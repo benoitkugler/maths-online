@@ -1,0 +1,189 @@
+package expression
+
+import (
+	"unicode"
+)
+
+type token struct {
+	data tokenData // a nil data field means EOF
+	pos  int
+}
+
+type tokenData interface {
+	isToken()
+}
+
+func (symbol) isToken()     {}
+func (numberText) isToken() {}
+func (constant) isToken()   {}
+func (Variable) isToken()   {}
+func (function) isToken()   {}
+func (operator) isToken()   {}
+
+type symbol uint8
+
+const (
+	openPar symbol = iota
+	closePar
+)
+
+type numberText string
+
+type tokenizer struct {
+	nextToken token // cache used for peek
+
+	src []rune
+	pos int
+}
+
+func newTokenizer(s string) *tokenizer { return &tokenizer{src: []rune(s)} }
+
+func (tk *tokenizer) peek() token {
+	if tk.nextToken.data != nil {
+		return tk.nextToken
+	}
+
+	tk.nextToken = tk.readToken() // save it so that next do not advance again
+	return tk.nextToken
+}
+
+func (tk *tokenizer) next() token {
+	if out := tk.nextToken; out.data != nil {
+		tk.nextToken = token{}
+		return out
+	}
+
+	out := tk.readToken()
+	return out
+}
+
+func isWhiteSpace(r rune) bool {
+	switch r {
+	case ' ', '\n', '\t', '\r', '\f':
+		return true
+	default:
+		return false
+	}
+}
+
+func isOperator(r rune) (operator, bool) {
+	var op operator
+	switch r {
+	case '+':
+		op = plus
+	case '-':
+		op = minus
+	case '/', '\u00F7':
+		op = div
+	case '*', '\u00D7':
+		op = mult
+	case '^':
+		op = pow
+	default:
+		return 0, false
+	}
+	return op, true
+}
+
+// advance pos to the next non whitespace char
+func (tk *tokenizer) skipWhitespace() {
+	for tk.pos < len(tk.src) && isWhiteSpace(tk.src[tk.pos]) {
+		tk.pos++
+	}
+}
+
+// advance the position
+func (tk *tokenizer) readToken() (tok token) {
+	tk.skipWhitespace()
+
+	if tk.pos >= len(tk.src) {
+		return token{pos: tk.pos}
+	}
+
+	out := token{pos: tk.pos}
+	c := tk.src[tk.pos]
+	op, isOp := isOperator(c)
+	switch {
+	case c == '(':
+		out.data = openPar
+		tk.pos++
+	case c == ')':
+		out.data = closePar
+		tk.pos++
+	case isOp:
+		out.data = op
+		tk.pos++
+	case unicode.IsLetter(c): // either a function, a variable or a constant
+		fn, isFunction := tk.tryReadFunction()
+		if isFunction {
+			out.data = fn
+		} else {
+			// read the symbol as variable or predefined constants
+			v := tk.readConstantOrVariable()
+			out.data = v
+		}
+	default: // number start
+		out.data = tk.readNumber()
+	}
+
+	return out
+}
+
+func (tk *tokenizer) tryReadFunction() (function, bool) {
+	L := len(tk.src)
+
+	// read subsequent letters
+	var letters []rune
+	for i := tk.pos; i < L && unicode.IsLetter(tk.src[i]); i++ {
+		letters = append(letters, tk.src[i])
+	}
+
+	var fn function
+	switch string(letters) {
+	case "exp":
+		fn = exp
+	case "ln", "log":
+		fn = log
+	case "sin":
+		fn = sin
+	case "cos":
+		fn = cos
+	case "abs":
+		fn = abs
+	default: // no  matching function name
+		return 0, false
+	}
+
+	// found a function, advance the position
+	tk.pos += len(letters)
+	return fn, true
+}
+
+func (tk *tokenizer) readConstantOrVariable() (out tokenData) {
+	switch c := tk.src[tk.pos]; c {
+	case 'e':
+		out = numberE
+	case '\u03C0':
+		out = numberPi
+	default:
+		out = Variable(c)
+	}
+	tk.pos++
+
+	return out
+}
+
+func (tk *tokenizer) readNumber() numberText {
+	var buffer []rune
+	L := len(tk.src)
+	for ; tk.pos < L; tk.pos++ {
+		r := tk.src[tk.pos]
+		if unicode.IsDigit(r) || r == '.' {
+			buffer = append(buffer, r)
+		} else {
+			break
+		}
+	}
+
+	return numberText(buffer)
+}

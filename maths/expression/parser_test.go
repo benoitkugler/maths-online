@@ -8,9 +8,46 @@ import (
 func Test_parseExpression(t *testing.T) {
 	tests := []struct {
 		args    string
-		want    *node
+		want    *Expression
 		wantErr bool
 	}{
+		{
+			"1 + (x + z) * (x + 1)", &Expression{
+				atom: plus,
+				left: newNumber(1),
+				right: &Expression{
+					atom:  mult,
+					left:  &Expression{atom: plus, left: newVariable('x'), right: newVariable('z')},
+					right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)},
+				},
+			}, false,
+		},
+		{
+			"1 + 2 * 3 * 4", &Expression{
+				atom: plus,
+				left: newNumber(1),
+				right: &Expression{
+					atom:  mult,
+					left:  &Expression{atom: mult, left: newNumber(2), right: newNumber(3)},
+					right: newNumber(4),
+				},
+			}, false,
+		},
+		{
+			"1 + (x + z) * (x + 1) * z ", &Expression{
+				atom: plus,
+				left: newNumber(1),
+				right: &Expression{
+					atom: mult,
+					left: &Expression{
+						atom:  mult,
+						left:  &Expression{atom: plus, left: newVariable('x'), right: newVariable('z')},
+						right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)},
+					},
+					right: newVariable('z'),
+				},
+			}, false,
+		},
 		{
 			"x", newVariable('x'), false,
 		},
@@ -24,16 +61,16 @@ func Test_parseExpression(t *testing.T) {
 			" 3.14 ", newNumber(3.14), false,
 		},
 		{
-			" e ", &node{atom: numberE}, false,
+			" e ", &Expression{atom: numberE}, false,
 		},
 		{
-			" \u03C0 ", &node{atom: numberPi}, false,
+			" \u03C0 ", &Expression{atom: numberPi}, false,
 		},
 		{
-			" (e) ", &node{atom: numberE}, false,
+			" (e) ", &Expression{atom: numberE}, false,
 		},
 		{
-			" ((e)) ", &node{atom: numberE}, false,
+			" ((e)) ", &Expression{atom: numberE}, false,
 		},
 		{
 			"", nil, true,
@@ -49,6 +86,9 @@ func Test_parseExpression(t *testing.T) {
 		},
 		{
 			"2 + 1)", nil, true,
+		},
+		{
+			"2 + 1 * (1 + ", nil, true,
 		},
 		{
 			" ( ", nil, true,
@@ -72,67 +112,111 @@ func Test_parseExpression(t *testing.T) {
 			" log( /2)", nil, true,
 		},
 		{
-			" x + 3 ", &node{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
+			" x + 3 ", &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
 		},
 		{
-			" x - 3 ", &node{atom: minus, left: newVariable('x'), right: newNumber(3)}, false,
+			" x - 3 ", &Expression{atom: minus, left: newVariable('x'), right: newNumber(3)}, false,
 		},
 		{
-			" x ^ 3 ", &node{atom: pow, left: newVariable('x'), right: newNumber(3)}, false,
+			" x ^ 3 ", &Expression{atom: pow, left: newVariable('x'), right: newNumber(3)}, false,
 		},
 		{
-			" x / 3 ", &node{atom: div, left: newVariable('x'), right: newNumber(3)}, false,
+			" x / 3 ", &Expression{atom: div, left: newVariable('x'), right: newNumber(3)}, false,
 		},
 		{
-			" x * 3 ", &node{atom: mult, left: newVariable('x'), right: newNumber(3)}, false,
+			" x * 3 ", &Expression{atom: mult, left: newVariable('x'), right: newNumber(3)}, false,
 		},
 		{
-			"(x + 3 )", &node{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
+			"(x + 3 )", &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
 		},
 		{
-			"3 - (x + 3 )", &node{atom: minus, left: newNumber(3), right: &node{atom: plus, left: newVariable('x'), right: newNumber(3)}}, false,
+			"1 + 2 * 3", &Expression{
+				atom:  plus,
+				left:  newNumber(1),
+				right: &Expression{atom: mult, left: newNumber(2), right: newNumber(3)},
+			}, false,
+		},
+		{
+			"1 + 2 * 3 ^ 4", &Expression{
+				atom: plus,
+				left: newNumber(1),
+				right: &Expression{
+					atom: mult,
+					left: newNumber(2),
+					right: &Expression{
+						atom:  pow,
+						left:  newNumber(3),
+						right: newNumber(4),
+					},
+				},
+			}, false,
+		},
+		{
+			"1 + (x + z) * (x + 1) * z ", &Expression{
+				atom: plus,
+				left: newNumber(1),
+				right: &Expression{
+					atom: mult,
+					left: &Expression{
+						atom:  mult,
+						left:  &Expression{atom: plus, left: newVariable('x'), right: newVariable('z')},
+						right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)},
+					},
+					right: newVariable('z'),
+				},
+			}, false,
+		},
+		{
+			"1 + 2 * (x + 1)", &Expression{
+				atom:  plus,
+				left:  newNumber(1),
+				right: &Expression{atom: mult, left: newNumber(2), right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)}},
+			}, false,
+		},
+		{
+			"3 - (x + 3 )", &Expression{atom: minus, left: newNumber(3), right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}}, false,
 		},
 		{
 			"(1 + y) / (3 - (x + 3 ))",
 
-			&node{
+			&Expression{
 				atom:  div,
-				left:  &node{atom: plus, left: newNumber(1), right: newVariable('y')},
-				right: &node{atom: minus, left: newNumber(3), right: &node{atom: plus, left: newVariable('x'), right: newNumber(3)}},
+				left:  &Expression{atom: plus, left: newNumber(1), right: newVariable('y')},
+				right: &Expression{atom: minus, left: newNumber(3), right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}},
 			},
 			false,
 		},
 		{
-			"ln(x)", &node{atom: log, left: nil, right: newVariable('x')}, false,
+			"ln(x)", &Expression{atom: log, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"exp(x)", &node{atom: exp, left: nil, right: newVariable('x')}, false,
+			"exp(x)", &Expression{atom: exp, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"sin(x)", &node{atom: sin, left: nil, right: newVariable('x')}, false,
+			"sin(x)", &Expression{atom: sin, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"cos(x)", &node{atom: cos, left: nil, right: newVariable('x')}, false,
+			"cos(x)", &Expression{atom: cos, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"abs(x)", &node{atom: abs, left: nil, right: newVariable('x')}, false,
+			"abs(x)", &Expression{atom: abs, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"ln(x + y)", &node{atom: log, left: nil, right: &node{atom: plus, left: newVariable('x'), right: newVariable('y')}}, false,
+			"ln(x + y)", &Expression{atom: log, left: nil, right: &Expression{atom: plus, left: newVariable('x'), right: newVariable('y')}}, false,
 		},
 	}
 	for _, tt := range tests {
-		got, err := parseExpression(tt.args)
+		got, err := Parse(tt.args)
 		if err != nil {
 			_ = err.Error()
 		}
 
 		if (err != nil) != tt.wantErr {
-			t.Errorf("%s : parseExpression() error = %v, wantErr %v", tt.args, err, tt.wantErr)
+			t.Fatalf("parseExpression(%s) error = %v, wantErr %v", tt.args, err, tt.wantErr)
 			return
 		}
 		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("parseExpression() = %v, want %v", got, tt.want)
+			t.Fatalf("parseExpression(%s) = %v, want %v", tt.args, got, tt.want)
 		}
 	}
 }
