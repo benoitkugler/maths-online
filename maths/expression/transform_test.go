@@ -15,7 +15,7 @@ func mustParse(t *testing.T, s string) *Expression {
 	return want
 }
 
-func Test_node_extractOperator(t *testing.T) {
+func Test_Expression_extractOperator(t *testing.T) {
 	tests := []struct {
 		expr string
 		op   operator
@@ -56,7 +56,7 @@ func Test_node_extractOperator(t *testing.T) {
 	}
 }
 
-func Test_node_sortPlusAndMultOperands(t *testing.T) {
+func Test_Expression_sortPlusAndMultOperands(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string
@@ -88,7 +88,7 @@ func Test_node_sortPlusAndMultOperands(t *testing.T) {
 	}
 }
 
-func Test_node_expandMult(t *testing.T) {
+func Test_Expression_expandMult(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string
@@ -109,7 +109,7 @@ func Test_node_expandMult(t *testing.T) {
 	}
 }
 
-func Test_node_expandPow(t *testing.T) {
+func Test_Expression_expandPow(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string
@@ -133,7 +133,7 @@ func Test_node_expandPow(t *testing.T) {
 	}
 }
 
-func Test_node_groupAdditions(t *testing.T) {
+func Test_Expression_groupAdditions(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string
@@ -155,7 +155,7 @@ func Test_node_groupAdditions(t *testing.T) {
 	}
 }
 
-func Test_node_expandMinus(t *testing.T) {
+func Test_Expression_expandMinus(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string
@@ -175,7 +175,7 @@ func Test_node_expandMinus(t *testing.T) {
 	}
 }
 
-func Test_node_cannonicalize(t *testing.T) {
+func Test_Expression_fullSimplification(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string
@@ -188,35 +188,64 @@ func Test_node_cannonicalize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		nbPasses := expr.cannonicalize()
+		nbPasses := expr.fullSimplification()
 
 		t.Logf("Required %d passes", nbPasses)
 
 		want := mustParse(t, tt.want)
 		if !reflect.DeepEqual(expr, want) {
-			t.Fatalf("cannonicalize(%s) = %v, expected %v", tt.expr, expr, tt.want)
+			t.Fatalf("fullSimplification(%s) = %v, expected %v", tt.expr, expr, tt.want)
 		}
 	}
 }
 
-func Test_areExpressionEquivalent(t *testing.T) {
+func Test_Expression_basicSimplification(t *testing.T) {
+	tests := []struct {
+		expr string
+		want string
+	}{
+		{"1+x+y", "1+x+y"}, // no-op
+		{"x+2", "2+x"},
+		{"2+3+x", "5+x"},
+		{"2*(x+ 2)", "2*(2+x)"},
+		{"2 - y", "2 + (-y)"},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		expr.basicSimplification()
+
+		want := mustParse(t, tt.want)
+		if !reflect.DeepEqual(expr, want) {
+			t.Fatalf("basicSimplification(%s) = %v, expected %v", tt.expr, expr, tt.want)
+		}
+	}
+}
+
+func Test_AreExpressionEquivalent(t *testing.T) {
 	tests := []struct {
 		e1, e2 string
+		level  ComparisonLevel
 		want   bool
 	}{
-		{"1+x", "x+1", true},
-		{"(a+b)^2", "a^2 + 2*a*b + b^2", true},
-		{"(a+b)^2", "a^2 + b^2 + 2*a*b ", true},
-		{"a + y", "a", false},
-		{"x + x", "2*x", true},
-		{"x + (- y) + x", "2*x + (- y)", true},
-		{"x + (- y) + x", "2*x - y", true},
-		// {"x + x - x", "x", true}, // TODO
+		{"1+x", "x+1", Strict, false},
+		{"1+x", "x+1", SimpleSubstitutions, true},
+		{"1+x", "x+1", ExpandedSubstitutions, true},
+		{"(a+b)^2", "a^2 + 2*a*b + b^2", SimpleSubstitutions, false},
+		{"(a+b)^2", "a^2 + 2*a*b + b^2", ExpandedSubstitutions, true},
+		{"(a+b)^2", "a^2 + b^2 + 2*a*b ", ExpandedSubstitutions, true},
+		{"a + y", "a", Strict, false},
+		{"a + y", "a", SimpleSubstitutions, false},
+		{"a + y", "a", ExpandedSubstitutions, false},
+		{"a + y", "a", ExpandedSubstitutions, false},
+		{"x + x", "2*x", ExpandedSubstitutions, true},
+		{"x + (- y) + x", "2*x + (- y)", ExpandedSubstitutions, true},
+		{"x + (- y) + x", "2*x - y", ExpandedSubstitutions, true},
+		// {"x + x - x", "x", ExpandedSubstitutions, true}, // TODO
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
-		if got := AreExpressionEquivalent(e1, e2); got != tt.want {
-			t.Errorf("areExpressionEquivalent(%s, %s) = %v, want %v", tt.e1, tt.e2, got, tt.want)
+		if got := AreExpressionsEquivalent(e1, e2, tt.level); got != tt.want {
+			t.Fatalf("AreExpressionEquivalent(%s, %s) = %v, want %v", tt.e1, tt.e2, got, tt.want)
 		}
 	}
 }

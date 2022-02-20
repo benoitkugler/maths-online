@@ -15,7 +15,7 @@ func (inv InvalidExpr) Error() string {
 	return fmt.Sprintf("expression invalide : position %d : %s", inv.Pos, inv.Reason)
 }
 
-// Parse parses a mathematical expression. If invalid, a InvalidExpr is returned.
+// Parse parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
 func Parse(s string) (*Expression, error) {
 	pr := parser{tk: newTokenizer(s)}
 	return pr.parseExpression()

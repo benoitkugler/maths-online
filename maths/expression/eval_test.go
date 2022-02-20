@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_node_eval(t *testing.T) {
+func Test_Expression_eval(t *testing.T) {
 	tests := []struct {
 		expr     string
 		bindings VariablesBinding
@@ -67,7 +67,7 @@ func Test_node_eval(t *testing.T) {
 	}
 }
 
-func Test_node_simplifyNumbers(t *testing.T) {
+func Test_Expression_simplifyNumbers(t *testing.T) {
 	tests := []struct {
 		expr string
 		want string

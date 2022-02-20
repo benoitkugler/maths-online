@@ -265,8 +265,27 @@ func (expr *Expression) expandMinus() {
 	}
 }
 
-func (expr *Expression) cannonicalize() (nbPasses int) {
-	const maxIterations = 10_000 // very very unlikely in pratice
+const maxIterations = 10_000 // very very unlikely in pratice
+
+func (expr *Expression) basicSimplification() (nbPasses int) {
+	ref := expr.copy()
+
+	// apply each transformation until no one triggers a change
+	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
+		expr.simplifyNumbers()
+		expr.sortPlusAndMultOperands()
+		expr.expandMinus()
+
+		if expr.equals(ref) {
+			break
+		}
+		ref = expr.copy() // update the reference and start a new pass
+	}
+
+	return nbPasses
+}
+
+func (expr *Expression) fullSimplification() (nbPasses int) {
 	ref := expr.copy()
 
 	// apply each transformation until no one triggers a change
@@ -287,13 +306,42 @@ func (expr *Expression) cannonicalize() (nbPasses int) {
 	return nbPasses
 }
 
-// AreExpressionEquivalent compare the two expressions using
-// mathematical knowledge.
-// For instance, (a+b)^2 and (a^2 + 2ab + b^2) are equivalent,
-// even if not structurally equal.
-func AreExpressionEquivalent(e1, e2 *Expression) bool {
-	e1, e2 = e1.copy(), e2.copy()
-	e1.cannonicalize()
-	e2.cannonicalize()
+// ComparisonLevel speficies how mathematical expressions should be
+// compared.
+// Depending on the context, it is preferable to ask for exact matching
+// (like when learning distributivity), or to accept broader answers,
+// such as for derivatives.
+type ComparisonLevel uint8
+
+const (
+	// Expressions are compared structurally
+	// This is usually to restrictive
+	Strict ComparisonLevel = iota
+	// Expressions are compared after performing some basic transformations,
+	// such as reording operands.
+	SimpleSubstitutions
+	// Apply many subsitutions to get a very robust comparison
+	// For instance, multiplications are expanded and equal terms grouped.
+	ExpandedSubstitutions
+)
+
+// AreExpressionsEquivalent compares the two expressions using
+// mathematical knowledge, as hinted by `level`.
+// For instance, (a+b)^2 and (a^2 + 2ab + b^2) are equivalent
+// if level == ExpandedSubstitutions, but not with other levels.
+func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
+	switch level {
+	case Strict:
+		// pass
+	case SimpleSubstitutions:
+		e1, e2 = e1.copy(), e2.copy()
+		e1.basicSimplification()
+		e2.basicSimplification()
+	default:
+		e1, e2 = e1.copy(), e2.copy()
+		e1.fullSimplification()
+		e2.fullSimplification()
+	}
+
 	return e1.equals(e2)
 }

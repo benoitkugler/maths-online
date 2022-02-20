@@ -1,3 +1,5 @@
+// Package expression provides support for parsing,
+// evaluating and comparing simple mathematical expressions.
 package expression
 
 import "fmt"
@@ -107,7 +109,7 @@ const (
 )
 
 // Variable is a (one letter) mathematical variable,
-// such as a, b in (a + b)^2 or x in 2x + 3
+// such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3
 type Variable rune
 
 func newVariable(r rune) *Expression {
