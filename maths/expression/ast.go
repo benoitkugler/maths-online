@@ -2,7 +2,20 @@
 // evaluating and comparing simple mathematical expressions.
 package expression
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"unicode"
+)
+
+const (
+	exhaustiveFunctionSwitch = "function"
+	exhaustiveOperatorSwitch = "operator"
+	exhaustiveConstantSwitch = "constant"
+	exhaustiveSymbolSwitch   = "symbol"
+	exhaustiveTokenSwitch    = "token"
+	exhaustiveAtomSwitch     = "atom"
+)
 
 // Expression is a parsed mathematical expression
 type Expression struct {
@@ -10,7 +23,9 @@ type Expression struct {
 	atom        atom
 }
 
-// TODO: polish
+// String returns a human readable form of the expression,
+// mainly used for debug.
+// See `AsLaTeX` for a better output format.
 func (expr *Expression) String() string {
 	var out string
 	if expr.left != nil {
@@ -20,9 +35,7 @@ func (expr *Expression) String() string {
 	if expr.right != nil {
 		out += expr.right.String()
 	}
-	if expr.left != nil && expr.right != nil {
-		out = "(" + out + ")"
-	}
+	out = "(" + out + ")"
 	return out
 }
 
@@ -58,8 +71,11 @@ func (expr *Expression) equals(other *Expression) bool {
 // atom is either an operator, a function,
 // a variable, a predefined constant or a numerical value
 type atom interface {
+	fmt.Stringer
+
 	lexicographicOrder() int // smaller is first; unique among concrete types
-	eval(left, right float64, context VariablesBinding) float64
+	eval(left, right float64, context ValueResolver) float64
+	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
 func (operator) lexicographicOrder() int { return 4 }
@@ -93,39 +109,83 @@ func (op operator) String() string {
 	case pow:
 		return "^"
 	default:
-		panic("invalid operator")
+		panic(exhaustiveOperatorSwitch)
 	}
 }
 
 type function uint8
 
 const (
-	log function = iota
-	exp
-	sin
-	cos
-	abs
+	logFn function = iota
+	expFn
+	sinFn
+	cosFn
+	absFn
+	sqrtFn
 	// round
 )
 
+func (fn function) String() string {
+	switch fn {
+	case logFn:
+		return "log"
+	case expFn:
+		return "exp"
+	case sinFn:
+		return "sin"
+	case cosFn:
+		return "cos"
+	case absFn:
+		return "abs"
+	case sqrtFn:
+		return "sqrt"
+	default:
+		panic(exhaustiveFunctionSwitch)
+	}
+}
+
 // Variable is a (one letter) mathematical variable,
 // such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3
+// Private Unicode points are also permitted, so that
+// custom compounded symbols may be used.
 type Variable rune
 
 func newVariable(r rune) *Expression {
 	return &Expression{atom: Variable(r)}
 }
 
+func (v Variable) String() string {
+	if unicode.Is(unicode.Co, rune(v)) {
+		return fmt.Sprintf("<private 0x%x>", rune(v))
+	}
+	return string(v)
+}
+
 type constant uint8
 
 const (
-	numberPi constant = iota
-	numberE
+	piConstant constant = iota
+	eConstant
 	// i
 )
+
+func (c constant) String() string {
+	switch c {
+	case piConstant:
+		return string(piRune)
+	case eConstant:
+		return "e"
+	default:
+		panic(exhaustiveConstantSwitch)
+	}
+}
 
 type number float64
 
 func newNumber(v float64) *Expression {
 	return &Expression{atom: number(v)}
+}
+
+func (v number) String() string {
+	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }

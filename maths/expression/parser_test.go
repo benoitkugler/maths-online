@@ -52,6 +52,9 @@ func Test_parseExpression(t *testing.T) {
 			"x", newVariable('x'), false,
 		},
 		{
+			"t * q", &Expression{atom: mult, left: newVariable('t'), right: newVariable('q')}, false,
+		},
+		{
 			" x ", newVariable('x'), false,
 		},
 		{
@@ -61,16 +64,20 @@ func Test_parseExpression(t *testing.T) {
 			" 3.14 ", newNumber(3.14), false,
 		},
 		{
-			" e ", &Expression{atom: numberE}, false,
+			" e ", &Expression{atom: eConstant}, false,
+		},
+		// custom variables
+		{
+			" \uE000 + 2", &Expression{atom: plus, left: newVariable('\uE000'), right: newNumber(2)}, false,
 		},
 		{
-			" \u03C0 ", &Expression{atom: numberPi}, false,
+			" \u03C0 ", &Expression{atom: piConstant}, false,
 		},
 		{
-			" (e) ", &Expression{atom: numberE}, false,
+			" (e) ", &Expression{atom: eConstant}, false,
 		},
 		{
-			" ((e)) ", &Expression{atom: numberE}, false,
+			" ((e)) ", &Expression{atom: eConstant}, false,
 		},
 		{
 			"", nil, true,
@@ -119,6 +126,29 @@ func Test_parseExpression(t *testing.T) {
 		},
 		{
 			" x ^ 3 ", &Expression{atom: pow, left: newVariable('x'), right: newNumber(3)}, false,
+		},
+		// ^ is not associative !
+		{
+			" a^b^c ", &Expression{
+				atom: pow,
+				left: newVariable('a'),
+				right: &Expression{
+					atom:  pow,
+					left:  newVariable('b'),
+					right: newVariable('c'),
+				},
+			}, false,
+		},
+		{
+			" (a^b)^c ", &Expression{
+				atom: pow,
+				left: &Expression{
+					atom:  pow,
+					left:  newVariable('a'),
+					right: newVariable('b'),
+				},
+				right: newVariable('c'),
+			}, false,
 		},
 		{
 			" x / 3 ", &Expression{atom: div, left: newVariable('x'), right: newNumber(3)}, false,
@@ -187,22 +217,25 @@ func Test_parseExpression(t *testing.T) {
 			false,
 		},
 		{
-			"ln(x)", &Expression{atom: log, left: nil, right: newVariable('x')}, false,
+			"sqrt(x)", &Expression{atom: sqrtFn, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"exp(x)", &Expression{atom: exp, left: nil, right: newVariable('x')}, false,
+			"ln(x)", &Expression{atom: logFn, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"sin(x)", &Expression{atom: sin, left: nil, right: newVariable('x')}, false,
+			"exp(x)", &Expression{atom: expFn, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"cos(x)", &Expression{atom: cos, left: nil, right: newVariable('x')}, false,
+			"sin(x)", &Expression{atom: sinFn, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"abs(x)", &Expression{atom: abs, left: nil, right: newVariable('x')}, false,
+			"cos(x)", &Expression{atom: cosFn, left: nil, right: newVariable('x')}, false,
 		},
 		{
-			"ln(x + y)", &Expression{atom: log, left: nil, right: &Expression{atom: plus, left: newVariable('x'), right: newVariable('y')}}, false,
+			"abs(x)", &Expression{atom: absFn, left: nil, right: newVariable('x')}, false,
+		},
+		{
+			"ln(x + y)", &Expression{atom: logFn, left: nil, right: &Expression{atom: plus, left: newVariable('x'), right: newVariable('y')}}, false,
 		},
 	}
 	for _, tt := range tests {

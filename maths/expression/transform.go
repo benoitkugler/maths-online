@@ -92,7 +92,7 @@ func compareNodes(n1, n2 *Expression) int {
 				return 0
 			}
 		default:
-			panic("unknown atom")
+			panic(exhaustiveAtomSwitch)
 		}
 	}
 }

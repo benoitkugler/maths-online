@@ -122,6 +122,9 @@ func (tk *tokenizer) readToken() (tok token) {
 			v := tk.readConstantOrVariable()
 			out.data = v
 		}
+	case unicode.Is(unicode.Co, c): // custom variables
+		v := tk.readConstantOrVariable()
+		out.data = v
 	default: // number start
 		out.data = tk.readNumber()
 	}
@@ -141,15 +144,17 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 	var fn function
 	switch string(letters) {
 	case "exp":
-		fn = exp
+		fn = expFn
 	case "ln", "log":
-		fn = log
+		fn = logFn
 	case "sin":
-		fn = sin
+		fn = sinFn
 	case "cos":
-		fn = cos
+		fn = cosFn
 	case "abs":
-		fn = abs
+		fn = absFn
+	case "sqrt":
+		fn = sqrtFn
 	default: // no  matching function name
 		return 0, false
 	}
@@ -159,12 +164,14 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 	return fn, true
 }
 
+const piRune = '\u03C0'
+
 func (tk *tokenizer) readConstantOrVariable() (out tokenData) {
 	switch c := tk.src[tk.pos]; c {
 	case 'e':
-		out = numberE
-	case '\u03C0':
-		out = numberPi
+		out = eConstant
+	case piRune:
+		out = piConstant
 	default:
 		out = Variable(c)
 	}

@@ -4,16 +4,21 @@ import (
 	"math"
 )
 
-type VariablesBinding interface {
-	Resolve(v Variable) float64
+type ValueResolver interface {
+	Resolve(v Variable) (float64, bool)
 }
+
+var _ ValueResolver = variables{}
 
 type variables map[Variable]float64
 
-func (vrs variables) Resolve(v Variable) float64 { return vrs[v] }
+func (vrs variables) Resolve(v Variable) (float64, bool) {
+	value, ok := vrs[v]
+	return value, ok
+}
 
 // Evaluate uses the given variables values to evaluate the formula.
-func (expr *Expression) Evaluate(bindings VariablesBinding) float64 {
+func (expr *Expression) Evaluate(bindings ValueResolver) float64 {
 	var left, right float64 // 0 is a valid default value
 	if expr.left != nil {
 		left = expr.left.Evaluate(bindings)
@@ -24,7 +29,7 @@ func (expr *Expression) Evaluate(bindings VariablesBinding) float64 {
 	return expr.atom.eval(left, right, bindings)
 }
 
-func (op operator) eval(left, right float64, _ VariablesBinding) float64 {
+func (op operator) eval(left, right float64, _ ValueResolver) float64 {
 	return op.evaluate(left, right)
 }
 
@@ -43,40 +48,62 @@ func (op operator) evaluate(left, right float64) float64 {
 	case pow:
 		return math.Pow(left, right)
 	default:
-		panic("unknown operator")
+		panic(exhaustiveOperatorSwitch)
 	}
 }
 
-func (c constant) eval(_, _ float64, _ VariablesBinding) float64 {
+func (c constant) eval(_, _ float64, _ ValueResolver) float64 {
 	switch c {
-	case numberPi:
+	case piConstant:
 		return math.Pi
-	case numberE:
+	case eConstant:
 		return math.E
 	default:
-		panic("unknown constant")
+		panic(exhaustiveConstantSwitch)
 	}
 }
 
-func (v number) eval(_, _ float64, _ VariablesBinding) float64 { return float64(v) }
+func (v number) eval(_, _ float64, _ ValueResolver) float64 { return float64(v) }
 
-func (va Variable) eval(_, _ float64, b VariablesBinding) float64 { return b.Resolve(va) }
+func (va Variable) eval(_, _ float64, b ValueResolver) float64 {
+	out, _ := b.Resolve(va)
+	return out
+}
 
-func (fn function) eval(_, right float64, _ VariablesBinding) float64 {
+func (fn function) eval(_, right float64, _ ValueResolver) float64 {
 	arg := right
 	switch fn {
-	case log:
+	case logFn:
 		return math.Log(arg)
-	case exp:
+	case expFn:
 		return math.Exp(arg)
-	case sin:
+	case sinFn:
 		return math.Sin(arg)
-	case cos:
+	case cosFn:
 		return math.Cos(arg)
-	case abs:
+	case absFn:
 		return math.Abs(arg)
 	default:
-		panic("unknown constant")
+		panic(exhaustiveConstantSwitch)
+	}
+}
+
+// partial evaluation a.k.a substitution
+
+// Substitute replaces variables by the given values, that is
+// the ones for which Resolve() returns `true`.
+func (expr *Expression) Substitute(vars ValueResolver) {
+	if expr == nil {
+		return
+	}
+	expr.left.Substitute(vars)
+	expr.right.Substitute(vars)
+
+	if v, isVariable := expr.atom.(Variable); isVariable {
+		value, has := vars.Resolve(v)
+		if has {
+			expr.atom = number(value)
+		}
 	}
 }
 

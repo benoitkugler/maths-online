@@ -59,6 +59,7 @@ func (pr *parser) parseExpression() (*Expression, error) {
 	return pr.stack[0], nil
 }
 
+// the next token has already been checked for emptyness
 func (pr *parser) parseOneNode() (*Expression, error) {
 	tok := pr.tk.next()
 	c := tok.data
@@ -73,7 +74,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 				Pos:    tok.pos,
 			}
 		default:
-			panic("unknown symbol")
+			panic(exhaustiveSymbolSwitch)
 		}
 	case operator:
 		return pr.parseOperator(data, tok.pos)
@@ -90,7 +91,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 		}
 		return &Expression{atom: nb}, nil
 	default:
-		panic("unknown token type")
+		panic(exhaustiveTokenSwitch)
 	}
 }
 
@@ -98,7 +99,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 	var leftIsOptional bool
 	switch op {
-	case plus, minus:
+	case plus, minus: // an expression before the sign is optional
 		leftIsOptional = true
 	}
 
@@ -112,7 +113,14 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 	}
 
 	// parse the remaining expression
-	right, err := pr.parseUntil(op)
+
+	// since a^b^c = a^(b^c) and not (a^b)^c
+	// adjust operator precedence
+	stopOp := op
+	if op == pow {
+		stopOp = mult
+	}
+	right, err := pr.parseUntil(stopOp)
 	if err != nil {
 		return nil, err
 	}
@@ -124,15 +132,14 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 		}
 	}
 
-	// an expression before the sign is optional
 	return &Expression{
 		atom:  op,
-		right: right,
 		left:  left,
+		right: right,
 	}, nil
 }
 
-// parse while the operator have higher precedence than `op`
+// parse while the operator have strictly higher precedence than `op`
 func (pr *parser) parseUntil(op operator) (*Expression, error) {
 	for {
 		tok := pr.tk.peek()

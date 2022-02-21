@@ -9,7 +9,7 @@ import (
 func Test_Expression_eval(t *testing.T) {
 	tests := []struct {
 		expr     string
-		bindings VariablesBinding
+		bindings ValueResolver
 		want     float64
 	}{
 		{
@@ -88,6 +88,28 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 		want.simplifyNumbers()
 		if !reflect.DeepEqual(expr, want) {
 			t.Errorf("node.simplifyNumbers() = %v, want %v", expr, tt.want)
+		}
+	}
+}
+
+func TestExpression_Substitute(t *testing.T) {
+	tests := []struct {
+		expr string
+		vars ValueResolver
+		want string
+	}{
+		{"a + b", variables{}, "a+b"},
+		{"a + b", variables{'a': 4}, "4+b"},
+		{"a + b / 2*a", variables{'a': 4}, "4+b/2*4"},
+		{"a + b", variables{'a': 4, 'b': 5}, "4+5"},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		expr.Substitute(tt.vars)
+
+		want := mustParse(t, tt.want)
+		if !reflect.DeepEqual(expr, want) {
+			t.Errorf("Substitute(%s) = %v, want %v", tt.expr, expr, tt.want)
 		}
 	}
 }
