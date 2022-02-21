@@ -110,8 +110,10 @@ func (expr *Expression) Substitute(vars ValueResolver) {
 // --------------------------- numbers computations ---------------------------
 
 // performs some basic simplifications to convert expressions to numbers
-// examples : 2*3 -> 6
-// examples : ln(1) -> 0
+// examples :
+//	2*3 -> 6
+//  ln(1) -> 0
+// 	1 * x -> x
 // due to the binary representation, some expressions cannot be simplified, such as
 // (1 + x + 2)
 func (expr *Expression) simplifyNumbers() {
@@ -128,17 +130,65 @@ func (expr *Expression) simplifyNumbers() {
 		return
 	}
 
-	var (
-		leftNumber number
-		leftOK     bool
-	)
-	if expr.left == nil {
-		leftOK = true // 0 is a valid default value
-	} else {
-		leftNumber, leftOK = expr.left.atom.(number)
+	left := expr.left
+	if expr.left == nil { // 0 is a valid default value
+		left = newNumber(0)
 	}
-	rightNumber, rightOK := expr.right.atom.(number)
+	right := expr.right
 
+	// multiplying or dividing by 1;
+	// adding or substracting 0 are no-ops
+	switch op {
+	case plus:
+		if left.atom == number(0) { // 0 + x = x
+			*expr = *expr.right
+			return
+		} else if right.atom == number(0) { // x + 0 = x
+			*expr = *expr.left
+			return
+		}
+	case minus:
+		if right.atom == number(0) { // x - 0 = x
+			*expr = *expr.left
+			return
+		}
+	case mult:
+		if left.atom == number(1) { // 1 * x = x
+			*expr = *expr.right
+			return
+		} else if right.atom == number(1) { // x * 1 = x
+			*expr = *expr.left
+			return
+		} else if left.atom == number(0) { // 0 * x = 0
+			*expr = Expression{atom: number(0)}
+			return
+		} else if right.atom == number(0) {
+			*expr = Expression{atom: number(0)}
+			return
+		}
+	case div:
+		if right.atom == number(1) { // x / 1 = x
+			*expr = *expr.left
+			return
+		} else if left.atom == number(0) && right.atom != number(0) { // 0 / x = 0
+			*expr = Expression{atom: number(0)}
+			return
+		}
+	case pow:
+		if right.atom == number(1) { // x ^ 1 = x
+			*expr = *expr.left
+			return
+		} else if left.atom == number(1) { // 1 ^ x = 1
+			*expr = Expression{atom: number(1)}
+			return
+		}
+	default:
+		panic(exhaustiveOperatorSwitch)
+	}
+
+	// general case with two numbers
+	leftNumber, leftOK := left.atom.(number)
+	rightNumber, rightOK := right.atom.(number)
 	if leftOK && rightOK {
 		res := op.evaluate(float64(leftNumber), float64(rightNumber))
 		*expr = Expression{atom: number(res)}

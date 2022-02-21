@@ -5,7 +5,6 @@ package expression
 import (
 	"fmt"
 	"strconv"
-	"unicode"
 )
 
 const (
@@ -25,6 +24,9 @@ type Expression struct {
 
 // String returns a human readable form of the expression,
 // mainly used for debug.
+// It is also suitable as a storage format, since
+// it always produces a valid expression output, whose parsing
+// yields a structurally equal expression.
 // See `AsLaTeX` for a better output format.
 func (expr *Expression) String() string {
 	var out string
@@ -155,9 +157,7 @@ func newVariable(r rune) *Expression {
 }
 
 func (v Variable) String() string {
-	if unicode.Is(unicode.Co, rune(v)) {
-		return fmt.Sprintf("<private 0x%x>", rune(v))
-	}
+	// we have to output valid expression syntax
 	return string(v)
 }
 

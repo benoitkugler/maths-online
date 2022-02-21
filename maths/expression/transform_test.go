@@ -10,7 +10,7 @@ func mustParse(t *testing.T, s string) *Expression {
 
 	want, err := Parse(s)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(s, err)
 	}
 	return want
 }
@@ -238,9 +238,11 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"a + y", "a", ExpandedSubstitutions, false},
 		{"a + y", "a", ExpandedSubstitutions, false},
 		{"x + x", "2*x", ExpandedSubstitutions, true},
-		{"x + (- y) + x", "2*x + (- y)", ExpandedSubstitutions, true},
 		{"x + (- y) + x", "2*x - y", ExpandedSubstitutions, true},
-		// {"x + x - x", "x", ExpandedSubstitutions, true}, // TODO
+		{"x + (- y) + x", "2*x + (- y)", ExpandedSubstitutions, true},
+		// {"x + x - x", "x", ExpandedSubstitutions, true}, // TODO ?
+		{"e^x * (2*x +1)", "2*x*e^x + e^x", ExpandedSubstitutions, true},
+		{"e^x * (2*x +1)", "2*x*e^x + e^x", SimpleSubstitutions, false},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
