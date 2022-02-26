@@ -1,9 +1,11 @@
-import 'package:eleve/maths/maths.dart';
+import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
+final Color darkBlue = const Color.fromARGB(255, 18, 32, 47);
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -11,23 +13,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Maths online',
+      title: 'Isiro',
+      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: darkBlue),
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Bienvenue !'),
-        ),
-        body: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Exercice(),
-        ),
-      ),
-      theme: ThemeData(
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.lightGreen,
-          foregroundColor: Colors.black,
-        ),
-        primaryColor: Colors.purple,
-      ),
+          appBar: AppBar(
+            title: const Text('Bienvenue !'),
+          ),
+          // Outer white container with padding
+          body: Game()),
     );
   }
 }
