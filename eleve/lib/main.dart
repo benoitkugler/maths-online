@@ -5,7 +5,7 @@ void main() {
   runApp(const MyApp());
 }
 
-final Color darkBlue = const Color.fromARGB(255, 18, 32, 47);
+const Color darkBlue = Color.fromARGB(255, 18, 32, 47);
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -20,8 +20,7 @@ class MyApp extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Bienvenue !'),
           ),
-          // Outer white container with padding
-          body: Game()),
+          body: const Center(child: Game())),
     );
   }
 }

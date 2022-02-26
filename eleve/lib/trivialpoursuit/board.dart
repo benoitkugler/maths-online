@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 typedef OnTapTile = void Function(int);
 
@@ -20,8 +19,10 @@ class Board extends StatelessWidget {
 
   final OnTapTile onTap;
   final Set<int> highlights;
+  final int pawnTile;
 
-  const Board(this.onTap, this.highlights, {Key? key}) : super(key: key);
+  const Board(this.onTap, this.highlights, this.pawnTile, {Key? key})
+      : super(key: key);
 
   static const innerRingRadius = 35;
   static const outerRingRadius = innerRingRadius + 10;
@@ -104,16 +105,32 @@ class Board extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: List<Widget>.generate(shapes.length, (index) {
-        final shape = shapes[index];
-        final isHighlighted = highlights.contains(index);
-        if (isHighlighted) {
-          // wrap with a glow effect
-          return _HightightedTile(shape, () => onTap(index));
-        }
-        return _RegularTile(shape, () => onTap(index));
-      }),
+    final sideLength = MediaQuery.of(context).size.shortestSide * 0.9;
+    final size = Size(sideLength, sideLength);
+
+    final pawnShape = shapes[pawnTile];
+    final center = pawnShape.builder.visualCenter(size) ??
+        pawnShape.builder.buildPath(size).getBounds().center;
+
+    return Center(
+      child: SizedBox.square(
+          dimension: sideLength,
+          child: Stack(
+            children: List<Widget>.generate(shapes.length, (index) {
+                  final shape = shapes[index];
+                  final path = shape.builder.buildPath(size);
+
+                  final isHighlighted = highlights.contains(index);
+                  final tile =
+                      _TileConfig(path, () => onTap(index), shape.color);
+                  if (isHighlighted) {
+                    // wrap with a glow effect
+                    return _HightightedTile(tile);
+                  }
+                  return _RegularTile(tile);
+                }) +
+                [PawnImage(center, sideLength * 0.07)],
+          )),
     );
   }
 }
@@ -125,7 +142,7 @@ class _RP {
   const _RP(this.x, this.y);
 
   Offset resolve(Size size) {
-    return Offset(x / 100 * size.width, y / 100 * size.height);
+    return Offset(x / 100 * size.shortestSide, y / 100 * size.height);
   }
 }
 
@@ -138,11 +155,18 @@ class _RL {
   }
 }
 
-class _RegularTile extends StatelessWidget {
-  final _ShapeDescriptor shape;
+class _TileConfig {
+  final Path path;
   final void Function() onTap;
+  final Color color;
 
-  const _RegularTile(this.shape, this.onTap, {Key? key}) : super(key: key);
+  const _TileConfig(this.path, this.onTap, this.color);
+}
+
+class _RegularTile extends StatelessWidget {
+  final _TileConfig tile;
+
+  const _RegularTile(this.tile, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -151,9 +175,9 @@ class _RegularTile extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: tile.onTap,
         child: CustomPaint(
-          painter: _TilePainter(shape, 0),
+          painter: _TilePainter(tile, 0),
         ),
       ),
     );
@@ -162,10 +186,9 @@ class _RegularTile extends StatelessWidget {
 
 /// add a glow animation to a tile
 class _HightightedTile extends StatefulWidget {
-  final _ShapeDescriptor shape;
-  final void Function() onTap;
+  final _TileConfig tile;
 
-  const _HightightedTile(this.shape, this.onTap, {Key? key}) : super(key: key);
+  const _HightightedTile(this.tile, {Key? key}) : super(key: key);
 
   @override
   __HightightedTileState createState() => __HightightedTileState();
@@ -206,10 +229,10 @@ class __HightightedTileState extends State<_HightightedTile>
           animation: controller,
           builder: (_, __) {
             return GestureDetector(
-              onTap: widget.onTap,
+              onTap: widget.tile.onTap,
               child: CustomPaint(
                 painter: _TilePainter(
-                    widget.shape, radiusFactor * controller.value + 10),
+                    widget.tile, radiusFactor * controller.value + 10),
               ),
             );
           }),
@@ -219,12 +242,11 @@ class __HightightedTileState extends State<_HightightedTile>
 
 /// _TilePainter is one board tile
 class _TilePainter extends CustomPainter {
-  final _ShapeDescriptor desc;
+  final _TileConfig desc;
   final double highlightRadius; // 0 for no highight
+  // final bool hasPawn;
 
   bool get isHighlighted => highlightRadius != 0;
-
-  Path _path = Path(); // used in hitTesting
 
   _TilePainter(this.desc, this.highlightRadius);
 
@@ -243,12 +265,12 @@ class _TilePainter extends CustomPainter {
 
   @override
   bool? hitTest(Offset position) {
-    return _path.contains(position);
+    return desc.path.contains(position);
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    _path = desc.builder.buildPath(size);
+    final _path = desc.path;
 
     final bounds = _path.getBounds();
 
@@ -281,10 +303,6 @@ class _TilePainter extends CustomPainter {
   bool shouldRepaint(_TilePainter oldDelegate) {
     return oldDelegate.highlightRadius != highlightRadius;
   }
-
-  bool hitTesting(Offset position) {
-    return _path.contains(position);
-  }
 }
 
 class _ShapeDescriptor {
@@ -295,7 +313,13 @@ class _ShapeDescriptor {
 
 abstract class _PathBuilder {
   const _PathBuilder();
+
+  /// returns the path scaled to the given size
   Path buildPath(Size size);
+
+  /// returns the esthetic (scaled) center of the shape
+  /// if Null, the center of the path is used
+  Offset? visualCenter(Size size);
 }
 
 class _ArcSection extends _PathBuilder {
@@ -321,6 +345,11 @@ class _ArcSection extends _PathBuilder {
     path.close();
     return path;
   }
+
+  @override
+  Offset? visualCenter(Size size) {
+    return null;
+  }
 }
 
 // one "horizontal" arc, and three straigth lines
@@ -334,16 +363,17 @@ class _RoundedTrapezoide extends _PathBuilder {
   const _RoundedTrapezoide(this.arcCenter, this.arcRadius, this.arcStartAngle,
       this.arcSweepAngle, this.point);
 
+  double get startRadians => arcStartAngle * pi / 180;
+  double get sweepRadians => arcSweepAngle * pi / 180;
+
   @override
   Path buildPath(Size size) {
     final path = Path();
-    final startAngle = arcStartAngle * pi / 180;
-    final sweepAngle = arcSweepAngle * pi / 180;
     path.arcTo(
         Rect.fromCircle(
             center: arcCenter.resolve(size), radius: arcRadius.resolve(size)),
-        startAngle,
-        sweepAngle,
+        startRadians,
+        sweepRadians,
         true);
     final pt = point.resolve(size);
     // infer dxBottom
@@ -353,6 +383,26 @@ class _RoundedTrapezoide extends _PathBuilder {
     path.close();
 
     return path;
+  }
+
+  @override
+  Offset? visualCenter(Size size) {
+    final path = Path();
+    path.arcTo(
+        Rect.fromCircle(
+            center: arcCenter.resolve(size), radius: arcRadius.resolve(size)),
+        startRadians,
+        sweepRadians,
+        true);
+    path.close();
+    final pointY = point.resolve(size).dy;
+    final roundBounds = path.getBounds();
+    final outX = roundBounds.center.dx;
+    if (pointY > roundBounds.bottom) {
+      return Offset(outX, (pointY + roundBounds.bottom) / 2 - 5);
+    } else {
+      return Offset(outX, (pointY + roundBounds.top) / 2 + 5);
+    }
   }
 }
 
@@ -381,6 +431,11 @@ class _Trapeze extends _PathBuilder {
 
     return path;
   }
+
+  @override
+  Offset? visualCenter(Size size) {
+    return null;
+  }
 }
 
 class _Circle extends _PathBuilder {
@@ -396,5 +451,32 @@ class _Circle extends _PathBuilder {
     final path = Path();
     path.addOval(Rect.fromCircle(center: center, radius: radius));
     return path;
+  }
+
+  @override
+  Offset? visualCenter(Size size) {
+    return null;
+  }
+}
+
+class PawnImage extends StatelessWidget {
+  final Offset center;
+  final double size;
+  const PawnImage(this.center, this.size, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+        top: center.dy - size / 2,
+        left: center.dx - size / 2,
+        width: size,
+        height: size,
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.mode(
+              Color.fromARGB(255, 255, 36, 47), BlendMode.srcIn),
+          child: Image.asset(
+            "lib/images/pawn.png",
+          ),
+        ));
   }
 }
