@@ -1,6 +1,8 @@
 package exercice
 
-// This file is used a source to auto generate dart bindings
+// This file is used as source to auto generate dart bindings
+
+//go:generate ../../../../structgen/structgen -source=models.go -mode=dart:test.dart -mode=itfs-json:gen.go
 
 // Exercice is a sequence of questions
 type Exercice struct {
