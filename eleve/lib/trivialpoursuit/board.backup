@@ -28,8 +28,6 @@ class Board extends StatelessWidget {
   static const outerRingRadius = innerRingRadius + 10;
   static const crossAngularSection = 40.0;
   static const angularSection = (180 - crossAngularSection) / 5;
-
-  /// graphical description of the board
   static const shapes = [
     // center, start
     _ShapeDescriptor(Colors.purple, _Circle(middle, _RL(8))),
@@ -107,7 +105,7 @@ class Board extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sideLength = MediaQuery.of(context).size.shortestSide;
+    final sideLength = MediaQuery.of(context).size.shortestSide * 0.9;
     final size = Size(sideLength, sideLength);
 
     final pawnShape = shapes[pawnTile];
@@ -124,7 +122,7 @@ class Board extends StatelessWidget {
 
                   final isHighlighted = highlights.contains(index);
                   final tile =
-                      _TileConfig(size, path, () => onTap(index), shape.color);
+                      _TileConfig(path, () => onTap(index), shape.color);
                   if (isHighlighted) {
                     // wrap with a glow effect
                     return _HightightedTile(tile);
@@ -158,12 +156,11 @@ class _RL {
 }
 
 class _TileConfig {
-  final Size size; // used to handle gesture detector issues
   final Path path;
   final void Function() onTap;
   final Color color;
 
-  const _TileConfig(this.size, this.path, this.onTap, this.color);
+  const _TileConfig(this.path, this.onTap, this.color);
 }
 
 class _RegularTile extends StatelessWidget {
@@ -173,11 +170,15 @@ class _RegularTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: tile.onTap,
-      child: CustomPaint(
-        size: tile.size,
-        painter: _TilePainter(tile, false),
+    return SizedBox(
+      // pass double.infinity to prevent shrinking of the painter area to 0.
+      width: double.infinity,
+      height: double.infinity,
+      child: GestureDetector(
+        onTap: tile.onTap,
+        child: CustomPaint(
+          painter: _TilePainter(tile, 0),
+        ),
       ),
     );
   }
@@ -196,8 +197,8 @@ class _HightightedTile extends StatefulWidget {
 class __HightightedTileState extends State<_HightightedTile>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
-  static const radiusFactor = 8;
-  static const duration = Duration(milliseconds: 800);
+  static const radiusFactor = 20;
+  static const duration = 1;
 
   @override
   void initState() {
@@ -205,8 +206,8 @@ class __HightightedTileState extends State<_HightightedTile>
 
     controller = AnimationController(
       vsync: this,
-      duration: duration,
-      reverseDuration: duration,
+      duration: const Duration(seconds: duration),
+      reverseDuration: const Duration(seconds: duration),
     );
 
     controller.repeat(reverse: true);
@@ -220,70 +221,34 @@ class __HightightedTileState extends State<_HightightedTile>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        CustomPaint(
-          size: widget.tile.size,
-          painter: _TilePainter(widget.tile, true),
-        ),
-        GestureDetector(
-          onTap: widget.tile.onTap,
-          child: AnimatedBuilder(
-              animation: controller,
-              builder: (_, __) {
-                final radius = radiusFactor * controller.value + 10;
-                return CustomPaint(
-                  size: widget
-                      .tile.size, // required to work around pointer issues
-                  painter: _TileGlow(widget.tile.path, radius),
-                );
-              }),
-        ),
-      ],
+    return SizedBox(
+      // pass double.infinity to prevent shrinking of the painter area to 0.
+      width: double.infinity,
+      height: double.infinity,
+      child: AnimatedBuilder(
+          animation: controller,
+          builder: (_, __) {
+            return GestureDetector(
+              onTap: widget.tile.onTap,
+              child: CustomPaint(
+                painter: _TilePainter(
+                    widget.tile, radiusFactor * controller.value + 10),
+              ),
+            );
+          }),
     );
-  }
-}
-
-class _TileGlow extends CustomPainter {
-  static final color = Colors.white.withOpacity(0.8);
-
-  final Path _path;
-  final double highlightRadius;
-  _TileGlow(this._path, this.highlightRadius);
-
-  @override
-  bool? hitTest(Offset position) {
-    return _path.contains(position);
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.clipPath(_path);
-    canvas.drawPath(
-      _path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = highlightRadius
-        ..color = color
-        ..imageFilter = ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-    );
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_TileGlow oldDelegate) {
-    return oldDelegate.highlightRadius != highlightRadius;
   }
 }
 
 /// _TilePainter is one board tile
 class _TilePainter extends CustomPainter {
   final _TileConfig desc;
-  final bool isHighlighted;
+  final double highlightRadius; // 0 for no highight
+  // final bool hasPawn;
 
-  _TilePainter(this.desc, this.isHighlighted);
+  bool get isHighlighted => highlightRadius != 0;
+
+  _TilePainter(this.desc, this.highlightRadius);
 
   Paint _strokeStyle() {
     return Paint()
@@ -307,17 +272,40 @@ class _TilePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final _path = desc.path;
 
+    final bounds = _path.getBounds();
+
+    canvas.saveLayer(bounds, Paint());
+
     canvas.save();
-    canvas.clipPath(_path); // no to stroke outside the path
+    canvas.clipPath(_path);
     canvas.drawPath(_path, _strokeStyle());
     canvas.drawPath(_path, _fillStyle());
 
-    canvas.restore();
+    if (isHighlighted) {
+      const color = Colors.white;
+
+      final Rect shadowRect = bounds.inflate(highlightRadius);
+      final shadowPaint = Paint()
+        ..blendMode = BlendMode.srcATop
+        ..colorFilter = const ColorFilter.mode(color, BlendMode.srcOut)
+        ..imageFilter = ImageFilter.blur(
+            sigmaX: Shadow.convertRadiusToSigma(highlightRadius),
+            sigmaY: Shadow.convertRadiusToSigma(highlightRadius));
+      canvas.saveLayer(shadowRect, shadowPaint);
+
+      canvas.drawPath(_path, _fillStyle());
+
+      canvas.restore();
+    }
+
+    canvas
+      ..restore()
+      ..restore();
   }
 
   @override
   bool shouldRepaint(_TilePainter oldDelegate) {
-    return oldDelegate.isHighlighted != isHighlighted;
+    return oldDelegate.highlightRadius != highlightRadius;
   }
 }
 

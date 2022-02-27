@@ -1,3 +1,4 @@
+import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ class _GameState extends State<Game> {
   int pawnTile = 0;
 
   void onTapTile(int tile) {
+    print("tapped ${tile}");
     setState(() {
       if (highligthedTiles.contains(tile)) {
         highligthedTiles.remove(tile);
@@ -55,14 +57,14 @@ class _GameState extends State<Game> {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.grey,
-      // child: Center(
-      //   child: AspectRatio(
-      //     aspectRatio: 1,
-      //     child: Board(onTapTile, highligthedTiles, pawnTile),
-      //   ),
-      // ),
-      child: TextButton(
-          onPressed: () => _rollDice(dice.Face.two), child: const Text("Dice")),
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Board(onTapTile, highligthedTiles, pawnTile),
+        ),
+      ),
+      // child: TextButton(
+      //     onPressed: () => _rollDice(dice.Face.two), child: const Text("Dice")),
     );
   }
 }
