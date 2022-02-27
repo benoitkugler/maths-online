@@ -20,8 +20,13 @@ type GameState struct {
 	question showQuestion // the question to answer, or empty
 }
 
+// EventRange describes a list of events yielding
+// a game state.
+// Clients should animate the returned events, then
+// update the state, then process the next range, etc..
 type EventRange struct {
 	Events events
+	State  GameState
 	Start  int
 }
 

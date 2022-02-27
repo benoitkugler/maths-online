@@ -181,27 +181,6 @@ dynamic listEventToJson(List<Event> item) {
 // github.com/benoitkugler/maths-online/trivial-poursuit.events
 typedef Events = List<Event>;
 
-// github.com/benoitkugler/maths-online/trivial-poursuit.EventRange
-class EventRange {
-  final Events events;
-  final int start;
-
-  const EventRange(this.events, this.start);
-}
-
-EventRange eventRangeFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return EventRange(
-      listEventFromJson(json['Events']), intFromJson(json['Start']));
-}
-
-JSON eventRangeToJson(EventRange item) {
-  return {
-    "Events": listEventToJson(item.events),
-    "Start": intToJson(item.start)
-  };
-}
-
 List<bool> listBoolFromJson(dynamic json) {
   return (json as List<dynamic>).map(boolFromJson).toList();
 }
@@ -241,5 +220,28 @@ JSON gameStateToJson(GameState item) {
     "Successes": listListBoolToJson(item.successes),
     "PawnTile": intToJson(item.pawnTile),
     "Player": intToJson(item.player)
+  };
+}
+
+// github.com/benoitkugler/maths-online/trivial-poursuit.EventRange
+class EventRange {
+  final Events events;
+  final GameState state;
+  final int start;
+
+  const EventRange(this.events, this.state, this.start);
+}
+
+EventRange eventRangeFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return EventRange(listEventFromJson(json['Events']),
+      gameStateFromJson(json['State']), intFromJson(json['Start']));
+}
+
+JSON eventRangeToJson(EventRange item) {
+  return {
+    "Events": listEventToJson(item.events),
+    "State": gameStateToJson(item.state),
+    "Start": intToJson(item.start)
   };
 }

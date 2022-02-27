@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:eleve/trivialpoursuit/pawn.dart';
 import 'package:flutter/material.dart';
 
 typedef OnTapTile = void Function(int);
@@ -122,7 +123,7 @@ class Board extends StatelessWidget {
                   }
                   return _RegularTile(tile);
                 }) +
-                [PawnImage(center, sideLength * 0.07)],
+                [PawnImage(center, sideLength * 0.05)],
           )),
     );
   }
@@ -463,27 +464,5 @@ class _Circle extends _PathBuilder {
   @override
   Offset? visualCenter(Size size) {
     return null;
-  }
-}
-
-class PawnImage extends StatelessWidget {
-  final Offset center;
-  final double size;
-  const PawnImage(this.center, this.size, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-        top: center.dy - size / 2,
-        left: center.dx - size / 2,
-        width: size,
-        height: size,
-        child: ColorFiltered(
-          colorFilter: const ColorFilter.mode(
-              Color.fromARGB(255, 255, 36, 47), BlendMode.srcIn),
-          child: Image.asset(
-            "lib/images/pawn.png",
-          ),
-        ));
   }
 }

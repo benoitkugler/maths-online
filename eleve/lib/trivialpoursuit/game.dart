@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
+import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +17,9 @@ class GameController extends StatefulWidget {
 }
 
 class _GameControllerState extends State<GameController> {
-  GameState state = const GameState([], 0, 0);
+  GameState state = const GameState([
+    [false, true, false, true, true]
+  ], 0, 0);
 
   Set<int> highligthedTiles = {};
 
@@ -28,19 +33,21 @@ class _GameControllerState extends State<GameController> {
     });
   }
 
-  void _onPlayerTurn(PlayerTurn event) {
-    // TODO: animation
-    // the actual state modification is handled in TODO
+  Future<void> _onPlayerTurn(PlayerTurn event) async {
+    if (event.player != widget.playerID) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 3),
+      backgroundColor: Theme.of(context).colorScheme.secondary,
+      content: const Text("C'est à toi !"),
+    ));
+    return Future.delayed(const Duration(seconds: 2));
   }
 
   Future<void> _showRoute(Widget content) {
     return Navigator.push<void>(context, MaterialPageRoute(builder: (context) {
-      return Container(
-        color: Colors.grey,
-        child: Center(
-          child: content,
-        ),
-      );
+      return content;
     }));
   }
 
@@ -49,8 +56,32 @@ class _GameControllerState extends State<GameController> {
   Future<void> _onDiceThrow(DiceThrow event) async {
     final face =
         dice.Face.values[event.face - 1]; // event.face is the "natural" face
-    final widget = dice.DiceRoll(face, () => Navigator.pop(context));
-    return _showRoute(widget);
+
+    final widget = dice.DiceRoll(face);
+
+    final completer = Completer<void>();
+
+    final entry = OverlayEntry(
+      builder: (context) => Container(
+        color: Colors.grey.withOpacity(0.5),
+        child: Center(
+          child: NotificationListener<dice.DoneRolling>(
+            child: widget,
+            onNotification: (n) {
+              completer.complete();
+              return true;
+            },
+          ),
+        ),
+      ),
+    );
+
+    final overlayState = Overlay.of(context)!;
+    overlayState.insert(entry);
+
+    final out = completer.future;
+    out.then((value) => entry.remove());
+    return out;
   }
 
   Future<void> _onPossibleMoves(PossibleMoves event) async {
@@ -91,7 +122,7 @@ class _GameControllerState extends State<GameController> {
   // process the given event
   Future<void> _processEvent(Event event) async {
     if (event is PlayerTurn) {
-      _onPlayerTurn(event);
+      return _onPlayerTurn(event);
     } else if (event is DiceThrow) {
       return _onDiceThrow(event);
     } else if (event is PossibleMoves) {
@@ -107,7 +138,7 @@ class _GameControllerState extends State<GameController> {
     }
   }
 
-  void processEvents() async {
+  void processDebugEvents() {
     const List<Event> events = [
       PlayerTurn(0),
       DiceThrow(3),
@@ -116,10 +147,21 @@ class _GameControllerState extends State<GameController> {
       ShowQuestion("Ma belle question", 0),
       PlayerAnswerResult(0, true)
     ];
+    processEventRange(const EventRange(
+        events,
+        GameState([
+          [true, true, true, true, true]
+        ], 1, 0),
+        0));
+  }
 
-    for (var event in events) {
+  void processEventRange(EventRange events) async {
+    for (var event in events.events) {
       await _processEvent(event);
     }
+    setState(() {
+      state = events.state;
+    });
   }
 
   @override
@@ -134,8 +176,14 @@ class _GameControllerState extends State<GameController> {
               child: Board(onTapTile, highligthedTiles, state.pawnTile),
             ),
           ),
-          ElevatedButton(
-              onPressed: processEvents, child: const Text("Lancer !"))
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Pie(state.successes[widget.playerID]),
+              ElevatedButton(
+                  onPressed: processDebugEvents, child: const Text("Lancer !"))
+            ],
+          )
         ],
       ),
       // child: TextButton(

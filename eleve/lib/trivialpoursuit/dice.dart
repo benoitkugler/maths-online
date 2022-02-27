@@ -64,13 +64,14 @@ class _Dice extends StatelessWidget {
 }
 
 class DiceRoll extends StatefulWidget {
-  final void Function() onDone;
   final Face _result;
-  const DiceRoll(this._result, this.onDone, {Key? key}) : super(key: key);
+  const DiceRoll(this._result, {Key? key}) : super(key: key);
 
   @override
   _DiceRollState createState() => _DiceRollState();
 }
+
+class DoneRolling extends Notification {}
 
 class _DiceRollState extends State<DiceRoll> {
   Face currentFace = Face.one;
@@ -91,7 +92,6 @@ class _DiceRollState extends State<DiceRoll> {
     });
     // let the result be seen
     await Future<void>.delayed(const Duration(seconds: 1));
-    widget.onDone();
   }
 
   @override
@@ -102,6 +102,9 @@ class _DiceRollState extends State<DiceRoll> {
 
   @override
   Widget build(BuildContext context) {
+    if (isRolling == false) {
+      DoneRolling().dispatch(context);
+    }
     return _Dice(currentFace, isRolling);
   }
 }
