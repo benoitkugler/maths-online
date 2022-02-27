@@ -7,22 +7,25 @@ import (
 )
 
 func TestEventsJSON(t *testing.T) {
+	dice := newDiceThrow()
+	moves := Board.choices(0, int(dice.Face))
 	payload := EventRange{
 		Events: []event{
 			playerTurn{2},
-			newDiceThrow(),
-			move{3},
+			dice,
+			possibleMoves{moves},
+			move{moves[0]},
 			showQuestion{Question: "Super", Categorie: 0},
-			playerAnswerSuccess{0, true},
-			playerAnswerSuccess{1, false},
-			playerAnswerSuccess{2, true},
+			playerAnswerResult{0, true},
+			playerAnswerResult{1, false},
+			playerAnswerResult{2, true},
 			playerTurn{0},
 			diceThrow{3},
 			move{4},
 			showQuestion{Question: "Super", Categorie: 1},
-			playerAnswerSuccess{0, false},
-			playerAnswerSuccess{1, true},
-			playerAnswerSuccess{2, true},
+			playerAnswerResult{0, false},
+			playerAnswerResult{1, true},
+			playerAnswerResult{2, true},
 			playerTurn{1},
 		},
 		Start: 0,

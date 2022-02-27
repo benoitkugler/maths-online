@@ -29,7 +29,7 @@ func (out *eventWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.data = data
 	case 2:
-		var data playerAnswerSuccess
+		var data playerAnswerResult
 		err = json.Unmarshal(wr.Data, &data)
 		out.data = data
 	case 3:
@@ -37,6 +37,10 @@ func (out *eventWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.data = data
 	case 4:
+		var data possibleMoves
+		err = json.Unmarshal(wr.Data, &data)
+		out.data = data
+	case 5:
 		var data showQuestion
 		err = json.Unmarshal(wr.Data, &data)
 		out.data = data
@@ -58,12 +62,14 @@ func (item eventWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 0, Data: data}
 	case move:
 		wr = wrapper{Kind: 1, Data: data}
-	case playerAnswerSuccess:
+	case playerAnswerResult:
 		wr = wrapper{Kind: 2, Data: data}
 	case playerTurn:
 		wr = wrapper{Kind: 3, Data: data}
-	case showQuestion:
+	case possibleMoves:
 		wr = wrapper{Kind: 4, Data: data}
+	case showQuestion:
+		wr = wrapper{Kind: 5, Data: data}
 
 	default:
 		panic("exhaustive switch")

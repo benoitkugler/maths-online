@@ -11,13 +11,13 @@ import (
 
 // GameState represents the state of the game at one point in time
 type GameState struct {
-	Question showQuestion // the question to answer, or empty
-
 	Successes []success // per-player advance
+	PawnTile  int       // position of the pawn
+	Player    int       // the player currently playing (choosing where to move)
 
-	PawnTile int // position on the pawn
-	Player   int
-	Dice     uint8 // 0 means no current dice result
+	// not exported to the client
+
+	question showQuestion // the question to answer, or empty
 }
 
 type EventRange struct {
@@ -46,6 +46,7 @@ func (evs *events) UnmarshalJSON(data []byte) error {
 }
 
 // event is an action advancing the game
+// or requiring to update the UI
 type event interface {
 	apply(*GameState)
 }
@@ -59,7 +60,7 @@ type playerTurn struct {
 // also remove the current question
 func (p playerTurn) apply(state *GameState) {
 	state.Player = p.Player
-	state.Question = showQuestion{}
+	state.question = showQuestion{}
 }
 
 // diceThrow represents the result obtained
@@ -74,9 +75,14 @@ func newDiceThrow() diceThrow {
 }
 
 // apply overwrite the current dice result
-func (dice diceThrow) apply(state *GameState) {
-	state.Dice = dice.Face
+func (dice diceThrow) apply(state *GameState) {}
+
+// possibleMoves is emitted after a diceThrow
+type possibleMoves struct {
+	Tiles []int // the tile indices where the clurrent player may move
 }
+
+func (possibleMoves) apply(state *GameState) {}
 
 // move is emitted when a player choose to move the
 // pawn
@@ -87,7 +93,6 @@ type move struct {
 // also clear the current dice
 func (m move) apply(state *GameState) {
 	state.PawnTile = int(m.Tile)
-	state.Dice = 0
 }
 
 // showQuestion is emitted when a player
@@ -98,18 +103,18 @@ type showQuestion struct {
 }
 
 func (qu showQuestion) apply(state *GameState) {
-	state.Question = qu
+	state.question = qu
 }
 
-// playerAnswerSuccess indicates
+// playerAnswerResult indicates
 // if the player has answered correctly to the
 // current question
-type playerAnswerSuccess struct {
+type playerAnswerResult struct {
 	Player  int
 	Success bool
 }
 
-func (pa playerAnswerSuccess) apply(state *GameState) {
+func (pa playerAnswerResult) apply(state *GameState) {
 	// wrong answers remove the potential previous success
-	state.Successes[pa.Player][state.Question.Categorie] = pa.Success
+	state.Successes[pa.Player][state.question.Categorie] = pa.Success
 }

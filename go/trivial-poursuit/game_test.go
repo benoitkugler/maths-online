@@ -16,8 +16,6 @@ func TestGame_currentState(t *testing.T) {
 			},
 			GameState{
 				Successes: make([]success, 3),
-				Dice:      2,
-				// dice is reset on move
 			},
 		},
 		{
@@ -39,16 +37,16 @@ func TestGame_currentState(t *testing.T) {
 				newDiceThrow(),
 				move{3},
 				showQuestion{Question: "Super", Categorie: 0},
-				playerAnswerSuccess{0, true},
-				playerAnswerSuccess{1, false},
-				playerAnswerSuccess{2, true},
+				playerAnswerResult{0, true},
+				playerAnswerResult{1, false},
+				playerAnswerResult{2, true},
 				playerTurn{0},
 				diceThrow{3},
 				move{4},
 				showQuestion{Question: "Super", Categorie: 1},
-				playerAnswerSuccess{0, false},
-				playerAnswerSuccess{1, true},
-				playerAnswerSuccess{2, true},
+				playerAnswerResult{0, false},
+				playerAnswerResult{1, true},
+				playerAnswerResult{2, true},
 				playerTurn{1},
 			},
 			GameState{

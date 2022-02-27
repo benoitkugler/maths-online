@@ -78,7 +78,7 @@ class _DiceRollState extends State<DiceRoll> {
 
   void roll() async {
     const choices = Face.values;
-    for (var i = 10; i < 50; i++) {
+    for (var i = 10; i < 40; i++) {
       await Future<void>.delayed(Duration(
           milliseconds: 20 + exp(i.toDouble() * log(400) / 50).round()));
       setState(() {
@@ -89,6 +89,7 @@ class _DiceRollState extends State<DiceRoll> {
       currentFace = widget._result;
       isRolling = false;
     });
+    // let the result be seen
     await Future<void>.delayed(const Duration(seconds: 1));
     widget.onDone();
   }

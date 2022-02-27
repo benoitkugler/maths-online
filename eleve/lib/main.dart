@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Bienvenue !'),
           ),
-          body: const Center(child: Game())),
+          body: const Center(child: GameController(0))),
     );
   }
 }

@@ -5,15 +5,6 @@ import 'package:flutter/material.dart';
 
 typedef OnTapTile = void Function(int);
 
-Color darken(Color color, [double amount = .1]) {
-  assert(amount >= 0 && amount <= 1);
-
-  final hsl = HSLColor.fromColor(color);
-  final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
-
-  return hslDark.toColor();
-}
-
 class Board extends StatelessWidget {
   static const middle = _RP(50, 50);
 

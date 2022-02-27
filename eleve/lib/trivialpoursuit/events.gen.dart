@@ -42,21 +42,21 @@ bool boolFromJson(dynamic json) => json as bool;
 
 dynamic boolToJson(bool item) => item;
 
-// github.com/benoitkugler/maths-online/trivial-poursuit.playerAnswerSuccess
-class PlayerAnswerSuccess implements Event {
+// github.com/benoitkugler/maths-online/trivial-poursuit.playerAnswerResult
+class PlayerAnswerResult implements Event {
   final int player;
   final bool success;
 
-  const PlayerAnswerSuccess(this.player, this.success);
+  const PlayerAnswerResult(this.player, this.success);
 }
 
-PlayerAnswerSuccess playerAnswerSuccessFromJson(dynamic json_) {
+PlayerAnswerResult playerAnswerResultFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return PlayerAnswerSuccess(
+  return PlayerAnswerResult(
       intFromJson(json['Player']), boolFromJson(json['Success']));
 }
 
-JSON playerAnswerSuccessToJson(PlayerAnswerSuccess item) {
+JSON playerAnswerResultToJson(PlayerAnswerResult item) {
   return {
     "Player": intToJson(item.player),
     "Success": boolToJson(item.success)
@@ -77,6 +77,30 @@ PlayerTurn playerTurnFromJson(dynamic json_) {
 
 JSON playerTurnToJson(PlayerTurn item) {
   return {"Player": intToJson(item.player)};
+}
+
+List<int> listIntFromJson(dynamic json) {
+  return (json as List<dynamic>).map(intFromJson).toList();
+}
+
+dynamic listIntToJson(List<int> item) {
+  return item.map(intToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/trivial-poursuit.possibleMoves
+class PossibleMoves implements Event {
+  final List<int> tiles;
+
+  const PossibleMoves(this.tiles);
+}
+
+PossibleMoves possibleMovesFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PossibleMoves(listIntFromJson(json['Tiles']));
+}
+
+JSON possibleMovesToJson(PossibleMoves item) {
+  return {"Tiles": listIntToJson(item.tiles)};
 }
 
 String stringFromJson(dynamic json) => json as String;
@@ -116,10 +140,12 @@ Event eventFromJson(dynamic json_) {
     case 1:
       return moveFromJson(data);
     case 2:
-      return playerAnswerSuccessFromJson(data);
+      return playerAnswerResultFromJson(data);
     case 3:
       return playerTurnFromJson(data);
     case 4:
+      return possibleMovesFromJson(data);
+    case 5:
       return showQuestionFromJson(data);
     default:
       throw ("unexpected type");
@@ -131,12 +157,14 @@ JSON eventToJson(Event item) {
     return {'Kind': 0, 'Data': diceThrowToJson(item)};
   } else if (item is Move) {
     return {'Kind': 1, 'Data': moveToJson(item)};
-  } else if (item is PlayerAnswerSuccess) {
-    return {'Kind': 2, 'Data': playerAnswerSuccessToJson(item)};
+  } else if (item is PlayerAnswerResult) {
+    return {'Kind': 2, 'Data': playerAnswerResultToJson(item)};
   } else if (item is PlayerTurn) {
     return {'Kind': 3, 'Data': playerTurnToJson(item)};
+  } else if (item is PossibleMoves) {
+    return {'Kind': 4, 'Data': possibleMovesToJson(item)};
   } else if (item is ShowQuestion) {
-    return {'Kind': 4, 'Data': showQuestionToJson(item)};
+    return {'Kind': 5, 'Data': showQuestionToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -195,32 +223,23 @@ dynamic listListBoolToJson(List<Success> item) {
 
 // github.com/benoitkugler/maths-online/trivial-poursuit.GameState
 class GameState {
-  final ShowQuestion question;
   final List<Success> successes;
   final int pawnTile;
   final int player;
-  final int dice;
 
-  const GameState(
-      this.question, this.successes, this.pawnTile, this.player, this.dice);
+  const GameState(this.successes, this.pawnTile, this.player);
 }
 
 GameState gameStateFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return GameState(
-      showQuestionFromJson(json['Question']),
-      listListBoolFromJson(json['Successes']),
-      intFromJson(json['PawnTile']),
-      intFromJson(json['Player']),
-      intFromJson(json['Dice']));
+  return GameState(listListBoolFromJson(json['Successes']),
+      intFromJson(json['PawnTile']), intFromJson(json['Player']));
 }
 
 JSON gameStateToJson(GameState item) {
   return {
-    "Question": showQuestionToJson(item.question),
     "Successes": listListBoolToJson(item.successes),
     "PawnTile": intToJson(item.pawnTile),
-    "Player": intToJson(item.player),
-    "Dice": intToJson(item.dice)
+    "Player": intToJson(item.player)
   };
 }
