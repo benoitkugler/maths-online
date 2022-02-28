@@ -53,7 +53,7 @@ class Board extends StatelessWidget {
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             290 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Color(0xFFFBC02D),
+        Colors.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             290 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
