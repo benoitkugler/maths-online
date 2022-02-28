@@ -1,7 +1,7 @@
 // Package trivialpoursuit implements a backend for
 // a multi player trivial poursuit game, where questions
 // are (short) maths questions.
-package trivialpoursuit
+package game
 
 import "sort"
 
@@ -10,28 +10,52 @@ import "sort"
 
 const nbSquares = 19
 
-// Board is the Trivial-Poursuit board game shape.
-var Board = board{ // the first tile is in the center
-	{1: true, nbSquares - 1: true},
-	{0: true, 2: true},
-	{1: true, 3: true},
-	{2: true, 4: true},
-	4: {3: true, 5: true, nbSquares - 4: true},
-	{4: true, 6: true},
-	{5: true, 7: true},
-	{6: true, 8: true},
-	{7: true, 9: true},
-	{8: true, 10: true},
-	10: {11: true, 9: true, nbSquares - 3: true},
-	{10: true, 12: true},
-	{11: true, 13: true},
-	{12: true, 14: true},
-	{13: true, 15: true},
-	15: {14: true, 4: true},
-	16: {17: true, 10: true},
-	{16: true, 18: true},
-	{17: true, 0: true},
-}
+var (
+	// Board is the Trivial-Poursuit board game shape.
+	Board = board{ // the first tile is in the center
+		{1: true, nbSquares - 1: true},
+		{0: true, 2: true},
+		{1: true, 3: true},
+		{2: true, 4: true},
+		4: {3: true, 5: true, nbSquares - 4: true},
+		{4: true, 6: true},
+		{5: true, 7: true},
+		{6: true, 8: true},
+		{7: true, 9: true},
+		{8: true, 10: true},
+		10: {11: true, 9: true, nbSquares - 3: true},
+		{10: true, 12: true},
+		{11: true, 13: true},
+		{12: true, 14: true},
+		{13: true, 15: true},
+		15: {14: true, 4: true},
+		16: {17: true, 10: true},
+		{16: true, 18: true},
+		{17: true, 0: true},
+	}
+
+	categories = [nbSquares]categorie{
+		purple,
+		green,
+		blue,
+		green,
+		blue,
+		green,
+		orange,
+		purple,
+		yellow,
+		orange,
+		yellow,
+		orange,
+		yellow,
+		purple,
+		orange,
+		green,
+		blue,
+		yellow,
+		blue,
+	}
+)
 
 // board is a trivial-poursuit board, stored as an adjency matrix
 // even if board[i][i] is true, it is ignored.
@@ -48,10 +72,22 @@ func (b board) adjacents(pos int) (out []int) {
 	return out
 }
 
+type tileSet map[int]bool
+
+// list returns a sorted slice, for reproducibility
+func (ts tileSet) list() []int {
+	var out []int
+	for pos := range ts {
+		out = append(out, pos)
+	}
+	sort.Ints(out)
+	return out
+}
+
 // choices returns the square indices where the player located at `currentPos`
 // may advances with `nbMoves`.
 // In this game, you can go back when you have made one step.
-func (b board) choices(currentPos, nbMoves int) []int {
+func (b board) choices(currentPos, nbMoves int) tileSet {
 	type target struct {
 		pos    int
 		origin int // -1 for no constraint
@@ -79,17 +115,10 @@ func (b board) choices(currentPos, nbMoves int) []int {
 	}
 
 	// in case a square is reachable from two paths, remove duplicates
-	uniqueSquares := make(map[int]bool)
+	out := make(tileSet)
 	for _, t := range targets {
-		uniqueSquares[t.pos] = true
+		out[t.pos] = true
 	}
-
-	// convert back to a sorted slice (for reproducibility)
-	var out []int
-	for pos := range uniqueSquares {
-		out = append(out, pos)
-	}
-	sort.Ints(out)
 
 	return out
 }

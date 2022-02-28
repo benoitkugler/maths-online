@@ -1,7 +1,4 @@
-// Package trivialpoursuit implements a backend for
-// a multi player trivial poursuit game, where questions
-// are (short) maths questions.
-package trivialpoursuit
+package game
 
 import (
 	"reflect"
@@ -64,7 +61,7 @@ func Test_board_choices(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if got := tt.b.choices(tt.args.currentPos, tt.args.nbMoves); !reflect.DeepEqual(got, tt.want) {
+		if got := tt.b.choices(tt.args.currentPos, tt.args.nbMoves).list(); !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("board.choices() = %v, want %v", got, tt.want)
 		}
 	}
@@ -82,7 +79,7 @@ func TestBoardMoves(t *testing.T) {
 		{2, 3, []int{5, 15, nbSquares - 1}},
 	}
 	for _, tt := range tests {
-		if got := Board.choices(tt.pos, tt.nbMoves); !reflect.DeepEqual(got, tt.want) {
+		if got := Board.choices(tt.pos, tt.nbMoves).list(); !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("Board.choices() = %v, want %v", got, tt.want)
 		}
 	}
