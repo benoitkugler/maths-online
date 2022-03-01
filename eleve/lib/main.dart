@@ -19,8 +19,17 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
           appBar: AppBar(
             title: const Text('Bienvenue !'),
+            actions: [
+              TextButton(
+                onPressed: () {},
+                child: const Text("DEBUG"),
+              )
+            ],
           ),
-          body: const Center(child: GameController(0))),
+          body: const Center(
+            child: GameController(),
+            // child: QuestionRoute(ShowQuestion("Test", Categorie.orange)),
+          )),
     );
   }
 }

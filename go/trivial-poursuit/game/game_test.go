@@ -80,7 +80,7 @@ func TestGameState_nextPlayer(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
-	g := NewGame()
+	g := NewGame(0)
 	p1 := g.AddPlayer()
 	if p1 != 0 {
 		t.Fatalf("unexpected player id %d", p1)
@@ -99,8 +99,7 @@ func TestStart(t *testing.T) {
 }
 
 func TestEmitQuestion(t *testing.T) {
-	QuestionDurationLimit = time.Second / 2
-	g := NewGame()
+	g := NewGame(time.Second / 2)
 	g.AddPlayer()
 
 	if g.QuestionTimeout.Stop() {
@@ -128,7 +127,7 @@ outer:
 }
 
 func TestHandleClientEvent(t *testing.T) {
-	g := NewGame()
+	g := NewGame(0)
 	g.AddPlayer()
 	g.startTurn()
 

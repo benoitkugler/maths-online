@@ -3,7 +3,9 @@
 // are (short) maths questions.
 package game
 
-import "sort"
+import (
+	"sort"
+)
 
 // To support arbitrary trivial poursuit board,
 // we model it by a graph
@@ -35,25 +37,25 @@ var (
 	}
 
 	categories = [nbSquares]categorie{
-		purple,
-		green,
-		blue,
-		green,
-		blue,
-		green,
-		orange,
-		purple,
-		yellow,
-		orange,
-		yellow,
-		orange,
-		yellow,
-		purple,
-		orange,
-		green,
-		blue,
-		yellow,
-		blue,
+		Purple,
+		Green,
+		Blue,
+		Green,
+		Blue,
+		Green,
+		Orange,
+		Purple,
+		Yellow,
+		Orange,
+		Yellow,
+		Orange,
+		Yellow,
+		Purple,
+		Orange,
+		Green,
+		Blue,
+		Yellow,
+		Blue,
 	}
 )
 
@@ -94,7 +96,7 @@ func (b board) choices(currentPos, nbMoves int) tileSet {
 	}
 	// start with the current pos, with no constraint
 	var (
-		targets = []target{{pos: currentPos}}
+		targets = []target{{pos: currentPos, origin: -1}}
 		buffer  []target
 	)
 	for i := 0; i < nbMoves; i++ { // one step at a time

@@ -26,6 +26,11 @@ func Test_board_adjacents(t *testing.T) {
 			1,
 			[]int{0, 2, 3},
 		},
+		{
+			Board,
+			18,
+			[]int{0, 17},
+		},
 	}
 	for _, tt := range tests {
 		if gotOut := tt.b.adjacents(tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
@@ -74,6 +79,7 @@ func TestBoardMoves(t *testing.T) {
 		nbMoves int
 		want    []int
 	}{
+		{18, 2, []int{1, 16}},
 		{0, 1, []int{1, nbSquares - 1}},
 		{4, 1, []int{3, 5, 15}},
 		{2, 3, []int{5, 15, nbSquares - 1}},

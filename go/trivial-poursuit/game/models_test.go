@@ -10,28 +10,28 @@ import (
 func TestEventsJSON(t *testing.T) {
 	dice := newDiceThrow()
 	moves := Board.choices(0, int(dice.Face)).list()
-	payload := GameEvents{
-		Events: []gameEvent{
+	payload := EventList{{
+		Events: []GameEvent{
 			gameStart{},
-			playerTurn{2},
+			playerTurn{2, "Haha"},
 			dice,
-			possibleMoves{moves},
+			possibleMoves{2, moves},
 			move{moves[0]},
 			playerLeft{1},
 			showQuestion{Question: "Super", Categorie: 0},
 			playerAnswerResult{0, true},
 			playerAnswerResult{1, false},
 			playerAnswerResult{2, true},
-			playerTurn{0},
+			playerTurn{0, ""},
 			diceThrow{3},
 			move{4},
 			showQuestion{Question: "Super", Categorie: 1},
 			playerAnswerResult{0, false},
 			playerAnswerResult{1, true},
 			playerAnswerResult{2, true},
-			playerTurn{1},
+			playerTurn{1, ""},
 		},
-	}
+	}}
 
 	b, err := json.MarshalIndent(payload, "", " ")
 	if err != nil {
@@ -39,7 +39,7 @@ func TestEventsJSON(t *testing.T) {
 	}
 	fmt.Println(string(b))
 
-	err = json.Unmarshal(b, &GameEvents{})
+	err = json.Unmarshal(b, &[]GameEvents{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,10 +61,10 @@ func TestGameStateJSON(t *testing.T) {
 }
 
 func TestClientEventJSON(t *testing.T) {
-	for _, event := range []clientEvent{
+	for _, event := range []clientEventData{
 		move{4},
 		answer{"ma réponse"},
-		Ping("Test"),
+		Ping{"Test"},
 	} {
 		paylod := ClientEvent{Event: event, Player: 0}
 		b, err := json.Marshal(paylod)

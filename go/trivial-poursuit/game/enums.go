@@ -4,11 +4,11 @@ package game
 type categorie uint8
 
 const (
-	purple categorie = iota // purple
-	green                   // green
-	orange                  // orange
-	yellow                  // yellow
-	blue                    // blue
+	Purple categorie = iota // purple
+	Green                   // green
+	Orange                  // orange
+	Yellow                  // yellow
+	Blue                    // blue
 
 	nbCategories // the number of categories a player should complete
 )

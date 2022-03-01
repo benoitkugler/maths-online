@@ -14,8 +14,6 @@ import (
 // PlayerID identifies a player in the game
 type PlayerID = int
 
-var QuestionDurationLimit = time.Minute
-
 var DebugLogger = log.New(os.Stdout, "game-debug:", log.LstdFlags)
 
 type Game struct {
@@ -32,11 +30,18 @@ type Game struct {
 	question       showQuestion // the question to answer, or empty
 
 	dice diceThrow // last dice thrown
+
+	questionDurationLimit time.Duration
 }
 
 // NewGame returns an empty game, waiting for players to be
 // added.
-func NewGame() *Game {
+// `questionTimeout` is an optionnal parameter which default to one minute
+func NewGame(questionTimeout time.Duration) *Game {
+	if questionTimeout == 0 {
+		questionTimeout = time.Minute
+	}
+
 	timer := time.NewTimer(time.Second)
 	timer.Stop()
 	return &Game{
@@ -44,10 +49,14 @@ func NewGame() *Game {
 			Successes: make(map[int]*success),
 			Player:    -1,
 		},
-		currentAnswers:  make(map[int]playerAnswerResult),
-		QuestionTimeout: timer,
+		currentAnswers:        make(map[int]playerAnswerResult),
+		QuestionTimeout:       timer,
+		questionDurationLimit: questionTimeout,
 	}
 }
+
+// NumberPlayers return the number of players actually in the game.
+func (gs GameState) NumberPlayers() int { return len(gs.Successes) }
 
 // AddPlayer add a player to the game and returns
 // its id.
@@ -86,14 +95,17 @@ func (g *Game) nextPlayer() PlayerID {
 
 // convenient method to start a new turn,
 // launch the dice, and compute the possible moves
-func (g *Game) startTurn() events {
+func (g *Game) startTurn() GameEvents {
 	g.Player = g.nextPlayer()
 	g.dice = newDiceThrow()
 	choices := Board.choices(g.PawnTile, int(g.dice.Face)).list()
-	return events{
-		playerTurn{g.Player},
-		g.dice,
-		possibleMoves{choices},
+	return GameEvents{
+		Events: Events{
+			playerTurn{g.Player, g.playerName(g.Player)},
+			g.dice,
+			possibleMoves{CurrentPlayer: g.Player, Tiles: choices},
+		},
+		State: g.GameState,
 	}
 }
 
@@ -101,36 +113,34 @@ func (g *Game) startTurn() events {
 // registred so far, which must not be empty.
 func (g *Game) StartGame() GameEvents {
 	evs := g.startTurn()
-	return GameEvents{
-		Events: append(events{gameStart{}}, evs...),
-		State:  g.GameState,
-	}
+	evs.Events = append(Events{gameStart{}}, evs.Events...)
+	return evs
 }
 
 // HandleClientEvent handles the given `event`, or returns
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).
 // Caller should check and ignore empty return values.
-func (g *Game) HandleClientEvent(event ClientEvent) (GameEvents, error) {
+func (g *Game) HandleClientEvent(event ClientEvent) (EventList, error) {
 	switch eventData := event.Event.(type) {
 	case move:
 		evs, err := g.handleMove(eventData, event.Player)
 		if err != nil {
-			return GameEvents{}, err
+			return nil, err
 		}
-		return GameEvents{Events: evs, State: g.GameState}, nil
+		return EventList{{Events: evs, State: g.GameState}}, nil
 	case answer:
 		evs := g.handleAnswer(eventData, event.Player)
-		return GameEvents{Events: evs, State: g.GameState}, nil
+		return evs, nil
 	case Ping:
 		// safely ignore the event
-		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData)
-		return GameEvents{}, nil
+		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData.Info)
+		return nil, nil
 	}
-	return GameEvents{}, fmt.Errorf("invalid client event %T", event.Event)
+	return nil, fmt.Errorf("invalid client event %T", event.Event)
 }
 
-func (g *Game) handleMove(m move, player PlayerID) (events, error) {
+func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	// check if the player is allowed to move
 	if g.Player != player {
 		return nil, fmt.Errorf("player %d is not allowed to move during turn of player %d", player, g.Player)
@@ -144,13 +154,13 @@ func (g *Game) handleMove(m move, player PlayerID) (events, error) {
 	g.PawnTile = m.Tile
 	g.dice = diceThrow{}
 	question := g.EmitQuestion()
-	return events{
+	return Events{
 		m, // now valid
 		question,
 	}, nil
 }
 
-func (g *Game) handleAnswer(a answer, player PlayerID) events {
+func (g *Game) handleAnswer(a answer, player PlayerID) EventList {
 	isValid := g.isAnswerValid(a)
 	g.Successes[player][g.question.Categorie] = isValid
 	g.currentAnswers[player] = playerAnswerResult{
@@ -171,17 +181,13 @@ func (gs *Game) EmitQuestion() showQuestion {
 	}
 	gs.question = question
 
-	gs.QuestionTimeout.Reset(QuestionDurationLimit)
+	gs.QuestionTimeout.Reset(gs.questionDurationLimit)
 
 	return question
 }
 
-func (gs *Game) QuestionTimeoutAction() GameEvents {
-	evs := gs.concludeTurn(true)
-	return GameEvents{
-		Events: evs,
-		State:  gs.GameState,
-	}
+func (gs *Game) QuestionTimeoutAction() EventList {
+	return gs.concludeTurn(true)
 }
 
 // isAnswerValid validdate `a` against the current question
@@ -190,26 +196,31 @@ func (gs *Game) isAnswerValid(a answer) bool {
 	return a.Content == fmt.Sprintf("%d", gs.question.Categorie)
 }
 
-func (gs *Game) concludeTurn(force bool) events {
+func (gs *Game) concludeTurn(force bool) EventList {
 	evs := gs.endQuestion(force)
 	if len(evs) == 0 { // nothing has changed
 		return nil
 	}
 
+	out := EventList{{Events: evs, State: gs.GameState}}
+
 	// check for winners
 	winners := gs.winners()
 	if len(winners) != 0 { // end the game
-		evs = append(evs, gameEnd{gs.playerNames(winners)})
+		out = append(out, GameEvents{
+			Events: Events{gameEnd{gs.playerNames(winners)}},
+			State:  gs.GameState,
+		})
 	} else { // start a new turn
-		evs = append(evs, gs.startTurn()...)
+		out = append(out, gs.startTurn())
 	}
 
-	return evs
+	return out
 }
 
 // endQuestion close the current question
 // if `force` is false, it only does so if every player have answered
-func (gs *Game) endQuestion(force bool) events {
+func (gs *Game) endQuestion(force bool) Events {
 	hasAllAnswered := true
 	for player := range gs.Successes {
 		if _, has := gs.currentAnswers[player]; !has {
@@ -222,7 +233,7 @@ func (gs *Game) endQuestion(force bool) events {
 	}
 
 	// return the answers event
-	var out events
+	var out Events
 	for _, re := range gs.currentAnswers {
 		out = append(out, re)
 	}
@@ -253,10 +264,14 @@ func (gs *Game) winners() (out []int) {
 	return out
 }
 
-func (gs *Game) playerNames(players []int) []string {
+func (gs *Game) playerName(player PlayerID) string {
+	return fmt.Sprintf("Joueur %d", player+1)
+}
+
+func (gs *Game) playerNames(players []PlayerID) []string {
 	out := make([]string, len(players))
 	for i, id := range players {
-		out[i] = fmt.Sprintf("Joueur %d", id+1)
+		out[i] = gs.playerName(id)
 	}
 	return out
 }

@@ -23,17 +23,28 @@ class Pie extends StatelessWidget {
   }
 }
 
+/// map question categories to colors
+
+extension CategorieColor on Categorie {
+  Color get color {
+    switch (this) {
+      case Categorie.purple:
+        return Colors.purple;
+      case Categorie.green:
+        return Colors.green;
+      case Categorie.orange:
+        return Colors.orange;
+      case Categorie.yellow:
+        return Colors.yellow;
+      case Categorie.blue:
+        return Colors.blue;
+    }
+  }
+}
+
 class _PiePainter extends CustomPainter {
   final Success success;
 
-  /// map question categories to colors
-  static const categoriesColors = [
-    Colors.purple,
-    Colors.green,
-    Colors.orange,
-    Colors.yellow,
-    Colors.blue,
-  ];
   static const blurRadius = 6.0;
 
   _PiePainter(this.success);
@@ -41,7 +52,7 @@ class _PiePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final radius = size.shortestSide;
-    final nbSections = categoriesColors.length;
+    final nbSections = Categorie.values.length;
     final angularSection = 2 * pi / nbSections;
     final center = size.center(Offset.zero);
 
@@ -66,25 +77,25 @@ class _PiePainter extends CustomPainter {
           ..style = PaintingStyle.fill);
 
     final arcRect = Rect.fromCircle(center: center, radius: radius);
-    for (var i = 0; i < nbSections; i++) {
+    for (var i in Categorie.values) {
       canvas.drawArc(
           arcRect,
-          i * angularSection,
+          i.index * angularSection,
           angularSection,
           true,
           Paint()
             ..style = PaintingStyle.stroke
             ..color = Colors.black.withOpacity(0.5)
             ..strokeWidth = 1);
-      if (success[i]) {
+      if (success[i.index]) {
         canvas.drawArc(
             arcRect,
-            i * angularSection,
+            i.index * angularSection,
             angularSection,
             true,
             Paint()
               ..style = PaintingStyle.fill
-              ..color = categoriesColors[i].withOpacity(0.8));
+              ..color = i.color.withOpacity(0.8));
       }
     }
 

@@ -16,44 +16,44 @@ type GameState struct {
 	Player    int                   // the player currently playing (choosing where to move)
 }
 
+type EventList = []GameEvents
+
 // GameEvents describes a list of events yielding
 // a game state.
 // Clients should animate the returned events and
 // update the state.
 type GameEvents struct {
-	Events events
+	Events Events
 	State  GameState
 }
 
-// IsEmpty returns `true` if no events are actually emitted.
-func (ge GameEvents) IsEmpty() bool { return len(ge.Events) == 0 }
+type Events []GameEvent
 
-type events []gameEvent
-
-func (evs events) MarshalJSON() ([]byte, error) {
-	tmp := make([]gameEventWrapper, len(evs))
+func (evs Events) MarshalJSON() ([]byte, error) {
+	tmp := make([]GameEventWrapper, len(evs))
 	for i, v := range evs {
-		tmp[i] = gameEventWrapper{Data: v}
+		tmp[i] = GameEventWrapper{Data: v}
 	}
 	return json.Marshal(tmp)
 }
 
-func (evs *events) UnmarshalJSON(data []byte) error {
-	var tmp []gameEventWrapper
+func (evs *Events) UnmarshalJSON(data []byte) error {
+	var tmp []GameEventWrapper
 	err := json.Unmarshal(data, &tmp)
-	*evs = make(events, len(tmp))
+	*evs = make(Events, len(tmp))
 	for i, v := range tmp {
 		(*evs)[i] = v.Data
 	}
 	return err
 }
 
-// gameEvent is an action (created by the server) advancing the game
+// GameEvent is an action (created by the server) advancing the game
 // or requiring to update the UI
-type gameEvent interface {
+type GameEvent interface {
 	isGameEvent()
 }
 
+func (PlayerJoin) isGameEvent()         {}
 func (gameStart) isGameEvent()          {}
 func (playerLeft) isGameEvent()         {}
 func (playerTurn) isGameEvent()         {}
@@ -64,6 +64,10 @@ func (showQuestion) isGameEvent()       {}
 func (playerAnswerResult) isGameEvent() {}
 func (gameEnd) isGameEvent()            {}
 
+type PlayerJoin struct {
+	Player PlayerID
+}
+
 type gameStart struct{}
 
 type playerLeft struct {
@@ -73,7 +77,8 @@ type playerLeft struct {
 // playerTurn is emitted at the start of
 // a player
 type playerTurn struct {
-	Player PlayerID
+	Player     PlayerID
+	PlayerName string
 }
 
 // diceThrow represents the result obtained
@@ -95,7 +100,8 @@ type move struct {
 
 // possibleMoves is emitted after a diceThrow
 type possibleMoves struct {
-	Tiles []int // the tile indices where the clurrent player may move
+	CurrentPlayer PlayerID // the player allowed to play
+	Tiles         []int    // the tile indices where the current player may move
 }
 
 // showQuestion is emitted when a player
@@ -118,8 +124,8 @@ type gameEnd struct {
 	Winners []string
 }
 
-// clientEvent is send by a client to the game server
-type clientEvent interface {
+// clientEventData is send by a client to the game server
+type clientEventData interface {
 	isClientEvent()
 }
 
@@ -132,25 +138,28 @@ type answer struct {
 	Content string
 }
 
-type Ping string // DEBUG
+// DEBUG
+type Ping struct {
+	Info string
+}
 
 type ClientEvent struct {
-	Event  clientEvent
+	Event  clientEventData
 	Player PlayerID
 }
 
 func (ev ClientEvent) MarshalJSON() ([]byte, error) {
 	tmp := struct {
-		Event clientEventWrapper
+		Event clientEventDataWrapper
 	}{
-		Event: clientEventWrapper{ev.Event},
+		Event: clientEventDataWrapper{ev.Event},
 	}
 	return json.Marshal(tmp)
 }
 
 func (ev *ClientEvent) UnmarshalJSON(data []byte) error {
 	var tmp struct {
-		Event clientEventWrapper
+		Event clientEventDataWrapper
 	}
 	err := json.Unmarshal(data, &tmp)
 	ev.Event = tmp.Event.Data

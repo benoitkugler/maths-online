@@ -8,37 +8,46 @@ enum Face { one, two, three }
 class _Dice extends StatelessWidget {
   final Face face;
   final bool isRolling;
-  const _Dice(this.face, this.isRolling, {Key? key}) : super(key: key);
+  final bool isDisabled;
+  final double faceSize;
+  const _Dice(this.faceSize, this.face, this.isRolling, this.isDisabled,
+      {Key? key})
+      : super(key: key);
 
-  static const faceSize = 100.0;
-  static const bulletSize = faceSize * 0.15;
+  double get bulletSize => faceSize * 0.15;
 
   /// returns top left offset for positionned bullets
-  static const faces = [
-    [Offset(faceSize / 2 - bulletSize / 2, faceSize / 2 - bulletSize / 2)],
-    [
-      Offset(faceSize / 4 - bulletSize / 2, faceSize / 4 - bulletSize / 2),
-      Offset(
-          faceSize * 3 / 4 - bulletSize / 2, faceSize * 3 / 4 - bulletSize / 2)
-    ],
-    [
-      Offset(faceSize / 2 - bulletSize / 2,
-          faceSize / 2 - bulletSize / 2), // center
-      Offset(faceSize / 4 - bulletSize / 2, faceSize / 4 - bulletSize / 2),
-      Offset(
-          faceSize * 3 / 4 - bulletSize / 2, faceSize * 3 / 4 - bulletSize / 2)
-    ]
-  ];
+  List<List<Offset>> get faces => [
+        [Offset(faceSize / 2 - bulletSize / 2, faceSize / 2 - bulletSize / 2)],
+        [
+          Offset(faceSize / 4 - bulletSize / 2, faceSize / 4 - bulletSize / 2),
+          Offset(faceSize * 3 / 4 - bulletSize / 2,
+              faceSize * 3 / 4 - bulletSize / 2)
+        ],
+        [
+          Offset(faceSize / 2 - bulletSize / 2,
+              faceSize / 2 - bulletSize / 2), // center
+          Offset(faceSize / 4 - bulletSize / 2, faceSize / 4 - bulletSize / 2),
+          Offset(faceSize * 3 / 4 - bulletSize / 2,
+              faceSize * 3 / 4 - bulletSize / 2)
+        ]
+      ];
+
+  Color get shadow {
+    if (isDisabled) {
+      return Colors.blueGrey;
+    }
+    return isRolling ? Colors.red : Colors.blue;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDisabled ? Colors.grey : Colors.white,
         borderRadius: const BorderRadiusDirectional.all(Radius.circular(10)),
         boxShadow: [
-          BoxShadow(
-              color: isRolling ? Colors.red : Colors.blue, blurRadius: 10),
+          BoxShadow(color: shadow, blurRadius: 10),
         ],
       ),
       width: faceSize,
@@ -60,6 +69,17 @@ class _Dice extends StatelessWidget {
             .toList(),
       ),
     );
+  }
+}
+
+class DisabledDice extends StatelessWidget {
+  final Face face;
+
+  const DisabledDice(this.face, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Dice(60, face, false, true);
   }
 }
 
@@ -90,8 +110,10 @@ class _DiceRollState extends State<DiceRoll> {
       currentFace = widget._result;
       isRolling = false;
     });
+
     // let the result be seen
     await Future<void>.delayed(const Duration(seconds: 1));
+    DoneRolling().dispatch(context);
   }
 
   @override
@@ -102,9 +124,6 @@ class _DiceRollState extends State<DiceRoll> {
 
   @override
   Widget build(BuildContext context) {
-    if (isRolling == false) {
-      DoneRolling().dispatch(context);
-    }
-    return _Dice(currentFace, isRolling);
+    return _Dice(60, currentFace, isRolling, false);
   }
 }
