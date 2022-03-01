@@ -21,15 +21,15 @@ func (out *clientEventWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data answer
+		var data Ping
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data move
+		var data answer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data Ping
+		var data move
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -46,11 +46,11 @@ func (item clientEventWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case answer:
-		wr = wrapper{Kind: 0, Data: data}
-	case move:
-		wr = wrapper{Kind: 1, Data: data}
 	case Ping:
+		wr = wrapper{Kind: 0, Data: data}
+	case answer:
+		wr = wrapper{Kind: 1, Data: data}
+	case move:
 		wr = wrapper{Kind: 2, Data: data}
 
 	default:

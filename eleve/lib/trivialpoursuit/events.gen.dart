@@ -42,7 +42,7 @@ JSON moveToJson(Move item) {
   return {"Tile": intToJson(item.tile)};
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.ping
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.Ping
 typedef Ping = String;
 
 abstract class ClientEvent {}
