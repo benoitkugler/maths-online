@@ -29,7 +29,7 @@ func (out *clientEventWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data ping
+		var data Ping
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -50,7 +50,7 @@ func (item clientEventWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 0, Data: data}
 	case move:
 		wr = wrapper{Kind: 1, Data: data}
-	case ping:
+	case Ping:
 		wr = wrapper{Kind: 2, Data: data}
 
 	default:

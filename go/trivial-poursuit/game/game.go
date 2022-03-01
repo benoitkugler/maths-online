@@ -6,6 +6,7 @@ package game
 import (
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"time"
 )
@@ -14,6 +15,8 @@ import (
 type PlayerID = int
 
 var QuestionDurationLimit = time.Minute
+
+var DebugLogger = log.New(os.Stdout, "game-debug:", log.LstdFlags)
 
 type Game struct {
 	// GameState is the exposed game state, shared by clients
@@ -34,12 +37,15 @@ type Game struct {
 // NewGame returns an empty game, waiting for players to be
 // added.
 func NewGame() *Game {
+	timer := time.NewTimer(time.Second)
+	timer.Stop()
 	return &Game{
 		GameState: GameState{
 			Successes: make(map[int]*success),
 			Player:    -1,
 		},
-		currentAnswers: make(map[int]playerAnswerResult),
+		currentAnswers:  make(map[int]playerAnswerResult),
+		QuestionTimeout: timer,
 	}
 }
 
@@ -104,6 +110,7 @@ func (g *Game) StartGame() GameEvents {
 // HandleClientEvent handles the given `event`, or returns
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).
+// Caller should check and ignore empty return values.
 func (g *Game) HandleClientEvent(event ClientEvent) (GameEvents, error) {
 	switch eventData := event.Event.(type) {
 	case move:
@@ -115,9 +122,9 @@ func (g *Game) HandleClientEvent(event ClientEvent) (GameEvents, error) {
 	case answer:
 		evs := g.handleAnswer(eventData, event.Player)
 		return GameEvents{Events: evs, State: g.GameState}, nil
-	case ping:
+	case Ping:
 		// safely ignore the event
-		log.Printf("Client event; ping from player %d: %s", event.Player, eventData)
+		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData)
 		return GameEvents{}, nil
 	}
 	return GameEvents{}, fmt.Errorf("invalid client event %T", event.Event)
@@ -136,7 +143,7 @@ func (g *Game) handleMove(m move, player PlayerID) (events, error) {
 
 	g.PawnTile = m.Tile
 	g.dice = diceThrow{}
-	question := g.emitQuestion()
+	question := g.EmitQuestion()
 	return events{
 		m, // now valid
 		question,
@@ -154,9 +161,9 @@ func (g *Game) handleAnswer(a answer, player PlayerID) events {
 	return g.concludeTurn(false) // wait for other players if needed
 }
 
-// emitQuestion generate a question with the right categorie,
+// EmitQuestion generate a question with the right categorie,
 // and reset the current answers
-func (gs *Game) emitQuestion() showQuestion {
+func (gs *Game) EmitQuestion() showQuestion {
 	cat := categories[gs.PawnTile]
 	question := showQuestion{
 		Question:  fmt.Sprintf("Quelle est la catégorie %d", cat),
@@ -164,7 +171,7 @@ func (gs *Game) emitQuestion() showQuestion {
 	}
 	gs.question = question
 
-	gs.QuestionTimeout = time.NewTimer(QuestionDurationLimit)
+	gs.QuestionTimeout.Reset(QuestionDurationLimit)
 
 	return question
 }
@@ -221,10 +228,11 @@ func (gs *Game) endQuestion(force bool) events {
 	}
 
 	// cleanup
-	if gs.QuestionTimeout != nil {
-		gs.QuestionTimeout.Stop()
-		gs.QuestionTimeout = nil
+	stopped := gs.QuestionTimeout.Stop()
+	if !stopped && !force {
+		<-gs.QuestionTimeout.C // drain the channel
 	}
+
 	gs.question = showQuestion{}
 	for k := range gs.currentAnswers {
 		delete(gs.currentAnswers, k)

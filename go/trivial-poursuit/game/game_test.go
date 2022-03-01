@@ -103,11 +103,11 @@ func TestEmitQuestion(t *testing.T) {
 	g := NewGame()
 	g.AddPlayer()
 
-	if g.QuestionTimeout != nil {
-		t.Fatal()
+	if g.QuestionTimeout.Stop() {
+		t.Fatal("timer should not being running")
 	}
 
-	g.emitQuestion()
+	g.EmitQuestion()
 
 outer:
 	for {
@@ -119,11 +119,11 @@ outer:
 		}
 	}
 
-	g.emitQuestion()
+	g.EmitQuestion()
 	g.handleAnswer(answer{"dd"}, 0)
 	g.endQuestion(false)
-	if g.QuestionTimeout != nil {
-		t.Fatal()
+	if g.QuestionTimeout.Stop() {
+		t.Fatal("timer should have been stopped")
 	}
 }
 
@@ -165,6 +165,7 @@ func TestHandleClientEvent(t *testing.T) {
 	}
 
 	for cat := categorie(0); cat < nbCategories; cat++ {
+		g.EmitQuestion()
 		g.question.Categorie = cat
 		_, err = g.HandleClientEvent(ClientEvent{Event: answer{fmt.Sprintf("%d", cat)}})
 		if err != nil {

@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/gorilla/websocket"
 )
+
+var WarningLogger = log.New(os.Stdout, "trivial-poursuit:", log.LstdFlags)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -15,8 +19,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// SetupRoutes start the controllers and registers the end points
-func SetupRoutes(apiPath string) {
+// RegisterAndStart start the controllers and registers the end points
+func RegisterAndStart(apiPath string) {
 	ct := newGameController()
 	go ct.startLoop()
 
@@ -27,17 +31,11 @@ func (ct *controller) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Failed to init websocket: ", err)
+		WarningLogger.Println("Failed to init websocket: ", err)
 		return
 	}
 
 	defer ws.Close()
-
-	// err = ws.WriteMessage(websocket.TextMessage, []byte("Hi Client!"))
-	// if err != nil {
-	// 	log.Println("failed to greet", err)
-	// 	return
-	// }
 
 	// create a client object ...
 	client := &client{conn: ws, game: ct}
@@ -46,8 +44,10 @@ func (ct *controller) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	err = client.startLoop()
 	if err != nil {
-		log.Println("error reading client:", err)
-		ws.WriteMessage(websocket.TextMessage, []byte(err.Error()))
+		WarningLogger.Println(err)
+		ws.WriteControl(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseUnsupportedData, err.Error()),
+			time.Now().Add(time.Second))
 	}
 }
 
@@ -71,7 +71,7 @@ func (cl *client) startLoop() error {
 		var event game.ClientEvent
 		err := cl.conn.ReadJSON(&event)
 		if err != nil {
-			return fmt.Errorf("invalid client format: %s", err)
+			return fmt.Errorf("invalid event: %s", err)
 		}
 
 		// the player is deduced from the client pointer
@@ -105,45 +105,31 @@ func newGameController() *controller {
 
 func (gc *controller) startLoop() {
 	for {
-
-		if timeout := gc.game.QuestionTimeout; timeout != nil {
-			if _, has := <-timeout.C; has { // force the question ending
-				fmt.Println("QuestionTimeoutAction")
-
-				events := gc.game.QuestionTimeoutAction()
-				gc.broadcastEvents <- events
-				continue
-			}
-		}
-
 		select {
+		case <-gc.game.QuestionTimeout.C:
+			events := gc.game.QuestionTimeoutAction()
+			gc.broadcastEvents <- events
 		case client := <-gc.join:
-			fmt.Println("AddPlayer")
-
 			playerID := gc.game.AddPlayer()
 			gc.clients[client] = playerID
-			fmt.Println(gc.clients)
 		case client := <-gc.leave:
-			fmt.Println("RemovePlayer")
-
 			gc.game.RemovePlayer(gc.clients[client])
 			delete(gc.clients, client)
 		case message := <-gc.incomingEvents:
-			fmt.Println("HandleClientEvent")
-
 			out, err := gc.game.HandleClientEvent(message)
 			if err != nil { // malicious client: ignore the query
-				log.Println(err)
+				WarningLogger.Println(err)
 			}
-			gc.broadcastEvents <- out
+
+			if !out.IsEmpty() {
+				gc.broadcastEvents <- out
+			}
 
 		case event := <-gc.broadcastEvents:
-			fmt.Println("Sending events to all clients")
-
 			for client, clientID := range gc.clients {
 				err := client.sendEvent(event)
 				if err != nil {
-					log.Printf("Broadcasting to client %d: %s", clientID, err)
+					WarningLogger.Printf("Broadcasting to client %d failed: %s", clientID, err)
 				}
 			}
 

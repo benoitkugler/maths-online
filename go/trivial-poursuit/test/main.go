@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	trivialpoursuit.SetupRoutes("/ws")
+	trivialpoursuit.RegisterAndStart("/ws")
 
 	fmt.Println("Listenning...")
 

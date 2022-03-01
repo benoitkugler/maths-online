@@ -25,6 +25,9 @@ type GameEvents struct {
 	State  GameState
 }
 
+// IsEmpty returns `true` if no events are actually emitted.
+func (ge GameEvents) IsEmpty() bool { return len(ge.Events) == 0 }
+
 type events []gameEvent
 
 func (evs events) MarshalJSON() ([]byte, error) {
@@ -122,14 +125,14 @@ type clientEvent interface {
 
 func (move) isClientEvent()   {}
 func (answer) isClientEvent() {}
-func (ping) isClientEvent()   {}
+func (Ping) isClientEvent()   {}
 
 // the proposition of a client to a question
 type answer struct {
 	Content string
 }
 
-type ping string // DEBUG
+type Ping string // DEBUG
 
 type ClientEvent struct {
 	Event  clientEvent

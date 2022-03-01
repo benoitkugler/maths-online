@@ -64,7 +64,7 @@ func TestClientEventJSON(t *testing.T) {
 	for _, event := range []clientEvent{
 		move{4},
 		answer{"ma réponse"},
-		ping("Test"),
+		Ping("Test"),
 	} {
 		paylod := ClientEvent{Event: event, Player: 0}
 		b, err := json.Marshal(paylod)
