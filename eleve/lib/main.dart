@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
           ),
           body: const Center(
             child: GameController(),
+            // child: TryDice(),
             // child: QuestionRoute(ShowQuestion("Test", Categorie.orange)),
           )),
     );

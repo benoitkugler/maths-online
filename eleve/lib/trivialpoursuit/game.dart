@@ -23,22 +23,26 @@ class _GameControllerState extends State<GameController> {
   bool hasGameStarted = false;
 
   GameState state = const GameState({
-    0: [false, true, false, true, true]
+    0: [false, false, false, false, false]
   }, 0, 0);
   Set<int> highligthedTiles = {};
 
-  bool showDiceRoll = false;
+  /// null when no animation is displayed
+  Stream<dice.Face>? diceRollAnimation;
   dice.Face diceResult = dice.Face.one;
-  Completer<void> diceCompleter = Completer();
+  bool diceDisabled = true;
 
   @override
   void initState() {
     /// API connection
-    channel = WebSocketChannel.connect(
-      Uri.parse('ws://localhost:8080/trivial-poursuit'),
-    );
+    // channel = WebSocketChannel.connect(
+    //   Uri.parse('ws://localhost:8080/trivial-poursuit'),
+    // );
+    // channel.stream.listen(listen, onError: showError);
 
-    channel.stream.listen(listen, onError: showError);
+    // debug only
+    Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
+
     super.initState();
   }
 
@@ -113,20 +117,31 @@ class _GameControllerState extends State<GameController> {
   // with the given value
   Future<void> _onDiceThrow(DiceThrow event) async {
     final face =
-        dice.Face.values[event.face - 1]; // event.face is the "natural" face
+        dice.Face.values[event.face - 1]; // event.face is the "human" face
+
+    final completer = Completer<void>();
+    final diceRoll = dice.Dice.rollDice().asBroadcastStream();
+    diceRoll.listen(null, onDone: completer.complete);
 
     setState(() {
-      diceCompleter = Completer<void>();
-      diceResult = face;
-      showDiceRoll = true;
+      diceRollAnimation = diceRoll;
+      diceDisabled = false;
     });
 
-    diceCompleter.future.then((value) {
-      setState(() {
-        showDiceRoll = false;
-      });
+    await completer.future;
+
+    // make the dice result more visible
+    setState(() {
+      diceRollAnimation = null;
+      diceResult = face;
     });
-    return diceCompleter.future;
+    await Future<void>.delayed(const Duration(seconds: 1));
+
+    setState(() {
+      diceDisabled = true;
+    });
+
+    return;
   }
 
   Future<void> _onPossibleMoves(PossibleMoves event) async {
@@ -205,10 +220,27 @@ class _GameControllerState extends State<GameController> {
     }
   }
 
+  void processEventsDebug() {
+    processEvents([
+      GameEvents([
+        const GameStart(),
+        const PlayerTurn(0, "Benoit"),
+        const DiceThrow(2),
+        const PossibleMoves(0, [0, 1, 2, 3]),
+      ], state),
+    ]);
+  }
+
   Widget get _game {
     return hasGameStarted
-        ? _GameStarted(state.successes[playerID]!, showDiceRoll, diceResult,
-            diceCompleter, onTapTile, highligthedTiles, state.pawnTile)
+        ? _GameStarted(
+            state.successes[playerID]!,
+            diceRollAnimation,
+            diceResult,
+            diceDisabled,
+            onTapTile,
+            highligthedTiles,
+            state.pawnTile)
         : const _GameLobby();
   }
 
@@ -244,16 +276,16 @@ class _GameLobby extends StatelessWidget {
 class _GameStarted extends StatelessWidget {
   final Success success;
 
-  final bool showDiceRoll;
+  final Stream<dice.Face>? diceRollAnimation;
   final dice.Face diceResult;
-  final Completer<void> diceCompleter;
+  final bool diceDisabled;
 
   final OnTapTile onTapTile;
   final Set<int> availableTiles;
   final int pawnTile;
 
-  const _GameStarted(this.success, this.showDiceRoll, this.diceResult,
-      this.diceCompleter, this.onTapTile, this.availableTiles, this.pawnTile,
+  const _GameStarted(this.success, this.diceRollAnimation, this.diceResult,
+      this.diceDisabled, this.onTapTile, this.availableTiles, this.pawnTile,
       {Key? key})
       : super(key: key);
 
@@ -274,17 +306,9 @@ class _GameStarted extends StatelessWidget {
                 ),
                 const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.only(right: 30),
-                  child: showDiceRoll
-                      ? NotificationListener<dice.DoneRolling>(
-                          child: dice.DiceRoll(diceResult),
-                          onNotification: (n) {
-                            diceCompleter.complete();
-                            return true;
-                          },
-                        )
-                      : dice.DisabledDice(diceResult),
-                ),
+                    padding: const EdgeInsets.only(right: 30),
+                    child:
+                        dice.Dice(diceRollAnimation, diceResult, diceDisabled)),
               ],
             ),
           ),

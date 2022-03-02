@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 /// Face is the face of a dice.
 enum Face { one, two, three }
 
-class _Dice extends StatelessWidget {
+class _DiceFace extends StatelessWidget {
   final Face face;
   final bool isRolling;
   final bool isDisabled;
   final double faceSize;
-  const _Dice(this.faceSize, this.face, this.isRolling, this.isDisabled,
+  const _DiceFace(this.faceSize, this.face, this.isRolling, this.isDisabled,
       {Key? key})
       : super(key: key);
 
@@ -72,58 +72,49 @@ class _Dice extends StatelessWidget {
   }
 }
 
-class DisabledDice extends StatelessWidget {
-  final Face face;
+/// Dice presents a dice roll, with three states :
+///   - in animation
+///   - paused on the last result
+///   - disabled
+class Dice extends StatelessWidget {
+  /// If non null, provides the faces to animate the roll.
+  final Stream<Face>? animation;
 
-  const DisabledDice(this.face, {Key? key}) : super(key: key);
+  /// Show the face with a different highligth color.
+  final Face lastResult;
+  final bool isDisabled;
 
-  @override
-  Widget build(BuildContext context) {
-    return _Dice(60, face, false, true);
-  }
-}
+  const Dice(this.animation, this.lastResult, this.isDisabled, {Key? key})
+      : super(key: key);
 
-class DiceRoll extends StatefulWidget {
-  final Face _result;
-  const DiceRoll(this._result, {Key? key}) : super(key: key);
-
-  @override
-  _DiceRollState createState() => _DiceRollState();
-}
-
-class DoneRolling extends Notification {}
-
-class _DiceRollState extends State<DiceRoll> {
-  Face currentFace = Face.one;
-  bool isRolling = true;
-
-  void roll() async {
+  /// rollDice returns a stream animating a rolling dice,
+  /// to be used as input of DiceRoll
+  static Stream<Face> rollDice() async* {
     const choices = Face.values;
+    var currentFace = Face.one;
     for (var i = 10; i < 40; i++) {
       await Future<void>.delayed(Duration(
           milliseconds: 20 + exp(i.toDouble() * log(400) / 50).round()));
-      setState(() {
-        currentFace = choices[(currentFace.index + 1) % choices.length];
-      });
+      currentFace = choices[(currentFace.index + 1) % choices.length];
+      yield currentFace;
     }
-    setState(() {
-      currentFace = widget._result;
-      isRolling = false;
-    });
-
-    // let the result be seen
-    await Future<void>.delayed(const Duration(seconds: 1));
-    DoneRolling().dispatch(context);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    roll();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _Dice(60, currentFace, isRolling, false);
+    final animation = this.animation;
+    if (animation != null) {
+      return StreamBuilder<Face>(
+          stream: animation,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return _DiceFace(60, snapshot.data!, true, false);
+            } else if (snapshot.connectionState == ConnectionState.done) {
+              return const _DiceFace(60, Face.one, false, false);
+            }
+            return const _DiceFace(60, Face.one, false, false);
+          });
+    }
+    return _DiceFace(60, lastResult, false, isDisabled);
   }
 }
