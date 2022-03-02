@@ -21,42 +21,46 @@ func (out *GameEventWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data PlayerJoin
+		var data LobbyUpdate
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data diceThrow
+		var data PlayerJoin
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data gameEnd
+		var data diceThrow
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data gameStart
+		var data gameEnd
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data move
+		var data gameStart
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data playerAnswerResult
+		var data move
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data playerLeft
+		var data playerAnswerResult
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data playerTurn
+		var data playerLeft
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data possibleMoves
+		var data playerTurn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
+		var data possibleMoves
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 10:
 		var data showQuestion
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -74,26 +78,28 @@ func (item GameEventWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case PlayerJoin:
+	case LobbyUpdate:
 		wr = wrapper{Kind: 0, Data: data}
-	case diceThrow:
+	case PlayerJoin:
 		wr = wrapper{Kind: 1, Data: data}
-	case gameEnd:
+	case diceThrow:
 		wr = wrapper{Kind: 2, Data: data}
-	case gameStart:
+	case gameEnd:
 		wr = wrapper{Kind: 3, Data: data}
-	case move:
+	case gameStart:
 		wr = wrapper{Kind: 4, Data: data}
-	case playerAnswerResult:
+	case move:
 		wr = wrapper{Kind: 5, Data: data}
-	case playerLeft:
+	case playerAnswerResult:
 		wr = wrapper{Kind: 6, Data: data}
-	case playerTurn:
+	case playerLeft:
 		wr = wrapper{Kind: 7, Data: data}
-	case possibleMoves:
+	case playerTurn:
 		wr = wrapper{Kind: 8, Data: data}
-	case showQuestion:
+	case possibleMoves:
 		wr = wrapper{Kind: 9, Data: data}
+	case showQuestion:
+		wr = wrapper{Kind: 10, Data: data}
 
 	default:
 		panic("exhaustive switch")

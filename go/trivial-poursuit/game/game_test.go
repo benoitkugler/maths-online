@@ -81,13 +81,13 @@ func TestGameState_nextPlayer(t *testing.T) {
 
 func TestStart(t *testing.T) {
 	g := NewGame(0)
-	p1 := g.AddPlayer()
+	p1 := g.AddPlayer().Player
 	if p1 != 0 {
 		t.Fatalf("unexpected player id %d", p1)
 	}
 
-	p2 := g.AddPlayer()
-	p3 := g.AddPlayer()
+	p2 := g.AddPlayer().Player
+	p3 := g.AddPlayer().Player
 	if p1 == p2 || p2 == p3 {
 		t.Fatal()
 	}

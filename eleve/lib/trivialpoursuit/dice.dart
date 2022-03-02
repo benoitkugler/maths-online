@@ -92,7 +92,7 @@ class Dice extends StatelessWidget {
   static Stream<Face> rollDice() async* {
     const choices = Face.values;
     var currentFace = Face.one;
-    for (var i = 10; i < 40; i++) {
+    for (var i = 20; i < 40; i++) {
       await Future<void>.delayed(Duration(
           milliseconds: 20 + exp(i.toDouble() * log(400) / 50).round()));
       currentFace = choices[(currentFace.index + 1) % choices.length];

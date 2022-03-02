@@ -63,9 +63,7 @@ func TestConcurrentEvents(t *testing.T) {
 	go clientLoop(client2)
 	go clientLoop(client3)
 
-	for range [200]int{} {
-		ct.broadcastEvents <- game.EventList{{}}
-	}
+	time.Sleep(time.Second / 10)
 }
 
 func TestEvents(t *testing.T) {
@@ -108,7 +106,11 @@ func TestClientInvalidMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = client.ReadJSON(&[]game.GameEvents{})
+	err = client.ReadJSON(&[]game.GameEvents{}) // player join
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = client.ReadJSON(&[]game.GameEvents{}) // game lobby
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,21 +145,24 @@ func TestStartGame(t *testing.T) {
 	if err = client1.ReadJSON(&events); err != nil {
 		t.Fatal(err)
 	}
-	if events[0].State.Player != -1 {
+	if events[0].State.HasStarted() {
 		t.Fatal("game should not have started")
 	}
 
-	_, _, err = websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(time.Millisecond * 20)
 
-	if err = client1.ReadJSON(&events); err != nil {
+	if err = client2.ReadJSON(&events); err != nil { // PlayerJoin event
 		t.Fatal(err)
 	}
-	if events[0].State.Player != 0 {
+	if err = client2.ReadJSON(&events); err != nil { // GameStart event
+		t.Fatal(err)
+	}
+	if !events[0].State.HasStarted() {
 		t.Fatal("game should have started")
 	}
 }

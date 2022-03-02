@@ -58,9 +58,11 @@ func NewGame(questionTimeout time.Duration) *Game {
 // NumberPlayers return the number of players actually in the game.
 func (gs GameState) NumberPlayers() int { return len(gs.Successes) }
 
+func (gs GameState) HasStarted() bool { return gs.Player != -1 }
+
 // AddPlayer add a player to the game and returns
 // its id.
-func (g *Game) AddPlayer() PlayerID {
+func (g *Game) AddPlayer() LobbyUpdate {
 	max := -1
 	for id := range g.Successes {
 		if id > max {
@@ -69,12 +71,25 @@ func (g *Game) AddPlayer() PlayerID {
 	}
 	playerID := max + 1
 	g.Successes[playerID] = &success{}
-	return playerID
+
+	return LobbyUpdate{
+		Player:     playerID,
+		Names:      g.playerNames(),
+		PlayerName: g.playerName(playerID),
+		IsJoining:  true,
+	}
 }
 
 // RemovePlayer remove `player` from the game.
-func (g *Game) RemovePlayer(player PlayerID) {
+func (g *Game) RemovePlayer(player PlayerID) LobbyUpdate {
+	playerName := g.playerName(player)
 	delete(g.Successes, player)
+	return LobbyUpdate{
+		Player:     player,
+		Names:      g.playerNames(),
+		PlayerName: playerName,
+		IsJoining:  false,
+	}
 }
 
 // panic if no players are present
@@ -147,7 +162,7 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	}
 	// check if the tile is actually reachable
 	choices := Board.choices(g.PawnTile, int(g.dice.Face))
-	if !choices[m.Tile] {
+	if _, has := choices[m.Tile]; !has {
 		return nil, fmt.Errorf("pawn is not allowed to move to %d", m.Tile)
 	}
 
@@ -155,7 +170,10 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	g.dice = diceThrow{}
 	question := g.EmitQuestion()
 	return Events{
-		m, // now valid
+		move{
+			Tile: m.Tile, // now valid
+			Path: choices[m.Tile],
+		},
 		question,
 	}, nil
 }
@@ -208,7 +226,7 @@ func (gs *Game) concludeTurn(force bool) EventList {
 	winners := gs.winners()
 	if len(winners) != 0 { // end the game
 		out = append(out, GameEvents{
-			Events: Events{gameEnd{gs.playerNames(winners)}},
+			Events: Events{gameEnd{Winners: winners, WinnerNames: gs.idToNames(winners)}},
 			State:  gs.GameState,
 		})
 	} else { // start a new turn
@@ -232,10 +250,14 @@ func (gs *Game) endQuestion(force bool) Events {
 		return nil
 	}
 
-	// return the answers event
+	// return the answers event, defaulting
 	var out Events
-	for _, re := range gs.currentAnswers {
-		out = append(out, re)
+	for player := range gs.Successes {
+		answer, has := gs.currentAnswers[player]
+		if !has {
+			answer = playerAnswerResult{Player: player, Success: false}
+		}
+		out = append(out, answer)
 	}
 
 	// cleanup
@@ -268,7 +290,15 @@ func (gs *Game) playerName(player PlayerID) string {
 	return fmt.Sprintf("Joueur %d", player+1)
 }
 
-func (gs *Game) playerNames(players []PlayerID) []string {
+func (g *Game) playerNames() map[PlayerID]string {
+	out := make(map[int]string, len(g.Successes))
+	for player := range g.Successes {
+		out[player] = g.playerName(player)
+	}
+	return out
+}
+
+func (gs *Game) idToNames(players []PlayerID) []string {
 	out := make([]string, len(players))
 	for i, id := range players {
 		out[i] = gs.playerName(id)

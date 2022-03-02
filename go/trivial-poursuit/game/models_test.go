@@ -16,7 +16,7 @@ func TestEventsJSON(t *testing.T) {
 			playerTurn{2, "Haha"},
 			dice,
 			possibleMoves{2, moves},
-			move{moves[0]},
+			move{Tile: moves[0]},
 			playerLeft{1},
 			showQuestion{Question: "Super", Categorie: 0},
 			playerAnswerResult{0, true},
@@ -24,7 +24,7 @@ func TestEventsJSON(t *testing.T) {
 			playerAnswerResult{2, true},
 			playerTurn{0, ""},
 			diceThrow{3},
-			move{4},
+			move{Tile: 4},
 			showQuestion{Question: "Super", Categorie: 1},
 			playerAnswerResult{0, false},
 			playerAnswerResult{1, true},
@@ -62,7 +62,7 @@ func TestGameStateJSON(t *testing.T) {
 
 func TestClientEventJSON(t *testing.T) {
 	for _, event := range []clientEventData{
-		move{4},
+		move{Tile: 4},
 		answer{"ma réponse"},
 		Ping{"Test"},
 	} {

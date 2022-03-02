@@ -5,7 +5,7 @@ void main() {
   runApp(const MyApp());
 }
 
-const Color darkBlue = Color.fromARGB(255, 18, 32, 47);
+const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -14,11 +14,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Isiro',
-      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: darkBlue),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: darkBlue,
+        cardTheme: ThemeData.dark()
+            .cardTheme
+            .copyWith(color: darkBlue.withOpacity(0.5)),
+      ),
       debugShowCheckedModeBanner: false,
       home: Scaffold(
           appBar: AppBar(
-            title: const Text('Bienvenue !'),
+            title: const Text('Isiro'),
             actions: [
               TextButton(
                 onPressed: () {},
@@ -27,9 +32,7 @@ class MyApp extends StatelessWidget {
             ],
           ),
           body: const Center(
-            child: GameController(),
-            // child: TryDice(),
-            // child: QuestionRoute(ShowQuestion("Test", Categorie.orange)),
+            child: GameController(60),
           )),
     );
   }

@@ -74,7 +74,8 @@ func (b board) adjacents(pos int) (out []int) {
 	return out
 }
 
-type tileSet map[int]bool
+// tileSet is a set of reachable tiles, associated to a path towards them
+type tileSet map[int]tilePath
 
 // list returns a sorted slice, for reproducibility
 func (ts tileSet) list() []int {
@@ -84,6 +85,18 @@ func (ts tileSet) list() []int {
 	}
 	sort.Ints(out)
 	return out
+}
+
+// a path of contiguous tiles towards the last element of the slice
+type tilePath []int
+
+func (tp tilePath) pos() int { return tp[len(tp)-1] }
+
+func (tp tilePath) origin() int {
+	if len(tp) == 1 {
+		return -1
+	}
+	return tp[len(tp)-2]
 }
 
 // choices returns the square indices where the player located at `currentPos`
@@ -96,30 +109,33 @@ func (b board) choices(currentPos, nbMoves int) tileSet {
 	}
 	// start with the current pos, with no constraint
 	var (
-		targets = []target{{pos: currentPos, origin: -1}}
-		buffer  []target
+		currentPaths = []tilePath{{currentPos}}
+		buffer       []tilePath
 	)
 	for i := 0; i < nbMoves; i++ { // one step at a time
-		for _, t := range targets {
+		for _, path := range currentPaths {
 			// advance everywhere expect to the origin
-			candidates := b.adjacents(t.pos)
+			candidates := b.adjacents(path.pos())
+
 			// remove the previous square
 			for _, candidate := range candidates {
-				if candidate == t.origin {
+				if candidate == path.origin() {
 					continue
 				}
-				buffer = append(buffer, target{pos: candidate, origin: t.pos})
+				// extend the path : we need to copy to avoid sharing a same underlying array
+				newPath := append(append(tilePath(nil), path...), candidate)
+				buffer = append(buffer, newPath)
 			}
 		}
 
-		targets = buffer
+		currentPaths = buffer
 		buffer = nil
 	}
 
 	// in case a square is reachable from two paths, remove duplicates
 	out := make(tileSet)
-	for _, t := range targets {
-		out[t.pos] = true
+	for _, t := range currentPaths {
+		out[t.pos()] = t
 	}
 
 	return out

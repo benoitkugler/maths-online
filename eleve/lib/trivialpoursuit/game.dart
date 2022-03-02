@@ -4,23 +4,30 @@ import 'dart:convert';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
+import 'package:eleve/trivialpoursuit/lobby.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class GameController extends StatefulWidget {
-  const GameController({Key? key}) : super(key: key);
+  final int questionTimeout; // in seconds
+
+  const GameController(this.questionTimeout, {Key? key}) : super(key: key);
 
   @override
   _GameControllerState createState() => _GameControllerState();
 }
+
+final _wsApi = Uri.parse('ws://localhost:8080/trivial-poursuit');
 
 class _GameControllerState extends State<GameController> {
   late WebSocketChannel channel;
 
   int playerID = 0;
   bool hasGameStarted = false;
+
+  Map<int, String> lobby = {};
 
   GameState state = const GameState({
     0: [false, false, false, false, false]
@@ -32,12 +39,16 @@ class _GameControllerState extends State<GameController> {
   dice.Face diceResult = dice.Face.one;
   bool diceDisabled = true;
 
+  bool hasQuestion = false;
+
+  /// empty until game end
+  List<int> winners = [];
+  List<String> winnerNames = [];
+
   @override
   void initState() {
     /// API connection
-    // channel = WebSocketChannel.connect(
-    //   Uri.parse('ws://localhost:8080/trivial-poursuit'),
-    // );
+    // channel = WebSocketChannel.connect(_wsApi);
     // channel.stream.listen(listen, onError: showError);
 
     // debug only
@@ -46,8 +57,40 @@ class _GameControllerState extends State<GameController> {
     super.initState();
   }
 
+  void processEventsDebug() async {
+    processEvents([
+      GameEvents([
+        // PlayerJoin(0),
+        const GameStart(),
+        const PossibleMoves(0, [1, 2, 3]),
+      ], state),
+    ]);
+
+    // await Future.delayed(Duration(seconds: 1));
+
+    // processEvents([
+    //   GameEvents([
+    //     const GameEnd([0, 2, 3], ["player1", "player 2", "player 3"])
+    //   ], state),
+    // GameEvents([
+    //   PlayerTurn(2, "ttess"),
+    //   DiceThrow(2),
+    // ], state),
+    // ]);
+  }
+
+  @override
+  void dispose() {
+    channel.sink.close(1000, "Bye bye");
+    super.dispose();
+  }
+
   void showError(dynamic error) {
-    print("ERROR: $error");
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 5),
+      backgroundColor: Theme.of(context).colorScheme.error,
+      content: Text("Une erreur est survenue : $error"),
+    ));
   }
 
   void listen(dynamic event) {
@@ -73,7 +116,26 @@ class _GameControllerState extends State<GameController> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 3),
       backgroundColor: Theme.of(context).colorScheme.primary,
-      content: const Text("Connection réussie !"),
+      content: const Text("Connecté au serveur."),
+    ));
+  }
+
+  void _onLobbyUpdate(LobbyUpdate event) {
+    setState(() {
+      lobby = event.names;
+    });
+
+    if (event.player == playerID) {
+      // do not notify our own connection
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 2),
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      content: event.isJoining
+          ? Text("${event.playerName} a rejoint la partie !")
+          : Text("${event.playerName} a quitté la partie."),
     ));
   }
 
@@ -94,7 +156,7 @@ class _GameControllerState extends State<GameController> {
       return;
     }
 
-    _sendEvent(Move(tile));
+    _sendEvent(Move([], tile));
   }
 
   Future<void> _onPlayerTurn(PlayerTurn event) async {
@@ -105,12 +167,6 @@ class _GameControllerState extends State<GameController> {
           ? const Text("C'est à toi !")
           : Text("Au tour de ${event.playerName}"),
     ));
-  }
-
-  Future<void> _showRoute(Widget content) {
-    return Navigator.push<void>(context, MaterialPageRoute(builder: (context) {
-      return content;
-    }));
   }
 
   // triggers and wait for a dice roll
@@ -154,29 +210,49 @@ class _GameControllerState extends State<GameController> {
     });
   }
 
-  void _onMove(Move event) {
-    // TODO: animated
+  void _onMove(Move event) async {
     setState(() {
       highligthedTiles.clear();
     });
+
+    for (var tile in event.path) {
+      setState(() {
+        state = GameState(state.successes, tile, state.player);
+      });
+
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
   }
 
   Future<void> _onShowQuestion(ShowQuestion event) async {
-    // TODO: handle timeout and cancelation correctly;
-    final widget = NotificationListener<SubmitAnswerNotification>(
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => NotificationListener<SubmitAnswerNotification>(
         onNotification: (notification) {
           Navigator.pop(context);
+          hasQuestion = false;
           _sendEvent(Answer(notification.answer));
           return true;
         },
-        child: QuestionRoute(event));
-    return _showRoute(widget);
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child:
+              QuestionRoute(event, Duration(seconds: widget.questionTimeout)),
+        ),
+      ),
+    ));
+    hasQuestion = true;
   }
 
   void _onPlayerAnswerResult(PlayerAnswerResult event) {
     // for now, we simply ignore other player success
     if (event.player != playerID) {
       return;
+    }
+
+    // close the question on timeout
+    if (hasQuestion) {
+      Navigator.of(context).pop();
+      hasQuestion = false;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -186,10 +262,20 @@ class _GameControllerState extends State<GameController> {
     ));
   }
 
+  void _onGameEnd(GameEnd event) {
+    setState(() {
+      hasGameStarted = false;
+      winners = event.winners;
+      winnerNames = event.winnerNames;
+    });
+  }
+
   // process the given event
   Future<void> _processEvent(GameEvent event) async {
     if (event is PlayerJoin) {
       _onPlayerJoin(event);
+    } else if (event is LobbyUpdate) {
+      _onLobbyUpdate(event);
     } else if (event is GameStart) {
       _onGameStart();
     } else if (event is PlayerTurn) {
@@ -199,11 +285,13 @@ class _GameControllerState extends State<GameController> {
     } else if (event is PossibleMoves) {
       return _onPossibleMoves(event);
     } else if (event is Move) {
-      _onMove(event);
+      return _onMove(event);
     } else if (event is ShowQuestion) {
       return _onShowQuestion(event);
     } else if (event is PlayerAnswerResult) {
       _onPlayerAnswerResult(event);
+    } else if (event is GameEnd) {
+      _onGameEnd(event);
     } else {
       throw Exception("unexpected event type ${event.runtimeType}");
     }
@@ -220,18 +308,11 @@ class _GameControllerState extends State<GameController> {
     }
   }
 
-  void processEventsDebug() {
-    processEvents([
-      GameEvents([
-        const GameStart(),
-        const PlayerTurn(0, "Benoit"),
-        const DiceThrow(2),
-        const PossibleMoves(0, [0, 1, 2, 3]),
-      ], state),
-    ]);
-  }
-
   Widget get _game {
+    if (winners.isNotEmpty) {
+      return _GameEnd(winnerNames, winners.contains(playerID));
+    }
+
     return hasGameStarted
         ? _GameStarted(
             state.successes[playerID]!,
@@ -241,7 +322,7 @@ class _GameControllerState extends State<GameController> {
             onTapTile,
             highligthedTiles,
             state.pawnTile)
-        : const _GameLobby();
+        : GameLobby(lobby, playerID);
   }
 
   @override
@@ -249,26 +330,6 @@ class _GameControllerState extends State<GameController> {
     return AnimatedSwitcher(
       child: _game,
       duration: const Duration(seconds: 3),
-    );
-  }
-}
-
-class _GameLobby extends StatelessWidget {
-  const _GameLobby({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: const [
-          Text(
-            "En attente d'autres joueurs...",
-            style: TextStyle(fontSize: 20),
-          ),
-          CircularProgressIndicator(),
-        ],
-      ),
     );
   }
 }
@@ -321,6 +382,65 @@ class _GameStarted extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GameEnd extends StatelessWidget {
+  final List<String> winners;
+  final bool hasWon;
+  const _GameEnd(this.winners, this.hasWon, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> congrats = [];
+    if (hasWon) {
+      congrats.add(const Text("Vous avez gagné, bravo !",
+          style: TextStyle(
+            color: Colors.yellow,
+            fontSize: 25,
+          )));
+    }
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          const Text(
+            "Partie terminée",
+            style: TextStyle(fontSize: 25),
+          ),
+          ...congrats,
+          Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: Text(
+                  "Les gagnants sont :",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: winners
+                    .map((e) => DecoratedBox(
+                        decoration: const BoxDecoration(boxShadow: [
+                          BoxShadow(
+                            color: Colors.yellow,
+                            blurRadius: 5,
+                          )
+                        ], borderRadius: BorderRadius.all(Radius.circular(10))),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(e),
+                          ),
+                        )))
+                    .toList(),
+              ),
+            ],
+          )
         ],
       ),
     );

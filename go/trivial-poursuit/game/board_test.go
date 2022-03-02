@@ -90,3 +90,21 @@ func TestBoardMoves(t *testing.T) {
 		}
 	}
 }
+
+func TestBoardPaths(t *testing.T) {
+	// test the real board
+	tests := []struct {
+		pos     int
+		nbMoves int
+		want    tileSet
+	}{
+		// {18, 2, tileSet{1: []int{18, 0, 1}, 16: []int{18, 17, 16}}},
+		// {0, 1, tileSet{1: []int{0, 1}, nbSquares - 1: []int{0, nbSquares - 1}}},
+		{2, 3, tileSet{5: []int{2, 3, 4, 5}, 15: []int{2, 3, 4, 15}, nbSquares - 1: []int{2, 1, 0, nbSquares - 1}}},
+	}
+	for _, tt := range tests {
+		if got := Board.choices(tt.pos, tt.nbMoves); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("Board.choices() = %v, want %v", got, tt.want)
+		}
+	}
+}

@@ -132,6 +132,22 @@ func (gc *controller) startLoop() {
 				}
 			}
 
+		case client := <-gc.leave:
+			ProgressLogger.Println("Removing player...")
+
+			event := gc.game.RemovePlayer(gc.clients[client])
+			delete(gc.clients, client)
+
+			if gc.game.NumberPlayers() == 0 { // reset the game
+				// TODO: higher level gestion of multiples games
+				gc.game = *game.NewGame(gc.options.QuestionTimeout)
+			} else if !gc.game.HasStarted() { // update the lobby
+				gc.broadcastEvents <- []game.GameEvents{{
+					Events: game.Events{event},
+					State:  gc.game.GameState,
+				}}
+			}
+
 		case <-gc.game.QuestionTimeout.C:
 			ProgressLogger.Println("QuestionTimeoutAction...")
 
@@ -141,25 +157,30 @@ func (gc *controller) startLoop() {
 		case client := <-gc.join:
 			ProgressLogger.Println("Adding player...")
 
-			playerID := gc.game.AddPlayer()
-			gc.clients[client] = playerID
+			// we do not allow connection into an already started game
+			if gc.game.HasStarted() { // TODO: notify the client
+				continue
+			}
 
-			// only notifie the player who joined
+			event := gc.game.AddPlayer()
+			gc.clients[client] = event.Player
+
+			// only notifie the player who joined ...
 			client.sendEvent(game.EventList{{
-				Events: game.Events{game.PlayerJoin{Player: playerID}},
+				Events: game.Events{game.PlayerJoin{Player: event.Player}},
 				State:  gc.game.GameState,
 			}})
 
+			// ... check if the new player triggers a game start
 			if gc.game.NumberPlayers() >= gc.options.PlayersNumber {
 				events := gc.game.StartGame()
 				gc.broadcastEvents <- []game.GameEvents{events}
+			} else { // update the lobby
+				gc.broadcastEvents <- []game.GameEvents{{
+					Events: game.Events{event},
+					State:  gc.game.GameState,
+				}}
 			}
-
-		case client := <-gc.leave:
-			ProgressLogger.Println("Removing player...")
-
-			gc.game.RemovePlayer(gc.clients[client])
-			delete(gc.clients, client)
 
 		case message := <-gc.incomingEvents:
 			ProgressLogger.Println("HandleClientEvent...")

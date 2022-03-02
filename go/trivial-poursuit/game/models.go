@@ -54,6 +54,7 @@ type GameEvent interface {
 }
 
 func (PlayerJoin) isGameEvent()         {}
+func (LobbyUpdate) isGameEvent()        {}
 func (gameStart) isGameEvent()          {}
 func (playerLeft) isGameEvent()         {}
 func (playerTurn) isGameEvent()         {}
@@ -64,8 +65,17 @@ func (showQuestion) isGameEvent()       {}
 func (playerAnswerResult) isGameEvent() {}
 func (gameEnd) isGameEvent()            {}
 
+// PlayerJoin is only emitted to the actual player
+// who join the game
 type PlayerJoin struct {
 	Player PlayerID
+}
+
+type LobbyUpdate struct {
+	Names      map[PlayerID]string // the new players in the lobby
+	PlayerName string
+	Player     PlayerID // the player who joined or left
+	IsJoining  bool     // false for leaving
 }
 
 type gameStart struct{}
@@ -95,6 +105,9 @@ func newDiceThrow() diceThrow {
 // move is emitted when a player choose to move the
 // pawn
 type move struct {
+	// the tiles to go through to animate the move
+	// (only valid when send by the server)
+	Path []int
 	Tile int
 }
 
@@ -121,7 +134,8 @@ type playerAnswerResult struct {
 
 // gameEnd is emitted when at least one player has won
 type gameEnd struct {
-	Winners []string
+	Winners     []int
+	WinnerNames []string
 }
 
 // clientEventData is send by a client to the game server
