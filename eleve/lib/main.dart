@@ -22,18 +22,58 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Isiro'),
-            actions: [
-              TextButton(
-                onPressed: () {},
-                child: const Text("DEBUG"),
-              )
-            ],
-          ),
-          body: const Center(
-            child: GameController(60),
-          )),
+        appBar: AppBar(
+          title: const Text('Isiro'),
+        ),
+        body: const _HomePage(),
+      ),
+    );
+  }
+}
+
+class _HomePage extends StatefulWidget {
+  const _HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<_HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<_HomePage> {
+  void _launchTrivialPoursuit() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: TrivialPoursuitController(60))));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Card(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "Bienvenue dans Isiro",
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
+            const Text(
+              "Activités disponibles",
+              style: TextStyle(fontSize: 20),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GameIcon(() => _launchTrivialPoursuit()),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 }

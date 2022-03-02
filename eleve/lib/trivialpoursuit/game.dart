@@ -10,18 +10,20 @@ import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-class GameController extends StatefulWidget {
+class TrivialPoursuitController extends StatefulWidget {
   final int questionTimeout; // in seconds
 
-  const GameController(this.questionTimeout, {Key? key}) : super(key: key);
+  const TrivialPoursuitController(this.questionTimeout, {Key? key})
+      : super(key: key);
 
   @override
-  _GameControllerState createState() => _GameControllerState();
+  _TrivialPoursuitControllerState createState() =>
+      _TrivialPoursuitControllerState();
 }
 
 final _wsApi = Uri.parse('ws://localhost:8080/trivial-poursuit');
 
-class _GameControllerState extends State<GameController> {
+class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   late WebSocketChannel channel;
 
   int playerID = 0;
@@ -48,11 +50,11 @@ class _GameControllerState extends State<GameController> {
   @override
   void initState() {
     /// API connection
-    // channel = WebSocketChannel.connect(_wsApi);
-    // channel.stream.listen(listen, onError: showError);
+    channel = WebSocketChannel.connect(_wsApi);
+    channel.stream.listen(listen, onError: showError);
 
     // debug only
-    Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
+    // Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
 
     super.initState();
   }
@@ -362,8 +364,8 @@ class _GameStarted extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Pie(success),
+                  padding: const EdgeInsets.only(top: 10, left: 40),
+                  child: Pie(10, success),
                 ),
                 const Spacer(),
                 Padding(
@@ -443,6 +445,32 @@ class _GameEnd extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+class GameIcon extends StatelessWidget {
+  final void Function() onTap;
+
+  const GameIcon(this.onTap, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        RawMaterialButton(
+          onPressed: onTap,
+          elevation: 2.0,
+          // fillColor: Colors.white,
+          child: Pie(2, Categorie.values.map((e) => true).toList()),
+          padding: const EdgeInsets.all(10.0),
+          shape: const CircleBorder(),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(top: 6, bottom: 6),
+          child: Text("Trivial poursuit"),
+        ),
+      ],
     );
   }
 }

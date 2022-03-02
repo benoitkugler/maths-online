@@ -8,17 +8,15 @@ import 'package:flutter/material.dart';
 /// Pie displays the current sucesses of the player,
 /// using a pie chart.
 class Pie extends StatelessWidget {
+  final double glowWidth;
   final Success success;
-  const Pie(this.success, {Key? key}) : super(key: key);
+  const Pie(this.glowWidth, this.success, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 40),
-      child: CustomPaint(
-        size: const Size(40, 40),
-        painter: _PiePainter(success),
-      ),
+    return CustomPaint(
+      size: const Size(80, 80),
+      painter: _PiePainter(glowWidth, success),
     );
   }
 }
@@ -43,15 +41,17 @@ extension CategorieColor on Categorie {
 }
 
 class _PiePainter extends CustomPainter {
+  final double glowWidth;
+
   final Success success;
 
   static const blurRadius = 6.0;
 
-  _PiePainter(this.success);
+  _PiePainter(this.glowWidth, this.success);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final radius = size.shortestSide;
+    final radius = size.shortestSide * 0.45;
     final nbSections = Categorie.values.length;
     final angularSection = 2 * pi / nbSections;
     final center = size.center(Offset.zero);
@@ -63,7 +63,7 @@ class _PiePainter extends CustomPainter {
       Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 10
+        ..strokeWidth = glowWidth
         ..imageFilter =
             ImageFilter.blur(sigmaX: blurRadius, sigmaY: blurRadius),
     );
