@@ -10,6 +10,8 @@ import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+const devMode = bool.fromEnvironment("dev");
+
 class TrivialPoursuitController extends StatefulWidget {
   final int questionTimeout; // in seconds
 
@@ -49,42 +51,46 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   @override
   void initState() {
-    /// API connection
-    channel = WebSocketChannel.connect(_wsApi);
-    channel.stream.listen(listen, onError: showError);
-
-    // debug only
-    // Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
+    if (devMode) {
+      // debug only
+      Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
+    } else {
+      /// API connection
+      channel = WebSocketChannel.connect(_wsApi);
+      channel.stream.listen(listen, onError: showError);
+    }
 
     super.initState();
   }
 
   void processEventsDebug() async {
-    processEvents([
-      GameEvents([
-        // PlayerJoin(0),
-        const GameStart(),
-        // const PossibleMoves(0, [1, 2, 3]),
-        const ShowQuestion("test", Categorie.blue),
+    await processEvents([
+      GameEvents(const [
+        PlayerJoin(0),
+        GameStart(),
+        DiceThrow(2),
+        PossibleMoves(0, [1, 2, 3]),
+        Move([0, 1, 2], 2),
+        ShowQuestion("test", Categorie.blue),
       ], state),
     ]);
 
-    // await Future.delayed(Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 1));
 
-    // processEvents([
-    //   GameEvents([
-    //     const GameEnd([0, 2, 3], ["player1", "player 2", "player 3"])
-    //   ], state),
-    // GameEvents([
-    //   PlayerTurn(2, "ttess"),
-    //   DiceThrow(2),
-    // ], state),
-    // ]);
+    await processEvents([
+      GameEvents(const [
+        PlayerAnswerResult(0, true),
+        GameEnd([0], ["Pierre"])
+      ], state),
+    ]);
   }
 
   @override
   void dispose() {
-    channel.sink.close(1000, "Bye bye");
+    if (!devMode) {
+      channel.sink.close(1000, "Bye bye");
+    }
+    diceRollAnimation = null;
     super.dispose();
   }
 
@@ -231,8 +237,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => NotificationListener<SubmitAnswerNotification>(
         onNotification: (notification) {
-          Navigator.pop(context);
-          hasQuestion = false;
+          if (hasQuestion) {
+            Navigator.pop(context);
+            hasQuestion = false;
+          }
           _sendEvent(Answer(notification.answer));
           return true;
         },
@@ -296,7 +304,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     }
   }
 
-  void processEvents(List<GameEvents> eventList) async {
+  Future<void> processEvents(List<GameEvents> eventList) async {
     for (var events in eventList) {
       for (var event in events.events) {
         await _processEvent(event);
