@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
+
+  // start music as background
+  // final player = AudioCache(prefix: "lib/music/");
+  // player.loop("DontLetMeGo.mp3");
 }
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
