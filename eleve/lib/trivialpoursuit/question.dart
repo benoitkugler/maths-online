@@ -44,48 +44,51 @@ class _QuestionRouteState extends State<QuestionRoute> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-          color: widget.question.categorie.color,
-          borderRadius: const BorderRadius.all(Radius.circular(10))),
-      child: Card(
-        elevation: 20,
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text(
-                "Question du thème ${widget.question.categorie}",
-                style: const TextStyle(fontSize: 20),
-              ),
-              const Text("Quel est le numéro du thème actuel ?",
-                  style: TextStyle(fontSize: 18)),
-              TextField(
-                controller: _controller,
-                cursorColor: widget.question.categorie.color,
-                decoration: InputDecoration(
-                  focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                    color: widget.question.categorie.color,
-                  )),
-                  border: const OutlineInputBorder(),
+    return Padding(
+      padding: const EdgeInsets.only(top: 40, bottom: 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+            color: widget.question.categorie.color,
+            borderRadius: const BorderRadius.all(Radius.circular(10))),
+        child: Card(
+          elevation: 20,
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text(
+                  "Question du thème ${widget.question.categorie}",
+                  style: const TextStyle(fontSize: 20),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: _enabledValid
-                    ? () {
-                        SubmitAnswerNotification(_controller.text)
-                            .dispatch(context);
-                      }
-                    : null,
-                child: const Text(
-                  "Valider",
-                  style: TextStyle(fontSize: 18),
+                const Text("Quel est le numéro du thème actuel ?",
+                    style: TextStyle(fontSize: 18)),
+                TextField(
+                  controller: _controller,
+                  cursorColor: widget.question.categorie.color,
+                  decoration: InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                      color: widget.question.categorie.color,
+                    )),
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              TimeoutBar(widget.timeout),
-            ],
+                ElevatedButton(
+                  onPressed: _enabledValid
+                      ? () {
+                          SubmitAnswerNotification(_controller.text)
+                              .dispatch(context);
+                        }
+                      : null,
+                  child: const Text(
+                    "Valider",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                TimeoutBar(widget.timeout),
+              ],
+            ),
           ),
         ),
       ),

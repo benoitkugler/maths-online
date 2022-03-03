@@ -64,7 +64,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       GameEvents([
         // PlayerJoin(0),
         const GameStart(),
-        const PossibleMoves(0, [1, 2, 3]),
+        // const PossibleMoves(0, [1, 2, 3]),
+        const ShowQuestion("test", Categorie.blue),
       ], state),
     ]);
 
@@ -235,11 +236,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           _sendEvent(Answer(notification.answer));
           return true;
         },
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child:
-              QuestionRoute(event, Duration(seconds: widget.questionTimeout)),
-        ),
+        child: QuestionRoute(event, Duration(seconds: widget.questionTimeout)),
       ),
     ));
     hasQuestion = true;
@@ -357,9 +354,10 @@ class _GameStarted extends StatelessWidget {
     return Container(
       color: Colors.grey,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 25),
+            padding: const EdgeInsets.only(top: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -375,13 +373,10 @@ class _GameStarted extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Board(onTapTile, availableTiles, pawnTile),
-              ),
+          Center(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Board(onTapTile, availableTiles, pawnTile),
             ),
           ),
         ],

@@ -26,6 +26,11 @@ func main() {
 	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
 	trivialpoursuit.RegisterAndStart("/"+u.Path, trivialpoursuit.GameOptions{PlayersNumber: *nbPlayers})
 
+	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println("incomming")
+		rw.Write([]byte("All good"))
+	})
+
 	u.Scheme = "ws"
 	fmt.Println("Listenning at ", u.String())
 
