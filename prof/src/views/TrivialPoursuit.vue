@@ -30,26 +30,26 @@
 
 <script setup lang="ts">
 import { controller } from "@/controller/controller";
-import { ref } from "@vue/reactivity";
 import { computed } from "@vue/runtime-core";
+import { $ref } from "vue/macros";
 
-const nbPlayers = ref(0);
+let nbPlayers = $ref(0);
 
-const isValid = computed(() => !isSpinning.value && nbPlayers.value > 0);
-const isSpinning = ref(false);
+const isValid = computed(() => !isSpinning && nbPlayers > 0);
+let isSpinning = $ref(false);
 
-const gameURL = ref("");
+let gameURL = $ref("");
 
 async function launchGame(): Promise<void> {
-  isSpinning.value = true;
-  const res = await controller.LaunchGame({ NbPlayers: nbPlayers.value });
-  isSpinning.value = false;
+  isSpinning = true;
+  const res = await controller.LaunchGame({ NbPlayers: nbPlayers });
+  isSpinning = false;
 
   if (res === undefined) {
     return;
   }
 
-  gameURL.value = res.URL;
+  gameURL = res.URL;
 }
 </script>
 

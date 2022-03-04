@@ -7,7 +7,7 @@ class Controller extends AbstractAPI {
   }
 
   startRequest(): void {
-    console.log("lauching request");
+    console.log("launching request");
   }
 
   protected onSuccessLaunchGame(data: LaunchGameOut): void {
