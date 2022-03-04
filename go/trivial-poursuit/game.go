@@ -23,7 +23,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// RegisterAndStart start the controllers and registers the end points
+// RegisterAndStart starts a new game at the given `apiPath`,
+// registering the route.
 func RegisterAndStart(apiPath string, options GameOptions) {
 	ct := newGameController(options)
 	go ct.startLoop()
@@ -31,7 +32,7 @@ func RegisterAndStart(apiPath string, options GameOptions) {
 	http.HandleFunc(apiPath, ct.setupWebSocket)
 }
 
-func (ct *controller) setupWebSocket(w http.ResponseWriter, r *http.Request) {
+func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -50,7 +51,7 @@ func (ct *controller) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 
 type client struct {
 	conn *websocket.Conn
-	game *controller // to accept user events
+	game *gameController // to accept user events
 }
 
 func (cl *client) sendEvent(er game.EventList) error { return cl.conn.WriteJSON(er) }
@@ -96,7 +97,8 @@ type GameOptions struct {
 	QuestionTimeout time.Duration
 }
 
-type controller struct {
+// gameController handle one game session
+type gameController struct {
 	join, leave chan *client
 
 	incomingEvents  chan game.ClientEvent
@@ -108,8 +110,8 @@ type controller struct {
 	options GameOptions
 }
 
-func newGameController(options GameOptions) *controller {
-	return &controller{
+func newGameController(options GameOptions) *gameController {
+	return &gameController{
 		join:            make(chan *client),
 		leave:           make(chan *client),
 		incomingEvents:  make(chan game.ClientEvent),
@@ -120,7 +122,7 @@ func newGameController(options GameOptions) *controller {
 	}
 }
 
-func (gc *controller) startLoop() {
+func (gc *gameController) startLoop() {
 	for {
 		select {
 		case event := <-gc.broadcastEvents:
