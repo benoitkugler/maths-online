@@ -6,6 +6,7 @@ const path = require("path");
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/static/prof/",
   plugins: [
     vue({
       reactivityTransform: true
@@ -15,7 +16,11 @@ export default defineConfig({
       autoImport: true
     })
   ],
-  define: { "process.env": {} },
+  define: {
+    "process.env": {
+      VERSION: require("./package.json").version
+    }
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src")

@@ -15,7 +15,9 @@
     </v-navigation-drawer>
 
     <v-app-bar app>
-      <v-app-bar-title>Maths online</v-app-bar-title>
+      <v-app-bar-title> Maths online </v-app-bar-title>
+      <v-spacer></v-spacer>
+      <small>(Version {{ version }})</small>
     </v-app-bar>
 
     <v-main>
@@ -32,7 +34,7 @@ export default defineComponent({
 
   data() {
     return {
-      //
+      version: process.env.VERSION
     };
   }
 });
