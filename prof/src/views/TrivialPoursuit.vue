@@ -18,11 +18,9 @@
         </v-col>
       </v-row>
 
-      <v-alert class="px-4 my-2" :model-value="gameURL != ''" color="info">
-        Rejoindre la partie à cette adresse :
-        <v-btn class="mx-2" :href="gameURL" target="_blank">{{
-          gameURL
-        }}</v-btn>
+      <v-alert class="px-4 my-2" :model-value="gameCode != ''" color="info">
+        Code de la partie à rejoindre :
+        <v-chip size="big" class="pa-3">{{ gameCode }}</v-chip>
       </v-alert>
     </v-form>
   </v-card>
@@ -38,7 +36,7 @@ let nbPlayers = $ref(0);
 const isValid = computed(() => !isSpinning && nbPlayers > 0);
 let isSpinning = $ref(false);
 
-let gameURL = $ref("");
+let gameCode = $ref("");
 
 async function launchGame(): Promise<void> {
   isSpinning = true;
@@ -49,7 +47,7 @@ async function launchGame(): Promise<void> {
     return;
   }
 
-  gameURL = res.URL;
+  gameCode = res.URL.slice(res.URL.length - 6);
 }
 </script>
 

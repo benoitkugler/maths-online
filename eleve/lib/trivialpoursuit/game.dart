@@ -14,16 +14,15 @@ const devMode = bool.fromEnvironment("dev");
 
 class TrivialPoursuitController extends StatefulWidget {
   final int questionTimeout; // in seconds
+  final Uri apiURL;
 
-  const TrivialPoursuitController(this.questionTimeout, {Key? key})
+  const TrivialPoursuitController(this.questionTimeout, this.apiURL, {Key? key})
       : super(key: key);
 
   @override
   _TrivialPoursuitControllerState createState() =>
       _TrivialPoursuitControllerState();
 }
-
-final _wsApi = Uri.parse('ws://localhost:8080/trivial-poursuit');
 
 class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   late WebSocketChannel channel;
@@ -43,8 +42,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   dice.Face diceResult = dice.Face.one;
   bool diceDisabled = true;
 
-  bool hasQuestion = false;
-
   /// empty until game end
   List<int> winners = [];
   List<String> winnerNames = [];
@@ -56,7 +53,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
     } else {
       /// API connection
-      channel = WebSocketChannel.connect(_wsApi);
+      channel = WebSocketChannel.connect(widget.apiURL);
       channel.stream.listen(listen, onError: showError);
     }
 
@@ -68,14 +65,14 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       StateUpdate(const [
         PlayerJoin(0),
         GameStart(),
-        DiceThrow(2),
-        PossibleMoves(0, [1, 2, 3]),
-        Move([0, 1, 2], 2),
+        // DiceThrow(2),
+        // PossibleMoves(0, [1, 2, 3]),
+        // Move([0, 1, 2], 2),
         ShowQuestion("test", Categorie.blue),
       ], state),
     ]);
 
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 2000));
 
     await processEvents([
       StateUpdate(const [
@@ -112,8 +109,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   void _sendEvent(ClientEventData event) {
-    channel.sink
-        .add(jsonEncode(clientEventToJson(ClientEvent(event, playerID))));
+    if (!devMode) {
+      channel.sink
+          .add(jsonEncode(clientEventToJson(ClientEvent(event, playerID))));
+    }
   }
 
   void _onPlayerJoin(PlayerJoin event) {
@@ -237,17 +236,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => NotificationListener<SubmitAnswerNotification>(
         onNotification: (notification) {
-          if (hasQuestion) {
-            Navigator.pop(context);
-            hasQuestion = false;
-          }
+          // do not close the page now, it is handled when receiving result
           _sendEvent(Answer(notification.answer));
           return true;
         },
         child: QuestionRoute(event, Duration(seconds: widget.questionTimeout)),
       ),
     ));
-    hasQuestion = true;
   }
 
   void _onPlayerAnswerResult(PlayerAnswerResult event) {
@@ -257,10 +252,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     }
 
     // close the question on timeout
-    if (hasQuestion) {
-      Navigator.of(context).pop();
-      hasQuestion = false;
-    }
+    Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 3),

@@ -58,7 +58,8 @@ func NewGame(questionTimeout time.Duration) *Game {
 // NumberPlayers return the number of players actually in the game.
 func (gs GameState) NumberPlayers() int { return len(gs.Successes) }
 
-func (gs GameState) HasStarted() bool { return gs.Player != -1 }
+// IsPlaying returns true if the game has started and is not finished yet.
+func (g *Game) IsPlaying() bool { return g.Player != -1 && len(g.winners()) == 0 }
 
 // AddPlayer add a player to the game and returns
 // its id.
@@ -136,23 +137,23 @@ func (g *Game) StartGame() StateUpdate {
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).
 // Caller should check and ignore empty return values.
-func (g *Game) HandleClientEvent(event ClientEvent) (StateUpdates, error) {
+func (g *Game) HandleClientEvent(event ClientEvent) (updates StateUpdates, isGameOver bool, err error) {
 	switch eventData := event.Event.(type) {
 	case move:
 		evs, err := g.handleMove(eventData, event.Player)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
-		return StateUpdates{{Events: evs, State: g.GameState}}, nil
+		return StateUpdates{{Events: evs, State: g.GameState}}, false, nil
 	case answer:
-		evs := g.handleAnswer(eventData, event.Player)
-		return evs, nil
+		updates, isGameOver = g.handleAnswer(eventData, event.Player)
+		return updates, isGameOver, nil
 	case Ping:
 		// safely ignore the event
 		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData.Info)
-		return nil, nil
+		return nil, false, nil
 	}
-	return nil, fmt.Errorf("invalid client event %T", event.Event)
+	return nil, false, fmt.Errorf("invalid client event %T", event.Event)
 }
 
 func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
@@ -178,7 +179,7 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	}, nil
 }
 
-func (g *Game) handleAnswer(a answer, player PlayerID) StateUpdates {
+func (g *Game) handleAnswer(a answer, player PlayerID) (updates StateUpdates, isGameOver bool) {
 	isValid := g.isAnswerValid(a)
 	g.Successes[player][g.question.Categorie] = isValid
 	g.currentAnswers[player] = playerAnswerResult{
@@ -204,7 +205,9 @@ func (gs *Game) EmitQuestion() showQuestion {
 	return question
 }
 
-func (gs *Game) QuestionTimeoutAction() StateUpdates {
+// QuestionTimeoutAction closes the current question session,
+// and start a new turn
+func (gs *Game) QuestionTimeoutAction() (updates StateUpdates, isGameOver bool) {
 	return gs.concludeTurn(true)
 }
 
@@ -214,26 +217,27 @@ func (gs *Game) isAnswerValid(a answer) bool {
 	return a.Content == fmt.Sprintf("%d", gs.question.Categorie)
 }
 
-func (gs *Game) concludeTurn(force bool) StateUpdates {
+func (gs *Game) concludeTurn(force bool) (updates StateUpdates, isGameOver bool) {
 	evs := gs.endQuestion(force)
 	if len(evs) == 0 { // nothing has changed
-		return nil
+		return nil, false
 	}
 
-	out := StateUpdates{{Events: evs, State: gs.GameState}}
+	updates = StateUpdates{{Events: evs, State: gs.GameState}}
 
 	// check for winners
 	winners := gs.winners()
-	if len(winners) != 0 { // end the game
-		out = append(out, StateUpdate{
+	isGameOver = len(winners) != 0
+	if isGameOver { // end the game
+		updates = append(updates, StateUpdate{
 			Events: Events{gameEnd{Winners: winners, WinnerNames: gs.idToNames(winners)}},
 			State:  gs.GameState,
 		})
 	} else { // start a new turn
-		out = append(out, gs.startTurn())
+		updates = append(updates, gs.startTurn())
 	}
 
-	return out
+	return updates, isGameOver
 }
 
 // endQuestion close the current question

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'events.gen.dart';
 import 'pie.dart';
 
+/// SubmitAnswerNotification is emitted when the player
+/// validates his answer
 class SubmitAnswerNotification extends Notification {
   final String answer;
   SubmitAnswerNotification(this.answer);
@@ -24,6 +26,7 @@ class _QuestionRouteState extends State<QuestionRoute> {
   late TextEditingController _controller;
 
   bool _enabledValid = false;
+  bool _waiting = false;
 
   @override
   void initState() {
@@ -42,6 +45,16 @@ class _QuestionRouteState extends State<QuestionRoute> {
     super.dispose();
   }
 
+  void _onValidated() {
+    // send the anwser and wait others players
+    SubmitAnswerNotification(_controller.text).dispatch(context);
+
+    setState(() {
+      _waiting = true;
+      _enabledValid = false; // do no permit answering again
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -58,7 +71,7 @@ class _QuestionRouteState extends State<QuestionRoute> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Text(
-                  "Question du thème ${widget.question.categorie}",
+                  "Thème ${widget.question.categorie}",
                   style: const TextStyle(fontSize: 20),
                 ),
                 const Text("Quel est le numéro du thème actuel ?",
@@ -75,18 +88,15 @@ class _QuestionRouteState extends State<QuestionRoute> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _enabledValid
-                      ? () {
-                          SubmitAnswerNotification(_controller.text)
-                              .dispatch(context);
-                        }
-                      : null,
+                  onPressed: _enabledValid ? _onValidated : null,
                   child: const Text(
                     "Valider",
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
                 TimeoutBar(widget.timeout),
+                Text(_waiting ? "En attente des autres joueurs..." : "",
+                    style: const TextStyle(fontSize: 16)),
               ],
             ),
           ),

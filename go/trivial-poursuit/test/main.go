@@ -24,7 +24,7 @@ func main() {
 	u.Path = "trivial-poursuit"
 
 	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
-	trivialpoursuit.RegisterAndStart("/"+u.Path, trivialpoursuit.GameOptions{PlayersNumber: *nbPlayers})
+	trivialpoursuit.RegisterTestGame("/"+u.Path, trivialpoursuit.GameOptions{PlayersNumber: *nbPlayers})
 
 	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		fmt.Println("incomming")

@@ -1,4 +1,5 @@
 import 'package:eleve/trivialpoursuit/game.dart';
+import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -29,7 +30,8 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        body: const _HomePage(),
+        // body: const _HomePage(),
+        body: const TrivialPoursuitLoggin(),
       ),
     );
   }
@@ -45,7 +47,7 @@ class _HomePage extends StatefulWidget {
 class _HomePageState extends State<_HomePage> {
   void _launchTrivialPoursuit() {
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: TrivialPoursuitController(60))));
+        builder: (_) => const Scaffold(body: TrivialPoursuitLoggin())));
   }
 
   @override

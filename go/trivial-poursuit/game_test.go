@@ -145,9 +145,12 @@ func TestStartGame(t *testing.T) {
 	if err = client1.ReadJSON(&events); err != nil {
 		t.Fatal(err)
 	}
-	if events[0].State.HasStarted() {
+
+	ct.gameLock.Lock()
+	if ct.game.IsPlaying() {
 		t.Fatal("game should not have started")
 	}
+	ct.gameLock.Unlock()
 
 	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
 	if err != nil {
@@ -162,7 +165,38 @@ func TestStartGame(t *testing.T) {
 	if err = client2.ReadJSON(&events); err != nil { // GameStart event
 		t.Fatal(err)
 	}
-	if !events[0].State.HasStarted() {
+
+	ct.gameLock.Lock()
+	if !ct.game.IsPlaying() {
 		t.Fatal("game should have started")
+	}
+	ct.gameLock.Unlock()
+}
+
+func TestInvalidJoin(t *testing.T) {
+	WarningLogger.SetOutput(io.Discard)
+
+	ct := newGameController(GameOptions{1, 0})
+
+	go ct.startLoop()
+
+	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
+	defer server.Close()
+
+	// first client join and launch the game
+	_, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// second client try to join
+	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = client2.ReadMessage()
+	if err == nil {
+		t.Fatal("expected error when joining started game")
 	}
 }

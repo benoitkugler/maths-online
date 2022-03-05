@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,7 +15,10 @@ import (
 const GameEndPoint = "/trivial/game/:game_id"
 
 type Controller struct {
-	host  *url.URL                   // current URL start, such as http://localhost:1323, or https://www.deployed.fr
+	host *url.URL // current URL start, such as http://localhost:1323, or https://www.deployed.fr
+
+	lock sync.Mutex
+
 	games map[string]*gameController // active games
 }
 
@@ -60,7 +64,7 @@ func (ct *Controller) LaunchGame(c echo.Context) error {
 }
 
 func randGameID() string {
-	const choices = "ABCDEFGHIJKLMNOP"
+	const choices = "abcdefghijklmnopqrstuvwxyz0123456789"
 	var out [6]byte
 	for i := range out {
 		out[i] = choices[rand.Intn(len(choices))]
@@ -69,6 +73,9 @@ func randGameID() string {
 }
 
 func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
+	ct.lock.Lock()
+	defer ct.lock.Unlock()
+
 	newID := randGameID()
 	for _, taken := ct.games[newID]; taken; newID = randGameID() { // avoid (unlikely) collisions
 	}
@@ -80,6 +87,9 @@ func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 	go func() {
 		game.startLoop()
 
+		// remove the game controller when the game is over
+		ct.lock.Lock()
+		defer ct.lock.Unlock()
 		delete(ct.games, newID)
 	}()
 
@@ -96,6 +106,7 @@ func (ct *Controller) AccessGame(c echo.Context) error {
 		return fmt.Errorf("La partie n'existe pas ou est déjà terminée")
 	}
 
+	// connect to the websocket handler, which handle errors
 	game.setupWebSocket(c.Response().Writer, c.Request())
 	return nil
 }

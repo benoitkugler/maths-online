@@ -131,23 +131,23 @@ func TestHandleClientEvent(t *testing.T) {
 	g.AddPlayer()
 	g.startTurn()
 
-	_, err := g.HandleClientEvent(ClientEvent{})
+	_, _, err := g.HandleClientEvent(ClientEvent{})
 	if err == nil {
 		t.Fatal("expected error for invalid client event type")
 	}
 
-	_, err = g.HandleClientEvent(ClientEvent{Event: move{}, Player: 2})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{}, Player: 2})
 	if err == nil {
 		t.Fatal("expected error for invalid move")
 	}
 
-	_, err = g.HandleClientEvent(ClientEvent{Event: move{Tile: 89}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{Tile: 89}})
 	if err == nil {
 		t.Fatal("expected error for invalid tile")
 	}
 
 	expected := g.dice.Face
-	_, err = g.HandleClientEvent(ClientEvent{Event: move{Tile: int(g.dice.Face)}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{Tile: int(g.dice.Face)}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal()
 	}
 
-	_, err = g.HandleClientEvent(ClientEvent{Event: answer{"BAD"}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{"wrong answer"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +166,7 @@ func TestHandleClientEvent(t *testing.T) {
 	for cat := categorie(0); cat < nbCategories; cat++ {
 		g.EmitQuestion()
 		g.question.Categorie = cat
-		_, err = g.HandleClientEvent(ClientEvent{Event: answer{fmt.Sprintf("%d", cat)}})
+		_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{fmt.Sprintf("%d", cat)}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -174,5 +174,9 @@ func TestHandleClientEvent(t *testing.T) {
 
 	if !reflect.DeepEqual(g.winners(), []int{0}) {
 		t.Fatal()
+	}
+
+	if g.IsPlaying() {
+		t.Fatal("game should be over")
 	}
 }
