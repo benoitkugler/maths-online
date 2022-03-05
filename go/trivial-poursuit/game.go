@@ -54,7 +54,7 @@ type client struct {
 	game *gameController // to accept user events
 }
 
-func (cl *client) sendEvent(er game.EventList) error { return cl.conn.WriteJSON(er) }
+func (cl *client) sendEvent(er game.StateUpdates) error { return cl.conn.WriteJSON(er) }
 
 // startLoop listens for new messages being sent to our WebSocket
 // endpoint, only returning on error
@@ -102,7 +102,7 @@ type gameController struct {
 	join, leave chan *client
 
 	incomingEvents  chan game.ClientEvent
-	broadcastEvents chan []game.GameEvents
+	broadcastEvents chan []game.StateUpdate
 	clients         map[*client]game.PlayerID // current clients in the game
 
 	game game.Game // game logic
@@ -115,7 +115,7 @@ func newGameController(options GameOptions) *gameController {
 		join:            make(chan *client),
 		leave:           make(chan *client),
 		incomingEvents:  make(chan game.ClientEvent),
-		broadcastEvents: make(chan []game.GameEvents, 1), // the main loop write in this channel
+		broadcastEvents: make(chan []game.StateUpdate, 1), // the main loop write in this channel
 		clients:         map[*client]game.PlayerID{},
 		game:            *game.NewGame(options.QuestionTimeout),
 		options:         options,
@@ -140,11 +140,12 @@ func (gc *gameController) startLoop() {
 			event := gc.game.RemovePlayer(gc.clients[client])
 			delete(gc.clients, client)
 
-			if gc.game.NumberPlayers() == 0 { // reset the game
-				// TODO: higher level gestion of multiples games
-				gc.game = *game.NewGame(gc.options.QuestionTimeout)
-			} else if !gc.game.HasStarted() { // update the lobby
-				gc.broadcastEvents <- []game.GameEvents{{
+			// end the game only if the game has already started and all
+			// players have left
+			if hasStarted := gc.game.HasStarted(); hasStarted && gc.game.NumberPlayers() == 0 {
+				return
+			} else if !hasStarted { // update the lobby if the game has to started
+				gc.broadcastEvents <- []game.StateUpdate{{
 					Events: game.Events{event},
 					State:  gc.game.GameState,
 				}}
@@ -168,7 +169,7 @@ func (gc *gameController) startLoop() {
 			gc.clients[client] = event.Player
 
 			// only notifie the player who joined ...
-			client.sendEvent(game.EventList{{
+			client.sendEvent(game.StateUpdates{{
 				Events: game.Events{game.PlayerJoin{Player: event.Player}},
 				State:  gc.game.GameState,
 			}})
@@ -176,9 +177,9 @@ func (gc *gameController) startLoop() {
 			// ... check if the new player triggers a game start
 			if gc.game.NumberPlayers() >= gc.options.PlayersNumber {
 				events := gc.game.StartGame()
-				gc.broadcastEvents <- []game.GameEvents{events}
+				gc.broadcastEvents <- []game.StateUpdate{events}
 			} else { // update the lobby
-				gc.broadcastEvents <- []game.GameEvents{{
+				gc.broadcastEvents <- []game.StateUpdate{{
 					Events: game.Events{event},
 					State:  gc.game.GameState,
 				}}

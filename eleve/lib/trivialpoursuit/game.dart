@@ -65,7 +65,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   void processEventsDebug() async {
     await processEvents([
-      GameEvents(const [
+      StateUpdate(const [
         PlayerJoin(0),
         GameStart(),
         DiceThrow(2),
@@ -78,7 +78,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     await Future<void>.delayed(const Duration(seconds: 1));
 
     await processEvents([
-      GameEvents(const [
+      StateUpdate(const [
         PlayerAnswerResult(0, true),
         GameEnd([0], ["Pierre"])
       ], state),
@@ -104,7 +104,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   void listen(dynamic event) {
     try {
-      final events = listGameEventsFromJson(jsonDecode(event as String));
+      final events = listStateUpdateFromJson(jsonDecode(event as String));
       processEvents(events);
     } catch (e) {
       showError(e);
@@ -304,7 +304,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     }
   }
 
-  Future<void> processEvents(List<GameEvents> eventList) async {
+  Future<void> processEvents(List<StateUpdate> eventList) async {
     for (var events in eventList) {
       for (var event in events.events) {
         await _processEvent(event);

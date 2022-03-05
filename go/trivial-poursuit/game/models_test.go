@@ -10,7 +10,7 @@ import (
 func TestEventsJSON(t *testing.T) {
 	dice := newDiceThrow()
 	moves := Board.choices(0, int(dice.Face)).list()
-	payload := EventList{{
+	payload := StateUpdates{{
 		Events: []GameEvent{
 			gameStart{},
 			playerTurn{2, "Haha"},
@@ -39,7 +39,7 @@ func TestEventsJSON(t *testing.T) {
 	}
 	fmt.Println(string(b))
 
-	err = json.Unmarshal(b, &[]GameEvents{})
+	err = json.Unmarshal(b, &[]StateUpdate{})
 	if err != nil {
 		t.Fatal(err)
 	}

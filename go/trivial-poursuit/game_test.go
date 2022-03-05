@@ -106,11 +106,11 @@ func TestClientInvalidMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = client.ReadJSON(&[]game.GameEvents{}) // player join
+	err = client.ReadJSON(&[]game.StateUpdate{}) // player join
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.ReadJSON(&[]game.GameEvents{}) // game lobby
+	err = client.ReadJSON(&[]game.StateUpdate{}) // game lobby
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestStartGame(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var events game.EventList
+	var events game.StateUpdates
 	if err = client1.ReadJSON(&events); err != nil {
 		t.Fatal(err)
 	}

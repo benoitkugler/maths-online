@@ -492,34 +492,34 @@ JSON gameStateToJson(GameState item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.GameEvents
-class GameEvents {
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.StateUpdate
+class StateUpdate {
   final Events events;
   final GameState state;
 
-  const GameEvents(this.events, this.state);
+  const StateUpdate(this.events, this.state);
 }
 
-GameEvents gameEventsFromJson(dynamic json_) {
+StateUpdate stateUpdateFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return GameEvents(
+  return StateUpdate(
       listGameEventFromJson(json['Events']), gameStateFromJson(json['State']));
 }
 
-JSON gameEventsToJson(GameEvents item) {
+JSON stateUpdateToJson(StateUpdate item) {
   return {
     "Events": listGameEventToJson(item.events),
     "State": gameStateToJson(item.state)
   };
 }
 
-List<GameEvents> listGameEventsFromJson(dynamic json) {
+List<StateUpdate> listStateUpdateFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
-  return (json as List<dynamic>).map(gameEventsFromJson).toList();
+  return (json as List<dynamic>).map(stateUpdateFromJson).toList();
 }
 
-dynamic listGameEventsToJson(List<GameEvents> item) {
-  return item.map(gameEventsToJson).toList();
+dynamic listStateUpdateToJson(List<StateUpdate> item) {
+  return item.map(stateUpdateToJson).toList();
 }

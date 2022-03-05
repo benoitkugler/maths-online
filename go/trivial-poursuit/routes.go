@@ -70,14 +70,18 @@ func randGameID() string {
 
 func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 	newID := randGameID()
-	for _, taken := ct.games[newID]; taken; newID = randGameID() {
+	for _, taken := ct.games[newID]; taken; newID = randGameID() { // avoid (unlikely) collisions
 	}
 
 	game := newGameController(GameOptions{PlayersNumber: options.NbPlayers})
 	// register the controller...
 	ct.games[newID] = game
 	// ...and start it
-	go game.startLoop() // TODO: clean shut down
+	go func() {
+		game.startLoop()
+
+		delete(ct.games, newID)
+	}()
 
 	var out LaunchGameOut
 	out.URL = ct.buildURL(strings.ReplaceAll(GameEndPoint, ":game_id", newID), true)

@@ -110,11 +110,11 @@ func (g *Game) nextPlayer() PlayerID {
 
 // convenient method to start a new turn,
 // launch the dice, and compute the possible moves
-func (g *Game) startTurn() GameEvents {
+func (g *Game) startTurn() StateUpdate {
 	g.Player = g.nextPlayer()
 	g.dice = newDiceThrow()
 	choices := Board.choices(g.PawnTile, int(g.dice.Face)).list()
-	return GameEvents{
+	return StateUpdate{
 		Events: Events{
 			playerTurn{g.Player, g.playerName(g.Player)},
 			g.dice,
@@ -126,7 +126,7 @@ func (g *Game) startTurn() GameEvents {
 
 // StartGame actually launch the game with the players
 // registred so far, which must not be empty.
-func (g *Game) StartGame() GameEvents {
+func (g *Game) StartGame() StateUpdate {
 	evs := g.startTurn()
 	evs.Events = append(Events{gameStart{}}, evs.Events...)
 	return evs
@@ -136,14 +136,14 @@ func (g *Game) StartGame() GameEvents {
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).
 // Caller should check and ignore empty return values.
-func (g *Game) HandleClientEvent(event ClientEvent) (EventList, error) {
+func (g *Game) HandleClientEvent(event ClientEvent) (StateUpdates, error) {
 	switch eventData := event.Event.(type) {
 	case move:
 		evs, err := g.handleMove(eventData, event.Player)
 		if err != nil {
 			return nil, err
 		}
-		return EventList{{Events: evs, State: g.GameState}}, nil
+		return StateUpdates{{Events: evs, State: g.GameState}}, nil
 	case answer:
 		evs := g.handleAnswer(eventData, event.Player)
 		return evs, nil
@@ -178,7 +178,7 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	}, nil
 }
 
-func (g *Game) handleAnswer(a answer, player PlayerID) EventList {
+func (g *Game) handleAnswer(a answer, player PlayerID) StateUpdates {
 	isValid := g.isAnswerValid(a)
 	g.Successes[player][g.question.Categorie] = isValid
 	g.currentAnswers[player] = playerAnswerResult{
@@ -204,7 +204,7 @@ func (gs *Game) EmitQuestion() showQuestion {
 	return question
 }
 
-func (gs *Game) QuestionTimeoutAction() EventList {
+func (gs *Game) QuestionTimeoutAction() StateUpdates {
 	return gs.concludeTurn(true)
 }
 
@@ -214,18 +214,18 @@ func (gs *Game) isAnswerValid(a answer) bool {
 	return a.Content == fmt.Sprintf("%d", gs.question.Categorie)
 }
 
-func (gs *Game) concludeTurn(force bool) EventList {
+func (gs *Game) concludeTurn(force bool) StateUpdates {
 	evs := gs.endQuestion(force)
 	if len(evs) == 0 { // nothing has changed
 		return nil
 	}
 
-	out := EventList{{Events: evs, State: gs.GameState}}
+	out := StateUpdates{{Events: evs, State: gs.GameState}}
 
 	// check for winners
 	winners := gs.winners()
 	if len(winners) != 0 { // end the game
-		out = append(out, GameEvents{
+		out = append(out, StateUpdate{
 			Events: Events{gameEnd{Winners: winners, WinnerNames: gs.idToNames(winners)}},
 			State:  gs.GameState,
 		})

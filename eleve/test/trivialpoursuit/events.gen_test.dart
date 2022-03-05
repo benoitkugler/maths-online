@@ -141,7 +141,7 @@ void main() {
  }
 ]
     """;
-      final ev = listGameEventsFromJson(jsonDecode(input));
+      final ev = listStateUpdateFromJson(jsonDecode(input));
       expect(ev.length, equals(1));
       expect(ev[0].events.length, equals(18));
       expect(ev[0].events[0] is GameStart, equals(true));

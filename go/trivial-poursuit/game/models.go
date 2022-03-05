@@ -16,13 +16,13 @@ type GameState struct {
 	Player    int                   // the player currently playing (choosing where to move)
 }
 
-type EventList = []GameEvents
+type StateUpdates = []StateUpdate
 
-// GameEvents describes a list of events yielding
-// a game state.
-// Clients should animate the returned events and
+// StateUpdate describes a list of events yielding
+// a new game state.
+// Clients should animate the events and
 // update the state.
-type GameEvents struct {
+type StateUpdate struct {
 	Events Events
 	State  GameState
 }
