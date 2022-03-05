@@ -26,6 +26,10 @@ func main() {
 
 	ct := trivialpoursuit.NewController(host)
 
+	// for now, show the logs
+	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
+	trivialpoursuit.WarningLogger.SetOutput(os.Stdout)
+
 	e := echo.New()
 	e.HideBanner = true
 

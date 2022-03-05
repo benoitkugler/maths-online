@@ -131,6 +131,7 @@ func (ct *Controller) AccessGame(c echo.Context) error {
 
 	game, ok := ct.games[gameID]
 	if !ok {
+		WarningLogger.Printf("invalid game ID %s", gameID)
 		return fmt.Errorf("La partie n'existe pas ou est déjà terminée.")
 	}
 
