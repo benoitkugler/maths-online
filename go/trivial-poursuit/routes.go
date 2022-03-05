@@ -139,3 +139,10 @@ func (ct *Controller) AccessGame(c echo.Context) error {
 	game.setupWebSocket(c.Response().Writer, c.Request())
 	return nil
 }
+
+// ShowStats returns a JSON dict of current games, usable as
+// debug tool.
+// TODO: protect the access
+func (ct *Controller) ShowStats(c echo.Context) error {
+	return c.JSON(200, ct.stats())
+}

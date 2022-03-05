@@ -81,5 +81,6 @@ func getAdress(dev bool) string {
 
 func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	e.POST("/trivial/launch_game", ct.LaunchGame)
+	e.GET("/trivial/stats", ct.ShowStats)
 	e.GET(trivialpoursuit.GameEndPoint, ct.AccessGame)
 }
