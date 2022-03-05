@@ -32,6 +32,11 @@ func main() {
 
 	e := echo.New()
 	e.HideBanner = true
+	// this prints detailed error messages
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		err = echo.NewHTTPError(400, err.Error())
+		e.DefaultHTTPErrorHandler(err, c)
+	}
 
 	if *devPtr {
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -95,7 +100,7 @@ func serveProfApp(c echo.Context) error {
 
 func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	// global static files used by frontend apps
-	e.Group("/static", middleware.Gzip()).Static("/*", "static")
+	e.Group("/static", middleware.Gzip()).Static("/*", "/static")
 
 	// trivialpoursuit game server
 	e.POST("/trivial/launch_game", ct.LaunchGame)
