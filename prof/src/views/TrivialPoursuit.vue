@@ -10,8 +10,8 @@
         v-model.number="nbPlayers"
       ></v-text-field>
       <v-row>
-        <v-spacer></v-spacer>
-        <v-col>
+        <v-col cols="4" sm="6" md="9"></v-col>
+        <v-col cols="8" sm="6" md="3" class="text-right">
           <v-btn block @click="launchGame" :disabled="!isValid" color="success">
             Lancer la partie
           </v-btn>
@@ -19,8 +19,14 @@
       </v-row>
 
       <v-alert class="px-4 my-2" :model-value="gameCode != ''" color="info">
-        Code de la partie à rejoindre :
-        <v-chip size="big" class="pa-3">{{ gameCode }}</v-chip>
+        <v-row no-gutters>
+          <v-col align-self="center"> Code de la partie à rejoindre : </v-col>
+          <v-col>
+            <v-chip size="big" class="pa-3"
+              ><b>{{ gameCode }}</b></v-chip
+            >
+          </v-col>
+        </v-row>
       </v-alert>
     </v-form>
   </v-card>

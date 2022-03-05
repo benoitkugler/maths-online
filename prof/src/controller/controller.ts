@@ -15,4 +15,8 @@ class Controller extends AbstractAPI {
   }
 }
 
-export const controller = new Controller("http://localhost:1323", "", {});
+export const controller = new Controller(
+  import.meta.env.DEV ? "http://localhost:1323" : window.location.origin,
+  "",
+  {}
+);
