@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	_ "embed"
 	"encoding/csv"
 	"fmt"
 	"log"
@@ -11,15 +13,13 @@ import (
 	"strings"
 )
 
-func importData() (map[rune]string, error) {
-	f, err := os.Open("unicode-latex/unicode-math-symbols.txt")
-	if err != nil {
-		return nil, err
-	}
+//go:embed unicode-math-symbols.txt
+var symbols []byte
 
+func importData() (map[rune]string, error) {
 	out := make(map[rune]string)
 
-	r := bufio.NewScanner(f)
+	r := bufio.NewScanner(bytes.NewReader(symbols))
 	for r.Scan() {
 		if err := r.Err(); err != nil {
 			return nil, err
