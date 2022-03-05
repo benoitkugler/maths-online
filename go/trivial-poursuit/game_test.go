@@ -1,6 +1,7 @@
 package trivialpoursuit
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,7 +31,7 @@ func TestConcurrentEvents(t *testing.T) {
 	// ProgressLogger.SetOutput(os.Stdout)
 
 	ct := newGameController(GameOptions{4, 0}) // do not start a game
-	go ct.startLoop()
+	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -70,7 +71,7 @@ func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
 	ct := newGameController(GameOptions{4, time.Millisecond * 50})
-	go ct.startLoop()
+	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -96,7 +97,7 @@ func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
 	ct := newGameController(GameOptions{2, 0})
-	go ct.startLoop()
+	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -131,7 +132,7 @@ func TestStartGame(t *testing.T) {
 
 	ct := newGameController(GameOptions{2, 0})
 
-	go ct.startLoop()
+	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -178,7 +179,7 @@ func TestInvalidJoin(t *testing.T) {
 
 	ct := newGameController(GameOptions{1, 0})
 
-	go ct.startLoop()
+	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()

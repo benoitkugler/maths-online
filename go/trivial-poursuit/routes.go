@@ -1,11 +1,13 @@
 package trivialpoursuit
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -14,20 +16,41 @@ import (
 
 const GameEndPoint = "/trivial/game/:game_id"
 
+type gameID = string
+
 type Controller struct {
 	host *url.URL // current URL start, such as http://localhost:1323, or https://www.deployed.fr
 
 	lock sync.Mutex
 
-	games map[string]*gameController // active games
+	games       map[gameID]*gameController // active games
+	gameTimeout time.Duration              // max duration of a game (useful is nobody joins)
 }
 
-func NewController(host string) (*Controller, error) {
-	u, err := url.Parse(host)
+// NewController initialize the controller. It will panic
+// if the given host is an invalid url
+func NewController(host string) *Controller {
+	u, err := url.Parse("http://" + host)
+	if err != nil {
+		panic(err)
+	}
 	return &Controller{
-		host:  u,
-		games: make(map[string]*gameController),
-	}, err
+		host:        u,
+		games:       make(map[string]*gameController),
+		gameTimeout: time.Hour * 24,
+	}
+}
+
+// return the active game and the number of players in it
+func (ct *Controller) stats() map[gameID]int {
+	ct.lock.Lock()
+	defer ct.lock.Unlock()
+
+	out := make(map[gameID]int)
+	for k, v := range ct.games {
+		out[k] = len(v.clients)
+	}
+	return out
 }
 
 func (ct *Controller) buildURL(path string, isWebSocket bool) string {
@@ -85,7 +108,10 @@ func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 	ct.games[newID] = game
 	// ...and start it
 	go func() {
-		game.startLoop()
+		ctx, cancelFunc := context.WithTimeout(context.Background(), ct.gameTimeout)
+		game.startLoop(ctx)
+
+		cancelFunc()
 
 		// remove the game controller when the game is over
 		ct.lock.Lock()
@@ -98,12 +124,14 @@ func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 	return out
 }
 
+// AccessGame establish a connection to a game session, using
+// WebSockets
 func (ct *Controller) AccessGame(c echo.Context) error {
 	gameID := c.Param("game_id")
 
 	game, ok := ct.games[gameID]
 	if !ok {
-		return fmt.Errorf("La partie n'existe pas ou est déjà terminée")
+		return fmt.Errorf("La partie n'existe pas ou est déjà terminée.")
 	}
 
 	// connect to the websocket handler, which handle errors

@@ -24,10 +24,7 @@ func main() {
 
 	host := getAdress(*devPtr)
 
-	ct, err := trivialpoursuit.NewController("http://" + host)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ct := trivialpoursuit.NewController(host)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -55,8 +52,8 @@ func main() {
 	}
 	fmt.Println("Setup done")
 
-	err = e.Start(host) // start and block
-	e.Logger.Fatal(err) // report error and quit
+	err := e.Start(host) // start and block
+	e.Logger.Fatal(err)  // report error and quit
 }
 
 func getAdress(dev bool) string {

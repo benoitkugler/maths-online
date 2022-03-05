@@ -1,6 +1,7 @@
 package trivialpoursuit
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -31,7 +32,7 @@ func RegisterTestGame(apiPath string, options GameOptions) {
 	ct := newGameController(options)
 	go func() {
 		for {
-			ct.startLoop()
+			ct.startLoop(context.Background()) // never timeout for tests
 
 			// when game ends, just reset it and start again
 			ct.game = *game.NewGame(options.QuestionTimeout)
@@ -55,19 +56,24 @@ func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 	}
 	defer ws.Close()
 
-	client, hasJoined := ct.tryJoin(ws)
-	if !hasJoined { // the game at this end point is not usable: close the connection with an error
+	client := &client{conn: ws, game: ct, isAccepted: make(chan bool)}
+	ct.join <- client
+
+	isAccepted := <-client.isAccepted // wait for the controller to check the access
+	if !isAccepted {
+		// the game at this end point is not usable: close the connection with an error
 		websocketError(ws, errors.New("game is closed"))
 		return
 	}
 
-	// all good, start listening for client messages
 	client.startLoop()
 }
 
 type client struct {
 	conn *websocket.Conn
 	game *gameController // to accept user events
+
+	isAccepted chan bool // valid the access to the game
 }
 
 func (cl *client) sendEvent(er game.StateUpdates) error { return cl.conn.WriteJSON(er) }
@@ -84,7 +90,6 @@ func (cl *client) startLoop() {
 		// read in a message
 		_, r, err := cl.conn.NextReader()
 		if err != nil {
-			// fmt.Errorf("client connection closed: %s", err)
 			return
 		}
 
@@ -138,30 +143,18 @@ func newGameController(options GameOptions) *gameController {
 	}
 }
 
-// check if the game can accept a new player
-// if so, also create a new client instance and sends it
-// to the join channel
-func (gc *gameController) tryJoin(ws *websocket.Conn) (*client, bool) {
-	gc.gameLock.Lock()
-	defer gc.gameLock.Unlock()
-
-	// we do not allow connection into an already started game
-	if gc.game.IsPlaying() {
-		return nil, false
-	}
-
-	// create a client object ...
-	cl := &client{conn: ws, game: gc}
-	// ... and adds it to the current game
-	gc.join <- cl
-
-	return cl, true
-}
-
-func (gc *gameController) startLoop() {
+func (gc *gameController) startLoop(ctx context.Context) {
 	var isGameOver bool // if true, broadcast the last events and quit
 	for {
 		select {
+		case <-ctx.Done(): // terminate the game on timeout
+			ProgressLogger.Println("Game timed out")
+			for client := range gc.clients {
+				websocketError(client.conn, errors.New("game timeout reached"))
+			}
+
+			return
+
 		case event := <-gc.broadcastEvents:
 			ProgressLogger.Println("Broadcasting...")
 			for client, clientID := range gc.clients {
@@ -177,6 +170,10 @@ func (gc *gameController) startLoop() {
 			}
 
 		case client := <-gc.leave:
+			if _, in := gc.clients[client]; !in { // client who never joined may still end up here
+				continue
+			}
+
 			ProgressLogger.Println("Removing player...")
 
 			gc.gameLock.Lock()
@@ -207,6 +204,15 @@ func (gc *gameController) startLoop() {
 
 		case client := <-gc.join:
 			ProgressLogger.Println("Adding player...")
+
+			// we do not allow connection into an already started game
+			if gc.game.IsPlaying() {
+				// the game at this end point is not usable: close the connection with an error
+				client.isAccepted <- false
+				continue
+			} else {
+				client.isAccepted <- true
+			}
 
 			event := gc.game.AddPlayer()
 			gc.clients[client] = event.Player
