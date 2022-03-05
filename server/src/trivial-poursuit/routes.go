@@ -14,7 +14,10 @@ import (
 
 // exposes some routes used to control and launch games
 
-const GameEndPoint = "/trivial/game/:game_id"
+const (
+	GameEndPoint = "/trivial/game/:game_id"
+	gameTimeout  = time.Hour * 24
+)
 
 type gameID = string
 
@@ -37,7 +40,7 @@ func NewController(host string) *Controller {
 	return &Controller{
 		host:        u,
 		games:       make(map[string]*gameController),
-		gameTimeout: time.Hour * 24,
+		gameTimeout: gameTimeout,
 	}
 }
 
