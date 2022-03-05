@@ -1,3 +1,4 @@
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,8 @@ void main() {
 }
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
+
+final bm = buildMode();
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -30,8 +33,8 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        // body: const _HomePage(),
-        body: const TrivialPoursuitLoggin(),
+        body: const _HomePage(),
+        // body: const TrivialPoursuitLoggin(),
       ),
     );
   }
@@ -47,7 +50,7 @@ class _HomePage extends StatefulWidget {
 class _HomePageState extends State<_HomePage> {
   void _launchTrivialPoursuit() {
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: TrivialPoursuitLoggin())));
+        builder: (_) => Scaffold(body: TrivialPoursuitLoggin(bm))));
   }
 
   @override

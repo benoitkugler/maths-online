@@ -1,20 +1,48 @@
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:flutter/material.dart';
 import 'package:otp_text_field/otp_text_field.dart';
 import 'package:otp_text_field/style.dart';
 
+/// in seconds (TODO: fetch from the server if this settings may vary)
+const questionTimeout = 60;
+
 /// Loggin is an introduction screen to access
 /// a TrivialPoursuit game
 class TrivialPoursuitLoggin extends StatefulWidget {
-  const TrivialPoursuitLoggin({Key? key}) : super(key: key);
+  final BuildMode buildMode;
+  const TrivialPoursuitLoggin(this.buildMode, {Key? key}) : super(key: key);
 
   @override
   _TrivialPoursuitLogginState createState() => _TrivialPoursuitLogginState();
 }
 
 class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
+  OtpFieldController otpController = OtpFieldController();
+
+  @override
+  void initState() {
+    Future.delayed(const Duration(milliseconds: 50), () {
+      otpController.setFocus(0);
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final otp = OTPTextField(
+      controller: otpController,
+      length: 6,
+      width: MediaQuery.of(context).size.width,
+      textFieldAlignment: MainAxisAlignment.center,
+      otpFieldStyle: OtpFieldStyle(
+          enabledBorderColor: Theme.of(context).colorScheme.secondary),
+      fieldStyle: FieldStyle.box,
+      fieldWidth: 45,
+      onCompleted: _launchTrivialPoursuit,
+      onChanged: (_) {},
+    );
+
     return Scaffold(
       body: Card(
         child: Column(
@@ -28,20 +56,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: OTPTextField(
-                length: 6,
-                width: MediaQuery.of(context).size.width,
-                textFieldAlignment: MainAxisAlignment.center,
-                otpFieldStyle: OtpFieldStyle(
-                    enabledBorderColor:
-                        Theme.of(context).colorScheme.secondary),
-                fieldStyle: FieldStyle.box,
-                fieldWidth: 45,
-                onCompleted: _launchTrivialPoursuit,
-                onChanged: (_) {},
-              ),
-            ),
+                padding: const EdgeInsets.symmetric(vertical: 20), child: otp),
           ],
         ),
       ),
@@ -49,10 +64,9 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   }
 
   void _launchTrivialPoursuit(String code) {
-    const host = "localhost:1323";
-    final uri = Uri.parse('ws://$host/trivial/game/$code');
-
+    final url = widget.buildMode.websocketURL('/trivial/game/$code');
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(body: TrivialPoursuitController(60, uri))));
+        builder: (_) =>
+            Scaffold(body: TrivialPoursuitController(questionTimeout, url))));
   }
 }

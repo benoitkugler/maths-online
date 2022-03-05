@@ -10,11 +10,10 @@ import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-const devMode = bool.fromEnvironment("dev");
-
 class TrivialPoursuitController extends StatefulWidget {
   final int questionTimeout; // in seconds
-  final Uri apiURL;
+  /// empty for no remote connection
+  final String apiURL;
 
   const TrivialPoursuitController(this.questionTimeout, this.apiURL, {Key? key})
       : super(key: key);
@@ -48,12 +47,12 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   @override
   void initState() {
-    if (devMode) {
+    if (widget.apiURL == "") {
       // debug only
       Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
     } else {
       /// API connection
-      channel = WebSocketChannel.connect(widget.apiURL);
+      channel = WebSocketChannel.connect(Uri.parse(widget.apiURL));
       channel.stream.listen(listen, onError: showError);
     }
 
@@ -84,7 +83,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   @override
   void dispose() {
-    if (!devMode) {
+    if (widget.apiURL != "") {
       channel.sink.close(1000, "Bye bye");
     }
     diceRollAnimation = null;
@@ -109,7 +108,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   void _sendEvent(ClientEventData event) {
-    if (!devMode) {
+    if (widget.apiURL != "") {
       channel.sink
           .add(jsonEncode(clientEventToJson(ClientEvent(event, playerID))));
     }
