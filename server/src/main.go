@@ -100,7 +100,7 @@ func serveProfApp(c echo.Context) error {
 
 func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	// global static files used by frontend apps
-	e.Group("/static", middleware.Gzip()).Static("/*", "/static")
+	e.Group("/static", middleware.Gzip()).Static("/*", "static")
 
 	// trivialpoursuit game server
 	e.POST("/trivial/launch_game", ct.LaunchGame)
