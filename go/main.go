@@ -68,7 +68,7 @@ func getAdress(dev bool) string {
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
-			log.Fatal("No PORT found", err)
+			log.Fatal("No PORT found ", err)
 		}
 		if strings.Count(host, ":") >= 2 { // ipV6 -> besoin de crochet
 			host = "[" + host + "]"
