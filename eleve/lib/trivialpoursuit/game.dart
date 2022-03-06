@@ -23,6 +23,7 @@ class TrivialPoursuitController extends StatefulWidget {
 
 class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   late WebSocketChannel channel;
+  late Timer _keepAliveTimmer;
 
   int playerID = 0;
   bool hasGameStarted = false;
@@ -52,6 +53,12 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       /// API connection
       channel = WebSocketChannel.connect(Uri.parse(widget.apiURL));
       channel.stream.listen(listen, onError: showError);
+
+      /// websocket is close in case of inactivity
+      /// prevent it by sending pings
+      _keepAliveTimmer = Timer.periodic(const Duration(seconds: 50), (timer) {
+        _sendEvent(const Ping("keeping alive"));
+      });
     }
 
     super.initState();
@@ -83,6 +90,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   void dispose() {
     if (widget.apiURL != "") {
       channel.sink.close(1000, "Bye bye");
+      _keepAliveTimmer.cancel();
     }
     diceRollAnimation = null;
     super.dispose();
@@ -254,7 +262,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 3),
       backgroundColor: event.success ? Colors.lightGreen : Colors.orange,
-      content: Text(event.success ? "Bravo !" : "Dommage..."),
+      content: Text(event.success
+          ? "Bonne réponse, bravo !"
+          : "Réponse incorrecte, dommage..."),
     ));
   }
 
@@ -289,6 +299,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     } else if (event is GameEnd) {
       _onGameEnd(event);
     } else {
+      // exhaustive switch
       throw Exception("unexpected event type ${event.runtimeType}");
     }
   }
