@@ -4,9 +4,9 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
   "manifest.json": "6be06c3ebad0d6a2ecb2cdd71690d463",
-"main.dart.js": "ea0c261eeb83a2a3b312428541b89c36",
-"index.html": "81449b16c913a4c59689e2e57b8a1fc0",
-"/": "81449b16c913a4c59689e2e57b8a1fc0",
+"main.dart.js": "6abfdad8753554af13a7f681b4ef2915",
+"index.html": "3dbf1febd6e893f50fe59fc8e2ba65d0",
+"/": "3dbf1febd6e893f50fe59fc8e2ba65d0",
 "canvaskit/profiling/canvaskit.js": "ae2949af4efc61d28a4a80fffa1db900",
 "canvaskit/profiling/canvaskit.wasm": "95e736ab31147d1b2c7b25f11d4c32cd",
 "canvaskit/canvaskit.js": "c2b4e5f3d7a3d82aed024e7249a78487",
@@ -59,7 +59,7 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
   return event.waitUntil(
     caches.open(TEMP).then((cache) => {
-       cache.addAll(
+      cache.addAll(
         CORE.map((value) => new Request(value, {'cache': 'reload'})));
     })
   );

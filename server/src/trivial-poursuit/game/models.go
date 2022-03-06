@@ -7,7 +7,7 @@ import (
 
 // interaction with the client
 
-//go:generate ../../../../structgen/structgen -source=models.go -mode=dart:../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen.go
+//go:generate ../../../../../structgen/structgen -source=models.go -mode=dart:../../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen.go
 
 // GameState represents an on-going game.
 type GameState struct {
@@ -120,8 +120,9 @@ type possibleMoves struct {
 // showQuestion is emitted when a player
 // should answer a question
 type showQuestion struct {
-	Question  string
-	Categorie categorie
+	Question       string
+	TimeoutSeconds int
+	Categorie      categorie
 }
 
 // playerAnswerResult indicates

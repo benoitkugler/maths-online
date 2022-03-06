@@ -349,20 +349,24 @@ dynamic categorieToJson(Categorie item) => item.toValue();
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.showQuestion
 class ShowQuestion implements GameEvent {
   final String question;
+  final int timeoutSeconds;
   final Categorie categorie;
 
-  const ShowQuestion(this.question, this.categorie);
+  const ShowQuestion(this.question, this.timeoutSeconds, this.categorie);
 }
 
 ShowQuestion showQuestionFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return ShowQuestion(
-      stringFromJson(json['Question']), categorieFromJson(json['Categorie']));
+      stringFromJson(json['Question']),
+      intFromJson(json['TimeoutSeconds']),
+      categorieFromJson(json['Categorie']));
 }
 
 JSON showQuestionToJson(ShowQuestion item) {
   return {
     "Question": stringToJson(item.question),
+    "TimeoutSeconds": intToJson(item.timeoutSeconds),
     "Categorie": categorieToJson(item.categorie)
   };
 }

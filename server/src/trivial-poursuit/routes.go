@@ -69,7 +69,8 @@ func (ct *Controller) buildURL(path string, isWebSocket bool) string {
 }
 
 type LaunchGameIn struct {
-	NbPlayers int
+	NbPlayers      int
+	TimeoutSeconds int
 }
 
 type LaunchGameOut struct {
@@ -106,7 +107,7 @@ func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 	for _, taken := ct.games[newID]; taken; newID = randGameID() { // avoid (unlikely) collisions
 	}
 
-	game := newGameController(GameOptions{PlayersNumber: options.NbPlayers})
+	game := newGameController(GameOptions{PlayersNumber: options.NbPlayers, QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds)})
 	// register the controller...
 	ct.games[newID] = game
 	// ...and start it

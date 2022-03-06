@@ -199,8 +199,9 @@ func (g *Game) handleAnswer(a answer, player PlayerID) (updates StateUpdates, is
 func (gs *Game) EmitQuestion() showQuestion {
 	cat := categories[gs.PawnTile]
 	question := showQuestion{
-		Question:  fmt.Sprintf("Quelle est la catégorie %d", cat),
-		Categorie: cat,
+		Question:       fmt.Sprintf("Quelle est la catégorie %d", cat),
+		Categorie:      cat,
+		TimeoutSeconds: int(gs.questionDurationLimit.Seconds()),
 	}
 	gs.question = question
 

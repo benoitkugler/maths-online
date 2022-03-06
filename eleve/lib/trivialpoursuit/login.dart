@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:otp_text_field/otp_text_field.dart';
 import 'package:otp_text_field/style.dart';
 
-/// in seconds (TODO: fetch from the server if this settings may vary)
-const questionTimeout = 60;
-
 /// Loggin is an introduction screen to access
 /// a TrivialPoursuit game
 class TrivialPoursuitLoggin extends StatefulWidget {
@@ -66,7 +63,6 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   void _launchTrivialPoursuit(String code) {
     final url = widget.buildMode.websocketURL('/trivial/game/$code');
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) =>
-            Scaffold(body: TrivialPoursuitController(questionTimeout, url))));
+        builder: (_) => Scaffold(body: TrivialPoursuitController(url))));
   }
 }

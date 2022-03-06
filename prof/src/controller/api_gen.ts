@@ -5,6 +5,7 @@ import Axios, { AxiosResponse } from "axios";
 // github.com/benoitkugler/maths-online/trivial-poursuit.LaunchGameIn
 export interface LaunchGameIn {
   NbPlayers: number;
+  TimeoutSeconds: number;
 }
 // github.com/benoitkugler/maths-online/trivial-poursuit.LaunchGameOut
 export interface LaunchGameOut {
@@ -18,7 +19,7 @@ export abstract class AbstractAPI {
   constructor(
     protected baseUrl: string,
     protected authToken: string,
-    protected urlParams: {}
+    protected urlParams: { game_id: string }
   ) {}
 
   abstract handleError(error: any): void;
@@ -52,4 +53,50 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessLaunchGame(data: LaunchGameOut): void;
+
+  protected async rawShowStats() {
+    const fullUrl = this.baseUrl + "/trivial/stats";
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ShowStats wraps rawShowStats and handles the error */
+  async ShowStats() {
+    this.startRequest();
+    try {
+      const out = await this.rawShowStats();
+      this.onSuccessShowStats(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessShowStats(data: any): void;
+
+  protected async rawAccessGame() {
+    const fullUrl =
+      this.baseUrl +
+      "/trivial/game/:game_id".replace(":game_id", this.urlParams.game_id);
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** AccessGame wraps rawAccessGame and handles the error */
+  async AccessGame() {
+    this.startRequest();
+    try {
+      const out = await this.rawAccessGame();
+      this.onSuccessAccessGame(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessAccessGame(data: any): void;
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:generate ../../structgen/apigen -source=main.go -out=../prof/src/controller/api_gen.ts
+//go:generate ../../../structgen/apigen -source=main.go -out=../../prof/src/controller/api_gen.ts
 
 func main() {
 	devPtr := flag.Bool("dev", false, "run in dev mode (localhost)")

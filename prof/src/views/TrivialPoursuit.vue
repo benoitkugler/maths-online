@@ -8,7 +8,14 @@
         label="Nombre de joueurs"
         type="number"
         min="1"
-        v-model.number="nbPlayers"
+        v-model.number="launchOptions.NbPlayers"
+      ></v-text-field>
+      <v-text-field
+        label="Durée limite pour une question"
+        type="number"
+        min="1"
+        suffix="sec"
+        v-model.number="launchOptions.TimeoutSeconds"
       ></v-text-field>
       <v-row>
         <v-col cols="4" sm="6" md="9"></v-col>
@@ -37,20 +44,24 @@
 </template>
 
 <script setup lang="ts">
+import type { LaunchGameIn } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "@vue/runtime-core";
+import { computed, reactive } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
-let nbPlayers = $ref(1);
+let launchOptions: LaunchGameIn = reactive({
+  NbPlayers: 1,
+  TimeoutSeconds: 60
+});
 
-const isValid = computed(() => !isSpinning && nbPlayers > 0);
+const isValid = computed(() => !isSpinning && launchOptions.NbPlayers >= 1);
 let isSpinning = $ref(false);
 
 let gameCode = $ref("");
 
 async function launchGame(): Promise<void> {
   isSpinning = true;
-  const res = await controller.LaunchGame({ NbPlayers: nbPlayers });
+  const res = await controller.LaunchGame(launchOptions);
   isSpinning = false;
 
   if (res === undefined) {

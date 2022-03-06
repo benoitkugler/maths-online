@@ -11,12 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class TrivialPoursuitController extends StatefulWidget {
-  final int questionTimeout; // in seconds
   /// empty for no remote connection
   final String apiURL;
 
-  const TrivialPoursuitController(this.questionTimeout, this.apiURL, {Key? key})
-      : super(key: key);
+  const TrivialPoursuitController(this.apiURL, {Key? key}) : super(key: key);
 
   @override
   _TrivialPoursuitControllerState createState() =>
@@ -67,7 +65,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
         // DiceThrow(2),
         // PossibleMoves(0, [1, 2, 3]),
         // Move([0, 1, 2], 2),
-        ShowQuestion("test", Categorie.blue),
+        ShowQuestion("test", 60, Categorie.blue),
       ], state),
     ]);
 
@@ -239,7 +237,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           _sendEvent(Answer(notification.answer));
           return true;
         },
-        child: QuestionRoute(event, Duration(seconds: widget.questionTimeout)),
+        child: QuestionRoute(event, Duration(seconds: event.timeoutSeconds)),
       ),
     ));
   }
