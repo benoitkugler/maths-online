@@ -90,6 +90,7 @@ func (cl *client) startLoop() {
 		// read in a message
 		_, r, err := cl.conn.NextReader()
 		if err != nil {
+			WarningLogger.Printf("client connection: %s", err)
 			return
 		}
 
@@ -174,15 +175,14 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				continue
 			}
 
-			ProgressLogger.Println("Removing player...")
+			ProgressLogger.Printf("Removing player %d...", gc.clients[client])
 
 			gc.gameLock.Lock()
 			event := gc.game.RemovePlayer(gc.clients[client])
 			hasStarted := gc.game.IsPlaying()
 			nbPlayers := gc.game.NumberPlayers()
-			gc.gameLock.Unlock()
-
 			delete(gc.clients, client)
+			gc.gameLock.Unlock()
 
 			// end the game only if the game has already started and all
 			// players have left

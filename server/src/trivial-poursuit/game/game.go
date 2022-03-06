@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const defautQuestionTimeout = time.Minute / 10
+
+// const defautQuestionTimeout = time.Minute
+
 // PlayerID identifies a player in the game
 type PlayerID = int
 
@@ -39,7 +43,7 @@ type Game struct {
 // `questionTimeout` is an optionnal parameter which default to one minute
 func NewGame(questionTimeout time.Duration) *Game {
 	if questionTimeout == 0 {
-		questionTimeout = time.Minute
+		questionTimeout = defautQuestionTimeout
 	}
 
 	timer := time.NewTimer(time.Second)

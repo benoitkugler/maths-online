@@ -3,6 +3,10 @@ import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
+const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
+
+final bm = buildMode();
+
 void main() {
   runApp(const MyApp());
 
@@ -10,10 +14,6 @@ void main() {
   // final player = AudioCache(prefix: "lib/music/");
   // player.loop("DontLetMeGo.mp3");
 }
-
-const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
-
-final bm = buildMode();
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
