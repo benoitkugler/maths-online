@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
@@ -45,12 +44,6 @@ func main() {
 			ExposeHeaders: []string{"Content-Disposition"},
 		}))
 		fmt.Println("CORS activé.")
-
-		// simulate some latency for better conformity
-		e.Use(echo.WrapMiddleware(func(h http.Handler) http.Handler {
-			time.Sleep(time.Second / 2)
-			return h
-		}))
 	}
 
 	setupRoutes(e, ct)
@@ -98,9 +91,17 @@ func serveProfApp(c echo.Context) error {
 	return c.File("static/prof/index.html")
 }
 
+func serveEleveApp(c echo.Context) error {
+	return c.File("static/eleve/index.html")
+}
+
 func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip()).Static("/*", "static")
+
+	e.GET("/test-eleve", serveEleveApp)
+	e.GET("/test-eleve/", serveEleveApp)
+	e.Group("/test-eleve/*", middleware.Gzip()).Static("/*", "static/eleve")
 
 	// trivialpoursuit game server
 	e.POST("/trivial/launch_game", ct.LaunchGame)

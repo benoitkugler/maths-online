@@ -7,6 +7,7 @@
       <v-text-field
         label="Nombre de joueurs"
         type="number"
+        min="1"
         v-model.number="nbPlayers"
       ></v-text-field>
       <v-row>
@@ -20,7 +21,10 @@
 
       <v-alert class="px-4 my-2" :model-value="gameCode != ''" color="info">
         <v-row no-gutters>
-          <v-col align-self="center"> Code de la partie à rejoindre : </v-col>
+          <v-col align-self="center">
+            Code de
+            <a href="/test-eleve" target="_blank">la partie à rejoindre</a> :
+          </v-col>
           <v-col>
             <v-chip size="big" class="pa-3"
               ><b>{{ gameCode }}</b></v-chip
@@ -37,7 +41,7 @@ import { controller } from "@/controller/controller";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
-let nbPlayers = $ref(0);
+let nbPlayers = $ref(1);
 
 const isValid = computed(() => !isSpinning && nbPlayers > 0);
 let isSpinning = $ref(false);
