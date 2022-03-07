@@ -14,9 +14,23 @@ class Pie extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(80, 80),
-      painter: _PiePainter(glowWidth, success),
+    return Stack(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
+            BoxShadow(
+              color: Colors.white,
+              blurRadius: glowWidth,
+            )
+          ]),
+        ),
+        CustomPaint(
+          size: const Size(80, 80),
+          painter: _PiePainter(success),
+        ),
+      ],
     );
   }
 }
@@ -41,13 +55,9 @@ extension CategorieColor on Categorie {
 }
 
 class _PiePainter extends CustomPainter {
-  final double glowWidth;
-
   final Success success;
 
-  static const blurRadius = 6.0;
-
-  _PiePainter(this.glowWidth, this.success);
+  _PiePainter(this.success);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -55,18 +65,6 @@ class _PiePainter extends CustomPainter {
     final nbSections = Categorie.values.length;
     final angularSection = 2 * pi / nbSections;
     final center = size.center(Offset.zero);
-
-    // outer glow
-    canvas.drawCircle(
-      center,
-      radius + 2,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = glowWidth
-        ..imageFilter =
-            ImageFilter.blur(sigmaX: blurRadius, sigmaY: blurRadius),
-    );
 
     // white background
     canvas.drawCircle(

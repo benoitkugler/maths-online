@@ -34,7 +34,6 @@ class MyApp extends StatelessWidget {
           title: const Text('Isiro'),
         ),
         body: const _HomePage(),
-        // body: const TrivialPoursuitLoggin(),
       ),
     );
   }

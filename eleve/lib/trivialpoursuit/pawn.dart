@@ -9,7 +9,8 @@ class PawnImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 800),
       top: center.dy - size / 2,
       left: center.dx - size / 2,
       width: size,

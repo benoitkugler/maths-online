@@ -22,6 +22,13 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     Future.delayed(const Duration(milliseconds: 50), () {
       otpController.setFocus(0);
     });
+
+    if (widget.buildMode == BuildMode.debug) {
+      // skip loggin screen
+      Future.delayed(
+          const Duration(milliseconds: 50), () => _launchTrivialPoursuit(""));
+    }
+
     super.initState();
   }
 

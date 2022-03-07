@@ -44,6 +44,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   List<int> winners = [];
   List<String> winnerNames = [];
 
+  double pieGlowWidth = 10;
+
   @override
   void initState() {
     if (widget.apiURL == "") {
@@ -66,24 +68,26 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   void processEventsDebug() async {
     await processEvents([
-      StateUpdate(const [
+      StateUpdate([
         PlayerJoin(0),
         GameStart(),
         // DiceThrow(2),
-        // PossibleMoves(0, [1, 2, 3]),
-        // Move([0, 1, 2], 2),
-        ShowQuestion("test", 60, Categorie.blue),
+        PossibleMoves(0, [1, 2, 3]),
+        // Move([0, 1, 2, 3, 4, 5], 5),
+        // ShowQuestion("test", 60, Categorie.blue),
+        // PlayerAnswerResult(0, true),
       ], state),
     ]);
 
-    await Future<void>.delayed(const Duration(seconds: 2000));
+    // await Future<void>.delayed(const Duration(seconds: 2));
 
-    await processEvents([
-      StateUpdate(const [
-        PlayerAnswerResult(0, true),
-        GameEnd([0], ["Pierre"])
-      ], state),
-    ]);
+    // await processEvents([
+    //   StateUpdate(const [
+    //     // DiceThrow(2)
+    //     // PlayerAnswerResult(0, true),
+    //     // GameEnd([0], ["Pierre"])
+    //   ], state),
+    // ]);
   }
 
   @override
@@ -219,6 +223,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return;
     }
     setState(() {
+      diceDisabled = false;
       highligthedTiles = event.tiles.toSet();
     });
   }
@@ -256,7 +261,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return;
     }
 
-    // close the question on timeout
+    // close the question on timeout :
+    // this rely on ShowQuestion being always executed
+    // before PlayerAnswerResult
     Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -266,6 +273,19 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           ? "Bonne réponse, bravo !"
           : "Réponse incorrecte, dommage..."),
     ));
+
+    if (event.success) {
+      // some glow effect
+      setState(() {
+        pieGlowWidth += 10;
+      });
+
+      Future.delayed(const Duration(milliseconds: 500), () {
+        setState(() {
+          pieGlowWidth -= 10;
+        });
+      });
+    }
   }
 
   void _onGameEnd(GameEnd event) {
@@ -323,6 +343,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     return hasGameStarted
         ? _GameStarted(
             state.successes[playerID]!,
+            pieGlowWidth,
             diceRollAnimation,
             diceResult,
             diceDisabled,
@@ -343,6 +364,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
 class _GameStarted extends StatelessWidget {
   final Success success;
+  final double pieGlowWidth;
 
   final Stream<dice.Face>? diceRollAnimation;
   final dice.Face diceResult;
@@ -352,8 +374,15 @@ class _GameStarted extends StatelessWidget {
   final Set<int> availableTiles;
   final int pawnTile;
 
-  const _GameStarted(this.success, this.diceRollAnimation, this.diceResult,
-      this.diceDisabled, this.onTapTile, this.availableTiles, this.pawnTile,
+  const _GameStarted(
+      this.success,
+      this.pieGlowWidth,
+      this.diceRollAnimation,
+      this.diceResult,
+      this.diceDisabled,
+      this.onTapTile,
+      this.availableTiles,
+      this.pawnTile,
       {Key? key})
       : super(key: key);
 
@@ -371,7 +400,7 @@ class _GameStarted extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(top: 10, left: 40),
-                  child: Pie(10, success),
+                  child: Pie(pieGlowWidth, success),
                 ),
                 const Spacer(),
                 Padding(
@@ -381,7 +410,7 @@ class _GameStarted extends StatelessWidget {
               ],
             ),
           ),
-          Center(
+          Expanded(
             child: AspectRatio(
               aspectRatio: 1,
               child: Board(onTapTile, availableTiles, pawnTile),
@@ -464,8 +493,7 @@ class GameIcon extends StatelessWidget {
         RawMaterialButton(
           onPressed: onTap,
           elevation: 2.0,
-          // fillColor: Colors.white,
-          child: Pie(2, Categorie.values.map((e) => true).toList()),
+          child: Pie(5, Categorie.values.map((e) => true).toList()),
           padding: const EdgeInsets.all(10.0),
           shape: const CircleBorder(),
         ),

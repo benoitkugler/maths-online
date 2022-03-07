@@ -183,12 +183,6 @@ class _RegularTile extends StatelessWidget {
 class _HightightedTile extends StatelessWidget {
   final _TileConfig tile;
 
-  /// blur effect
-  static const radius = 6.0;
-
-  /// blur effect
-  static const width = 10.0;
-
   const _HightightedTile(this.tile, {Key? key}) : super(key: key);
 
   @override
@@ -201,84 +195,70 @@ class _HightightedTile extends StatelessWidget {
         ),
         GestureDetector(
           onTap: tile.onTap,
-          child: CustomPaint(
-            size: tile.size, // required to work around pointer issues
-            painter: _TileGlow(tile.path, width, radius),
-          ),
+          child: _AnimatedGlow(tile),
         ),
       ],
     );
   }
 }
 
-/// add a glow animation to a tile
-// class _HightightedTile extends StatefulWidget {
-//   final _TileConfig tile;
+// add a glow animation to a tile
+class _AnimatedGlow extends StatefulWidget {
+  final _TileConfig tile;
 
-//   const _HightightedTile(this.tile, {Key? key}) : super(key: key);
+  const _AnimatedGlow(this.tile, {Key? key}) : super(key: key);
 
-//   @override
-//   __HightightedTileState createState() => __HightightedTileState();
-// }
+  @override
+  __AnimatedGlowState createState() => __AnimatedGlowState();
+}
 
-// class __HightightedTileState extends State<_HightightedTile>
-//     with SingleTickerProviderStateMixin {
-//   late AnimationController controller;
-//   static const radiusFactor = 8;
-//   static const duration = Duration(milliseconds: 800);
+class __AnimatedGlowState extends State<_AnimatedGlow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController controller;
+  static const radiusFactor = 6;
+  static const duration = Duration(milliseconds: 800);
 
-//   @override
-//   void initState() {
-//     super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-//     controller = AnimationController(
-//       vsync: this,
-//       duration: duration,
-//       reverseDuration: duration,
-//     );
+    controller = AnimationController(
+      vsync: this,
+      duration: duration,
+      reverseDuration: duration,
+    );
 
-//     controller.repeat(reverse: true);
-//   }
+    controller.repeat(reverse: true);
+  }
 
-//   @override
-//   void dispose() {
-//     controller.dispose();
-//     super.dispose();
-//   }
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Stack(
-//       children: [
-//         CustomPaint(
-//           size: widget.tile.size,
-//           painter: _TilePainter(widget.tile, true),
-//         ),
-//         GestureDetector(
-//           onTap: widget.tile.onTap,
-//           child: AnimatedBuilder(
-//               animation: controller,
-//               builder: (_, __) {
-//                 final radius = radiusFactor * controller.value + 10;
-//                 return CustomPaint(
-//                   size: widget
-//                       .tile.size, // required to work around pointer issues
-//                   painter: _TileGlow(widget.tile.path, radius),
-//                 );
-//               }),
-//         ),
-//       ],
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+        animation: controller,
+        builder: (_, __) {
+          final radius = radiusFactor * controller.value + 4;
+          return CustomPaint(
+            size: widget.tile.size, // required to work around pointer issues
+            painter: _TileGlow(widget.tile.path, radius),
+          );
+        });
+  }
+}
 
 class _TileGlow extends CustomPainter {
-  static final color = Colors.white.withOpacity(0.8);
-
   final Path _path;
-  final double highlightWidth;
   final double blurRadius;
-  _TileGlow(this._path, this.highlightWidth, this.blurRadius);
+
+  static const color = Colors.white;
+  static const highlightWidth = 10.0;
+
+  const _TileGlow(this._path, this.blurRadius);
 
   @override
   bool? hitTest(Offset position) {
@@ -288,7 +268,7 @@ class _TileGlow extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
-    // canvas.clipPath(_path);
+    canvas.clipPath(_path);
     canvas.drawPath(
       _path,
       Paint()
@@ -304,7 +284,7 @@ class _TileGlow extends CustomPainter {
 
   @override
   bool shouldRepaint(_TileGlow oldDelegate) {
-    return oldDelegate.highlightWidth != highlightWidth;
+    return oldDelegate.blurRadius != blurRadius;
   }
 }
 
