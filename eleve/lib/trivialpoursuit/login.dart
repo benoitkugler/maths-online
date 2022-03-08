@@ -69,7 +69,13 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
 
   void _launchTrivialPoursuit(String code) {
     final url = widget.buildMode.websocketURL('/trivial/game/$code');
-    Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(body: TrivialPoursuitController(url))));
+    final route = Navigator.of(context).push(MaterialPageRoute<void>(
+      settings: const RouteSettings(name: "/board"),
+      builder: (_) => Scaffold(body: TrivialPoursuitController(url)),
+    ));
+
+    route.then((value) {
+      otpController.clear();
+    });
   }
 }

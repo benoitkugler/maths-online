@@ -71,13 +71,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     await processEvents([
       const StateUpdate(
           [
-            PlayerJoin(1),
+            PlayerJoin(0),
             GameStart(),
             // DiceThrow(2),
             // PossibleMoves(0, [1, 2, 3]),
             // Move([0, 1, 2, 3, 4, 5], 5),
-            // ShowQuestion("test", 60, Categorie.blue),
-            // PlayerAnswerResult(0, true),
+            // ShowQuestion("test", 60, Categorie.orange),
+            PlayerAnswerResult(0, true),
           ],
           GameState({
             0: PlayerStatus("", [false, false, false, true, false]),
@@ -86,15 +86,15 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           }, 0, 0)),
     ]);
 
-    // await Future<void>.delayed(const Duration(seconds: 2));
+    // await Future<void>.delayed(const Duration(seconds: 3));
 
-    // await processEvents([
-    //   StateUpdate(const [
-    //     // DiceThrow(2)
-    //     // PlayerAnswerResult(0, true),
-    //     // GameEnd([0], ["Pierre"])
-    //   ], state),
-    // ]);
+    await processEvents([
+      StateUpdate(const [
+        DiceThrow(2)
+        // PlayerAnswerResult(0, true),
+        // GameEnd([0], ["Pierre"])
+      ], state),
+    ]);
   }
 
   @override
@@ -113,6 +113,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       backgroundColor: Theme.of(context).colorScheme.error,
       content: Text("Une erreur est survenue : $error"),
     ));
+    Navigator.of(context).pop();
   }
 
   void listen(dynamic event) {
@@ -251,6 +252,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   Future<void> _onShowQuestion(ShowQuestion event) async {
     Navigator.of(context).push(MaterialPageRoute<void>(
+      settings: const RouteSettings(name: "/question"),
       builder: (context) => NotificationListener<SubmitAnswerNotification>(
         onNotification: (notification) {
           // do not close the page now, it is handled when receiving result
@@ -262,24 +264,32 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     ));
   }
 
-  void _onPlayerAnswerResult(PlayerAnswerResult event) {
+  Future<void> _onPlayerAnswerResult(PlayerAnswerResult event) async {
     // for now, we simply ignore other player success
     if (event.player != playerID) {
       return;
     }
 
-    // close the question on timeout :
-    // this rely on ShowQuestion being always executed
-    // before PlayerAnswerResult
-    Navigator.of(context).pop();
+    // close the additional routes (question or recap)
+    // until the "main" board
+    Navigator.of(context).popUntil((route) {
+      if (route.settings.name == "/board") {
+        return true;
+      }
+      return false;
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 3),
-      backgroundColor: event.success ? Colors.lightGreen : Colors.orange,
-      content: Text(event.success
-          ? "Bonne réponse, bravo !"
-          : "Réponse incorrecte, dommage..."),
-    ));
+        duration: const Duration(seconds: 3),
+        backgroundColor: event.success ? Colors.lightGreen : Colors.orange,
+        content: Text(event.success
+            ? "Bonne réponse, bravo !"
+            : "Réponse incorrecte, dommage..."),
+        action: SnackBarAction(
+          textColor: Colors.black,
+          label: "Etat de la partie",
+          onPressed: _showSuccessRecap,
+        )));
 
     if (event.success) {
       // some glow effect
@@ -287,12 +297,15 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
         pieGlowWidth += 10;
       });
 
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(seconds: 1), () {
         setState(() {
           pieGlowWidth -= 10;
         });
       });
     }
+
+    // wait a bit before a new turn
+    return Future.delayed(const Duration(seconds: 2));
   }
 
   void _onGameEnd(GameEnd event) {
@@ -301,6 +314,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       winners = event.winners;
       winnerNames = event.winnerNames;
     });
+  }
+
+  void _showSuccessRecap() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+          builder: (context) => SuccessRecap(state.players)),
+    );
   }
 
   // process the given event
@@ -322,7 +342,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     } else if (event is ShowQuestion) {
       return _onShowQuestion(event);
     } else if (event is PlayerAnswerResult) {
-      _onPlayerAnswerResult(event);
+      return _onPlayerAnswerResult(event);
     } else if (event is GameEnd) {
       _onGameEnd(event);
     } else {
@@ -349,9 +369,11 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
     return hasGameStarted
         ? _GameStarted(
-            state.players,
-            playerID,
-            pieGlowWidth,
+            Hero(
+              tag: "recap_$playerID",
+              child: Pie.asButton(_showSuccessRecap, pieGlowWidth,
+                  state.players[playerID]!.success),
+            ),
             diceRollAnimation,
             diceResult,
             diceDisabled,
@@ -371,10 +393,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 }
 
 class _GameStarted extends StatelessWidget {
-  final Map<int, PlayerStatus> players;
-
-  final int playerID;
-  final double pieGlowWidth;
+  final Widget pie;
 
   final Stream<dice.Face>? diceRollAnimation;
   final dice.Face diceResult;
@@ -384,26 +403,10 @@ class _GameStarted extends StatelessWidget {
   final Set<int> availableTiles;
   final int pawnTile;
 
-  const _GameStarted(
-      this.players,
-      this.playerID,
-      this.pieGlowWidth,
-      this.diceRollAnimation,
-      this.diceResult,
-      this.diceDisabled,
-      this.onTapTile,
-      this.availableTiles,
-      this.pawnTile,
+  const _GameStarted(this.pie, this.diceRollAnimation, this.diceResult,
+      this.diceDisabled, this.onTapTile, this.availableTiles, this.pawnTile,
       {Key? key})
       : super(key: key);
-
-  void _showSuccessRecap(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => SuccessRecap(players)),
-    );
-  }
-
-  Success get success => players[playerID]!.success;
 
   @override
   Widget build(BuildContext context) {
@@ -419,11 +422,7 @@ class _GameStarted extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(top: 10, left: 40),
-                  child: Hero(
-                    tag: "recap_$playerID",
-                    child: Pie.asButton(() => _showSuccessRecap(context),
-                        pieGlowWidth, success),
-                  ),
+                  child: pie,
                 ),
                 const Spacer(),
                 Padding(

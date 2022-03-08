@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class TimeoutBar extends StatefulWidget {
   final Duration duration;
+  final Color color;
 
-  const TimeoutBar(this.duration, {Key? key}) : super(key: key);
+  const TimeoutBar(this.duration, this.color, {Key? key}) : super(key: key);
 
   @override
   _TimeoutBarState createState() => _TimeoutBarState();
@@ -41,6 +42,7 @@ class _TimeoutBarState extends State<TimeoutBar> {
   @override
   Widget build(BuildContext context) {
     return LinearProgressIndicator(
+      color: widget.color,
       value: value,
       minHeight: 10,
     );

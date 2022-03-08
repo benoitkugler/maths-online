@@ -57,49 +57,43 @@ class _QuestionRouteState extends State<QuestionRoute> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 40, bottom: 10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-            color: widget.question.categorie.color,
-            borderRadius: const BorderRadius.all(Radius.circular(10))),
-        child: Card(
-          elevation: 20,
-          child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text(
-                  "Thème ${widget.question.categorie}",
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const Text("Quel est le numéro du thème actuel ?",
-                    style: TextStyle(fontSize: 18)),
-                TextField(
-                  controller: _controller,
-                  cursorColor: widget.question.categorie.color,
-                  decoration: InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                      color: widget.question.categorie.color,
-                    )),
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: _enabledValid ? _onValidated : null,
-                  child: const Text(
-                    "Valider",
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-                TimeoutBar(widget.timeout),
-                Text(_waiting ? "En attente des autres joueurs..." : "",
-                    style: const TextStyle(fontSize: 16)),
-              ],
+    final color = widget.question.categorie.color;
+    return Scaffold(
+      body: Padding(
+        padding:
+            const EdgeInsets.only(top: 40, bottom: 10, left: 20, right: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(
+              "Thème ${widget.question.categorie}",
+              style: const TextStyle(fontSize: 20),
             ),
-          ),
+            const Text("Quel est le numéro du thème actuel ?",
+                style: TextStyle(fontSize: 18)),
+            TextField(
+              controller: _controller,
+              cursorColor: color,
+              decoration: InputDecoration(
+                focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                  color: color,
+                )),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _enabledValid ? _onValidated : null,
+              style: ElevatedButton.styleFrom(primary: color),
+              child: const Text(
+                "Valider",
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            TimeoutBar(widget.timeout, color),
+            Text(_waiting ? "En attente des autres joueurs..." : "",
+                style: const TextStyle(fontSize: 16)),
+          ],
         ),
       ),
     );

@@ -21,6 +21,7 @@ class SuccessRecap extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
           child: ListView(
+              shrinkWrap: true,
               children: sortedPlayers
                   .map((e) => _PlayerTile(e, successes[e]!))
                   .toList()),
@@ -44,7 +45,7 @@ class _PlayerTile extends StatelessWidget {
         tag: "recap_$playerID",
         child: Pie(2, status.success),
       ),
-      contentPadding: const EdgeInsets.all(8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 15),
     );
   }
 }
