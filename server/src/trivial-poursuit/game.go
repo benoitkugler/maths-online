@@ -214,7 +214,7 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				client.isAccepted <- true
 			}
 
-			event := gc.game.AddPlayer()
+			event := gc.game.AddPlayer("") // TODO: name for players
 			gc.clients[client] = event.Player
 
 			// only notifie the player who joined ...

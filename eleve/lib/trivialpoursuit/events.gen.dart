@@ -461,36 +461,57 @@ dynamic listBoolToJson(List<bool> item) {
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.success
 typedef Success = List<bool>;
 
-Map<int, Success> dictIntListBoolFromJson(dynamic json) {
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.PlayerStatus
+class PlayerStatus {
+  final String name;
+  final Success success;
+
+  const PlayerStatus(this.name, this.success);
+}
+
+PlayerStatus playerStatusFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PlayerStatus(
+      stringFromJson(json['Name']), listBoolFromJson(json['Success']));
+}
+
+JSON playerStatusToJson(PlayerStatus item) {
+  return {
+    "Name": stringToJson(item.name),
+    "Success": listBoolToJson(item.success)
+  };
+}
+
+Map<int, PlayerStatus> dictIntPlayerStatusFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
   return (json as JSON)
-      .map((k, v) => MapEntry(int.parse(k), listBoolFromJson(v)));
+      .map((k, v) => MapEntry(int.parse(k), playerStatusFromJson(v)));
 }
 
-dynamic dictIntListBoolToJson(Map<int, Success> item) {
-  return item.map((k, v) => MapEntry(intToJson(k), listBoolToJson(v)));
+dynamic dictIntPlayerStatusToJson(Map<int, PlayerStatus> item) {
+  return item.map((k, v) => MapEntry(intToJson(k), playerStatusToJson(v)));
 }
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.GameState
 class GameState {
-  final Map<int, Success> successes;
+  final Map<int, PlayerStatus> players;
   final int pawnTile;
   final int player;
 
-  const GameState(this.successes, this.pawnTile, this.player);
+  const GameState(this.players, this.pawnTile, this.player);
 }
 
 GameState gameStateFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return GameState(dictIntListBoolFromJson(json['Successes']),
+  return GameState(dictIntPlayerStatusFromJson(json['Players']),
       intFromJson(json['PawnTile']), intFromJson(json['Player']));
 }
 
 JSON gameStateToJson(GameState item) {
   return {
-    "Successes": dictIntListBoolToJson(item.successes),
+    "Players": dictIntPlayerStatusToJson(item.players),
     "PawnTile": intToJson(item.pawnTile),
     "Player": intToJson(item.player)
   };

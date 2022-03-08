@@ -47,9 +47,9 @@ func TestEventsJSON(t *testing.T) {
 
 func TestGameStateJSON(t *testing.T) {
 	payload := GameState{
-		Successes: map[int]*success{
-			0: {true, false},
-			1: {false, true, true},
+		Players: map[int]*PlayerStatus{
+			0: {Success: success{true, false}},
+			1: {Success: success{false, true, true}},
 		},
 		PawnTile: 2,
 	}

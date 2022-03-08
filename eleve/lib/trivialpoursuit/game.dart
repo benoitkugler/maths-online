@@ -7,6 +7,7 @@ import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/lobby.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/question.dart';
+import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -31,7 +32,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   Map<int, String> lobby = {};
 
   GameState state = const GameState({
-    0: [false, false, false, false, false]
+    0: PlayerStatus("", [false, false, false, false, false])
   }, 0, 0);
   Set<int> highligthedTiles = {};
 
@@ -68,15 +69,21 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   void processEventsDebug() async {
     await processEvents([
-      StateUpdate([
-        PlayerJoin(0),
-        GameStart(),
-        // DiceThrow(2),
-        PossibleMoves(0, [1, 2, 3]),
-        // Move([0, 1, 2, 3, 4, 5], 5),
-        // ShowQuestion("test", 60, Categorie.blue),
-        // PlayerAnswerResult(0, true),
-      ], state),
+      const StateUpdate(
+          [
+            PlayerJoin(1),
+            GameStart(),
+            // DiceThrow(2),
+            // PossibleMoves(0, [1, 2, 3]),
+            // Move([0, 1, 2, 3, 4, 5], 5),
+            // ShowQuestion("test", 60, Categorie.blue),
+            // PlayerAnswerResult(0, true),
+          ],
+          GameState({
+            0: PlayerStatus("", [false, false, false, true, false]),
+            1: PlayerStatus("", [false, false, false, false, false]),
+            2: PlayerStatus("", [false, true, false, false, false]),
+          }, 0, 0)),
     ]);
 
     // await Future<void>.delayed(const Duration(seconds: 2));
@@ -235,7 +242,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
     for (var tile in event.path) {
       setState(() {
-        state = GameState(state.successes, tile, state.player);
+        state = GameState(state.players, tile, state.player);
       });
 
       await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -342,7 +349,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
     return hasGameStarted
         ? _GameStarted(
-            state.successes[playerID]!,
+            state.players,
+            playerID,
             pieGlowWidth,
             diceRollAnimation,
             diceResult,
@@ -363,7 +371,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 }
 
 class _GameStarted extends StatelessWidget {
-  final Success success;
+  final Map<int, PlayerStatus> players;
+
+  final int playerID;
   final double pieGlowWidth;
 
   final Stream<dice.Face>? diceRollAnimation;
@@ -375,7 +385,8 @@ class _GameStarted extends StatelessWidget {
   final int pawnTile;
 
   const _GameStarted(
-      this.success,
+      this.players,
+      this.playerID,
       this.pieGlowWidth,
       this.diceRollAnimation,
       this.diceResult,
@@ -385,6 +396,14 @@ class _GameStarted extends StatelessWidget {
       this.pawnTile,
       {Key? key})
       : super(key: key);
+
+  void _showSuccessRecap(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => SuccessRecap(players)),
+    );
+  }
+
+  Success get success => players[playerID]!.success;
 
   @override
   Widget build(BuildContext context) {
@@ -400,7 +419,11 @@ class _GameStarted extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(top: 10, left: 40),
-                  child: Pie(pieGlowWidth, success),
+                  child: Hero(
+                    tag: "recap_$playerID",
+                    child: Pie.asButton(() => _showSuccessRecap(context),
+                        pieGlowWidth, success),
+                  ),
                 ),
                 const Spacer(),
                 Padding(
@@ -490,13 +513,7 @@ class GameIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        RawMaterialButton(
-          onPressed: onTap,
-          elevation: 2.0,
-          child: Pie(5, Categorie.values.map((e) => true).toList()),
-          padding: const EdgeInsets.all(10.0),
-          shape: const CircleBorder(),
-        ),
+        Pie.asButton(onTap, 5, Categorie.values.map((e) => true).toList()),
         const Padding(
           padding: EdgeInsets.only(top: 6, bottom: 6),
           child: Text("Trivial poursuit"),

@@ -11,9 +11,15 @@ import (
 
 // GameState represents an on-going game.
 type GameState struct {
-	Successes map[PlayerID]*success // per-player advance
-	PawnTile  int                   // position of the pawn
-	Player    int                   // the player currently playing (choosing where to move)
+	Players  map[PlayerID]*PlayerStatus // per-player advance
+	PawnTile int                        // position of the pawn
+	Player   int                        // the player currently playing (choosing where to move)
+}
+
+// PlayerStatus exposes the information about one player
+type PlayerStatus struct {
+	Name    string
+	Success success
 }
 
 type StateUpdates = []StateUpdate

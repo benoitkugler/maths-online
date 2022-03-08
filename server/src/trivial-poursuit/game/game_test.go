@@ -7,19 +7,27 @@ import (
 	"time"
 )
 
+func playersFromSuccess(scs ...success) map[int]*PlayerStatus {
+	out := make(map[int]*PlayerStatus)
+	for i, s := range scs {
+		out[i] = &PlayerStatus{Success: s}
+	}
+	return out
+}
+
 func Test_gameState_winners(t *testing.T) {
 	tests := []struct {
-		sc      map[int]*success
+		sc      map[int]*PlayerStatus
 		wantOut []int
 	}{
-		{map[int]*success{0: {true}, 1: {true}, 2: {true, true, true, true, true}}, []int{2}},
-		{map[int]*success{0: {true}, 1: {true}, 2: {true, true, true, true}}, nil},
-		{map[int]*success{0: {true, true, true, true, true}, 1: {true}, 2: {true, true, true, true, true}}, []int{0, 2}},
+		{playersFromSuccess(success{true}, success{true}, success{true, true, true, true, true}), []int{2}},
+		{playersFromSuccess(success{true}, success{true}, success{true, true, true, true}), nil},
+		{playersFromSuccess(success{true, true, true, true, true}, success{true}, success{true, true, true, true, true}), []int{0, 2}},
 	}
 	for _, tt := range tests {
 		gs := &Game{
 			GameState: GameState{
-				Successes: tt.sc,
+				Players: tt.sc,
 			},
 		}
 		if gotOut := gs.winners(); !reflect.DeepEqual(gotOut, tt.wantOut) {
@@ -30,7 +38,7 @@ func Test_gameState_winners(t *testing.T) {
 
 func TestGameState_nextPlayer(t *testing.T) {
 	type fields struct {
-		Successes map[PlayerID]*success
+		Successes map[PlayerID]*PlayerStatus
 		Player    int
 	}
 	tests := []struct {
@@ -39,28 +47,28 @@ func TestGameState_nextPlayer(t *testing.T) {
 	}{
 		{
 			fields{
-				Successes: map[int]*success{0: {}, 1: {}, 4: {}},
+				Successes: map[int]*PlayerStatus{0: {}, 1: {}, 4: {}},
 				Player:    0,
 			},
 			1,
 		},
 		{
 			fields{
-				Successes: map[int]*success{0: {}, 1: {}, 4: {}},
+				Successes: map[int]*PlayerStatus{0: {}, 1: {}, 4: {}},
 				Player:    1,
 			},
 			4,
 		},
 		{
 			fields{
-				Successes: map[int]*success{0: {}, 1: {}, 4: {}},
+				Successes: map[int]*PlayerStatus{0: {}, 1: {}, 4: {}},
 				Player:    2,
 			},
 			4,
 		},
 		{
 			fields{
-				Successes: map[int]*success{0: {}, 1: {}, 4: {}},
+				Successes: map[int]*PlayerStatus{0: {}, 1: {}, 4: {}},
 				Player:    4,
 			},
 			0,
@@ -69,8 +77,8 @@ func TestGameState_nextPlayer(t *testing.T) {
 	for _, tt := range tests {
 		g := &Game{
 			GameState: GameState{
-				Successes: tt.fields.Successes,
-				Player:    tt.fields.Player,
+				Players: tt.fields.Successes,
+				Player:  tt.fields.Player,
 			},
 		}
 		if got := g.nextPlayer(); !reflect.DeepEqual(got, tt.want) {
@@ -81,13 +89,13 @@ func TestGameState_nextPlayer(t *testing.T) {
 
 func TestStart(t *testing.T) {
 	g := NewGame(0)
-	p1 := g.AddPlayer().Player
+	p1 := g.AddPlayer("").Player
 	if p1 != 0 {
 		t.Fatalf("unexpected player id %d", p1)
 	}
 
-	p2 := g.AddPlayer().Player
-	p3 := g.AddPlayer().Player
+	p2 := g.AddPlayer("").Player
+	p3 := g.AddPlayer("").Player
 	if p1 == p2 || p2 == p3 {
 		t.Fatal()
 	}
@@ -100,7 +108,7 @@ func TestStart(t *testing.T) {
 
 func TestEmitQuestion(t *testing.T) {
 	g := NewGame(time.Second / 2)
-	g.AddPlayer()
+	g.AddPlayer("")
 
 	if g.QuestionTimeout.Stop() {
 		t.Fatal("timer should not being running")
@@ -128,7 +136,7 @@ outer:
 
 func TestHandleClientEvent(t *testing.T) {
 	g := NewGame(0)
-	g.AddPlayer()
+	g.AddPlayer("")
 	g.startTurn()
 
 	_, _, err := g.HandleClientEvent(ClientEvent{})

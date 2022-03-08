@@ -50,8 +50,8 @@ func NewGame(questionTimeout time.Duration) *Game {
 	timer.Stop()
 	return &Game{
 		GameState: GameState{
-			Successes: make(map[int]*success),
-			Player:    -1,
+			Players: make(map[int]*PlayerStatus),
+			Player:  -1,
 		},
 		currentAnswers:        make(map[int]playerAnswerResult),
 		QuestionTimeout:       timer,
@@ -60,27 +60,35 @@ func NewGame(questionTimeout time.Duration) *Game {
 }
 
 // NumberPlayers return the number of players actually in the game.
-func (gs GameState) NumberPlayers() int { return len(gs.Successes) }
+func (gs GameState) NumberPlayers() int { return len(gs.Players) }
 
 // IsPlaying returns true if the game has started and is not finished yet.
 func (g *Game) IsPlaying() bool { return g.Player != -1 && len(g.winners()) == 0 }
 
 // AddPlayer add a player to the game and returns
 // its id.
-func (g *Game) AddPlayer() LobbyUpdate {
+// If name is empty, a name is generated.
+func (g *Game) AddPlayer(name string) LobbyUpdate {
 	max := -1
-	for id := range g.Successes {
+	for id := range g.Players {
 		if id > max {
 			max = id
 		}
 	}
 	playerID := max + 1
-	g.Successes[playerID] = &success{}
+
+	if name == "" {
+		name = generatePlayerName(playerID)
+	}
+
+	g.Players[playerID] = &PlayerStatus{
+		Name: name,
+	}
 
 	return LobbyUpdate{
 		Player:     playerID,
 		Names:      g.playerNames(),
-		PlayerName: g.playerName(playerID),
+		PlayerName: name,
 		IsJoining:  true,
 	}
 }
@@ -88,7 +96,7 @@ func (g *Game) AddPlayer() LobbyUpdate {
 // RemovePlayer remove `player` from the game.
 func (g *Game) RemovePlayer(player PlayerID) LobbyUpdate {
 	playerName := g.playerName(player)
-	delete(g.Successes, player)
+	delete(g.Players, player)
 	return LobbyUpdate{
 		Player:     player,
 		Names:      g.playerNames(),
@@ -100,7 +108,7 @@ func (g *Game) RemovePlayer(player PlayerID) LobbyUpdate {
 // panic if no players are present
 func (g *Game) nextPlayer() PlayerID {
 	var sortedIds []int
-	for player := range g.Successes {
+	for player := range g.Players {
 		sortedIds = append(sortedIds, player)
 	}
 	sort.Ints(sortedIds)
@@ -185,7 +193,7 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 
 func (g *Game) handleAnswer(a answer, player PlayerID) (updates StateUpdates, isGameOver bool) {
 	isValid := g.isAnswerValid(a)
-	g.Successes[player][g.question.Categorie] = isValid
+	g.Players[player].Success[g.question.Categorie] = isValid
 	g.currentAnswers[player] = playerAnswerResult{
 		Player:  player,
 		Success: isValid,
@@ -249,7 +257,7 @@ func (gs *Game) concludeTurn(force bool) (updates StateUpdates, isGameOver bool)
 // if `force` is false, it only does so if every player have answered
 func (gs *Game) endQuestion(force bool) Events {
 	hasAllAnswered := true
-	for player := range gs.Successes {
+	for player := range gs.Players {
 		if _, has := gs.currentAnswers[player]; !has {
 			hasAllAnswered = false
 			break
@@ -261,7 +269,7 @@ func (gs *Game) endQuestion(force bool) Events {
 
 	// return the answers event, defaulting
 	var out Events
-	for player := range gs.Successes {
+	for player := range gs.Players {
 		answer, has := gs.currentAnswers[player]
 		if !has {
 			answer = playerAnswerResult{Player: player, Success: false}
@@ -286,8 +294,8 @@ func (gs *Game) endQuestion(force bool) Events {
 // winners returns the players who win, or an empty slice
 // use it to check if the game is over
 func (gs *Game) winners() (out []int) {
-	for player, success := range gs.Successes {
-		if success.isDone() {
+	for player, state := range gs.Players {
+		if state.Success.isDone() {
 			out = append(out, player)
 		}
 	}
@@ -295,13 +303,17 @@ func (gs *Game) winners() (out []int) {
 	return out
 }
 
-func (gs *Game) playerName(player PlayerID) string {
+func generatePlayerName(player PlayerID) string {
 	return fmt.Sprintf("Joueur %d", player+1)
 }
 
+func (g *Game) playerName(player PlayerID) string {
+	return g.Players[player].Name
+}
+
 func (g *Game) playerNames() map[PlayerID]string {
-	out := make(map[int]string, len(g.Successes))
-	for player := range g.Successes {
+	out := make(map[int]string, len(g.Players))
+	for player := range g.Players {
 		out[player] = g.playerName(player)
 	}
 	return out

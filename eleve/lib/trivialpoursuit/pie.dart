@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +10,17 @@ class Pie extends StatelessWidget {
   final double glowWidth;
   final Success success;
   const Pie(this.glowWidth, this.success, {Key? key}) : super(key: key);
+
+  static RawMaterialButton asButton(
+      void Function() onPressed, double glowWidth, Success success) {
+    return RawMaterialButton(
+      onPressed: onPressed,
+      elevation: 2.0,
+      child: Pie(glowWidth, success),
+      padding: const EdgeInsets.all(10.0),
+      shape: const CircleBorder(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
