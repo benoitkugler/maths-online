@@ -2,16 +2,19 @@
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
-String StringFromJson(dynamic json) => json as String;
+String stringFromJson(dynamic json) => json as String;
 
-dynamic StringToJson(String item) => item;
+dynamic stringToJson(String item) => item;
 
-Map<String, String> Dict_String_StringFromJson(dynamic json) {
-  return json.map((k, v) => MapEntry(k as String, StringFromJson(v)));
+Map<String, String> dictStringStringFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON).map((k, v) => MapEntry(k as String, stringFromJson(v)));
 }
 
-dynamic Dict_String_StringToJson(Map<String, String> item) {
-  return item.map((k, v) => MapEntry(StringToJson(k), StringToJson(v)));
+dynamic dictStringStringToJson(Map<String, String> item) {
+  return item.map((k, v) => MapEntry(stringToJson(k), stringToJson(v)));
 }
 
 bool boolFromJson(dynamic json) => json as bool;
@@ -19,176 +22,185 @@ bool boolFromJson(dynamic json) => json as bool;
 dynamic boolToJson(bool item) => item;
 
 // github.com/benoitkugler/maths-online/maths/exercice.Formula
-class Formula implements block {
-  final String Latex;
-  final bool IsInline;
+class Formula implements Block {
+  final String latex;
+  final bool isInline;
 
-  Formula(this.Latex, this.IsInline);
+  const Formula(this.latex, this.isInline);
 }
 
-Formula FormulaFromJson(dynamic json_) {
+Formula formulaFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Formula(StringFromJson(json['Latex']), boolFromJson(json['IsInline']));
+  return Formula(stringFromJson(json['Latex']), boolFromJson(json['IsInline']));
 }
 
-JSON FormulaToJson(Formula item) {
+JSON formulaToJson(Formula item) {
   return {
-    "Latex": StringToJson(item.Latex),
-    "IsInline": boolToJson(item.IsInline)
+    "Latex": stringToJson(item.latex),
+    "IsInline": boolToJson(item.isInline)
   };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice.FormulaField
-class FormulaField implements block {
-  final String Id;
+class FormulaField implements Block {
+  final String id;
 
-  FormulaField(this.Id);
+  const FormulaField(this.id);
 }
 
-FormulaField FormulaFieldFromJson(dynamic json_) {
+FormulaField formulaFieldFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return FormulaField(StringFromJson(json['Id']));
+  return FormulaField(stringFromJson(json['Id']));
 }
 
-JSON FormulaFieldToJson(FormulaField item) {
-  return {"Id": StringToJson(item.Id)};
+JSON formulaFieldToJson(FormulaField item) {
+  return {"Id": stringToJson(item.id)};
 }
 
-List<String> List_StringFromJson(dynamic json) {
-  return (json as List<dynamic>).map(StringFromJson).toList();
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
 }
 
-dynamic List_StringToJson(List<String> item) {
-  return item.map(StringToJson).toList();
+dynamic listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice.ListField
-class ListField implements block {
-  final String Id;
-  final List<String> Choices;
+class ListField implements Block {
+  final String id;
+  final List<String> choices;
 
-  ListField(this.Id, this.Choices);
+  const ListField(this.id, this.choices);
 }
 
-ListField ListFieldFromJson(dynamic json_) {
+ListField listFieldFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return ListField(
-      StringFromJson(json['Id']), List_StringFromJson(json['Choices']));
+      stringFromJson(json['Id']), listStringFromJson(json['Choices']));
 }
 
-JSON ListFieldToJson(ListField item) {
+JSON listFieldToJson(ListField item) {
   return {
-    "Id": StringToJson(item.Id),
-    "Choices": List_StringToJson(item.Choices)
+    "Id": stringToJson(item.id),
+    "Choices": listStringToJson(item.choices)
   };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice.TextBlock
-class TextBlock implements block {
-  final String Text;
+class TextBlock implements Block {
+  final String text;
 
-  TextBlock(this.Text);
+  const TextBlock(this.text);
 }
 
-TextBlock TextBlockFromJson(dynamic json_) {
+TextBlock textBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return TextBlock(StringFromJson(json['Text']));
+  return TextBlock(stringFromJson(json['Text']));
 }
 
-JSON TextBlockToJson(TextBlock item) {
-  return {"Text": StringToJson(item.Text)};
+JSON textBlockToJson(TextBlock item) {
+  return {"Text": stringToJson(item.text)};
 }
 
-abstract class block {}
+abstract class Block {}
 
-block blockFromJson(dynamic json_) {
+Block blockFromJson(dynamic json_) {
   final json = json_ as JSON;
   final kind = json['Kind'] as int;
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return FormulaFromJson(data);
+      return formulaFromJson(data);
     case 1:
-      return FormulaFieldFromJson(data);
+      return formulaFieldFromJson(data);
     case 2:
-      return ListFieldFromJson(data);
+      return listFieldFromJson(data);
     case 3:
-      return TextBlockFromJson(data);
+      return textBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
 }
 
-JSON blockToJson(block item) {
+JSON blockToJson(Block item) {
   if (item is Formula) {
-    return {'Kind': 0, 'Data': FormulaToJson(item)};
+    return {'Kind': 0, 'Data': formulaToJson(item)};
   } else if (item is FormulaField) {
-    return {'Kind': 1, 'Data': FormulaFieldToJson(item)};
+    return {'Kind': 1, 'Data': formulaFieldToJson(item)};
   } else if (item is ListField) {
-    return {'Kind': 2, 'Data': ListFieldToJson(item)};
+    return {'Kind': 2, 'Data': listFieldToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 3, 'Data': TextBlockToJson(item)};
+    return {'Kind': 3, 'Data': textBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }
 }
 
-List<block> List_blockFromJson(dynamic json) {
+List<Block> listBlockFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
   return (json as List<dynamic>).map(blockFromJson).toList();
 }
 
-dynamic List_blockToJson(List<block> item) {
+dynamic listBlockToJson(List<Block> item) {
   return item.map(blockToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice.Question
 class Question {
-  final List<block> Content;
+  final List<Block> content;
 
-  Question(this.Content);
+  const Question(this.content);
 }
 
-Question QuestionFromJson(dynamic json_) {
+Question questionFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Question(List_blockFromJson(json['Content']));
+  return Question(listBlockFromJson(json['Content']));
 }
 
-JSON QuestionToJson(Question item) {
-  return {"Content": List_blockToJson(item.Content)};
+JSON questionToJson(Question item) {
+  return {"Content": listBlockToJson(item.content)};
 }
 
-List<Question> List_QuestionFromJson(dynamic json) {
-  return (json as List<dynamic>).map(QuestionFromJson).toList();
+List<Question> listQuestionFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(questionFromJson).toList();
 }
 
-dynamic List_QuestionToJson(List<Question> item) {
-  return item.map(QuestionToJson).toList();
+dynamic listQuestionToJson(List<Question> item) {
+  return item.map(questionToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice.Exercice
 class Exercice {
-  final String Title;
-  final String Description;
-  final Map<String, String> Fields;
-  final List<Question> Questions;
+  final String title;
+  final String description;
+  final Map<String, String> fields;
+  final List<Question> questions;
 
-  Exercice(this.Title, this.Description, this.Fields, this.Questions);
+  const Exercice(this.title, this.description, this.fields, this.questions);
 }
 
-Exercice ExerciceFromJson(dynamic json_) {
+Exercice exerciceFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return Exercice(
-      StringFromJson(json['Title']),
-      StringFromJson(json['Description']),
-      Dict_String_StringFromJson(json['Fields']),
-      List_QuestionFromJson(json['Questions']));
+      stringFromJson(json['Title']),
+      stringFromJson(json['Description']),
+      dictStringStringFromJson(json['Fields']),
+      listQuestionFromJson(json['Questions']));
 }
 
-JSON ExerciceToJson(Exercice item) {
+JSON exerciceToJson(Exercice item) {
   return {
-    "Title": StringToJson(item.Title),
-    "Description": StringToJson(item.Description),
-    "Fields": Dict_String_StringToJson(item.Fields),
-    "Questions": List_QuestionToJson(item.Questions)
+    "Title": stringToJson(item.title),
+    "Description": stringToJson(item.description),
+    "Fields": dictStringStringToJson(item.fields),
+    "Questions": listQuestionToJson(item.questions)
   };
 }
