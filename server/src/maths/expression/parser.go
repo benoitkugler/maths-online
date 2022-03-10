@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -73,11 +74,22 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 				Reason: "parenthèse fermante invalide",
 				Pos:    tok.pos,
 			}
+		case comma:
+			return nil, InvalidExpr{
+				Reason: "virgule inattendue",
+				Pos:    tok.pos,
+			}
 		default:
 			panic(exhaustiveSymbolSwitch)
 		}
 	case operator:
 		return pr.parseOperator(data, tok.pos)
+	case randFunction:
+		rd, err := pr.parseRandInt(tok.pos)
+		if err != nil {
+			return nil, err
+		}
+		return &Expression{atom: rd}, nil
 	case function:
 		return pr.parseFunction(data, tok.pos)
 	case constant:
@@ -85,7 +97,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 	case Variable:
 		return &Expression{atom: data}, nil
 	case numberText:
-		nb, err := pr.parseNumber(data, tok.pos)
+		nb, err := parseNumber(data, tok.pos)
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +233,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 	}, nil
 }
 
-func (pr *parser) parseNumber(v numberText, pos int) (number, error) {
+func parseNumber(v numberText, pos int) (number, error) {
 	out, err := strconv.ParseFloat(string(v), 64)
 	if err != nil {
 		return 0, InvalidExpr{
@@ -231,4 +243,74 @@ func (pr *parser) parseNumber(v numberText, pos int) (number, error) {
 	}
 
 	return number(out), nil
+}
+
+func parseInt(v numberText, pos int) (int, error) {
+	n, err := parseNumber(v, pos)
+	if err != nil {
+		return 0, err
+	}
+
+	if math.Floor(float64(n)) != float64(n) {
+		return 0, InvalidExpr{
+			Reason: "nombre entier attendu",
+			Pos:    pos,
+		}
+	}
+
+	return int(n), nil
+}
+
+// special case for randInt:
+// to keep the parser simple, we only accept randInt(number, number)
+func (pr *parser) parseRandInt(pos int) (rd random, err error) {
+	// after a function name, their must be a (
+	// with optional whitespaces
+	par := pr.tk.next()
+
+	if par.data != openPar {
+		return random{}, InvalidExpr{
+			Reason: "parenthèse ouvrante manquante après randInt",
+			Pos:    pos,
+		}
+	}
+
+	arg1 := pr.tk.next()
+	if number, ok := arg1.data.(numberText); ok {
+		rd.start, err = parseInt(number, arg1.pos)
+		if err != nil {
+			return random{}, err
+		}
+	}
+
+	if tok := pr.tk.next(); tok.data != comma {
+		return random{}, InvalidExpr{
+			Reason: "virgule manquant entre les arguments de randInt",
+			Pos:    tok.pos,
+		}
+	}
+
+	arg2 := pr.tk.next()
+	if number, ok := arg2.data.(numberText); ok {
+		rd.end, err = parseInt(number, arg2.pos)
+		if err != nil {
+			return random{}, err
+		}
+	}
+
+	if tok := pr.tk.next(); tok.data != closePar {
+		return random{}, InvalidExpr{
+			Reason: "parenthèse fermante manquante après randInt",
+			Pos:    tok.pos,
+		}
+	}
+
+	if rd.start > rd.end {
+		return random{}, InvalidExpr{
+			Reason: "ordre invalide entre les arguments de randInt",
+			Pos:    pos,
+		}
+	}
+
+	return rd, nil
 }

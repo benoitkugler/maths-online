@@ -57,6 +57,9 @@ func Test_Expression_eval(t *testing.T) {
 		{
 			"x + 2", variables{'x': 4}, 6,
 		},
+		{
+			"2 + 0 * randInt(1,3)", nil, 2,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

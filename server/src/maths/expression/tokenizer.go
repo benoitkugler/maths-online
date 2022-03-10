@@ -13,18 +13,24 @@ type tokenData interface {
 	isToken()
 }
 
-func (symbol) isToken()     {}
-func (numberText) isToken() {}
-func (constant) isToken()   {}
-func (Variable) isToken()   {}
-func (function) isToken()   {}
-func (operator) isToken()   {}
+func (symbol) isToken()       {}
+func (numberText) isToken()   {}
+func (constant) isToken()     {}
+func (Variable) isToken()     {}
+func (function) isToken()     {}
+func (randFunction) isToken() {}
+func (operator) isToken()     {}
+
+type randFunction struct{}
 
 type symbol uint8
 
 const (
-	openPar symbol = iota
-	closePar
+	openPar  symbol = iota // (
+	closePar               // )
+	comma                  // ,
+
+	invalidSymbol
 )
 
 type numberText string
@@ -110,12 +116,16 @@ func (tk *tokenizer) readToken() (tok token) {
 	case c == ')':
 		out.data = closePar
 		tk.pos++
+	case c == ',':
+		out.data = comma
+		tk.pos++
 	case isOp:
 		out.data = op
 		tk.pos++
 	case unicode.IsLetter(c): // either a function, a variable or a constant
-		fn, isFunction := tk.tryReadFunction()
-		if isFunction {
+		if tk.tryReadRandint() {
+			out.data = randFunction{}
+		} else if fn, isFunction := tk.tryReadFunction(); isFunction {
 			out.data = fn
 		} else {
 			// read the symbol as variable or predefined constants
@@ -130,6 +140,22 @@ func (tk *tokenizer) readToken() (tok token) {
 	}
 
 	return out
+}
+
+func (tk *tokenizer) tryReadRandint() bool {
+	const runeLen = len("randint")
+
+	if len(tk.src) < tk.pos+runeLen {
+		return false
+	}
+
+	word := string(tk.src[tk.pos : tk.pos+runeLen])
+	if word == "randInt" || word == "randint" {
+		tk.pos += runeLen
+		return true
+	}
+
+	return false
 }
 
 func (tk *tokenizer) tryReadFunction() (function, bool) {

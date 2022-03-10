@@ -73,7 +73,7 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	}
 }
 
-func (fn function) asLaTeX(_, right *Expression, res LaTeXResolver) string {
+func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	arg := right.AsLaTeX(res)
 	switch fn {
 	case logFn:
@@ -91,6 +91,10 @@ func (fn function) asLaTeX(_, right *Expression, res LaTeXResolver) string {
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
+}
+
+func (r random) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
+	return fmt.Sprintf(`\text{rand(%d, %d)}`, r.start, r.end)
 }
 
 func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {

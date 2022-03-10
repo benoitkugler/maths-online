@@ -2,6 +2,7 @@ package expression
 
 import (
 	"math"
+	"math/rand"
 )
 
 type ValueResolver interface {
@@ -70,7 +71,7 @@ func (va Variable) eval(_, _ float64, b ValueResolver) float64 {
 	return out
 }
 
-func (fn function) eval(_, right float64, _ ValueResolver) float64 {
+func (fn function) eval(left, right float64, _ ValueResolver) float64 {
 	arg := right
 	switch fn {
 	case logFn:
@@ -84,8 +85,12 @@ func (fn function) eval(_, right float64, _ ValueResolver) float64 {
 	case absFn:
 		return math.Abs(arg)
 	default:
-		panic(exhaustiveConstantSwitch)
+		panic(exhaustiveFunctionSwitch)
 	}
+}
+
+func (r random) eval(_, _ float64, _ ValueResolver) float64 {
+	return float64(r.start + rand.Intn(r.end-r.start+1))
 }
 
 // partial evaluation a.k.a substitution

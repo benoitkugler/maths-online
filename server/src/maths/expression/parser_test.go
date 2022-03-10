@@ -247,6 +247,20 @@ var expressions = []struct {
 	{
 		"ln(x + y)", &Expression{atom: logFn, left: nil, right: &Expression{atom: plus, left: newVariable('x'), right: newVariable('y')}}, false,
 	},
+	{"2 , 5", nil, true},
+	{"randInt(1.5, )", nil, true},
+	{"randInt 1.5, )", nil, true},
+	{"randInt(1.., )", nil, true},
+	{"randInt(1.5, )", nil, true},
+	{"randInt(0, 2.2)", nil, true},
+	{"randInt(0, 1", nil, true},
+	{"randInt(2 * 4, 1)", nil, true}, // not supported for now
+	{"randInt(0, 1)", &Expression{atom: random{0, 1}}, false},
+	{"randInt(2, 12)", &Expression{atom: random{2, 12}}, false},
+	{"randInt(15, 12)", nil, true},
+	{
+		"2 + 3 * randInt(2, 12)", &Expression{atom: plus, left: newNumber(2), right: &Expression{atom: mult, left: newNumber(3), right: &Expression{atom: random{2, 12}}}}, false,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {

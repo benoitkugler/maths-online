@@ -27,7 +27,7 @@ type Expression struct {
 // It is also suitable as a storage format, since
 // it always produces a valid expression output, whose parsing
 // yields a structurally equal expression.
-// See `AsLaTeX` for a better output format.
+// See `AsLaTeX` for a better display format.
 func (expr *Expression) String() string {
 	var out string
 	if expr.left != nil {
@@ -80,7 +80,8 @@ type atom interface {
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
-func (operator) lexicographicOrder() int { return 4 }
+func (operator) lexicographicOrder() int { return 5 }
+func (random) lexicographicOrder() int   { return 4 }
 func (function) lexicographicOrder() int { return 3 }
 func (Variable) lexicographicOrder() int { return 2 }
 func (constant) lexicographicOrder() int { return 1 }
@@ -124,6 +125,7 @@ const (
 	cosFn
 	absFn
 	sqrtFn
+	// sgnFn // return -1 0 or 1 // TODO:
 	// round
 )
 
@@ -188,4 +190,14 @@ func newNumber(v float64) *Expression {
 
 func (v number) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
+}
+
+// random is a random parameter, used to create unique and distinct
+// version of the same general formula
+type random struct {
+	start, end int // inclusive, only accepts number as arguments (not expression)
+}
+
+func (r random) String() string {
+	return fmt.Sprintf("randInt(%d, %d)", r.start, r.end)
 }

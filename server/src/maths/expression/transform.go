@@ -64,6 +64,13 @@ func compareNodes(n1, n2 *Expression) int {
 			} else {
 				return compareNodes(n1.right, n2.right)
 			}
+		case random:
+			a2 := a2.(random)
+			if a1.start == a2.start {
+				return a1.end - a2.end
+			} else {
+				return a1.start - a2.start
+			}
 		case Variable:
 			a2 := a2.(Variable)
 			if a1 < a2 {

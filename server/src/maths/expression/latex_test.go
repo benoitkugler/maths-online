@@ -37,6 +37,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"(x^y)^z^t",
 		"\u0393 + \u0398 + \u03B8", // some greek letters
 		"\uE000 +  \uE000 + \uE001 + \u0398 + \u03B8", // custom variables
+		"randInt(3,14) + 2",
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -59,6 +60,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 	code := fmt.Sprintf(`
 		\documentclass{article}
 		\usepackage[utf8]{inputenc}
+		\usepackage{amsmath}
+
 		\begin{document}
 		%s
 		\end{document}
