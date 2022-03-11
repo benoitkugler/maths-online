@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"bytes"
 	"unicode"
 )
 
@@ -42,7 +43,7 @@ type tokenizer struct {
 	pos int
 }
 
-func newTokenizer(s string) *tokenizer { return &tokenizer{src: []rune(s)} }
+func newTokenizer(text []byte) *tokenizer { return &tokenizer{src: bytes.Runes(text)} }
 
 func (tk *tokenizer) peek() token {
 	if tk.nextToken.data != nil {
@@ -181,7 +182,10 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = absFn
 	case "sqrt":
 		fn = sqrtFn
+	case "sgn":
+		fn = sgnFn
 	default: // no  matching function name
+		_ = exhaustiveFunctionSwitch
 		return 0, false
 	}
 

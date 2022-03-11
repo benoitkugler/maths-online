@@ -43,11 +43,36 @@ func randstring() string {
 	return string(b)
 }
 
+func randrune() rune {
+	return rune(rand.Intn(1000000))
+}
+
+func randrandomParameter() randomParameter {
+	return randomParameter{
+		Expression: randstring(),
+		Variable:   randrune(),
+	}
+}
+
+func randSlicerandomParameter() []randomParameter {
+	l := rand.Intn(10)
+	out := make([]randomParameter, l)
+	for i := range out {
+		out[i] = randrandomParameter()
+	}
+	return out
+}
+
+func randrandomParameters() randomParameters {
+	return randomParameters(randSlicerandomParameter())
+}
+
 func randExercice() Exercice {
 	return Exercice{
-		Id:          randint64(),
-		Title:       randstring(),
-		Description: randstring(),
+		Id:               randint64(),
+		Title:            randstring(),
+		Description:      randstring(),
+		RandomParameters: randrandomParameters(),
 	}
 }
 

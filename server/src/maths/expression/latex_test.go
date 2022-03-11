@@ -38,6 +38,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"\u0393 + \u0398 + \u03B8", // some greek letters
 		"\uE000 +  \uE000 + \uE001 + \u0398 + \u03B8", // custom variables
 		"randInt(3,14) + 2",
+		"sgn(-8)",
 	} {
 		e, err := Parse(expr)
 		if err != nil {

@@ -9,7 +9,7 @@ import (
 func Test_Expression_eval(t *testing.T) {
 	tests := []struct {
 		expr     string
-		bindings ValueResolver
+		bindings valueResolver
 		want     float64
 	}{
 		{
@@ -55,10 +55,22 @@ func Test_Expression_eval(t *testing.T) {
 			"1 + 1 * 3 ^ 3 * 2 - 1", nil, 54,
 		},
 		{
-			"x + 2", variables{'x': 4}, 6,
+			"x + 2", Variables{'x': 4}, 6,
 		},
 		{
 			"2 + 0 * randInt(1,3)", nil, 2,
+		},
+		{
+			"4 * sgn(-1)", nil, -4,
+		},
+		{
+			"sqrt(16) * sqrt(9)", nil, 4 * 3,
+		},
+		{
+			"2 * sqrt(16) * sqrt(9) * sqrt(25)", nil, 2 * 4 * 3 * 5,
+		},
+		{
+			"4 * sgn(-1) * sgn(1) * sgn(0)", nil, 0,
 		},
 	}
 	for _, tt := range tests {
@@ -108,13 +120,13 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 func TestExpression_Substitute(t *testing.T) {
 	tests := []struct {
 		expr string
-		vars ValueResolver
+		vars valueResolver
 		want string
 	}{
-		{"a + b", variables{}, "a+b"},
-		{"a + b", variables{'a': 4}, "4+b"},
-		{"a + b / 2*a", variables{'a': 4}, "4+b/2*4"},
-		{"a + b", variables{'a': 4, 'b': 5}, "4+5"},
+		{"a + b", Variables{}, "a+b"},
+		{"a + b", Variables{'a': 4}, "4+b"},
+		{"a + b / 2*a", Variables{'a': 4}, "4+b/2*4"},
+		{"a + b", Variables{'a': 4, 'b': 5}, "4+5"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

@@ -14,21 +14,21 @@ func shouldPanic(t *testing.T, f func()) {
 }
 
 func TestPanics(t *testing.T) {
-	shouldPanic(t, func() { (sqrtFn + 1).eval(0, 0, nil) })
-	shouldPanic(t, func() { (eConstant + 1).eval(0, 0, nil) })
-	shouldPanic(t, func() { (pow + 1).eval(0, 0, nil) })
+	shouldPanic(t, func() { (invalidFn).eval(0, 0, nil) })
+	shouldPanic(t, func() { (invalidConstant).eval(0, 0, nil) })
+	shouldPanic(t, func() { (invalidOperator).eval(0, 0, nil) })
 
-	shouldPanic(t, func() { _ = (sqrtFn + 1).String() })
-	shouldPanic(t, func() { _ = (eConstant + 1).String() })
-	shouldPanic(t, func() { _ = (pow + 1).String() })
+	shouldPanic(t, func() { _ = (invalidFn).String() })
+	shouldPanic(t, func() { _ = (invalidConstant).String() })
+	shouldPanic(t, func() { _ = (invalidOperator).String() })
 
-	shouldPanic(t, func() { _ = (sqrtFn + 1).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (eConstant + 1).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (pow + 1).asLaTeX(nil, nil, nil) })
+	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil, nil) })
+	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
+	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
 
 	shouldPanic(t, func() { Expression{}.needParenthesis(0, false) })
 	shouldPanic(t, func() {
-		e := &Expression{atom: pow + 1}
+		e := &Expression{atom: invalidOperator}
 		e.simplifyNumbers()
 	})
 

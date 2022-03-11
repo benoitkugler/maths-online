@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -247,7 +248,10 @@ var expressions = []struct {
 	{
 		"ln(x + y)", &Expression{atom: logFn, left: nil, right: &Expression{atom: plus, left: newVariable('x'), right: newVariable('y')}}, false,
 	},
+	{"3 + ln()", nil, true},
 	{"2 , 5", nil, true},
+	{"sgn( )", nil, true},
+	{"sgn(-8)", &Expression{atom: sgnFn, right: &Expression{atom: minus, right: newNumber(8)}}, false},
 	{"randInt(1.5, )", nil, true},
 	{"randInt 1.5, )", nil, true},
 	{"randInt(1.., )", nil, true},
@@ -271,6 +275,7 @@ func Test_parseExpression(t *testing.T) {
 		}
 
 		if (err != nil) != tt.wantErr {
+			fmt.Println(got.String())
 			t.Fatalf("parseExpression(%s) error = %v, wantErr %v", tt.expr, err, tt.wantErr)
 			return
 		}

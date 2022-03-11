@@ -5,10 +5,10 @@ package exercice
 //go:generate ../../../../../structgen/structgen -source=sql_models.go -mode=sql:gen_scans.go -mode=sql_test:gen_scans_test.go  -mode=sql_composite:composites/auto.go  -mode=sql_gen:create_gen.sql  -mode=rand:gen_data_test.go -mode=itfs-json:gen_itfs.go
 
 type Exercice struct {
-	Id          int64  `json:"id"`
-	Title       string `json:"title"`       // name for the exercice
-	Description string `json:"description"` // overall description for all questions (optional)
-	// RandomVariables map[rune]
+	Id               int64            `json:"id"`
+	Title            string           `json:"title"`             // name for the exercice
+	Description      string           `json:"description"`       // overall description for all questions (optional)
+	RandomParameters randomParameters `json:"random_parameters"` // random parameters shared by the questions
 }
 
 // Question is the fundamental object to build exercices.

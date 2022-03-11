@@ -88,6 +88,8 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf(`\left|%s\right|`, arg)
 	case sqrtFn:
 		return fmt.Sprintf(`\sqrt{%s}`, arg)
+	case sgnFn:
+		return fmt.Sprintf(`\text{sgn}\left(%s\right)`, arg)
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}

@@ -22,22 +22,26 @@ type Expression struct {
 	atom        atom
 }
 
-// String returns a human readable form of the expression,
-// mainly used for debug.
+// String returns a human readable form of the expression.
 // It is also suitable as a storage format, since
 // it always produces a valid expression output, whose parsing
 // yields a structurally equal expression.
+// The returned error is always nil.
 // See `AsLaTeX` for a better display format.
 func (expr *Expression) String() string {
-	var out string
+	return string(expr.serialize())
+}
+
+func (expr *Expression) serialize() []byte {
+	out := []byte{'('}
 	if expr.left != nil {
-		out = expr.left.String()
+		out = append(out, expr.left.serialize()...)
 	}
-	out += fmt.Sprint(expr.atom)
+	out = append(out, fmt.Sprint(expr.atom)...)
 	if expr.right != nil {
-		out += expr.right.String()
+		out = append(out, expr.right.serialize()...)
 	}
-	out = "(" + out + ")"
+	out = append(out, ')')
 	return out
 }
 
@@ -76,7 +80,7 @@ type atom interface {
 	fmt.Stringer
 
 	lexicographicOrder() int // smaller is first; unique among concrete types
-	eval(left, right float64, context ValueResolver) float64
+	eval(left, right float64, context valueResolver) float64
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
@@ -97,6 +101,8 @@ const (
 	mult
 	div
 	pow // x^2
+
+	invalidOperator
 )
 
 func (op operator) String() string {
@@ -125,8 +131,10 @@ const (
 	cosFn
 	absFn
 	sqrtFn
-	// sgnFn // return -1 0 or 1 // TODO:
+	sgnFn // return -1 0 or 1
 	// round
+
+	invalidFn
 )
 
 func (fn function) String() string {
@@ -143,6 +151,8 @@ func (fn function) String() string {
 		return "abs"
 	case sqrtFn:
 		return "sqrt"
+	case sgnFn:
+		return "sgn"
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -169,6 +179,8 @@ const (
 	piConstant constant = iota
 	eConstant
 	// i
+
+	invalidConstant
 )
 
 func (c constant) String() string {
@@ -192,7 +204,7 @@ func (v number) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }
 
-// random is a random parameter, used to create unique and distinct
+// random is an integer random parameter, used to create unique and distinct
 // version of the same general formula
 type random struct {
 	start, end int // inclusive, only accepts number as arguments (not expression)

@@ -111,6 +111,7 @@ func scanOneExercice(row scanner) (Exercice, error) {
 		&s.Id,
 		&s.Title,
 		&s.Description,
+		&s.RandomParameters,
 	)
 	return s, err
 }
@@ -180,24 +181,24 @@ func ScanExercices(rs *sql.Rows) (Exercices, error) {
 // Insert Exercice in the database and returns the item with id filled.
 func (item Exercice) Insert(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`INSERT INTO exercices (
-		title,description
+		title,description,random_parameters
 		) VALUES (
-		$1,$2
+		$1,$2,$3
 		) RETURNING 
-		id,title,description;
-		`, item.Title, item.Description)
+		id,title,description,random_parameters;
+		`, item.Title, item.Description, item.RandomParameters)
 	return ScanExercice(row)
 }
 
 // Update Exercice in the database and returns the new version.
 func (item Exercice) Update(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`UPDATE exercices SET (
-		title,description
+		title,description,random_parameters
 		) = (
-		$2,$3
+		$2,$3,$4
 		) WHERE id = $1 RETURNING 
-		id,title,description;
-		`, item.Id, item.Title, item.Description)
+		id,title,description,random_parameters;
+		`, item.Id, item.Title, item.Description, item.RandomParameters)
 	return ScanExercice(row)
 }
 
@@ -215,6 +216,9 @@ func DeleteExercicesByIDs(tx DB, ids ...int64) (IDs, error) {
 	}
 	return ScanIDs(rows)
 }
+
+func (s *randomParameters) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s randomParameters) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func scanOneFormula(row scanner) (Formula, error) {
 	var s Formula
@@ -356,7 +360,7 @@ func InsertManyFormulaFields(tx *sql.Tx, items ...FormulaField) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("formula_fields",
-		"Content",
+		"Expression",
 	))
 	if err != nil {
 		return err

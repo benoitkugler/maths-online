@@ -20,12 +20,6 @@ func (ct *Content) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// Exercice is a sequence of questions
-type ExerciceQuestions struct {
-	Exercice
-	Questions Questions
-}
-
 func SelectExerciceQuestions(db DB, id int64) (ExerciceQuestions, error) {
 	ex, err := SelectExercice(db, id)
 	if err != nil {

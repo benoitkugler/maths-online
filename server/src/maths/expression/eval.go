@@ -5,21 +5,22 @@ import (
 	"math/rand"
 )
 
-type ValueResolver interface {
-	Resolve(v Variable) (float64, bool)
+type valueResolver interface {
+	resolve(v Variable) (float64, bool)
 }
 
-var _ ValueResolver = variables{}
+var _ valueResolver = Variables{}
 
-type variables map[Variable]float64
+// Variables maps variables to a chosen value.
+type Variables map[Variable]float64
 
-func (vrs variables) Resolve(v Variable) (float64, bool) {
+func (vrs Variables) resolve(v Variable) (float64, bool) {
 	value, ok := vrs[v]
 	return value, ok
 }
 
 // Evaluate uses the given variables values to evaluate the formula.
-func (expr *Expression) Evaluate(bindings ValueResolver) float64 {
+func (expr *Expression) Evaluate(bindings valueResolver) float64 {
 	var left, right float64 // 0 is a valid default value
 	if expr.left != nil {
 		left = expr.left.Evaluate(bindings)
@@ -30,7 +31,7 @@ func (expr *Expression) Evaluate(bindings ValueResolver) float64 {
 	return expr.atom.eval(left, right, bindings)
 }
 
-func (op operator) eval(left, right float64, _ ValueResolver) float64 {
+func (op operator) eval(left, right float64, _ valueResolver) float64 {
 	return op.evaluate(left, right)
 }
 
@@ -53,7 +54,7 @@ func (op operator) evaluate(left, right float64) float64 {
 	}
 }
 
-func (c constant) eval(_, _ float64, _ ValueResolver) float64 {
+func (c constant) eval(_, _ float64, _ valueResolver) float64 {
 	switch c {
 	case piConstant:
 		return math.Pi
@@ -64,14 +65,14 @@ func (c constant) eval(_, _ float64, _ ValueResolver) float64 {
 	}
 }
 
-func (v number) eval(_, _ float64, _ ValueResolver) float64 { return float64(v) }
+func (v number) eval(_, _ float64, _ valueResolver) float64 { return float64(v) }
 
-func (va Variable) eval(_, _ float64, b ValueResolver) float64 {
-	out, _ := b.Resolve(va)
+func (va Variable) eval(_, _ float64, b valueResolver) float64 {
+	out, _ := b.resolve(va)
 	return out
 }
 
-func (fn function) eval(left, right float64, _ ValueResolver) float64 {
+func (fn function) eval(left, right float64, _ valueResolver) float64 {
 	arg := right
 	switch fn {
 	case logFn:
@@ -84,12 +85,22 @@ func (fn function) eval(left, right float64, _ ValueResolver) float64 {
 		return math.Cos(arg)
 	case absFn:
 		return math.Abs(arg)
+	case sqrtFn:
+		return math.Sqrt(arg)
+	case sgnFn:
+		if arg > 0 {
+			return 1
+		} else if arg < 0 {
+			return -1
+		}
+		return 0
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
 }
 
-func (r random) eval(_, _ float64, _ ValueResolver) float64 {
+// return a random number
+func (r random) eval(_, _ float64, _ valueResolver) float64 {
 	return float64(r.start + rand.Intn(r.end-r.start+1))
 }
 
@@ -97,7 +108,7 @@ func (r random) eval(_, _ float64, _ ValueResolver) float64 {
 
 // Substitute replaces variables by the given values, that is
 // the ones for which Resolve() returns `true`.
-func (expr *Expression) Substitute(vars ValueResolver) {
+func (expr *Expression) Substitute(vars valueResolver) {
 	if expr == nil {
 		return
 	}
@@ -105,7 +116,7 @@ func (expr *Expression) Substitute(vars ValueResolver) {
 	expr.right.Substitute(vars)
 
 	if v, isVariable := expr.atom.(Variable); isVariable {
-		value, has := vars.Resolve(v)
+		value, has := vars.resolve(v)
 		if has {
 			expr.atom = number(value)
 		}

@@ -125,3 +125,5 @@ func testSQL(t *testing.T, logs logsDB) {
 }
 
 // TODO: populate a "real" DB to support further testing
+func setupDBDev(db *sql.DB) {
+}

@@ -18,7 +18,12 @@ func (inv InvalidExpr) Error() string {
 
 // Parse parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
 func Parse(s string) (*Expression, error) {
-	pr := parser{tk: newTokenizer(s)}
+	return parseBytes([]byte(s))
+}
+
+// parseBytes parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
+func parseBytes(text []byte) (*Expression, error) {
+	pr := parser{tk: newTokenizer(text)}
 	return pr.parseExpression()
 }
 
@@ -224,6 +229,13 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 	arg, err := pr.parseParenthesisBlock(pos)
 	if err != nil {
 		return nil, err
+	}
+
+	if arg == nil {
+		return nil, InvalidExpr{
+			Reason: fmt.Sprintf("argument manquant pour la fonction %s", fn),
+			Pos:    pos,
+		}
 	}
 
 	return &Expression{
