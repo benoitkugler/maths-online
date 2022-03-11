@@ -77,7 +77,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
             // PossibleMoves(0, [1, 2, 3]),
             // Move([0, 1, 2, 3, 4, 5], 5),
             // ShowQuestion("test", 60, Categorie.orange),
-            PlayerAnswerResult(0, true),
+            // PlayerAnswerResult(0, false),
+            GameEnd([0, 1], ["Pierre", "Paul"])
           ],
           GameState({
             0: PlayerStatus("", [false, false, false, true, false]),
@@ -88,13 +89,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
     // await Future<void>.delayed(const Duration(seconds: 3));
 
-    await processEvents([
-      StateUpdate(const [
-        DiceThrow(2)
-        // PlayerAnswerResult(0, true),
-        // GameEnd([0], ["Pierre"])
-      ], state),
-    ]);
+    // await processEvents([
+    //   StateUpdate(const [
+    //     DiceThrow(2)
+    //     // PlayerAnswerResult(0, true),
+    //     // GameEnd([0], ["Pierre"])
+    //   ], state),
+    // ]);
   }
 
   @override
@@ -281,7 +282,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: const Duration(seconds: 3),
-        backgroundColor: event.success ? Colors.lightGreen : Colors.orange,
+        backgroundColor:
+            event.success ? Colors.lightGreen.shade400 : Colors.red,
         content: Text(event.success
             ? "Bonne réponse, bravo !"
             : "Réponse incorrecte, dommage..."),
@@ -470,11 +472,13 @@ class _GameEnd extends StatelessWidget {
           ...congrats,
           Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.only(bottom: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
                 child: Text(
-                  "Les gagnants sont :",
-                  style: TextStyle(fontSize: 20),
+                  winners.length == 1
+                      ? "Le gagnant est :"
+                      : "Les gagnants sont :",
+                  style: const TextStyle(fontSize: 20),
                 ),
               ),
               Row(
