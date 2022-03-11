@@ -92,7 +92,7 @@ func (ct *Controller) LaunchGame(c echo.Context) error {
 
 func randGameID() string {
 	const choices = "abcdefghijklmnopqrstuvwxyz0123456789"
-	var out [6]byte
+	var out [3]byte
 	for i := range out {
 		out[i] = choices[rand.Intn(len(choices))]
 	}

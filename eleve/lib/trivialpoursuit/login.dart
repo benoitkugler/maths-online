@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:otp_text_field/otp_text_field.dart';
 import 'package:otp_text_field/style.dart';
 
+const pinLength = 3;
+
 /// Loggin is an introduction screen to access
 /// a TrivialPoursuit game
 class TrivialPoursuitLoggin extends StatefulWidget {
@@ -36,7 +38,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   Widget build(BuildContext context) {
     final otp = OTPTextField(
       controller: otpController,
-      length: 6,
+      length: pinLength,
       width: MediaQuery.of(context).size.width,
       textFieldAlignment: MainAxisAlignment.center,
       otpFieldStyle: OtpFieldStyle(

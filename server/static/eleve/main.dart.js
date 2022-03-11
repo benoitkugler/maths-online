@@ -35545,7 +35545,7 @@ aJ(){var s=this
 A.fU(B.cN,new A.a8r(s),t.P)
 if(s.a.c===B.lw)A.fU(B.cN,new A.a8s(s),t.H)
 s.b6()},
-I(a,b){return A.wr(null,A.QI(A.lB(A.b([B.Gu,new A.bY(B.m8,new A.vx(this.d,6,b.O(t.w).f.a.a,45,B.h3,A.aqo(A.ap(b).ch.f),B.mc,new A.a8q(),this.gXH(),null),null)],t.p),B.h3,B.ad)))},
+I(a,b){return A.wr(null,A.QI(A.lB(A.b([B.Gu,new A.bY(B.m8,new A.vx(this.d,3,b.O(t.w).f.a.a,45,B.h3,A.aqo(A.ap(b).ch.f),B.mc,new A.a8q(),this.gXH(),null),null)],t.p),B.h3,B.ad)))},
 Ey(a){var s=A.aoq(this.a.c,"/trivial/game/"+a),r=this.c
 r.toString
 A.ks(r).kJ(A.EH(new A.a8o(s),B.GU,t.H)).bs(0,new A.a8p(this),t.P)}}

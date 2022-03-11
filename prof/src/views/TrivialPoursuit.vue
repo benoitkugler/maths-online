@@ -49,6 +49,8 @@ import { controller } from "@/controller/controller";
 import { computed, reactive } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
+const pinLength = 3;
+
 let launchOptions: LaunchGameIn = reactive({
   NbPlayers: 1,
   TimeoutSeconds: 60
@@ -68,7 +70,7 @@ async function launchGame(): Promise<void> {
     return;
   }
 
-  gameCode = res.URL.slice(res.URL.length - 6);
+  gameCode = res.URL.slice(res.URL.length - pinLength);
 }
 </script>
 
