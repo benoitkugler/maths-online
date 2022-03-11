@@ -57,22 +57,23 @@ class _DiceDots extends StatelessWidget {
 
 /// Dice presents a dice roll, with three states :
 ///   - in animation
-///   - paused on the last result
+///   - static and enabled
 ///   - disabled
 class Dice extends StatelessWidget {
+  /// [onTap] is ignored if [isDisabled] is true
+  final void Function() onTap;
+
   /// If non null, provides the faces to animate the roll.
   final Stream<Face>? animation;
 
-  /// Show the face with a different highligth color.
-  final Face lastResult;
   final bool isDisabled;
 
-  const Dice(this.animation, this.lastResult, this.isDisabled, {Key? key})
+  const Dice(this.onTap, this.animation, this.isDisabled, {Key? key})
       : super(key: key);
 
   /// rollDice returns a stream animating a rolling dice,
   /// to be used as input of DiceRoll
-  static Stream<Face> rollDice() async* {
+  static Stream<Face> rollDice(Face lastFace) async* {
     const choices = Face.values;
     var currentFace = Face.one;
     for (var i = 25; i < 45; i++) {
@@ -81,51 +82,41 @@ class Dice extends StatelessWidget {
       await Future<void>.delayed(Duration(
           milliseconds: 20 + exp(i.toDouble() * log(400) / 50).round()));
     }
+    yield lastFace;
   }
 
   double get faceSize => animation == null ? 60 : 80;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      decoration: BoxDecoration(
-        color: isDisabled ? Colors.grey : Colors.white,
-        borderRadius: const BorderRadiusDirectional.all(Radius.circular(10)),
-        boxShadow: [
-          BoxShadow(color: shadow, blurRadius: 10),
-        ],
+    return RawMaterialButton(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      elevation: 2,
+      onPressed: isDisabled ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        decoration: BoxDecoration(
+          color: isDisabled ? Colors.grey : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(color: shadow, blurRadius: 10),
+          ],
+        ),
+        width: faceSize,
+        height: faceSize,
+        child: StreamBuilder<Face>(
+            stream: animation,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return _DiceDots(faceSize: faceSize, face: snapshot.data!);
+              }
+              // this is actually never reached
+              return _DiceDots(faceSize: faceSize, face: Face.one);
+            }),
       ),
-      width: faceSize,
-      height: faceSize,
-      child: StreamBuilder<Face>(
-          stream: animation,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return _DiceDots(faceSize: faceSize, face: snapshot.data!);
-            }
-            return _DiceDots(faceSize: faceSize, face: Face.one);
-          }),
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   final animation = this.animation;
-  //   if (animation != null) {
-  //     return StreamBuilder<Face>(
-  //         stream: animation,
-  //         builder: (context, snapshot) {
-  //           if (snapshot.hasData) {
-  //             return _DiceFace(80, snapshot.data!, true, false);
-  //           } else if (snapshot.connectionState == ConnectionState.done) {
-  //             return const _DiceFace(60, Face.one, false, false);
-  //           }
-  //           return const _DiceFace(60, Face.one, false, false);
-  //         });
-  //   }
-  //   return _DiceFace(60, lastResult, false, isDisabled);
-  // }
 
   Color get shadow {
     if (isDisabled) {
@@ -133,21 +124,4 @@ class Dice extends StatelessWidget {
     }
     return animation != null ? Colors.red : Colors.blue;
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return AnimatedContainer(
-  //     duration: const Duration(seconds: 1),
-  //     decoration: BoxDecoration(
-  //       color: isDisabled ? Colors.grey : Colors.white,
-  //       borderRadius: const BorderRadiusDirectional.all(Radius.circular(10)),
-  //       boxShadow: [
-  //         BoxShadow(color: shadow, blurRadius: 10),
-  //       ],
-  //     ),
-  //     width: faceSize,
-  //     height: faceSize,
-  //     child: _DiceDots(faceSize: faceSize, face: face),
-  //   );
-  // }
 }

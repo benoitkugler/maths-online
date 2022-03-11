@@ -121,20 +121,32 @@ func (g *Game) nextPlayer() PlayerID {
 	return sortedIds[0]
 }
 
-// convenient method to start a new turn,
-// launch the dice, and compute the possible moves
+// startTurn starts a new turn, updating the state
 func (g *Game) startTurn() StateUpdate {
 	g.Player = g.nextPlayer()
+	return StateUpdate{
+		Events: Events{playerTurn{g.playerName(g.Player), g.Player}},
+		State:  g.GameState,
+	}
+}
+
+// handleDiceClicked launches the dice, and compute the possible moves
+// returns an error if the player is not allowed to click
+func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
+	// check if the player is allowed to move
+	if g.Player != player {
+		return StateUpdate{}, fmt.Errorf("player %d is not allowed to throw the dice during turn of player %d", player, g.Player)
+	}
+
 	g.dice = newDiceThrow()
 	choices := Board.choices(g.PawnTile, int(g.dice.Face)).list()
 	return StateUpdate{
 		Events: Events{
-			playerTurn{g.Player, g.playerName(g.Player)},
 			g.dice,
 			possibleMoves{CurrentPlayer: g.Player, Tiles: choices},
 		},
 		State: g.GameState,
-	}
+	}, nil
 }
 
 // StartGame actually launch the game with the players
@@ -160,6 +172,9 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates StateUpdates, isGam
 	case answer:
 		updates, isGameOver = g.handleAnswer(eventData, event.Player)
 		return updates, isGameOver, nil
+	case diceClicked:
+		update, err := g.handleDiceClicked(event.Player)
+		return StateUpdates{update}, false, err
 	case Ping:
 		// safely ignore the event
 		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData.Info)

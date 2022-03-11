@@ -93,8 +93,8 @@ type playerLeft struct {
 // playerTurn is emitted at the start of
 // a player
 type playerTurn struct {
-	Player     PlayerID
 	PlayerName string
+	Player     PlayerID
 }
 
 // diceThrow represents the result obtained
@@ -119,8 +119,8 @@ type move struct {
 
 // possibleMoves is emitted after a diceThrow
 type possibleMoves struct {
-	CurrentPlayer PlayerID // the player allowed to play
 	Tiles         []int    // the tile indices where the current player may move
+	CurrentPlayer PlayerID // the player allowed to play
 }
 
 // showQuestion is emitted when a player
@@ -150,16 +150,22 @@ type clientEventData interface {
 	isClientEvent()
 }
 
-func (move) isClientEvent()   {}
-func (answer) isClientEvent() {}
-func (Ping) isClientEvent()   {}
+func (move) isClientEvent()        {}
+func (answer) isClientEvent()      {}
+func (diceClicked) isClientEvent() {}
+func (Ping) isClientEvent()        {}
 
 // the proposition of a client to a question
 type answer struct {
 	Content string
 }
 
-// DEBUG
+// diceClicked is emitted when the current player
+// throws the dice
+type diceClicked struct{}
+
+// Ping is used to maintain the client connection
+// openned
 type Ping struct {
 	Info string
 }

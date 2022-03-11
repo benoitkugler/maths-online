@@ -13,23 +13,23 @@ func TestEventsJSON(t *testing.T) {
 	payload := StateUpdates{{
 		Events: []GameEvent{
 			gameStart{},
-			playerTurn{2, "Haha"},
+			playerTurn{"Haha", 2},
 			dice,
-			possibleMoves{2, moves},
+			possibleMoves{moves, 2},
 			move{Tile: moves[0]},
 			playerLeft{1},
 			showQuestion{Question: "Super", Categorie: 0},
 			playerAnswerResult{0, true},
 			playerAnswerResult{1, false},
 			playerAnswerResult{2, true},
-			playerTurn{0, ""},
+			playerTurn{"", 0},
 			diceThrow{3},
 			move{Tile: 4},
 			showQuestion{Question: "Super", Categorie: 1},
 			playerAnswerResult{0, false},
 			playerAnswerResult{1, true},
 			playerAnswerResult{2, true},
-			playerTurn{1, ""},
+			playerTurn{"", 1},
 		},
 	}}
 

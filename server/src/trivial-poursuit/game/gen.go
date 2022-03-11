@@ -132,6 +132,10 @@ func (out *clientEventDataWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
+		var data diceClicked
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 3:
 		var data move
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -153,8 +157,10 @@ func (item clientEventDataWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 0, Data: data}
 	case answer:
 		wr = wrapper{Kind: 1, Data: data}
-	case move:
+	case diceClicked:
 		wr = wrapper{Kind: 2, Data: data}
+	case move:
+		wr = wrapper{Kind: 3, Data: data}
 
 	default:
 		panic("exhaustive switch")

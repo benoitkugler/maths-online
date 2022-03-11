@@ -38,7 +38,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   /// null when no animation is displayed
   Stream<dice.Face>? diceRollAnimation;
-  dice.Face diceResult = dice.Face.one;
   bool diceDisabled = true;
 
   /// empty until game end
@@ -73,12 +72,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           [
             PlayerJoin(0),
             GameStart(),
+            PlayerTurn("", 0),
             // DiceThrow(2),
             // PossibleMoves(0, [1, 2, 3]),
             // Move([0, 1, 2, 3, 4, 5], 5),
             // ShowQuestion("test", 60, Categorie.orange),
             // PlayerAnswerResult(0, false),
-            GameEnd([0, 1], ["Pierre", "Paul"])
+            // GameEnd([0, 1], ["Pierre", "Paul"])
           ],
           GameState({
             0: PlayerStatus("", [false, false, false, true, false]),
@@ -185,14 +185,28 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     _sendEvent(Move([], tile));
   }
 
+  void onTapDice() {
+    if (state.player != playerID) {
+      // ignore if this it not our turn
+      return;
+    }
+
+    _sendEvent(const DiceClicked());
+  }
+
   Future<void> _onPlayerTurn(PlayerTurn event) async {
+    final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 3),
       backgroundColor: Theme.of(context).colorScheme.secondary,
-      content: event.player == playerID
-          ? const Text("C'est à toi !")
+      content: isOwnTurn
+          ? const Text("C'est à toi de lancer le dé !")
           : Text("Au tour de ${event.playerName}"),
     ));
+
+    setState(() {
+      diceDisabled = !isOwnTurn;
+    });
   }
 
   // triggers and wait for a dice roll
@@ -202,7 +216,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
         dice.Face.values[event.face - 1]; // event.face is the "human" face
 
     final completer = Completer<void>();
-    final diceRoll = dice.Dice.rollDice().asBroadcastStream();
+    final diceRoll = dice.Dice.rollDice(face).asBroadcastStream();
     diceRoll.listen(null, onDone: completer.complete);
 
     setState(() {
@@ -215,7 +229,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     // make the dice result more visible
     setState(() {
       diceRollAnimation = null;
-      diceResult = face;
     });
     await Future<void>.delayed(const Duration(seconds: 1));
 
@@ -232,7 +245,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return;
     }
     setState(() {
-      diceDisabled = false;
+      diceDisabled = true;
       highligthedTiles = event.tiles.toSet();
     });
   }
@@ -376,8 +389,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
               child: Pie.asButton(_showSuccessRecap, pieGlowWidth,
                   state.players[playerID]!.success),
             ),
+            onTapDice,
             diceRollAnimation,
-            diceResult,
             diceDisabled,
             onTapTile,
             highligthedTiles,
@@ -397,15 +410,15 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 class _GameStarted extends StatelessWidget {
   final Widget pie;
 
+  final void Function() onTapDice;
   final Stream<dice.Face>? diceRollAnimation;
-  final dice.Face diceResult;
   final bool diceDisabled;
 
   final OnTapTile onTapTile;
   final Set<int> availableTiles;
   final int pawnTile;
 
-  const _GameStarted(this.pie, this.diceRollAnimation, this.diceResult,
+  const _GameStarted(this.pie, this.onTapDice, this.diceRollAnimation,
       this.diceDisabled, this.onTapTile, this.availableTiles, this.pawnTile,
       {Key? key})
       : super(key: key);
@@ -430,7 +443,7 @@ class _GameStarted extends StatelessWidget {
                 Padding(
                     padding: const EdgeInsets.only(right: 30),
                     child:
-                        dice.Dice(diceRollAnimation, diceResult, diceDisabled)),
+                        dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
               ],
             ),
           ),
