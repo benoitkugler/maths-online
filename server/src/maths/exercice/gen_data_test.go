@@ -65,7 +65,7 @@ func randFormula() Formula {
 
 func randFormulaField() FormulaField {
 	return FormulaField{
-		Content: randstring(),
+		Expression: randstring(),
 	}
 }
 

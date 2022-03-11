@@ -20,6 +20,7 @@ func (ct *Content) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// Exercice is a sequence of questions
 type ExerciceQuestions struct {
 	Exercice
 	Questions Questions

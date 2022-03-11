@@ -305,7 +305,7 @@ func (item Formula) Delete(tx DB) error {
 func scanOneFormulaField(row scanner) (FormulaField, error) {
 	var s FormulaField
 	err := row.Scan(
-		&s.Content,
+		&s.Expression,
 	)
 	return s, err
 }
@@ -363,7 +363,7 @@ func InsertManyFormulaFields(tx *sql.Tx, items ...FormulaField) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Content)
+		_, err = stmt.Exec(item.Expression)
 		if err != nil {
 			return err
 		}

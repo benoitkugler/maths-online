@@ -4,11 +4,11 @@ package exercice
 
 //go:generate ../../../../../structgen/structgen -source=sql_models.go -mode=sql:gen_scans.go -mode=sql_test:gen_scans_test.go  -mode=sql_composite:composites/auto.go  -mode=sql_gen:create_gen.sql  -mode=rand:gen_data_test.go -mode=itfs-json:gen_itfs.go
 
-// Exercice is a sequence of questions
 type Exercice struct {
 	Id          int64  `json:"id"`
 	Title       string `json:"title"`       // name for the exercice
 	Description string `json:"description"` // overall description for all questions (optional)
+	// RandomVariables map[rune]
 }
 
 // Question is the fundamental object to build exercices.
@@ -49,5 +49,5 @@ type ListField struct {
 
 type FormulaField struct {
 	// Id string
-	Content string
+	Expression string // a valid expression, in the format used by expression.Expression
 }
