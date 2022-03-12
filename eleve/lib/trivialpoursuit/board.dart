@@ -6,33 +6,36 @@ import 'package:flutter/material.dart';
 
 typedef OnTapTile = void Function(int);
 
+/// Board is a squared widget with a fixed side length
 class Board extends StatelessWidget {
   static const middle = _RP(50, 50);
 
+  final double sideLength;
   final OnTapTile onTap;
   final Set<int> highlights;
   final int pawnTile;
 
-  const Board(this.onTap, this.highlights, this.pawnTile, {Key? key})
+  const Board(this.sideLength, this.onTap, this.highlights, this.pawnTile,
+      {Key? key})
       : super(key: key);
 
-  static const innerRingRadius = 35;
-  static const outerRingRadius = innerRingRadius + 10;
+  static const innerRingRadius = 38;
+  static const outerRingRadius = innerRingRadius + 14;
   static const angularSection = 180 / 6;
 
   /// graphical description of the board
   static const shapes = [
     // center, start
-    _ShapeDescriptor(Colors.purple, _Circle(middle, _RL(8))),
+    _ShapeDescriptor(Colors.purple, _Circle(middle, _RL(9))),
     // three vertical tiles
     _ShapeDescriptor(Colors.green,
-        _RoundedTrapezoide(middle, _RL(8), 180 + 20, 180 - 40, _RP(58, 35))),
+        _RoundedTrapezoide(middle, _RL(9), 180 + 20, 180 - 40, _RP(59, 35))),
     _ShapeDescriptor(
-        Colors.blue, _Trapeze(_RP(42, 25), _RP(16, 0), _RP(0, 10))),
+        Colors.blue, _Trapeze(_RP(41, 25), _RP(18, 0), _RP(0, 10))),
     _ShapeDescriptor(
         Colors.green,
         _RoundedTrapezoide(middle, _RL(innerRingRadius),
-            270 - angularSection / 2, angularSection, _RP(40 + 18, 25))),
+            270 - angularSection / 2, angularSection, _RP(40 + 19, 25))),
     // cross
     _ShapeDescriptor(
         Colors.blue,
@@ -89,16 +92,15 @@ class Board extends StatelessWidget {
     _ShapeDescriptor(
         Colors.blue,
         _RoundedTrapezoide(middle, _RL(innerRingRadius),
-            90 - angularSection / 2, angularSection, _RP(42, 75))),
+            90 - angularSection / 2, angularSection, _RP(41, 75))),
     _ShapeDescriptor(
-        Colors.yellow, _Trapeze(_RP(42, 75), _RP(16, 0), _RP(0, -10))),
+        Colors.yellow, _Trapeze(_RP(41, 75), _RP(18, 0), _RP(0, -10))),
     _ShapeDescriptor(Colors.blue,
-        _RoundedTrapezoide(middle, _RL(8), 20, 180 - 40, _RP(42, 65))),
+        _RoundedTrapezoide(middle, _RL(9), 20, 180 - 40, _RP(41, 65))),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final sideLength = MediaQuery.of(context).size.shortestSide;
     final size = Size(sideLength, sideLength);
 
     final pawnShape = shapes[pawnTile];
@@ -122,14 +124,12 @@ class Board extends StatelessWidget {
       }
     }
 
-    return Center(
-      child: SizedBox.square(
-          dimension: sideLength,
-          child: Stack(
-            children: // place highligths over regular
-                regular + highligthed + [PawnImage(center, sideLength * 0.05)],
-          )),
-    );
+    return SizedBox.square(
+        dimension: sideLength,
+        child: Stack(
+          children: // place highligths over regular
+              regular + highligthed + [PawnImage(center, sideLength * 0.05)],
+        ));
   }
 }
 

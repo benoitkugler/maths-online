@@ -74,16 +74,16 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
             GameStart(),
             // PlayerTurn("", 0),
             // DiceThrow(2),
-            PossibleMoves("Katia", [1, 2, 3], 1),
+            // PossibleMoves("Katia", [1, 2, 3], 1),
             // Move([0, 1, 2, 3, 4, 5], 5),
             // ShowQuestion("test", 60, Categorie.orange),
             // PlayerAnswerResult(0, false),
             // GameEnd([0, 1], ["Pierre", "Paul"])
           ],
           GameState({
-            0: PlayerStatus("", [false, false, false, true, false]),
-            1: PlayerStatus("", [false, false, false, false, false]),
-            2: PlayerStatus("", [false, true, false, false, false]),
+            0: PlayerStatus("Player 2", [false, false, false, true, false]),
+            1: PlayerStatus("Player 2", [false, false, false, false, false]),
+            2: PlayerStatus("Player 2", [false, true, false, false, false]),
           }, 0, 0)),
     ]);
 
@@ -340,7 +340,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   void _showSuccessRecap() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-          builder: (context) => SuccessRecap(state.players)),
+          builder: (context) => SuccessRecapScaffold(state.players)),
     );
   }
 
@@ -395,6 +395,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
               child: Pie.asButton(_showSuccessRecap, pieGlowWidth,
                   state.players[playerID]!.success),
             ),
+            SuccessRecapRow(
+              playerID,
+              state.players,
+            ),
             onTapDice,
             diceRollAnimation,
             diceDisabled,
@@ -415,6 +419,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
 class _GameStarted extends StatelessWidget {
   final Widget pie;
+  final SuccessRecapRow recapRow;
 
   final void Function() onTapDice;
   final Stream<dice.Face>? diceRollAnimation;
@@ -424,8 +429,15 @@ class _GameStarted extends StatelessWidget {
   final Set<int> availableTiles;
   final int pawnTile;
 
-  const _GameStarted(this.pie, this.onTapDice, this.diceRollAnimation,
-      this.diceDisabled, this.onTapTile, this.availableTiles, this.pawnTile,
+  const _GameStarted(
+      this.pie,
+      this.recapRow,
+      this.onTapDice,
+      this.diceRollAnimation,
+      this.diceDisabled,
+      this.onTapTile,
+      this.availableTiles,
+      this.pawnTile,
       {Key? key})
       : super(key: key);
 
@@ -434,30 +446,30 @@ class _GameStarted extends StatelessWidget {
     return Container(
       color: Colors.grey,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 10, left: 40),
-                  child: pie,
-                ),
-                const Spacer(),
-                Padding(
-                    padding: const EdgeInsets.only(right: 30),
-                    child:
-                        dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
-              ],
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 5, left: 40),
+                child: pie,
+              ),
+              const Spacer(),
+              Padding(
+                  padding: const EdgeInsets.only(right: 30),
+                  child: dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
+            ],
           ),
-          Expanded(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Board(onTapTile, availableTiles, pawnTile),
-            ),
+          Expanded(child: LayoutBuilder(
+            builder: (_, cts) {
+              return Board(cts.biggest.shortestSide, onTapTile, availableTiles,
+                  pawnTile);
+            },
+          )),
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: recapRow,
           ),
         ],
       ),
