@@ -120,7 +120,7 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 func TestExpression_Substitute(t *testing.T) {
 	tests := []struct {
 		expr string
-		vars valueResolver
+		vars Variables
 		want string
 	}{
 		{"a + b", Variables{}, "a+b"},

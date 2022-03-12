@@ -106,9 +106,8 @@ func (r random) eval(_, _ float64, _ valueResolver) float64 {
 
 // partial evaluation a.k.a substitution
 
-// Substitute replaces variables by the given values, that is
-// the ones for which Resolve() returns `true`.
-func (expr *Expression) Substitute(vars valueResolver) {
+// Substitute replaces variables contained in `vars`.
+func (expr *Expression) Substitute(vars Variables) {
 	if expr == nil {
 		return
 	}
@@ -116,7 +115,7 @@ func (expr *Expression) Substitute(vars valueResolver) {
 	expr.right.Substitute(vars)
 
 	if v, isVariable := expr.atom.(Variable); isVariable {
-		value, has := vars.resolve(v)
+		value, has := vars[v]
 		if has {
 			expr.atom = number(value)
 		}

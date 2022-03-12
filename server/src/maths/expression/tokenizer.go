@@ -76,9 +76,9 @@ func isWhiteSpace(r rune) bool {
 func isOperator(r rune) (operator, bool) {
 	var op operator
 	switch r {
-	case '+':
+	case '+', '\ufe62':
 		op = plus
-	case '-':
+	case '-', '\u2212':
 		op = minus
 	case '/', '\u00F7':
 		op = div
@@ -109,6 +109,7 @@ func (tk *tokenizer) readToken() (tok token) {
 
 	out := token{pos: tk.pos}
 	c := tk.src[tk.pos]
+
 	op, isOp := isOperator(c)
 	switch {
 	case c == '(':

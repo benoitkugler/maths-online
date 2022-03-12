@@ -1,8 +1,10 @@
 package exercice
 
+import "github.com/benoitkugler/maths-online/maths/expression"
+
 // This file is used as source to auto generate SQL statements
 
-//go:generate ../../../../../structgen/structgen -source=sql_models.go -mode=sql:gen_scans.go -mode=sql_test:gen_scans_test.go  -mode=sql_composite:composites/auto.go  -mode=sql_gen:create_gen.sql  -mode=rand:gen_data_test.go -mode=itfs-json:gen_itfs.go
+//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_test:gen_scans_test.go  -mode=sql_composite:composites/auto.go  -mode=sql_gen:create_gen.sql  -mode=rand:gen_data_test.go -mode=itfs-json:gen_itfs.go
 
 type Exercice struct {
 	Id               int64            `json:"id"`
@@ -21,14 +23,12 @@ type Question struct {
 
 type Content []block
 
+// block form the actual content of a question
+// it is stored on DB in generic form, but may be instantiated
+// against random parameter values
 type block interface {
-	isBlock()
+	instantiate(params expression.Variables) blockInstance
 }
-
-func (TextBlock) isBlock()    {}
-func (Formula) isBlock()      {}
-func (ListField) isBlock()    {}
-func (FormulaField) isBlock() {}
 
 // TextBlock is a regular chunk of text
 type TextBlock struct {
@@ -36,9 +36,9 @@ type TextBlock struct {
 }
 
 // Formula is a math formula, which should be display using
-// a LaTeX renderer
+// a LaTeX renderer.
 type Formula struct {
-	Latex    string
+	Chunks   FormulaContent
 	IsInline bool // else display
 }
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os/exec"
+	"reflect"
 	"testing"
 )
 
@@ -69,6 +70,7 @@ func removeDBDev() {
 }
 
 func TestRoot(t *testing.T) {
+	// create a DB shared by all tests
 	logs := createDBDev()
 	defer removeDBDev()
 
@@ -100,6 +102,7 @@ func testSQL(t *testing.T, logs logsDB) {
 	qu1, qu2 := randQuestion(), randQuestion()
 	qu1.IdExercice = ex.Id
 	qu2.IdExercice = ex.Id
+	qu1.Content = append(qu1.Content, randFormula())
 	err = InsertManyQuestions(tx, qu1, qu2)
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +117,7 @@ func testSQL(t *testing.T, logs logsDB) {
 		t.Fatal(err)
 	}
 
-	if len(exQ.Questions) != 2 {
+	if !reflect.DeepEqual(exQ.Questions, Questions{qu1, qu2}) {
 		t.Fatal(err)
 	}
 

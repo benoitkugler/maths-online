@@ -1,24 +1,22 @@
 package exercice
 
-import "encoding/json"
+// func (ct Content) MarshalJSON() ([]byte, error) {
+// 	tmp := make([]blockWrapper, len(ct))
+// 	for i, v := range ct {
+// 		tmp[i].Data = v
+// 	}
+// 	return json.Marshal(tmp)
+// }
 
-func (ct Content) MarshalJSON() ([]byte, error) {
-	tmp := make([]blockWrapper, len(ct))
-	for i, v := range ct {
-		tmp[i].Data = v
-	}
-	return json.Marshal(tmp)
-}
-
-func (ct *Content) UnmarshalJSON(data []byte) error {
-	var tmp []blockWrapper
-	err := json.Unmarshal(data, &tmp)
-	*ct = make(Content, len(tmp))
-	for i, v := range tmp {
-		(*ct)[i] = v.Data
-	}
-	return err
-}
+// func (ct *Content) UnmarshalJSON(data []byte) error {
+// 	var tmp []blockWrapper
+// 	err := json.Unmarshal(data, &tmp)
+// 	*ct = make(Content, len(tmp))
+// 	for i, v := range tmp {
+// 		(*ct)[i] = v.Data
+// 	}
+// 	return err
+// }
 
 func SelectExerciceQuestions(db DB, id int64) (ExerciceQuestions, error) {
 	ex, err := SelectExercice(db, id)

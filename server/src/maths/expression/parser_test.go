@@ -1,12 +1,11 @@
 package expression
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
 
-var expressions = []struct {
+var expressions = [...]struct {
 	expr    string
 	want    *Expression
 	wantErr bool
@@ -265,23 +264,86 @@ var expressions = []struct {
 	{
 		"2 + 3 * randInt(2, 12)", &Expression{atom: plus, left: newNumber(2), right: &Expression{atom: mult, left: newNumber(3), right: &Expression{atom: random{2, 12}}}}, false,
 	},
+	// space are optional
+	{
+		"(x−6)*(4*x−3)", &Expression{
+			atom: mult,
+			left: &Expression{atom: minus, left: newVariable('x'), right: newNumber(6)},
+			right: &Expression{
+				atom:  minus,
+				left:  &Expression{atom: mult, left: newNumber(4), right: newVariable('x')},
+				right: newNumber(3),
+			},
+		},
+		false,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {
 	for _, tt := range expressions {
-		got, err := Parse(tt.expr)
+		got, _, err := Parse(tt.expr)
 		if err != nil {
 			_ = err.Error()
 		}
 
 		if (err != nil) != tt.wantErr {
-			fmt.Println(got.String())
 			t.Fatalf("parseExpression(%s) error = %v, wantErr %v", tt.expr, err, tt.wantErr)
 			return
 		}
 
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Fatalf("parseExpression(%s) = %v, want %v", tt.expr, got, tt.want)
+		}
+	}
+}
+
+func TestVarMap(t *testing.T) {
+	for _, tt := range []struct {
+		want VarMap
+		expr string
+	}{
+		{VarMap{}, "2 + 3"},
+		{VarMap{0: 'a', 4: 'b'}, "a + b"},
+		{VarMap{0: 'a', 4: 'b', 9: 'a'}, "a + b * (a + 2)"},
+	} {
+		_, vm, err := Parse(tt.expr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(vm, tt.want) {
+			t.Fatalf("for expr %s, expected %v, got %v", tt.expr, tt.want, vm)
+		}
+	}
+}
+
+func TestVarMap_Positions(t *testing.T) {
+	tests := []struct {
+		expr string
+		args []Variable
+		want []int
+	}{
+		{
+			"a + (x * b)", []Variable{}, nil,
+		},
+		{
+			"a + (x * b)", []Variable{'a', 'b'}, []int{0, 9},
+		},
+		{
+			"a + (x * b - b)", []Variable{'a', 'b'}, []int{0, 9, 13},
+		},
+	}
+	for _, tt := range tests {
+		rv := make(RandomParameters)
+		for _, v := range tt.args {
+			rv[v] = nil
+		}
+
+		_, vm, err := Parse(tt.expr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := vm.Positions(rv); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("VarMap.Positions() = %v, want %v", got, tt.want)
 		}
 	}
 }

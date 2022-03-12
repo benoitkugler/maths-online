@@ -81,9 +81,29 @@ func randbool() bool {
 	return i == 1
 }
 
+func randFormulaPart() FormulaPart {
+	return FormulaPart{
+		Content:      randstring(),
+		IsExpression: randbool(),
+	}
+}
+
+func randSliceFormulaPart() []FormulaPart {
+	l := rand.Intn(10)
+	out := make([]FormulaPart, l)
+	for i := range out {
+		out[i] = randFormulaPart()
+	}
+	return out
+}
+
+func randFormulaContent() FormulaContent {
+	return FormulaContent(randSliceFormulaPart())
+}
+
 func randFormula() Formula {
 	return Formula{
-		Latex:    randstring(),
+		Chunks:   randFormulaContent(),
 		IsInline: randbool(),
 	}
 }

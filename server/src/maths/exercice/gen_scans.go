@@ -223,7 +223,7 @@ func (s randomParameters) Value() (driver.Value, error) { return dumpJSON(s) }
 func scanOneFormula(row scanner) (Formula, error) {
 	var s Formula
 	err := row.Scan(
-		&s.Latex,
+		&s.Chunks,
 		&s.IsInline,
 	)
 	return s, err
@@ -275,14 +275,14 @@ func InsertManyFormulas(tx *sql.Tx, items ...Formula) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("formulas",
-		"Latex", "IsInline",
+		"Chunks", "IsInline",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Latex, item.IsInline)
+		_, err = stmt.Exec(item.Chunks, item.IsInline)
 		if err != nil {
 			return err
 		}
@@ -305,6 +305,9 @@ func (item Formula) Delete(tx DB) error {
 	;`)
 	return err
 }
+
+func (s *FormulaContent) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s FormulaContent) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func scanOneFormulaField(row scanner) (FormulaField, error) {
 	var s FormulaField

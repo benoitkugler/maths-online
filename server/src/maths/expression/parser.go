@@ -3,6 +3,7 @@ package expression
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 )
 
@@ -16,23 +17,49 @@ func (inv InvalidExpr) Error() string {
 	return fmt.Sprintf("expression invalide : position %d : %s", inv.Pos, inv.Reason)
 }
 
+// VarMap register the position of each variable occurence in
+// an expression rune slice.
+type VarMap map[int]Variable
+
+// Positions returns the indices in the original expression rune slice
+// of every occurence of the given variables
+func (vm VarMap) Positions(subset RandomParameters) []int {
+	var out []int
+	for index, v := range vm {
+		if _, has := subset[v]; has {
+			out = append(out, index)
+		}
+	}
+
+	sort.Ints(out)
+
+	return out
+}
+
 // Parse parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
-func Parse(s string) (*Expression, error) {
+func Parse(s string) (*Expression, VarMap, error) {
 	return parseBytes([]byte(s))
 }
 
 // parseBytes parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
-func parseBytes(text []byte) (*Expression, error) {
-	pr := parser{tk: newTokenizer(text)}
-	return pr.parseExpression()
+func parseBytes(text []byte) (*Expression, VarMap, error) {
+	pr := newParser(text)
+	e, err := pr.parseExpression()
+
+	return e, pr.variablePos, err
 }
 
-// parser transforms an utf8 byte input
-// to an ast
+// parser transforms an utf8 byte input into an ast
 type parser struct {
 	tk *tokenizer
 
+	variablePos VarMap // index of variable in input rune slice
+
 	stack []*Expression // waiting to be consumed by operators
+}
+
+func newParser(text []byte) *parser {
+	return &parser{tk: newTokenizer(text), variablePos: make(map[int]Variable)}
 }
 
 // return nil if the stack is empty
@@ -100,6 +127,9 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 	case constant:
 		return &Expression{atom: data}, nil
 	case Variable:
+		// register the variable position
+		pr.variablePos[tok.pos] = data
+
 		return &Expression{atom: data}, nil
 	case numberText:
 		nb, err := parseNumber(data, tok.pos)
@@ -249,7 +279,7 @@ func parseNumber(v numberText, pos int) (number, error) {
 	out, err := strconv.ParseFloat(string(v), 64)
 	if err != nil {
 		return 0, InvalidExpr{
-			Reason: fmt.Sprintf("syntaxe %s non reconnue pour un nombre", v),
+			Reason: fmt.Sprintf(`syntaxe "%s" non reconnue pour un nombre`, v),
 			Pos:    pos,
 		}
 	}

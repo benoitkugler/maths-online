@@ -40,7 +40,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"randInt(3,14) + 2",
 		"sgn(-8)",
 	} {
-		e, err := Parse(expr)
+		e, _, err := Parse(expr)
 		if err != nil {
 			t.Fatal(err)
 		}
