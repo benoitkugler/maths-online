@@ -245,20 +245,27 @@ class __AnimatedGlowState extends State<_AnimatedGlow>
           final radius = radiusFactor * controller.value + 4;
           return CustomPaint(
             size: widget.tile.size, // required to work around pointer issues
-            painter: _TileGlow(widget.tile.path, radius),
+            painter: _TileGlow(widget.tile.color, widget.tile.path, radius),
           );
         });
   }
 }
 
 class _TileGlow extends CustomPainter {
+  final Color insideColor;
   final Path _path;
   final double blurRadius;
 
-  static const color = Colors.white;
   static const highlightWidth = 10.0;
 
-  const _TileGlow(this._path, this.blurRadius);
+  const _TileGlow(this.insideColor, this._path, this.blurRadius);
+
+  Color get color {
+    if (insideColor.computeLuminance() > 0.5) {
+      return Colors.red;
+    }
+    return Colors.white;
+  }
 
   @override
   bool? hitTest(Offset position) {
