@@ -119,8 +119,9 @@ type move struct {
 
 // possibleMoves is emitted after a diceThrow
 type possibleMoves struct {
-	Tiles         []int    // the tile indices where the current player may move
-	CurrentPlayer PlayerID // the player allowed to play
+	PlayerName string
+	Tiles      []int    // the tile indices where the current player may move
+	Player     PlayerID // the player allowed to play
 }
 
 // showQuestion is emitted when a player

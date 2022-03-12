@@ -15,7 +15,7 @@ func TestEventsJSON(t *testing.T) {
 			gameStart{},
 			playerTurn{"Haha", 2},
 			dice,
-			possibleMoves{moves, 2},
+			possibleMoves{"", moves, 2},
 			move{Tile: moves[0]},
 			playerLeft{1},
 			showQuestion{Question: "Super", Categorie: 0},

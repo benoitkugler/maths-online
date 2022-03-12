@@ -143,7 +143,7 @@ func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
 	return StateUpdate{
 		Events: Events{
 			g.dice,
-			possibleMoves{CurrentPlayer: g.Player, Tiles: choices},
+			possibleMoves{PlayerName: g.playerName(g.Player), Player: g.Player, Tiles: choices},
 		},
 		State: g.GameState,
 	}, nil

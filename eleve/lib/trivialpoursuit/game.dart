@@ -72,9 +72,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           [
             PlayerJoin(0),
             GameStart(),
-            PlayerTurn("", 0),
+            // PlayerTurn("", 0),
             // DiceThrow(2),
-            // PossibleMoves(0, [1, 2, 3]),
+            PossibleMoves("Katia", [1, 2, 3], 1),
             // Move([0, 1, 2, 3, 4, 5], 5),
             // ShowQuestion("test", 60, Categorie.orange),
             // PlayerAnswerResult(0, false),
@@ -240,10 +240,16 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   Future<void> _onPossibleMoves(PossibleMoves event) async {
+    final isOwnTurn = event.player == playerID;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 3),
+      backgroundColor: Theme.of(context).colorScheme.secondary,
+      content: isOwnTurn
+          ? const Text("Choisis où déplacer le pion.")
+          : Text("${event.playerName} est en train de choisir la case..."),
+    ));
+
     // only the current player may choose the tile to move
-    if (playerID != event.currentPlayer) {
-      return;
-    }
     setState(() {
       diceDisabled = true;
       highligthedTiles = event.tiles.toSet();

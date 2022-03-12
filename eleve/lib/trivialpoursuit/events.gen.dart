@@ -321,22 +321,24 @@ JSON playerTurnToJson(PlayerTurn item) {
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.possibleMoves
 class PossibleMoves implements GameEvent {
+  final String playerName;
   final List<int> tiles;
-  final int currentPlayer;
+  final int player;
 
-  const PossibleMoves(this.tiles, this.currentPlayer);
+  const PossibleMoves(this.playerName, this.tiles, this.player);
 }
 
 PossibleMoves possibleMovesFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return PossibleMoves(
-      listIntFromJson(json['Tiles']), intFromJson(json['CurrentPlayer']));
+  return PossibleMoves(stringFromJson(json['PlayerName']),
+      listIntFromJson(json['Tiles']), intFromJson(json['Player']));
 }
 
 JSON possibleMovesToJson(PossibleMoves item) {
   return {
+    "PlayerName": stringToJson(item.playerName),
     "Tiles": listIntToJson(item.tiles),
-    "CurrentPlayer": intToJson(item.currentPlayer)
+    "Player": intToJson(item.player)
   };
 }
 
