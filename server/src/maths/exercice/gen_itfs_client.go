@@ -29,7 +29,11 @@ func (out *clientBlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data laTeXBlock
+		var data formulaBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 3:
+		var data textBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -50,8 +54,10 @@ func (item clientBlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 0, Data: data}
 	case clientListFieldBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case laTeXBlock:
+	case formulaBlock:
 		wr = wrapper{Kind: 2, Data: data}
+	case textBlock:
+		wr = wrapper{Kind: 3, Data: data}
 
 	default:
 		panic("exhaustive switch")

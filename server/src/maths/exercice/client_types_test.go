@@ -8,22 +8,25 @@ import (
 )
 
 func TestClientExerciceJSON(t *testing.T) {
-	cl := questions[0].toClient()
+	for _, qu := range questions {
+		cl := qu.toClient()
 
-	b, err := json.Marshal(cl)
-	if err != nil {
-		t.Fatal(err)
-	}
+		b, err := json.Marshal(cl)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	fmt.Println(string(b))
+		fmt.Println(string(b))
+		fmt.Println()
 
-	var cl2 ClientQuestion
-	err = json.Unmarshal(b, &cl2)
-	if err != nil {
-		t.Fatal(err)
-	}
+		var cl2 ClientQuestion
+		err = json.Unmarshal(b, &cl2)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	if !reflect.DeepEqual(cl, cl2) {
-		t.Fatal(cl, cl2)
+		if !reflect.DeepEqual(cl, cl2) {
+			t.Fatal(cl, cl2)
+		}
 	}
 }

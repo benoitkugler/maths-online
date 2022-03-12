@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/exercices/question.dart';
+import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +19,13 @@ void main() {
   // final player = AudioCache(prefix: "lib/music/");
   // player.loop("DontLetMeGo.mp3");
 }
+
+const input = """
+{"Title":"Très longue question horizontale","Content":[{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true},"Kind":2},{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true},"Kind":2},{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true},"Kind":2},{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true},"Kind":2},{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true},"Kind":2},{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true},"Kind":2},{"Data":{"Text":"Écrire sous une seule fraction : "},"Kind":3},{"Data":{"Content":"\\\\frac{1}{3} + \\\\frac{2}{5}","IsInline":true
+},"Kind":2}]}
+""";
+
+final question = clientQuestionFromJson(jsonDecode(input));
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -34,7 +45,12 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        body: const _HomePage(),
+        // body: const _HomePage(),
+        body: Padding(
+          padding:
+              const EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+          child: Question(question),
+        ),
       ),
     );
   }

@@ -148,7 +148,7 @@ type blockInstance interface {
 	toClient() clientBlock
 }
 
-func (t TextBlock) toClient() clientBlock { return laTeXBlock{Content: t.Text} }
+func (t TextBlock) toClient() clientBlock { return textBlock(t) }
 
 type FormulaInstance struct {
 	Chunks   []FormulaPartInstance
@@ -156,19 +156,12 @@ type FormulaInstance struct {
 }
 
 func (fi FormulaInstance) toClient() clientBlock {
-	delimiter := "\n$$"
-	if fi.IsInline {
-		delimiter = "$"
-	}
-
-	chunks := make([]string, len(fi.Chunks)+2)
-	chunks[0] = delimiter
+	chunks := make([]string, len(fi.Chunks))
 	for i, c := range fi.Chunks {
-		chunks[i+1] = c.asLaTeX()
+		chunks[i] = c.asLaTeX()
 	}
-	chunks[len(chunks)-1] = delimiter
 
-	return laTeXBlock{strings.Join(chunks, " ")}
+	return formulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
 }
 
 type ListFieldInstance struct{}

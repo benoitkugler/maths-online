@@ -49,20 +49,45 @@ JSON clientListFieldBlockToJson(ClientListFieldBlock item) {
   return {"Choices": listStringToJson(item.choices)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.laTeXBlock
-class LaTeXBlock implements ClientBlock {
+bool boolFromJson(dynamic json) => json as bool;
+
+dynamic boolToJson(bool item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice.formulaBlock
+class FormulaBlock implements ClientBlock {
   final String content;
+  final bool isInline;
 
-  const LaTeXBlock(this.content);
+  const FormulaBlock(this.content, this.isInline);
 }
 
-LaTeXBlock laTeXBlockFromJson(dynamic json_) {
+FormulaBlock formulaBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return LaTeXBlock(stringFromJson(json['Content']));
+  return FormulaBlock(
+      stringFromJson(json['Content']), boolFromJson(json['IsInline']));
 }
 
-JSON laTeXBlockToJson(LaTeXBlock item) {
-  return {"Content": stringToJson(item.content)};
+JSON formulaBlockToJson(FormulaBlock item) {
+  return {
+    "Content": stringToJson(item.content),
+    "IsInline": boolToJson(item.isInline)
+  };
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice.textBlock
+class TextBlock implements ClientBlock {
+  final String text;
+
+  const TextBlock(this.text);
+}
+
+TextBlock textBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TextBlock(stringFromJson(json['Text']));
+}
+
+JSON textBlockToJson(TextBlock item) {
+  return {"Text": stringToJson(item.text)};
 }
 
 abstract class ClientBlock {}
@@ -77,7 +102,9 @@ ClientBlock clientBlockFromJson(dynamic json_) {
     case 1:
       return clientListFieldBlockFromJson(data);
     case 2:
-      return laTeXBlockFromJson(data);
+      return formulaBlockFromJson(data);
+    case 3:
+      return textBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
@@ -88,8 +115,10 @@ JSON clientBlockToJson(ClientBlock item) {
     return {'Kind': 0, 'Data': clientFormulaFieldBlockToJson(item)};
   } else if (item is ClientListFieldBlock) {
     return {'Kind': 1, 'Data': clientListFieldBlockToJson(item)};
-  } else if (item is LaTeXBlock) {
-    return {'Kind': 2, 'Data': laTeXBlockToJson(item)};
+  } else if (item is FormulaBlock) {
+    return {'Kind': 2, 'Data': formulaBlockToJson(item)};
+  } else if (item is TextBlock) {
+    return {'Kind': 3, 'Data': textBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

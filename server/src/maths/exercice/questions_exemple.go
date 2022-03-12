@@ -19,4 +19,76 @@ var questions = [...]QuestionInstance{
 			}},
 		},
 	},
+	{
+		Title: "Calcul littéral", Content: ContentInstance{
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+		},
+	},
+	{
+		Title: "Très longue question horizontale", Content: ContentInstance{
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+		},
+	},
+	{
+		Title: "Très longue question verticale", Content: ContentInstance{
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+			TextBlock{"Écrire sous une seule fraction : "},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+			}},
+		},
+	},
 }

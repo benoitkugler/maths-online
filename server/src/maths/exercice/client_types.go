@@ -33,12 +33,18 @@ type clientBlock interface {
 	isClientBlock()
 }
 
-func (laTeXBlock) isClientBlock()              {}
+func (textBlock) isClientBlock()               {}
+func (formulaBlock) isClientBlock()            {}
 func (clientListFieldBlock) isClientBlock()    {}
 func (clientFormulaFieldBlock) isClientBlock() {}
 
-type laTeXBlock struct {
-	Content string
+type textBlock struct {
+	Text string
+}
+
+type formulaBlock struct {
+	Content  string // as latex
+	IsInline bool
 }
 
 // TODO:
