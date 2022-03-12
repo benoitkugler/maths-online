@@ -18,8 +18,7 @@ class Board extends StatelessWidget {
 
   static const innerRingRadius = 35;
   static const outerRingRadius = innerRingRadius + 10;
-  static const crossAngularSection = 40.0;
-  static const angularSection = (180 - crossAngularSection) / 5;
+  static const angularSection = 180 / 6;
 
   /// graphical description of the board
   static const shapes = [
@@ -27,74 +26,74 @@ class Board extends StatelessWidget {
     _ShapeDescriptor(Colors.purple, _Circle(middle, _RL(8))),
     // three vertical tiles
     _ShapeDescriptor(Colors.green,
-        _RoundedTrapezoide(middle, _RL(8), 180 + 20, 180 - 40, _RP(60, 35))),
+        _RoundedTrapezoide(middle, _RL(8), 180 + 20, 180 - 40, _RP(58, 35))),
     _ShapeDescriptor(
-        Colors.blue, _Trapeze(_RP(40, 25), _RP(20, 0), _RP(0, 10))),
+        Colors.blue, _Trapeze(_RP(42, 25), _RP(16, 0), _RP(0, 10))),
     _ShapeDescriptor(
         Colors.green,
-        _RoundedTrapezoide(
-            middle, _RL(innerRingRadius), 270 - 20, 20 * 2, _RP(40 + 20, 25))),
+        _RoundedTrapezoide(middle, _RL(innerRingRadius),
+            270 - angularSection / 2, angularSection, _RP(40 + 18, 25))),
     // cross
     _ShapeDescriptor(
         Colors.blue,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            270 - crossAngularSection / 2, crossAngularSection)),
+            270 - angularSection / 2, angularSection)),
     // 5 regular sections
     _ShapeDescriptor(
         Colors.green,
-        _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius), 290,
-            angularSection)),
+        _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
+            270 + angularSection / 2, angularSection)),
     _ShapeDescriptor(
         Colors.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            290 + angularSection, angularSection)),
+            270 + angularSection / 2 + angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.purple,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            290 + 2 * angularSection, angularSection)),
+            270 + angularSection / 2 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            290 + 3 * angularSection, angularSection)),
+            270 + angularSection / 2 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            290 + 4 * angularSection, angularSection)),
+            270 + angularSection / 2 + 4 * angularSection, angularSection)),
     // cross
     _ShapeDescriptor(
         Colors.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            290 + 5 * angularSection, crossAngularSection)),
+            270 + angularSection / 2 + 5 * angularSection, angularSection)),
     // 5 regular sections
     _ShapeDescriptor(
         Colors.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            90 + crossAngularSection / 2 + 0 * angularSection, angularSection)),
+            90 + angularSection / 2 + 0 * angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            90 + crossAngularSection / 2 + 1 * angularSection, angularSection)),
+            90 + angularSection / 2 + 1 * angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.purple,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            90 + crossAngularSection / 2 + 2 * angularSection, angularSection)),
+            90 + angularSection / 2 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            90 + crossAngularSection / 2 + 3 * angularSection, angularSection)),
+            90 + angularSection / 2 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
         Colors.green,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
-            90 + crossAngularSection / 2 + 4 * angularSection, angularSection)),
+            90 + angularSection / 2 + 4 * angularSection, angularSection)),
     // three last vertical tiles
     _ShapeDescriptor(
         Colors.blue,
-        _RoundedTrapezoide(
-            middle, _RL(innerRingRadius), 90 - 20, 20 * 2, _RP(40, 75))),
+        _RoundedTrapezoide(middle, _RL(innerRingRadius),
+            90 - angularSection / 2, angularSection, _RP(42, 75))),
     _ShapeDescriptor(
-        Colors.yellow, _Trapeze(_RP(40, 75), _RP(20, 0), _RP(0, -10))),
+        Colors.yellow, _Trapeze(_RP(42, 75), _RP(16, 0), _RP(0, -10))),
     _ShapeDescriptor(Colors.blue,
-        _RoundedTrapezoide(middle, _RL(8), 20, 180 - 40, _RP(40, 65))),
+        _RoundedTrapezoide(middle, _RL(8), 20, 180 - 40, _RP(42, 65))),
   ];
 
   @override
