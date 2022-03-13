@@ -100,6 +100,8 @@ const (
 	minus
 	mult
 	div
+	mod // modulo(a, x) := a % x
+	rem // remainder(a, x) := a // x
 	pow // x^2
 
 	invalidOperator
@@ -117,6 +119,10 @@ func (op operator) String() string {
 		return "/"
 	case pow:
 		return "^"
+	case mod:
+		return "%"
+	case rem:
+		return "//"
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
@@ -131,7 +137,8 @@ const (
 	cosFn
 	absFn
 	sqrtFn
-	sgnFn // return -1 0 or 1
+	sgnFn     // returns -1 0 or 1
+	isPrimeFn // returns 0 or 1
 	// round
 
 	invalidFn
@@ -153,6 +160,8 @@ func (fn function) String() string {
 		return "sqrt"
 	case sgnFn:
 		return "sgn"
+	case isPrimeFn:
+		return "isPrime"
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -207,9 +216,13 @@ func (v number) String() string {
 // random is an integer random parameter, used to create unique and distinct
 // version of the same general formula
 type random struct {
-	start, end int // inclusive, only accepts number as arguments (not expression)
+	start, end int  // inclusive, only accepts number as arguments (not expression)
+	isPrime    bool // if true, only generate prime numbers
 }
 
 func (r random) String() string {
+	if r.isPrime {
+		return fmt.Sprintf("randPrime(%d, %d)", r.start, r.end)
+	}
 	return fmt.Sprintf("randInt(%d, %d)", r.start, r.end)
 }

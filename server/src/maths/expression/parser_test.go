@@ -249,8 +249,14 @@ var expressions = [...]struct {
 	},
 	{"3 + ln()", nil, true},
 	{"2 , 5", nil, true},
+	{"isPrime( )", nil, true},
 	{"sgn( )", nil, true},
 	{"sgn(-8)", &Expression{atom: sgnFn, right: &Expression{atom: minus, right: newNumber(8)}}, false},
+	{"%", nil, true},
+	{"8 % 2", &Expression{atom: mod, left: newNumber(8), right: newNumber(2)}, false},
+	{"//", nil, true},
+	{"8 // 2", &Expression{atom: rem, left: newNumber(8), right: newNumber(2)}, false},
+	{"randInt(-a, )", nil, true},
 	{"randInt(1.5, )", nil, true},
 	{"randInt 1.5, )", nil, true},
 	{"randInt(1.., )", nil, true},
@@ -258,11 +264,19 @@ var expressions = [...]struct {
 	{"randInt(0, 2.2)", nil, true},
 	{"randInt(0, 1", nil, true},
 	{"randInt(2 * 4, 1)", nil, true}, // not supported for now
-	{"randInt(0, 1)", &Expression{atom: random{0, 1}}, false},
-	{"randInt(2, 12)", &Expression{atom: random{2, 12}}, false},
+	{"randPrime(-1, 12)", nil, true},
+	{"randPrime(4, 4)", nil, true},
+	{"randInt(0, 1)", &Expression{atom: random{0, 1, false}}, false},
+	{"randInt(2, 12)", &Expression{atom: random{2, 12, false}}, false},
+	{"randInt(-1, 4)", &Expression{atom: random{-1, 4, false}}, false},
+	{"randPrime(0, 2)", &Expression{atom: random{0, 2, true}}, false},
+	{"randPrime(2, 12)", &Expression{atom: random{2, 12, true}}, false},
 	{"randInt(15, 12)", nil, true},
 	{
-		"2 + 3 * randInt(2, 12)", &Expression{atom: plus, left: newNumber(2), right: &Expression{atom: mult, left: newNumber(3), right: &Expression{atom: random{2, 12}}}}, false,
+		"2 + 3 * randInt(2, 12)", &Expression{atom: plus, left: newNumber(2), right: &Expression{atom: mult, left: newNumber(3), right: &Expression{atom: random{2, 12, false}}}}, false,
+	},
+	{
+		"isPrime(2 * x)", &Expression{atom: isPrimeFn, left: nil, right: &Expression{atom: mult, left: newNumber(2), right: newVariable('x')}}, false,
 	},
 	// space are optional
 	{

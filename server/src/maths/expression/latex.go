@@ -60,6 +60,10 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf(`%s%s`, leftCode, rightCode)
 	case div:
 		return fmt.Sprintf(`\frac{%s}{%s}`, leftCode, rightCode)
+	case mod:
+		return fmt.Sprintf(`\text{mod}\left(%s, %s\right)`, leftCode, rightCode)
+	case rem:
+		return fmt.Sprintf(`\text{rem}\left(%s, %s\right)`, leftCode, rightCode)
 	case pow:
 		if left.needParenthesis(op, true) {
 			leftCode = addParenthesis(leftCode)
@@ -90,13 +94,18 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf(`\sqrt{%s}`, arg)
 	case sgnFn:
 		return fmt.Sprintf(`\text{sgn}\left(%s\right)`, arg)
+	case isPrimeFn:
+		return fmt.Sprintf(`\text{isPrime}\left(%s\right)`, arg)
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
 }
 
 func (r random) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
-	return fmt.Sprintf(`\text{rand(%d, %d)}`, r.start, r.end)
+	if r.isPrime {
+		return fmt.Sprintf(`\text{randPrime(%d, %d)}`, r.start, r.end)
+	}
+	return fmt.Sprintf(`\text{randInt(%d, %d)}`, r.start, r.end)
 }
 
 func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {

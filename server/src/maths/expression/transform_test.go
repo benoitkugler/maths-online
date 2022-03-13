@@ -246,6 +246,9 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"2 + randInt(1,3)", "randInt(1,3) + 2", SimpleSubstitutions, true},
 		{"2 + randInt(1,3) + randInt(2,4)", "randInt(1,3) + 2 + randInt(2,4)", SimpleSubstitutions, true},
 		{"2 + randInt(1,3) + randInt(1,4)", "randInt(1,3) + 2 + randInt(1,4)", SimpleSubstitutions, true},
+		{"2 + randPrime(1,3) + randPrime(2,4)", "randPrime(1,3) + 2 + randPrime(2,4)", SimpleSubstitutions, true},
+		{"2 + randPrime(1,3) + randPrime(1,4)", "randPrime(1,3) + 2 + randPrime(1,4)", SimpleSubstitutions, true},
+		{"randPrime(1,4) + randInt(1,3)", "randInt(1,3) + randPrime(1,4)", SimpleSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)

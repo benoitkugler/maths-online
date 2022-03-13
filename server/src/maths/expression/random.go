@@ -1,6 +1,9 @@
 package expression
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 // InvalidRandomVariable is returned when instantiating
 // invalid parameter definitions
@@ -92,4 +95,53 @@ func (rv RandomParameters) Instantiate() (Variables, error) {
 	}
 
 	return out, nil
+}
+
+// return list of primes between min and max (inclusive)
+func sieveOfEratosthenes(min, max int) (primes []int) {
+	b := make([]bool, max+1)
+	for i := 2; i <= max; i++ {
+		if b[i] == true {
+			continue
+		}
+		if i >= min {
+			primes = append(primes, i)
+		}
+		for k := i * i; k <= max; k += i {
+			b[k] = true
+		}
+	}
+	return
+}
+
+func randPrime(min, max int) int {
+	choices := sieveOfEratosthenes(min, max)
+	L := len(choices)
+	index := rand.Intn(L)
+	return choices[index]
+}
+
+func (rd random) validate(pos int) error {
+	if rd.start > rd.end {
+		return InvalidExpr{
+			Reason: "ordre invalide entre les arguments de randInt",
+			Pos:    pos,
+		}
+	}
+
+	if rd.isPrime && rd.start < 0 {
+		return InvalidExpr{
+			Reason: "randPrime n'accepte que des nombres positifs",
+			Pos:    pos,
+		}
+	}
+
+	if rd.isPrime && len(sieveOfEratosthenes(rd.start, rd.end)) == 0 {
+		return InvalidExpr{
+			Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", rd.start, rd.end),
+			Pos:    pos,
+		}
+	}
+
+	return nil
 }

@@ -72,6 +72,33 @@ func Test_Expression_eval(t *testing.T) {
 		{
 			"4 * sgn(-1) * sgn(1) * sgn(0)", nil, 0,
 		},
+		{
+			"2 * randPrime(8, 12)", nil, 22,
+		},
+		{
+			"2 * isPrime(8)", nil, 0,
+		},
+		{
+			"2 * isPrime(11)", nil, 2,
+		},
+		{
+			"2 * isPrime(-11)", nil, 2,
+		},
+		{
+			"2 * isPrime(11.4)", nil, 0,
+		},
+		{
+			"8 % 3", nil, 2,
+		},
+		{
+			"8.2 % 3", nil, 0, // error, actually
+		},
+		{
+			"11 // 3", nil, 3,
+		},
+		{
+			"8.2 // 3", nil, 0, // error, actually
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -135,6 +162,15 @@ func TestExpression_Substitute(t *testing.T) {
 		want := mustParse(t, tt.want)
 		if !reflect.DeepEqual(expr, want) {
 			t.Errorf("Substitute(%s) = %v, want %v", tt.expr, expr, tt.want)
+		}
+	}
+}
+
+func Test_isPrime(t *testing.T) {
+	primes := sieveOfEratosthenes(1, 1000)
+	for _, p := range primes {
+		if !isPrime(p) {
+			t.Fatal(p)
 		}
 	}
 }

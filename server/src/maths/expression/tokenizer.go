@@ -22,7 +22,9 @@ func (function) isToken()     {}
 func (randFunction) isToken() {}
 func (operator) isToken()     {}
 
-type randFunction struct{}
+type randFunction struct {
+	isPrime bool
+}
 
 type symbol uint8
 
@@ -73,6 +75,10 @@ func isWhiteSpace(r rune) bool {
 	}
 }
 
+func isRemaider(src []rune) bool {
+	return len(src) >= 2 && (string(src[0:2]) == "//")
+}
+
 func isOperator(r rune) (operator, bool) {
 	var op operator
 	switch r {
@@ -84,6 +90,8 @@ func isOperator(r rune) (operator, bool) {
 		op = div
 	case '*', '\u00D7':
 		op = mult
+	case '%':
+		op = mod
 	case '^':
 		op = pow
 	default:
@@ -110,6 +118,7 @@ func (tk *tokenizer) readToken() (tok token) {
 	out := token{pos: tk.pos}
 	c := tk.src[tk.pos]
 
+	isRem := isRemaider(tk.src[tk.pos:])
 	op, isOp := isOperator(c)
 	switch {
 	case c == '(':
@@ -121,12 +130,17 @@ func (tk *tokenizer) readToken() (tok token) {
 	case c == ',':
 		out.data = comma
 		tk.pos++
+	case isRem:
+		out.data = rem
+		tk.pos += 2
 	case isOp:
 		out.data = op
 		tk.pos++
 	case unicode.IsLetter(c): // either a function, a variable or a constant
 		if tk.tryReadRandint() {
-			out.data = randFunction{}
+			out.data = randFunction{isPrime: false}
+		} else if tk.tryReadRandPrime() {
+			out.data = randFunction{isPrime: true}
 		} else if fn, isFunction := tk.tryReadFunction(); isFunction {
 			out.data = fn
 		} else {
@@ -160,6 +174,22 @@ func (tk *tokenizer) tryReadRandint() bool {
 	return false
 }
 
+func (tk *tokenizer) tryReadRandPrime() bool {
+	const runeLen = len("randPrime")
+
+	if len(tk.src) < tk.pos+runeLen {
+		return false
+	}
+
+	word := string(tk.src[tk.pos : tk.pos+runeLen])
+	if word == "randPrime" || word == "randprime" {
+		tk.pos += runeLen
+		return true
+	}
+
+	return false
+}
+
 func (tk *tokenizer) tryReadFunction() (function, bool) {
 	L := len(tk.src)
 
@@ -185,6 +215,8 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = sqrtFn
 	case "sgn":
 		fn = sgnFn
+	case "isPrime":
+		fn = isPrimeFn
 	default: // no  matching function name
 		_ = exhaustiveFunctionSwitch
 		return 0, false

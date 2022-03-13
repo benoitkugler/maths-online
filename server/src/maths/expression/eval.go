@@ -47,6 +47,20 @@ func (op operator) evaluate(left, right float64) float64 {
 		return left * right
 	case div:
 		return left / right
+	case mod:
+		leftInt, leftIsInt := isInt(left)
+		rightInt, rightIsInt := isInt(right)
+		if !(leftIsInt && rightIsInt) {
+			return 0
+		}
+		return float64(leftInt % rightInt)
+	case rem:
+		leftInt, leftIsInt := isInt(left)
+		rightInt, rightIsInt := isInt(right)
+		if !(leftIsInt && rightIsInt) {
+			return 0
+		}
+		return float64(leftInt / rightInt)
 	case pow:
 		return math.Pow(left, right)
 	default:
@@ -94,13 +108,37 @@ func (fn function) eval(left, right float64, _ valueResolver) float64 {
 			return -1
 		}
 		return 0
+	case isPrimeFn:
+		argInt, isInt := isInt(arg)
+		if !isInt {
+			return 0
+		}
+		if isPrime(argInt) {
+			return 1
+		}
+		return 0
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
 }
 
+func isPrime(n int) bool {
+	if n < 0 {
+		n = -n
+	}
+	for i := 2; i <= int(math.Floor(math.Sqrt(float64(n)))); i++ {
+		if n%i == 0 {
+			return false
+		}
+	}
+	return n > 1
+}
+
 // return a random number
 func (r random) eval(_, _ float64, _ valueResolver) float64 {
+	if r.isPrime {
+		return float64(randPrime(r.start, r.end))
+	}
 	return float64(r.start + rand.Intn(r.end-r.start+1))
 }
 

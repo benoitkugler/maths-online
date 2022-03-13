@@ -2,7 +2,6 @@ package expression
 
 import (
 	"fmt"
-	"math"
 	"sort"
 	"strconv"
 )
@@ -117,7 +116,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 	case operator:
 		return pr.parseOperator(data, tok.pos)
 	case randFunction:
-		rd, err := pr.parseRandInt(tok.pos)
+		rd, err := pr.parseRandFunction(tok.pos, data.isPrime)
 		if err != nil {
 			return nil, err
 		}
@@ -287,25 +286,54 @@ func parseNumber(v numberText, pos int) (number, error) {
 	return number(out), nil
 }
 
-func parseInt(v numberText, pos int) (int, error) {
-	n, err := parseNumber(v, pos)
+// accept a possibly negative integer
+func (pr *parser) parseInt() (int, error) {
+	arg := pr.tk.next()
+
+	var isNegative bool
+	if arg.data == minus { // read another token
+		isNegative = true
+		arg = pr.tk.next()
+	}
+
+	v, ok := arg.data.(numberText)
+	if !ok {
+		return 0, InvalidExpr{
+			Reason: "nombre entier attendu",
+			Pos:    arg.pos,
+		}
+	}
+
+	n, err := parseNumber(v, arg.pos)
 	if err != nil {
 		return 0, err
 	}
 
-	if math.Floor(float64(n)) != float64(n) {
+	if _, isInt := isInt(float64(n)); !isInt {
 		return 0, InvalidExpr{
 			Reason: "nombre entier attendu",
-			Pos:    pos,
+			Pos:    arg.pos,
 		}
 	}
 
-	return int(n), nil
+	out := int(n)
+	if isNegative {
+		out = -out
+	}
+	return out, nil
 }
 
-// special case for randInt:
-// to keep the parser simple, we only accept randInt(number, number)
-func (pr *parser) parseRandInt(pos int) (rd random, err error) {
+func isInt(v float64) (int, bool) {
+	out := int(v)
+	if float64(out) == v {
+		return out, true
+	}
+	return 0, false
+}
+
+// special case for randInt or randPrime
+// to keep the parser simple, we only accept randXXX(number, number)
+func (pr *parser) parseRandFunction(pos int, isPrime bool) (rd random, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
 	par := pr.tk.next()
@@ -317,12 +345,11 @@ func (pr *parser) parseRandInt(pos int) (rd random, err error) {
 		}
 	}
 
-	arg1 := pr.tk.next()
-	if number, ok := arg1.data.(numberText); ok {
-		rd.start, err = parseInt(number, arg1.pos)
-		if err != nil {
-			return random{}, err
-		}
+	rd.isPrime = isPrime
+
+	rd.start, err = pr.parseInt()
+	if err != nil {
+		return random{}, err
 	}
 
 	if tok := pr.tk.next(); tok.data != comma {
@@ -332,12 +359,9 @@ func (pr *parser) parseRandInt(pos int) (rd random, err error) {
 		}
 	}
 
-	arg2 := pr.tk.next()
-	if number, ok := arg2.data.(numberText); ok {
-		rd.end, err = parseInt(number, arg2.pos)
-		if err != nil {
-			return random{}, err
-		}
+	rd.end, err = pr.parseInt()
+	if err != nil {
+		return random{}, err
 	}
 
 	if tok := pr.tk.next(); tok.data != closePar {
@@ -347,12 +371,7 @@ func (pr *parser) parseRandInt(pos int) (rd random, err error) {
 		}
 	}
 
-	if rd.start > rd.end {
-		return random{}, InvalidExpr{
-			Reason: "ordre invalide entre les arguments de randInt",
-			Pos:    pos,
-		}
-	}
+	err = rd.validate(pos)
 
-	return rd, nil
+	return rd, err
 }

@@ -95,3 +95,21 @@ func TestRandomVariables_range(t *testing.T) {
 		}
 	}
 }
+
+func Test_sieveOfEratosthenes(t *testing.T) {
+	tests := []struct {
+		min, max   int
+		wantPrimes []int
+	}{
+		{4, 4, nil},
+		{0, 10, []int{2, 3, 5, 7}},
+		{0, 11, []int{2, 3, 5, 7, 11}},
+		{3, 10, []int{3, 5, 7}},
+		{4, 11, []int{5, 7, 11}},
+	}
+	for _, tt := range tests {
+		if gotPrimes := sieveOfEratosthenes(tt.min, tt.max); !reflect.DeepEqual(gotPrimes, tt.wantPrimes) {
+			t.Errorf("sieveOfEratosthenes() = %v, want %v", gotPrimes, tt.wantPrimes)
+		}
+	}
+}

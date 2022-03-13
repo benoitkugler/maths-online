@@ -66,10 +66,16 @@ func compareNodes(n1, n2 *Expression) int {
 			}
 		case random:
 			a2 := a2.(random)
-			if a1.start == a2.start {
-				return a1.end - a2.end
+			if a1.isPrime && !a2.isPrime {
+				return 1
+			} else if !a1.isPrime && a2.isPrime {
+				return -1
 			} else {
-				return a1.start - a2.start
+				if a1.start == a2.start {
+					return a1.end - a2.end
+				} else {
+					return a1.start - a2.start
+				}
 			}
 		case Variable:
 			a2 := a2.(Variable)
