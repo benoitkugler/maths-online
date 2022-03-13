@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
@@ -444,7 +445,13 @@ class _GameStarted extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+            image: const AssetImage("lib/images/grey-wood.png"),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+                Colors.grey.withOpacity(0.6), BlendMode.srcATop)),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -468,7 +475,7 @@ class _GameStarted extends StatelessWidget {
             },
           )),
           Padding(
-            padding: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.only(top: 5, bottom: 2),
             child: recapRow,
           ),
         ],
