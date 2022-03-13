@@ -25,6 +25,16 @@ var questions = [...]QuestionInstance{
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("(1/3)+(2/5)")},
+				{StaticContent: `= \frac{a}{b}`},
+			}},
+			TextBlock{"Déterminer "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "a = "}}},
+			NumberFieldInstance{Answer: 1*5 + 2*3},
+			TextBlock{" et "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "b = "}}},
+			NumberFieldInstance{Answer: 3 * 5},
 		},
 	},
 	{

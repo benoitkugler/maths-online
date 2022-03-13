@@ -21,19 +21,23 @@ func (out *clientBlockWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data clientFormulaFieldBlock
+		var data clientFormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data clientListFieldBlock
+		var data clientFormulaFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data formulaBlock
+		var data clientListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data textBlock
+		var data clientNumberFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 4:
+		var data clientTextBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -50,14 +54,16 @@ func (item clientBlockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case clientFormulaFieldBlock:
+	case clientFormulaBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case clientListFieldBlock:
+	case clientFormulaFieldBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case formulaBlock:
+	case clientListFieldBlock:
 		wr = wrapper{Kind: 2, Data: data}
-	case textBlock:
+	case clientNumberFieldBlock:
 		wr = wrapper{Kind: 3, Data: data}
+	case clientTextBlock:
+		wr = wrapper{Kind: 4, Data: data}
 
 	default:
 		panic("exhaustive switch")

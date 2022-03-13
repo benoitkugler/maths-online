@@ -33,19 +33,25 @@ type clientBlock interface {
 	isClientBlock()
 }
 
-func (textBlock) isClientBlock()               {}
-func (formulaBlock) isClientBlock()            {}
+func (clientTextBlock) isClientBlock()         {}
+func (clientFormulaBlock) isClientBlock()      {}
+func (clientNumberFieldBlock) isClientBlock()  {}
 func (clientListFieldBlock) isClientBlock()    {}
 func (clientFormulaFieldBlock) isClientBlock() {}
 
-type textBlock struct {
+type clientTextBlock struct {
 	Text string
 }
 
-type formulaBlock struct {
+type clientFormulaBlock struct {
 	Content  string // as latex
 	IsInline bool
 }
+
+// clientNumberFieldBlock is an answer field where only
+// numbers are allowed
+// answers are compared as float values
+type clientNumberFieldBlock struct{}
 
 // TODO:
 type clientListFieldBlock struct {

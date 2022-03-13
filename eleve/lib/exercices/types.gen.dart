@@ -6,6 +6,31 @@ String stringFromJson(dynamic json) => json as String;
 
 dynamic stringToJson(String item) => item;
 
+bool boolFromJson(dynamic json) => json as bool;
+
+dynamic boolToJson(bool item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice.clientFormulaBlock
+class ClientFormulaBlock implements ClientBlock {
+  final String content;
+  final bool isInline;
+
+  const ClientFormulaBlock(this.content, this.isInline);
+}
+
+ClientFormulaBlock clientFormulaBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return ClientFormulaBlock(
+      stringFromJson(json['Content']), boolFromJson(json['IsInline']));
+}
+
+JSON clientFormulaBlockToJson(ClientFormulaBlock item) {
+  return {
+    "Content": stringToJson(item.content),
+    "IsInline": boolToJson(item.isInline)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice.clientFormulaFieldBlock
 class ClientFormulaFieldBlock implements ClientBlock {
   final String expression;
@@ -49,44 +74,33 @@ JSON clientListFieldBlockToJson(ClientListFieldBlock item) {
   return {"Choices": listStringToJson(item.choices)};
 }
 
-bool boolFromJson(dynamic json) => json as bool;
-
-dynamic boolToJson(bool item) => item;
-
-// github.com/benoitkugler/maths-online/maths/exercice.formulaBlock
-class FormulaBlock implements ClientBlock {
-  final String content;
-  final bool isInline;
-
-  const FormulaBlock(this.content, this.isInline);
+// github.com/benoitkugler/maths-online/maths/exercice.clientNumberFieldBlock
+class ClientNumberFieldBlock implements ClientBlock {
+  const ClientNumberFieldBlock();
 }
 
-FormulaBlock formulaBlockFromJson(dynamic json_) {
+ClientNumberFieldBlock clientNumberFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return FormulaBlock(
-      stringFromJson(json['Content']), boolFromJson(json['IsInline']));
+  return ClientNumberFieldBlock();
 }
 
-JSON formulaBlockToJson(FormulaBlock item) {
-  return {
-    "Content": stringToJson(item.content),
-    "IsInline": boolToJson(item.isInline)
-  };
+JSON clientNumberFieldBlockToJson(ClientNumberFieldBlock item) {
+  return {};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.textBlock
-class TextBlock implements ClientBlock {
+// github.com/benoitkugler/maths-online/maths/exercice.clientTextBlock
+class ClientTextBlock implements ClientBlock {
   final String text;
 
-  const TextBlock(this.text);
+  const ClientTextBlock(this.text);
 }
 
-TextBlock textBlockFromJson(dynamic json_) {
+ClientTextBlock clientTextBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return TextBlock(stringFromJson(json['Text']));
+  return ClientTextBlock(stringFromJson(json['Text']));
 }
 
-JSON textBlockToJson(TextBlock item) {
+JSON clientTextBlockToJson(ClientTextBlock item) {
   return {"Text": stringToJson(item.text)};
 }
 
@@ -98,27 +112,31 @@ ClientBlock clientBlockFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return clientFormulaFieldBlockFromJson(data);
+      return clientFormulaBlockFromJson(data);
     case 1:
-      return clientListFieldBlockFromJson(data);
+      return clientFormulaFieldBlockFromJson(data);
     case 2:
-      return formulaBlockFromJson(data);
+      return clientListFieldBlockFromJson(data);
     case 3:
-      return textBlockFromJson(data);
+      return clientNumberFieldBlockFromJson(data);
+    case 4:
+      return clientTextBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
 }
 
 JSON clientBlockToJson(ClientBlock item) {
-  if (item is ClientFormulaFieldBlock) {
-    return {'Kind': 0, 'Data': clientFormulaFieldBlockToJson(item)};
+  if (item is ClientFormulaBlock) {
+    return {'Kind': 0, 'Data': clientFormulaBlockToJson(item)};
+  } else if (item is ClientFormulaFieldBlock) {
+    return {'Kind': 1, 'Data': clientFormulaFieldBlockToJson(item)};
   } else if (item is ClientListFieldBlock) {
-    return {'Kind': 1, 'Data': clientListFieldBlockToJson(item)};
-  } else if (item is FormulaBlock) {
-    return {'Kind': 2, 'Data': formulaBlockToJson(item)};
-  } else if (item is TextBlock) {
-    return {'Kind': 3, 'Data': textBlockToJson(item)};
+    return {'Kind': 2, 'Data': clientListFieldBlockToJson(item)};
+  } else if (item is ClientNumberFieldBlock) {
+    return {'Kind': 3, 'Data': clientNumberFieldBlockToJson(item)};
+  } else if (item is ClientTextBlock) {
+    return {'Kind': 4, 'Data': clientTextBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

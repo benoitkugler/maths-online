@@ -52,7 +52,7 @@ func (fp FormulaPart) instantiate(params expression.Variables) FormulaPartInstan
 // FormulaPartInstance is either an expression or a static string
 type FormulaPartInstance struct {
 	Expression    *expression.Expression
-	StaticContent string
+	StaticContent string // LaTeX code, rendered in math mode
 }
 
 func (fi FormulaPartInstance) asLaTeX() string {
@@ -148,7 +148,7 @@ type blockInstance interface {
 	toClient() clientBlock
 }
 
-func (t TextBlock) toClient() clientBlock { return textBlock(t) }
+func (t TextBlock) toClient() clientBlock { return clientTextBlock(t) }
 
 type FormulaInstance struct {
 	Chunks   []FormulaPartInstance
@@ -161,8 +161,17 @@ func (fi FormulaInstance) toClient() clientBlock {
 		chunks[i] = c.asLaTeX()
 	}
 
-	return formulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
+	return clientFormulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
 }
+
+// NumberFieldInstance is an answer field where only
+// numbers are allowed
+// answers are compared as float values
+type NumberFieldInstance struct {
+	Answer float64
+}
+
+func (NumberFieldInstance) toClient() clientBlock { return clientNumberFieldBlock{} }
 
 type ListFieldInstance struct{}
 
