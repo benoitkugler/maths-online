@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
 
 func TestClientExerciceJSON(t *testing.T) {
@@ -16,10 +18,10 @@ func TestClientExerciceJSON(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		fmt.Println(string(b))
+		fmt.Printf("%q\n", string(b))
 		fmt.Println()
 
-		var cl2 ClientQuestion
+		var cl2 client.Question
 		err = json.Unmarshal(b, &cl2)
 		if err != nil {
 			t.Fatal(err)

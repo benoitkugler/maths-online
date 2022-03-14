@@ -9,9 +9,10 @@ func randblock() block {
 		randFormula(),
 		randFormulaField(),
 		randListField(),
+		randNumberField(),
 		randTextBlock(),
 	}
-	i := rand.Intn(4)
+	i := rand.Intn(5)
 	return choix[i]
 }
 
@@ -24,8 +25,8 @@ func randSliceblock() []block {
 	return out
 }
 
-func randContent() Content {
-	return Content(randSliceblock())
+func randEnonce() Enonce {
+	return Enonce(randSliceblock())
 }
 
 func randint64() int64 {
@@ -129,10 +130,16 @@ func randListField() ListField {
 	}
 }
 
+func randNumberField() NumberField {
+	return NumberField{
+		Expression: randstring(),
+	}
+}
+
 func randQuestion() Question {
 	return Question{
 		IdExercice: randint64(),
-		Content:    randContent(),
+		Enonce:     randEnonce(),
 	}
 }
 

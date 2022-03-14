@@ -146,6 +146,10 @@ CREATE TABLE list_fields (
 	Choices varchar[] 
 );
 
+CREATE TABLE number_fields (
+	Expression varchar  NOT NULL
+);
+
 	-- No validation : accept anything
 	CREATE OR REPLACE FUNCTION structgen_validate_json_ (data jsonb)
 		RETURNS boolean
@@ -173,7 +177,7 @@ CREATE TABLE list_fields (
 
 CREATE TABLE questions (
 	id_exercice integer  NOT NULL,
-	content jsonb  CONSTRAINT content_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(content))
+	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce))
 );
 
 CREATE TABLE text_blocks (

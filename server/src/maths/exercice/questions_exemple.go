@@ -12,7 +12,7 @@ func mustParse(s string) *expression.Expression {
 
 var questions = [...]QuestionInstance{
 	{
-		Title: "Calcul littéral", Content: ContentInstance{
+		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextBlock{"Développer l’expression : "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
 				{Expression: mustParse("(x−6)*(4*x−3)")},
@@ -20,7 +20,7 @@ var questions = [...]QuestionInstance{
 		},
 	},
 	{
-		Title: "Calcul littéral", Content: ContentInstance{
+		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextBlock{"Écrire sous une seule fraction : "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
 				{Expression: mustParse("(1/3)+(2/5)")},
@@ -29,16 +29,16 @@ var questions = [...]QuestionInstance{
 				{Expression: mustParse("(1/3)+(2/5)")},
 				{StaticContent: `= \frac{a}{b}`},
 			}},
-			TextBlock{"Déterminer "},
+			TextBlock{"avec "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "a = "}}},
-			NumberFieldInstance{Answer: 1*5 + 2*3},
+			NumberFieldInstance{ID: 0, Answer: 1*5 + 2*3},
 			TextBlock{" et "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "b = "}}},
-			NumberFieldInstance{Answer: 3 * 5},
+			NumberFieldInstance{ID: 1, Answer: 3 * 5},
 		},
 	},
 	{
-		Title: "Très longue question horizontale", Content: ContentInstance{
+		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextBlock{"Écrire sous une seule fraction : "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
 				{Expression: mustParse("(1/3)+(2/5)")},
@@ -70,7 +70,7 @@ var questions = [...]QuestionInstance{
 		},
 	},
 	{
-		Title: "Très longue question verticale", Content: ContentInstance{
+		Title: "Très longue question verticale", Enonce: EnonceInstance{
 			TextBlock{"Écrire sous une seule fraction : "},
 			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
 				{Expression: mustParse("(1/3)+(2/5)")},

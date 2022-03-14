@@ -99,6 +99,29 @@ func queriesListField(tx *sql.Tx, item ListField) (ListField, error) {
 	return item, err
 }
 
+func queriesNumberField(tx *sql.Tx, item NumberField) (NumberField, error) {
+	err := InsertManyNumberFields(tx, item)
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM number_fields")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanNumberFields(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM number_fields WHERE 
+		;`)
+	_, err = ScanNumberField(row)
+
+	return item, err
+}
+
 func queriesQuestion(tx *sql.Tx, item Question) (Question, error) {
 	err := InsertManyQuestions(tx, item)
 	if err != nil {

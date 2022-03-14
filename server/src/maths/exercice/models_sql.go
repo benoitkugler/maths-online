@@ -17,17 +17,18 @@ type Exercice struct {
 // It is mainly consituted of a list of content blocks, which
 // describes the question (description, question, field answer)
 type Question struct {
-	IdExercice int64   `json:"id_exercice" sql_on_delete:"CASCADE"`
-	Content    Content `json:"content"`
+	IdExercice int64  `json:"id_exercice" sql_on_delete:"CASCADE"`
+	Enonce     Enonce `json:"enonce"`
 }
 
-type Content []block
+type Enonce []block
 
 // block form the actual content of a question
 // it is stored on DB in generic form, but may be instantiated
 // against random parameter values
 type block interface {
-	instantiate(params expression.Variables) blockInstance
+	// ID is only used by answer fields
+	instantiate(params expression.Variables, ID int) blockInstance
 }
 
 // TextBlock is a regular chunk of text
@@ -42,12 +43,17 @@ type Formula struct {
 	IsInline bool // else display
 }
 
+type NumberField struct {
+	// a valid expression, in the format used by expression.Expression
+	// which is only parametrized by the random parameters
+	// TODO: carefully check that the prof expression is valid
+	Expression string
+}
+
 type ListField struct {
-	// Id      string
 	Choices []string
 }
 
 type FormulaField struct {
-	// Id string
 	Expression string // a valid expression, in the format used by expression.Expression
 }

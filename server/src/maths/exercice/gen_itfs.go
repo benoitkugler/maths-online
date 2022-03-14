@@ -33,6 +33,10 @@ func (out *blockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
+		var data NumberField
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 4:
 		var data TextBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -56,8 +60,10 @@ func (item blockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 1, Data: data}
 	case ListField:
 		wr = wrapper{Kind: 2, Data: data}
-	case TextBlock:
+	case NumberField:
 		wr = wrapper{Kind: 3, Data: data}
+	case TextBlock:
+		wr = wrapper{Kind: 4, Data: data}
 
 	default:
 		panic("exhaustive switch")

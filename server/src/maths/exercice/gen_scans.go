@@ -479,11 +479,96 @@ func (item ListField) Delete(tx DB) error {
 	return err
 }
 
+func scanOneNumberField(row scanner) (NumberField, error) {
+	var s NumberField
+	err := row.Scan(
+		&s.Expression,
+	)
+	return s, err
+}
+
+func ScanNumberField(row *sql.Row) (NumberField, error) {
+	return scanOneNumberField(row)
+}
+
+func SelectAllNumberFields(tx DB) (NumberFields, error) {
+	rows, err := tx.Query("SELECT * FROM number_fields")
+	if err != nil {
+		return nil, err
+	}
+	return ScanNumberFields(rows)
+}
+
+type NumberFields []NumberField
+
+func ScanNumberFields(rs *sql.Rows) (NumberFields, error) {
+	var (
+		s   NumberField
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(NumberFields, 0, 16)
+	for rs.Next() {
+		s, err = scanOneNumberField(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links NumberField in the database.
+func InsertManyNumberFields(tx *sql.Tx, items ...NumberField) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("number_fields",
+		"Expression",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.Expression)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link NumberField in the database.
+// Only the fields are used.
+func (item NumberField) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM number_fields WHERE 
+	;`)
+	return err
+}
+
 func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
 		&s.IdExercice,
-		&s.Content,
+		&s.Enonce,
 	)
 	return s, err
 }
@@ -534,14 +619,14 @@ func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("questions",
-		"id_exercice", "content",
+		"id_exercice", "enonce",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdExercice, item.Content)
+		_, err = stmt.Exec(item.IdExercice, item.Enonce)
 		if err != nil {
 			return err
 		}
@@ -565,8 +650,8 @@ func (item Question) Delete(tx DB) error {
 	return err
 }
 
-func (s *Content) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s Content) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func scanOneTextBlock(row scanner) (TextBlock, error) {
 	var s TextBlock

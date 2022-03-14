@@ -2,6 +2,97 @@
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
+double doubleFromJson(dynamic json) => json as double;
+
+dynamic doubleToJson(double item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.NumberAnswer
+class NumberAnswer implements Answer {
+  final double value;
+
+  const NumberAnswer(this.value);
+
+  @override
+  String toString() {
+    return "NumberAnswer($value)";
+  }
+}
+
+NumberAnswer numberAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return NumberAnswer(doubleFromJson(json['Value']));
+}
+
+JSON numberAnswerToJson(NumberAnswer item) {
+  return {"Value": doubleToJson(item.value)};
+}
+
+int intFromJson(dynamic json) => json as int;
+
+dynamic intToJson(int item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.RadioAnswer
+class RadioAnswer implements Answer {
+  final int index;
+
+  const RadioAnswer(this.index);
+
+  @override
+  String toString() {
+    return "RadioAnswer($index)";
+  }
+}
+
+RadioAnswer radioAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return RadioAnswer(intFromJson(json['Index']));
+}
+
+JSON radioAnswerToJson(RadioAnswer item) {
+  return {"Index": intToJson(item.index)};
+}
+
+abstract class Answer {}
+
+Answer answerFromJson(dynamic json_) {
+  final json = json_ as JSON;
+  final kind = json['Kind'] as int;
+  final data = json['Data'];
+  switch (kind) {
+    case 0:
+      return numberAnswerFromJson(data);
+    case 1:
+      return radioAnswerFromJson(data);
+    default:
+      throw ("unexpected type");
+  }
+}
+
+JSON answerToJson(Answer item) {
+  if (item is NumberAnswer) {
+    return {'Kind': 0, 'Data': numberAnswerToJson(item)};
+  } else if (item is RadioAnswer) {
+    return {'Kind': 1, 'Data': radioAnswerToJson(item)};
+  } else {
+    throw ("unexpected type");
+  }
+}
+
+Map<int, Answer> dictIntAnswerFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON)
+      .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
+}
+
+dynamic dictIntAnswerToJson(Map<int, Answer> item) {
+  return item.map((k, v) => MapEntry(intToJson(k), answerToJson(v)));
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.Answers
+typedef Answers = Map<int, Answer>;
+
 String stringFromJson(dynamic json) => json as String;
 
 dynamic stringToJson(String item) => item;
@@ -10,41 +101,56 @@ bool boolFromJson(dynamic json) => json as bool;
 
 dynamic boolToJson(bool item) => item;
 
-// github.com/benoitkugler/maths-online/maths/exercice.clientFormulaBlock
-class ClientFormulaBlock implements ClientBlock {
+// github.com/benoitkugler/maths-online/maths/exercice/client.FormulaBlock
+class FormulaBlock implements Block {
   final String content;
   final bool isInline;
 
-  const ClientFormulaBlock(this.content, this.isInline);
+  const FormulaBlock(this.content, this.isInline);
+
+  @override
+  String toString() {
+    return "FormulaBlock($content, $isInline)";
+  }
 }
 
-ClientFormulaBlock clientFormulaBlockFromJson(dynamic json_) {
+FormulaBlock formulaBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ClientFormulaBlock(
+  return FormulaBlock(
       stringFromJson(json['Content']), boolFromJson(json['IsInline']));
 }
 
-JSON clientFormulaBlockToJson(ClientFormulaBlock item) {
+JSON formulaBlockToJson(FormulaBlock item) {
   return {
     "Content": stringToJson(item.content),
     "IsInline": boolToJson(item.isInline)
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.clientFormulaFieldBlock
-class ClientFormulaFieldBlock implements ClientBlock {
+// github.com/benoitkugler/maths-online/maths/exercice/client.FormulaFieldBlock
+class FormulaFieldBlock implements Block {
   final String expression;
+  final int iD;
 
-  const ClientFormulaFieldBlock(this.expression);
+  const FormulaFieldBlock(this.expression, this.iD);
+
+  @override
+  String toString() {
+    return "FormulaFieldBlock($expression, $iD)";
+  }
 }
 
-ClientFormulaFieldBlock clientFormulaFieldBlockFromJson(dynamic json_) {
+FormulaFieldBlock formulaFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ClientFormulaFieldBlock(stringFromJson(json['Expression']));
+  return FormulaFieldBlock(
+      stringFromJson(json['Expression']), intFromJson(json['ID']));
 }
 
-JSON clientFormulaFieldBlockToJson(ClientFormulaFieldBlock item) {
-  return {"Expression": stringToJson(item.expression)};
+JSON formulaFieldBlockToJson(FormulaFieldBlock item) {
+  return {
+    "Expression": stringToJson(item.expression),
+    "ID": intToJson(item.iD)
+  };
 }
 
 List<String> listStringFromJson(dynamic json) {
@@ -58,121 +164,145 @@ dynamic listStringToJson(List<String> item) {
   return item.map(stringToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.clientListFieldBlock
-class ClientListFieldBlock implements ClientBlock {
+// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldBlock
+class ListFieldBlock implements Block {
   final List<String> choices;
+  final int iD;
 
-  const ClientListFieldBlock(this.choices);
+  const ListFieldBlock(this.choices, this.iD);
+
+  @override
+  String toString() {
+    return "ListFieldBlock($choices, $iD)";
+  }
 }
 
-ClientListFieldBlock clientListFieldBlockFromJson(dynamic json_) {
+ListFieldBlock listFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ClientListFieldBlock(listStringFromJson(json['Choices']));
+  return ListFieldBlock(
+      listStringFromJson(json['Choices']), intFromJson(json['ID']));
 }
 
-JSON clientListFieldBlockToJson(ClientListFieldBlock item) {
-  return {"Choices": listStringToJson(item.choices)};
+JSON listFieldBlockToJson(ListFieldBlock item) {
+  return {"Choices": listStringToJson(item.choices), "ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.clientNumberFieldBlock
-class ClientNumberFieldBlock implements ClientBlock {
-  const ClientNumberFieldBlock();
+// github.com/benoitkugler/maths-online/maths/exercice/client.NumberFieldBlock
+class NumberFieldBlock implements Block {
+  final int iD;
+
+  const NumberFieldBlock(this.iD);
+
+  @override
+  String toString() {
+    return "NumberFieldBlock($iD)";
+  }
 }
 
-ClientNumberFieldBlock clientNumberFieldBlockFromJson(dynamic json_) {
+NumberFieldBlock numberFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ClientNumberFieldBlock();
+  return NumberFieldBlock(intFromJson(json['ID']));
 }
 
-JSON clientNumberFieldBlockToJson(ClientNumberFieldBlock item) {
-  return {};
+JSON numberFieldBlockToJson(NumberFieldBlock item) {
+  return {"ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.clientTextBlock
-class ClientTextBlock implements ClientBlock {
+// github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
+class TextBlock implements Block {
   final String text;
 
-  const ClientTextBlock(this.text);
+  const TextBlock(this.text);
+
+  @override
+  String toString() {
+    return "TextBlock($text)";
+  }
 }
 
-ClientTextBlock clientTextBlockFromJson(dynamic json_) {
+TextBlock textBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ClientTextBlock(stringFromJson(json['Text']));
+  return TextBlock(stringFromJson(json['Text']));
 }
 
-JSON clientTextBlockToJson(ClientTextBlock item) {
+JSON textBlockToJson(TextBlock item) {
   return {"Text": stringToJson(item.text)};
 }
 
-abstract class ClientBlock {}
+abstract class Block {}
 
-ClientBlock clientBlockFromJson(dynamic json_) {
+Block blockFromJson(dynamic json_) {
   final json = json_ as JSON;
   final kind = json['Kind'] as int;
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return clientFormulaBlockFromJson(data);
+      return formulaBlockFromJson(data);
     case 1:
-      return clientFormulaFieldBlockFromJson(data);
+      return formulaFieldBlockFromJson(data);
     case 2:
-      return clientListFieldBlockFromJson(data);
+      return listFieldBlockFromJson(data);
     case 3:
-      return clientNumberFieldBlockFromJson(data);
+      return numberFieldBlockFromJson(data);
     case 4:
-      return clientTextBlockFromJson(data);
+      return textBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
 }
 
-JSON clientBlockToJson(ClientBlock item) {
-  if (item is ClientFormulaBlock) {
-    return {'Kind': 0, 'Data': clientFormulaBlockToJson(item)};
-  } else if (item is ClientFormulaFieldBlock) {
-    return {'Kind': 1, 'Data': clientFormulaFieldBlockToJson(item)};
-  } else if (item is ClientListFieldBlock) {
-    return {'Kind': 2, 'Data': clientListFieldBlockToJson(item)};
-  } else if (item is ClientNumberFieldBlock) {
-    return {'Kind': 3, 'Data': clientNumberFieldBlockToJson(item)};
-  } else if (item is ClientTextBlock) {
-    return {'Kind': 4, 'Data': clientTextBlockToJson(item)};
+JSON blockToJson(Block item) {
+  if (item is FormulaBlock) {
+    return {'Kind': 0, 'Data': formulaBlockToJson(item)};
+  } else if (item is FormulaFieldBlock) {
+    return {'Kind': 1, 'Data': formulaFieldBlockToJson(item)};
+  } else if (item is ListFieldBlock) {
+    return {'Kind': 2, 'Data': listFieldBlockToJson(item)};
+  } else if (item is NumberFieldBlock) {
+    return {'Kind': 3, 'Data': numberFieldBlockToJson(item)};
+  } else if (item is TextBlock) {
+    return {'Kind': 4, 'Data': textBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }
 }
 
-List<ClientBlock> listClientBlockFromJson(dynamic json) {
+List<Block> listBlockFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
-  return (json as List<dynamic>).map(clientBlockFromJson).toList();
+  return (json as List<dynamic>).map(blockFromJson).toList();
 }
 
-dynamic listClientBlockToJson(List<ClientBlock> item) {
-  return item.map(clientBlockToJson).toList();
+dynamic listBlockToJson(List<Block> item) {
+  return item.map(blockToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice.ClientContent
-typedef ClientContent = List<ClientBlock>;
+// github.com/benoitkugler/maths-online/maths/exercice/client.Enonce
+typedef Enonce = List<Block>;
 
-// github.com/benoitkugler/maths-online/maths/exercice.ClientQuestion
-class ClientQuestion {
+// github.com/benoitkugler/maths-online/maths/exercice/client.Question
+class Question {
   final String title;
-  final ClientContent content;
+  final Enonce enonce;
 
-  const ClientQuestion(this.title, this.content);
+  const Question(this.title, this.enonce);
+
+  @override
+  String toString() {
+    return "Question($title, $enonce)";
+  }
 }
 
-ClientQuestion clientQuestionFromJson(dynamic json_) {
+Question questionFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ClientQuestion(
-      stringFromJson(json['Title']), listClientBlockFromJson(json['Content']));
+  return Question(
+      stringFromJson(json['Title']), listBlockFromJson(json['Enonce']));
 }
 
-JSON clientQuestionToJson(ClientQuestion item) {
+JSON questionToJson(Question item) {
   return {
     "Title": stringToJson(item.title),
-    "Content": listClientBlockToJson(item.content)
+    "Enonce": listBlockToJson(item.enonce)
   };
 }

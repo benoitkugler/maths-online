@@ -3,6 +3,7 @@ package exercice
 import (
 	"strings"
 
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
@@ -82,23 +83,28 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 		Description: eq.Description,
 	}
 	out.Questions = make([]QuestionInstance, len(eq.Questions))
+
+	var currentID int
 	for i, qu := range eq.Questions {
-		content := make(ContentInstance, len(qu.Content))
-		for j, bl := range qu.Content {
-			content[j] = bl.instantiate(params)
+		content := make(EnonceInstance, len(qu.Enonce))
+		for j, bl := range qu.Enonce {
+			content[j] = bl.instantiate(params, currentID)
+			if _, isField := content[j].(fieldInstance); isField {
+				currentID++
+			}
 		}
 
-		out.Questions[i].Content = content
+		out.Questions[i].Enonce = content
 	}
 
 	return out
 }
 
-func (t TextBlock) instantiate(params expression.Variables) blockInstance {
+func (t TextBlock) instantiate(params expression.Variables, _ int) blockInstance {
 	return t
 }
 
-func (f Formula) instantiate(params expression.Variables) blockInstance {
+func (f Formula) instantiate(params expression.Variables, _ int) blockInstance {
 	out := FormulaInstance{IsInline: f.IsInline}
 	out.Chunks = make([]FormulaPartInstance, len(f.Chunks))
 	for i, c := range f.Chunks {
@@ -107,13 +113,19 @@ func (f Formula) instantiate(params expression.Variables) blockInstance {
 	return out
 }
 
+func (n NumberField) instantiate(params expression.Variables, ID int) blockInstance {
+	expr, _, _ := expression.Parse(n.Expression)
+	answer := expr.Evaluate(params)
+	return NumberFieldInstance{ID: ID, Answer: answer}
+}
+
 // TODO
-func (l ListField) instantiate(params expression.Variables) blockInstance {
+func (l ListField) instantiate(params expression.Variables, ID int) blockInstance {
 	return ListFieldInstance{}
 }
 
 // TODO
-func (f FormulaField) instantiate(params expression.Variables) blockInstance {
+func (f FormulaField) instantiate(params expression.Variables, ID int) blockInstance {
 	return FormulaFieldInstance{}
 }
 
@@ -127,58 +139,67 @@ type ExerciceInstance struct {
 }
 
 type QuestionInstance struct {
-	Title   string
-	Content ContentInstance
+	Title  string
+	Enonce EnonceInstance
 }
 
-func (qi QuestionInstance) toClient() ClientQuestion {
-	out := ClientQuestion{
-		Title:   qi.Title,
-		Content: make(ClientContent, len(qi.Content)),
+func (qi QuestionInstance) toClient() client.Question {
+	out := client.Question{
+		Title:  qi.Title,
+		Enonce: make(client.Enonce, len(qi.Enonce)),
 	}
-	for i, c := range qi.Content {
-		out.Content[i] = c.toClient()
+	for i, c := range qi.Enonce {
+		out.Enonce[i] = c.toClient()
 	}
 	return out
 }
 
-type ContentInstance []blockInstance
+type EnonceInstance []blockInstance
 
 type blockInstance interface {
-	toClient() clientBlock
+	toClient() client.Block
 }
 
-func (t TextBlock) toClient() clientBlock { return clientTextBlock(t) }
+// fieldInstance is an answer field, identified with an integer ID
+type fieldInstance interface {
+	blockInstance
+	fieldID() int
+}
+
+func (t TextBlock) toClient() client.Block { return client.TextBlock(t) }
 
 type FormulaInstance struct {
 	Chunks   []FormulaPartInstance
 	IsInline bool
 }
 
-func (fi FormulaInstance) toClient() clientBlock {
+func (fi FormulaInstance) toClient() client.Block {
 	chunks := make([]string, len(fi.Chunks))
 	for i, c := range fi.Chunks {
 		chunks[i] = c.asLaTeX()
 	}
 
-	return clientFormulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
+	return client.FormulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
 }
 
 // NumberFieldInstance is an answer field where only
 // numbers are allowed
 // answers are compared as float values
 type NumberFieldInstance struct {
-	Answer float64
+	ID     int
+	Answer float64 // expected answer
 }
 
-func (NumberFieldInstance) toClient() clientBlock { return clientNumberFieldBlock{} }
+func (f NumberFieldInstance) fieldID() int { return f.ID }
+
+func (f NumberFieldInstance) toClient() client.Block { return client.NumberFieldBlock{ID: f.ID} }
 
 type ListFieldInstance struct{}
 
 // TODO:
-func (ListFieldInstance) toClient() clientBlock { return clientListFieldBlock{} }
+func (ListFieldInstance) toClient() client.Block { return client.ListFieldBlock{} }
 
 type FormulaFieldInstance struct{}
 
 // TODO:
-func (FormulaFieldInstance) toClient() clientBlock { return clientFormulaFieldBlock{} }
+func (FormulaFieldInstance) toClient() client.Block { return client.FormulaFieldBlock{} }
