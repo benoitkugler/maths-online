@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
 
 func playersFromSuccess(scs ...success) map[int]*PlayerStatus {
@@ -127,7 +129,7 @@ outer:
 	}
 
 	g.EmitQuestion()
-	g.handleAnswer(answer{"dd"}, 0)
+	g.handleAnswer(answer{client.QuestionAnswersIn{}, "dd"}, 0)
 	g.endQuestion(false)
 	if g.QuestionTimeout.Stop() {
 		t.Fatal("timer should have been stopped")
@@ -166,7 +168,7 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal()
 	}
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{"wrong answer"}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{client.QuestionAnswersIn{}, "wrong answer"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +176,7 @@ func TestHandleClientEvent(t *testing.T) {
 	for cat := categorie(0); cat < nbCategories; cat++ {
 		g.EmitQuestion()
 		g.question.Categorie = cat
-		_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{fmt.Sprintf("%d", cat)}})
+		_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{client.QuestionAnswersIn{}, fmt.Sprintf("%d", cat)}})
 		if err != nil {
 			t.Fatal(err)
 		}

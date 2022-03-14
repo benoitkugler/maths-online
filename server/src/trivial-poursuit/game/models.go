@@ -3,6 +3,8 @@ package game
 import (
 	"encoding/json"
 	"math/rand"
+
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
 
 // interaction with the client
@@ -158,7 +160,8 @@ func (Ping) isClientEvent()        {}
 
 // the proposition of a client to a question
 type answer struct {
-	Content string
+	NewField client.QuestionAnswersIn `dart-extern:"../exercices/types.gen.dart"`
+	Content  string
 }
 
 // diceClicked is emitted when the current player

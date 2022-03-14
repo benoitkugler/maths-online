@@ -18,6 +18,7 @@ type Exercice struct {
 // describes the question (description, question, field answer)
 type Question struct {
 	IdExercice int64  `json:"id_exercice" sql_on_delete:"CASCADE"`
+	Title      string `json:"title"` // theme of the question
 	Enonce     Enonce `json:"enonce"`
 }
 

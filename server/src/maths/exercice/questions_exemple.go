@@ -10,7 +10,7 @@ func mustParse(s string) *expression.Expression {
 	return e
 }
 
-var questions = [...]QuestionInstance{
+var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextBlock{"Développer l’expression : "},

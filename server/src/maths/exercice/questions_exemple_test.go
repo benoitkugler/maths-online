@@ -2,7 +2,6 @@ package exercice
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -10,16 +9,13 @@ import (
 )
 
 func TestClientExerciceJSON(t *testing.T) {
-	for _, qu := range questions {
-		cl := qu.toClient()
+	for _, qu := range PredefinedQuestions {
+		cl := qu.ToClient()
 
 		b, err := json.Marshal(cl)
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		fmt.Printf("%q\n", string(b))
-		fmt.Println()
 
 		var cl2 client.Question
 		err = json.Unmarshal(b, &cl2)

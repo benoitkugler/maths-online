@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
 
 func TestEventsJSON(t *testing.T) {
@@ -63,7 +65,7 @@ func TestGameStateJSON(t *testing.T) {
 func TestClientEventJSON(t *testing.T) {
 	for _, event := range []clientEventData{
 		move{Tile: 4},
-		answer{"ma réponse"},
+		answer{client.QuestionAnswersIn{}, "ma réponse"},
 		Ping{"Test"},
 	} {
 		paylod := ClientEvent{Event: event, Player: 0}

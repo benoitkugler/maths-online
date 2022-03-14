@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 
+import 'package:eleve/exercices/types.gen.dart' as exercices;
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
@@ -277,7 +277,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       builder: (context) => NotificationListener<SubmitAnswerNotification>(
         onNotification: (notification) {
           // do not close the page now, it is handled when receiving result
-          _sendEvent(Answer(notification.answer));
+          _sendEvent(
+              Answer(exercices.QuestionAnswersIn({}), notification.answer));
           return true;
         },
         child: QuestionRoute(event, Duration(seconds: event.timeoutSeconds)),

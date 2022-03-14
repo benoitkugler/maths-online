@@ -4,7 +4,7 @@ typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
 double doubleFromJson(dynamic json) => json as double;
 
-dynamic doubleToJson(double item) => item;
+double doubleToJson(double item) => item;
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.NumberAnswer
 class NumberAnswer implements Answer {
@@ -29,7 +29,7 @@ JSON numberAnswerToJson(NumberAnswer item) {
 
 int intFromJson(dynamic json) => json as int;
 
-dynamic intToJson(int item) => item;
+int intToJson(int item) => item;
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.RadioAnswer
 class RadioAnswer implements Answer {
@@ -78,28 +78,13 @@ JSON answerToJson(Answer item) {
   }
 }
 
-Map<int, Answer> dictIntAnswerFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as JSON)
-      .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
-}
-
-dynamic dictIntAnswerToJson(Map<int, Answer> item) {
-  return item.map((k, v) => MapEntry(intToJson(k), answerToJson(v)));
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.Answers
-typedef Answers = Map<int, Answer>;
-
 String stringFromJson(dynamic json) => json as String;
 
-dynamic stringToJson(String item) => item;
+String stringToJson(String item) => item;
 
 bool boolFromJson(dynamic json) => json as bool;
 
-dynamic boolToJson(bool item) => item;
+bool boolToJson(bool item) => item;
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.FormulaBlock
 class FormulaBlock implements Block {
@@ -160,7 +145,7 @@ List<String> listStringFromJson(dynamic json) {
   return (json as List<dynamic>).map(stringFromJson).toList();
 }
 
-dynamic listStringToJson(List<String> item) {
+List<dynamic> listStringToJson(List<String> item) {
   return item.map(stringToJson).toList();
 }
 
@@ -274,7 +259,7 @@ List<Block> listBlockFromJson(dynamic json) {
   return (json as List<dynamic>).map(blockFromJson).toList();
 }
 
-dynamic listBlockToJson(List<Block> item) {
+List<dynamic> listBlockToJson(List<Block> item) {
   return item.map(blockToJson).toList();
 }
 
@@ -304,5 +289,119 @@ JSON questionToJson(Question item) {
   return {
     "Title": stringToJson(item.title),
     "Enonce": listBlockToJson(item.enonce)
+  };
+}
+
+Map<int, Answer> dictIntAnswerFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON)
+      .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
+}
+
+Map<String, dynamic> dictIntAnswerToJson(Map<int, Answer> item) {
+  return item.map((k, v) => MapEntry(intToJson(k).toString(), answerToJson(v)));
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersIn
+class QuestionAnswersIn {
+  final Map<int, Answer> data;
+
+  const QuestionAnswersIn(this.data);
+
+  @override
+  String toString() {
+    return "QuestionAnswersIn($data)";
+  }
+}
+
+QuestionAnswersIn questionAnswersInFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return QuestionAnswersIn(dictIntAnswerFromJson(json['Data']));
+}
+
+JSON questionAnswersInToJson(QuestionAnswersIn item) {
+  return {"Data": dictIntAnswerToJson(item.data)};
+}
+
+Map<int, bool> dictIntBoolFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON).map((k, v) => MapEntry(int.parse(k), boolFromJson(v)));
+}
+
+Map<String, dynamic> dictIntBoolToJson(Map<int, bool> item) {
+  return item.map((k, v) => MapEntry(intToJson(k).toString(), boolToJson(v)));
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersOut
+class QuestionAnswersOut {
+  final Map<int, bool> data;
+
+  const QuestionAnswersOut(this.data);
+
+  @override
+  String toString() {
+    return "QuestionAnswersOut($data)";
+  }
+}
+
+QuestionAnswersOut questionAnswersOutFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return QuestionAnswersOut(dictIntBoolFromJson(json['Data']));
+}
+
+JSON questionAnswersOutToJson(QuestionAnswersOut item) {
+  return {"Data": dictIntBoolToJson(item.data)};
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionSyntaxCheckIn
+class QuestionSyntaxCheckIn {
+  final Answer answer;
+  final int iD;
+
+  const QuestionSyntaxCheckIn(this.answer, this.iD);
+
+  @override
+  String toString() {
+    return "QuestionSyntaxCheckIn($answer, $iD)";
+  }
+}
+
+QuestionSyntaxCheckIn questionSyntaxCheckInFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return QuestionSyntaxCheckIn(
+      answerFromJson(json['Answer']), intFromJson(json['ID']));
+}
+
+JSON questionSyntaxCheckInToJson(QuestionSyntaxCheckIn item) {
+  return {"Answer": answerToJson(item.answer), "ID": intToJson(item.iD)};
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionSyntaxCheckOut
+class QuestionSyntaxCheckOut {
+  final String reason;
+  final bool isValid;
+
+  const QuestionSyntaxCheckOut(this.reason, this.isValid);
+
+  @override
+  String toString() {
+    return "QuestionSyntaxCheckOut($reason, $isValid)";
+  }
+}
+
+QuestionSyntaxCheckOut questionSyntaxCheckOutFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return QuestionSyntaxCheckOut(
+      stringFromJson(json['Reason']), boolFromJson(json['IsValid']));
+}
+
+JSON questionSyntaxCheckOutToJson(QuestionSyntaxCheckOut item) {
+  return {
+    "Reason": stringToJson(item.reason),
+    "IsValid": boolToJson(item.isValid)
   };
 }

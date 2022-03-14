@@ -1,5 +1,7 @@
 package client
 
+// TODO: autogenerate JSON wrappers for type using interfaces
+
 import "encoding/json"
 
 //go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/exercices/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
@@ -67,7 +69,7 @@ type FormulaFieldBlock struct {
 	ID         int
 }
 
-// Answer is an sum type for the possible answers
+// Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
 	isAnswer()
@@ -86,5 +88,72 @@ type RadioAnswer struct {
 	Index int
 }
 
-// Answers map the field ids to their answer
-type Answers map[int]Answer
+// QuestionAnswersIn map the field ids to their answer
+type QuestionAnswersIn struct {
+	Data map[int]Answer
+}
+
+func (out *QuestionAnswersIn) UnmarshalJSON(src []byte) error {
+	var wr struct {
+		Data map[int]AnswerWrapper
+	}
+
+	err := json.Unmarshal(src, &wr)
+	out.Data = make(map[int]Answer)
+	for i, v := range wr.Data {
+		out.Data[i] = v.Data
+	}
+
+	return err
+}
+
+func (out QuestionAnswersIn) MarshalJSON() ([]byte, error) {
+	var tmp struct {
+		Data map[int]AnswerWrapper
+	}
+	tmp.Data = make(map[int]AnswerWrapper)
+	for k, v := range out.Data {
+		tmp.Data[k] = AnswerWrapper{v}
+	}
+	return json.Marshal(tmp)
+}
+
+type QuestionAnswersOut struct {
+	Data map[int]bool
+}
+
+// QuestionSyntaxCheckIn is emitted by the client
+// to perform a preliminary check of the syntax,
+// without validating the answer
+type QuestionSyntaxCheckIn struct {
+	Answer Answer
+	ID     int
+}
+
+func (out *QuestionSyntaxCheckIn) UnmarshalJSON(src []byte) error {
+	var wr struct {
+		Answer AnswerWrapper
+		ID     int
+	}
+	err := json.Unmarshal(src, &wr)
+	out.Answer = wr.Answer.Data
+	out.ID = wr.ID
+
+	return err
+}
+
+func (out QuestionSyntaxCheckIn) MarshalJSON() ([]byte, error) {
+	wr := struct {
+		Answer AnswerWrapper
+		ID     int
+	}{
+		Answer: AnswerWrapper{out.Answer},
+		ID:     out.ID,
+	}
+	return json.Marshal(wr)
+}
+
+type QuestionSyntaxCheckOut struct {
+	Reason  string
+	IsValid bool
+}

@@ -40,6 +40,7 @@ class _NumberController extends _FieldController {
 
 /// utility class used to layout the Block
 class _ContentBuilder {
+  final void Function(int) onFieldDone;
   final List<Block> _content;
   final Color _color;
 
@@ -51,7 +52,8 @@ class _ContentBuilder {
   List<InlineSpan> _currentRow = []; // current row
   static const _textStyle = TextStyle(fontSize: 18);
 
-  _ContentBuilder(this._content, this._controllers, this._color);
+  _ContentBuilder(
+      this.onFieldDone, this._content, this._controllers, this._color);
 
   /// walks throught the question content and creates field controllers,
   /// later used when building widgets
@@ -139,7 +141,9 @@ class _ContentBuilder {
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = _controllers[element.iD] as _NumberController;
-    _currentRow.add(WidgetSpan(child: _NumberField(_color, ct.textController)));
+    _currentRow.add(WidgetSpan(
+        child: _NumberField(
+            _color, ct.textController, () => onFieldDone(element.iD))));
   }
 
   /// populate [rows]
@@ -161,15 +165,28 @@ class _ContentBuilder {
   }
 }
 
-/// ValidQuestionNotification is emitted when the player
-/// validates his answer
-class ValidQuestionNotification extends Notification {
-  final Map<int, Answer> answers;
-  ValidQuestionNotification(this.answers);
+/// CheckQuestionSyntaxeNotification is emitted when the player
+/// has edited one field
+class CheckQuestionSyntaxeNotification extends Notification {
+  final int id;
+  final Answer answer;
+  CheckQuestionSyntaxeNotification(this.id, this.answer);
 
   @override
   String toString() {
-    return "ValidQuestionNotification($answers)";
+    return "CheckQuestionSyntaxeNotification($id, $answer)";
+  }
+}
+
+/// ValidQuestionNotification is emitted when the player
+/// validates his answer
+class ValidQuestionNotification extends Notification {
+  final QuestionAnswersIn data;
+  ValidQuestionNotification(this.data);
+
+  @override
+  String toString() {
+    return "ValidQuestionNotification($data)";
   }
 }
 
@@ -199,7 +216,18 @@ class _QuestionPageState extends State<QuestionPage> {
 
   ValidQuestionNotification answers() {
     return ValidQuestionNotification(
-        _controllers.map((key, ct) => MapEntry(key, ct.getData())));
+      QuestionAnswersIn(
+        _controllers.map((key, ct) => MapEntry(key, ct.getData())),
+      ),
+    );
+  }
+
+  void _emitCheckSyntax(int id) {
+    final ct = _controllers[id]!;
+    if (!ct.hasValidData()) {
+      return;
+    }
+    CheckQuestionSyntaxeNotification(id, ct.getData()).dispatch(context);
   }
 
   @override
@@ -212,8 +240,8 @@ class _QuestionPageState extends State<QuestionPage> {
     ];
     const spacing = SizedBox(height: 20.0);
 
-    final builder = _ContentBuilder(
-        widget.question.enonce, _controllers, widget.categorie.color);
+    final builder = _ContentBuilder(_emitCheckSyntax, widget.question.enonce,
+        _controllers, widget.categorie.color);
     builder.build();
 
     return Column(
@@ -270,8 +298,9 @@ class _QuestionPageState extends State<QuestionPage> {
 class _NumberField extends StatelessWidget {
   final Color _color;
   final TextEditingController _controller;
+  final void Function() onDone;
 
-  const _NumberField(this._color, this._controller, {Key? key})
+  const _NumberField(this._color, this._controller, this.onDone, {Key? key})
       : super(key: key);
 
   @override
@@ -281,6 +310,7 @@ class _NumberField extends StatelessWidget {
       child: SizedBox(
         width: 100,
         child: TextField(
+          onSubmitted: (_) => onDone(),
           controller: _controller,
           decoration: InputDecoration(
             isDense: true,

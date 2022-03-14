@@ -1,6 +1,7 @@
 package exercice
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -84,20 +85,23 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 	}
 	out.Questions = make([]QuestionInstance, len(eq.Questions))
 
-	var currentID int
 	for i, qu := range eq.Questions {
-		content := make(EnonceInstance, len(qu.Enonce))
-		for j, bl := range qu.Enonce {
-			content[j] = bl.instantiate(params, currentID)
-			if _, isField := content[j].(fieldInstance); isField {
-				currentID++
-			}
-		}
-
-		out.Questions[i].Enonce = content
+		out.Questions[i] = qu.instantiate(params)
 	}
 
 	return out
+}
+
+func (qu Question) instantiate(params expression.Variables) QuestionInstance {
+	enonce := make(EnonceInstance, len(qu.Enonce))
+	var currentID int
+	for j, bl := range qu.Enonce {
+		enonce[j] = bl.instantiate(params, currentID)
+		if _, isField := enonce[j].(fieldInstance); isField {
+			currentID++
+		}
+	}
+	return QuestionInstance{Title: qu.Title, Enonce: enonce}
 }
 
 func (t TextBlock) instantiate(params expression.Variables, _ int) blockInstance {
@@ -143,7 +147,53 @@ type QuestionInstance struct {
 	Enonce EnonceInstance
 }
 
-func (qi QuestionInstance) toClient() client.Question {
+func (qu QuestionInstance) fields() map[int]fieldInstance {
+	out := make(map[int]fieldInstance)
+	for _, block := range qu.Enonce {
+		if field, isField := block.(fieldInstance); isField {
+			out[field.fieldID()] = field
+		}
+	}
+	return out
+}
+
+// CheckSyntaxe returns an error message if the syntaxe is not
+func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) error {
+	field, ok := qu.fields()[answer.ID]
+	if !ok {
+		return fmt.Errorf("champ %d invalide", answer.ID)
+	}
+
+	return field.validateAnswerSyntax(answer.Answer)
+}
+
+// EvaluateAnswer check if the given answers are correct, and complete.
+// TODO: provide detailled feedback
+func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) client.QuestionAnswersOut {
+	fields := qu.fields()
+
+	out := make(map[int]bool, len(fields))
+	for id, reference := range fields {
+		answer, ok := answers.Data[id]
+		if !ok { // should not happen since the client forces the user to fill all fields
+			out[id] = false
+			continue
+		}
+
+		if err := reference.validateAnswerSyntax(answer); err != nil {
+			out[id] = false // should not happen since a pre-validation step has been done previously
+			continue
+		}
+
+		out[id], _ = reference.evaluateAnswer(answer)
+	}
+
+	return client.QuestionAnswersOut{Data: out}
+}
+
+// ToClient convert the question to a client version, stripping
+// expected answers and converting expressions to LaTeX strings.
+func (qi QuestionInstance) ToClient() client.Question {
 	out := client.Question{
 		Title:  qi.Title,
 		Enonce: make(client.Enonce, len(qi.Enonce)),
@@ -158,12 +208,6 @@ type EnonceInstance []blockInstance
 
 type blockInstance interface {
 	toClient() client.Block
-}
-
-// fieldInstance is an answer field, identified with an integer ID
-type fieldInstance interface {
-	blockInstance
-	fieldID() int
 }
 
 func (t TextBlock) toClient() client.Block { return client.TextBlock(t) }
@@ -181,25 +225,3 @@ func (fi FormulaInstance) toClient() client.Block {
 
 	return client.FormulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
 }
-
-// NumberFieldInstance is an answer field where only
-// numbers are allowed
-// answers are compared as float values
-type NumberFieldInstance struct {
-	ID     int
-	Answer float64 // expected answer
-}
-
-func (f NumberFieldInstance) fieldID() int { return f.ID }
-
-func (f NumberFieldInstance) toClient() client.Block { return client.NumberFieldBlock{ID: f.ID} }
-
-type ListFieldInstance struct{}
-
-// TODO:
-func (ListFieldInstance) toClient() client.Block { return client.ListFieldBlock{} }
-
-type FormulaFieldInstance struct{}
-
-// TODO:
-func (FormulaFieldInstance) toClient() client.Block { return client.FormulaFieldBlock{} }
