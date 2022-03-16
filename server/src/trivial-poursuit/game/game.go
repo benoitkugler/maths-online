@@ -241,7 +241,7 @@ func (gs *Game) QuestionTimeoutAction() (updates StateUpdates, isGameOver bool) 
 
 // isAnswerValid validdate `a` against the current question
 func (gs *Game) isAnswerValid(a answer) bool {
-	// TODO: à implémenter
+	// TODO: à implémenter, using the real questions
 	return a.Content == fmt.Sprintf("%d", gs.question.Categorie)
 }
 
