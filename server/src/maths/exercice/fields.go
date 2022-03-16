@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
 // InvalidFieldAnswer is returned for syntactically incorrect answers
@@ -24,12 +25,13 @@ type fieldInstance interface {
 
 	// validateAnswerSyntax is called during editing for complex fields,
 	// to catch syntax mistake before validating the answer
+	// an error may also be returned against malicious query
 	validateAnswerSyntax(answer client.Answer) error
 
 	// evaluateAnswer evaluate the given answer against the reference
-	// an error may be returned, for instance against malicious query
 	// validateAnswerSyntax is assumed to have already been called on `answer`
-	evaluateAnswer(answer client.Answer) (isCorrect bool, err error)
+	// so that is has a valid format.
+	evaluateAnswer(answer client.Answer) (isCorrect bool)
 }
 
 // NumberFieldInstance is an answer field where only
@@ -55,16 +57,60 @@ func (f NumberFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 	return nil
 }
 
-func (f NumberFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool, err error) {
-	return f.Answer == answer.(client.NumberAnswer).Value, nil
+func (f NumberFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return f.Answer == answer.(client.NumberAnswer).Value
+}
+
+// ExpressionFieldInstance is an answer field where a single mathematical expression
+// if expected
+type ExpressionFieldInstance struct {
+	Label *expression.Expression // if not nil, the field is displayed on a new line, prefixed by <expression> =
+
+	Answer          *expression.Expression
+	ComparisonLevel expression.ComparisonLevel
+	ID              int
+}
+
+func (f ExpressionFieldInstance) fieldID() int { return f.ID }
+
+func (f ExpressionFieldInstance) toClient() client.Block {
+	var label string
+	if f.Label != nil {
+		label = f.Label.AsLaTeX(nil)
+	}
+	return client.ExpressionFieldBlock{
+		ID:    f.ID,
+		Label: label,
+	}
+}
+
+func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	expr, ok := answer.(client.ExpressionAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected ExpressionAnswer, got %T", answer),
+		}
+	}
+
+	_, _, err := expression.Parse(expr.Expression)
+	if err != nil {
+		err := err.(expression.InvalidExpr)
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf(`Expression invalide : %s (à "%s")`, err.Reason, err.PortionOf(expr.Expression)),
+		}
+	}
+	return nil
+}
+
+func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	expr, _, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
+
+	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
 }
 
 type ListFieldInstance struct{}
 
 // TODO:
 func (ListFieldInstance) toClient() client.Block { return client.ListFieldBlock{} }
-
-type FormulaFieldInstance struct{}
-
-// TODO:
-func (FormulaFieldInstance) toClient() client.Block { return client.FormulaFieldBlock{} }

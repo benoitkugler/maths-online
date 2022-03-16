@@ -568,6 +568,7 @@ func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
 		&s.IdExercice,
+		&s.Title,
 		&s.Enonce,
 	)
 	return s, err
@@ -619,14 +620,14 @@ func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("questions",
-		"id_exercice", "enonce",
+		"id_exercice", "title", "enonce",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdExercice, item.Enonce)
+		_, err = stmt.Exec(item.IdExercice, item.Title, item.Enonce)
 		if err != nil {
 			return err
 		}

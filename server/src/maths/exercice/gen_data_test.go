@@ -139,6 +139,7 @@ func randNumberField() NumberField {
 func randQuestion() Question {
 	return Question{
 		IdExercice: randint64(),
+		Title:      randstring(),
 		Enonce:     randEnonce(),
 	}
 }

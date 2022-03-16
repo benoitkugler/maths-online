@@ -39,7 +39,7 @@ func main() {
 		var out client.QuestionSyntaxCheckOut
 		err = exercice.PredefinedQuestions[index].CheckSyntaxe(data)
 		if err != nil {
-			out.Reason = err.Error()
+			out.Reason = err.(exercice.InvalidFieldAnswer).Reason
 		} else {
 			out.IsValid = true
 		}

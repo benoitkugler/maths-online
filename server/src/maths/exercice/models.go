@@ -124,13 +124,13 @@ func (n NumberField) instantiate(params expression.Variables, ID int) blockInsta
 }
 
 // TODO
-func (l ListField) instantiate(params expression.Variables, ID int) blockInstance {
-	return ListFieldInstance{}
+func (f FormulaField) instantiate(params expression.Variables, ID int) blockInstance {
+	return ExpressionFieldInstance{}
 }
 
 // TODO
-func (f FormulaField) instantiate(params expression.Variables, ID int) blockInstance {
-	return FormulaFieldInstance{}
+func (l ListField) instantiate(params expression.Variables, ID int) blockInstance {
+	return ListFieldInstance{}
 }
 
 // ExerciceInstance is an in memory version of an Exercice,
@@ -161,7 +161,10 @@ func (qu QuestionInstance) fields() map[int]fieldInstance {
 func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) error {
 	field, ok := qu.fields()[answer.ID]
 	if !ok {
-		return fmt.Errorf("champ %d invalide", answer.ID)
+		return InvalidFieldAnswer{
+			ID:     answer.ID,
+			Reason: fmt.Sprintf("champ %d inconnu", answer.ID),
+		}
 	}
 
 	return field.validateAnswerSyntax(answer.Answer)
@@ -185,7 +188,7 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 			continue
 		}
 
-		out[id], _ = reference.evaluateAnswer(answer)
+		out[id] = reference.evaluateAnswer(answer)
 	}
 
 	return client.QuestionAnswersOut{Data: out}

@@ -21,10 +21,14 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data NumberAnswer
+		var data ExpressionAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
+		var data NumberAnswer
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 2:
 		var data RadioAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -42,10 +46,12 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case NumberAnswer:
+	case ExpressionAnswer:
 		wr = wrapper{Kind: 0, Data: data}
-	case RadioAnswer:
+	case NumberAnswer:
 		wr = wrapper{Kind: 1, Data: data}
+	case RadioAnswer:
+		wr = wrapper{Kind: 2, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -70,11 +76,11 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data FormulaBlock
+		var data ExpressionFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data FormulaFieldBlock
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
@@ -103,9 +109,9 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case FormulaBlock:
+	case ExpressionFieldBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case FormulaFieldBlock:
+	case FormulaBlock:
 		wr = wrapper{Kind: 1, Data: data}
 	case ListFieldBlock:
 		wr = wrapper{Kind: 2, Data: data}

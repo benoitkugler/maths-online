@@ -177,6 +177,7 @@ CREATE TABLE number_fields (
 
 CREATE TABLE questions (
 	id_exercice integer  NOT NULL,
+	title varchar  NOT NULL,
 	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce))
 );
 

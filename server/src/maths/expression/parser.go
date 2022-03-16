@@ -16,6 +16,10 @@ func (inv InvalidExpr) Error() string {
 	return fmt.Sprintf("expression invalide : position %d : %s", inv.Pos, inv.Reason)
 }
 
+func (inv InvalidExpr) PortionOf(expr string) string {
+	return string([]rune(expr)[:inv.Pos])
+}
+
 // VarMap register the position of each variable occurence in
 // an expression rune slice.
 type VarMap map[int]Variable

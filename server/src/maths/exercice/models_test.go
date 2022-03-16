@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
 func TestQuestionInstance_CompareAnswer(t *testing.T) {
@@ -36,6 +37,16 @@ func TestQuestionInstance_CompareAnswer(t *testing.T) {
 		{
 			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, NumberFieldInstance{ID: 1, Answer: -0.2}},
 			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.NumberAnswer{Value: -0.2}},
+			map[int]bool{0: true, 1: true},
+		},
+		{
+			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}},
+			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.ExpressionAnswer{Expression: "x+3"}},
+			map[int]bool{0: true, 1: false},
+		},
+		{
+			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}},
+			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.ExpressionAnswer{Expression: "x+ 2"}},
 			map[int]bool{0: true, 1: true},
 		},
 	}

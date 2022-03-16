@@ -57,7 +57,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   }
 
   List<dynamic> questions = [];
-  final _controller = PageController(initialPage: 1);
+  final _controller = PageController(initialPage: 0);
 
   void _checkSyntax(
       CheckQuestionSyntaxeNotification v, BuildContext context) async {

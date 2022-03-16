@@ -328,7 +328,8 @@ type ComparisonLevel uint8
 
 const (
 	// Expressions are compared structurally
-	// This is usually to restrictive
+	// This is usually too restrictive to be useful
+	// For instance, x + 2 != 2 + x according to this level
 	Strict ComparisonLevel = iota
 	// Expressions are compared after performing some basic transformations,
 	// such as reording operands.

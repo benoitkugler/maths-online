@@ -1,42 +1,12 @@
+import 'package:eleve/exercices/expression.dart';
+import 'package:eleve/exercices/fields.dart';
+import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart' as events;
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
-
-abstract class _FieldController {
-  /// returns true if the field is not empty and contains valid data
-  bool hasValidData();
-
-  /// returns the current answer
-  Answer getData();
-}
-
-class _NumberController extends _FieldController {
-  final TextEditingController textController;
-
-  _NumberController(void Function() onChange)
-      : textController = TextEditingController() {
-    textController.addListener(onChange);
-  }
-
-  @override
-  bool hasValidData() {
-    final content = textController.text.trim();
-    if (content.isEmpty) {
-      return false;
-    }
-    return double.tryParse(content) != null;
-  }
-
-  @override
-  Answer getData() {
-    final content = textController.text.trim();
-    return NumberAnswer(double.parse(content));
-  }
-}
 
 /// utility class used to layout the Block
 class _ContentBuilder {
@@ -45,7 +15,7 @@ class _ContentBuilder {
   final Color _color;
 
   /// field controllers created by [initControllers]
-  final Map<int, _FieldController> _controllers;
+  final Map<int, FieldController> _controllers;
 
   final List<Widget> rows = []; // final output
 
@@ -57,13 +27,17 @@ class _ContentBuilder {
 
   /// walks throught the question content and creates field controllers,
   /// later used when building widgets
-  static Map<int, _FieldController> initControllers(
+  static Map<int, FieldController> initControllers(
       List<Block> content, void Function() onChange) {
-    final controllers = <int, _FieldController>{};
+    final controllers = <int, FieldController>{};
     for (var block in content) {
       if (block is NumberFieldBlock) {
-        controllers[block.iD] = _NumberController(onChange);
-      } // TODO: handle more fields
+        controllers[block.iD] = NumberController(onChange);
+      } else if (block is ExpressionFieldBlock) {
+        controllers[block.iD] = ExpressionController(onChange);
+      }
+
+      // TODO: handle more fields
     }
     return controllers;
   }
@@ -87,9 +61,17 @@ class _ContentBuilder {
   }
 
   void _handleTextBlock(TextBlock element) {
-    _currentRow.add(TextSpan(
-      text: element.text,
-    ));
+    if (element.text.endsWith("\n")) {
+      _currentRow.add(TextSpan(
+        text: element.text.substring(0, element.text.length - 1),
+      ));
+      // add an explicit new line
+      _flushCurrentRow();
+    } else {
+      _currentRow.add(TextSpan(
+        text: element.text,
+      ));
+    }
   }
 
   // void _handleInlineFormulaBLock(String content) {
@@ -115,17 +97,21 @@ class _ContentBuilder {
   //   )));
   // }
 
+  WidgetSpan _inlineMath(String content) {
+    return WidgetSpan(
+      baseline: TextBaseline.alphabetic,
+      alignment: PlaceholderAlignment.baseline,
+      child: Math.tex(
+        content,
+        mathStyle: MathStyle.text,
+        textStyle: _textStyle,
+      ),
+    );
+  }
+
   void _handleFormulaBlock(FormulaBlock element) {
     if (element.isInline) {
-      _currentRow.add(WidgetSpan(
-        baseline: TextBaseline.alphabetic,
-        alignment: PlaceholderAlignment.baseline,
-        child: Math.tex(
-          element.content,
-          mathStyle: MathStyle.text,
-          textStyle: _textStyle,
-        ),
-      ));
+      _currentRow.add(_inlineMath(element.content));
     } else {
       // start a new row
       _flushCurrentRow();
@@ -140,10 +126,41 @@ class _ContentBuilder {
   }
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
-    final ct = _controllers[element.iD] as _NumberController;
+    final ct = _controllers[element.iD] as NumberController;
     _currentRow.add(WidgetSpan(
-        child: _NumberField(
+        child: NumberField(
             _color, ct.textController, () => onFieldDone(element.iD))));
+  }
+
+  void _handleExpressionFieldBlock(ExpressionFieldBlock element) {
+    final ct = _controllers[element.iD] as ExpressionController;
+
+    final field = WidgetSpan(
+        child: ExpressionField(
+            _color, ct.textController, () => onFieldDone(element.iD)));
+    if (element.label.isNotEmpty) {
+      // start a new line
+      _flushCurrentRow();
+
+      rows.add(
+        Center(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                _inlineMath(element.label),
+                const TextSpan(text: " "),
+                _inlineMath("="),
+                const TextSpan(text: " "),
+                field,
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      // just add the field in the current row
+      _currentRow.add(field);
+    }
   }
 
   /// populate [rows]
@@ -155,6 +172,8 @@ class _ContentBuilder {
         _handleFormulaBlock(element);
       } else if (element is NumberFieldBlock) {
         _handleNumberFieldBlock(element);
+      } else if (element is ExpressionFieldBlock) {
+        _handleExpressionFieldBlock(element);
       } else {
         // TODO:
       }
@@ -201,7 +220,7 @@ class QuestionPage extends StatefulWidget {
 }
 
 class _QuestionPageState extends State<QuestionPage> {
-  late Map<int, _FieldController> _controllers;
+  late Map<int, FieldController> _controllers;
 
   @override
   void initState() {
@@ -291,47 +310,6 @@ class _QuestionPageState extends State<QuestionPage> {
         spacing,
         const Text("", style: TextStyle(fontSize: 16)),
       ],
-    );
-  }
-}
-
-class _NumberField extends StatelessWidget {
-  final Color _color;
-  final TextEditingController _controller;
-  final void Function() onDone;
-
-  const _NumberField(this._color, this._controller, this.onDone, {Key? key})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: SizedBox(
-        width: 100,
-        child: TextField(
-          onSubmitted: (_) => onDone(),
-          controller: _controller,
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: _color,
-              ),
-            ),
-          ),
-          cursorColor: _color,
-          style: TextStyle(color: Colors.yellow.shade100),
-          textAlign: TextAlign.center,
-          textAlignVertical: TextAlignVertical.center,
-          keyboardType: const TextInputType.numberWithOptions(
-              signed: true, decimal: true),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.-]'))
-          ], // Only numbers, minus and dot can be entered
-        ),
-      ),
     );
   }
 }

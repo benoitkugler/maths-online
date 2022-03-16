@@ -35,11 +35,11 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()         {}
-func (FormulaBlock) isBlock()      {}
-func (NumberFieldBlock) isBlock()  {}
-func (ListFieldBlock) isBlock()    {}
-func (FormulaFieldBlock) isBlock() {}
+func (TextBlock) isBlock()            {}
+func (FormulaBlock) isBlock()         {}
+func (NumberFieldBlock) isBlock()     {}
+func (ListFieldBlock) isBlock()       {}
+func (ExpressionFieldBlock) isBlock() {}
 
 type TextBlock struct {
 	Text string
@@ -56,17 +56,15 @@ type FormulaBlock struct {
 type NumberFieldBlock struct {
 	ID int
 }
+type ExpressionFieldBlock struct {
+	Label string // as LaTeX, optional
+	ID    int
+}
 
 // TODO:
 type ListFieldBlock struct {
 	Choices []string
 	ID      int
-}
-
-// TODO:
-type FormulaFieldBlock struct {
-	Expression string // a valid expression, in the format used by expression.Expression
-	ID         int
 }
 
 // Answer is a sum type for the possible answers
@@ -75,12 +73,17 @@ type Answer interface {
 	isAnswer()
 }
 
-func (NumberAnswer) isAnswer() {}
-func (RadioAnswer) isAnswer()  {}
+func (NumberAnswer) isAnswer()     {}
+func (RadioAnswer) isAnswer()      {}
+func (ExpressionAnswer) isAnswer() {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
 	Value float64
+}
+
+type ExpressionAnswer struct {
+	Expression string
 }
 
 // RadioAnswer is compared against a reference index

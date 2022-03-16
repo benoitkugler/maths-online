@@ -13,10 +13,13 @@ func mustParse(s string) *expression.Expression {
 var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextBlock{"Développer l’expression : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(x−6)*(4*x−3)")},
-			}},
+			TextBlock{"Développer l’expression :"},
+			ExpressionFieldInstance{
+				ID:              0,
+				Label:           mustParse("(x−6)*(4*x−3)"),
+				ComparisonLevel: expression.SimpleSubstitutions,
+				Answer:          mustParse("24*x^2 - 27 *x + 18"),
+			},
 		},
 	},
 	{
@@ -35,6 +38,19 @@ var PredefinedQuestions = [...]QuestionInstance{
 			TextBlock{" et "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "b = "}}},
 			NumberFieldInstance{ID: 1, Answer: 3 * 5},
+		},
+	},
+	{
+		Title: "Calcul littéral", Enonce: EnonceInstance{
+			TextBlock{"Développer l’expression : \n"},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{StaticContent: "a = "},
+			}},
+			ExpressionFieldInstance{
+				ID:              0,
+				ComparisonLevel: expression.SimpleSubstitutions,
+				Answer:          mustParse("4*x^2 - 27 *x + 18"),
+			},
 		},
 	},
 	{

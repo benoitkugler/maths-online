@@ -2,6 +2,31 @@
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
+String stringFromJson(dynamic json) => json as String;
+
+String stringToJson(String item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.ExpressionAnswer
+class ExpressionAnswer implements Answer {
+  final String expression;
+
+  const ExpressionAnswer(this.expression);
+
+  @override
+  String toString() {
+    return "ExpressionAnswer($expression)";
+  }
+}
+
+ExpressionAnswer expressionAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return ExpressionAnswer(stringFromJson(json['Expression']));
+}
+
+JSON expressionAnswerToJson(ExpressionAnswer item) {
+  return {"Expression": stringToJson(item.expression)};
+}
+
 double doubleFromJson(dynamic json) => json as double;
 
 double doubleToJson(double item) => item;
@@ -60,8 +85,10 @@ Answer answerFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return numberAnswerFromJson(data);
+      return expressionAnswerFromJson(data);
     case 1:
+      return numberAnswerFromJson(data);
+    case 2:
       return radioAnswerFromJson(data);
     default:
       throw ("unexpected type");
@@ -69,18 +96,39 @@ Answer answerFromJson(dynamic json_) {
 }
 
 JSON answerToJson(Answer item) {
-  if (item is NumberAnswer) {
-    return {'Kind': 0, 'Data': numberAnswerToJson(item)};
+  if (item is ExpressionAnswer) {
+    return {'Kind': 0, 'Data': expressionAnswerToJson(item)};
+  } else if (item is NumberAnswer) {
+    return {'Kind': 1, 'Data': numberAnswerToJson(item)};
   } else if (item is RadioAnswer) {
-    return {'Kind': 1, 'Data': radioAnswerToJson(item)};
+    return {'Kind': 2, 'Data': radioAnswerToJson(item)};
   } else {
     throw ("unexpected type");
   }
 }
 
-String stringFromJson(dynamic json) => json as String;
+// github.com/benoitkugler/maths-online/maths/exercice/client.ExpressionFieldBlock
+class ExpressionFieldBlock implements Block {
+  final String label;
+  final int iD;
 
-String stringToJson(String item) => item;
+  const ExpressionFieldBlock(this.label, this.iD);
+
+  @override
+  String toString() {
+    return "ExpressionFieldBlock($label, $iD)";
+  }
+}
+
+ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return ExpressionFieldBlock(
+      stringFromJson(json['Label']), intFromJson(json['ID']));
+}
+
+JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
+  return {"Label": stringToJson(item.label), "ID": intToJson(item.iD)};
+}
 
 bool boolFromJson(dynamic json) => json as bool;
 
@@ -109,32 +157,6 @@ JSON formulaBlockToJson(FormulaBlock item) {
   return {
     "Content": stringToJson(item.content),
     "IsInline": boolToJson(item.isInline)
-  };
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.FormulaFieldBlock
-class FormulaFieldBlock implements Block {
-  final String expression;
-  final int iD;
-
-  const FormulaFieldBlock(this.expression, this.iD);
-
-  @override
-  String toString() {
-    return "FormulaFieldBlock($expression, $iD)";
-  }
-}
-
-FormulaFieldBlock formulaFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return FormulaFieldBlock(
-      stringFromJson(json['Expression']), intFromJson(json['ID']));
-}
-
-JSON formulaFieldBlockToJson(FormulaFieldBlock item) {
-  return {
-    "Expression": stringToJson(item.expression),
-    "ID": intToJson(item.iD)
   };
 }
 
@@ -222,9 +244,9 @@ Block blockFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return formulaBlockFromJson(data);
+      return expressionFieldBlockFromJson(data);
     case 1:
-      return formulaFieldBlockFromJson(data);
+      return formulaBlockFromJson(data);
     case 2:
       return listFieldBlockFromJson(data);
     case 3:
@@ -237,10 +259,10 @@ Block blockFromJson(dynamic json_) {
 }
 
 JSON blockToJson(Block item) {
-  if (item is FormulaBlock) {
-    return {'Kind': 0, 'Data': formulaBlockToJson(item)};
-  } else if (item is FormulaFieldBlock) {
-    return {'Kind': 1, 'Data': formulaFieldBlockToJson(item)};
+  if (item is ExpressionFieldBlock) {
+    return {'Kind': 0, 'Data': expressionFieldBlockToJson(item)};
+  } else if (item is FormulaBlock) {
+    return {'Kind': 1, 'Data': formulaBlockToJson(item)};
   } else if (item is ListFieldBlock) {
     return {'Kind': 2, 'Data': listFieldBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
