@@ -2,11 +2,12 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-// final bm = buildMode();
-final bm = BuildMode.debug;
+final bm = buildMode();
+// final bm = BuildMode.dev;
 
 void main() {
   runApp(const MyApp());
@@ -30,21 +31,20 @@ class MyApp extends StatelessWidget {
             .copyWith(color: darkBlue.withOpacity(0.5)),
       ),
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fr', ''), // French, no country code
+        Locale('en', ''), // English, no country code
+      ],
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        // body: const _HomePage(),
-        // body: Container(
-        //     color: Colors.grey,
-        //     child: GameEndPannel([
-        //       0,
-        //     ], {
-        //       0: PlayerStatus("Benoit", [true, true, true, true, true]),
-        //       1: PlayerStatus("Guillaume", [true, true, false, true, false]),
-        //     }, 0)),
-        body:
-            Container(color: Colors.grey, child: TrivialPoursuitController("")),
+        body: const _HomePage(),
         // body: Padding(
         //   padding:
         //       const EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),

@@ -50,6 +50,9 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     );
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Rejoindre une partie"),
+      ),
       body: Card(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

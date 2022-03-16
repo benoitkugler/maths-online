@@ -31,49 +31,52 @@ class GameEndPannel extends StatelessWidget {
             fontSize: 25,
           )));
     }
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          const Text(
-            "Partie terminée",
-            style: TextStyle(fontSize: 25),
-          ),
-          Pie.asButton(() => _showRecap(context), 2, ownSuccess),
-          ...congrats,
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Text(
-                  winners.length == 1
-                      ? "Le gagnant est :"
-                      : "Les gagnants sont :",
-                  style: const TextStyle(fontSize: 20),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Partie terminée")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Text(
+              "Partie terminée",
+              style: TextStyle(fontSize: 25),
+            ),
+            Pie.asButton(() => _showRecap(context), 2, ownSuccess),
+            ...congrats,
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    winners.length == 1
+                        ? "Le gagnant est :"
+                        : "Les gagnants sont :",
+                    style: const TextStyle(fontSize: 20),
+                  ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: winners.map((e) {
-                  final name = players[e]!.name;
-                  return DecoratedBox(
-                      decoration: const BoxDecoration(boxShadow: [
-                        BoxShadow(
-                          color: Colors.yellow,
-                          blurRadius: 5,
-                        )
-                      ], borderRadius: BorderRadius.all(Radius.circular(10))),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text(name),
-                        ),
-                      ));
-                }).toList(),
-              ),
-            ],
-          )
-        ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: winners.map((e) {
+                    final name = players[e]!.name;
+                    return DecoratedBox(
+                        decoration: const BoxDecoration(boxShadow: [
+                          BoxShadow(
+                            color: Colors.yellow,
+                            blurRadius: 5,
+                          )
+                        ], borderRadius: BorderRadius.all(Radius.circular(10))),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(name),
+                          ),
+                        ));
+                  }).toList(),
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

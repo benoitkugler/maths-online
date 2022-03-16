@@ -473,7 +473,7 @@ class _GameStarted extends StatelessWidget {
                                     "    - si je n'ai pas encore le camembert, je le gagne !",
                                     16),
                                 _ruleRow(
-                                    "    - si j'avais déjà le camembert, il ne se passe rien",
+                                    "    - si j'avais déjà le camembert, il ne se passe rien.",
                                     16),
                               ]),
                         ),
@@ -491,7 +491,7 @@ class _GameStarted extends StatelessWidget {
                                     "    - si j'ai le camembert, je le perds !",
                                     16),
                                 _ruleRow(
-                                    "    - si je n'ai pas encore le camembert, il ne se passe rien",
+                                    "    - si je n'ai pas encore le camembert, il ne se passe rien.",
                                     16),
                               ]),
                         ),
@@ -520,7 +520,7 @@ class _GameStarted extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 5, left: 40),
+                padding: const EdgeInsets.only(top: 5, left: 40, bottom: 10),
                 child: pie,
               ),
               const Spacer(),
@@ -541,7 +541,8 @@ class _GameStarted extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   child: FloatingActionButton(
                     foregroundColor: Colors.lightBlue,
                     backgroundColor: Colors.lightBlue.shade100,
