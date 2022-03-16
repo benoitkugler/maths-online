@@ -1,4 +1,5 @@
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-final bm = buildMode();
-// final bm = BuildMode.dev;
+// final bm = buildMode();
+final bm = BuildMode.dev;
 
 void main() {
   runApp(const MyApp());
@@ -44,12 +45,11 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        body: const _HomePage(),
-        // body: Padding(
-        //   padding:
-        //       const EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
-        //   child: QuestionGallery(),
-        // ),
+        // body: const _HomePage(),
+        body: const Padding(
+          padding: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+          child: QuestionGallery(),
+        ),
       ),
     );
   }
@@ -66,6 +66,11 @@ class _HomePageState extends State<_HomePage> {
   void _launchTrivialPoursuit() {
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(body: TrivialPoursuitLoggin(bm))));
+  }
+
+  void _launchQuestionGallery() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: QuestionGallery())));
   }
 
   @override
@@ -91,7 +96,11 @@ class _HomePageState extends State<_HomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GameIcon(() => _launchTrivialPoursuit()),
+                  GameIcon(_launchTrivialPoursuit),
+                  // TODO: polish
+                  ElevatedButton(
+                      onPressed: _launchQuestionGallery,
+                      child: const Text("Gallerie de questions")),
                 ],
               ),
             )

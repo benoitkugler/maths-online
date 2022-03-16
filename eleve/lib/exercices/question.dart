@@ -1,6 +1,7 @@
 import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/number.dart';
+import 'package:eleve/exercices/radio.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart' as events;
 import 'package:eleve/trivialpoursuit/pie.dart';
@@ -35,6 +36,8 @@ class _ContentBuilder {
         controllers[block.iD] = NumberController(onChange);
       } else if (block is ExpressionFieldBlock) {
         controllers[block.iD] = ExpressionController(onChange);
+      } else if (block is RadioFieldBlock) {
+        controllers[block.iD] = RadioController(onChange, block.proposals);
       }
 
       // TODO: handle more fields
@@ -99,14 +102,14 @@ class _ContentBuilder {
 
   WidgetSpan _inlineMath(String content) {
     return WidgetSpan(
-      baseline: TextBaseline.alphabetic,
-      alignment: PlaceholderAlignment.baseline,
-      child: Math.tex(
-        content,
-        mathStyle: MathStyle.text,
-        textStyle: _textStyle,
-      ),
-    );
+        baseline: TextBaseline.alphabetic,
+        alignment: PlaceholderAlignment.baseline,
+        child: Math.tex(
+          content,
+          mathStyle: MathStyle.text,
+          textScaleFactor: 1.15,
+          textStyle: _textStyle.copyWith(fontSize: _textStyle.fontSize! - 1),
+        ));
   }
 
   void _handleFormulaBlock(FormulaBlock element) {
@@ -163,6 +166,15 @@ class _ContentBuilder {
     }
   }
 
+  void _handleRadioFieldBlock(RadioFieldBlock element) {
+    final ct = _controllers[element.iD] as RadioController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(RadioField(_color, ct));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -174,6 +186,8 @@ class _ContentBuilder {
         _handleNumberFieldBlock(element);
       } else if (element is ExpressionFieldBlock) {
         _handleExpressionFieldBlock(element);
+      } else if (element is RadioFieldBlock) {
+        _handleRadioFieldBlock(element);
       } else {
         // TODO:
       }

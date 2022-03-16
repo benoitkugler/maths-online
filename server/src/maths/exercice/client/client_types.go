@@ -40,6 +40,7 @@ func (FormulaBlock) isBlock()         {}
 func (NumberFieldBlock) isBlock()     {}
 func (ListFieldBlock) isBlock()       {}
 func (ExpressionFieldBlock) isBlock() {}
+func (RadioFieldBlock) isBlock()      {}
 
 type TextBlock struct {
 	Text string
@@ -59,6 +60,20 @@ type NumberFieldBlock struct {
 type ExpressionFieldBlock struct {
 	Label string // as LaTeX, optional
 	ID    int
+}
+
+type ListFieldProposalPart struct {
+	Content string
+	IsMath  bool
+}
+
+type ListFieldProposal struct {
+	Content []ListFieldProposalPart
+}
+
+type RadioFieldBlock struct {
+	Proposals []ListFieldProposal
+	ID        int
 }
 
 // TODO:

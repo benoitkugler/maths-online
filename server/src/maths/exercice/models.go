@@ -130,7 +130,7 @@ func (f FormulaField) instantiate(params expression.Variables, ID int) blockInst
 
 // TODO
 func (l ListField) instantiate(params expression.Variables, ID int) blockInstance {
-	return ListFieldInstance{}
+	return RadioFieldInstance{}
 }
 
 // ExerciceInstance is an in memory version of an Exercice,

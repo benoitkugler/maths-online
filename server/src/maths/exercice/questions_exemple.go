@@ -1,6 +1,9 @@
 package exercice
 
-import "github.com/benoitkugler/maths-online/maths/expression"
+import (
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/expression"
+)
 
 func mustParse(s string) *expression.Expression {
 	e, _, err := expression.Parse(s)
@@ -25,9 +28,6 @@ var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
 			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
 				{Expression: mustParse("(1/3)+(2/5)")},
 				{StaticContent: `= \frac{a}{b}`},
@@ -42,14 +42,45 @@ var PredefinedQuestions = [...]QuestionInstance{
 	},
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextBlock{"Développer l’expression : \n"},
+			TextBlock{"Écrire sous la forme "},
 			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{StaticContent: "a = "},
+				{StaticContent: `a\sqrt{b},`},
 			}},
-			ExpressionFieldInstance{
-				ID:              0,
-				ComparisonLevel: expression.SimpleSubstitutions,
-				Answer:          mustParse("4*x^2 - 27 *x + 18"),
+			TextBlock{" où "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{StaticContent: `a`},
+			}},
+			TextBlock{" et "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{StaticContent: `b`},
+			}},
+			TextBlock{" sont des entiers les plus petits possibles :"},
+			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("sqrt(50)")},
+				{StaticContent: " = "},
+				{Expression: mustParse("a * sqrt(b)")},
+			}},
+			TextBlock{"avec "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "a = "}}},
+			NumberFieldInstance{ID: 0, Answer: 5},
+			TextBlock{" et "},
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "b = "}}},
+			NumberFieldInstance{ID: 1, Answer: 2},
+		},
+	},
+	{
+		Title: "Nombres entiers", Enonce: EnonceInstance{
+			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
+				{Expression: mustParse("89")},
+			}},
+			TextBlock{" est-il un nombre premier ?"},
+			RadioFieldInstance{
+				ID:     0,
+				Answer: 1,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.ListFieldProposalPart{{Content: "Oui"}}},
+					{Content: []client.ListFieldProposalPart{{Content: "Non"}}},
+				},
 			},
 		},
 	},

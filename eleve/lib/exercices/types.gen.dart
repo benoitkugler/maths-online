@@ -215,6 +215,102 @@ JSON numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD)};
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposalPart
+class ListFieldProposalPart {
+  final String content;
+  final bool isMath;
+
+  const ListFieldProposalPart(this.content, this.isMath);
+
+  @override
+  String toString() {
+    return "ListFieldProposalPart($content, $isMath)";
+  }
+}
+
+ListFieldProposalPart listFieldProposalPartFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return ListFieldProposalPart(
+      stringFromJson(json['Content']), boolFromJson(json['IsMath']));
+}
+
+JSON listFieldProposalPartToJson(ListFieldProposalPart item) {
+  return {
+    "Content": stringToJson(item.content),
+    "IsMath": boolToJson(item.isMath)
+  };
+}
+
+List<ListFieldProposalPart> listListFieldProposalPartFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(listFieldProposalPartFromJson).toList();
+}
+
+List<dynamic> listListFieldProposalPartToJson(
+    List<ListFieldProposalPart> item) {
+  return item.map(listFieldProposalPartToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposal
+class ListFieldProposal {
+  final List<ListFieldProposalPart> content;
+
+  const ListFieldProposal(this.content);
+
+  @override
+  String toString() {
+    return "ListFieldProposal($content)";
+  }
+}
+
+ListFieldProposal listFieldProposalFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return ListFieldProposal(listListFieldProposalPartFromJson(json['Content']));
+}
+
+JSON listFieldProposalToJson(ListFieldProposal item) {
+  return {"Content": listListFieldProposalPartToJson(item.content)};
+}
+
+List<ListFieldProposal> listListFieldProposalFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(listFieldProposalFromJson).toList();
+}
+
+List<dynamic> listListFieldProposalToJson(List<ListFieldProposal> item) {
+  return item.map(listFieldProposalToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.RadioFieldBlock
+class RadioFieldBlock implements Block {
+  final List<ListFieldProposal> proposals;
+  final int iD;
+
+  const RadioFieldBlock(this.proposals, this.iD);
+
+  @override
+  String toString() {
+    return "RadioFieldBlock($proposals, $iD)";
+  }
+}
+
+RadioFieldBlock radioFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return RadioFieldBlock(listListFieldProposalFromJson(json['Proposals']),
+      intFromJson(json['ID']));
+}
+
+JSON radioFieldBlockToJson(RadioFieldBlock item) {
+  return {
+    "Proposals": listListFieldProposalToJson(item.proposals),
+    "ID": intToJson(item.iD)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
 class TextBlock implements Block {
   final String text;
@@ -252,6 +348,8 @@ Block blockFromJson(dynamic json_) {
     case 3:
       return numberFieldBlockFromJson(data);
     case 4:
+      return radioFieldBlockFromJson(data);
+    case 5:
       return textBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -267,8 +365,10 @@ JSON blockToJson(Block item) {
     return {'Kind': 2, 'Data': listFieldBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
     return {'Kind': 3, 'Data': numberFieldBlockToJson(item)};
+  } else if (item is RadioFieldBlock) {
+    return {'Kind': 4, 'Data': radioFieldBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 4, 'Data': textBlockToJson(item)};
+    return {'Kind': 5, 'Data': textBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

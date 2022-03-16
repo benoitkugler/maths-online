@@ -34,6 +34,12 @@ type fieldInstance interface {
 	evaluateAnswer(answer client.Answer) (isCorrect bool)
 }
 
+var (
+	_ fieldInstance = NumberFieldInstance{}
+	_ fieldInstance = ExpressionFieldInstance{}
+	_ fieldInstance = RadioFieldInstance{}
+)
+
 // NumberFieldInstance is an answer field where only
 // numbers are allowed
 // answers are compared as float values
@@ -110,7 +116,69 @@ func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect
 	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
 }
 
-type ListFieldInstance struct{}
+// expressionOrText is either
+//	- a math expression
+// 	- a math content
+// 	- a regular text content
+type expressionOrText struct {
+	Expression *expression.Expression
+	Text       string
+	IsMath     bool
+}
 
-// TODO:
-func (ListFieldInstance) toClient() client.Block { return client.ListFieldBlock{} }
+func (e expressionOrText) instantiate() (out client.ListFieldProposalPart) {
+	if e.Expression != nil {
+		out.Content = e.Expression.AsLaTeX(nil)
+		out.IsMath = true
+	} else {
+		out.Content = e.Text
+		out.IsMath = e.IsMath
+	}
+	return out
+}
+
+// type listFieldProposal struct {
+// 	Content []expressionOrText
+// }
+
+// func (lf listFieldProposal) toClient() client.ListFieldProposal {
+// 	out := client.ListFieldProposal{Content: make([]client.ListFieldProposalBlock, len(lf.Content))}
+// 	for i, f := range lf.Content {
+// 		out.Content[i] = f.toClient()
+// 	}
+// 	return out
+// }
+
+// RadioFieldInstance is an answer field where one choice
+// is to be made against a fixed list
+type RadioFieldInstance struct {
+	Proposals []client.ListFieldProposal
+	ID        int
+	Answer    int // index into Proposals
+}
+
+func (rf RadioFieldInstance) fieldID() int {
+	return rf.ID
+}
+
+func (rf RadioFieldInstance) toClient() client.Block {
+	return client.RadioFieldBlock{
+		ID:        rf.ID,
+		Proposals: rf.Proposals,
+	}
+}
+
+func (f RadioFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.RadioAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected RadioAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return f.Answer == answer.(client.RadioAnswer).Index
+}
