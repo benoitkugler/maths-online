@@ -28,8 +28,8 @@ func Test_board_adjacents(t *testing.T) {
 		},
 		{
 			Board,
-			18,
-			[]int{0, 17},
+			nbSquares - 1,
+			[]int{0, nbSquares - 2},
 		},
 	}
 	for _, tt := range tests {
@@ -79,10 +79,11 @@ func TestBoardMoves(t *testing.T) {
 		nbMoves int
 		want    []int
 	}{
-		{18, 2, []int{1, 16}},
+		{nbSquares - 1, 1, []int{0, 15}},
+		{nbSquares - 1, 2, []int{1, 9}},
 		{0, 1, []int{1, nbSquares - 1}},
-		{4, 1, []int{3, 5, 15}},
-		{2, 3, []int{5, 15, nbSquares - 1}},
+		{3, 1, []int{2, 4, nbSquares - 3}},
+		{2, 3, []int{5, 13, nbSquares - 1}},
 	}
 	for _, tt := range tests {
 		if got := Board.choices(tt.pos, tt.nbMoves).list(); !reflect.DeepEqual(got, tt.want) {
@@ -98,9 +99,9 @@ func TestBoardPaths(t *testing.T) {
 		nbMoves int
 		want    tileSet
 	}{
-		// {18, 2, tileSet{1: []int{18, 0, 1}, 16: []int{18, 17, 16}}},
-		// {0, 1, tileSet{1: []int{0, 1}, nbSquares - 1: []int{0, nbSquares - 1}}},
-		{2, 3, tileSet{5: []int{2, 3, 4, 5}, 15: []int{2, 3, 4, 15}, nbSquares - 1: []int{2, 1, 0, nbSquares - 1}}},
+		{nbSquares - 1, 2, tileSet{1: []int{nbSquares - 1, 0, 1}, 9: []int{16, 15, 9}}},
+		{0, 1, tileSet{1: []int{0, 1}, nbSquares - 1: []int{0, nbSquares - 1}}},
+		{2, 3, tileSet{5: []int{2, 3, 4, 5}, 13: []int{2, 3, 14, 13}, nbSquares - 1: []int{2, 1, 0, nbSquares - 1}}},
 	}
 	for _, tt := range tests {
 		if got := Board.choices(tt.pos, tt.nbMoves); !reflect.DeepEqual(got, tt.want) {

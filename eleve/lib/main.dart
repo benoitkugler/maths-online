@@ -1,5 +1,4 @@
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -36,13 +35,13 @@ class MyApp extends StatelessWidget {
           title: const Text('Isiro'),
         ),
         // body: const _HomePage(),
-        // body:
-        //     Container(color: Colors.grey, child: TrivialPoursuitController("")),
-        body: Padding(
-          padding:
-              const EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
-          child: QuestionGallery(),
-        ),
+        body:
+            Container(color: Colors.grey, child: TrivialPoursuitController("")),
+        // body: Padding(
+        //   padding:
+        //       const EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+        //   child: QuestionGallery(),
+        // ),
       ),
     );
   }

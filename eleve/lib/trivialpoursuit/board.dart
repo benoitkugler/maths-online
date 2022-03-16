@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/pawn.dart';
+import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:flutter/material.dart';
 
 typedef OnTapTile = void Function(int);
@@ -26,77 +28,73 @@ class Board extends StatelessWidget {
   /// graphical description of the board
   static const shapes = [
     // center, start
-    _ShapeDescriptor(Colors.purple, _Circle(middle, _RL(9))),
-    // three vertical tiles
-    _ShapeDescriptor(Colors.green,
-        _RoundedTrapezoide(middle, _RL(9), 180 + 20, 180 - 40, _RP(59, 35))),
+    _ShapeDescriptor(Categorie.purple, _Circle(middle, _RL(9))),
+    // two vertical tiles
+    _ShapeDescriptor(Categorie.blue,
+        _RoundedTrapezoide(middle, _RL(9), 180 + 20, 180 - 40, _RP(59, 30))),
     _ShapeDescriptor(
-        Colors.blue, _Trapeze(_RP(41, 25), _RP(18, 0), _RP(0, 10))),
-    _ShapeDescriptor(
-        Colors.green,
+        Categorie.green,
         _RoundedTrapezoide(middle, _RL(innerRingRadius),
-            270 - angularSection / 2, angularSection, _RP(40 + 19, 25))),
+            270 - angularSection / 2, angularSection, _RP(40 + 19, 30))),
     // cross
     _ShapeDescriptor(
-        Colors.blue,
+        Categorie.blue,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 - angularSection / 2, angularSection)),
     // 5 regular sections
     _ShapeDescriptor(
-        Colors.green,
+        Categorie.green,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2, angularSection)),
     _ShapeDescriptor(
-        Colors.orange,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.purple,
+        Categorie.purple,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.yellow,
+        Categorie.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.orange,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 4 * angularSection, angularSection)),
     // cross
     _ShapeDescriptor(
-        Colors.yellow,
+        Categorie.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             270 + angularSection / 2 + 5 * angularSection, angularSection)),
     // 5 regular sections
     _ShapeDescriptor(
-        Colors.orange,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 0 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.yellow,
+        Categorie.yellow,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 1 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.purple,
+        Categorie.purple,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 2 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.orange,
+        Categorie.orange,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 3 * angularSection, angularSection)),
     _ShapeDescriptor(
-        Colors.green,
+        Categorie.green,
         _ArcSection(middle, _RL(innerRingRadius), _RL(outerRingRadius),
             90 + angularSection / 2 + 4 * angularSection, angularSection)),
-    // three last vertical tiles
+    // two last vertical tiles
     _ShapeDescriptor(
-        Colors.blue,
+        Categorie.blue,
         _RoundedTrapezoide(middle, _RL(innerRingRadius),
-            90 - angularSection / 2, angularSection, _RP(41, 75))),
-    _ShapeDescriptor(
-        Colors.yellow, _Trapeze(_RP(41, 75), _RP(18, 0), _RP(0, -10))),
-    _ShapeDescriptor(Colors.blue,
-        _RoundedTrapezoide(middle, _RL(9), 20, 180 - 40, _RP(41, 65))),
+            90 - angularSection / 2, angularSection, _RP(41, 70))),
+    _ShapeDescriptor(Categorie.yellow,
+        _RoundedTrapezoide(middle, _RL(9), 20, 180 - 40, _RP(41, 70))),
   ];
 
   @override
@@ -111,7 +109,7 @@ class Board extends StatelessWidget {
     final configs = List<_TileConfig>.generate(shapes.length, (index) {
       final shape = shapes[index];
       final path = shape.builder.buildPath(size);
-      return _TileConfig(size, path, () => onTap(index), shape.color);
+      return _TileConfig(size, path, () => onTap(index), shape.categorie.color);
     });
 
     final List<Widget> regular = [];
@@ -338,9 +336,9 @@ class _TilePainter extends CustomPainter {
 }
 
 class _ShapeDescriptor {
-  final Color color;
+  final Categorie categorie;
   final _PathBuilder builder;
-  const _ShapeDescriptor(this.color, this.builder);
+  const _ShapeDescriptor(this.categorie, this.builder);
 }
 
 abstract class _PathBuilder {
@@ -435,38 +433,6 @@ class _RoundedTrapezoide extends _PathBuilder {
     } else {
       return Offset(outX, (pointY + roundBounds.top) / 2 + 5);
     }
-  }
-}
-
-class _Trapeze extends _PathBuilder {
-  final _RP topLeft;
-  final _RP topLeftToTopRight;
-  final _RP topToBottom;
-
-  const _Trapeze(this.topLeft, this.topLeftToTopRight, this.topToBottom);
-
-  @override
-  Path buildPath(Size size) {
-    // infer dxBottom by symmetry
-    final topLeft = this.topLeft.resolve(size);
-    final topLeftToTopRight = this.topLeftToTopRight.resolve(size);
-    final topToBottom = this.topToBottom.resolve(size);
-    // infer dxBottom by symmetry
-    final dxBottom = -(topLeftToTopRight.dx + 2 * topToBottom.dx);
-
-    final path = Path();
-    path.moveTo(topLeft.dx, topLeft.dy);
-    path.relativeLineTo(topLeftToTopRight.dx, topLeftToTopRight.dy);
-    path.relativeLineTo(topToBottom.dx, topToBottom.dy);
-    path.relativeLineTo(dxBottom, 0);
-    path.close();
-
-    return path;
-  }
-
-  @override
-  Offset? visualCenter(Size size) {
-    return null;
   }
 }
 

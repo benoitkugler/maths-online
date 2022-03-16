@@ -64,24 +64,24 @@ func TestGameStateJSON(t *testing.T) {
 
 func TestClientEventJSON(t *testing.T) {
 	for _, event := range []clientEventData{
-		move{Tile: 4},
-		answer{client.QuestionAnswersIn{}, "ma réponse"},
+		move{Tile: 4, Path: []int{}},
+		answer{client.QuestionAnswersIn{Data: make(map[int]client.Answer)}, "ma réponse"},
 		Ping{"Test"},
 	} {
-		paylod := ClientEvent{Event: event, Player: 0}
-		b, err := json.Marshal(paylod)
+		payload := ClientEvent{Event: event, Player: 0}
+		b, err := json.Marshal(payload)
 		if err != nil {
 			t.Fatal(err)
 		}
 		fmt.Println(string(b))
 
-		var paylod2 ClientEvent
-		err = json.Unmarshal(b, &paylod2)
+		var payload2 ClientEvent
+		err = json.Unmarshal(b, &payload2)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if !reflect.DeepEqual(paylod, paylod2) {
+		if !reflect.DeepEqual(payload, payload2) {
 			t.Fatal()
 		}
 	}

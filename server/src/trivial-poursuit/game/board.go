@@ -10,44 +10,41 @@ import (
 // To support arbitrary trivial poursuit board,
 // we model it by a graph
 
-const nbSquares = 19
+const nbSquares = 17
 
 var (
 	// Board is the Trivial-Poursuit board game shape.
 	Board = board{ // the first tile is in the center
-		{1: true, nbSquares - 1: true},
-		{0: true, 2: true},
-		{1: true, 3: true},
-		{2: true, 4: true},
-		4: {3: true, 5: true, nbSquares - 4: true},
-		{4: true, 6: true},
-		{5: true, 7: true},
-		{6: true, 8: true},
-		{7: true, 9: true},
-		{8: true, 10: true},
-		10: {11: true, 9: true, nbSquares - 3: true},
-		{10: true, 12: true},
-		{11: true, 13: true},
-		{12: true, 14: true},
-		{13: true, 15: true},
-		15: {14: true, 4: true},
-		16: {17: true, 10: true},
-		{16: true, 18: true},
-		{17: true, 0: true},
+		0:  {1: true, nbSquares - 1: true},
+		1:  {0: true, 2: true},
+		2:  {1: true, 3: true},
+		3:  {2: true, 4: true, nbSquares - 3: true}, // cross
+		4:  {3: true, 5: true},
+		5:  {4: true, 6: true},
+		6:  {5: true, 7: true},
+		7:  {6: true, 8: true},
+		8:  {7: true, 9: true},
+		9:  {8: true, 10: true, nbSquares - 2: true}, // cross
+		10: {9: true, 11: true},
+		11: {10: true, 12: true},
+		12: {11: true, 13: true},
+		13: {12: true, 14: true},
+		14: {13: true, 3: true},
+		15: {16: true, 9: true},
+		16: {15: true, 0: true},
 	}
 
 	categories = [nbSquares]categorie{
 		Purple,
-		Green,
 		Blue,
 		Green,
-		Blue,
+		Blue, // cross
 		Green,
 		Orange,
 		Purple,
 		Yellow,
 		Orange,
-		Yellow,
+		Yellow, // cross
 		Orange,
 		Yellow,
 		Purple,
@@ -55,7 +52,6 @@ var (
 		Green,
 		Blue,
 		Yellow,
-		Blue,
 	}
 )
 
