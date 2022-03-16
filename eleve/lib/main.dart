@@ -1,5 +1,7 @@
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
+import 'package:eleve/trivialpoursuit/game_end.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
@@ -35,8 +37,16 @@ class MyApp extends StatelessWidget {
           title: const Text('Isiro'),
         ),
         // body: const _HomePage(),
-        body:
-            Container(color: Colors.grey, child: TrivialPoursuitController("")),
+        body: Container(
+            color: Colors.grey,
+            child: GameEndPannel([
+              0,
+            ], {
+              0: PlayerStatus("Benoit", [true, true, true, true, true]),
+              1: PlayerStatus("Guillaume", [true, true, false, true, false]),
+            }, 0)),
+        // body:
+        //     Container(color: Colors.grey, child: TrivialPoursuitController("")),
         // body: Padding(
         //   padding:
         //       const EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),

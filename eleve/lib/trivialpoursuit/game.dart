@@ -5,6 +5,7 @@ import 'package:eleve/exercices/types.gen.dart' as exercices;
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
+import 'package:eleve/trivialpoursuit/game_end.dart';
 import 'package:eleve/trivialpoursuit/lobby.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/question.dart';
@@ -198,7 +199,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   Future<void> _onPlayerTurn(PlayerTurn event) async {
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 4),
       backgroundColor: Theme.of(context).colorScheme.secondary,
       content: isOwnTurn
           ? const Text("C'est à toi de lancer le dé !")
@@ -387,7 +388,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   Widget get _game {
     if (winners.isNotEmpty) {
-      return _GameEnd(winnerNames, winners.contains(playerID));
+      return GameEndPannel(winners, state.players, playerID);
     }
 
     return hasGameStarted
@@ -479,67 +480,6 @@ class _GameStarted extends StatelessWidget {
             padding: const EdgeInsets.only(top: 5, bottom: 2),
             child: recapRow,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GameEnd extends StatelessWidget {
-  final List<String> winners;
-  final bool hasWon;
-  const _GameEnd(this.winners, this.hasWon, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> congrats = [];
-    if (hasWon) {
-      congrats.add(const Text("Vous avez gagné, bravo !",
-          style: TextStyle(
-            color: Colors.yellow,
-            fontSize: 25,
-          )));
-    }
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          const Text(
-            "Partie terminée",
-            style: TextStyle(fontSize: 25),
-          ),
-          ...congrats,
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Text(
-                  winners.length == 1
-                      ? "Le gagnant est :"
-                      : "Les gagnants sont :",
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: winners
-                    .map((e) => DecoratedBox(
-                        decoration: const BoxDecoration(boxShadow: [
-                          BoxShadow(
-                            color: Colors.yellow,
-                            blurRadius: 5,
-                          )
-                        ], borderRadius: BorderRadius.all(Radius.circular(10))),
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(e),
-                          ),
-                        )))
-                    .toList(),
-              ),
-            ],
-          )
         ],
       ),
     );
