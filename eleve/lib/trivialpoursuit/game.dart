@@ -444,6 +444,65 @@ class _GameStarted extends StatelessWidget {
       {Key? key})
       : super(key: key);
 
+  Text _ruleRow(String content, double fontSize) {
+    return Text(content, style: TextStyle(fontSize: fontSize, height: 2));
+  }
+
+  void _showRules(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+          builder: (context) => Scaffold(
+                appBar: AppBar(title: const Text("Règles du jeu")),
+                body: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Card(
+                        color: Colors.lightGreen,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _ruleRow(
+                                    "Quand je réponds correctement à une question : ",
+                                    18),
+                                _ruleRow(
+                                    "    - si je n'ai pas encore le camembert, je le gagne !",
+                                    16),
+                                _ruleRow(
+                                    "    - si j'avais déjà le camembert, il ne se passe rien",
+                                    16),
+                              ]),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Card(
+                        color: Colors.red,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _ruleRow("Quand je me trompe : ", 18),
+                                _ruleRow(
+                                    "    - si j'ai le camembert, je le perds !",
+                                    16),
+                                _ruleRow(
+                                    "    - si je n'ai pas encore le camembert, il ne se passe rien",
+                                    16),
+                              ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -478,7 +537,25 @@ class _GameStarted extends StatelessWidget {
           )),
           Padding(
             padding: const EdgeInsets.only(top: 5, bottom: 2),
-            child: recapRow,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: FloatingActionButton(
+                    foregroundColor: Colors.lightBlue,
+                    backgroundColor: Colors.lightBlue.shade100,
+                    onPressed: () => _showRules(context),
+                    child: const Icon(
+                      IconData(0xe33d, fontFamily: 'MaterialIcons'),
+                      size: 40,
+                    ),
+                    tooltip: "Afficher la règle du jeu",
+                  ),
+                ),
+                recapRow,
+              ],
+            ),
           ),
         ],
       ),
