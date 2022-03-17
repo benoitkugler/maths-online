@@ -42,13 +42,20 @@ func (ListFieldBlock) isBlock()       {}
 func (ExpressionFieldBlock) isBlock() {}
 func (RadioFieldBlock) isBlock()      {}
 
-type TextBlock struct {
-	Text string
+// TextOrMath is a part of a text line, rendered
+// either as plain text or using LaTeX in text mode.
+type TextOrMath struct {
+	Text   string
+	IsMath bool
 }
 
+type TextBlock struct {
+	Parts []TextOrMath
+}
+
+// FormulaBlock is whole line, rendered as LaTeX in display mode
 type FormulaBlock struct {
-	Content  string // as latex
-	IsInline bool
+	Formula string // as latex
 }
 
 // NumberFieldBlock is an answer field where only
@@ -62,13 +69,8 @@ type ExpressionFieldBlock struct {
 	ID    int
 }
 
-type ListFieldProposalPart struct {
-	Content string
-	IsMath  bool
-}
-
 type ListFieldProposal struct {
-	Content []ListFieldProposalPart
+	Content []TextOrMath
 }
 
 type RadioFieldBlock struct {

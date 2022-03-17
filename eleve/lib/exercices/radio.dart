@@ -36,10 +36,6 @@ class RadioField extends StatefulWidget {
 }
 
 class _RadioFieldState extends State<RadioField> {
-  Widget _buildProposal(ListFieldProposal proposal) {
-    return Text("TODO");
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -47,7 +43,7 @@ class _RadioFieldState extends State<RadioField> {
             List<Widget>.generate(widget._controller.proposals.length, (index) {
       final prop = widget._controller.proposals[index];
       return RadioListTile<int>(
-        title: _buildProposal(prop),
+        title: TextRow(buildText(prop.content, 18), 2),
         value: index,
         groupValue: widget._controller.index,
         onChanged: (int? value) {

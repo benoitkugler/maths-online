@@ -116,26 +116,22 @@ func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect
 	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
 }
 
-// expressionOrText is either
-//	- a math expression
-// 	- a math content
-// 	- a regular text content
-type expressionOrText struct {
-	Expression *expression.Expression
-	Text       string
-	IsMath     bool
-}
+// type expressionOrText struct {
+// 	Expression *expression.Expression
+// 	Text       string
+// 	IsMath     bool
+// }
 
-func (e expressionOrText) instantiate() (out client.ListFieldProposalPart) {
-	if e.Expression != nil {
-		out.Content = e.Expression.AsLaTeX(nil)
-		out.IsMath = true
-	} else {
-		out.Content = e.Text
-		out.IsMath = e.IsMath
-	}
-	return out
-}
+// func (e expressionOrText) instantiate() (out client.TextOrMath) {
+// 	if e.Expression != nil {
+// 		out.Content = e.Expression.AsLaTeX(nil)
+// 		out.IsMath = true
+// 	} else {
+// 		out.Content = e.Text
+// 		out.IsMath = e.IsMath
+// 	}
+// 	return out
+// }
 
 // type listFieldProposal struct {
 // 	Content []expressionOrText

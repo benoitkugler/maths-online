@@ -13,10 +13,22 @@ func mustParse(s string) *expression.Expression {
 	return e
 }
 
+func text(s string) TextOrMaths {
+	return TextOrMaths{MathOrExpression: MathOrExpression{StaticContent: s}}
+}
+
+func staticMath(s string) TextOrMaths {
+	return TextOrMaths{MathOrExpression: MathOrExpression{StaticContent: s}, IsMath: true}
+}
+
+func expr(s string) TextOrMaths {
+	return TextOrMaths{MathOrExpression: MathOrExpression{Expression: mustParse(s)}, IsMath: true}
+}
+
 var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextBlock{"Développer l’expression :"},
+			TextInstance{Parts: []TextOrMaths{text("Développer l’expression :")}},
 			ExpressionFieldInstance{
 				ID:              0,
 				Label:           mustParse("(x−6)*(4*x−3)"),
@@ -27,123 +39,147 @@ var PredefinedQuestions = [...]QuestionInstance{
 	},
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 				{StaticContent: `= \frac{a}{b}`},
 			}},
-			TextBlock{"avec "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "a = "}}},
+			TextInstance{Parts: []TextOrMaths{
+				text("avec "),
+				staticMath("a = "),
+			}},
 			NumberFieldInstance{ID: 0, Answer: 1*5 + 2*3},
-			TextBlock{" et "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "b = "}}},
+			TextInstance{Parts: []TextOrMaths{
+				text(" et "),
+				staticMath("b = "),
+			}},
 			NumberFieldInstance{ID: 1, Answer: 3 * 5},
 		},
 	},
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextBlock{"Écrire sous la forme "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{StaticContent: `a\sqrt{b},`},
+			TextInstance{Parts: []TextOrMaths{
+				text("Écrire sous la forme "),
+				staticMath(`a\sqrt{b},`),
+				text(" où "),
+				staticMath("a"),
+				text(" et "),
+				staticMath("b"),
+				text(" sont des entiers les plus petits possibles :"),
 			}},
-			TextBlock{" où "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{StaticContent: `a`},
-			}},
-			TextBlock{" et "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{StaticContent: `b`},
-			}},
-			TextBlock{" sont des entiers les plus petits possibles :"},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("sqrt(50)")},
 				{StaticContent: " = "},
 				{Expression: mustParse("a * sqrt(b)")},
 			}},
-			TextBlock{"avec "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "a = "}}},
+			TextInstance{Parts: []TextOrMaths{
+				text("avec "),
+				staticMath("a = "),
+			}},
 			NumberFieldInstance{ID: 0, Answer: 5},
-			TextBlock{" et "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{{StaticContent: "b = "}}},
+			TextInstance{Parts: []TextOrMaths{
+				text(" et "),
+				staticMath("b = "),
+			}},
 			NumberFieldInstance{ID: 1, Answer: 2},
 		},
 	},
 	{
 		Title: "Nombres entiers", Enonce: EnonceInstance{
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("89")},
+			TextInstance{Parts: []TextOrMaths{
+				expr("89"),
+				text(" est-il un nombre premier ?"),
 			}},
-			TextBlock{" est-il un nombre premier ?"},
 			RadioFieldInstance{
 				ID:     0,
 				Answer: 1,
 				Proposals: []client.ListFieldProposal{
-					{Content: []client.ListFieldProposalPart{{Content: "Oui"}}},
-					{Content: []client.ListFieldProposalPart{{Content: "Non"}}},
+					{Content: []client.TextOrMath{{Text: "Oui"}}},
+					{Content: []client.TextOrMath{{Text: "Non"}}},
+				},
+			},
+		},
+	},
+	{
+		Title: "Nombres entiers", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				expr("987"),
+				text(" est-il un mulitple de "),
+				expr("3"),
+			}},
+			RadioFieldInstance{
+				ID:     0,
+				Answer: 0,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: "Oui"}}},
+					{Content: []client.TextOrMath{{Text: "Non"}}},
+				},
+			},
+		},
+	},
+	{
+		Title: "Nombres réels", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("A quel plus petit ensemble appartient "),
+				expr("4/7"),
+			}},
+			RadioFieldInstance{
+				ID:     0,
+				Answer: 4,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: `\mathbb{N}`, IsMath: true}}},
+					{Content: []client.TextOrMath{{Text: `\mathbb{Z}`, IsMath: true}}},
+					{Content: []client.TextOrMath{{Text: `\mathbb{D}`, IsMath: true}}},
+					{Content: []client.TextOrMath{{Text: `\mathbb{Q}`, IsMath: true}}},
+					{Content: []client.TextOrMath{{Text: `\mathbb{R}`, IsMath: true}}},
 				},
 			},
 		},
 	},
 	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: true, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
+			TextInstance{Parts: []TextOrMaths{
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
+				text("Écrire sous une seule fraction : "),
+				expr("(1/3)+(2/5)"),
 			}},
 		},
 	},
 	{
 		Title: "Très longue question verticale", Enonce: EnonceInstance{
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextBlock{"Écrire sous une seule fraction : "},
-			FormulaInstance{IsInline: false, Chunks: []FormulaPartInstance{
+			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			FormulaDisplayInstance{Parts: []MathOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 		},

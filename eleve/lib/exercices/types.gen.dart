@@ -130,34 +130,25 @@ JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
   return {"Label": stringToJson(item.label), "ID": intToJson(item.iD)};
 }
 
-bool boolFromJson(dynamic json) => json as bool;
-
-bool boolToJson(bool item) => item;
-
 // github.com/benoitkugler/maths-online/maths/exercice/client.FormulaBlock
 class FormulaBlock implements Block {
-  final String content;
-  final bool isInline;
+  final String formula;
 
-  const FormulaBlock(this.content, this.isInline);
+  const FormulaBlock(this.formula);
 
   @override
   String toString() {
-    return "FormulaBlock($content, $isInline)";
+    return "FormulaBlock($formula)";
   }
 }
 
 FormulaBlock formulaBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return FormulaBlock(
-      stringFromJson(json['Content']), boolFromJson(json['IsInline']));
+  return FormulaBlock(stringFromJson(json['Formula']));
 }
 
 JSON formulaBlockToJson(FormulaBlock item) {
-  return {
-    "Content": stringToJson(item.content),
-    "IsInline": boolToJson(item.isInline)
-  };
+  return {"Formula": stringToJson(item.formula)};
 }
 
 List<String> listStringFromJson(dynamic json) {
@@ -215,47 +206,46 @@ JSON numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposalPart
-class ListFieldProposalPart {
-  final String content;
+bool boolFromJson(dynamic json) => json as bool;
+
+bool boolToJson(bool item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
+class TextOrMath {
+  final String text;
   final bool isMath;
 
-  const ListFieldProposalPart(this.content, this.isMath);
+  const TextOrMath(this.text, this.isMath);
 
   @override
   String toString() {
-    return "ListFieldProposalPart($content, $isMath)";
+    return "TextOrMath($text, $isMath)";
   }
 }
 
-ListFieldProposalPart listFieldProposalPartFromJson(dynamic json_) {
+TextOrMath textOrMathFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ListFieldProposalPart(
-      stringFromJson(json['Content']), boolFromJson(json['IsMath']));
+  return TextOrMath(stringFromJson(json['Text']), boolFromJson(json['IsMath']));
 }
 
-JSON listFieldProposalPartToJson(ListFieldProposalPart item) {
-  return {
-    "Content": stringToJson(item.content),
-    "IsMath": boolToJson(item.isMath)
-  };
+JSON textOrMathToJson(TextOrMath item) {
+  return {"Text": stringToJson(item.text), "IsMath": boolToJson(item.isMath)};
 }
 
-List<ListFieldProposalPart> listListFieldProposalPartFromJson(dynamic json) {
+List<TextOrMath> listTextOrMathFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
-  return (json as List<dynamic>).map(listFieldProposalPartFromJson).toList();
+  return (json as List<dynamic>).map(textOrMathFromJson).toList();
 }
 
-List<dynamic> listListFieldProposalPartToJson(
-    List<ListFieldProposalPart> item) {
-  return item.map(listFieldProposalPartToJson).toList();
+List<dynamic> listTextOrMathToJson(List<TextOrMath> item) {
+  return item.map(textOrMathToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposal
 class ListFieldProposal {
-  final List<ListFieldProposalPart> content;
+  final List<TextOrMath> content;
 
   const ListFieldProposal(this.content);
 
@@ -267,11 +257,11 @@ class ListFieldProposal {
 
 ListFieldProposal listFieldProposalFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ListFieldProposal(listListFieldProposalPartFromJson(json['Content']));
+  return ListFieldProposal(listTextOrMathFromJson(json['Content']));
 }
 
 JSON listFieldProposalToJson(ListFieldProposal item) {
-  return {"Content": listListFieldProposalPartToJson(item.content)};
+  return {"Content": listTextOrMathToJson(item.content)};
 }
 
 List<ListFieldProposal> listListFieldProposalFromJson(dynamic json) {
@@ -313,23 +303,23 @@ JSON radioFieldBlockToJson(RadioFieldBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
 class TextBlock implements Block {
-  final String text;
+  final List<TextOrMath> parts;
 
-  const TextBlock(this.text);
+  const TextBlock(this.parts);
 
   @override
   String toString() {
-    return "TextBlock($text)";
+    return "TextBlock($parts)";
   }
 }
 
 TextBlock textBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return TextBlock(stringFromJson(json['Text']));
+  return TextBlock(listTextOrMathFromJson(json['Parts']));
 }
 
 JSON textBlockToJson(TextBlock item) {
-  return {"Text": stringToJson(item.text)};
+  return {"Parts": listTextOrMathToJson(item.parts)};
 }
 
 abstract class Block {}

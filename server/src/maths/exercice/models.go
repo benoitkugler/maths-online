@@ -41,23 +41,40 @@ type FormulaPart struct {
 }
 
 // assume the expression is valid
-func (fp FormulaPart) instantiate(params expression.Variables) FormulaPartInstance {
+func (fp FormulaPart) instantiate(params expression.Variables) MathOrExpression {
 	if !fp.IsExpression { // nothing to do
-		return FormulaPartInstance{StaticContent: fp.Content}
+		return MathOrExpression{StaticContent: fp.Content}
 	}
 
 	expr, _, _ := expression.Parse(fp.Content)
 	expr.Substitute(params)
-	return FormulaPartInstance{Expression: expr}
+	return MathOrExpression{Expression: expr}
 }
 
-// FormulaPartInstance is either an expression or a static string
-type FormulaPartInstance struct {
+// TextOrMaths is either
+//	- a math expression
+// 	- a math content
+// 	- a regular text content
+type TextOrMaths struct {
+	MathOrExpression
+	IsMath bool
+}
+
+func (tm TextOrMaths) toClient() client.TextOrMath {
+	return client.TextOrMath{
+		IsMath: tm.IsMath,
+		Text:   tm.MathOrExpression.asLaTeX(),
+	}
+}
+
+// MathOrExpression is either an expression or a static string,
+// rendered as LaTeX, in text mode.
+type MathOrExpression struct {
 	Expression    *expression.Expression
 	StaticContent string // LaTeX code, rendered in math mode
 }
 
-func (fi FormulaPartInstance) asLaTeX() string {
+func (fi MathOrExpression) asLaTeX() string {
 	if fi.Expression != nil {
 		return fi.Expression.AsLaTeX(nil)
 	}
@@ -104,17 +121,19 @@ func (qu Question) instantiate(params expression.Variables) QuestionInstance {
 	return QuestionInstance{Title: qu.Title, Enonce: enonce}
 }
 
+// TODO:
 func (t TextBlock) instantiate(params expression.Variables, _ int) blockInstance {
-	return t
+	return TextInstance{}
 }
 
+// TODO:
 func (f Formula) instantiate(params expression.Variables, _ int) blockInstance {
-	out := FormulaInstance{IsInline: f.IsInline}
-	out.Chunks = make([]FormulaPartInstance, len(f.Chunks))
-	for i, c := range f.Chunks {
-		out.Chunks[i] = c.instantiate(params)
-	}
-	return out
+	// out := FormulaDisplayInstance{IsInline: f.IsInline}
+	// out.Chunks = make([]MathOrExpression, len(f.Chunks))
+	// for i, c := range f.Chunks {
+	// 	out.Chunks[i] = c.instantiate(params)
+	// }
+	return FormulaDisplayInstance{}
 }
 
 func (n NumberField) instantiate(params expression.Variables, ID int) blockInstance {
@@ -213,18 +232,32 @@ type blockInstance interface {
 	toClient() client.Block
 }
 
-func (t TextBlock) toClient() client.Block { return client.TextBlock(t) }
-
-type FormulaInstance struct {
-	Chunks   []FormulaPartInstance
-	IsInline bool
+// TextInstance is a paragraph of text, which may contain expression or
+// math chunks, which is rendered on a single line (eventually wrapped).
+type TextInstance struct {
+	Parts []TextOrMaths
 }
 
-func (fi FormulaInstance) toClient() client.Block {
-	chunks := make([]string, len(fi.Chunks))
-	for i, c := range fi.Chunks {
+func (t TextInstance) toClient() client.Block {
+	out := client.TextBlock{
+		Parts: make([]client.TextOrMath, len(t.Parts)),
+	}
+	for i, p := range t.Parts {
+		out.Parts[i] = p.toClient()
+	}
+	return out
+}
+
+// FormulaDisplayInstance is rendered as LaTeX, in display mode.
+type FormulaDisplayInstance struct {
+	Parts []MathOrExpression
+}
+
+func (fi FormulaDisplayInstance) toClient() client.Block {
+	chunks := make([]string, len(fi.Parts))
+	for i, c := range fi.Parts {
 		chunks[i] = c.asLaTeX()
 	}
 
-	return client.FormulaBlock{Content: strings.Join(chunks, " "), IsInline: fi.IsInline}
+	return client.FormulaBlock{Formula: strings.Join(chunks, " ")}
 }

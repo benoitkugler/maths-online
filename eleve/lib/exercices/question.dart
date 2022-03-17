@@ -9,6 +9,27 @@ import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
+WidgetSpan _inlineMath(String content, double fontSize) {
+  return WidgetSpan(
+    baseline: TextBaseline.alphabetic,
+    alignment: PlaceholderAlignment.baseline,
+    child: Math.tex(
+      content,
+      mathStyle: MathStyle.text,
+      textScaleFactor: 1.15,
+      textStyle: TextStyle(fontSize: fontSize - 1),
+    ),
+  );
+}
+
+List<InlineSpan> buildText(List<TextOrMath> parts, double fontSize) {
+  return parts
+      .map((part) => part.isMath
+          ? _inlineMath(part.text, fontSize)
+          : TextSpan(text: part.text, style: TextStyle(fontSize: fontSize)))
+      .toList();
+}
+
 /// utility class used to layout the Block
 class _ContentBuilder {
   final void Function(int) onFieldDone;
@@ -21,7 +42,7 @@ class _ContentBuilder {
   final List<Widget> rows = []; // final output
 
   List<InlineSpan> _currentRow = []; // current row
-  static const _textStyle = TextStyle(fontSize: 18);
+  static const fontSize = 18.0;
 
   _ContentBuilder(
       this.onFieldDone, this._content, this._controllers, this._color);
@@ -45,87 +66,30 @@ class _ContentBuilder {
     return controllers;
   }
 
-  // we use Wrap instead of Rows to avoid overflows
   void _flushCurrentRow() {
     if (_currentRow.isEmpty) {
       return;
     }
 
-    rows.add(
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Text.rich(
-          TextSpan(
-              style: _textStyle.copyWith(height: 1.5), children: _currentRow),
-        ),
-      ),
-    );
+    rows.add(TextRow(_currentRow, 6));
     _currentRow = [];
   }
 
   void _handleTextBlock(TextBlock element) {
-    if (element.text.endsWith("\n")) {
-      _currentRow.add(TextSpan(
-        text: element.text.substring(0, element.text.length - 1),
-      ));
-      // add an explicit new line
-      _flushCurrentRow();
-    } else {
-      _currentRow.add(TextSpan(
-        text: element.text,
-      ));
-    }
-  }
-
-  // void _handleInlineFormulaBLock(String content) {
-  //   Math math = Math.tex(
-  //     content,
-  //     mathStyle: MathStyle.text,
-  //     textStyle: _textStyle,
-  //   );
-  //   List<Math> parts = math.texBreak().parts;
-  //   List<InlineSpan> children = [];
-  //   for (Math part in parts) {
-  //     children.add(WidgetSpan(
-  //       baseline: TextBaseline.alphabetic,
-  //       alignment: PlaceholderAlignment.baseline,
-  //       child: part,
-  //     ));
-  //     children.add(const TextSpan(text: ' '));
-  //   }
-  //   children.removeLast();
-
-  //   _currentRow.add(Text.rich(TextSpan(
-  //     children: children,
-  //   )));
-  // }
-
-  WidgetSpan _inlineMath(String content) {
-    return WidgetSpan(
-        baseline: TextBaseline.alphabetic,
-        alignment: PlaceholderAlignment.baseline,
-        child: Math.tex(
-          content,
-          mathStyle: MathStyle.text,
-          textScaleFactor: 1.15,
-          textStyle: _textStyle.copyWith(fontSize: _textStyle.fontSize! - 1),
-        ));
+    // _flushCurrentRow();
+    _currentRow.addAll(buildText(element.parts, fontSize));
   }
 
   void _handleFormulaBlock(FormulaBlock element) {
-    if (element.isInline) {
-      _currentRow.add(_inlineMath(element.content));
-    } else {
-      // start a new row
-      _flushCurrentRow();
+    // start a new row
+    _flushCurrentRow();
 
-      rows.add(Center(
-          child: Math.tex(
-        element.content,
-        mathStyle: MathStyle.display,
-        textStyle: _textStyle,
-      )));
-    }
+    rows.add(Center(
+        child: Math.tex(
+      element.formula,
+      mathStyle: MathStyle.display,
+      textStyle: const TextStyle(fontSize: fontSize),
+    )));
   }
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
@@ -150,9 +114,9 @@ class _ContentBuilder {
           child: Text.rich(
             TextSpan(
               children: [
-                _inlineMath(element.label),
+                _inlineMath(element.label, fontSize),
                 const TextSpan(text: " "),
-                _inlineMath("="),
+                _inlineMath("=", fontSize),
                 const TextSpan(text: " "),
                 field,
               ],
