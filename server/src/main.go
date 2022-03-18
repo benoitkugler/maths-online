@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -116,4 +118,50 @@ func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	} {
 		e.GET(route, serveProfApp, noCache)
 	}
+
+	// temporary question quick access
+
+	e.GET("/questions", func(c echo.Context) error {
+		var out []client.Question
+		for _, qu := range exercice.PredefinedQuestions {
+			out = append(out, qu.ToClient())
+		}
+		return c.JSON(200, out)
+	})
+
+	e.POST("/questions/syntaxe/:index", func(c echo.Context) error {
+		index, _ := strconv.Atoi(c.Param("index"))
+		var data client.QuestionSyntaxCheckIn
+		err := c.Bind(&data)
+		if err != nil {
+			return err
+		}
+
+		var out client.QuestionSyntaxCheckOut
+		err = exercice.PredefinedQuestions[index].CheckSyntaxe(data)
+		if err != nil {
+			out.Reason = err.(exercice.InvalidFieldAnswer).Reason
+		} else {
+			out.IsValid = true
+		}
+
+		c.JSON(200, out)
+
+		return nil
+	})
+
+	e.POST("/questions/answer/:index", func(c echo.Context) error {
+		index, _ := strconv.Atoi(c.Param("index"))
+
+		var data client.QuestionAnswersIn
+		err := c.Bind(&data)
+		if err != nil {
+			return err
+		}
+
+		out := exercice.PredefinedQuestions[index].EvaluateAnswer(data)
+		c.JSON(200, out)
+
+		return nil
+	})
 }

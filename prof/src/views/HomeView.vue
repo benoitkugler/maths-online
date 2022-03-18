@@ -14,6 +14,15 @@
                   Trivial poursuit
                 </v-btn>
               </v-col>
+              <v-col>
+                <v-btn
+                  link
+                  href="https://education.alwaysdata.net/test-eleve"
+                  color="primary"
+                >
+                  Tester l'application élève
+                </v-btn>
+              </v-col>
             </v-row>
           </v-card-text>
         </v-card>

@@ -7,8 +7,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-// final bm = buildMode();
-final bm = BuildMode.dev;
+final bm = buildMode();
+// final bm = BuildMode.dev;
 
 void main() {
   runApp(const MyApp());
@@ -45,11 +45,11 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        // body: const _HomePage(),
-        body: const Padding(
-          padding: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
-          child: QuestionGallery(),
-        ),
+        body: const _HomePage(),
+        // body: const Padding(
+        //   padding: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+        //   child: QuestionGallery(),
+        // ),
       ),
     );
   }
@@ -70,7 +70,7 @@ class _HomePageState extends State<_HomePage> {
 
   void _launchQuestionGallery() {
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: QuestionGallery())));
+        builder: (_) => Scaffold(appBar: AppBar(), body: QuestionGallery(bm))));
   }
 
   @override
@@ -94,7 +94,7 @@ class _HomePageState extends State<_HomePage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   GameIcon(_launchTrivialPoursuit),
                   // TODO: polish

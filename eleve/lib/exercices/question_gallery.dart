@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart' as game;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-final server = Uri.parse("http://localhost:3030/");
-
 class QuestionGallery extends StatefulWidget {
-  const QuestionGallery({Key? key}) : super(key: key);
+  final BuildMode buildMode;
+
+  const QuestionGallery(this.buildMode, {Key? key}) : super(key: key);
 
   @override
   State<QuestionGallery> createState() => _QuestionGalleryState();
@@ -24,6 +25,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   }
 
   void _loadQuestions() async {
+    final server = Uri.parse(widget.buildMode.serverURL("/questions"));
     try {
       final resp = await http.get(server);
       setState(() {
@@ -37,7 +39,8 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   Future<QuestionSyntaxCheckOut> _checkSyntaxCall(
       CheckQuestionSyntaxeNotification v) async {
     final pageIndex = _controller.page!.toInt();
-    final uri = server.replace(path: "syntaxe/$pageIndex");
+    final uri =
+        Uri.parse(widget.buildMode.serverURL("/questions/syntaxe/$pageIndex"));
     final resp = await http.post(uri,
         body: jsonEncode({"ID": v.id, "Answer": answerToJson(v.answer)}),
         headers: {
@@ -48,7 +51,8 @@ class _QuestionGalleryState extends State<QuestionGallery> {
 
   Future<QuestionAnswersOut> _validateCall(ValidQuestionNotification v) async {
     final pageIndex = _controller.page!.toInt();
-    final uri = server.replace(path: "answer/$pageIndex");
+    final uri =
+        Uri.parse(widget.buildMode.serverURL("/questions/answer/$pageIndex"));
     final resp = await http
         .post(uri, body: jsonEncode(questionAnswersInToJson(v.data)), headers: {
       'Content-type': 'application/json',
@@ -109,9 +113,12 @@ class _QuestionGalleryState extends State<QuestionGallery> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView(
-      controller: _controller,
-      children: questions.map((q) => _fromJSON(q, context)).toList(),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: PageView(
+        controller: _controller,
+        children: questions.map((q) => _fromJSON(q, context)).toList(),
+      ),
     );
   }
 }

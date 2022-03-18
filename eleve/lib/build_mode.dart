@@ -24,6 +24,20 @@ extension Api on BuildMode {
         return "";
     }
   }
+
+  /// serverURL returns url ending by the [endpoint],
+  /// or an empty string
+  /// [endpoint] is expected to start with a slash
+  String serverURL(String endpoint) {
+    switch (this) {
+      case BuildMode.production:
+        return "https://education.alwaysdata.net" + endpoint;
+      case BuildMode.dev:
+        return "http://localhost:1323" + endpoint;
+      case BuildMode.debug:
+        return "";
+    }
+  }
 }
 
 /// buildMode returns the build mode
