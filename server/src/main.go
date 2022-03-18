@@ -101,8 +101,8 @@ func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip()).Static("/*", "static")
 
-	e.GET("/test-eleve", serveEleveApp)
-	e.GET("/test-eleve/", serveEleveApp)
+	e.GET("/test-eleve", serveEleveApp, noCache)
+	e.GET("/test-eleve/", serveEleveApp, noCache)
 	e.Group("/test-eleve/*", middleware.Gzip()).Static("/*", "static/eleve")
 
 	// trivialpoursuit game server
