@@ -1,6 +1,7 @@
 import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/number.dart';
+import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart' as events;
@@ -20,14 +21,6 @@ WidgetSpan _inlineMath(String content, double fontSize) {
       textStyle: TextStyle(fontSize: fontSize - 1),
     ),
   );
-}
-
-List<InlineSpan> buildText(List<TextOrMath> parts, double fontSize) {
-  return parts
-      .map((part) => part.isMath
-          ? _inlineMath(part.text, fontSize)
-          : TextSpan(text: part.text, style: TextStyle(fontSize: fontSize)))
-      .toList();
 }
 
 /// utility class used to layout the Block
@@ -59,6 +52,8 @@ class _ContentBuilder {
         controllers[block.iD] = ExpressionController(onChange);
       } else if (block is RadioFieldBlock) {
         controllers[block.iD] = RadioController(onChange, block.proposals);
+      } else if (block is OrderedListFieldBlock) {
+        controllers[block.iD] = OrderedListController(onChange, block);
       }
 
       // TODO: handle more fields
@@ -139,6 +134,15 @@ class _ContentBuilder {
     rows.add(RadioField(_color, ct));
   }
 
+  void _handleOrderedListFieldBlock(OrderedListFieldBlock element) {
+    final ct = _controllers[element.iD] as OrderedListController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(OrderedListField(_color, ct));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -152,6 +156,8 @@ class _ContentBuilder {
         _handleExpressionFieldBlock(element);
       } else if (element is RadioFieldBlock) {
         _handleRadioFieldBlock(element);
+      } else if (element is OrderedListFieldBlock) {
+        _handleOrderedListFieldBlock(element);
       } else {
         // TODO:
       }

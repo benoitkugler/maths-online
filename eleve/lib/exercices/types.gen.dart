@@ -56,6 +56,38 @@ int intFromJson(dynamic json) => json as int;
 
 int intToJson(int item) => item;
 
+List<int> listIntFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(intFromJson).toList();
+}
+
+List<dynamic> listIntToJson(List<int> item) {
+  return item.map(intToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListAnswer
+class OrderedListAnswer implements Answer {
+  final List<int> indices;
+
+  const OrderedListAnswer(this.indices);
+
+  @override
+  String toString() {
+    return "OrderedListAnswer($indices)";
+  }
+}
+
+OrderedListAnswer orderedListAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return OrderedListAnswer(listIntFromJson(json['Indices']));
+}
+
+JSON orderedListAnswerToJson(OrderedListAnswer item) {
+  return {"Indices": listIntToJson(item.indices)};
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.RadioAnswer
 class RadioAnswer implements Answer {
   final int index;
@@ -89,6 +121,8 @@ Answer answerFromJson(dynamic json_) {
     case 1:
       return numberAnswerFromJson(data);
     case 2:
+      return orderedListAnswerFromJson(data);
+    case 3:
       return radioAnswerFromJson(data);
     default:
       throw ("unexpected type");
@@ -100,8 +134,10 @@ JSON answerToJson(Answer item) {
     return {'Kind': 0, 'Data': expressionAnswerToJson(item)};
   } else if (item is NumberAnswer) {
     return {'Kind': 1, 'Data': numberAnswerToJson(item)};
+  } else if (item is OrderedListAnswer) {
+    return {'Kind': 2, 'Data': orderedListAnswerToJson(item)};
   } else if (item is RadioAnswer) {
-    return {'Kind': 2, 'Data': radioAnswerToJson(item)};
+    return {'Kind': 3, 'Data': radioAnswerToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -204,6 +240,34 @@ NumberFieldBlock numberFieldBlockFromJson(dynamic json_) {
 
 JSON numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD)};
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListFieldBlock
+class OrderedListFieldBlock implements Block {
+  final List<String> proposals;
+  final int answerLength;
+  final int iD;
+
+  const OrderedListFieldBlock(this.proposals, this.answerLength, this.iD);
+
+  @override
+  String toString() {
+    return "OrderedListFieldBlock($proposals, $answerLength, $iD)";
+  }
+}
+
+OrderedListFieldBlock orderedListFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return OrderedListFieldBlock(listStringFromJson(json['Proposals']),
+      intFromJson(json['AnswerLength']), intFromJson(json['ID']));
+}
+
+JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
+  return {
+    "Proposals": listStringToJson(item.proposals),
+    "AnswerLength": intToJson(item.answerLength),
+    "ID": intToJson(item.iD)
+  };
 }
 
 bool boolFromJson(dynamic json) => json as bool;
@@ -338,8 +402,10 @@ Block blockFromJson(dynamic json_) {
     case 3:
       return numberFieldBlockFromJson(data);
     case 4:
-      return radioFieldBlockFromJson(data);
+      return orderedListFieldBlockFromJson(data);
     case 5:
+      return radioFieldBlockFromJson(data);
+    case 6:
       return textBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -355,10 +421,12 @@ JSON blockToJson(Block item) {
     return {'Kind': 2, 'Data': listFieldBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
     return {'Kind': 3, 'Data': numberFieldBlockToJson(item)};
+  } else if (item is OrderedListFieldBlock) {
+    return {'Kind': 4, 'Data': orderedListFieldBlockToJson(item)};
   } else if (item is RadioFieldBlock) {
-    return {'Kind': 4, 'Data': radioFieldBlockToJson(item)};
+    return {'Kind': 5, 'Data': radioFieldBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 5, 'Data': textBlockToJson(item)};
+    return {'Kind': 6, 'Data': textBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

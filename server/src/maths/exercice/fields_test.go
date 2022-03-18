@@ -1,6 +1,7 @@
 package exercice
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -48,5 +49,30 @@ func TestNumberFieldInstance_evaluateAnswer(t *testing.T) {
 		if gotIsCorrect != tt.wantIsCorrect {
 			t.Errorf("NumberFieldInstance.evaluateAnswer() = %v, want %v", gotIsCorrect, tt.wantIsCorrect)
 		}
+	}
+}
+
+func TestOrderedList(t *testing.T) {
+	field := OrderedListFieldInstance{
+		Answer: []StringOrExpression{ // [12;+infty]
+			{String: "["},
+			{Expression: mustParse("12")},
+			{String: ";"},
+			{String: "+"},
+			{String: `\infty`},
+			{String: `]`},
+		},
+		AdditionalProposals: []StringOrExpression{
+			{String: "]"}, // some duplicates
+			{String: `\infty`},
+			{Expression: mustParse("11")},
+			{String: "-"},
+		},
+	}
+
+	p1 := field.proposals()
+	p2 := field.proposals()
+	if !reflect.DeepEqual(p1, p2) {
+		t.Fatal(p1, p2)
 	}
 }

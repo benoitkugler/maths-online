@@ -43,6 +43,7 @@ class _RadioFieldState extends State<RadioField> {
             List<Widget>.generate(widget._controller.proposals.length, (index) {
       final prop = widget._controller.proposals[index];
       return RadioListTile<int>(
+        activeColor: widget._color,
         title: TextRow(buildText(prop.content, 18), 2),
         value: index,
         groupValue: widget._controller.index,

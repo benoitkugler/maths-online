@@ -35,12 +35,13 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()            {}
-func (FormulaBlock) isBlock()         {}
-func (NumberFieldBlock) isBlock()     {}
-func (ListFieldBlock) isBlock()       {}
-func (ExpressionFieldBlock) isBlock() {}
-func (RadioFieldBlock) isBlock()      {}
+func (TextBlock) isBlock()             {}
+func (FormulaBlock) isBlock()          {}
+func (NumberFieldBlock) isBlock()      {}
+func (ListFieldBlock) isBlock()        {}
+func (ExpressionFieldBlock) isBlock()  {}
+func (RadioFieldBlock) isBlock()       {}
+func (OrderedListFieldBlock) isBlock() {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -78,6 +79,14 @@ type RadioFieldBlock struct {
 	ID        int
 }
 
+type OrderedListFieldBlock struct {
+	// Proposals is a shuffled version of the list,
+	// displayed as math text
+	Proposals    []string
+	AnswerLength int
+	ID           int
+}
+
 // TODO:
 type ListFieldBlock struct {
 	Choices []string
@@ -90,9 +99,10 @@ type Answer interface {
 	isAnswer()
 }
 
-func (NumberAnswer) isAnswer()     {}
-func (RadioAnswer) isAnswer()      {}
-func (ExpressionAnswer) isAnswer() {}
+func (NumberAnswer) isAnswer()      {}
+func (RadioAnswer) isAnswer()       {}
+func (ExpressionAnswer) isAnswer()  {}
+func (OrderedListAnswer) isAnswer() {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -106,6 +116,10 @@ type ExpressionAnswer struct {
 // RadioAnswer is compared against a reference index
 type RadioAnswer struct {
 	Index int
+}
+
+type OrderedListAnswer struct {
+	Indices []int // indices into the question field proposals
 }
 
 // QuestionAnswersIn map the field ids to their answer

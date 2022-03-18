@@ -27,7 +27,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     try {
       final resp = await http.get(server);
       setState(() {
-        questions = jsonDecode(resp.body) as List<dynamic>;
+        questions = (jsonDecode(resp.body) as List<dynamic>).sublist(5);
       });
     } catch (e) {
       print("ERROR: $e");
@@ -57,7 +57,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   }
 
   List<dynamic> questions = [];
-  final _controller = PageController(initialPage: 2);
+  final _controller = PageController(initialPage: 0);
 
   void _checkSyntax(
       CheckQuestionSyntaxeNotification v, BuildContext context) async {

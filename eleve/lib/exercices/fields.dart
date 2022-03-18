@@ -10,25 +10,34 @@ abstract class FieldController {
   Answer getData();
 }
 
+Widget textMath(String content, double fontSize) {
+  return Math.tex(
+    content,
+    mathStyle: MathStyle.text,
+    textScaleFactor: 1.15,
+    textStyle: TextStyle(fontSize: fontSize - 1),
+  );
+}
+
 WidgetSpan _inlineMath(String content, double fontSize) {
   return WidgetSpan(
     baseline: TextBaseline.alphabetic,
     alignment: PlaceholderAlignment.baseline,
-    child: Math.tex(
-      content,
-      mathStyle: MathStyle.text,
-      textScaleFactor: 1.15,
-      textStyle: TextStyle(fontSize: fontSize - 1),
-    ),
+    child: textMath(content, fontSize),
   );
 }
 
 List<InlineSpan> buildText(List<TextOrMath> parts, double fontSize) {
-  return parts
-      .map((part) => part.isMath
-          ? _inlineMath(part.text, fontSize)
-          : TextSpan(text: part.text))
-      .toList();
+  final out = <InlineSpan>[];
+  for (var part in parts) {
+    if (part.isMath) {
+      out.add(_inlineMath(part.text, fontSize));
+      out.add(const TextSpan(text: " "));
+    } else {
+      out.add(TextSpan(text: part.text, style: TextStyle(fontSize: fontSize)));
+    }
+  }
+  return out;
 }
 
 class TextRow extends StatelessWidget {

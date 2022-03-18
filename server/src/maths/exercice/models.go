@@ -2,6 +2,7 @@ package exercice
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -41,14 +42,14 @@ type FormulaPart struct {
 }
 
 // assume the expression is valid
-func (fp FormulaPart) instantiate(params expression.Variables) MathOrExpression {
+func (fp FormulaPart) instantiate(params expression.Variables) StringOrExpression {
 	if !fp.IsExpression { // nothing to do
-		return MathOrExpression{StaticContent: fp.Content}
+		return StringOrExpression{String: fp.Content}
 	}
 
 	expr, _, _ := expression.Parse(fp.Content)
 	expr.Substitute(params)
-	return MathOrExpression{Expression: expr}
+	return StringOrExpression{Expression: expr}
 }
 
 // TextOrMaths is either
@@ -56,29 +57,29 @@ func (fp FormulaPart) instantiate(params expression.Variables) MathOrExpression 
 // 	- a math content
 // 	- a regular text content
 type TextOrMaths struct {
-	MathOrExpression
+	StringOrExpression
 	IsMath bool
 }
 
 func (tm TextOrMaths) toClient() client.TextOrMath {
 	return client.TextOrMath{
 		IsMath: tm.IsMath,
-		Text:   tm.MathOrExpression.asLaTeX(),
+		Text:   tm.StringOrExpression.asLaTeX(),
 	}
 }
 
-// MathOrExpression is either an expression or a static string,
-// rendered as LaTeX, in text mode.
-type MathOrExpression struct {
-	Expression    *expression.Expression
-	StaticContent string // LaTeX code, rendered in math mode
+// StringOrExpression is either an expression or a static string,
+// usually rendered as LaTeX, in text mode.
+type StringOrExpression struct {
+	Expression *expression.Expression
+	String     string // LaTeX code, rendered in math mode
 }
 
-func (fi MathOrExpression) asLaTeX() string {
+func (fi StringOrExpression) asLaTeX() string {
 	if fi.Expression != nil {
 		return fi.Expression.AsLaTeX(nil)
 	}
-	return fi.StaticContent
+	return fi.String
 }
 
 // Exercice is a sequence of questions
@@ -199,11 +200,13 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 		answer, ok := answers.Data[id]
 		if !ok { // should not happen since the client forces the user to fill all fields
 			out[id] = false
+			log.Println("invalid id")
 			continue
 		}
 
 		if err := reference.validateAnswerSyntax(answer); err != nil {
-			out[id] = false // should not happen since a pre-validation step has been done previously
+			log.Println("invalid field", err)
+			out[id] = false
 			continue
 		}
 
@@ -250,7 +253,7 @@ func (t TextInstance) toClient() client.Block {
 
 // FormulaDisplayInstance is rendered as LaTeX, in display mode.
 type FormulaDisplayInstance struct {
-	Parts []MathOrExpression
+	Parts []StringOrExpression
 }
 
 func (fi FormulaDisplayInstance) toClient() client.Block {

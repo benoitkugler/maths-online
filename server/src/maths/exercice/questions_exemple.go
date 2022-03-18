@@ -14,15 +14,15 @@ func mustParse(s string) *expression.Expression {
 }
 
 func text(s string) TextOrMaths {
-	return TextOrMaths{MathOrExpression: MathOrExpression{StaticContent: s}}
+	return TextOrMaths{StringOrExpression: StringOrExpression{String: s}}
 }
 
 func staticMath(s string) TextOrMaths {
-	return TextOrMaths{MathOrExpression: MathOrExpression{StaticContent: s}, IsMath: true}
+	return TextOrMaths{StringOrExpression: StringOrExpression{String: s}, IsMath: true}
 }
 
 func expr(s string) TextOrMaths {
-	return TextOrMaths{MathOrExpression: MathOrExpression{Expression: mustParse(s)}, IsMath: true}
+	return TextOrMaths{StringOrExpression: StringOrExpression{Expression: mustParse(s)}, IsMath: true}
 }
 
 var PredefinedQuestions = [...]QuestionInstance{
@@ -40,9 +40,9 @@ var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
-				{StaticContent: `= \frac{a}{b}`},
+				{String: `= \frac{a}{b}`},
 			}},
 			TextInstance{Parts: []TextOrMaths{
 				text("avec "),
@@ -67,9 +67,9 @@ var PredefinedQuestions = [...]QuestionInstance{
 				staticMath("b"),
 				text(" sont des entiers les plus petits possibles :"),
 			}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("sqrt(50)")},
-				{StaticContent: " = "},
+				{String: " = "},
 				{Expression: mustParse("a * sqrt(b)")},
 			}},
 			TextInstance{Parts: []TextOrMaths{
@@ -120,6 +120,32 @@ var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Nombres réels", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
+				text("Traduire en intervalle : "),
+				staticMath(`x \ge `),
+				expr("12"),
+			}},
+			OrderedListFieldInstance{
+				ID: 0,
+				Answer: []StringOrExpression{ // [12;+infty[
+					{String: "["},
+					{Expression: mustParse("12")},
+					{String: ";"},
+					{String: "+"},
+					{String: `\infty`},
+					{String: `[`},
+				},
+				AdditionalProposals: []StringOrExpression{
+					{String: "]"}, // some duplicates
+					{String: `\infty`},
+					{Expression: mustParse("11")},
+					{String: "-"},
+				},
+			},
+		},
+	},
+	{
+		Title: "Nombres réels", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
 				text("A quel plus petit ensemble appartient "),
 				expr("4/7"),
 			}},
@@ -159,27 +185,27 @@ var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Très longue question verticale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []MathOrExpression{
+			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
 		},

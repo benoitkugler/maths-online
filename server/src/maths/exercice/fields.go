@@ -2,6 +2,7 @@ package exercice
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -38,6 +39,7 @@ var (
 	_ fieldInstance = NumberFieldInstance{}
 	_ fieldInstance = ExpressionFieldInstance{}
 	_ fieldInstance = RadioFieldInstance{}
+	_ fieldInstance = OrderedListFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only
@@ -177,4 +179,84 @@ func (f RadioFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 
 func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	return f.Answer == answer.(client.RadioAnswer).Index
+}
+
+// OrderedListFieldInstance asks the student to reorder part of the
+// given symbols
+type OrderedListFieldInstance struct {
+	Answer              []StringOrExpression
+	AdditionalProposals []StringOrExpression // added to Answer when displaying the field
+	ID                  int
+}
+
+func (olf OrderedListFieldInstance) fieldID() int { return olf.ID }
+
+// proposals groups Answer and AdditionalProposals and shuffle the list
+// according to
+func (olf OrderedListFieldInstance) proposals() (out []StringOrExpression) {
+	out = append(append(out, olf.Answer...), olf.AdditionalProposals...)
+	// shuffle in a deterministic way
+	rd := rand.New(rand.NewSource(int64(len(olf.Answer)*1000 + len(olf.AdditionalProposals))))
+	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	return out
+}
+
+func (olf OrderedListFieldInstance) toClient() client.Block {
+	out := client.OrderedListFieldBlock{
+		ID:           olf.ID,
+		AnswerLength: len(olf.Answer),
+	}
+
+	for _, v := range olf.proposals() {
+		out.Proposals = append(out.Proposals, v.asLaTeX())
+	}
+	return out
+}
+
+func (olf OrderedListFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	list, ok := answer.(client.OrderedListAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     olf.ID,
+			Reason: fmt.Sprintf("expected OrderedListAnswer, got %T", answer),
+		}
+	}
+
+	if len(list.Indices) != len(olf.Answer) {
+		return InvalidFieldAnswer{
+			ID:     olf.ID,
+			Reason: fmt.Sprintf("invalid answer length %d", len(list.Indices)),
+		}
+	}
+
+	props := olf.proposals()
+	for _, v := range list.Indices {
+		if v >= len(props) {
+			return InvalidFieldAnswer{
+				ID:     olf.ID,
+				Reason: fmt.Sprintf("invalid indice %d for length %d", v, len(props)),
+			}
+		}
+	}
+
+	return nil
+}
+
+func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	list := answer.(client.OrderedListAnswer).Indices
+
+	// reference and answer have the same length, as checked in `validateAnswerSyntax`
+	proposals := olf.proposals()
+	for i, ref := range olf.Answer {
+		got := proposals[list[i]] // check in `validateAnswerSyntax`
+
+		// we compare by value, not indices, since two different indices may have the same
+		// value and then not be distinguable by the student,
+		// and also, the indices has been shuffled
+		if ref.asLaTeX() != got.asLaTeX() {
+			return false
+		}
+	}
+
+	return true
 }
