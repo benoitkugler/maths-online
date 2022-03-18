@@ -27,7 +27,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     try {
       final resp = await http.get(server);
       setState(() {
-        questions = (jsonDecode(resp.body) as List<dynamic>).sublist(5);
+        questions = (jsonDecode(resp.body) as List<dynamic>).sublist(0);
       });
     } catch (e) {
       print("ERROR: $e");

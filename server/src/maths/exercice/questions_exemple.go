@@ -163,6 +163,105 @@ var PredefinedQuestions = [...]QuestionInstance{
 		},
 	},
 	{
+		Title: "Nombres réels", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Déterminer "),
+				staticMath(`I \cap J`),
+				text(" où "),
+				staticMath(`I = [`),
+				expr("3"),
+				staticMath(`;`),
+				expr("9"),
+				staticMath(`]`),
+				text(" et "),
+				staticMath(`J = [`),
+				expr("0"),
+				staticMath(`;`),
+				expr("6"),
+				staticMath(`]`),
+			}},
+			OrderedListFieldInstance{
+				ID: 0,
+				Answer: []StringOrExpression{ // [12;+infty[
+					{String: "["},
+					{Expression: mustParse("3")},
+					{String: ";"},
+					{Expression: mustParse("6")},
+					{String: `]`},
+				},
+				AdditionalProposals: []StringOrExpression{
+					{String: "]"}, // some duplicates
+					{String: `\infty`},
+					{Expression: mustParse("0")},
+					{Expression: mustParse("9")},
+					{String: "-"},
+				},
+			},
+		},
+	},
+	{
+		Title: "Equations et inéquations", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Résoudre dans "),
+				staticMath(`\mathbb{R}`),
+				text("l'équation :"),
+			}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{Expression: mustParse("20*x - 7")},
+				{String: "="},
+				{Expression: mustParse("34")},
+			}},
+			ExpressionFieldInstance{
+				ID:              0,
+				Label:           mustParse("x"),
+				ComparisonLevel: expression.SimpleSubstitutions,
+				Answer:          mustParse("(34+7)/20"),
+			},
+		},
+	},
+	{
+		Title: "Equations et inéquations", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Résoudre dans "),
+				staticMath(`\mathbb{R}`),
+				text("l'inéquation :"),
+			}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{Expression: mustParse("-8*x +1")},
+				{String: "<"},
+				{Expression: mustParse("2*x - 5")},
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath("x > "),
+			}},
+			NumberFieldInstance{ID: 0, Answer: 0.6},
+		},
+	},
+	{
+		Title: "Equations et inéquations", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Résoudre dans "),
+				staticMath(`\mathbb{R}`),
+				text("l'équation :"),
+			}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{Expression: mustParse("(x-7)*(4*x - 9)")},
+				{String: "="},
+				{Expression: mustParse("0")},
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				text("Solutions : "),
+				staticMath("x = "),
+			}},
+			NumberFieldInstance{ID: 0, Answer: 7},
+			TextInstance{Parts: []TextOrMaths{
+				text(" ou "),
+				staticMath("x = "),
+			}},
+			NumberFieldInstance{ID: 1, Answer: 9. / 4},
+		},
+	},
+	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Écrire sous une seule fraction : "),
