@@ -27,7 +27,7 @@ type randomVarResolver struct {
 	defs RandomParameters
 
 	seen    map[Variable]bool   // variable that we are currently resolving
-	results map[Variable]number // resulting values
+	results map[Variable]Number // resulting values
 
 	err error
 }
@@ -67,7 +67,7 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 	value := expr.Evaluate(rvv)
 
 	// register the result
-	rvv.results[v] = number(value)
+	rvv.results[v] = Number(value)
 
 	return value, true
 }
@@ -80,7 +80,7 @@ func (rv RandomParameters) Instantiate() (Variables, error) {
 	resolver := randomVarResolver{
 		defs:    rv,
 		seen:    make(map[Variable]bool),
-		results: make(map[Variable]number),
+		results: make(map[Variable]Number),
 	}
 
 	out := make(Variables, len(rv))

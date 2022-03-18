@@ -386,6 +386,68 @@ JSON textBlockToJson(TextBlock item) {
   return {"Parts": listTextOrMathToJson(item.parts)};
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumn
+class VariationColumn {
+  final String x;
+  final String y;
+  final bool isArrow;
+  final bool isUp;
+
+  const VariationColumn(this.x, this.y, this.isArrow, this.isUp);
+
+  @override
+  String toString() {
+    return "VariationColumn($x, $y, $isArrow, $isUp)";
+  }
+}
+
+VariationColumn variationColumnFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VariationColumn(stringFromJson(json['X']), stringFromJson(json['Y']),
+      boolFromJson(json['IsArrow']), boolFromJson(json['IsUp']));
+}
+
+JSON variationColumnToJson(VariationColumn item) {
+  return {
+    "X": stringToJson(item.x),
+    "Y": stringToJson(item.y),
+    "IsArrow": boolToJson(item.isArrow),
+    "IsUp": boolToJson(item.isUp)
+  };
+}
+
+List<VariationColumn> listVariationColumnFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(variationColumnFromJson).toList();
+}
+
+List<dynamic> listVariationColumnToJson(List<VariationColumn> item) {
+  return item.map(variationColumnToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableBlock
+class VariationTableBlock implements Block {
+  final List<VariationColumn> columns;
+
+  const VariationTableBlock(this.columns);
+
+  @override
+  String toString() {
+    return "VariationTableBlock($columns)";
+  }
+}
+
+VariationTableBlock variationTableBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VariationTableBlock(listVariationColumnFromJson(json['Columns']));
+}
+
+JSON variationTableBlockToJson(VariationTableBlock item) {
+  return {"Columns": listVariationColumnToJson(item.columns)};
+}
+
 abstract class Block {}
 
 Block blockFromJson(dynamic json_) {
@@ -407,6 +469,8 @@ Block blockFromJson(dynamic json_) {
       return radioFieldBlockFromJson(data);
     case 6:
       return textBlockFromJson(data);
+    case 7:
+      return variationTableBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
@@ -427,6 +491,8 @@ JSON blockToJson(Block item) {
     return {'Kind': 5, 'Data': radioFieldBlockToJson(item)};
   } else if (item is TextBlock) {
     return {'Kind': 6, 'Data': textBlockToJson(item)};
+  } else if (item is VariationTableBlock) {
+    return {'Kind': 7, 'Data': variationTableBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

@@ -262,6 +262,24 @@ var PredefinedQuestions = [...]QuestionInstance{
 		},
 	},
 	{
+		Title: "Equations et inéquations", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Combien l’équation "),
+				staticMath(`f(x) = `),
+				expr("-1"),
+				text(" admet-elle de solutions ? "),
+			}},
+			VariationTableInstance{
+				Xs:  []expression.Number{-20, -10, 0, 3, 18},
+				Fxs: []expression.Number{-6, -2, -8, 0, -5},
+			},
+			TextInstance{Parts: []TextOrMaths{
+				text("Nombre de solutions : "),
+			}},
+			NumberFieldInstance{ID: 0, Answer: 2},
+		},
+	},
+	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Écrire sous une seule fraction : "),

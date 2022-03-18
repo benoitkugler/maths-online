@@ -54,7 +54,7 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 
 		// check for implicit multiplication
 		// the only case where x is required is for two numbers
-		if _, isRightNumber := right.atom.(number); isRightNumber {
+		if _, isRightNumber := right.atom.(Number); isRightNumber {
 			return fmt.Sprintf(`%s \times %s`, leftCode, rightCode)
 		}
 		return fmt.Sprintf(`%s%s`, leftCode, rightCode)
@@ -123,7 +123,7 @@ func (c constant) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
 	}
 }
 
-func (v number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.String() }
+func (v Number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.String() }
 
 // returns `true` is the expression is compound and requires parenthesis
 // when used with `op`
@@ -131,7 +131,7 @@ func (v number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.Str
 // else this is ... op expr
 func (expr Expression) needParenthesis(op operator, isLeft bool) bool {
 	switch atom := expr.atom.(type) {
-	case number, constant, function, Variable:
+	case Number, constant, function, Variable:
 		return false
 	case operator:
 		switch op {

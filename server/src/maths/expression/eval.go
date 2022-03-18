@@ -79,7 +79,7 @@ func (c constant) eval(_, _ float64, _ valueResolver) float64 {
 	}
 }
 
-func (v number) eval(_, _ float64, _ valueResolver) float64 { return float64(v) }
+func (v Number) eval(_, _ float64, _ valueResolver) float64 { return float64(v) }
 
 func (va Variable) eval(_, _ float64, b valueResolver) float64 {
 	out, _ := b.resolve(va)
@@ -155,7 +155,7 @@ func (expr *Expression) Substitute(vars Variables) {
 	if v, isVariable := expr.atom.(Variable); isVariable {
 		value, has := vars[v]
 		if has {
-			expr.atom = number(value)
+			expr.atom = Number(value)
 		}
 	}
 }
@@ -193,46 +193,46 @@ func (expr *Expression) simplifyNumbers() {
 	// adding or substracting 0 are no-ops
 	switch op {
 	case plus:
-		if left.atom == number(0) { // 0 + x = x
+		if left.atom == Number(0) { // 0 + x = x
 			*expr = *expr.right
 			return
-		} else if right.atom == number(0) { // x + 0 = x
+		} else if right.atom == Number(0) { // x + 0 = x
 			*expr = *expr.left
 			return
 		}
 	case minus:
-		if right.atom == number(0) { // x - 0 = x
+		if right.atom == Number(0) { // x - 0 = x
 			*expr = *expr.left
 			return
 		}
 	case mult:
-		if left.atom == number(1) { // 1 * x = x
+		if left.atom == Number(1) { // 1 * x = x
 			*expr = *expr.right
 			return
-		} else if right.atom == number(1) { // x * 1 = x
+		} else if right.atom == Number(1) { // x * 1 = x
 			*expr = *expr.left
 			return
-		} else if left.atom == number(0) { // 0 * x = 0
-			*expr = Expression{atom: number(0)}
+		} else if left.atom == Number(0) { // 0 * x = 0
+			*expr = Expression{atom: Number(0)}
 			return
-		} else if right.atom == number(0) {
-			*expr = Expression{atom: number(0)}
+		} else if right.atom == Number(0) {
+			*expr = Expression{atom: Number(0)}
 			return
 		}
 	case div:
-		if right.atom == number(1) { // x / 1 = x
+		if right.atom == Number(1) { // x / 1 = x
 			*expr = *expr.left
 			return
-		} else if left.atom == number(0) && right.atom != number(0) { // 0 / x = 0
-			*expr = Expression{atom: number(0)}
+		} else if left.atom == Number(0) && right.atom != Number(0) { // 0 / x = 0
+			*expr = Expression{atom: Number(0)}
 			return
 		}
 	case pow:
-		if right.atom == number(1) { // x ^ 1 = x
+		if right.atom == Number(1) { // x ^ 1 = x
 			*expr = *expr.left
 			return
-		} else if left.atom == number(1) { // 1 ^ x = 1
-			*expr = Expression{atom: number(1)}
+		} else if left.atom == Number(1) { // 1 ^ x = 1
+			*expr = Expression{atom: Number(1)}
 			return
 		}
 	default:
@@ -240,10 +240,10 @@ func (expr *Expression) simplifyNumbers() {
 	}
 
 	// general case with two numbers
-	leftNumber, leftOK := left.atom.(number)
-	rightNumber, rightOK := right.atom.(number)
+	leftNumber, leftOK := left.atom.(Number)
+	rightNumber, rightOK := right.atom.(Number)
 	if leftOK && rightOK {
 		res := op.evaluate(float64(leftNumber), float64(rightNumber))
-		*expr = Expression{atom: number(res)}
+		*expr = Expression{atom: Number(res)}
 	}
 }

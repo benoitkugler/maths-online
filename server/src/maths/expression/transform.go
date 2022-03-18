@@ -95,8 +95,8 @@ func compareNodes(n1, n2 *Expression) int {
 			} else {
 				return 0
 			}
-		case number:
-			a2 := a2.(number)
+		case Number:
+			a2 := a2.(Number)
 			if a1 < a2 {
 				return -1
 			} else if a1 > a2 {
@@ -187,7 +187,7 @@ func (expr *Expression) expandPow() {
 		return
 	}
 
-	if power, ok := expr.right.atom.(number); ok {
+	if power, ok := expr.right.atom.(Number); ok {
 		asInt := int(power)
 		if float64(asInt) == float64(power) && asInt > 0 { // c^d = c * c * c * c ... * c
 			exprNew := expr.left.copy()

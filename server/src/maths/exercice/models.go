@@ -235,6 +235,12 @@ type blockInstance interface {
 	toClient() client.Block
 }
 
+var (
+	_ blockInstance = TextInstance{}
+	_ blockInstance = FormulaDisplayInstance{}
+	_ blockInstance = VariationTableInstance{}
+)
+
 // TextInstance is a paragraph of text, which may contain expression or
 // math chunks, which is rendered on a single line (eventually wrapped).
 type TextInstance struct {
@@ -263,4 +269,39 @@ func (fi FormulaDisplayInstance) toClient() client.Block {
 	}
 
 	return client.FormulaBlock{Formula: strings.Join(chunks, " ")}
+}
+
+type VariationTableInstance struct {
+	Xs  []expression.Number // sorted values for x
+	Fxs []expression.Number // corresponding values for f(x)
+}
+
+// assume at least two columns
+func (vt VariationTableInstance) toClient() client.Block {
+	out := client.VariationTableBlock{}
+	for i := range vt.Xs {
+		xStart, fxStart := vt.Xs[i], vt.Fxs[i]
+		// add the number column
+		numberCol := client.VariationColumn{
+			X:       xStart.String(),
+			Y:       fxStart.String(),
+			IsArrow: false,
+		}
+		if i == len(vt.Xs)-1 {
+			// compute isUp from previous
+			numberCol.IsUp = vt.Fxs[i-1] < fxStart
+			out.Columns = append(out.Columns, numberCol)
+			continue
+		}
+
+		numberCol.IsUp = fxStart > vt.Fxs[i+1]
+		out.Columns = append(out.Columns, numberCol)
+
+		// add the arrow column
+		out.Columns = append(out.Columns, client.VariationColumn{
+			IsArrow: true,
+			IsUp:    !numberCol.IsUp,
+		})
+	}
+	return out
 }

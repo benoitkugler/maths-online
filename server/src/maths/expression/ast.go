@@ -89,7 +89,7 @@ func (random) lexicographicOrder() int   { return 4 }
 func (function) lexicographicOrder() int { return 3 }
 func (Variable) lexicographicOrder() int { return 2 }
 func (constant) lexicographicOrder() int { return 1 }
-func (number) lexicographicOrder() int   { return 0 }
+func (Number) lexicographicOrder() int   { return 0 }
 
 type operator uint8
 
@@ -203,13 +203,13 @@ func (c constant) String() string {
 	}
 }
 
-type number float64
+type Number float64
 
 func newNumber(v float64) *Expression {
-	return &Expression{atom: number(v)}
+	return &Expression{atom: Number(v)}
 }
 
-func (v number) String() string {
+func (v Number) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }
 

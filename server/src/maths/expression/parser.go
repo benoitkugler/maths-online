@@ -278,7 +278,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 	}, nil
 }
 
-func parseNumber(v numberText, pos int) (number, error) {
+func parseNumber(v numberText, pos int) (Number, error) {
 	out, err := strconv.ParseFloat(string(v), 64)
 	if err != nil {
 		return 0, InvalidExpr{
@@ -287,7 +287,7 @@ func parseNumber(v numberText, pos int) (number, error) {
 		}
 	}
 
-	return number(out), nil
+	return Number(out), nil
 }
 
 // accept a possibly negative integer

@@ -37,6 +37,7 @@ type Block interface {
 
 func (TextBlock) isBlock()             {}
 func (FormulaBlock) isBlock()          {}
+func (VariationTableBlock) isBlock()   {}
 func (NumberFieldBlock) isBlock()      {}
 func (ListFieldBlock) isBlock()        {}
 func (ExpressionFieldBlock) isBlock()  {}
@@ -57,6 +58,19 @@ type TextBlock struct {
 // FormulaBlock is whole line, rendered as LaTeX in display mode
 type FormulaBlock struct {
 	Formula string // as latex
+}
+
+// VariationColumn is a column in a variation table,
+// either displaying (x, f(x)) values, or an arrow
+// between two local extrema.
+type VariationColumn struct {
+	X, Y    string // as LaTeX code
+	IsArrow bool
+	IsUp    bool
+}
+
+type VariationTableBlock struct {
+	Columns []VariationColumn
 }
 
 // NumberFieldBlock is an answer field where only

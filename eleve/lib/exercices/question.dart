@@ -4,6 +4,7 @@ import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
 import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/exercices/variation_table.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart' as events;
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
@@ -87,6 +88,13 @@ class _ContentBuilder {
     )));
   }
 
+  void _handleVariationTableBlock(VariationTableBlock element) {
+    // start a new row
+    _flushCurrentRow();
+
+    rows.add(Center(child: VariationTable(element)));
+  }
+
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = _controllers[element.iD] as NumberController;
     _currentRow.add(WidgetSpan(
@@ -150,6 +158,8 @@ class _ContentBuilder {
         _handleTextBlock(element);
       } else if (element is FormulaBlock) {
         _handleFormulaBlock(element);
+      } else if (element is VariationTableBlock) {
+        _handleVariationTableBlock(element);
       } else if (element is NumberFieldBlock) {
         _handleNumberFieldBlock(element);
       } else if (element is ExpressionFieldBlock) {
