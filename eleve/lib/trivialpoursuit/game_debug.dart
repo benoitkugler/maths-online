@@ -4,7 +4,7 @@ const updates = [
   [
     StateUpdate(
         [
-          PlayerJoin(0),
+          // PlayerJoin(0),
           GameStart(),
           // PlayerTurn("", 0),
           // DiceThrow(2),
@@ -20,11 +20,16 @@ const updates = [
           2: PlayerStatus("Player 2", [false, true, false, false, false]),
         }, 0, 0)),
   ],
-  // [
-  //   StateUpdate([
-  //     DiceThrow(2)
-  //     // PlayerAnswerResult(0, true),
-  //     // GameEnd([0], ["Pierre"])
-  //   ], GameState({}, 0, 0)),
-  // ],
+  [
+    StateUpdate(
+        [
+          Move([0, 1, 2, 3, 4, 5], 5),
+          // DiceThrow(2)
+          // PlayerAnswerResult(0, true),
+          // GameEnd([0], ["Pierre"])
+        ],
+        GameState({
+          0: PlayerStatus("Player 2", [false, false, false, true, false]),
+        }, 0, 0)),
+  ],
 ];

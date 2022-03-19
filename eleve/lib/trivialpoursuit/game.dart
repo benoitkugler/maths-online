@@ -221,7 +221,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   Future<void> _onPossibleMoves(PossibleMoves event) async {
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.secondary,
       content: isOwnTurn
           ? const Text("Choisis où déplacer le pion.")
@@ -236,6 +236,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   void _onMove(Move event) async {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
     setState(() {
       highligthedTiles.clear();
     });
