@@ -365,6 +365,72 @@ JSON radioFieldBlockToJson(RadioFieldBlock item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.SignColumn
+class SignColumn {
+  final String x;
+  final bool isYForbiddenValue;
+  final bool isSign;
+  final bool isPositive;
+
+  const SignColumn(
+      this.x, this.isYForbiddenValue, this.isSign, this.isPositive);
+
+  @override
+  String toString() {
+    return "SignColumn($x, $isYForbiddenValue, $isSign, $isPositive)";
+  }
+}
+
+SignColumn signColumnFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return SignColumn(
+      stringFromJson(json['X']),
+      boolFromJson(json['IsYForbiddenValue']),
+      boolFromJson(json['IsSign']),
+      boolFromJson(json['IsPositive']));
+}
+
+JSON signColumnToJson(SignColumn item) {
+  return {
+    "X": stringToJson(item.x),
+    "IsYForbiddenValue": boolToJson(item.isYForbiddenValue),
+    "IsSign": boolToJson(item.isSign),
+    "IsPositive": boolToJson(item.isPositive)
+  };
+}
+
+List<SignColumn> listSignColumnFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(signColumnFromJson).toList();
+}
+
+List<dynamic> listSignColumnToJson(List<SignColumn> item) {
+  return item.map(signColumnToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.SignTableBlock
+class SignTableBlock implements Block {
+  final List<SignColumn> columns;
+
+  const SignTableBlock(this.columns);
+
+  @override
+  String toString() {
+    return "SignTableBlock($columns)";
+  }
+}
+
+SignTableBlock signTableBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return SignTableBlock(listSignColumnFromJson(json['Columns']));
+}
+
+JSON signTableBlockToJson(SignTableBlock item) {
+  return {"Columns": listSignColumnToJson(item.columns)};
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
 class TextBlock implements Block {
   final List<TextOrMath> parts;
@@ -468,8 +534,10 @@ Block blockFromJson(dynamic json_) {
     case 5:
       return radioFieldBlockFromJson(data);
     case 6:
-      return textBlockFromJson(data);
+      return signTableBlockFromJson(data);
     case 7:
+      return textBlockFromJson(data);
+    case 8:
       return variationTableBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -489,10 +557,12 @@ JSON blockToJson(Block item) {
     return {'Kind': 4, 'Data': orderedListFieldBlockToJson(item)};
   } else if (item is RadioFieldBlock) {
     return {'Kind': 5, 'Data': radioFieldBlockToJson(item)};
+  } else if (item is SignTableBlock) {
+    return {'Kind': 6, 'Data': signTableBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 6, 'Data': textBlockToJson(item)};
+    return {'Kind': 7, 'Data': textBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 7, 'Data': variationTableBlockToJson(item)};
+    return {'Kind': 8, 'Data': variationTableBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

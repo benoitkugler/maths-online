@@ -7,8 +7,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-final bm = buildMode();
-// final bm = BuildMode.debug;
+// final bm = buildMode();
+final bm = BuildMode.dev;
 
 void main() {
   runApp(const MyApp());
@@ -46,10 +46,6 @@ class MyApp extends StatelessWidget {
           title: const Text('Isiro'),
         ),
         body: const _HomePage(),
-        // body: const Padding(
-        //   padding: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
-        //   child: QuestionGallery(),
-        // ),
       ),
     );
   }
@@ -69,8 +65,8 @@ class _HomePageState extends State<_HomePage> {
   }
 
   void _launchQuestionGallery() {
-    Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(appBar: AppBar(), body: QuestionGallery(bm))));
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => QuestionGallery(bm)));
   }
 
   @override

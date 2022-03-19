@@ -57,3 +57,28 @@ class TextRow extends StatelessWidget {
     );
   }
 }
+
+/// [MathTableCell] is a [TableCell] containing
+/// math text
+class MathTableCell extends StatelessWidget {
+  static const fontSize = 16.0;
+
+  final TableCellVerticalAlignment align;
+  final String mathContent;
+
+  const MathTableCell(this.align, this.mathContent, {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TableCell(
+      verticalAlignment: align,
+      child: Align(
+        alignment: Alignment.center,
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+            child: textMath(mathContent, fontSize)),
+      ),
+    );
+  }
+}

@@ -38,6 +38,7 @@ type Block interface {
 func (TextBlock) isBlock()             {}
 func (FormulaBlock) isBlock()          {}
 func (VariationTableBlock) isBlock()   {}
+func (SignTableBlock) isBlock()        {}
 func (NumberFieldBlock) isBlock()      {}
 func (ListFieldBlock) isBlock()        {}
 func (ExpressionFieldBlock) isBlock()  {}
@@ -71,6 +72,20 @@ type VariationColumn struct {
 
 type VariationTableBlock struct {
 	Columns []VariationColumn
+}
+
+// SignColumn is a column in a sign table,
+// either displaying (x, f(x)) values, or an arrow
+// between two local extrema.
+type SignColumn struct {
+	X                 string // as LaTeX code
+	IsYForbiddenValue bool   // if true, Y is ignored and a double bar is displayed instead
+	IsSign            bool
+	IsPositive        bool // for signs, displays a +, for numbers displays a 0 (else nothing)
+}
+
+type SignTableBlock struct {
+	Columns []SignColumn
 }
 
 // NumberFieldBlock is an answer field where only

@@ -269,8 +269,9 @@ class _PropsRow extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
               border: Border.all(color: accept ? color : Colors.transparent)),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: _Symbol.fromList(false, props),
           ),
         );

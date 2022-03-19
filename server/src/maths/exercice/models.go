@@ -305,3 +305,7 @@ func (vt VariationTableInstance) toClient() client.Block {
 	}
 	return out
 }
+
+type SignTableInstance client.SignTableBlock
+
+func (vt SignTableInstance) toClient() client.Block { return client.SignTableBlock(vt) }

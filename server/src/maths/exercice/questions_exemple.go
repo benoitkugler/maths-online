@@ -280,6 +280,50 @@ var PredefinedQuestions = [...]QuestionInstance{
 		},
 	},
 	{
+		Title: "Equations et inéquations", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Résoudre l’inéquation "),
+				staticMath(`f(x) \ge 0`),
+			}},
+			SignTableInstance{Columns: []client.SignColumn{
+				{X: `-\infty`, IsYForbiddenValue: false, IsSign: false, IsPositive: false},
+				{X: "", IsYForbiddenValue: false, IsSign: true, IsPositive: false},
+				{X: "-2", IsYForbiddenValue: false, IsSign: false, IsPositive: true},
+				{X: "", IsYForbiddenValue: false, IsSign: true, IsPositive: true},
+				{X: "0", IsYForbiddenValue: false, IsSign: false, IsPositive: true},
+				{X: "", IsYForbiddenValue: false, IsSign: true, IsPositive: false},
+				{X: "4", IsYForbiddenValue: true, IsSign: false, IsPositive: true},
+				{X: "", IsYForbiddenValue: false, IsSign: true, IsPositive: true},
+				{X: `+\infty`, IsYForbiddenValue: false, IsSign: false, IsPositive: false},
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				text("Intervalle(s) solution(s) :"),
+			}},
+			OrderedListFieldInstance{
+				ID: 0,
+				Answer: []StringOrExpression{ // [12;+infty[
+					{String: "["},
+					{Expression: mustParse("-2")},
+					{String: ";"},
+					{Expression: mustParse("0")},
+					{String: `]`},
+					{String: `\cup`},
+					{String: "]"},
+					{Expression: mustParse("4")},
+					{String: ";"},
+					{String: `+\infty`},
+					{String: `[`},
+				},
+				AdditionalProposals: []StringOrExpression{
+					{String: "]"}, // some duplicates
+					{String: `-\infty`},
+					{Expression: mustParse("0")},
+					{String: "-"},
+				},
+			},
+		},
+	},
+	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Écrire sous une seule fraction : "),

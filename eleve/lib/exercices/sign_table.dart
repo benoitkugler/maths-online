@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
@@ -9,27 +7,28 @@ class _WidgetPair {
   final Widget fx;
   _WidgetPair(this.x, this.fx);
 
-  factory _WidgetPair.fromData(VariationColumn data) {
-    if (data.isArrow) {
-      return _WidgetPair(const SizedBox(), _Arrow(data.isUp));
+  factory _WidgetPair.fromData(SignColumn data) {
+    if (data.isSign) {
+      return _WidgetPair(
+          const SizedBox(),
+          MathTableCell(
+              TableCellVerticalAlignment.middle, data.isPositive ? "+" : "-"));
     }
 
     return _WidgetPair(
       MathTableCell(TableCellVerticalAlignment.middle, data.x),
-      MathTableCell(
-        data.isUp
-            ? TableCellVerticalAlignment.top
-            : TableCellVerticalAlignment.bottom,
-        data.y,
-      ),
+      data.isYForbiddenValue
+          ? const _ForbiddenValue()
+          : MathTableCell(
+              TableCellVerticalAlignment.middle, data.isPositive ? "0" : ""),
     );
   }
 }
 
-class VariationTable extends StatelessWidget {
-  final VariationTableBlock data;
+class SignTable extends StatelessWidget {
+  final SignTableBlock data;
 
-  const VariationTable(this.data, {Key? key}) : super(key: key);
+  const SignTable(this.data, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +50,7 @@ class VariationTable extends StatelessWidget {
         ),
         children: [
           TableRow(
-              decoration: BoxDecoration(color: Colors.grey.shade600),
+              decoration: BoxDecoration(color: Colors.red.shade200),
               children: [
                 const MathTableCell(TableCellVerticalAlignment.middle, "x"),
                 ...xRow
@@ -64,23 +63,30 @@ class VariationTable extends StatelessWidget {
   }
 }
 
-class _Arrow extends StatelessWidget {
-  final bool isUp;
-  const _Arrow(this.isUp, {Key? key}) : super(key: key);
+class _ForbiddenValue extends StatelessWidget {
+  static const height = 40.0;
+
+  const _ForbiddenValue({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    const angle = pi / 4 + pi * 5 / 180;
+    final textColor =
+        Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
     return TableCell(
       verticalAlignment: TableCellVerticalAlignment.middle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40.0),
-        child: Transform.rotate(
-            angle: isUp ? -angle : angle,
-            child: Transform.scale(
-                scaleX: 3.5,
-                child:
-                    const Icon(IconData(0xe09f, fontFamily: 'MaterialIcons')))),
+      child: LayoutBuilder(
+        builder: (context, constraints) => Align(
+          child: Container(
+            width: 5,
+            height: height,
+            decoration: BoxDecoration(
+                color: Colors.transparent,
+                border: Border(
+                  left: BorderSide(color: textColor),
+                  right: BorderSide(color: textColor),
+                )),
+          ),
+        ),
       ),
     );
   }

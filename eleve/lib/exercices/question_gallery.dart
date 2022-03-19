@@ -18,6 +18,9 @@ class QuestionGallery extends StatefulWidget {
 }
 
 class _QuestionGalleryState extends State<QuestionGallery> {
+  List<Question> questions = [];
+  final _controller = PageController(initialPage: 0);
+
   @override
   void initState() {
     _loadQuestions();
@@ -29,7 +32,9 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     try {
       final resp = await http.get(server);
       setState(() {
-        questions = (jsonDecode(resp.body) as List<dynamic>).sublist(0);
+        questions = (jsonDecode(resp.body) as List<dynamic>)
+            .map(questionFromJson)
+            .toList();
       });
     } catch (e) {
       print("ERROR: $e");
@@ -60,9 +65,6 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     return questionAnswersOutFromJson(jsonDecode(resp.body));
   }
 
-  List<dynamic> questions = [];
-  final _controller = PageController(initialPage: 0);
-
   void _checkSyntax(
       CheckQuestionSyntaxeNotification v, BuildContext context) async {
     final rep = await _checkSyntaxCall(v);
@@ -91,8 +93,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     ));
   }
 
-  NotificationListener _fromJSON(dynamic json, BuildContext context) {
-    final question = questionFromJson(json);
+  NotificationListener _buildQuestion(Question question, BuildContext context) {
     return NotificationListener<CheckQuestionSyntaxeNotification>(
       onNotification: (v) {
         _checkSyntax(v, context);
@@ -111,13 +112,39 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     );
   }
 
+  void _showSummary() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+          builder: (ct) => Scaffold(
+                appBar: AppBar(),
+                body: ListView(
+                  children: List<Widget>.generate(
+                      questions.length,
+                      (index) => ListTile(
+                            title: Text(
+                                "(${index + 1}) " + questions[index].title),
+                            onTap: () {
+                              _controller.jumpToPage(index);
+                              Navigator.of(ct).pop();
+                            },
+                          )).toList(),
+                ),
+              )),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: PageView(
-        controller: _controller,
-        children: questions.map((q) => _fromJSON(q, context)).toList(),
+    return Scaffold(
+      appBar: AppBar(actions: [
+        TextButton(onPressed: _showSummary, child: const Text("Sommaire"))
+      ]),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: PageView(
+          controller: _controller,
+          children: questions.map((q) => _buildQuestion(q, context)).toList(),
+        ),
       ),
     );
   }
