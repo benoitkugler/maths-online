@@ -43,6 +43,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"isPrime(-8)",
 		"8 % 3",
 		"9 // 2",
+		"24x^2 - 27x + 18",
 	} {
 		e, _, err := Parse(expr)
 		if err != nil {

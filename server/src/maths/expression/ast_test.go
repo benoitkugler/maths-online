@@ -33,7 +33,7 @@ func TestPanics(t *testing.T) {
 	})
 
 	shouldPanic(t, func() {
-		tk := tokenizer{nextToken: token{data: symbol(invalidSymbol)}}
+		tk := tokenizer{currentToken: token{data: symbol(invalidSymbol)}}
 		pr := parser{tk: &tk}
 		pr.parseOneNode()
 	})

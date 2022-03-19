@@ -39,7 +39,9 @@ const (
 type numberText string
 
 type tokenizer struct {
-	nextToken token // cache used for peek
+	// caches used for peek and to handle implicit multiplication
+	// with implicit multiplication, and additional token may be added
+	lastToken, currentToken, nextToken token
 
 	src []rune
 	pos int
@@ -47,23 +49,53 @@ type tokenizer struct {
 
 func newTokenizer(text []byte) *tokenizer { return &tokenizer{src: bytes.Runes(text)} }
 
-func (tk *tokenizer) peek() token {
-	if tk.nextToken.data != nil {
-		return tk.nextToken
+// Peek returns the next token, without advancing the position.
+func (tk *tokenizer) Peek() token {
+	// check if we have a cached value in currentToken or nextToken
+	if tk.currentToken.data != nil { // return it without changing the state
+		return tk.currentToken
 	}
 
-	tk.nextToken = tk.readToken() // save it so that next do not advance again
-	return tk.nextToken
+	// trigger a new read
+	current, next := tk.readTokenImplicitMult()
+	// save both tokens
+	tk.currentToken = current
+	tk.nextToken = next
+
+	return tk.currentToken
 }
 
-func (tk *tokenizer) next() token {
-	if out := tk.nextToken; out.data != nil {
+func (tk *tokenizer) Next() token {
+	// check if we have already read the next token
+	if out := tk.currentToken; out.data != nil { // returns it without triggering a read
+		tk.lastToken = out
+		tk.currentToken = tk.nextToken
 		tk.nextToken = token{}
 		return out
 	}
 
-	out := tk.readToken()
-	return out
+	// trigger a new read
+	current, next := tk.readTokenImplicitMult()
+	tk.currentToken = next // only save the potential next token, not current
+	return current
+}
+
+// readTokenImplicitMult wraps readToken and handles implicit
+// multiplication.
+// When an implicit multiplication is detected, a corresponding
+// token is returned and `currentToken` and `currentToken` are updated accordingly
+func (tk *tokenizer) readTokenImplicitMult() (current, next token) {
+	nextToken := tk.readToken()
+	if isImplicitMult(tk.lastToken, nextToken) { // insert a mult
+		current = token{data: mult, pos: nextToken.pos}
+		next = nextToken
+	} else {
+		current = nextToken
+		next = token{}
+	}
+	tk.lastToken = current // update lastToken for next calls
+
+	return
 }
 
 func isWhiteSpace(r rune) bool {
@@ -156,6 +188,44 @@ func (tk *tokenizer) readToken() (tok token) {
 	}
 
 	return out
+}
+
+// isImplicitMultRight returns true if `t` may be on
+// the right of an implicit multiplication
+func isImplicitMultRight(t token) bool {
+	switch t := t.data.(type) {
+	case symbol:
+		return t == openPar // (...)(...)
+	case Variable: // (...)y
+		return true
+	case function: // (...)log()
+		return true
+	case randFunction: // (...)randPrime()
+		return true
+	default:
+		return false
+	}
+}
+
+// isImplicitMultLeft returns true if `t` may be on
+// the left of an implicit multiplication
+func isImplicitMultLeft(t token) bool {
+	switch t := t.data.(type) {
+	case numberText, constant: // 4x
+		return true
+	case symbol:
+		return t == closePar // (...)(...)
+	case Variable: // y(...)
+		return true
+	default:
+		return false
+	}
+}
+
+// isImplicitMult returns true if there is an implicit multiplication
+// between t1 and t2
+func isImplicitMult(t1, t2 token) bool {
+	return isImplicitMultLeft(t1) && isImplicitMultRight(t2)
 }
 
 func (tk *tokenizer) tryReadRandint() bool {

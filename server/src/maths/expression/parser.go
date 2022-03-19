@@ -16,6 +16,7 @@ func (inv InvalidExpr) Error() string {
 	return fmt.Sprintf("expression invalide : position %d : %s", inv.Pos, inv.Reason)
 }
 
+// PortionOf returns the start of `expr` until the error.
 func (inv InvalidExpr) PortionOf(expr string) string {
 	return string([]rune(expr)[:inv.Pos])
 }
@@ -76,7 +77,7 @@ func (pr *parser) pop() *Expression {
 }
 
 func (pr *parser) parseExpression() (*Expression, error) {
-	for pr.tk.peek().data != nil {
+	for pr.tk.Peek().data != nil {
 		node, err := pr.parseOneNode()
 		if err != nil {
 			return nil, err
@@ -97,7 +98,7 @@ func (pr *parser) parseExpression() (*Expression, error) {
 
 // the next token has already been checked for emptyness
 func (pr *parser) parseOneNode() (*Expression, error) {
-	tok := pr.tk.next()
+	tok := pr.tk.Next()
 	c := tok.data
 	switch data := c.(type) {
 	case symbol:
@@ -111,7 +112,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 			}
 		case semicolon:
 			return nil, InvalidExpr{
-				Reason: "virgule inattendue",
+				Reason: "point-virgule inattendue",
 				Pos:    tok.pos,
 			}
 		default:
@@ -192,7 +193,7 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 // parse while the operator have strictly higher precedence than `op`
 func (pr *parser) parseUntil(op operator) (*Expression, error) {
 	for {
-		tok := pr.tk.peek()
+		tok := pr.tk.Peek()
 		// if we reach EOF, return
 		// same if we encouter a closing )
 		// such as log(  2 + x  )
@@ -222,10 +223,10 @@ func (pr *parser) parseParenthesisBlock(pos int) (*Expression, error) {
 	// parse the content, until the closing )
 
 	for {
-		tok := pr.tk.peek()
+		tok := pr.tk.Peek()
 		if tok.data == closePar {
 			// consume the closing ')'
-			pr.tk.next()
+			pr.tk.Next()
 			out := pr.pop()
 			return out, nil
 		}
@@ -249,7 +250,7 @@ func (pr *parser) parseParenthesisBlock(pos int) (*Expression, error) {
 func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
-	par := pr.tk.next()
+	par := pr.tk.Next()
 
 	if par.data != openPar {
 		return nil, InvalidExpr{
@@ -292,12 +293,12 @@ func parseNumber(v numberText, pos int) (Number, error) {
 
 // accept a possibly negative integer
 func (pr *parser) parseInt() (int, error) {
-	arg := pr.tk.next()
+	arg := pr.tk.Next()
 
 	var isNegative bool
 	if arg.data == minus { // read another token
 		isNegative = true
-		arg = pr.tk.next()
+		arg = pr.tk.Next()
 	}
 
 	v, ok := arg.data.(numberText)
@@ -340,7 +341,7 @@ func isInt(v float64) (int, bool) {
 func (pr *parser) parseRandFunction(pos int, isPrime bool) (rd random, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
-	par := pr.tk.next()
+	par := pr.tk.Next()
 
 	if par.data != openPar {
 		return random{}, InvalidExpr{
@@ -356,7 +357,7 @@ func (pr *parser) parseRandFunction(pos int, isPrime bool) (rd random, err error
 		return random{}, err
 	}
 
-	if tok := pr.tk.next(); tok.data != semicolon {
+	if tok := pr.tk.Next(); tok.data != semicolon {
 		return random{}, InvalidExpr{
 			Reason: "virgule manquant entre les arguments de randInt",
 			Pos:    tok.pos,
@@ -368,7 +369,7 @@ func (pr *parser) parseRandFunction(pos int, isPrime bool) (rd random, err error
 		return random{}, err
 	}
 
-	if tok := pr.tk.next(); tok.data != closePar {
+	if tok := pr.tk.Next(); tok.data != closePar {
 		return random{}, InvalidExpr{
 			Reason: "parenthèse fermante manquante après randInt",
 			Pos:    tok.pos,

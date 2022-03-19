@@ -85,6 +85,9 @@ var expressions = [...]struct {
 		"", nil, true,
 	},
 	{
+		"(;)", nil, true,
+	},
+	{
 		"2  +", nil, true,
 	},
 	{
@@ -110,9 +113,6 @@ var expressions = [...]struct {
 	},
 	{
 		" ( y + (1 / 2 ) ", nil, true,
-	},
-	{
-		" (1+ 2 ) (x + 3) ", nil, true,
 	},
 	{
 		" log 3 ", nil, true,
@@ -171,6 +171,73 @@ var expressions = [...]struct {
 	},
 	{
 		"(x + 3 )", &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
+	},
+	// implicit multiplication référence
+	{
+		"(x + 3)*(x+4)", &Expression{
+			atom:  mult,
+			left:  &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)},
+			right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(4)},
+		}, false,
+	},
+	// implicit multiplication
+	{
+		"xln(x)", &Expression{
+			atom:  mult,
+			left:  newVariable('x'),
+			right: &Expression{atom: logFn, right: newVariable('x')},
+		}, false,
+	},
+	{
+		"(x + 3)(x+4)", &Expression{
+			atom:  mult,
+			left:  &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)},
+			right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(4)},
+		}, false,
+	},
+	{
+		" (1+ 2 ) (x + 3) ", &Expression{
+			atom:  mult,
+			left:  &Expression{atom: plus, left: newNumber(1), right: newNumber(2)},
+			right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)},
+		}, false,
+	},
+	{
+		"(x−6)(4x−3)", &Expression{
+			atom: mult,
+			left: &Expression{atom: minus, left: newVariable('x'), right: newNumber(6)},
+			right: &Expression{
+				atom:  minus,
+				left:  &Expression{atom: mult, left: newNumber(4), right: newVariable('x')},
+				right: newNumber(3),
+			},
+		}, false,
+	},
+	{
+		"24x^2 - 27x + 18", &Expression{
+			atom: plus,
+			left: &Expression{
+				atom: minus,
+				left: &Expression{
+					atom: mult,
+					left: newNumber(24),
+					right: &Expression{
+						atom:  pow,
+						left:  newVariable('x'),
+						right: newNumber(2),
+					},
+				},
+				right: &Expression{
+					atom:  mult,
+					left:  newNumber(27),
+					right: newVariable('x'),
+				},
+			},
+			right: newNumber(18),
+		}, false,
+	},
+	{
+		"x4", nil, true, // invalid implicit multiplication
 	},
 	{
 		"1 + 2 * 3", &Expression{
@@ -301,6 +368,7 @@ func Test_parseExpression(t *testing.T) {
 		got, _, err := Parse(tt.expr)
 		if err != nil {
 			_ = err.Error()
+			_ = err.(InvalidExpr).PortionOf(tt.expr)
 		}
 
 		if (err != nil) != tt.wantErr {
