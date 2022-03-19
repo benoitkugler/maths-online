@@ -11,19 +11,19 @@ class NumberController extends FieldController {
     textController.addListener(onChange);
   }
 
+  String get text => textController.text.trim().replaceAll(RegExp(r","), ".");
+
   @override
   bool hasValidData() {
-    final content = textController.text.trim();
-    if (content.isEmpty) {
+    if (text.isEmpty) {
       return false;
     }
-    return double.tryParse(content) != null;
+    return double.tryParse(text) != null;
   }
 
   @override
   Answer getData() {
-    final content = textController.text.trim();
-    return NumberAnswer(double.parse(content));
+    return NumberAnswer(double.parse(text));
   }
 }
 
@@ -60,8 +60,8 @@ class NumberField extends StatelessWidget {
           keyboardType: const TextInputType.numberWithOptions(
               signed: true, decimal: true),
           inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.-]'))
-          ], // Only numbers, minus and dot can be entered
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9-,\.]')),
+          ], // Only numbers, minus, dot and comma can be entered
         ),
       ),
     );
