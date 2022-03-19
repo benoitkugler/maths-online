@@ -37,6 +37,7 @@ class _ContentBuilder {
   final List<Widget> rows = []; // final output
 
   List<InlineSpan> _currentRow = []; // current row
+  bool lastIsText = false; // used to insert new line between to text block
   static const fontSize = 18.0;
 
   _ContentBuilder(
@@ -73,7 +74,9 @@ class _ContentBuilder {
   }
 
   void _handleTextBlock(TextBlock element) {
-    // _flushCurrentRow();
+    if (lastIsText) {
+      _flushCurrentRow();
+    }
     _currentRow.addAll(buildText(element.parts, fontSize));
   }
 
@@ -181,6 +184,8 @@ class _ContentBuilder {
       } else {
         // TODO:
       }
+
+      lastIsText = element is TextBlock;
     }
 
     // flush the current row

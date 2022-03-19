@@ -1,6 +1,8 @@
 package exercice
 
 import (
+	"math"
+
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 )
@@ -323,6 +325,73 @@ var PredefinedQuestions = [...]QuestionInstance{
 			},
 		},
 	},
+	// geometrie
+
+	{
+		Title: "Géométrie plane", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("ABC est un triangle rectangle en C avec "),
+				staticMath(`AB = `),
+				expr("sqrt(98)"),
+				text(" et "),
+				staticMath("BC = "),
+				expr("7"),
+				text(". Calculer, en degrés, "),
+				staticMath(`\widehat{ABC}.`),
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(`\widehat{ABC} = `),
+			}},
+			NumberFieldInstance{ID: 0, Answer: mustParse("acos(7/sqrt(98))").Evaluate(nil) * 180 / math.Pi},
+		},
+	},
+	{
+		Title: "Géométrie plane", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("ABC est un triangle rectangle en C avec "),
+				staticMath(`AB = `),
+				expr("sqrt(98)"),
+				text(" et "),
+				staticMath("BC = "),
+				expr("7"),
+				text(". Calculer AC."),
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				text("AC = "),
+			}},
+			NumberFieldInstance{ID: 0, Answer: mustParse("sqrt(sqrt(98)^2 - 7^2)").Evaluate(nil)},
+		},
+	},
+	{
+		Title: "Géométrie plane", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Soient "),
+				staticMath(`AB = `),
+				expr("4"),
+				staticMath(" ; AC = "),
+				expr("12"),
+				text(" et "),
+				staticMath("BC = "),
+				expr("8"),
+				text(". Le triangle ABC est-il rectangle ? Si oui, en quoi ?"),
+			}},
+			RadioFieldInstance{
+				ID: 0,
+				Answer: int(mustParse("1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)").Evaluate(expression.Variables{
+					'a': 8,  // BC
+					'b': 12, // AC
+					'c': 4,  // AB
+				})),
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: `ABC n'est pas rectangle.`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `ABC est rectangle en A.`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `ABC est rectangle en B.`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `ABC est rectangle en C.`, IsMath: false}}},
+				},
+			},
+		},
+	},
+
 	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
