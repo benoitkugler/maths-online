@@ -97,6 +97,14 @@ func (fn function) eval(left, right float64, _ valueResolver) float64 {
 		return math.Sin(arg)
 	case cosFn:
 		return math.Cos(arg)
+	case tanFn:
+		return math.Tan(arg)
+	case asinFn:
+		return math.Asin(arg)
+	case acosFn:
+		return math.Acos(arg)
+	case atanFn:
+		return math.Atan(arg)
 	case absFn:
 		return math.Abs(arg)
 	case sqrtFn:

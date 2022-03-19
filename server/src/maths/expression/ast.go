@@ -135,6 +135,10 @@ const (
 	expFn
 	sinFn
 	cosFn
+	tanFn
+	acosFn // invert
+	asinFn // invert
+	atanFn // invert
 	absFn
 	sqrtFn
 	sgnFn     // returns -1 0 or 1
@@ -154,6 +158,14 @@ func (fn function) String() string {
 		return "sin"
 	case cosFn:
 		return "cos"
+	case tanFn:
+		return "tan"
+	case acosFn:
+		return "acos"
+	case asinFn:
+		return "asin"
+	case atanFn:
+		return "atan"
 	case absFn:
 		return "abs"
 	case sqrtFn:

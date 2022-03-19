@@ -312,6 +312,18 @@ var expressions = [...]struct {
 		"cos(x)", &Expression{atom: cosFn, left: nil, right: newVariable('x')}, false,
 	},
 	{
+		"tan(x)", &Expression{atom: tanFn, left: nil, right: newVariable('x')}, false,
+	},
+	{
+		"asin(x)", &Expression{atom: asinFn, left: nil, right: newVariable('x')}, false,
+	},
+	{
+		"acos(x)", &Expression{atom: acosFn, left: nil, right: newVariable('x')}, false,
+	},
+	{
+		"atan(x)", &Expression{atom: atanFn, left: nil, right: newVariable('x')}, false,
+	},
+	{
 		"abs(x)", &Expression{atom: absFn, left: nil, right: newVariable('x')}, false,
 	},
 	{

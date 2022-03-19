@@ -279,6 +279,14 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = sinFn
 	case "cos":
 		fn = cosFn
+	case "tan":
+		fn = tanFn
+	case "asin", "arcsin":
+		fn = asinFn
+	case "acos", "arccos":
+		fn = acosFn
+	case "atan", "arctan":
+		fn = atanFn
 	case "abs":
 		fn = absFn
 	case "sqrt":

@@ -88,6 +88,14 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf(`\sin\left(%s\right)`, arg)
 	case cosFn:
 		return fmt.Sprintf(`\cos\left(%s\right)`, arg)
+	case tanFn:
+		return fmt.Sprintf(`\tan\left(%s\right)`, arg)
+	case asinFn:
+		return fmt.Sprintf(`\arcsin\left(%s\right)`, arg)
+	case acosFn:
+		return fmt.Sprintf(`\arccos\left(%s\right)`, arg)
+	case atanFn:
+		return fmt.Sprintf(`\arctan\left(%s\right)`, arg)
 	case absFn:
 		return fmt.Sprintf(`\left|%s\right|`, arg)
 	case sqrtFn:

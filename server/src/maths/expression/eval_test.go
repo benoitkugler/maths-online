@@ -25,6 +25,18 @@ func Test_Expression_eval(t *testing.T) {
 			"cos(0)", nil, 1,
 		},
 		{
+			"tan(0)", nil, 0,
+		},
+		{
+			"asin(0)", nil, 0,
+		},
+		{
+			"acos(1)", nil, 0,
+		},
+		{
+			"atan(0)", nil, 0,
+		},
+		{
 			"abs(-3)", nil, 3,
 		},
 		{
