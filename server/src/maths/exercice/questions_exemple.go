@@ -5,6 +5,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
 func mustParse(s string) *expression.Expression {
@@ -387,6 +388,80 @@ var PredefinedQuestions = [...]QuestionInstance{
 					{Content: []client.TextOrMath{{Text: `ABC est rectangle en A.`, IsMath: false}}},
 					{Content: []client.TextOrMath{{Text: `ABC est rectangle en B.`, IsMath: false}}},
 					{Content: []client.TextOrMath{{Text: `ABC est rectangle en C.`, IsMath: false}}},
+				},
+			},
+		},
+	},
+
+	{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Soient les points "),
+				staticMath(`A(`),
+				expr("8"),
+				staticMath(";"),
+				expr("19"),
+				staticMath(")"),
+				text(" et "),
+				staticMath(`B(`),
+				expr("-6"),
+				staticMath(";"),
+				expr("0"),
+				staticMath(")."),
+				text("Quelles sont les coordonnées de M, milieu de [AB] ?"),
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath("M = ("),
+			}},
+			NumberFieldInstance{ID: 0, Answer: mustParse("(8 + (-6))/2").Evaluate(nil)},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(";"),
+			}},
+			NumberFieldInstance{ID: 1, Answer: mustParse("(19 + 0)/2").Evaluate(nil)},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(")"),
+			}},
+		},
+	},
+
+	{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Quel point est le projeté orthogonal de D sur (AH) ?"),
+			}},
+			FigureInstance{Figure: repere.Figure{
+				Width:  1000,
+				Height: 600,
+				Points: map[string]repere.LabeledPoint{
+					"A": {Point: repere.Coord{X: 100, Y: 500}, Pos: repere.TopLeft},
+					"B": {Point: repere.Coord{X: 100, Y: 100}, Pos: repere.BottomLeft},
+					"C": {Point: repere.Coord{X: 900, Y: 100}, Pos: repere.BottomRight},
+					"D": {Point: repere.Coord{X: 900, Y: 500}, Pos: repere.TopRight},
+					"H": {Point: repere.ProjeteOrtho(repere.Coord{X: 100, Y: 100}, repere.Coord{X: 100, Y: 500}, repere.Coord{X: 900, Y: 100}), Pos: repere.Top},
+					"K": {Point: repere.ProjeteOrtho(repere.Coord{X: 900, Y: 500}, repere.Coord{X: 100, Y: 500}, repere.Coord{X: 900, Y: 100}), Pos: repere.Top},
+				},
+				Lines: []repere.Line{
+					{LabelName: "a", From: "A", To: "B", LabelPos: repere.Left},
+					{LabelName: "b", From: "B", To: "C", LabelPos: repere.Bottom},
+					{LabelName: "", From: "C", To: "D", LabelPos: repere.Right},
+					{LabelName: "", From: "D", To: "A", LabelPos: repere.Bottom},
+
+					// diagonal
+					{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},
+
+					{LabelName: "", From: "B", To: "H", LabelPos: repere.Bottom},
+					{LabelName: "", From: "D", To: "K", LabelPos: repere.Top},
+				},
+			}},
+			RadioFieldInstance{
+				ID:     0,
+				Answer: 2,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: `A`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `B`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `K`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `H`, IsMath: false}}},
+					{Content: []client.TextOrMath{{Text: `D`, IsMath: false}}},
 				},
 			},
 		},

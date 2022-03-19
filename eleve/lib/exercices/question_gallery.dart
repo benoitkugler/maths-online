@@ -25,6 +25,8 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   void initState() {
     _loadQuestions();
     super.initState();
+
+    Future.delayed(const Duration(milliseconds: 500), _showSummary);
   }
 
   void _loadQuestions() async {

@@ -2,7 +2,11 @@ package client
 
 // TODO: autogenerate JSON wrappers for type using interfaces
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/benoitkugler/maths-online/maths/repere"
+)
 
 //go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/exercices/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
 
@@ -39,6 +43,7 @@ func (TextBlock) isBlock()             {}
 func (FormulaBlock) isBlock()          {}
 func (VariationTableBlock) isBlock()   {}
 func (SignTableBlock) isBlock()        {}
+func (FigureBlock) isBlock()           {}
 func (NumberFieldBlock) isBlock()      {}
 func (ListFieldBlock) isBlock()        {}
 func (ExpressionFieldBlock) isBlock()  {}
@@ -86,6 +91,10 @@ type SignColumn struct {
 
 type SignTableBlock struct {
 	Columns []SignColumn
+}
+
+type FigureBlock struct {
+	Figure repere.Figure `dart-extern:"repere.gen.dart"`
 }
 
 // NumberFieldBlock is an answer field where only

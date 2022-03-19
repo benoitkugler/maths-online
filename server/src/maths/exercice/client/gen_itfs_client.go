@@ -86,34 +86,38 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data FormulaBlock
+		var data FigureBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data ListFieldBlock
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data NumberFieldBlock
+		var data ListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data OrderedListFieldBlock
+		var data NumberFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data RadioFieldBlock
+		var data OrderedListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data SignTableBlock
+		var data RadioFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data TextBlock
+		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
+		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 9:
 		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -133,22 +137,24 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	switch data := item.Data.(type) {
 	case ExpressionFieldBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case FormulaBlock:
+	case FigureBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case ListFieldBlock:
+	case FormulaBlock:
 		wr = wrapper{Kind: 2, Data: data}
-	case NumberFieldBlock:
+	case ListFieldBlock:
 		wr = wrapper{Kind: 3, Data: data}
-	case OrderedListFieldBlock:
+	case NumberFieldBlock:
 		wr = wrapper{Kind: 4, Data: data}
-	case RadioFieldBlock:
+	case OrderedListFieldBlock:
 		wr = wrapper{Kind: 5, Data: data}
-	case SignTableBlock:
+	case RadioFieldBlock:
 		wr = wrapper{Kind: 6, Data: data}
-	case TextBlock:
+	case SignTableBlock:
 		wr = wrapper{Kind: 7, Data: data}
-	case VariationTableBlock:
+	case TextBlock:
 		wr = wrapper{Kind: 8, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 9, Data: data}
 
 	default:
 		panic("exhaustive switch")

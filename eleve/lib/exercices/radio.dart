@@ -38,21 +38,26 @@ class RadioField extends StatefulWidget {
 class _RadioFieldState extends State<RadioField> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children:
-            List<Widget>.generate(widget._controller.proposals.length, (index) {
-      final prop = widget._controller.proposals[index];
-      return RadioListTile<int>(
-        activeColor: widget._color,
-        title: TextRow(buildText(prop.content, 18), 2),
-        value: index,
-        groupValue: widget._controller.index,
-        onChanged: (int? value) {
-          setState(() {
-            widget._controller.setIndex(value);
-          });
-        },
-      );
-    }));
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: widget._color),
+      ),
+      child: Column(
+          children: List<Widget>.generate(widget._controller.proposals.length,
+              (index) {
+        final prop = widget._controller.proposals[index];
+        return RadioListTile<int>(
+          activeColor: widget._color,
+          title: TextRow(buildText(prop.content, 18), 2),
+          value: index,
+          groupValue: widget._controller.index,
+          onChanged: (int? value) {
+            setState(() {
+              widget._controller.setIndex(value);
+            });
+          },
+        );
+      })),
+    );
   }
 }

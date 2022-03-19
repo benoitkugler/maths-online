@@ -239,6 +239,8 @@ var (
 	_ blockInstance = TextInstance{}
 	_ blockInstance = FormulaDisplayInstance{}
 	_ blockInstance = VariationTableInstance{}
+	_ blockInstance = SignTableInstance{}
+	_ blockInstance = FigureInstance{}
 )
 
 // TextInstance is a paragraph of text, which may contain expression or
@@ -309,3 +311,7 @@ func (vt VariationTableInstance) toClient() client.Block {
 type SignTableInstance client.SignTableBlock
 
 func (vt SignTableInstance) toClient() client.Block { return client.SignTableBlock(vt) }
+
+type FigureInstance client.FigureBlock
+
+func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
