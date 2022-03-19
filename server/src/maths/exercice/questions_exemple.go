@@ -430,21 +430,21 @@ var PredefinedQuestions = [...]QuestionInstance{
 				text("Quel point est le projeté orthogonal de D sur (AH) ?"),
 			}},
 			FigureInstance{Figure: repere.Figure{
-				Width:  1000,
-				Height: 600,
+				Width:  50,
+				Height: 30,
 				Points: map[string]repere.LabeledPoint{
-					"A": {Point: repere.Coord{X: 100, Y: 500}, Pos: repere.TopLeft},
-					"B": {Point: repere.Coord{X: 100, Y: 100}, Pos: repere.BottomLeft},
-					"C": {Point: repere.Coord{X: 900, Y: 100}, Pos: repere.BottomRight},
-					"D": {Point: repere.Coord{X: 900, Y: 500}, Pos: repere.TopRight},
-					"H": {Point: repere.ProjeteOrtho(repere.Coord{X: 100, Y: 100}, repere.Coord{X: 100, Y: 500}, repere.Coord{X: 900, Y: 100}), Pos: repere.Top},
-					"K": {Point: repere.ProjeteOrtho(repere.Coord{X: 900, Y: 500}, repere.Coord{X: 100, Y: 500}, repere.Coord{X: 900, Y: 100}), Pos: repere.Top},
+					"A": {Point: repere.Coord{X: 5, Y: 25}, Pos: repere.TopLeft},
+					"B": {Point: repere.Coord{X: 5, Y: 5}, Pos: repere.BottomLeft},
+					"C": {Point: repere.Coord{X: 45, Y: 5}, Pos: repere.BottomRight},
+					"D": {Point: repere.Coord{X: 45, Y: 25}, Pos: repere.TopRight},
+					"H": {Point: repere.ProjeteOrtho(repere.Coord{X: 5, Y: 5}, repere.Coord{X: 5, Y: 25}, repere.Coord{X: 45, Y: 5}), Pos: repere.Top},
+					"K": {Point: repere.ProjeteOrtho(repere.Coord{X: 45, Y: 25}, repere.Coord{X: 5, Y: 25}, repere.Coord{X: 45, Y: 5}), Pos: repere.Top},
 				},
 				Lines: []repere.Line{
 					{LabelName: "a", From: "A", To: "B", LabelPos: repere.Left},
 					{LabelName: "b", From: "B", To: "C", LabelPos: repere.Bottom},
-					{LabelName: "", From: "C", To: "D", LabelPos: repere.Right},
-					{LabelName: "", From: "D", To: "A", LabelPos: repere.Bottom},
+					{LabelName: "c", From: "C", To: "D", LabelPos: repere.Right},
+					{LabelName: "d", From: "D", To: "A", LabelPos: repere.Top},
 
 					// diagonal
 					{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},

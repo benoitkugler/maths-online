@@ -282,52 +282,56 @@ class _QuestionPageState extends State<QuestionPage> {
         _controllers, widget.categorie.color);
     builder.build();
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Text(
-          "Thème test",
-          style: TextStyle(fontSize: 22, shadows: shadows),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              widget.question.title,
-              style: TextStyle(
-                shadows: shadows,
-                fontSize: 20,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Text(
+            "Thème test",
+            style: TextStyle(fontSize: 22, shadows: shadows),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.question.title,
+                style: TextStyle(
+                  shadows: shadows,
+                  fontSize: 20,
+                ),
               ),
             ),
           ),
-        ),
-        Expanded(
-          child: ListView(
-            shrinkWrap: true,
-            children: builder.rows
-                .map(
-                  (e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                      child: e),
-                )
-                .toList(),
+          Expanded(
+            child: ListView(
+              shrinkWrap: true,
+              children: builder.rows
+                  .map(
+                    (e) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: e),
+                  )
+                  .toList(),
+            ),
           ),
-        ),
-        spacing,
-        ElevatedButton(
-          onPressed: areAnswersValid ? () => answers().dispatch(context) : null,
-          style: ElevatedButton.styleFrom(primary: widget.categorie.color),
-          child: const Text(
-            "Valider",
-            style: TextStyle(fontSize: 18),
+          spacing,
+          ElevatedButton(
+            onPressed:
+                areAnswersValid ? () => answers().dispatch(context) : null,
+            style: ElevatedButton.styleFrom(primary: widget.categorie.color),
+            child: const Text(
+              "Valider",
+              style: TextStyle(fontSize: 18),
+            ),
           ),
-        ),
-        spacing,
-        TimeoutBar(const Duration(seconds: 60), widget.categorie.color),
-        spacing,
-        const Text("", style: TextStyle(fontSize: 16)),
-      ],
+          spacing,
+          TimeoutBar(const Duration(seconds: 60), widget.categorie.color),
+          spacing,
+          const Text("", style: TextStyle(fontSize: 16)),
+        ],
+      ),
     );
   }
 }

@@ -41,6 +41,7 @@ class _RadioFieldState extends State<RadioField> {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: widget._color),
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Column(
           children: List<Widget>.generate(widget._controller.proposals.length,

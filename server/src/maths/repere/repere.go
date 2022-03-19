@@ -2,6 +2,8 @@
 // 2D mathematical figure drawing
 package repere
 
+import "math"
+
 //go:generate ../../../../../structgen/structgen -source=repere.go -mode=dart:../../../../eleve/lib/exercices/repere.gen.dart
 
 // Coord is a coordinate pair, in the usual mathematical plan,
@@ -39,11 +41,12 @@ func ProjeteOrtho(B, A, C Coord) Coord {
 	// det(AB, AC)
 	abX := B.X - A.X
 	abY := B.Y - A.Y
-	d := (abX*v - abY*u)
+	d := float64(abX*v - abY*u)
 	// solve for BH = (x, y)
 	// xu + yv = 0
 	// xv - yu = -d
-	x := -d * v / (u*u + v*v)
-	y := d * u / (u*u + v*v)
+	norm := float64(u*u + v*v)
+	x := int(math.Round(-d * float64(v) / norm))
+	y := int(math.Round(d * float64(u) / norm))
 	return Coord{X: (x + B.X), Y: (y + B.Y)}
 }

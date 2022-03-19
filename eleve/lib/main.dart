@@ -47,6 +47,13 @@ class MyApp extends StatelessWidget {
           title: const Text('Isiro'),
         ),
         body: const _HomePage(),
+        // body: Center(
+        //     child: Repere(Figure({
+        //   "A": LabeledPoint(Coord(40, 10), LabelPos.bottom),
+        //   "B": LabeledPoint(Coord(10, 40), LabelPos.bottom),
+        // }, [
+        //   Line("", "A", "B", LabelPos.bottom)
+        // ], 40, 50))),
       ),
     );
   }
