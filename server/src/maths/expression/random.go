@@ -76,6 +76,8 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 // variables, resolving possible dependencies.
 // It returns an InvalidRandomVariable error for invalid cycles, like a = a +1
 // or a = b + 1; b = a
+// By design, a set of random parameters is either always valid, or always invalid,
+// meaning this function may be used once as validation step.
 func (rv RandomParameters) Instantiate() (Variables, error) {
 	resolver := randomVarResolver{
 		defs:    rv,
@@ -144,4 +146,22 @@ func (rd random) validate(pos int) error {
 	}
 
 	return nil
+}
+
+// IsValidIndex instantiates the expression using `parameters`, then evaluate the resulting
+// expression and checks if it is usable as input in a slice of length `length`, that is if
+// the result is an integer in [0, length[
+// It also returns the frequency of successul tries, in % (between 0 and 100)
+// `parameters` must be a valid set of parameters
+func (expr *Expression) IsValidIndex(parameters RandomParameters, length int) (bool, int) {
+	const nbTries = 1000
+	var nbSuccess int
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+		value := expr.Evaluate(ps)
+		if index, ok := isInt(value); ok && 0 <= index && index < length {
+			nbSuccess++
+		}
+	}
+	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
 }

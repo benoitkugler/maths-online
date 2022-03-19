@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -112,4 +113,49 @@ func Test_sieveOfEratosthenes(t *testing.T) {
 			t.Errorf("sieveOfEratosthenes() = %v, want %v", gotPrimes, tt.wantPrimes)
 		}
 	}
+}
+
+func TestExpression_IsValidIndex(t *testing.T) {
+	tests := []struct {
+		expr       string
+		parameters RandomParameters
+		length     int
+		want       bool
+	}{
+		{
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{'a': mustParse(t, "2")}, 4, true,
+		},
+		{
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{'a': mustParse(t, "randInt(0;3)")}, 4, true,
+		},
+		{
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", RandomParameters{'a': mustParse(t, "randInt(0;3)")}, 4, false,
+		},
+		{
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", RandomParameters{'a': mustParse(t, "randInt(0;3)")}, 4, false,
+		},
+		{
+			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", RandomParameters{
+				'a': mustParse(t, "randInt(3;12)"), // BC
+				'b': mustParse(t, "randInt(3;12)"), // AC
+				'c': mustParse(t, "randInt(3;12)"), // AB
+			}, 4, true,
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		got, _ := expr.IsValidIndex(tt.parameters, tt.length)
+		if got != tt.want {
+			t.Errorf("Expression.IsValidIndex() got = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func TestExample(t *testing.T) {
+	expr, _, _ := Parse("1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
+	randExpr, _, _ := Parse("randInt(0;3)")
+	params := RandomParameters{'a': randExpr}
+
+	_, freq := expr.IsValidIndex(params, 3)
+	fmt.Println(freq) // approx 100 - 25 = 75
 }

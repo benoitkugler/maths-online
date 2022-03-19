@@ -120,6 +120,20 @@ func Test_Expression_eval(t *testing.T) {
 		{
 			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{'a': 2}, 2,
 		},
+		{
+			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
+				'a': 8,  // BC
+				'b': 12, // AC
+				'c': 4,  // AB
+			}, 0,
+		},
+		{
+			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
+				'a': 3, // BC
+				'b': 4, // AC
+				'c': 5, // AB
+			}, 3,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
