@@ -55,9 +55,9 @@ extension CategorieColor on Categorie {
       case Categorie.green:
         return Colors.green;
       case Categorie.orange:
-        return Colors.orange;
+        return Colors.orange.shade700;
       case Categorie.yellow:
-        return Colors.yellow;
+        return Colors.yellow.shade700;
       case Categorie.blue:
         return Colors.blue;
     }

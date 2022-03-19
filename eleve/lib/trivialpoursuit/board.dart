@@ -212,7 +212,7 @@ class _AnimatedGlow extends StatefulWidget {
 class __AnimatedGlowState extends State<_AnimatedGlow>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
-  static const radiusFactor = 6;
+  static const radiusFactor = 5;
   static const duration = Duration(milliseconds: 800);
 
   @override
@@ -253,16 +253,9 @@ class _TileGlow extends CustomPainter {
   final Path _path;
   final double blurRadius;
 
-  static const highlightWidth = 10.0;
+  static const highlightWidth = 15.0;
 
   const _TileGlow(this.insideColor, this._path, this.blurRadius);
-
-  Color get color {
-    if (insideColor.computeLuminance() > 0.5) {
-      return Colors.red;
-    }
-    return Colors.white;
-  }
 
   @override
   bool? hitTest(Offset position) {
@@ -278,7 +271,7 @@ class _TileGlow extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = highlightWidth
-        ..color = color
+        ..color = Colors.white
         ..imageFilter =
             ImageFilter.blur(sigmaX: blurRadius, sigmaY: blurRadius),
     );
@@ -302,14 +295,23 @@ class _TilePainter extends CustomPainter {
   Paint _strokeStyle() {
     return Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
+      ..strokeWidth = isHighlighted ? 4 : 6
       ..color = desc.color;
+  }
+
+  Color get darkened {
+    const amount = 0.1;
+
+    final hsl = HSLColor.fromColor(desc.color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+
+    return hslDark.toColor();
   }
 
   Paint _fillStyle() {
     return Paint()
       ..style = PaintingStyle.fill
-      ..color = isHighlighted ? desc.color : desc.color.withOpacity(0.6);
+      ..color = isHighlighted ? darkened : desc.color.withOpacity(0.6);
   }
 
   @override
@@ -321,12 +323,16 @@ class _TilePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final _path = desc.path;
 
-    canvas.save();
-    canvas.clipPath(_path); // no to stroke outside the path
-    canvas.drawPath(_path, _strokeStyle());
-    canvas.drawPath(_path, _fillStyle());
-
-    canvas.restore();
+    if (isHighlighted) {
+      canvas.drawPath(_path, _strokeStyle());
+      canvas.drawPath(_path, _fillStyle());
+    } else {
+      canvas.save();
+      canvas.clipPath(_path); // no to stroke outside the path
+      canvas.drawPath(_path, _strokeStyle());
+      canvas.drawPath(_path, _fillStyle());
+      canvas.restore();
+    }
   }
 
   @override

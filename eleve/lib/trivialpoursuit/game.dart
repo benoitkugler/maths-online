@@ -5,6 +5,7 @@ import 'package:eleve/exercices/types.gen.dart' as exercices;
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
+import 'package:eleve/trivialpoursuit/game_debug.dart';
 import 'package:eleve/trivialpoursuit/game_end.dart';
 import 'package:eleve/trivialpoursuit/lobby.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
@@ -69,35 +70,11 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   void processEventsDebug() async {
-    await processEvents([
-      const StateUpdate(
-          [
-            PlayerJoin(0),
-            GameStart(),
-            // PlayerTurn("", 0),
-            // DiceThrow(2),
-            // PossibleMoves("Katia", [1, 2, 3], 1),
-            // Move([0, 1, 2, 3, 4, 5], 5),
-            // ShowQuestion("test", 60, Categorie.orange),
-            // PlayerAnswerResult(0, false),
-            // GameEnd([0, 1], ["Pierre", "Paul"])
-          ],
-          GameState({
-            0: PlayerStatus("Player 2", [false, false, false, true, false]),
-            1: PlayerStatus("Player 2", [false, false, false, false, false]),
-            2: PlayerStatus("Player 2", [false, true, false, false, false]),
-          }, 0, 0)),
-    ]);
+    for (var update in updates) {
+      await processEvents(update);
 
-    // await Future<void>.delayed(const Duration(seconds: 3));
-
-    // await processEvents([
-    //   StateUpdate(const [
-    //     DiceThrow(2)
-    //     // PlayerAnswerResult(0, true),
-    //     // GameEnd([0], ["Pierre"])
-    //   ], state),
-    // ]);
+      await Future<void>.delayed(const Duration(seconds: 3));
+    }
   }
 
   @override
