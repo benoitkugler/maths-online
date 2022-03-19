@@ -58,7 +58,7 @@ func Test_Expression_eval(t *testing.T) {
 			"x + 2", Variables{'x': 4}, 6,
 		},
 		{
-			"2 + 0 * randInt(1,3)", nil, 2,
+			"2 + 0 * randInt(1;3)", nil, 2,
 		},
 		{
 			"4 * sgn(-1)", nil, -4,
@@ -73,7 +73,7 @@ func Test_Expression_eval(t *testing.T) {
 			"4 * sgn(-1) * sgn(1) * sgn(0)", nil, 0,
 		},
 		{
-			"2 * randPrime(8, 12)", nil, 22,
+			"2 * randPrime(8; 12)", nil, 22,
 		},
 		{
 			"2 * isPrime(8)", nil, 0,

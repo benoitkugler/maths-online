@@ -222,7 +222,7 @@ type random struct {
 
 func (r random) String() string {
 	if r.isPrime {
-		return fmt.Sprintf("randPrime(%d, %d)", r.start, r.end)
+		return fmt.Sprintf("randPrime(%d; %d)", r.start, r.end)
 	}
-	return fmt.Sprintf("randInt(%d, %d)", r.start, r.end)
+	return fmt.Sprintf("randInt(%d; %d)", r.start, r.end)
 }

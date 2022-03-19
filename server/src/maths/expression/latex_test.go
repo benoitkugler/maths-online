@@ -37,8 +37,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"(x^y)^z^t",
 		"\u0393 + \u0398 + \u03B8", // some greek letters
 		"\uE000 +  \uE000 + \uE001 + \u0398 + \u03B8", // custom variables
-		"randInt(3,14) + 2",
-		"randPrime(3,14) + 2",
+		"randInt(3;14) + 2",
+		"randPrime(3;14) + 2",
 		"sgn(-8)",
 		"isPrime(-8)",
 		"8 % 3",

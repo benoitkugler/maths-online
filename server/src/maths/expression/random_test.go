@@ -31,10 +31,10 @@ func TestRandomVariables_instantiate(t *testing.T) {
 			map[Variable]string{'a': "b + 1", 'b': " c+1", 'c': "8"}, Variables{'a': 10, 'b': 9, 'c': 8}, false,
 		},
 		{
-			map[Variable]string{'a': "0*randInt(1,3)"}, Variables{'a': 0}, false,
+			map[Variable]string{'a': "0*randInt(1;3)"}, Variables{'a': 0}, false,
 		},
 		{
-			map[Variable]string{'a': "randInt(1,1)", 'b': "2*a"}, Variables{'a': 1, 'b': 2}, false,
+			map[Variable]string{'a': "randInt(1;1)", 'b': "2*a"}, Variables{'a': 1, 'b': 2}, false,
 		},
 	}
 	for _, tt := range tests {
@@ -64,7 +64,7 @@ func TestRandomVariables_instantiate(t *testing.T) {
 func TestRandomVariables_range(t *testing.T) {
 	for range [10]int{} {
 		rv := RandomParameters{
-			'a': mustParse(t, "3*randInt(1, 10)"),
+			'a': mustParse(t, "3*randInt(1; 10)"),
 			'b': mustParse(t, "-a"),
 		}
 		values, err := rv.Instantiate()
@@ -80,8 +80,8 @@ func TestRandomVariables_range(t *testing.T) {
 		}
 
 		rv = RandomParameters{
-			'a': mustParse(t, "randInt(1, 10)"),
-			'b': mustParse(t, "sgn(2*randInt(0,1)-1) * a"),
+			'a': mustParse(t, "randInt(1; 10)"),
+			'b': mustParse(t, "sgn(2*randInt(0;1)-1) * a"),
 		}
 		values, err = rv.Instantiate()
 		if err != nil {

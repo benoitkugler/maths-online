@@ -29,9 +29,9 @@ type randFunction struct {
 type symbol uint8
 
 const (
-	openPar  symbol = iota // (
-	closePar               // )
-	comma                  // ,
+	openPar   symbol = iota // (
+	closePar                // )
+	semicolon               // ;
 
 	invalidSymbol
 )
@@ -127,8 +127,8 @@ func (tk *tokenizer) readToken() (tok token) {
 	case c == ')':
 		out.data = closePar
 		tk.pos++
-	case c == ',':
-		out.data = comma
+	case c == ';':
+		out.data = semicolon
 		tk.pos++
 	case isRem:
 		out.data = rem
@@ -250,6 +250,8 @@ func (tk *tokenizer) readNumber() numberText {
 		r := tk.src[tk.pos]
 		if unicode.IsDigit(r) || r == '.' {
 			buffer = append(buffer, r)
+		} else if r == ',' { // also accept comma a decimal separator
+			buffer = append(buffer, '.')
 		} else {
 			break
 		}

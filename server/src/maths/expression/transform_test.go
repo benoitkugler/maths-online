@@ -243,12 +243,12 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		// {"x + x - x", "x", ExpandedSubstitutions, true}, // TODO ?
 		{"e^x * (2*x +1)", "2*x*e^x + e^x", ExpandedSubstitutions, true},
 		{"e^x * (2*x +1)", "2*x*e^x + e^x", SimpleSubstitutions, false},
-		{"2 + randInt(1,3)", "randInt(1,3) + 2", SimpleSubstitutions, true},
-		{"2 + randInt(1,3) + randInt(2,4)", "randInt(1,3) + 2 + randInt(2,4)", SimpleSubstitutions, true},
-		{"2 + randInt(1,3) + randInt(1,4)", "randInt(1,3) + 2 + randInt(1,4)", SimpleSubstitutions, true},
-		{"2 + randPrime(1,3) + randPrime(2,4)", "randPrime(1,3) + 2 + randPrime(2,4)", SimpleSubstitutions, true},
-		{"2 + randPrime(1,3) + randPrime(1,4)", "randPrime(1,3) + 2 + randPrime(1,4)", SimpleSubstitutions, true},
-		{"randPrime(1,4) + randInt(1,3)", "randInt(1,3) + randPrime(1,4)", SimpleSubstitutions, true},
+		{"2 + randInt(1;3)", "randInt(1;3) + 2", SimpleSubstitutions, true},
+		{"2 + randInt(1;3) + randInt(2;4)", "randInt(1;3) + 2 + randInt(2;4)", SimpleSubstitutions, true},
+		{"2 + randInt(1;3) + randInt(1;4)", "randInt(1;3) + 2 + randInt(1;4)", SimpleSubstitutions, true},
+		{"2 + randPrime(1;3) + randPrime(2;4)", "randPrime(1;3) + 2 + randPrime(2;4)", SimpleSubstitutions, true},
+		{"2 + randPrime(1;3) + randPrime(1;4)", "randPrime(1;3) + 2 + randPrime(1;4)", SimpleSubstitutions, true},
+		{"randPrime(1;4) + randInt(1;3)", "randInt(1;3) + randPrime(1;4)", SimpleSubstitutions, true},
 		{"-1.2", "-(1.2)", SimpleSubstitutions, true},
 	}
 	for _, tt := range tests {

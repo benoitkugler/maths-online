@@ -109,7 +109,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 				Reason: "parenthèse fermante invalide",
 				Pos:    tok.pos,
 			}
-		case comma:
+		case semicolon:
 			return nil, InvalidExpr{
 				Reason: "virgule inattendue",
 				Pos:    tok.pos,
@@ -356,7 +356,7 @@ func (pr *parser) parseRandFunction(pos int, isPrime bool) (rd random, err error
 		return random{}, err
 	}
 
-	if tok := pr.tk.next(); tok.data != comma {
+	if tok := pr.tk.next(); tok.data != semicolon {
 		return random{}, InvalidExpr{
 			Reason: "virgule manquant entre les arguments de randInt",
 			Pos:    tok.pos,
