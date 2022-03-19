@@ -334,6 +334,8 @@ var expressions = [...]struct {
 	{"isPrime( )", nil, true},
 	{"sgn( )", nil, true},
 	{"sgn(-8)", &Expression{atom: sgnFn, right: &Expression{atom: minus, right: newNumber(8)}}, false},
+	{"isZero( )", nil, true},
+	{"isZero(-8)", &Expression{atom: isZeroFn, right: &Expression{atom: minus, right: newNumber(8)}}, false},
 	{"%", nil, true},
 	{"8 % 2", &Expression{atom: mod, left: newNumber(8), right: newNumber(2)}, false},
 	{"//", nil, true},

@@ -293,6 +293,8 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = sqrtFn
 	case "sgn":
 		fn = sgnFn
+	case "isZero":
+		fn = isZeroFn
 	case "isPrime":
 		fn = isPrimeFn
 	default: // no  matching function name

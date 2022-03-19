@@ -142,6 +142,7 @@ const (
 	absFn
 	sqrtFn
 	sgnFn     // returns -1 0 or 1
+	isZeroFn  // returns 1 is its argument is 0, 0 otherwise
 	isPrimeFn // returns 0 or 1
 	// round
 
@@ -172,6 +173,8 @@ func (fn function) String() string {
 		return "sqrt"
 	case sgnFn:
 		return "sgn"
+	case isZeroFn:
+		return "isZero"
 	case isPrimeFn:
 		return "isPrime"
 	default:

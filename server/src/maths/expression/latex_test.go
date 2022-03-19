@@ -44,6 +44,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"randInt(3;14) + 2",
 		"randPrime(3;14) + 2",
 		"sgn(-8)",
+		"isZero(-8)",
 		"isPrime(-8)",
 		"8 % 3",
 		"9 // 2",

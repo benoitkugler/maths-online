@@ -116,6 +116,11 @@ func (fn function) eval(left, right float64, _ valueResolver) float64 {
 			return -1
 		}
 		return 0
+	case isZeroFn:
+		if arg == 0 {
+			return 1
+		}
+		return 0
 	case isPrimeFn:
 		argInt, isInt := isInt(arg)
 		if !isInt {

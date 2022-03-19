@@ -111,6 +111,15 @@ func Test_Expression_eval(t *testing.T) {
 		{
 			"8.2 // 3", nil, 0, // error, actually
 		},
+		{
+			"acos(7/sqrt(98)) * 180 / " + string(piRune), nil, 45,
+		},
+		{
+			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
+		},
+		{
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{'a': 2}, 2,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

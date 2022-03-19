@@ -102,6 +102,8 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf(`\sqrt{%s}`, arg)
 	case sgnFn:
 		return fmt.Sprintf(`\text{sgn}\left(%s\right)`, arg)
+	case isZeroFn:
+		return fmt.Sprintf(`\text{isZero}\left(%s\right)`, arg)
 	case isPrimeFn:
 		return fmt.Sprintf(`\text{isPrime}\left(%s\right)`, arg)
 	default:
