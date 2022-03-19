@@ -33,7 +33,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 				ID:              0,
 				Label:           mustParse("(x−6)*(4*x−3)"),
 				ComparisonLevel: expression.SimpleSubstitutions,
-				Answer:          mustParse("24*x^2 - 27 *x + 18"),
+				Answer:          mustParse("4*x^2 - 27 *x + 18"),
 			},
 		},
 	},
