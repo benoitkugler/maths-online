@@ -5,9 +5,9 @@ cd src &&
 echo "Building (downloading deps if needed)..." && 
 go build main.go &&
 echo "Done." && 
-echo "Removing deps to free disk space..." &&
-go clean -cache -modcache && 
-echo "Done." &&
+# echo "Removing deps to free disk space..." &&
+# go clean -cache -modcache && 
+# echo "Done." &&
 echo "Moving executable and leaving source..."
 cd .. && 
 mv src/main . &&
