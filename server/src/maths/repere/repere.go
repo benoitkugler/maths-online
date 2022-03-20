@@ -7,9 +7,9 @@ import "math"
 //go:generate ../../../../../structgen/structgen -source=repere.go -mode=dart:../../../../eleve/lib/exercices/repere.gen.dart
 
 // Coord is a coordinate pair, in the usual mathematical plan,
-// where X and Y are expressed in a fraction (1/1000) of the total square.
+// where X and Y must be between 0 and the dimension of the figure
 type Coord struct {
-	X, Y int
+	X, Y float64
 }
 
 type PointName = string
@@ -22,8 +22,10 @@ type LabeledPoint struct {
 type Figure struct {
 	Points map[PointName]LabeledPoint
 	Lines  []Line
-	// Width and Height are values between 0 and 1000
-	// restricting the displayed area
+	// Width and Height defines the logical size of
+	// the figure. Since points comparison as performed
+	// by rounding to integers it also influences the
+	// tolerance allowed.
 	Width, Height int
 }
 
@@ -33,20 +35,20 @@ type Line struct {
 	LabelPos  LabelPos // used only if LabelName is not zero
 }
 
-// ProjeteOrtho compute the coordinates of the orthogonal
+// OrthogonalProjection compute the coordinates of the orthogonal
 // projection of B on (AC).
-func ProjeteOrtho(B, A, C Coord) Coord {
+func OrthogonalProjection(B, A, C Coord) Coord {
 	u := C.X - A.X // AC
 	v := C.Y - A.Y // AC
 	// det(AB, AC)
 	abX := B.X - A.X
 	abY := B.Y - A.Y
-	d := float64(abX*v - abY*u)
+	d := abX*v - abY*u
 	// solve for BH = (x, y)
 	// xu + yv = 0
 	// xv - yu = -d
-	norm := float64(u*u + v*v)
-	x := int(math.Round(-d * float64(v) / norm))
-	y := int(math.Round(d * float64(u) / norm))
-	return Coord{X: (x + B.X), Y: (y + B.Y)}
+	norm := u*u + v*v
+	x := math.Round(-d * v / norm)
+	y := math.Round(d * u / norm)
+	return Coord{X: x + B.X, Y: y + B.Y}
 }

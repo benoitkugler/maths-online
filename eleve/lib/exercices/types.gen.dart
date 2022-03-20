@@ -4,6 +4,55 @@ import 'repere.gen.dart';
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
+int intFromJson(dynamic json) => json as int;
+
+int intToJson(int item) => item;
+
+// github.com/benoitkugler/maths-online/maths/repere.IntCoord
+class IntCoord {
+  final int x;
+  final int y;
+
+  const IntCoord(this.x, this.y);
+
+  @override
+  String toString() {
+    return "IntCoord($x, $y)";
+  }
+}
+
+IntCoord intCoordFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return IntCoord(intFromJson(json['X']), intFromJson(json['Y']));
+}
+
+JSON intCoordToJson(IntCoord item) {
+  return {"X": intToJson(item.x), "Y": intToJson(item.y)};
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.DoublePointAnswer
+class DoublePointAnswer implements Answer {
+  final IntCoord from;
+  final IntCoord to;
+
+  const DoublePointAnswer(this.from, this.to);
+
+  @override
+  String toString() {
+    return "DoublePointAnswer($from, $to)";
+  }
+}
+
+DoublePointAnswer doublePointAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return DoublePointAnswer(
+      intCoordFromJson(json['From']), intCoordFromJson(json['To']));
+}
+
+JSON doublePointAnswerToJson(DoublePointAnswer item) {
+  return {"From": intCoordToJson(item.from), "To": intCoordToJson(item.to)};
+}
+
 String stringFromJson(dynamic json) => json as String;
 
 String stringToJson(String item) => item;
@@ -29,7 +78,7 @@ JSON expressionAnswerToJson(ExpressionAnswer item) {
   return {"Expression": stringToJson(item.expression)};
 }
 
-double doubleFromJson(dynamic json) => json as double;
+double doubleFromJson(dynamic json) => (json as num).toDouble();
 
 double doubleToJson(double item) => item;
 
@@ -53,10 +102,6 @@ NumberAnswer numberAnswerFromJson(dynamic json_) {
 JSON numberAnswerToJson(NumberAnswer item) {
   return {"Value": doubleToJson(item.value)};
 }
-
-int intFromJson(dynamic json) => json as int;
-
-int intToJson(int item) => item;
 
 List<int> listIntFromJson(dynamic json) {
   if (json == null) {
@@ -90,6 +135,27 @@ JSON orderedListAnswerToJson(OrderedListAnswer item) {
   return {"Indices": listIntToJson(item.indices)};
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.PointAnswer
+class PointAnswer implements Answer {
+  final IntCoord point;
+
+  const PointAnswer(this.point);
+
+  @override
+  String toString() {
+    return "PointAnswer($point)";
+  }
+}
+
+PointAnswer pointAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PointAnswer(intCoordFromJson(json['Point']));
+}
+
+JSON pointAnswerToJson(PointAnswer item) {
+  return {"Point": intCoordToJson(item.point)};
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.RadioAnswer
 class RadioAnswer implements Answer {
   final int index;
@@ -119,12 +185,16 @@ Answer answerFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return expressionAnswerFromJson(data);
+      return doublePointAnswerFromJson(data);
     case 1:
-      return numberAnswerFromJson(data);
+      return expressionAnswerFromJson(data);
     case 2:
-      return orderedListAnswerFromJson(data);
+      return numberAnswerFromJson(data);
     case 3:
+      return orderedListAnswerFromJson(data);
+    case 4:
+      return pointAnswerFromJson(data);
+    case 5:
       return radioAnswerFromJson(data);
     default:
       throw ("unexpected type");
@@ -132,14 +202,18 @@ Answer answerFromJson(dynamic json_) {
 }
 
 JSON answerToJson(Answer item) {
-  if (item is ExpressionAnswer) {
-    return {'Kind': 0, 'Data': expressionAnswerToJson(item)};
+  if (item is DoublePointAnswer) {
+    return {'Kind': 0, 'Data': doublePointAnswerToJson(item)};
+  } else if (item is ExpressionAnswer) {
+    return {'Kind': 1, 'Data': expressionAnswerToJson(item)};
   } else if (item is NumberAnswer) {
-    return {'Kind': 1, 'Data': numberAnswerToJson(item)};
+    return {'Kind': 2, 'Data': numberAnswerToJson(item)};
   } else if (item is OrderedListAnswer) {
-    return {'Kind': 2, 'Data': orderedListAnswerToJson(item)};
+    return {'Kind': 3, 'Data': orderedListAnswerToJson(item)};
+  } else if (item is PointAnswer) {
+    return {'Kind': 4, 'Data': pointAnswerToJson(item)};
   } else if (item is RadioAnswer) {
-    return {'Kind': 3, 'Data': radioAnswerToJson(item)};
+    return {'Kind': 5, 'Data': radioAnswerToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -189,6 +263,52 @@ JSON figureBlockToJson(FigureBlock item) {
   return {"Figure": figureToJson(item.figure)};
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.FigureDoublePointFieldBlock
+class FigureDoublePointFieldBlock implements Block {
+  final Figure figure;
+  final int iD;
+
+  const FigureDoublePointFieldBlock(this.figure, this.iD);
+
+  @override
+  String toString() {
+    return "FigureDoublePointFieldBlock($figure, $iD)";
+  }
+}
+
+FigureDoublePointFieldBlock figureDoublePointFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FigureDoublePointFieldBlock(
+      figureFromJson(json['Figure']), intFromJson(json['ID']));
+}
+
+JSON figureDoublePointFieldBlockToJson(FigureDoublePointFieldBlock item) {
+  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.FigurePointFieldBlock
+class FigurePointFieldBlock implements Block {
+  final Figure figure;
+  final int iD;
+
+  const FigurePointFieldBlock(this.figure, this.iD);
+
+  @override
+  String toString() {
+    return "FigurePointFieldBlock($figure, $iD)";
+  }
+}
+
+FigurePointFieldBlock figurePointFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FigurePointFieldBlock(
+      figureFromJson(json['Figure']), intFromJson(json['ID']));
+}
+
+JSON figurePointFieldBlockToJson(FigurePointFieldBlock item) {
+  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.FormulaBlock
 class FormulaBlock implements Block {
   final String formula;
@@ -210,40 +330,6 @@ JSON formulaBlockToJson(FormulaBlock item) {
   return {"Formula": stringToJson(item.formula)};
 }
 
-List<String> listStringFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(stringFromJson).toList();
-}
-
-List<dynamic> listStringToJson(List<String> item) {
-  return item.map(stringToJson).toList();
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldBlock
-class ListFieldBlock implements Block {
-  final List<String> choices;
-  final int iD;
-
-  const ListFieldBlock(this.choices, this.iD);
-
-  @override
-  String toString() {
-    return "ListFieldBlock($choices, $iD)";
-  }
-}
-
-ListFieldBlock listFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return ListFieldBlock(
-      listStringFromJson(json['Choices']), intFromJson(json['ID']));
-}
-
-JSON listFieldBlockToJson(ListFieldBlock item) {
-  return {"Choices": listStringToJson(item.choices), "ID": intToJson(item.iD)};
-}
-
 // github.com/benoitkugler/maths-online/maths/exercice/client.NumberFieldBlock
 class NumberFieldBlock implements Block {
   final int iD;
@@ -263,6 +349,17 @@ NumberFieldBlock numberFieldBlockFromJson(dynamic json_) {
 
 JSON numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD)};
+}
+
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
+}
+
+List<dynamic> listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListFieldBlock
@@ -549,20 +646,22 @@ Block blockFromJson(dynamic json_) {
     case 1:
       return figureBlockFromJson(data);
     case 2:
-      return formulaBlockFromJson(data);
+      return figureDoublePointFieldBlockFromJson(data);
     case 3:
-      return listFieldBlockFromJson(data);
+      return figurePointFieldBlockFromJson(data);
     case 4:
-      return numberFieldBlockFromJson(data);
+      return formulaBlockFromJson(data);
     case 5:
-      return orderedListFieldBlockFromJson(data);
+      return numberFieldBlockFromJson(data);
     case 6:
-      return radioFieldBlockFromJson(data);
+      return orderedListFieldBlockFromJson(data);
     case 7:
-      return signTableBlockFromJson(data);
+      return radioFieldBlockFromJson(data);
     case 8:
-      return textBlockFromJson(data);
+      return signTableBlockFromJson(data);
     case 9:
+      return textBlockFromJson(data);
+    case 10:
       return variationTableBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -574,22 +673,24 @@ JSON blockToJson(Block item) {
     return {'Kind': 0, 'Data': expressionFieldBlockToJson(item)};
   } else if (item is FigureBlock) {
     return {'Kind': 1, 'Data': figureBlockToJson(item)};
+  } else if (item is FigureDoublePointFieldBlock) {
+    return {'Kind': 2, 'Data': figureDoublePointFieldBlockToJson(item)};
+  } else if (item is FigurePointFieldBlock) {
+    return {'Kind': 3, 'Data': figurePointFieldBlockToJson(item)};
   } else if (item is FormulaBlock) {
-    return {'Kind': 2, 'Data': formulaBlockToJson(item)};
-  } else if (item is ListFieldBlock) {
-    return {'Kind': 3, 'Data': listFieldBlockToJson(item)};
+    return {'Kind': 4, 'Data': formulaBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
-    return {'Kind': 4, 'Data': numberFieldBlockToJson(item)};
+    return {'Kind': 5, 'Data': numberFieldBlockToJson(item)};
   } else if (item is OrderedListFieldBlock) {
-    return {'Kind': 5, 'Data': orderedListFieldBlockToJson(item)};
+    return {'Kind': 6, 'Data': orderedListFieldBlockToJson(item)};
   } else if (item is RadioFieldBlock) {
-    return {'Kind': 6, 'Data': radioFieldBlockToJson(item)};
+    return {'Kind': 7, 'Data': radioFieldBlockToJson(item)};
   } else if (item is SignTableBlock) {
-    return {'Kind': 7, 'Data': signTableBlockToJson(item)};
+    return {'Kind': 8, 'Data': signTableBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 8, 'Data': textBlockToJson(item)};
+    return {'Kind': 9, 'Data': textBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 9, 'Data': variationTableBlockToJson(item)};
+    return {'Kind': 10, 'Data': variationTableBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

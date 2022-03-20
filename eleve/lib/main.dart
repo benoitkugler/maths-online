@@ -1,6 +1,5 @@
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
-import 'package:eleve/exercices/repere.gen.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -57,22 +56,6 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
-}
-
-/// projette B sur AC
-Coord projeteOrtho(Coord B, Coord A, Coord C) {
-  final u = C.x - A.x; // AC
-  final v = C.y - A.y; // AC
-  // det(AB, AC)
-  final abX = B.x - A.x;
-  final abY = B.y - A.y;
-  final d = (abX * v - abY * u).toDouble();
-  // solve for BH = (x, y)
-  // xu + yv = 0
-  // xv - yu = -d
-  final x = -d * v / (u * u + v * v);
-  final y = d * u / (u * u + v * v);
-  return Coord((x + B.x).toInt(), (y + B.y).toInt());
 }
 
 class _HomePage extends StatefulWidget {

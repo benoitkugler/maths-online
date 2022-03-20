@@ -7,7 +7,8 @@ class NumberController extends FieldController {
   final TextEditingController textController;
 
   NumberController(void Function() onChange)
-      : textController = TextEditingController() {
+      : textController = TextEditingController(),
+        super(onChange) {
     textController.addListener(onChange);
   }
 
@@ -40,7 +41,7 @@ class NumberField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
-        width: 100,
+        width: 50,
         child: TextField(
           onSubmitted: (_) => onDone(),
           controller: _controller,

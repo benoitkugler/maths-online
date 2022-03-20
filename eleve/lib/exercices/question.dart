@@ -1,5 +1,6 @@
 import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
+import 'package:eleve/exercices/figure_point.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
@@ -36,6 +37,7 @@ class _ContentBuilder {
   final Map<int, FieldController> _controllers;
 
   final List<Widget> rows = []; // final output
+  final List<GlobalKey> zoomableWigets = [];
 
   List<InlineSpan> _currentRow = []; // current row
   bool lastIsText = false; // used to insert new line between to text block
@@ -58,6 +60,8 @@ class _ContentBuilder {
         controllers[block.iD] = RadioController(onChange, block.proposals);
       } else if (block is OrderedListFieldBlock) {
         controllers[block.iD] = OrderedListController(onChange, block);
+      } else if (block is FigurePointFieldBlock) {
+        controllers[block.iD] = FigurePointController(onChange);
       }
 
       // TODO: handle more fields
@@ -111,7 +115,7 @@ class _ContentBuilder {
     // start a new row
     _flushCurrentRow();
 
-    rows.add(Center(child: Repere(element.figure)));
+    rows.add(Center(child: StaticRepere(element.figure)));
   }
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
@@ -170,6 +174,18 @@ class _ContentBuilder {
     rows.add(OrderedListField(_color, ct));
   }
 
+  void _handleFigurePointFieldBlock(FigurePointFieldBlock element) {
+    final ct = _controllers[element.iD] as FigurePointController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    final key = GlobalKey();
+
+    zoomableWigets.add(key);
+    rows.add(Center(child: FigurePointField(element.figure, ct, key: key)));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -191,6 +207,8 @@ class _ContentBuilder {
         _handleRadioFieldBlock(element);
       } else if (element is OrderedListFieldBlock) {
         _handleOrderedListFieldBlock(element);
+      } else if (element is FigurePointFieldBlock) {
+        _handleFigurePointFieldBlock(element);
       } else {
         // TODO:
       }
@@ -228,6 +246,80 @@ class ValidQuestionNotification extends Notification {
   }
 }
 
+class _OptionScrollList extends StatefulWidget {
+  final _ContentBuilder content;
+
+  const _OptionScrollList(this.content, {Key? key}) : super(key: key);
+
+  @override
+  _OptionScrollListState createState() => _OptionScrollListState();
+}
+
+class _OptionScrollListState extends State<_OptionScrollList> {
+  bool _isPaningOverView = false;
+
+  /// returns true if [position] is in the widget identified
+  /// by [key]
+  bool _isInWidget(Offset position, GlobalKey key) {
+    // find your widget
+    final box = key.currentContext?.findRenderObject();
+    if (box is! RenderBox) {
+      return false;
+    }
+
+    //get offset
+    Offset boxOffset = box.localToGlobal(Offset.zero);
+
+    // check if your pointerdown event is inside the widget (you could do the same for the width, in this case I just used the height)
+    if (position.dy > boxOffset.dy &&
+        position.dy < boxOffset.dy + box.size.height) {
+      // check x dimension aswell
+      if (position.dx > boxOffset.dx &&
+          position.dx < boxOffset.dx + box.size.width) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void _checkPan(Offset position) {
+    final hasZommable =
+        widget.content.zoomableWigets.any((key) => _isInWidget(position, key));
+    setState(() {
+      _isPaningOverView = hasZommable;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerUp: (ev) {
+        // restore the scroll posibility
+        setState(() {
+          _isPaningOverView = false;
+        });
+      },
+      onPointerDown: (ev) {
+        _checkPan(ev.position);
+      },
+      child: ListView(
+        // if dragging over your widget, disable scroll, otherwise allow scrolling
+        physics: _isPaningOverView
+            ? const NeverScrollableScrollPhysics()
+            : const ScrollPhysics(),
+        shrinkWrap: true,
+        children: widget.content.rows
+            .map(
+              (e) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6.0), child: e),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
 class QuestionPage extends StatefulWidget {
   final Question question;
   final events.Categorie categorie;
@@ -241,11 +333,18 @@ class QuestionPage extends StatefulWidget {
 class _QuestionPageState extends State<QuestionPage> {
   late Map<int, FieldController> _controllers;
 
+  _ContentBuilder? builder;
+
   @override
   void initState() {
     _controllers = _ContentBuilder.initControllers(widget.question.enonce, () {
       setState(() {});
     });
+
+    builder = _ContentBuilder(_emitCheckSyntax, widget.question.enonce,
+        _controllers, widget.categorie.color);
+    builder!.build();
+
     super.initState();
   }
 
@@ -278,10 +377,6 @@ class _QuestionPageState extends State<QuestionPage> {
     ];
     const spacing = SizedBox(height: 20.0);
 
-    final builder = _ContentBuilder(_emitCheckSyntax, widget.question.enonce,
-        _controllers, widget.categorie.color);
-    builder.build();
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: Column(
@@ -304,18 +399,7 @@ class _QuestionPageState extends State<QuestionPage> {
               ),
             ),
           ),
-          Expanded(
-            child: ListView(
-              shrinkWrap: true,
-              children: builder.rows
-                  .map(
-                    (e) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6.0),
-                        child: e),
-                  )
-                  .toList(),
-            ),
-          ),
+          if (builder != null) Expanded(child: _OptionScrollList(builder!)),
           spacing,
           ElevatedButton(
             onPressed:

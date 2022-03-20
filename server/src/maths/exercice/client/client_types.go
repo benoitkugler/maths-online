@@ -39,16 +39,17 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()             {}
-func (FormulaBlock) isBlock()          {}
-func (VariationTableBlock) isBlock()   {}
-func (SignTableBlock) isBlock()        {}
-func (FigureBlock) isBlock()           {}
-func (NumberFieldBlock) isBlock()      {}
-func (ListFieldBlock) isBlock()        {}
-func (ExpressionFieldBlock) isBlock()  {}
-func (RadioFieldBlock) isBlock()       {}
-func (OrderedListFieldBlock) isBlock() {}
+func (TextBlock) isBlock()                   {}
+func (FormulaBlock) isBlock()                {}
+func (VariationTableBlock) isBlock()         {}
+func (SignTableBlock) isBlock()              {}
+func (FigureBlock) isBlock()                 {}
+func (NumberFieldBlock) isBlock()            {}
+func (ExpressionFieldBlock) isBlock()        {}
+func (RadioFieldBlock) isBlock()             {}
+func (OrderedListFieldBlock) isBlock()       {}
+func (FigurePointFieldBlock) isBlock()       {}
+func (FigureDoublePointFieldBlock) isBlock() {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -125,10 +126,18 @@ type OrderedListFieldBlock struct {
 	ID           int
 }
 
-// TODO:
-type ListFieldBlock struct {
-	Choices []string
-	ID      int
+// FigurePointFieldBlock asks for one 2D point
+type FigurePointFieldBlock struct {
+	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+	ID     int
+}
+
+// FigurePointFieldBlock asks for two 2D points,
+// which may be interpreted as a vector
+
+type FigureDoublePointFieldBlock struct {
+	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+	ID     int
 }
 
 // Answer is a sum type for the possible answers
@@ -141,6 +150,8 @@ func (NumberAnswer) isAnswer()      {}
 func (RadioAnswer) isAnswer()       {}
 func (ExpressionAnswer) isAnswer()  {}
 func (OrderedListAnswer) isAnswer() {}
+func (PointAnswer) isAnswer()       {}
+func (DoublePointAnswer) isAnswer() {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -158,6 +169,17 @@ type RadioAnswer struct {
 
 type OrderedListAnswer struct {
 	Indices []int // indices into the question field proposals
+}
+
+// PointAnswer is a 2D point, whoose coordinates
+// are rounded before begin compared
+type PointAnswer struct {
+	Point repere.IntCoord
+}
+
+type DoublePointAnswer struct {
+	From repere.IntCoord
+	To   repere.IntCoord
 }
 
 // QuestionAnswersIn map the field ids to their answer

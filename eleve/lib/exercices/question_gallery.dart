@@ -145,6 +145,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
         padding: const EdgeInsets.all(8.0),
         child: PageView(
           controller: _controller,
+          physics: NeverScrollableScrollPhysics(),
           children: questions.map((q) => _buildQuestion(q, context)).toList(),
         ),
       ),

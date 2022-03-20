@@ -28,6 +28,39 @@ func expr(s string) TextOrMaths {
 	return TextOrMaths{StringOrExpression: StringOrExpression{Expression: mustParse(s)}, IsMath: true}
 }
 
+var (
+	_A = repere.Coord{X: 5, Y: 25}
+	_B = repere.Coord{X: 5, Y: 5}
+	_C = repere.Coord{X: 45, Y: 5}
+	_D = repere.Coord{X: 45, Y: 25}
+	_K = repere.OrthogonalProjection(_D, _A, _C)
+
+	figure1 = repere.Figure{
+		Width:  50,
+		Height: 30,
+		Points: map[string]repere.LabeledPoint{
+			"A": {Point: _A, Pos: repere.TopLeft},
+			"B": {Point: _B, Pos: repere.BottomLeft},
+			"C": {Point: _C, Pos: repere.BottomRight},
+			"D": {Point: _D, Pos: repere.TopRight},
+			"H": {Point: repere.OrthogonalProjection(_B, _A, _C), Pos: repere.Top},
+			"K": {Point: _K, Pos: repere.Top},
+		},
+		Lines: []repere.Line{
+			{LabelName: "a", From: "A", To: "B", LabelPos: repere.Left},
+			{LabelName: "b", From: "B", To: "C", LabelPos: repere.Bottom},
+			{LabelName: "c", From: "C", To: "D", LabelPos: repere.Right},
+			{LabelName: "d", From: "D", To: "A", LabelPos: repere.Top},
+
+			// diagonal
+			{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},
+
+			{LabelName: "", From: "B", To: "H", LabelPos: repere.Bottom},
+			{LabelName: "", From: "D", To: "K", LabelPos: repere.Top},
+		},
+	}
+)
+
 var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
@@ -429,30 +462,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Quel point est le projeté orthogonal de D sur (AH) ?"),
 			}},
-			FigureInstance{Figure: repere.Figure{
-				Width:  50,
-				Height: 30,
-				Points: map[string]repere.LabeledPoint{
-					"A": {Point: repere.Coord{X: 5, Y: 25}, Pos: repere.TopLeft},
-					"B": {Point: repere.Coord{X: 5, Y: 5}, Pos: repere.BottomLeft},
-					"C": {Point: repere.Coord{X: 45, Y: 5}, Pos: repere.BottomRight},
-					"D": {Point: repere.Coord{X: 45, Y: 25}, Pos: repere.TopRight},
-					"H": {Point: repere.ProjeteOrtho(repere.Coord{X: 5, Y: 5}, repere.Coord{X: 5, Y: 25}, repere.Coord{X: 45, Y: 5}), Pos: repere.Top},
-					"K": {Point: repere.ProjeteOrtho(repere.Coord{X: 45, Y: 25}, repere.Coord{X: 5, Y: 25}, repere.Coord{X: 45, Y: 5}), Pos: repere.Top},
-				},
-				Lines: []repere.Line{
-					{LabelName: "a", From: "A", To: "B", LabelPos: repere.Left},
-					{LabelName: "b", From: "B", To: "C", LabelPos: repere.Bottom},
-					{LabelName: "c", From: "C", To: "D", LabelPos: repere.Right},
-					{LabelName: "d", From: "D", To: "A", LabelPos: repere.Top},
-
-					// diagonal
-					{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},
-
-					{LabelName: "", From: "B", To: "H", LabelPos: repere.Bottom},
-					{LabelName: "", From: "D", To: "K", LabelPos: repere.Top},
-				},
-			}},
+			FigureInstance{Figure: figure1},
 			RadioFieldInstance{
 				ID:     0,
 				Answer: 2,
@@ -463,6 +473,18 @@ var PredefinedQuestions = [...]QuestionInstance{
 					{Content: []client.TextOrMath{{Text: `H`, IsMath: false}}},
 					{Content: []client.TextOrMath{{Text: `D`, IsMath: false}}},
 				},
+			},
+		},
+	},
+	{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire le point M, projeté orthogonal de K sur (BC)."),
+			}},
+			FigurePointFieldInstance{
+				Figure: figure1,
+				Answer: repere.OrthogonalProjection(_K, _B, _C).Round(),
+				ID:     0,
 			},
 		},
 	},

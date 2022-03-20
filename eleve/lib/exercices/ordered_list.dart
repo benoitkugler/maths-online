@@ -11,7 +11,6 @@ class IndexedText {
 }
 
 class OrderedListController extends FieldController {
-  final void Function() onChange;
   final List<IndexedText> _references = [];
   final int expectedLength;
 
@@ -19,8 +18,9 @@ class OrderedListController extends FieldController {
 
   List<IndexedText> proposals = [];
 
-  OrderedListController(this.onChange, OrderedListFieldBlock field)
-      : expectedLength = field.answerLength {
+  OrderedListController(void Function() onChange, OrderedListFieldBlock field)
+      : expectedLength = field.answerLength,
+        super(onChange) {
     for (var i = 0; i < field.proposals.length; i++) {
       _references.add(IndexedText(i, field.proposals[i]));
     }
@@ -142,7 +142,7 @@ class _Symbol extends StatelessWidget {
     final text = Padding(
       padding: EdgeInsets.symmetric(
         vertical: 8,
-        horizontal: isAnswer ? 3 : 8,
+        horizontal: isAnswer ? 8 : 12,
       ),
       child: textMath(symbol.item.text, 16),
     );
@@ -157,7 +157,7 @@ class _Symbol extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: isAnswer ? 0 : 4),
+        padding: EdgeInsets.symmetric(horizontal: isAnswer ? 0 : 6),
         child: Material(
           elevation: 8,
           borderRadius: BorderRadius.circular(isAnswer ? 1 : 10),

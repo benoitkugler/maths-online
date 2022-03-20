@@ -6,7 +6,8 @@ class ExpressionController extends FieldController {
   final TextEditingController textController;
 
   ExpressionController(void Function() onChange)
-      : textController = TextEditingController() {
+      : textController = TextEditingController(),
+        super(onChange) {
     textController.addListener(onChange);
   }
 
@@ -34,7 +35,7 @@ class ExpressionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      width: MediaQuery.of(context).size.width * 0.4,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: TextField(
         onSubmitted: (_) => onDone(),

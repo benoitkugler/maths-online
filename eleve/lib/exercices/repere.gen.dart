@@ -2,14 +2,14 @@
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
-int intFromJson(dynamic json) => json as int;
+double doubleFromJson(dynamic json) => (json as num).toDouble();
 
-int intToJson(int item) => item;
+double doubleToJson(double item) => item;
 
 // github.com/benoitkugler/maths-online/maths/repere.Coord
 class Coord {
-  final int x;
-  final int y;
+  final double x;
+  final double y;
 
   const Coord(this.x, this.y);
 
@@ -21,11 +21,11 @@ class Coord {
 
 Coord coordFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Coord(intFromJson(json['X']), intFromJson(json['Y']));
+  return Coord(doubleFromJson(json['X']), doubleFromJson(json['Y']));
 }
 
 JSON coordToJson(Coord item) {
-  return {"X": intToJson(item.x), "Y": intToJson(item.y)};
+  return {"X": doubleToJson(item.x), "Y": doubleToJson(item.y)};
 }
 
 String stringFromJson(dynamic json) => json as String;
@@ -135,6 +135,10 @@ List<Line> listLineFromJson(dynamic json) {
 List<dynamic> listLineToJson(List<Line> item) {
   return item.map(lineToJson).toList();
 }
+
+int intFromJson(dynamic json) => json as int;
+
+int intToJson(int item) => item;
 
 // github.com/benoitkugler/maths-online/maths/repere.Figure
 class Figure {

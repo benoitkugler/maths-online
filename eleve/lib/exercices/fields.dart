@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 abstract class FieldController {
+  /// [onChange] should be called when the state change
+  /// to notify the question widget
+  final void Function() onChange;
+
+  FieldController(this.onChange);
+
   /// returns true if the field is not empty and contains valid data
   bool hasValidData();
 

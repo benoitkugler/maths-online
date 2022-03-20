@@ -5,9 +5,8 @@ import 'package:flutter/material.dart';
 class RadioController extends FieldController {
   List<ListFieldProposal> proposals;
   int? index;
-  final void Function() onChange;
 
-  RadioController(this.onChange, this.proposals);
+  RadioController(void Function() onChange, this.proposals) : super(onChange);
 
   @override
   bool hasValidData() {

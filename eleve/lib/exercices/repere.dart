@@ -1,121 +1,98 @@
+import 'dart:math';
+
 import 'package:eleve/exercices/repere.gen.dart';
+import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 
-class Repere extends StatelessWidget {
+class StaticRepere extends StatelessWidget {
   final Figure spec;
-  const Repere(this.spec, {Key? key}) : super(key: key);
+  const StaticRepere(this.spec, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final displayLength = MediaQuery.of(context).size.shortestSide * 0.7;
-    return _Board(displayLength, spec);
+    final metrics = RepereMetrics(spec, context);
+    return BaseRepere(metrics, const []);
   }
 }
 
-class _Board extends StatefulWidget {
-  final double displayLength;
-
-  static const gridResolution = 50.0;
+class RepereMetrics {
+  final double
+      _displayLength; // displayLength is the length of the largest size of the figure
   final Figure spec;
 
-  const _Board(this.displayLength, this.spec, {Key? key}) : super(key: key);
+  RepereMetrics(this.spec, BuildContext context)
+      : _displayLength = MediaQuery.of(context).size.shortestSide * 0.95;
 
-  @override
-  __BoardState createState() => __BoardState();
+  double get resolution => max(spec.width, spec.height).toDouble();
 
-  double get canvasWidth => displayLength * spec.width / gridResolution;
-  double get canvasHeight => displayLength * spec.height / gridResolution;
+  double get canvasWidth => _displayLength * spec.width / resolution;
+  double get canvasHeight => _displayLength * spec.height / resolution;
 
-  Offset _logicalToVisual(Coord point) {
-    return Offset(displayLength * point.x / gridResolution,
-        canvasHeight - displayLength * point.y / gridResolution);
+  Offset logicalToVisual(Coord point) {
+    return Offset(_displayLength * point.x / resolution,
+        canvasHeight - _displayLength * point.y / resolution);
   }
 
-  Coord _visualToLogical(Offset offset) {
-    return Coord(offset.dx * gridResolution ~/ displayLength,
-        -(offset.dy - canvasHeight) * gridResolution ~/ displayLength);
+  Offset logicalIntToVisual(IntCoord point) {
+    return logicalToVisual(Coord(point.x.toDouble(), point.y.toDouble()));
   }
 
-  List<double> _buildXTicks() {
+  IntCoord visualToLogical(Offset offset) {
+    return IntCoord((offset.dx * resolution / _displayLength).round(),
+        (-(offset.dy - canvasHeight) * resolution / _displayLength).round());
+  }
+
+  List<double> buildXTicks() {
     final out = <double>[];
     for (var i = 0; i <= spec.width; i += 1) {
-      final logical = Coord(i, 0);
-      final offset = _logicalToVisual(logical);
+      final logical = Coord(i.toDouble(), 0);
+      final offset = logicalToVisual(logical);
       out.add(offset.dx);
     }
     return out;
   }
 
-  List<double> _buildYTicks() {
+  List<double> buildYTicks() {
     final out = <double>[];
     for (var i = 0; i <= spec.height; i += 1) {
-      final logical = Coord(0, i);
-      final offset = _logicalToVisual(logical);
+      final logical = Coord(0, i.toDouble());
+      final offset = logicalToVisual(logical);
       out.add(offset.dy);
     }
     return out;
   }
 }
 
-class __BoardState extends State<_Board> {
-  Coord? logicalPoint;
-  bool showTooltip = false;
+class BaseRepere extends StatelessWidget {
+  final RepereMetrics metrics;
 
-  void _setCurrentPoint(Offset offset) {
-    setState(() {
-      logicalPoint = widget._visualToLogical(offset);
-    });
-  }
+  /// [layers] are added in the stack
+  final List<Widget> layers;
+
+  const BaseRepere(this.metrics, this.layers, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final visualPos =
-        logicalPoint == null ? null : widget._logicalToVisual(logicalPoint!);
-    return GestureDetector(
-      onTapUp: (details) => _setCurrentPoint(details.localPosition),
-      onPanUpdate: (details) => _setCurrentPoint(details.localPosition),
-      child: Container(
-        decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.7),
-            boxShadow: const [BoxShadow(color: Colors.white, blurRadius: 5)]),
-        child: Stack(
-          children: [
-            // grid
-            CustomPaint(
-              size: Size(widget.canvasWidth, widget.canvasHeight),
-              painter:
-                  _GridPainter(widget._buildXTicks(), widget._buildYTicks()),
-            ),
-            // custom drawing
-            CustomPaint(
-              size: Size(widget.canvasWidth, widget.canvasHeight),
-              painter: _ReperePainter(widget.spec, widget._logicalToVisual),
-            ),
-            // board
-            if (logicalPoint != null)
-              _GridPoint(logicalPoint!, visualPos!, () {
-                setState(() {
-                  showTooltip = true;
-                });
-              }, () {
-                setState(() {
-                  showTooltip = false;
-                });
-              }),
-            if (showTooltip)
-              Positioned(
-                child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Text("(${logicalPoint!.x};${logicalPoint!.y})")),
-                left: visualPos!.dx,
-                top: visualPos.dy + 20,
-              ),
-          ],
-        ),
+    return Container(
+      decoration: const BoxDecoration(
+        // color: Colors.white.withOpacity(0.8),
+        boxShadow: [BoxShadow(color: Colors.white, blurRadius: 5)],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // grid
+          CustomPaint(
+            size: Size(metrics.canvasWidth, metrics.canvasHeight),
+            painter: _GridPainter(metrics.buildXTicks(), metrics.buildYTicks()),
+          ),
+          // custom drawing
+          CustomPaint(
+            size: Size(metrics.canvasWidth, metrics.canvasHeight),
+            painter: _ReperePainter(metrics),
+          ),
+          ...layers
+        ],
       ),
     );
   }
@@ -169,12 +146,9 @@ extension _OffsetLabel on LabelPos {
 }
 
 class _ReperePainter extends CustomPainter {
-  final Figure spec;
-  // final double displayLength;
-  // final double gridResolution;
-  final Offset Function(Coord) logicalToVisual;
+  final RepereMetrics metrics;
 
-  _ReperePainter(this.spec, this.logicalToVisual);
+  _ReperePainter(this.metrics);
 
   @override
   bool? hitTest(_) {
@@ -198,7 +172,7 @@ class _ReperePainter extends CustomPainter {
     final textWidth = pt.width;
     final textHeight = pt.height;
 
-    final originalPos = logicalToVisual(point.point);
+    final originalPos = metrics.logicalToVisual(point.point);
 
     final offset = point.pos.offset(textWidth, textHeight);
 
@@ -210,27 +184,28 @@ class _ReperePainter extends CustomPainter {
   }
 
   void _paintPoints(Canvas canvas) {
-    spec.points.forEach((key, value) {
+    metrics.spec.points.forEach((key, value) {
       _paintPoint(canvas, value, key);
     });
   }
 
   void _paintLine(Canvas canvas, Line line) {
-    final from = spec.points[line.from]!.point;
-    final to = spec.points[line.to]!.point;
-    canvas.drawLine(logicalToVisual(from), logicalToVisual(to), Paint());
+    final from = metrics.spec.points[line.from]!.point;
+    final to = metrics.spec.points[line.to]!.point;
+    canvas.drawLine(
+        metrics.logicalToVisual(from), metrics.logicalToVisual(to), Paint());
 
     if (line.labelName.isNotEmpty) {
       _paintPoint(
           canvas,
           LabeledPoint(
-              Coord((from.x + to.x) ~/ 2, (from.y + to.y) ~/ 2), line.labelPos),
+              Coord((from.x + to.x) / 2, (from.y + to.y) / 2), line.labelPos),
           line.labelName);
     }
   }
 
   void _paintLines(Canvas canvas) {
-    for (var element in spec.lines) {
+    for (var element in metrics.spec.lines) {
       _paintLine(canvas, element);
     }
   }
@@ -248,32 +223,57 @@ class _ReperePainter extends CustomPainter {
   }
 }
 
-class _GridPoint extends StatelessWidget {
-  final Coord logical;
-  final Offset pos;
-  final Function onLongPress;
-  final Function onLongPressEnd;
-  const _GridPoint(
-      this.logical, this.pos, this.onLongPress, this.onLongPressEnd,
-      {Key? key})
-      : super(key: key);
+class GridPoint extends StatelessWidget {
+  final IntCoord logical;
+  final Offset visual;
+
+  // final Function onLongPress;
+  // final Function onLongPressEnd;
+
+  const GridPoint(this.logical, this.visual, {Key? key}) : super(key: key);
 
   static const radius = 10.0;
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: pos.dx - radius / 2,
-      top: pos.dy - radius / 2,
-      child: GestureDetector(
-        onLongPress: () => onLongPress(),
-        onLongPressEnd: (_) => onLongPressEnd(),
-        child: Container(
-            width: radius,
-            height: radius,
-            decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.8), shape: BoxShape.circle)),
-      ),
+      left: visual.dx - radius / 2,
+      top: visual.dy - radius / 2,
+      child: Container(
+          width: radius,
+          height: radius,
+          decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.8), shape: BoxShape.circle)),
     );
   }
+}
+
+class GridPointHighlight extends StatelessWidget {
+  final IntCoord logical;
+  final Offset visual;
+
+  const GridPointHighlight(this.logical, this.visual, {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey,
+          ),
+          padding: const EdgeInsets.all(8),
+          child: Text("( ${logical.x} ; ${logical.y} )")),
+      left: visual.dx - 20,
+      top: visual.dy - 50,
+    );
+  }
+}
+
+bool isInBounds(IntCoord point, Figure figure) {
+  return 0 <= point.x &&
+      point.x <= figure.width &&
+      0 <= point.y &&
+      point.y <= figure.height;
 }

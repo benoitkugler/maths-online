@@ -6,6 +6,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
 // InvalidFieldAnswer is returned for syntactically incorrect answers
@@ -259,4 +260,36 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 	}
 
 	return true
+}
+
+type FigurePointFieldInstance struct {
+	Figure repere.Figure
+	Answer repere.IntCoord
+	ID     int
+}
+
+func (f FigurePointFieldInstance) fieldID() int { return f.ID }
+
+func (f FigurePointFieldInstance) toClient() client.Block {
+	return client.FigurePointFieldBlock{Figure: f.Figure, ID: f.ID}
+}
+
+func (f FigurePointFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.PointAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected PointAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return f.Answer == answer.(client.PointAnswer).Point
+}
+
+type FigureDoublePointFieldInstance struct {
+	Figure   repere.Figure
+	AsVector bool
 }
