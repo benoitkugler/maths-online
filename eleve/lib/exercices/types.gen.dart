@@ -263,29 +263,6 @@ JSON figureBlockToJson(FigureBlock item) {
   return {"Figure": figureToJson(item.figure)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FigureDoublePointFieldBlock
-class FigureDoublePointFieldBlock implements Block {
-  final Figure figure;
-  final int iD;
-
-  const FigureDoublePointFieldBlock(this.figure, this.iD);
-
-  @override
-  String toString() {
-    return "FigureDoublePointFieldBlock($figure, $iD)";
-  }
-}
-
-FigureDoublePointFieldBlock figureDoublePointFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return FigureDoublePointFieldBlock(
-      figureFromJson(json['Figure']), intFromJson(json['ID']));
-}
-
-JSON figureDoublePointFieldBlockToJson(FigureDoublePointFieldBlock item) {
-  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
-}
-
 // github.com/benoitkugler/maths-online/maths/exercice/client.FigurePointFieldBlock
 class FigurePointFieldBlock implements Block {
   final Figure figure;
@@ -306,6 +283,29 @@ FigurePointFieldBlock figurePointFieldBlockFromJson(dynamic json_) {
 }
 
 JSON figurePointFieldBlockToJson(FigurePointFieldBlock item) {
+  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.FigureVectorFieldBlock
+class FigureVectorFieldBlock implements Block {
+  final Figure figure;
+  final int iD;
+
+  const FigureVectorFieldBlock(this.figure, this.iD);
+
+  @override
+  String toString() {
+    return "FigureVectorFieldBlock($figure, $iD)";
+  }
+}
+
+FigureVectorFieldBlock figureVectorFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FigureVectorFieldBlock(
+      figureFromJson(json['Figure']), intFromJson(json['ID']));
+}
+
+JSON figureVectorFieldBlockToJson(FigureVectorFieldBlock item) {
   return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
 }
 
@@ -646,9 +646,9 @@ Block blockFromJson(dynamic json_) {
     case 1:
       return figureBlockFromJson(data);
     case 2:
-      return figureDoublePointFieldBlockFromJson(data);
-    case 3:
       return figurePointFieldBlockFromJson(data);
+    case 3:
+      return figureVectorFieldBlockFromJson(data);
     case 4:
       return formulaBlockFromJson(data);
     case 5:
@@ -673,10 +673,10 @@ JSON blockToJson(Block item) {
     return {'Kind': 0, 'Data': expressionFieldBlockToJson(item)};
   } else if (item is FigureBlock) {
     return {'Kind': 1, 'Data': figureBlockToJson(item)};
-  } else if (item is FigureDoublePointFieldBlock) {
-    return {'Kind': 2, 'Data': figureDoublePointFieldBlockToJson(item)};
   } else if (item is FigurePointFieldBlock) {
-    return {'Kind': 3, 'Data': figurePointFieldBlockToJson(item)};
+    return {'Kind': 2, 'Data': figurePointFieldBlockToJson(item)};
+  } else if (item is FigureVectorFieldBlock) {
+    return {'Kind': 3, 'Data': figureVectorFieldBlockToJson(item)};
   } else if (item is FormulaBlock) {
     return {'Kind': 4, 'Data': formulaBlockToJson(item)};
   } else if (item is NumberFieldBlock) {

@@ -41,6 +41,8 @@ var (
 	_ fieldInstance = ExpressionFieldInstance{}
 	_ fieldInstance = RadioFieldInstance{}
 	_ fieldInstance = OrderedListFieldInstance{}
+	_ fieldInstance = FigurePointFieldInstance{}
+	_ fieldInstance = FigureVectorFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only
@@ -289,7 +291,34 @@ func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrec
 	return f.Answer == answer.(client.PointAnswer).Point
 }
 
-type FigureDoublePointFieldInstance struct {
-	Figure   repere.Figure
-	AsVector bool
+type FigureVectorFieldInstance struct {
+	Figure repere.Figure
+	ID     int
+	Answer repere.IntCoord
+}
+
+func (f FigureVectorFieldInstance) fieldID() int { return f.ID }
+
+func (f FigureVectorFieldInstance) toClient() client.Block {
+	return client.FigureVectorFieldBlock{Figure: f.Figure, ID: f.ID}
+}
+
+func (f FigureVectorFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.DoublePointAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.DoublePointAnswer)
+	vector := repere.IntCoord{
+		X: ans.To.X - ans.From.X,
+		Y: ans.To.Y - ans.From.Y,
+	}
+	return f.Answer == vector
 }

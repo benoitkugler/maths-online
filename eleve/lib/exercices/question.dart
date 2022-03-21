@@ -1,6 +1,7 @@
 import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/figure_point.dart';
+import 'package:eleve/exercices/figure_vector.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
@@ -62,6 +63,8 @@ class _ContentBuilder {
         controllers[block.iD] = OrderedListController(onChange, block);
       } else if (block is FigurePointFieldBlock) {
         controllers[block.iD] = FigurePointController(onChange);
+      } else if (block is FigureVectorFieldBlock) {
+        controllers[block.iD] = FigureVectorController(onChange);
       }
 
       // TODO: handle more fields
@@ -181,9 +184,19 @@ class _ContentBuilder {
     _flushCurrentRow();
 
     final key = GlobalKey();
-
     zoomableWigets.add(key);
     rows.add(Center(child: FigurePointField(element.figure, ct, key: key)));
+  }
+
+  void _handleFigureVectorFieldBlock(FigureVectorFieldBlock element) {
+    final ct = _controllers[element.iD] as FigureVectorController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    final key = GlobalKey();
+    zoomableWigets.add(key);
+    rows.add(Center(child: FigureVectorField(element.figure, ct, key: key)));
   }
 
   /// populate [rows]
@@ -209,6 +222,8 @@ class _ContentBuilder {
         _handleOrderedListFieldBlock(element);
       } else if (element is FigurePointFieldBlock) {
         _handleFigurePointFieldBlock(element);
+      } else if (element is FigureVectorFieldBlock) {
+        _handleFigureVectorFieldBlock(element);
       } else {
         // TODO:
       }

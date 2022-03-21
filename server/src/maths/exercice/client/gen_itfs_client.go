@@ -102,11 +102,11 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data FigureDoublePointFieldBlock
+		var data FigurePointFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data FigurePointFieldBlock
+		var data FigureVectorFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
@@ -155,9 +155,9 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 0, Data: data}
 	case FigureBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case FigureDoublePointFieldBlock:
-		wr = wrapper{Kind: 2, Data: data}
 	case FigurePointFieldBlock:
+		wr = wrapper{Kind: 2, Data: data}
+	case FigureVectorFieldBlock:
 		wr = wrapper{Kind: 3, Data: data}
 	case FormulaBlock:
 		wr = wrapper{Kind: 4, Data: data}

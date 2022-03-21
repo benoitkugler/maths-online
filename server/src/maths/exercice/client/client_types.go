@@ -39,17 +39,17 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()                   {}
-func (FormulaBlock) isBlock()                {}
-func (VariationTableBlock) isBlock()         {}
-func (SignTableBlock) isBlock()              {}
-func (FigureBlock) isBlock()                 {}
-func (NumberFieldBlock) isBlock()            {}
-func (ExpressionFieldBlock) isBlock()        {}
-func (RadioFieldBlock) isBlock()             {}
-func (OrderedListFieldBlock) isBlock()       {}
-func (FigurePointFieldBlock) isBlock()       {}
-func (FigureDoublePointFieldBlock) isBlock() {}
+func (TextBlock) isBlock()              {}
+func (FormulaBlock) isBlock()           {}
+func (VariationTableBlock) isBlock()    {}
+func (SignTableBlock) isBlock()         {}
+func (FigureBlock) isBlock()            {}
+func (NumberFieldBlock) isBlock()       {}
+func (ExpressionFieldBlock) isBlock()   {}
+func (RadioFieldBlock) isBlock()        {}
+func (OrderedListFieldBlock) isBlock()  {}
+func (FigurePointFieldBlock) isBlock()  {}
+func (FigureVectorFieldBlock) isBlock() {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -132,10 +132,11 @@ type FigurePointFieldBlock struct {
 	ID     int
 }
 
-// FigurePointFieldBlock asks for two 2D points,
-// which may be interpreted as a vector
+// FigureVectorFieldBlock asks for a vector,
+// represented by start and end, but evaluated
+// as vector.
 
-type FigureDoublePointFieldBlock struct {
+type FigureVectorFieldBlock struct {
 	Figure repere.Figure `dart-extern:"repere.gen.dart"`
 	ID     int
 }

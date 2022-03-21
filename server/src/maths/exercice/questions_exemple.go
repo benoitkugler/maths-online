@@ -61,6 +61,29 @@ var (
 	}
 )
 
+var (
+	__O = repere.Coord{X: 6, Y: 6}
+	__A = repere.Coord{X: 5, Y: 5}
+	__D = repere.Coord{X: 5, Y: 7}
+	__B = repere.Coord{X: 7, Y: 7}
+	__J = repere.Coord{X: 3, Y: 6}
+	__C = repere.Coord{X: 1, Y: 10}
+
+	figure2 = repere.Figure{
+		Width:  12,
+		Height: 12,
+		Points: map[string]repere.LabeledPoint{
+			"A": {Point: __A, Pos: repere.TopLeft},
+			"B": {Point: __B, Pos: repere.BottomLeft},
+			"C": {Point: __C, Pos: repere.BottomRight},
+			"D": {Point: __D, Pos: repere.TopRight},
+			"J": {Point: __J, Pos: repere.TopRight},
+			"O": {Point: __O, Pos: repere.TopRight},
+		},
+		Lines: []repere.Line{},
+	}
+)
+
 var PredefinedQuestions = [...]QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
@@ -484,6 +507,19 @@ var PredefinedQuestions = [...]QuestionInstance{
 			FigurePointFieldInstance{
 				Figure: figure1,
 				Answer: repere.OrthogonalProjection(_K, _B, _C).Round(),
+				ID:     0,
+			},
+		},
+	},
+	{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire le vecteur "),
+				staticMath(`\overrightarrow{AB} + \overrightarrow{CD}.`),
+			}},
+			FigureVectorFieldInstance{
+				Figure: figure2,
+				Answer: repere.IntCoord{X: 6, Y: -1},
 				ID:     0,
 			},
 		},

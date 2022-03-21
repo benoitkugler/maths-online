@@ -63,6 +63,16 @@ class RepereMetrics {
   }
 }
 
+enum PointID { from, to }
+
+/// [PointMovedNotification] is emitted when a point
+/// is moved by drag and drop
+class PointMovedNotification extends Notification {
+  final PointID id;
+  final IntCoord logicalPos;
+  PointMovedNotification(this.id, this.logicalPos);
+}
+
 class BaseRepere extends StatelessWidget {
   final RepereMetrics metrics;
 
@@ -78,21 +88,36 @@ class BaseRepere extends StatelessWidget {
         // color: Colors.white.withOpacity(0.8),
         boxShadow: [BoxShadow(color: Colors.white, blurRadius: 5)],
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // grid
-          CustomPaint(
-            size: Size(metrics.canvasWidth, metrics.canvasHeight),
-            painter: _GridPainter(metrics.buildXTicks(), metrics.buildYTicks()),
-          ),
-          // custom drawing
-          CustomPaint(
-            size: Size(metrics.canvasWidth, metrics.canvasHeight),
-            painter: _ReperePainter(metrics),
-          ),
-          ...layers
-        ],
+      child: DragTarget<PointID>(
+        builder: (context, candidateData, rejectedData) {
+          final hasDropOver = candidateData.isNotEmpty;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // grid
+              CustomPaint(
+                size: Size(metrics.canvasWidth, metrics.canvasHeight),
+                painter: _GridPainter(
+                    metrics.buildXTicks(), metrics.buildYTicks(), hasDropOver),
+              ),
+              // custom drawing
+              CustomPaint(
+                size: Size(metrics.canvasWidth, metrics.canvasHeight),
+                painter: _ReperePainter(metrics),
+              ),
+              ...layers
+            ],
+          );
+        },
+        onAcceptWithDetails: (details) {
+          final box = context.findRenderObject();
+          if (box is! RenderBox) {
+            return;
+          }
+          final localOffset = box.globalToLocal(details.offset);
+          final logicalCoord = metrics.visualToLogical(localOffset);
+          PointMovedNotification(details.data, logicalCoord).dispatch(context);
+        },
       ),
     );
   }
@@ -101,12 +126,15 @@ class BaseRepere extends StatelessWidget {
 class _GridPainter extends CustomPainter {
   final List<double> xs;
   final List<double> ys;
+  final bool isHighlighted;
 
-  _GridPainter(this.xs, this.ys);
+  _GridPainter(this.xs, this.ys, this.isHighlighted);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.grey.withOpacity(0.7);
+    final paint = Paint()
+      ..color =
+          isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
     for (var x in xs) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
@@ -116,8 +144,8 @@ class _GridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(_GridPainter oldDelegate) {
+    return isHighlighted != oldDelegate.isHighlighted;
   }
 }
 
@@ -181,6 +209,12 @@ class _ReperePainter extends CustomPainter {
 
   void _paintPoint(Canvas canvas, LabeledPoint point, String name) {
     _paintText(canvas, point, name, Colors.blue.shade800, FontWeight.bold);
+    canvas.drawCircle(
+        metrics.logicalToVisual(point.point),
+        2,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = Colors.blue);
   }
 
   void _paintPoints(Canvas canvas) {
@@ -226,25 +260,80 @@ class _ReperePainter extends CustomPainter {
 class GridPoint extends StatelessWidget {
   final IntCoord logical;
   final Offset visual;
+  final bool isDraggable;
 
   // final Function onLongPress;
   // final Function onLongPressEnd;
 
-  const GridPoint(this.logical, this.visual, {Key? key}) : super(key: key);
+  const GridPoint(this.logical, this.visual,
+      {Key? key, this.isDraggable = false})
+      : super(key: key);
 
   static const radius = 10.0;
 
   @override
   Widget build(BuildContext context) {
+    final shape = Container(
+      width: radius,
+      height: radius,
+      decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.8), shape: BoxShape.circle),
+    );
     return Positioned(
       left: visual.dx - radius / 2,
       top: visual.dy - radius / 2,
-      child: Container(
-          width: radius,
-          height: radius,
-          decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.8), shape: BoxShape.circle)),
+      child: isDraggable ? Draggable(child: shape, feedback: shape) : shape,
     );
+  }
+}
+
+class DraggableGridPoint extends StatelessWidget {
+  final IntCoord logical;
+  final Offset visual;
+  final PointID id;
+
+  /// used to adjust feedback when used in an InteractiveViewer
+  final double zoomFactor;
+
+  const DraggableGridPoint(this.logical, this.visual, this.id, this.zoomFactor,
+      {Key? key})
+      : super(key: key);
+
+  static const outerRadius = 15.0;
+  static const radius = 8.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+        left: visual.dx - outerRadius / 2,
+        top: visual.dy - outerRadius / 2,
+        child: Draggable<PointID>(
+          data: id,
+          child: Container(
+            color: Colors.transparent,
+            width: outerRadius,
+            height: outerRadius,
+            child: Center(
+              child: Container(
+                width: radius,
+                height: radius,
+                decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.8),
+                    shape: BoxShape.circle),
+              ),
+            ),
+          ),
+          feedback: Transform.translate(
+            offset: Offset(-radius * zoomFactor / 2, -radius * zoomFactor / 2),
+            child: Container(
+              width: radius * zoomFactor,
+              height: radius * zoomFactor,
+              decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.8),
+                  shape: BoxShape.circle),
+            ),
+          ),
+        ));
   }
 }
 
