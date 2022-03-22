@@ -151,7 +151,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 			}},
 			RadioFieldInstance{
 				ID:     0,
-				Answer: 1,
+				Answer: 0,
 				Proposals: []client.ListFieldProposal{
 					{Content: []client.TextOrMath{{Text: "Oui"}}},
 					{Content: []client.TextOrMath{{Text: "Non"}}},
