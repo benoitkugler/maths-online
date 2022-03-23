@@ -47,6 +47,7 @@ flutter_icons:
   android: true
   ios: true
   image_path: "ISIRO.png"
+  remove_alpha_ios: true
 
 dev_dependencies:
   flutter_test:
