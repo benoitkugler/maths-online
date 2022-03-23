@@ -78,7 +78,7 @@ class _Arrow extends StatelessWidget {
         child: Transform.rotate(
             angle: isUp ? -angle : angle,
             child: Transform.scale(
-                scaleX: 3.5,
+                scaleX: 3,
                 child:
                     const Icon(IconData(0xe09f, fontFamily: 'MaterialIcons')))),
       ),

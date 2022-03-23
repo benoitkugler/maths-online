@@ -69,7 +69,7 @@ class TextRow extends StatelessWidget {
 /// [MathTableCell] is a [TableCell] containing
 /// math text
 class MathTableCell extends StatelessWidget {
-  static const fontSize = 16.0;
+  static const fontSize = 14.0;
 
   final TableCellVerticalAlignment align;
   final String mathContent;
@@ -84,8 +84,9 @@ class MathTableCell extends StatelessWidget {
       child: Align(
         alignment: Alignment.center,
         child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
-            child: textMath(mathContent, fontSize)),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+          child: textMath(mathContent, fontSize - 1),
+        ),
       ),
     );
   }
