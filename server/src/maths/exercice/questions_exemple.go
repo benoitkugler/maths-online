@@ -47,10 +47,10 @@ var (
 			"K": {Point: _K, Pos: repere.Top},
 		},
 		Lines: []repere.Line{
-			{LabelName: "a", From: "A", To: "B", LabelPos: repere.Left},
-			{LabelName: "b", From: "B", To: "C", LabelPos: repere.Bottom},
-			{LabelName: "c", From: "C", To: "D", LabelPos: repere.Right},
-			{LabelName: "d", From: "D", To: "A", LabelPos: repere.Top},
+			{LabelName: "", From: "A", To: "B", LabelPos: repere.Left},
+			{LabelName: "", From: "B", To: "C", LabelPos: repere.Bottom},
+			{LabelName: "", From: "C", To: "D", LabelPos: repere.Right},
+			{LabelName: "", From: "D", To: "A", LabelPos: repere.Top},
 
 			// diagonal
 			{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},

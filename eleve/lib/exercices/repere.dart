@@ -183,8 +183,9 @@ class _ReperePainter extends CustomPainter {
     return false;
   }
 
-  void _paintText(Canvas canvas, LabeledPoint point, String name, Color color,
-      FontWeight weight) {
+  void _paintText(Canvas canvas, LabeledPoint point, String name) {
+    final color = Colors.blue.shade800;
+    const weight = FontWeight.bold;
     final pt = TextPainter(
         text: TextSpan(
           text: name,
@@ -208,7 +209,7 @@ class _ReperePainter extends CustomPainter {
   }
 
   void _paintPoint(Canvas canvas, LabeledPoint point, String name) {
-    _paintText(canvas, point, name, Colors.blue.shade800, FontWeight.bold);
+    _paintText(canvas, point, name);
     canvas.drawCircle(
         metrics.logicalToVisual(point.point),
         2,
@@ -230,7 +231,7 @@ class _ReperePainter extends CustomPainter {
         metrics.logicalToVisual(from), metrics.logicalToVisual(to), Paint());
 
     if (line.labelName.isNotEmpty) {
-      _paintPoint(
+      _paintText(
           canvas,
           LabeledPoint(
               Coord((from.x + to.x) / 2, (from.y + to.y) / 2), line.labelPos),
