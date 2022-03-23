@@ -33,6 +33,9 @@ type Game struct {
 	currentAnswers map[PlayerID]playerAnswerResult
 	question       showQuestion // the question to answer, or empty
 
+	// refreshed for each new turn
+	currentWantNextTurn map[PlayerID]bool
+
 	dice diceThrow // last dice thrown
 
 	questionDurationLimit time.Duration
@@ -54,6 +57,7 @@ func NewGame(questionTimeout time.Duration) *Game {
 			Player:  -1,
 		},
 		currentAnswers:        make(map[int]playerAnswerResult),
+		currentWantNextTurn:   make(map[int]bool),
 		QuestionTimeout:       timer,
 		questionDurationLimit: questionTimeout,
 	}
@@ -63,7 +67,11 @@ func NewGame(questionTimeout time.Duration) *Game {
 func (gs GameState) NumberPlayers() int { return len(gs.Players) }
 
 // IsPlaying returns true if the game has started and is not finished yet.
-func (g *Game) IsPlaying() bool { return g.Player != -1 && len(g.winners()) == 0 }
+func (g *Game) IsPlaying() bool {
+	return g.Player != -1 &&
+		(len(g.winners()) == 0 ||
+			!g.arePlayersReady())
+}
 
 // AddPlayer add a player to the game and returns
 // its id.
@@ -123,6 +131,10 @@ func (g *Game) nextPlayer() PlayerID {
 
 // startTurn starts a new turn, updating the state
 func (g *Game) startTurn() StateUpdate {
+	for k := range g.currentWantNextTurn { // reset the "ready for next turn" map
+		delete(g.currentWantNextTurn, k)
+	}
+
 	g.Player = g.nextPlayer()
 	return StateUpdate{
 		Events: Events{playerTurn{g.playerName(g.Player), g.Player}},
@@ -133,7 +145,7 @@ func (g *Game) startTurn() StateUpdate {
 // handleDiceClicked launches the dice, and compute the possible moves
 // returns an error if the player is not allowed to click
 func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
-	// check if the player is allowed to move
+	// check if the player is allowed to throw the dice
 	if g.Player != player {
 		return StateUpdate{}, fmt.Errorf("player %d is not allowed to throw the dice during turn of player %d", player, g.Player)
 	}
@@ -160,9 +172,13 @@ func (g *Game) StartGame() StateUpdate {
 // HandleClientEvent handles the given `event`, or returns
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).
-// Caller should check and ignore empty return values.
+// Caller should check and ignore empty return values, which mean
+// nothing should happen.
 func (g *Game) HandleClientEvent(event ClientEvent) (updates StateUpdates, isGameOver bool, err error) {
 	switch eventData := event.Event.(type) {
+	case diceClicked:
+		update, err := g.handleDiceClicked(event.Player)
+		return StateUpdates{update}, false, err
 	case move:
 		evs, err := g.handleMove(eventData, event.Player)
 		if err != nil {
@@ -170,11 +186,12 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates StateUpdates, isGam
 		}
 		return StateUpdates{{Events: evs, State: g.GameState}}, false, nil
 	case answer:
-		updates, isGameOver = g.handleAnswer(eventData, event.Player)
+		updates = g.handleAnswer(eventData, event.Player)
+		return updates, false, nil
+	case wantNextTurn:
+		updates = g.tryAndConcludeTurn(eventData, event.Player)
+		isGameOver = !g.IsPlaying()
 		return updates, isGameOver, nil
-	case diceClicked:
-		update, err := g.handleDiceClicked(event.Player)
-		return StateUpdates{update}, false, err
 	case Ping:
 		// safely ignore the event
 		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData.Info)
@@ -206,15 +223,17 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	}, nil
 }
 
-func (g *Game) handleAnswer(a answer, player PlayerID) (updates StateUpdates, isGameOver bool) {
-	isValid := g.isAnswerValid(a)
+func (g *Game) handleAnswer(a answer, player PlayerID) StateUpdates {
+	isValid, expected := g.isAnswerValid(a)
 	g.Players[player].Success[g.question.Categorie] = isValid
 	g.currentAnswers[player] = playerAnswerResult{
-		Player:  player,
-		Success: isValid,
+		Player:        player,
+		Success:       isValid,
+		CorrectAnwser: expected,
+		Categorie:     g.question.Categorie,
 	}
 
-	return g.concludeTurn(false) // wait for other players if needed
+	return g.concludeQuestion(false) // wait for other players if needed
 }
 
 // EmitQuestion generate a question with the right categorie,
@@ -235,37 +254,56 @@ func (gs *Game) EmitQuestion() showQuestion {
 
 // QuestionTimeoutAction closes the current question session,
 // and start a new turn
-func (gs *Game) QuestionTimeoutAction() (updates StateUpdates, isGameOver bool) {
-	return gs.concludeTurn(true)
+func (gs *Game) QuestionTimeoutAction() StateUpdates {
+	return gs.concludeQuestion(true)
 }
 
-// isAnswerValid validdate `a` against the current question
-func (gs *Game) isAnswerValid(a answer) bool {
-	// TODO: à implémenter, using the real questions
-	return a.Content == fmt.Sprintf("%d", gs.question.Categorie)
-}
-
-func (gs *Game) concludeTurn(force bool) (updates StateUpdates, isGameOver bool) {
+func (gs *Game) concludeQuestion(force bool) StateUpdates {
 	evs := gs.endQuestion(force)
 	if len(evs) == 0 { // nothing has changed
-		return nil, false
+		return nil
 	}
+	return StateUpdates{{Events: evs, State: gs.GameState}}
+}
 
-	updates = StateUpdates{{Events: evs, State: gs.GameState}}
+// isAnswerValid validate `a` against the current question
+// and returns the expected answer
+func (gs *Game) isAnswerValid(a answer) (bool, string) {
+	// TODO: à implémenter, using the real questions
+	expected := fmt.Sprintf("%d", gs.question.Categorie)
+	return a.Content == expected, expected
+}
+
+func (gs *Game) arePlayersReady() bool {
+	for player := range gs.Players {
+		if ok := gs.currentWantNextTurn[player]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+// TODO: handle MarkQuestion
+func (gs *Game) tryAndConcludeTurn(event wantNextTurn, player PlayerID) (updates StateUpdates) {
+	gs.currentWantNextTurn[player] = true
+
+	if !gs.arePlayersReady() { // do nothing
+		return nil
+	}
 
 	// check for winners
 	winners := gs.winners()
-	isGameOver = len(winners) != 0
+	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
-		updates = append(updates, StateUpdate{
+		updates = StateUpdates{{
 			Events: Events{gameEnd{Winners: winners, WinnerNames: gs.idToNames(winners)}},
 			State:  gs.GameState,
-		})
+		}}
 	} else { // start a new turn
-		updates = append(updates, gs.startTurn())
+		updates = StateUpdates{gs.startTurn()}
 	}
 
-	return updates, isGameOver
+	return updates
 }
 
 // endQuestion close the current question
@@ -282,7 +320,8 @@ func (gs *Game) endQuestion(force bool) Events {
 		return nil
 	}
 
-	// return the answers event, defaulting
+	// return the answers event, defaulting to
+	// false for no answer
 	var out Events
 	for player := range gs.Players {
 		answer, has := gs.currentAnswers[player]

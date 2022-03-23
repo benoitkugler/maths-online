@@ -10,6 +10,7 @@ import 'package:eleve/trivialpoursuit/game_end.dart';
 import 'package:eleve/trivialpoursuit/lobby.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/question.dart';
+import 'package:eleve/trivialpoursuit/question_result.dart';
 import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -257,8 +258,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       builder: (context) => NotificationListener<SubmitAnswerNotification>(
         onNotification: (notification) {
           // do not close the page now, it is handled when receiving result
-          _sendEvent(
-              Answer(exercices.QuestionAnswersIn({}), notification.answer));
+          _sendEvent(Answer(
+              const exercices.QuestionAnswersIn({}), notification.answer));
           return true;
         },
         child: QuestionRoute(event, Duration(seconds: event.timeoutSeconds)),
@@ -281,34 +282,17 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        duration: const Duration(seconds: 3),
-        backgroundColor:
-            event.success ? Colors.lightGreen.shade400 : Colors.red,
-        content: Text(event.success
-            ? "Bonne réponse, bravo !"
-            : "Réponse incorrecte, dommage..."),
-        action: SnackBarAction(
-          textColor: Colors.black,
-          label: "Etat de la partie",
-          onPressed: _showSuccessRecap,
-        )));
-
-    if (event.success) {
-      // some glow effect
-      setState(() {
-        pieGlowWidth += 10;
-      });
-
-      Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          pieGlowWidth -= 10;
-        });
-      });
-    }
-
-    // wait a bit before a new turn
-    return Future.delayed(const Duration(seconds: 2));
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      settings: const RouteSettings(name: "/answer"),
+      builder: (context) => NotificationListener<WantNextTurnNotification>(
+        onNotification: (notification) {
+          Navigator.pop(context);
+          _sendEvent(notification.event);
+          return true;
+        },
+        child: QuestionResult(event),
+      ),
+    ));
   }
 
   void _onGameEnd(GameEnd event) {
@@ -493,7 +477,7 @@ class _GameStarted extends StatelessWidget {
                 Colors.grey.withOpacity(0.6), BlendMode.srcATop)),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -508,11 +492,13 @@ class _GameStarted extends StatelessWidget {
                   child: dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
             ],
           ),
-          Expanded(child: LayoutBuilder(
-            builder: (_, cts) {
-              return Board(cts.biggest.shortestSide, onTapTile, availableTiles,
-                  pawnTile);
-            },
+          Expanded(child: Center(
+            child: LayoutBuilder(
+              builder: (_, cts) {
+                return Board(cts.biggest.shortestSide, onTapTile,
+                    availableTiles, pawnTile);
+              },
+            ),
           )),
           Padding(
             padding: const EdgeInsets.only(top: 5, bottom: 2),

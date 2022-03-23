@@ -139,6 +139,10 @@ func (out *clientEventDataWrapper) UnmarshalJSON(src []byte) error {
 		var data move
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 4:
+		var data wantNextTurn
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -161,6 +165,8 @@ func (item clientEventDataWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 2, Data: data}
 	case move:
 		wr = wrapper{Kind: 3, Data: data}
+	case wantNextTurn:
+		wr = wrapper{Kind: 4, Data: data}
 
 	default:
 		panic("exhaustive switch")

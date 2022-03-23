@@ -138,8 +138,10 @@ type showQuestion struct {
 // if the player has answered correctly to the
 // current question
 type playerAnswerResult struct {
-	Player  int
-	Success bool
+	CorrectAnwser string // TODO:
+	Player        int
+	Success       bool
+	Categorie     categorie
 }
 
 // gameEnd is emitted when at least one player has won
@@ -153,10 +155,11 @@ type clientEventData interface {
 	isClientEvent()
 }
 
-func (move) isClientEvent()        {}
-func (answer) isClientEvent()      {}
-func (diceClicked) isClientEvent() {}
-func (Ping) isClientEvent()        {}
+func (move) isClientEvent()         {}
+func (answer) isClientEvent()       {}
+func (diceClicked) isClientEvent()  {}
+func (wantNextTurn) isClientEvent() {}
+func (Ping) isClientEvent()         {}
 
 // the proposition of a client to a question
 type answer struct {
@@ -167,6 +170,14 @@ type answer struct {
 // diceClicked is emitted when the current player
 // throws the dice
 type diceClicked struct{}
+
+// wantNextTurn is emitted when a player is done
+// looking at the question answer panel
+type wantNextTurn struct {
+	// MarkQuestion is true if the player wants to
+	// keep the question for following trainings
+	MarkQuestion bool
+}
 
 // Ping is used to maintain the client connection
 // openned

@@ -3,8 +3,9 @@ import 'dart:ui';
 
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/pawn.dart';
-import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:flutter/material.dart';
+
+import 'categories.dart';
 
 typedef OnTapTile = void Function(int);
 
@@ -21,7 +22,7 @@ class Board extends StatelessWidget {
       {Key? key})
       : super(key: key);
 
-  static const innerRingRadius = 38;
+  static const innerRingRadius = 34;
   static const outerRingRadius = innerRingRadius + 14;
   static const angularSection = 180 / 6;
 

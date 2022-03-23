@@ -8,10 +8,10 @@ const updates = [
           GameStart(),
           // PlayerTurn("", 0),
           // DiceThrow(2),
-          PossibleMoves("Katia", [1, 3, 7], 0),
+          // PossibleMoves("Katia", [1, 3, 7], 0),
           // Move([0, 1, 2, 3, 4, 5], 5),
           // ShowQuestion("test", 60, Categorie.orange),
-          // PlayerAnswerResult(0, false),
+          PlayerAnswerResult("tetst", 0, false, Categorie.green),
           // GameEnd([0, 1], ["Pierre", "Paul"])
         ],
         GameState({

@@ -198,8 +198,7 @@ func (gc *gameController) startLoop(ctx context.Context) {
 		case <-gc.game.QuestionTimeout.C:
 			ProgressLogger.Println("QuestionTimeoutAction...")
 
-			var events game.StateUpdates
-			events, isGameOver = gc.game.QuestionTimeoutAction()
+			events := gc.game.QuestionTimeoutAction()
 			gc.broadcastEvents <- events
 
 		case client := <-gc.join:

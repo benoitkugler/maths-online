@@ -1,8 +1,8 @@
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 
+import 'categories.dart';
 import 'events.gen.dart';
-import 'pie.dart';
 
 /// SubmitAnswerNotification is emitted when the player
 /// validates his answer
@@ -58,42 +58,48 @@ class _QuestionRouteState extends State<QuestionRoute> {
   @override
   Widget build(BuildContext context) {
     final color = widget.question.categorie.color;
-    return Scaffold(
-      body: Padding(
-        padding:
-            const EdgeInsets.only(top: 40, bottom: 10, left: 20, right: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(
-              "Thème ${widget.question.categorie}",
-              style: const TextStyle(fontSize: 20),
-            ),
-            const Text("Quel est le numéro du thème actuel ?",
-                style: TextStyle(fontSize: 18)),
-            TextField(
-              controller: _controller,
-              cursorColor: color,
-              decoration: InputDecoration(
-                focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                  color: color,
-                )),
-                border: const OutlineInputBorder(),
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+        ),
+        body: Padding(
+          padding:
+              const EdgeInsets.only(top: 40, bottom: 10, left: 20, right: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(
+                "Thème ${widget.question.categorie}",
+                style: const TextStyle(fontSize: 20),
               ),
-            ),
-            ElevatedButton(
-              onPressed: _enabledValid ? _onValidated : null,
-              style: ElevatedButton.styleFrom(primary: color),
-              child: const Text(
-                "Valider",
-                style: TextStyle(fontSize: 18),
+              const Text("Quel est le numéro du thème actuel ?",
+                  style: TextStyle(fontSize: 18)),
+              TextField(
+                controller: _controller,
+                cursorColor: color,
+                decoration: InputDecoration(
+                  focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                    color: color,
+                  )),
+                  border: const OutlineInputBorder(),
+                ),
               ),
-            ),
-            TimeoutBar(widget.timeout, color),
-            Text(_waiting ? "En attente des autres joueurs..." : "",
-                style: const TextStyle(fontSize: 16)),
-          ],
+              ElevatedButton(
+                onPressed: _enabledValid ? _onValidated : null,
+                style: ElevatedButton.styleFrom(primary: color),
+                child: const Text(
+                  "Valider",
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+              TimeoutBar(widget.timeout, color),
+              Text(_waiting ? "En attente des autres joueurs..." : "",
+                  style: const TextStyle(fontSize: 16)),
+            ],
+          ),
         ),
       ),
     );

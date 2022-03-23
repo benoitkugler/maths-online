@@ -146,6 +146,13 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal("expected error for invalid client event type")
 	}
 
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: diceClicked{}, Player: 2})
+	if err == nil {
+		t.Fatal("expected error for invalid click")
+	}
+
+	g.HandleClientEvent(ClientEvent{Event: diceClicked{}})
+
 	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{}, Player: 2})
 	if err == nil {
 		t.Fatal("expected error for invalid move")
@@ -185,6 +192,12 @@ func TestHandleClientEvent(t *testing.T) {
 	if !reflect.DeepEqual(g.winners(), []int{0}) {
 		t.Fatal()
 	}
+
+	if !g.IsPlaying() {
+		t.Fatal("game should still be active")
+	}
+
+	g.HandleClientEvent(ClientEvent{Player: 0, Event: wantNextTurn{}})
 
 	if g.IsPlaying() {
 		t.Fatal("game should be over")

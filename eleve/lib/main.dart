@@ -46,6 +46,8 @@ class MyApp extends StatelessWidget {
           title: const Text('Isiro'),
         ),
         body: const _HomePage(),
+        // body: QuestionResult(PlayerAnswerResult(
+        //     "Voici la réponse attendue", 0, false, Categorie.orange))
         // body: Center(
         //     child: Repere(Figure({
         //   "A": LabeledPoint(Coord(40, 10), LabelPos.bottom),

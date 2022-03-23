@@ -4,6 +4,8 @@ import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'categories.dart';
+
 /// Pie displays the current sucesses of the player,
 /// using a pie chart.
 class Pie extends StatelessWidget {
@@ -42,25 +44,6 @@ class Pie extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-/// map question categories to colors
-
-extension CategorieColor on Categorie {
-  Color get color {
-    switch (this) {
-      case Categorie.purple:
-        return Colors.purple;
-      case Categorie.green:
-        return Colors.green;
-      case Categorie.orange:
-        return Colors.orange.shade700;
-      case Categorie.yellow:
-        return Colors.yellow.shade700;
-      case Categorie.blue:
-        return Colors.blue;
-    }
   }
 }
 
