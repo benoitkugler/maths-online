@@ -12,6 +12,7 @@ class IndexedText {
 
 class OrderedListController extends FieldController {
   final List<IndexedText> _references = [];
+  final String label;
   final int expectedLength;
 
   List<IndexedText> answers = [];
@@ -20,6 +21,7 @@ class OrderedListController extends FieldController {
 
   OrderedListController(void Function() onChange, OrderedListFieldBlock field)
       : expectedLength = field.answerLength,
+        label = field.label,
         super(onChange) {
     for (var i = 0; i < field.proposals.length; i++) {
       _references.add(IndexedText(i, field.proposals[i]));
@@ -112,6 +114,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
         _AnswerRow(
             widget._color,
             answers,
+            ct.label,
             (symbol, isStart) => setState(() {
                   // insert into answers
                   ct.insertAnswerAt(symbol.item, isStart ? 0 : answers.length);
@@ -132,6 +135,8 @@ class _Symbol extends StatelessWidget {
   final _PositionnedItem symbol;
   const _Symbol(this.isAnswer, this.symbol, {Key? key}) : super(key: key);
 
+  static const fontSize = 16.0;
+
   static List<_Symbol> fromList(bool dense, List<IndexedText> list) {
     return List<_Symbol>.generate(list.length,
         (index) => _Symbol(dense, _PositionnedItem(list[index], index)));
@@ -144,7 +149,7 @@ class _Symbol extends StatelessWidget {
         vertical: 8,
         horizontal: isAnswer ? 8 : 12,
       ),
-      child: textMath(symbol.item.text, 16),
+      child: textMath(symbol.item.text, fontSize),
     );
     return Draggable<_PositionnedItem>(
       data: symbol,
@@ -153,7 +158,7 @@ class _Symbol extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: textMath(symbol.item.text, 16),
+          child: textMath(symbol.item.text, fontSize),
         ),
       ),
       child: Padding(
@@ -176,68 +181,78 @@ class _Symbol extends StatelessWidget {
 class _AnswerRow extends StatelessWidget {
   final Color color;
   final List<IndexedText> answers;
+  final String label; // optional
 
   final void Function(_PositionnedItem, bool isStart) addAnswer;
 
-  const _AnswerRow(this.color, this.answers, this.addAnswer, {Key? key})
+  const _AnswerRow(this.color, this.answers, this.label, this.addAnswer,
+      {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return answers.isEmpty
-        ? DragTarget<_PositionnedItem>(
-            builder: (context, candidateData, rejectedData) => Container(
-              constraints: const BoxConstraints(
-                minHeight: 40,
-              ),
-              decoration: BoxDecoration(
-                  color: candidateData.isEmpty ? null : color,
-                  border: Border.all(color: color)),
-              child: const Center(
-                child: Text("Glisser les symboles...",
-                    style: TextStyle(fontStyle: FontStyle.italic)),
-              ),
-            ),
-            onAccept: (_PositionnedItem symbol) {
-              addAnswer(symbol, true);
-            },
-          )
-        : Container(
-            decoration: BoxDecoration(border: Border.all(color: color)),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DragTarget<_PositionnedItem>(
-                    builder: (context, candidateData, rejectedData) => Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Container(
-                        constraints: const BoxConstraints(minHeight: 40),
-                        color: candidateData.isEmpty ? null : color,
+    final widgets = answers.isEmpty
+        ? [
+            Expanded(
+              child: DragTarget<_PositionnedItem>(
+                  builder: (context, candidateData, rejectedData) => Container(
+                        constraints: const BoxConstraints(
+                          minHeight: 40,
+                        ),
+                        decoration: BoxDecoration(
+                          color: candidateData.isEmpty ? null : color,
+                        ),
+                        child: const Center(
+                          child: Text("Glisser les symboles...",
+                              style: TextStyle(fontStyle: FontStyle.italic)),
+                        ),
                       ),
-                    ),
-                    onAccept: (_PositionnedItem symbol) {
-                      addAnswer(symbol, true);
-                    },
+                  onAccept: (_PositionnedItem symbol) {
+                    addAnswer(symbol, true);
+                  }),
+            )
+          ]
+        : [
+            Expanded(
+              child: DragTarget<_PositionnedItem>(
+                builder: (context, candidateData, rejectedData) => Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 40),
+                    color: candidateData.isEmpty ? null : color,
                   ),
                 ),
-                ..._Symbol.fromList(true, answers),
-                Expanded(
-                  child: DragTarget<_PositionnedItem>(
-                    builder: (context, candidateData, rejectedData) => Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Container(
-                        constraints: const BoxConstraints(minHeight: 40),
-                        color: candidateData.isEmpty ? null : color,
-                      ),
-                    ),
-                    onAccept: (_PositionnedItem symbol) {
-                      addAnswer(symbol, false);
-                    },
+                onAccept: (_PositionnedItem symbol) {
+                  addAnswer(symbol, true);
+                },
+              ),
+            ),
+            ..._Symbol.fromList(true, answers),
+            Expanded(
+              child: DragTarget<_PositionnedItem>(
+                builder: (context, candidateData, rejectedData) => Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 40),
+                    color: candidateData.isEmpty ? null : color,
                   ),
                 ),
-              ],
+                onAccept: (_PositionnedItem symbol) {
+                  addAnswer(symbol, false);
+                },
+              ),
             ),
-          );
+          ];
+    return Container(
+        decoration: BoxDecoration(border: Border.all(color: color)),
+        child: Row(children: [
+          if (label.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: textMath(label, _Symbol.fontSize),
+            ),
+          ...widgets,
+        ]));
   }
 }
 

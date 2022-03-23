@@ -184,7 +184,8 @@ var PredefinedQuestions = [...]QuestionInstance{
 				expr("12"),
 			}},
 			OrderedListFieldInstance{
-				ID: 0,
+				ID:    0,
+				Label: `x \in`,
 				Answer: []StringOrExpression{ // [12;+infty[
 					{String: "["},
 					{Expression: mustParse("12")},
@@ -240,7 +241,8 @@ var PredefinedQuestions = [...]QuestionInstance{
 				staticMath(`]`),
 			}},
 			OrderedListFieldInstance{
-				ID: 0,
+				ID:    0,
+				Label: `I \cap J =`,
 				Answer: []StringOrExpression{ // [12;+infty[
 					{String: "["},
 					{Expression: mustParse("3")},

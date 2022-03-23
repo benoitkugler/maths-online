@@ -119,6 +119,7 @@ type RadioFieldBlock struct {
 }
 
 type OrderedListFieldBlock struct {
+	Label string // as LaTeX, optional, displayed before the answer
 	// Proposals is a shuffled version of the list,
 	// displayed as math text
 	Proposals    []string

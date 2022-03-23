@@ -187,6 +187,7 @@ func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool
 // OrderedListFieldInstance asks the student to reorder part of the
 // given symbols
 type OrderedListFieldInstance struct {
+	Label               string
 	Answer              []StringOrExpression
 	AdditionalProposals []StringOrExpression // added to Answer when displaying the field
 	ID                  int
@@ -207,6 +208,7 @@ func (olf OrderedListFieldInstance) proposals() (out []StringOrExpression) {
 func (olf OrderedListFieldInstance) toClient() client.Block {
 	out := client.OrderedListFieldBlock{
 		ID:           olf.ID,
+		Label:        olf.Label,
 		AnswerLength: len(olf.Answer),
 	}
 

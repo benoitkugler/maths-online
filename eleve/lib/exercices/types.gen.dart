@@ -364,26 +364,32 @@ List<dynamic> listStringToJson(List<String> item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListFieldBlock
 class OrderedListFieldBlock implements Block {
+  final String label;
   final List<String> proposals;
   final int answerLength;
   final int iD;
 
-  const OrderedListFieldBlock(this.proposals, this.answerLength, this.iD);
+  const OrderedListFieldBlock(
+      this.label, this.proposals, this.answerLength, this.iD);
 
   @override
   String toString() {
-    return "OrderedListFieldBlock($proposals, $answerLength, $iD)";
+    return "OrderedListFieldBlock($label, $proposals, $answerLength, $iD)";
   }
 }
 
 OrderedListFieldBlock orderedListFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return OrderedListFieldBlock(listStringFromJson(json['Proposals']),
-      intFromJson(json['AnswerLength']), intFromJson(json['ID']));
+  return OrderedListFieldBlock(
+      stringFromJson(json['Label']),
+      listStringFromJson(json['Proposals']),
+      intFromJson(json['AnswerLength']),
+      intFromJson(json['ID']));
 }
 
 JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
   return {
+    "Label": stringToJson(item.label),
     "Proposals": listStringToJson(item.proposals),
     "AnswerLength": intToJson(item.answerLength),
     "ID": intToJson(item.iD)
