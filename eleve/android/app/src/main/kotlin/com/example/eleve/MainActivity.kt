@@ -1,4 +1,4 @@
-package com.example.eleve
+package com.maths.isiro
 
 import io.flutter.embedding.android.FlutterActivity
 
