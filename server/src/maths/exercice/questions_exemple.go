@@ -293,9 +293,18 @@ var PredefinedQuestions = [...]QuestionInstance{
 				{Expression: mustParse("2*x - 5")},
 			}},
 			TextInstance{Parts: []TextOrMaths{
-				staticMath("x > "),
+				staticMath("x "),
 			}},
-			NumberFieldInstance{ID: 0, Answer: 0.6},
+			DropDownFieldInstance{
+				ID:     0,
+				Answer: 1,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: `<`, IsMath: true}}},
+					{Content: []client.TextOrMath{{Text: `>`, IsMath: true}}},
+					{Content: []client.TextOrMath{{Text: `=`, IsMath: true}}},
+				},
+			},
+			NumberFieldInstance{ID: 1, Answer: 0.6},
 		},
 	},
 	{

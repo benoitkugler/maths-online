@@ -16,20 +16,21 @@ abstract class FieldController {
   Answer getData();
 }
 
-Widget textMath(String content, double fontSize) {
+Widget textMath(String content, double fontSize, {Key? key}) {
   return Math.tex(
     content,
+    key: key,
     mathStyle: MathStyle.text,
     textScaleFactor: 1.15,
     textStyle: TextStyle(fontSize: fontSize - 1),
   );
 }
 
-WidgetSpan _inlineMath(String content, double fontSize) {
+WidgetSpan _inlineMath(String content, double fontSize, Key? key) {
   return WidgetSpan(
     baseline: TextBaseline.alphabetic,
     alignment: PlaceholderAlignment.baseline,
-    child: textMath(content, fontSize),
+    child: textMath(content, fontSize, key: key),
   );
 }
 
@@ -37,7 +38,8 @@ List<InlineSpan> buildText(List<TextOrMath> parts, double fontSize) {
   final out = <InlineSpan>[];
   for (var part in parts) {
     if (part.isMath) {
-      out.add(_inlineMath(part.text, fontSize));
+      out.add(const TextSpan(text: " "));
+      out.add(_inlineMath(part.text, fontSize, null));
       out.add(const TextSpan(text: " "));
     } else {
       out.add(TextSpan(text: part.text, style: TextStyle(fontSize: fontSize)));

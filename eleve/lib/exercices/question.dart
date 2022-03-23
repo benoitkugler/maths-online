@@ -1,3 +1,4 @@
+import 'package:eleve/exercices/dropdown.dart';
 import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/figure_point.dart';
@@ -59,6 +60,8 @@ class _ContentBuilder {
         controllers[block.iD] = ExpressionController(onChange);
       } else if (block is RadioFieldBlock) {
         controllers[block.iD] = RadioController(onChange, block.proposals);
+      } else if (block is DropDownFieldBlock) {
+        controllers[block.iD] = DropDownController(onChange, block.proposals);
       } else if (block is OrderedListFieldBlock) {
         controllers[block.iD] = OrderedListController(onChange, block);
       } else if (block is FigurePointFieldBlock) {
@@ -168,6 +171,13 @@ class _ContentBuilder {
     rows.add(RadioField(_color, ct));
   }
 
+  void _handleDropDownFieldBlock(DropDownFieldBlock element) {
+    final ct = _controllers[element.iD] as DropDownController;
+
+    // add inline
+    _currentRow.add(WidgetSpan(child: DropDownField(_color, ct)));
+  }
+
   void _handleOrderedListFieldBlock(OrderedListFieldBlock element) {
     final ct = _controllers[element.iD] as OrderedListController;
 
@@ -218,6 +228,8 @@ class _ContentBuilder {
         _handleExpressionFieldBlock(element);
       } else if (element is RadioFieldBlock) {
         _handleRadioFieldBlock(element);
+      } else if (element is DropDownFieldBlock) {
+        _handleDropDownFieldBlock(element);
       } else if (element is OrderedListFieldBlock) {
         _handleOrderedListFieldBlock(element);
       } else if (element is FigurePointFieldBlock) {

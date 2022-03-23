@@ -219,6 +219,101 @@ JSON answerToJson(Answer item) {
   }
 }
 
+bool boolFromJson(dynamic json) => json as bool;
+
+bool boolToJson(bool item) => item;
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
+class TextOrMath {
+  final String text;
+  final bool isMath;
+
+  const TextOrMath(this.text, this.isMath);
+
+  @override
+  String toString() {
+    return "TextOrMath($text, $isMath)";
+  }
+}
+
+TextOrMath textOrMathFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TextOrMath(stringFromJson(json['Text']), boolFromJson(json['IsMath']));
+}
+
+JSON textOrMathToJson(TextOrMath item) {
+  return {"Text": stringToJson(item.text), "IsMath": boolToJson(item.isMath)};
+}
+
+List<TextOrMath> listTextOrMathFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(textOrMathFromJson).toList();
+}
+
+List<dynamic> listTextOrMathToJson(List<TextOrMath> item) {
+  return item.map(textOrMathToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposal
+class ListFieldProposal {
+  final List<TextOrMath> content;
+
+  const ListFieldProposal(this.content);
+
+  @override
+  String toString() {
+    return "ListFieldProposal($content)";
+  }
+}
+
+ListFieldProposal listFieldProposalFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return ListFieldProposal(listTextOrMathFromJson(json['Content']));
+}
+
+JSON listFieldProposalToJson(ListFieldProposal item) {
+  return {"Content": listTextOrMathToJson(item.content)};
+}
+
+List<ListFieldProposal> listListFieldProposalFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(listFieldProposalFromJson).toList();
+}
+
+List<dynamic> listListFieldProposalToJson(List<ListFieldProposal> item) {
+  return item.map(listFieldProposalToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.DropDownFieldBlock
+class DropDownFieldBlock implements Block {
+  final List<ListFieldProposal> proposals;
+  final int iD;
+
+  const DropDownFieldBlock(this.proposals, this.iD);
+
+  @override
+  String toString() {
+    return "DropDownFieldBlock($proposals, $iD)";
+  }
+}
+
+DropDownFieldBlock dropDownFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return DropDownFieldBlock(listListFieldProposalFromJson(json['Proposals']),
+      intFromJson(json['ID']));
+}
+
+JSON dropDownFieldBlockToJson(DropDownFieldBlock item) {
+  return {
+    "Proposals": listListFieldProposalToJson(item.proposals),
+    "ID": intToJson(item.iD)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.ExpressionFieldBlock
 class ExpressionFieldBlock implements Block {
   final String label;
@@ -394,75 +489,6 @@ JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
     "AnswerLength": intToJson(item.answerLength),
     "ID": intToJson(item.iD)
   };
-}
-
-bool boolFromJson(dynamic json) => json as bool;
-
-bool boolToJson(bool item) => item;
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
-class TextOrMath {
-  final String text;
-  final bool isMath;
-
-  const TextOrMath(this.text, this.isMath);
-
-  @override
-  String toString() {
-    return "TextOrMath($text, $isMath)";
-  }
-}
-
-TextOrMath textOrMathFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return TextOrMath(stringFromJson(json['Text']), boolFromJson(json['IsMath']));
-}
-
-JSON textOrMathToJson(TextOrMath item) {
-  return {"Text": stringToJson(item.text), "IsMath": boolToJson(item.isMath)};
-}
-
-List<TextOrMath> listTextOrMathFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(textOrMathFromJson).toList();
-}
-
-List<dynamic> listTextOrMathToJson(List<TextOrMath> item) {
-  return item.map(textOrMathToJson).toList();
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposal
-class ListFieldProposal {
-  final List<TextOrMath> content;
-
-  const ListFieldProposal(this.content);
-
-  @override
-  String toString() {
-    return "ListFieldProposal($content)";
-  }
-}
-
-ListFieldProposal listFieldProposalFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return ListFieldProposal(listTextOrMathFromJson(json['Content']));
-}
-
-JSON listFieldProposalToJson(ListFieldProposal item) {
-  return {"Content": listTextOrMathToJson(item.content)};
-}
-
-List<ListFieldProposal> listListFieldProposalFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(listFieldProposalFromJson).toList();
-}
-
-List<dynamic> listListFieldProposalToJson(List<ListFieldProposal> item) {
-  return item.map(listFieldProposalToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.RadioFieldBlock
@@ -648,26 +674,28 @@ Block blockFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return expressionFieldBlockFromJson(data);
+      return dropDownFieldBlockFromJson(data);
     case 1:
-      return figureBlockFromJson(data);
+      return expressionFieldBlockFromJson(data);
     case 2:
-      return figurePointFieldBlockFromJson(data);
+      return figureBlockFromJson(data);
     case 3:
-      return figureVectorFieldBlockFromJson(data);
+      return figurePointFieldBlockFromJson(data);
     case 4:
-      return formulaBlockFromJson(data);
+      return figureVectorFieldBlockFromJson(data);
     case 5:
-      return numberFieldBlockFromJson(data);
+      return formulaBlockFromJson(data);
     case 6:
-      return orderedListFieldBlockFromJson(data);
+      return numberFieldBlockFromJson(data);
     case 7:
-      return radioFieldBlockFromJson(data);
+      return orderedListFieldBlockFromJson(data);
     case 8:
-      return signTableBlockFromJson(data);
+      return radioFieldBlockFromJson(data);
     case 9:
-      return textBlockFromJson(data);
+      return signTableBlockFromJson(data);
     case 10:
+      return textBlockFromJson(data);
+    case 11:
       return variationTableBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -675,28 +703,30 @@ Block blockFromJson(dynamic json_) {
 }
 
 JSON blockToJson(Block item) {
-  if (item is ExpressionFieldBlock) {
-    return {'Kind': 0, 'Data': expressionFieldBlockToJson(item)};
+  if (item is DropDownFieldBlock) {
+    return {'Kind': 0, 'Data': dropDownFieldBlockToJson(item)};
+  } else if (item is ExpressionFieldBlock) {
+    return {'Kind': 1, 'Data': expressionFieldBlockToJson(item)};
   } else if (item is FigureBlock) {
-    return {'Kind': 1, 'Data': figureBlockToJson(item)};
+    return {'Kind': 2, 'Data': figureBlockToJson(item)};
   } else if (item is FigurePointFieldBlock) {
-    return {'Kind': 2, 'Data': figurePointFieldBlockToJson(item)};
+    return {'Kind': 3, 'Data': figurePointFieldBlockToJson(item)};
   } else if (item is FigureVectorFieldBlock) {
-    return {'Kind': 3, 'Data': figureVectorFieldBlockToJson(item)};
+    return {'Kind': 4, 'Data': figureVectorFieldBlockToJson(item)};
   } else if (item is FormulaBlock) {
-    return {'Kind': 4, 'Data': formulaBlockToJson(item)};
+    return {'Kind': 5, 'Data': formulaBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
-    return {'Kind': 5, 'Data': numberFieldBlockToJson(item)};
+    return {'Kind': 6, 'Data': numberFieldBlockToJson(item)};
   } else if (item is OrderedListFieldBlock) {
-    return {'Kind': 6, 'Data': orderedListFieldBlockToJson(item)};
+    return {'Kind': 7, 'Data': orderedListFieldBlockToJson(item)};
   } else if (item is RadioFieldBlock) {
-    return {'Kind': 7, 'Data': radioFieldBlockToJson(item)};
+    return {'Kind': 8, 'Data': radioFieldBlockToJson(item)};
   } else if (item is SignTableBlock) {
-    return {'Kind': 8, 'Data': signTableBlockToJson(item)};
+    return {'Kind': 9, 'Data': signTableBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 9, 'Data': textBlockToJson(item)};
+    return {'Kind': 10, 'Data': textBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 10, 'Data': variationTableBlockToJson(item)};
+    return {'Kind': 11, 'Data': variationTableBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

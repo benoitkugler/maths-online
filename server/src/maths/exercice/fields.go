@@ -40,6 +40,7 @@ var (
 	_ fieldInstance = NumberFieldInstance{}
 	_ fieldInstance = ExpressionFieldInstance{}
 	_ fieldInstance = RadioFieldInstance{}
+	_ fieldInstance = DropDownFieldInstance{}
 	_ fieldInstance = OrderedListFieldInstance{}
 	_ fieldInstance = FigurePointFieldInstance{}
 	_ fieldInstance = FigureVectorFieldInstance{}
@@ -182,6 +183,25 @@ func (f RadioFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 
 func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	return f.Answer == answer.(client.RadioAnswer).Index
+}
+
+type DropDownFieldInstance RadioFieldInstance
+
+func (rf DropDownFieldInstance) fieldID() int { return rf.ID }
+
+func (rf DropDownFieldInstance) toClient() client.Block {
+	return client.DropDownFieldBlock{
+		ID:        rf.ID,
+		Proposals: rf.Proposals,
+	}
+}
+
+func (f DropDownFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	return RadioFieldInstance(f).validateAnswerSyntax(answer)
+}
+
+func (f DropDownFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return RadioFieldInstance(f).evaluateAnswer(answer)
 }
 
 // OrderedListFieldInstance asks the student to reorder part of the

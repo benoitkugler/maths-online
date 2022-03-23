@@ -47,6 +47,7 @@ func (FigureBlock) isBlock()            {}
 func (NumberFieldBlock) isBlock()       {}
 func (ExpressionFieldBlock) isBlock()   {}
 func (RadioFieldBlock) isBlock()        {}
+func (DropDownFieldBlock) isBlock()     {}
 func (OrderedListFieldBlock) isBlock()  {}
 func (FigurePointFieldBlock) isBlock()  {}
 func (FigureVectorFieldBlock) isBlock() {}
@@ -118,6 +119,13 @@ type RadioFieldBlock struct {
 	ID        int
 }
 
+// DropDownFieldBlock is the same has RadioFieldBlock,
+// but is displayed inline.
+type DropDownFieldBlock struct {
+	Proposals []ListFieldProposal
+	ID        int
+}
+
 type OrderedListFieldBlock struct {
 	Label string // as LaTeX, optional, displayed before the answer
 	// Proposals is a shuffled version of the list,
@@ -165,6 +173,7 @@ type ExpressionAnswer struct {
 }
 
 // RadioAnswer is compared against a reference index
+// It is shared by Radio and DropDown fields.
 type RadioAnswer struct {
 	Index int
 }
