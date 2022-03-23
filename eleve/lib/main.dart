@@ -103,7 +103,7 @@ class _HomePageState extends State<_HomePage> {
                   // TODO: polish
                   ElevatedButton(
                       onPressed: _launchQuestionGallery,
-                      child: const Text("Gallerie de questions")),
+                      child: const Text("Galerie de questions")),
                 ],
               ),
             )
