@@ -586,22 +586,27 @@ JSON signTableBlockToJson(SignTableBlock item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
 class TextBlock implements Block {
   final List<TextOrMath> parts;
+  final bool isHint;
 
-  const TextBlock(this.parts);
+  const TextBlock(this.parts, this.isHint);
 
   @override
   String toString() {
-    return "TextBlock($parts)";
+    return "TextBlock($parts, $isHint)";
   }
 }
 
 TextBlock textBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return TextBlock(listTextOrMathFromJson(json['Parts']));
+  return TextBlock(
+      listTextOrMathFromJson(json['Parts']), boolFromJson(json['IsHint']));
 }
 
 JSON textBlockToJson(TextBlock item) {
-  return {"Parts": listTextOrMathToJson(item.parts)};
+  return {
+    "Parts": listTextOrMathToJson(item.parts),
+    "IsHint": boolToJson(item.isHint)
+  };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumn

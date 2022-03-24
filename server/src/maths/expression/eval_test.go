@@ -6,10 +6,19 @@ import (
 	"testing"
 )
 
+func TestEvalMissingVariable(t *testing.T) {
+	e := mustParse(t, "x + y")
+	_, err := e.Evaluate(Variables{'x': 7})
+	if err == nil {
+		t.Fatal()
+	}
+	_ = err.Error()
+}
+
 func Test_Expression_eval(t *testing.T) {
 	tests := []struct {
 		expr     string
-		bindings valueResolver
+		bindings ValueResolver
 		want     float64
 	}{
 		{
@@ -137,8 +146,11 @@ func Test_Expression_eval(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-
-		if got := expr.Evaluate(tt.bindings); got != tt.want {
+		got, err := expr.Evaluate(tt.bindings)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tt.want {
 			t.Errorf("node.eval() = %v, want %v", got, tt.want)
 		}
 	}

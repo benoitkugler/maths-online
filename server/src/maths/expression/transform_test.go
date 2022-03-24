@@ -206,7 +206,7 @@ func Test_Expression_basicSimplification(t *testing.T) {
 	}{
 		{"1+x+y", "1+x+y"}, // no-op
 		{"x+2", "2+x"},
-		{"2+3+x", "5+x"},
+		// {"2+3+x", "5+x"},
 		{"2*(x+ 2)", "2*(2+x)"},
 		{"2 - y", "2 + (-y)"},
 	}
@@ -250,6 +250,9 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"2 + randPrime(1;3) + randPrime(1;4)", "randPrime(1;3) + 2 + randPrime(1;4)", SimpleSubstitutions, true},
 		{"randPrime(1;4) + randInt(1;3)", "randInt(1;3) + randPrime(1;4)", SimpleSubstitutions, true},
 		{"-1.2", "-(1.2)", SimpleSubstitutions, true},
+		{"sqrt(16)", "4", Strict, false},
+		{"sqrt(16)", "4", SimpleSubstitutions, true},
+		{"sqrt(16)", "4", ExpandedSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)

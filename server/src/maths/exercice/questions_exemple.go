@@ -16,6 +16,21 @@ func mustParse(s string) *expression.Expression {
 	return e
 }
 
+func mustEvaluate(s string, vars ...expression.Variables) float64 {
+	e := mustParse(s)
+
+	var resolver expression.ValueResolver
+	if len(vars) > 0 {
+		resolver = vars[0]
+	}
+
+	out, err := e.Evaluate(resolver)
+	if err != nil {
+		panic(err)
+	}
+	return out
+}
+
 func text(s string) TextOrMaths {
 	return TextOrMaths{StringOrExpression: StringOrExpression{String: s}}
 }
@@ -83,15 +98,103 @@ var (
 		Lines:    []repere.Line{},
 		ShowGrid: true,
 	}
+
+	figure3 = repere.Figure{
+		Width:  8,
+		Height: 8,
+		Points: map[string]repere.LabeledPoint{
+			"A": {Point: __A, Pos: repere.TopLeft},
+			"B": {Point: __B, Pos: repere.BottomLeft},
+			"D": {Point: __D, Pos: repere.TopRight},
+			"O": {Point: __O, Pos: repere.TopRight},
+		},
+		Lines:    []repere.Line{},
+		ShowGrid: true,
+	}
+
+	_A4     = repere.Coord{X: 4, Y: 9}
+	_B4     = repere.Coord{X: 6, Y: 6}
+	_C4     = repere.Coord{X: 5, Y: 12}
+	_D4     = repere.Coord{X: 2, Y: 0}
+	figure4 = repere.Figure{
+		Width:  7,
+		Height: 13,
+		Points: map[string]repere.LabeledPoint{
+			"A": {Point: _A4, Pos: repere.TopLeft},
+			"B": {Point: _B4, Pos: repere.BottomLeft},
+			"C": {Point: _C4, Pos: repere.TopRight},
+			"D": {Point: _D4, Pos: repere.TopRight},
+		},
+		Lines: []repere.Line{},
+	}
 )
 
-var PredefinedQuestions = [...]QuestionInstance{
+// pythagorian triplet
+var (
+	pythagorians = expression.PythagorianTriplet{
+		A: 'a', B: 'b', C: 'c',
+		SeedStart: 2, SeedEnd: 20,
+	}
+	distanceParams = expression.RandomParameters{
+		'X': mustParse("-randInt(100;200)"),
+		'Y': mustParse("300"),
+		'A': mustParse("a + X"),
+		'B': mustParse("b + Y"),
+	}
+	distanceSample expression.Variables
+)
+
+func init() {
+	pythagorians.MergeTo(distanceParams)
+
+	var err error
+	distanceSample, err = distanceParams.Instantiate()
+	if err != nil {
+		panic(err)
+	}
+
+	PredefinedQuestions = append(PredefinedQuestions, QuestionInstance{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Soient les points F("),
+				staticMath(expression.Number(distanceSample['A']).String()),
+				text(";"),
+				staticMath(expression.Number(distanceSample['B']).String()),
+				text(") et G("),
+				staticMath(expression.Number(distanceSample['X']).String()),
+				text(";"),
+				staticMath(expression.Number(distanceSample['Y']).String()),
+				text("). Calculer FG."),
+			}},
+			// TextInstance{
+			// 	IsHint: true,
+			// 	Parts: []TextOrMaths{
+			// 		text("(On utilisera sqrt(10) pour "),
+			// 		staticMath(`\sqrt{10}`),
+			// 		text(")."),
+			// 	},
+			// },
+			// ExpressionFieldInstance{
+			// 	ID:              0,
+			// 	Label:           StringOrExpression{String: "FG = "},
+			// 	Answer:          mustParse("sqrt(1262900)"),
+			// 	ComparisonLevel: expression.SimpleSubstitutions,
+			// },
+			TextInstance{Parts: []TextOrMaths{
+				staticMath("FG = "),
+			}},
+			NumberFieldInstance{ID: 0, Answer: distanceSample['c']},
+		},
+	})
+}
+
+var PredefinedQuestions = []QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{text("Développer l’expression :")}},
 			ExpressionFieldInstance{
 				ID:              0,
-				Label:           mustParse("(x−6)*(4*x−3)"),
+				Label:           StringOrExpression{Expression: mustParse("(x−6)*(4*x−3)")},
 				ComparisonLevel: expression.SimpleSubstitutions,
 				Answer:          mustParse("4*x^2 - 27 *x + 18"),
 			},
@@ -275,7 +378,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 			}},
 			ExpressionFieldInstance{
 				ID:              0,
-				Label:           mustParse("x"),
+				Label:           StringOrExpression{String: "x ="},
 				ComparisonLevel: expression.SimpleSubstitutions,
 				Answer:          mustParse("(34+7)/20"),
 			},
@@ -411,7 +514,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 			TextInstance{Parts: []TextOrMaths{
 				staticMath(`\widehat{ABC} = `),
 			}},
-			NumberFieldInstance{ID: 0, Answer: mustParse("acos(7/sqrt(98))").Evaluate(nil) * 180 / math.Pi},
+			NumberFieldInstance{ID: 0, Answer: mustEvaluate("acos(7/sqrt(98))") * 180 / math.Pi},
 		},
 	},
 	{
@@ -428,7 +531,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("AC = "),
 			}},
-			NumberFieldInstance{ID: 0, Answer: mustParse("sqrt(sqrt(98)^2 - 7^2)").Evaluate(nil)},
+			NumberFieldInstance{ID: 0, Answer: mustEvaluate("sqrt(sqrt(98)^2 - 7^2)")},
 		},
 	},
 	{
@@ -446,7 +549,7 @@ var PredefinedQuestions = [...]QuestionInstance{
 			}},
 			RadioFieldInstance{
 				ID: 0,
-				Answer: int(mustParse("1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)").Evaluate(expression.Variables{
+				Answer: int(mustEvaluate("1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", expression.Variables{
 					'a': 8,  // BC
 					'b': 12, // AC
 					'c': 4,  // AB
@@ -481,11 +584,11 @@ var PredefinedQuestions = [...]QuestionInstance{
 			TextInstance{Parts: []TextOrMaths{
 				staticMath("M = ("),
 			}},
-			NumberFieldInstance{ID: 0, Answer: mustParse("(8 + (-6))/2").Evaluate(nil)},
+			NumberFieldInstance{ID: 0, Answer: mustEvaluate("(8 + (-6))/2")},
 			TextInstance{Parts: []TextOrMaths{
 				staticMath(";"),
 			}},
-			NumberFieldInstance{ID: 1, Answer: mustParse("(19 + 0)/2").Evaluate(nil)},
+			NumberFieldInstance{ID: 1, Answer: mustEvaluate("(19 + 0)/2")},
 			TextInstance{Parts: []TextOrMaths{
 				staticMath(")"),
 			}},
@@ -533,6 +636,53 @@ var PredefinedQuestions = [...]QuestionInstance{
 				Figure: figure2,
 				Answer: repere.IntCoord{X: 6, Y: -1},
 				ID:     0,
+			},
+		},
+	},
+	{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Lire les coordonnées de B."),
+			}},
+			FigureInstance{
+				Figure: figure3,
+			},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath("B = ("),
+			}},
+			NumberFieldInstance{
+				ID:     0,
+				Answer: __B.X - __O.X,
+			},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath("; "),
+			}},
+			NumberFieldInstance{
+				ID:     1,
+				Answer: __B.Y - __O.Y,
+			},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(")"),
+			}},
+		},
+	},
+	{
+		Title: "Repérage dans le plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Quelle est la nature de ABCD ?"),
+			}},
+			FigureInstance{
+				Figure: figure4,
+			},
+			RadioFieldInstance{
+				ID:     0,
+				Answer: 0,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: "Quadrilatère quelconque"}}},
+					{Content: []client.TextOrMath{{Text: "Rectangle"}}},
+					{Content: []client.TextOrMath{{Text: "Losange"}}},
+					{Content: []client.TextOrMath{{Text: "Carré"}}},
+				},
 			},
 		},
 	},

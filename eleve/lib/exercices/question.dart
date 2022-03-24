@@ -88,7 +88,7 @@ class _ContentBuilder {
     if (lastIsText) {
       _flushCurrentRow();
     }
-    _currentRow.addAll(buildText(element.parts, fontSize));
+    _currentRow.addAll(buildText(element.parts, element.isHint, fontSize));
   }
 
   void _handleFormulaBlock(FormulaBlock element) {
@@ -147,8 +147,6 @@ class _ContentBuilder {
             TextSpan(
               children: [
                 _inlineMath(element.label, fontSize),
-                const TextSpan(text: " "),
-                _inlineMath("=", fontSize),
                 const TextSpan(text: " "),
                 field,
               ],
@@ -275,8 +273,10 @@ class ValidQuestionNotification extends Notification {
 
 class _OptionScrollList extends StatefulWidget {
   final _ContentBuilder content;
+  final Widget button;
 
-  const _OptionScrollList(this.content, {Key? key}) : super(key: key);
+  const _OptionScrollList(this.content, this.button, {Key? key})
+      : super(key: key);
 
   @override
   _OptionScrollListState createState() => _OptionScrollListState();
@@ -331,18 +331,22 @@ class _OptionScrollListState extends State<_OptionScrollList> {
         _checkPan(ev.position);
       },
       child: ListView(
-        // if dragging over your widget, disable scroll, otherwise allow scrolling
-        physics: _isPaningOverView
-            ? const NeverScrollableScrollPhysics()
-            : const ScrollPhysics(),
-        shrinkWrap: true,
-        children: widget.content.rows
-            .map(
-              (e) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0), child: e),
-            )
-            .toList(),
-      ),
+          // if dragging over your widget, disable scroll, otherwise allow scrolling
+          physics: _isPaningOverView
+              ? const NeverScrollableScrollPhysics()
+              : const ScrollPhysics(),
+          shrinkWrap: true,
+          children: [
+            ...widget.content.rows
+                .map(
+                  (e) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                      child: e),
+                )
+                .toList(),
+            const SizedBox(height: 10.0),
+            widget.button
+          ]),
     );
   }
 }
@@ -426,17 +430,21 @@ class _QuestionPageState extends State<QuestionPage> {
               ),
             ),
           ),
-          if (builder != null) Expanded(child: _OptionScrollList(builder!)),
-          spacing,
-          ElevatedButton(
-            onPressed:
-                areAnswersValid ? () => answers().dispatch(context) : null,
-            style: ElevatedButton.styleFrom(primary: widget.categorie.color),
-            child: const Text(
-              "Valider",
-              style: TextStyle(fontSize: 18),
-            ),
-          ),
+          if (builder != null)
+            Expanded(
+                child: _OptionScrollList(
+              builder!,
+              ElevatedButton(
+                onPressed:
+                    areAnswersValid ? () => answers().dispatch(context) : null,
+                style:
+                    ElevatedButton.styleFrom(primary: widget.categorie.color),
+                child: const Text(
+                  "Valider",
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            )),
           spacing,
           TimeoutBar(const Duration(seconds: 60), widget.categorie.color),
           spacing,

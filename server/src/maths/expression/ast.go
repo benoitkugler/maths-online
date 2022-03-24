@@ -14,6 +14,8 @@ const (
 	exhaustiveSymbolSwitch   = "symbol"
 	exhaustiveTokenSwitch    = "token"
 	exhaustiveAtomSwitch     = "atom"
+
+	exhaustiveIntrinsicSwitch = "intrinsic"
 )
 
 // Expression is a parsed mathematical expression
@@ -80,7 +82,7 @@ type atom interface {
 	fmt.Stringer
 
 	lexicographicOrder() int // smaller is first; unique among concrete types
-	eval(left, right float64, context valueResolver) float64
+	eval(left, right float64, context ValueResolver) (float64, error)
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
@@ -187,6 +189,8 @@ func (fn function) String() string {
 // Private Unicode points are also permitted, so that
 // custom compounded symbols may be used.
 type Variable rune
+
+const firstPrivateVariable Variable = '\uE001'
 
 func newVariable(r rune) *Expression {
 	return &Expression{atom: Variable(r)}

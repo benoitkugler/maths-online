@@ -18,10 +18,21 @@ func (irv InvalidRandomVariable) Error() string {
 
 // RandomParameters stores a set of random parameters definitions,
 // which may be related, but cannot contain cycles.
-// RandomParameters may be stored in JSON format.
 type RandomParameters map[Variable]*Expression
 
-var _ valueResolver = &randomVarResolver{}
+// addAnonymousParam register the given expression under a new variable, not used yet,
+// chosen among a private range
+func (rp RandomParameters) addAnonymousParam(expr *Expression) Variable {
+	for v := firstPrivateVariable; v > 0; v++ {
+		if _, has := rp[v]; !has {
+			rp[v] = expr
+			return v
+		}
+	}
+	panic("implementation limit reached")
+}
+
+var _ ValueResolver = &randomVarResolver{}
 
 type randomVarResolver struct {
 	defs RandomParameters
@@ -64,7 +75,7 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 	}
 
 	// recurse
-	value := expr.Evaluate(rvv)
+	value, _ := expr.Evaluate(rvv)
 
 	// register the result
 	rvv.results[v] = Number(value)
@@ -158,7 +169,7 @@ func (expr *Expression) IsValidIndex(parameters RandomParameters, length int) (b
 	var nbSuccess int
 	for i := 0; i < nbTries; i++ {
 		ps, _ := parameters.Instantiate()
-		value := expr.Evaluate(ps)
+		value, _ := expr.Evaluate(ps)
 		if index, ok := isInt(value); ok && 0 <= index && index < length {
 			nbSuccess++
 		}

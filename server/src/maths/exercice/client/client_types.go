@@ -60,7 +60,8 @@ type TextOrMath struct {
 }
 
 type TextBlock struct {
-	Parts []TextOrMath
+	Parts  []TextOrMath
+	IsHint bool // an hint is displayed in italic with a smaller font
 }
 
 // FormulaBlock is whole line, rendered as LaTeX in display mode

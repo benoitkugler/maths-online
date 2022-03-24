@@ -75,6 +75,11 @@ type StringOrExpression struct {
 	String     string // LaTeX code, rendered in math mode
 }
 
+// IsEmpty returns `true` is the struct is the zero value.
+func (se StringOrExpression) IsEmpty() bool {
+	return se.Expression == nil && se.String == ""
+}
+
 func (fi StringOrExpression) asLaTeX() string {
 	if fi.Expression != nil {
 		return fi.Expression.AsLaTeX(nil)
@@ -139,7 +144,7 @@ func (f Formula) instantiate(params expression.Variables, _ int) blockInstance {
 
 func (n NumberField) instantiate(params expression.Variables, ID int) blockInstance {
 	expr, _, _ := expression.Parse(n.Expression)
-	answer := expr.Evaluate(params)
+	answer, _ := expr.Evaluate(params)
 	return NumberFieldInstance{ID: ID, Answer: answer}
 }
 
@@ -246,12 +251,14 @@ var (
 // TextInstance is a paragraph of text, which may contain expression or
 // math chunks, which is rendered on a single line (eventually wrapped).
 type TextInstance struct {
-	Parts []TextOrMaths
+	Parts  []TextOrMaths
+	IsHint bool
 }
 
 func (t TextInstance) toClient() client.Block {
 	out := client.TextBlock{
-		Parts: make([]client.TextOrMath, len(t.Parts)),
+		Parts:  make([]client.TextOrMath, len(t.Parts)),
+		IsHint: t.IsHint,
 	}
 	for i, p := range t.Parts {
 		out.Parts[i] = p.toClient()

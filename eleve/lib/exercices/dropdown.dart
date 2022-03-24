@@ -35,7 +35,8 @@ class _DropDownFieldState extends State<DropDownField> {
         ct.proposals.length,
         (index) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5.0),
-          child: TextRow(buildText(ct.proposals[index].content, fontSize), 0),
+          child: TextRow(
+              buildText(ct.proposals[index].content, false, fontSize), 0),
         ),
       ),
       items: List.generate(
@@ -45,7 +46,8 @@ class _DropDownFieldState extends State<DropDownField> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3),
                   child: TextRow(
-                      buildText(ct.proposals[index].content, fontSize), 1),
+                      buildText(ct.proposals[index].content, false, fontSize),
+                      1),
                 ),
               )),
       onChanged: (v) => setState(() {

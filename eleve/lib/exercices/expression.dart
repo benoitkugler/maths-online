@@ -1,6 +1,7 @@
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ExpressionController extends FieldController {
   final TextEditingController textController;
@@ -32,6 +33,33 @@ class ExpressionField extends StatelessWidget {
   const ExpressionField(this._color, this._controller, this.onDone, {Key? key})
       : super(key: key);
 
+  static bool isTypingFunc(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    /// To keep in sync with the server
+    const functions = [
+      "exp",
+      "ln",
+      "log",
+      "sin",
+      "cos",
+      "tan",
+      "asin",
+      "arcsin",
+      "acos",
+      "arccos",
+      "atan",
+      "arctan",
+      "abs",
+      "sqrt",
+      "sgn",
+      "isZero",
+      "isPrime",
+    ];
+    return functions.any((element) =>
+        newValue.text.endsWith(element) &&
+        !oldValue.text.endsWith(element + "("));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -39,6 +67,19 @@ class ExpressionField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: TextField(
         onSubmitted: (_) => onDone(),
+        inputFormatters: [
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            if (isTypingFunc(oldValue, newValue)) {
+              final sel = newValue.selection;
+              return newValue.copyWith(
+                  text: newValue.text + "()",
+                  selection: sel.copyWith(
+                      baseOffset: sel.baseOffset + 1,
+                      extentOffset: sel.extentOffset + 1));
+            }
+            return newValue;
+          })
+        ],
         controller: _controller,
         decoration: InputDecoration(
           isDense: true,

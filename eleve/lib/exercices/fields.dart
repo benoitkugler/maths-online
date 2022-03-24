@@ -34,15 +34,23 @@ WidgetSpan _inlineMath(String content, double fontSize, Key? key) {
   );
 }
 
-List<InlineSpan> buildText(List<TextOrMath> parts, double fontSize) {
+List<InlineSpan> buildText(
+    List<TextOrMath> parts, bool isHint, double fontSize) {
   final out = <InlineSpan>[];
+  if (isHint) {
+    fontSize = fontSize - 2;
+  }
   for (var part in parts) {
     if (part.isMath) {
       out.add(const TextSpan(text: " "));
       out.add(_inlineMath(part.text, fontSize, null));
       out.add(const TextSpan(text: " "));
     } else {
-      out.add(TextSpan(text: part.text, style: TextStyle(fontSize: fontSize)));
+      out.add(TextSpan(
+          text: part.text,
+          style: TextStyle(
+              fontSize: fontSize,
+              fontStyle: isHint ? FontStyle.italic : FontStyle.normal)));
     }
   }
   return out;

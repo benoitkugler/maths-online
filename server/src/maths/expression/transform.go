@@ -285,7 +285,6 @@ func (expr *Expression) basicSimplification() (nbPasses int) {
 
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
-		expr.simplifyNumbers()
 		expr.sortPlusAndMultOperands()
 		expr.expandMinus()
 
@@ -333,9 +332,11 @@ const (
 	Strict ComparisonLevel = iota
 	// Expressions are compared after performing some basic transformations,
 	// such as reording operands.
+	// Also, if both expressions may be evaluated, equal values are considered equal.
 	SimpleSubstitutions
 	// Apply many subsitutions to get a very robust comparison
 	// For instance, multiplications are expanded and equal terms grouped.
+	// Operations on numbers are also performed.
 	ExpandedSubstitutions
 )
 
@@ -344,15 +345,22 @@ const (
 // For instance, (a+b)^2 and (a^2 + 2ab + b^2) are equivalent
 // if level == ExpandedSubstitutions, but not with other levels.
 func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
-	switch level {
-	case Strict:
-		// pass
-	case SimpleSubstitutions:
-		e1, e2 = e1.copy(), e2.copy()
+	if level == Strict {
+		return e1.equals(e2)
+	}
+
+	// start by evaluating
+	v1, err1 := e1.Evaluate(nil)
+	v2, err2 := e2.Evaluate(nil)
+	if err1 == nil && err2 == nil && v1 == v2 {
+		return true
+	}
+
+	e1, e2 = e1.copy(), e2.copy()
+	if level == SimpleSubstitutions {
 		e1.basicSimplification()
 		e2.basicSimplification()
-	default:
-		e1, e2 = e1.copy(), e2.copy()
+	} else {
 		e1.fullSimplification()
 		e2.fullSimplification()
 	}

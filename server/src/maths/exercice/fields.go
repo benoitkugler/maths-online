@@ -76,7 +76,9 @@ func (f NumberFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect boo
 // ExpressionFieldInstance is an answer field where a single mathematical expression
 // if expected
 type ExpressionFieldInstance struct {
-	Label *expression.Expression // if not nil, the field is displayed on a new line, prefixed by <expression> =
+	// if not empty, the field is displayed on a new line
+	// expression are added an equal symbol : <expression> =
+	Label StringOrExpression
 
 	Answer          *expression.Expression
 	ComparisonLevel expression.ComparisonLevel
@@ -87,8 +89,10 @@ func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
 func (f ExpressionFieldInstance) toClient() client.Block {
 	var label string
-	if f.Label != nil {
-		label = f.Label.AsLaTeX(nil)
+	if f.Label.Expression != nil {
+		label = f.Label.Expression.AsLaTeX(nil) + " = "
+	} else {
+		label = f.Label.String
 	}
 	return client.ExpressionFieldBlock{
 		ID:    f.ID,

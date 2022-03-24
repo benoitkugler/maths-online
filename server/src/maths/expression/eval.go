@@ -1,15 +1,16 @@
 package expression
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
 
-type valueResolver interface {
+type ValueResolver interface {
 	resolve(v Variable) (float64, bool)
 }
 
-var _ valueResolver = Variables{}
+var _ ValueResolver = Variables{}
 
 // Variables maps variables to a chosen value.
 type Variables map[Variable]float64
@@ -19,20 +20,39 @@ func (vrs Variables) resolve(v Variable) (float64, bool) {
 	return value, ok
 }
 
+type MissingVariableErr struct {
+	Missing Variable
+}
+
+func (mv MissingVariableErr) Error() string {
+	return fmt.Sprintf("missing value for variable %s", mv.Missing)
+}
+
 // Evaluate uses the given variables values to evaluate the formula.
-func (expr *Expression) Evaluate(bindings valueResolver) float64 {
-	var left, right float64 // 0 is a valid default value
+// If a variable is referenced in the expression but not in the bindings,
+// `MissingVariableErr` is returned.
+func (expr *Expression) Evaluate(bindings ValueResolver) (float64, error) {
+	var (
+		left, right float64 // 0 is a valid default value
+		err         error
+	)
 	if expr.left != nil {
-		left = expr.left.Evaluate(bindings)
+		left, err = expr.left.Evaluate(bindings)
+		if err != nil {
+			return 0, err
+		}
 	}
 	if expr.right != nil {
-		right = expr.right.Evaluate(bindings)
+		right, err = expr.right.Evaluate(bindings)
+		if err != nil {
+			return 0, err
+		}
 	}
 	return expr.atom.eval(left, right, bindings)
 }
 
-func (op operator) eval(left, right float64, _ valueResolver) float64 {
-	return op.evaluate(left, right)
+func (op operator) eval(left, right float64, _ ValueResolver) (float64, error) {
+	return op.evaluate(left, right), nil
 }
 
 func (op operator) evaluate(left, right float64) float64 {
@@ -68,68 +88,75 @@ func (op operator) evaluate(left, right float64) float64 {
 	}
 }
 
-func (c constant) eval(_, _ float64, _ valueResolver) float64 {
+func (c constant) eval(_, _ float64, _ ValueResolver) (float64, error) {
 	switch c {
 	case piConstant:
-		return math.Pi
+		return math.Pi, nil
 	case eConstant:
-		return math.E
+		return math.E, nil
 	default:
 		panic(exhaustiveConstantSwitch)
 	}
 }
 
-func (v Number) eval(_, _ float64, _ valueResolver) float64 { return float64(v) }
+func (v Number) eval(_, _ float64, _ ValueResolver) (float64, error) { return float64(v), nil }
 
-func (va Variable) eval(_, _ float64, b valueResolver) float64 {
-	out, _ := b.resolve(va)
-	return out
+func (va Variable) eval(_, _ float64, b ValueResolver) (float64, error) {
+	if b == nil {
+		return 0, MissingVariableErr{Missing: va}
+	}
+
+	out, has := b.resolve(va)
+	if !has {
+		return 0, MissingVariableErr{Missing: va}
+	}
+	return out, nil
 }
 
-func (fn function) eval(left, right float64, _ valueResolver) float64 {
+func (fn function) eval(left, right float64, _ ValueResolver) (float64, error) {
 	arg := right
 	switch fn {
 	case logFn:
-		return math.Log(arg)
+		return math.Log(arg), nil
 	case expFn:
-		return math.Exp(arg)
+		return math.Exp(arg), nil
 	case sinFn:
-		return math.Sin(arg)
+		return math.Sin(arg), nil
 	case cosFn:
-		return math.Cos(arg)
+		return math.Cos(arg), nil
 	case tanFn:
-		return math.Tan(arg)
+		return math.Tan(arg), nil
 	case asinFn:
-		return math.Asin(arg)
+		return math.Asin(arg), nil
 	case acosFn:
-		return math.Acos(arg)
+		return math.Acos(arg), nil
 	case atanFn:
-		return math.Atan(arg)
+		return math.Atan(arg), nil
 	case absFn:
-		return math.Abs(arg)
+		return math.Abs(arg), nil
 	case sqrtFn:
-		return math.Sqrt(arg)
+		return math.Sqrt(arg), nil
 	case sgnFn:
 		if arg > 0 {
-			return 1
+			return 1, nil
 		} else if arg < 0 {
-			return -1
+			return -1, nil
 		}
-		return 0
+		return 0, nil
 	case isZeroFn:
 		if arg == 0 {
-			return 1
+			return 1, nil
 		}
-		return 0
+		return 0, nil
 	case isPrimeFn:
 		argInt, isInt := isInt(arg)
 		if !isInt {
-			return 0
+			return 0, nil
 		}
 		if isPrime(argInt) {
-			return 1
+			return 1, nil
 		}
-		return 0
+		return 0, nil
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -148,11 +175,11 @@ func isPrime(n int) bool {
 }
 
 // return a random number
-func (r random) eval(_, _ float64, _ valueResolver) float64 {
+func (r random) eval(_, _ float64, _ ValueResolver) (float64, error) {
 	if r.isPrime {
-		return float64(randPrime(r.start, r.end))
+		return float64(randPrime(r.start, r.end)), nil
 	}
-	return float64(r.start + rand.Intn(r.end-r.start+1))
+	return float64(r.start + rand.Intn(r.end-r.start+1)), nil
 }
 
 // partial evaluation a.k.a substitution
