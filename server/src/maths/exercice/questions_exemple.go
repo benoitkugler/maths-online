@@ -80,7 +80,8 @@ var (
 			"J": {Point: __J, Pos: repere.TopRight},
 			"O": {Point: __O, Pos: repere.TopRight},
 		},
-		Lines: []repere.Line{},
+		Lines:    []repere.Line{},
+		ShowGrid: true,
 	}
 )
 

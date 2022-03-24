@@ -95,11 +95,12 @@ class BaseRepere extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               // grid
-              CustomPaint(
-                size: Size(metrics.canvasWidth, metrics.canvasHeight),
-                painter: _GridPainter(
-                    metrics.buildXTicks(), metrics.buildYTicks(), hasDropOver),
-              ),
+              if (metrics.spec.showGrid)
+                CustomPaint(
+                  size: Size(metrics.canvasWidth, metrics.canvasHeight),
+                  painter: _GridPainter(metrics.buildXTicks(),
+                      metrics.buildYTicks(), hasDropOver),
+                ),
               // custom drawing
               CustomPaint(
                 size: Size(metrics.canvasWidth, metrics.canvasHeight),

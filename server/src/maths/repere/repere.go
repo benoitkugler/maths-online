@@ -27,6 +27,7 @@ type Figure struct {
 	// by rounding to integers it also influences the
 	// tolerance allowed.
 	Width, Height int
+	ShowGrid      bool
 }
 
 type Line struct {

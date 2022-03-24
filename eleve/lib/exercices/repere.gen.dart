@@ -140,18 +140,23 @@ int intFromJson(dynamic json) => json as int;
 
 int intToJson(int item) => item;
 
+bool boolFromJson(dynamic json) => json as bool;
+
+bool boolToJson(bool item) => item;
+
 // github.com/benoitkugler/maths-online/maths/repere.Figure
 class Figure {
   final Map<String, LabeledPoint> points;
   final List<Line> lines;
   final int width;
   final int height;
+  final bool showGrid;
 
-  const Figure(this.points, this.lines, this.width, this.height);
+  const Figure(this.points, this.lines, this.width, this.height, this.showGrid);
 
   @override
   String toString() {
-    return "Figure($points, $lines, $width, $height)";
+    return "Figure($points, $lines, $width, $height, $showGrid)";
   }
 }
 
@@ -161,7 +166,8 @@ Figure figureFromJson(dynamic json_) {
       dictStringLabeledPointFromJson(json['Points']),
       listLineFromJson(json['Lines']),
       intFromJson(json['Width']),
-      intFromJson(json['Height']));
+      intFromJson(json['Height']),
+      boolFromJson(json['ShowGrid']));
 }
 
 JSON figureToJson(Figure item) {
@@ -169,6 +175,7 @@ JSON figureToJson(Figure item) {
     "Points": dictStringLabeledPointToJson(item.points),
     "Lines": listLineToJson(item.lines),
     "Width": intToJson(item.width),
-    "Height": intToJson(item.height)
+    "Height": intToJson(item.height),
+    "ShowGrid": boolToJson(item.showGrid)
   };
 }
