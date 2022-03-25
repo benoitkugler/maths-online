@@ -6,16 +6,26 @@ import 'package:flutter/services.dart';
 class ExpressionController extends FieldController {
   final TextEditingController textController;
 
+  bool _isDirty = false;
+
   ExpressionController(void Function() onChange)
       : textController = TextEditingController(),
         super(onChange) {
-    textController.addListener(onChange);
+    textController.addListener(() {
+      _isDirty = true;
+      onChange();
+    });
+  }
+
+  void submit() {
+    _isDirty = false;
+    onChange();
   }
 
   @override
   bool hasValidData() {
     final content = textController.text.trim();
-    return content.isNotEmpty;
+    return !_isDirty && content.isNotEmpty;
   }
 
   @override
@@ -27,7 +37,7 @@ class ExpressionController extends FieldController {
 
 class ExpressionField extends StatelessWidget {
   final Color _color;
-  final TextEditingController _controller;
+  final ExpressionController _controller;
   final void Function() onDone;
 
   const ExpressionField(this._color, this._controller, this.onDone, {Key? key})
@@ -66,7 +76,10 @@ class ExpressionField extends StatelessWidget {
       width: MediaQuery.of(context).size.width * 0.4,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: TextField(
-        onSubmitted: (_) => onDone(),
+        onSubmitted: (_) {
+          _controller.submit();
+          onDone();
+        },
         inputFormatters: [
           TextInputFormatter.withFunction((oldValue, newValue) {
             if (isTypingFunc(oldValue, newValue)) {
@@ -80,7 +93,7 @@ class ExpressionField extends StatelessWidget {
             return newValue;
           })
         ],
-        controller: _controller,
+        controller: _controller.textController,
         decoration: InputDecoration(
           isDense: true,
           contentPadding: const EdgeInsets.only(top: 10, bottom: 4),

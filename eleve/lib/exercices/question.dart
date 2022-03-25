@@ -139,8 +139,7 @@ class _ContentBuilder {
     final ct = _controllers[element.iD] as ExpressionController;
 
     final field = WidgetSpan(
-        child: ExpressionField(
-            _color, ct.textController, () => onFieldDone(element.iD)));
+        child: ExpressionField(_color, ct, () => onFieldDone(element.iD)));
     if (element.label.isNotEmpty) {
       // start a new line
       _flushCurrentRow();

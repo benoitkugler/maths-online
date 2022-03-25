@@ -841,6 +841,48 @@ var PredefinedQuestions = []QuestionInstance{
 		},
 	},
 	{
+		Title: "Droites du plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Quelle est la position relative entre"),
+			}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{String: `(d) : `},
+				{Expression: mustParse("3x - 7y + 1")},
+				{String: `= 0`},
+			}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{String: `(d') : `},
+				{Expression: mustParse("x + 2y - 7")},
+				{String: `= 0`},
+			}},
+			RadioFieldInstance{
+				ID: 0,
+				Proposals: []client.ListFieldProposal{
+					{Content: []client.TextOrMath{{Text: "(d) est au dessus de (d')"}}},
+					{Content: []client.TextOrMath{{Text: "(d) est au dessous de (d')"}}},
+					{Content: []client.TextOrMath{{Text: "Ni l'un, ni l'autre"}}},
+				},
+				Answer: 2,
+			},
+		},
+	},
+	{
+		Title: "Droites du plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{text("Quelle est l'équation réduite de :")}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{String: `(d) : `},
+				{Expression: mustParse("3x - 7y + 1")},
+				{String: `= 0`},
+			}},
+			ExpressionFieldInstance{
+				ID:              0,
+				Label:           StringOrExpression{String: "y = "},
+				ComparisonLevel: expression.ExpandedSubstitutions,
+				Answer:          mustParse("(3/7)x + 1"),
+			},
+		},
+	},
+	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Écrire sous une seule fraction : "),
