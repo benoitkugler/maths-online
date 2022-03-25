@@ -39,18 +39,19 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()              {}
-func (FormulaBlock) isBlock()           {}
-func (VariationTableBlock) isBlock()    {}
-func (SignTableBlock) isBlock()         {}
-func (FigureBlock) isBlock()            {}
-func (NumberFieldBlock) isBlock()       {}
-func (ExpressionFieldBlock) isBlock()   {}
-func (RadioFieldBlock) isBlock()        {}
-func (DropDownFieldBlock) isBlock()     {}
-func (OrderedListFieldBlock) isBlock()  {}
-func (FigurePointFieldBlock) isBlock()  {}
-func (FigureVectorFieldBlock) isBlock() {}
+func (TextBlock) isBlock()                  {}
+func (FormulaBlock) isBlock()               {}
+func (VariationTableBlock) isBlock()        {}
+func (SignTableBlock) isBlock()             {}
+func (FigureBlock) isBlock()                {}
+func (NumberFieldBlock) isBlock()           {}
+func (ExpressionFieldBlock) isBlock()       {}
+func (RadioFieldBlock) isBlock()            {}
+func (DropDownFieldBlock) isBlock()         {}
+func (OrderedListFieldBlock) isBlock()      {}
+func (FigurePointFieldBlock) isBlock()      {}
+func (FigureVectorFieldBlock) isBlock()     {}
+func (FigureVectorPairFieldBlock) isBlock() {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -151,18 +152,30 @@ type FigureVectorFieldBlock struct {
 	ID     int
 }
 
+// FigureVectorPairFieldBlock asks for two vectors,
+// represented by start and end, but evaluated
+// as vector.
+// The trivial case where the two pair of points are equals
+// is not allowed
+
+type FigureVectorPairFieldBlock struct {
+	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+	ID     int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
 	isAnswer()
 }
 
-func (NumberAnswer) isAnswer()      {}
-func (RadioAnswer) isAnswer()       {}
-func (ExpressionAnswer) isAnswer()  {}
-func (OrderedListAnswer) isAnswer() {}
-func (PointAnswer) isAnswer()       {}
-func (DoublePointAnswer) isAnswer() {}
+func (NumberAnswer) isAnswer()          {}
+func (RadioAnswer) isAnswer()           {}
+func (ExpressionAnswer) isAnswer()      {}
+func (OrderedListAnswer) isAnswer()     {}
+func (PointAnswer) isAnswer()           {}
+func (DoublePointAnswer) isAnswer()     {}
+func (DoublePointPairAnswer) isAnswer() {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -192,6 +205,13 @@ type PointAnswer struct {
 type DoublePointAnswer struct {
 	From repere.IntCoord
 	To   repere.IntCoord
+}
+
+type DoublePointPairAnswer struct {
+	From1 repere.IntCoord
+	To1   repere.IntCoord
+	From2 repere.IntCoord
+	To2   repere.IntCoord
 }
 
 // QuestionAnswersIn map the field ids to their answer

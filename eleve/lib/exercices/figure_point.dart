@@ -56,7 +56,7 @@ class _FigurePrivateState extends State<_FigurePrivate> {
 
   void _setCurrentPoint(Offset visual, RepereMetrics metrics) {
     final logical = metrics.visualToLogical(visual);
-    if (isInBounds(logical, metrics.spec)) {
+    if (isInBounds(logical, metrics.figure)) {
       setState(() {
         widget.controller.setPoint(logical);
       });

@@ -61,7 +61,7 @@ var (
 			"H": {Point: repere.OrthogonalProjection(_B, _A, _C), Pos: repere.Top},
 			"K": {Point: _K, Pos: repere.Top},
 		},
-		Lines: []repere.Line{
+		Segments: []repere.Segment{
 			{LabelName: "", From: "A", To: "B", LabelPos: repere.Left},
 			{LabelName: "", From: "B", To: "C", LabelPos: repere.Bottom},
 			{LabelName: "", From: "C", To: "D", LabelPos: repere.Right},
@@ -77,14 +77,14 @@ var (
 )
 
 var (
-	__O = repere.Coord{X: 6, Y: 6}
-	__A = repere.Coord{X: 5, Y: 5}
-	__D = repere.Coord{X: 5, Y: 7}
-	__B = repere.Coord{X: 7, Y: 7}
-	__J = repere.Coord{X: 3, Y: 6}
-	__C = repere.Coord{X: 1, Y: 10}
+	__A = repere.Coord{X: -1, Y: -1}
+	__D = repere.Coord{X: -1, Y: 1}
+	__B = repere.Coord{X: 1, Y: 1}
+	__J = repere.Coord{X: -3, Y: 0}
+	__C = repere.Coord{X: -5, Y: 4}
 
 	figure2 = repere.Figure{
+		Origin: repere.Coord{X: 6, Y: 6},
 		Width:  12,
 		Height: 12,
 		Points: map[string]repere.LabeledPoint{
@@ -93,22 +93,21 @@ var (
 			"C": {Point: __C, Pos: repere.BottomRight},
 			"D": {Point: __D, Pos: repere.TopRight},
 			"J": {Point: __J, Pos: repere.TopRight},
-			"O": {Point: __O, Pos: repere.TopRight},
 		},
-		Lines:    []repere.Line{},
+		Segments: []repere.Segment{},
 		ShowGrid: true,
 	}
 
 	figure3 = repere.Figure{
+		Origin: repere.Coord{X: 6, Y: 6},
 		Width:  8,
 		Height: 8,
 		Points: map[string]repere.LabeledPoint{
 			"A": {Point: __A, Pos: repere.TopLeft},
 			"B": {Point: __B, Pos: repere.BottomLeft},
 			"D": {Point: __D, Pos: repere.TopRight},
-			"O": {Point: __O, Pos: repere.TopRight},
 		},
-		Lines:    []repere.Line{},
+		Segments: []repere.Segment{},
 		ShowGrid: true,
 	}
 
@@ -125,7 +124,44 @@ var (
 			"C": {Point: _C4, Pos: repere.TopRight},
 			"D": {Point: _D4, Pos: repere.TopRight},
 		},
-		Lines: []repere.Line{},
+		Segments: []repere.Segment{},
+	}
+
+	_A5     = repere.Coord{X: 1, Y: 1}
+	_B5     = repere.Coord{X: -1, Y: 5}
+	_J5     = repere.Coord{X: -1, Y: 3}
+	_H5     = repere.Coord{X: -2, Y: 4}
+	_F5     = repere.Coord{X: -3, Y: 4}
+	_G5     = repere.Coord{X: -2, Y: 2}
+	figure5 = repere.Figure{
+		Origin:   repere.Coord{X: 4, Y: 0},
+		ShowGrid: true,
+		Width:    7,
+		Height:   8,
+		Points: map[string]repere.LabeledPoint{
+			"A": {Point: _A5, Pos: repere.BottomLeft},
+			"B": {Point: _B5, Pos: repere.BottomLeft},
+			"J": {Point: _J5, Pos: repere.TopRight},
+			"H": {Point: _H5, Pos: repere.TopRight},
+			"F": {Point: _F5, Pos: repere.TopRight},
+			"G": {Point: _G5, Pos: repere.TopRight},
+		},
+		Segments: []repere.Segment{
+			{From: "A", To: "B", AsVector: true},
+			{From: "F", To: "G", AsVector: true},
+			{From: "J", To: "H", AsVector: true},
+		},
+	}
+
+	_line   = repere.Line{A: 3. / 2, B: 1, Label: "(d)"}
+	figure6 = repere.Figure{
+		Origin:   repere.Coord{X: 2, Y: 1},
+		Width:    6,
+		Height:   8,
+		ShowGrid: true,
+		Lines: []repere.Line{
+			_line,
+		},
 	}
 )
 
@@ -626,19 +662,7 @@ var PredefinedQuestions = []QuestionInstance{
 			},
 		},
 	},
-	{
-		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
-				text("Construire le vecteur "),
-				staticMath(`\overrightarrow{AB} + \overrightarrow{CD}.`),
-			}},
-			FigureVectorFieldInstance{
-				Figure: figure2,
-				Answer: repere.IntCoord{X: 6, Y: -1},
-				ID:     0,
-			},
-		},
-	},
+
 	{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
@@ -652,14 +676,14 @@ var PredefinedQuestions = []QuestionInstance{
 			}},
 			NumberFieldInstance{
 				ID:     0,
-				Answer: __B.X - __O.X,
+				Answer: __B.X,
 			},
 			TextInstance{Parts: []TextOrMaths{
 				staticMath("; "),
 			}},
 			NumberFieldInstance{
 				ID:     1,
-				Answer: __B.Y - __O.Y,
+				Answer: __B.Y,
 			},
 			TextInstance{Parts: []TextOrMaths{
 				staticMath(")"),
@@ -686,7 +710,115 @@ var PredefinedQuestions = []QuestionInstance{
 			},
 		},
 	},
-
+	{
+		Title: "Vecteurs", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire le vecteur "),
+				staticMath(`\overrightarrow{AB} + \overrightarrow{CD}.`),
+			}},
+			FigureVectorFieldInstance{
+				Figure: figure2,
+				Answer: repere.IntCoord{X: 6, Y: -1},
+				ID:     0,
+			},
+		},
+	},
+	{
+		Title: "Vecteurs", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Simplifier au maximum l'expression vectorielle"),
+				staticMath(`\overrightarrow{AB} + \overrightarrow{EB} -  \overrightarrow{EG}`),
+			}},
+			OrderedListFieldInstance{
+				Label: `\overrightarrow{AB} + \overrightarrow{EB} - \overrightarrow{EG} = `,
+				Answer: []StringOrExpression{
+					{String: "G"},
+					{String: "A"},
+				},
+				AdditionalProposals: []StringOrExpression{
+					{String: "E"},
+					{String: "B"},
+					{String: "F"},
+					{String: "A"},
+				},
+			},
+		},
+	},
+	{
+		Title: "Vecteurs", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire deux vecteurs égaux."),
+			}},
+			FigureVectorPairFieldInstance{
+				Figure:    figure1,
+				Criterion: VectorEquals,
+				ID:        0,
+			},
+		},
+	},
+	{
+		Title: "Vecteurs", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire deux vecteurs colinéaires."),
+			}},
+			FigureVectorPairFieldInstance{
+				Figure:    figure1,
+				Criterion: VectorColinear,
+				ID:        0,
+			},
+		},
+	},
+	{
+		Title: "Vecteurs", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Lire les coordonnées de "),
+				staticMath(`\overrightarrow{FG}.`),
+			}},
+			FigureInstance{
+				Figure: figure5,
+			},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(`\overrightarrow{FG} = (`),
+			}},
+			NumberFieldInstance{
+				ID:     0,
+				Answer: _G5.X - _F5.X,
+			},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(`;`),
+			}},
+			NumberFieldInstance{
+				ID:     1,
+				Answer: _G5.Y - _F5.Y,
+			},
+			TextInstance{Parts: []TextOrMaths{
+				staticMath(`)`),
+			}},
+		},
+	},
+	{
+		Title: "Droites du plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Lire l'équation de la droite (d)."),
+			}},
+			FigureInstance{
+				Figure: figure6,
+			},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{String: "y = ax + b"},
+			}},
+			TextInstance{Parts: []TextOrMaths{
+				text("avec "),
+				staticMath("a = "),
+			}},
+			NumberFieldInstance{ID: 0, Answer: _line.A},
+			TextInstance{Parts: []TextOrMaths{
+				text(" et "),
+				staticMath("b = "),
+			}},
+			NumberFieldInstance{ID: 1, Answer: _line.B},
+		},
+	},
 	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{

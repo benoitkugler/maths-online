@@ -20,20 +20,35 @@ type LabeledPoint struct {
 }
 
 type Figure struct {
-	Points map[PointName]LabeledPoint
-	Lines  []Line
+	Points   map[PointName]LabeledPoint
+	Segments []Segment
+	Lines    []Line
+
 	// Width and Height defines the logical size of
 	// the figure. Since points comparison as performed
 	// by rounding to integers it also influences the
 	// tolerance allowed.
 	Width, Height int
-	ShowGrid      bool
+	// Origin defines the visual position of the mathematical origin (0;0),
+	// counting from the bottom left of the figure.
+	// All points are expressed in mathematical coordinates, meaning a point (x;y)
+	// will be visually placed at Origin + (x; y)
+	Origin   Coord
+	ShowGrid bool
 }
 
-type Line struct {
+// Segment is a segment from a defined point to another
+type Segment struct {
 	LabelName string // optional
 	From, To  PointName
 	LabelPos  LabelPos // used only if LabelName is not zero
+	AsVector  bool     // if true, add an arrow
+}
+
+// Line is an infinite line, defined by an equation y = ax + b
+type Line struct {
+	Label string
+	A, B  float64
 }
 
 // OrthogonalProjection compute the coordinates of the orthogonal

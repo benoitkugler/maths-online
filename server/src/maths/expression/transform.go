@@ -278,6 +278,41 @@ func (expr *Expression) expandMinus() {
 	}
 }
 
+func (expr *Expression) extractNegativeInMults() {
+	if expr == nil {
+		return
+	}
+
+	expr.left.extractNegativeInMults()
+	expr.right.extractNegativeInMults()
+
+	if expr.atom != mult && expr.atom != div {
+		return
+	}
+
+	// replace (-a) * b by -(a * b)
+	changeSign := false
+	newLeft := expr.left
+	if number, ok := expr.left.atom.(Number); ok && number < 0 {
+		newLeft = &Expression{atom: -number}
+		changeSign = !changeSign
+	}
+	newRight := expr.right
+	if number, ok := expr.right.atom.(Number); ok && number < 0 {
+		newRight = &Expression{atom: -number}
+		changeSign = !changeSign
+	}
+
+	newExpr := &Expression{atom: expr.atom, left: newLeft, right: newRight}
+	if changeSign { // wrap with minus
+		expr.atom = minus
+		expr.left = nil
+		expr.right = newExpr
+	} else {
+		*expr = *newExpr
+	}
+}
+
 const maxIterations = 10_000 // very very unlikely in pratice
 
 func (expr *Expression) basicSimplification() (nbPasses int) {
@@ -304,10 +339,21 @@ func (expr *Expression) fullSimplification() (nbPasses int) {
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
 		expr.simplifyNumbers()
 		expr.expandPow()
+		expr.expandMinus()
 		expr.expandMult()
 		expr.sortPlusAndMultOperands()
 		expr.groupAdditions()
-		expr.expandMinus()
+		expr.simplifyNumbers()
+		if expr.equals(ref) {
+			break
+		}
+		ref = expr.copy() // update the reference and start a new pass
+	}
+
+	// extractNegativeInMults interfers with other transforms, do it later
+	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
+		expr.extractNegativeInMults()
+		expr.simplifyNumbers()
 
 		if expr.equals(ref) {
 			break

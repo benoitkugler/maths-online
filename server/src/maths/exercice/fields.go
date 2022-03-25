@@ -348,3 +348,56 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 	}
 	return f.Answer == vector
 }
+
+type VectorPairCriterion uint8
+
+const (
+	VectorEquals VectorPairCriterion = iota
+	VectorColinear
+	VectorOrthogonal
+)
+
+type FigureVectorPairFieldInstance struct {
+	Figure    repere.Figure
+	ID        int
+	Criterion VectorPairCriterion
+}
+
+func (f FigureVectorPairFieldInstance) fieldID() int { return f.ID }
+
+func (f FigureVectorPairFieldInstance) toClient() client.Block {
+	return client.FigureVectorPairFieldBlock{Figure: f.Figure, ID: f.ID}
+}
+
+func (f FigureVectorPairFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.DoublePointPairAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.DoublePointPairAnswer)
+	vector1 := repere.IntCoord{
+		X: ans.To1.X - ans.From1.X,
+		Y: ans.To1.Y - ans.From1.Y,
+	}
+	vector2 := repere.IntCoord{
+		X: ans.To2.X - ans.From2.X,
+		Y: ans.To2.Y - ans.From2.Y,
+	}
+	switch f.Criterion {
+	case VectorEquals:
+		return vector1 == vector2
+	case VectorColinear: // check if det(v1, v2) = 0
+		return vector1.X*vector2.Y-vector1.Y*vector2.X == 0
+	case VectorOrthogonal: // check if v1.v2 = 0
+		return vector1.X*vector2.X+vector1.Y*vector2.Y == 0
+	default:
+		panic("exhaustive switch")
+	}
+}

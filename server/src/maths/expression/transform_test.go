@@ -253,11 +253,33 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"sqrt(16)", "4", Strict, false},
 		{"sqrt(16)", "4", SimpleSubstitutions, true},
 		{"sqrt(16)", "4", ExpandedSubstitutions, true},
+		{"(x+10)^2", "x^2 + 20x + 100", ExpandedSubstitutions, true},
+		{"(x-10)^2", "x^2 - 20x + 100", ExpandedSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
 		if got := AreExpressionsEquivalent(e1, e2, tt.level); got != tt.want {
 			t.Fatalf("AreExpressionEquivalent(%s, %s) = %v, want %v", tt.e1, tt.e2, got, tt.want)
+		}
+	}
+}
+
+func TestExpression_extractNegativeInMults(t *testing.T) {
+	tests := []struct {
+		expr string
+		want string
+	}{
+		{"(-20)*x", "-(20 * x)"},
+		{"x * (-20)", "-(x * 20 )"},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		expr.simplifyNumbers()
+		expr.extractNegativeInMults()
+
+		want := mustParse(t, tt.want)
+		if !reflect.DeepEqual(expr, want) {
+			t.Fatalf("for expression %s, got %s, want %s", tt.expr, expr, want.String())
 		}
 	}
 }

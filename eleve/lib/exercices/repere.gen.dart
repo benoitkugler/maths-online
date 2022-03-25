@@ -95,33 +95,83 @@ Map<String, dynamic> dictStringLabeledPointToJson(
       (k, v) => MapEntry(stringToJson(k).toString(), labeledPointToJson(v)));
 }
 
-// github.com/benoitkugler/maths-online/maths/repere.Line
-class Line {
+bool boolFromJson(dynamic json) => json as bool;
+
+bool boolToJson(bool item) => item;
+
+// github.com/benoitkugler/maths-online/maths/repere.Segment
+class Segment {
   final String labelName;
   final String from;
   final String to;
   final LabelPos labelPos;
+  final bool asVector;
 
-  const Line(this.labelName, this.from, this.to, this.labelPos);
+  const Segment(
+      this.labelName, this.from, this.to, this.labelPos, this.asVector);
 
   @override
   String toString() {
-    return "Line($labelName, $from, $to, $labelPos)";
+    return "Segment($labelName, $from, $to, $labelPos, $asVector)";
+  }
+}
+
+Segment segmentFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Segment(
+      stringFromJson(json['LabelName']),
+      stringFromJson(json['From']),
+      stringFromJson(json['To']),
+      labelPosFromJson(json['LabelPos']),
+      boolFromJson(json['AsVector']));
+}
+
+JSON segmentToJson(Segment item) {
+  return {
+    "LabelName": stringToJson(item.labelName),
+    "From": stringToJson(item.from),
+    "To": stringToJson(item.to),
+    "LabelPos": labelPosToJson(item.labelPos),
+    "AsVector": boolToJson(item.asVector)
+  };
+}
+
+List<Segment> listSegmentFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(segmentFromJson).toList();
+}
+
+List<dynamic> listSegmentToJson(List<Segment> item) {
+  return item.map(segmentToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/repere.Line
+class Line {
+  final String label;
+  final double a;
+  final double b;
+
+  const Line(this.label, this.a, this.b);
+
+  @override
+  String toString() {
+    return "Line($label, $a, $b)";
   }
 }
 
 Line lineFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Line(stringFromJson(json['LabelName']), stringFromJson(json['From']),
-      stringFromJson(json['To']), labelPosFromJson(json['LabelPos']));
+  return Line(stringFromJson(json['Label']), doubleFromJson(json['A']),
+      doubleFromJson(json['B']));
 }
 
 JSON lineToJson(Line item) {
   return {
-    "LabelName": stringToJson(item.labelName),
-    "From": stringToJson(item.from),
-    "To": stringToJson(item.to),
-    "LabelPos": labelPosToJson(item.labelPos)
+    "Label": stringToJson(item.label),
+    "A": doubleToJson(item.a),
+    "B": doubleToJson(item.b)
   };
 }
 
@@ -140,23 +190,22 @@ int intFromJson(dynamic json) => json as int;
 
 int intToJson(int item) => item;
 
-bool boolFromJson(dynamic json) => json as bool;
-
-bool boolToJson(bool item) => item;
-
 // github.com/benoitkugler/maths-online/maths/repere.Figure
 class Figure {
   final Map<String, LabeledPoint> points;
+  final List<Segment> segments;
   final List<Line> lines;
   final int width;
   final int height;
+  final Coord origin;
   final bool showGrid;
 
-  const Figure(this.points, this.lines, this.width, this.height, this.showGrid);
+  const Figure(this.points, this.segments, this.lines, this.width, this.height,
+      this.origin, this.showGrid);
 
   @override
   String toString() {
-    return "Figure($points, $lines, $width, $height, $showGrid)";
+    return "Figure($points, $segments, $lines, $width, $height, $origin, $showGrid)";
   }
 }
 
@@ -164,18 +213,22 @@ Figure figureFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return Figure(
       dictStringLabeledPointFromJson(json['Points']),
+      listSegmentFromJson(json['Segments']),
       listLineFromJson(json['Lines']),
       intFromJson(json['Width']),
       intFromJson(json['Height']),
+      coordFromJson(json['Origin']),
       boolFromJson(json['ShowGrid']));
 }
 
 JSON figureToJson(Figure item) {
   return {
     "Points": dictStringLabeledPointToJson(item.points),
+    "Segments": listSegmentToJson(item.segments),
     "Lines": listLineToJson(item.lines),
     "Width": intToJson(item.width),
     "Height": intToJson(item.height),
+    "Origin": coordToJson(item.origin),
     "ShowGrid": boolToJson(item.showGrid)
   };
 }

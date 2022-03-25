@@ -3,6 +3,7 @@ import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/figure_point.dart';
 import 'package:eleve/exercices/figure_vector.dart';
+import 'package:eleve/exercices/figure_vector_pair.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
@@ -67,7 +68,10 @@ class _ContentBuilder {
       } else if (block is FigurePointFieldBlock) {
         controllers[block.iD] = FigurePointController(onChange);
       } else if (block is FigureVectorFieldBlock) {
-        controllers[block.iD] = FigureVectorController(onChange);
+        controllers[block.iD] = FigureVectorController(block.figure, onChange);
+      } else if (block is FigureVectorPairFieldBlock) {
+        controllers[block.iD] =
+            FigureVectorPairController(block.figure, onChange);
       }
 
       // TODO: handle more fields
@@ -204,7 +208,18 @@ class _ContentBuilder {
 
     final key = GlobalKey();
     zoomableWigets.add(key);
-    rows.add(Center(child: FigureVectorField(element.figure, ct, key: key)));
+    rows.add(Center(child: FigureVectorField(ct, key: key)));
+  }
+
+  void _handleFigureVectorPairFieldBlock(FigureVectorPairFieldBlock element) {
+    final ct = _controllers[element.iD] as FigureVectorPairController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    final key = GlobalKey();
+    zoomableWigets.add(key);
+    rows.add(Center(child: FigureVectorPairField(ct, key: key)));
   }
 
   /// populate [rows]
@@ -234,6 +249,8 @@ class _ContentBuilder {
         _handleFigurePointFieldBlock(element);
       } else if (element is FigureVectorFieldBlock) {
         _handleFigureVectorFieldBlock(element);
+      } else if (element is FigureVectorPairFieldBlock) {
+        _handleFigureVectorPairFieldBlock(element);
       } else {
         // TODO:
       }
