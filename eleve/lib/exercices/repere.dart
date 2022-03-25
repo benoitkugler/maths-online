@@ -109,7 +109,7 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
               // custom drawing
               CustomPaint(
                 size: Size(metrics.canvasWidth, metrics.canvasHeight),
-                painter: _ReperePainter(metrics),
+                painter: ReperePainter(metrics),
               ),
               ...layers
             ],
@@ -233,45 +233,19 @@ extension _OffsetLabel on LabelPos {
   }
 }
 
-class _ReperePainter extends CustomPainter {
+class ReperePainter extends CustomPainter {
   final RepereMetrics metrics;
 
-  _ReperePainter(this.metrics);
+  ReperePainter(this.metrics);
 
   @override
   bool? hitTest(_) {
     return false;
   }
 
-  void _paintText(Canvas canvas, LabeledPoint point, String name,
-      {Color? color}) {
-    color = color ?? Colors.blue.shade800;
-    const weight = FontWeight.bold;
-    final pt = TextPainter(
-        text: TextSpan(
-          text: name,
-          style: TextStyle(
-            fontWeight: weight,
-            color: color,
-            backgroundColor: Colors.white.withOpacity(0.5),
-          ),
-        ),
-        textDirection: TextDirection.ltr);
-    pt.layout();
-
-    final textWidth = pt.width;
-    final textHeight = pt.height;
-
-    final originalPos = metrics.logicalToVisual(point.point);
-
-    final offset = point.pos.offset(textWidth, textHeight);
-
-    pt.paint(canvas, originalPos.translate(offset.dx, offset.dy));
-  }
-
   void _paintPoint(Canvas canvas, LabeledPoint point, String name,
       {Color color = Colors.blue}) {
-    _paintText(canvas, point, name, color: color);
+    paintText(metrics, canvas, point, name, color: color);
     canvas.drawCircle(
         metrics.logicalToVisual(point.point),
         2,
@@ -299,7 +273,8 @@ class _ReperePainter extends CustomPainter {
     }
 
     if (line.labelName.isNotEmpty) {
-      _paintText(
+      paintText(
+          metrics,
           canvas,
           LabeledPoint(
               Coord((from.x + to.x) / 2, (from.y + to.y) / 2), line.labelPos),
@@ -307,7 +282,35 @@ class _ReperePainter extends CustomPainter {
     }
   }
 
-  void _paintLine(Canvas canvas, Line line) {
+  static void paintText(
+      RepereMetrics metrics, Canvas canvas, LabeledPoint point, String name,
+      {Color? color}) {
+    color = color ?? Colors.blue.shade800;
+    const weight = FontWeight.bold;
+    final pt = TextPainter(
+        text: TextSpan(
+          text: name,
+          style: TextStyle(
+            fontWeight: weight,
+            color: color,
+            backgroundColor: Colors.white.withOpacity(0.5),
+          ),
+        ),
+        textDirection: TextDirection.ltr);
+    pt.layout();
+
+    final textWidth = pt.width;
+    final textHeight = pt.height;
+
+    final originalPos = metrics.logicalToVisual(point.point);
+
+    final offset = point.pos.offset(textWidth, textHeight);
+
+    pt.paint(canvas, originalPos.translate(offset.dx, offset.dy));
+  }
+
+  static void paintAffineLine(
+      RepereMetrics metrics, Canvas canvas, Line line, Size size) {
     final origin = metrics.figure.origin;
     // start point
     final logicalStart = Coord(-origin.x, line.a * (-origin.x) + line.b);
@@ -317,8 +320,7 @@ class _ReperePainter extends CustomPainter {
         line.a * (metrics.figure.width - origin.x) + line.b);
 
     canvas.save();
-    canvas.clipRect(
-        Rect.fromLTWH(0, 0, metrics.canvasWidth, metrics.canvasHeight));
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawLine(
         metrics.logicalToVisual(logicalStart),
         metrics.logicalToVisual(logicalEnd),
@@ -329,7 +331,8 @@ class _ReperePainter extends CustomPainter {
     // label position
     final logicalLabelX = (metrics.figure.width - origin.x) / 2;
     final logicalLabel = Coord(logicalLabelX, line.a * origin.x + line.b);
-    _paintText(
+    paintText(
+        metrics,
         canvas,
         LabeledPoint(
             logicalLabel, line.a > 0 ? LabelPos.bottomRight : LabelPos.topLeft),
@@ -346,7 +349,7 @@ class _ReperePainter extends CustomPainter {
     }
 
     for (var line in metrics.figure.lines) {
-      _paintLine(canvas, line);
+      paintAffineLine(metrics, canvas, line, size);
     }
 
     metrics.figure.points.forEach((key, value) {

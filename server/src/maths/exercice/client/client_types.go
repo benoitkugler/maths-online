@@ -144,12 +144,14 @@ type FigurePointFieldBlock struct {
 }
 
 // FigureVectorFieldBlock asks for a vector,
-// represented by start and end, but evaluated
-// as vector.
+// represented by start and end.
+// It may be used for vectors and affine functions
 
 type FigureVectorFieldBlock struct {
-	Figure repere.Figure `dart-extern:"repere.gen.dart"`
-	ID     int
+	LineLabel string        // ignored if AsLine is false
+	Figure    repere.Figure `dart-extern:"repere.gen.dart"`
+	ID        int
+	AsLine    bool
 }
 
 // FigureVectorPairFieldBlock asks for two vectors,

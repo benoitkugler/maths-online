@@ -820,6 +820,27 @@ var PredefinedQuestions = []QuestionInstance{
 		},
 	},
 	{
+		Title: "Droites du plan", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire la droite (d') d'équation"),
+			}},
+			FormulaDisplayInstance{Parts: []StringOrExpression{
+				{String: `y =`},
+				{Expression: mustParse("((-1)/3)x + 2")},
+			}},
+			FigureAffineLineFieldInstance{
+				Figure: repere.Figure{
+					Origin:   repere.Coord{X: 2, Y: 2},
+					Width:    7,
+					Height:   7,
+					ShowGrid: true,
+				},
+				Label:  "(d')",
+				Answer: [2]float64{-1. / 3, 2},
+			},
+		},
+	},
+	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Écrire sous une seule fraction : "),

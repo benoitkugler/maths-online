@@ -349,6 +349,44 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 	return f.Answer == vector
 }
 
+type FigureAffineLineFieldInstance struct {
+	Label  string        // of the expect affine function
+	Figure repere.Figure // usually empty, but set width and height
+	ID     int
+	Answer [2]float64 // a, b
+}
+
+func (f FigureAffineLineFieldInstance) fieldID() int { return f.ID }
+
+func (f FigureAffineLineFieldInstance) toClient() client.Block {
+	return client.FigureVectorFieldBlock{Figure: f.Figure, ID: f.ID, AsLine: true, LineLabel: f.Label}
+}
+
+func (f FigureAffineLineFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	ans, ok := answer.(client.DoublePointAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
+		}
+	}
+
+	if ans.To.X-ans.From.X == 0 {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: "invalid 0 x increment",
+		}
+	}
+	return nil
+}
+
+func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.DoublePointAnswer)
+	a := float64(ans.To.Y-ans.From.Y) / float64(ans.To.X-ans.From.X)
+	b := float64(ans.From.Y) - a*float64(ans.From.X)
+	return f.Answer == [2]float64{a, b}
+}
+
 type VectorPairCriterion uint8
 
 const (

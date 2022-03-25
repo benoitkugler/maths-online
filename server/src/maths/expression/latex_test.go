@@ -99,3 +99,11 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestParenthesis(t *testing.T) {
+	expr := mustParse(t, "((-1)/3)x + 2")
+	latex := expr.AsLaTeX(nil)
+	if strings.ContainsRune(latex, '(') {
+		t.Fatal("unexpected parenthesis")
+	}
+}

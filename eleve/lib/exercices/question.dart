@@ -68,7 +68,7 @@ class _ContentBuilder {
       } else if (block is FigurePointFieldBlock) {
         controllers[block.iD] = FigurePointController(onChange);
       } else if (block is FigureVectorFieldBlock) {
-        controllers[block.iD] = FigureVectorController(block.figure, onChange);
+        controllers[block.iD] = FigureVectorController(block, onChange);
       } else if (block is FigureVectorPairFieldBlock) {
         controllers[block.iD] =
             FigureVectorPairController(block.figure, onChange);

@@ -420,25 +420,36 @@ JSON figurePointFieldBlockToJson(FigurePointFieldBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.FigureVectorFieldBlock
 class FigureVectorFieldBlock implements Block {
+  final String lineLabel;
   final Figure figure;
   final int iD;
+  final bool asLine;
 
-  const FigureVectorFieldBlock(this.figure, this.iD);
+  const FigureVectorFieldBlock(
+      this.lineLabel, this.figure, this.iD, this.asLine);
 
   @override
   String toString() {
-    return "FigureVectorFieldBlock($figure, $iD)";
+    return "FigureVectorFieldBlock($lineLabel, $figure, $iD, $asLine)";
   }
 }
 
 FigureVectorFieldBlock figureVectorFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return FigureVectorFieldBlock(
-      figureFromJson(json['Figure']), intFromJson(json['ID']));
+      stringFromJson(json['LineLabel']),
+      figureFromJson(json['Figure']),
+      intFromJson(json['ID']),
+      boolFromJson(json['AsLine']));
 }
 
 JSON figureVectorFieldBlockToJson(FigureVectorFieldBlock item) {
-  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
+  return {
+    "LineLabel": stringToJson(item.lineLabel),
+    "Figure": figureToJson(item.figure),
+    "ID": intToJson(item.iD),
+    "AsLine": boolToJson(item.asLine)
+  };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.FigureVectorPairFieldBlock
