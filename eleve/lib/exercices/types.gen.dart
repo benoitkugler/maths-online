@@ -496,6 +496,97 @@ JSON formulaBlockToJson(FormulaBlock item) {
   return {"Formula": stringToJson(item.formula)};
 }
 
+// github.com/benoitkugler/maths-online/maths/function_grapher.BezierCurve
+class BezierCurve {
+  final Coord p0;
+  final Coord p1;
+  final Coord p2;
+
+  const BezierCurve(this.p0, this.p1, this.p2);
+
+  @override
+  String toString() {
+    return "BezierCurve($p0, $p1, $p2)";
+  }
+}
+
+BezierCurve bezierCurveFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return BezierCurve(coordFromJson(json['P0']), coordFromJson(json['P1']),
+      coordFromJson(json['P2']));
+}
+
+JSON bezierCurveToJson(BezierCurve item) {
+  return {
+    "P0": coordToJson(item.p0),
+    "P1": coordToJson(item.p1),
+    "P2": coordToJson(item.p2)
+  };
+}
+
+List<BezierCurve> listBezierCurveFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(bezierCurveFromJson).toList();
+}
+
+List<dynamic> listBezierCurveToJson(List<BezierCurve> item) {
+  return item.map(bezierCurveToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionGraph
+class FunctionGraph {
+  final List<BezierCurve> segments;
+  final RepereBounds bounds;
+
+  const FunctionGraph(this.segments, this.bounds);
+
+  @override
+  String toString() {
+    return "FunctionGraph($segments, $bounds)";
+  }
+}
+
+FunctionGraph functionGraphFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionGraph(listBezierCurveFromJson(json['Segments']),
+      repereBoundsFromJson(json['Bounds']));
+}
+
+JSON functionGraphToJson(FunctionGraph item) {
+  return {
+    "Segments": listBezierCurveToJson(item.segments),
+    "Bounds": repereBoundsToJson(item.bounds)
+  };
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.FunctionGraphBlock
+class FunctionGraphBlock implements Block {
+  final String label;
+  final FunctionGraph graph;
+
+  const FunctionGraphBlock(this.label, this.graph);
+
+  @override
+  String toString() {
+    return "FunctionGraphBlock($label, $graph)";
+  }
+}
+
+FunctionGraphBlock functionGraphBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionGraphBlock(
+      stringFromJson(json['Label']), functionGraphFromJson(json['Graph']));
+}
+
+JSON functionGraphBlockToJson(FunctionGraphBlock item) {
+  return {
+    "Label": stringToJson(item.label),
+    "Graph": functionGraphToJson(item.graph)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.NumberFieldBlock
 class NumberFieldBlock implements Block {
   final int iD;
@@ -764,16 +855,18 @@ Block blockFromJson(dynamic json_) {
     case 6:
       return formulaBlockFromJson(data);
     case 7:
-      return numberFieldBlockFromJson(data);
+      return functionGraphBlockFromJson(data);
     case 8:
-      return orderedListFieldBlockFromJson(data);
+      return numberFieldBlockFromJson(data);
     case 9:
-      return radioFieldBlockFromJson(data);
+      return orderedListFieldBlockFromJson(data);
     case 10:
-      return signTableBlockFromJson(data);
+      return radioFieldBlockFromJson(data);
     case 11:
-      return textBlockFromJson(data);
+      return signTableBlockFromJson(data);
     case 12:
+      return textBlockFromJson(data);
+    case 13:
       return variationTableBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -795,18 +888,20 @@ JSON blockToJson(Block item) {
     return {'Kind': 5, 'Data': figureVectorPairFieldBlockToJson(item)};
   } else if (item is FormulaBlock) {
     return {'Kind': 6, 'Data': formulaBlockToJson(item)};
+  } else if (item is FunctionGraphBlock) {
+    return {'Kind': 7, 'Data': functionGraphBlockToJson(item)};
   } else if (item is NumberFieldBlock) {
-    return {'Kind': 7, 'Data': numberFieldBlockToJson(item)};
+    return {'Kind': 8, 'Data': numberFieldBlockToJson(item)};
   } else if (item is OrderedListFieldBlock) {
-    return {'Kind': 8, 'Data': orderedListFieldBlockToJson(item)};
+    return {'Kind': 9, 'Data': orderedListFieldBlockToJson(item)};
   } else if (item is RadioFieldBlock) {
-    return {'Kind': 9, 'Data': radioFieldBlockToJson(item)};
+    return {'Kind': 10, 'Data': radioFieldBlockToJson(item)};
   } else if (item is SignTableBlock) {
-    return {'Kind': 10, 'Data': signTableBlockToJson(item)};
+    return {'Kind': 11, 'Data': signTableBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 11, 'Data': textBlockToJson(item)};
+    return {'Kind': 12, 'Data': textBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 12, 'Data': variationTableBlockToJson(item)};
+    return {'Kind': 13, 'Data': variationTableBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

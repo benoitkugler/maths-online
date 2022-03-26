@@ -186,49 +186,90 @@ List<dynamic> listLineToJson(List<Line> item) {
   return item.map(lineToJson).toList();
 }
 
+// github.com/benoitkugler/maths-online/maths/repere.Drawings
+class Drawings {
+  final Map<String, LabeledPoint> points;
+  final List<Segment> segments;
+  final List<Line> lines;
+
+  const Drawings(this.points, this.segments, this.lines);
+
+  @override
+  String toString() {
+    return "Drawings($points, $segments, $lines)";
+  }
+}
+
+Drawings drawingsFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Drawings(dictStringLabeledPointFromJson(json['Points']),
+      listSegmentFromJson(json['Segments']), listLineFromJson(json['Lines']));
+}
+
+JSON drawingsToJson(Drawings item) {
+  return {
+    "Points": dictStringLabeledPointToJson(item.points),
+    "Segments": listSegmentToJson(item.segments),
+    "Lines": listLineToJson(item.lines)
+  };
+}
+
 int intFromJson(dynamic json) => json as int;
 
 int intToJson(int item) => item;
 
-// github.com/benoitkugler/maths-online/maths/repere.Figure
-class Figure {
-  final Map<String, LabeledPoint> points;
-  final List<Segment> segments;
-  final List<Line> lines;
+// github.com/benoitkugler/maths-online/maths/repere.RepereBounds
+class RepereBounds {
   final int width;
   final int height;
   final Coord origin;
-  final bool showGrid;
 
-  const Figure(this.points, this.segments, this.lines, this.width, this.height,
-      this.origin, this.showGrid);
+  const RepereBounds(this.width, this.height, this.origin);
 
   @override
   String toString() {
-    return "Figure($points, $segments, $lines, $width, $height, $origin, $showGrid)";
+    return "RepereBounds($width, $height, $origin)";
+  }
+}
+
+RepereBounds repereBoundsFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return RepereBounds(intFromJson(json['Width']), intFromJson(json['Height']),
+      coordFromJson(json['Origin']));
+}
+
+JSON repereBoundsToJson(RepereBounds item) {
+  return {
+    "Width": intToJson(item.width),
+    "Height": intToJson(item.height),
+    "Origin": coordToJson(item.origin)
+  };
+}
+
+// github.com/benoitkugler/maths-online/maths/repere.Figure
+class Figure {
+  final Drawings drawings;
+  final RepereBounds bounds;
+  final bool showGrid;
+
+  const Figure(this.drawings, this.bounds, this.showGrid);
+
+  @override
+  String toString() {
+    return "Figure($drawings, $bounds, $showGrid)";
   }
 }
 
 Figure figureFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Figure(
-      dictStringLabeledPointFromJson(json['Points']),
-      listSegmentFromJson(json['Segments']),
-      listLineFromJson(json['Lines']),
-      intFromJson(json['Width']),
-      intFromJson(json['Height']),
-      coordFromJson(json['Origin']),
-      boolFromJson(json['ShowGrid']));
+  return Figure(drawingsFromJson(json['Drawings']),
+      repereBoundsFromJson(json['Bounds']), boolFromJson(json['ShowGrid']));
 }
 
 JSON figureToJson(Figure item) {
   return {
-    "Points": dictStringLabeledPointToJson(item.points),
-    "Segments": listSegmentToJson(item.segments),
-    "Lines": listLineToJson(item.lines),
-    "Width": intToJson(item.width),
-    "Height": intToJson(item.height),
-    "Origin": coordToJson(item.origin),
+    "Drawings": drawingsToJson(item.drawings),
+    "Bounds": repereBoundsToJson(item.bounds),
     "ShowGrid": boolToJson(item.showGrid)
   };
 }

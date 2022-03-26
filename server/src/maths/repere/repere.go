@@ -19,11 +19,7 @@ type LabeledPoint struct {
 	Pos   LabelPos
 }
 
-type Figure struct {
-	Points   map[PointName]LabeledPoint
-	Segments []Segment
-	Lines    []Line
-
+type RepereBounds struct {
 	// Width and Height defines the logical size of
 	// the figure. Since points comparison as performed
 	// by rounding to integers it also influences the
@@ -33,7 +29,20 @@ type Figure struct {
 	// counting from the bottom left of the figure.
 	// All points are expressed in mathematical coordinates, meaning a point (x;y)
 	// will be visually placed at Origin + (x; y)
-	Origin   Coord
+	Origin Coord
+}
+
+type Drawings struct {
+	Points   map[PointName]LabeledPoint
+	Segments []Segment
+	Lines    []Line
+}
+
+type Figure struct {
+	Drawings Drawings
+
+	Bounds RepereBounds
+
 	ShowGrid bool
 }
 

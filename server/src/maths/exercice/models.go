@@ -7,6 +7,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 )
 
 // randomParameters is a serialized form of expression.RandomParameters
@@ -322,3 +323,17 @@ func (vt SignTableInstance) toClient() client.Block { return client.SignTableBlo
 type FigureInstance client.FigureBlock
 
 func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
+
+type FunctionGraphInstance struct {
+	Function *expression.Expression
+	Label    string
+	Variable expression.Variable
+	Range    [2]float64
+}
+
+func (fg FunctionGraphInstance) toClient() client.Block {
+	return client.FunctionGraphBlock{
+		Graph: functiongrapher.NewFunctionGraph(fg.Function, fg.Variable, fg.Range[0], fg.Range[1]),
+		Label: fg.Label,
+	}
+}

@@ -5,6 +5,7 @@ package client
 import (
 	"encoding/json"
 
+	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -39,11 +40,13 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()                  {}
-func (FormulaBlock) isBlock()               {}
-func (VariationTableBlock) isBlock()        {}
-func (SignTableBlock) isBlock()             {}
-func (FigureBlock) isBlock()                {}
+func (TextBlock) isBlock()           {}
+func (FormulaBlock) isBlock()        {}
+func (VariationTableBlock) isBlock() {}
+func (SignTableBlock) isBlock()      {}
+func (FigureBlock) isBlock()         {}
+func (FunctionGraphBlock) isBlock()  {}
+
 func (NumberFieldBlock) isBlock()           {}
 func (ExpressionFieldBlock) isBlock()       {}
 func (RadioFieldBlock) isBlock()            {}
@@ -99,6 +102,11 @@ type SignTableBlock struct {
 
 type FigureBlock struct {
 	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+}
+
+type FunctionGraphBlock struct {
+	Label string
+	Graph functiongrapher.FunctionGraph
 }
 
 // NumberFieldBlock is an answer field where only

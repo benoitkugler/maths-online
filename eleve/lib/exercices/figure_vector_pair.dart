@@ -22,10 +22,12 @@ class FigureVectorPairController extends FieldController {
   bool _hasData = false;
 
   FigureVectorPairController(this.figure, void Function() onChange)
-      : from1 = IntCoord(figure.width ~/ 4 - 2, figure.height ~/ 4),
-        to1 = IntCoord(figure.width ~/ 4, figure.height ~/ 4),
-        from2 = IntCoord(figure.width ~/ 4 + 3, figure.height ~/ 4),
-        to2 = IntCoord(figure.width ~/ 4, figure.height ~/ 4 + 3),
+      : from1 =
+            IntCoord(figure.bounds.width ~/ 4 - 2, figure.bounds.height ~/ 4),
+        to1 = IntCoord(figure.bounds.width ~/ 4, figure.bounds.height ~/ 4),
+        from2 =
+            IntCoord(figure.bounds.width ~/ 4 + 3, figure.bounds.height ~/ 4),
+        to2 = IntCoord(figure.bounds.width ~/ 4, figure.bounds.height ~/ 4 + 3),
         super(onChange);
 
   void setPoint(IntCoord point, VectorPairPointID id) {
@@ -82,7 +84,8 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = RepereMetrics(widget.controller.figure, context);
+    final figure = widget.controller.figure;
+    final metrics = RepereMetrics(figure.bounds, context);
     final from1 = widget.controller.from1;
     final to1 = widget.controller.to1;
     final from2 = widget.controller.from2;
@@ -100,6 +103,7 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
         },
         child: BaseRepere<VectorPairPointID>(
           metrics,
+          figure.showGrid,
           [
             DraggableGridPoint(
               from1,

@@ -51,27 +51,31 @@ var (
 	_K = repere.OrthogonalProjection(_D, _A, _C)
 
 	figure1 = repere.Figure{
-		Width:  50,
-		Height: 30,
-		Points: map[string]repere.LabeledPoint{
-			"A": {Point: _A, Pos: repere.TopLeft},
-			"B": {Point: _B, Pos: repere.BottomLeft},
-			"C": {Point: _C, Pos: repere.BottomRight},
-			"D": {Point: _D, Pos: repere.TopRight},
-			"H": {Point: repere.OrthogonalProjection(_B, _A, _C), Pos: repere.Top},
-			"K": {Point: _K, Pos: repere.Top},
+		Bounds: repere.RepereBounds{
+			Width:  50,
+			Height: 30,
 		},
-		Segments: []repere.Segment{
-			{LabelName: "", From: "A", To: "B", LabelPos: repere.Left},
-			{LabelName: "", From: "B", To: "C", LabelPos: repere.Bottom},
-			{LabelName: "", From: "C", To: "D", LabelPos: repere.Right},
-			{LabelName: "", From: "D", To: "A", LabelPos: repere.Top},
+		Drawings: repere.Drawings{
+			Points: map[string]repere.LabeledPoint{
+				"A": {Point: _A, Pos: repere.TopLeft},
+				"B": {Point: _B, Pos: repere.BottomLeft},
+				"C": {Point: _C, Pos: repere.BottomRight},
+				"D": {Point: _D, Pos: repere.TopRight},
+				"H": {Point: repere.OrthogonalProjection(_B, _A, _C), Pos: repere.Top},
+				"K": {Point: _K, Pos: repere.Top},
+			},
+			Segments: []repere.Segment{
+				{LabelName: "", From: "A", To: "B", LabelPos: repere.Left},
+				{LabelName: "", From: "B", To: "C", LabelPos: repere.Bottom},
+				{LabelName: "", From: "C", To: "D", LabelPos: repere.Right},
+				{LabelName: "", From: "D", To: "A", LabelPos: repere.Top},
 
-			// diagonal
-			{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},
+				// diagonal
+				{LabelName: "", From: "A", To: "C", LabelPos: repere.Bottom},
 
-			{LabelName: "", From: "B", To: "H", LabelPos: repere.Bottom},
-			{LabelName: "", From: "D", To: "K", LabelPos: repere.Top},
+				{LabelName: "", From: "B", To: "H", LabelPos: repere.Bottom},
+				{LabelName: "", From: "D", To: "K", LabelPos: repere.Top},
+			},
 		},
 	}
 )
@@ -84,30 +88,38 @@ var (
 	__C = repere.Coord{X: -5, Y: 4}
 
 	figure2 = repere.Figure{
-		Origin: repere.Coord{X: 6, Y: 6},
-		Width:  12,
-		Height: 12,
-		Points: map[string]repere.LabeledPoint{
-			"A": {Point: __A, Pos: repere.TopLeft},
-			"B": {Point: __B, Pos: repere.BottomLeft},
-			"C": {Point: __C, Pos: repere.BottomRight},
-			"D": {Point: __D, Pos: repere.TopRight},
-			"J": {Point: __J, Pos: repere.TopRight},
+		Bounds: repere.RepereBounds{
+			Origin: repere.Coord{X: 6, Y: 6},
+			Width:  12,
+			Height: 12,
 		},
-		Segments: []repere.Segment{},
+		Drawings: repere.Drawings{
+			Points: map[string]repere.LabeledPoint{
+				"A": {Point: __A, Pos: repere.TopLeft},
+				"B": {Point: __B, Pos: repere.BottomLeft},
+				"C": {Point: __C, Pos: repere.BottomRight},
+				"D": {Point: __D, Pos: repere.TopRight},
+				"J": {Point: __J, Pos: repere.TopRight},
+			},
+			Segments: []repere.Segment{},
+		},
 		ShowGrid: true,
 	}
 
 	figure3 = repere.Figure{
-		Origin: repere.Coord{X: 6, Y: 6},
-		Width:  8,
-		Height: 8,
-		Points: map[string]repere.LabeledPoint{
-			"A": {Point: __A, Pos: repere.TopLeft},
-			"B": {Point: __B, Pos: repere.BottomLeft},
-			"D": {Point: __D, Pos: repere.TopRight},
+		Bounds: repere.RepereBounds{
+			Origin: repere.Coord{X: 6, Y: 6},
+			Width:  8,
+			Height: 8,
 		},
-		Segments: []repere.Segment{},
+		Drawings: repere.Drawings{
+			Points: map[string]repere.LabeledPoint{
+				"A": {Point: __A, Pos: repere.TopLeft},
+				"B": {Point: __B, Pos: repere.BottomLeft},
+				"D": {Point: __D, Pos: repere.TopRight},
+			},
+			Segments: []repere.Segment{},
+		},
 		ShowGrid: true,
 	}
 
@@ -116,15 +128,19 @@ var (
 	_C4     = repere.Coord{X: 5, Y: 12}
 	_D4     = repere.Coord{X: 2, Y: 0}
 	figure4 = repere.Figure{
-		Width:  7,
-		Height: 13,
-		Points: map[string]repere.LabeledPoint{
-			"A": {Point: _A4, Pos: repere.TopLeft},
-			"B": {Point: _B4, Pos: repere.BottomLeft},
-			"C": {Point: _C4, Pos: repere.TopRight},
-			"D": {Point: _D4, Pos: repere.TopRight},
+		Bounds: repere.RepereBounds{
+			Width:  7,
+			Height: 13,
 		},
-		Segments: []repere.Segment{},
+		Drawings: repere.Drawings{
+			Points: map[string]repere.LabeledPoint{
+				"A": {Point: _A4, Pos: repere.TopLeft},
+				"B": {Point: _B4, Pos: repere.BottomLeft},
+				"C": {Point: _C4, Pos: repere.TopRight},
+				"D": {Point: _D4, Pos: repere.TopRight},
+			},
+			Segments: []repere.Segment{},
+		},
 	}
 
 	_A5     = repere.Coord{X: 1, Y: 1}
@@ -134,33 +150,41 @@ var (
 	_F5     = repere.Coord{X: -3, Y: 4}
 	_G5     = repere.Coord{X: -2, Y: 2}
 	figure5 = repere.Figure{
-		Origin:   repere.Coord{X: 4, Y: 0},
-		ShowGrid: true,
-		Width:    7,
-		Height:   8,
-		Points: map[string]repere.LabeledPoint{
-			"A": {Point: _A5, Pos: repere.BottomLeft},
-			"B": {Point: _B5, Pos: repere.BottomLeft},
-			"J": {Point: _J5, Pos: repere.TopRight},
-			"H": {Point: _H5, Pos: repere.TopRight},
-			"F": {Point: _F5, Pos: repere.TopRight},
-			"G": {Point: _G5, Pos: repere.TopRight},
+		Bounds: repere.RepereBounds{
+			Origin: repere.Coord{X: 4, Y: 0},
+			Width:  7,
+			Height: 8,
 		},
-		Segments: []repere.Segment{
-			{From: "A", To: "B", AsVector: true},
-			{From: "F", To: "G", AsVector: true},
-			{From: "J", To: "H", AsVector: true},
+		ShowGrid: true,
+		Drawings: repere.Drawings{
+			Points: map[string]repere.LabeledPoint{
+				"A": {Point: _A5, Pos: repere.BottomLeft},
+				"B": {Point: _B5, Pos: repere.BottomLeft},
+				"J": {Point: _J5, Pos: repere.TopRight},
+				"H": {Point: _H5, Pos: repere.TopRight},
+				"F": {Point: _F5, Pos: repere.TopRight},
+				"G": {Point: _G5, Pos: repere.TopRight},
+			},
+			Segments: []repere.Segment{
+				{From: "A", To: "B", AsVector: true},
+				{From: "F", To: "G", AsVector: true},
+				{From: "J", To: "H", AsVector: true},
+			},
 		},
 	}
 
 	_line   = repere.Line{A: 3. / 2, B: 1, Label: "(d)"}
 	figure6 = repere.Figure{
-		Origin:   repere.Coord{X: 2, Y: 1},
-		Width:    6,
-		Height:   8,
+		Bounds: repere.RepereBounds{
+			Origin: repere.Coord{X: 2, Y: 1},
+			Width:  6,
+			Height: 8,
+		},
 		ShowGrid: true,
-		Lines: []repere.Line{
-			_line,
+		Drawings: repere.Drawings{
+			Lines: []repere.Line{
+				_line,
+			},
 		},
 	}
 )
@@ -830,9 +854,11 @@ var PredefinedQuestions = []QuestionInstance{
 			}},
 			FigureAffineLineFieldInstance{
 				Figure: repere.Figure{
-					Origin:   repere.Coord{X: 2, Y: 2},
-					Width:    7,
-					Height:   7,
+					Bounds: repere.RepereBounds{
+						Origin: repere.Coord{X: 2, Y: 2},
+						Width:  7,
+						Height: 7,
+					},
 					ShowGrid: true,
 				},
 				Label:  "(d')",
@@ -882,6 +908,24 @@ var PredefinedQuestions = []QuestionInstance{
 			},
 		},
 	},
+
+	{
+		Title: "Variations", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{text("Quel est le maximum de h ?")}},
+			FunctionGraphInstance{
+				Label:    `y = h(x)`,
+				Function: mustParse("10*(1.1(x/10)^4 - 2.2(x/10)^3+(x/10)) + 0.047"),
+				Variable: 'x',
+				Range:    [2]float64{-5, 16},
+			},
+			TextInstance{Parts: []TextOrMaths{text("Max : ")}},
+			NumberFieldInstance{
+				ID:     0,
+				Answer: 3,
+			},
+		},
+	},
+
 	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{

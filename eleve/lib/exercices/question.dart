@@ -4,6 +4,7 @@ import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/figure_point.dart';
 import 'package:eleve/exercices/figure_vector.dart';
 import 'package:eleve/exercices/figure_vector_pair.dart';
+import 'package:eleve/exercices/function_graph.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
@@ -128,6 +129,13 @@ class _ContentBuilder {
     rows.add(Center(child: StaticRepere(element.figure)));
   }
 
+  void _handleFunctionGraphBlock(FunctionGraphBlock element) {
+    // start a new row
+    _flushCurrentRow();
+
+    rows.add(Center(child: FunctionGraphW(element)));
+  }
+
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = _controllers[element.iD] as NumberController;
     _currentRow.add(WidgetSpan(
@@ -234,6 +242,8 @@ class _ContentBuilder {
         _handleSignTableBlock(element);
       } else if (element is FigureBlock) {
         _handleFigureBlock(element);
+      } else if (element is FunctionGraphBlock) {
+        _handleFunctionGraphBlock(element);
       } else if (element is NumberFieldBlock) {
         _handleNumberFieldBlock(element);
       } else if (element is ExpressionFieldBlock) {

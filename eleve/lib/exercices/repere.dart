@@ -5,20 +5,26 @@ import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 
 class StaticRepere extends StatelessWidget {
-  final Figure spec;
-  const StaticRepere(this.spec, {Key? key}) : super(key: key);
+  final Figure figure;
+  const StaticRepere(this.figure, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final metrics = RepereMetrics(spec, context);
-    return BaseRepere(metrics, const []);
+    final metrics = RepereMetrics(figure.bounds, context);
+    return BaseRepere(metrics, figure.showGrid, [
+      // custom drawing
+      CustomPaint(
+        size: Size(metrics.canvasWidth, metrics.canvasHeight),
+        painter: DrawingsPainter(metrics, figure.drawings),
+      ),
+    ]);
   }
 }
 
 class RepereMetrics {
   final double
       _displayLength; // displayLength is the length of the largest size of the figure
-  final Figure figure;
+  final RepereBounds figure;
 
   RepereMetrics(this.figure, BuildContext context)
       : _displayLength = MediaQuery.of(context).size.shortestSide * 0.95;
@@ -52,7 +58,7 @@ class RepereMetrics {
   List<double> buildXTicks() {
     final out = <double>[];
     for (var i = 0; i <= figure.width; i += 1) {
-      final logical = Coord(i.toDouble() - figure.origin.x, 0);
+      final logical = Coord(i.toDouble() - figure.origin.x.ceil(), 0);
       final offset = logicalToVisual(logical);
       out.add(offset.dx);
     }
@@ -62,7 +68,7 @@ class RepereMetrics {
   List<double> buildYTicks() {
     final out = <double>[];
     for (var i = 0; i <= figure.height; i += 1) {
-      final logical = Coord(0, i.toDouble() - figure.origin.y);
+      final logical = Coord(0, i.toDouble() - figure.origin.y.ceil());
       final offset = logicalToVisual(logical);
       out.add(offset.dy);
     }
@@ -81,10 +87,13 @@ class PointMovedNotification<T> extends Notification {
 class BaseRepere<PointIDType extends Object> extends StatelessWidget {
   final RepereMetrics metrics;
 
+  final bool showGrid;
+
   /// [layers] are added in the stack
   final List<Widget> layers;
 
-  const BaseRepere(this.metrics, this.layers, {Key? key}) : super(key: key);
+  const BaseRepere(this.metrics, this.showGrid, this.layers, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -99,18 +108,9 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
           return Stack(
             clipBehavior: Clip.none,
             children: [
+              _OriginPainter.asCustomPaint(metrics),
               // grid
-              if (metrics.figure.showGrid)
-                CustomPaint(
-                  size: Size(metrics.canvasWidth, metrics.canvasHeight),
-                  painter: _GridPainter(metrics.buildXTicks(),
-                      metrics.buildYTicks(), hasDropOver),
-                ),
-              // custom drawing
-              CustomPaint(
-                size: Size(metrics.canvasWidth, metrics.canvasHeight),
-                painter: ReperePainter(metrics),
-              ),
+              if (showGrid) _GridPainter.asCustomPaint(metrics, hasDropOver),
               ...layers
             ],
           );
@@ -190,6 +190,14 @@ class _GridPainter extends CustomPainter {
 
   _GridPainter(this.xs, this.ys, this.isHighlighted);
 
+  static CustomPaint asCustomPaint(RepereMetrics metrics, bool isHighlighted) {
+    return CustomPaint(
+      size: Size(metrics.canvasWidth, metrics.canvasHeight),
+      painter: _GridPainter(
+          metrics.buildXTicks(), metrics.buildYTicks(), isHighlighted),
+    );
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -206,6 +214,37 @@ class _GridPainter extends CustomPainter {
   @override
   bool shouldRepaint(_GridPainter oldDelegate) {
     return isHighlighted != oldDelegate.isHighlighted;
+  }
+}
+
+class _OriginPainter extends CustomPainter {
+  final RepereMetrics metrics;
+
+  _OriginPainter(this.metrics);
+
+  static CustomPaint asCustomPaint(RepereMetrics metrics) {
+    return CustomPaint(
+      size: Size(metrics.canvasWidth, metrics.canvasHeight),
+      painter: _OriginPainter(metrics),
+    );
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // paint the origin if not implicit
+    final origin = metrics.figure.origin;
+    if (origin.x != 0 || origin.y != 0) {
+      // note that logicalToVisual already shift by the origin
+      final pos = origin.y == 0 ? LabelPos.top : LabelPos.bottomRight;
+      DrawingsPainter.paintPoint(
+          metrics, canvas, LabeledPoint(const Coord(0, 0), pos), "O",
+          color: Colors.black);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_OriginPainter oldDelegate) {
+    return metrics != oldDelegate.metrics;
   }
 }
 
@@ -233,17 +272,19 @@ extension _OffsetLabel on LabelPos {
   }
 }
 
-class ReperePainter extends CustomPainter {
+class DrawingsPainter extends CustomPainter {
   final RepereMetrics metrics;
+  final Drawings drawings;
 
-  ReperePainter(this.metrics);
+  DrawingsPainter(this.metrics, this.drawings);
 
   @override
-  bool? hitTest(_) {
+  bool? hitTest(Offset position) {
     return false;
   }
 
-  void _paintPoint(Canvas canvas, LabeledPoint point, String name,
+  static void paintPoint(
+      RepereMetrics metrics, Canvas canvas, LabeledPoint point, String name,
       {Color color = Colors.blue}) {
     paintText(metrics, canvas, point, name, color: color);
     canvas.drawCircle(
@@ -255,8 +296,8 @@ class ReperePainter extends CustomPainter {
   }
 
   void _paintSegment(Canvas canvas, Segment line) {
-    final from = metrics.figure.points[line.from]!.point;
-    final to = metrics.figure.points[line.to]!.point;
+    final from = drawings.points[line.from]!.point;
+    final to = drawings.points[line.to]!.point;
     final visualFrom = metrics.logicalToVisual(from);
     final visualTo = metrics.logicalToVisual(to);
     canvas.drawLine(visualFrom, visualTo, Paint());
@@ -344,26 +385,17 @@ class ReperePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var segment in metrics.figure.segments) {
+    for (var segment in drawings.segments) {
       _paintSegment(canvas, segment);
     }
 
-    for (var line in metrics.figure.lines) {
+    for (var line in drawings.lines) {
       paintAffineLine(metrics, canvas, line, size);
     }
 
-    metrics.figure.points.forEach((key, value) {
-      _paintPoint(canvas, value, key);
+    drawings.points.forEach((key, value) {
+      paintPoint(metrics, canvas, value, key);
     });
-
-    // paint the origin if not implicit
-    final origin = metrics.figure.origin;
-    if (origin.x != 0 || origin.y != 0) {
-      // note that logicalToVisual already shift by the origin
-      final pos = origin.y == 0 ? LabelPos.top : LabelPos.bottomRight;
-      _paintPoint(canvas, LabeledPoint(const Coord(0, 0), pos), "O",
-          color: Colors.black);
-    }
   }
 
   @override
@@ -467,7 +499,7 @@ class GridPointHighlight extends StatelessWidget {
   }
 }
 
-bool isInBounds(IntCoord point, Figure figure) {
+bool isInBounds(IntCoord point, RepereBounds figure) {
   return 0 <= point.x &&
       point.x <= figure.width &&
       0 <= point.y &&

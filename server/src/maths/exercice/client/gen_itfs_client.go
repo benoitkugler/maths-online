@@ -128,26 +128,30 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data NumberFieldBlock
+		var data FunctionGraphBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data OrderedListFieldBlock
+		var data NumberFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
-		var data RadioFieldBlock
+		var data OrderedListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 10:
-		var data SignTableBlock
+		var data RadioFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 11:
-		var data TextBlock
+		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 12:
+		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 13:
 		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -179,18 +183,20 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 5, Data: data}
 	case FormulaBlock:
 		wr = wrapper{Kind: 6, Data: data}
-	case NumberFieldBlock:
+	case FunctionGraphBlock:
 		wr = wrapper{Kind: 7, Data: data}
-	case OrderedListFieldBlock:
+	case NumberFieldBlock:
 		wr = wrapper{Kind: 8, Data: data}
-	case RadioFieldBlock:
+	case OrderedListFieldBlock:
 		wr = wrapper{Kind: 9, Data: data}
-	case SignTableBlock:
+	case RadioFieldBlock:
 		wr = wrapper{Kind: 10, Data: data}
-	case TextBlock:
+	case SignTableBlock:
 		wr = wrapper{Kind: 11, Data: data}
-	case VariationTableBlock:
+	case TextBlock:
 		wr = wrapper{Kind: 12, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 13, Data: data}
 
 	default:
 		panic("exhaustive switch")

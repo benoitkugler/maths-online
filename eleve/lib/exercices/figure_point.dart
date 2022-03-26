@@ -41,10 +41,10 @@ class FigurePointField extends StatelessWidget {
 }
 
 class _FigurePrivate extends StatefulWidget {
-  final Figure spec;
+  final Figure figure;
   final FigurePointController controller;
 
-  const _FigurePrivate(this.spec, this.controller, {Key? key})
+  const _FigurePrivate(this.figure, this.controller, {Key? key})
       : super(key: key);
 
   @override
@@ -65,12 +65,13 @@ class _FigurePrivateState extends State<_FigurePrivate> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = RepereMetrics(widget.spec, context);
+    final metrics = RepereMetrics(widget.figure.bounds, context);
     final point = widget.controller.point;
     return GestureDetector(
       onTapUp: (details) => _setCurrentPoint(details.localPosition, metrics),
       child: BaseRepere(
         metrics,
+        widget.figure.showGrid,
         [
           if (point != null)
             GridPoint(point, metrics.logicalIntToVisual(point)),

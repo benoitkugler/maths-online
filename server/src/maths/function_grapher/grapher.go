@@ -8,7 +8,7 @@ import (
 )
 
 type BezierCurve struct {
-	P0, P1, P2 repere.Coord
+	P0, P1, P2 repere.Coord `dart-extern:"repere.gen.dart"`
 }
 
 func (seg segment) toCurve() BezierCurve {
@@ -38,8 +38,6 @@ type segment struct {
 	dFrom, dTo float64
 }
 
-// TODO: tests
-
 // expr must be an expression containing only the variable `variable`
 func newSegment(expr *expression.Expression, variable expression.Variable, from, to float64) segment {
 	f := func(x float64) float64 {
@@ -51,9 +49,9 @@ func newSegment(expr *expression.Expression, variable expression.Variable, from,
 	yTo := f(to)
 
 	// compute derivative with finite differences
-	epsilon := (to - from) / 100
-	dFrom := (f(from-epsilon) - f(from+epsilon)) / epsilon
-	dTo := (f(to-epsilon) - f(to+epsilon)) / epsilon
+	epsilon := (to - from) / 100_000
+	dFrom := (f(from+epsilon) - f(from)) / epsilon
+	dTo := (f(to) - f(to-epsilon)) / epsilon
 
 	return segment{
 		from:  repere.Coord{X: from, Y: yFrom},
@@ -61,4 +59,28 @@ func newSegment(expr *expression.Expression, variable expression.Variable, from,
 		dFrom: dFrom,
 		dTo:   dTo,
 	}
+}
+
+type FunctionGraph struct {
+	Segments []BezierCurve
+	Bounds   repere.RepereBounds `dart-extern:"repere.gen.dart"`
+}
+
+// nbStep is the number of segments used when converting
+// a function curve to Bezier curves.
+const nbStep = 100
+
+// Graph splits the curve of `expr(vari)` on [from, to] in small chunks on which it is approximated
+// by Bezier curves.
+func NewFunctionGraph(expr *expression.Expression, vari expression.Variable, from, to float64) FunctionGraph {
+	step := (to - from) / nbStep
+	out := make([]BezierCurve, nbStep)
+	for i := range out {
+		seg := newSegment(expr, vari, from+float64(i)*step, from+float64(i+1)*step)
+		out[i] = seg.toCurve()
+	}
+
+	fn := FunctionGraph{Segments: out}
+	fn.Bounds = boundingBox(out)
+	return fn
 }

@@ -12,8 +12,10 @@ class FigureVectorController extends FieldController {
   bool _hasData = false;
 
   FigureVectorController(this.data, void Function() onChange)
-      : from = IntCoord(data.figure.width ~/ 4 - 2, data.figure.height ~/ 4),
-        to = IntCoord(data.figure.width ~/ 4 + 2, data.figure.height ~/ 4),
+      : from = IntCoord(
+            data.figure.bounds.width ~/ 4 - 2, data.figure.bounds.height ~/ 4),
+        to = IntCoord(
+            data.figure.bounds.width ~/ 4 + 2, data.figure.bounds.height ~/ 4),
         super(onChange);
 
   bool _checkSameX(IntCoord point, VectorPointID id) {
@@ -75,7 +77,8 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
 
   @override
   Widget build(BuildContext context) {
-    final metrics = RepereMetrics(widget.controller.data.figure, context);
+    final figure = widget.controller.data.figure;
+    final metrics = RepereMetrics(figure.bounds, context);
     final from = widget.controller.from;
     final to = widget.controller.to;
     final zoomFactor = _zoomController.value.getMaxScaleOnAxis();
@@ -91,7 +94,13 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
         },
         child: BaseRepere<VectorPointID>(
           metrics,
+          figure.showGrid,
           [
+            // custom drawing
+            CustomPaint(
+              size: Size(metrics.canvasWidth, metrics.canvasHeight),
+              painter: DrawingsPainter(metrics, figure.drawings),
+            ),
             CustomPaint(
               size: Size(metrics.canvasWidth, metrics.canvasHeight),
               painter: widget.controller.data.asLine
@@ -129,7 +138,7 @@ class _AffineLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final a = (to.y - from.y).toDouble() / (to.x - from.x);
     final b = from.y - a * from.x;
-    ReperePainter.paintAffineLine(metrics, canvas, Line(label, a, b), size);
+    DrawingsPainter.paintAffineLine(metrics, canvas, Line(label, a, b), size);
   }
 
   @override
