@@ -337,3 +337,14 @@ func (fg FunctionGraphInstance) toClient() client.Block {
 		Label: fg.Label,
 	}
 }
+
+// FunctionVariationGraphInstance is the same as VariationTableInstance,
+// but displays its content as a graph
+type FunctionVariationGraphInstance VariationTableInstance
+
+func (fg FunctionVariationGraphInstance) toClient() client.Block {
+	return client.FunctionGraphBlock{
+		Graph: functiongrapher.GraphFromVariations(fg.Xs, fg.Fxs),
+		Label: "y = f(x)",
+	}
+}

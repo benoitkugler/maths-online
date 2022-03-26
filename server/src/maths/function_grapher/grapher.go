@@ -21,16 +21,21 @@ func (seg segment) toCurve() BezierCurve {
 		}
 	}
 
-	// compute the control point, which is the intersection between
-	// the tangents in seg.from.x and seg.to.x
-	xIntersec := (seg.to.Y - seg.from.Y + seg.dFrom*seg.from.X - seg.dTo*seg.to.X) / (seg.dFrom - seg.dTo)
-	yIntersec := seg.dFrom*(xIntersec-seg.from.X) + seg.from.Y
-	p1 := repere.Coord{X: xIntersec, Y: yIntersec}
+	p1 := controlFromDerivatives(seg.from, seg.to, seg.dFrom, seg.dTo)
 	return BezierCurve{
 		P0: seg.from,
 		P1: p1,
 		P2: seg.to,
 	}
+}
+
+// compute the control point matching the given derivatives,
+// which is the intersection between
+// the tangents at from and to
+func controlFromDerivatives(from, to repere.Coord, dFrom, dTo float64) repere.Coord {
+	xIntersec := (to.Y - from.Y + dFrom*from.X - dTo*to.X) / (dFrom - dTo)
+	yIntersec := dFrom*(xIntersec-from.X) + from.Y
+	return repere.Coord{X: xIntersec, Y: yIntersec}
 }
 
 type segment struct {
@@ -74,13 +79,63 @@ const nbStep = 100
 // by Bezier curves.
 func NewFunctionGraph(expr *expression.Expression, vari expression.Variable, from, to float64) FunctionGraph {
 	step := (to - from) / nbStep
-	out := make([]BezierCurve, nbStep)
-	for i := range out {
+	curves := make([]BezierCurve, nbStep)
+	for i := range curves {
 		seg := newSegment(expr, vari, from+float64(i)*step, from+float64(i+1)*step)
-		out[i] = seg.toCurve()
+		curves[i] = seg.toCurve()
 	}
 
-	fn := FunctionGraph{Segments: out}
-	fn.Bounds = boundingBox(out)
-	return fn
+	return FunctionGraph{
+		Segments: curves,
+		Bounds:   boundingBox(curves),
+	}
+}
+
+func controlFromPoints(from, to repere.Coord, firstHalf bool) repere.Coord {
+	var dFrom, dTo float64
+	if from.Y > to.Y { // decreasing
+		if firstHalf {
+			dFrom, dTo = 0, -4
+		} else {
+			dFrom, dTo = -4, 0
+		}
+	} else { // increasing
+		if firstHalf {
+			dFrom, dTo = 0, +4
+		} else {
+			dFrom, dTo = +4, 0
+		}
+	}
+	return controlFromDerivatives(from, to, dFrom, dTo)
+}
+
+// GraphFromVariations builds one possible representation for the given variations
+func GraphFromVariations(xs []expression.Number, ys []expression.Number) FunctionGraph {
+	// each segment is drawn with two quadratic curves
+	var curves []BezierCurve
+	for i := range xs {
+		if i >= len(xs)-1 {
+			break
+		}
+		x1, x2 := float64(xs[i]), float64(xs[i+1])
+		y1, y2 := float64(ys[i]), float64(ys[i+1])
+		xMiddle, yMiddle := (x1+x2)/2, (y1+y2)/2
+
+		// first half
+		p0 := repere.Coord{X: x1, Y: y1}
+		p2 := repere.Coord{X: xMiddle, Y: yMiddle}
+		p1 := controlFromPoints(p0, p2, true)
+		curves = append(curves, BezierCurve{p0, p1, p2})
+
+		// second half
+		p0 = repere.Coord{X: xMiddle, Y: yMiddle}
+		p2 = repere.Coord{X: x2, Y: y2}
+		p1 = controlFromPoints(p0, p2, false)
+		curves = append(curves, BezierCurve{p0, p1, p2})
+	}
+
+	return FunctionGraph{
+		Segments: curves,
+		Bounds:   boundingBox(curves),
+	}
 }

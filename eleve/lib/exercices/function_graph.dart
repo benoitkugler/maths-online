@@ -38,7 +38,7 @@ class _FuncPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = Colors.purple
-      ..strokeWidth = 2
+      ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
     final path = Path();
