@@ -45,6 +45,14 @@ func Parse(s string) (*Expression, VarMap, error) {
 	return parseBytes([]byte(s))
 }
 
+func mustParseE(s string) *Expression {
+	expr, _, err := Parse(s)
+	if err != nil {
+		panic(err)
+	}
+	return expr
+}
+
 // parseBytes parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
 func parseBytes(text []byte) (*Expression, VarMap, error) {
 	pr := newParser(text)

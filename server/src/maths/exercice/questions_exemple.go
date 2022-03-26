@@ -1,6 +1,7 @@
 package exercice
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -17,18 +18,10 @@ func mustParse(s string) *expression.Expression {
 }
 
 func mustEvaluate(s string, vars ...expression.Variables) float64 {
-	e := mustParse(s)
-
-	var resolver expression.ValueResolver
 	if len(vars) > 0 {
-		resolver = vars[0]
+		return expression.MustEvaluate(s, vars[0])
 	}
-
-	out, err := e.Evaluate(resolver)
-	if err != nil {
-		panic(err)
-	}
-	return out
+	return expression.MustEvaluate(s, nil)
 }
 
 func text(s string) TextOrMaths {
@@ -204,6 +197,18 @@ var (
 	distanceSample expression.Variables
 )
 
+// polynomials
+var (
+	polynomials = expression.PolynomialCoeffs{
+		B: 'b', C: 'c', D: 'd',
+		X1: 'u', X2: 'v', X3: 'w',
+		RootsStart: -1, RootsEnd: 15,
+	}
+	polynomialsParams = expression.BuildParams(polynomials)
+	polynomialsSample expression.Variables
+	polynomial        *expression.Expression
+)
+
 func init() {
 	pythagorians.MergeTo(distanceParams)
 
@@ -212,6 +217,14 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	polynomialsSample, err = polynomialsParams.Instantiate()
+	if err != nil {
+		panic(err)
+	}
+	polynomial = mustParse("0.001*((3/4)X^4 + bX^3 + cX^2 + dX)")
+	polynomial.Substitute(polynomialsSample)
+	fmt.Println("anwser", polynomialsSample)
 
 	PredefinedQuestions = append(PredefinedQuestions, QuestionInstance{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
@@ -245,7 +258,24 @@ func init() {
 			}},
 			NumberFieldInstance{ID: 0, Answer: distanceSample['c']},
 		},
-	})
+	},
+		QuestionInstance{
+			Title: "Variations", Enonce: EnonceInstance{
+				TextInstance{Parts: []TextOrMaths{text("Compléter le tableau de variations de h.")}},
+				FunctionGraphInstance{
+					Label:    `y = h(x)`,
+					Function: polynomial,
+					Variable: 'X',
+					Range:    [2]float64{-3, 20},
+				},
+				// TextInstance{Parts: []TextOrMaths{text("Max : ")}},
+				// NumberFieldInstance{
+				// 	ID:     0,
+				// 	Answer: 3,
+				// },
+			},
+		},
+	)
 }
 
 var PredefinedQuestions = []QuestionInstance{

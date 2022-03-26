@@ -28,6 +28,22 @@ func (mv MissingVariableErr) Error() string {
 	return fmt.Sprintf("missing value for variable %s", mv.Missing)
 }
 
+// MustEvaluate panics if the expression is invalid or if
+// a variable is missing from `vars`.
+func MustEvaluate(expr string, vars Variables) float64 {
+	e := mustParseE(expr)
+	return e.MustEvaluate(vars)
+}
+
+// MustEvaluate panics if a variable is missing.
+func (expr *Expression) MustEvaluate(bindings ValueResolver) float64 {
+	out, err := expr.Evaluate(bindings)
+	if err != nil {
+		panic(err)
+	}
+	return out
+}
+
 // Evaluate uses the given variables values to evaluate the formula.
 // If a variable is referenced in the expression but not in the bindings,
 // `MissingVariableErr` is returned.

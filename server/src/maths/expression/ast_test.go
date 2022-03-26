@@ -43,6 +43,14 @@ func TestPanics(t *testing.T) {
 		pr := parser{tk: &tk}
 		pr.parseOneNode()
 	})
+
+	shouldPanic(t, func() {
+		MustEvaluate("x+2", nil)
+	})
+	shouldPanic(t, func() {
+		expr := mustParseE("x+2")
+		expr.MustEvaluate(nil)
+	})
 }
 
 func TestExpression_String(t *testing.T) {
