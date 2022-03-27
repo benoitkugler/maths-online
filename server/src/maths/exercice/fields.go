@@ -473,7 +473,6 @@ func (f VariationTableFieldInstance) validateAnswerSyntax(answer client.Answer) 
 
 func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.VariationTableAnswer)
-	fmt.Print(ans)
 	for i := range f.Answer.Xs {
 		if ans.Xs[i] != f.Answer.Xs[i] || ans.Fxs[i] != f.Answer.Fxs[i] {
 			return false
