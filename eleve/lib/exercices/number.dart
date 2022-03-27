@@ -22,18 +22,21 @@ class NumberController extends FieldController {
     return double.tryParse(text) != null;
   }
 
+  double getNumber() => double.parse(text);
+
   @override
   Answer getData() {
-    return NumberAnswer(double.parse(text));
+    return NumberAnswer(getNumber());
   }
 }
 
 class NumberField extends StatelessWidget {
   final Color _color;
-  final TextEditingController _controller;
-  final void Function() onDone;
+  final NumberController _controller;
+  final bool outlined;
 
-  const NumberField(this._color, this._controller, this.onDone, {Key? key})
+  const NumberField(this._color, this._controller,
+      {Key? key, this.outlined = false})
       : super(key: key);
 
   @override
@@ -43,17 +46,31 @@ class NumberField extends StatelessWidget {
       child: SizedBox(
         width: 50,
         child: TextField(
-          onSubmitted: (_) => onDone(),
-          controller: _controller,
+          // onSubmitted: (_) => onDone(),
+          controller: _controller.textController,
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: _color,
-              ),
-            ),
+            focusedBorder: outlined
+                ? OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _color,
+                    ),
+                  )
+                : UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _color,
+                    ),
+                  ),
+            border: outlined
+                ? OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _color,
+                    ),
+                  )
+                : null,
           ),
+
           cursorColor: _color,
           style: TextStyle(color: Colors.yellow.shade100),
           textAlign: TextAlign.center,

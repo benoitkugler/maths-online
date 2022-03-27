@@ -44,6 +44,7 @@ var (
 	_ fieldInstance = OrderedListFieldInstance{}
 	_ fieldInstance = FigurePointFieldInstance{}
 	_ fieldInstance = FigureVectorFieldInstance{}
+	_ fieldInstance = VariationTableFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only
@@ -438,4 +439,49 @@ func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isC
 	default:
 		panic("exhaustive switch")
 	}
+}
+
+type VariationTableFieldInstance struct {
+	Answer VariationTableInstance
+	ID     int
+}
+
+func (f VariationTableFieldInstance) fieldID() int { return f.ID }
+
+func (f VariationTableFieldInstance) toClient() client.Block {
+	return client.VariationTableFieldBlock{Length: len(f.Answer.Xs), ID: f.ID}
+}
+
+func (f VariationTableFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	ans, ok := answer.(client.VariationTableAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
+		}
+	}
+
+	if L := len(f.Answer.Xs); len(ans.Xs) != L || len(ans.Fxs) != L || len(ans.Arrows) != L-1 {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("invalid lengths %d %d %d", len(ans.Xs), len(ans.Fxs), len(ans.Arrows)),
+		}
+	}
+
+	return nil
+}
+
+func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.VariationTableAnswer)
+	fmt.Print(ans)
+	for i := range f.Answer.Xs {
+		if ans.Xs[i] != f.Answer.Xs[i] || ans.Fxs[i] != f.Answer.Fxs[i] {
+			return false
+		}
+		if i < len(f.Answer.Xs)-1 && !f.Answer.inferAlignment(i) != ans.Arrows[i] {
+			return false
+		}
+	}
+
+	return true
 }

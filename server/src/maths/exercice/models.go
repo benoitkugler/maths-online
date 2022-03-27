@@ -282,36 +282,35 @@ func (fi FormulaDisplayInstance) toClient() client.Block {
 }
 
 type VariationTableInstance struct {
-	Xs  []expression.Number // sorted values for x
-	Fxs []expression.Number // corresponding values for f(x)
+	Xs  []float64 // sorted values for x
+	Fxs []float64 // corresponding values for f(x)
+}
+
+// inferAlignment return the alignment of the number at index i
+func (vt VariationTableInstance) inferAlignment(i int) (isUp bool) {
+	if i == len(vt.Xs)-1 { // compute isUp from previous
+		return vt.Fxs[i-1] < vt.Fxs[i]
+	}
+	// else continue from following
+	return vt.Fxs[i] > vt.Fxs[i+1]
 }
 
 // assume at least two columns
 func (vt VariationTableInstance) toClient() client.Block {
 	out := client.VariationTableBlock{}
 	for i := range vt.Xs {
-		xStart, fxStart := vt.Xs[i], vt.Fxs[i]
+		numberIsUp := vt.inferAlignment(i)
 		// add the number column
-		numberCol := client.VariationColumn{
-			X:       xStart.String(),
-			Y:       fxStart.String(),
-			IsArrow: false,
-		}
-		if i == len(vt.Xs)-1 {
-			// compute isUp from previous
-			numberCol.IsUp = vt.Fxs[i-1] < fxStart
-			out.Columns = append(out.Columns, numberCol)
-			continue
-		}
-
-		numberCol.IsUp = fxStart > vt.Fxs[i+1]
-		out.Columns = append(out.Columns, numberCol)
-
-		// add the arrow column
-		out.Columns = append(out.Columns, client.VariationColumn{
-			IsArrow: true,
-			IsUp:    !numberCol.IsUp,
+		out.Columns = append(out.Columns, client.VariationColumnNumber{
+			X:    vt.Xs[i],
+			Y:    vt.Fxs[i],
+			IsUp: numberIsUp,
 		})
+
+		if i <= len(vt.Xs)-1 {
+			// add the arrow column
+			out.Arrows = append(out.Arrows, !numberIsUp)
+		}
 	}
 	return out
 }

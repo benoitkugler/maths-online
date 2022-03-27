@@ -210,6 +210,60 @@ JSON radioAnswerToJson(RadioAnswer item) {
   return {"Index": intToJson(item.index)};
 }
 
+List<double> listDoubleFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(doubleFromJson).toList();
+}
+
+List<dynamic> listDoubleToJson(List<double> item) {
+  return item.map(doubleToJson).toList();
+}
+
+bool boolFromJson(dynamic json) => json as bool;
+
+bool boolToJson(bool item) => item;
+
+List<bool> listBoolFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(boolFromJson).toList();
+}
+
+List<dynamic> listBoolToJson(List<bool> item) {
+  return item.map(boolToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableAnswer
+class VariationTableAnswer implements Answer {
+  final List<double> xs;
+  final List<double> fxs;
+  final List<bool> arrows;
+
+  const VariationTableAnswer(this.xs, this.fxs, this.arrows);
+
+  @override
+  String toString() {
+    return "VariationTableAnswer($xs, $fxs, $arrows)";
+  }
+}
+
+VariationTableAnswer variationTableAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VariationTableAnswer(listDoubleFromJson(json['Xs']),
+      listDoubleFromJson(json['Fxs']), listBoolFromJson(json['Arrows']));
+}
+
+JSON variationTableAnswerToJson(VariationTableAnswer item) {
+  return {
+    "Xs": listDoubleToJson(item.xs),
+    "Fxs": listDoubleToJson(item.fxs),
+    "Arrows": listBoolToJson(item.arrows)
+  };
+}
+
 abstract class Answer {}
 
 Answer answerFromJson(dynamic json_) {
@@ -231,6 +285,8 @@ Answer answerFromJson(dynamic json_) {
       return pointAnswerFromJson(data);
     case 6:
       return radioAnswerFromJson(data);
+    case 7:
+      return variationTableAnswerFromJson(data);
     default:
       throw ("unexpected type");
   }
@@ -251,14 +307,12 @@ JSON answerToJson(Answer item) {
     return {'Kind': 5, 'Data': pointAnswerToJson(item)};
   } else if (item is RadioAnswer) {
     return {'Kind': 6, 'Data': radioAnswerToJson(item)};
+  } else if (item is VariationTableAnswer) {
+    return {'Kind': 7, 'Data': variationTableAnswerToJson(item)};
   } else {
     throw ("unexpected type");
   }
 }
-
-bool boolFromJson(dynamic json) => json as bool;
-
-bool boolToJson(bool item) => item;
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
 class TextOrMath {
@@ -771,66 +825,93 @@ JSON textBlockToJson(TextBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumn
-class VariationColumn {
-  final String x;
-  final String y;
-  final bool isArrow;
+// github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumnNumber
+class VariationColumnNumber {
+  final double x;
+  final double y;
   final bool isUp;
 
-  const VariationColumn(this.x, this.y, this.isArrow, this.isUp);
+  const VariationColumnNumber(this.x, this.y, this.isUp);
 
   @override
   String toString() {
-    return "VariationColumn($x, $y, $isArrow, $isUp)";
+    return "VariationColumnNumber($x, $y, $isUp)";
   }
 }
 
-VariationColumn variationColumnFromJson(dynamic json_) {
+VariationColumnNumber variationColumnNumberFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationColumn(stringFromJson(json['X']), stringFromJson(json['Y']),
-      boolFromJson(json['IsArrow']), boolFromJson(json['IsUp']));
+  return VariationColumnNumber(doubleFromJson(json['X']),
+      doubleFromJson(json['Y']), boolFromJson(json['IsUp']));
 }
 
-JSON variationColumnToJson(VariationColumn item) {
+JSON variationColumnNumberToJson(VariationColumnNumber item) {
   return {
-    "X": stringToJson(item.x),
-    "Y": stringToJson(item.y),
-    "IsArrow": boolToJson(item.isArrow),
+    "X": doubleToJson(item.x),
+    "Y": doubleToJson(item.y),
     "IsUp": boolToJson(item.isUp)
   };
 }
 
-List<VariationColumn> listVariationColumnFromJson(dynamic json) {
+List<VariationColumnNumber> listVariationColumnNumberFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
-  return (json as List<dynamic>).map(variationColumnFromJson).toList();
+  return (json as List<dynamic>).map(variationColumnNumberFromJson).toList();
 }
 
-List<dynamic> listVariationColumnToJson(List<VariationColumn> item) {
-  return item.map(variationColumnToJson).toList();
+List<dynamic> listVariationColumnNumberToJson(
+    List<VariationColumnNumber> item) {
+  return item.map(variationColumnNumberToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableBlock
 class VariationTableBlock implements Block {
-  final List<VariationColumn> columns;
+  final List<VariationColumnNumber> columns;
+  final List<bool> arrows;
 
-  const VariationTableBlock(this.columns);
+  const VariationTableBlock(this.columns, this.arrows);
 
   @override
   String toString() {
-    return "VariationTableBlock($columns)";
+    return "VariationTableBlock($columns, $arrows)";
   }
 }
 
 VariationTableBlock variationTableBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationTableBlock(listVariationColumnFromJson(json['Columns']));
+  return VariationTableBlock(listVariationColumnNumberFromJson(json['Columns']),
+      listBoolFromJson(json['Arrows']));
 }
 
 JSON variationTableBlockToJson(VariationTableBlock item) {
-  return {"Columns": listVariationColumnToJson(item.columns)};
+  return {
+    "Columns": listVariationColumnNumberToJson(item.columns),
+    "Arrows": listBoolToJson(item.arrows)
+  };
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableFieldBlock
+class VariationTableFieldBlock implements Block {
+  final int iD;
+  final int length;
+
+  const VariationTableFieldBlock(this.iD, this.length);
+
+  @override
+  String toString() {
+    return "VariationTableFieldBlock($iD, $length)";
+  }
+}
+
+VariationTableFieldBlock variationTableFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VariationTableFieldBlock(
+      intFromJson(json['ID']), intFromJson(json['Length']));
+}
+
+JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
+  return {"ID": intToJson(item.iD), "Length": intToJson(item.length)};
 }
 
 abstract class Block {}
@@ -868,6 +949,8 @@ Block blockFromJson(dynamic json_) {
       return textBlockFromJson(data);
     case 13:
       return variationTableBlockFromJson(data);
+    case 14:
+      return variationTableFieldBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
@@ -902,6 +985,8 @@ JSON blockToJson(Block item) {
     return {'Kind': 12, 'Data': textBlockToJson(item)};
   } else if (item is VariationTableBlock) {
     return {'Kind': 13, 'Data': variationTableBlockToJson(item)};
+  } else if (item is VariationTableFieldBlock) {
+    return {'Kind': 14, 'Data': variationTableFieldBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

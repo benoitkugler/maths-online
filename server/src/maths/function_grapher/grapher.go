@@ -110,15 +110,15 @@ func controlFromPoints(from, to repere.Coord, firstHalf bool) repere.Coord {
 }
 
 // GraphFromVariations builds one possible representation for the given variations
-func GraphFromVariations(xs []expression.Number, ys []expression.Number) FunctionGraph {
+func GraphFromVariations(xs []float64, ys []float64) FunctionGraph {
 	// each segment is drawn with two quadratic curves
 	var curves []BezierCurve
 	for i := range xs {
 		if i >= len(xs)-1 {
 			break
 		}
-		x1, x2 := float64(xs[i]), float64(xs[i+1])
-		y1, y2 := float64(ys[i]), float64(ys[i+1])
+		x1, x2 := xs[i], xs[i+1]
+		y1, y2 := ys[i], ys[i+1]
 		xMiddle, yMiddle := (x1+x2)/2, (y1+y2)/2
 
 		// first half

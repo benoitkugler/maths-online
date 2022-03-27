@@ -55,6 +55,7 @@ func (OrderedListFieldBlock) isBlock()      {}
 func (FigurePointFieldBlock) isBlock()      {}
 func (FigureVectorFieldBlock) isBlock()     {}
 func (FigureVectorPairFieldBlock) isBlock() {}
+func (VariationTableFieldBlock) isBlock()   {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -73,17 +74,17 @@ type FormulaBlock struct {
 	Formula string // as latex
 }
 
-// VariationColumn is a column in a variation table,
-// either displaying (x, f(x)) values, or an arrow
-// between two local extrema.
-type VariationColumn struct {
-	X, Y    string // as LaTeX code
-	IsArrow bool
-	IsUp    bool
+// VariationColumnNumber is a column in a variation table
+// displaying (x, f(x)) values
+type VariationColumnNumber struct {
+	X, Y float64
+	IsUp bool // to adjust the vertical alignment
 }
 
 type VariationTableBlock struct {
-	Columns []VariationColumn
+	Columns []VariationColumnNumber
+	// Arrows displays the arrows between two local extrema.
+	Arrows []bool
 }
 
 // SignColumn is a column in a sign table,
@@ -173,6 +174,13 @@ type FigureVectorPairFieldBlock struct {
 	ID     int
 }
 
+// VariationTableFieldBlock asks to complete a
+// variation table (with fixed length)
+type VariationTableFieldBlock struct {
+	ID     int
+	Length int // number of (x, f(x)) pairs, always >= 2
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -186,6 +194,7 @@ func (OrderedListAnswer) isAnswer()     {}
 func (PointAnswer) isAnswer()           {}
 func (DoublePointAnswer) isAnswer()     {}
 func (DoublePointPairAnswer) isAnswer() {}
+func (VariationTableAnswer) isAnswer()  {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -222,6 +231,12 @@ type DoublePointPairAnswer struct {
 	To1   repere.IntCoord
 	From2 repere.IntCoord
 	To2   repere.IntCoord
+}
+
+type VariationTableAnswer struct {
+	Xs     []float64
+	Fxs    []float64
+	Arrows []bool
 }
 
 // QuestionAnswersIn map the field ids to their answer

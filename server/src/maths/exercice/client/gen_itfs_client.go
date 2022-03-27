@@ -48,6 +48,10 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 		var data RadioAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 7:
+		var data VariationTableAnswer
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -76,6 +80,8 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 5, Data: data}
 	case RadioAnswer:
 		wr = wrapper{Kind: 6, Data: data}
+	case VariationTableAnswer:
+		wr = wrapper{Kind: 7, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -155,6 +161,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 14:
+		var data VariationTableFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -197,6 +207,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 12, Data: data}
 	case VariationTableBlock:
 		wr = wrapper{Kind: 13, Data: data}
+	case VariationTableFieldBlock:
+		wr = wrapper{Kind: 14, Data: data}
 
 	default:
 		panic("exhaustive switch")

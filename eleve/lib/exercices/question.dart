@@ -12,6 +12,7 @@ import 'package:eleve/exercices/repere.dart';
 import 'package:eleve/exercices/sign_table.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
+import 'package:eleve/exercices/variation_table_field.dart';
 import 'package:eleve/trivialpoursuit/categories.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart' as events;
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
@@ -73,6 +74,9 @@ class _ContentBuilder {
       } else if (block is FigureVectorPairFieldBlock) {
         controllers[block.iD] =
             FigureVectorPairController(block.figure, onChange);
+      } else if (block is VariationTableFieldBlock) {
+        controllers[block.iD] =
+            VariationTableController(block.length, onChange);
       }
 
       // TODO: handle more fields
@@ -138,9 +142,7 @@ class _ContentBuilder {
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = _controllers[element.iD] as NumberController;
-    _currentRow.add(WidgetSpan(
-        child: NumberField(
-            _color, ct.textController, () => onFieldDone(element.iD))));
+    _currentRow.add(WidgetSpan(child: NumberField(_color, ct)));
   }
 
   void _handleExpressionFieldBlock(ExpressionFieldBlock element) {
@@ -229,6 +231,15 @@ class _ContentBuilder {
     rows.add(Center(child: FigureVectorPairField(ct, key: key)));
   }
 
+  void _handleVariationTableFieldBlock(VariationTableFieldBlock element) {
+    final ct = _controllers[element.iD] as VariationTableController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(Center(child: VariationTableField(_color, ct)));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -260,6 +271,8 @@ class _ContentBuilder {
         _handleFigureVectorFieldBlock(element);
       } else if (element is FigureVectorPairFieldBlock) {
         _handleFigureVectorPairFieldBlock(element);
+      } else if (element is VariationTableFieldBlock) {
+        _handleVariationTableFieldBlock(element);
       } else {
         // TODO:
       }

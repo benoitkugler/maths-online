@@ -497,8 +497,8 @@ var PredefinedQuestions = []QuestionInstance{
 				text(" admet-elle de solutions ? "),
 			}},
 			VariationTableInstance{
-				Xs:  []expression.Number{-20, -10, 0, 3, 18},
-				Fxs: []expression.Number{-6, -2, -8, 0, -5},
+				Xs:  []float64{-20, -10, 0, 3, 18},
+				Fxs: []float64{-6, -2, -8, 0, -5},
 			},
 			TextInstance{Parts: []TextOrMaths{
 				text("Nombre de solutions : "),
@@ -923,14 +923,16 @@ var PredefinedQuestions = []QuestionInstance{
 		Title: "Variations", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{text("Compléter le tableau de variations de h.")}},
 			FunctionVariationGraphInstance{
-				Xs:  []expression.Number{0, 2, 6, 10, 12},
-				Fxs: []expression.Number{3, 0, 6, 1, 4},
+				Xs:  []float64{0, 2, 6, 10, 12},
+				Fxs: []float64{3, 0, 6, 1, 4},
 			},
-			// TextInstance{Parts: []TextOrMaths{text("Max : ")}},
-			// NumberFieldInstance{
-			// 	ID:     0,
-			// 	Answer: 3,
-			// },
+			VariationTableFieldInstance{
+				ID: 0,
+				Answer: VariationTableInstance{
+					Xs:  []float64{0, 2, 6, 10, 12},
+					Fxs: []float64{3, 0, 6, 1, 4},
+				},
+			},
 		},
 	},
 
