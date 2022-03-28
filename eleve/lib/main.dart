@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
@@ -7,15 +8,40 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-// final bm = buildMode();
-final bm = BuildMode.dev;
+final bm = buildMode();
+// final bm = BuildMode.dev;
 
-void main() {
+void main() async {
   runApp(const MyApp());
+}
 
-  // start music as background
-  // final player = AudioCache(prefix: "lib/music/");
-  // player.loop("DontLetMeGo.mp3");
+class Audio {
+  final AudioCache _cache = AudioCache(prefix: "lib/music/");
+  final List<String> songs;
+
+  int _currentSong = -1;
+  AudioPlayer? _player;
+
+  Audio(this.songs);
+
+  void run() {
+    _startNextSong();
+  }
+
+  void pause() {
+    if (_player == null) {
+      return;
+    }
+    _player!.stop();
+  }
+
+  void _startNextSong() async {
+    _currentSong++;
+    _player = await _cache.play(songs[_currentSong % songs.length]);
+    _player!.onPlayerCompletion.listen((event) {
+      _startNextSong();
+    });
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -45,7 +71,7 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Isiro'),
         ),
-        body: const _HomePage(),
+        body: _HomePage(),
         // body: QuestionResult(PlayerAnswerResult(
         //     "Voici la réponse attendue", 0, false, Categorie.orange))
         // body: Center(
@@ -61,7 +87,9 @@ class MyApp extends StatelessWidget {
 }
 
 class _HomePage extends StatefulWidget {
-  const _HomePage({Key? key}) : super(key: key);
+  final player = Audio(["GrooveBow.mp3", "NouvelleTrajectoire.mp3"]);
+
+  _HomePage({Key? key}) : super(key: key);
 
   @override
   State<_HomePage> createState() => _HomePageState();
@@ -69,13 +97,17 @@ class _HomePage extends StatefulWidget {
 
 class _HomePageState extends State<_HomePage> {
   void _launchTrivialPoursuit() {
-    Navigator.of(context).push(MaterialPageRoute<void>(
+    widget.player.run();
+    final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => Scaffold(body: TrivialPoursuitLoggin(bm))));
+    onPop.then((value) => widget.player.pause());
   }
 
   void _launchQuestionGallery() {
-    Navigator.of(context)
+    widget.player.run();
+    final onPop = Navigator.of(context)
         .push(MaterialPageRoute<void>(builder: (_) => QuestionGallery(bm)));
+    onPop.then((value) => widget.player.pause());
   }
 
   @override
