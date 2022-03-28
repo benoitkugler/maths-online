@@ -159,3 +159,23 @@ func TestExample(t *testing.T) {
 	_, freq := expr.IsValidIndex(params, 3)
 	fmt.Println(freq) // approx 100 - 25 = 75
 }
+
+func TestExpression_AreFxsIntegers(t *testing.T) {
+	tests := []struct {
+		expr       string
+		parameters RandomParameters
+		grid       []int
+		want       bool
+	}{
+		{"2x + 1", nil, []int{-2, -1, 0, 4}, true},
+		{"ax^2 - 2x + c", RandomParameters{'a': mustParse(t, "randInt(2;4)"), 'c': mustParse(t, "7")}, []int{-2, -1, 0, 4}, true},
+		{"2x + 0.5", nil, []int{-2, -1, 0, 4}, false},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		got, freq := expr.AreFxsIntegers(tt.parameters, 'x', tt.grid)
+		if got != tt.want {
+			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
+		}
+	}
+}

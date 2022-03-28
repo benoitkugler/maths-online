@@ -12,15 +12,6 @@ type BezierCurve struct {
 }
 
 func (seg segment) toCurve() BezierCurve {
-	// special case when df1 = df2
-	if seg.dFrom == seg.dTo {
-		return BezierCurve{
-			P0: seg.from,
-			P1: repere.Coord{X: (seg.from.X + seg.to.X) / 2, Y: (seg.from.Y + seg.to.Y) / 2},
-			P2: seg.to,
-		}
-	}
-
 	p1 := controlFromDerivatives(seg.from, seg.to, seg.dFrom, seg.dTo)
 	return BezierCurve{
 		P0: seg.from,
@@ -33,9 +24,19 @@ func (seg segment) toCurve() BezierCurve {
 // which is the intersection between
 // the tangents at from and to
 func controlFromDerivatives(from, to repere.Coord, dFrom, dTo float64) repere.Coord {
+	// special case when df1 = df2
+	if dFrom == dTo {
+		return repere.Coord{X: (from.X + to.X) / 2, Y: (from.Y + to.Y) / 2}
+	}
+
 	xIntersec := (to.Y - from.Y + dFrom*from.X - dTo*to.X) / (dFrom - dTo)
 	yIntersec := dFrom*(xIntersec-from.X) + from.Y
 	return repere.Coord{X: xIntersec, Y: yIntersec}
+}
+
+// compute derivative with finite differences
+func computeDf(f func(float64) float64, x, epsilon float64) float64 {
+	return (f(x+epsilon) - f(x)) / epsilon
 }
 
 type segment struct {
@@ -45,18 +46,15 @@ type segment struct {
 
 // expr must be an expression containing only the variable `variable`
 func newSegment(expr *expression.Expression, variable expression.Variable, from, to float64) segment {
-	f := func(x float64) float64 {
-		out, _ := expr.Evaluate(expression.Variables{variable: x})
-		return out
-	}
+	f := expr.Closure(variable)
 
 	yFrom := f(from)
 	yTo := f(to)
 
 	// compute derivative with finite differences
 	epsilon := (to - from) / 100_000
-	dFrom := (f(from+epsilon) - f(from)) / epsilon
-	dTo := (f(to) - f(to-epsilon)) / epsilon
+	dFrom := computeDf(f, from, epsilon)
+	dTo := computeDf(f, to, epsilon)
 
 	return segment{
 		from:  repere.Coord{X: from, Y: yFrom},
@@ -77,6 +75,7 @@ const nbStep = 100
 
 // Graph splits the curve of `expr(vari)` on [from, to] in small chunks on which it is approximated
 // by Bezier curves.
+// It will panic if `expr` is not valid or evaluable given `vari`.
 func NewFunctionGraph(expr *expression.Expression, vari expression.Variable, from, to float64) FunctionGraph {
 	step := (to - from) / nbStep
 	curves := make([]BezierCurve, nbStep)
@@ -138,4 +137,36 @@ func GraphFromVariations(xs []float64, ys []float64) FunctionGraph {
 		Segments: curves,
 		Bounds:   boundingBox(curves),
 	}
+}
+
+// BoundsFromExpression returns the f(x) and f'(x) values for x in the grid
+func BoundsFromExpression(expr *expression.Expression, vari expression.Variable, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
+	f := expr.Closure(vari)
+
+	fxs = make([]int, len(grid))
+	dfxs = make([]float64, len(grid))
+	// always add the origin
+	minX, maxX, minY, maxY := -1., 1., -1., 1.
+	for i, xValue := range grid {
+		x := float64(xValue)
+		y := f(x)
+		fxs[i] = int(y)
+		dfxs[i] = computeDf(f, x, 1e-5)
+
+		if x < minX {
+			minX = x
+		}
+		if x > maxX {
+			maxX = x
+		}
+		if y < minY {
+			minY = y
+		}
+		if y > maxY {
+			maxY = y
+		}
+	}
+
+	bounds = boundsFromBoudingBox(minX, minY, maxX, maxY)
+	return
 }

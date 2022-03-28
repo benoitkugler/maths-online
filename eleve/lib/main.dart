@@ -7,8 +7,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-final bm = buildMode();
-// final bm = BuildMode.dev;
+// final bm = buildMode();
+final bm = BuildMode.dev;
 
 void main() {
   runApp(const MyApp());

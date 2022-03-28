@@ -44,6 +44,26 @@ func (expr *Expression) MustEvaluate(bindings ValueResolver) float64 {
 	return out
 }
 
+type singleVarResolver struct {
+	v     Variable
+	value float64
+}
+
+func (res singleVarResolver) resolve(v Variable) (float64, bool) {
+	if res.v != v {
+		return 0, false
+	}
+	return res.value, true
+}
+
+// Closure returns a function computing f(x), where f is defined by the expression.
+// The closure will panic if the expression depends on other variables
+func (expr *Expression) Closure(x Variable) func(float64) float64 {
+	return func(xValue float64) float64 {
+		return expr.MustEvaluate(singleVarResolver{x, xValue})
+	}
+}
+
 // Evaluate uses the given variables values to evaluate the formula.
 // If a variable is referenced in the expression but not in the bindings,
 // `MissingVariableErr` is returned.

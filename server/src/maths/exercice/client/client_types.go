@@ -56,6 +56,7 @@ func (FigurePointFieldBlock) isBlock()      {}
 func (FigureVectorFieldBlock) isBlock()     {}
 func (FigureVectorPairFieldBlock) isBlock() {}
 func (VariationTableFieldBlock) isBlock()   {}
+func (FunctionPointsFieldBlock) isBlock()   {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -181,6 +182,16 @@ type VariationTableFieldBlock struct {
 	Length int // number of (x, f(x)) pairs, always >= 2
 }
 
+// FunctionPointsFieldBlock asks to place points
+// to draw the graph of a function
+type FunctionPointsFieldBlock struct {
+	Label  string              // name of the function
+	Xs     []int               // the grid
+	Dfxs   []float64           // the derivatives of the function, to plot a nice curve
+	Bounds repere.RepereBounds `dart-extern:"repere.gen.dart"`
+	ID     int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -195,6 +206,7 @@ func (PointAnswer) isAnswer()           {}
 func (DoublePointAnswer) isAnswer()     {}
 func (DoublePointPairAnswer) isAnswer() {}
 func (VariationTableAnswer) isAnswer()  {}
+func (FunctionPointsAnswer) isAnswer()  {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -237,6 +249,10 @@ type VariationTableAnswer struct {
 	Xs     []float64
 	Fxs    []float64
 	Arrows []bool
+}
+
+type FunctionPointsAnswer struct {
+	Fxs []int
 }
 
 // QuestionAnswersIn map the field ids to their answer

@@ -903,6 +903,23 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 
 	{
+		Title: "Généralités sur les fonctions", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text("Construire la courbe représentative de "),
+				staticMath("g(x) = "),
+				expr("x^2 − 3x + 1"),
+				text("."),
+			}},
+			FunctionPointsFieldInstance{
+				ID:       0,
+				Function: mustParse("x^2 − 3x + 1"),
+				Variable: 'x',
+				Label:    "g(x)",
+				XGrid:    []int{-2, -1, 0, 1, 2, 3, 4, 5},
+			},
+		},
+	},
+	{
 		Title: "Variations", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{text("Quel est le maximum de h ?")}},
 			FunctionGraphInstance{

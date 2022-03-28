@@ -14,21 +14,22 @@ class FunctionGraphW extends StatelessWidget {
     return BaseRepere(metrics, true, [
       CustomPaint(
         size: Size(metrics.canvasWidth, metrics.canvasHeight),
-        painter: _AxisPainter(metrics),
+        painter: AxisPainter(metrics),
       ),
       CustomPaint(
         size: Size(metrics.canvasWidth, metrics.canvasHeight),
-        painter: _FuncPainter(metrics, function.label, function.graph.segments),
+        painter: BezierCurvesPainter(
+            metrics, function.label, function.graph.segments),
       ),
     ]);
   }
 }
 
-class _FuncPainter extends CustomPainter {
+class BezierCurvesPainter extends CustomPainter {
   final RepereMetrics metrics;
   final String label;
   final List<BezierCurve> segments;
-  _FuncPainter(this.metrics, this.label, this.segments);
+  BezierCurvesPainter(this.metrics, this.label, this.segments);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -52,20 +53,22 @@ class _FuncPainter extends CustomPainter {
     }
     canvas.drawPath(path, paint);
 
-    DrawingsPainter.paintText(
-        metrics, canvas, LabeledPoint(segments[5].p0, LabelPos.top), label,
+    final labelIndex = segments.length * 3 ~/ 4;
+    final labelPos = segments[labelIndex].p0;
+    DrawingsPainter.paintText(metrics, canvas,
+        LabeledPoint(Coord(labelPos.x, labelPos.y + 1), LabelPos.top), label,
         color: Colors.purple);
   }
 
   @override
-  bool shouldRepaint(covariant _FuncPainter oldDelegate) {
+  bool shouldRepaint(covariant BezierCurvesPainter oldDelegate) {
     return metrics != oldDelegate.metrics || segments != oldDelegate.segments;
   }
 }
 
-class _AxisPainter extends CustomPainter {
+class AxisPainter extends CustomPainter {
   final RepereMetrics metrics;
-  _AxisPainter(this.metrics);
+  AxisPainter(this.metrics);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -82,7 +85,7 @@ class _AxisPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _AxisPainter oldDelegate) {
+  bool shouldRepaint(covariant AxisPainter oldDelegate) {
     return metrics != oldDelegate.metrics;
   }
 }

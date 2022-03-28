@@ -104,6 +104,10 @@ func boundingBox(curves []BezierCurve) repere.RepereBounds {
 		maxY = max(maxY, maxY2)
 	}
 
+	return boundsFromBoudingBox(minX, minY, maxX, maxY)
+}
+
+func boundsFromBoudingBox(minX, minY, maxX, maxY float64) repere.RepereBounds {
 	return repere.RepereBounds{
 		Width:  int(math.Ceil(maxX-minX)) + 2,
 		Height: int(math.Ceil(maxY-minY)) + 2,

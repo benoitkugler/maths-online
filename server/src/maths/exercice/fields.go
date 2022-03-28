@@ -6,6 +6,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -482,5 +483,55 @@ func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 		}
 	}
 
+	return true
+}
+
+type FunctionPointsFieldInstance struct {
+	Function *expression.Expression
+	Label    string
+	XGrid    []int
+	Variable expression.Variable
+	ID       int
+}
+
+func (f FunctionPointsFieldInstance) fieldID() int { return f.ID }
+
+func (f FunctionPointsFieldInstance) toClient() client.Block {
+	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.Variable, f.XGrid)
+	return client.FunctionPointsFieldBlock{
+		Label: f.Label,
+		Xs:    f.XGrid, ID: f.ID,
+		Bounds: bounds,
+		Dfxs:   dfxs,
+	}
+}
+
+func (f FunctionPointsFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	ans, ok := answer.(client.FunctionPointsAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
+		}
+	}
+
+	if L := len(ans.Fxs); L != len(f.XGrid) {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("invalid length %d", L),
+		}
+	}
+
+	return nil
+}
+
+func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.FunctionPointsAnswer).Fxs
+	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.Variable, f.XGrid)
+	for i := range ys {
+		if ans[i] != ys[i] {
+			return false
+		}
+	}
 	return true
 }

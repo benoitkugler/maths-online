@@ -55,21 +55,23 @@ class RepereMetrics {
         (x - figure.origin.x).round(), (y - figure.origin.y).round());
   }
 
-  List<double> buildXTicks() {
+  List<double> buildXTicks({int logicalStep = 1}) {
+    final firstLogical = -figure.origin.x.ceil() ~/ logicalStep * logicalStep;
     final out = <double>[];
-    for (var i = 0; i <= figure.width; i += 1) {
-      final logical = Coord(i.toDouble() - figure.origin.x.ceil(), 0);
-      final offset = logicalToVisual(logical);
+    for (var i = 0; i <= figure.width; i += logicalStep) {
+      final logical = IntCoord(firstLogical + i, 0);
+      final offset = logicalIntToVisual(logical);
       out.add(offset.dx);
     }
     return out;
   }
 
-  List<double> buildYTicks() {
+  List<double> buildYTicks({int logicalStep = 1}) {
+    final firstLogical = -figure.origin.y.ceil() ~/ logicalStep * logicalStep;
     final out = <double>[];
-    for (var i = 0; i <= figure.height; i += 1) {
-      final logical = Coord(0, i.toDouble() - figure.origin.y.ceil());
-      final offset = logicalToVisual(logical);
+    for (var i = 0; i <= figure.height; i += logicalStep) {
+      final logical = IntCoord(0, firstLogical + i);
+      final offset = logicalIntToVisual(logical);
       out.add(offset.dy);
     }
     return out;
@@ -184,30 +186,48 @@ class VectorPainter extends CustomPainter {
 }
 
 class _GridPainter extends CustomPainter {
-  final List<double> xs;
-  final List<double> ys;
+  final RepereMetrics metrics;
   final bool isHighlighted;
 
-  _GridPainter(this.xs, this.ys, this.isHighlighted);
+  _GridPainter(this.metrics, this.isHighlighted);
 
   static CustomPaint asCustomPaint(RepereMetrics metrics, bool isHighlighted) {
     return CustomPaint(
       size: Size(metrics.canvasWidth, metrics.canvasHeight),
-      painter: _GridPainter(
-          metrics.buildXTicks(), metrics.buildYTicks(), isHighlighted),
+      painter: _GridPainter(metrics, isHighlighted),
     );
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    // minor grid
+    final minorPaint = Paint()
       ..color =
           isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
-    for (var x in xs) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    for (var x in metrics.buildXTicks()) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), minorPaint);
     }
-    for (var y in ys) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    for (var y in metrics.buildYTicks()) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), minorPaint);
+    }
+
+    // ticks
+    final tickLinePaint = Paint()
+      ..strokeWidth = 1
+      ..color =
+          isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
+    final ticksPaint = Paint()..strokeWidth = 1;
+    final visualOrigin = metrics.logicalIntToVisual(const IntCoord(0, 0));
+    for (var x in metrics.buildXTicks(logicalStep: 5)) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), tickLinePaint);
+
+      canvas.drawLine(Offset(x, visualOrigin.dy - 5),
+          Offset(x, visualOrigin.dy + 5), ticksPaint);
+    }
+    for (var y in metrics.buildYTicks(logicalStep: 5)) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), tickLinePaint);
+      canvas.drawLine(Offset(visualOrigin.dx - 5, y),
+          Offset(visualOrigin.dx + 5, y), ticksPaint);
     }
   }
 
@@ -440,7 +460,7 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
       {Key? key, this.color = Colors.orange})
       : super(key: key);
 
-  static const outerRadius = 15.0;
+  static const outerRadius = 20.0;
   static const radius = 8.0;
 
   @override

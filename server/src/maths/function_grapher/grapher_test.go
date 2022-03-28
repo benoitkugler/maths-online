@@ -12,18 +12,33 @@ import (
 )
 
 func assertApprox(t *testing.T, a, b float64) {
+	t.Helper()
+
 	if math.Abs(a-b) > 1e-5 {
 		t.Fatalf("%g != %g", a, b)
 	}
 }
 
 func assertSegmentApprox(t *testing.T, a, b segment) {
+	t.Helper()
+
 	assertApprox(t, a.dFrom, b.dFrom)
 	assertApprox(t, a.dTo, b.dTo)
 	assertApprox(t, a.from.X, b.from.X)
 	assertApprox(t, a.from.Y, b.from.Y)
 	assertApprox(t, a.to.X, b.to.X)
 	assertApprox(t, a.to.Y, b.to.Y)
+}
+
+func assertSliceApprox(t *testing.T, a, b []float64) {
+	t.Helper()
+
+	if len(a) != len(b) {
+		t.Fatal()
+	}
+	for i := range a {
+		assertApprox(t, a[i], b[i])
+	}
 }
 
 func Test_newSegment(t *testing.T) {
@@ -113,5 +128,32 @@ func TestGraph(t *testing.T) {
 		if got.Bounds.Origin.X < 0 || got.Bounds.Origin.Y < 0 {
 			t.Fatal(got.Bounds.Origin)
 		}
+	}
+}
+
+func TestBoundsFromExpression(t *testing.T) {
+	tests := []struct {
+		expr       string
+		grid       []int
+		wantBounds repere.RepereBounds
+		wantFxs    []int
+		wantDfxs   []float64
+	}{
+		{"2x + 1", []int{-2, -1, 0, 1, 2}, repere.RepereBounds{Width: 6, Height: 10, Origin: repere.Coord{X: 3, Y: 4}}, []int{-3, -1, 1, 3, 5}, []float64{2, 2, 2, 2, 2}},
+	}
+	for _, tt := range tests {
+		expr, _, err := expression.Parse(tt.expr)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		gotBounds, gotFxs, gotDfxs := BoundsFromExpression(expr, 'x', tt.grid)
+		if !reflect.DeepEqual(gotBounds, tt.wantBounds) {
+			t.Errorf("BoundsFromExpression() gotBounds = %v, want %v", gotBounds, tt.wantBounds)
+		}
+		if !reflect.DeepEqual(gotFxs, tt.wantFxs) {
+			t.Errorf("BoundsFromExpression() gotFxs = %v, want %v", gotFxs, tt.wantFxs)
+		}
+		assertSliceApprox(t, gotDfxs, tt.wantDfxs)
 	}
 }

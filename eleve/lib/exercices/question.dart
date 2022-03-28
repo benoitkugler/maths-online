@@ -5,6 +5,7 @@ import 'package:eleve/exercices/figure_point.dart';
 import 'package:eleve/exercices/figure_vector.dart';
 import 'package:eleve/exercices/figure_vector_pair.dart';
 import 'package:eleve/exercices/function_graph.dart';
+import 'package:eleve/exercices/function_points.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
@@ -77,6 +78,8 @@ class _ContentBuilder {
       } else if (block is VariationTableFieldBlock) {
         controllers[block.iD] =
             VariationTableController(block.length, onChange);
+      } else if (block is FunctionPointsFieldBlock) {
+        controllers[block.iD] = FunctionPointsController(block, onChange);
       }
 
       // TODO: handle more fields
@@ -240,6 +243,17 @@ class _ContentBuilder {
     rows.add(Center(child: VariationTableField(_color, ct)));
   }
 
+  void _handleFunctionPointsFieldBlock(FunctionPointsFieldBlock element) {
+    final ct = _controllers[element.iD] as FunctionPointsController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    final key = GlobalKey();
+    zoomableWigets.add(key);
+    rows.add(Center(child: FunctionPoints(ct, key: key)));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -273,6 +287,8 @@ class _ContentBuilder {
         _handleFigureVectorPairFieldBlock(element);
       } else if (element is VariationTableFieldBlock) {
         _handleVariationTableFieldBlock(element);
+      } else if (element is FunctionPointsFieldBlock) {
+        _handleFunctionPointsFieldBlock(element);
       } else {
         // TODO:
       }
