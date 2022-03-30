@@ -108,10 +108,6 @@ class _FunctionPointsState extends State<FunctionPoints> {
         child: BaseRepere<_PointID>(metrics, true, [
           CustomPaint(
             size: Size(metrics.canvasWidth, metrics.canvasHeight),
-            painter: AxisPainter(metrics),
-          ),
-          CustomPaint(
-            size: Size(metrics.canvasWidth, metrics.canvasHeight),
             painter: BezierCurvesPainter(metrics, ct.data.label, segments),
           ),
           ...List<Widget>.generate(ct.fxs.length, (index) {

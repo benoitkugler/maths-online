@@ -14,10 +14,6 @@ class FunctionGraphW extends StatelessWidget {
     return BaseRepere(metrics, true, [
       CustomPaint(
         size: Size(metrics.canvasWidth, metrics.canvasHeight),
-        painter: AxisPainter(metrics),
-      ),
-      CustomPaint(
-        size: Size(metrics.canvasWidth, metrics.canvasHeight),
         painter: BezierCurvesPainter(
             metrics, function.label, function.graph.segments),
       ),
@@ -63,29 +59,5 @@ class BezierCurvesPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant BezierCurvesPainter oldDelegate) {
     return metrics != oldDelegate.metrics || segments != oldDelegate.segments;
-  }
-}
-
-class AxisPainter extends CustomPainter {
-  final RepereMetrics metrics;
-  AxisPainter(this.metrics);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    final visualOrigin = metrics.logicalToVisual(const Coord(0, 0));
-    canvas.drawLine(Offset(visualOrigin.dx, 0),
-        Offset(visualOrigin.dx, size.height), paint);
-    canvas.drawLine(
-        Offset(0, visualOrigin.dy), Offset(size.width, visualOrigin.dy), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant AxisPainter oldDelegate) {
-    return metrics != oldDelegate.metrics;
   }
 }

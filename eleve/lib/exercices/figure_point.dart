@@ -73,6 +73,11 @@ class _FigurePrivateState extends State<_FigurePrivate> {
         metrics,
         widget.figure.showGrid,
         [
+          // custom drawing
+          CustomPaint(
+            size: Size(metrics.canvasWidth, metrics.canvasHeight),
+            painter: DrawingsPainter(metrics, widget.figure.drawings),
+          ),
           if (point != null)
             GridPoint(point, metrics.logicalIntToVisual(point)),
           // if (showTooltip && point != null)

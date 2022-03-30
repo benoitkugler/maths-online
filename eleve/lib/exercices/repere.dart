@@ -112,7 +112,10 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
             children: [
               _OriginPainter.asCustomPaint(metrics),
               // grid
-              if (showGrid) _GridPainter.asCustomPaint(metrics, hasDropOver),
+              if (showGrid) ...[
+                _GridPainter.asCustomPaint(metrics, hasDropOver),
+                _AxisPainter.asCustomPaint(metrics),
+              ],
               ...layers
             ],
           );
@@ -182,6 +185,37 @@ class VectorPainter extends CustomPainter {
   @override
   bool? hitTest(Offset position) {
     return false;
+  }
+}
+
+class _AxisPainter extends CustomPainter {
+  final RepereMetrics metrics;
+  _AxisPainter(this.metrics);
+
+  static CustomPaint asCustomPaint(RepereMetrics metrics) {
+    return CustomPaint(
+      size: Size(metrics.canvasWidth, metrics.canvasHeight),
+      painter: _AxisPainter(metrics),
+    );
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    final visualOrigin = metrics.logicalToVisual(const Coord(0, 0));
+    canvas.drawLine(Offset(visualOrigin.dx, 0),
+        Offset(visualOrigin.dx, size.height), paint);
+    canvas.drawLine(
+        Offset(0, visualOrigin.dy), Offset(size.width, visualOrigin.dy), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AxisPainter oldDelegate) {
+    return metrics != oldDelegate.metrics;
   }
 }
 
