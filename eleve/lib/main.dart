@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
+import 'package:eleve/exercices/tree.dart';
+import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -68,20 +70,25 @@ class MyApp extends StatelessWidget {
         Locale('en', ''), // English, no country code
       ],
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Isiro'),
-        ),
-        body: _HomePage(),
-        // body: QuestionResult(PlayerAnswerResult(
-        //     "Voici la réponse attendue", 0, false, Categorie.orange))
-        // body: Center(
-        //     child: Repere(Figure({
-        //   "A": LabeledPoint(Coord(40, 10), LabelPos.bottom),
-        //   "B": LabeledPoint(Coord(10, 40), LabelPos.bottom),
-        // }, [
-        //   Line("", "A", "B", LabelPos.bottom)
-        // ], 40, 50))),
-      ),
+          appBar: AppBar(
+            title: const Text('Isiro'),
+          ),
+          // body: _HomePage(),
+          body: Center(
+              child: Tree(
+                  Colors.blue,
+                  TreeController(
+                      TreeFieldBlock([
+                        [2, 2],
+                        [2, 3],
+                        [3, 2],
+                        [2, 2, 2],
+                      ], [
+                        TextOrMath("A", false),
+                        TextOrMath("x", true),
+                        TextOrMath("C", false),
+                      ], 0),
+                      () {})))),
     );
   }
 }

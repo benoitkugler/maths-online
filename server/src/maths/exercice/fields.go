@@ -46,6 +46,10 @@ var (
 	_ fieldInstance = FigurePointFieldInstance{}
 	_ fieldInstance = FigureVectorFieldInstance{}
 	_ fieldInstance = VariationTableFieldInstance{}
+	_ fieldInstance = FunctionPointsFieldInstance{}
+	// TODO: à tester
+	_ fieldInstance = FigureVectorPairFieldInstance{}
+	_ fieldInstance = FigureAffineLineFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only

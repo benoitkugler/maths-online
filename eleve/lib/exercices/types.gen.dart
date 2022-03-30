@@ -1211,3 +1211,45 @@ JSON questionSyntaxCheckOutToJson(QuestionSyntaxCheckOut item) {
     "IsValid": boolToJson(item.isValid)
   };
 }
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TreeShape
+typedef TreeShape = List<int>;
+
+List<TreeShape> listListIntFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(listIntFromJson).toList();
+}
+
+List<dynamic> listListIntToJson(List<TreeShape> item) {
+  return item.map(listIntToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TreeFieldBlock
+class TreeFieldBlock {
+  final List<TreeShape> shapeProposals;
+  final List<TextOrMath> eventsProposals;
+  final int iD;
+
+  const TreeFieldBlock(this.shapeProposals, this.eventsProposals, this.iD);
+
+  @override
+  String toString() {
+    return "TreeFieldBlock($shapeProposals, $eventsProposals, $iD)";
+  }
+}
+
+TreeFieldBlock treeFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TreeFieldBlock(listListIntFromJson(json['ShapeProposals']),
+      listTextOrMathFromJson(json['EventsProposals']), intFromJson(json['ID']));
+}
+
+JSON treeFieldBlockToJson(TreeFieldBlock item) {
+  return {
+    "ShapeProposals": listListIntToJson(item.shapeProposals),
+    "EventsProposals": listTextOrMathToJson(item.eventsProposals),
+    "ID": intToJson(item.iD)
+  };
+}

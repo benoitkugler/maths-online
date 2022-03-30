@@ -34,9 +34,14 @@ class NumberField extends StatelessWidget {
   final Color _color;
   final NumberController _controller;
   final bool outlined;
+  final bool autofocus;
+  final void Function(String)? onSubmitted;
 
   const NumberField(this._color, this._controller,
-      {Key? key, this.outlined = false})
+      {Key? key,
+      this.outlined = false,
+      this.autofocus = false,
+      this.onSubmitted})
       : super(key: key);
 
   @override
@@ -46,7 +51,8 @@ class NumberField extends StatelessWidget {
       child: SizedBox(
         width: 50,
         child: TextField(
-          // onSubmitted: (_) => onDone(),
+          onSubmitted: onSubmitted,
+          autofocus: autofocus,
           controller: _controller.textController,
           decoration: InputDecoration(
             isDense: true,

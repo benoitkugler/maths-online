@@ -192,6 +192,18 @@ type FunctionPointsFieldBlock struct {
 	ID     int
 }
 
+// TreeShape defines the shape of a "regular" tree,
+// specifying the number of children for each level
+type TreeShape []int
+
+// TreeFieldBlock asks to choose the shape and complete a
+// probability tree
+type TreeFieldBlock struct {
+	ShapeProposals  []TreeShape
+	EventsProposals []TextOrMath
+	ID              int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
