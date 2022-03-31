@@ -231,6 +231,17 @@ JSON radioAnswerToJson(RadioAnswer item) {
   return {"Index": intToJson(item.index)};
 }
 
+List<TreeNodeAnswer> listTreeNodeAnswerFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(treeNodeAnswerFromJson).toList();
+}
+
+List<dynamic> listTreeNodeAnswerToJson(List<TreeNodeAnswer> item) {
+  return item.map(treeNodeAnswerToJson).toList();
+}
+
 List<double> listDoubleFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -240,6 +251,55 @@ List<double> listDoubleFromJson(dynamic json) {
 
 List<dynamic> listDoubleToJson(List<double> item) {
   return item.map(doubleToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TreeNodeAnswer
+class TreeNodeAnswer {
+  final List<TreeNodeAnswer> children;
+  final List<double> probabilities;
+  final int value;
+
+  const TreeNodeAnswer(this.children, this.probabilities, this.value);
+
+  @override
+  String toString() {
+    return "TreeNodeAnswer($children, $probabilities, $value)";
+  }
+}
+
+TreeNodeAnswer treeNodeAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TreeNodeAnswer(listTreeNodeAnswerFromJson(json['Children']),
+      listDoubleFromJson(json['Probabilities']), intFromJson(json['Value']));
+}
+
+JSON treeNodeAnswerToJson(TreeNodeAnswer item) {
+  return {
+    "Children": listTreeNodeAnswerToJson(item.children),
+    "Probabilities": listDoubleToJson(item.probabilities),
+    "Value": intToJson(item.value)
+  };
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TreeAnswer
+class TreeAnswer implements Answer {
+  final TreeNodeAnswer root;
+
+  const TreeAnswer(this.root);
+
+  @override
+  String toString() {
+    return "TreeAnswer($root)";
+  }
+}
+
+TreeAnswer treeAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TreeAnswer(treeNodeAnswerFromJson(json['Root']));
+}
+
+JSON treeAnswerToJson(TreeAnswer item) {
+  return {"Root": treeNodeAnswerToJson(item.root)};
 }
 
 bool boolFromJson(dynamic json) => json as bool;
@@ -309,6 +369,8 @@ Answer answerFromJson(dynamic json_) {
     case 7:
       return radioAnswerFromJson(data);
     case 8:
+      return treeAnswerFromJson(data);
+    case 9:
       return variationTableAnswerFromJson(data);
     default:
       throw ("unexpected type");
@@ -332,8 +394,10 @@ JSON answerToJson(Answer item) {
     return {'Kind': 6, 'Data': pointAnswerToJson(item)};
   } else if (item is RadioAnswer) {
     return {'Kind': 7, 'Data': radioAnswerToJson(item)};
+  } else if (item is TreeAnswer) {
+    return {'Kind': 8, 'Data': treeAnswerToJson(item)};
   } else if (item is VariationTableAnswer) {
-    return {'Kind': 8, 'Data': variationTableAnswerToJson(item)};
+    return {'Kind': 9, 'Data': variationTableAnswerToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -887,6 +951,48 @@ JSON textBlockToJson(TextBlock item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.TreeShape
+typedef TreeShape = List<int>;
+
+List<TreeShape> listListIntFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(listIntFromJson).toList();
+}
+
+List<dynamic> listListIntToJson(List<TreeShape> item) {
+  return item.map(listIntToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.TreeFieldBlock
+class TreeFieldBlock implements Block {
+  final List<TreeShape> shapeProposals;
+  final List<TextOrMath> eventsProposals;
+  final int iD;
+
+  const TreeFieldBlock(this.shapeProposals, this.eventsProposals, this.iD);
+
+  @override
+  String toString() {
+    return "TreeFieldBlock($shapeProposals, $eventsProposals, $iD)";
+  }
+}
+
+TreeFieldBlock treeFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TreeFieldBlock(listListIntFromJson(json['ShapeProposals']),
+      listTextOrMathFromJson(json['EventsProposals']), intFromJson(json['ID']));
+}
+
+JSON treeFieldBlockToJson(TreeFieldBlock item) {
+  return {
+    "ShapeProposals": listListIntToJson(item.shapeProposals),
+    "EventsProposals": listTextOrMathToJson(item.eventsProposals),
+    "ID": intToJson(item.iD)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumnNumber
 class VariationColumnNumber {
   final double x;
@@ -1012,8 +1118,10 @@ Block blockFromJson(dynamic json_) {
     case 13:
       return textBlockFromJson(data);
     case 14:
-      return variationTableBlockFromJson(data);
+      return treeFieldBlockFromJson(data);
     case 15:
+      return variationTableBlockFromJson(data);
+    case 16:
       return variationTableFieldBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -1049,10 +1157,12 @@ JSON blockToJson(Block item) {
     return {'Kind': 12, 'Data': signTableBlockToJson(item)};
   } else if (item is TextBlock) {
     return {'Kind': 13, 'Data': textBlockToJson(item)};
+  } else if (item is TreeFieldBlock) {
+    return {'Kind': 14, 'Data': treeFieldBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 14, 'Data': variationTableBlockToJson(item)};
+    return {'Kind': 15, 'Data': variationTableBlockToJson(item)};
   } else if (item is VariationTableFieldBlock) {
-    return {'Kind': 15, 'Data': variationTableFieldBlockToJson(item)};
+    return {'Kind': 16, 'Data': variationTableFieldBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -1209,47 +1319,5 @@ JSON questionSyntaxCheckOutToJson(QuestionSyntaxCheckOut item) {
   return {
     "Reason": stringToJson(item.reason),
     "IsValid": boolToJson(item.isValid)
-  };
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.TreeShape
-typedef TreeShape = List<int>;
-
-List<TreeShape> listListIntFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(listIntFromJson).toList();
-}
-
-List<dynamic> listListIntToJson(List<TreeShape> item) {
-  return item.map(listIntToJson).toList();
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.TreeFieldBlock
-class TreeFieldBlock {
-  final List<TreeShape> shapeProposals;
-  final List<TextOrMath> eventsProposals;
-  final int iD;
-
-  const TreeFieldBlock(this.shapeProposals, this.eventsProposals, this.iD);
-
-  @override
-  String toString() {
-    return "TreeFieldBlock($shapeProposals, $eventsProposals, $iD)";
-  }
-}
-
-TreeFieldBlock treeFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return TreeFieldBlock(listListIntFromJson(json['ShapeProposals']),
-      listTextOrMathFromJson(json['EventsProposals']), intFromJson(json['ID']));
-}
-
-JSON treeFieldBlockToJson(TreeFieldBlock item) {
-  return {
-    "ShapeProposals": listListIntToJson(item.shapeProposals),
-    "EventsProposals": listTextOrMathToJson(item.eventsProposals),
-    "ID": intToJson(item.iD)
   };
 }

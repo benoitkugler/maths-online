@@ -50,6 +50,7 @@ var (
 	// TODO: à tester
 	_ fieldInstance = FigureVectorPairFieldInstance{}
 	_ fieldInstance = FigureAffineLineFieldInstance{}
+	_ fieldInstance = TreeFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only
@@ -214,6 +215,10 @@ func (f DropDownFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect b
 	return RadioFieldInstance(f).evaluateAnswer(answer)
 }
 
+func deterministicRand(i, j int) *rand.Rand {
+	return rand.New(rand.NewSource(int64(i*1000 + j)))
+}
+
 // OrderedListFieldInstance asks the student to reorder part of the
 // given symbols
 type OrderedListFieldInstance struct {
@@ -230,7 +235,7 @@ func (olf OrderedListFieldInstance) fieldID() int { return olf.ID }
 func (olf OrderedListFieldInstance) proposals() (out []StringOrExpression) {
 	out = append(append(out, olf.Answer...), olf.AdditionalProposals...)
 	// shuffle in a deterministic way
-	rd := rand.New(rand.NewSource(int64(len(olf.Answer)*1000 + len(olf.AdditionalProposals))))
+	rd := deterministicRand(len(olf.Answer), len(olf.AdditionalProposals))
 	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
 	return out
 }
@@ -476,13 +481,26 @@ func (f VariationTableFieldInstance) validateAnswerSyntax(answer client.Answer) 
 	return nil
 }
 
-func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	ans := answer.(client.VariationTableAnswer)
-	for i := range f.Answer.Xs {
-		if ans.Xs[i] != f.Answer.Xs[i] || ans.Fxs[i] != f.Answer.Fxs[i] {
+func areNumbersEqual(s1, s2 []float64) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for i, v := range s1 {
+		if s2[i] != v {
 			return false
 		}
-		if i < len(f.Answer.Xs)-1 && !f.Answer.inferAlignment(i) != ans.Arrows[i] {
+	}
+	return true
+}
+
+func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.VariationTableAnswer)
+	if !(areNumbersEqual(ans.Xs, f.Answer.Xs) && areNumbersEqual(ans.Fxs, f.Answer.Fxs)) {
+		return false
+	}
+
+	for i, arrow := range ans.Arrows {
+		if !f.Answer.inferAlignment(i) != arrow {
 			return false
 		}
 	}
@@ -538,4 +556,83 @@ func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 		}
 	}
 	return true
+}
+
+type TreeFieldInstance struct {
+	EventsProposals []client.TextOrMath
+	Answer          client.TreeAnswer
+	ID              int
+}
+
+func shape(tree client.TreeNodeAnswer) (out client.TreeShape) {
+	if len(tree.Children) == 0 {
+		return nil
+	}
+	levelWidth := len(tree.Children)
+	return append(client.TreeShape{levelWidth}, shape(tree.Children[0])...)
+}
+
+func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
+	realShape := shape(f.Answer.Root)
+	alternative1 := append(client.TreeShape(nil), realShape...)
+	alternative1[0] += 1
+	alternative2 := append(client.TreeShape(nil), realShape...)
+	alternative2[len(alternative2)-1] += 1
+	out := []client.TreeShape{
+		realShape,
+		append(realShape, realShape[0]),
+		alternative1,
+		alternative2,
+	}
+
+	rd := deterministicRand(len(f.EventsProposals), f.ID)
+	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	return out
+}
+
+func (f TreeFieldInstance) fieldID() int { return f.ID }
+
+func (f TreeFieldInstance) toClient() client.Block {
+	return client.TreeFieldBlock{
+		ID:              f.ID,
+		ShapeProposals:  f.shapeProposals(),
+		EventsProposals: f.EventsProposals,
+	}
+}
+
+func (f TreeFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.TreeAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected TreeAnswer, got %T", answer),
+		}
+	}
+
+	return nil
+}
+
+func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.TreeAnswer)
+
+	var isNodeCorrect func(exp, got client.TreeNodeAnswer) bool
+	isNodeCorrect = func(exp, got client.TreeNodeAnswer) bool {
+		if exp.Value != got.Value {
+			return false
+		}
+		if !areNumbersEqual(exp.Probabilities, got.Probabilities) {
+			return false
+		}
+		if len(exp.Children) != len(got.Children) {
+			return false
+		}
+		for i := range exp.Children {
+			if !isNodeCorrect(exp.Children[i], got.Children[i]) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return isNodeCorrect(f.Answer.Root, ans.Root)
 }

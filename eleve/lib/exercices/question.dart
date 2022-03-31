@@ -11,6 +11,7 @@ import 'package:eleve/exercices/ordered_list.dart';
 import 'package:eleve/exercices/radio.dart';
 import 'package:eleve/exercices/repere.dart';
 import 'package:eleve/exercices/sign_table.dart';
+import 'package:eleve/exercices/tree.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:eleve/exercices/variation_table_field.dart';
@@ -80,6 +81,8 @@ class _ContentBuilder {
             VariationTableController(block.length, onChange);
       } else if (block is FunctionPointsFieldBlock) {
         controllers[block.iD] = FunctionPointsController(block, onChange);
+      } else if (block is TreeFieldBlock) {
+        controllers[block.iD] = TreeController(block, onChange);
       }
 
       // TODO: handle more fields
@@ -254,6 +257,15 @@ class _ContentBuilder {
     rows.add(Center(child: FunctionPoints(ct, key: key)));
   }
 
+  void _handleTreeFieldBlock(TreeFieldBlock element) {
+    final ct = _controllers[element.iD] as TreeController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(Center(child: TreeField(_color, ct)));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -289,6 +301,8 @@ class _ContentBuilder {
         _handleVariationTableFieldBlock(element);
       } else if (element is FunctionPointsFieldBlock) {
         _handleFunctionPointsFieldBlock(element);
+      } else if (element is TreeFieldBlock) {
+        _handleTreeFieldBlock(element);
       } else {
         // TODO:
       }

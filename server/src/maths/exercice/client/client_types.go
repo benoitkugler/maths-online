@@ -57,6 +57,7 @@ func (FigureVectorFieldBlock) isBlock()     {}
 func (FigureVectorPairFieldBlock) isBlock() {}
 func (VariationTableFieldBlock) isBlock()   {}
 func (FunctionPointsFieldBlock) isBlock()   {}
+func (TreeFieldBlock) isBlock()             {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -219,6 +220,7 @@ func (DoublePointAnswer) isAnswer()     {}
 func (DoublePointPairAnswer) isAnswer() {}
 func (VariationTableAnswer) isAnswer()  {}
 func (FunctionPointsAnswer) isAnswer()  {}
+func (TreeAnswer) isAnswer()            {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -265,6 +267,16 @@ type VariationTableAnswer struct {
 
 type FunctionPointsAnswer struct {
 	Fxs []int
+}
+
+type TreeNodeAnswer struct {
+	Children      []TreeNodeAnswer
+	Probabilities []float64 // edges, same length as Children
+	Value         int       // index into the proposals
+}
+
+type TreeAnswer struct {
+	Root TreeNodeAnswer
 }
 
 // QuestionAnswersIn map the field ids to their answer

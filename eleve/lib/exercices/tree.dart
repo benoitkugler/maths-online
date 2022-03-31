@@ -31,8 +31,7 @@ class TreeController extends FieldController {
 
   @override
   Answer getData() {
-    // TODO: implement getData
-    throw UnimplementedError();
+    return TreeAnswer(controllers!.getData());
   }
 }
 
@@ -86,7 +85,8 @@ class _NodeController {
   }
 
   bool hasValidData() {
-    if (valueController == null || !valueController!.hasValidData()) {
+    if (!isRoot &&
+        (valueController == null || !valueController!.hasValidData())) {
       return false;
     }
     if (edgesController == null ||
@@ -95,23 +95,48 @@ class _NodeController {
     }
     return children.every((element) => element.hasValidData());
   }
+
+  // only valid if hasValidData is true
+  // by convention, the root is expected to has 0 as value
+  TreeNodeAnswer getData() {
+    final childrenAnswers = children.map((e) => e.getData()).toList();
+    final edgesAnswers = edgesController!.map((e) => e.getNumber()).toList();
+    return TreeNodeAnswer(
+        childrenAnswers, edgesAnswers, isRoot ? 0 : valueController!.index!);
+  }
 }
 
-class Tree extends StatefulWidget {
+class TreeField extends StatefulWidget {
   final Color color;
   final TreeController controller;
 
-  const Tree(this.color, this.controller, {Key? key}) : super(key: key);
+  const TreeField(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
-  _TreeState createState() => _TreeState();
+  _TreeFieldState createState() => _TreeFieldState();
 }
 
-class _TreeState extends State<Tree> {
+class _TreeFieldState extends State<TreeField> {
   void _onSelectShape(int? shapeIndex) {
     setState(() {
       widget.controller.setShape(shapeIndex);
     });
+  }
+
+  void _showShapeSelection() async {
+    final ct = widget.controller;
+    final selected = await Navigator.of(context).push(
+      MaterialPageRoute<int?>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(),
+          body: _ShapeSelection(
+              widget.color, ct.data.shapeProposals, ct.selectedShape, (p0) {
+            Navigator.of(context).pop(p0);
+          }),
+        ),
+      ),
+    );
+    _onSelectShape(selected);
   }
 
   @override
@@ -119,21 +144,7 @@ class _TreeState extends State<Tree> {
     final ct = widget.controller;
     return ct.selectedShape == null
         ? InkWell(
-            onTap: () async {
-              final selected = await Navigator.of(context).push(
-                MaterialPageRoute<int?>(
-                  builder: (context) => Scaffold(
-                    appBar: AppBar(),
-                    body: _ShapeSelection(
-                        widget.color, ct.data.shapeProposals, ct.selectedShape,
-                        (p0) {
-                      Navigator.of(context).pop(p0);
-                    }),
-                  ),
-                ),
-              );
-              _onSelectShape(selected);
-            },
+            onTap: _showShapeSelection,
             child: Container(
               padding: const EdgeInsets.all(12),
               child: const Text(
@@ -146,17 +157,18 @@ class _TreeState extends State<Tree> {
               ),
             ),
           )
-        : _OneTree(false, widget.color, ct.controllers!);
+        : _OneTree(false, widget.color, _showShapeSelection, ct.controllers!);
   }
 }
 
 class _OneTree extends StatelessWidget {
   final bool isSelected;
   final Color color;
-
+  final void Function()? onBack;
   final _NodeController controller;
 
-  const _OneTree(this.isSelected, this.color, this.controller, {Key? key})
+  const _OneTree(this.isSelected, this.color, this.onBack, this.controller,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -173,13 +185,33 @@ class _OneTree extends StatelessWidget {
             shrinkWrap: true,
             scrollDirection: Axis.horizontal,
             children: [
-              Container(
-                  padding: const EdgeInsets.symmetric(vertical: boxPadding),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: color),
-                      borderRadius: BorderRadius.circular(5),
-                      color: isSelected ? Colors.white.withOpacity(0.3) : null),
-                  child: _Node(color, controller))
+              Stack(
+                children: [
+                  Container(
+                      padding: const EdgeInsets.symmetric(vertical: boxPadding),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: color),
+                          borderRadius: BorderRadius.circular(5),
+                          color: isSelected
+                              ? Colors.white.withOpacity(0.3)
+                              : null),
+                      child: _Node(color, controller)),
+                  if (onBack != null)
+                    Positioned(
+                      top: 3,
+                      left: 3,
+                      child: FloatingActionButton(
+                          mini: true,
+                          onPressed: onBack,
+                          tooltip: "Changer de forme",
+                          child: const Icon(
+                            IconData(0xe092,
+                                fontFamily: 'MaterialIcons',
+                                matchTextDirection: true),
+                          )),
+                    ),
+                ],
+              )
             ]),
       ),
     );
@@ -206,7 +238,7 @@ class _ShapeSelection extends StatelessWidget {
             proposals.length,
             (index) => InkWell(
                   onTap: () => onSelect(index),
-                  child: _OneTree(index == selected, color,
+                  child: _OneTree(index == selected, color, null,
                       _NodeController.staticFromShape(proposals[index], true)),
                 )),
       ),
@@ -357,8 +389,8 @@ class _EdgesPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(covariant _EdgesPainter oldDelegate) {
+    return oldDelegate != this;
   }
 
   @override

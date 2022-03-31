@@ -954,6 +954,49 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 
 	{
+		Title: "Probabilités", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text(`Construire l’arbre pondéré associé à l’expérience aléatoire suivante :
+on lance une pièce de monnaie truquée deux fois d’affilé, la probabilité d’obtenir Pile (P) est de 0,3.`),
+			}},
+			TextInstance{IsHint: true, Parts: []TextOrMaths{
+				text(`On ordonnera les issues par ordre alphabétique.`),
+			}},
+			TreeFieldInstance{
+				ID: 0,
+				EventsProposals: []client.TextOrMath{
+					{Text: "F"},
+					{Text: "P"},
+					{Text: "?"},
+				},
+				Answer: client.TreeAnswer{
+					Root: client.TreeNodeAnswer{
+						Probabilities: []float64{0.7, 0.3},
+						Children: []client.TreeNodeAnswer{
+							{
+								Value:         0,
+								Probabilities: []float64{0.7, 0.3},
+								Children: []client.TreeNodeAnswer{
+									{Value: 0},
+									{Value: 1},
+								},
+							},
+							{
+								Value:         1,
+								Probabilities: []float64{0.7, 0.3},
+								Children: []client.TreeNodeAnswer{
+									{Value: 0},
+									{Value: 1},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+
+	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
 			TextInstance{Parts: []TextOrMaths{
 				text("Écrire sous une seule fraction : "),
