@@ -13,7 +13,8 @@ final bm = buildMode();
 
 void main() {
   final audio = Audio();
-  audio.setSongs(["GrooveBow.mp3", "NouvelleTrajectoire.mp3"]);
+  // start with some defaults
+  audio.setSongs([0, 1]);
   runApp(MyApp(audio));
 }
 
@@ -21,6 +22,13 @@ class MyApp extends StatelessWidget {
   final Audio audioPlayer;
 
   const MyApp(this.audioPlayer, {Key? key}) : super(key: key);
+
+  void _showAudioSettings(BuildContext context) {
+    final ct = audioPlayer.playlist.toList();
+    final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
+        builder: (_) => Scaffold(appBar: AppBar(), body: Playlist(ct))));
+    onPop.then((_) => audioPlayer.setSongs(ct));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +53,15 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Isiro'),
+          actions: [
+            Builder(
+              builder: (context) => IconButton(
+                onPressed: () => _showAudioSettings(context),
+                icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
+                tooltip: "Choisir la musique",
+              ),
+            )
+          ],
         ),
         body: _HomePage(audioPlayer),
         // body: Center(
