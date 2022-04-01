@@ -93,6 +93,10 @@ func serveProfApp(c echo.Context) error {
 	return c.File("static/prof/index.html")
 }
 
+func serveProfLoopbackApp(c echo.Context) error {
+	return c.File("static/prof_loopback/index.html")
+}
+
 func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
@@ -104,6 +108,10 @@ func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	e.GET("/test-eleve", serveEleveApp, noCache)
 	e.GET("/test-eleve/", serveEleveApp, noCache)
 	e.Group("/test-eleve/*", middleware.Gzip()).Static("/*", "static/eleve")
+
+	e.GET("/prof-loopback-app", serveProfLoopbackApp, noCache)
+	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
+	e.Group("/prof-loopback-app/*", middleware.Gzip()).Static("/*", "static/prof_loopback")
 
 	// trivialpoursuit game server
 	e.POST("/trivial/launch_game", ct.LaunchGame)

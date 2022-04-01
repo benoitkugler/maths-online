@@ -6,8 +6,6 @@ import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
-
 final bm = buildMode();
 // final bm = BuildMode.dev;
 
@@ -15,13 +13,32 @@ void main() {
   final audio = Audio();
   // start with some defaults
   audio.setSongs([0, 1]);
-  runApp(MyApp(audio));
+  runApp(EleveApp(audio));
 }
 
-class MyApp extends StatelessWidget {
+const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
+
+final theme = ThemeData.dark().copyWith(
+  scaffoldBackgroundColor: darkBlue,
+  cardTheme:
+      ThemeData.dark().cardTheme.copyWith(color: darkBlue.withOpacity(0.5)),
+);
+
+const localizations = [
+  GlobalMaterialLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+];
+
+const locales = [
+  Locale('fr', ''), // French, no country code
+  Locale('en', ''), // English, no country code
+];
+
+class EleveApp extends StatelessWidget {
   final Audio audioPlayer;
 
-  const MyApp(this.audioPlayer, {Key? key}) : super(key: key);
+  const EleveApp(this.audioPlayer, {Key? key}) : super(key: key);
 
   void _showAudioSettings(BuildContext context) {
     final ct = audioPlayer.playlist.toList();
@@ -34,22 +51,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Isiro',
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: darkBlue,
-        cardTheme: ThemeData.dark()
-            .cardTheme
-            .copyWith(color: darkBlue.withOpacity(0.5)),
-      ),
+      theme: theme,
       debugShowCheckedModeBanner: false,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('fr', ''), // French, no country code
-        Locale('en', ''), // English, no country code
-      ],
+      localizationsDelegates: localizations,
+      supportedLocales: locales,
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Isiro'),
