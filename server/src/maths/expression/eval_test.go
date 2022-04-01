@@ -15,6 +15,25 @@ func TestEvalMissingVariable(t *testing.T) {
 	_ = err.Error()
 }
 
+func TestPrecision(t *testing.T) {
+	if !AreFloatEqual(MustEvaluate("3 * (1 - (0.25 + 0.1)) / 4", nil), 0.4875) {
+		t.Fatal("precision error")
+	}
+
+	// Note : we could use math.Big with a large precision to better handle
+	// floating point arithmetic issues
+	// b := big.NewFloat(0.25)
+	// b.SetPrec(100)
+	// b.Add(b, big.NewFloat(0.1))
+	// fmt.Println(b)
+	// b.Sub(big.NewFloat(1), b)
+	// fmt.Println(b)
+	// b.Mul(big.NewFloat(0).SetPrec(100).SetInt(big.NewInt(3)), b)
+	// fmt.Println(b)
+	// b.Quo(b, big.NewFloat(4))
+	// fmt.Println(b.Float64())
+}
+
 func Test_Expression_eval(t *testing.T) {
 	tests := []struct {
 		expr     string
@@ -24,6 +43,9 @@ func Test_Expression_eval(t *testing.T) {
 		{
 			"3 + 2", nil, 5,
 		},
+		// {
+		// 	"3 * (1 - (0.25 + 0.1)) / 4", nil, 0.4875,
+		// },
 		{
 			"3 + exp(0)", nil, 4,
 		},

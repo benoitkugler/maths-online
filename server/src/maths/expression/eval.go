@@ -64,6 +64,13 @@ func (expr *Expression) Closure(x Variable) func(float64) float64 {
 	}
 }
 
+// AreFloatEqual returns `true` if v1 and v2 are equal up to
+// a small threshold, so that floating point rouding errors are ignored
+func AreFloatEqual(v1, v2 float64) bool {
+	const floatPrec = 1e-8
+	return math.Abs(v1-v2) < floatPrec
+}
+
 // Evaluate uses the given variables values to evaluate the formula.
 // If a variable is referenced in the expression but not in the bindings,
 // `MissingVariableErr` is returned.

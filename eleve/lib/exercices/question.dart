@@ -8,10 +8,11 @@ import 'package:eleve/exercices/function_graph.dart';
 import 'package:eleve/exercices/function_points.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/ordered_list.dart';
+import 'package:eleve/exercices/probas_tree.dart';
 import 'package:eleve/exercices/radio.dart';
 import 'package:eleve/exercices/repere.dart';
 import 'package:eleve/exercices/sign_table.dart';
-import 'package:eleve/exercices/tree.dart';
+import 'package:eleve/exercices/table.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:eleve/exercices/variation_table_field.dart';
@@ -83,6 +84,8 @@ class _ContentBuilder {
         controllers[block.iD] = FunctionPointsController(block, onChange);
       } else if (block is TreeFieldBlock) {
         controllers[block.iD] = TreeController(block, onChange);
+      } else if (block is TableFieldBlock) {
+        controllers[block.iD] = TableController(block, onChange);
       }
 
       // TODO: handle more fields
@@ -144,6 +147,20 @@ class _ContentBuilder {
     _flushCurrentRow();
 
     rows.add(Center(child: FunctionGraphW(element)));
+  }
+
+  void _handleTableBlock(TableBlock element) {
+    // start a new row
+    _flushCurrentRow();
+
+    rows.add(Center(child: TableSimple(element)));
+  }
+
+  void _handleTableDoubleEntryBlock(TableDoubleEntryBlock element) {
+    // start a new row
+    _flushCurrentRow();
+
+    rows.add(Center(child: TableDoubleEntry(element)));
   }
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
@@ -266,9 +283,20 @@ class _ContentBuilder {
     rows.add(Center(child: TreeField(_color, ct)));
   }
 
+  void _handleTableFieldBlock(TableFieldBlock element) {
+    final ct = _controllers[element.iD] as TableController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(Center(child: TableField(_color, ct)));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
+      // plain widgets
+
       if (element is TextBlock) {
         _handleTextBlock(element);
       } else if (element is FormulaBlock) {
@@ -281,6 +309,13 @@ class _ContentBuilder {
         _handleFigureBlock(element);
       } else if (element is FunctionGraphBlock) {
         _handleFunctionGraphBlock(element);
+      } else if (element is TableBlock) {
+        _handleTableBlock(element);
+      } else if (element is TableDoubleEntryBlock) {
+        _handleTableDoubleEntryBlock(element);
+
+        // editable widgets
+
       } else if (element is NumberFieldBlock) {
         _handleNumberFieldBlock(element);
       } else if (element is ExpressionFieldBlock) {
@@ -303,6 +338,8 @@ class _ContentBuilder {
         _handleFunctionPointsFieldBlock(element);
       } else if (element is TreeFieldBlock) {
         _handleTreeFieldBlock(element);
+      } else if (element is TableFieldBlock) {
+        _handleTableFieldBlock(element);
       } else {
         // TODO:
       }

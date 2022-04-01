@@ -53,10 +53,14 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data TreeAnswer
+		var data TableAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
+		var data TreeAnswer
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 10:
 		var data VariationTableAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -90,10 +94,12 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 6, Data: data}
 	case RadioAnswer:
 		wr = wrapper{Kind: 7, Data: data}
-	case TreeAnswer:
+	case TableAnswer:
 		wr = wrapper{Kind: 8, Data: data}
-	case VariationTableAnswer:
+	case TreeAnswer:
 		wr = wrapper{Kind: 9, Data: data}
+	case VariationTableAnswer:
+		wr = wrapper{Kind: 10, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -170,18 +176,30 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 13:
-		var data TextBlock
+		var data TableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 14:
-		var data TreeFieldBlock
+		var data TableDoubleEntryBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 15:
-		var data VariationTableBlock
+		var data TableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 16:
+		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 17:
+		var data TreeFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 18:
+		var data VariationTableBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 19:
 		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -225,14 +243,20 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 11, Data: data}
 	case SignTableBlock:
 		wr = wrapper{Kind: 12, Data: data}
-	case TextBlock:
+	case TableBlock:
 		wr = wrapper{Kind: 13, Data: data}
-	case TreeFieldBlock:
+	case TableDoubleEntryBlock:
 		wr = wrapper{Kind: 14, Data: data}
-	case VariationTableBlock:
+	case TableFieldBlock:
 		wr = wrapper{Kind: 15, Data: data}
-	case VariationTableFieldBlock:
+	case TextBlock:
 		wr = wrapper{Kind: 16, Data: data}
+	case TreeFieldBlock:
+		wr = wrapper{Kind: 17, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 18, Data: data}
+	case VariationTableFieldBlock:
+		wr = wrapper{Kind: 19, Data: data}
 
 	default:
 		panic("exhaustive switch")

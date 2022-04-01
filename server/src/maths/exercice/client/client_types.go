@@ -40,12 +40,14 @@ type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()           {}
-func (FormulaBlock) isBlock()        {}
-func (VariationTableBlock) isBlock() {}
-func (SignTableBlock) isBlock()      {}
-func (FigureBlock) isBlock()         {}
-func (FunctionGraphBlock) isBlock()  {}
+func (TextBlock) isBlock()             {}
+func (FormulaBlock) isBlock()          {}
+func (VariationTableBlock) isBlock()   {}
+func (SignTableBlock) isBlock()        {}
+func (FigureBlock) isBlock()           {}
+func (FunctionGraphBlock) isBlock()    {}
+func (TableBlock) isBlock()            {}
+func (TableDoubleEntryBlock) isBlock() {}
 
 func (NumberFieldBlock) isBlock()           {}
 func (ExpressionFieldBlock) isBlock()       {}
@@ -58,6 +60,7 @@ func (FigureVectorPairFieldBlock) isBlock() {}
 func (VariationTableFieldBlock) isBlock()   {}
 func (FunctionPointsFieldBlock) isBlock()   {}
 func (TreeFieldBlock) isBlock()             {}
+func (TableFieldBlock) isBlock()            {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -110,6 +113,17 @@ type FigureBlock struct {
 type FunctionGraphBlock struct {
 	Label string
 	Graph functiongrapher.FunctionGraph
+}
+
+type TableBlock struct {
+	Rows     [][]TextOrMath // the first item of each row serves as header
+	NoHeader bool
+}
+
+type TableDoubleEntryBlock struct {
+	HorizontalHeaders []TextOrMath
+	VerticalHeaders   []TextOrMath
+	Values            [][]TextOrMath
 }
 
 // NumberFieldBlock is an answer field where only
@@ -205,6 +219,12 @@ type TreeFieldBlock struct {
 	ID              int
 }
 
+type TableFieldBlock struct {
+	HorizontalHeaders []TextOrMath
+	VerticalHeaders   []TextOrMath
+	ID                int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -221,6 +241,7 @@ func (DoublePointPairAnswer) isAnswer() {}
 func (VariationTableAnswer) isAnswer()  {}
 func (FunctionPointsAnswer) isAnswer()  {}
 func (TreeAnswer) isAnswer()            {}
+func (TableAnswer) isAnswer()           {}
 
 // NumberAnswer is compared with exact float equality
 type NumberAnswer struct {
@@ -277,6 +298,10 @@ type TreeNodeAnswer struct {
 
 type TreeAnswer struct {
 	Root TreeNodeAnswer
+}
+
+type TableAnswer struct {
+	Rows [][]float64
 }
 
 // QuestionAnswersIn map the field ids to their answer

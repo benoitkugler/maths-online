@@ -51,6 +51,7 @@ var (
 	_ fieldInstance = FigureVectorPairFieldInstance{}
 	_ fieldInstance = FigureAffineLineFieldInstance{}
 	_ fieldInstance = TreeFieldInstance{}
+	_ fieldInstance = TableFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only
@@ -77,7 +78,7 @@ func (f NumberFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 }
 
 func (f NumberFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	return f.Answer == answer.(client.NumberAnswer).Value
+	return expression.AreFloatEqual(f.Answer, answer.(client.NumberAnswer).Value)
 }
 
 // ExpressionFieldInstance is an answer field where a single mathematical expression
@@ -486,7 +487,7 @@ func areNumbersEqual(s1, s2 []float64) bool {
 		return false
 	}
 	for i, v := range s1 {
-		if s2[i] != v {
+		if !expression.AreFloatEqual(s2[i], v) {
 			return false
 		}
 	}
@@ -635,4 +636,47 @@ func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool)
 	}
 
 	return isNodeCorrect(f.Answer.Root, ans.Root)
+}
+
+type TableFieldInstance struct {
+	HorizontalHeaders []client.TextOrMath
+	VerticalHeaders   []client.TextOrMath
+	Answer            client.TableAnswer
+	ID                int
+}
+
+func (f TableFieldInstance) fieldID() int { return f.ID }
+
+func (f TableFieldInstance) toClient() client.Block {
+	return client.TableFieldBlock{
+		ID:                f.ID,
+		HorizontalHeaders: f.HorizontalHeaders,
+		VerticalHeaders:   f.VerticalHeaders,
+	}
+}
+
+func (f TableFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.TableAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected TableAnswer, got %T", answer),
+		}
+	}
+
+	return nil
+}
+
+func (f TableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.TableAnswer)
+
+	if len(ans.Rows) != len(f.Answer.Rows) {
+		return false
+	}
+	for i := range f.Answer.Rows {
+		if !areNumbersEqual(f.Answer.Rows[i], ans.Rows[i]) {
+			return false
+		}
+	}
+	return true
 }

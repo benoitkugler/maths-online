@@ -247,6 +247,8 @@ var (
 	_ blockInstance = VariationTableInstance{}
 	_ blockInstance = SignTableInstance{}
 	_ blockInstance = FigureInstance{}
+	_ blockInstance = FunctionVariationGraphInstance{}
+	_ blockInstance = TableInstance{}
 )
 
 // TextInstance is a paragraph of text, which may contain expression or
@@ -346,4 +348,16 @@ func (fg FunctionVariationGraphInstance) toClient() client.Block {
 		Graph: functiongrapher.GraphFromVariations(fg.Xs, fg.Fxs),
 		Label: "y = f(x)",
 	}
+}
+
+type TableInstance client.TableBlock
+
+func (ti TableInstance) toClient() client.Block {
+	return client.TableBlock(ti)
+}
+
+type TableDoubleEntryInstance client.TableDoubleEntryBlock
+
+func (ti TableDoubleEntryInstance) toClient() client.Block {
+	return client.TableDoubleEntryBlock(ti)
 }

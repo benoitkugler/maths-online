@@ -26,16 +26,17 @@ Widget textMath(String content, double fontSize, {Key? key}) {
   );
 }
 
-WidgetSpan _inlineMath(String content, double fontSize, Key? key) {
+WidgetSpan _inlineMath(
+    String content, double fontSize, PlaceholderAlignment aligment, Key? key) {
   return WidgetSpan(
     baseline: TextBaseline.alphabetic,
-    alignment: PlaceholderAlignment.baseline,
+    alignment: aligment,
     child: textMath(content, fontSize, key: key),
   );
 }
 
-List<InlineSpan> buildText(
-    List<TextOrMath> parts, bool isHint, double fontSize) {
+List<InlineSpan> buildText(List<TextOrMath> parts, bool isHint, double fontSize,
+    {bool inTable = false}) {
   final out = <InlineSpan>[];
   if (isHint) {
     fontSize = fontSize - 2;
@@ -43,7 +44,11 @@ List<InlineSpan> buildText(
   for (var part in parts) {
     if (part.isMath) {
       out.add(const TextSpan(text: " "));
-      out.add(_inlineMath(part.text, fontSize, null));
+      out.add(_inlineMath(
+          part.text,
+          fontSize,
+          inTable ? PlaceholderAlignment.middle : PlaceholderAlignment.baseline,
+          null));
       out.add(const TextSpan(text: " "));
     } else {
       out.add(TextSpan(

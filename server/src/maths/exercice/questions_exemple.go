@@ -952,6 +952,97 @@ var PredefinedQuestions = []QuestionInstance{
 			},
 		},
 	},
+	{
+		Title: "Probabilités", Enonce: EnonceInstance{
+			TableInstance{
+				Rows: [][]client.TextOrMath{
+					{
+						{Text: "Issue"}, {Text: "Pique"}, {Text: "Trèfle"}, {Text: "Coeur"}, {Text: "Carreau"}, {Text: "TEST"}, {Text: "TEST"}, {Text: "TEST"},
+					},
+					{
+						{Text: "Probabilité"}, {Text: "0.25", IsMath: true}, {Text: "x", IsMath: true}, {Text: "3x", IsMath: true}, {Text: "0.1", IsMath: true}, {}, {}, {},
+					},
+				},
+			},
+			TextInstance{Parts: []TextOrMaths{text("Quelle est la probabilité de tirer un coeur ?")}},
+			NumberFieldInstance{
+				ID:     0,
+				Answer: mustEvaluate("3 * (1 -(0.25 + 0.1)) / 4"),
+			},
+		},
+	},
+
+	{
+		Title: "Probabilités", Enonce: EnonceInstance{
+			TableDoubleEntryInstance{
+				HorizontalHeaders: []client.TextOrMath{
+					{Text: "Femmes"}, {Text: "Hommes"}, {Text: "Total"},
+				},
+				VerticalHeaders: []client.TextOrMath{
+					{Text: "Inexpérimentés"}, {Text: "Expérimentés"}, {Text: "Total"},
+				},
+				Values: [][]client.TextOrMath{
+					{
+						{Text: "49", IsMath: true}, {Text: "48", IsMath: true}, {Text: "97", IsMath: true},
+					},
+					{
+						{Text: "191", IsMath: true}, {Text: "912", IsMath: true}, {Text: "1103", IsMath: true},
+					},
+					{
+						{Text: "240", IsMath: true}, {Text: "960", IsMath: true}, {Text: "1200", IsMath: true},
+					},
+				},
+			},
+			TextInstance{Parts: []TextOrMaths{
+				text(`On choisit au hasard un employé de l’entreprise. 
+Quel est la probabilité que ce soit un employé inexpérimenté ?`),
+			}},
+			NumberFieldInstance{
+				ID:     0,
+				Answer: mustEvaluate("97/1200"),
+			},
+			TextInstance{Parts: []TextOrMaths{text("\n\nUn expérimenté si on sait que c’est un homme ?")}},
+			NumberFieldInstance{
+				ID:     1,
+				Answer: mustEvaluate("48/960"),
+			},
+			TextInstance{Parts: []TextOrMaths{text("\n\nQuelle est la probabilité que ce soit une femme ou un employé expérimenté ?")}},
+			NumberFieldInstance{
+				ID:     2,
+				Answer: mustEvaluate("240/1200 + 912/1200"),
+			},
+		},
+	},
+
+	{
+		Title: "Probabilités", Enonce: EnonceInstance{
+			TextInstance{Parts: []TextOrMaths{
+				text(`Compléter ce tableau sachant que : l’entreprise comporte 1200 salariés dont 960 hommes. 
+Parmi les hommes, 48 sont inexpérimentés et parmi les femmes, 191 sont expérimentées.`),
+			}},
+			TableFieldInstance{
+				HorizontalHeaders: []client.TextOrMath{
+					{Text: "Femmes"}, {Text: "Hommes"}, {Text: "Total"},
+				},
+				VerticalHeaders: []client.TextOrMath{
+					{Text: "Inexpérimentés"}, {Text: "Expérimentés"}, {Text: "Total"},
+				},
+				Answer: client.TableAnswer{
+					Rows: [][]float64{
+						{
+							49, 48, 97,
+						},
+						{
+							191, 912, 1103,
+						},
+						{
+							240, 960, 1200,
+						},
+					},
+				},
+			},
+		},
+	},
 
 	{
 		Title: "Probabilités", Enonce: EnonceInstance{
