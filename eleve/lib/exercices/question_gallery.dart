@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
 import 'package:eleve/exercices/types.gen.dart';
-import 'package:eleve/trivialpoursuit/events.gen.dart' as game;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -95,23 +94,12 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     ));
   }
 
-  NotificationListener _buildQuestion(Question question, BuildContext context) {
-    return NotificationListener<CheckQuestionSyntaxeNotification>(
-      onNotification: (v) {
-        _checkSyntax(v, context);
-        return true;
-      },
-      child: NotificationListener<ValidQuestionNotification>(
-        onNotification: (v) {
-          _validate(v, context);
-          return true;
-        },
-        child: QuestionPage(
-            question,
-            game.Categorie
-                .values[Random().nextInt(game.Categorie.values.length)]),
-      ),
-    );
+  Widget _buildQuestion(Question question, BuildContext context) {
+    return QuestionPage.withEvents(
+        (v) => _checkSyntax(v, context),
+        (v) => _validate(v, context),
+        question,
+        Color(Random().nextInt(1 << 32)));
   }
 
   void _showSummary() {
@@ -145,7 +133,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
         padding: const EdgeInsets.all(8.0),
         child: PageView(
           controller: _controller,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           children: questions.map((q) => _buildQuestion(q, context)).toList(),
         ),
       ),

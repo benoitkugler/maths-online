@@ -16,8 +16,6 @@ import 'package:eleve/exercices/table.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:eleve/exercices/variation_table_field.dart';
-import 'package:eleve/trivialpoursuit/categories.dart';
-import 'package:eleve/trivialpoursuit/events.gen.dart' as events;
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -459,9 +457,29 @@ class _OptionScrollListState extends State<_OptionScrollList> {
 
 class QuestionPage extends StatefulWidget {
   final Question question;
-  final events.Categorie categorie;
-  const QuestionPage(this.question, this.categorie, {Key? key})
-      : super(key: key);
+  final Color color;
+  const QuestionPage(this.question, this.color, {Key? key}) : super(key: key);
+
+  static Widget withEvents(
+    void Function(CheckQuestionSyntaxeNotification) onCheckSyntax,
+    void Function(ValidQuestionNotification) onValid,
+    Question question,
+    Color color,
+  ) {
+    return NotificationListener<CheckQuestionSyntaxeNotification>(
+      onNotification: (v) {
+        onCheckSyntax(v);
+        return true;
+      },
+      child: NotificationListener<ValidQuestionNotification>(
+        onNotification: (v) {
+          onValid(v);
+          return true;
+        },
+        child: QuestionPage(question, color),
+      ),
+    );
+  }
 
   @override
   State<QuestionPage> createState() => _QuestionPageState();
@@ -478,8 +496,8 @@ class _QuestionPageState extends State<QuestionPage> {
       setState(() {});
     });
 
-    builder = _ContentBuilder(_emitCheckSyntax, widget.question.enonce,
-        _controllers, widget.categorie.color);
+    builder = _ContentBuilder(
+        _emitCheckSyntax, widget.question.enonce, _controllers, widget.color);
     builder!.build();
 
     super.initState();
@@ -508,7 +526,7 @@ class _QuestionPageState extends State<QuestionPage> {
   Widget build(BuildContext context) {
     final shadows = [
       Shadow(
-          color: widget.categorie.color.withOpacity(0.9),
+          color: widget.color.withOpacity(0.9),
           offset: const Offset(2, -2),
           blurRadius: 1.3)
     ];
@@ -543,8 +561,7 @@ class _QuestionPageState extends State<QuestionPage> {
               ElevatedButton(
                 onPressed:
                     areAnswersValid ? () => answers().dispatch(context) : null,
-                style:
-                    ElevatedButton.styleFrom(primary: widget.categorie.color),
+                style: ElevatedButton.styleFrom(primary: widget.color),
                 child: const Text(
                   "Valider",
                   style: TextStyle(fontSize: 18),
@@ -552,7 +569,7 @@ class _QuestionPageState extends State<QuestionPage> {
               ),
             )),
           spacing,
-          TimeoutBar(const Duration(seconds: 60), widget.categorie.color),
+          TimeoutBar(const Duration(seconds: 60), widget.color),
           spacing,
           const Text("", style: TextStyle(fontSize: 16)),
         ],
