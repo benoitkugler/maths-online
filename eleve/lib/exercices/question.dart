@@ -33,7 +33,7 @@ WidgetSpan _inlineMath(String content, double fontSize) {
   );
 }
 
-/// utility class used to layout the Block
+/// utility class used to layout the blocks
 class _ContentBuilder {
   final void Function(int) onFieldDone;
   final List<Block> _content;
@@ -455,17 +455,20 @@ class _OptionScrollListState extends State<_OptionScrollList> {
   }
 }
 
-class QuestionPage extends StatefulWidget {
+class QuestionPage extends StatelessWidget {
   final Question question;
   final Color color;
-  const QuestionPage(this.question, this.color, {Key? key}) : super(key: key);
+  final void Function(CheckQuestionSyntaxeNotification) onCheckSyntax;
+  final void Function(ValidQuestionNotification) onValid;
+  final bool showTimeout;
 
-  static Widget withEvents(
-    void Function(CheckQuestionSyntaxeNotification) onCheckSyntax,
-    void Function(ValidQuestionNotification) onValid,
-    Question question,
-    Color color,
-  ) {
+  const QuestionPage(
+      this.question, this.color, this.onCheckSyntax, this.onValid,
+      {Key? key, this.showTimeout = true})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return NotificationListener<CheckQuestionSyntaxeNotification>(
       onNotification: (v) {
         onCheckSyntax(v);
@@ -476,22 +479,43 @@ class QuestionPage extends StatefulWidget {
           onValid(v);
           return true;
         },
-        child: QuestionPage(question, color),
+        child: _QuestionPage(question, color, showTimeout),
       ),
     );
   }
-
-  @override
-  State<QuestionPage> createState() => _QuestionPageState();
 }
 
-class _QuestionPageState extends State<QuestionPage> {
+class _QuestionPage extends StatefulWidget {
+  final Question question;
+  final Color color;
+  final bool showTimeout;
+  const _QuestionPage(this.question, this.color, this.showTimeout, {Key? key})
+      : super(key: key);
+
+  @override
+  State<_QuestionPage> createState() => _QuestionPageState();
+}
+
+class _QuestionPageState extends State<_QuestionPage> {
   late Map<int, FieldController> _controllers;
 
   _ContentBuilder? builder;
 
   @override
   void initState() {
+    _buildFields();
+
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(_QuestionPage oldWidget) {
+    _buildFields();
+
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _buildFields() {
     _controllers = _ContentBuilder.initControllers(widget.question.enonce, () {
       setState(() {});
     });
@@ -499,8 +523,6 @@ class _QuestionPageState extends State<QuestionPage> {
     builder = _ContentBuilder(
         _emitCheckSyntax, widget.question.enonce, _controllers, widget.color);
     builder!.build();
-
-    super.initState();
   }
 
   bool get areAnswersValid =>
@@ -568,10 +590,12 @@ class _QuestionPageState extends State<QuestionPage> {
                 ),
               ),
             )),
-          spacing,
-          TimeoutBar(const Duration(seconds: 60), widget.color),
-          spacing,
-          const Text("", style: TextStyle(fontSize: 16)),
+          if (widget.showTimeout) ...[
+            spacing,
+            TimeoutBar(const Duration(seconds: 60), widget.color),
+            spacing,
+            const Text("", style: TextStyle(fontSize: 16)),
+          ]
         ],
       ),
     );

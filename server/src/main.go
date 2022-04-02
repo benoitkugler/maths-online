@@ -11,12 +11,11 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/prof/editor"
 	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
-
-//go:generate ../../../structgen/apigen -source=main.go -out=../../prof/src/controller/api_gen.ts
 
 func main() {
 	devPtr := flag.Bool("dev", false, "run in dev mode (localhost)")
@@ -25,11 +24,13 @@ func main() {
 
 	host := getAdress(*devPtr)
 
-	ct := trivialpoursuit.NewController(host)
+	trivial := trivialpoursuit.NewController(host)
 
 	// for now, show the logs
 	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
 	trivialpoursuit.WarningLogger.SetOutput(os.Stdout)
+
+	edit := editor.NewController()
 
 	e := echo.New()
 	e.HideBanner = true
@@ -48,7 +49,7 @@ func main() {
 		fmt.Println("CORS activé.")
 	}
 
-	setupRoutes(e, ct)
+	setupRoutes(e, trivial, edit)
 
 	if *dryPtr {
 		log.Printf("Setup done, leaving early.")
@@ -101,7 +102,9 @@ func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
 
-func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
+func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor.Controller) {
+	setupProfAPI(e, trivial, edit)
+
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip()).Static("/*", "static")
 
@@ -113,10 +116,8 @@ func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
 	e.Group("/prof-loopback-app/*", middleware.Gzip()).Static("/*", "static/prof_loopback")
 
-	// trivialpoursuit game server
-	e.POST("/trivial/launch_game", ct.LaunchGame)
-	e.GET("/trivial/stats", ct.ShowStats)
-	e.GET(trivialpoursuit.GameEndPoint, ct.AccessGame)
+	e.GET("/trivial/stats", trivial.ShowStats)
+	e.GET(trivialpoursuit.GameEndPoint, trivial.AccessGame)
 
 	// prof. back office
 	for _, route := range []string{
@@ -126,6 +127,9 @@ func setupRoutes(e *echo.Echo, ct *trivialpoursuit.Controller) {
 	} {
 		e.GET(route, serveProfApp, noCache)
 	}
+
+	// embeded preview app
+	e.GET(editor.LoopbackEndpoint, edit.AccessLoopback)
 
 	// temporary question quick access
 

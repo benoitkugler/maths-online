@@ -1,3 +1,4 @@
+import QuestionEditor from "@/views/QuestionEditor.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
@@ -14,6 +15,11 @@ const router = createRouter({
       path: "/trivial",
       name: "trivial",
       component: TrivialPoursuit
+    },
+    {
+      path: "/editor",
+      name: "editor",
+      component: QuestionEditor
     }
     // {
     //   path: '/about',

@@ -3,12 +3,12 @@ package trivialpoursuit
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -90,22 +90,14 @@ func (ct *Controller) LaunchGame(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func randGameID() string {
-	const choices = "0123456789"
-	var out [3]byte
-	for i := range out {
-		out[i] = choices[rand.Intn(len(choices))]
-	}
-	return string(out[:])
-}
-
 func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
 
-	newID := randGameID()
-	for _, taken := ct.games[newID]; taken; newID = randGameID() { // avoid (unlikely) collisions
-	}
+	newID := utils.RandomID(true, 3, func(s string) bool {
+		_, taken := ct.games[s]
+		return taken
+	})
 
 	game := newGameController(GameOptions{PlayersNumber: options.NbPlayers, QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds)})
 	// register the controller...

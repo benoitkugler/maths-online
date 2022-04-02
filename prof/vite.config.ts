@@ -5,8 +5,8 @@ import { defineConfig } from "vite";
 const path = require("path");
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: "/static/prof/",
+export default defineConfig(({ command }) => ({
+  base: command == "serve" ? "/prof/" : "/static/prof/",
   plugins: [
     vue({
       reactivityTransform: true
@@ -39,4 +39,4 @@ export default defineConfig({
     ]
   },
   */
-});
+}));

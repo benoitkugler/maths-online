@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
 
@@ -42,11 +43,6 @@ func RegisterTestGame(apiPath string, options GameOptions) {
 	http.HandleFunc(apiPath, ct.setupWebSocket)
 }
 
-func websocketError(ws *websocket.Conn, err error) {
-	message := websocket.FormatCloseMessage(websocket.CloseUnsupportedData, err.Error())
-	ws.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
-}
-
 func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -62,7 +58,7 @@ func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 	isAccepted := <-client.isAccepted // wait for the controller to check the access
 	if !isAccepted {
 		// the game at this end point is not usable: close the connection with an error
-		websocketError(ws, errors.New("game is closed"))
+		utils.WebsocketError(ws, errors.New("game is closed"))
 		return
 	}
 
@@ -100,7 +96,7 @@ func (cl *client) startLoop() {
 			WarningLogger.Printf("invalid event format: %s", err)
 
 			// return an error to the client and close
-			websocketError(cl.conn, err)
+			utils.WebsocketError(cl.conn, err)
 
 			return
 		}
@@ -151,7 +147,7 @@ func (gc *gameController) startLoop(ctx context.Context) {
 		case <-ctx.Done(): // terminate the game on timeout
 			ProgressLogger.Println("Game timed out")
 			for client := range gc.clients {
-				websocketError(client.conn, errors.New("game timeout reached"))
+				utils.WebsocketError(client.conn, errors.New("game timeout reached"))
 			}
 
 			return

@@ -15,6 +15,11 @@
                 </v-btn>
               </v-col>
               <v-col>
+                <v-btn link :to="{ name: 'editor' }" color="primary">
+                  Editeur de question
+                </v-btn>
+              </v-col>
+              <v-col>
                 <v-btn
                   link
                   href="https://education.alwaysdata.net/test-eleve"

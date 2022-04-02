@@ -11,6 +11,14 @@ export interface LaunchGameIn {
 export interface LaunchGameOut {
   URL: string;
 }
+// github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
+export interface StartSessionOut {
+  ID: string;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
+export interface SaveAndPreviewIn {
+  SessionID: string;
+}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -19,7 +27,7 @@ export abstract class AbstractAPI {
   constructor(
     protected baseUrl: string,
     protected authToken: string,
-    protected urlParams: { game_id: string }
+    protected urlParams: {}
   ) {}
 
   abstract handleError(error: any): void;
@@ -54,49 +62,49 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessLaunchGame(data: LaunchGameOut): void;
 
-  protected async rawShowStats() {
-    const fullUrl = this.baseUrl + "/trivial/stats";
-    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
+  protected async rawEditStartSession(params: any) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/new";
+    const rep: AxiosResponse<StartSessionOut> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
-  /** ShowStats wraps rawShowStats and handles the error */
-  async ShowStats() {
+  /** EditStartSession wraps rawEditStartSession and handles the error */
+  async EditStartSession(params: any) {
     this.startRequest();
     try {
-      const out = await this.rawShowStats();
-      this.onSuccessShowStats(out);
+      const out = await this.rawEditStartSession(params);
+      this.onSuccessEditStartSession(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessShowStats(data: any): void;
+  protected abstract onSuccessEditStartSession(data: StartSessionOut): void;
 
-  protected async rawAccessGame() {
-    const fullUrl =
-      this.baseUrl +
-      "/trivial/game/:game_id".replace(":game_id", this.urlParams.game_id);
-    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+  protected async rawEditSaveAndPreview(params: SaveAndPreviewIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/save";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
-  /** AccessGame wraps rawAccessGame and handles the error */
-  async AccessGame() {
+  /** EditSaveAndPreview wraps rawEditSaveAndPreview and handles the error */
+  async EditSaveAndPreview(params: SaveAndPreviewIn) {
     this.startRequest();
     try {
-      const out = await this.rawAccessGame();
-      this.onSuccessAccessGame(out);
+      const out = await this.rawEditSaveAndPreview(params);
+      this.onSuccessEditSaveAndPreview(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessAccessGame(data: any): void;
+  protected abstract onSuccessEditSaveAndPreview(data: any): void;
 }

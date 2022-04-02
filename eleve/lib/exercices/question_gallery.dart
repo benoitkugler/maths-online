@@ -95,11 +95,13 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   }
 
   Widget _buildQuestion(Question question, BuildContext context) {
-    return QuestionPage.withEvents(
-        (v) => _checkSyntax(v, context),
-        (v) => _validate(v, context),
-        question,
-        Color(Random().nextInt(1 << 32)));
+    return QuestionPage(
+      question,
+      Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
+          Random().nextInt(256)),
+      (v) => _checkSyntax(v, context),
+      (v) => _validate(v, context),
+    );
   }
 
   void _showSummary() {

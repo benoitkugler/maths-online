@@ -1,7 +1,11 @@
-import type { LaunchGameOut } from "./api_gen";
+import type { LaunchGameOut, StartSessionOut } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
 class Controller extends AbstractAPI {
+  getURL(endpoint: string) {
+    return this.baseUrl + endpoint;
+  }
+
   handleError(error: any): void {
     console.log(`ERROR: ${error}`);
   }
@@ -12,6 +16,14 @@ class Controller extends AbstractAPI {
 
   protected onSuccessLaunchGame(data: LaunchGameOut): void {
     console.log(`Game started at ${data.URL}`);
+  }
+
+  protected onSuccessEditStartSession(data: StartSessionOut): void {
+    console.log(data);
+  }
+
+  protected onSuccessEditSaveAndPreview(data: any): void {
+    console.log("OK", data);
   }
 }
 

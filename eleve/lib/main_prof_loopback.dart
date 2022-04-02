@@ -20,7 +20,7 @@ void main() {
   // note that the MaterialApp routing erase these parameters,
   // so that we need to fetch it early
   final uri = Uri.parse(js.context['location']['href'] as String);
-  final id = uri.queryParameters["session"]!;
+  final id = uri.queryParameters["sessionID"]!;
 
   runApp(LoopbackApp(id));
 }
@@ -73,6 +73,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     // API connection
     channel = WebSocketChannel.connect(Uri.parse(url));
     channel.stream.listen(listen, onError: showError);
+    print("connected !");
 
     // websocket is closed in case of inactivity
     // prevent it by sending pings
@@ -114,8 +115,14 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
         ? const Center(child: CircularProgressIndicator())
         : Padding(
             padding: const EdgeInsets.all(8.0),
-            child: QuestionPage.withEvents(
-                (p0) {}, (p0) {}, question!, Color(Random().nextInt(1 << 32))),
+            child: QuestionPage(
+              question!,
+              Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
+                  Random().nextInt(256)),
+              (p0) {},
+              (p0) {},
+              showTimeout: false,
+            ),
           );
   }
 }
