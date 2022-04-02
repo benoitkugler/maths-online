@@ -102,7 +102,7 @@ func testSQL(t *testing.T, logs logsDB) {
 	qu1, qu2 := randQuestion(), randQuestion()
 	qu1.IdExercice = ex.Id
 	qu2.IdExercice = ex.Id
-	qu1.Enonce = append(qu1.Enonce, randFormula())
+	qu1.Enonce = append(qu1.Enonce, randFormulaBlock())
 	err = InsertManyQuestions(tx, qu1, qu2)
 	if err != nil {
 		t.Fatal(err)

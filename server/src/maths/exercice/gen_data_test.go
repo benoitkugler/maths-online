@@ -6,13 +6,15 @@ import "math/rand"
 
 func randblock() block {
 	choix := [...]block{
-		randFormula(),
+		randFormulaBlock(),
 		randFormulaField(),
 		randListField(),
 		randNumberField(),
+		randSignTableBlock(),
 		randTextBlock(),
+		randVariationTableBlock(),
 	}
-	i := rand.Intn(5)
+	i := rand.Intn(7)
 	return choix[i]
 }
 
@@ -102,10 +104,9 @@ func randFormulaContent() FormulaContent {
 	return FormulaContent(randSliceFormulaPart())
 }
 
-func randFormula() Formula {
-	return Formula{
-		Chunks:   randFormulaContent(),
-		IsInline: randbool(),
+func randFormulaBlock() FormulaBlock {
+	return FormulaBlock{
+		Parts: randFormulaContent(),
 	}
 }
 
@@ -144,8 +145,74 @@ func randQuestion() Question {
 	}
 }
 
+func randSignSymbol() SignSymbol {
+	choix := [...]SignSymbol{ForbiddenValue, Nothing, Zero}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randSliceSignSymbol() []SignSymbol {
+	l := rand.Intn(10)
+	out := make([]SignSymbol, l)
+	for i := range out {
+		out[i] = randSignSymbol()
+	}
+	return out
+}
+
+func randSlicebool() []bool {
+	l := rand.Intn(10)
+	out := make([]bool, l)
+	for i := range out {
+		out[i] = randbool()
+	}
+	return out
+}
+
+func randSignTableBlock() SignTableBlock {
+	return SignTableBlock{
+		Xs:        randFormulaContent(),
+		FxSymbols: randSliceSignSymbol(),
+		Signs:     randSlicebool(),
+	}
+}
+
+func randTextKind() TextKind {
+	choix := [...]TextKind{Expression, StaticMath, Text}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randTextPart() TextPart {
+	return TextPart{
+		Content: randstring(),
+		Kind:    randTextKind(),
+	}
+}
+
+func randSliceTextPart() []TextPart {
+	l := rand.Intn(10)
+	out := make([]TextPart, l)
+	for i := range out {
+		out[i] = randTextPart()
+	}
+	return out
+}
+
+func randTextParts() TextParts {
+	return TextParts(randSliceTextPart())
+}
+
 func randTextBlock() TextBlock {
 	return TextBlock{
-		Text: randstring(),
+		Parts:  randTextParts(),
+		IsHint: randbool(),
+	}
+}
+
+func randVariationTableBlock() VariationTableBlock {
+	return VariationTableBlock{
+		Xs:  randSlicestring(),
+		Fxs: randSlicestring(),
 	}
 }

@@ -10,154 +10,19 @@ import (
 	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 )
 
-// randomParameters is a serialized form of expression.RandomParameters
-type randomParameters []randomParameter
-
-type randomParameter struct {
-	Expression string `json:"expression"` // as typed by the user, but validated
-	Variable   rune   `json:"variable"`
+type instance interface {
+	toClient() client.Block
 }
 
-// toMap assumes `rp` only contains valid expressions
-func (rp randomParameters) toMap() expression.RandomParameters {
-	out := make(expression.RandomParameters, len(rp))
-	for _, item := range rp {
-		out[expression.Variable(item.Variable)], _, _ = expression.Parse(item.Expression)
-	}
-	return out
-}
-
-// FormulaContent is a list of chunks, either
-//	- static math symbols, such as f(x) =
-//	- valid expression, such as a*x - b, which will be instantiated when rendering the question
-//
-// For instance, the formula f(x) = a*(x + 2)
-// is represented by two FormulaPart elements:
-// 	{ f(x) = } and { a*(x + 2) }
-type FormulaContent []FormulaPart
-
-// FormulaPart forms a logic chunk of a formula.
-type FormulaPart struct {
-	Content      string
-	IsExpression bool // when true, Content is interpreted as an expression.Expression
-}
-
-// assume the expression is valid
-func (fp FormulaPart) instantiate(params expression.Variables) StringOrExpression {
-	if !fp.IsExpression { // nothing to do
-		return StringOrExpression{String: fp.Content}
-	}
-
-	expr, _, _ := expression.Parse(fp.Content)
-	expr.Substitute(params)
-	return StringOrExpression{Expression: expr}
-}
-
-// TextOrMaths is either
-//	- a math expression
-// 	- a math content
-// 	- a regular text content
-type TextOrMaths struct {
-	StringOrExpression
-	IsMath bool
-}
-
-func (tm TextOrMaths) toClient() client.TextOrMath {
-	return client.TextOrMath{
-		IsMath: tm.IsMath,
-		Text:   tm.StringOrExpression.asLaTeX(),
-	}
-}
-
-// StringOrExpression is either an expression or a static string,
-// usually rendered as LaTeX, in text mode.
-type StringOrExpression struct {
-	Expression *expression.Expression
-	String     string // LaTeX code, rendered in math mode
-}
-
-// IsEmpty returns `true` is the struct is the zero value.
-func (se StringOrExpression) IsEmpty() bool {
-	return se.Expression == nil && se.String == ""
-}
-
-func (fi StringOrExpression) asLaTeX() string {
-	if fi.Expression != nil {
-		return fi.Expression.AsLaTeX(nil)
-	}
-	return fi.String
-}
-
-// Exercice is a sequence of questions
-type ExerciceQuestions struct {
-	Exercice
-	Questions Questions
-}
-
-// instantiate returns a deep copy of `eq`, where all random parameters
-// have been resolved
-// It assumes that the expressions and random parameters definitions are valid.
-func (eq ExerciceQuestions) instantiate() ExerciceInstance {
-	rp := eq.RandomParameters.toMap()
-	// generate random params
-	params, _ := rp.Instantiate()
-
-	out := ExerciceInstance{
-		Id:          eq.Id,
-		Title:       eq.Title,
-		Description: eq.Description,
-	}
-	out.Questions = make([]QuestionInstance, len(eq.Questions))
-
-	for i, qu := range eq.Questions {
-		out.Questions[i] = qu.instantiate(params)
-	}
-
-	return out
-}
-
-func (qu Question) instantiate(params expression.Variables) QuestionInstance {
-	enonce := make(EnonceInstance, len(qu.Enonce))
-	var currentID int
-	for j, bl := range qu.Enonce {
-		enonce[j] = bl.instantiate(params, currentID)
-		if _, isField := enonce[j].(fieldInstance); isField {
-			currentID++
-		}
-	}
-	return QuestionInstance{Title: qu.Title, Enonce: enonce}
-}
-
-// TODO:
-func (t TextBlock) instantiate(params expression.Variables, _ int) blockInstance {
-	return TextInstance{}
-}
-
-// TODO:
-func (f Formula) instantiate(params expression.Variables, _ int) blockInstance {
-	// out := FormulaDisplayInstance{IsInline: f.IsInline}
-	// out.Chunks = make([]MathOrExpression, len(f.Chunks))
-	// for i, c := range f.Chunks {
-	// 	out.Chunks[i] = c.instantiate(params)
-	// }
-	return FormulaDisplayInstance{}
-}
-
-func (n NumberField) instantiate(params expression.Variables, ID int) blockInstance {
-	expr, _, _ := expression.Parse(n.Expression)
-	answer, _ := expr.Evaluate(params)
-	return NumberFieldInstance{ID: ID, Answer: answer}
-}
-
-// TODO
-func (f FormulaField) instantiate(params expression.Variables, ID int) blockInstance {
-	return ExpressionFieldInstance{}
-}
-
-// TODO
-func (l ListField) instantiate(params expression.Variables, ID int) blockInstance {
-	return RadioFieldInstance{}
-}
+var (
+	_ instance = TextInstance{}
+	_ instance = FormulaDisplayInstance{}
+	_ instance = VariationTableInstance{}
+	_ instance = SignTableInstance{}
+	_ instance = FigureInstance{}
+	_ instance = FunctionVariationGraphInstance{}
+	_ instance = TableInstance{}
+)
 
 // ExerciceInstance is an in memory version of an Exercice,
 // where all random parameters have been generated and substituted
@@ -235,21 +100,42 @@ func (qi QuestionInstance) ToClient() client.Question {
 	return out
 }
 
-type EnonceInstance []blockInstance
+type EnonceInstance []instance
 
-type blockInstance interface {
-	toClient() client.Block
+// TextOrMaths is either
+//	- a math expression
+// 	- a math content
+// 	- a regular text content
+type TextOrMaths struct {
+	StringOrExpression
+	IsMath bool
 }
 
-var (
-	_ blockInstance = TextInstance{}
-	_ blockInstance = FormulaDisplayInstance{}
-	_ blockInstance = VariationTableInstance{}
-	_ blockInstance = SignTableInstance{}
-	_ blockInstance = FigureInstance{}
-	_ blockInstance = FunctionVariationGraphInstance{}
-	_ blockInstance = TableInstance{}
-)
+func (tm TextOrMaths) toClient() client.TextOrMath {
+	return client.TextOrMath{
+		IsMath: tm.IsMath,
+		Text:   tm.StringOrExpression.asLaTeX(),
+	}
+}
+
+// StringOrExpression is either an expression or a static string,
+// usually rendered as LaTeX, in text mode.
+type StringOrExpression struct {
+	Expression *expression.Expression
+	String     string // LaTeX code, rendered in math mode
+}
+
+// IsEmpty returns `true` is the struct is the zero value.
+func (se StringOrExpression) IsEmpty() bool {
+	return se.Expression == nil && se.String == ""
+}
+
+func (fi StringOrExpression) asLaTeX() string {
+	if fi.Expression != nil {
+		return fi.Expression.AsLaTeX(nil)
+	}
+	return fi.String
+}
 
 // TextInstance is a paragraph of text, which may contain expression or
 // math chunks, which is rendered on a single line (eventually wrapped).
@@ -317,9 +203,37 @@ func (vt VariationTableInstance) toClient() client.Block {
 	return out
 }
 
-type SignTableInstance client.SignTableBlock
+type SignTableInstance struct {
+	Xs        []string
+	FxSymbols []SignSymbol
+	Signs     []bool // with length len(Xs) - 1
+}
 
-func (vt SignTableInstance) toClient() client.Block { return client.SignTableBlock(vt) }
+func (st SignTableInstance) toClient() client.Block {
+	var columns []client.SignColumn
+	for i, x := range st.Xs {
+		col := client.SignColumn{
+			X:      x,
+			IsSign: false,
+		}
+		switch st.FxSymbols[i] {
+		case Nothing:
+		case Zero:
+			col.IsPositive = true
+		case ForbiddenValue:
+			col.IsYForbiddenValue = true
+		}
+		columns = append(columns, col)
+
+		if i != len(st.Xs)-1 {
+			columns = append(columns, client.SignColumn{
+				IsSign:     true,
+				IsPositive: st.Signs[i],
+			})
+		}
+	}
+	return client.SignTableBlock{Columns: columns}
+}
 
 type FigureInstance client.FigureBlock
 

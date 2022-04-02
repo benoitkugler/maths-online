@@ -30,25 +30,25 @@ func queriesExercice(tx *sql.Tx, item Exercice) (Exercice, error) {
 	return item, err
 }
 
-func queriesFormula(tx *sql.Tx, item Formula) (Formula, error) {
-	err := InsertManyFormulas(tx, item)
+func queriesFormulaBlock(tx *sql.Tx, item FormulaBlock) (FormulaBlock, error) {
+	err := InsertManyFormulaBlocks(tx, item)
 	if err != nil {
 		return item, err
 	}
-	rows, err := tx.Query("SELECT * FROM formulas")
+	rows, err := tx.Query("SELECT * FROM formula_blocks")
 	if err != nil {
 		return item, err
 	}
-	items, err := ScanFormulas(rows)
+	items, err := ScanFormulaBlocks(rows)
 	if err != nil {
 		return item, err
 	}
 
 	_ = len(items)
 
-	row := tx.QueryRow(`SELECT * FROM formulas WHERE 
+	row := tx.QueryRow(`SELECT * FROM formula_blocks WHERE 
 		;`)
-	_, err = ScanFormula(row)
+	_, err = ScanFormulaBlock(row)
 
 	return item, err
 }
@@ -145,6 +145,29 @@ func queriesQuestion(tx *sql.Tx, item Question) (Question, error) {
 	return item, err
 }
 
+func queriesSignTableBlock(tx *sql.Tx, item SignTableBlock) (SignTableBlock, error) {
+	err := InsertManySignTableBlocks(tx, item)
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM sign_table_blocks")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanSignTableBlocks(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM sign_table_blocks WHERE 
+		;`)
+	_, err = ScanSignTableBlock(row)
+
+	return item, err
+}
+
 func queriesTextBlock(tx *sql.Tx, item TextBlock) (TextBlock, error) {
 	err := InsertManyTextBlocks(tx, item)
 	if err != nil {
@@ -164,6 +187,29 @@ func queriesTextBlock(tx *sql.Tx, item TextBlock) (TextBlock, error) {
 	row := tx.QueryRow(`SELECT * FROM text_blocks WHERE 
 		;`)
 	_, err = ScanTextBlock(row)
+
+	return item, err
+}
+
+func queriesVariationTableBlock(tx *sql.Tx, item VariationTableBlock) (VariationTableBlock, error) {
+	err := InsertManyVariationTableBlocks(tx, item)
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM variation_table_blocks")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanVariationTableBlocks(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM variation_table_blocks WHERE 
+		;`)
+	_, err = ScanVariationTableBlock(row)
 
 	return item, err
 }

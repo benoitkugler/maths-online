@@ -22,7 +22,7 @@ func (ifa InvalidFieldAnswer) Error() string {
 
 // fieldInstance is an answer field, identified with an integer ID
 type fieldInstance interface {
-	blockInstance
+	instance
 
 	fieldID() int
 

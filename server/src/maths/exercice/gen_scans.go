@@ -220,32 +220,31 @@ func DeleteExercicesByIDs(tx DB, ids ...int64) (IDs, error) {
 func (s *randomParameters) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s randomParameters) Value() (driver.Value, error) { return dumpJSON(s) }
 
-func scanOneFormula(row scanner) (Formula, error) {
-	var s Formula
+func scanOneFormulaBlock(row scanner) (FormulaBlock, error) {
+	var s FormulaBlock
 	err := row.Scan(
-		&s.Chunks,
-		&s.IsInline,
+		&s.Parts,
 	)
 	return s, err
 }
 
-func ScanFormula(row *sql.Row) (Formula, error) {
-	return scanOneFormula(row)
+func ScanFormulaBlock(row *sql.Row) (FormulaBlock, error) {
+	return scanOneFormulaBlock(row)
 }
 
-func SelectAllFormulas(tx DB) (Formulas, error) {
-	rows, err := tx.Query("SELECT * FROM formulas")
+func SelectAllFormulaBlocks(tx DB) (FormulaBlocks, error) {
+	rows, err := tx.Query("SELECT * FROM formula_blocks")
 	if err != nil {
 		return nil, err
 	}
-	return ScanFormulas(rows)
+	return ScanFormulaBlocks(rows)
 }
 
-type Formulas []Formula
+type FormulaBlocks []FormulaBlock
 
-func ScanFormulas(rs *sql.Rows) (Formulas, error) {
+func ScanFormulaBlocks(rs *sql.Rows) (FormulaBlocks, error) {
 	var (
-		s   Formula
+		s   FormulaBlock
 		err error
 	)
 	defer func() {
@@ -254,9 +253,9 @@ func ScanFormulas(rs *sql.Rows) (Formulas, error) {
 			err = errClose
 		}
 	}()
-	structs := make(Formulas, 0, 16)
+	structs := make(FormulaBlocks, 0, 16)
 	for rs.Next() {
-		s, err = scanOneFormula(rs)
+		s, err = scanOneFormulaBlock(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -268,21 +267,21 @@ func ScanFormulas(rs *sql.Rows) (Formulas, error) {
 	return structs, nil
 }
 
-// Insert the links Formula in the database.
-func InsertManyFormulas(tx *sql.Tx, items ...Formula) error {
+// Insert the links FormulaBlock in the database.
+func InsertManyFormulaBlocks(tx *sql.Tx, items ...FormulaBlock) error {
 	if len(items) == 0 {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("formulas",
-		"Chunks", "IsInline",
+	stmt, err := tx.Prepare(pq.CopyIn("formula_blocks",
+		"Parts",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Chunks, item.IsInline)
+		_, err = stmt.Exec(item.Parts)
 		if err != nil {
 			return err
 		}
@@ -298,10 +297,10 @@ func InsertManyFormulas(tx *sql.Tx, items ...Formula) error {
 	return nil
 }
 
-// Delete the link Formula in the database.
+// Delete the link FormulaBlock in the database.
 // Only the fields are used.
-func (item Formula) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM formulas WHERE 
+func (item FormulaBlock) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM formula_blocks WHERE 
 	;`)
 	return err
 }
@@ -654,10 +653,98 @@ func (item Question) Delete(tx DB) error {
 func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
 
+func scanOneSignTableBlock(row scanner) (SignTableBlock, error) {
+	var s SignTableBlock
+	err := row.Scan(
+		&s.Xs,
+		&s.FxSymbols,
+		&s.Signs,
+	)
+	return s, err
+}
+
+func ScanSignTableBlock(row *sql.Row) (SignTableBlock, error) {
+	return scanOneSignTableBlock(row)
+}
+
+func SelectAllSignTableBlocks(tx DB) (SignTableBlocks, error) {
+	rows, err := tx.Query("SELECT * FROM sign_table_blocks")
+	if err != nil {
+		return nil, err
+	}
+	return ScanSignTableBlocks(rows)
+}
+
+type SignTableBlocks []SignTableBlock
+
+func ScanSignTableBlocks(rs *sql.Rows) (SignTableBlocks, error) {
+	var (
+		s   SignTableBlock
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(SignTableBlocks, 0, 16)
+	for rs.Next() {
+		s, err = scanOneSignTableBlock(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links SignTableBlock in the database.
+func InsertManySignTableBlocks(tx *sql.Tx, items ...SignTableBlock) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("sign_table_blocks",
+		"Xs", "FxSymbols", "Signs",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.Xs, item.FxSymbols, item.Signs)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link SignTableBlock in the database.
+// Only the fields are used.
+func (item SignTableBlock) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM sign_table_blocks WHERE 
+	;`)
+	return err
+}
+
 func scanOneTextBlock(row scanner) (TextBlock, error) {
 	var s TextBlock
 	err := row.Scan(
-		&s.Text,
+		&s.Parts,
+		&s.IsHint,
 	)
 	return s, err
 }
@@ -708,14 +795,14 @@ func InsertManyTextBlocks(tx *sql.Tx, items ...TextBlock) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("text_blocks",
-		"Text",
+		"Parts", "IsHint",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Text)
+		_, err = stmt.Exec(item.Parts, item.IsHint)
 		if err != nil {
 			return err
 		}
@@ -735,6 +822,95 @@ func InsertManyTextBlocks(tx *sql.Tx, items ...TextBlock) error {
 // Only the fields are used.
 func (item TextBlock) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM text_blocks WHERE 
+	;`)
+	return err
+}
+
+func (s *TextParts) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s TextParts) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func scanOneVariationTableBlock(row scanner) (VariationTableBlock, error) {
+	var s VariationTableBlock
+	err := row.Scan(
+		&s.Xs,
+		&s.Fxs,
+	)
+	return s, err
+}
+
+func ScanVariationTableBlock(row *sql.Row) (VariationTableBlock, error) {
+	return scanOneVariationTableBlock(row)
+}
+
+func SelectAllVariationTableBlocks(tx DB) (VariationTableBlocks, error) {
+	rows, err := tx.Query("SELECT * FROM variation_table_blocks")
+	if err != nil {
+		return nil, err
+	}
+	return ScanVariationTableBlocks(rows)
+}
+
+type VariationTableBlocks []VariationTableBlock
+
+func ScanVariationTableBlocks(rs *sql.Rows) (VariationTableBlocks, error) {
+	var (
+		s   VariationTableBlock
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(VariationTableBlocks, 0, 16)
+	for rs.Next() {
+		s, err = scanOneVariationTableBlock(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links VariationTableBlock in the database.
+func InsertManyVariationTableBlocks(tx *sql.Tx, items ...VariationTableBlock) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("variation_table_blocks",
+		"Xs", "Fxs",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.Xs, item.Fxs)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link VariationTableBlock in the database.
+// Only the fields are used.
+func (item VariationTableBlock) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM variation_table_blocks WHERE 
 	;`)
 	return err
 }

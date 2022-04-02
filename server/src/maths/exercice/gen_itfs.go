@@ -21,7 +21,7 @@ func (out *blockWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data Formula
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
@@ -37,7 +37,15 @@ func (out *blockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
+		var data SignTableBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 5:
 		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 6:
+		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -54,7 +62,7 @@ func (item blockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case Formula:
+	case FormulaBlock:
 		wr = wrapper{Kind: 0, Data: data}
 	case FormulaField:
 		wr = wrapper{Kind: 1, Data: data}
@@ -62,8 +70,12 @@ func (item blockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 2, Data: data}
 	case NumberField:
 		wr = wrapper{Kind: 3, Data: data}
-	case TextBlock:
+	case SignTableBlock:
 		wr = wrapper{Kind: 4, Data: data}
+	case TextBlock:
+		wr = wrapper{Kind: 5, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 6, Data: data}
 
 	default:
 		panic("exhaustive switch")

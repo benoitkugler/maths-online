@@ -92,12 +92,10 @@ type VariationTableBlock struct {
 	Arrows []bool
 }
 
-// SignColumn is a column in a sign table,
-// either displaying (x, f(x)) values, or an arrow
-// between two local extrema.
+// SignColumn is a column in a sign table.
 type SignColumn struct {
 	X                 string // as LaTeX code
-	IsYForbiddenValue bool   // if true, Y is ignored and a double bar is displayed instead
+	IsYForbiddenValue bool   // if true, a double bar is displayed
 	IsSign            bool
 	IsPositive        bool // for signs, displays a +, for numbers displays a 0 (else nothing)
 }

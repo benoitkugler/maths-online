@@ -25,23 +25,35 @@ type Question struct {
 type Enonce []block
 
 // block form the actual content of a question
-// it is stored on DB in generic form, but may be instantiated
+// it is stored in a DB in generic form, but may be instantiated
 // against random parameter values
 type block interface {
 	// ID is only used by answer fields
-	instantiate(params expression.Variables, ID int) blockInstance
+	instantiate(params expression.Variables, ID int) instance
 }
 
-// TextBlock is a regular chunk of text
+// TextBlock is a chunk of text
+// which may contain maths
 type TextBlock struct {
-	Text string
+	Parts  TextParts
+	IsHint bool
 }
 
-// Formula is a math formula, which should be display using
+// FormulaBlock is a math formula, which should be display using
 // a LaTeX renderer.
-type Formula struct {
-	Chunks   FormulaContent
-	IsInline bool // else display
+type FormulaBlock struct {
+	Parts FormulaContent
+}
+
+type VariationTableBlock struct {
+	Xs  []string // expressions
+	Fxs []string // expressions
+}
+
+type SignTableBlock struct {
+	Xs        FormulaContent
+	FxSymbols []SignSymbol
+	Signs     []bool // with length len(Xs) - 1
 }
 
 type NumberField struct {

@@ -1,5 +1,10 @@
 // Package exercice models the content (question, explanation, hints,..)
-// of an exercice
+// of an exercice.
+// An exercice is roughly a list of questions, and a question is represented
+// in this package in 3 forms:
+//	- as written by a teacher, containing random parameters
+//	- instanciated, where random parameters are generated
+//	- as send to the client : the answer are stripped and the expression are formatted
 package exercice
 
 // Parcours modelize a sequence of exercice, with
