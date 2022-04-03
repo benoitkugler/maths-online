@@ -22,12 +22,12 @@ type Question struct {
 	Enonce     Enonce `json:"enonce"`
 }
 
-type Enonce []block
+type Enonce []Block
 
-// block form the actual content of a question
+// Block form the actual content of a question
 // it is stored in a DB in generic form, but may be instantiated
 // against random parameter values
-type block interface {
+type Block interface {
 	// ID is only used by answer fields
 	instantiate(params expression.Variables, ID int) instance
 }

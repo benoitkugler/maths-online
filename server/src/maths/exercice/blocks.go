@@ -7,10 +7,10 @@ import (
 const ExhaustiveTextKind = "exhaustiveTextKind"
 
 var (
-	_ block = TextBlock{}
-	_ block = FormulaBlock{}
-	_ block = VariationTableBlock{}
-	_ block = SignTableBlock{}
+	_ Block = TextBlock{}
+	_ Block = FormulaBlock{}
+	_ Block = VariationTableBlock{}
+	_ Block = SignTableBlock{}
 )
 
 // randomParameters is a serialized form of expression.RandomParameters

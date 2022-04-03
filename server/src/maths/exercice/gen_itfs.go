@@ -7,7 +7,7 @@ import "encoding/json"
 // blockWrapper may be used as replacements for block
 // when working with JSON
 type blockWrapper struct {
-	Data block
+	Data Block
 }
 
 func (out *blockWrapper) UnmarshalJSON(src []byte) error {
