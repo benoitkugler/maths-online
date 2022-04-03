@@ -826,9 +826,6 @@ func (item TextBlock) Delete(tx DB) error {
 	return err
 }
 
-func (s *TextParts) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s TextParts) Value() (driver.Value, error) { return dumpJSON(s) }
-
 func scanOneVariationTableBlock(row scanner) (VariationTableBlock, error) {
 	var s VariationTableBlock
 	err := row.Scan(

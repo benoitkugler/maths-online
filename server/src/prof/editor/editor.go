@@ -66,7 +66,7 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
-// TODO actually save
+// TODO actually validate and save
 func (ct *Controller) saveAndPreview(sessionID string) error {
 	index := rand.Intn(len(exercice.PredefinedQuestions))
 	question := exercice.PredefinedQuestions[index].ToClient()

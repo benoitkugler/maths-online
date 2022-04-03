@@ -93,8 +93,9 @@ func (tp TextPart) instantiate(params expression.Variables) TextOrMaths {
 type TextParts []TextPart
 
 func (t TextBlock) instantiate(params expression.Variables, _ int) instance {
-	parts := make([]TextOrMaths, len(t.Parts))
-	for i, p := range t.Parts {
+	content, _ := ParseInterpolatedString(t.Parts)
+	parts := make([]TextOrMaths, len(content))
+	for i, p := range content {
 		parts[i] = p.instantiate(params)
 	}
 	return TextInstance{

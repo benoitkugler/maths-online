@@ -1,33 +1,30 @@
-package editor
+package exercice
 
 import (
-	"strings"
-
-	ex "github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
-func NewTextBlock(text ex.TextBlock) TextBlock {
-	var chunks []string
-	for _, part := range text.Parts {
-		var chunk string
-		switch part.Kind {
-		case ex.Text: // nothing to do
-			chunk = part.Content
-		case ex.StaticMath: // wrap with $ $
-			chunk = "$" + part.Content + "$"
-		case ex.Expression: // xrap with #{}
-			chunk = "#{" + part.Content + "}"
-		default:
-			panic(ex.ExhaustiveTextKind)
-		}
-		chunks = append(chunks, chunk)
-	}
-	return TextBlock{
-		Parts:  strings.Join(chunks, ""),
-		IsHint: text.IsHint,
-	}
-}
+// func NewTextBlock(text TextBlock) TextBlock {
+// 	var chunks []string
+// 	for _, part := range text.Parts {
+// 		var chunk string
+// 		switch part.Kind {
+// 		case Text: // nothing to do
+// 			chunk = part.Content
+// 		case StaticMath: // wrap with $ $
+// 			chunk = "$" + part.Content + "$"
+// 		case Expression: // xrap with #{}
+// 			chunk = "#{" + part.Content + "}"
+// 		default:
+// 			panic(ExhaustiveTextKind)
+// 		}
+// 		chunks = append(chunks, chunk)
+// 	}
+// 	return TextBlock{
+// 		Parts:  strings.Join(chunks, ""),
+// 		IsHint: text.IsHint,
+// 	}
+// }
 
 type parser struct {
 	src []rune
@@ -38,9 +35,9 @@ func newParser(s string) *parser {
 	return &parser{src: []rune(s)}
 }
 
-func (pr *parser) nextPart() (_ ex.TextPart, eof bool, err error) {
+func (pr *parser) nextPart() (_ TextPart, eof bool, err error) {
 	if pr.pos >= len(pr.src) {
-		return ex.TextPart{}, true, nil
+		return TextPart{}, true, nil
 	}
 
 	switch pr.src[pr.pos] {
@@ -51,7 +48,7 @@ func (pr *parser) nextPart() (_ ex.TextPart, eof bool, err error) {
 		}
 		part := string(pr.src[start:pr.pos])
 		pr.pos++ // skip the $
-		return ex.TextPart{Content: part, Kind: ex.StaticMath}, false, nil
+		return TextPart{Content: part, Kind: StaticMath}, false, nil
 	case '#':
 		pr.pos++
 		if pr.pos < len(pr.src) && pr.src[pr.pos] == '{' {
@@ -65,9 +62,9 @@ func (pr *parser) nextPart() (_ ex.TextPart, eof bool, err error) {
 
 			_, _, err := expression.Parse(part) // TODO: adjust feedback offset
 			if err != nil {
-				return ex.TextPart{}, false, err
+				return TextPart{}, false, err
 			}
-			return ex.TextPart{Content: part, Kind: ex.Expression}, false, nil
+			return TextPart{Content: part, Kind: Expression}, false, nil
 		}
 	}
 
@@ -78,13 +75,13 @@ func (pr *parser) nextPart() (_ ex.TextPart, eof bool, err error) {
 			break
 		}
 	}
-	return ex.TextPart{Content: string(pr.src[start:pr.pos]), Kind: ex.Text}, false, nil
+	return TextPart{Content: string(pr.src[start:pr.pos]), Kind: Text}, false, nil
 }
 
 // ParseInterpolatedString expects a string with $<static math>$ or #{<expression>}
 // delimiters.
-func ParseInterpolatedString(s string) (ex.TextParts, error) {
-	var out ex.TextParts
+func ParseInterpolatedString(s string) (TextParts, error) {
+	var out TextParts
 	pr := newParser(s)
 	for {
 		part, eof, err := pr.nextPart()

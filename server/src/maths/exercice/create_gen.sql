@@ -186,50 +186,8 @@ CREATE TABLE sign_table_blocks (
 	Signs boolean[] 
 );
 
-	CREATE OR REPLACE FUNCTION structgen_validate_json_TextKind (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		RETURN jsonb_typeof(data) = '' AND data::int IN (2, 1, 0);
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_2225605156 (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		IF jsonb_typeof(data) != 'object' THEN 
-			RETURN FALSE;
-		END IF;
-		RETURN (SELECT bool_and( 
-			key IN ('Content', 'Kind')
-		) FROM jsonb_each(data))  
-		AND structgen_validate_json_string(data->'Content')
-AND structgen_validate_json_TextKind(data->'Kind')
-		;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-	CREATE OR REPLACE FUNCTION structgen_validate_json_array_struct_2225605156 (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		IF jsonb_typeof(data) = 'null' THEN RETURN TRUE; END IF;
-		IF jsonb_typeof(data) != 'array' THEN RETURN FALSE; END IF;
-		IF jsonb_array_length(data) = 0 THEN RETURN TRUE; END IF; 
-		RETURN (SELECT bool_and( structgen_validate_json_struct_2225605156(value) )  FROM jsonb_array_elements(data)) 
-			;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
 CREATE TABLE text_blocks (
-	Parts jsonb  CONSTRAINT Parts_structgen_validate_json_array_struct_2225605156 CHECK (structgen_validate_json_array_struct_2225605156(Parts)),
+	Parts varchar  NOT NULL,
 	IsHint boolean  NOT NULL
 );
 

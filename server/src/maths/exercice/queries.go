@@ -3,7 +3,7 @@ package exercice
 import "encoding/json"
 
 func (ct Enonce) MarshalJSON() ([]byte, error) {
-	tmp := make([]blockWrapper, len(ct))
+	tmp := make([]BlockWrapper, len(ct))
 	for i, v := range ct {
 		tmp[i].Data = v
 	}
@@ -11,7 +11,7 @@ func (ct Enonce) MarshalJSON() ([]byte, error) {
 }
 
 func (ct *Enonce) UnmarshalJSON(data []byte) error {
-	var tmp []blockWrapper
+	var tmp []BlockWrapper
 	err := json.Unmarshal(data, &tmp)
 	*ct = make(Enonce, len(tmp))
 	for i, v := range tmp {

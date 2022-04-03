@@ -4,7 +4,7 @@ import "github.com/benoitkugler/maths-online/maths/expression"
 
 // This file is used as source to auto generate SQL statements
 
-//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_test:gen_scans_test.go  -mode=sql_composite:composites/auto.go  -mode=sql_gen:create_gen.sql  -mode=rand:gen_data_test.go -mode=itfs-json:gen_itfs.go
+//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_test:gen_scans_test.go  -mode=sql_composite:composites/auto.go  -mode=sql_gen:create_gen.sql  -mode=rand:gen_data_test.go -mode=itfs-json:gen_itfs.go -mode=ts:test.ts
 
 type Exercice struct {
 	Id               int64            `json:"id"`
@@ -34,8 +34,9 @@ type Block interface {
 
 // TextBlock is a chunk of text
 // which may contain maths
+// It support basic interpolation syntax.
 type TextBlock struct {
-	Parts  TextParts
+	Parts  string
 	IsHint bool
 }
 
