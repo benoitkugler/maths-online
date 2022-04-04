@@ -91,64 +91,6 @@ CREATE TABLE exercices (
 	random_parameters jsonb  CONSTRAINT random_parameters_structgen_validate_json_array_struct_3340897463 CHECK (structgen_validate_json_array_struct_3340897463(random_parameters))
 );
 
-	CREATE OR REPLACE FUNCTION structgen_validate_json_boolean (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		RETURN jsonb_typeof(data) = 'boolean';
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_3651341631 (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		IF jsonb_typeof(data) != 'object' THEN 
-			RETURN FALSE;
-		END IF;
-		RETURN (SELECT bool_and( 
-			key IN ('Content', 'IsExpression')
-		) FROM jsonb_each(data))  
-		AND structgen_validate_json_string(data->'Content')
-AND structgen_validate_json_boolean(data->'IsExpression')
-		;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-	CREATE OR REPLACE FUNCTION structgen_validate_json_array_struct_3651341631 (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		IF jsonb_typeof(data) = 'null' THEN RETURN TRUE; END IF;
-		IF jsonb_typeof(data) != 'array' THEN RETURN FALSE; END IF;
-		IF jsonb_array_length(data) = 0 THEN RETURN TRUE; END IF; 
-		RETURN (SELECT bool_and( structgen_validate_json_struct_3651341631(value) )  FROM jsonb_array_elements(data)) 
-			;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-CREATE TABLE formula_blocks (
-	Parts jsonb  CONSTRAINT Parts_structgen_validate_json_array_struct_3651341631 CHECK (structgen_validate_json_array_struct_3651341631(Parts))
-);
-
-CREATE TABLE formula_fields (
-	Expression varchar  NOT NULL
-);
-
-CREATE TABLE list_fields (
-	Choices varchar[] 
-);
-
-CREATE TABLE number_fields (
-	Expression varchar  NOT NULL
-);
-
 	-- No validation : accept anything
 	CREATE OR REPLACE FUNCTION structgen_validate_json_ (data jsonb)
 		RETURNS boolean
@@ -178,21 +120,5 @@ CREATE TABLE questions (
 	id_exercice integer  NOT NULL,
 	title varchar  NOT NULL,
 	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce))
-);
-
-CREATE TABLE sign_table_blocks (
-	Xs jsonb  CONSTRAINT Xs_structgen_validate_json_array_struct_3651341631 CHECK (structgen_validate_json_array_struct_3651341631(Xs)),
-	FxSymbols integer[] ,
-	Signs boolean[] 
-);
-
-CREATE TABLE text_blocks (
-	Parts varchar  NOT NULL,
-	IsHint boolean  NOT NULL
-);
-
-CREATE TABLE variation_table_blocks (
-	Xs varchar[] ,
-	Fxs varchar[] 
 );
 ALTER TABLE questions ADD FOREIGN KEY(id_exercice) REFERENCES exercices ON DELETE CASCADE;

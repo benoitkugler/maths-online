@@ -21,30 +21,34 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data FormulaBlock
+		var data FigureBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data FormulaField
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data ListField
+		var data FormulaField
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data NumberField
+		var data ListField
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data SignTableBlock
+		var data NumberField
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data TextBlock
+		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
+		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 7:
 		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -62,23 +66,43 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case FormulaBlock:
+	case FigureBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case FormulaField:
+	case FormulaBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case ListField:
+	case FormulaField:
 		wr = wrapper{Kind: 2, Data: data}
-	case NumberField:
+	case ListField:
 		wr = wrapper{Kind: 3, Data: data}
-	case SignTableBlock:
+	case NumberField:
 		wr = wrapper{Kind: 4, Data: data}
-	case TextBlock:
+	case SignTableBlock:
 		wr = wrapper{Kind: 5, Data: data}
-	case VariationTableBlock:
+	case TextBlock:
 		wr = wrapper{Kind: 6, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 7, Data: data}
 
 	default:
 		panic("exhaustive switch")
 	}
 	return json.Marshal(wr)
+}
+
+func (ct Enonce) MarshalJSON() ([]byte, error) {
+	tmp := make([]BlockWrapper, len(ct))
+	for i, v := range ct {
+		tmp[i].Data = v
+	}
+	return json.Marshal(tmp)
+}
+
+func (ct *Enonce) UnmarshalJSON(data []byte) error {
+	var tmp []BlockWrapper
+	err := json.Unmarshal(data, &tmp)
+	*ct = make(Enonce, len(tmp))
+	for i, v := range tmp {
+		(*ct)[i] = v.Data
+	}
+	return err
 }

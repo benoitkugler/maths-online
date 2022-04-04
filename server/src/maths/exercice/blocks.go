@@ -2,6 +2,7 @@ package exercice
 
 import (
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
 const ExhaustiveTextKind = "exhaustiveTextKind"
@@ -11,7 +12,33 @@ var (
 	_ Block = FormulaBlock{}
 	_ Block = VariationTableBlock{}
 	_ Block = SignTableBlock{}
+	_ Block = FigureBlock{}
 )
+
+type Enonce []Block
+
+// Block form the actual content of a question
+// it is stored in a DB in generic form, but may be instantiated
+// against random parameter values
+type Block interface {
+	// ID is only used by answer fields
+	instantiate(params expression.Variables, ID int) instance
+}
+
+type NumberField struct {
+	// a valid expression, in the format used by expression.Expression
+	// which is only parametrized by the random parameters
+	// TODO: carefully check that the prof expression is valid
+	Expression string
+}
+
+type ListField struct {
+	Choices []string
+}
+
+type FormulaField struct {
+	Expression string // a valid expression, in the format used by expression.Expression
+}
 
 // randomParameters is a serialized form of expression.RandomParameters
 type randomParameters []randomParameter
@@ -92,6 +119,14 @@ func (tp TextPart) instantiate(params expression.Variables) TextOrMaths {
 
 type TextParts []TextPart
 
+// TextBlock is a chunk of text
+// which may contain maths
+// It support basic interpolation syntax.
+type TextBlock struct {
+	Parts  string
+	IsHint bool
+}
+
 func (t TextBlock) instantiate(params expression.Variables, _ int) instance {
 	content, _ := ParseInterpolatedString(t.Parts)
 	parts := make([]TextOrMaths, len(content))
@@ -131,6 +166,12 @@ func (fp FormulaPart) instantiate(params expression.Variables) StringOrExpressio
 	return StringOrExpression{Expression: expr}
 }
 
+// FormulaBlock is a math formula, which should be display using
+// a LaTeX renderer.
+type FormulaBlock struct {
+	Parts FormulaContent
+}
+
 func (f FormulaBlock) instantiate(params expression.Variables, _ int) instance {
 	out := FormulaDisplayInstance{}
 	out.Parts = make([]StringOrExpression, len(f.Parts))
@@ -138,6 +179,11 @@ func (f FormulaBlock) instantiate(params expression.Variables, _ int) instance {
 		out.Parts[i] = c.instantiate(params)
 	}
 	return FormulaDisplayInstance{}
+}
+
+type VariationTableBlock struct {
+	Xs  []string // expressions
+	Fxs []string // expressions
 }
 
 func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) instance {
@@ -154,6 +200,12 @@ func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) in
 	return out
 }
 
+type SignTableBlock struct {
+	Xs        FormulaContent
+	FxSymbols []SignSymbol
+	Signs     []bool // with length len(Xs) - 1
+}
+
 func (st SignTableBlock) instantiate(params expression.Variables, _ int) instance {
 	out := SignTableInstance{
 		Xs: make([]string, len(st.Xs)),
@@ -163,6 +215,44 @@ func (st SignTableBlock) instantiate(params expression.Variables, _ int) instanc
 	}
 	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
 	out.Signs = append([]bool(nil), st.Signs...)
+	return out
+}
+
+type FigureBlock struct {
+	Drawings repere.RandomDrawings
+	Bounds   repere.RepereBounds
+	ShowGrid bool
+}
+
+func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
+	out := FigureInstance{
+		Figure: repere.Figure{
+			Drawings: repere.Drawings{
+				Segments: f.Drawings.Segments,
+				Points:   make(map[string]repere.LabeledPoint),
+				Lines:    make([]repere.Line, len(f.Drawings.Lines)),
+			},
+			Bounds:   f.Bounds,
+			ShowGrid: f.ShowGrid,
+		},
+	}
+	for k, v := range f.Drawings.Points {
+		out.Figure.Drawings.Points[k] = repere.LabeledPoint{
+			Point: repere.Coord{
+				X: mustEvaluate(v.Coord.X, params),
+				Y: mustEvaluate(v.Coord.Y, params),
+			},
+			Pos: v.Pos,
+		}
+	}
+
+	for i, l := range f.Drawings.Lines {
+		out.Figure.Drawings.Lines[i] = repere.Line{
+			Label: l.Label,
+			A:     mustEvaluate(l.A, params),
+			B:     mustEvaluate(l.B, params),
+		}
+	}
 	return out
 }
 
