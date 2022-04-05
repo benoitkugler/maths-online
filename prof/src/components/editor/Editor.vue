@@ -14,17 +14,43 @@
         </v-btn>
       </v-col>
     </v-row>
+    <v-card>
+      <component
+        v-for="row in rows"
+        :data="row.props"
+        :is="row.component"
+      ></component>
+    </v-card>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { controller } from "@/controller/controller";
+import type { Question, TextBlock } from "@/controller/exercice_gen";
+import { reactive } from "@vue/reactivity";
+import TextCompVue from "./blocks/TextComp.vue";
 
 const props = defineProps({
   session_id: { type: String, required: true }
 });
 
+const question: Question = reactive({
+  title: "Nouvelle question",
+  enonce: [],
+  random_parameters: []
+});
+
+let rows = reactive([
+  {
+    component: TextCompVue,
+    props: <TextBlock>{ IsHint: true, Parts: "Ceci est un essai" }
+  }
+]); // TODO
+
 async function save() {
-  await controller.EditSaveAndPreview({ SessionID: props.session_id || "" });
+  await controller.EditSaveAndPreview({
+    SessionID: props.session_id || "",
+    Question: question
+  });
 }
 </script>

@@ -15,9 +15,27 @@ export interface LaunchGameOut {
 export interface StartSessionOut {
   ID: string;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.Block
+export type Block = any;
+// github.com/benoitkugler/maths-online/maths/exercice.Enonce
+export type Enonce = Block[] | null;
+// github.com/benoitkugler/maths-online/maths/exercice.randomParameter
+export interface randomParameter {
+  expression: string;
+  variable: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.randomParameters
+export type randomParameters = randomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/exercice.Question
+export interface Question {
+  title: string;
+  enonce: Enonce;
+  random_parameters: randomParameters;
+}
 // github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
 export interface SaveAndPreviewIn {
   SessionID: string;
+  Question: Question;
 }
 
 /** AbstractAPI provides auto-generated API calls and should be used 
