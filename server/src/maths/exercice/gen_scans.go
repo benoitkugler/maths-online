@@ -223,9 +223,9 @@ func (s randomParameters) Value() (driver.Value, error) { return dumpJSON(s) }
 func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
-		&s.IdExercice,
 		&s.Title,
 		&s.Enonce,
+		&s.RandomParameters,
 	)
 	return s, err
 }
@@ -276,14 +276,14 @@ func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("questions",
-		"id_exercice", "title", "enonce",
+		"title", "enonce", "random_parameters",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdExercice, item.Title, item.Enonce)
+		_, err = stmt.Exec(item.Title, item.Enonce, item.RandomParameters)
 		if err != nil {
 			return err
 		}
@@ -300,37 +300,12 @@ func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
 }
 
 // Delete the link Question in the database.
-// Only the 'IdExercice' fields are used.
+// Only the fields are used.
 func (item Question) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM questions WHERE 
-	id_exercice = $1;`, item.IdExercice)
+	;`)
 	return err
 }
 
 func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
-
-func SelectQuestionsByIdExercices(tx DB, idExercices ...int64) (Questions, error) {
-	rows, err := tx.Query("SELECT * FROM questions WHERE id_exercice = ANY($1)", pq.Int64Array(idExercices))
-	if err != nil {
-		return nil, err
-	}
-	return ScanQuestions(rows)
-}
-
-func DeleteQuestionsByIdExercices(tx DB, idExercices ...int64) (Questions, error) {
-	rows, err := tx.Query("DELETE FROM questions WHERE id_exercice = ANY($1) RETURNING *", pq.Int64Array(idExercices))
-	if err != nil {
-		return nil, err
-	}
-	return ScanQuestions(rows)
-}
-
-// ByIdExercice returns a map with 'IdExercice' as keys.
-func (items Questions) ByIdExercice() map[int64]Questions {
-	out := make(map[int64]Questions)
-	for _, target := range items {
-		out[target.IdExercice] = append(out[target.IdExercice], target)
-	}
-	return out
-}

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os/exec"
-	"reflect"
 	"testing"
 )
 
@@ -100,8 +99,6 @@ func testSQL(t *testing.T, logs logsDB) {
 	}
 
 	qu1, qu2 := randQuestion(), randQuestion()
-	qu1.IdExercice = ex.Id
-	qu2.IdExercice = ex.Id
 	qu1.Enonce = append(qu1.Enonce, randFormulaBlock())
 	err = InsertManyQuestions(tx, qu1, qu2)
 	if err != nil {
@@ -112,14 +109,14 @@ func testSQL(t *testing.T, logs logsDB) {
 		t.Fatal(err)
 	}
 
-	exQ, err := SelectExerciceQuestions(db, ex.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// exQ, err := SelectExerciceQuestions(db, ex.Id)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 
-	if !reflect.DeepEqual(exQ.Questions, Questions{qu1, qu2}) {
-		t.Fatal(err)
-	}
+	// if !reflect.DeepEqual(exQ.Questions, Questions{qu1, qu2}) {
+	// 	t.Fatal(err)
+	// }
 
 	_, err = DeleteExerciceById(db, ex.Id)
 	if err != nil {

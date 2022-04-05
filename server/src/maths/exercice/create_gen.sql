@@ -117,8 +117,7 @@ CREATE TABLE exercices (
 	IMMUTABLE;
 
 CREATE TABLE questions (
-	id_exercice integer  NOT NULL,
 	title varchar  NOT NULL,
-	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce))
+	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce)),
+	random_parameters jsonb  CONSTRAINT random_parameters_structgen_validate_json_array_struct_3340897463 CHECK (structgen_validate_json_array_struct_3340897463(random_parameters))
 );
-ALTER TABLE questions ADD FOREIGN KEY(id_exercice) REFERENCES exercices ON DELETE CASCADE;

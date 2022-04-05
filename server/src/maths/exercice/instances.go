@@ -22,6 +22,7 @@ var (
 	_ instance = FigureInstance{}
 	_ instance = FunctionVariationGraphInstance{}
 	_ instance = TableInstance{}
+	_ instance = FunctionGraphInstance{}
 )
 
 // ExerciceInstance is an in memory version of an Exercice,
@@ -102,22 +103,6 @@ func (qi QuestionInstance) ToClient() client.Question {
 
 type EnonceInstance []instance
 
-// TextOrMaths is either
-//	- a math expression
-// 	- a math content
-// 	- a regular text content
-type TextOrMaths struct {
-	StringOrExpression
-	IsMath bool
-}
-
-func (tm TextOrMaths) toClient() client.TextOrMath {
-	return client.TextOrMath{
-		IsMath: tm.IsMath,
-		Text:   tm.StringOrExpression.asLaTeX(),
-	}
-}
-
 // StringOrExpression is either an expression or a static string,
 // usually rendered as LaTeX, in text mode.
 type StringOrExpression struct {
@@ -139,21 +124,9 @@ func (fi StringOrExpression) asLaTeX() string {
 
 // TextInstance is a paragraph of text, which may contain expression or
 // math chunks, which is rendered on a single line (eventually wrapped).
-type TextInstance struct {
-	Parts  []TextOrMaths
-	IsHint bool
-}
+type TextInstance client.TextBlock
 
-func (t TextInstance) toClient() client.Block {
-	out := client.TextBlock{
-		Parts:  make([]client.TextOrMath, len(t.Parts)),
-		IsHint: t.IsHint,
-	}
-	for i, p := range t.Parts {
-		out.Parts[i] = p.toClient()
-	}
-	return out
-}
+func (t TextInstance) toClient() client.Block { return client.TextBlock(t) }
 
 // FormulaDisplayInstance is rendered as LaTeX, in display mode.
 type FormulaDisplayInstance struct {
@@ -242,8 +215,8 @@ func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 type FunctionGraphInstance struct {
 	Function *expression.Expression
 	Label    string
-	Variable expression.Variable
-	Range    [2]float64
+	Variable expression.Variable // usually x
+	Range    [2]float64          // definition domain
 }
 
 func (fg FunctionGraphInstance) toClient() client.Block {
@@ -268,10 +241,4 @@ type TableInstance client.TableBlock
 
 func (ti TableInstance) toClient() client.Block {
 	return client.TableBlock(ti)
-}
-
-type TableDoubleEntryInstance client.TableDoubleEntryBlock
-
-func (ti TableDoubleEntryInstance) toClient() client.Block {
-	return client.TableDoubleEntryBlock(ti)
 }

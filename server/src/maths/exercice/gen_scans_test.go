@@ -47,7 +47,7 @@ func queriesQuestion(tx *sql.Tx, item Question) (Question, error) {
 	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM questions WHERE 
-		id_exercice = $1;`, item.IdExercice)
+		;`)
 	_, err = ScanQuestion(row)
 
 	return item, err

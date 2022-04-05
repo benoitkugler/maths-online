@@ -17,12 +17,16 @@ export interface Exercice {
 export enum BlockKind {
   FigureBlock = 0,
   FormulaBlock = 1,
-  FormulaField = 2,
-  ListField = 3,
-  NumberField = 4,
-  SignTableBlock = 5,
-  TextBlock = 6,
-  VariationTableBlock = 7,
+  FormulaFieldBlock = 2,
+  FunctionGraphBlock = 3,
+  FunctionVariationGraphBlock = 4,
+  ListField = 5,
+  NumberFieldBlock = 6,
+  RadioFieldBlock = 7,
+  SignTableBlock = 8,
+  TableBlock = 9,
+  TextBlock = 10,
+  VariationTableBlock = 11,
 }
 
 export interface Block {
@@ -30,10 +34,14 @@ export interface Block {
   Data:
     | FigureBlock
     | FormulaBlock
-    | FormulaField
+    | FormulaFieldBlock
+    | FunctionGraphBlock
+    | FunctionVariationGraphBlock
     | ListField
-    | NumberField
+    | NumberFieldBlock
+    | RadioFieldBlock
     | SignTableBlock
+    | TableBlock
     | TextBlock
     | VariationTableBlock;
 }
@@ -118,17 +126,60 @@ export type FormulaContent = FormulaPart[] | null;
 export interface FormulaBlock {
   Parts: FormulaContent;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaField
-export interface FormulaField {
+// github.com/benoitkugler/maths-online/maths/exercice.TextKind
+enum TextKind {
+  Expression = 2,
+  StaticMath = 1,
+  Text = 0,
+}
+
+export const TextKindLabels: { [key in TextKind]: string } = {
+  [TextKind.Expression]: "Expression",
+  [TextKind.StaticMath]: "Code LaTeX",
+  [TextKind.Text]: "Text simple",
+};
+
+// github.com/benoitkugler/maths-online/maths/exercice.TextPart
+export interface TextPart {
+  Content: string;
+  Kind: TextKind;
+}
+// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
+export type ComparisonLevel = number;
+// github.com/benoitkugler/maths-online/maths/exercice.FormulaFieldBlock
+export interface FormulaFieldBlock {
   Expression: string;
+  Label: TextPart;
+  ComparisonLevel: ComparisonLevel;
+}
+// github.com/benoitkugler/maths-online/maths/expression.Variable
+export type Variable = number;
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
+export interface FunctionGraphBlock {
+  Function: string;
+  Label: string;
+  Variable: Variable;
+  Range: number[];
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
+export interface FunctionVariationGraphBlock {
+  Xs: string[] | null;
+  Fxs: string[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.ListField
 export interface ListField {
   Choices: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.NumberField
-export interface NumberField {
+// github.com/benoitkugler/maths-online/maths/exercice.NumberFieldBlock
+export interface NumberFieldBlock {
   Expression: string;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.Interpolated
+export type Interpolated = string;
+// github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
+export interface RadioFieldBlock {
+  Answer: string;
+  Proposals: Interpolated[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
 enum SignSymbol {
@@ -149,9 +200,20 @@ export interface SignTableBlock {
   FxSymbols: SignSymbol[] | null;
   Signs: boolean[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
+export interface TextOrMath {
+  Text: string;
+  IsMath: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TableBlock
+export interface TableBlock {
+  HorizontalHeaders: TextOrMath[] | null;
+  VerticalHeaders: TextOrMath[] | null;
+  Values: TextPart[] | null[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.TextBlock
 export interface TextBlock {
-  Parts: string;
+  Parts: Interpolated;
   IsHint: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
@@ -163,7 +225,7 @@ export interface VariationTableBlock {
 export type Enonce = Block[] | null;
 // github.com/benoitkugler/maths-online/maths/exercice.Question
 export interface Question {
-  id_exercice: number;
   title: string;
   enonce: Enonce;
+  random_parameters: randomParameters;
 }

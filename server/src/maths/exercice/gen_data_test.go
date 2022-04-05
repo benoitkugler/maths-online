@@ -3,6 +3,8 @@ package exercice
 import (
 	"math/rand"
 
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -60,14 +62,18 @@ func randBlock() Block {
 	choix := [...]Block{
 		randFigureBlock(),
 		randFormulaBlock(),
-		randFormulaField(),
+		randFormulaFieldBlock(),
+		randFunctionGraphBlock(),
+		randFunctionVariationGraphBlock(),
 		randListField(),
-		randNumberField(),
+		randNumberFieldBlock(),
+		randRadioFieldBlock(),
 		randSignTableBlock(),
+		randTableBlock(),
 		randTextBlock(),
 		randVariationTableBlock(),
 	}
-	i := rand.Intn(8)
+	i := rand.Intn(12)
 	return choix[i]
 }
 
@@ -206,9 +212,53 @@ func randFormulaBlock() FormulaBlock {
 	}
 }
 
-func randFormulaField() FormulaField {
-	return FormulaField{
-		Expression: randstring(),
+func randTextKind() TextKind {
+	choix := [...]TextKind{Expression, StaticMath, Text}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randTextPart() TextPart {
+	return TextPart{
+		Content: randstring(),
+		Kind:    randTextKind(),
+	}
+}
+
+func randuint8() uint8 {
+	return uint8(rand.Intn(1000000))
+}
+
+func randComparisonLevel() expression.ComparisonLevel {
+	return expression.ComparisonLevel(randuint8())
+}
+
+func randFormulaFieldBlock() FormulaFieldBlock {
+	return FormulaFieldBlock{
+		Expression:      randstring(),
+		Label:           randTextPart(),
+		ComparisonLevel: randComparisonLevel(),
+	}
+}
+
+func randVariable() expression.Variable {
+	return expression.Variable(randrune())
+}
+
+func randArray2float64() [2]float64 {
+	var out [2]float64
+	for i := range out {
+		out[i] = randfloat64()
+	}
+	return out
+}
+
+func randFunctionGraphBlock() FunctionGraphBlock {
+	return FunctionGraphBlock{
+		Function: randstring(),
+		Label:    randstring(),
+		Variable: randVariable(),
+		Range:    randArray2float64(),
 	}
 }
 
@@ -221,15 +271,42 @@ func randSlicestring() []string {
 	return out
 }
 
+func randFunctionVariationGraphBlock() FunctionVariationGraphBlock {
+	return FunctionVariationGraphBlock{
+		Xs:  randSlicestring(),
+		Fxs: randSlicestring(),
+	}
+}
+
 func randListField() ListField {
 	return ListField{
 		Choices: randSlicestring(),
 	}
 }
 
-func randNumberField() NumberField {
-	return NumberField{
+func randNumberFieldBlock() NumberFieldBlock {
+	return NumberFieldBlock{
 		Expression: randstring(),
+	}
+}
+
+func randInterpolated() Interpolated {
+	return Interpolated(randstring())
+}
+
+func randSliceInterpolated() []Interpolated {
+	l := rand.Intn(10)
+	out := make([]Interpolated, l)
+	for i := range out {
+		out[i] = randInterpolated()
+	}
+	return out
+}
+
+func randRadioFieldBlock() RadioFieldBlock {
+	return RadioFieldBlock{
+		Answer:    randstring(),
+		Proposals: randSliceInterpolated(),
 	}
 }
 
@@ -265,9 +342,51 @@ func randSignTableBlock() SignTableBlock {
 	}
 }
 
+func randclientTextOrMath() client.TextOrMath {
+	return client.TextOrMath{
+		Text:   randstring(),
+		IsMath: randbool(),
+	}
+}
+
+func randSliceclientTextOrMath() []client.TextOrMath {
+	l := rand.Intn(10)
+	out := make([]client.TextOrMath, l)
+	for i := range out {
+		out[i] = randclientTextOrMath()
+	}
+	return out
+}
+
+func randSliceTextPart() []TextPart {
+	l := rand.Intn(10)
+	out := make([]TextPart, l)
+	for i := range out {
+		out[i] = randTextPart()
+	}
+	return out
+}
+
+func randSliceSliceTextPart() [][]TextPart {
+	l := rand.Intn(10)
+	out := make([][]TextPart, l)
+	for i := range out {
+		out[i] = randSliceTextPart()
+	}
+	return out
+}
+
+func randTableBlock() TableBlock {
+	return TableBlock{
+		HorizontalHeaders: randSliceclientTextOrMath(),
+		VerticalHeaders:   randSliceclientTextOrMath(),
+		Values:            randSliceSliceTextPart(),
+	}
+}
+
 func randTextBlock() TextBlock {
 	return TextBlock{
-		Parts:  randstring(),
+		Parts:  randInterpolated(),
 		IsHint: randbool(),
 	}
 }
@@ -294,8 +413,8 @@ func randEnonce() Enonce {
 
 func randQuestion() Question {
 	return Question{
-		IdExercice: randint64(),
-		Title:      randstring(),
-		Enonce:     randEnonce(),
+		Title:            randstring(),
+		Enonce:           randEnonce(),
+		RandomParameters: randrandomParameters(),
 	}
 }

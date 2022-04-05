@@ -18,36 +18,17 @@ type Question struct {
 
 type Enonce []Block
 
-func (evs Enonce) MarshalJSON() ([]byte, error) {
-	tmp := make([]BlockWrapper, len(evs))
-	for i, v := range evs {
-		tmp[i] = BlockWrapper{Data: v}
-	}
-	return json.Marshal(tmp)
-}
-
-func (evs *Enonce) UnmarshalJSON(data []byte) error {
-	var tmp []BlockWrapper
-	err := json.Unmarshal(data, &tmp)
-	*evs = make(Enonce, len(tmp))
-	for i, v := range tmp {
-		(*evs)[i] = v.Data
-	}
-	return err
-}
-
 type Block interface {
 	isBlock()
 }
 
-func (TextBlock) isBlock()             {}
-func (FormulaBlock) isBlock()          {}
-func (VariationTableBlock) isBlock()   {}
-func (SignTableBlock) isBlock()        {}
-func (FigureBlock) isBlock()           {}
-func (FunctionGraphBlock) isBlock()    {}
-func (TableBlock) isBlock()            {}
-func (TableDoubleEntryBlock) isBlock() {}
+func (TextBlock) isBlock()           {}
+func (FormulaBlock) isBlock()        {}
+func (VariationTableBlock) isBlock() {}
+func (SignTableBlock) isBlock()      {}
+func (FigureBlock) isBlock()         {}
+func (FunctionGraphBlock) isBlock()  {}
+func (TableBlock) isBlock()          {}
 
 func (NumberFieldBlock) isBlock()           {}
 func (ExpressionFieldBlock) isBlock()       {}
@@ -113,14 +94,14 @@ type FunctionGraphBlock struct {
 	Graph functiongrapher.FunctionGraph
 }
 
-type TableBlock struct {
-	Rows     [][]TextOrMath // the first item of each row serves as header
-	NoHeader bool
-}
+// type TableBlock struct {
+// 	Rows     [][]TextOrMath // the first item of each row serves as header
+// 	NoHeader bool
+// }
 
-type TableDoubleEntryBlock struct {
-	HorizontalHeaders []TextOrMath
-	VerticalHeaders   []TextOrMath
+type TableBlock struct {
+	HorizontalHeaders []TextOrMath // optional
+	VerticalHeaders   []TextOrMath // optional
 	Values            [][]TextOrMath
 }
 

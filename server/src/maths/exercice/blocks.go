@@ -1,6 +1,7 @@
 package exercice
 
 import (
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
@@ -13,6 +14,9 @@ var (
 	_ Block = VariationTableBlock{}
 	_ Block = SignTableBlock{}
 	_ Block = FigureBlock{}
+	_ Block = FunctionGraphBlock{}
+	_ Block = FunctionVariationGraphBlock{}
+	_ Block = TableBlock{}
 )
 
 type Enonce []Block
@@ -25,19 +29,8 @@ type Block interface {
 	instantiate(params expression.Variables, ID int) instance
 }
 
-type NumberField struct {
-	// a valid expression, in the format used by expression.Expression
-	// which is only parametrized by the random parameters
-	// TODO: carefully check that the prof expression is valid
-	Expression string
-}
-
 type ListField struct {
 	Choices []string
-}
-
-type FormulaField struct {
-	Expression string // a valid expression, in the format used by expression.Expression
 }
 
 // randomParameters is a serialized form of expression.RandomParameters
@@ -48,11 +41,12 @@ type randomParameter struct {
 	Variable   rune   `json:"variable"`
 }
 
-// toMap assumes `rp` only contains valid expressions
+// toMap assumes `rp` only contains valid expressions,
+// or it will panic
 func (rp randomParameters) toMap() expression.RandomParameters {
 	out := make(expression.RandomParameters, len(rp))
 	for _, item := range rp {
-		out[expression.Variable(item.Variable)], _, _ = expression.Parse(item.Expression)
+		out[expression.Variable(item.Variable)] = mustParse(item.Expression)
 	}
 	return out
 }
@@ -79,13 +73,22 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 	out.Questions = make([]QuestionInstance, len(eq.Questions))
 
 	for i, qu := range eq.Questions {
-		out.Questions[i] = qu.instantiate(params)
+		out.Questions[i] = qu.instantiateWith(params)
 	}
 
 	return out
 }
 
-func (qu Question) instantiate(params expression.Variables) QuestionInstance {
+// Instantiate returns a deep copy of `qu`, where all random parameters
+// have been resolved.
+// It assumes that the expressions and random parameters definitions are valid.
+func (qu Question) Instantiate() QuestionInstance {
+	// generate random params
+	rp, _ := qu.RandomParameters.toMap().Instantiate()
+	return qu.instantiateWith(rp)
+}
+
+func (qu Question) instantiateWith(params expression.Variables) QuestionInstance {
 	enonce := make(EnonceInstance, len(qu.Enonce))
 	var currentID int
 	for j, bl := range qu.Enonce {
@@ -97,21 +100,22 @@ func (qu Question) instantiate(params expression.Variables) QuestionInstance {
 	return QuestionInstance{Title: qu.Title, Enonce: enonce}
 }
 
+// TextPart is either a plain text, a LaTeX code or an expression
 type TextPart struct {
 	Content string
 	Kind    TextKind
 }
 
-func (tp TextPart) instantiate(params expression.Variables) TextOrMaths {
+func (tp TextPart) instantiate(params expression.Variables) client.TextOrMath {
 	switch tp.Kind {
 	case Text:
-		return TextOrMaths{StringOrExpression: StringOrExpression{String: tp.Content}}
+		return client.TextOrMath{Text: tp.Content}
 	case StaticMath:
-		return TextOrMaths{StringOrExpression: StringOrExpression{String: tp.Content}, IsMath: true}
+		return client.TextOrMath{Text: tp.Content, IsMath: true}
 	case Expression:
 		expr, _, _ := expression.Parse(tp.Content)
 		expr.Substitute(params)
-		return TextOrMaths{StringOrExpression: StringOrExpression{Expression: expr}, IsMath: true}
+		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}
 	default:
 		panic(ExhaustiveTextKind)
 	}
@@ -119,23 +123,27 @@ func (tp TextPart) instantiate(params expression.Variables) TextOrMaths {
 
 type TextParts []TextPart
 
+func (tp TextParts) instantiate(params expression.Variables) []client.TextOrMath {
+	parts := make([]client.TextOrMath, len(tp))
+	for i, p := range tp {
+		parts[i] = p.instantiate(params)
+	}
+	return parts
+}
+
 // TextBlock is a chunk of text
 // which may contain maths
 // It support basic interpolation syntax.
 type TextBlock struct {
-	Parts  string
+	Parts  Interpolated
 	IsHint bool
 }
 
 func (t TextBlock) instantiate(params expression.Variables, _ int) instance {
-	content, _ := ParseInterpolatedString(t.Parts)
-	parts := make([]TextOrMaths, len(content))
-	for i, p := range content {
-		parts[i] = p.instantiate(params)
-	}
+	content, _ := t.Parts.Parse()
 	return TextInstance{
 		IsHint: t.IsHint,
-		Parts:  parts,
+		Parts:  content.instantiate(params),
 	}
 }
 
@@ -186,7 +194,7 @@ type VariationTableBlock struct {
 	Fxs []string // expressions
 }
 
-func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) instance {
+func (vt VariationTableBlock) instantiateVT(params expression.Variables) VariationTableInstance {
 	out := VariationTableInstance{
 		Xs:  make([]float64, len(vt.Xs)),
 		Fxs: make([]float64, len(vt.Fxs)),
@@ -198,6 +206,10 @@ func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) in
 		out.Fxs[i] = mustEvaluate(c, params)
 	}
 	return out
+}
+
+func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) instance {
+	return vt.instantiateVT(params)
 }
 
 type SignTableBlock struct {
@@ -256,15 +268,50 @@ func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
 	return out
 }
 
-func (n NumberField) instantiate(params expression.Variables, ID int) instance {
-	expr, _, _ := expression.Parse(n.Expression)
-	answer, _ := expr.Evaluate(params)
-	return NumberFieldInstance{ID: ID, Answer: answer}
+type FunctionGraphBlock struct {
+	Function string // expression
+	Label    string
+	Variable expression.Variable // usually x
+	Range    [2]float64          // definition domain
 }
 
-// TODO
-func (f FormulaField) instantiate(params expression.Variables, ID int) instance {
-	return ExpressionFieldInstance{}
+func (fg FunctionGraphBlock) instantiate(params expression.Variables, _ int) instance {
+	expr := mustParse(fg.Function)
+	expr.Substitute(params)
+	return FunctionGraphInstance{
+		Function: expr,
+		Label:    fg.Label,
+		Variable: fg.Variable,
+		Range:    fg.Range,
+	}
+}
+
+type FunctionVariationGraphBlock VariationTableBlock
+
+func (f FunctionVariationGraphBlock) instantiate(params expression.Variables, _ int) instance {
+	return FunctionVariationGraphInstance(VariationTableBlock(f).instantiateVT(params))
+}
+
+type TableBlock struct {
+	HorizontalHeaders []client.TextOrMath
+	VerticalHeaders   []client.TextOrMath
+	Values            [][]TextPart
+}
+
+func (t TableBlock) instantiate(params expression.Variables, _ int) instance {
+	out := TableInstance{
+		HorizontalHeaders: t.HorizontalHeaders,
+		VerticalHeaders:   t.VerticalHeaders,
+		Values:            make([][]client.TextOrMath, len(t.Values)),
+	}
+	for i, row := range t.Values {
+		rowInstance := make([]client.TextOrMath, len(row))
+		for j, v := range row {
+			rowInstance[j] = v.instantiate(params)
+		}
+		out.Values[i] = rowInstance
+	}
+	return out
 }
 
 // TODO

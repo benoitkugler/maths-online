@@ -9,7 +9,7 @@ const regularText = "This is a regular text"
 
 func TestParseInterpolatedString(t *testing.T) {
 	tests := []struct {
-		args    string
+		args    Interpolated
 		want    TextParts
 		wantErr bool
 	}{
@@ -36,13 +36,13 @@ func TestParseInterpolatedString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got, err := ParseInterpolatedString(tt.args)
+		got, err := tt.args.Parse()
 		if (err != nil) != tt.wantErr {
-			t.Errorf("ParseInterpolatedString() error = %v, wantErr %v", err, tt.wantErr)
+			t.Errorf("Interpolated.Parse() error = %v, wantErr %v", err, tt.wantErr)
 			return
 		}
 		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("ParseInterpolatedString() = %v, want %v", got, tt.want)
+			t.Errorf("Interpolated.Parse() = %v, want %v", got, tt.want)
 		}
 	}
 }

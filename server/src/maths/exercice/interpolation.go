@@ -78,11 +78,14 @@ func (pr *parser) nextPart() (_ TextPart, eof bool, err error) {
 	return TextPart{Content: string(pr.src[start:pr.pos]), Kind: Text}, false, nil
 }
 
-// ParseInterpolatedString expects a string with $<static math>$ or #{<expression>}
+// Interpolated is a string with $<static math>$ or #{<expression>}
 // delimiters.
-func ParseInterpolatedString(s string) (TextParts, error) {
+type Interpolated string
+
+// Parse extracts each parts of the interpolated string.
+func (s Interpolated) Parse() (TextParts, error) {
 	var out TextParts
-	pr := newParser(s)
+	pr := newParser(string(s))
 	for {
 		part, eof, err := pr.nextPart()
 		if err != nil {

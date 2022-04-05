@@ -3,6 +3,7 @@ package editor
 import (
 	"fmt"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,7 +20,7 @@ func (ct *Controller) EditStartSession(c echo.Context) error {
 
 type SaveAndPreviewIn struct {
 	SessionID string
-	// TODO: read the actual question
+	Question  exercice.Question
 }
 
 func (ct *Controller) EditSaveAndPreview(c echo.Context) error {
@@ -28,7 +29,7 @@ func (ct *Controller) EditSaveAndPreview(c echo.Context) error {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.saveAndPreview(args.SessionID)
+	err := ct.saveAndPreview(args)
 	if err != nil {
 		return err
 	}

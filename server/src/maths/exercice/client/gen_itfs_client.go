@@ -180,26 +180,22 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 14:
-		var data TableDoubleEntryBlock
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 15:
 		var data TableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 16:
+	case 15:
 		var data TextBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 17:
+	case 16:
 		var data TreeFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 18:
+	case 17:
 		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 19:
+	case 18:
 		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -245,21 +241,37 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 12, Data: data}
 	case TableBlock:
 		wr = wrapper{Kind: 13, Data: data}
-	case TableDoubleEntryBlock:
-		wr = wrapper{Kind: 14, Data: data}
 	case TableFieldBlock:
-		wr = wrapper{Kind: 15, Data: data}
+		wr = wrapper{Kind: 14, Data: data}
 	case TextBlock:
-		wr = wrapper{Kind: 16, Data: data}
+		wr = wrapper{Kind: 15, Data: data}
 	case TreeFieldBlock:
-		wr = wrapper{Kind: 17, Data: data}
+		wr = wrapper{Kind: 16, Data: data}
 	case VariationTableBlock:
-		wr = wrapper{Kind: 18, Data: data}
+		wr = wrapper{Kind: 17, Data: data}
 	case VariationTableFieldBlock:
-		wr = wrapper{Kind: 19, Data: data}
+		wr = wrapper{Kind: 18, Data: data}
 
 	default:
 		panic("exhaustive switch")
 	}
 	return json.Marshal(wr)
+}
+
+func (ct Enonce) MarshalJSON() ([]byte, error) {
+	tmp := make([]BlockWrapper, len(ct))
+	for i, v := range ct {
+		tmp[i].Data = v
+	}
+	return json.Marshal(tmp)
+}
+
+func (ct *Enonce) UnmarshalJSON(data []byte) error {
+	var tmp []BlockWrapper
+	err := json.Unmarshal(data, &tmp)
+	*ct = make(Enonce, len(tmp))
+	for i, v := range tmp {
+		(*ct)[i] = v.Data
+	}
+	return err
 }

@@ -5,11 +5,9 @@ package editor
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"sync"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -66,17 +64,16 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
-// TODO actually validate and save
-func (ct *Controller) saveAndPreview(sessionID string) error {
-	index := rand.Intn(len(exercice.PredefinedQuestions))
-	question := exercice.PredefinedQuestions[index].ToClient()
+func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
+	// TODO actually validate and save
+	question := params.Question.Instantiate().ToClient()
 
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
 
-	loopback, ok := ct.sessions[sessionID]
+	loopback, ok := ct.sessions[params.SessionID]
 	if !ok {
-		return fmt.Errorf("invalid session ID %s", sessionID)
+		return fmt.Errorf("invalid session ID %s", params.SessionID)
 	}
 
 	loopback.broadcast <- question

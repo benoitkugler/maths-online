@@ -23,16 +23,16 @@ func mustEvaluate(s string, vars ...expression.Variables) float64 {
 	return expression.MustEvaluate(s, nil)
 }
 
-func text(s string) TextOrMaths {
-	return TextOrMaths{StringOrExpression: StringOrExpression{String: s}}
+func text(s string) client.TextOrMath {
+	return client.TextOrMath{Text: s}
 }
 
-func staticMath(s string) TextOrMaths {
-	return TextOrMaths{StringOrExpression: StringOrExpression{String: s}, IsMath: true}
+func staticMath(s string) client.TextOrMath {
+	return client.TextOrMath{Text: s, IsMath: true}
 }
 
-func expr(s string) TextOrMaths {
-	return TextOrMaths{StringOrExpression: StringOrExpression{Expression: mustParse(s)}, IsMath: true}
+func expr(s string) client.TextOrMath {
+	return client.TextOrMath{Text: mustParse(s).AsLaTeX(nil), IsMath: true}
 }
 
 var (
@@ -207,7 +207,7 @@ func init() {
 
 	PredefinedQuestions = append(PredefinedQuestions, QuestionInstance{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Soient les points F("),
 				staticMath(expression.Number(distanceSample['A']).String()),
 				text(";"),
@@ -220,7 +220,7 @@ func init() {
 			}},
 			// TextInstance{
 			// 	IsHint: true,
-			// 	Parts: []TextOrMaths{
+			// 	Parts: []client.TextOrMath{
 			// 		text("(On utilisera sqrt(10) pour "),
 			// 		staticMath(`\sqrt{10}`),
 			// 		text(")."),
@@ -232,7 +232,7 @@ func init() {
 			// 	Answer:          mustParse("sqrt(1262900)"),
 			// 	ComparisonLevel: expression.SimpleSubstitutions,
 			// },
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath("FG = "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: distanceSample['c']},
@@ -244,7 +244,7 @@ func init() {
 var PredefinedQuestions = []QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{text("Développer l’expression :")}},
+			TextInstance{Parts: []client.TextOrMath{text("Développer l’expression :")}},
 			ExpressionFieldInstance{
 				ID:              0,
 				Label:           StringOrExpression{Expression: mustParse("(x−6)*(4*x−3)")},
@@ -255,17 +255,17 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 				{String: `= \frac{a}{b}`},
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("avec "),
 				staticMath("a = "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: 1*5 + 2*3},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(" et "),
 				staticMath("b = "),
 			}},
@@ -274,7 +274,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Écrire sous la forme "),
 				staticMath(`a\sqrt{b},`),
 				text(" où "),
@@ -288,12 +288,12 @@ var PredefinedQuestions = []QuestionInstance{
 				{String: " = "},
 				{Expression: mustParse("a * sqrt(b)")},
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("avec "),
 				staticMath("a = "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: 5},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(" et "),
 				staticMath("b = "),
 			}},
@@ -302,7 +302,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Nombres entiers", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				expr("89"),
 				text(" est-il un nombre premier ?"),
 			}},
@@ -318,7 +318,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Nombres entiers", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				expr("987"),
 				text(" est-il un mulitple de "),
 				expr("3"),
@@ -335,7 +335,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Nombres réels", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Traduire en intervalle : "),
 				staticMath(`x \ge `),
 				expr("12"),
@@ -362,7 +362,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Nombres réels", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("A quel plus petit ensemble appartient "),
 				expr("4/7"),
 			}},
@@ -381,7 +381,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Nombres réels", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Déterminer "),
 				staticMath(`I \cap J`),
 				text(" où "),
@@ -419,7 +419,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Equations et inéquations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Résoudre dans "),
 				staticMath(`\mathbb{R}`),
 				text("l'équation :"),
@@ -439,7 +439,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Equations et inéquations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Résoudre dans "),
 				staticMath(`\mathbb{R}`),
 				text("l'inéquation :"),
@@ -449,7 +449,7 @@ var PredefinedQuestions = []QuestionInstance{
 				{String: "<"},
 				{Expression: mustParse("2*x - 5")},
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath("x "),
 			}},
 			DropDownFieldInstance{
@@ -466,7 +466,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Equations et inéquations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Résoudre dans "),
 				staticMath(`\mathbb{R}`),
 				text("l'équation :"),
@@ -476,12 +476,12 @@ var PredefinedQuestions = []QuestionInstance{
 				{String: "="},
 				{Expression: mustParse("0")},
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Solutions : "),
 				staticMath("x = "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: 7},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(" ou "),
 				staticMath("x = "),
 			}},
@@ -490,7 +490,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Equations et inéquations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Combien l’équation "),
 				staticMath(`f(x) = `),
 				expr("-1"),
@@ -500,7 +500,7 @@ var PredefinedQuestions = []QuestionInstance{
 				Xs:  []float64{-20, -10, 0, 3, 18},
 				Fxs: []float64{-6, -2, -8, 0, -5},
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Nombre de solutions : "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: 2},
@@ -508,7 +508,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Equations et inéquations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Résoudre l’inéquation "),
 				staticMath(`f(x) \ge 0`),
 			}},
@@ -534,7 +534,7 @@ var PredefinedQuestions = []QuestionInstance{
 			// 	{X: "", IsYForbiddenValue: false, IsSign: true, IsPositive: true},
 			// 	{X: `+\infty`, IsYForbiddenValue: false, IsSign: false, IsPositive: false},
 			// }},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Intervalle(s) solution(s) :"),
 			}},
 			OrderedListFieldInstance{
@@ -565,7 +565,7 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Géométrie plane", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("ABC est un triangle rectangle en C avec "),
 				staticMath(`AB = `),
 				expr("sqrt(98)"),
@@ -575,7 +575,7 @@ var PredefinedQuestions = []QuestionInstance{
 				text(". Calculer, en degrés, "),
 				staticMath(`\widehat{ABC}.`),
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(`\widehat{ABC} = `),
 			}},
 			NumberFieldInstance{ID: 0, Answer: mustEvaluate("acos(7/sqrt(98))") * 180 / math.Pi},
@@ -583,7 +583,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Géométrie plane", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("ABC est un triangle rectangle en C avec "),
 				staticMath(`AB = `),
 				expr("sqrt(98)"),
@@ -592,7 +592,7 @@ var PredefinedQuestions = []QuestionInstance{
 				expr("7"),
 				text(". Calculer AC."),
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("AC = "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: mustEvaluate("sqrt(sqrt(98)^2 - 7^2)")},
@@ -600,7 +600,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Géométrie plane", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Soient "),
 				staticMath(`AB = `),
 				expr("4"),
@@ -630,7 +630,7 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Soient les points "),
 				staticMath(`A(`),
 				expr("8"),
@@ -645,15 +645,15 @@ var PredefinedQuestions = []QuestionInstance{
 				staticMath(")."),
 				text("Quelles sont les coordonnées de M, milieu de [AB] ?"),
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath("M = ("),
 			}},
 			NumberFieldInstance{ID: 0, Answer: mustEvaluate("(8 + (-6))/2")},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(";"),
 			}},
 			NumberFieldInstance{ID: 1, Answer: mustEvaluate("(19 + 0)/2")},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(")"),
 			}},
 		},
@@ -661,7 +661,7 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Quel point est le projeté orthogonal de D sur (AH) ?"),
 			}},
 			FigureInstance{Figure: figure1},
@@ -680,7 +680,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Construire le point M, projeté orthogonal de K sur (BC)."),
 			}},
 			FigurePointFieldInstance{
@@ -693,34 +693,34 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Lire les coordonnées de B."),
 			}},
 			FigureInstance{
 				Figure: figure3,
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath("B = ("),
 			}},
 			NumberFieldInstance{
 				ID:     0,
 				Answer: __B.X,
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath("; "),
 			}},
 			NumberFieldInstance{
 				ID:     1,
 				Answer: __B.Y,
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(")"),
 			}},
 		},
 	},
 	{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Quelle est la nature de ABCD ?"),
 			}},
 			FigureInstance{
@@ -740,7 +740,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Vecteurs", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Construire le vecteur "),
 				staticMath(`\overrightarrow{AB} + \overrightarrow{CD}.`),
 			}},
@@ -753,7 +753,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Vecteurs", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Simplifier au maximum l'expression vectorielle"),
 				staticMath(`\overrightarrow{AB} + \overrightarrow{EB} -  \overrightarrow{EG}`),
 			}},
@@ -774,7 +774,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Vecteurs", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Construire deux vecteurs égaux."),
 			}},
 			FigureVectorPairFieldInstance{
@@ -786,7 +786,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Vecteurs", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Construire deux vecteurs colinéaires."),
 			}},
 			FigureVectorPairFieldInstance{
@@ -798,35 +798,35 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Vecteurs", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Lire les coordonnées de "),
 				staticMath(`\overrightarrow{FG}.`),
 			}},
 			FigureInstance{
 				Figure: figure5,
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(`\overrightarrow{FG} = (`),
 			}},
 			NumberFieldInstance{
 				ID:     0,
 				Answer: _G5.X - _F5.X,
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(`;`),
 			}},
 			NumberFieldInstance{
 				ID:     1,
 				Answer: _G5.Y - _F5.Y,
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				staticMath(`)`),
 			}},
 		},
 	},
 	{
 		Title: "Droites du plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Lire l'équation de la droite (d)."),
 			}},
 			FigureInstance{
@@ -835,12 +835,12 @@ var PredefinedQuestions = []QuestionInstance{
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{String: "y = ax + b"},
 			}},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("avec "),
 				staticMath("a = "),
 			}},
 			NumberFieldInstance{ID: 0, Answer: _line.A},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(" et "),
 				staticMath("b = "),
 			}},
@@ -849,7 +849,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Droites du plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Construire la droite (d') d'équation"),
 			}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
@@ -872,7 +872,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Droites du plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Quelle est la position relative entre"),
 			}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
@@ -898,7 +898,7 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Droites du plan", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{text("Quelle est l'équation réduite de :")}},
+			TextInstance{Parts: []client.TextOrMath{text("Quelle est l'équation réduite de :")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{String: `(d) : `},
 				{Expression: mustParse("3x - 7y + 1")},
@@ -915,7 +915,7 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Généralités sur les fonctions", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Construire la courbe représentative de "),
 				staticMath("g(x) = "),
 				expr("x^2 − 3x + 1"),
@@ -932,14 +932,14 @@ var PredefinedQuestions = []QuestionInstance{
 	},
 	{
 		Title: "Variations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{text("Quel est le maximum de h ?")}},
+			TextInstance{Parts: []client.TextOrMath{text("Quel est le maximum de h ?")}},
 			FunctionGraphInstance{
 				Label:    `y = h(x)`,
 				Function: mustParse("10*(1.1(x/10)^4 - 2.2(x/10)^3+(x/10)) + 0.047"),
 				Variable: 'x',
 				Range:    [2]float64{-5, 16},
 			},
-			TextInstance{Parts: []TextOrMaths{text("Max : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Max : ")}},
 			NumberFieldInstance{
 				ID:     0,
 				Answer: 3,
@@ -949,7 +949,7 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Variations", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{text("Compléter le tableau de variations de h.")}},
+			TextInstance{Parts: []client.TextOrMath{text("Compléter le tableau de variations de h.")}},
 			FunctionVariationGraphInstance{
 				Xs:  []float64{0, 2, 6, 10, 12},
 				Fxs: []float64{3, 0, 6, 1, 4},
@@ -966,16 +966,19 @@ var PredefinedQuestions = []QuestionInstance{
 	{
 		Title: "Probabilités", Enonce: EnonceInstance{
 			TableInstance{
-				Rows: [][]client.TextOrMath{
+				VerticalHeaders: []client.TextOrMath{
+					{Text: "Issue"}, {Text: "Probabilité"},
+				},
+				Values: [][]client.TextOrMath{
 					{
-						{Text: "Issue"}, {Text: "Pique"}, {Text: "Trèfle"}, {Text: "Coeur"}, {Text: "Carreau"}, {Text: "TEST"}, {Text: "TEST"}, {Text: "TEST"},
+						{Text: "Pique"}, {Text: "Trèfle"}, {Text: "Coeur"}, {Text: "Carreau"}, {Text: "TEST"}, {Text: "TEST"}, {Text: "TEST"},
 					},
 					{
-						{Text: "Probabilité"}, {Text: "0.25", IsMath: true}, {Text: "x", IsMath: true}, {Text: "3x", IsMath: true}, {Text: "0.1", IsMath: true}, {}, {}, {},
+						{Text: "0.25", IsMath: true}, {Text: "x", IsMath: true}, {Text: "3x", IsMath: true}, {Text: "0.1", IsMath: true}, {}, {}, {},
 					},
 				},
 			},
-			TextInstance{Parts: []TextOrMaths{text("Quelle est la probabilité de tirer un coeur ?")}},
+			TextInstance{Parts: []client.TextOrMath{text("Quelle est la probabilité de tirer un coeur ?")}},
 			NumberFieldInstance{
 				ID:     0,
 				Answer: mustEvaluate("3 * (1 -(0.25 + 0.1)) / 4"),
@@ -985,7 +988,7 @@ var PredefinedQuestions = []QuestionInstance{
 
 	{
 		Title: "Probabilités", Enonce: EnonceInstance{
-			TableDoubleEntryInstance{
+			TableInstance{
 				HorizontalHeaders: []client.TextOrMath{
 					{Text: "Femmes"}, {Text: "Hommes"}, {Text: "Total"},
 				},
@@ -1004,7 +1007,7 @@ var PredefinedQuestions = []QuestionInstance{
 					},
 				},
 			},
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(`On choisit au hasard un employé de l’entreprise. 
 Quel est la probabilité que ce soit un employé inexpérimenté ?`),
 			}},
@@ -1012,12 +1015,12 @@ Quel est la probabilité que ce soit un employé inexpérimenté ?`),
 				ID:     0,
 				Answer: mustEvaluate("97/1200"),
 			},
-			TextInstance{Parts: []TextOrMaths{text("\n\nUn expérimenté si on sait que c’est un homme ?")}},
+			TextInstance{Parts: []client.TextOrMath{text("\n\nUn expérimenté si on sait que c’est un homme ?")}},
 			NumberFieldInstance{
 				ID:     1,
 				Answer: mustEvaluate("48/960"),
 			},
-			TextInstance{Parts: []TextOrMaths{text("\n\nQuelle est la probabilité que ce soit une femme ou un employé expérimenté ?")}},
+			TextInstance{Parts: []client.TextOrMath{text("\n\nQuelle est la probabilité que ce soit une femme ou un employé expérimenté ?")}},
 			NumberFieldInstance{
 				ID:     2,
 				Answer: mustEvaluate("240/1200 + 912/1200"),
@@ -1027,7 +1030,7 @@ Quel est la probabilité que ce soit un employé inexpérimenté ?`),
 
 	{
 		Title: "Probabilités", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(`Compléter ce tableau sachant que : l’entreprise comporte 1200 salariés dont 960 hommes. 
 Parmi les hommes, 48 sont inexpérimentés et parmi les femmes, 191 sont expérimentées.`),
 			}},
@@ -1057,11 +1060,11 @@ Parmi les hommes, 48 sont inexpérimentés et parmi les femmes, 191 sont expéri
 
 	{
 		Title: "Probabilités", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text(`Construire l’arbre pondéré associé à l’expérience aléatoire suivante :
 on lance une pièce de monnaie truquée deux fois d’affilé, la probabilité d’obtenir Pile (P) est de 0,3.`),
 			}},
-			TextInstance{IsHint: true, Parts: []TextOrMaths{
+			TextInstance{IsHint: true, Parts: []client.TextOrMath{
 				text(`On ordonnera les issues par ordre alphabétique.`),
 			}},
 			TreeFieldInstance{
@@ -1100,7 +1103,7 @@ on lance une pièce de monnaie truquée deux fois d’affilé, la probabilité d
 
 	{
 		Title: "Très longue question horizontale", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{
+			TextInstance{Parts: []client.TextOrMath{
 				text("Écrire sous une seule fraction : "),
 				expr("(1/3)+(2/5)"),
 				text("Écrire sous une seule fraction : "),
@@ -1120,27 +1123,27 @@ on lance une pièce de monnaie truquée deux fois d’affilé, la probabilité d
 	},
 	{
 		Title: "Très longue question verticale", Enonce: EnonceInstance{
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
-			TextInstance{Parts: []TextOrMaths{text("Écrire sous une seule fraction : ")}},
+			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 			FormulaDisplayInstance{Parts: []StringOrExpression{
 				{Expression: mustParse("(1/3)+(2/5)")},
 			}},
