@@ -151,14 +151,7 @@ class _ContentBuilder {
     // start a new row
     _flushCurrentRow();
 
-    rows.add(Center(child: TableSimple(element)));
-  }
-
-  void _handleTableDoubleEntryBlock(TableDoubleEntryBlock element) {
-    // start a new row
-    _flushCurrentRow();
-
-    rows.add(Center(child: TableDoubleEntry(element)));
+    rows.add(Center(child: TableW(element)));
   }
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
@@ -309,8 +302,6 @@ class _ContentBuilder {
         _handleFunctionGraphBlock(element);
       } else if (element is TableBlock) {
         _handleTableBlock(element);
-      } else if (element is TableDoubleEntryBlock) {
-        _handleTableDoubleEntryBlock(element);
 
         // editable widgets
 

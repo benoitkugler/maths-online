@@ -3,34 +3,6 @@ import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 
-class TableSimple extends StatelessWidget {
-  final TableBlock data;
-
-  const TableSimple(this.data, {Key? key}) : super(key: key);
-
-  static const fontSize = 14.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Table(
-        defaultColumnWidth: const IntrinsicColumnWidth(),
-        border: TableBorder.all(),
-        children: data.rows
-            .map((row) => TableRow(
-                  children: List<_Cell>.generate(
-                          row.length,
-                          (index) =>
-                              _Cell(row[index], index == 0 && !data.noHeader))
-                      .toList(),
-                ))
-            .toList(),
-      ),
-    );
-  }
-}
-
 class _Cell extends StatelessWidget {
   static const fontSize = 14.0;
 
@@ -57,10 +29,10 @@ class _Cell extends StatelessWidget {
   }
 }
 
-class TableDoubleEntry extends StatelessWidget {
-  final TableDoubleEntryBlock data;
+class TableW extends StatelessWidget {
+  final TableBlock data;
 
-  const TableDoubleEntry(this.data, {Key? key}) : super(key: key);
+  const TableW(this.data, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -90,27 +62,28 @@ class _Table extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firstRow = [
+      if (verticalHeaders.isNotEmpty) const SizedBox(),
+      ...horizontalHeaders.map((e) => _Cell(e, true)).toList(),
+    ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Table(
           defaultColumnWidth: const IntrinsicColumnWidth(),
           border: TableBorder.all(),
           children: [
-            TableRow(
-                children: <Widget>[const SizedBox()] +
-                    horizontalHeaders.map((e) => _Cell(e, true)).toList()),
+            if (horizontalHeaders.isNotEmpty) TableRow(children: firstRow),
             ...List<TableRow>.generate(
                 values.length,
-                (i) => TableRow(
-                      children: <Widget>[
-                            _Cell(
-                              verticalHeaders[i],
-                              true,
-                              align: TableCellVerticalAlignment.fill,
-                            )
-                          ] +
-                          values[i],
-                    )),
+                (i) => TableRow(children: [
+                      if (verticalHeaders.isNotEmpty)
+                        _Cell(
+                          verticalHeaders[i],
+                          true,
+                          align: TableCellVerticalAlignment.fill,
+                        ),
+                      ...values[i],
+                    ])),
           ]),
     );
   }

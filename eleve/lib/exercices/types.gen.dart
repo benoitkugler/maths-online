@@ -974,54 +974,27 @@ List<dynamic> listListTextOrMathToJson(List<List<TextOrMath>> item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.TableBlock
 class TableBlock implements Block {
-  final List<List<TextOrMath>> rows;
-  final bool noHeader;
+  final List<TextOrMath> horizontalHeaders;
+  final List<TextOrMath> verticalHeaders;
+  final List<List<TextOrMath>> values;
 
-  const TableBlock(this.rows, this.noHeader);
+  const TableBlock(this.horizontalHeaders, this.verticalHeaders, this.values);
 
   @override
   String toString() {
-    return "TableBlock($rows, $noHeader)";
+    return "TableBlock($horizontalHeaders, $verticalHeaders, $values)";
   }
 }
 
 TableBlock tableBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return TableBlock(
-      listListTextOrMathFromJson(json['Rows']), boolFromJson(json['NoHeader']));
-}
-
-JSON tableBlockToJson(TableBlock item) {
-  return {
-    "Rows": listListTextOrMathToJson(item.rows),
-    "NoHeader": boolToJson(item.noHeader)
-  };
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.TableDoubleEntryBlock
-class TableDoubleEntryBlock implements Block {
-  final List<TextOrMath> horizontalHeaders;
-  final List<TextOrMath> verticalHeaders;
-  final List<List<TextOrMath>> values;
-
-  const TableDoubleEntryBlock(
-      this.horizontalHeaders, this.verticalHeaders, this.values);
-
-  @override
-  String toString() {
-    return "TableDoubleEntryBlock($horizontalHeaders, $verticalHeaders, $values)";
-  }
-}
-
-TableDoubleEntryBlock tableDoubleEntryBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return TableDoubleEntryBlock(
       listTextOrMathFromJson(json['HorizontalHeaders']),
       listTextOrMathFromJson(json['VerticalHeaders']),
       listListTextOrMathFromJson(json['Values']));
 }
 
-JSON tableDoubleEntryBlockToJson(TableDoubleEntryBlock item) {
+JSON tableBlockToJson(TableBlock item) {
   return {
     "HorizontalHeaders": listTextOrMathToJson(item.horizontalHeaders),
     "VerticalHeaders": listTextOrMathToJson(item.verticalHeaders),
@@ -1250,16 +1223,14 @@ Block blockFromJson(dynamic json_) {
     case 13:
       return tableBlockFromJson(data);
     case 14:
-      return tableDoubleEntryBlockFromJson(data);
-    case 15:
       return tableFieldBlockFromJson(data);
-    case 16:
+    case 15:
       return textBlockFromJson(data);
-    case 17:
+    case 16:
       return treeFieldBlockFromJson(data);
-    case 18:
+    case 17:
       return variationTableBlockFromJson(data);
-    case 19:
+    case 18:
       return variationTableFieldBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -1295,18 +1266,16 @@ JSON blockToJson(Block item) {
     return {'Kind': 12, 'Data': signTableBlockToJson(item)};
   } else if (item is TableBlock) {
     return {'Kind': 13, 'Data': tableBlockToJson(item)};
-  } else if (item is TableDoubleEntryBlock) {
-    return {'Kind': 14, 'Data': tableDoubleEntryBlockToJson(item)};
   } else if (item is TableFieldBlock) {
-    return {'Kind': 15, 'Data': tableFieldBlockToJson(item)};
+    return {'Kind': 14, 'Data': tableFieldBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 16, 'Data': textBlockToJson(item)};
+    return {'Kind': 15, 'Data': textBlockToJson(item)};
   } else if (item is TreeFieldBlock) {
-    return {'Kind': 17, 'Data': treeFieldBlockToJson(item)};
+    return {'Kind': 16, 'Data': treeFieldBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 18, 'Data': variationTableBlockToJson(item)};
+    return {'Kind': 17, 'Data': variationTableBlockToJson(item)};
   } else if (item is VariationTableFieldBlock) {
-    return {'Kind': 19, 'Data': variationTableFieldBlockToJson(item)};
+    return {'Kind': 18, 'Data': variationTableFieldBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }
