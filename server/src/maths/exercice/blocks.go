@@ -177,16 +177,17 @@ func (fp FormulaPart) instantiate(params expression.Variables) StringOrExpressio
 // FormulaBlock is a math formula, which should be display using
 // a LaTeX renderer.
 type FormulaBlock struct {
-	Parts FormulaContent
+	Parts Interpolated
 }
 
 func (f FormulaBlock) instantiate(params expression.Variables, _ int) instance {
-	out := FormulaDisplayInstance{}
-	out.Parts = make([]StringOrExpression, len(f.Parts))
-	for i, c := range f.Parts {
-		out.Parts[i] = c.instantiate(params)
+	parts, _ := f.Parts.Parse()
+	partsInstance := parts.instantiate(params)
+	out := make(FormulaDisplayInstance, len(partsInstance))
+	for i, c := range partsInstance {
+		out[i] = c.Text
 	}
-	return FormulaDisplayInstance{}
+	return out
 }
 
 type VariationTableBlock struct {

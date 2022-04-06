@@ -129,17 +129,10 @@ type TextInstance client.TextBlock
 func (t TextInstance) toClient() client.Block { return client.TextBlock(t) }
 
 // FormulaDisplayInstance is rendered as LaTeX, in display mode.
-type FormulaDisplayInstance struct {
-	Parts []StringOrExpression
-}
+type FormulaDisplayInstance []string
 
 func (fi FormulaDisplayInstance) toClient() client.Block {
-	chunks := make([]string, len(fi.Parts))
-	for i, c := range fi.Parts {
-		chunks[i] = c.asLaTeX()
-	}
-
-	return client.FormulaBlock{Formula: strings.Join(chunks, " ")}
+	return client.FormulaBlock{Formula: strings.Join(fi, " ")}
 }
 
 type VariationTableInstance struct {

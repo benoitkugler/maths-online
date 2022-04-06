@@ -256,10 +256,10 @@ var PredefinedQuestions = []QuestionInstance{
 	{
 		Title: "Calcul littéral", Enonce: EnonceInstance{
 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-				{String: `= \frac{a}{b}`},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(1/3)+(2/5)").AsLaTeX(nil),
+				`= \frac{a}{b}`,
+			},
 			TextInstance{Parts: []client.TextOrMath{
 				text("avec "),
 				staticMath("a = "),
@@ -283,11 +283,11 @@ var PredefinedQuestions = []QuestionInstance{
 				staticMath("b"),
 				text(" sont des entiers les plus petits possibles :"),
 			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("sqrt(50)")},
-				{String: " = "},
-				{Expression: mustParse("a * sqrt(b)")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("sqrt(50)").AsLaTeX(nil),
+				" = ",
+				mustParse("a * sqrt(b)").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{
 				text("avec "),
 				staticMath("a = "),
@@ -424,11 +424,11 @@ var PredefinedQuestions = []QuestionInstance{
 				staticMath(`\mathbb{R}`),
 				text("l'équation :"),
 			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("20*x - 7")},
-				{String: "="},
-				{Expression: mustParse("34")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("20*x - 7").AsLaTeX(nil),
+				"=",
+				mustParse("34").AsLaTeX(nil),
+			},
 			ExpressionFieldInstance{
 				ID:              0,
 				Label:           StringOrExpression{String: "x ="},
@@ -444,11 +444,11 @@ var PredefinedQuestions = []QuestionInstance{
 				staticMath(`\mathbb{R}`),
 				text("l'inéquation :"),
 			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("-8*x +1")},
-				{String: "<"},
-				{Expression: mustParse("2*x - 5")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("-8*x +1").AsLaTeX(nil),
+				"<",
+				mustParse("2*x - 5").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{
 				staticMath("x "),
 			}},
@@ -471,11 +471,11 @@ var PredefinedQuestions = []QuestionInstance{
 				staticMath(`\mathbb{R}`),
 				text("l'équation :"),
 			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(x-7)*(4*x - 9)")},
-				{String: "="},
-				{Expression: mustParse("0")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(x-7)*(4*x - 9)").AsLaTeX(nil),
+				"=",
+				mustParse("0").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{
 				text("Solutions : "),
 				staticMath("x = "),
@@ -832,9 +832,9 @@ var PredefinedQuestions = []QuestionInstance{
 			FigureInstance{
 				Figure: figure6,
 			},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{String: "y = ax + b"},
-			}},
+			FormulaDisplayInstance{
+				"y = ax + b",
+			},
 			TextInstance{Parts: []client.TextOrMath{
 				text("avec "),
 				staticMath("a = "),
@@ -852,10 +852,10 @@ var PredefinedQuestions = []QuestionInstance{
 			TextInstance{Parts: []client.TextOrMath{
 				text("Construire la droite (d') d'équation"),
 			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{String: `y =`},
-				{Expression: mustParse("((-1)/3)x + 2")},
-			}},
+			FormulaDisplayInstance{
+				`y =`,
+				mustParse("((-1)/3)x + 2").AsLaTeX(nil),
+			},
 			FigureAffineLineFieldInstance{
 				Figure: repere.Figure{
 					Bounds: repere.RepereBounds{
@@ -875,16 +875,16 @@ var PredefinedQuestions = []QuestionInstance{
 			TextInstance{Parts: []client.TextOrMath{
 				text("Quelle est la position relative entre"),
 			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{String: `(d) : `},
-				{Expression: mustParse("3x - 7y + 1")},
-				{String: `= 0`},
-			}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{String: `(d') : `},
-				{Expression: mustParse("x + 2y - 7")},
-				{String: `= 0`},
-			}},
+			FormulaDisplayInstance{
+				`(d) : `,
+				mustParse("3x - 7y + 1").AsLaTeX(nil),
+				`= 0`,
+			},
+			FormulaDisplayInstance{
+				`(d') : `,
+				mustParse("x + 2y - 7").AsLaTeX(nil),
+				`= 0`,
+			},
 			RadioFieldInstance{
 				ID: 0,
 				Proposals: []client.ListFieldProposal{
@@ -899,11 +899,11 @@ var PredefinedQuestions = []QuestionInstance{
 	{
 		Title: "Droites du plan", Enonce: EnonceInstance{
 			TextInstance{Parts: []client.TextOrMath{text("Quelle est l'équation réduite de :")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{String: `(d) : `},
-				{Expression: mustParse("3x - 7y + 1")},
-				{String: `= 0`},
-			}},
+			FormulaDisplayInstance{
+				`(d) : `,
+				mustParse("3x - 7y + 1").AsLaTeX(nil),
+				`= 0`,
+			},
 			ExpressionFieldInstance{
 				ID:              0,
 				Label:           StringOrExpression{String: "y = "},
@@ -1124,29 +1124,25 @@ on lance une pièce de monnaie truquée deux fois d’affilé, la probabilité d
 	{
 		Title: "Très longue question verticale", Enonce: EnonceInstance{
 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(1/3)+(2/5)").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(1/3)+(2/5)").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(1/3)+(2/5)").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(1/3)+(2/5)").AsLaTeX(nil),
+			},
 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
-			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
-			FormulaDisplayInstance{Parts: []StringOrExpression{
-				{Expression: mustParse("(1/3)+(2/5)")},
-			}},
+			FormulaDisplayInstance{
+				mustParse("(1/3)+(2/5)").AsLaTeX(nil),
+			},
 		},
 	},
 }

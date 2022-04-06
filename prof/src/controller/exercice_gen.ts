@@ -51,7 +51,7 @@ export interface RandomCoord {
   Y: string;
 }
 // github.com/benoitkugler/maths-online/maths/repere.LabelPos
-enum LabelPos {
+export enum LabelPos {
   Bottom = 1,
   BottomLeft = 7,
   BottomRight = 6,
@@ -115,19 +115,14 @@ export interface FigureBlock {
   Bounds: RepereBounds;
   ShowGrid: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaPart
-export interface FormulaPart {
-  Content: string;
-  IsExpression: boolean;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaContent
-export type FormulaContent = FormulaPart[] | null;
+// github.com/benoitkugler/maths-online/maths/exercice.Interpolated
+export type Interpolated = string;
 // github.com/benoitkugler/maths-online/maths/exercice.FormulaBlock
 export interface FormulaBlock {
-  Parts: FormulaContent;
+  Parts: Interpolated;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TextKind
-enum TextKind {
+export enum TextKind {
   Expression = 2,
   StaticMath = 1,
   Text = 0,
@@ -174,15 +169,20 @@ export interface ListField {
 export interface NumberFieldBlock {
   Expression: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Interpolated
-export type Interpolated = string;
 // github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
 export interface RadioFieldBlock {
   Answer: string;
   Proposals: Interpolated[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.FormulaPart
+export interface FormulaPart {
+  Content: string;
+  IsExpression: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FormulaContent
+export type FormulaContent = FormulaPart[] | null;
 // github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
-enum SignSymbol {
+export enum SignSymbol {
   ForbiddenValue = 2,
   Nothing = 0,
   Zero = 1,

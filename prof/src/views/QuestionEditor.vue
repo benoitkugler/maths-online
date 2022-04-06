@@ -1,6 +1,6 @@
 <template>
   <div class="ma-2">
-    <v-row style="height: 89vh">
+    <v-row>
       <v-col>
         <Editor :session_id="sessionID"></Editor>
       </v-col>

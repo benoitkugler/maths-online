@@ -42,9 +42,6 @@ class LoopbackApp extends StatelessWidget {
       localizationsDelegates: localizations,
       supportedLocales: locales,
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Isiro - Application élève'),
-        ),
         body: _QuestionLoopback(sessionID),
       ),
     );
@@ -112,7 +109,13 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   @override
   Widget build(BuildContext context) {
     return question == null
-        ? const Center(child: CircularProgressIndicator())
+        ? Center(
+            child: Column(
+            children: const [
+              CircularProgressIndicator(),
+              Text("En attente de prévisualisation..."),
+            ],
+          ))
         : Padding(
             padding: const EdgeInsets.all(8.0),
             child: QuestionPage(

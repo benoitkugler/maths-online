@@ -5,9 +5,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "lib":["es2020"]
   },
-
   "references": [
     {
       "path": "./tsconfig.vite-config.json"

@@ -25,11 +25,12 @@ func TestParseInterpolatedString(t *testing.T) {
 				{Content: " regular end", Kind: Text},
 			}, false,
 		},
-		{ // we accept unterminated sequences
-			"$ 45", TextParts{{Content: " 45", Kind: StaticMath}}, false,
-		},
-		{ // we accept unterminated sequences
-			"#{45x ", TextParts{{Content: "45x ", Kind: Expression}}, false,
+		{ // expression inside latex
+			"Regular $A = #{a}$", TextParts{
+				{Content: "Regular ", Kind: Text},
+				{Content: "A = ", Kind: StaticMath},
+				{Content: "a", Kind: Expression},
+			}, false,
 		},
 		{
 			"#{45x - +}", nil, true,
@@ -43,6 +44,45 @@ func TestParseInterpolatedString(t *testing.T) {
 		}
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("Interpolated.Parse() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func Test_splitByLaTeX(t *testing.T) {
+	tests := []struct {
+		args    string
+		wantOut []TextPart
+	}{
+		{"Plain text", []TextPart{{Content: "Plain text"}}},
+		{"Plain text $2x +3$", []TextPart{{Content: "Plain text "}, {Content: "2x +3", Kind: StaticMath}}},
+		{"Plain text $2x +3$", []TextPart{{Content: "Plain text "}, {Content: "2x +3", Kind: StaticMath}}},
+		{"Plain text $#{2x +3}$ end", []TextPart{{Content: "Plain text "}, {Content: "#{2x +3}", Kind: StaticMath}, {Content: " end"}}},
+	}
+	for _, tt := range tests {
+		if gotOut := splitByLaTeX(tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
+			t.Errorf("splitByLaTeX() = %v, want %v", gotOut, tt.wantOut)
+		}
+	}
+}
+
+func Test_splitByExpression(t *testing.T) {
+	tests := []struct {
+		args TextPart
+		want []TextPart
+	}{
+		{
+			TextPart{Content: "mlqk "}, []TextPart{{Content: "mlqk "}},
+		},
+		{
+			TextPart{Content: "mlqk #{lsd} smdl"}, []TextPart{{Content: "mlqk "}, {Content: "lsd", Kind: Expression}, {Content: " smdl"}},
+		},
+		{
+			TextPart{Content: "mlqk #{lsd}", Kind: StaticMath}, []TextPart{{Content: "mlqk ", Kind: StaticMath}, {Content: "lsd", Kind: Expression}},
+		},
+	}
+	for _, tt := range tests {
+		if got := splitByExpression(tt.args); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("splitByExpression() = %v, want %v", got, tt.want)
 		}
 	}
 }

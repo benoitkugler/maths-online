@@ -186,29 +186,13 @@ func randFigureBlock() FigureBlock {
 	}
 }
 
-func randFormulaPart() FormulaPart {
-	return FormulaPart{
-		Content:      randstring(),
-		IsExpression: randbool(),
-	}
-}
-
-func randSliceFormulaPart() []FormulaPart {
-	l := rand.Intn(10)
-	out := make([]FormulaPart, l)
-	for i := range out {
-		out[i] = randFormulaPart()
-	}
-	return out
-}
-
-func randFormulaContent() FormulaContent {
-	return FormulaContent(randSliceFormulaPart())
+func randInterpolated() Interpolated {
+	return Interpolated(randstring())
 }
 
 func randFormulaBlock() FormulaBlock {
 	return FormulaBlock{
-		Parts: randFormulaContent(),
+		Parts: randInterpolated(),
 	}
 }
 
@@ -290,10 +274,6 @@ func randNumberFieldBlock() NumberFieldBlock {
 	}
 }
 
-func randInterpolated() Interpolated {
-	return Interpolated(randstring())
-}
-
 func randSliceInterpolated() []Interpolated {
 	l := rand.Intn(10)
 	out := make([]Interpolated, l)
@@ -308,6 +288,26 @@ func randRadioFieldBlock() RadioFieldBlock {
 		Answer:    randstring(),
 		Proposals: randSliceInterpolated(),
 	}
+}
+
+func randFormulaPart() FormulaPart {
+	return FormulaPart{
+		Content:      randstring(),
+		IsExpression: randbool(),
+	}
+}
+
+func randSliceFormulaPart() []FormulaPart {
+	l := rand.Intn(10)
+	out := make([]FormulaPart, l)
+	for i := range out {
+		out[i] = randFormulaPart()
+	}
+	return out
+}
+
+func randFormulaContent() FormulaContent {
+	return FormulaContent(randSliceFormulaPart())
 }
 
 func randSignSymbol() SignSymbol {
