@@ -111,6 +111,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     return question == null
         ? Center(
             child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: const [
               CircularProgressIndicator(),
               Text("En attente de prévisualisation..."),
