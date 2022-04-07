@@ -14,8 +14,13 @@ type RandomLine struct {
 	A, B  string // must be a valid expression.Expression
 }
 
+type NamedRandomLabeledPoint struct {
+	Name  PointName
+	Point RandomLabeledPoint
+}
+
 type RandomDrawings struct {
-	Points   map[PointName]RandomLabeledPoint
+	Points   []NamedRandomLabeledPoint
 	Segments []Segment
 	Lines    []RandomLine
 }

@@ -43,12 +43,13 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "App",
-
   data() {
     return {
       showSideBar: false,
-      version: process.env.VERSION
+      version: process.env.VERSION,
+      tmp: ""
     };
-  }
+  },
+  components: {}
 });
 </script>

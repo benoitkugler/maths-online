@@ -11,7 +11,9 @@
     >
       Formule
     </v-list-item>
-    <v-list-item dense class="py-0"> Figure </v-list-item>
+    <v-list-item dense class="py-0" @click="emit('add', BlockKind.FigureBlock)">
+      Figure
+    </v-list-item>
     <v-list-item dense class="py-0"> Fonction </v-list-item>
     <v-list-item dense class="py-0"> Fonction par variations </v-list-item>
     <v-list-item dense class="py-0"> Tableau de signes </v-list-item>

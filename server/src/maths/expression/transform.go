@@ -278,6 +278,60 @@ func (expr *Expression) expandMinus() {
 	}
 }
 
+// replace + (- 8) by -8 to have a better formatted output
+func (expr *Expression) contractPlusMinus() {
+	if expr == nil {
+		return
+	}
+
+	expr.left.contractPlusMinus()
+	expr.right.contractPlusMinus()
+
+	if expr.atom != plus {
+		return
+	}
+
+	// ... + (-...) => ... - ...
+	if expr.right.atom == minus && expr.right.left == nil {
+		expr.atom = minus
+		expr.right = expr.right.right
+		return
+	}
+
+	// ... + (-9) => ... - 9
+	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
+		expr.atom = minus
+		expr.right = &Expression{atom: -number}
+	}
+}
+
+// replace + (- 8) by -8 to have a better formatted output
+func (expr *Expression) contractMinusMinus() {
+	if expr == nil {
+		return
+	}
+
+	expr.left.contractMinusMinus()
+	expr.right.contractMinusMinus()
+
+	if expr.atom != minus {
+		return
+	}
+
+	// ... - (-...) => ... + ...
+	if expr.right.atom == minus && expr.right.left == nil {
+		expr.atom = plus
+		expr.right = expr.right.right
+		return
+	}
+
+	// ... - (-9) => ... + 9
+	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
+		expr.atom = plus
+		expr.right = &Expression{atom: -number}
+	}
+}
+
 func (expr *Expression) extractNegativeInMults() {
 	if expr == nil {
 		return

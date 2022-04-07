@@ -5,12 +5,12 @@ package repere
 type LabelPos uint8
 
 const (
-	Top         LabelPos = iota // Top
-	Bottom                      // Bottom
-	Left                        // Left
-	Right                       // Right
-	TopLeft                     // TopLeft
-	TopRight                    // TopRight
-	BottomRight                 // BottomRight
-	BottomLeft                  // BottomLeft
+	Top         LabelPos = iota // Au dessus
+	Bottom                      // En dessous
+	Left                        // A gauche
+	Right                       // A droite
+	TopLeft                     // Au dessus, à gauche
+	TopRight                    // Au dessus, à droite
+	BottomRight                 // En dessous, à droite
+	BottomLeft                  // En dessous, à gauche
 )

@@ -249,13 +249,13 @@ func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
 			ShowGrid: f.ShowGrid,
 		},
 	}
-	for k, v := range f.Drawings.Points {
-		out.Figure.Drawings.Points[k] = repere.LabeledPoint{
+	for _, v := range f.Drawings.Points {
+		out.Figure.Drawings.Points[v.Name] = repere.LabeledPoint{
 			Point: repere.Coord{
-				X: mustEvaluate(v.Coord.X, params),
-				Y: mustEvaluate(v.Coord.Y, params),
+				X: mustEvaluate(v.Point.Coord.X, params),
+				Y: mustEvaluate(v.Point.Coord.Y, params),
 			},
-			Pos: v.Pos,
+			Pos: v.Point.Pos,
 		}
 	}
 

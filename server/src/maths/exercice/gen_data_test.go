@@ -97,11 +97,18 @@ func randrepereRandomLabeledPoint() repere.RandomLabeledPoint {
 	}
 }
 
-func randMapstringrepereRandomLabeledPoint() map[string]repere.RandomLabeledPoint {
+func randrepereNamedRandomLabeledPoint() repere.NamedRandomLabeledPoint {
+	return repere.NamedRandomLabeledPoint{
+		Name:  randstring(),
+		Point: randrepereRandomLabeledPoint(),
+	}
+}
+
+func randSlicerepereNamedRandomLabeledPoint() []repere.NamedRandomLabeledPoint {
 	l := rand.Intn(10)
-	out := make(map[string]repere.RandomLabeledPoint, l)
-	for i := 0; i < l; i++ {
-		out[randstring()] = randrepereRandomLabeledPoint()
+	out := make([]repere.NamedRandomLabeledPoint, l)
+	for i := range out {
+		out[i] = randrepereNamedRandomLabeledPoint()
 	}
 	return out
 }
@@ -149,7 +156,7 @@ func randSlicerepereRandomLine() []repere.RandomLine {
 
 func randrepereRandomDrawings() repere.RandomDrawings {
 	return repere.RandomDrawings{
-		Points:   randMapstringrepereRandomLabeledPoint(),
+		Points:   randSlicerepereNamedRandomLabeledPoint(),
 		Segments: randSlicerepereSegment(),
 		Lines:    randSlicerepereRandomLine(),
 	}

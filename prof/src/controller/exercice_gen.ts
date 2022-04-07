@@ -63,20 +63,25 @@ export enum LabelPos {
 }
 
 export const LabelPosLabels: { [key in LabelPos]: string } = {
-  [LabelPos.Bottom]: "Bottom",
-  [LabelPos.BottomLeft]: "BottomLeft",
-  [LabelPos.BottomRight]: "BottomRight",
-  [LabelPos.Left]: "Left",
-  [LabelPos.Right]: "Right",
-  [LabelPos.Top]: "Top",
-  [LabelPos.TopLeft]: "TopLeft",
-  [LabelPos.TopRight]: "TopRight",
+  [LabelPos.Bottom]: "En dessous",
+  [LabelPos.BottomLeft]: "En dessous, à gauche",
+  [LabelPos.BottomRight]: "En dessous, à droite",
+  [LabelPos.Left]: "A gauche",
+  [LabelPos.Right]: "A droite",
+  [LabelPos.Top]: "Au dessus",
+  [LabelPos.TopLeft]: "Au dessus, à gauche",
+  [LabelPos.TopRight]: "Au dessus, à droite",
 };
 
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {
   Coord: RandomCoord;
   Pos: LabelPos;
+}
+// github.com/benoitkugler/maths-online/maths/repere.NamedRandomLabeledPoint
+export interface NamedRandomLabeledPoint {
+  Name: string;
+  Point: RandomLabeledPoint;
 }
 // github.com/benoitkugler/maths-online/maths/repere.Segment
 export interface Segment {
@@ -94,7 +99,7 @@ export interface RandomLine {
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomDrawings
 export interface RandomDrawings {
-  Points: { [key: string]: RandomLabeledPoint } | null;
+  Points: NamedRandomLabeledPoint[] | null;
   Segments: Segment[] | null;
   Lines: RandomLine[] | null;
 }

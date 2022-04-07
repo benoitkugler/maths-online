@@ -24,6 +24,9 @@ func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
 		res = DefaultLatexResolver
 	}
 
+	expr.contractPlusMinus()
+	expr.contractMinusMinus()
+
 	return expr.atom.asLaTeX(expr.left, expr.right, res)
 }
 

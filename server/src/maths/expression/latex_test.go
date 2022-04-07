@@ -107,3 +107,17 @@ func TestParenthesis(t *testing.T) {
 		t.Fatal("unexpected parenthesis")
 	}
 }
+
+func TestPlusMinus(t *testing.T) {
+	expr := mustParse(t, "x + (-5)")
+	latex := expr.AsLaTeX(nil)
+	if strings.ContainsRune(latex, '+') {
+		t.Fatal("unexpected +")
+	}
+
+	expr = mustParse(t, "x - (-5)")
+	latex = expr.AsLaTeX(nil)
+	if strings.ContainsRune(latex, '-') {
+		t.Fatal("unexpected -")
+	}
+}
