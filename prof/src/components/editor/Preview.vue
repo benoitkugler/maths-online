@@ -1,6 +1,15 @@
 <template>
   <iframe v-if="session_id" :src="src" width="350px" height="100%"></iframe>
-  <div v-else class="ma-4" style="width: 350px; text-align: center">
+  <div
+    v-else
+    class="mx-4 d-flex"
+    style="
+      width: 350px;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+    "
+  >
     <v-progress-circular indeterminate color="secondary"></v-progress-circular>
   </div>
 </template>
