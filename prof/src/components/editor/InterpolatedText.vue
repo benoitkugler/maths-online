@@ -49,8 +49,6 @@ function onTextChange(text: string) {
 }
 
 function colorize(arg: { source: Sources }) {
-  console.log("color");
-
   if (arg.source != "user" || quill == null) {
     return;
   }

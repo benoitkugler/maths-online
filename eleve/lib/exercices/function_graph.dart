@@ -49,6 +49,8 @@ class BezierCurvesPainter extends CustomPainter {
     }
     canvas.drawPath(path, paint);
 
+    // TODO: better choose the label position to avoid painting outside
+    // the figure
     final labelIndex = segments.length * 3 ~/ 4;
     final labelPos = segments[labelIndex].p0;
     DrawingsPainter.paintText(metrics, canvas,

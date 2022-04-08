@@ -64,6 +64,23 @@ func (expr *Expression) Closure(x Variable) func(float64) float64 {
 	}
 }
 
+// Extrema returns an approximation of max |f(x)| on [from, to].
+// The approximation is exact for monotonous functions.
+// `Extrema` will panic if the expression if not a function of `x`
+func (expr *Expression) Extrema(x Variable, from, to float64) float64 {
+	const nbSteps = 100
+	f := expr.Closure(x)
+	step := (to - from) / nbSteps
+	var max float64
+	for i := 0; i <= nbSteps; i++ {
+		fx := math.Abs(f(from + float64(i)*step))
+		if fx > max {
+			max = fx
+		}
+	}
+	return max
+}
+
 // AreFloatEqual returns `true` if v1 and v2 are equal up to
 // a small threshold, so that floating point rouding errors are ignored
 func AreFloatEqual(v1, v2 float64) bool {

@@ -269,6 +269,7 @@ func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
 	return out
 }
 
+// TODO: validate using extrema to avoid edge cases
 type FunctionGraphBlock struct {
 	Function string // expression
 	Label    string

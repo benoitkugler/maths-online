@@ -76,13 +76,8 @@
 <script setup lang="ts">
 import type { randomParameter } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type {
-  Block,
-  FigureBlock,
-  FormulaBlock,
-  Question,
-  TextBlock
-} from "@/controller/exercice_gen";
+import type { TypedBlock } from "@/controller/editor";
+import type { Block, Question } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { reactive, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
@@ -91,6 +86,8 @@ import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
 import FigureVue from "./blocks/Figure.vue";
 import FormulaVue from "./blocks/Formula.vue";
+import FunctionGraphVue from "./blocks/FunctionGraph.vue";
+import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
 import TextVue from "./blocks/Text.vue";
 import DropZone from "./DropZone.vue";
 import RandomParameters from "./RandomParameters.vue";
@@ -115,6 +112,10 @@ function component(kind: BlockKind): Component {
       return FormulaVue;
     case BlockKind.FigureBlock:
       return FigureVue;
+    case BlockKind.FunctionGraphBlock:
+      return FunctionGraphVue;
+    case BlockKind.FunctionVariationGraphBlock:
+      return FunctionVariationGraphVue;
     default:
       throw "Unexpected Kind";
   }
@@ -122,25 +123,29 @@ function component(kind: BlockKind): Component {
 
 function newBlock(kind: BlockKind): Block {
   switch (kind) {
-    case BlockKind.TextBlock:
-      return {
+    case BlockKind.TextBlock: {
+      const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: <TextBlock>{
+        Data: {
           IsHint: false,
           Parts: ""
         }
       };
-    case BlockKind.FormulaBlock:
-      return {
+      return out;
+    }
+    case BlockKind.FormulaBlock: {
+      const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: <FormulaBlock>{
+        Data: {
           Parts: ""
         }
       };
-    case BlockKind.FigureBlock:
-      return {
+      return out;
+    }
+    case BlockKind.FigureBlock: {
+      const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: <FigureBlock>{
+        Data: {
           ShowGrid: true,
           Bounds: {
             Width: 10,
@@ -154,6 +159,30 @@ function newBlock(kind: BlockKind): Block {
           }
         }
       };
+      return out;
+    }
+    case BlockKind.FunctionGraphBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Function: "",
+          Label: "f",
+          Variable: "x".codePointAt(0)!,
+          Range: [-5, 5]
+        }
+      };
+      return out;
+    }
+    case BlockKind.FunctionVariationGraphBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Xs: ["-5", "0", "5"],
+          Fxs: ["-3", "2", "-1"]
+        }
+      };
+      return out;
+    }
     default:
       throw "Unexpected Kind";
   }
@@ -173,7 +202,7 @@ function removeBlock(index: number) {
 
 // TODO: fix text erasure when swapping
 /** take the block at the index `origin` and insert it right before
-the block at index `target` (which is between 0 and nbBlocks) 
+the block at index `target` (which is between 0 and nbBlocks)
  */
 function swapBlocks(origin: number, target: number) {
   if (target == origin || target == origin + 1) {

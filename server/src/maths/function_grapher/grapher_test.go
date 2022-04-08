@@ -3,6 +3,7 @@
 package functiongrapher
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -116,6 +117,7 @@ func TestGraph(t *testing.T) {
 	}{
 		{"7x+1", 'x', 0, 10},
 		{"ln(y)", 'y', 1, 10},
+		{"cos(4x)", 'x', -5, 5},
 	}
 	for _, tt := range tests {
 		expr, _, _ := expression.Parse(tt.expr)
@@ -128,6 +130,21 @@ func TestGraph(t *testing.T) {
 		if got.Bounds.Origin.X < 0 || got.Bounds.Origin.Y < 0 {
 			t.Fatal(got.Bounds.Origin)
 		}
+
+		for _, seg := range got.Segments {
+			if !(seg.P0.X <= seg.P1.X && seg.P1.X <= seg.P2.X) {
+				fmt.Println(math.Sin(4*seg.P0.X), math.Sin(4*seg.P2.X))
+				t.Fatal(tt.expr, seg)
+			}
+		}
+	}
+}
+
+func TestGraphArtifact(t *testing.T) {
+	expr, _, _ := expression.Parse("cos(4x)")
+	got := NewFunctionGraph(expr, 'x', -5, 5)
+	for _, seg := range got.Segments {
+		fmt.Printf("%.2f %.2f %.3f %.3f \n", seg.P0.X, seg.P2.X, seg.P1.X, seg.P1.Y)
 	}
 }
 

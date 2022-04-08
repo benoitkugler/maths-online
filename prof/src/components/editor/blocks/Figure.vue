@@ -9,7 +9,7 @@
           <v-text-field
             density="compact"
             variant="outlined"
-            v-model.num="props.modelValue.Bounds.Width"
+            v-model.number="props.modelValue.Bounds.Width"
             label="Largeur"
             hint="Largeur de la figure, en nombre de carreaux"
             hide-details
@@ -20,7 +20,7 @@
             hide-details
             density="compact"
             variant="outlined"
-            v-model.num="props.modelValue.Bounds.Height"
+            v-model.number="props.modelValue.Bounds.Height"
             label="Hauteur"
             hint="Hauteur de la figure, en nombre de carreaux"
           ></v-text-field>
@@ -31,7 +31,7 @@
           <v-text-field
             density="compact"
             variant="outlined"
-            v-model.num="props.modelValue.Bounds.Origin.X"
+            v-model.number="props.modelValue.Bounds.Origin.X"
             label="Origine : abscisse"
             hint="Abscisse de l'origine par rapport au coin inférieur gauche"
           ></v-text-field>
@@ -40,7 +40,7 @@
           <v-text-field
             density="compact"
             variant="outlined"
-            v-model.num="props.modelValue.Bounds.Origin.Y"
+            v-model.number="props.modelValue.Bounds.Origin.Y"
             label="Origine : ordonnée"
             hint="Ordonnée de l'origine par rapport au coin inférieur gauche"
           ></v-text-field>

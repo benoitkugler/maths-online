@@ -3,6 +3,8 @@
 package functiongrapher
 
 import (
+	"math"
+
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
@@ -25,7 +27,7 @@ func (seg segment) toCurve() BezierCurve {
 // the tangents at from and to
 func controlFromDerivatives(from, to repere.Coord, dFrom, dTo float64) repere.Coord {
 	// special case when df1 = df2
-	if dFrom == dTo {
+	if math.Abs(dFrom-dTo) < 0.1 {
 		return repere.Coord{X: (from.X + to.X) / 2, Y: (from.Y + to.Y) / 2}
 	}
 

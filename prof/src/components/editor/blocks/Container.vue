@@ -1,6 +1,6 @@
 <template>
-  <v-card class="my-2" @dragstart="onDragStart" draggable="true">
-    <v-row no-gutters class="px-2">
+  <v-card class="my-2">
+    <v-row no-gutters class="px-2" @dragstart="onDragStart" draggable="true">
       <v-col align-self="center" cols="6">
         <v-card-subtitle>
           {{ kindLabels[props.kind] }}
@@ -21,7 +21,7 @@
       </v-col>
     </v-row>
 
-    <v-card-text class="pt-0 pb-2" :hidden="hidden">
+    <v-card-text class="pt-0 pb-2">
       <slot></slot>
     </v-card-text>
   </v-card>
@@ -30,8 +30,6 @@
 <script setup lang="ts">
 import { BlockKindLabels } from "@/controller/editor";
 import type { BlockKind } from "@/controller/exercice_gen";
-import { ref } from "@vue/reactivity";
-import { watch } from "@vue/runtime-core";
 
 const emit = defineEmits<{
   (e: "delete"): void;
@@ -39,30 +37,14 @@ const emit = defineEmits<{
   (e: "dragStart"): void;
 }>();
 
-const hidden = ref(false);
-
 export interface ContainerProps {
   index: number;
-  nbBlocks: number;
   kind: BlockKind;
 }
 
 const props = defineProps<ContainerProps>();
 
 const kindLabels = BlockKindLabels;
-
-let initialIndex = ref(props.nbBlocks - props.index);
-
-watch(props, () => (initialIndex.value = props.nbBlocks - props.index));
-
-function onClosePositionner(isOpen: boolean) {
-  if (!isOpen) {
-    // commit the changes
-    console.log(props.index, initialIndex.value);
-
-    emit("swap", props.index, props.nbBlocks - initialIndex.value);
-  }
-}
 
 function onDragStart(payload: DragEvent) {
   payload.dataTransfer?.setData(

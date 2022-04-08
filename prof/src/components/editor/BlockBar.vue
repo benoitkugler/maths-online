@@ -35,8 +35,9 @@ const labels = BlockKindLabels;
 const staticKinds = [
   BlockKind.TextBlock,
   BlockKind.FormulaBlock,
-  BlockKind.FigureBlock
-  // TODO:
+  BlockKind.FigureBlock,
+  BlockKind.FunctionGraphBlock,
+  BlockKind.FunctionVariationGraphBlock
 ];
 
 const fieldKinds = [

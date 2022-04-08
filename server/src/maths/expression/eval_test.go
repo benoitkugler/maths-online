@@ -243,3 +243,28 @@ func Test_isPrime(t *testing.T) {
 		}
 	}
 }
+
+func TestExpression_Extrema(t *testing.T) {
+	tests := []struct {
+		expr string
+		from float64
+		to   float64
+		want float64
+	}{
+		{
+			"x", -2, 2, 2,
+		},
+		{
+			"cos(x)", -2, 2, 1,
+		},
+		{
+			"exp(x)", -2, 10, math.Exp(10),
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		if got := expr.Extrema('x', tt.from, tt.to); got != tt.want {
+			t.Errorf("Expression.Extrema() = %v, want %v", got, tt.want)
+		}
+	}
+}

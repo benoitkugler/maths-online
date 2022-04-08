@@ -1,4 +1,18 @@
-import type { TextPart } from "./exercice_gen";
+import type {
+  FigureBlock,
+  FormulaBlock,
+  FormulaFieldBlock,
+  FunctionGraphBlock,
+  FunctionVariationGraphBlock,
+  ListField,
+  NumberFieldBlock,
+  RadioFieldBlock,
+  SignTableBlock,
+  TableBlock,
+  TextBlock,
+  TextPart,
+  VariationTableBlock
+} from "./exercice_gen";
 import { BlockKind, TextKind } from "./exercice_gen";
 
 const reLaTeX = /\$([^$]*)\$/g;
@@ -55,9 +69,9 @@ export const BlockKindLabels: { [T in BlockKind]: string } = {
   [BlockKind.TextBlock]: "Texte",
   [BlockKind.FormulaBlock]: "Formule",
   [BlockKind.FigureBlock]: "Figure",
+  [BlockKind.FunctionGraphBlock]: "Graphe (expression)",
+  [BlockKind.FunctionVariationGraphBlock]: "Graphe (variations)",
   [BlockKind.FormulaFieldBlock]: "FormulaFieldBlock",
-  [BlockKind.FunctionGraphBlock]: "FunctionGraphBlock",
-  [BlockKind.FunctionVariationGraphBlock]: "FunctionVariationGraphBlock",
   [BlockKind.ListField]: "ListField",
   [BlockKind.NumberFieldBlock]: "NumberFieldBlock",
   [BlockKind.RadioFieldBlock]: "RadioFieldBlock",
@@ -65,3 +79,23 @@ export const BlockKindLabels: { [T in BlockKind]: string } = {
   [BlockKind.TableBlock]: "TableBlock",
   [BlockKind.VariationTableBlock]: "VariationTableBlock"
 };
+
+interface BlockKindTypes {
+  [BlockKind.FigureBlock]: FigureBlock;
+  [BlockKind.FormulaBlock]: FormulaBlock;
+  [BlockKind.FormulaFieldBlock]: FormulaFieldBlock;
+  [BlockKind.FunctionGraphBlock]: FunctionGraphBlock;
+  [BlockKind.FunctionVariationGraphBlock]: FunctionVariationGraphBlock;
+  [BlockKind.ListField]: ListField;
+  [BlockKind.NumberFieldBlock]: NumberFieldBlock;
+  [BlockKind.RadioFieldBlock]: RadioFieldBlock;
+  [BlockKind.SignTableBlock]: SignTableBlock;
+  [BlockKind.TableBlock]: TableBlock;
+  [BlockKind.TextBlock]: TextBlock;
+  [BlockKind.VariationTableBlock]: VariationTableBlock;
+}
+
+export interface TypedBlock<K extends BlockKind> {
+  Kind: K;
+  Data: BlockKindTypes[K];
+}

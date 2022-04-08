@@ -42,14 +42,12 @@
         <v-list>
           <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
             <v-list-item-title>
-              <v-text-field
-                variant="outlined"
+              <variable-field
                 suffix=":"
-                density="compact"
-                hide-details
-                :model-value="String.fromCodePoint(param.variable)"
-                @update:model-value="s => onVariableChange(s, index)"
-              ></v-text-field>
+                v-model="param.variable"
+                @update:model-value="emit('update', index, param)"
+              >
+              </variable-field>
             </v-list-item-title>
             <v-text-field
               class="ml-2"
@@ -74,6 +72,7 @@ import type {
   randomParameter,
   randomParameters
 } from "@/controller/exercice_gen";
+import VariableField from "./VariableField.vue";
 
 interface Props {
   parameters: randomParameters;
