@@ -1,5 +1,5 @@
 import type { TextPart } from "./exercice_gen";
-import { TextKind } from "./exercice_gen";
+import { BlockKind, TextKind } from "./exercice_gen";
 
 const reLaTeX = /\$([^$]*)\$/g;
 const reExpression = /#{([^}]*)}/g;
@@ -50,3 +50,18 @@ export function itemize(s: string): TextPart[] {
   );
   return out;
 }
+
+export const BlockKindLabels: { [T in BlockKind]: string } = {
+  [BlockKind.TextBlock]: "Texte",
+  [BlockKind.FormulaBlock]: "Formule",
+  [BlockKind.FigureBlock]: "Figure",
+  [BlockKind.FormulaFieldBlock]: "FormulaFieldBlock",
+  [BlockKind.FunctionGraphBlock]: "FunctionGraphBlock",
+  [BlockKind.FunctionVariationGraphBlock]: "FunctionVariationGraphBlock",
+  [BlockKind.ListField]: "ListField",
+  [BlockKind.NumberFieldBlock]: "NumberFieldBlock",
+  [BlockKind.RadioFieldBlock]: "RadioFieldBlock",
+  [BlockKind.SignTableBlock]: "SignTableBlock",
+  [BlockKind.TableBlock]: "TableBlock",
+  [BlockKind.VariationTableBlock]: "VariationTableBlock"
+};

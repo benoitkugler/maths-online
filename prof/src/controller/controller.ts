@@ -32,3 +32,5 @@ export const controller = new Controller(
   "",
   {}
 );
+
+export const IDStore = { id: 0 };

@@ -30,7 +30,7 @@
       </v-col>
     </v-row>
     <v-row no-gutters>
-      <v-col md="4" class="mr-2">
+      <v-col md="4" class="mx-2">
         <random-parameters
           :parameters="question.random_parameters"
           @add="addRandomParameter"
@@ -38,17 +38,36 @@
           @delete="deleteRandomParameter"
         ></random-parameters>
       </v-col>
-      <v-col>
-        <v-card style="height: 70vh; overflow-y: auto">
-          <component
-            v-for="(row, index) in rows"
-            :Data="row.props.Data"
-            :Pos="blockPosition(index)"
-            :is="row.component"
-            @delete="removeBlock(index)"
-            @swap="swapBlocks"
-          ></component>
-        </v-card>
+      <v-col class="mr-2">
+        <div
+          style="height: 70vh; overflow-y: auto"
+          @dragstart="onDragStart"
+          @dragend="onDragEnd"
+        >
+          <drop-zone
+            v-if="showDropZone"
+            @drop="origin => swapBlocks(origin, 0)"
+          ></drop-zone>
+          <div v-for="(row, index) in rows" :key="index">
+            <container
+              @delete="removeBlock(index)"
+              @swap="swapBlocks"
+              :index="index"
+              :nb-blocks="rows.length"
+              :kind="row.Kind"
+            >
+              <component
+                :model-value="row.Data"
+                @update:model-value="(v: any) => updateBlock(index, v)"
+                :is="component(row.Kind)"
+              ></component>
+            </container>
+            <drop-zone
+              v-if="showDropZone"
+              @drop="origin => swapBlocks(origin, index + 1)"
+            ></drop-zone>
+          </div>
+        </div>
       </v-col>
     </v-row>
   </v-card>
@@ -65,13 +84,15 @@ import type {
   TextBlock
 } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
-import { markRaw, reactive } from "@vue/reactivity";
+import { reactive, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
+import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
-import type { ContainerProps } from "./blocks/Container.vue";
+import Container from "./blocks/Container.vue";
 import FigureVue from "./blocks/Figure.vue";
 import FormulaVue from "./blocks/Formula.vue";
 import TextVue from "./blocks/Text.vue";
+import DropZone from "./DropZone.vue";
 import RandomParameters from "./RandomParameters.vue";
 
 const props = defineProps({
@@ -84,57 +105,52 @@ const question: Question = reactive({
   random_parameters: []
 });
 
-type block = {
-  component: Component;
-  props: Block;
-};
+const rows = ref(<Block[]>[]); // TODO
 
-let rows = reactive(<block[]>[]); // TODO
-
-function blockPosition(index: number): ContainerProps {
-  return { index: index, nbBlocks: rows.length };
+function component(kind: BlockKind): Component {
+  switch (kind) {
+    case BlockKind.TextBlock:
+      return TextVue;
+    case BlockKind.FormulaBlock:
+      return FormulaVue;
+    case BlockKind.FigureBlock:
+      return FigureVue;
+    default:
+      throw "Unexpected Kind";
+  }
 }
 
-function newBlock(kind: BlockKind): block {
+function newBlock(kind: BlockKind): Block {
   switch (kind) {
     case BlockKind.TextBlock:
       return {
-        component: markRaw(TextVue),
-        props: {
-          Kind: kind,
-          Data: <TextBlock>{
-            IsHint: false,
-            Parts: ""
-          }
+        Kind: kind,
+        Data: <TextBlock>{
+          IsHint: false,
+          Parts: ""
         }
       };
     case BlockKind.FormulaBlock:
       return {
-        component: markRaw(FormulaVue),
-        props: {
-          Kind: kind,
-          Data: <FormulaBlock>{
-            Parts: ""
-          }
+        Kind: kind,
+        Data: <FormulaBlock>{
+          Parts: ""
         }
       };
     case BlockKind.FigureBlock:
       return {
-        component: markRaw(FigureVue),
-        props: {
-          Kind: kind,
-          Data: <FigureBlock>{
-            ShowGrid: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Lines: [],
-              Points: [],
-              Segments: []
-            }
+        Kind: kind,
+        Data: <FigureBlock>{
+          ShowGrid: true,
+          Bounds: {
+            Width: 10,
+            Height: 10,
+            Origin: { X: 3, Y: 3 }
+          },
+          Drawings: {
+            Lines: [],
+            Points: [],
+            Segments: []
           }
         }
       };
@@ -144,22 +160,42 @@ function newBlock(kind: BlockKind): block {
 }
 
 function addBlock(kind: BlockKind) {
-  rows.push(newBlock(kind));
+  rows.value.push(newBlock(kind));
+}
+
+function updateBlock(index: number, data: Block["Data"]) {
+  rows.value[index].Data = data;
 }
 
 function removeBlock(index: number) {
-  rows.splice(index, 1);
+  rows.value.splice(index, 1);
 }
 
 // TODO: fix text erasure when swapping
-// TODO: insert and shift instead of swapping
+/** take the block at the index `origin` and insert it right before
+the block at index `target` (which is between 0 and nbBlocks) 
+ */
 function swapBlocks(origin: number, target: number) {
-  if (origin == target) {
+  if (target == origin || target == origin + 1) {
+    // nothing to do
     return;
   }
-  var b = rows[origin];
-  rows[origin] = rows[target];
-  rows[target] = b;
+
+  if (origin < target) {
+    const after = rows.value.slice(target);
+    const before = rows.value.slice(0, target);
+    const originRow = before.splice(origin, 1);
+    before.push(...originRow);
+    before.push(...after);
+    rows.value = before;
+  } else {
+    const before = rows.value.slice(0, target);
+    const originRow = rows.value.splice(origin, 1);
+    const after = rows.value.slice(target);
+    before.push(...originRow);
+    before.push(...after);
+    rows.value = before;
+  }
 }
 
 function addRandomParameter() {
@@ -177,8 +213,18 @@ function deleteRandomParameter(index: number) {
   question.random_parameters!.splice(index, 1);
 }
 
+let showDropZone = $ref(false);
+
+function onDragStart() {
+  showDropZone = true;
+}
+
+function onDragEnd(ev: DragEvent) {
+  showDropZone = false;
+}
+
 async function save() {
-  question.enonce = rows.map(v => v.props);
+  question.enonce = rows.value.map(v => v);
   await controller.EditSaveAndPreview({
     SessionID: props.session_id || "",
     Question: question

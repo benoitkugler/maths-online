@@ -1,7 +1,7 @@
 <template>
   <v-card class="ma-1 border-red">
     <v-row style="background-color: lightgray">
-      <v-col md="8">
+      <v-col md="9" align-self="center">
         <v-card-subtitle class="py-2">Paramètres aléatoires</v-card-subtitle>
       </v-col>
       <v-spacer></v-spacer>
@@ -10,8 +10,8 @@
           icon
           @click="emit('add')"
           title="Ajouter un paramètre"
-          size="small"
-          class="mr-2"
+          size="x-small"
+          class="mr-2 my-2"
         >
           <v-icon icon="mdi-plus" color="green" small></v-icon>
         </v-btn>
@@ -43,7 +43,7 @@
           <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
             <v-list-item-title>
               <v-text-field
-                variant="plain"
+                variant="outlined"
                 suffix=":"
                 density="compact"
                 hide-details

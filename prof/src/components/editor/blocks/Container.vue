@@ -1,81 +1,75 @@
 <template>
-  <v-row no-gutters class="px-2">
-    <v-col>
-      <v-btn icon flat title="Supprimer" small>
-        <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
-      </v-btn>
+  <v-card class="my-2" @dragstart="onDragStart" draggable="true">
+    <v-row no-gutters class="px-2">
+      <v-col align-self="center" cols="6">
+        <v-card-subtitle>
+          {{ kindLabels[props.kind] }}
+        </v-card-subtitle>
+      </v-col>
+      <v-col cols="6" style="text-align: right">
+        <!-- <v-btn icon flat title="Masquer" small>
+          <v-icon
+            small
+            @click="hidden = !hidden"
+            :icon="hidden ? 'mdi-eye' : 'mdi-eye-off'"
+          ></v-icon>
+        </v-btn> -->
 
-      <v-menu
-        offset-y
-        close-on-content-click
-        v-if="props.nbBlocks >= 2"
-        @update:model-value="onClosePositionner"
-      >
-        <template v-slot:activator="{ isActive, props }">
-          <v-btn
-            icon
-            flat
-            title="Positionner"
-            size="small"
-            v-on="{ isActive }"
-            v-bind="props"
-          >
-            <v-icon small color="secondary">mdi-sort</v-icon>
-          </v-btn>
-        </template>
-        <v-card>
-          <v-card-text>
-            <v-slider
-              class="small-slider"
-              direction="vertical"
-              step="1"
-              :min="0"
-              :max="props.nbBlocks - 1"
-              show-ticks="always"
-              :tick-size="6"
-              v-model="initialIndex"
-              hide-details
-            ></v-slider>
-          </v-card-text>
-        </v-card>
-      </v-menu>
-    </v-col>
-    <v-col md="auto" style="text-align: right">
-      <slot name="toolbar"></slot>
-    </v-col>
-  </v-row>
-  <div class="px-4 my-0 py-0">
-    <slot></slot>
-  </div>
+        <v-btn icon flat title="Supprimer" small>
+          <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <v-card-text class="pt-0 pb-2" :hidden="hidden">
+      <slot></slot>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script setup lang="ts">
+import { BlockKindLabels } from "@/controller/editor";
+import type { BlockKind } from "@/controller/exercice_gen";
 import { ref } from "@vue/reactivity";
 import { watch } from "@vue/runtime-core";
 
 const emit = defineEmits<{
   (e: "delete"): void;
   (e: "swap", origin: number, target: number): void;
+  (e: "dragStart"): void;
 }>();
+
+const hidden = ref(false);
 
 export interface ContainerProps {
   index: number;
   nbBlocks: number;
+  kind: BlockKind;
 }
 
 const props = defineProps<ContainerProps>();
 
-let initialIndex = ref(props.nbBlocks - 1 - props.index);
+const kindLabels = BlockKindLabels;
 
-watch(props, () => (initialIndex.value = props.nbBlocks - 1 - props.index));
+let initialIndex = ref(props.nbBlocks - props.index);
+
+watch(props, () => (initialIndex.value = props.nbBlocks - props.index));
 
 function onClosePositionner(isOpen: boolean) {
   if (!isOpen) {
     // commit the changes
     console.log(props.index, initialIndex.value);
 
-    emit("swap", props.index, props.nbBlocks - 1 - initialIndex.value);
+    emit("swap", props.index, props.nbBlocks - initialIndex.value);
   }
+}
+
+function onDragStart(payload: DragEvent) {
+  payload.dataTransfer?.setData(
+    "text/json",
+    JSON.stringify({ index: props.index })
+  );
+  payload.dataTransfer!.dropEffect = "move";
 }
 </script>
 
