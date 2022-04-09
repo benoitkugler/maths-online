@@ -285,7 +285,7 @@ func (expr *Expression) simplifyNumbers() {
 
 	left := expr.left
 	if expr.left == nil { // 0 is a valid default value
-		left = newNumber(0)
+		left = NewNumber(0)
 	}
 	right := expr.right
 

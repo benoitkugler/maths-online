@@ -13,35 +13,35 @@ var expressions = [...]struct {
 	{
 		"1 + (x + z) * (x + 1)", &Expression{
 			atom: plus,
-			left: newNumber(1),
+			left: NewNumber(1),
 			right: &Expression{
 				atom:  mult,
 				left:  &Expression{atom: plus, left: newVariable('x'), right: newVariable('z')},
-				right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)},
+				right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(1)},
 			},
 		}, false,
 	},
 	{
 		"1 + 2 * 3 * 4", &Expression{
 			atom: plus,
-			left: newNumber(1),
+			left: NewNumber(1),
 			right: &Expression{
 				atom:  mult,
-				left:  &Expression{atom: mult, left: newNumber(2), right: newNumber(3)},
-				right: newNumber(4),
+				left:  &Expression{atom: mult, left: NewNumber(2), right: NewNumber(3)},
+				right: NewNumber(4),
 			},
 		}, false,
 	},
 	{
 		"1 + (x + z) * (x + 1) * z ", &Expression{
 			atom: plus,
-			left: newNumber(1),
+			left: NewNumber(1),
 			right: &Expression{
 				atom: mult,
 				left: &Expression{
 					atom:  mult,
 					left:  &Expression{atom: plus, left: newVariable('x'), right: newVariable('z')},
-					right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)},
+					right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(1)},
 				},
 				right: newVariable('z'),
 			},
@@ -57,20 +57,20 @@ var expressions = [...]struct {
 		" x ", newVariable('x'), false,
 	},
 	{
-		" 3 ", newNumber(3), false,
+		" 3 ", NewNumber(3), false,
 	},
 	{
-		" 3.14 ", newNumber(3.14), false,
+		" 3.14 ", NewNumber(3.14), false,
 	},
 	{
-		" 3,14 ", newNumber(3.14), false,
+		" 3,14 ", NewNumber(3.14), false,
 	},
 	{
 		" e ", &Expression{atom: eConstant}, false,
 	},
 	// custom variables
 	{
-		" \uE000 + 2", &Expression{atom: plus, left: newVariable('\uE000'), right: newNumber(2)}, false,
+		" \uE000 + 2", &Expression{atom: plus, left: newVariable('\uE000'), right: NewNumber(2)}, false,
 	},
 	{
 		" \u03C0 ", &Expression{atom: piConstant}, false,
@@ -121,13 +121,13 @@ var expressions = [...]struct {
 		" log( /2)", nil, true,
 	},
 	{
-		" x + 3 ", &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
+		" x + 3 ", &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)}, false,
 	},
 	{
-		" x - 3 ", &Expression{atom: minus, left: newVariable('x'), right: newNumber(3)}, false,
+		" x - 3 ", &Expression{atom: minus, left: newVariable('x'), right: NewNumber(3)}, false,
 	},
 	{
-		" x ^ 3 ", &Expression{atom: pow, left: newVariable('x'), right: newNumber(3)}, false,
+		" x ^ 3 ", &Expression{atom: pow, left: newVariable('x'), right: NewNumber(3)}, false,
 	},
 	// ^ is not associative !
 	{
@@ -164,20 +164,20 @@ var expressions = [...]struct {
 		}, false,
 	},
 	{
-		" x / 3 ", &Expression{atom: div, left: newVariable('x'), right: newNumber(3)}, false,
+		" x / 3 ", &Expression{atom: div, left: newVariable('x'), right: NewNumber(3)}, false,
 	},
 	{
-		" x * 3 ", &Expression{atom: mult, left: newVariable('x'), right: newNumber(3)}, false,
+		" x * 3 ", &Expression{atom: mult, left: newVariable('x'), right: NewNumber(3)}, false,
 	},
 	{
-		"(x + 3 )", &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}, false,
+		"(x + 3 )", &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)}, false,
 	},
 	// implicit multiplication référence
 	{
 		"(x + 3)*(x+4)", &Expression{
 			atom:  mult,
-			left:  &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)},
-			right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(4)},
+			left:  &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)},
+			right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(4)},
 		}, false,
 	},
 	// implicit multiplication
@@ -191,25 +191,25 @@ var expressions = [...]struct {
 	{
 		"(x + 3)(x+4)", &Expression{
 			atom:  mult,
-			left:  &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)},
-			right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(4)},
+			left:  &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)},
+			right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(4)},
 		}, false,
 	},
 	{
 		" (1+ 2 ) (x + 3) ", &Expression{
 			atom:  mult,
-			left:  &Expression{atom: plus, left: newNumber(1), right: newNumber(2)},
-			right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)},
+			left:  &Expression{atom: plus, left: NewNumber(1), right: NewNumber(2)},
+			right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)},
 		}, false,
 	},
 	{
 		"(x−6)(4x−3)", &Expression{
 			atom: mult,
-			left: &Expression{atom: minus, left: newVariable('x'), right: newNumber(6)},
+			left: &Expression{atom: minus, left: newVariable('x'), right: NewNumber(6)},
 			right: &Expression{
 				atom:  minus,
-				left:  &Expression{atom: mult, left: newNumber(4), right: newVariable('x')},
-				right: newNumber(3),
+				left:  &Expression{atom: mult, left: NewNumber(4), right: newVariable('x')},
+				right: NewNumber(3),
 			},
 		}, false,
 	},
@@ -220,20 +220,20 @@ var expressions = [...]struct {
 				atom: minus,
 				left: &Expression{
 					atom: mult,
-					left: newNumber(24),
+					left: NewNumber(24),
 					right: &Expression{
 						atom:  pow,
 						left:  newVariable('x'),
-						right: newNumber(2),
+						right: NewNumber(2),
 					},
 				},
 				right: &Expression{
 					atom:  mult,
-					left:  newNumber(27),
+					left:  NewNumber(27),
 					right: newVariable('x'),
 				},
 			},
-			right: newNumber(18),
+			right: NewNumber(18),
 		}, false,
 	},
 	{
@@ -242,21 +242,21 @@ var expressions = [...]struct {
 	{
 		"1 + 2 * 3", &Expression{
 			atom:  plus,
-			left:  newNumber(1),
-			right: &Expression{atom: mult, left: newNumber(2), right: newNumber(3)},
+			left:  NewNumber(1),
+			right: &Expression{atom: mult, left: NewNumber(2), right: NewNumber(3)},
 		}, false,
 	},
 	{
 		"1 + 2 * 3 ^ 4", &Expression{
 			atom: plus,
-			left: newNumber(1),
+			left: NewNumber(1),
 			right: &Expression{
 				atom: mult,
-				left: newNumber(2),
+				left: NewNumber(2),
 				right: &Expression{
 					atom:  pow,
-					left:  newNumber(3),
-					right: newNumber(4),
+					left:  NewNumber(3),
+					right: NewNumber(4),
 				},
 			},
 		}, false,
@@ -264,13 +264,13 @@ var expressions = [...]struct {
 	{
 		"1 + (x + z) * (x + 1) * z ", &Expression{
 			atom: plus,
-			left: newNumber(1),
+			left: NewNumber(1),
 			right: &Expression{
 				atom: mult,
 				left: &Expression{
 					atom:  mult,
 					left:  &Expression{atom: plus, left: newVariable('x'), right: newVariable('z')},
-					right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)},
+					right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(1)},
 				},
 				right: newVariable('z'),
 			},
@@ -279,20 +279,20 @@ var expressions = [...]struct {
 	{
 		"1 + 2 * (x + 1)", &Expression{
 			atom:  plus,
-			left:  newNumber(1),
-			right: &Expression{atom: mult, left: newNumber(2), right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(1)}},
+			left:  NewNumber(1),
+			right: &Expression{atom: mult, left: NewNumber(2), right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(1)}},
 		}, false,
 	},
 	{
-		"3 - (x + 3 )", &Expression{atom: minus, left: newNumber(3), right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}}, false,
+		"3 - (x + 3 )", &Expression{atom: minus, left: NewNumber(3), right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)}}, false,
 	},
 	{
 		"(1 + y) / (3 - (x + 3 ))",
 
 		&Expression{
 			atom:  div,
-			left:  &Expression{atom: plus, left: newNumber(1), right: newVariable('y')},
-			right: &Expression{atom: minus, left: newNumber(3), right: &Expression{atom: plus, left: newVariable('x'), right: newNumber(3)}},
+			left:  &Expression{atom: plus, left: NewNumber(1), right: newVariable('y')},
+			right: &Expression{atom: minus, left: NewNumber(3), right: &Expression{atom: plus, left: newVariable('x'), right: NewNumber(3)}},
 		},
 		false,
 	},
@@ -333,13 +333,13 @@ var expressions = [...]struct {
 	{"2 , 5", nil, true},
 	{"isPrime( )", nil, true},
 	{"sgn( )", nil, true},
-	{"sgn(-8)", &Expression{atom: sgnFn, right: &Expression{atom: minus, right: newNumber(8)}}, false},
+	{"sgn(-8)", &Expression{atom: sgnFn, right: &Expression{atom: minus, right: NewNumber(8)}}, false},
 	{"isZero( )", nil, true},
-	{"isZero(-8)", &Expression{atom: isZeroFn, right: &Expression{atom: minus, right: newNumber(8)}}, false},
+	{"isZero(-8)", &Expression{atom: isZeroFn, right: &Expression{atom: minus, right: NewNumber(8)}}, false},
 	{"%", nil, true},
-	{"8 % 2", &Expression{atom: mod, left: newNumber(8), right: newNumber(2)}, false},
+	{"8 % 2", &Expression{atom: mod, left: NewNumber(8), right: NewNumber(2)}, false},
 	{"//", nil, true},
-	{"8 // 2", &Expression{atom: rem, left: newNumber(8), right: newNumber(2)}, false},
+	{"8 // 2", &Expression{atom: rem, left: NewNumber(8), right: NewNumber(2)}, false},
 	{"randInt(-a, )", nil, true},
 	{"randInt(1.5; )", nil, true},
 	{"randInt 1.5; )", nil, true},
@@ -357,20 +357,20 @@ var expressions = [...]struct {
 	{"randPrime(2; 12)", &Expression{atom: random{2, 12, true}}, false},
 	{"randInt(15; 12)", nil, true},
 	{
-		"2 + 3 * randInt(2; 12)", &Expression{atom: plus, left: newNumber(2), right: &Expression{atom: mult, left: newNumber(3), right: &Expression{atom: random{2, 12, false}}}}, false,
+		"2 + 3 * randInt(2; 12)", &Expression{atom: plus, left: NewNumber(2), right: &Expression{atom: mult, left: NewNumber(3), right: &Expression{atom: random{2, 12, false}}}}, false,
 	},
 	{
-		"isPrime(2 * x)", &Expression{atom: isPrimeFn, left: nil, right: &Expression{atom: mult, left: newNumber(2), right: newVariable('x')}}, false,
+		"isPrime(2 * x)", &Expression{atom: isPrimeFn, left: nil, right: &Expression{atom: mult, left: NewNumber(2), right: newVariable('x')}}, false,
 	},
 	// space are optional
 	{
 		"(x−6)*(4*x−3)", &Expression{
 			atom: mult,
-			left: &Expression{atom: minus, left: newVariable('x'), right: newNumber(6)},
+			left: &Expression{atom: minus, left: newVariable('x'), right: NewNumber(6)},
 			right: &Expression{
 				atom:  minus,
-				left:  &Expression{atom: mult, left: newNumber(4), right: newVariable('x')},
-				right: newNumber(3),
+				left:  &Expression{atom: mult, left: NewNumber(4), right: newVariable('x')},
+				right: NewNumber(3),
 			},
 		},
 		false,

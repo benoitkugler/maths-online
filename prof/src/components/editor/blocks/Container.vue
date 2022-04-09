@@ -1,12 +1,17 @@
 <template>
-  <v-card class="my-2">
-    <v-row no-gutters class="px-2" @dragstart="onDragStart" draggable="true">
+  <v-card class="my-2" elevation="3">
+    <v-row
+      no-gutters
+      class="px-2 bg-purple-lighten-3"
+      @dragstart="onDragStart"
+      draggable="true"
+    >
       <v-col align-self="center" cols="6">
         <v-card-subtitle>
           {{ kindLabels[props.kind] }}
         </v-card-subtitle>
       </v-col>
-      <v-col cols="6" style="text-align: right">
+      <v-col cols="6" style="text-align: right" class="my-2">
         <!-- <v-btn icon flat title="Masquer" small>
           <v-icon
             small
@@ -15,13 +20,13 @@
           ></v-icon>
         </v-btn> -->
 
-        <v-btn icon flat title="Supprimer" small>
+        <v-btn icon flat title="Supprimer" size="small">
           <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
         </v-btn>
       </v-col>
     </v-row>
 
-    <v-card-text class="pt-0 pb-2">
+    <v-card-text class="pt-1 pb-2">
       <slot></slot>
     </v-card-text>
   </v-card>

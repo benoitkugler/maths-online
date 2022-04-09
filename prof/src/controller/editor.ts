@@ -15,6 +15,12 @@ import type {
 } from "./exercice_gen";
 import { BlockKind, TextKind } from "./exercice_gen";
 
+export const colorByKind: { [key in TextKind]: string } = {
+  [TextKind.Text]: "",
+  [TextKind.StaticMath]: "green",
+  [TextKind.Expression]: "orange"
+};
+
 const reLaTeX = /\$([^$]*)\$/g;
 const reExpression = /#{([^}]*)}/g;
 
@@ -34,7 +40,6 @@ function splitByRegexp(
     if (outerStart > cursor) {
       out.push({ Kind: kindDefault, Content: s.substring(cursor, outerStart) });
     }
-    console.log(s.substring(outerStart, outerEnd));
 
     out.push({ Kind: kindMatch, Content: s.substring(outerStart, outerEnd) });
 
@@ -71,13 +76,13 @@ export const BlockKindLabels: { [T in BlockKind]: string } = {
   [BlockKind.FigureBlock]: "Figure",
   [BlockKind.FunctionGraphBlock]: "Graphe (expression)",
   [BlockKind.FunctionVariationGraphBlock]: "Graphe (variations)",
+  [BlockKind.VariationTableBlock]: "Tableau de variations",
+  [BlockKind.SignTableBlock]: "Tableau de signes",
+  [BlockKind.TableBlock]: "Tableau",
   [BlockKind.FormulaFieldBlock]: "FormulaFieldBlock",
   [BlockKind.ListField]: "ListField",
   [BlockKind.NumberFieldBlock]: "NumberFieldBlock",
-  [BlockKind.RadioFieldBlock]: "RadioFieldBlock",
-  [BlockKind.SignTableBlock]: "SignTableBlock",
-  [BlockKind.TableBlock]: "TableBlock",
-  [BlockKind.VariationTableBlock]: "VariationTableBlock"
+  [BlockKind.RadioFieldBlock]: "RadioFieldBlock"
 };
 
 interface BlockKindTypes {

@@ -54,12 +54,12 @@
               @swap="swapBlocks"
               :index="index"
               :nb-blocks="rows.length"
-              :kind="row.Kind"
+              :kind="row.Props.Kind"
             >
               <component
-                :model-value="row.Data"
+                :model-value="row.Props.Data"
                 @update:model-value="(v: any) => updateBlock(index, v)"
-                :is="component(row.Kind)"
+                :is="row.Component"
               ></component>
             </container>
             <drop-zone
@@ -78,8 +78,8 @@ import type { randomParameter } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { TypedBlock } from "@/controller/editor";
 import type { Block, Question } from "@/controller/exercice_gen";
-import { BlockKind } from "@/controller/exercice_gen";
-import { reactive, ref } from "@vue/reactivity";
+import { BlockKind, SignSymbol, TextKind } from "@/controller/exercice_gen";
+import { markRaw, reactive, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
@@ -88,7 +88,10 @@ import FigureVue from "./blocks/Figure.vue";
 import FormulaVue from "./blocks/Formula.vue";
 import FunctionGraphVue from "./blocks/FunctionGraph.vue";
 import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
+import SignTableVue from "./blocks/SignTable.vue";
+import TableVue from "./blocks/Table.vue";
 import TextVue from "./blocks/Text.vue";
+import VariationTableVue from "./blocks/VariationTable.vue";
 import DropZone from "./DropZone.vue";
 import RandomParameters from "./RandomParameters.vue";
 
@@ -102,26 +105,14 @@ const question: Question = reactive({
   random_parameters: []
 });
 
-const rows = ref(<Block[]>[]); // TODO
+const rows = ref(<block[]>[]); // TODO
 
-function component(kind: BlockKind): Component {
-  switch (kind) {
-    case BlockKind.TextBlock:
-      return TextVue;
-    case BlockKind.FormulaBlock:
-      return FormulaVue;
-    case BlockKind.FigureBlock:
-      return FigureVue;
-    case BlockKind.FunctionGraphBlock:
-      return FunctionGraphVue;
-    case BlockKind.FunctionVariationGraphBlock:
-      return FunctionVariationGraphVue;
-    default:
-      throw "Unexpected Kind";
-  }
+interface block {
+  Props: Block;
+  Component: Component;
 }
 
-function newBlock(kind: BlockKind): Block {
+function newBlock(kind: BlockKind): block {
   switch (kind) {
     case BlockKind.TextBlock: {
       const out: TypedBlock<typeof kind> = {
@@ -131,7 +122,7 @@ function newBlock(kind: BlockKind): Block {
           Parts: ""
         }
       };
-      return out;
+      return { Props: out, Component: markRaw(TextVue) };
     }
     case BlockKind.FormulaBlock: {
       const out: TypedBlock<typeof kind> = {
@@ -140,7 +131,7 @@ function newBlock(kind: BlockKind): Block {
           Parts: ""
         }
       };
-      return out;
+      return { Props: out, Component: markRaw(FormulaVue) };
     }
     case BlockKind.FigureBlock: {
       const out: TypedBlock<typeof kind> = {
@@ -159,7 +150,7 @@ function newBlock(kind: BlockKind): Block {
           }
         }
       };
-      return out;
+      return { Props: out, Component: markRaw(FigureVue) };
     }
     case BlockKind.FunctionGraphBlock: {
       const out: TypedBlock<typeof kind> = {
@@ -171,7 +162,7 @@ function newBlock(kind: BlockKind): Block {
           Range: [-5, 5]
         }
       };
-      return out;
+      return { Props: out, Component: markRaw(FunctionGraphVue) };
     }
     case BlockKind.FunctionVariationGraphBlock: {
       const out: TypedBlock<typeof kind> = {
@@ -181,7 +172,59 @@ function newBlock(kind: BlockKind): Block {
           Fxs: ["-3", "2", "-1"]
         }
       };
-      return out;
+      return { Props: out, Component: markRaw(FunctionVariationGraphVue) };
+    }
+    case BlockKind.VariationTableBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Xs: ["-5", "0", "5"],
+          Fxs: ["-3", "2", "-1"]
+        }
+      };
+      return { Props: out, Component: markRaw(VariationTableVue) };
+    }
+    case BlockKind.SignTableBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          FxSymbols: [
+            SignSymbol.Nothing,
+            SignSymbol.Zero,
+            SignSymbol.ForbiddenValue,
+            SignSymbol.Nothing
+          ],
+          Xs: ["\\infty", "3", "5", "+\\infty"],
+          Signs: [true, false, true]
+        }
+      };
+      return { Props: out, Component: markRaw(SignTableVue) };
+    }
+    case BlockKind.TableBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          VerticalHeaders: [
+            { Kind: TextKind.Text, Content: "Ligne 1" },
+            { Kind: TextKind.Text, Content: "Ligne 2" }
+          ],
+          HorizontalHeaders: [
+            { Kind: TextKind.Text, Content: "Colonne 1" },
+            { Kind: TextKind.Text, Content: "Colonne 2" }
+          ],
+          Values: [
+            [
+              { Kind: TextKind.Text, Content: "Case" },
+              { Kind: TextKind.StaticMath, Content: "\\frac{1}{2}" }
+            ],
+            [
+              { Kind: TextKind.Expression, Content: "2x + 3" },
+              { Kind: TextKind.StaticMath, Content: "18" }
+            ]
+          ]
+        }
+      };
+      return { Props: out, Component: markRaw(TableVue) };
     }
     default:
       throw "Unexpected Kind";
@@ -193,7 +236,7 @@ function addBlock(kind: BlockKind) {
 }
 
 function updateBlock(index: number, data: Block["Data"]) {
-  rows.value[index].Data = data;
+  rows.value[index].Props.Data = data;
 }
 
 function removeBlock(index: number) {
@@ -230,7 +273,7 @@ function swapBlocks(origin: number, target: number) {
 function addRandomParameter() {
   question.random_parameters?.push({
     variable: "x".codePointAt(0)!,
-    expression: ""
+    expression: "randint(1;10)"
   });
 }
 
@@ -253,7 +296,7 @@ function onDragEnd(ev: DragEvent) {
 }
 
 async function save() {
-  question.enonce = rows.value.map(v => v);
+  question.enonce = rows.value.map(v => v.Props);
   await controller.EditSaveAndPreview({
     SessionID: props.session_id || "",
     Question: question

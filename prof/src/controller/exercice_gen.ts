@@ -26,7 +26,7 @@ export enum BlockKind {
   SignTableBlock = 8,
   TableBlock = 9,
   TextBlock = 10,
-  VariationTableBlock = 11
+  VariationTableBlock = 11,
 }
 
 export interface Block {
@@ -59,7 +59,7 @@ export enum LabelPos {
   Right = 3,
   Top = 0,
   TopLeft = 4,
-  TopRight = 5
+  TopRight = 5,
 }
 
 export const LabelPosLabels: { [key in LabelPos]: string } = {
@@ -70,7 +70,7 @@ export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Right]: "A droite",
   [LabelPos.Top]: "Au dessus",
   [LabelPos.TopLeft]: "Au dessus, à gauche",
-  [LabelPos.TopRight]: "Au dessus, à droite"
+  [LabelPos.TopRight]: "Au dessus, à droite",
 };
 
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
@@ -130,13 +130,13 @@ export interface FormulaBlock {
 export enum TextKind {
   Expression = 2,
   StaticMath = 1,
-  Text = 0
+  Text = 0,
 }
 
 export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Expression]: "Expression",
   [TextKind.StaticMath]: "Code LaTeX",
-  [TextKind.Text]: "Text simple"
+  [TextKind.Text]: "Text simple",
 };
 
 // github.com/benoitkugler/maths-online/maths/exercice.TextPart
@@ -179,42 +179,30 @@ export interface RadioFieldBlock {
   Answer: string;
   Proposals: Interpolated[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaPart
-export interface FormulaPart {
-  Content: string;
-  IsExpression: boolean;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaContent
-export type FormulaContent = FormulaPart[] | null;
 // github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
 export enum SignSymbol {
   ForbiddenValue = 2,
   Nothing = 0,
-  Zero = 1
+  Zero = 1,
 }
 
 export const SignSymbolLabels: { [key in SignSymbol]: string } = {
-  [SignSymbol.ForbiddenValue]: "Valeur interdite",
-  [SignSymbol.Nothing]: "Vide",
-  [SignSymbol.Zero]: "Zéro"
+  [SignSymbol.ForbiddenValue]: "||",
+  [SignSymbol.Nothing]: "",
+  [SignSymbol.Zero]: "0",
 };
 
 // github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
 export interface SignTableBlock {
-  Xs: FormulaContent;
+  Xs: Interpolated[] | null;
   FxSymbols: SignSymbol[] | null;
   Signs: boolean[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
-export interface TextOrMath {
-  Text: string;
-  IsMath: boolean;
-}
 // github.com/benoitkugler/maths-online/maths/exercice.TableBlock
 export interface TableBlock {
-  HorizontalHeaders: TextOrMath[] | null;
-  VerticalHeaders: TextOrMath[] | null;
-  Values: TextPart[] | null[] | null;
+  HorizontalHeaders: TextPart[] | null;
+  VerticalHeaders: TextPart[] | null;
+  Values: (TextPart[] | null)[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TextBlock
 export interface TextBlock {

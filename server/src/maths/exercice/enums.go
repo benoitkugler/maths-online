@@ -11,7 +11,7 @@ const (
 type SignSymbol uint8
 
 const (
-	Nothing        SignSymbol = iota // Vide
-	Zero                             // Zéro
-	ForbiddenValue                   // Valeur interdite
+	Nothing        SignSymbol = iota //
+	Zero                             // 0
+	ForbiddenValue                   // ||
 )

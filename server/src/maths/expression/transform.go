@@ -231,7 +231,7 @@ func (expr *Expression) groupAdditions() {
 			if count > 1 {
 				newNodes = append(newNodes, &Expression{
 					atom:  mult,
-					left:  newNumber(float64(count)),
+					left:  NewNumber(float64(count)),
 					right: ref,
 				})
 			} else {
@@ -246,7 +246,7 @@ func (expr *Expression) groupAdditions() {
 	if count > 1 {
 		newNodes = append(newNodes, &Expression{
 			atom:  mult,
-			left:  newNumber(float64(count)),
+			left:  NewNumber(float64(count)),
 			right: ref,
 		})
 	} else {

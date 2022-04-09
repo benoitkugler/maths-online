@@ -224,7 +224,9 @@ func (c constant) String() string {
 
 type Number float64
 
-func newNumber(v float64) *Expression {
+// NewNumber returns the one element expression containing
+// the given number
+func NewNumber(v float64) *Expression {
 	return &Expression{atom: Number(v)}
 }
 

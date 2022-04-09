@@ -37,7 +37,10 @@ const staticKinds = [
   BlockKind.FormulaBlock,
   BlockKind.FigureBlock,
   BlockKind.FunctionGraphBlock,
-  BlockKind.FunctionVariationGraphBlock
+  BlockKind.FunctionVariationGraphBlock,
+  BlockKind.VariationTableBlock,
+  BlockKind.SignTableBlock,
+  BlockKind.TableBlock
 ];
 
 const fieldKinds = [

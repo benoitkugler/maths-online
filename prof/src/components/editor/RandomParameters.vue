@@ -86,14 +86,6 @@ const emit = defineEmits<{
   (e: "delete", index: number): void;
 }>();
 
-function onVariableChange(s: string, index: number) {
-  if (s != "") {
-    const param = props.parameters![index];
-    param.variable = s.codePointAt(0)!;
-    emit("update", index, param);
-  }
-}
-
 function onExpressionChange(s: string, index: number) {
   const param = props.parameters![index];
   param.expression = s;

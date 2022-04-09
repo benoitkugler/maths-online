@@ -94,11 +94,6 @@ type FunctionGraphBlock struct {
 	Graph functiongrapher.FunctionGraph
 }
 
-// type TableBlock struct {
-// 	Rows     [][]TextOrMath // the first item of each row serves as header
-// 	NoHeader bool
-// }
-
 type TableBlock struct {
 	HorizontalHeaders []TextOrMath // optional
 	VerticalHeaders   []TextOrMath // optional

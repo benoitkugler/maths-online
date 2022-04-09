@@ -3,7 +3,6 @@ package exercice
 import (
 	"math/rand"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
@@ -297,26 +296,6 @@ func randRadioFieldBlock() RadioFieldBlock {
 	}
 }
 
-func randFormulaPart() FormulaPart {
-	return FormulaPart{
-		Content:      randstring(),
-		IsExpression: randbool(),
-	}
-}
-
-func randSliceFormulaPart() []FormulaPart {
-	l := rand.Intn(10)
-	out := make([]FormulaPart, l)
-	for i := range out {
-		out[i] = randFormulaPart()
-	}
-	return out
-}
-
-func randFormulaContent() FormulaContent {
-	return FormulaContent(randSliceFormulaPart())
-}
-
 func randSignSymbol() SignSymbol {
 	choix := [...]SignSymbol{ForbiddenValue, Nothing, Zero}
 	i := rand.Intn(len(choix))
@@ -343,26 +322,10 @@ func randSlicebool() []bool {
 
 func randSignTableBlock() SignTableBlock {
 	return SignTableBlock{
-		Xs:        randFormulaContent(),
+		Xs:        randSliceInterpolated(),
 		FxSymbols: randSliceSignSymbol(),
 		Signs:     randSlicebool(),
 	}
-}
-
-func randclientTextOrMath() client.TextOrMath {
-	return client.TextOrMath{
-		Text:   randstring(),
-		IsMath: randbool(),
-	}
-}
-
-func randSliceclientTextOrMath() []client.TextOrMath {
-	l := rand.Intn(10)
-	out := make([]client.TextOrMath, l)
-	for i := range out {
-		out[i] = randclientTextOrMath()
-	}
-	return out
 }
 
 func randSliceTextPart() []TextPart {
@@ -385,8 +348,8 @@ func randSliceSliceTextPart() [][]TextPart {
 
 func randTableBlock() TableBlock {
 	return TableBlock{
-		HorizontalHeaders: randSliceclientTextOrMath(),
-		VerticalHeaders:   randSliceclientTextOrMath(),
+		HorizontalHeaders: randSliceTextPart(),
+		VerticalHeaders:   randSliceTextPart(),
 		Values:            randSliceSliceTextPart(),
 	}
 }

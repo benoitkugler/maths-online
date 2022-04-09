@@ -3,7 +3,7 @@
     v-model="props.modelValue.Parts"
     @update:model-value="emit('update:modelValue', props.modelValue)"
   ></InterpolatedText>
-  <small class="text-grey mt-1"
+  <small class="text-grey mt-1 d-block"
     >Interprété comme du code LaTeX. Insérer une expression avec : #{2x +
     1}</small
   >

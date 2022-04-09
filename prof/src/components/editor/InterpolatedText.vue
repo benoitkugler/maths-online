@@ -2,17 +2,18 @@
   <QuillEditor
     theme=""
     toolbar=""
-    class="text-field"
+    class="text-field elevation-2"
     content-type="text"
     @update:content="onTextChange"
     @text-change="colorize"
     :content="props.modelValue"
+    :options="{ formats: ['color', 'bold'] }"
     ref="quill"
   />
 </template>
 
 <script setup lang="ts">
-import { itemize } from "@/controller/editor";
+import { colorByKind, itemize } from "@/controller/editor";
 import { TextKind } from "@/controller/exercice_gen";
 import { onMounted, watch } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
@@ -29,8 +30,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: string): void;
 }>();
-
-const colorByKind = ["", "green", "orange"];
 
 let quill = $ref<InstanceType<typeof QuillEditor> | null>();
 
@@ -69,9 +68,9 @@ function colorize(arg: { source: Sources }) {
 <style>
 .text-field {
   width: 100%;
-  border: 1px solid black;
-  border-radius: 5px;
-  background-color: #d4d4d4a8;
+  border: 1px solid grey;
+  border-radius: 4px;
+  background-color: #d4d4d477;
 }
 
 .ql-editor {

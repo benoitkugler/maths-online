@@ -1,6 +1,8 @@
 package exercice
 
 import (
+	"strings"
+
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/repere"
@@ -121,6 +123,19 @@ func (tp TextPart) instantiate(params expression.Variables) client.TextOrMath {
 	}
 }
 
+func (tp TextPart) instantiateAndEvaluate(params expression.Variables) client.TextOrMath {
+	if tp.Kind == Expression {
+		expr, _, _ := expression.Parse(tp.Content)
+		expr.Substitute(params)
+		v, err := expr.Evaluate(nil)
+		if err == nil {
+			expr = expression.NewNumber(v)
+		}
+		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}
+	}
+	return tp.instantiate(params)
+}
+
 type TextParts []TextPart
 
 func (tp TextParts) instantiate(params expression.Variables) []client.TextOrMath {
@@ -129,6 +144,17 @@ func (tp TextParts) instantiate(params expression.Variables) []client.TextOrMath
 		parts[i] = p.instantiate(params)
 	}
 	return parts
+}
+
+// assume all parts are either static math or expression.
+// after instantiating, tries to evaluate the expression
+// and returns the LaTeX concatenated code
+func (tp TextParts) instantiateAndEvaluate(params expression.Variables) string {
+	parts := make([]string, len(tp))
+	for i, p := range tp {
+		parts[i] = p.instantiateAndEvaluate(params).Text
+	}
+	return strings.Join(parts, "")
 }
 
 // TextBlock is a chunk of text
@@ -214,7 +240,7 @@ func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) in
 }
 
 type SignTableBlock struct {
-	Xs        FormulaContent
+	Xs        []Interpolated // always math content
 	FxSymbols []SignSymbol
 	Signs     []bool // with length len(Xs) - 1
 }
@@ -224,7 +250,8 @@ func (st SignTableBlock) instantiate(params expression.Variables, _ int) instanc
 		Xs: make([]string, len(st.Xs)),
 	}
 	for i, c := range st.Xs {
-		out.Xs[i] = c.instantiate(params).asLaTeX()
+		parts, _ := c.Parse()
+		out.Xs[i] = parts.instantiateAndEvaluate(params)
 	}
 	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
 	out.Signs = append([]bool(nil), st.Signs...)
@@ -295,17 +322,24 @@ func (f FunctionVariationGraphBlock) instantiate(params expression.Variables, _ 
 }
 
 type TableBlock struct {
-	HorizontalHeaders []client.TextOrMath
-	VerticalHeaders   []client.TextOrMath
+	HorizontalHeaders []TextPart
+	VerticalHeaders   []TextPart
 	Values            [][]TextPart
 }
 
 func (t TableBlock) instantiate(params expression.Variables, _ int) instance {
 	out := TableInstance{
-		HorizontalHeaders: t.HorizontalHeaders,
-		VerticalHeaders:   t.VerticalHeaders,
+		HorizontalHeaders: make([]client.TextOrMath, len(t.HorizontalHeaders)),
+		VerticalHeaders:   make([]client.TextOrMath, len(t.VerticalHeaders)),
 		Values:            make([][]client.TextOrMath, len(t.Values)),
 	}
+	for i, cell := range t.HorizontalHeaders {
+		out.HorizontalHeaders[i] = cell.instantiate(params)
+	}
+	for i, cell := range t.VerticalHeaders {
+		out.VerticalHeaders[i] = cell.instantiate(params)
+	}
+
 	for i, row := range t.Values {
 		rowInstance := make([]client.TextOrMath, len(row))
 		for j, v := range row {
