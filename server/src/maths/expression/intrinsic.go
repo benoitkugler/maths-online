@@ -19,14 +19,17 @@ func BuildParams(it Intrinsic) RandomParameters {
 // PythagorianTriplet are 3 positive integers (a,b,c) such that a^2 + b^2 = c^2
 type PythagorianTriplet struct {
 	A, B, C Variable
-	// SeedStart and SeedEnd define the magnitude of a, b, c such that
-	// 2*SeedStart^2 <= a <= 2*SeedEnd^2
-	SeedStart, SeedEnd int
+	// Bound roughly defines the magnitude of a, b, c, such that
+	// a <= 2*Bound^2.
+	// It must be >= 2
+	Bound int
 }
 
 func (pt PythagorianTriplet) MergeTo(params RandomParameters) {
-	p := params.addAnonymousParam(mustParseE(fmt.Sprintf("2 * randInt(%d;%d)", pt.SeedStart, pt.SeedEnd)))
-	q := params.addAnonymousParam(mustParseE(fmt.Sprintf("randInt(%d;%d)", pt.SeedStart, pt.SeedEnd)))
+	const seedStart = 1
+	p := params.addAnonymousParam(mustParseE(fmt.Sprintf("2 * randInt(%d;%d)", seedStart, pt.Bound)))
+	// q = 1 yield b = 0, avoid this edge case
+	q := params.addAnonymousParam(mustParseE(fmt.Sprintf("randInt(%d;%d)", seedStart+1, pt.Bound)))
 	a := mustParseE(fmt.Sprintf("%s*%s", p, q))                  // p * q
 	c := mustParseE(fmt.Sprintf("(%s %s^2 + %s)  / 2", p, q, p)) // (p q^2 + p)  / 2
 	b := mustParseE(fmt.Sprintf("%s-%s", pt.C, p))               // c - p

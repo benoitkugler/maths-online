@@ -5,8 +5,10 @@
     :model-value="text"
     @update:model-value="onTextChange"
     :color="color"
-    hide-details
+    :hide-details="!hint"
+    :hint="hint"
     class="input-small"
+    :label="label"
   >
   </v-text-field>
 </template>
@@ -19,6 +21,8 @@ import { computed } from "@vue/runtime-core";
 
 interface Props {
   modelValue: TextPart;
+  label?: string;
+  hint?: string;
 }
 
 const props = defineProps<Props>();

@@ -1,6 +1,6 @@
 <template>
   <v-card class="ma-1">
-    <v-row>
+    <v-row class="mb-1">
       <v-col md="auto">
         <v-card-title>Editeur de question</v-card-title>
         <v-card-subtitle
@@ -31,12 +31,20 @@
     </v-row>
     <v-row no-gutters>
       <v-col md="4" class="mx-2">
-        <random-parameters
-          :parameters="question.random_parameters"
-          @add="addRandomParameter"
-          @update="updateRandomParameter"
-          @delete="deleteRandomParameter"
-        ></random-parameters>
+        <div style="height: 70vh; overflow-y: auto">
+          <random-parameters
+            :parameters="question.parameters.Variables"
+            @add="addRandomParameter"
+            @update="updateRandomParameter"
+            @delete="deleteRandomParameter"
+          ></random-parameters>
+          <pythagorians
+            :parameters="question.parameters.Pythagorians || []"
+            @add="addPythagorian"
+            @update="updatePythagorian"
+            @delete="deletePythagorian"
+          ></pythagorians>
+        </div>
       </v-col>
       <v-col class="mr-2">
         <div
@@ -77,8 +85,17 @@
 import type { randomParameter } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { TypedBlock } from "@/controller/editor";
-import type { Block, Question } from "@/controller/exercice_gen";
-import { BlockKind, SignSymbol, TextKind } from "@/controller/exercice_gen";
+import type {
+  Block,
+  PythagorianTriplet,
+  Question
+} from "@/controller/exercice_gen";
+import {
+  BlockKind,
+  ComparisonLevel,
+  SignSymbol,
+  TextKind
+} from "@/controller/exercice_gen";
 import { markRaw, reactive, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -86,13 +103,17 @@ import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
 import FigureVue from "./blocks/Figure.vue";
 import FormulaVue from "./blocks/Formula.vue";
+import FormulaFieldVue from "./blocks/FormulaField.vue";
 import FunctionGraphVue from "./blocks/FunctionGraph.vue";
 import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
+import NumberFieldVue from "./blocks/NumberField.vue";
+import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
 import TableVue from "./blocks/Table.vue";
 import TextVue from "./blocks/Text.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import DropZone from "./DropZone.vue";
+import Pythagorians from "./Pythagorians.vue";
 import RandomParameters from "./RandomParameters.vue";
 
 const props = defineProps({
@@ -102,7 +123,10 @@ const props = defineProps({
 const question: Question = reactive({
   title: "Nouvelle question",
   enonce: [],
-  random_parameters: []
+  parameters: {
+    Variables: [],
+    Pythagorians: []
+  }
 });
 
 const rows = ref(<block[]>[]); // TODO
@@ -226,6 +250,36 @@ function newBlock(kind: BlockKind): block {
       };
       return { Props: out, Component: markRaw(TableVue) };
     }
+    case BlockKind.NumberFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Expression: "1"
+        }
+      };
+      return { Props: out, Component: markRaw(NumberFieldVue) };
+    }
+    case BlockKind.FormulaFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Label: { Kind: TextKind.Text, Content: "" },
+          Expression: "x^2 + 2x + 1",
+          ComparisonLevel: ComparisonLevel.SimpleSubstitutions
+        }
+      };
+      return { Props: out, Component: markRaw(FormulaFieldVue) };
+    }
+    case BlockKind.RadioFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: "1",
+          Proposals: ["Oui", "Non"]
+        }
+      };
+      return { Props: out, Component: markRaw(RadioFieldVue) };
+    }
     default:
       throw "Unexpected Kind";
   }
@@ -271,18 +325,35 @@ function swapBlocks(origin: number, target: number) {
 }
 
 function addRandomParameter() {
-  question.random_parameters?.push({
+  question.parameters.Variables?.push({
     variable: "x".codePointAt(0)!,
     expression: "randint(1;10)"
   });
 }
 
 function updateRandomParameter(index: number, param: randomParameter) {
-  question.random_parameters![index] = param;
+  question.parameters.Variables![index] = param;
 }
 
 function deleteRandomParameter(index: number) {
-  question.random_parameters!.splice(index, 1);
+  question.parameters.Variables!.splice(index, 1);
+}
+
+function addPythagorian() {
+  question.parameters.Pythagorians?.push({
+    A: "a".codePointAt(0)!,
+    B: "b".codePointAt(0)!,
+    C: "c".codePointAt(0)!,
+    Bound: 10
+  });
+}
+
+function updatePythagorian(index: number, param: PythagorianTriplet) {
+  question.parameters.Pythagorians![index] = param;
+}
+
+function deletePythagorian(index: number) {
+  question.parameters.Pythagorians!.splice(index, 1);
 }
 
 let showDropZone = $ref(false);

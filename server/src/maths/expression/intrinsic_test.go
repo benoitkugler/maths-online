@@ -7,17 +7,15 @@ import (
 
 func TestPythagorianTriplet_mergeTo(t *testing.T) {
 	tests := []struct {
-		RangeStart int
-		RangeEnd   int
+		Bound int
 	}{
-		{2, 10},
-		{3, 40},
+		{10},
+		{40},
 	}
 	for _, tt := range tests {
 		pt := PythagorianTriplet{
 			A: 'a', B: 'b', C: 'c',
-			SeedStart: tt.RangeStart,
-			SeedEnd:   tt.RangeEnd,
+			Bound: tt.Bound,
 		}
 		out := BuildParams(pt)
 

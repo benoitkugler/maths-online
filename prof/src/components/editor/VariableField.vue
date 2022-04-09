@@ -40,4 +40,7 @@ function onVariableChange(s: string) {
 .centered-input:deep(input) {
   text-align: center;
 }
+.centered-input:deep(.v-field__input) {
+  padding-left: 4px;
+}
 </style>

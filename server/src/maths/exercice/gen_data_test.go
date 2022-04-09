@@ -48,12 +48,45 @@ func randrandomParameters() randomParameters {
 	return randomParameters(randSlicerandomParameter())
 }
 
+func randVariable() expression.Variable {
+	return expression.Variable(randrune())
+}
+
+func randint() int {
+	return int(rand.Intn(1000000))
+}
+
+func randexpressionPythagorianTriplet() expression.PythagorianTriplet {
+	return expression.PythagorianTriplet{
+		A:     randVariable(),
+		B:     randVariable(),
+		C:     randVariable(),
+		Bound: randint(),
+	}
+}
+
+func randSliceexpressionPythagorianTriplet() []expression.PythagorianTriplet {
+	l := rand.Intn(10)
+	out := make([]expression.PythagorianTriplet, l)
+	for i := range out {
+		out[i] = randexpressionPythagorianTriplet()
+	}
+	return out
+}
+
+func randParameters() Parameters {
+	return Parameters{
+		Variables:    randrandomParameters(),
+		Pythagorians: randSliceexpressionPythagorianTriplet(),
+	}
+}
+
 func randExercice() Exercice {
 	return Exercice{
-		Id:               randint64(),
-		Title:            randstring(),
-		Description:      randstring(),
-		RandomParameters: randrandomParameters(),
+		Id:          randint64(),
+		Title:       randstring(),
+		Description: randstring(),
+		Parameters:  randParameters(),
 	}
 }
 
@@ -64,7 +97,6 @@ func randBlock() Block {
 		randFormulaFieldBlock(),
 		randFunctionGraphBlock(),
 		randFunctionVariationGraphBlock(),
-		randListField(),
 		randNumberFieldBlock(),
 		randRadioFieldBlock(),
 		randSignTableBlock(),
@@ -72,7 +104,7 @@ func randBlock() Block {
 		randTextBlock(),
 		randVariationTableBlock(),
 	}
-	i := rand.Intn(12)
+	i := rand.Intn(11)
 	return choix[i]
 }
 
@@ -161,10 +193,6 @@ func randrepereRandomDrawings() repere.RandomDrawings {
 	}
 }
 
-func randint() int {
-	return int(rand.Intn(1000000))
-}
-
 func randfloat64() float64 {
 	return rand.Float64() * float64(rand.Int31())
 }
@@ -215,12 +243,10 @@ func randTextPart() TextPart {
 	}
 }
 
-func randuint8() uint8 {
-	return uint8(rand.Intn(1000000))
-}
-
 func randComparisonLevel() expression.ComparisonLevel {
-	return expression.ComparisonLevel(randuint8())
+	choix := [...]expression.ComparisonLevel{expression.ExpandedSubstitutions, expression.SimpleSubstitutions, expression.Strict}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randFormulaFieldBlock() FormulaFieldBlock {
@@ -229,10 +255,6 @@ func randFormulaFieldBlock() FormulaFieldBlock {
 		Label:           randTextPart(),
 		ComparisonLevel: randComparisonLevel(),
 	}
-}
-
-func randVariable() expression.Variable {
-	return expression.Variable(randrune())
 }
 
 func randArray2float64() [2]float64 {
@@ -265,12 +287,6 @@ func randFunctionVariationGraphBlock() FunctionVariationGraphBlock {
 	return FunctionVariationGraphBlock{
 		Xs:  randSlicestring(),
 		Fxs: randSlicestring(),
-	}
-}
-
-func randListField() ListField {
-	return ListField{
-		Choices: randSlicestring(),
 	}
 }
 
@@ -383,8 +399,8 @@ func randEnonce() Enonce {
 
 func randQuestion() Question {
 	return Question{
-		Title:            randstring(),
-		Enonce:           randEnonce(),
-		RandomParameters: randrandomParameters(),
+		Title:      randstring(),
+		Enonce:     randEnonce(),
+		Parameters: randParameters(),
 	}
 }

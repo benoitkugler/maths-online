@@ -111,7 +111,7 @@ func scanOneExercice(row scanner) (Exercice, error) {
 		&s.Id,
 		&s.Title,
 		&s.Description,
-		&s.RandomParameters,
+		&s.Parameters,
 	)
 	return s, err
 }
@@ -181,24 +181,24 @@ func ScanExercices(rs *sql.Rows) (Exercices, error) {
 // Insert Exercice in the database and returns the item with id filled.
 func (item Exercice) Insert(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`INSERT INTO exercices (
-		title,description,random_parameters
+		title,description,parameters
 		) VALUES (
 		$1,$2,$3
 		) RETURNING 
-		id,title,description,random_parameters;
-		`, item.Title, item.Description, item.RandomParameters)
+		id,title,description,parameters;
+		`, item.Title, item.Description, item.Parameters)
 	return ScanExercice(row)
 }
 
 // Update Exercice in the database and returns the new version.
 func (item Exercice) Update(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`UPDATE exercices SET (
-		title,description,random_parameters
+		title,description,parameters
 		) = (
 		$2,$3,$4
 		) WHERE id = $1 RETURNING 
-		id,title,description,random_parameters;
-		`, item.Id, item.Title, item.Description, item.RandomParameters)
+		id,title,description,parameters;
+		`, item.Id, item.Title, item.Description, item.Parameters)
 	return ScanExercice(row)
 }
 
@@ -217,15 +217,15 @@ func DeleteExercicesByIDs(tx DB, ids ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
-func (s *randomParameters) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s randomParameters) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *Parameters) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Parameters) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
 		&s.Title,
 		&s.Enonce,
-		&s.RandomParameters,
+		&s.Parameters,
 	)
 	return s, err
 }
@@ -276,14 +276,14 @@ func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("questions",
-		"title", "enonce", "random_parameters",
+		"title", "enonce", "parameters",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Title, item.Enonce, item.RandomParameters)
+		_, err = stmt.Exec(item.Title, item.Enonce, item.Parameters)
 		if err != nil {
 			return err
 		}

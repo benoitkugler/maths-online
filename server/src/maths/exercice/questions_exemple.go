@@ -185,7 +185,7 @@ var (
 var (
 	pythagorians = expression.PythagorianTriplet{
 		A: 'a', B: 'b', C: 'c',
-		SeedStart: 2, SeedEnd: 20,
+		Bound: 20,
 	}
 	distanceParams = expression.RandomParameters{
 		'X': mustParse("-randInt(100;200)"),

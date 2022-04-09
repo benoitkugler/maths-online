@@ -4,7 +4,6 @@ import type {
   FormulaFieldBlock,
   FunctionGraphBlock,
   FunctionVariationGraphBlock,
-  ListField,
   NumberFieldBlock,
   RadioFieldBlock,
   SignTableBlock,
@@ -79,10 +78,9 @@ export const BlockKindLabels: { [T in BlockKind]: string } = {
   [BlockKind.VariationTableBlock]: "Tableau de variations",
   [BlockKind.SignTableBlock]: "Tableau de signes",
   [BlockKind.TableBlock]: "Tableau",
-  [BlockKind.FormulaFieldBlock]: "FormulaFieldBlock",
-  [BlockKind.ListField]: "ListField",
-  [BlockKind.NumberFieldBlock]: "NumberFieldBlock",
-  [BlockKind.RadioFieldBlock]: "RadioFieldBlock"
+  [BlockKind.NumberFieldBlock]: "Nombre",
+  [BlockKind.FormulaFieldBlock]: "Expression",
+  [BlockKind.RadioFieldBlock]: "QCM"
 };
 
 interface BlockKindTypes {
@@ -91,7 +89,6 @@ interface BlockKindTypes {
   [BlockKind.FormulaFieldBlock]: FormulaFieldBlock;
   [BlockKind.FunctionGraphBlock]: FunctionGraphBlock;
   [BlockKind.FunctionVariationGraphBlock]: FunctionVariationGraphBlock;
-  [BlockKind.ListField]: ListField;
   [BlockKind.NumberFieldBlock]: NumberFieldBlock;
   [BlockKind.RadioFieldBlock]: RadioFieldBlock;
   [BlockKind.SignTableBlock]: SignTableBlock;

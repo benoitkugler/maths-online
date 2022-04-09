@@ -6,12 +6,26 @@ export interface randomParameter {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.randomParameters
 export type randomParameters = randomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/expression.Variable
+export type Variable = number;
+// github.com/benoitkugler/maths-online/maths/expression.PythagorianTriplet
+export interface PythagorianTriplet {
+  A: Variable;
+  B: Variable;
+  C: Variable;
+  Bound: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.Parameters
+export interface Parameters {
+  Variables: randomParameters;
+  Pythagorians: PythagorianTriplet[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.Exercice
 export interface Exercice {
   id: number;
   title: string;
   description: string;
-  random_parameters: randomParameters;
+  parameters: Parameters;
 }
 
 export enum BlockKind {
@@ -20,13 +34,12 @@ export enum BlockKind {
   FormulaFieldBlock = 2,
   FunctionGraphBlock = 3,
   FunctionVariationGraphBlock = 4,
-  ListField = 5,
-  NumberFieldBlock = 6,
-  RadioFieldBlock = 7,
-  SignTableBlock = 8,
-  TableBlock = 9,
-  TextBlock = 10,
-  VariationTableBlock = 11,
+  NumberFieldBlock = 5,
+  RadioFieldBlock = 6,
+  SignTableBlock = 7,
+  TableBlock = 8,
+  TextBlock = 9,
+  VariationTableBlock = 10,
 }
 
 export interface Block {
@@ -37,7 +50,6 @@ export interface Block {
     | FormulaFieldBlock
     | FunctionGraphBlock
     | FunctionVariationGraphBlock
-    | ListField
     | NumberFieldBlock
     | RadioFieldBlock
     | SignTableBlock
@@ -145,15 +157,24 @@ export interface TextPart {
   Kind: TextKind;
 }
 // github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
-export type ComparisonLevel = number;
+export enum ComparisonLevel {
+  ExpandedSubstitutions = 2,
+  SimpleSubstitutions = 1,
+  Strict = 0,
+}
+
+export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
+  [ComparisonLevel.ExpandedSubstitutions]: "Complète",
+  [ComparisonLevel.SimpleSubstitutions]: "Simple",
+  [ComparisonLevel.Strict]: "Exacte",
+};
+
 // github.com/benoitkugler/maths-online/maths/exercice.FormulaFieldBlock
 export interface FormulaFieldBlock {
   Expression: string;
   Label: TextPart;
   ComparisonLevel: ComparisonLevel;
 }
-// github.com/benoitkugler/maths-online/maths/expression.Variable
-export type Variable = number;
 // github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
 export interface FunctionGraphBlock {
   Function: string;
@@ -165,10 +186,6 @@ export interface FunctionGraphBlock {
 export interface FunctionVariationGraphBlock {
   Xs: string[] | null;
   Fxs: string[] | null;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.ListField
-export interface ListField {
-  Choices: string[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.NumberFieldBlock
 export interface NumberFieldBlock {
@@ -220,5 +237,5 @@ export type Enonce = Block[] | null;
 export interface Question {
   title: string;
   enonce: Enonce;
-  random_parameters: randomParameters;
+  parameters: Parameters;
 }

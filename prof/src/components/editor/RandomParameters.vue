@@ -1,5 +1,5 @@
 <template>
-  <v-card class="ma-1 border-red">
+  <v-card class="ma-2 border-red">
     <v-row style="background-color: lightgray">
       <v-col md="9" align-self="center">
         <v-card-subtitle class="py-2">Paramètres aléatoires</v-card-subtitle>

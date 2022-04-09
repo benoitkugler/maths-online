@@ -31,8 +31,21 @@ type Block interface {
 	instantiate(params expression.Variables, ID int) instance
 }
 
-type ListField struct {
-	Choices []string
+type Parameters struct {
+	Variables    randomParameters
+	Pythagorians []expression.PythagorianTriplet
+}
+
+func (pr Parameters) toMap() expression.RandomParameters {
+	// start with basic variables
+	out := pr.Variables.toMap()
+
+	// add intrinsic
+	for _, intrinsic := range pr.Pythagorians {
+		intrinsic.MergeTo(out)
+	}
+
+	return out
 }
 
 // randomParameters is a serialized form of expression.RandomParameters
@@ -63,7 +76,7 @@ type ExerciceQuestions struct {
 // have been resolved
 // It assumes that the expressions and random parameters definitions are valid.
 func (eq ExerciceQuestions) instantiate() ExerciceInstance {
-	rp := eq.RandomParameters.toMap()
+	rp := eq.Parameters.toMap()
 	// generate random params
 	params, _ := rp.Instantiate()
 
@@ -86,7 +99,7 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 // It assumes that the expressions and random parameters definitions are valid.
 func (qu Question) Instantiate() QuestionInstance {
 	// generate random params
-	rp, _ := qu.RandomParameters.toMap().Instantiate()
+	rp, _ := qu.Parameters.toMap().Instantiate()
 	return qu.instantiateWith(rp)
 }
 
@@ -348,9 +361,4 @@ func (t TableBlock) instantiate(params expression.Variables, _ int) instance {
 		out.Values[i] = rowInstance
 	}
 	return out
-}
-
-// TODO
-func (l ListField) instantiate(params expression.Variables, ID int) instance {
-	return RadioFieldInstance{}
 }

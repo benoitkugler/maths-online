@@ -25,7 +25,7 @@ func (n NumberFieldBlock) instantiate(params expression.Variables, ID int) insta
 type FormulaFieldBlock struct {
 	Expression      string   // a valid expression, in the format used by expression.Expression
 	Label           TextPart // optional
-	ComparisonLevel expression.ComparisonLevel
+	ComparisonLevel ComparisonLevel
 }
 
 func (f FormulaFieldBlock) instantiate(params expression.Variables, ID int) instance {

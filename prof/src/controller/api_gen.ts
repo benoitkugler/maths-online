@@ -26,11 +26,25 @@ export interface randomParameter {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.randomParameters
 export type randomParameters = randomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/expression.Variable
+export type Variable = number;
+// github.com/benoitkugler/maths-online/maths/expression.PythagorianTriplet
+export interface PythagorianTriplet {
+  A: Variable;
+  B: Variable;
+  C: Variable;
+  Bound: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.Parameters
+export interface Parameters {
+  Variables: randomParameters;
+  Pythagorians: PythagorianTriplet[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.Question
 export interface Question {
   title: string;
   enonce: Enonce;
-  random_parameters: randomParameters;
+  parameters: Parameters;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
 export interface SaveAndPreviewIn {

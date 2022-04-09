@@ -84,11 +84,63 @@ AND structgen_validate_json_number(data->'variable')
 	LANGUAGE 'plpgsql'
 	IMMUTABLE;
 
+	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_3515813091 (data jsonb)
+		RETURNS boolean
+		AS $f$
+	BEGIN
+		IF jsonb_typeof(data) != 'object' THEN 
+			RETURN FALSE;
+		END IF;
+		RETURN (SELECT bool_and( 
+			key IN ('A', 'B', 'C', 'Bound')
+		) FROM jsonb_each(data))  
+		AND structgen_validate_json_number(data->'A')
+AND structgen_validate_json_number(data->'B')
+AND structgen_validate_json_number(data->'C')
+AND structgen_validate_json_number(data->'Bound')
+		;
+	END;
+	$f$
+	LANGUAGE 'plpgsql'
+	IMMUTABLE;
+
+	CREATE OR REPLACE FUNCTION structgen_validate_json_array_struct_3515813091 (data jsonb)
+		RETURNS boolean
+		AS $f$
+	BEGIN
+		IF jsonb_typeof(data) = 'null' THEN RETURN TRUE; END IF;
+		IF jsonb_typeof(data) != 'array' THEN RETURN FALSE; END IF;
+		IF jsonb_array_length(data) = 0 THEN RETURN TRUE; END IF; 
+		RETURN (SELECT bool_and( structgen_validate_json_struct_3515813091(value) )  FROM jsonb_array_elements(data)) 
+			;
+	END;
+	$f$
+	LANGUAGE 'plpgsql'
+	IMMUTABLE;
+
+	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_1330845610 (data jsonb)
+		RETURNS boolean
+		AS $f$
+	BEGIN
+		IF jsonb_typeof(data) != 'object' THEN 
+			RETURN FALSE;
+		END IF;
+		RETURN (SELECT bool_and( 
+			key IN ('Variables', 'Pythagorians')
+		) FROM jsonb_each(data))  
+		AND structgen_validate_json_array_struct_3340897463(data->'Variables')
+AND structgen_validate_json_array_struct_3515813091(data->'Pythagorians')
+		;
+	END;
+	$f$
+	LANGUAGE 'plpgsql'
+	IMMUTABLE;
+
 CREATE TABLE exercices (
 	id serial PRIMARY KEY,
 	title varchar  NOT NULL,
 	description varchar  NOT NULL,
-	random_parameters jsonb  CONSTRAINT random_parameters_structgen_validate_json_array_struct_3340897463 CHECK (structgen_validate_json_array_struct_3340897463(random_parameters))
+	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_1330845610 CHECK (structgen_validate_json_struct_1330845610(parameters))
 );
 
 	-- No validation : accept anything
@@ -119,5 +171,5 @@ CREATE TABLE exercices (
 CREATE TABLE questions (
 	title varchar  NOT NULL,
 	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce)),
-	random_parameters jsonb  CONSTRAINT random_parameters_structgen_validate_json_array_struct_3340897463 CHECK (structgen_validate_json_array_struct_3340897463(random_parameters))
+	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_1330845610 CHECK (structgen_validate_json_struct_1330845610(parameters))
 );
