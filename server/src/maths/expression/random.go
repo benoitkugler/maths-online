@@ -5,15 +5,15 @@ import (
 	"math/rand"
 )
 
-// InvalidRandomVariable is returned when instantiating
+// ErrInvalidRandomParameters is returned when instantiating
 // invalid parameter definitions
-type InvalidRandomVariable struct {
+type ErrInvalidRandomParameters struct {
 	Detail string
 	Cause  Variable
 }
 
-func (irv InvalidRandomVariable) Error() string {
-	return fmt.Sprintf("paramètre aléatoire %s invalide : %s", irv.Cause, irv.Detail)
+func (irv ErrInvalidRandomParameters) Error() string {
+	return fmt.Sprintf("Paramètre aléatoire %s invalide : %s", irv.Cause, irv.Detail)
 }
 
 // RandomParameters stores a set of random parameters definitions,
@@ -55,7 +55,7 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 	}
 
 	if rvv.seen[v] {
-		rvv.err = InvalidRandomVariable{
+		rvv.err = ErrInvalidRandomParameters{
 			Cause:  v,
 			Detail: fmt.Sprintf("%s est présente dans un cycle et ne peut donc pas être calculée", v),
 		}
@@ -68,7 +68,7 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 
 	expr, ok := rvv.defs[v]
 	if !ok {
-		rvv.err = InvalidRandomVariable{
+		rvv.err = ErrInvalidRandomParameters{
 			Cause:  v,
 			Detail: fmt.Sprintf("%s n'est pas définie", v),
 		}
@@ -86,8 +86,8 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 
 // Instantiate generate a random version of the
 // variables, resolving possible dependencies.
-// It returns an InvalidRandomVariable error for invalid cycles, like a = a +1
-// or a = b + 1; b = a
+// It returns an `ErrInvalidRandomParameters` error for invalid cycles, like a = a +1
+// or a = b + 1; b = a.
 // By design, a set of random parameters is either always valid, or always invalid,
 // meaning this function may be used once as validation step.
 func (rv RandomParameters) Instantiate() (Variables, error) {

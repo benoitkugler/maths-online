@@ -32,17 +32,19 @@ type Block interface {
 }
 
 type Parameters struct {
-	Variables    randomParameters
-	Pythagorians []expression.PythagorianTriplet
+	Variables  randomParameters
+	Intrinsics []string // validated by exercice.ParseIntrinsic
 }
 
-func (pr Parameters) toMap() expression.RandomParameters {
+// ToMap may only be used after `Validate`
+func (pr Parameters) ToMap() expression.RandomParameters {
 	// start with basic variables
 	out := pr.Variables.toMap()
 
-	// add intrinsic
-	for _, intrinsic := range pr.Pythagorians {
-		intrinsic.MergeTo(out)
+	// add intrinsics
+	for _, intrinsic := range pr.Intrinsics {
+		it, _ := expression.ParseIntrinsic(intrinsic)
+		_ = it.MergeTo(out)
 	}
 
 	return out
@@ -58,6 +60,7 @@ type randomParameter struct {
 
 // toMap assumes `rp` only contains valid expressions,
 // or it will panic
+// It may only be used after `ValidateParameters`
 func (rp randomParameters) toMap() expression.RandomParameters {
 	out := make(expression.RandomParameters, len(rp))
 	for _, item := range rp {
@@ -76,7 +79,7 @@ type ExerciceQuestions struct {
 // have been resolved
 // It assumes that the expressions and random parameters definitions are valid.
 func (eq ExerciceQuestions) instantiate() ExerciceInstance {
-	rp := eq.Parameters.toMap()
+	rp := eq.Parameters.ToMap()
 	// generate random params
 	params, _ := rp.Instantiate()
 
@@ -99,7 +102,7 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 // It assumes that the expressions and random parameters definitions are valid.
 func (qu Question) Instantiate() QuestionInstance {
 	// generate random params
-	rp, _ := qu.Parameters.toMap().Instantiate()
+	rp, _ := qu.Parameters.ToMap().Instantiate()
 	return qu.instantiateWith(rp)
 }
 

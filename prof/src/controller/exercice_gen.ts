@@ -11,17 +11,10 @@ export interface randomParameter {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.randomParameters
 export type randomParameters = randomParameter[] | null;
-// github.com/benoitkugler/maths-online/maths/expression.PythagorianTriplet
-export interface PythagorianTriplet {
-  A: Variable;
-  B: Variable;
-  C: Variable;
-  Bound: number;
-}
 // github.com/benoitkugler/maths-online/maths/exercice.Parameters
 export interface Parameters {
   Variables: randomParameters;
-  Pythagorians: PythagorianTriplet[] | null;
+  Intrinsics: string[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.Exercice
 export interface Exercice {

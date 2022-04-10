@@ -15,31 +15,42 @@ export interface LaunchGameOut {
 export interface StartSessionOut {
   ID: string;
 }
+// github.com/benoitkugler/maths-online/maths/expression.Variable
+export interface Variable {
+  Indice: string;
+  Name: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.randomParameter
+export interface randomParameter {
+  expression: string;
+  variable: Variable;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.randomParameters
+export type randomParameters = randomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/exercice.Parameters
+export interface Parameters {
+  Variables: randomParameters;
+  Intrinsics: string[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckParametersIn
+export interface CheckParametersIn {
+  SessionID: string;
+  Parameters: Parameters;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.ErrParameters
+export interface ErrParameters {
+  Origin: string;
+  Details: string;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckParametersOut
+export interface CheckParametersOut {
+  ErrDefinition: ErrParameters;
+  Variables: Variable[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.Block
 export type Block = any;
 // github.com/benoitkugler/maths-online/maths/exercice.Enonce
 export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.randomParameter
-export interface randomParameter {
-  expression: string;
-  variable: number;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.randomParameters
-export type randomParameters = randomParameter[] | null;
-// github.com/benoitkugler/maths-online/maths/expression.Variable
-export type Variable = number;
-// github.com/benoitkugler/maths-online/maths/expression.PythagorianTriplet
-export interface PythagorianTriplet {
-  A: Variable;
-  B: Variable;
-  C: Variable;
-  Bound: number;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.Parameters
-export interface Parameters {
-  Variables: randomParameters;
-  Pythagorians: PythagorianTriplet[] | null;
-}
 // github.com/benoitkugler/maths-online/maths/exercice.Question
 export interface Question {
   title: string;
@@ -117,6 +128,32 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditStartSession(data: StartSessionOut): void;
+
+  protected async rawEditCheckParameters(params: CheckParametersIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/check-params";
+    const rep: AxiosResponse<CheckParametersOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditCheckParameters wraps rawEditCheckParameters and handles the error */
+  async EditCheckParameters(params: CheckParametersIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditCheckParameters(params);
+      this.onSuccessEditCheckParameters(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditCheckParameters(
+    data: CheckParametersOut
+  ): void;
 
   protected async rawEditSaveAndPreview(params: SaveAndPreviewIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/save";

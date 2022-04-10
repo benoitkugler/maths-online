@@ -46,7 +46,7 @@ func TestRandomVariables_instantiate(t *testing.T) {
 
 		got, err := rv.Instantiate()
 		if err != nil {
-			err, ok := err.(InvalidRandomVariable)
+			err, ok := err.(ErrInvalidRandomParameters)
 			if !ok {
 				t.Fatal("invalid err type")
 			}

@@ -320,6 +320,7 @@ func (tk *tokenizer) tryReadConstant() (constant, bool) {
 		tk.pos++
 		return piConstant, true
 	default:
+		_ = exhaustiveConstantSwitch
 		return 0, false
 	}
 }

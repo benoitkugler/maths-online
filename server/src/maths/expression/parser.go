@@ -13,7 +13,7 @@ type InvalidExpr struct {
 }
 
 func (inv InvalidExpr) Error() string {
-	return fmt.Sprintf("expression invalide : position %d : %s", inv.Pos, inv.Reason)
+	return fmt.Sprintf("Expression invalide (position %d) : %s", inv.Pos, inv.Reason)
 }
 
 // PortionOf returns the start of `expr` until the error.

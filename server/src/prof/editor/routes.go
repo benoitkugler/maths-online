@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/labstack/echo/v4"
 )
 
@@ -14,6 +15,29 @@ const LoopbackEndpoint = "/prof-loopback/:session_id"
 // `loopbackController` instance to handle preview requests.
 func (ct *Controller) EditStartSession(c echo.Context) error {
 	out := ct.startSession()
+
+	return c.JSON(200, out)
+}
+
+type CheckParametersIn struct {
+	SessionID  string
+	Parameters exercice.Parameters
+}
+
+type CheckParametersOut struct {
+	ErrDefinition exercice.ErrParameters
+	// Variables is the list of the variables defined
+	// in the parameteres (intrinsics included)
+	Variables []expression.Variable
+}
+
+func (ct *Controller) EditCheckParameters(c echo.Context) error {
+	var args CheckParametersIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out := ct.checkParameters(args)
 
 	return c.JSON(200, out)
 }

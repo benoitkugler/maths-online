@@ -102,41 +102,21 @@ AND structgen_validate_json_struct_1700595950(data->'variable')
 	LANGUAGE 'plpgsql'
 	IMMUTABLE;
 
-	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_2538083439 (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		IF jsonb_typeof(data) != 'object' THEN 
-			RETURN FALSE;
-		END IF;
-		RETURN (SELECT bool_and( 
-			key IN ('A', 'B', 'C', 'Bound')
-		) FROM jsonb_each(data))  
-		AND structgen_validate_json_struct_1700595950(data->'A')
-AND structgen_validate_json_struct_1700595950(data->'B')
-AND structgen_validate_json_struct_1700595950(data->'C')
-AND structgen_validate_json_number(data->'Bound')
-		;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-	CREATE OR REPLACE FUNCTION structgen_validate_json_array_struct_2538083439 (data jsonb)
+	CREATE OR REPLACE FUNCTION structgen_validate_json_array_string (data jsonb)
 		RETURNS boolean
 		AS $f$
 	BEGIN
 		IF jsonb_typeof(data) = 'null' THEN RETURN TRUE; END IF;
 		IF jsonb_typeof(data) != 'array' THEN RETURN FALSE; END IF;
 		IF jsonb_array_length(data) = 0 THEN RETURN TRUE; END IF; 
-		RETURN (SELECT bool_and( structgen_validate_json_struct_2538083439(value) )  FROM jsonb_array_elements(data)) 
+		RETURN (SELECT bool_and( structgen_validate_json_string(value) )  FROM jsonb_array_elements(data)) 
 			;
 	END;
 	$f$
 	LANGUAGE 'plpgsql'
 	IMMUTABLE;
 
-	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_1308956586 (data jsonb)
+	CREATE OR REPLACE FUNCTION structgen_validate_json_struct_724571229 (data jsonb)
 		RETURNS boolean
 		AS $f$
 	BEGIN
@@ -144,10 +124,10 @@ AND structgen_validate_json_number(data->'Bound')
 			RETURN FALSE;
 		END IF;
 		RETURN (SELECT bool_and( 
-			key IN ('Variables', 'Pythagorians')
+			key IN ('Variables', 'Intrinsics')
 		) FROM jsonb_each(data))  
 		AND structgen_validate_json_array_struct_1675104059(data->'Variables')
-AND structgen_validate_json_array_struct_2538083439(data->'Pythagorians')
+AND structgen_validate_json_array_string(data->'Intrinsics')
 		;
 	END;
 	$f$
@@ -158,7 +138,7 @@ CREATE TABLE exercices (
 	id serial PRIMARY KEY,
 	title varchar  NOT NULL,
 	description varchar  NOT NULL,
-	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_1308956586 CHECK (structgen_validate_json_struct_1308956586(parameters))
+	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters))
 );
 
 	-- No validation : accept anything
@@ -189,5 +169,5 @@ CREATE TABLE exercices (
 CREATE TABLE questions (
 	title varchar  NOT NULL,
 	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce)),
-	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_1308956586 CHECK (structgen_validate_json_struct_1308956586(parameters))
+	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters))
 );

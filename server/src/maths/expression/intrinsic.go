@@ -1,18 +1,38 @@
 package expression
 
-import "fmt"
+import (
+	"fmt"
+)
+
+type ErrDuplicateParameter struct {
+	Duplicate Variable
+}
+
+func (err ErrDuplicateParameter) Error() string {
+	return fmt.Sprintf("Paramètre %s défini deux fois", err.Duplicate)
+}
+
+func checkDuplicates(params RandomParameters, vars ...Variable) error {
+	for _, v := range vars {
+		if _, has := params[v]; has {
+			return ErrDuplicateParameter{Duplicate: v}
+		}
+	}
+	return nil
+}
 
 // Intrinsic maps some variables to expression,
 // serving as shortcut for complex conditions
 type Intrinsic interface {
-	MergeTo(params RandomParameters)
+	// MergeTo returns an `ErrDuplicateParameter` error if parameters are already defined
+	MergeTo(params RandomParameters) error
 }
 
-// BuildParams is a convenience shortcut to build the
+// buildParams is a convenience shortcut to build the
 // parameters associated with the given intrinsic.
-func BuildParams(it Intrinsic) RandomParameters {
+func buildParams(it Intrinsic) RandomParameters {
 	out := make(RandomParameters)
-	it.MergeTo(out)
+	_ = it.MergeTo(out)
 	return out
 }
 
@@ -25,7 +45,11 @@ type PythagorianTriplet struct {
 	Bound int
 }
 
-func (pt PythagorianTriplet) MergeTo(params RandomParameters) {
+func (pt PythagorianTriplet) MergeTo(params RandomParameters) error {
+	if err := checkDuplicates(params, pt.A, pt.B, pt.C); err != nil {
+		return err
+	}
+
 	const seedStart = 1
 	p := params.addAnonymousParam(mustParseE(fmt.Sprintf("2 * randInt(%d;%d)", seedStart, pt.Bound)))
 	// q = 1 yield b = 0, avoid this edge case
@@ -37,6 +61,8 @@ func (pt PythagorianTriplet) MergeTo(params RandomParameters) {
 	params[pt.A] = a
 	params[pt.B] = b
 	params[pt.C] = c
+
+	return nil
 }
 
 // PolynomialCoeffs are the coefficient of
@@ -48,7 +74,11 @@ type PolynomialCoeffs struct {
 	RootsStart, RootsEnd int
 }
 
-func (qp PolynomialCoeffs) MergeTo(params RandomParameters) {
+func (qp PolynomialCoeffs) MergeTo(params RandomParameters) error {
+	if err := checkDuplicates(params, qp.B, qp.C, qp.D, qp.X1, qp.X2, qp.X3); err != nil {
+		return err
+	}
+
 	width := qp.RootsEnd - qp.RootsStart
 	// ensure no solutions are too close
 	// |--_|_-_|_--|
@@ -73,4 +103,37 @@ func (qp PolynomialCoeffs) MergeTo(params RandomParameters) {
 	params[qp.B] = b
 	params[qp.C] = c
 	params[qp.D] = d
+
+	return nil
+}
+
+// OrthogonalProjection compute the coordinates of H, the orthogonal
+// projection of A on (BC).
+type OrthogonalProjection struct {
+	Ax, Ay, Bx, By, Cx, Cy Variable // arguments
+
+	Hx, Hy Variable // output
+}
+
+func (op OrthogonalProjection) MergeTo(params RandomParameters) error {
+	if err := checkDuplicates(params, op.Hx, op.Hy); err != nil {
+		return err
+	}
+
+	// BC
+	u := params.addAnonymousParam(mustParseE(fmt.Sprintf("%s - %s", op.Cx, op.Bx))) // Cx - Bx
+	v := params.addAnonymousParam(mustParseE(fmt.Sprintf("%s - %s", op.Cy, op.By))) // Cy - By
+
+	// det(BA,BC)
+	d := params.addAnonymousParam(mustParseE(fmt.Sprintf("(%s - %s)%s - (%s - %s)%s", op.Ax, op.Bx, v, op.Ay, op.By, u)))
+
+	// solve for AH = (x, y)
+	// xu + yv = 0
+	// xv - yu = -d
+	norm := params.addAnonymousParam(mustParseE(fmt.Sprintf("%s^2 + %s^2", u, v)))
+
+	params[op.Hx] = mustParseE(fmt.Sprintf("(-%s * %s / %s) + %s", d, v, norm, op.Ax))
+	params[op.Hy] = mustParseE(fmt.Sprintf("(%s * %s / %s) + %s", d, u, norm, op.Ay))
+
+	return nil
 }

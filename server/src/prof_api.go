@@ -13,5 +13,6 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *edito
 	e.POST("/trivial/launch_game", trivial.LaunchGame)
 
 	e.PUT("/prof/editor/api/new", edit.EditStartSession)
+	e.POST("/prof/editor/api/check-params", edit.EditCheckParameters)
 	e.POST("/prof/editor/api/save", edit.EditSaveAndPreview)
 }

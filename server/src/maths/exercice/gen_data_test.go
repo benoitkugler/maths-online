@@ -55,32 +55,19 @@ func randrandomParameters() randomParameters {
 	return randomParameters(randSlicerandomParameter())
 }
 
-func randint() int {
-	return int(rand.Intn(1000000))
-}
-
-func randexpressionPythagorianTriplet() expression.PythagorianTriplet {
-	return expression.PythagorianTriplet{
-		A:     randexpressionVariable(),
-		B:     randexpressionVariable(),
-		C:     randexpressionVariable(),
-		Bound: randint(),
-	}
-}
-
-func randSliceexpressionPythagorianTriplet() []expression.PythagorianTriplet {
+func randSlicestring() []string {
 	l := rand.Intn(10)
-	out := make([]expression.PythagorianTriplet, l)
+	out := make([]string, l)
 	for i := range out {
-		out[i] = randexpressionPythagorianTriplet()
+		out[i] = randstring()
 	}
 	return out
 }
 
 func randParameters() Parameters {
 	return Parameters{
-		Variables:    randrandomParameters(),
-		Pythagorians: randSliceexpressionPythagorianTriplet(),
+		Variables:  randrandomParameters(),
+		Intrinsics: randSlicestring(),
 	}
 }
 
@@ -196,6 +183,10 @@ func randrepereRandomDrawings() repere.RandomDrawings {
 	}
 }
 
+func randint() int {
+	return int(rand.Intn(1000000))
+}
+
 func randfloat64() float64 {
 	return rand.Float64() * float64(rand.Int31())
 }
@@ -275,15 +266,6 @@ func randFunctionGraphBlock() FunctionGraphBlock {
 		Variable: randexpressionVariable(),
 		Range:    randArray2float64(),
 	}
-}
-
-func randSlicestring() []string {
-	l := rand.Intn(10)
-	out := make([]string, l)
-	for i := range out {
-		out[i] = randstring()
-	}
-	return out
 }
 
 func randFunctionVariationGraphBlock() FunctionVariationGraphBlock {

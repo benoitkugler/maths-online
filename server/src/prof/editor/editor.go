@@ -5,9 +5,11 @@ package editor
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -62,6 +64,23 @@ func (ct *Controller) startSession() StartSessionOut {
 	}()
 
 	return StartSessionOut{ID: newID}
+}
+
+func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
+	err := params.Parameters.Validate()
+	if err != nil {
+		return CheckParametersOut{ErrDefinition: err.(exercice.ErrParameters)}
+	}
+
+	var out CheckParametersOut
+	for vr := range params.Parameters.ToMap() {
+		out.Variables = append(out.Variables, vr)
+	}
+	sort.Slice(out.Variables, func(i, j int) bool {
+		return out.Variables[i].String() < out.Variables[j].String()
+	})
+
+	return out
 }
 
 func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {

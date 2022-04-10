@@ -16,7 +16,7 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 			A: NewVariable('a'), B: NewVariable('b'), C: NewVariable('c'),
 			Bound: tt.Bound,
 		}
-		out := BuildParams(pt)
+		out := buildParams(pt)
 
 		for range [100]int{} {
 			vr, err := out.Instantiate()
@@ -58,7 +58,7 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 			RootsStart: tt.RootsStart,
 			RootsEnd:   tt.RootsEnd,
 		}
-		out := BuildParams(qp)
+		out := buildParams(qp)
 
 		for range [10]int{} {
 			vs, err := out.Instantiate()
@@ -99,6 +99,50 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 			if x2-x1 < minDist || x3-x2 < minDist {
 				t.Fatal(width, minDist, x1, x2, x3)
 			}
+		}
+	}
+}
+
+func TestOrthogonalProjection_MergeTo(t *testing.T) {
+	op := OrthogonalProjection{
+		Ax: Variable{Name: 'x', Indice: "A"},
+		Ay: Variable{Name: 'y', Indice: "A"},
+		Bx: Variable{Name: 'x', Indice: "B"},
+		By: Variable{Name: 'y', Indice: "B"},
+		Cx: Variable{Name: 'x', Indice: "C"},
+		Cy: Variable{Name: 'y', Indice: "C"},
+		Hx: Variable{Name: 'x', Indice: "H"},
+		Hy: Variable{Name: 'y', Indice: "H"},
+	}
+	tests := []struct {
+		args                 RandomParameters
+		expectedX, expectedY float64
+	}{
+		{
+			RandomParameters{
+				op.Ax: NewNumber(0), op.Ay: NewNumber(2),
+				op.Bx: NewNumber(-1), op.By: NewNumber(0),
+				op.Cx: NewNumber(4), op.Cy: NewNumber(0),
+			},
+			0, 0,
+		},
+		{
+			RandomParameters{
+				op.Ax: NewNumber(-1), op.Ay: NewNumber(1),
+				op.Bx: NewNumber(-1), op.By: NewNumber(-1),
+				op.Cx: NewNumber(1), op.Cy: NewNumber(1),
+			},
+			0, 0,
+		},
+	}
+	for _, tt := range tests {
+		op.MergeTo(tt.args)
+		v, err := tt.args.Instantiate()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if v[op.Hx] != tt.expectedX || v[op.Hy] != tt.expectedY {
+			t.Fatal()
 		}
 	}
 }
