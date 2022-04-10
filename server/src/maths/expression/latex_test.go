@@ -41,6 +41,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"(x^y)^z^t",
 		"\u0393 + \u0398 + \u03B8", // some greek letters
 		"\uE000 +  \uE000 + \uE001 + \u0398 + \u03B8", // custom variables
+		"x_A + y_B", // indices
 		"randInt(3;14) + 2",
 		"randPrime(3;14) + 2",
 		"sgn(-8)",
@@ -58,10 +59,10 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		_ = e.AsLaTeX(nil) // check for panic
 
 		code := e.AsLaTeX(func(v Variable) string {
-			if v == '\uE000' {
-				return "u_{n}"
-			} else if v == '\uE001' {
-				return "v_{n}"
+			if v.Name == '\uE000' {
+				return "u_{n+1}"
+			} else if v.Name == '\uE001' {
+				return "v_{n+2}"
 			}
 			return DefaultLatexResolver(v)
 		})

@@ -28,10 +28,17 @@ func randrune() rune {
 	return rune(rand.Intn(1000000))
 }
 
+func randexpressionVariable() expression.Variable {
+	return expression.Variable{
+		Indice: randstring(),
+		Name:   randrune(),
+	}
+}
+
 func randrandomParameter() randomParameter {
 	return randomParameter{
 		Expression: randstring(),
-		Variable:   randrune(),
+		Variable:   randexpressionVariable(),
 	}
 }
 
@@ -48,19 +55,15 @@ func randrandomParameters() randomParameters {
 	return randomParameters(randSlicerandomParameter())
 }
 
-func randVariable() expression.Variable {
-	return expression.Variable(randrune())
-}
-
 func randint() int {
 	return int(rand.Intn(1000000))
 }
 
 func randexpressionPythagorianTriplet() expression.PythagorianTriplet {
 	return expression.PythagorianTriplet{
-		A:     randVariable(),
-		B:     randVariable(),
-		C:     randVariable(),
+		A:     randexpressionVariable(),
+		B:     randexpressionVariable(),
+		C:     randexpressionVariable(),
 		Bound: randint(),
 	}
 }
@@ -269,7 +272,7 @@ func randFunctionGraphBlock() FunctionGraphBlock {
 	return FunctionGraphBlock{
 		Function: randstring(),
 		Label:    randstring(),
-		Variable: randVariable(),
+		Variable: randexpressionVariable(),
 		Range:    randArray2float64(),
 	}
 }

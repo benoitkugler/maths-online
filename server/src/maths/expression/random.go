@@ -23,7 +23,8 @@ type RandomParameters map[Variable]*Expression
 // addAnonymousParam register the given expression under a new variable, not used yet,
 // chosen among a private range
 func (rp RandomParameters) addAnonymousParam(expr *Expression) Variable {
-	for v := firstPrivateVariable; v > 0; v++ {
+	for ru := firstPrivateVariable; ru > 0; ru++ {
+		v := Variable{Name: ru}
 		if _, has := rp[v]; !has {
 			rp[v] = expr
 			return v

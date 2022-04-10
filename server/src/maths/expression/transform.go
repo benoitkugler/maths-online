@@ -2,6 +2,7 @@ package expression
 
 import (
 	"sort"
+	"strings"
 )
 
 // return a slice of all the operands of the `op` operator at the level of `expr`,
@@ -79,12 +80,12 @@ func compareNodes(n1, n2 *Expression) int {
 			}
 		case Variable:
 			a2 := a2.(Variable)
-			if a1 < a2 {
+			if a1.Name < a2.Name {
 				return -1
-			} else if a1 > a2 {
+			} else if a1.Name > a2.Name {
 				return 1
 			} else {
-				return 0
+				return strings.Compare(a1.Indice, a2.Indice)
 			}
 		case constant:
 			a2 := a2.(constant)

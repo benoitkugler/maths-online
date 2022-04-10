@@ -107,7 +107,7 @@ func isWhiteSpace(r rune) bool {
 	}
 }
 
-func isRemaider(src []rune) bool {
+func isRemainder(src []rune) bool {
 	return len(src) >= 2 && (string(src[0:2]) == "//")
 }
 
@@ -150,7 +150,7 @@ func (tk *tokenizer) readToken() (tok token) {
 	out := token{pos: tk.pos}
 	c := tk.src[tk.pos]
 
-	isRem := isRemaider(tk.src[tk.pos:])
+	isRem := isRemainder(tk.src[tk.pos:])
 	op, isOp := isOperator(c)
 	switch {
 	case c == '(':
@@ -175,13 +175,15 @@ func (tk *tokenizer) readToken() (tok token) {
 			out.data = randFunction{isPrime: true}
 		} else if fn, isFunction := tk.tryReadFunction(); isFunction {
 			out.data = fn
+		} else if ct, isConst := tk.tryReadConstant(); isConst {
+			out.data = ct
 		} else {
-			// read the symbol as variable or predefined constants
-			v := tk.readConstantOrVariable()
+			// read the symbol as variable
+			v := tk.readVariable()
 			out.data = v
 		}
 	case unicode.Is(unicode.Co, c): // custom variables
-		v := tk.readConstantOrVariable()
+		v := tk.readVariable()
 		out.data = v
 	default: // number start
 		out.data = tk.readNumber()
@@ -309,17 +311,33 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 
 const piRune = '\u03C0'
 
-func (tk *tokenizer) readConstantOrVariable() (out tokenData) {
+func (tk *tokenizer) tryReadConstant() (constant, bool) {
 	switch c := tk.src[tk.pos]; c {
 	case 'e':
-		out = eConstant
+		tk.pos++
+		return eConstant, true
 	case piRune:
-		out = piConstant
+		tk.pos++
+		return piConstant, true
 	default:
-		out = Variable(c)
+		return 0, false
 	}
-	tk.pos++
+}
 
+func (tk *tokenizer) readVariable() Variable {
+	c := tk.src[tk.pos]
+	out := Variable{Name: c}
+	tk.pos++
+	if tk.pos < len(tk.src) && tk.src[tk.pos] == '_' { // indice start
+		tk.pos++
+		start := tk.pos
+		for ; tk.pos < len(tk.src); tk.pos++ {
+			if isWhiteSpace(tk.src[tk.pos]) {
+				break
+			}
+		}
+		out.Indice = string(tk.src[start:tk.pos])
+	}
 	return out
 }
 

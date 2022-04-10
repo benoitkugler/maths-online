@@ -42,17 +42,31 @@ func TestImplicitMult(t *testing.T) {
 		expr   string
 		tokens []tokenData
 	}{
-		{"7x  + 8", []tokenData{numberText("7"), mult, Variable('x'), plus, numberText("8")}},
-		{"7*x", []tokenData{numberText("7"), mult, Variable('x')}},
-		{"(2x + 1)(4x)", []tokenData{openPar, numberText("2"), mult, Variable('x'), plus, numberText("1"), closePar, mult, openPar, numberText("4"), mult, Variable('x'), closePar}},
-		{"(x + 3)(x+4)", []tokenData{openPar, Variable('x'), plus, numberText("3"), closePar, mult, openPar, Variable('x'), plus, numberText("4"), closePar}},
-		{"(x + 3)*(x+4)", []tokenData{openPar, Variable('x'), plus, numberText("3"), closePar, mult, openPar, Variable('x'), plus, numberText("4"), closePar}},
-		{" (1+ 2 ) (x + 3) ", []tokenData{openPar, numberText("1"), plus, numberText("2"), closePar, mult, openPar, Variable('x'), plus, numberText("3"), closePar}},
+		{"7x  + 8", []tokenData{numberText("7"), mult, Variable{Name: 'x'}, plus, numberText("8")}},
+		{"7*x", []tokenData{numberText("7"), mult, Variable{Name: 'x'}}},
+		{"(2x + 1)(4x)", []tokenData{openPar, numberText("2"), mult, Variable{Name: 'x'}, plus, numberText("1"), closePar, mult, openPar, numberText("4"), mult, Variable{Name: 'x'}, closePar}},
+		{"(x + 3)(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("4"), closePar}},
+		{"(x + 3)*(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("4"), closePar}},
+		{" (1+ 2 ) (x + 3) ", []tokenData{openPar, numberText("1"), plus, numberText("2"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar}},
 		{"7log(10)", []tokenData{numberText("7"), mult, logFn, openPar, numberText("10"), closePar}},
 		{"7randPrime(1;10)", []tokenData{numberText("7"), mult, randFunction{true}, openPar, numberText("1"), semicolon, numberText("10"), closePar}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)
 		}
+	}
+}
+
+func TestVariableIndice(t *testing.T) {
+	got, _ := allTokens("x_A + y_B + D_JIE")
+	expected := []tokenData{
+		Variable{Name: 'x', Indice: "A"},
+		plus,
+		Variable{Name: 'y', Indice: "B"},
+		plus,
+		Variable{Name: 'D', Indice: "JIE"},
+	}
+	if !reflect.DeepEqual(got, expected) {
+		t.Fatal()
 	}
 }

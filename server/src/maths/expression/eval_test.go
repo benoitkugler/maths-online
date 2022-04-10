@@ -8,7 +8,7 @@ import (
 
 func TestEvalMissingVariable(t *testing.T) {
 	e := mustParse(t, "x + y")
-	_, err := e.Evaluate(Variables{'x': 7})
+	_, err := e.Evaluate(Variables{NewVariable('x'): 7})
 	if err == nil {
 		t.Fatal()
 	}
@@ -98,7 +98,7 @@ func Test_Expression_eval(t *testing.T) {
 			"1 + 1 * 3 ^ 3 * 2 - 1", nil, 54,
 		},
 		{
-			"x + 2", Variables{'x': 4}, 6,
+			"x + 2", Variables{NewVariable('x'): 4}, 6,
 		},
 		{
 			"2 + 0 * randInt(1;3)", nil, 2,
@@ -149,20 +149,20 @@ func Test_Expression_eval(t *testing.T) {
 			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{'a': 2}, 2,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVariable('a'): 2}, 2,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				'a': 8,  // BC
-				'b': 12, // AC
-				'c': 4,  // AB
+				NewVariable('a'): 8,  // BC
+				NewVariable('b'): 12, // AC
+				NewVariable('c'): 4,  // AB
 			}, 0,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				'a': 3, // BC
-				'b': 4, // AC
-				'c': 5, // AB
+				NewVariable('a'): 3, // BC
+				NewVariable('b'): 4, // AC
+				NewVariable('c'): 5, // AB
 			}, 3,
 		},
 	}
@@ -220,9 +220,9 @@ func TestExpression_Substitute(t *testing.T) {
 		want string
 	}{
 		{"a + b", Variables{}, "a+b"},
-		{"a + b", Variables{'a': 4}, "4+b"},
-		{"a + b / 2*a", Variables{'a': 4}, "4+b/2*4"},
-		{"a + b", Variables{'a': 4, 'b': 5}, "4+5"},
+		{"a + b", Variables{NewVariable('a'): 4}, "4+b"},
+		{"a + b / 2*a", Variables{NewVariable('a'): 4}, "4+b/2*4"},
+		{"a + b", Variables{NewVariable('a'): 4, NewVariable('b'): 5}, "4+5"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -263,7 +263,7 @@ func TestExpression_Extrema(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		if got := expr.Extrema('x', tt.from, tt.to); got != tt.want {
+		if got := expr.Extrema(NewVariable('x'), tt.from, tt.to); got != tt.want {
 			t.Errorf("Expression.Extrema() = %v, want %v", got, tt.want)
 		}
 	}

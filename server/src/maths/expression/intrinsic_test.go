@@ -1,7 +1,6 @@
 package expression
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -14,7 +13,7 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		pt := PythagorianTriplet{
-			A: 'a', B: 'b', C: 'c',
+			A: NewVariable('a'), B: NewVariable('b'), C: NewVariable('c'),
 			Bound: tt.Bound,
 		}
 		out := BuildParams(pt)
@@ -24,7 +23,7 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			a, b, c := vr['a'], vr['b'], vr['c']
+			a, b, c := vr[NewVariable('a')], vr[NewVariable('b')], vr[NewVariable('c')]
 			if _, ok := isInt(a); !ok {
 				t.Fatal()
 			}
@@ -50,12 +49,12 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		qp := PolynomialCoeffs{
-			B:          'b',
-			C:          'c',
-			D:          'd',
-			X1:         'u',
-			X2:         'v',
-			X3:         'w',
+			B:          NewVariable('b'),
+			C:          NewVariable('c'),
+			D:          NewVariable('d'),
+			X1:         NewVariable('u'),
+			X2:         NewVariable('v'),
+			X3:         NewVariable('w'),
 			RootsStart: tt.RootsStart,
 			RootsEnd:   tt.RootsEnd,
 		}
@@ -69,28 +68,28 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 			expr := mustParse(t, "4*((3/4)X^4 + bX^3 + cX^2 + dX)")
 			expr.Substitute(vs)
 
-			if v := expr.MustEvaluate(Variables{'X': 0}); v != 0 {
+			if v := expr.MustEvaluate(Variables{NewVariable('X'): 0}); v != 0 {
 				t.Fatal(v)
 			}
 
-			x1, x2, x3 := vs['u'], vs['v'], vs['w']
+			x1, x2, x3 := vs[NewVariable('u')], vs[NewVariable('v')], vs[NewVariable('w')]
 
 			derivative := mustParse(t, "3X^3 + 3bX^2 + 2cX + d")
 			derivative.Substitute(vs)
 
-			if v := derivative.MustEvaluate(Variables{'X': x1}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVariable('X'): x1}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x1, v)
 			}
-			if v := derivative.MustEvaluate(Variables{'X': x2}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVariable('X'): x2}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x2, v)
 			}
-			if v := derivative.MustEvaluate(Variables{'X': x3}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVariable('X'): x3}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x3, v)
 			}
 
-			fmt.Println(expr.MustEvaluate(Variables{'X': x1}))
-			fmt.Println(expr.MustEvaluate(Variables{'X': x2}))
-			fmt.Println(expr.MustEvaluate(Variables{'X': x3}))
+			// fmt.Println(expr.MustEvaluate(Variables{NewVariable('X'): x1}))
+			// fmt.Println(expr.MustEvaluate(Variables{NewVariable('X'): x2}))
+			// fmt.Println(expr.MustEvaluate(Variables{NewVariable('X'): x3}))
 
 			width := qp.RootsEnd - qp.RootsStart
 			minDist := float64(2*width)/9 - 1 // -1 to account for rouding error

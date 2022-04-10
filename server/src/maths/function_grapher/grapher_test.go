@@ -59,7 +59,7 @@ func Test_newSegment(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got := newSegment(expr, 'x', tt.from, tt.to)
+		got := newSegment(expr, expression.NewVariable('x'), tt.from, tt.to)
 		assertSegmentApprox(t, got, tt.want)
 	}
 }
@@ -115,9 +115,9 @@ func TestGraph(t *testing.T) {
 		from float64
 		to   float64
 	}{
-		{"7x+1", 'x', 0, 10},
-		{"ln(y)", 'y', 1, 10},
-		{"cos(4x)", 'x', -5, 5},
+		{"7x+1", expression.NewVariable('x'), 0, 10},
+		{"ln(y)", expression.NewVariable('y'), 1, 10},
+		{"cos(4x)", expression.NewVariable('x'), -5, 5},
 	}
 	for _, tt := range tests {
 		expr, _, _ := expression.Parse(tt.expr)
@@ -142,7 +142,7 @@ func TestGraph(t *testing.T) {
 
 func TestGraphArtifact(t *testing.T) {
 	expr, _, _ := expression.Parse("cos(4x)")
-	got := NewFunctionGraph(expr, 'x', -5, 5)
+	got := NewFunctionGraph(expr, expression.NewVariable('x'), -5, 5)
 	for _, seg := range got.Segments {
 		fmt.Printf("%.2f %.2f %.3f %.3f \n", seg.P0.X, seg.P2.X, seg.P1.X, seg.P1.Y)
 	}
@@ -164,7 +164,7 @@ func TestBoundsFromExpression(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		gotBounds, gotFxs, gotDfxs := BoundsFromExpression(expr, 'x', tt.grid)
+		gotBounds, gotFxs, gotDfxs := BoundsFromExpression(expr, expression.NewVariable('x'), tt.grid)
 		if !reflect.DeepEqual(gotBounds, tt.wantBounds) {
 			t.Errorf("BoundsFromExpression() gotBounds = %v, want %v", gotBounds, tt.wantBounds)
 		}

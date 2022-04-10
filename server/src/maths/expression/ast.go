@@ -185,20 +185,31 @@ func (fn function) String() string {
 }
 
 // Variable is a (one letter) mathematical variable,
-// such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3
+// such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3.
+// Indices are also permitted, written in LaTeX format :
+// x_A or x_AB
 // Private Unicode points are also permitted, so that
 // custom compounded symbols may be used.
-type Variable rune
+type Variable struct {
+	Indice string // optional
+	Name   rune
+}
 
-const firstPrivateVariable Variable = '\uE001'
+const firstPrivateVariable rune = '\uE001'
 
-func newVariable(r rune) *Expression {
-	return &Expression{atom: Variable(r)}
+func NewVariable(x rune) Variable { return Variable{Name: x} }
+
+func newVarExpr(r rune) *Expression {
+	return &Expression{atom: NewVariable(r)}
 }
 
 func (v Variable) String() string {
 	// we have to output valid expression syntax
-	return string(v)
+	out := string(v.Name)
+	if v.Indice != "" {
+		return out + "_" + v.Indice + " "
+	}
+	return out
 }
 
 type constant uint8

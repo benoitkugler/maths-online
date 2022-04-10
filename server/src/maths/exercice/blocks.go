@@ -52,8 +52,8 @@ func (pr Parameters) toMap() expression.RandomParameters {
 type randomParameters []randomParameter
 
 type randomParameter struct {
-	Expression string `json:"expression"` // as typed by the user, but validated
-	Variable   rune   `json:"variable"`
+	Expression string              `json:"expression"` // as typed by the user, but validated
+	Variable   expression.Variable `json:"variable"`
 }
 
 // toMap assumes `rp` only contains valid expressions,

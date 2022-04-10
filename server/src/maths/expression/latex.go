@@ -11,7 +11,7 @@ type LaTeXResolver = func(v Variable) string
 
 // DefaultLatexResolver maps from unicode values to LaTeX commands
 // for usual maths symbols.
-func DefaultLatexResolver(v Variable) string { return unicodeToLaTeX[v] }
+func DefaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
 // AsLaTeX returns a valid LaTeX code displaying the expression.
 // `res` is an optional mapping from variables to latex symbols
@@ -122,7 +122,11 @@ func (r random) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
 }
 
 func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {
-	return res(v)
+	name := res(v)
+	if v.Indice != "" {
+		name += "_{" + v.Indice + "}"
+	}
+	return name
 }
 
 func (c constant) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {

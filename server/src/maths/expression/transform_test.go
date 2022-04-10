@@ -29,7 +29,7 @@ func Test_Expression_extractOperator(t *testing.T) {
 		}},
 		{"1 + (2 * x) + 3", plus, []*Expression{
 			NewNumber(1),
-			{atom: mult, left: NewNumber(2), right: newVariable('x')},
+			{atom: mult, left: NewNumber(2), right: newVarExpr('x')},
 			NewNumber(3),
 		}},
 		{"1 + 2 * (x + y) + 3", plus, []*Expression{
@@ -37,7 +37,7 @@ func Test_Expression_extractOperator(t *testing.T) {
 			{
 				atom:  mult,
 				left:  NewNumber(2),
-				right: &Expression{atom: plus, left: newVariable('x'), right: newVariable('y')},
+				right: &Expression{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')},
 			},
 			NewNumber(3),
 		}},
