@@ -3,7 +3,7 @@ git pull &&
 echo "Entering src/" &&
 cd src && 
 echo "Building (downloading deps if needed)..." && 
-go build main.go &&
+go build *.go &&
 echo "Done." && 
 # echo "Removing deps to free disk space..." &&
 # go clean -cache -modcache && 
