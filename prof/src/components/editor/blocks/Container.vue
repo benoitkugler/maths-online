@@ -12,21 +12,13 @@
         </v-card-subtitle>
       </v-col>
       <v-col cols="6" style="text-align: right" class="my-2">
-        <!-- <v-btn icon flat title="Masquer" small>
-          <v-icon
-            small
-            @click="hidden = !hidden"
-            :icon="hidden ? 'mdi-eye' : 'mdi-eye-off'"
-          ></v-icon>
-        </v-btn> -->
-
         <v-btn icon flat title="Supprimer" size="small">
           <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
         </v-btn>
       </v-col>
     </v-row>
 
-    <v-card-text class="pt-1 pb-2">
+    <v-card-text class="pt-1 pb-2" :hidden="hideContent">
       <slot></slot>
     </v-card-text>
   </v-card>
@@ -42,9 +34,10 @@ const emit = defineEmits<{
   (e: "dragStart"): void;
 }>();
 
-export interface ContainerProps {
+interface ContainerProps {
   index: number;
   kind: BlockKind;
+  hideContent: boolean;
 }
 
 const props = defineProps<ContainerProps>();

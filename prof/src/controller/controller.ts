@@ -1,4 +1,8 @@
-import type { LaunchGameOut, StartSessionOut } from "./api_gen";
+import type {
+  CheckParametersOut,
+  LaunchGameOut,
+  StartSessionOut
+} from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
 class Controller extends AbstractAPI {
@@ -7,6 +11,7 @@ class Controller extends AbstractAPI {
   }
 
   handleError(error: any): void {
+    // TODO: real message
     console.log(`ERROR: ${error}`);
   }
 
@@ -23,6 +28,10 @@ class Controller extends AbstractAPI {
   }
 
   protected onSuccessEditSaveAndPreview(data: any): void {
+    console.log("OK", data);
+  }
+
+  protected onSuccessEditCheckParameters(data: CheckParametersOut): void {
     console.log("OK", data);
   }
 }

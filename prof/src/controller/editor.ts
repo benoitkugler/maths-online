@@ -10,14 +10,17 @@ import type {
   TableBlock,
   TextBlock,
   TextPart,
+  Variable,
   VariationTableBlock
 } from "./exercice_gen";
 import { BlockKind, TextKind } from "./exercice_gen";
 
+export const ExpressionColor = "orange";
+
 export const colorByKind: { [key in TextKind]: string } = {
   [TextKind.Text]: "",
   [TextKind.StaticMath]: "green",
-  [TextKind.Expression]: "orange"
+  [TextKind.Expression]: ExpressionColor
 };
 
 const reLaTeX = /\$([^$]*)\$/g;
@@ -100,4 +103,28 @@ interface BlockKindTypes {
 export interface TypedBlock<K extends BlockKind> {
   Kind: K;
   Data: BlockKindTypes[K];
+}
+
+export const xRune = "x".codePointAt(0)!;
+export const yRune = "y".codePointAt(0)!;
+
+/** extractPoints returns the names of indices A for which 'x_A' and 'y_A' are defined */
+export function extractPoints(vars: Variable[]) {
+  const points: { [key: string]: { x: boolean; y: boolean } } = {};
+  vars.forEach(v => {
+    if (v.Indice != "") {
+      const point = points[v.Indice] || {};
+      if (v.Name == xRune) {
+        point.x = true;
+      } else if (v.Name == yRune) {
+        point.y = true;
+      }
+      points[v.Indice] = point;
+    }
+  });
+
+  return Object.keys(points).filter(name => {
+    const point = points[name];
+    return point.x && point.y;
+  });
 }

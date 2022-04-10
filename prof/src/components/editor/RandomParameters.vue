@@ -43,19 +43,20 @@
           <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
             <v-list-item-title>
               <variable-field
-                suffix=":"
                 v-model="param.variable"
                 @update:model-value="emit('update', index, param)"
               >
               </variable-field>
             </v-list-item-title>
             <v-text-field
-              class="ml-2"
-              variant="outlined"
+              class="ml-2 small-input"
+              variant="underlined"
               density="compact"
               hide-details
               :model-value="param.expression"
               @update:model-value="s => onExpressionChange(s, index)"
+              @blur="emit('done')"
+              :color="expressionColor"
             ></v-text-field>
             <v-btn icon size="small" flat @click="emit('delete', index)">
               <v-icon icon="mdi-delete" color="red"></v-icon>
@@ -68,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import { ExpressionColor } from "@/controller/editor";
 import type {
   randomParameter,
   randomParameters
@@ -84,7 +86,10 @@ const emit = defineEmits<{
   (e: "add"): void;
   (e: "update", index: number, param: randomParameter): void;
   (e: "delete", index: number): void;
+  (e: "done"): void;
 }>();
+
+const expressionColor = ExpressionColor;
 
 function onExpressionChange(s: string, index: number) {
   const param = props.parameters![index];
@@ -92,3 +97,9 @@ function onExpressionChange(s: string, index: number) {
   emit("update", index, param);
 }
 </script>
+
+<style scoped>
+.small-input:deep(input) {
+  font-size: 14px;
+}
+</style>

@@ -33,7 +33,7 @@
             variant="outlined"
             v-model.number="props.modelValue.Bounds.Origin.X"
             label="Origine : abscisse"
-            hint="Abscisse de l'origine par rapport au coin inférieur gauche"
+            hint="Abscisse de l'origine par rapport au coin inférieur gauche."
           ></v-text-field>
         </v-col>
         <v-col md="6">
@@ -42,7 +42,7 @@
             variant="outlined"
             v-model.number="props.modelValue.Bounds.Origin.Y"
             label="Origine : ordonnée"
-            hint="Ordonnée de l'origine par rapport au coin inférieur gauche"
+            hint="Ordonnée de l'origine par rapport au coin inférieur gauche."
           ></v-text-field>
         </v-col>
       </v-row>
@@ -86,6 +86,7 @@
                 variant="outlined"
                 label="Nom"
                 v-model="point.Name"
+                @update:model-value="v => onTypePointName(index, v)"
                 hide-details
               >
               </v-text-field>
@@ -100,6 +101,7 @@
                     label="X"
                     hint="Expression"
                     class="mr-2"
+                    :color="expressionColor"
                   ></v-text-field>
                 </v-col>
                 <v-col md="6">
@@ -109,6 +111,7 @@
                     v-model="point.Point.Coord.Y"
                     label="Y"
                     hint="Expression"
+                    :color="expressionColor"
                   ></v-text-field>
                 </v-col>
                 <v-col md="12">
@@ -291,12 +294,14 @@
 </template>
 
 <script setup lang="ts">
-import type { FigureBlock } from "@/controller/exercice_gen";
-import { LabelPos, LabelPosLabels } from "@/controller/exercice_gen";
+import { colorByKind, extractPoints } from "@/controller/editor";
+import type { FigureBlock, Variable } from "@/controller/exercice_gen";
+import { LabelPos, LabelPosLabels, TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
 interface Props {
   modelValue: FigureBlock;
+  availableParameters: Variable[];
 }
 
 const props = defineProps<Props>();
@@ -304,6 +309,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FigureBlock): void;
 }>();
+
+const expressionColor = colorByKind[TextKind.Expression];
 
 const labelPosItems = Object.entries(LabelPosLabels).map(k => ({
   value: Number(k[0]) as LabelPos,
@@ -318,7 +325,7 @@ function addPoint() {
   const points = props.modelValue.Drawings.Points || [];
   points.push({
     Name: "",
-    Point: { Coord: { X: "0", Y: "0" }, Pos: LabelPos.Top }
+    Point: { Coord: { X: "", Y: "" }, Pos: LabelPos.Top }
   });
   props.modelValue.Drawings.Points = points;
 }
@@ -367,6 +374,26 @@ function addLine() {
   const lines = props.modelValue.Drawings.Lines || [];
   lines.push({ Label: "(d)", A: "1", B: "0" });
   props.modelValue.Drawings.Lines = lines;
+}
+
+const availablePoints = computed(() =>
+  extractPoints(props.availableParameters)
+);
+
+function onTypePointName(index: number, name: string) {
+  if (!availablePoints.value.includes(name)) {
+    return;
+  }
+
+  console.log("autocomplete", availablePoints.value, name);
+  const point = props.modelValue.Drawings.Points![index];
+  // do not autocomplete if fields are already taken
+  if (!point.Point.Coord.X) {
+    point.Point.Coord.X = "x_" + name;
+  }
+  if (!point.Point.Coord.Y) {
+    point.Point.Coord.Y = "y_" + name;
+  }
 }
 </script>
 

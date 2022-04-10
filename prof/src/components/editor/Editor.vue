@@ -1,4 +1,26 @@
 <template>
+  <v-snackbar :model-value="showErrorParameters" color="warning">
+    <v-row>
+      <v-col>
+        <v-row no-gutters>
+          <v-col>
+            Erreur dans la définition <b>{{ errorParameters.Origin }}</b> :
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <i>{{ errorParameters.Details }}</i>
+          </v-col>
+        </v-row>
+      </v-col>
+      <v-col cols="2" align-self="center" style="text-align: right">
+        <v-btn icon size="x-small" flat @click="errorParameters.Origin = ''">
+          <v-icon icon="mdi-close" color="warning"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+  </v-snackbar>
+
   <v-card class="ma-1">
     <v-row class="mb-1">
       <v-col md="auto">
@@ -37,13 +59,15 @@
             @add="addRandomParameter"
             @update="updateRandomParameter"
             @delete="deleteRandomParameter"
+            @done="checkParameters"
           ></random-parameters>
-          <pythagorians
-            :parameters="question.parameters.Pythagorians || []"
-            @add="addPythagorian"
-            @update="updatePythagorian"
-            @delete="deletePythagorian"
-          ></pythagorians>
+          <intrinsics
+            :parameters="question.parameters.Intrinsics || []"
+            @add="addIntrinsic"
+            @update="updateIntrinsic"
+            @delete="deleteIntrinsic"
+            @done="checkParameters"
+          ></intrinsics>
         </div>
       </v-col>
       <v-col class="mr-2">
@@ -63,11 +87,13 @@
               :index="index"
               :nb-blocks="rows.length"
               :kind="row.Props.Kind"
+              :hide-content="showDropZone"
             >
               <component
                 :model-value="row.Props.Data"
                 @update:model-value="(v: any) => updateBlock(index, v)"
                 :is="row.Component"
+                :available-parameters="availableParameters"
               ></component>
             </container>
             <drop-zone
@@ -82,14 +108,11 @@
 </template>
 
 <script setup lang="ts">
-import type { randomParameter } from "@/controller/api_gen";
+import type { ErrParameters, randomParameter } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { TypedBlock } from "@/controller/editor";
-import type {
-  Block,
-  PythagorianTriplet,
-  Question
-} from "@/controller/exercice_gen";
+import { xRune } from "@/controller/editor";
+import type { Block, Question, Variable } from "@/controller/exercice_gen";
 import {
   BlockKind,
   ComparisonLevel,
@@ -98,6 +121,7 @@ import {
 } from "@/controller/exercice_gen";
 import { markRaw, reactive, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
+import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
@@ -113,7 +137,7 @@ import TableVue from "./blocks/Table.vue";
 import TextVue from "./blocks/Text.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import DropZone from "./DropZone.vue";
-import Pythagorians from "./Pythagorians.vue";
+import Intrinsics from "./Intrinsics.vue";
 import RandomParameters from "./RandomParameters.vue";
 
 const props = defineProps({
@@ -125,7 +149,7 @@ const question: Question = reactive({
   enonce: [],
   parameters: {
     Variables: [],
-    Pythagorians: []
+    Intrinsics: []
   }
 });
 
@@ -182,7 +206,7 @@ function newBlock(kind: BlockKind): block {
         Data: {
           Function: "",
           Label: "f",
-          Variable: "x".codePointAt(0)!,
+          Variable: { Name: xRune, Indice: "" },
           Range: [-5, 5]
         }
       };
@@ -326,7 +350,7 @@ function swapBlocks(origin: number, target: number) {
 
 function addRandomParameter() {
   question.parameters.Variables?.push({
-    variable: "x".codePointAt(0)!,
+    variable: { Name: xRune, Indice: "" },
     expression: "randint(1;10)"
   });
 }
@@ -337,23 +361,22 @@ function updateRandomParameter(index: number, param: randomParameter) {
 
 function deleteRandomParameter(index: number) {
   question.parameters.Variables!.splice(index, 1);
+
+  checkParameters();
 }
 
-function addPythagorian() {
-  question.parameters.Pythagorians?.push({
-    A: "a".codePointAt(0)!,
-    B: "b".codePointAt(0)!,
-    C: "c".codePointAt(0)!,
-    Bound: 10
-  });
+function addIntrinsic() {
+  question.parameters.Intrinsics?.push("a,b,c = pythagorians()");
 }
 
-function updatePythagorian(index: number, param: PythagorianTriplet) {
-  question.parameters.Pythagorians![index] = param;
+function updateIntrinsic(index: number, param: string) {
+  question.parameters.Intrinsics![index] = param;
 }
 
-function deletePythagorian(index: number) {
-  question.parameters.Pythagorians!.splice(index, 1);
+function deleteIntrinsic(index: number) {
+  question.parameters.Intrinsics!.splice(index, 1);
+
+  checkParameters();
 }
 
 let showDropZone = $ref(false);
@@ -373,4 +396,21 @@ async function save() {
     Question: question
   });
 }
+
+const errorParameters = ref<ErrParameters>({ Origin: "", Details: "" });
+const showErrorParameters = computed(() => errorParameters.value.Origin != "");
+const availableParameters = ref<Variable[]>([]);
+
+async function checkParameters() {
+  const out = await controller.EditCheckParameters({
+    SessionID: props.session_id || "",
+    Parameters: question.parameters
+  });
+  if (out === undefined) return;
+
+  errorParameters.value = out.ErrDefinition;
+  availableParameters.value = out.Variables || [];
+}
 </script>
+
+<style scoped></style>
