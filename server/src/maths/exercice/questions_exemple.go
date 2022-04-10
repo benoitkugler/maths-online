@@ -343,19 +343,19 @@ var PredefinedQuestions = []QuestionInstance{
 			OrderedListFieldInstance{
 				ID:    0,
 				Label: `x \in`,
-				Answer: []StringOrExpression{ // [12;+infty[
-					{String: "["},
-					{Expression: mustParse("12")},
-					{String: ";"},
-					{String: "+"},
-					{String: `\infty`},
-					{String: `[`},
+				Answer: []string{ // [12;+infty[
+					"[",
+					"12",
+					";",
+					"+",
+					`\infty`,
+					`[`,
 				},
-				AdditionalProposals: []StringOrExpression{
-					{String: "]"}, // some duplicates
-					{String: `\infty`},
-					{Expression: mustParse("11")},
-					{String: "-"},
+				AdditionalProposals: []string{
+					"]", // some duplicats
+					`\infty`,
+					"11",
+					"-",
 				},
 			},
 		},
@@ -400,19 +400,19 @@ var PredefinedQuestions = []QuestionInstance{
 			OrderedListFieldInstance{
 				ID:    0,
 				Label: `I \cap J =`,
-				Answer: []StringOrExpression{ // [12;+infty[
-					{String: "["},
-					{Expression: mustParse("3")},
-					{String: ";"},
-					{Expression: mustParse("6")},
-					{String: `]`},
+				Answer: []string{ // [12;+infty[
+					"[",
+					"3",
+					";",
+					"6",
+					`]`,
 				},
-				AdditionalProposals: []StringOrExpression{
-					{String: "]"}, // some duplicates
-					{String: `\infty`},
-					{Expression: mustParse("0")},
-					{Expression: mustParse("9")},
-					{String: "-"},
+				AdditionalProposals: []string{
+					"]", // some duplicates
+					`\infty`,
+					"0",
+					"9",
+					"-",
 				},
 			},
 		},
@@ -539,24 +539,24 @@ var PredefinedQuestions = []QuestionInstance{
 			}},
 			OrderedListFieldInstance{
 				ID: 0,
-				Answer: []StringOrExpression{ // [12;+infty[
-					{String: "["},
-					{Expression: mustParse("-2")},
-					{String: ";"},
-					{Expression: mustParse("0")},
-					{String: `]`},
-					{String: `\cup`},
-					{String: "]"},
-					{Expression: mustParse("4")},
-					{String: ";"},
-					{String: `+\infty`},
-					{String: `[`},
+				Answer: []string{ // [12;+infty[
+					"[",
+					"-2",
+					";",
+					"0",
+					`]`,
+					`\cup`,
+					"]",
+					"4",
+					";",
+					`+\infty`,
+					`[`,
 				},
-				AdditionalProposals: []StringOrExpression{
-					{String: "]"}, // some duplicates
-					{String: `-\infty`},
-					{Expression: mustParse("0")},
-					{String: "-"},
+				AdditionalProposals: []string{
+					"]", // some duplicates
+					`-\infty`,
+					"0",
+					"-",
 				},
 			},
 		},
@@ -759,15 +759,15 @@ var PredefinedQuestions = []QuestionInstance{
 			}},
 			OrderedListFieldInstance{
 				Label: `\overrightarrow{AB} + \overrightarrow{EB} - \overrightarrow{EG} = `,
-				Answer: []StringOrExpression{
-					{String: "G"},
-					{String: "A"},
+				Answer: []string{
+					"G",
+					"A",
 				},
-				AdditionalProposals: []StringOrExpression{
-					{String: "E"},
-					{String: "B"},
-					{String: "F"},
-					{String: "A"},
+				AdditionalProposals: []string{
+					"E",
+					"B",
+					"F",
+					"A",
 				},
 			},
 		},

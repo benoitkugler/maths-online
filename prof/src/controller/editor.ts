@@ -5,6 +5,7 @@ import type {
   FunctionGraphBlock,
   FunctionVariationGraphBlock,
   NumberFieldBlock,
+  OrderedListFieldBlock,
   RadioFieldBlock,
   SignTableBlock,
   TableBlock,
@@ -83,7 +84,8 @@ export const BlockKindLabels: { [T in BlockKind]: string } = {
   [BlockKind.TableBlock]: "Tableau",
   [BlockKind.NumberFieldBlock]: "Nombre",
   [BlockKind.FormulaFieldBlock]: "Expression",
-  [BlockKind.RadioFieldBlock]: "QCM"
+  [BlockKind.RadioFieldBlock]: "QCM",
+  [BlockKind.OrderedListFieldBlock]: "Liste ordonnée"
 };
 
 interface BlockKindTypes {
@@ -98,6 +100,7 @@ interface BlockKindTypes {
   [BlockKind.TableBlock]: TableBlock;
   [BlockKind.TextBlock]: TextBlock;
   [BlockKind.VariationTableBlock]: VariationTableBlock;
+  [BlockKind.OrderedListFieldBlock]: OrderedListFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {

@@ -131,6 +131,7 @@ import FormulaFieldVue from "./blocks/FormulaField.vue";
 import FunctionGraphVue from "./blocks/FunctionGraph.vue";
 import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
 import NumberFieldVue from "./blocks/NumberField.vue";
+import OrderedListFieldVue from "./blocks/OrderedListField.vue";
 import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
 import TableVue from "./blocks/Table.vue";
@@ -299,10 +300,28 @@ function newBlock(kind: BlockKind): block {
         Kind: kind,
         Data: {
           Answer: "1",
-          Proposals: ["Oui", "Non"]
+          Proposals: ["Oui", "Non"],
+          AsDropDown: false
         }
       };
       return { Props: out, Component: markRaw(RadioFieldVue) };
+    }
+    case BlockKind.OrderedListFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: [
+            { Kind: TextKind.StaticMath, Content: "[" },
+            { Kind: TextKind.StaticMath, Content: "-12" },
+            { Kind: TextKind.StaticMath, Content: ";" },
+            { Kind: TextKind.StaticMath, Content: "30" },
+            { Kind: TextKind.StaticMath, Content: "]" }
+          ],
+          AdditionalProposals: [],
+          Label: "x \\in "
+        }
+      };
+      return { Props: out, Component: markRaw(OrderedListFieldVue) };
     }
     default:
       throw "Unexpected Kind";

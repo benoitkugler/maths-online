@@ -31,11 +31,12 @@ export enum BlockKind {
   FunctionGraphBlock = 3,
   FunctionVariationGraphBlock = 4,
   NumberFieldBlock = 5,
-  RadioFieldBlock = 6,
-  SignTableBlock = 7,
-  TableBlock = 8,
-  TextBlock = 9,
-  VariationTableBlock = 10,
+  OrderedListFieldBlock = 6,
+  RadioFieldBlock = 7,
+  SignTableBlock = 8,
+  TableBlock = 9,
+  TextBlock = 10,
+  VariationTableBlock = 11,
 }
 
 export interface Block {
@@ -47,6 +48,7 @@ export interface Block {
     | FunctionGraphBlock
     | FunctionVariationGraphBlock
     | NumberFieldBlock
+    | OrderedListFieldBlock
     | RadioFieldBlock
     | SignTableBlock
     | TableBlock
@@ -187,10 +189,17 @@ export interface FunctionVariationGraphBlock {
 export interface NumberFieldBlock {
   Expression: string;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
+export interface OrderedListFieldBlock {
+  Label: string;
+  Answer: TextPart[] | null;
+  AdditionalProposals: TextPart[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
 export interface RadioFieldBlock {
   Answer: string;
   Proposals: Interpolated[] | null;
+  AsDropDown: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
 export enum SignSymbol {

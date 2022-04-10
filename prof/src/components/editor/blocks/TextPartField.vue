@@ -23,6 +23,7 @@ interface Props {
   modelValue: TextPart;
   label?: string;
   hint?: string;
+  forceLatex?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -36,6 +37,9 @@ const text = computed(() => {
     case TextKind.Text:
       return props.modelValue.Content;
     case TextKind.StaticMath:
+      if (props.forceLatex) {
+        return props.modelValue.Content;
+      }
       return "$" + props.modelValue.Content + "$";
     case TextKind.Expression:
       return "#{" + props.modelValue.Content + "}";
@@ -58,7 +62,7 @@ function onTextChange(s: string) {
     });
   } else {
     emit("update:model-value", {
-      Kind: TextKind.Text,
+      Kind: props.forceLatex ? TextKind.StaticMath : TextKind.Text,
       Content: s
     });
   }

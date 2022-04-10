@@ -224,8 +224,8 @@ func deterministicRand(i, j int) *rand.Rand {
 // given symbols
 type OrderedListFieldInstance struct {
 	Label               string
-	Answer              []StringOrExpression
-	AdditionalProposals []StringOrExpression // added to Answer when displaying the field
+	Answer              []string // LaTeX code
+	AdditionalProposals []string // added to Answer when displaying the field
 	ID                  int
 }
 
@@ -233,7 +233,7 @@ func (olf OrderedListFieldInstance) fieldID() int { return olf.ID }
 
 // proposals groups Answer and AdditionalProposals and shuffle the list
 // according to
-func (olf OrderedListFieldInstance) proposals() (out []StringOrExpression) {
+func (olf OrderedListFieldInstance) proposals() (out []string) {
 	out = append(append(out, olf.Answer...), olf.AdditionalProposals...)
 	// shuffle in a deterministic way
 	rd := deterministicRand(len(olf.Answer), len(olf.AdditionalProposals))
@@ -246,11 +246,9 @@ func (olf OrderedListFieldInstance) toClient() client.Block {
 		ID:           olf.ID,
 		Label:        olf.Label,
 		AnswerLength: len(olf.Answer),
+		Proposals:    olf.proposals(),
 	}
 
-	for _, v := range olf.proposals() {
-		out.Proposals = append(out.Proposals, v.asLaTeX())
-	}
 	return out
 }
 
@@ -294,7 +292,7 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 		// we compare by value, not indices, since two different indices may have the same
 		// value and then not be distinguable by the student,
 		// and also, the indices has been shuffled
-		if ref.asLaTeX() != got.asLaTeX() {
+		if ref != got {
 			return false
 		}
 	}

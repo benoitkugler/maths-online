@@ -54,19 +54,19 @@ func TestNumberFieldInstance_evaluateAnswer(t *testing.T) {
 
 func TestOrderedList(t *testing.T) {
 	field := OrderedListFieldInstance{
-		Answer: []StringOrExpression{ // [12;+infty]
-			{String: "["},
-			{Expression: mustParse("12")},
-			{String: ";"},
-			{String: "+"},
-			{String: `\infty`},
-			{String: `]`},
+		Answer: []string{ // [12;+infty]
+			"[",
+			"12",
+			";",
+			"+",
+			`\infty`,
+			`]`,
 		},
-		AdditionalProposals: []StringOrExpression{
-			{String: "]"}, // some duplicates
-			{String: `\infty`},
-			{Expression: mustParse("11")},
-			{String: "-"},
+		AdditionalProposals: []string{
+			"]", // some duplicates
+			`\infty`,
+			"11",
+			"-",
 		},
 	}
 

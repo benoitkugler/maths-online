@@ -46,7 +46,8 @@ const staticKinds = [
 const fieldKinds = [
   BlockKind.NumberFieldBlock,
   BlockKind.FormulaFieldBlock,
-  BlockKind.RadioFieldBlock
+  BlockKind.RadioFieldBlock,
+  BlockKind.OrderedListFieldBlock
   //TODO
 ];
 </script>

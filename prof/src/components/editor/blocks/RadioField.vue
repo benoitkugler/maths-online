@@ -43,8 +43,8 @@
       </v-list>
     </v-col>
   </v-row>
-  <v-row class="mt-2">
-    <v-col>
+  <v-row class="mt-2 mb-0 pb-0">
+    <v-col class="mb-0 pb-0">
       <v-text-field
         variant="outlined"
         density="compact"
@@ -54,6 +54,16 @@
         :color="color"
       >
       </v-text-field>
+    </v-col>
+  </v-row>
+  <v-row class="mt-0 pt-0">
+    <v-col class="mt-0 pt-0">
+      <v-switch
+        label="Afficher comme menu déroulant"
+        v-model="props.modelValue.AsDropDown"
+        color="secondary"
+        hide-details
+      ></v-switch>
     </v-col>
   </v-row>
 </template>
