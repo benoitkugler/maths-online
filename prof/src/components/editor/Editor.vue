@@ -46,11 +46,27 @@
         </v-menu>
 
         <v-divider vertical></v-divider>
-        <v-btn icon class="mx-2" @click="save" :disabled="!session_id">
+        <v-btn
+          icon
+          class="mx-2"
+          @click="save"
+          :disabled="!session_id"
+          title="Prévisualiser"
+        >
           <v-icon icon="mdi-content-save"></v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          class="mx-2"
+          @click="download"
+          :disabled="!session_id"
+          title="Télécharger"
+        >
+          <v-icon icon="mdi-download"></v-icon>
         </v-btn>
       </v-col>
     </v-row>
+
     <v-row no-gutters>
       <v-col md="4" class="mx-2">
         <div style="height: 70vh; overflow-y: auto">
@@ -71,6 +87,21 @@
         </div>
       </v-col>
       <v-col class="mr-2">
+        <div
+          @drop="onDropJSON"
+          @dragover="onDragoverJSON"
+          class="d-flex"
+          style="
+            border: 1px solid blue;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+          "
+          v-if="rows.length == 0"
+        >
+          <i>Glisser un fichier .json ...</i>
+        </div>
+
         <div
           style="height: 70vh; overflow-y: auto"
           @dragstart="onDragStart"
@@ -110,16 +141,10 @@
 <script setup lang="ts">
 import type { ErrParameters, randomParameter } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type { TypedBlock } from "@/controller/editor";
-import { xRune } from "@/controller/editor";
+import { newBlock, saveData, xRune } from "@/controller/editor";
 import type { Block, Question, Variable } from "@/controller/exercice_gen";
-import {
-  BlockKind,
-  ComparisonLevel,
-  SignSymbol,
-  TextKind
-} from "@/controller/exercice_gen";
-import { markRaw, reactive, ref } from "@vue/reactivity";
+import { BlockKind } from "@/controller/exercice_gen";
+import { markRaw, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -145,7 +170,7 @@ const props = defineProps({
   session_id: { type: String, required: true }
 });
 
-const question: Question = reactive({
+let question: Question = $ref({
   title: "Nouvelle question",
   enonce: [],
   parameters: {
@@ -154,193 +179,56 @@ const question: Question = reactive({
   }
 });
 
-const rows = ref(<block[]>[]); // TODO
+const rows = computed(() => question.enonce?.map(dataToBlock) || []); // TODO
 
 interface block {
   Props: Block;
   Component: Component;
 }
 
-function newBlock(kind: BlockKind): block {
-  switch (kind) {
-    case BlockKind.TextBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          IsHint: false,
-          Parts: ""
-        }
-      };
-      return { Props: out, Component: markRaw(TextVue) };
-    }
-    case BlockKind.FormulaBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Parts: ""
-        }
-      };
-      return { Props: out, Component: markRaw(FormulaVue) };
-    }
-    case BlockKind.FigureBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          ShowGrid: true,
-          Bounds: {
-            Width: 10,
-            Height: 10,
-            Origin: { X: 3, Y: 3 }
-          },
-          Drawings: {
-            Lines: [],
-            Points: [],
-            Segments: []
-          }
-        }
-      };
-      return { Props: out, Component: markRaw(FigureVue) };
-    }
-    case BlockKind.FunctionGraphBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Function: "",
-          Label: "f",
-          Variable: { Name: xRune, Indice: "" },
-          Range: [-5, 5]
-        }
-      };
-      return { Props: out, Component: markRaw(FunctionGraphVue) };
-    }
-    case BlockKind.FunctionVariationGraphBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Xs: ["-5", "0", "5"],
-          Fxs: ["-3", "2", "-1"]
-        }
-      };
-      return { Props: out, Component: markRaw(FunctionVariationGraphVue) };
-    }
-    case BlockKind.VariationTableBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Xs: ["-5", "0", "5"],
-          Fxs: ["-3", "2", "-1"]
-        }
-      };
-      return { Props: out, Component: markRaw(VariationTableVue) };
-    }
-    case BlockKind.SignTableBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          FxSymbols: [
-            SignSymbol.Nothing,
-            SignSymbol.Zero,
-            SignSymbol.ForbiddenValue,
-            SignSymbol.Nothing
-          ],
-          Xs: ["\\infty", "3", "5", "+\\infty"],
-          Signs: [true, false, true]
-        }
-      };
-      return { Props: out, Component: markRaw(SignTableVue) };
-    }
-    case BlockKind.TableBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          VerticalHeaders: [
-            { Kind: TextKind.Text, Content: "Ligne 1" },
-            { Kind: TextKind.Text, Content: "Ligne 2" }
-          ],
-          HorizontalHeaders: [
-            { Kind: TextKind.Text, Content: "Colonne 1" },
-            { Kind: TextKind.Text, Content: "Colonne 2" }
-          ],
-          Values: [
-            [
-              { Kind: TextKind.Text, Content: "Case" },
-              { Kind: TextKind.StaticMath, Content: "\\frac{1}{2}" }
-            ],
-            [
-              { Kind: TextKind.Expression, Content: "2x + 3" },
-              { Kind: TextKind.StaticMath, Content: "18" }
-            ]
-          ]
-        }
-      };
-      return { Props: out, Component: markRaw(TableVue) };
-    }
-    case BlockKind.NumberFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Expression: "1"
-        }
-      };
-      return { Props: out, Component: markRaw(NumberFieldVue) };
-    }
-    case BlockKind.FormulaFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Label: { Kind: TextKind.Text, Content: "" },
-          Expression: "x^2 + 2x + 1",
-          ComparisonLevel: ComparisonLevel.SimpleSubstitutions
-        }
-      };
-      return { Props: out, Component: markRaw(FormulaFieldVue) };
-    }
-    case BlockKind.RadioFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Answer: "1",
-          Proposals: ["Oui", "Non"],
-          AsDropDown: false
-        }
-      };
-      return { Props: out, Component: markRaw(RadioFieldVue) };
-    }
-    case BlockKind.OrderedListFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Answer: [
-            { Kind: TextKind.StaticMath, Content: "[" },
-            { Kind: TextKind.StaticMath, Content: "-12" },
-            { Kind: TextKind.StaticMath, Content: ";" },
-            { Kind: TextKind.StaticMath, Content: "30" },
-            { Kind: TextKind.StaticMath, Content: "]" }
-          ],
-          AdditionalProposals: [],
-          Label: "x \\in "
-        }
-      };
-      return { Props: out, Component: markRaw(OrderedListFieldVue) };
-    }
+function dataToBlock(data: Block): block {
+  switch (data.Kind) {
+    case BlockKind.TextBlock:
+      return { Props: data, Component: markRaw(TextVue) };
+    case BlockKind.FormulaBlock:
+      return { Props: data, Component: markRaw(FormulaVue) };
+    case BlockKind.FigureBlock:
+      return { Props: data, Component: markRaw(FigureVue) };
+    case BlockKind.FunctionGraphBlock:
+      return { Props: data, Component: markRaw(FunctionGraphVue) };
+    case BlockKind.FunctionVariationGraphBlock:
+      return { Props: data, Component: markRaw(FunctionVariationGraphVue) };
+    case BlockKind.VariationTableBlock:
+      return { Props: data, Component: markRaw(VariationTableVue) };
+    case BlockKind.SignTableBlock:
+      return { Props: data, Component: markRaw(SignTableVue) };
+    case BlockKind.TableBlock:
+      return { Props: data, Component: markRaw(TableVue) };
+    case BlockKind.NumberFieldBlock:
+      return { Props: data, Component: markRaw(NumberFieldVue) };
+    case BlockKind.FormulaFieldBlock:
+      return { Props: data, Component: markRaw(FormulaFieldVue) };
+    case BlockKind.RadioFieldBlock:
+      return { Props: data, Component: markRaw(RadioFieldVue) };
+    case BlockKind.OrderedListFieldBlock:
+      return { Props: data, Component: markRaw(OrderedListFieldVue) };
     default:
       throw "Unexpected Kind";
   }
 }
 
 function addBlock(kind: BlockKind) {
-  rows.value.push(newBlock(kind));
+  question.enonce!.push(newBlock(kind));
 }
 
 function updateBlock(index: number, data: Block["Data"]) {
-  rows.value[index].Props.Data = data;
+  question.enonce![index].Data = data;
 }
 
 function removeBlock(index: number) {
-  rows.value.splice(index, 1);
+  question.enonce!.splice(index, 1);
 }
 
-// TODO: fix text erasure when swapping
 /** take the block at the index `origin` and insert it right before
 the block at index `target` (which is between 0 and nbBlocks)
  */
@@ -351,19 +239,19 @@ function swapBlocks(origin: number, target: number) {
   }
 
   if (origin < target) {
-    const after = rows.value.slice(target);
-    const before = rows.value.slice(0, target);
+    const after = question.enonce!.slice(target);
+    const before = question.enonce!.slice(0, target);
     const originRow = before.splice(origin, 1);
     before.push(...originRow);
     before.push(...after);
-    rows.value = before;
+    question.enonce = before;
   } else {
-    const before = rows.value.slice(0, target);
-    const originRow = rows.value.splice(origin, 1);
-    const after = rows.value.slice(target);
+    const before = question.enonce!.slice(0, target);
+    const originRow = question.enonce!.splice(origin, 1);
+    const after = question.enonce!.slice(target);
     before.push(...originRow);
     before.push(...after);
-    rows.value = before;
+    question.enonce = before;
   }
 }
 
@@ -414,6 +302,24 @@ async function save() {
     SessionID: props.session_id || "",
     Question: question
   });
+}
+
+function download() {
+  saveData(question, "question_isiro.json");
+}
+
+async function onDropJSON(ev: DragEvent) {
+  if (ev.dataTransfer?.files.length) {
+    ev.preventDefault();
+    const content = await ev.dataTransfer?.files[0].text();
+    question = JSON.parse(content!);
+  }
+}
+
+function onDragoverJSON(ev: DragEvent) {
+  if (ev.dataTransfer?.files.length || ev.dataTransfer?.items.length) {
+    ev.preventDefault();
+  }
 }
 
 const errorParameters = ref<ErrParameters>({ Origin: "", Details: "" });
