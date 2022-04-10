@@ -12,8 +12,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
 
-// final bm = buildMode();
-final bm = BuildMode.dev;
+final bm = buildMode();
+// final bm = BuildMode.dev;
 
 void main() {
   // the static app is called via an url setting the session ID
