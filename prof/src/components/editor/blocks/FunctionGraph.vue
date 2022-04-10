@@ -26,6 +26,7 @@
         v-model="props.modelValue.Function"
         label="Expression de la fonction"
         hide-details
+        :color="color"
       ></v-text-field>
     </v-col>
     <v-col md="3" align-self="center">
@@ -54,6 +55,7 @@
 </template>
 
 <script setup lang="ts">
+import { ExpressionColor } from "@/controller/editor";
 import type { FunctionGraphBlock } from "@/controller/exercice_gen";
 import VariableField from "../VariableField.vue";
 
@@ -65,6 +67,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionGraphBlock): void;
 }>();
+
+const color = ExpressionColor;
 </script>
 
 <style></style>
