@@ -554,8 +554,7 @@ class GridPointHighlight extends StatelessWidget {
 }
 
 bool isInBounds(IntCoord point, RepereBounds figure) {
-  return 0 <= point.x &&
-      point.x <= figure.width &&
-      0 <= point.y &&
-      point.y <= figure.height;
+  final sx = point.x + figure.origin.x;
+  final sy = point.y + figure.origin.y;
+  return 0 <= sx && sx <= figure.width && 0 <= sy && sy <= figure.height;
 }
