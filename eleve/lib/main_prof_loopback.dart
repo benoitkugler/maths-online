@@ -19,7 +19,6 @@ void main() {
   final mode = uri.queryParameters["mode"];
   final bm = APISetting.fromString(mode ?? "");
 
-  print("$mode $bm");
   runApp(LoopbackApp(id, bm));
 }
 
@@ -73,7 +72,6 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     // API connection
     channel = WebSocketChannel.connect(Uri.parse(url));
     channel.stream.listen(listen, onError: showError);
-    print("connected !");
 
     // websocket is closed in case of inactivity
     // prevent it by sending pings
