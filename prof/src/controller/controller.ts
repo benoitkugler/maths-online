@@ -36,10 +36,10 @@ class Controller extends AbstractAPI {
   }
 }
 
+export const BuildMode = import.meta.env.DEV ? "dev" : "prod";
+
 export const controller = new Controller(
-  import.meta.env.DEV ? "http://localhost:1323" : window.location.origin,
+  BuildMode == "dev" ? "http://localhost:1323" : window.location.origin,
   "",
   {}
 );
-
-export const IDStore = { id: 0 };

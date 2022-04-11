@@ -25,47 +25,63 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data FormulaBlock
+		var data FigurePointFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data FormulaFieldBlock
+		var data FigureVectorFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data FunctionGraphBlock
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data FunctionVariationGraphBlock
+		var data FormulaFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data NumberFieldBlock
+		var data FunctionGraphBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data OrderedListFieldBlock
+		var data FunctionPointsFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data RadioFieldBlock
+		var data FunctionVariationGraphBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data SignTableBlock
+		var data NumberFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
-		var data TableBlock
+		var data OrderedListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 10:
-		var data TextBlock
+		var data RadioFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 11:
+		var data SignTableBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 12:
+		var data TableBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 13:
+		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 14:
 		var data VariationTableBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 15:
+		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -84,28 +100,36 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	switch data := item.Data.(type) {
 	case FigureBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case FormulaBlock:
+	case FigurePointFieldBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case FormulaFieldBlock:
+	case FigureVectorFieldBlock:
 		wr = wrapper{Kind: 2, Data: data}
-	case FunctionGraphBlock:
+	case FormulaBlock:
 		wr = wrapper{Kind: 3, Data: data}
-	case FunctionVariationGraphBlock:
+	case FormulaFieldBlock:
 		wr = wrapper{Kind: 4, Data: data}
-	case NumberFieldBlock:
+	case FunctionGraphBlock:
 		wr = wrapper{Kind: 5, Data: data}
-	case OrderedListFieldBlock:
+	case FunctionPointsFieldBlock:
 		wr = wrapper{Kind: 6, Data: data}
-	case RadioFieldBlock:
+	case FunctionVariationGraphBlock:
 		wr = wrapper{Kind: 7, Data: data}
-	case SignTableBlock:
+	case NumberFieldBlock:
 		wr = wrapper{Kind: 8, Data: data}
-	case TableBlock:
+	case OrderedListFieldBlock:
 		wr = wrapper{Kind: 9, Data: data}
-	case TextBlock:
+	case RadioFieldBlock:
 		wr = wrapper{Kind: 10, Data: data}
-	case VariationTableBlock:
+	case SignTableBlock:
 		wr = wrapper{Kind: 11, Data: data}
+	case TableBlock:
+		wr = wrapper{Kind: 12, Data: data}
+	case TextBlock:
+		wr = wrapper{Kind: 13, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 14, Data: data}
+	case VariationTableFieldBlock:
+		wr = wrapper{Kind: 15, Data: data}
 
 	default:
 		panic("exhaustive switch")

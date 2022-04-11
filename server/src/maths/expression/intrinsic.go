@@ -51,12 +51,12 @@ func (pt PythagorianTriplet) MergeTo(params RandomParameters) error {
 	}
 
 	const seedStart = 1
-	p := params.addAnonymousParam(mustParseE(fmt.Sprintf("2 * randInt(%d;%d)", seedStart, pt.Bound)))
+	p := params.addAnonymousParam(MustParse(fmt.Sprintf("2 * randInt(%d;%d)", seedStart, pt.Bound)))
 	// q = 1 yield b = 0, avoid this edge case
-	q := params.addAnonymousParam(mustParseE(fmt.Sprintf("randInt(%d;%d)", seedStart+1, pt.Bound)))
-	a := mustParseE(fmt.Sprintf("%s*%s", p, q))                  // p * q
-	c := mustParseE(fmt.Sprintf("(%s %s^2 + %s)  / 2", p, q, p)) // (p q^2 + p)  / 2
-	b := mustParseE(fmt.Sprintf("%s-%s", pt.C, p))               // c - p
+	q := params.addAnonymousParam(MustParse(fmt.Sprintf("randInt(%d;%d)", seedStart+1, pt.Bound)))
+	a := MustParse(fmt.Sprintf("%s*%s", p, q))                  // p * q
+	c := MustParse(fmt.Sprintf("(%s %s^2 + %s)  / 2", p, q, p)) // (p q^2 + p)  / 2
+	b := MustParse(fmt.Sprintf("%s-%s", pt.C, p))               // c - p
 
 	params[pt.A] = a
 	params[pt.B] = b
@@ -82,9 +82,9 @@ func (qp PolynomialCoeffs) MergeTo(params RandomParameters) error {
 	width := qp.RootsEnd - qp.RootsStart
 	// ensure no solutions are too close
 	// |--_|_-_|_--|
-	x1 := mustParseE(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart, qp.RootsStart+2*width/9))
-	x2 := mustParseE(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart+4*width/9, qp.RootsStart+5*width/9))
-	x3 := mustParseE(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart+7*width/9, qp.RootsEnd))
+	x1 := MustParse(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart, qp.RootsStart+2*width/9))
+	x2 := MustParse(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart+4*width/9, qp.RootsStart+5*width/9))
+	x3 := MustParse(fmt.Sprintf("randInt(%d;%d)", qp.RootsStart+7*width/9, qp.RootsEnd))
 
 	// we solve
 	// P' = 4a X^3 + 3bX^2 + 2cX + d = 4a(X - x1)(X - x2)(X - x3)
@@ -93,9 +93,9 @@ func (qp PolynomialCoeffs) MergeTo(params RandomParameters) error {
 	// d = 4a * -(x1 x2 x3 )
 
 	// for now we simply choose a = 3/4 and e = 0
-	b := mustParseE(fmt.Sprintf("-(%s + %s + %s)", qp.X1, qp.X2, qp.X3))
-	c := mustParseE(fmt.Sprintf("3 * (%s * %s + %s * %s + %s * %s) / 2", qp.X1, qp.X2, qp.X1, qp.X3, qp.X2, qp.X3))
-	d := mustParseE(fmt.Sprintf("-3 * %s * %s * %s", qp.X1, qp.X2, qp.X3))
+	b := MustParse(fmt.Sprintf("-(%s + %s + %s)", qp.X1, qp.X2, qp.X3))
+	c := MustParse(fmt.Sprintf("3 * (%s * %s + %s * %s + %s * %s) / 2", qp.X1, qp.X2, qp.X1, qp.X3, qp.X2, qp.X3))
+	d := MustParse(fmt.Sprintf("-3 * %s * %s * %s", qp.X1, qp.X2, qp.X3))
 
 	params[qp.X1] = x1
 	params[qp.X2] = x2
@@ -121,19 +121,19 @@ func (op OrthogonalProjection) MergeTo(params RandomParameters) error {
 	}
 
 	// BC
-	u := params.addAnonymousParam(mustParseE(fmt.Sprintf("%s - %s", op.Cx, op.Bx))) // Cx - Bx
-	v := params.addAnonymousParam(mustParseE(fmt.Sprintf("%s - %s", op.Cy, op.By))) // Cy - By
+	u := params.addAnonymousParam(MustParse(fmt.Sprintf("%s - %s", op.Cx, op.Bx))) // Cx - Bx
+	v := params.addAnonymousParam(MustParse(fmt.Sprintf("%s - %s", op.Cy, op.By))) // Cy - By
 
 	// det(BA,BC)
-	d := params.addAnonymousParam(mustParseE(fmt.Sprintf("(%s - %s)%s - (%s - %s)%s", op.Ax, op.Bx, v, op.Ay, op.By, u)))
+	d := params.addAnonymousParam(MustParse(fmt.Sprintf("(%s - %s)%s - (%s - %s)%s", op.Ax, op.Bx, v, op.Ay, op.By, u)))
 
 	// solve for AH = (x, y)
 	// xu + yv = 0
 	// xv - yu = -d
-	norm := params.addAnonymousParam(mustParseE(fmt.Sprintf("%s^2 + %s^2", u, v)))
+	norm := params.addAnonymousParam(MustParse(fmt.Sprintf("%s^2 + %s^2", u, v)))
 
-	params[op.Hx] = mustParseE(fmt.Sprintf("(-%s * %s / %s) + %s", d, v, norm, op.Ax))
-	params[op.Hy] = mustParseE(fmt.Sprintf("(%s * %s / %s) + %s", d, u, norm, op.Ay))
+	params[op.Hx] = MustParse(fmt.Sprintf("(-%s * %s / %s) + %s", d, v, norm, op.Ax))
+	params[op.Hy] = MustParse(fmt.Sprintf("(%s * %s / %s) + %s", d, u, norm, op.Ay))
 
 	return nil
 }

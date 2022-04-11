@@ -48,7 +48,7 @@ func TestPanics(t *testing.T) {
 		MustEvaluate("x+2", nil)
 	})
 	shouldPanic(t, func() {
-		expr := mustParseE("x+2")
+		expr := MustParse("x+2")
 		expr.MustEvaluate(nil)
 	})
 }

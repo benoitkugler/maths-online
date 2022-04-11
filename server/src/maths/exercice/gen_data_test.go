@@ -83,9 +83,12 @@ func randExercice() Exercice {
 func randBlock() Block {
 	choix := [...]Block{
 		randFigureBlock(),
+		randFigurePointFieldBlock(),
+		randFigureVectorFieldBlock(),
 		randFormulaBlock(),
 		randFormulaFieldBlock(),
 		randFunctionGraphBlock(),
+		randFunctionPointsFieldBlock(),
 		randFunctionVariationGraphBlock(),
 		randNumberFieldBlock(),
 		randOrderedListFieldBlock(),
@@ -94,8 +97,9 @@ func randBlock() Block {
 		randTableBlock(),
 		randTextBlock(),
 		randVariationTableBlock(),
+		randVariationTableFieldBlock(),
 	}
-	i := rand.Intn(12)
+	i := rand.Intn(16)
 	return choix[i]
 }
 
@@ -215,6 +219,29 @@ func randFigureBlock() FigureBlock {
 	}
 }
 
+func randCoordExpression() CoordExpression {
+	return CoordExpression{
+		X: randstring(),
+		Y: randstring(),
+	}
+}
+
+func randFigurePointFieldBlock() FigurePointFieldBlock {
+	return FigurePointFieldBlock{
+		Answer: randCoordExpression(),
+		Figure: randFigureBlock(),
+	}
+}
+
+func randFigureVectorFieldBlock() FigureVectorFieldBlock {
+	return FigureVectorFieldBlock{
+		Answer:         randCoordExpression(),
+		AnswerOrigin:   randCoordExpression(),
+		Figure:         randFigureBlock(),
+		MustHaveOrigin: randbool(),
+	}
+}
+
 func randInterpolated() Interpolated {
 	return Interpolated(randstring())
 }
@@ -266,6 +293,24 @@ func randFunctionGraphBlock() FunctionGraphBlock {
 		Label:    randstring(),
 		Variable: randexpressionVariable(),
 		Range:    randArray2float64(),
+	}
+}
+
+func randSliceint() []int {
+	l := rand.Intn(10)
+	out := make([]int, l)
+	for i := range out {
+		out[i] = randint()
+	}
+	return out
+}
+
+func randFunctionPointsFieldBlock() FunctionPointsFieldBlock {
+	return FunctionPointsFieldBlock{
+		Function: randstring(),
+		Label:    randstring(),
+		Variable: randexpressionVariable(),
+		XGrid:    randSliceint(),
 	}
 }
 
@@ -376,6 +421,12 @@ func randVariationTableBlock() VariationTableBlock {
 	return VariationTableBlock{
 		Xs:  randSlicestring(),
 		Fxs: randSlicestring(),
+	}
+}
+
+func randVariationTableFieldBlock() VariationTableFieldBlock {
+	return VariationTableFieldBlock{
+		Answer: randVariationTableBlock(),
 	}
 }
 

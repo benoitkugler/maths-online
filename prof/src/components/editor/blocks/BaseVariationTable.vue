@@ -35,6 +35,7 @@
               :model-value="x"
               @update:model-value="s => props.modelValue.Xs![index] = s"
               hide-details
+              :color="expressionColor"
             ></v-text-field>
           </td>
         </tr>
@@ -51,6 +52,7 @@
               :model-value="fx"
               @update:model-value="s => props.modelValue.Fxs![index] = s"
               hide-details
+              :color="expressionColor"
             ></v-text-field>
           </td>
         </tr>
@@ -71,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { ExpressionColor } from "@/controller/editor";
 import type { FunctionVariationGraphBlock } from "@/controller/exercice_gen";
 
 interface Props {
@@ -82,6 +85,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionVariationGraphBlock): void;
 }>();
+
+const expressionColor = ExpressionColor;
 
 function addColumn() {
   props.modelValue.Xs?.push("5");

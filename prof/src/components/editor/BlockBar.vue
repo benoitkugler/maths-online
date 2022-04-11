@@ -7,7 +7,7 @@
       v-for="kind in staticKinds"
       @click="emit('add', kind)"
     >
-      {{ labels[kind] }}
+      {{ labels[kind].label }}
     </v-list-item>
     <v-divider></v-divider>
     <v-list-subheader>Champs de réponse</v-list-subheader>
@@ -17,14 +17,14 @@
       v-for="kind in fieldKinds"
       @click="emit('add', kind)"
     >
-      {{ labels[kind] }}
+      {{ labels[kind].label }}
     </v-list-item>
   </v-list>
 </template>
 
 <script setup lang="ts">
 import { BlockKindLabels } from "@/controller/editor";
-import { BlockKind } from "@/controller/exercice_gen";
+import type { BlockKind } from "@/controller/exercice_gen";
 
 const emit = defineEmits<{
   (e: "add", kind: BlockKind): void;
@@ -32,22 +32,10 @@ const emit = defineEmits<{
 
 const labels = BlockKindLabels;
 
-const staticKinds = [
-  BlockKind.TextBlock,
-  BlockKind.FormulaBlock,
-  BlockKind.FigureBlock,
-  BlockKind.FunctionGraphBlock,
-  BlockKind.FunctionVariationGraphBlock,
-  BlockKind.VariationTableBlock,
-  BlockKind.SignTableBlock,
-  BlockKind.TableBlock
-];
-
-const fieldKinds = [
-  BlockKind.NumberFieldBlock,
-  BlockKind.FormulaFieldBlock,
-  BlockKind.RadioFieldBlock,
-  BlockKind.OrderedListFieldBlock
-  //TODO
-];
+const staticKinds = Object.keys(BlockKindLabels)
+  .map(k => Number(k) as BlockKind)
+  .filter(k => !BlockKindLabels[k].isAnswerField);
+const fieldKinds = Object.keys(BlockKindLabels)
+  .map(k => Number(k) as BlockKind)
+  .filter(k => BlockKindLabels[k].isAnswerField);
 </script>

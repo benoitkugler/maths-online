@@ -45,7 +45,8 @@ func Parse(s string) (*Expression, VarMap, error) {
 	return parseBytes([]byte(s))
 }
 
-func mustParseE(s string) *Expression {
+// MustParse is the same as Parse but panics on invalid expressions.
+func MustParse(s string) *Expression {
 	expr, _, err := Parse(s)
 	if err != nil {
 		panic(err)

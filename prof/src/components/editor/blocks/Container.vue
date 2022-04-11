@@ -2,16 +2,21 @@
   <v-card class="my-2" elevation="3">
     <v-row
       no-gutters
-      class="px-2 bg-purple-lighten-3"
+      :class="{
+        'px-2': true,
+        'bg-pink-lighten-3': isAnswer,
+        'bg-purple-lighten-3': !isAnswer
+      }"
       @dragstart="onDragStart"
       draggable="true"
     >
-      <v-col align-self="center" cols="6">
+      <v-col align-self="center" cols="8">
         <v-card-subtitle>
-          {{ kindLabels[props.kind] }}
+          <template v-if="isAnswer">Champ de réponse :</template>
+          {{ kindLabels[props.kind].label }}
         </v-card-subtitle>
       </v-col>
-      <v-col cols="6" style="text-align: right" class="my-2">
+      <v-col cols="4" style="text-align: right" class="my-2">
         <v-btn icon flat title="Supprimer" size="small">
           <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
         </v-btn>
@@ -27,6 +32,7 @@
 <script setup lang="ts">
 import { BlockKindLabels } from "@/controller/editor";
 import type { BlockKind } from "@/controller/exercice_gen";
+import { computed } from "@vue/runtime-core";
 
 const emit = defineEmits<{
   (e: "delete"): void;
@@ -43,6 +49,8 @@ interface ContainerProps {
 const props = defineProps<ContainerProps>();
 
 const kindLabels = BlockKindLabels;
+
+const isAnswer = computed(() => kindLabels[props.kind].isAnswerField);
 
 function onDragStart(payload: DragEvent) {
   payload.dataTransfer?.setData(

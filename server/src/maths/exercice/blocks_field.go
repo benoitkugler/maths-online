@@ -3,6 +3,7 @@ package exercice
 import (
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
 var (
@@ -10,6 +11,10 @@ var (
 	_ Block = FormulaFieldBlock{}
 	_ Block = RadioFieldBlock{}
 	_ Block = OrderedListFieldBlock{}
+	_ Block = FigurePointFieldBlock{}
+	_ Block = FigureVectorFieldBlock{}
+	_ Block = VariationTableFieldBlock{}
+	_ Block = FunctionPointsFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -89,4 +94,81 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Variables, ID int)
 	}
 
 	return out
+}
+
+// CoordExpression is a pair of valid expression.Expression
+type CoordExpression struct {
+	X, Y string
+}
+
+func (c CoordExpression) instantiate(params expression.Variables) repere.IntCoord {
+	return repere.IntCoord{
+		X: int(expression.MustEvaluate(c.X, params)),
+		Y: int(expression.MustEvaluate(c.Y, params)),
+	}
+}
+
+type FigurePointFieldBlock struct {
+	Answer CoordExpression
+	Figure FigureBlock
+}
+
+func (fp FigurePointFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	return FigurePointFieldInstance{
+		Figure: fp.Figure.instantiateF(params).Figure,
+		Answer: fp.Answer.instantiate(params),
+		ID:     ID,
+	}
+}
+
+type FigureVectorFieldBlock struct {
+	Answer CoordExpression
+
+	AnswerOrigin CoordExpression // optionnal
+
+	Figure FigureBlock
+
+	MustHaveOrigin bool
+}
+
+func (fv FigureVectorFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	out := FigureVectorFieldInstance{
+		ID:             ID,
+		Figure:         fv.Figure.instantiateF(params).Figure,
+		Answer:         fv.Answer.instantiate(params),
+		MustHaveOrigin: fv.MustHaveOrigin,
+	}
+
+	if fv.MustHaveOrigin {
+		out.AnswerOrigin = fv.AnswerOrigin.instantiate(params)
+	}
+	return out
+}
+
+type VariationTableFieldBlock struct {
+	Answer VariationTableBlock
+}
+
+func (vt VariationTableFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	return VariationTableFieldInstance{
+		ID:     ID,
+		Answer: vt.Answer.instantiateVT(params),
+	}
+}
+
+type FunctionPointsFieldBlock struct {
+	Function string // valid expression.Expression
+	Label    string
+	Variable expression.Variable
+	XGrid    []int
+}
+
+func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	return FunctionPointsFieldInstance{
+		ID:       ID,
+		Function: expression.MustParse(fp.Function),
+		Label:    fp.Label,
+		XGrid:    fp.XGrid,
+		Variable: fp.Variable,
+	}
 }

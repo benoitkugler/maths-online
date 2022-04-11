@@ -1,9 +1,13 @@
 import type {
   Block,
+  CoordExpression,
   FigureBlock,
+  FigurePointFieldBlock,
+  FigureVectorFieldBlock,
   FormulaBlock,
   FormulaFieldBlock,
   FunctionGraphBlock,
+  FunctionPointsFieldBlock,
   FunctionVariationGraphBlock,
   NumberFieldBlock,
   OrderedListFieldBlock,
@@ -13,7 +17,8 @@ import type {
   TextBlock,
   TextPart,
   Variable,
-  VariationTableBlock
+  VariationTableBlock,
+  VariationTableFieldBlock
 } from "./exercice_gen";
 import {
   BlockKind,
@@ -79,19 +84,52 @@ export function itemize(s: string): TextPart[] {
   return out;
 }
 
-export const BlockKindLabels: { [T in BlockKind]: string } = {
-  [BlockKind.TextBlock]: "Texte",
-  [BlockKind.FormulaBlock]: "Formule",
-  [BlockKind.FigureBlock]: "Figure",
-  [BlockKind.FunctionGraphBlock]: "Graphe (expression)",
-  [BlockKind.FunctionVariationGraphBlock]: "Graphe (variations)",
-  [BlockKind.VariationTableBlock]: "Tableau de variations",
-  [BlockKind.SignTableBlock]: "Tableau de signes",
-  [BlockKind.TableBlock]: "Tableau",
-  [BlockKind.NumberFieldBlock]: "Nombre",
-  [BlockKind.FormulaFieldBlock]: "Expression",
-  [BlockKind.RadioFieldBlock]: "QCM",
-  [BlockKind.OrderedListFieldBlock]: "Liste ordonnée"
+export const BlockKindLabels: {
+  [T in BlockKind]: { label: string; isAnswerField: boolean };
+} = {
+  [BlockKind.TextBlock]: { label: "Texte", isAnswerField: false },
+  [BlockKind.FormulaBlock]: { label: "Formule", isAnswerField: false },
+  [BlockKind.FigureBlock]: { label: "Figure", isAnswerField: false },
+  [BlockKind.FunctionGraphBlock]: {
+    label: "Graphe (expression)",
+    isAnswerField: false
+  },
+  [BlockKind.FunctionVariationGraphBlock]: {
+    label: "Graphe (variations)",
+    isAnswerField: false
+  },
+  [BlockKind.VariationTableBlock]: {
+    label: "Tableau de variations",
+    isAnswerField: false
+  },
+  [BlockKind.SignTableBlock]: {
+    label: "Tableau de signes",
+    isAnswerField: false
+  },
+  [BlockKind.TableBlock]: { label: "Tableau", isAnswerField: false },
+  [BlockKind.NumberFieldBlock]: { label: "Nombre", isAnswerField: true },
+  [BlockKind.FormulaFieldBlock]: { label: "Expression", isAnswerField: true },
+  [BlockKind.RadioFieldBlock]: { label: "QCM", isAnswerField: true },
+  [BlockKind.OrderedListFieldBlock]: {
+    label: "Liste ordonnée",
+    isAnswerField: true
+  },
+  [BlockKind.FigurePointFieldBlock]: {
+    label: "Point (sur une figure)",
+    isAnswerField: true
+  },
+  [BlockKind.FigureVectorFieldBlock]: {
+    label: "Vecteur (sur une figure)",
+    isAnswerField: true
+  },
+  [BlockKind.VariationTableFieldBlock]: {
+    label: "Tableau de variations",
+    isAnswerField: true
+  },
+  [BlockKind.FunctionPointsFieldBlock]: {
+    label: "Construction de fonction",
+    isAnswerField: true
+  }
 };
 
 interface BlockKindTypes {
@@ -107,6 +145,10 @@ interface BlockKindTypes {
   [BlockKind.TextBlock]: TextBlock;
   [BlockKind.VariationTableBlock]: VariationTableBlock;
   [BlockKind.OrderedListFieldBlock]: OrderedListFieldBlock;
+  [BlockKind.FigurePointFieldBlock]: FigurePointFieldBlock;
+  [BlockKind.FigureVectorFieldBlock]: FigureVectorFieldBlock;
+  [BlockKind.VariationTableFieldBlock]: VariationTableFieldBlock;
+  [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -313,7 +355,93 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
+    case BlockKind.FigurePointFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Figure: {
+            ShowGrid: true,
+            Bounds: {
+              Width: 10,
+              Height: 10,
+              Origin: { X: 3, Y: 3 }
+            },
+            Drawings: {
+              Lines: [],
+              Points: [],
+              Segments: []
+            }
+          },
+          Answer: {
+            X: "3",
+            Y: "4"
+          }
+        }
+      };
+      return out;
+    }
+    case BlockKind.FigureVectorFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Figure: {
+            ShowGrid: true,
+            Bounds: {
+              Width: 10,
+              Height: 10,
+              Origin: { X: 3, Y: 3 }
+            },
+            Drawings: {
+              Lines: [],
+              Points: [],
+              Segments: []
+            }
+          },
+          Answer: {
+            X: "3",
+            Y: "4"
+          },
+          MustHaveOrigin: false,
+          AnswerOrigin: { X: "", Y: "" }
+        }
+      };
+      return out;
+    }
+    case BlockKind.VariationTableFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: {
+            Xs: ["-5", "0", "5"],
+            Fxs: ["-3", "2", "-1"]
+          }
+        }
+      };
+      return out;
+    }
+    case BlockKind.FunctionPointsFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Function: "(x/2)^2",
+          Label: "f",
+          Variable: { Name: xRune, Indice: "" },
+          XGrid: [-4, -2, 0, 2, 4]
+        }
+      };
+      return out;
+    }
     default:
       throw "Unexpected Kind";
+  }
+}
+
+export function completePoint(s: string, point: CoordExpression) {
+  s = s.trim();
+  if (s.startsWith("x_") && s.length > 2) {
+    const name = s.substr(2);
+    if (!point.Y) {
+      point.Y = "y_" + name;
+    }
   }
 }

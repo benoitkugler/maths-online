@@ -281,6 +281,10 @@ type FigureBlock struct {
 }
 
 func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
+	return f.instantiateF(params)
+}
+
+func (f FigureBlock) instantiateF(params expression.Variables) FigureInstance {
 	out := FigureInstance{
 		Figure: repere.Figure{
 			Drawings: repere.Drawings{
@@ -314,7 +318,7 @@ func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
 
 // TODO: validate using extrema to avoid edge cases
 type FunctionGraphBlock struct {
-	Function string // expression
+	Function string // expression.Expression
 	Label    string
 	Variable expression.Variable // usually x
 	Range    [2]float64          // definition domain

@@ -151,9 +151,12 @@ import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
 import FigureVue from "./blocks/Figure.vue";
+import FigurePointFieldVue from "./blocks/FigurePointField.vue";
+import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
 import FormulaVue from "./blocks/Formula.vue";
 import FormulaFieldVue from "./blocks/FormulaField.vue";
 import FunctionGraphVue from "./blocks/FunctionGraph.vue";
+import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
 import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
 import NumberFieldVue from "./blocks/NumberField.vue";
 import OrderedListFieldVue from "./blocks/OrderedListField.vue";
@@ -162,6 +165,7 @@ import SignTableVue from "./blocks/SignTable.vue";
 import TableVue from "./blocks/Table.vue";
 import TextVue from "./blocks/Text.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
+import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import DropZone from "./DropZone.vue";
 import Intrinsics from "./Intrinsics.vue";
 import RandomParameters from "./RandomParameters.vue";
@@ -212,6 +216,14 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(RadioFieldVue) };
     case BlockKind.OrderedListFieldBlock:
       return { Props: data, Component: markRaw(OrderedListFieldVue) };
+    case BlockKind.FigurePointFieldBlock:
+      return { Props: data, Component: markRaw(FigurePointFieldVue) };
+    case BlockKind.FigureVectorFieldBlock:
+      return { Props: data, Component: markRaw(FigureVectorFieldVue) };
+    case BlockKind.VariationTableFieldBlock:
+      return { Props: data, Component: markRaw(VariationTableFieldVue) };
+    case BlockKind.FunctionPointsFieldBlock:
+      return { Props: data, Component: markRaw(FunctionPointsFieldVue) };
     default:
       throw "Unexpected Kind";
   }

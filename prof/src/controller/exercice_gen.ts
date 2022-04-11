@@ -26,26 +26,33 @@ export interface Exercice {
 
 export enum BlockKind {
   FigureBlock = 0,
-  FormulaBlock = 1,
-  FormulaFieldBlock = 2,
-  FunctionGraphBlock = 3,
-  FunctionVariationGraphBlock = 4,
-  NumberFieldBlock = 5,
-  OrderedListFieldBlock = 6,
-  RadioFieldBlock = 7,
-  SignTableBlock = 8,
-  TableBlock = 9,
-  TextBlock = 10,
-  VariationTableBlock = 11,
+  FigurePointFieldBlock = 1,
+  FigureVectorFieldBlock = 2,
+  FormulaBlock = 3,
+  FormulaFieldBlock = 4,
+  FunctionGraphBlock = 5,
+  FunctionPointsFieldBlock = 6,
+  FunctionVariationGraphBlock = 7,
+  NumberFieldBlock = 8,
+  OrderedListFieldBlock = 9,
+  RadioFieldBlock = 10,
+  SignTableBlock = 11,
+  TableBlock = 12,
+  TextBlock = 13,
+  VariationTableBlock = 14,
+  VariationTableFieldBlock = 15,
 }
 
 export interface Block {
   Kind: BlockKind;
   Data:
     | FigureBlock
+    | FigurePointFieldBlock
+    | FigureVectorFieldBlock
     | FormulaBlock
     | FormulaFieldBlock
     | FunctionGraphBlock
+    | FunctionPointsFieldBlock
     | FunctionVariationGraphBlock
     | NumberFieldBlock
     | OrderedListFieldBlock
@@ -53,7 +60,8 @@ export interface Block {
     | SignTableBlock
     | TableBlock
     | TextBlock
-    | VariationTableBlock;
+    | VariationTableBlock
+    | VariationTableFieldBlock;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomCoord
 export interface RandomCoord {
@@ -130,6 +138,23 @@ export interface FigureBlock {
   Bounds: RepereBounds;
   ShowGrid: boolean;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.CoordExpression
+export interface CoordExpression {
+  X: string;
+  Y: string;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FigurePointFieldBlock
+export interface FigurePointFieldBlock {
+  Answer: CoordExpression;
+  Figure: FigureBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorFieldBlock
+export interface FigureVectorFieldBlock {
+  Answer: CoordExpression;
+  AnswerOrigin: CoordExpression;
+  Figure: FigureBlock;
+  MustHaveOrigin: boolean;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.Interpolated
 export type Interpolated = string;
 // github.com/benoitkugler/maths-online/maths/exercice.FormulaBlock
@@ -179,6 +204,13 @@ export interface FunctionGraphBlock {
   Label: string;
   Variable: Variable;
   Range: number[];
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionPointsFieldBlock
+export interface FunctionPointsFieldBlock {
+  Function: string;
+  Label: string;
+  Variable: Variable;
+  XGrid: number[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
 export interface FunctionVariationGraphBlock {
@@ -235,6 +267,10 @@ export interface TextBlock {
 export interface VariationTableBlock {
   Xs: string[] | null;
   Fxs: string[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.VariationTableFieldBlock
+export interface VariationTableFieldBlock {
+  Answer: VariationTableBlock;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.Enonce
 export type Enonce = Block[] | null;

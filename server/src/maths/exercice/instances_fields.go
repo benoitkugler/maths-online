@@ -329,8 +329,11 @@ func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrec
 
 type FigureVectorFieldInstance struct {
 	Figure repere.Figure
-	ID     int
 	Answer repere.IntCoord
+	// It true, the vector must be anchored at `AnswerOrigin`
+	MustHaveOrigin bool
+	AnswerOrigin   repere.IntCoord
+	ID             int
 }
 
 func (f FigureVectorFieldInstance) fieldID() int { return f.ID }
@@ -356,6 +359,10 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 		X: ans.To.X - ans.From.X,
 		Y: ans.To.Y - ans.From.Y,
 	}
+	if f.MustHaveOrigin { // compare vector and origin
+		return f.Answer == vector && f.AnswerOrigin == ans.From
+	}
+	// only compare the vectors
 	return f.Answer == vector
 }
 

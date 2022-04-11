@@ -31,7 +31,7 @@ func (mv MissingVariableErr) Error() string {
 // MustEvaluate panics if the expression is invalid or if
 // a variable is missing from `vars`.
 func MustEvaluate(expr string, vars Variables) float64 {
-	e := mustParseE(expr)
+	e := MustParse(expr)
 	return e.MustEvaluate(vars)
 }
 

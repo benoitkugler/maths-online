@@ -261,6 +261,8 @@
                 label="A"
                 hint="Expression du coefficient directeur"
                 v-model="line.A"
+                :color="expressionColor"
+                class="no-hint-padding"
               ></v-text-field>
             </v-col>
             <v-col align-self="center" md="4">
@@ -268,8 +270,10 @@
                 density="compact"
                 variant="outlined"
                 label="B"
-                hint="Expression de l'ordonnée à l'origine"
                 v-model="line.B"
+                hint="Expression de l'ordonnée à l'origine"
+                :color="expressionColor"
+                class="no-hint-padding"
               ></v-text-field>
             </v-col>
             <v-col align-self="center" md="3">
@@ -385,7 +389,6 @@ function onTypePointName(index: number, name: string) {
     return;
   }
 
-  console.log("autocomplete", availablePoints.value, name);
   const point = props.modelValue.Drawings.Points![index];
   // do not autocomplete if fields are already taken
   if (!point.Point.Coord.X) {
@@ -397,4 +400,8 @@ function onTypePointName(index: number, name: string) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.no-hint-padding:deep(.v-input__details) {
+  padding-inline: 0px;
+}
+</style>
