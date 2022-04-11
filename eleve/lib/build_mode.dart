@@ -10,7 +10,18 @@ enum BuildMode {
   debug,
 }
 
-extension Api on BuildMode {
+extension APISetting on BuildMode {
+  static BuildMode fromString(String bm) {
+    switch (bm) {
+      case "debug":
+        return BuildMode.debug;
+      case "dev":
+        return BuildMode.dev;
+      default:
+        return BuildMode.production;
+    }
+  }
+
   /// websocketURL returns url ending by the [endpoint],
   /// or an empty string
   /// [endpoint] is expected to start with a slash
@@ -43,12 +54,5 @@ extension Api on BuildMode {
 /// buildMode returns the build mode
 BuildMode buildMode() {
   const buildMode = String.fromEnvironment("mode");
-  switch (buildMode) {
-    case "debug":
-      return BuildMode.debug;
-    case "dev":
-      return BuildMode.dev;
-    default:
-      return BuildMode.production;
-  }
+  return APISetting.fromString(buildMode);
 }

@@ -6,14 +6,9 @@ import 'dart:math';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
 import 'package:eleve/exercices/types.gen.dart';
-import 'package:eleve/main.dart';
+import 'package:eleve/main_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-
-const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
-
-final bm = buildMode();
-// final bm = BuildMode.dev;
 
 void main() {
   // the static app is called via an url setting the session ID
@@ -21,8 +16,11 @@ void main() {
   // so that we need to fetch it early
   final uri = Uri.parse(js.context['location']['href'] as String);
   final id = uri.queryParameters["sessionID"]!;
+  final mode = uri.queryParameters["mode"];
+  final bm = APISetting.fromString(mode ?? "");
 
-  runApp(LoopbackApp(id));
+  print("$mode $bm");
+  runApp(LoopbackApp(id, bm));
 }
 
 /// [LoopbackApp] show the content of a question instance
@@ -30,8 +28,10 @@ void main() {
 /// It is meant to be embedded in a Web page, not used as a mobile app.
 class LoopbackApp extends StatelessWidget {
   final String sessionID;
+  final BuildMode buildMode;
 
-  const LoopbackApp(this.sessionID, {Key? key}) : super(key: key);
+  const LoopbackApp(this.sessionID, this.buildMode, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class LoopbackApp extends StatelessWidget {
       localizationsDelegates: localizations,
       supportedLocales: locales,
       home: Scaffold(
-        body: _QuestionLoopback(sessionID),
+        body: _QuestionLoopback(sessionID, buildMode),
       ),
     );
   }
@@ -50,8 +50,10 @@ class LoopbackApp extends StatelessWidget {
 
 class _QuestionLoopback extends StatefulWidget {
   final String sessionID;
+  final BuildMode buildMode;
 
-  const _QuestionLoopback(this.sessionID, {Key? key}) : super(key: key);
+  const _QuestionLoopback(this.sessionID, this.buildMode, {Key? key})
+      : super(key: key);
 
   @override
   State<_QuestionLoopback> createState() => _QuestionLoopbackState();
@@ -65,7 +67,8 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
 
   @override
   void initState() {
-    final url = bm.websocketURL("/prof-loopback/${widget.sessionID}");
+    final url =
+        widget.buildMode.websocketURL("/prof-loopback/${widget.sessionID}");
 
     // API connection
     channel = WebSocketChannel.connect(Uri.parse(url));

@@ -1,10 +1,10 @@
 import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
+import 'package:eleve/main_shared.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 final bm = buildMode();
 // final bm = BuildMode.dev;
@@ -15,25 +15,6 @@ void main() {
   audio.setSongs([0, 1]);
   runApp(EleveApp(audio));
 }
-
-const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
-
-final theme = ThemeData.dark().copyWith(
-  scaffoldBackgroundColor: darkBlue,
-  cardTheme:
-      ThemeData.dark().cardTheme.copyWith(color: darkBlue.withOpacity(0.5)),
-);
-
-const localizations = [
-  GlobalMaterialLocalizations.delegate,
-  GlobalWidgetsLocalizations.delegate,
-  GlobalCupertinoLocalizations.delegate,
-];
-
-const locales = [
-  Locale('fr', ''), // French, no country code
-  Locale('en', ''), // English, no country code
-];
 
 class EleveApp extends StatelessWidget {
   final Audio audioPlayer;
