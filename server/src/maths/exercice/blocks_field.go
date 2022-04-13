@@ -15,6 +15,8 @@ var (
 	_ Block = FigureVectorFieldBlock{}
 	_ Block = VariationTableFieldBlock{}
 	_ Block = FunctionPointsFieldBlock{}
+	_ Block = FigureVectorPairFieldBlock{}
+	_ Block = FigureAffineLineFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -170,5 +172,37 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID i
 		Label:    fp.Label,
 		XGrid:    fp.XGrid,
 		Variable: fp.Variable,
+	}
+}
+
+type FigureVectorPairFieldBlock struct {
+	Figure    FigureBlock
+	Criterion VectorPairCriterion
+}
+
+func (fv FigureVectorPairFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	return FigureVectorPairFieldInstance{
+		ID:        ID,
+		Figure:    fv.Figure.instantiateF(params).Figure,
+		Criterion: fv.Criterion,
+	}
+}
+
+type FigureAffineLineFieldBlock struct {
+	Label  string
+	A      string // valid expression.Expression
+	B      string // valid expression.Expression
+	Figure FigureBlock
+}
+
+func (fa FigureAffineLineFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	return FigureAffineLineFieldInstance{
+		ID:     ID,
+		Label:  fa.Label,
+		Figure: fa.Figure.instantiateF(params).Figure,
+		Answer: [2]float64{
+			expression.MustEvaluate(fa.A, params),
+			expression.MustEvaluate(fa.B, params),
+		},
 	}
 }

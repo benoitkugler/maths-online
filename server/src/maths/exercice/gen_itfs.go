@@ -21,66 +21,74 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data FigureBlock
+		var data FigureAffineLineFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data FigurePointFieldBlock
+		var data FigureBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data FigureVectorFieldBlock
+		var data FigurePointFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data FormulaBlock
+		var data FigureVectorFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data FormulaFieldBlock
+		var data FigureVectorPairFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data FunctionGraphBlock
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data FunctionPointsFieldBlock
+		var data FormulaFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data FunctionVariationGraphBlock
+		var data FunctionGraphBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data NumberFieldBlock
+		var data FunctionPointsFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
-		var data OrderedListFieldBlock
+		var data FunctionVariationGraphBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 10:
-		var data RadioFieldBlock
+		var data NumberFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 11:
-		var data SignTableBlock
+		var data OrderedListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 12:
-		var data TableBlock
+		var data RadioFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 13:
-		var data TextBlock
+		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 14:
-		var data VariationTableBlock
+		var data TableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 15:
+		var data TextBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 16:
+		var data VariationTableBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 17:
 		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -98,38 +106,42 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case FigureBlock:
+	case FigureAffineLineFieldBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case FigurePointFieldBlock:
+	case FigureBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case FigureVectorFieldBlock:
+	case FigurePointFieldBlock:
 		wr = wrapper{Kind: 2, Data: data}
-	case FormulaBlock:
+	case FigureVectorFieldBlock:
 		wr = wrapper{Kind: 3, Data: data}
-	case FormulaFieldBlock:
+	case FigureVectorPairFieldBlock:
 		wr = wrapper{Kind: 4, Data: data}
-	case FunctionGraphBlock:
+	case FormulaBlock:
 		wr = wrapper{Kind: 5, Data: data}
-	case FunctionPointsFieldBlock:
+	case FormulaFieldBlock:
 		wr = wrapper{Kind: 6, Data: data}
-	case FunctionVariationGraphBlock:
+	case FunctionGraphBlock:
 		wr = wrapper{Kind: 7, Data: data}
-	case NumberFieldBlock:
+	case FunctionPointsFieldBlock:
 		wr = wrapper{Kind: 8, Data: data}
-	case OrderedListFieldBlock:
+	case FunctionVariationGraphBlock:
 		wr = wrapper{Kind: 9, Data: data}
-	case RadioFieldBlock:
+	case NumberFieldBlock:
 		wr = wrapper{Kind: 10, Data: data}
-	case SignTableBlock:
+	case OrderedListFieldBlock:
 		wr = wrapper{Kind: 11, Data: data}
-	case TableBlock:
+	case RadioFieldBlock:
 		wr = wrapper{Kind: 12, Data: data}
-	case TextBlock:
+	case SignTableBlock:
 		wr = wrapper{Kind: 13, Data: data}
-	case VariationTableBlock:
+	case TableBlock:
 		wr = wrapper{Kind: 14, Data: data}
-	case VariationTableFieldBlock:
+	case TextBlock:
 		wr = wrapper{Kind: 15, Data: data}
+	case VariationTableBlock:
+		wr = wrapper{Kind: 16, Data: data}
+	case VariationTableFieldBlock:
+		wr = wrapper{Kind: 17, Data: data}
 
 	default:
 		panic("exhaustive switch")

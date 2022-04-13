@@ -25,30 +25,34 @@ export interface Exercice {
 }
 
 export enum BlockKind {
-  FigureBlock = 0,
-  FigurePointFieldBlock = 1,
-  FigureVectorFieldBlock = 2,
-  FormulaBlock = 3,
-  FormulaFieldBlock = 4,
-  FunctionGraphBlock = 5,
-  FunctionPointsFieldBlock = 6,
-  FunctionVariationGraphBlock = 7,
-  NumberFieldBlock = 8,
-  OrderedListFieldBlock = 9,
-  RadioFieldBlock = 10,
-  SignTableBlock = 11,
-  TableBlock = 12,
-  TextBlock = 13,
-  VariationTableBlock = 14,
-  VariationTableFieldBlock = 15,
+  FigureAffineLineFieldBlock = 0,
+  FigureBlock = 1,
+  FigurePointFieldBlock = 2,
+  FigureVectorFieldBlock = 3,
+  FigureVectorPairFieldBlock = 4,
+  FormulaBlock = 5,
+  FormulaFieldBlock = 6,
+  FunctionGraphBlock = 7,
+  FunctionPointsFieldBlock = 8,
+  FunctionVariationGraphBlock = 9,
+  NumberFieldBlock = 10,
+  OrderedListFieldBlock = 11,
+  RadioFieldBlock = 12,
+  SignTableBlock = 13,
+  TableBlock = 14,
+  TextBlock = 15,
+  VariationTableBlock = 16,
+  VariationTableFieldBlock = 17,
 }
 
 export interface Block {
   Kind: BlockKind;
   Data:
+    | FigureAffineLineFieldBlock
     | FigureBlock
     | FigurePointFieldBlock
     | FigureVectorFieldBlock
+    | FigureVectorPairFieldBlock
     | FormulaBlock
     | FormulaFieldBlock
     | FunctionGraphBlock
@@ -139,6 +143,13 @@ export interface FigureBlock {
   Bounds: RepereBounds;
   ShowGrid: boolean;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.FigureAffineLineFieldBlock
+export interface FigureAffineLineFieldBlock {
+  Label: string;
+  A: string;
+  B: string;
+  Figure: FigureBlock;
+}
 // github.com/benoitkugler/maths-online/maths/exercice.CoordExpression
 export interface CoordExpression {
   X: string;
@@ -155,6 +166,26 @@ export interface FigureVectorFieldBlock {
   AnswerOrigin: CoordExpression;
   Figure: FigureBlock;
   MustHaveOrigin: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.VectorPairCriterion
+export enum VectorPairCriterion {
+  VectorColinear = 1,
+  VectorEquals = 0,
+  VectorOrthogonal = 2,
+}
+
+export const VectorPairCriterionLabels: {
+  [key in VectorPairCriterion]: string;
+} = {
+  [VectorPairCriterion.VectorColinear]: "Vecteur colinéaires",
+  [VectorPairCriterion.VectorEquals]: "Vecteur égaux",
+  [VectorPairCriterion.VectorOrthogonal]: "Vecteur orthogonaux",
+};
+
+// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorPairFieldBlock
+export interface FigureVectorPairFieldBlock {
+  Figure: FigureBlock;
+  Criterion: VectorPairCriterion;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.Interpolated
 export type Interpolated = string;

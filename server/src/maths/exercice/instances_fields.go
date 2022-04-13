@@ -47,7 +47,6 @@ var (
 	_ fieldInstance = FigureVectorFieldInstance{}
 	_ fieldInstance = VariationTableFieldInstance{}
 	_ fieldInstance = FunctionPointsFieldInstance{}
-	// TODO: à tester
 	_ fieldInstance = FigureVectorPairFieldInstance{}
 	_ fieldInstance = FigureAffineLineFieldInstance{}
 	_ fieldInstance = TreeFieldInstance{}
@@ -367,7 +366,7 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 }
 
 type FigureAffineLineFieldInstance struct {
-	Label  string        // of the expect affine function
+	Label  string        // of the expected affine function
 	Figure repere.Figure // usually empty, but set width and height
 	ID     int
 	Answer [2]float64 // a, b
@@ -403,14 +402,6 @@ func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isC
 	b := float64(ans.From.Y) - a*float64(ans.From.X)
 	return f.Answer == [2]float64{a, b}
 }
-
-type VectorPairCriterion uint8
-
-const (
-	VectorEquals VectorPairCriterion = iota
-	VectorColinear
-	VectorOrthogonal
-)
 
 type FigureVectorPairFieldInstance struct {
 	Figure    repere.Figure

@@ -82,9 +82,11 @@ func randExercice() Exercice {
 
 func randBlock() Block {
 	choix := [...]Block{
+		randFigureAffineLineFieldBlock(),
 		randFigureBlock(),
 		randFigurePointFieldBlock(),
 		randFigureVectorFieldBlock(),
+		randFigureVectorPairFieldBlock(),
 		randFormulaBlock(),
 		randFormulaFieldBlock(),
 		randFunctionGraphBlock(),
@@ -99,7 +101,7 @@ func randBlock() Block {
 		randVariationTableBlock(),
 		randVariationTableFieldBlock(),
 	}
-	i := rand.Intn(16)
+	i := rand.Intn(18)
 	return choix[i]
 }
 
@@ -220,6 +222,15 @@ func randFigureBlock() FigureBlock {
 	}
 }
 
+func randFigureAffineLineFieldBlock() FigureAffineLineFieldBlock {
+	return FigureAffineLineFieldBlock{
+		Label:  randstring(),
+		A:      randstring(),
+		B:      randstring(),
+		Figure: randFigureBlock(),
+	}
+}
+
 func randCoordExpression() CoordExpression {
 	return CoordExpression{
 		X: randstring(),
@@ -240,6 +251,19 @@ func randFigureVectorFieldBlock() FigureVectorFieldBlock {
 		AnswerOrigin:   randCoordExpression(),
 		Figure:         randFigureBlock(),
 		MustHaveOrigin: randbool(),
+	}
+}
+
+func randVectorPairCriterion() VectorPairCriterion {
+	choix := [...]VectorPairCriterion{VectorColinear, VectorEquals, VectorOrthogonal}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randFigureVectorPairFieldBlock() FigureVectorPairFieldBlock {
+	return FigureVectorPairFieldBlock{
+		Figure:    randFigureBlock(),
+		Criterion: randVectorPairCriterion(),
 	}
 }
 

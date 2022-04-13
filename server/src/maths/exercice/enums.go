@@ -25,3 +25,11 @@ const (
 	SimpleSubstitutions   ComparisonLevel = expression.SimpleSubstitutions   // Simple
 	ExpandedSubstitutions ComparisonLevel = expression.ExpandedSubstitutions // Complète
 )
+
+type VectorPairCriterion uint8
+
+const (
+	VectorEquals     VectorPairCriterion = iota // Vecteurs égaux
+	VectorColinear                              // Vecteurs colinéaires
+	VectorOrthogonal                            // Vecteurs orthogonaux
+)

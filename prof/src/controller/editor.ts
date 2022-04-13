@@ -1,9 +1,11 @@
 import type {
   Block,
   CoordExpression,
+  FigureAffineLineFieldBlock,
   FigureBlock,
   FigurePointFieldBlock,
   FigureVectorFieldBlock,
+  FigureVectorPairFieldBlock,
   FormulaBlock,
   FormulaFieldBlock,
   FunctionGraphBlock,
@@ -24,7 +26,8 @@ import {
   BlockKind,
   ComparisonLevel,
   SignSymbol,
-  TextKind
+  TextKind,
+  VectorPairCriterion
 } from "./exercice_gen";
 
 export const ExpressionColor = "orange";
@@ -129,6 +132,14 @@ export const BlockKindLabels: {
   [BlockKind.FunctionPointsFieldBlock]: {
     label: "Construction de fonction",
     isAnswerField: true
+  },
+  [BlockKind.FigureAffineLineFieldBlock]: {
+    label: "Fonction affine",
+    isAnswerField: true
+  },
+  [BlockKind.FigureVectorPairFieldBlock]: {
+    label: "Construction de vecteurs",
+    isAnswerField: true
   }
 };
 
@@ -149,6 +160,8 @@ interface BlockKindTypes {
   [BlockKind.FigureVectorFieldBlock]: FigureVectorFieldBlock;
   [BlockKind.VariationTableFieldBlock]: VariationTableFieldBlock;
   [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
+  [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
+  [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -427,6 +440,44 @@ export function newBlock(kind: BlockKind): Block {
           Label: "f",
           Variable: { Name: xRune, Indice: "" },
           XGrid: [-4, -2, 0, 2, 4]
+        }
+      };
+      return out;
+    }
+    case BlockKind.FigureVectorPairFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Figure: {
+            ShowGrid: true,
+            Bounds: {
+              Width: 10,
+              Height: 10,
+              Origin: { X: 3, Y: 3 }
+            },
+            Drawings: { Points: [], Lines: [], Segments: [] }
+          },
+          Criterion: VectorPairCriterion.VectorColinear
+        }
+      };
+      return out;
+    }
+    case BlockKind.FigureAffineLineFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Figure: {
+            ShowGrid: true,
+            Bounds: {
+              Width: 10,
+              Height: 10,
+              Origin: { X: 3, Y: 3 }
+            },
+            Drawings: { Points: [], Lines: [], Segments: [] }
+          },
+          Label: "f",
+          A: "1",
+          B: "3"
         }
       };
       return out;

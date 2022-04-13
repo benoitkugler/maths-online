@@ -151,8 +151,10 @@ import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
 import FigureVue from "./blocks/Figure.vue";
+import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
 import FigurePointFieldVue from "./blocks/FigurePointField.vue";
 import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
+import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
 import FormulaVue from "./blocks/Formula.vue";
 import FormulaFieldVue from "./blocks/FormulaField.vue";
 import FunctionGraphVue from "./blocks/FunctionGraph.vue";
@@ -224,6 +226,10 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(VariationTableFieldVue) };
     case BlockKind.FunctionPointsFieldBlock:
       return { Props: data, Component: markRaw(FunctionPointsFieldVue) };
+    case BlockKind.FigureVectorPairFieldBlock:
+      return { Props: data, Component: markRaw(FigureVectorPairFieldVue) };
+    case BlockKind.FigureAffineLineFieldBlock:
+      return { Props: data, Component: markRaw(FigureAffineLineFieldVue) };
     default:
       throw "Unexpected Kind";
   }
