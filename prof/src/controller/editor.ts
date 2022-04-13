@@ -18,6 +18,7 @@ import type {
   TableBlock,
   TextBlock,
   TextPart,
+  TreeFieldBlock,
   Variable,
   VariationTableBlock,
   VariationTableFieldBlock
@@ -140,6 +141,10 @@ export const BlockKindLabels: {
   [BlockKind.FigureVectorPairFieldBlock]: {
     label: "Construction de vecteurs",
     isAnswerField: true
+  },
+  [BlockKind.TreeFieldBlock]: {
+    label: "Arbre",
+    isAnswerField: true
   }
 };
 
@@ -162,6 +167,7 @@ interface BlockKindTypes {
   [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
   [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
   [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
+  [BlockKind.TreeFieldBlock]: TreeFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -478,6 +484,37 @@ export function newBlock(kind: BlockKind): Block {
           Label: "f",
           A: "1",
           B: "3"
+        }
+      };
+      return out;
+    }
+    case BlockKind.TreeFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          EventsProposals: ["P", "F", "?"],
+          AnswerRoot: {
+            Children: [
+              {
+                Children: [
+                  { Value: 0, Children: [], Probabilities: [] },
+                  { Value: 1, Children: [], Probabilities: [] }
+                ],
+                Probabilities: ["0.7", "0.3"],
+                Value: 0
+              },
+              {
+                Children: [
+                  { Value: 0, Children: [], Probabilities: [] },
+                  { Value: 1, Children: [], Probabilities: [] }
+                ],
+                Probabilities: ["0.7", "0.3"],
+                Value: 1
+              }
+            ],
+            Probabilities: ["0.7", "0.3"],
+            Value: 0
+          }
         }
       };
       return out;

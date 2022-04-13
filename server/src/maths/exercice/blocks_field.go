@@ -17,6 +17,7 @@ var (
 	_ Block = FunctionPointsFieldBlock{}
 	_ Block = FigureVectorPairFieldBlock{}
 	_ Block = FigureAffineLineFieldBlock{}
+	_ Block = TreeFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -205,4 +206,44 @@ func (fa FigureAffineLineFieldBlock) instantiate(params expression.Variables, ID
 			expression.MustEvaluate(fa.B, params),
 		},
 	}
+}
+
+type TreeNodeAnswer struct {
+	Children      []TreeNodeAnswer `structgen-data:"ignore"`
+	Probabilities []string         // edges, same length as Children, valid expression.Expression
+	Value         int              // index into the proposals, 0 for the root
+}
+
+type TreeFieldBlock struct {
+	EventsProposals []string
+	AnswerRoot      TreeNodeAnswer
+}
+
+func (tf TreeFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	out := TreeFieldInstance{
+		ID:              ID,
+		EventsProposals: make([]client.TextOrMath, len(tf.EventsProposals)),
+	}
+	for i, p := range tf.EventsProposals {
+		out.EventsProposals[i] = client.TextOrMath{Text: p}
+	}
+
+	var buildTree func(node TreeNodeAnswer) client.TreeNodeAnswer
+	buildTree = func(node TreeNodeAnswer) client.TreeNodeAnswer {
+		out := client.TreeNodeAnswer{
+			Value:         node.Value,
+			Probabilities: make([]float64, len(node.Probabilities)),
+			Children:      make([]client.TreeNodeAnswer, len(node.Children)),
+		}
+		for i, c := range node.Probabilities {
+			out.Probabilities[i] = expression.MustEvaluate(c, params)
+		}
+		for i, c := range node.Children {
+			out.Children[i] = buildTree(c)
+		}
+		return out
+	}
+
+	out.Answer = client.TreeAnswer{Root: buildTree(tf.AnswerRoot)}
+	return out
 }

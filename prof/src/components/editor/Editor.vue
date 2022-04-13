@@ -166,6 +166,7 @@ import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
 import TableVue from "./blocks/Table.vue";
 import TextVue from "./blocks/Text.vue";
+import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import DropZone from "./DropZone.vue";
@@ -230,6 +231,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(FigureVectorPairFieldVue) };
     case BlockKind.FigureAffineLineFieldBlock:
       return { Props: data, Component: markRaw(FigureAffineLineFieldVue) };
+    case BlockKind.TreeFieldBlock:
+      return { Props: data, Component: markRaw(TreeFieldVue) };
     default:
       throw "Unexpected Kind";
   }

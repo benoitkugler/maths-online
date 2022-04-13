@@ -98,10 +98,11 @@ func randBlock() Block {
 		randSignTableBlock(),
 		randTableBlock(),
 		randTextBlock(),
+		randTreeFieldBlock(),
 		randVariationTableBlock(),
 		randVariationTableFieldBlock(),
 	}
-	i := rand.Intn(18)
+	i := rand.Intn(19)
 	return choix[i]
 }
 
@@ -439,6 +440,20 @@ func randTextBlock() TextBlock {
 	return TextBlock{
 		Parts:  randInterpolated(),
 		IsHint: randbool(),
+	}
+}
+
+func randTreeNodeAnswer() TreeNodeAnswer {
+	return TreeNodeAnswer{
+		Probabilities: randSlicestring(),
+		Value:         randint(),
+	}
+}
+
+func randTreeFieldBlock() TreeFieldBlock {
+	return TreeFieldBlock{
+		EventsProposals: randSlicestring(),
+		AnswerRoot:      randTreeNodeAnswer(),
 	}
 }
 

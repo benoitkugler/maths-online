@@ -41,8 +41,9 @@ export enum BlockKind {
   SignTableBlock = 13,
   TableBlock = 14,
   TextBlock = 15,
-  VariationTableBlock = 16,
-  VariationTableFieldBlock = 17,
+  TreeFieldBlock = 16,
+  VariationTableBlock = 17,
+  VariationTableFieldBlock = 18,
 }
 
 export interface Block {
@@ -64,6 +65,7 @@ export interface Block {
     | SignTableBlock
     | TableBlock
     | TextBlock
+    | TreeFieldBlock
     | VariationTableBlock
     | VariationTableFieldBlock;
 }
@@ -177,9 +179,9 @@ export enum VectorPairCriterion {
 export const VectorPairCriterionLabels: {
   [key in VectorPairCriterion]: string;
 } = {
-  [VectorPairCriterion.VectorColinear]: "Vecteur colinéaires",
-  [VectorPairCriterion.VectorEquals]: "Vecteur égaux",
-  [VectorPairCriterion.VectorOrthogonal]: "Vecteur orthogonaux",
+  [VectorPairCriterion.VectorColinear]: "Vecteurs colinéaires",
+  [VectorPairCriterion.VectorEquals]: "Vecteurs égaux",
+  [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
 };
 
 // github.com/benoitkugler/maths-online/maths/exercice.FigureVectorPairFieldBlock
@@ -244,11 +246,13 @@ export interface FunctionPointsFieldBlock {
   Variable: Variable;
   XGrid: number[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
-export interface FunctionVariationGraphBlock {
+// github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
+export interface VariationTableBlock {
   Xs: string[] | null;
   Fxs: string[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
+export type FunctionVariationGraphBlock = VariationTableBlock;
 // github.com/benoitkugler/maths-online/maths/exercice.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;
@@ -295,10 +299,16 @@ export interface TextBlock {
   Parts: Interpolated;
   IsHint: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
-export interface VariationTableBlock {
-  Xs: string[] | null;
-  Fxs: string[] | null;
+// github.com/benoitkugler/maths-online/maths/exercice.TreeNodeAnswer
+export interface TreeNodeAnswer {
+  Children: TreeNodeAnswer[] | null;
+  Probabilities: string[] | null;
+  Value: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TreeFieldBlock
+export interface TreeFieldBlock {
+  EventsProposals: string[] | null;
+  AnswerRoot: TreeNodeAnswer;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableFieldBlock
 export interface VariationTableFieldBlock {
