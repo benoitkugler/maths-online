@@ -41,13 +41,13 @@ func TestNumberFieldInstance_evaluateAnswer(t *testing.T) {
 		{NumberFieldInstance{Answer: 1}, client.NumberAnswer{Value: 1.1}, false},
 		{ExpressionFieldInstance{Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "x + 2"}, true},
 		{ExpressionFieldInstance{Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "2+x "}, true},
-		{ExpressionFieldInstance{Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "2+ 1*x "}, true},
+		{ExpressionFieldInstance{Answer: mustParse("x+2"), ComparisonLevel: expression.ExpandedSubstitutions}, client.ExpressionAnswer{Expression: "2+ 1*x "}, true},
 	}
 	for _, tt := range tests {
 		f := tt.field
 		gotIsCorrect := f.evaluateAnswer(tt.args)
 		if gotIsCorrect != tt.wantIsCorrect {
-			t.Errorf("NumberFieldInstance.evaluateAnswer() = %v, want %v", gotIsCorrect, tt.wantIsCorrect)
+			t.Errorf("NumberFieldInstance.evaluateAnswer(%v) = %v, want %v", tt.args, gotIsCorrect, tt.wantIsCorrect)
 		}
 	}
 }
