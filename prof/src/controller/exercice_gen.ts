@@ -114,6 +114,7 @@ export interface RandomLine {
   Label: string;
   A: string;
   B: string;
+  Color: string;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomDrawings
 export interface RandomDrawings {

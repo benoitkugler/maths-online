@@ -326,6 +326,12 @@ extension _OffsetLabel on LabelPos {
   }
 }
 
+/// fromHex expected a #FFFFFF string
+Color fromHex(String color) {
+  color = "FF" + color.replaceAll("#", "");
+  return Color(int.parse(color, radix: 16));
+}
+
 class DrawingsPainter extends CustomPainter {
   final RepereMetrics metrics;
   final Drawings drawings;
@@ -359,12 +365,6 @@ class DrawingsPainter extends CustomPainter {
     if (line.asVector) {
       final path = VectorPainter.arrowPath(visualFrom, visualTo);
       canvas.drawPath(path, Paint()..style = PaintingStyle.fill);
-
-      // _paintText(
-      //     canvas,
-      //     LabeledPoint(
-      //         Coord((from.x + to.x) / 2, (from.y + to.y) / 2), line.labelPos),
-      //     line.from + line.to);
     }
 
     if (line.labelName.isNotEmpty) {
@@ -414,13 +414,14 @@ class DrawingsPainter extends CustomPainter {
     final logicalEnd = Coord(metrics.figure.width - origin.x,
         line.a * (metrics.figure.width - origin.x) + line.b);
 
+    final lineColor = fromHex(line.color);
     canvas.save();
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawLine(
         metrics.logicalToVisual(logicalStart),
         metrics.logicalToVisual(logicalEnd),
         Paint()
-          ..color = Colors.purple
+          ..color = lineColor
           ..strokeWidth = 2);
 
     // label position
@@ -432,7 +433,7 @@ class DrawingsPainter extends CustomPainter {
         LabeledPoint(
             logicalLabel, line.a > 0 ? LabelPos.bottomRight : LabelPos.topLeft),
         line.label,
-        color: Colors.purple);
+        color: lineColor);
 
     canvas.restore();
   }

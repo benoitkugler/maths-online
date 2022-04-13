@@ -150,26 +150,28 @@ List<dynamic> listSegmentToJson(List<Segment> item) {
 // github.com/benoitkugler/maths-online/maths/repere.Line
 class Line {
   final String label;
+  final String color;
   final double a;
   final double b;
 
-  const Line(this.label, this.a, this.b);
+  const Line(this.label, this.color, this.a, this.b);
 
   @override
   String toString() {
-    return "Line($label, $a, $b)";
+    return "Line($label, $color, $a, $b)";
   }
 }
 
 Line lineFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Line(stringFromJson(json['Label']), doubleFromJson(json['A']),
-      doubleFromJson(json['B']));
+  return Line(stringFromJson(json['Label']), stringFromJson(json['Color']),
+      doubleFromJson(json['A']), doubleFromJson(json['B']));
 }
 
 JSON lineToJson(Line item) {
   return {
     "Label": stringToJson(item.label),
+    "Color": stringToJson(item.color),
     "A": doubleToJson(item.a),
     "B": doubleToJson(item.b)
   };

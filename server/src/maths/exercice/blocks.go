@@ -311,6 +311,7 @@ func (f FigureBlock) instantiateF(params expression.Variables) FigureInstance {
 			Label: l.Label,
 			A:     mustEvaluate(l.A, params),
 			B:     mustEvaluate(l.B, params),
+			Color: l.Color,
 		}
 	}
 	return out

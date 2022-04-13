@@ -57,6 +57,7 @@ type Segment struct {
 // Line is an infinite line, defined by an equation y = ax + b
 type Line struct {
 	Label string
+	Color string // #FFFFFF format
 	A, B  float64
 }
 

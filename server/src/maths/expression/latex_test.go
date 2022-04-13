@@ -140,10 +140,4 @@ func Test0And1(t *testing.T) {
 			t.Fatalf("expected %s, got %s", test.latex, latex)
 		}
 	}
-
-	// expr = mustParse(t, "x - (-5)")
-	// latex = expr.AsLaTeX(nil)
-	// if strings.ContainsRune(latex, '-') {
-	// 	t.Fatal("unexpected -")
-	// }
 }

@@ -12,6 +12,7 @@ type RandomLabeledPoint struct {
 type RandomLine struct {
 	Label string
 	A, B  string // must be a valid expression.Expression
+	Color string // #FFFFFF format
 }
 
 type NamedRandomLabeledPoint struct {

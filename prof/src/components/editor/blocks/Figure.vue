@@ -254,37 +254,47 @@
       <div v-for="(line, index) in props.modelValue.Drawings.Lines">
         <v-list-item>
           <v-row>
-            <v-col align-self="center" md="4">
-              <v-text-field
-                density="compact"
-                variant="outlined"
-                label="A"
-                hint="Expression du coefficient directeur"
-                v-model="line.A"
-                :color="expressionColor"
-                class="no-hint-padding"
-              ></v-text-field>
+            <v-col cols="10">
+              <v-row>
+                <v-col align-self="center">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="A"
+                    hint="Expression du coefficient directeur"
+                    v-model="line.A"
+                    :color="expressionColor"
+                    class="no-hint-padding"
+                  ></v-text-field>
+                </v-col>
+                <v-col align-self="center">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="B"
+                    v-model="line.B"
+                    hint="Expression de l'ordonnée à l'origine"
+                    :color="expressionColor"
+                    class="no-hint-padding"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col align-self="center" cols="8">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="Légende"
+                    v-model="line.Label"
+                  ></v-text-field>
+                </v-col>
+                <v-col>
+                  <btn-color-picker v-model="line.Color"></btn-color-picker>
+                </v-col>
+              </v-row>
             </v-col>
-            <v-col align-self="center" md="4">
-              <v-text-field
-                density="compact"
-                variant="outlined"
-                label="B"
-                v-model="line.B"
-                hint="Expression de l'ordonnée à l'origine"
-                :color="expressionColor"
-                class="no-hint-padding"
-              ></v-text-field>
-            </v-col>
-            <v-col align-self="center" md="3">
-              <v-text-field
-                density="compact"
-                variant="outlined"
-                label="Légende"
-                v-model="line.Label"
-              ></v-text-field>
-            </v-col>
-            <v-col md="1" align-self="center">
+
+            <v-col md="2" align-self="center">
               <v-btn icon size="x-small" flat @click="deleteLine(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
@@ -302,6 +312,7 @@ import { colorByKind, extractPoints } from "@/controller/editor";
 import type { FigureBlock, Variable } from "@/controller/exercice_gen";
 import { LabelPos, LabelPosLabels, TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
+import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
   modelValue: FigureBlock;
@@ -376,7 +387,7 @@ function addSegment() {
 
 function addLine() {
   const lines = props.modelValue.Drawings.Lines || [];
-  lines.push({ Label: "(d)", A: "1", B: "0" });
+  lines.push({ Label: "(d)", A: "1", B: "0", Color: "#5500FF" });
   props.modelValue.Drawings.Lines = lines;
 }
 

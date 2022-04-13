@@ -168,6 +168,7 @@ func randrepereRandomLine() repere.RandomLine {
 		Label: randstring(),
 		A:     randstring(),
 		B:     randstring(),
+		Color: randstring(),
 	}
 }
 

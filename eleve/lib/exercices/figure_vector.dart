@@ -138,7 +138,16 @@ class _AffineLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final a = (to.y - from.y).toDouble() / (to.x - from.x);
     final b = from.y - a * from.x;
-    DrawingsPainter.paintAffineLine(metrics, canvas, Line(label, a, b), size);
+    DrawingsPainter.paintAffineLine(
+        metrics,
+        canvas,
+        Line(
+          label,
+          "#a832a2",
+          a,
+          b,
+        ),
+        size);
   }
 
   @override
