@@ -1,7 +1,7 @@
 <template>
   <small class="text-grey mt-1">
-    Chaque case peut être du texte, une formule LaTeX ($$) ou une expression
-    (#{}).
+    Chaque case est une expression. Les cases d'entête peuvent être du texte,
+    une formule LaTeX ($$) ou une expression (#{}).
   </small>
   <v-row>
     <v-col cols="10" align-self="center">
@@ -38,7 +38,7 @@
               </text-part-field>
             </th>
           </tr>
-          <tr v-for="(row, index) in props.modelValue.Values || []">
+          <tr v-for="(row, index) in props.modelValue.Answer || []">
             <td style="text-align: center; width: 20px">
               <v-btn
                 icon
@@ -66,11 +66,15 @@
               v-for="(x, j) in row"
               style="text-align: center; min-width: 80px"
             >
-              <text-part-field
+              <v-text-field
+                variant="underlined"
+                density="compact"
+                hide-details
+                :color="expressionColor"
                 :model-value="x"
                 @update:model-value="v => (row![j] = v)"
               >
-              </text-part-field>
+              </v-text-field>
             </td>
           </tr>
         </table>
@@ -100,41 +104,26 @@
         Nouvelle ligne
       </v-btn>
     </v-col>
-    <v-col>
-      <v-switch
-        label="Entête horizontal"
-        hide-details
-        :model-value="props.modelValue.HorizontalHeaders != null"
-        @update:model-value="toogleHorizontal"
-        color="secondary"
-      ></v-switch>
-    </v-col>
-    <v-col>
-      <v-switch
-        label="Entête vertical"
-        hide-details
-        :model-value="props.modelValue.VerticalHeaders != null"
-        @update:model-value="toogleVertical"
-        color="secondary"
-      ></v-switch>
-    </v-col>
   </v-row>
 </template>
 
 <script setup lang="ts">
-import type { TableBlock } from "@/controller/exercice_gen";
+import { ExpressionColor } from "@/controller/editor";
+import type { TableFieldBlock } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
-  modelValue: TableBlock;
+  modelValue: TableFieldBlock;
 }
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: TableBlock): void;
+  (event: "update:modelValue", value: TableFieldBlock): void;
 }>();
+
+const expressionColor = ExpressionColor;
 
 function addColumn() {
   if (props.modelValue.HorizontalHeaders != null) {
@@ -143,19 +132,14 @@ function addColumn() {
       Content: ""
     });
   }
-  props.modelValue.Values?.forEach(row =>
-    row!.push({
-      Kind: TextKind.Text,
-      Content: ""
-    })
-  );
+  props.modelValue.Answer?.forEach(row => row!.push("1"));
 }
 
 const rowLength = computed(() => {
   let len = props.modelValue.HorizontalHeaders?.length;
   if (!len) {
-    if (props.modelValue.Values?.length) {
-      len = props.modelValue.Values[0]?.length;
+    if (props.modelValue.Answer?.length) {
+      len = props.modelValue.Answer[0]?.length;
     } else {
       len = 0;
     }
@@ -172,28 +156,23 @@ function addRow() {
     });
   }
 
-  props.modelValue.Values?.push(
-    Array.from(new Array(rowLength.value), () => ({
-      Kind: TextKind.Text,
-      Content: ""
-    }))
+  props.modelValue.Answer?.push(
+    Array.from(new Array(rowLength.value), () => "1")
   );
 }
 
 function removeColumn(index: number) {
-  console.log("removecol", index);
-
   if (props.modelValue.HorizontalHeaders != null) {
     props.modelValue.HorizontalHeaders.splice(index, 1);
   }
-  props.modelValue.Values?.forEach(row => row!.splice(index, 1));
+  props.modelValue.Answer?.forEach(row => row!.splice(index, 1));
 }
 
 function removeRow(index: number) {
   if (props.modelValue.VerticalHeaders != null) {
     props.modelValue.VerticalHeaders.splice(index, 1);
   }
-  props.modelValue.Values?.splice(index, 1);
+  props.modelValue.Answer?.splice(index, 1);
 }
 
 function toogleHorizontal(b: boolean) {
@@ -213,7 +192,7 @@ function toogleHorizontal(b: boolean) {
 function toogleVertical(b: boolean) {
   if (b) {
     props.modelValue.VerticalHeaders = Array.from(
-      new Array(props.modelValue.Values?.length || 0),
+      new Array(props.modelValue.Answer?.length || 0),
       () => ({
         Kind: TextKind.Text,
         Content: ""

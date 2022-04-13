@@ -16,6 +16,7 @@ import type {
   RadioFieldBlock,
   SignTableBlock,
   TableBlock,
+  TableFieldBlock,
   TextBlock,
   TextPart,
   TreeFieldBlock,
@@ -145,6 +146,10 @@ export const BlockKindLabels: {
   [BlockKind.TreeFieldBlock]: {
     label: "Arbre",
     isAnswerField: true
+  },
+  [BlockKind.TableFieldBlock]: {
+    label: "Tableau",
+    isAnswerField: true
   }
 };
 
@@ -168,6 +173,7 @@ interface BlockKindTypes {
   [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
   [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
   [BlockKind.TreeFieldBlock]: TreeFieldBlock;
+  [BlockKind.TableFieldBlock]: TableFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -515,6 +521,26 @@ export function newBlock(kind: BlockKind): Block {
             Probabilities: ["0.7", "0.3"],
             Value: 0
           }
+        }
+      };
+      return out;
+    }
+    case BlockKind.TableFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          VerticalHeaders: [
+            { Kind: TextKind.Text, Content: "Ligne 1" },
+            { Kind: TextKind.Text, Content: "Ligne 2" }
+          ],
+          HorizontalHeaders: [
+            { Kind: TextKind.Text, Content: "Colonne 1" },
+            { Kind: TextKind.Text, Content: "Colonne 2" }
+          ],
+          Answer: [
+            ["0", "1"],
+            ["2", "3"]
+          ]
         }
       };
       return out;

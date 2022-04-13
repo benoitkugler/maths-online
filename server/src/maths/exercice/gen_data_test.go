@@ -97,12 +97,13 @@ func randBlock() Block {
 		randRadioFieldBlock(),
 		randSignTableBlock(),
 		randTableBlock(),
+		randTableFieldBlock(),
 		randTextBlock(),
 		randTreeFieldBlock(),
 		randVariationTableBlock(),
 		randVariationTableFieldBlock(),
 	}
-	i := rand.Intn(19)
+	i := rand.Intn(20)
 	return choix[i]
 }
 
@@ -433,6 +434,23 @@ func randTableBlock() TableBlock {
 		HorizontalHeaders: randSliceTextPart(),
 		VerticalHeaders:   randSliceTextPart(),
 		Values:            randSliceSliceTextPart(),
+	}
+}
+
+func randSliceSlicestring() [][]string {
+	l := rand.Intn(10)
+	out := make([][]string, l)
+	for i := range out {
+		out[i] = randSlicestring()
+	}
+	return out
+}
+
+func randTableFieldBlock() TableFieldBlock {
+	return TableFieldBlock{
+		HorizontalHeaders: randSliceTextPart(),
+		VerticalHeaders:   randSliceTextPart(),
+		Answer:            randSliceSlicestring(),
 	}
 }
 

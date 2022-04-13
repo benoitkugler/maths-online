@@ -40,10 +40,11 @@ export enum BlockKind {
   RadioFieldBlock = 12,
   SignTableBlock = 13,
   TableBlock = 14,
-  TextBlock = 15,
-  TreeFieldBlock = 16,
-  VariationTableBlock = 17,
-  VariationTableFieldBlock = 18,
+  TableFieldBlock = 15,
+  TextBlock = 16,
+  TreeFieldBlock = 17,
+  VariationTableBlock = 18,
+  VariationTableFieldBlock = 19,
 }
 
 export interface Block {
@@ -64,6 +65,7 @@ export interface Block {
     | RadioFieldBlock
     | SignTableBlock
     | TableBlock
+    | TableFieldBlock
     | TextBlock
     | TreeFieldBlock
     | VariationTableBlock
@@ -293,6 +295,12 @@ export interface TableBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Values: (TextPart[] | null)[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TableFieldBlock
+export interface TableFieldBlock {
+  HorizontalHeaders: TextPart[] | null;
+  VerticalHeaders: TextPart[] | null;
+  Answer: (string[] | null)[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TextBlock
 export interface TextBlock {

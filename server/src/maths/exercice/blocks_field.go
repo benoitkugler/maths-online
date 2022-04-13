@@ -18,6 +18,7 @@ var (
 	_ Block = FigureVectorPairFieldBlock{}
 	_ Block = FigureAffineLineFieldBlock{}
 	_ Block = TreeFieldBlock{}
+	_ Block = TableFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -245,5 +246,35 @@ func (tf TreeFieldBlock) instantiate(params expression.Variables, ID int) instan
 	}
 
 	out.Answer = client.TreeAnswer{Root: buildTree(tf.AnswerRoot)}
+	return out
+}
+
+type TableFieldBlock struct {
+	HorizontalHeaders []TextPart
+	VerticalHeaders   []TextPart
+	Answer            [][]string // valid expression.Expression
+}
+
+func (tf TableFieldBlock) instantiate(params expression.Variables, ID int) instance {
+	out := TableFieldInstance{
+		ID:                ID,
+		HorizontalHeaders: make([]client.TextOrMath, len(tf.HorizontalHeaders)),
+		VerticalHeaders:   make([]client.TextOrMath, len(tf.VerticalHeaders)),
+		Answer:            client.TableAnswer{Rows: make([][]float64, len(tf.Answer))},
+	}
+	for i, cell := range tf.HorizontalHeaders {
+		out.HorizontalHeaders[i] = cell.instantiate(params)
+	}
+	for i, cell := range tf.VerticalHeaders {
+		out.VerticalHeaders[i] = cell.instantiate(params)
+	}
+
+	for i, row := range tf.Answer {
+		rowInstance := make([]float64, len(row))
+		for j, v := range row {
+			rowInstance[j] = expression.MustEvaluate(v, params)
+		}
+		out.Answer.Rows[i] = rowInstance
+	}
 	return out
 }

@@ -7,6 +7,7 @@
         v-model="props.modelValue.Expression"
         label="Réponse"
         hint="Expression s'évaluant en un nombre (à virgule flottante). Ne crée pas de nouvelle ligne."
+        persistent-hint
         :color="color"
       >
       </v-text-field>

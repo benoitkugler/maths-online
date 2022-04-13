@@ -165,6 +165,7 @@ import OrderedListFieldVue from "./blocks/OrderedListField.vue";
 import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
 import TableVue from "./blocks/Table.vue";
+import TableFieldVue from "./blocks/TableField.vue";
 import TextVue from "./blocks/Text.vue";
 import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
@@ -233,6 +234,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(FigureAffineLineFieldVue) };
     case BlockKind.TreeFieldBlock:
       return { Props: data, Component: markRaw(TreeFieldVue) };
+    case BlockKind.TableFieldBlock:
+      return { Props: data, Component: markRaw(TableFieldVue) };
     default:
       throw "Unexpected Kind";
   }
