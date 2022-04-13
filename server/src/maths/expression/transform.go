@@ -333,6 +333,81 @@ func (expr *Expression) contractMinusMinus() {
 	}
 }
 
+// remove unnecessary 1 and 0 such as in
+// 	1 * x -> x
+//	 0x -> 0
+func (expr *Expression) simplify0And1() {
+	if expr == nil {
+		return
+	}
+
+	expr.left.simplify0And1()
+	expr.right.simplify0And1()
+
+	op, ok := expr.atom.(operator)
+	if !ok {
+		return
+	}
+
+	left := expr.left
+	if expr.left == nil { // 0 is a valid default value
+		left = NewNumber(0)
+	}
+	right := expr.right
+
+	// multiplying or dividing by 1;
+	// adding or substracting 0 are no-ops
+	switch op {
+	case plus:
+		if left.atom == Number(0) { // 0 + x = x
+			*expr = *expr.right
+			return
+		} else if right.atom == Number(0) { // x + 0 = x
+			*expr = *expr.left
+			return
+		}
+	case minus:
+		if right.atom == Number(0) { // x - 0 = x
+			*expr = *expr.left
+			return
+		}
+	case mult:
+		if left.atom == Number(1) { // 1 * x = x
+			*expr = *expr.right
+			return
+		} else if right.atom == Number(1) { // x * 1 = x
+			*expr = *expr.left
+			return
+		} else if left.atom == Number(0) { // 0 * x = 0
+			*expr = Expression{atom: Number(0)}
+			return
+		} else if right.atom == Number(0) {
+			*expr = Expression{atom: Number(0)}
+			return
+		}
+	case div:
+		if right.atom == Number(1) { // x / 1 = x
+			*expr = *expr.left
+			return
+		} else if left.atom == Number(0) && right.atom != Number(0) { // 0 / x = 0
+			*expr = Expression{atom: Number(0)}
+			return
+		}
+	case pow:
+		if right.atom == Number(1) { // x ^ 1 = x
+			*expr = *expr.left
+			return
+		} else if left.atom == Number(1) { // 1 ^ x = 1
+			*expr = Expression{atom: Number(1)}
+			return
+		}
+	case mod:
+	case rem:
+	default:
+		panic(exhaustiveOperatorSwitch)
+	}
+}
+
 func (expr *Expression) extractNegativeInMults() {
 	if expr == nil {
 		return
@@ -398,6 +473,7 @@ func (expr *Expression) fullSimplification() (nbPasses int) {
 		expr.expandMult()
 		expr.sortPlusAndMultOperands()
 		expr.groupAdditions()
+		expr.simplify0And1()
 		expr.simplifyNumbers()
 		if expr.equals(ref) {
 			break

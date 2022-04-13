@@ -203,6 +203,7 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
+		expr.simplify0And1()
 		expr.simplifyNumbers()
 
 		want := mustParse(t, tt.want)

@@ -122,3 +122,28 @@ func TestPlusMinus(t *testing.T) {
 		t.Fatal("unexpected -")
 	}
 }
+
+func Test0And1(t *testing.T) {
+	for _, test := range []struct {
+		expr  string
+		latex string
+	}{
+		{"x + 0", "x"},
+		{"x - 0", "x"},
+		{"1x", "x"},
+		{"1+x", "1 + x"},
+		{"+2", "2"},
+	} {
+		expr := mustParse(t, test.expr)
+		latex := expr.AsLaTeX(nil)
+		if latex != test.latex {
+			t.Fatalf("expected %s, got %s", test.latex, latex)
+		}
+	}
+
+	// expr = mustParse(t, "x - (-5)")
+	// latex = expr.AsLaTeX(nil)
+	// if strings.ContainsRune(latex, '-') {
+	// 	t.Fatal("unexpected -")
+	// }
+}

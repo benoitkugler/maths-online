@@ -266,7 +266,6 @@ func (expr *Expression) Substitute(vars Variables) {
 // examples :
 //	2*3 -> 6
 //  ln(1) -> 0
-// 	1 * x -> x
 // due to the binary representation, some expressions cannot be simplified, such as
 // (1 + x + 2)
 func (expr *Expression) simplifyNumbers() {
@@ -277,7 +276,6 @@ func (expr *Expression) simplifyNumbers() {
 	expr.left.simplifyNumbers()
 	expr.right.simplifyNumbers()
 
-	// we only simplify operators for now
 	op, ok := expr.atom.(operator)
 	if !ok {
 		return
@@ -288,56 +286,6 @@ func (expr *Expression) simplifyNumbers() {
 		left = NewNumber(0)
 	}
 	right := expr.right
-
-	// multiplying or dividing by 1;
-	// adding or substracting 0 are no-ops
-	switch op {
-	case plus:
-		if left.atom == Number(0) { // 0 + x = x
-			*expr = *expr.right
-			return
-		} else if right.atom == Number(0) { // x + 0 = x
-			*expr = *expr.left
-			return
-		}
-	case minus:
-		if right.atom == Number(0) { // x - 0 = x
-			*expr = *expr.left
-			return
-		}
-	case mult:
-		if left.atom == Number(1) { // 1 * x = x
-			*expr = *expr.right
-			return
-		} else if right.atom == Number(1) { // x * 1 = x
-			*expr = *expr.left
-			return
-		} else if left.atom == Number(0) { // 0 * x = 0
-			*expr = Expression{atom: Number(0)}
-			return
-		} else if right.atom == Number(0) {
-			*expr = Expression{atom: Number(0)}
-			return
-		}
-	case div:
-		if right.atom == Number(1) { // x / 1 = x
-			*expr = *expr.left
-			return
-		} else if left.atom == Number(0) && right.atom != Number(0) { // 0 / x = 0
-			*expr = Expression{atom: Number(0)}
-			return
-		}
-	case pow:
-		if right.atom == Number(1) { // x ^ 1 = x
-			*expr = *expr.left
-			return
-		} else if left.atom == Number(1) { // 1 ^ x = 1
-			*expr = Expression{atom: Number(1)}
-			return
-		}
-	default:
-		panic(exhaustiveOperatorSwitch)
-	}
 
 	// general case with two numbers
 	leftNumber, leftOK := left.atom.(Number)
