@@ -329,4 +329,10 @@ export interface Question {
   title: string;
   enonce: Enonce;
   parameters: Parameters;
+  id: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.QuestionTag
+export interface QuestionTag {
+  tag: string;
+  id_question: number;
 }

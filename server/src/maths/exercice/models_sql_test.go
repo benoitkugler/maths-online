@@ -3,32 +3,14 @@ package exercice
 import (
 	"bytes"
 	"database/sql"
-	"fmt"
 	"os/exec"
+	"reflect"
 	"testing"
+
+	"github.com/benoitkugler/maths-online/pass"
 )
 
-type logsDB struct {
-	Host     string
-	User     string
-	Password string
-	Name     string // of the database
-	Port     int    // default to 5432
-}
-
-func ConnectDB(credences logsDB) (*sql.DB, error) {
-	port := credences.Port
-	if port == 0 {
-		port = 5432
-	}
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s",
-		credences.Host, port, credences.User, credences.Password, credences.Name)
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("connexion DB : %s", err)
-	}
-	return db, nil
-}
+type logsDB = pass.DB
 
 func getUserName() string {
 	var buf bytes.Buffer
@@ -73,11 +55,7 @@ func TestRoot(t *testing.T) {
 	logs := createDBDev()
 	defer removeDBDev()
 
-	t.Run("basic CRUD", func(t *testing.T) { testSQL(t, logs) })
-}
-
-func testSQL(t *testing.T, logs logsDB) {
-	db, err := ConnectDB(logs)
+	db, err := logs.ConnectPostgres()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,10 +65,56 @@ func testSQL(t *testing.T, logs logsDB) {
 		t.Fatal(err)
 	}
 
+	t.Run("CRUD for Exercice", func(t *testing.T) { testExercice(t, db) })
+	t.Run("CRUD for Question", func(t *testing.T) { testQuestion(t, db) })
+}
+
+func testExercice(t *testing.T, db *sql.DB) {
+	exes, err := SelectAllExercices(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	L := len(exes)
+
 	ex := randExercice()
 	ex, err = ex.Insert(db)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	exes, err = SelectAllExercices(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(exes) != L+1 {
+		t.Fatal()
+	}
+
+	_, err = DeleteExerciceById(db, ex.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testQuestion(t *testing.T, db *sql.DB) {
+	questions, err := SelectAllQuestions(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	L := len(questions)
+
+	qu := randQuestion()
+	qu, err = qu.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	questions, err = SelectAllQuestions(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(questions) != L+1 {
+		t.Fatal()
 	}
 
 	tx, err := db.Begin()
@@ -98,27 +122,47 @@ func testSQL(t *testing.T, logs logsDB) {
 		t.Fatal(err)
 	}
 
-	qu1, qu2 := randQuestion(), randQuestion()
-	qu1.Enonce = append(qu1.Enonce, randFormulaBlock())
-	err = InsertManyQuestions(tx, qu1, qu2)
+	err = InsertManyQuestionTags(tx, QuestionTag{IdQuestion: qu.Id, Tag: "seconde"}, QuestionTag{IdQuestion: qu.Id, Tag: "calcul"})
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if err = tx.Commit(); err != nil {
 		t.Fatal(err)
 	}
 
-	// exQ, err := SelectExerciceQuestions(db, ex.Id)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
+	tags, err := SelectAllTags(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(tags, []string{"calcul", "seconde"}) {
+		t.Fatal()
+	}
 
-	// if !reflect.DeepEqual(exQ.Questions, Questions{qu1, qu2}) {
-	// 	t.Fatal(err)
-	// }
+	d, err := SelectQuestionByTags(db, "calcul")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d) != 1 {
+		t.Fatal()
+	}
 
-	_, err = DeleteExerciceById(db, ex.Id)
+	d, err = SelectQuestionByTags(db, "calcul", "seconde")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d) != 1 {
+		t.Fatal()
+	}
+
+	d, err = SelectQuestionByTags(db, "calcul", "XXX")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d) != 0 {
+		t.Fatal()
+	}
+
+	_, err = DeleteQuestionById(db, qu.Id)
 	if err != nil {
 		t.Fatal(err)
 	}

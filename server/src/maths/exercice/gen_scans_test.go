@@ -31,7 +31,8 @@ func queriesExercice(tx *sql.Tx, item Exercice) (Exercice, error) {
 }
 
 func queriesQuestion(tx *sql.Tx, item Question) (Question, error) {
-	err := InsertManyQuestions(tx, item)
+	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -44,11 +45,36 @@ func queriesQuestion(tx *sql.Tx, item Question) (Question, error) {
 		return item, err
 	}
 
+	_ = items.IDs()
+
+	item, err = item.Update(tx)
+	if err != nil {
+		return item, err
+	}
+	_, err = SelectQuestion(tx, item.Id)
+
+	return item, err
+}
+
+func queriesQuestionTag(tx *sql.Tx, item QuestionTag) (QuestionTag, error) {
+	err := InsertManyQuestionTags(tx, item)
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM question_tags")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanQuestionTags(rows)
+	if err != nil {
+		return item, err
+	}
+
 	_ = len(items)
 
-	row := tx.QueryRow(`SELECT * FROM questions WHERE 
-		;`)
-	_, err = ScanQuestion(row)
+	row := tx.QueryRow(`SELECT * FROM question_tags WHERE 
+		id_question = $1;`, item.IdQuestion)
+	_, err = ScanQuestionTag(row)
 
 	return item, err
 }

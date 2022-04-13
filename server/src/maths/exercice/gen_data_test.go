@@ -43,7 +43,7 @@ func randrandomParameter() randomParameter {
 }
 
 func randSlicerandomParameter() []randomParameter {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]randomParameter, l)
 	for i := range out {
 		out[i] = randrandomParameter()
@@ -56,7 +56,7 @@ func randrandomParameters() randomParameters {
 }
 
 func randSlicestring() []string {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]string, l)
 	for i := range out {
 		out[i] = randstring()
@@ -135,7 +135,7 @@ func randrepereNamedRandomLabeledPoint() repere.NamedRandomLabeledPoint {
 }
 
 func randSlicerepereNamedRandomLabeledPoint() []repere.NamedRandomLabeledPoint {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]repere.NamedRandomLabeledPoint, l)
 	for i := range out {
 		out[i] = randrepereNamedRandomLabeledPoint()
@@ -159,7 +159,7 @@ func randrepereSegment() repere.Segment {
 }
 
 func randSlicerepereSegment() []repere.Segment {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]repere.Segment, l)
 	for i := range out {
 		out[i] = randrepereSegment()
@@ -177,7 +177,7 @@ func randrepereRandomLine() repere.RandomLine {
 }
 
 func randSlicerepereRandomLine() []repere.RandomLine {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]repere.RandomLine, l)
 	for i := range out {
 		out[i] = randrepereRandomLine()
@@ -324,7 +324,7 @@ func randFunctionGraphBlock() FunctionGraphBlock {
 }
 
 func randSliceint() []int {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]int, l)
 	for i := range out {
 		out[i] = randint()
@@ -355,7 +355,7 @@ func randNumberFieldBlock() NumberFieldBlock {
 }
 
 func randSliceTextPart() []TextPart {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]TextPart, l)
 	for i := range out {
 		out[i] = randTextPart()
@@ -372,7 +372,7 @@ func randOrderedListFieldBlock() OrderedListFieldBlock {
 }
 
 func randSliceInterpolated() []Interpolated {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]Interpolated, l)
 	for i := range out {
 		out[i] = randInterpolated()
@@ -395,7 +395,7 @@ func randSignSymbol() SignSymbol {
 }
 
 func randSliceSignSymbol() []SignSymbol {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]SignSymbol, l)
 	for i := range out {
 		out[i] = randSignSymbol()
@@ -404,7 +404,7 @@ func randSliceSignSymbol() []SignSymbol {
 }
 
 func randSlicebool() []bool {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]bool, l)
 	for i := range out {
 		out[i] = randbool()
@@ -421,7 +421,7 @@ func randSignTableBlock() SignTableBlock {
 }
 
 func randSliceSliceTextPart() [][]TextPart {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([][]TextPart, l)
 	for i := range out {
 		out[i] = randSliceTextPart()
@@ -438,7 +438,7 @@ func randTableBlock() TableBlock {
 }
 
 func randSliceSlicestring() [][]string {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([][]string, l)
 	for i := range out {
 		out[i] = randSlicestring()
@@ -489,7 +489,7 @@ func randVariationTableFieldBlock() VariationTableFieldBlock {
 }
 
 func randSliceBlock() []Block {
-	l := rand.Intn(10)
+	l := 40 + rand.Intn(10)
 	out := make([]Block, l)
 	for i := range out {
 		out[i] = randBlock()
@@ -506,5 +506,13 @@ func randQuestion() Question {
 		Title:      randstring(),
 		Enonce:     randEnonce(),
 		Parameters: randParameters(),
+		Id:         randint64(),
+	}
+}
+
+func randQuestionTag() QuestionTag {
+	return QuestionTag{
+		Tag:        randstring(),
+		IdQuestion: randint64(),
 	}
 }

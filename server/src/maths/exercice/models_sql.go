@@ -15,8 +15,14 @@ type Exercice struct {
 // It is mainly consituted of a list of content blocks, which
 // describes the question (description, question, field answer)
 type Question struct {
-	// IdExercice int64  `json:"id_exercice" sql_on_delete:"CASCADE"`
 	Title      string     `json:"title"` // theme of the question
 	Enonce     Enonce     `json:"enonce"`
 	Parameters Parameters `json:"parameters"` // random parameters shared by the all the blocks
+	Id         int64      `json:"id"`
+}
+
+// sql: ADD UNIQUE(id_question, tag)
+type QuestionTag struct {
+	Tag        string `json:"tag"`
+	IdQuestion int64  `sql_on_delete:"CASCADE" json:"id_question"`
 }

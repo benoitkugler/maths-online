@@ -169,5 +169,13 @@ CREATE TABLE exercices (
 CREATE TABLE questions (
 	title varchar  NOT NULL,
 	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce)),
-	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters))
+	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters)),
+	id serial PRIMARY KEY
 );
+
+CREATE TABLE question_tags (
+	tag varchar  NOT NULL,
+	id_question integer  NOT NULL
+);
+ALTER TABLE question_tags ADD FOREIGN KEY(id_question) REFERENCES questions ON DELETE CASCADE;
+ALTER TABLE question_tags  ADD UNIQUE(id_question, tag);

@@ -226,6 +226,7 @@ func scanOneQuestion(row scanner) (Question, error) {
 		&s.Title,
 		&s.Enonce,
 		&s.Parameters,
+		&s.Id,
 	)
 	return s, err
 }
@@ -242,7 +243,30 @@ func SelectAllQuestions(tx DB) (Questions, error) {
 	return ScanQuestions(rows)
 }
 
-type Questions []Question
+// SelectQuestion returns the entry matching id.
+func SelectQuestion(tx DB, id int64) (Question, error) {
+	row := tx.QueryRow("SELECT * FROM questions WHERE id = $1", id)
+	return ScanQuestion(row)
+}
+
+// SelectQuestions returns the entry matching the given ids.
+func SelectQuestions(tx DB, ids ...int64) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions WHERE id = ANY($1)", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestions(rows)
+}
+
+type Questions map[int64]Question
+
+func (m Questions) IDs() IDs {
+	out := make(IDs, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
 
 func ScanQuestions(rs *sql.Rows) (Questions, error) {
 	var (
@@ -255,9 +279,99 @@ func ScanQuestions(rs *sql.Rows) (Questions, error) {
 			err = errClose
 		}
 	}()
-	structs := make(Questions, 0, 16)
+	structs := make(Questions, 16)
 	for rs.Next() {
 		s, err = scanOneQuestion(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert Question in the database and returns the item with id filled.
+func (item Question) Insert(tx DB) (out Question, err error) {
+	row := tx.QueryRow(`INSERT INTO questions (
+		title,enonce,parameters
+		) VALUES (
+		$1,$2,$3
+		) RETURNING 
+		title,enonce,parameters,id;
+		`, item.Title, item.Enonce, item.Parameters)
+	return ScanQuestion(row)
+}
+
+// Update Question in the database and returns the new version.
+func (item Question) Update(tx DB) (out Question, err error) {
+	row := tx.QueryRow(`UPDATE questions SET (
+		title,enonce,parameters
+		) = (
+		$2,$3,$4
+		) WHERE id = $1 RETURNING 
+		title,enonce,parameters,id;
+		`, item.Title, item.Enonce, item.Parameters, item.Id)
+	return ScanQuestion(row)
+}
+
+// Deletes the Question and returns the item
+func DeleteQuestionById(tx DB, id int64) (Question, error) {
+	row := tx.QueryRow("DELETE FROM questions WHERE id = $1 RETURNING *;", id)
+	return ScanQuestion(row)
+}
+
+// Deletes the Question in the database and returns the ids.
+func DeleteQuestionsByIDs(tx DB, ids ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}
+
+func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func scanOneQuestionTag(row scanner) (QuestionTag, error) {
+	var s QuestionTag
+	err := row.Scan(
+		&s.Tag,
+		&s.IdQuestion,
+	)
+	return s, err
+}
+
+func ScanQuestionTag(row *sql.Row) (QuestionTag, error) {
+	return scanOneQuestionTag(row)
+}
+
+func SelectAllQuestionTags(tx DB) (QuestionTags, error) {
+	rows, err := tx.Query("SELECT * FROM question_tags")
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestionTags(rows)
+}
+
+type QuestionTags []QuestionTag
+
+func ScanQuestionTags(rs *sql.Rows) (QuestionTags, error) {
+	var (
+		s   QuestionTag
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(QuestionTags, 0, 16)
+	for rs.Next() {
+		s, err = scanOneQuestionTag(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -269,21 +383,21 @@ func ScanQuestions(rs *sql.Rows) (Questions, error) {
 	return structs, nil
 }
 
-// Insert the links Question in the database.
-func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
+// Insert the links QuestionTag in the database.
+func InsertManyQuestionTags(tx *sql.Tx, items ...QuestionTag) error {
 	if len(items) == 0 {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("questions",
-		"title", "enonce", "parameters",
+	stmt, err := tx.Prepare(pq.CopyIn("question_tags",
+		"tag", "id_question",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Title, item.Enonce, item.Parameters)
+		_, err = stmt.Exec(item.Tag, item.IdQuestion)
 		if err != nil {
 			return err
 		}
@@ -299,13 +413,35 @@ func InsertManyQuestions(tx *sql.Tx, items ...Question) error {
 	return nil
 }
 
-// Delete the link Question in the database.
-// Only the fields are used.
-func (item Question) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM questions WHERE 
-	;`)
+// Delete the link QuestionTag in the database.
+// Only the 'IdQuestion' fields are used.
+func (item QuestionTag) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM question_tags WHERE 
+	id_question = $1;`, item.IdQuestion)
 	return err
 }
 
-func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
+func SelectQuestionTagsByIdQuestions(tx DB, idQuestions ...int64) (QuestionTags, error) {
+	rows, err := tx.Query("SELECT * FROM question_tags WHERE id_question = ANY($1)", pq.Int64Array(idQuestions))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestionTags(rows)
+}
+
+func DeleteQuestionTagsByIdQuestions(tx DB, idQuestions ...int64) (QuestionTags, error) {
+	rows, err := tx.Query("DELETE FROM question_tags WHERE id_question = ANY($1) RETURNING *", pq.Int64Array(idQuestions))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestionTags(rows)
+}
+
+// ByIdQuestion returns a map with 'IdQuestion' as keys.
+func (items QuestionTags) ByIdQuestion() map[int64]QuestionTags {
+	out := make(map[int64]QuestionTags)
+	for _, target := range items {
+		out[target.IdQuestion] = append(out[target.IdQuestion], target)
+	}
+	return out
+}
