@@ -17,11 +17,14 @@
       </v-list-item>
     </v-navigation-drawer>
 
-    <v-app-bar app dense>
+    <v-app-bar app dense color="secondary">
       <v-app-bar-nav-icon
         @click="showSideBar = !showSideBar"
       ></v-app-bar-nav-icon>
-      <v-app-bar-title tag="h5"> Maths online </v-app-bar-title>
+      <v-app-bar-title tag="h5">
+        Maths online -
+        <b>{{ $route.meta.Label }}</b>
+      </v-app-bar-title>
       <v-spacer></v-spacer>
       <small>(Version {{ version }})</small>
     </v-app-bar>

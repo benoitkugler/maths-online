@@ -22,15 +22,21 @@
   </v-snackbar>
 
   <v-card class="ma-1">
-    <v-row class="mb-1">
-      <v-col md="auto">
-        <v-card-title>Editeur de question</v-card-title>
-        <v-card-subtitle
-          >Editer et visualiser une question pour l'élève</v-card-subtitle
-        >
+    <v-row class="mb-1 px-2">
+      <v-col align-self="center">
+        <v-text-field
+          class="mt-2"
+          variant="outlined"
+          density="compact"
+          label="Nom de la question"
+          v-model="question.title"
+          hide-details
+        ></v-text-field>
       </v-col>
-      <v-spacer></v-spacer>
-      <v-col align-self="center" style="text-align: right">
+      <v-col align-self="center">
+        <tag-list-field label="Catégories" v-model="tags"></tag-list-field>
+      </v-col>
+      <v-col align-self="center" style="text-align: right" cols="3">
         <v-menu offset-y close-on-content-click>
           <template v-slot:activator="{ isActive, props }">
             <v-btn
@@ -38,6 +44,7 @@
               title="Ajouter un contenu"
               v-on="{ isActive }"
               v-bind="props"
+              size="small"
             >
               <v-icon icon="mdi-plus" color="green"></v-icon>
             </v-btn>
@@ -52,10 +59,12 @@
           @click="save"
           :disabled="!session_id"
           title="Prévisualiser"
+          size="small"
         >
           <v-icon icon="mdi-content-save"></v-icon>
         </v-btn>
         <v-btn
+          size="small"
           icon
           class="mx-2"
           @click="download"
@@ -173,19 +182,23 @@ import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import DropZone from "./DropZone.vue";
 import Intrinsics from "./Intrinsics.vue";
 import RandomParameters from "./RandomParameters.vue";
+import TagListField from "./TagListField.vue";
 
 const props = defineProps({
   session_id: { type: String, required: true }
 });
 
 let question: Question = $ref({
-  title: "Nouvelle question",
+  id: -1,
+  title: "",
   enonce: [],
   parameters: {
     Variables: [],
     Intrinsics: []
   }
 });
+
+let tags = $ref<string[]>(["a", "b", "Seconde", "Probas"]);
 
 const rows = computed(() => question.enonce?.map(dataToBlock) || []); // TODO
 
@@ -329,7 +342,7 @@ async function save() {
 }
 
 function download() {
-  saveData(question, "question_isiro.json");
+  saveData(question, "question.isiro.json");
 }
 
 async function onDropJSON(ev: DragEvent) {

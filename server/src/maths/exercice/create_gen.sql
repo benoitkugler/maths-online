@@ -32,6 +32,31 @@ SELECT
 DROP FUNCTION f_delfunc;
 
 
+	-- No validation : accept anything
+	CREATE OR REPLACE FUNCTION structgen_validate_json_ (data jsonb)
+		RETURNS boolean
+		AS $f$
+	BEGIN
+		RETURN TRUE;
+	END;
+	$f$
+	LANGUAGE 'plpgsql'
+	IMMUTABLE;
+
+	CREATE OR REPLACE FUNCTION structgen_validate_json_array_ (data jsonb)
+		RETURNS boolean
+		AS $f$
+	BEGIN
+		IF jsonb_typeof(data) = 'null' THEN RETURN TRUE; END IF;
+		IF jsonb_typeof(data) != 'array' THEN RETURN FALSE; END IF;
+		IF jsonb_array_length(data) = 0 THEN RETURN TRUE; END IF; 
+		RETURN (SELECT bool_and( structgen_validate_json_(value) )  FROM jsonb_array_elements(data)) 
+			;
+	END;
+	$f$
+	LANGUAGE 'plpgsql'
+	IMMUTABLE;
+
 	CREATE OR REPLACE FUNCTION structgen_validate_json_string (data jsonb)
 		RETURNS boolean
 		AS $f$
@@ -129,38 +154,6 @@ AND structgen_validate_json_struct_1700595950(data->'variable')
 		AND structgen_validate_json_array_struct_1675104059(data->'Variables')
 AND structgen_validate_json_array_string(data->'Intrinsics')
 		;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-CREATE TABLE exercices (
-	id serial PRIMARY KEY,
-	title varchar  NOT NULL,
-	description varchar  NOT NULL,
-	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters))
-);
-
-	-- No validation : accept anything
-	CREATE OR REPLACE FUNCTION structgen_validate_json_ (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		RETURN TRUE;
-	END;
-	$f$
-	LANGUAGE 'plpgsql'
-	IMMUTABLE;
-
-	CREATE OR REPLACE FUNCTION structgen_validate_json_array_ (data jsonb)
-		RETURNS boolean
-		AS $f$
-	BEGIN
-		IF jsonb_typeof(data) = 'null' THEN RETURN TRUE; END IF;
-		IF jsonb_typeof(data) != 'array' THEN RETURN FALSE; END IF;
-		IF jsonb_array_length(data) = 0 THEN RETURN TRUE; END IF; 
-		RETURN (SELECT bool_and( structgen_validate_json_(value) )  FROM jsonb_array_elements(data)) 
-			;
 	END;
 	$f$
 	LANGUAGE 'plpgsql'

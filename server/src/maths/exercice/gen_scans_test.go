@@ -4,32 +4,6 @@ package exercice
 
 import "database/sql"
 
-func queriesExercice(tx *sql.Tx, item Exercice) (Exercice, error) {
-	item, err := item.Insert(tx)
-
-	if err != nil {
-		return item, err
-	}
-	rows, err := tx.Query("SELECT * FROM exercices")
-	if err != nil {
-		return item, err
-	}
-	items, err := ScanExercices(rows)
-	if err != nil {
-		return item, err
-	}
-
-	_ = items.IDs()
-
-	item, err = item.Update(tx)
-	if err != nil {
-		return item, err
-	}
-	_, err = SelectExercice(tx, item.Id)
-
-	return item, err
-}
-
 func queriesQuestion(tx *sql.Tx, item Question) (Question, error) {
 	item, err := item.Insert(tx)
 

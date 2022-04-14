@@ -65,36 +65,36 @@ func TestRoot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Run("CRUD for Exercice", func(t *testing.T) { testExercice(t, db) })
+	// t.Run("CRUD for Exercice", func(t *testing.T) { testExercice(t, db) })
 	t.Run("CRUD for Question", func(t *testing.T) { testQuestion(t, db) })
 }
 
-func testExercice(t *testing.T, db *sql.DB) {
-	exes, err := SelectAllExercices(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	L := len(exes)
+// func testExercice(t *testing.T, db *sql.DB) {
+// 	exes, err := SelectAllExercices(db)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	L := len(exes)
 
-	ex := randExercice()
-	ex, err = ex.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	ex := randExercice()
+// 	ex, err = ex.Insert(db)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	exes, err = SelectAllExercices(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(exes) != L+1 {
-		t.Fatal()
-	}
+// 	exes, err = SelectAllExercices(db)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	if len(exes) != L+1 {
+// 		t.Fatal()
+// 	}
 
-	_, err = DeleteExerciceById(db, ex.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// 	_, err = DeleteExerciceById(db, ex.Id)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
 func testQuestion(t *testing.T, db *sql.DB) {
 	questions, err := SelectAllQuestions(db)

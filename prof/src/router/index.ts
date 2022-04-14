@@ -9,17 +9,20 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: HomeView
+      component: HomeView,
+      meta: { Label: "Accueil" }
     },
     {
       path: "/trivial",
       name: "trivial",
-      component: TrivialPoursuit
+      component: TrivialPoursuit,
+      meta: { Label: "Configuration du TrivialPoursuit" }
     },
     {
       path: "/editor",
       name: "editor",
-      component: QuestionEditor
+      component: QuestionEditor,
+      meta: { Label: "Editeur de question" }
     }
     // {
     //   path: '/about',

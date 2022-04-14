@@ -105,121 +105,6 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
-func scanOneExercice(row scanner) (Exercice, error) {
-	var s Exercice
-	err := row.Scan(
-		&s.Id,
-		&s.Title,
-		&s.Description,
-		&s.Parameters,
-	)
-	return s, err
-}
-
-func ScanExercice(row *sql.Row) (Exercice, error) {
-	return scanOneExercice(row)
-}
-
-func SelectAllExercices(tx DB) (Exercices, error) {
-	rows, err := tx.Query("SELECT * FROM exercices")
-	if err != nil {
-		return nil, err
-	}
-	return ScanExercices(rows)
-}
-
-// SelectExercice returns the entry matching id.
-func SelectExercice(tx DB, id int64) (Exercice, error) {
-	row := tx.QueryRow("SELECT * FROM exercices WHERE id = $1", id)
-	return ScanExercice(row)
-}
-
-// SelectExercices returns the entry matching the given ids.
-func SelectExercices(tx DB, ids ...int64) (Exercices, error) {
-	rows, err := tx.Query("SELECT * FROM exercices WHERE id = ANY($1)", pq.Int64Array(ids))
-	if err != nil {
-		return nil, err
-	}
-	return ScanExercices(rows)
-}
-
-type Exercices map[int64]Exercice
-
-func (m Exercices) IDs() IDs {
-	out := make(IDs, 0, len(m))
-	for i := range m {
-		out = append(out, i)
-	}
-	return out
-}
-
-func ScanExercices(rs *sql.Rows) (Exercices, error) {
-	var (
-		s   Exercice
-		err error
-	)
-	defer func() {
-		errClose := rs.Close()
-		if err == nil {
-			err = errClose
-		}
-	}()
-	structs := make(Exercices, 16)
-	for rs.Next() {
-		s, err = scanOneExercice(rs)
-		if err != nil {
-			return nil, err
-		}
-		structs[s.Id] = s
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return structs, nil
-}
-
-// Insert Exercice in the database and returns the item with id filled.
-func (item Exercice) Insert(tx DB) (out Exercice, err error) {
-	row := tx.QueryRow(`INSERT INTO exercices (
-		title,description,parameters
-		) VALUES (
-		$1,$2,$3
-		) RETURNING 
-		id,title,description,parameters;
-		`, item.Title, item.Description, item.Parameters)
-	return ScanExercice(row)
-}
-
-// Update Exercice in the database and returns the new version.
-func (item Exercice) Update(tx DB) (out Exercice, err error) {
-	row := tx.QueryRow(`UPDATE exercices SET (
-		title,description,parameters
-		) = (
-		$2,$3,$4
-		) WHERE id = $1 RETURNING 
-		id,title,description,parameters;
-		`, item.Id, item.Title, item.Description, item.Parameters)
-	return ScanExercice(row)
-}
-
-// Deletes the Exercice and returns the item
-func DeleteExerciceById(tx DB, id int64) (Exercice, error) {
-	row := tx.QueryRow("DELETE FROM exercices WHERE id = $1 RETURNING *;", id)
-	return ScanExercice(row)
-}
-
-// Deletes the Exercice in the database and returns the ids.
-func DeleteExercicesByIDs(tx DB, ids ...int64) (IDs, error) {
-	rows, err := tx.Query("DELETE FROM exercices WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIDs(rows)
-}
-
-func (s *Parameters) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s Parameters) Value() (driver.Value, error) { return dumpJSON(s) }
-
 func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
@@ -334,6 +219,9 @@ func DeleteQuestionsByIDs(tx DB, ids ...int64) (IDs, error) {
 
 func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func (s *Parameters) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Parameters) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func scanOneQuestionTag(row scanner) (QuestionTag, error) {
 	var s QuestionTag
