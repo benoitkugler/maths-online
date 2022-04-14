@@ -9,7 +9,7 @@
         </v-row>
         <v-row>
           <v-col>
-            <i>{{ errorParameters.Details }}</i>
+            <div>{{ errorParameters.Details }}</div>
           </v-col>
         </v-row>
       </v-col>
@@ -23,6 +23,16 @@
 
   <v-card class="ma-1">
     <v-row class="mb-1 px-2">
+      <v-col cols="auto" align-self="center" class="pr-0">
+        <v-btn
+          size="small"
+          icon
+          title="Retour aux questions"
+          @click="backToList"
+        >
+          <v-icon icon="mdi-arrow-left"></v-icon>
+        </v-btn>
+      </v-col>
       <v-col align-self="center">
         <v-text-field
           class="mt-2"
@@ -34,7 +44,11 @@
         ></v-text-field>
       </v-col>
       <v-col align-self="center">
-        <tag-list-field label="Catégories" v-model="tags"></tag-list-field>
+        <tag-list-field
+          label="Catégories"
+          v-model="tags"
+          @update:model-value="saveTags"
+        ></tag-list-field>
       </v-col>
       <v-col align-self="center" style="text-align: right" cols="3">
         <v-menu offset-y close-on-content-click>
@@ -108,7 +122,7 @@
           "
           v-if="rows.length == 0"
         >
-          <i>Glisser un fichier .json ...</i>
+          <div>Glisser un fichier .json ...</div>
         </div>
 
         <div
@@ -155,7 +169,7 @@ import type { Block, Question, Variable } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
-import { computed } from "@vue/runtime-core";
+import { computed, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
@@ -184,23 +198,27 @@ import Intrinsics from "./Intrinsics.vue";
 import RandomParameters from "./RandomParameters.vue";
 import TagListField from "./TagListField.vue";
 
-const props = defineProps({
-  session_id: { type: String, required: true }
+interface Props {
+  session_id: string;
+  question: Question;
+  tags: string[];
+}
+
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: "back"): void;
+}>();
+
+let question = $ref(props.question);
+let tags = $ref(props.tags);
+
+watch(props, () => {
+  question = props.question;
+  //   tags = props.tags;
 });
 
-let question: Question = $ref({
-  id: -1,
-  title: "",
-  enonce: [],
-  parameters: {
-    Variables: [],
-    Intrinsics: []
-  }
-});
-
-let tags = $ref<string[]>(["a", "b", "Seconde", "Probas"]);
-
-const rows = computed(() => question.enonce?.map(dataToBlock) || []); // TODO
+const rows = computed(() => props.question.enonce?.map(dataToBlock) || []);
 
 interface block {
   Props: Block;
@@ -335,7 +353,7 @@ function onDragEnd(ev: DragEvent) {
 
 async function save() {
   question.enonce = rows.value.map(v => v.Props);
-  await controller.EditSaveAndPreview({
+  await controller.EditorSaveAndPreview({
     SessionID: props.session_id || "",
     Question: question
   });
@@ -349,7 +367,10 @@ async function onDropJSON(ev: DragEvent) {
   if (ev.dataTransfer?.files.length) {
     ev.preventDefault();
     const content = await ev.dataTransfer?.files[0].text();
+    // keep the current ID
+    const trueID = question.id;
     question = JSON.parse(content!);
+    question.id = trueID;
   }
 }
 
@@ -364,7 +385,7 @@ const showErrorParameters = computed(() => errorParameters.value.Origin != "");
 const availableParameters = ref<Variable[]>([]);
 
 async function checkParameters() {
-  const out = await controller.EditCheckParameters({
+  const out = await controller.EditorCheckParameters({
     SessionID: props.session_id || "",
     Parameters: question.parameters
   });
@@ -372,6 +393,14 @@ async function checkParameters() {
 
   errorParameters.value = out.ErrDefinition;
   availableParameters.value = out.Variables || [];
+}
+
+async function saveTags() {
+  await controller.EditorUpdateTags({ IdQuestion: question.id, Tags: tags });
+}
+
+function backToList() {
+  emit("back");
 }
 </script>
 

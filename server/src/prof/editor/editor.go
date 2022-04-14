@@ -4,8 +4,10 @@ package editor
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,11 +22,14 @@ const sessionTimeout = 12 * time.Hour
 type Controller struct {
 	lock sync.Mutex
 
+	db *sql.DB
+
 	sessions map[string]*loopbackController
 }
 
-func NewController() *Controller {
+func NewController(db *sql.DB) *Controller {
 	return &Controller{
+		db:       db,
 		sessions: make(map[string]*loopbackController),
 	}
 }
@@ -66,6 +71,77 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
+type QuestionHeader struct {
+	Id    int64
+	Title string
+	Tags  []string
+}
+
+func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHeader, err error) {
+	const pagination = 30
+
+	var questions exercice.Questions
+	if len(query.Tags) != 0 {
+		questions, err = exercice.SelectQuestionByTags(ct.db, query.Tags...)
+	} else {
+		questions, err = exercice.SelectAllQuestions(ct.db)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
+	var ids exercice.IDs
+	for _, question := range questions {
+		thisTitle := strings.TrimSpace(strings.ToLower(question.Title))
+		if strings.Contains(thisTitle, queryTitle) {
+			out = append(out, QuestionHeader{Id: question.Id, Title: question.Title})
+			ids = append(ids, question.Id)
+		}
+	}
+
+	tags, err := exercice.SelectQuestionTagsByIdQuestions(ct.db, ids...)
+	if err != nil {
+		return nil, err
+	}
+	tagsMap := tags.ByIdQuestion()
+	for i, question := range out {
+		for _, tag := range tagsMap[question.Id] {
+			out[i].Tags = append(out[i].Tags, tag.Tag)
+		}
+	}
+
+	if len(out) > pagination {
+		out = out[:pagination]
+	}
+
+	return out, nil
+}
+
+func (ct *Controller) updateTags(params UpdateTagsIn) error {
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return err
+	}
+	_, err = exercice.DeleteQuestionTagsByIdQuestions(tx, params.IdQuestion)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	var tags exercice.QuestionTags
+	for _, tag := range params.Tags {
+		tags = append(tags, exercice.QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
+	}
+	err = exercice.InsertManyQuestionTags(tx, tags...)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	return err
+}
+
 func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
 	err := params.Parameters.Validate()
 	if err != nil {
@@ -83,8 +159,26 @@ func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersO
 	return out
 }
 
+func (ct *Controller) pausePreview(sessionID string) error {
+	ct.lock.Lock()
+	defer ct.lock.Unlock()
+
+	loopback, ok := ct.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("invalid session ID %s", sessionID)
+	}
+
+	loopback.broadcast <- LoopbackState{IsPaused: true}
+	return nil
+}
+
 func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
-	// TODO actually validate and save
+	// TODO validation step before saving
+	_, err := params.Question.Update(ct.db)
+	if err != nil {
+		return err
+	}
+
 	question := params.Question.Instantiate().ToClient()
 
 	ct.lock.Lock()
@@ -95,6 +189,6 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
 		return fmt.Errorf("invalid session ID %s", params.SessionID)
 	}
 
-	loopback.broadcast <- question
+	loopback.broadcast <- LoopbackState{Question: question}
 	return nil
 }

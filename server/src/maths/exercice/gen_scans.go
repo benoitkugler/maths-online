@@ -108,10 +108,10 @@ type DB interface {
 func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
+		&s.Id,
 		&s.Title,
 		&s.Enonce,
 		&s.Parameters,
-		&s.Id,
 	)
 	return s, err
 }
@@ -185,7 +185,7 @@ func (item Question) Insert(tx DB) (out Question, err error) {
 		) VALUES (
 		$1,$2,$3
 		) RETURNING 
-		title,enonce,parameters,id;
+		id,title,enonce,parameters;
 		`, item.Title, item.Enonce, item.Parameters)
 	return ScanQuestion(row)
 }
@@ -197,8 +197,8 @@ func (item Question) Update(tx DB) (out Question, err error) {
 		) = (
 		$2,$3,$4
 		) WHERE id = $1 RETURNING 
-		title,enonce,parameters,id;
-		`, item.Title, item.Enonce, item.Parameters, item.Id)
+		id,title,enonce,parameters;
+		`, item.Id, item.Title, item.Enonce, item.Parameters)
 	return ScanQuestion(row)
 }
 

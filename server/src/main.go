@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -11,11 +12,31 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+func connectDB() (*sql.DB, error) {
+	// TODO: setup production DB
+
+	credentials := pass.DB{
+		Host:     "localhost",
+		User:     "benoit",
+		Password: "dummy",
+		Name:     "maths_dev",
+	}
+	db, err := credentials.ConnectPostgres()
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+
+	return db, err
+}
 
 func main() {
 	devPtr := flag.Bool("dev", false, "run in dev mode (localhost)")
@@ -24,13 +45,19 @@ func main() {
 
 	host := getAdress(*devPtr)
 
-	trivial := trivialpoursuit.NewController(host)
+	db, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	fmt.Println("DB connected.")
 
+	trivial := trivialpoursuit.NewController(host)
 	// for now, show the logs
 	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
 	trivialpoursuit.WarningLogger.SetOutput(os.Stdout)
 
-	edit := editor.NewController()
+	edit := editor.NewController(db)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -52,13 +79,13 @@ func main() {
 	setupRoutes(e, trivial, edit)
 
 	if *dryPtr {
-		log.Printf("Setup done, leaving early.")
+		fmt.Println("Setup done, leaving early.")
 		return
 	}
 	fmt.Println("Setup done")
 
-	err := e.Start(host) // start and block
-	e.Logger.Fatal(err)  // report error and quit
+	err = e.Start(host) // start and block
+	e.Logger.Fatal(err) // report error and quit
 }
 
 func getAdress(dev bool) string {

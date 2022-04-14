@@ -37,12 +37,22 @@
           </keep-alive>
         </transition>
       </router-view>
+
+      <v-snackbar app :model-value="showLoadingSnackbar">
+        <v-progress-linear indeterminate></v-progress-linear>
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import { controller } from "./controller/controller";
+
+// TODO: cleanly cancel server preview socket
+// window.onbeforeunload((ev)=> {
+//     controller.EditorLeavePreview
+// })
 
 export default defineComponent({
   name: "App",
@@ -52,6 +62,9 @@ export default defineComponent({
       version: process.env.VERSION,
       tmp: ""
     };
+  },
+  computed: {
+    showLoadingSnackbar: () => controller.inRequest
   },
   components: {}
 });

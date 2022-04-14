@@ -5,7 +5,7 @@ import 'dart:math';
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -62,7 +62,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   late WebSocketChannel channel;
   late Timer _keepAliveTimmer;
 
-  Question? question;
+  LoopbackState? question;
 
   @override
   void initState() {
@@ -100,7 +100,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   void listen(dynamic event) {
     try {
       setState(() {
-        question = questionFromJson(jsonDecode(event as String));
+        question = loopbackStateFromJson(jsonDecode(event as String));
       });
     } catch (e) {
       showError(e);
@@ -109,19 +109,22 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
 
   @override
   Widget build(BuildContext context) {
-    return question == null
+    return question == null || question!.isPaused
         ? Center(
             child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
               CircularProgressIndicator(),
-              Text("En attente de prévisualisation..."),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Text("En attente de prévisualisation..."),
+              ),
             ],
           ))
         : Padding(
             padding: const EdgeInsets.all(8.0),
             child: QuestionPage(
-              question!,
+              question!.question,
               Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
                   Random().nextInt(256)),
               (p0) {},

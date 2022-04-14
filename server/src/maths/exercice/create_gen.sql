@@ -160,10 +160,10 @@ AND structgen_validate_json_array_string(data->'Intrinsics')
 	IMMUTABLE;
 
 CREATE TABLE questions (
+	id serial PRIMARY KEY,
 	title varchar  NOT NULL,
 	enonce jsonb  CONSTRAINT enonce_structgen_validate_json_array_ CHECK (structgen_validate_json_array_(enonce)),
-	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters)),
-	id serial PRIMARY KEY
+	parameters jsonb  NOT NULL CONSTRAINT parameters_structgen_validate_json_struct_724571229 CHECK (structgen_validate_json_struct_724571229(parameters))
 );
 
 CREATE TABLE question_tags (

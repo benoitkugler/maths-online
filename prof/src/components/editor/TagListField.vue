@@ -62,7 +62,7 @@
       style="cursor: pointer"
       >{{ tag }}</v-chip
     >
-    <i v-if="props.modelValue.length == 0">Ajouter une étiquette...</i>
+    <div v-if="props.modelValue.length == 0">Ajouter une étiquette...</div>
   </v-btn>
 </template>
 

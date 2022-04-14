@@ -1,38 +1,72 @@
 import type {
   CheckParametersOut,
   LaunchGameOut,
+  Question,
+  QuestionHeader,
   StartSessionOut
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
 class Controller extends AbstractAPI {
+  inRequest = false;
+  requestError = "";
+
   getURL(endpoint: string) {
     return this.baseUrl + endpoint;
   }
 
   handleError(error: any): void {
-    // TODO: real message
-    console.log(`ERROR: ${error}`);
+    this.inRequest = false;
+    this.requestError = `${error}`;
   }
 
   startRequest(): void {
     console.log("launching request");
+    this.inRequest = true;
   }
 
   protected onSuccessLaunchGame(data: LaunchGameOut): void {
     console.log(`Game started at ${data.URL}`);
+    this.inRequest = false;
   }
 
-  protected onSuccessEditStartSession(data: StartSessionOut): void {
+  protected onSuccessEditorStartSession(data: StartSessionOut): void {
     console.log(data);
+    this.inRequest = false;
   }
 
-  protected onSuccessEditSaveAndPreview(data: any): void {
+  protected onSuccessEditorSaveAndPreview(data: any): void {
     console.log("OK", data);
+    this.inRequest = false;
   }
 
-  protected onSuccessEditCheckParameters(data: CheckParametersOut): void {
+  protected onSuccessEditorCheckParameters(data: CheckParametersOut): void {
     console.log("OK", data);
+    this.inRequest = false;
+  }
+
+  protected onSuccessEditorSearchQuestions(
+    data: QuestionHeader[] | null
+  ): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorCreateQuestion(data: Question): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorUpdateTags(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorGetTags(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorGetQuestion(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorDeleteQuestion(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorPausePreview(data: any): void {
+    this.inRequest = false;
   }
 }
 

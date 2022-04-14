@@ -1,0 +1,10 @@
+package editor
+
+import "github.com/benoitkugler/maths-online/maths/exercice/client"
+
+//go:generate ../../../../../structgen/structgen -source=loopback_types.go -mode=dart:../../../../eleve/lib/loopback_types.gen.dart
+
+type LoopbackState struct {
+	Question client.Question `dart-extern:"exercices/types.gen.dart"`
+	IsPaused bool
+}

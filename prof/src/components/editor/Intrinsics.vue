@@ -6,7 +6,7 @@
         complexes de manière rapide et simple. La syntaxe d'une définition suit
         le format : <br />
         <p class="my-2">
-          <i>a,b,c,d,... </i> = <b>fonction</b>(<i>argument1, argument2, ...</i
+          <div>a,b,c,d,... </div> = <b>fonction</b>(<div>argument1, argument2, ...</div
           >)
         </p>
         Les fonctions utilisables sont les suivantes :
@@ -20,9 +20,9 @@
               </v-col>
               <v-col align-self="center">
                 <v-list-item-subtitle
-                  >Génère trois entiers <i>a</i>,<i>b</i>,<i>c</i> vérifiant a^2
-                  + b^2 = c^2. <i>bound</i> est un argument optionnel qui
-                  controle le maximum de <i>a</i> par <i>2 bound^2</i>
+                  >Génère trois entiers <div>a</div>,<div>b</div>,<div>c</div> vérifiant a^2
+                  + b^2 = c^2. <div>bound</div> est un argument optionnel qui
+                  controle le maximum de <div>a</div> par <div>2 bound^2</div>
                 </v-list-item-subtitle>
               </v-col>
             </v-row>
@@ -34,8 +34,8 @@
               </v-col>
               <v-col align-self="center">
                 <v-list-item-subtitle>
-                  Calcule le projeté orthogonal du point <i>A</i> sur
-                  (<i>BC</i>).
+                  Calcule le projeté orthogonal du point <div>A</div> sur
+                  (<div>BC</div>).
                 </v-list-item-subtitle>
               </v-col>
             </v-row>

@@ -15,6 +15,21 @@ export interface LaunchGameOut {
 export interface StartSessionOut {
   ID: string;
 }
+// github.com/benoitkugler/maths-online/prof/editor.ListQuestionsIn
+export interface ListQuestionsIn {
+  TitleQuery: string;
+  Tags: string[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
+export interface QuestionHeader {
+  Id: number;
+  Title: string;
+  Tags: string[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.Block
+export type Block = any;
+// github.com/benoitkugler/maths-online/maths/exercice.Enonce
+export type Enonce = Block[] | null;
 // github.com/benoitkugler/maths-online/maths/expression.Variable
 export interface Variable {
   Indice: string;
@@ -32,6 +47,23 @@ export interface Parameters {
   Variables: randomParameters;
   Intrinsics: string[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.Question
+export interface Question {
+  id: number;
+  title: string;
+  enonce: Enonce;
+  parameters: Parameters;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
+export interface SaveAndPreviewIn {
+  SessionID: string;
+  Question: Question;
+}
+// github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
+export interface UpdateTagsIn {
+  Tags: string[] | null;
+  IdQuestion: number;
+}
 // github.com/benoitkugler/maths-online/prof/editor.CheckParametersIn
 export interface CheckParametersIn {
   SessionID: string;
@@ -46,21 +78,6 @@ export interface ErrParameters {
 export interface CheckParametersOut {
   ErrDefinition: ErrParameters;
   Variables: Variable[] | null;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.Block
-export type Block = any;
-// github.com/benoitkugler/maths-online/maths/exercice.Enonce
-export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.Question
-export interface Question {
-  title: string;
-  enonce: Enonce;
-  parameters: Parameters;
-}
-// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
-export interface SaveAndPreviewIn {
-  SessionID: string;
-  Question: Question;
 }
 
 /** AbstractAPI provides auto-generated API calls and should be used 
@@ -105,7 +122,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessLaunchGame(data: LaunchGameOut): void;
 
-  protected async rawEditStartSession(params: any) {
+  protected async rawEditorStartSession(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/new";
     const rep: AxiosResponse<StartSessionOut> = await Axios.put(
       fullUrl,
@@ -115,21 +132,204 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** EditStartSession wraps rawEditStartSession and handles the error */
-  async EditStartSession(params: any) {
+  /** EditorStartSession wraps rawEditorStartSession and handles the error */
+  async EditorStartSession(params: any) {
     this.startRequest();
     try {
-      const out = await this.rawEditStartSession(params);
-      this.onSuccessEditStartSession(out);
+      const out = await this.rawEditorStartSession(params);
+      this.onSuccessEditorStartSession(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditStartSession(data: StartSessionOut): void;
+  protected abstract onSuccessEditorStartSession(data: StartSessionOut): void;
 
-  protected async rawEditCheckParameters(params: CheckParametersIn) {
+  protected async rawEditorGetTags() {
+    const fullUrl = this.baseUrl + "/prof/editor/api/tags";
+    const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorGetTags wraps rawEditorGetTags and handles the error */
+  async EditorGetTags() {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorGetTags();
+      this.onSuccessEditorGetTags(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorGetTags(data: string[] | null): void;
+
+  protected async rawEditorSearchQuestions(params: ListQuestionsIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/questions";
+    const rep: AxiosResponse<QuestionHeader[] | null> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorSearchQuestions wraps rawEditorSearchQuestions and handles the error */
+  async EditorSearchQuestions(params: ListQuestionsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorSearchQuestions(params);
+      this.onSuccessEditorSearchQuestions(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorSearchQuestions(
+    data: QuestionHeader[] | null
+  ): void;
+
+  protected async rawEditorCreateQuestion(params: any) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question";
+    const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorCreateQuestion wraps rawEditorCreateQuestion and handles the error */
+  async EditorCreateQuestion(params: any) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorCreateQuestion(params);
+      this.onSuccessEditorCreateQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorCreateQuestion(data: Question): void;
+
+  protected async rawEditorGetQuestion(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question";
+    const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
+      params: { id: params["id"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorGetQuestion wraps rawEditorGetQuestion and handles the error */
+  async EditorGetQuestion(params: { id: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorGetQuestion(params);
+      this.onSuccessEditorGetQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorGetQuestion(data: Question): void;
+
+  protected async rawEditorDeleteQuestion(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: { id: params["id"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
+  async EditorDeleteQuestion(params: { id: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDeleteQuestion(params);
+      this.onSuccessEditorDeleteQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDeleteQuestion(data: any): void;
+
+  protected async rawEditorSaveAndPreview(params: SaveAndPreviewIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorSaveAndPreview wraps rawEditorSaveAndPreview and handles the error */
+  async EditorSaveAndPreview(params: SaveAndPreviewIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorSaveAndPreview(params);
+      this.onSuccessEditorSaveAndPreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorSaveAndPreview(data: any): void;
+
+  protected async rawEditorPausePreview(params: { sessionID: string }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      params: { sessionID: params["sessionID"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
+  async EditorPausePreview(params: { sessionID: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorPausePreview(params);
+      this.onSuccessEditorPausePreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorPausePreview(data: any): void;
+
+  protected async rawEditorUpdateTags(params: UpdateTagsIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorUpdateTags wraps rawEditorUpdateTags and handles the error */
+  async EditorUpdateTags(params: UpdateTagsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorUpdateTags(params);
+      this.onSuccessEditorUpdateTags(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorUpdateTags(data: any): void;
+
+  protected async rawEditorCheckParameters(params: CheckParametersIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/check-params";
     const rep: AxiosResponse<CheckParametersOut> = await Axios.post(
       fullUrl,
@@ -139,41 +339,19 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** EditCheckParameters wraps rawEditCheckParameters and handles the error */
-  async EditCheckParameters(params: CheckParametersIn) {
+  /** EditorCheckParameters wraps rawEditorCheckParameters and handles the error */
+  async EditorCheckParameters(params: CheckParametersIn) {
     this.startRequest();
     try {
-      const out = await this.rawEditCheckParameters(params);
-      this.onSuccessEditCheckParameters(out);
+      const out = await this.rawEditorCheckParameters(params);
+      this.onSuccessEditorCheckParameters(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditCheckParameters(
+  protected abstract onSuccessEditorCheckParameters(
     data: CheckParametersOut
   ): void;
-
-  protected async rawEditSaveAndPreview(params: SaveAndPreviewIn) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/save";
-    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditSaveAndPreview wraps rawEditSaveAndPreview and handles the error */
-  async EditSaveAndPreview(params: SaveAndPreviewIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditSaveAndPreview(params);
-      this.onSuccessEditSaveAndPreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditSaveAndPreview(data: any): void;
 }

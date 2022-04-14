@@ -8,10 +8,10 @@ package exercice
 // It is mainly consituted of a list of content blocks, which
 // describes the question (description, question, field answer)
 type Question struct {
+	Id         int64      `json:"id"`
 	Title      string     `json:"title"` // name of the question, optional
 	Enonce     Enonce     `json:"enonce"`
 	Parameters Parameters `json:"parameters"` // random parameters shared by the all the blocks
-	Id         int64      `json:"id"`
 }
 
 // sql: ADD UNIQUE(id_question, tag)

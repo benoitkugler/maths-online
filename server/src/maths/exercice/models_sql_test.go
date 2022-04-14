@@ -35,11 +35,12 @@ func createDBDev() logsDB {
 		panic(err)
 	}
 
+	const userPassword = "dummy"
 	return logsDB{
 		Name:     "tmp_dev_test",
 		Host:     "localhost",
 		User:     getUserName(),
-		Password: "dummy",
+		Password: userPassword,
 	}
 }
 

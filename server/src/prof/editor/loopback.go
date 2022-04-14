@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
@@ -18,7 +17,8 @@ var upgrader = websocket.Upgrader{
 }
 
 type loopbackController struct {
-	broadcast  chan client.Question // the question to display in the preview
+	// the question to display in the preview
+	broadcast  chan LoopbackState
 	clientLeft chan bool
 	client     *previewClient // initialy empty
 	sessionID  string
@@ -26,7 +26,7 @@ type loopbackController struct {
 
 func newLoopbackController(sessionID string) *loopbackController {
 	return &loopbackController{
-		broadcast:  make(chan client.Question),
+		broadcast:  make(chan LoopbackState),
 		clientLeft: make(chan bool),
 		sessionID:  sessionID,
 	}
@@ -37,7 +37,7 @@ func (ct *loopbackController) startLoop(ctx context.Context) {
 		select {
 		case <-ct.clientLeft: // client is done
 			log.Println("Client is done")
-			return
+			// return
 
 		case <-ctx.Done(): // terminate the session on timeout
 			log.Println("Session timed out")
@@ -63,7 +63,7 @@ type previewClient struct {
 	controller *loopbackController
 }
 
-func (cl *previewClient) sendQuestion(question client.Question) error {
+func (cl *previewClient) sendQuestion(question LoopbackState) error {
 	return cl.conn.WriteJSON(question)
 }
 

@@ -1,7 +1,7 @@
 <template>
-  <iframe v-if="session_id" :src="src" width="350px" height="100%"></iframe>
+  <iframe v-show="session_id" :src="src" width="350px" height="100%"></iframe>
   <div
-    v-else
+    v-if="session_id.length == 0"
     class="mx-4 d-flex"
     style="
       width: 350px;
@@ -21,6 +21,7 @@ import { computed } from "@vue/runtime-core";
 const props = defineProps({
   session_id: { type: String, required: true }
 });
+
 let src = computed(() =>
   controller.getURL(
     `/prof-loopback-app?sessionID=${props.session_id}&mode=${BuildMode}`

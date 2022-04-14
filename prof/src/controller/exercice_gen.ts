@@ -319,10 +319,10 @@ export interface Parameters {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.Question
 export interface Question {
+  id: number;
   title: string;
   enonce: Enonce;
   parameters: Parameters;
-  id: number;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.QuestionTag
 export interface QuestionTag {
