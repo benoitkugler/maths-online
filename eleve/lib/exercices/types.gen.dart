@@ -675,6 +675,29 @@ JSON formulaBlockToJson(FormulaBlock item) {
   return {"Formula": stringToJson(item.formula)};
 }
 
+// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
+class FunctionDecoration {
+  final String label;
+  final String color;
+
+  const FunctionDecoration(this.label, this.color);
+
+  @override
+  String toString() {
+    return "FunctionDecoration($label, $color)";
+  }
+}
+
+FunctionDecoration functionDecorationFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionDecoration(
+      stringFromJson(json['Label']), stringFromJson(json['Color']));
+}
+
+JSON functionDecorationToJson(FunctionDecoration item) {
+  return {"Label": stringToJson(item.label), "Color": stringToJson(item.color)};
+}
+
 // github.com/benoitkugler/maths-online/maths/function_grapher.BezierCurve
 class BezierCurve {
   final Coord p0;
@@ -716,54 +739,86 @@ List<dynamic> listBezierCurveToJson(List<BezierCurve> item) {
 
 // github.com/benoitkugler/maths-online/maths/function_grapher.FunctionGraph
 class FunctionGraph {
+  final FunctionDecoration decoration;
   final List<BezierCurve> segments;
-  final RepereBounds bounds;
 
-  const FunctionGraph(this.segments, this.bounds);
+  const FunctionGraph(this.decoration, this.segments);
 
   @override
   String toString() {
-    return "FunctionGraph($segments, $bounds)";
+    return "FunctionGraph($decoration, $segments)";
   }
 }
 
 FunctionGraph functionGraphFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return FunctionGraph(listBezierCurveFromJson(json['Segments']),
-      repereBoundsFromJson(json['Bounds']));
+  return FunctionGraph(functionDecorationFromJson(json['Decoration']),
+      listBezierCurveFromJson(json['Segments']));
 }
 
 JSON functionGraphToJson(FunctionGraph item) {
   return {
-    "Segments": listBezierCurveToJson(item.segments),
+    "Decoration": functionDecorationToJson(item.decoration),
+    "Segments": listBezierCurveToJson(item.segments)
+  };
+}
+
+List<FunctionGraph> listFunctionGraphFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(functionGraphFromJson).toList();
+}
+
+List<dynamic> listFunctionGraphToJson(List<FunctionGraph> item) {
+  return item.map(functionGraphToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionsGraph
+class FunctionsGraph {
+  final List<FunctionGraph> functions;
+  final RepereBounds bounds;
+
+  const FunctionsGraph(this.functions, this.bounds);
+
+  @override
+  String toString() {
+    return "FunctionsGraph($functions, $bounds)";
+  }
+}
+
+FunctionsGraph functionsGraphFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionsGraph(listFunctionGraphFromJson(json['Functions']),
+      repereBoundsFromJson(json['Bounds']));
+}
+
+JSON functionsGraphToJson(FunctionsGraph item) {
+  return {
+    "Functions": listFunctionGraphToJson(item.functions),
     "Bounds": repereBoundsToJson(item.bounds)
   };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.FunctionGraphBlock
 class FunctionGraphBlock implements Block {
-  final String label;
-  final FunctionGraph graph;
+  final FunctionsGraph graph;
 
-  const FunctionGraphBlock(this.label, this.graph);
+  const FunctionGraphBlock(this.graph);
 
   @override
   String toString() {
-    return "FunctionGraphBlock($label, $graph)";
+    return "FunctionGraphBlock($graph)";
   }
 }
 
 FunctionGraphBlock functionGraphBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return FunctionGraphBlock(
-      stringFromJson(json['Label']), functionGraphFromJson(json['Graph']));
+  return FunctionGraphBlock(functionsGraphFromJson(json['Graph']));
 }
 
 JSON functionGraphBlockToJson(FunctionGraphBlock item) {
-  return {
-    "Label": stringToJson(item.label),
-    "Graph": functionGraphToJson(item.graph)
-  };
+  return {"Graph": functionsGraphToJson(item.graph)};
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.FunctionPointsFieldBlock

@@ -90,8 +90,7 @@ type FigureBlock struct {
 }
 
 type FunctionGraphBlock struct {
-	Label string
-	Graph functiongrapher.FunctionGraph
+	Graph functiongrapher.FunctionsGraph
 }
 
 type TableBlock struct {

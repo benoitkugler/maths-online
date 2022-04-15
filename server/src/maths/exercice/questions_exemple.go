@@ -5,6 +5,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -922,11 +923,13 @@ var PredefinedQuestions = []QuestionInstance{
 				text("."),
 			}},
 			FunctionPointsFieldInstance{
-				ID:       0,
-				Function: mustParse("x^2 − 3x + 1"),
-				Variable: expression.NewVariable('x'),
-				Label:    "g(x)",
-				XGrid:    []int{-2, -1, 0, 1, 2, 3, 4, 5},
+				ID: 0,
+				Function: expression.FunctionExpr{
+					Function: mustParse("x^2 − 3x + 1"),
+					Variable: expression.NewVariable('x'),
+				},
+				Label: "g(x)",
+				XGrid: []int{-2, -1, 0, 1, 2, 3, 4, 5},
 			},
 		},
 	},
@@ -934,10 +937,15 @@ var PredefinedQuestions = []QuestionInstance{
 		Title: "Variations", Enonce: EnonceInstance{
 			TextInstance{Parts: []client.TextOrMath{text("Quel est le maximum de h ?")}},
 			FunctionGraphInstance{
-				Label:    `y = h(x)`,
-				Function: mustParse("10*(1.1(x/10)^4 - 2.2(x/10)^3+(x/10)) + 0.047"),
-				Variable: expression.NewVariable('x'),
-				Range:    [2]float64{-5, 16},
+				Functions: []expression.FunctionDefinition{{
+					FunctionExpr: expression.FunctionExpr{
+						Function: mustParse("10*(1.1(x/10)^4 - 2.2(x/10)^3+(x/10)) + 0.047"),
+						Variable: expression.NewVariable('x'),
+					},
+					From: -5,
+					To:   16,
+				}},
+				Decorations: []functiongrapher.FunctionDecoration{{Label: `y = h(x)`}},
 			},
 			TextInstance{Parts: []client.TextOrMath{text("Max : ")}},
 			NumberFieldInstance{

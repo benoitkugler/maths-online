@@ -56,24 +56,35 @@ func (res singleVarResolver) resolve(v Variable) (float64, bool) {
 	return res.value, true
 }
 
+type FunctionExpr struct {
+	Function *Expression
+	Variable Variable // usually x
+}
+
+// FunctionDefinition interprets an expression as mathematical function
+type FunctionDefinition struct {
+	FunctionExpr
+	From, To float64 // definition domain
+}
+
 // Closure returns a function computing f(x), where f is defined by the expression.
 // The closure will panic if the expression depends on other variables
-func (expr *Expression) Closure(x Variable) func(float64) float64 {
+func (f FunctionExpr) Closure() func(float64) float64 {
 	return func(xValue float64) float64 {
-		return expr.MustEvaluate(singleVarResolver{x, xValue})
+		return f.Function.MustEvaluate(singleVarResolver{f.Variable, xValue})
 	}
 }
 
-// Extrema returns an approximation of max |f(x)| on [from, to].
+// Extrema returns an approximation of max |f(x)| on its definition domain.
 // The approximation is exact for monotonous functions.
-// `Extrema` will panic if the expression if not a function of `x`
-func (expr *Expression) Extrema(x Variable, from, to float64) float64 {
+// `Extrema` will panic if the expression if not a valid function.
+func (f FunctionDefinition) Extrema() float64 {
 	const nbSteps = 100
-	f := expr.Closure(x)
-	step := (to - from) / nbSteps
+	fn := f.Closure()
+	step := (f.To - f.From) / nbSteps
 	var max float64
 	for i := 0; i <= nbSteps; i++ {
-		fx := math.Abs(f(from + float64(i)*step))
+		fx := math.Abs(fn(f.From + float64(i)*step))
 		if fx > max {
 			max = fx
 		}

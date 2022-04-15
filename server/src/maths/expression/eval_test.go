@@ -264,7 +264,11 @@ func TestExpression_Extrema(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		if got := expr.Extrema(NewVariable('x'), tt.from, tt.to); got != tt.want {
+		fn := FunctionDefinition{
+			FunctionExpr: FunctionExpr{Function: expr, Variable: NewVariable('x')},
+			From:         tt.from, To: tt.to,
+		}
+		if got := fn.Extrema(); got != tt.want {
 			t.Errorf("Expression.Extrema() = %v, want %v", got, tt.want)
 		}
 	}

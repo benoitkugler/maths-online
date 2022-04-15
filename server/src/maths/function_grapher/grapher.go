@@ -47,8 +47,8 @@ type segment struct {
 }
 
 // expr must be an expression containing only the variable `variable`
-func newSegment(expr *expression.Expression, variable expression.Variable, from, to float64) segment {
-	f := expr.Closure(variable)
+func newSegment(fn expression.FunctionExpr, from, to float64) segment {
+	f := fn.Closure()
 
 	yFrom := f(from)
 	yTo := f(to)
@@ -67,29 +67,53 @@ func newSegment(expr *expression.Expression, variable expression.Variable, from,
 }
 
 type FunctionGraph struct {
-	Segments []BezierCurve
-	Bounds   repere.RepereBounds `dart-extern:"repere.gen.dart"`
+	Decoration FunctionDecoration
+	Segments   []BezierCurve
+}
+
+func newFunctionGraph(fn expression.FunctionDefinition) []BezierCurve {
+	step := (fn.To - fn.From) / nbStep
+	curves := make([]BezierCurve, nbStep)
+	for i := range curves {
+		seg := newSegment(fn.FunctionExpr, fn.From+float64(i)*step, fn.From+float64(i+1)*step)
+		curves[i] = seg.toCurve()
+	}
+
+	return curves
+}
+
+type FunctionDecoration struct {
+	Label string
+	Color string
+}
+
+type FunctionsGraph struct {
+	Functions []FunctionGraph
+	Bounds    repere.RepereBounds `dart-extern:"repere.gen.dart"`
 }
 
 // nbStep is the number of segments used when converting
 // a function curve to Bezier curves.
 const nbStep = 100
 
-// Graph splits the curve of `expr(vari)` on [from, to] in small chunks on which it is approximated
+// Graph splits the curve of each function on the definition domain in small chunks on which it is approximated
 // by Bezier curves.
-// It will panic if `expr` is not valid or evaluable given `vari`.
-func NewFunctionGraph(expr *expression.Expression, vari expression.Variable, from, to float64) FunctionGraph {
-	step := (to - from) / nbStep
-	curves := make([]BezierCurve, nbStep)
-	for i := range curves {
-		seg := newSegment(expr, vari, from+float64(i)*step, from+float64(i+1)*step)
-		curves[i] = seg.toCurve()
+// It will panic if the expression are not valid or evaluable given their input variable.
+func NewFunctionGraph(functions []expression.FunctionDefinition, decorations []FunctionDecoration) FunctionsGraph {
+	var allCurves []BezierCurve
+
+	out := FunctionsGraph{
+		Functions: make([]FunctionGraph, len(functions)),
+	}
+	for i, fn := range functions {
+		out.Functions[i].Segments = newFunctionGraph(fn)
+		out.Functions[i].Decoration = decorations[i]
+		allCurves = append(allCurves, out.Functions[i].Segments...)
 	}
 
-	return FunctionGraph{
-		Segments: curves,
-		Bounds:   boundingBox(curves),
-	}
+	out.Bounds = boundingBox(allCurves)
+
+	return out
 }
 
 func controlFromPoints(from, to repere.Coord, firstHalf bool) repere.Coord {
@@ -111,7 +135,7 @@ func controlFromPoints(from, to repere.Coord, firstHalf bool) repere.Coord {
 }
 
 // GraphFromVariations builds one possible representation for the given variations
-func GraphFromVariations(xs []float64, ys []float64) FunctionGraph {
+func GraphFromVariations(dec FunctionDecoration, xs []float64, ys []float64) FunctionsGraph {
 	// each segment is drawn with two quadratic curves
 	var curves []BezierCurve
 	for i := range xs {
@@ -135,15 +159,15 @@ func GraphFromVariations(xs []float64, ys []float64) FunctionGraph {
 		curves = append(curves, BezierCurve{p0, p1, p2})
 	}
 
-	return FunctionGraph{
-		Segments: curves,
-		Bounds:   boundingBox(curves),
+	return FunctionsGraph{
+		Functions: []FunctionGraph{{Decoration: dec, Segments: curves}},
+		Bounds:    boundingBox(curves),
 	}
 }
 
 // BoundsFromExpression returns the f(x) and f'(x) values for x in the grid
-func BoundsFromExpression(expr *expression.Expression, vari expression.Variable, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
-	f := expr.Closure(vari)
+func BoundsFromExpression(fn expression.FunctionExpr, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
+	f := fn.Closure()
 
 	fxs = make([]int, len(grid))
 	dfxs = make([]float64, len(grid))

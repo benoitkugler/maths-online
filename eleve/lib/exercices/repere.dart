@@ -327,7 +327,10 @@ extension _OffsetLabel on LabelPos {
 }
 
 /// fromHex expected a #FFFFFF string
-Color fromHex(String color) {
+Color fromHex(String color, {Color onEmpty = Colors.purple}) {
+  if (color.isEmpty) {
+    return onEmpty;
+  }
   color = "FF" + color.replaceAll("#", "");
   return Color(int.parse(color, radix: 16));
 }

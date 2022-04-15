@@ -211,16 +211,13 @@ type FigureInstance client.FigureBlock
 func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 
 type FunctionGraphInstance struct {
-	Function *expression.Expression
-	Label    string
-	Variable expression.Variable // usually x
-	Range    [2]float64          // definition domain
+	Functions   []expression.FunctionDefinition
+	Decorations []functiongrapher.FunctionDecoration
 }
 
 func (fg FunctionGraphInstance) toClient() client.Block {
 	return client.FunctionGraphBlock{
-		Graph: functiongrapher.NewFunctionGraph(fg.Function, fg.Variable, fg.Range[0], fg.Range[1]),
-		Label: fg.Label,
+		Graph: functiongrapher.NewFunctionGraph(fg.Functions, fg.Decorations),
 	}
 }
 
@@ -230,8 +227,7 @@ type FunctionVariationGraphInstance VariationTableInstance
 
 func (fg FunctionVariationGraphInstance) toClient() client.Block {
 	return client.FunctionGraphBlock{
-		Graph: functiongrapher.GraphFromVariations(fg.Xs, fg.Fxs),
-		Label: "y = f(x)",
+		Graph: functiongrapher.GraphFromVariations(functiongrapher.FunctionDecoration{Label: "y = f(x)"}, fg.Xs, fg.Fxs),
 	}
 }
 

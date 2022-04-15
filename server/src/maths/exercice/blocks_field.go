@@ -169,11 +169,13 @@ type FunctionPointsFieldBlock struct {
 
 func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID int) instance {
 	return FunctionPointsFieldInstance{
-		ID:       ID,
-		Function: expression.MustParse(fp.Function),
-		Label:    fp.Label,
-		XGrid:    fp.XGrid,
-		Variable: fp.Variable,
+		Function: expression.FunctionExpr{
+			Function: expression.MustParse(fp.Function),
+			Variable: fp.Variable,
+		},
+		ID:    ID,
+		Label: fp.Label,
+		XGrid: fp.XGrid,
 	}
 }
 

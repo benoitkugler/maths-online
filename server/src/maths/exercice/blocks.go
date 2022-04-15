@@ -5,6 +5,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -317,23 +318,41 @@ func (f FigureBlock) instantiateF(params expression.Variables) FigureInstance {
 	return out
 }
 
+type FunctionDefinition struct {
+	Function   string // expression.Expression
+	Decoration functiongrapher.FunctionDecoration
+	Variable   expression.Variable // usually x
+	Range      [2]float64          // definition domain
+}
+
+func (fg FunctionDefinition) instantiate(params expression.Variables) expression.FunctionDefinition {
+	expr := mustParse(fg.Function)
+	expr.Substitute(params)
+	return expression.FunctionDefinition{
+		FunctionExpr: expression.FunctionExpr{
+			Function: expr,
+			Variable: fg.Variable,
+		},
+		From: fg.Range[0],
+		To:   fg.Range[1],
+	}
+}
+
 // TODO: validate using extrema to avoid edge cases
 type FunctionGraphBlock struct {
-	Function string // expression.Expression
-	Label    string
-	Variable expression.Variable // usually x
-	Range    [2]float64          // definition domain
+	Functions []FunctionDefinition
 }
 
 func (fg FunctionGraphBlock) instantiate(params expression.Variables, _ int) instance {
-	expr := mustParse(fg.Function)
-	expr.Substitute(params)
-	return FunctionGraphInstance{
-		Function: expr,
-		Label:    fg.Label,
-		Variable: fg.Variable,
-		Range:    fg.Range,
+	out := FunctionGraphInstance{
+		Functions:   make([]expression.FunctionDefinition, len(fg.Functions)),
+		Decorations: make([]functiongrapher.FunctionDecoration, len(fg.Functions)),
 	}
+	for i, f := range fg.Functions {
+		out.Functions[i] = f.instantiate(params)
+		out.Decorations[i] = f.Decoration
+	}
+	return out
 }
 
 type FunctionVariationGraphBlock VariationTableBlock

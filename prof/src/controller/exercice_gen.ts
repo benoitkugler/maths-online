@@ -210,17 +210,26 @@ export interface FormulaFieldBlock {
   Label: TextPart;
   ComparisonLevel: ComparisonLevel;
 }
+// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
+export interface FunctionDecoration {
+  Label: string;
+  Color: string;
+}
 // github.com/benoitkugler/maths-online/maths/expression.Variable
 export interface Variable {
   Indice: string;
   Name: number;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
-export interface FunctionGraphBlock {
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionDefinition
+export interface FunctionDefinition {
   Function: string;
-  Label: string;
+  Decoration: FunctionDecoration;
   Variable: Variable;
   Range: number[];
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
+export interface FunctionGraphBlock {
+  Functions: FunctionDefinition[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {

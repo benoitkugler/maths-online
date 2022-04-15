@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
+	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -250,6 +251,13 @@ func randFormulaFieldBlock() FormulaFieldBlock {
 	}
 }
 
+func randfunctiongrapherFunctionDecoration() functiongrapher.FunctionDecoration {
+	return functiongrapher.FunctionDecoration{
+		Label: randstring(),
+		Color: randstring(),
+	}
+}
+
 func randrune() rune {
 	return rune(rand.Intn(1000000))
 }
@@ -269,12 +277,27 @@ func randArray2float64() [2]float64 {
 	return out
 }
 
+func randFunctionDefinition() FunctionDefinition {
+	return FunctionDefinition{
+		Function:   randstring(),
+		Decoration: randfunctiongrapherFunctionDecoration(),
+		Variable:   randexpressionVariable(),
+		Range:      randArray2float64(),
+	}
+}
+
+func randSliceFunctionDefinition() []FunctionDefinition {
+	l := 40 + rand.Intn(10)
+	out := make([]FunctionDefinition, l)
+	for i := range out {
+		out[i] = randFunctionDefinition()
+	}
+	return out
+}
+
 func randFunctionGraphBlock() FunctionGraphBlock {
 	return FunctionGraphBlock{
-		Function: randstring(),
-		Label:    randstring(),
-		Variable: randexpressionVariable(),
-		Range:    randArray2float64(),
+		Functions: randSliceFunctionDefinition(),
 	}
 }
 

@@ -262,10 +262,17 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Function: "abs(x) + sin(x)",
-          Label: "f",
-          Variable: { Name: xRune, Indice: "" },
-          Range: [-5, 5]
+          Functions: [
+            {
+              Function: "abs(x) + sin(x)",
+              Decoration: {
+                Label: "f",
+                Color: ""
+              },
+              Variable: { Name: xRune, Indice: "" },
+              Range: [-5, 5]
+            }
+          ]
         }
       };
       return out;

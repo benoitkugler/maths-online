@@ -507,17 +507,16 @@ func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 }
 
 type FunctionPointsFieldInstance struct {
-	Function *expression.Expression
+	Function expression.FunctionExpr
 	Label    string
 	XGrid    []int
-	Variable expression.Variable
 	ID       int
 }
 
 func (f FunctionPointsFieldInstance) fieldID() int { return f.ID }
 
 func (f FunctionPointsFieldInstance) toClient() client.Block {
-	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.Variable, f.XGrid)
+	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
 	return client.FunctionPointsFieldBlock{
 		Label: f.Label,
 		Xs:    f.XGrid, ID: f.ID,
@@ -547,7 +546,7 @@ func (f FunctionPointsFieldInstance) validateAnswerSyntax(answer client.Answer) 
 
 func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.FunctionPointsAnswer).Fxs
-	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.Variable, f.XGrid)
+	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
 	for i := range ys {
 		if ans[i] != ys[i] {
 			return false
