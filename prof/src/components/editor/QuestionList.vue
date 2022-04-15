@@ -120,6 +120,7 @@
 import type { QuestionHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { Question } from "@/controller/exercice_gen";
+import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
 interface Props {
@@ -138,6 +139,8 @@ let queryTags = $ref<string[]>([]);
 
 let timerId = 0;
 
+onMounted(fetchQuestions);
+
 function updateQuerySearch() {
   const debounceDelay = 200;
   // cancel pending call
@@ -150,8 +153,6 @@ function updateQuerySearch() {
 }
 
 async function updateQueryTags() {
-  console.log("searching");
-
   await fetchQuestions();
 }
 

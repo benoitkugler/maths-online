@@ -18,9 +18,38 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-text-field
+            <v-autocomplete
+              :items="allTags"
               variant="outlined"
               density="comfortable"
+              hide-details
+              label="Ajouter..."
+              :search="entry"
+              @update:search="s => (entry = s)"
+              @keyup="onEnterKey"
+              append-icon=""
+              hide-no-data
+              auto-select-first
+              hide-selected
+            >
+              <template v-slot:appendInner>
+                <v-btn
+                  icon
+                  size="x-small"
+                  class="my-1"
+                  color="success"
+                  :disabled="!isEntryValid"
+                  @click="add"
+                >
+                  <v-icon icon="mdi-plus"></v-icon>
+                </v-btn>
+              </template>
+            </v-autocomplete>
+          </v-col>
+        </v-row>
+        <!-- <v-row>
+          <v-col>
+            <v-text-field
               hide-details
               label="Ajouter..."
               v-model="entry"
@@ -40,7 +69,7 @@
               </template>
             </v-text-field>
           </v-col>
-        </v-row>
+        </v-row> -->
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -72,6 +101,7 @@ import { $ref } from "vue/macros";
 
 interface Props {
   modelValue: string[];
+  allTags: string[];
   label?: string;
 }
 
@@ -104,7 +134,7 @@ function add() {
   entry = "";
 }
 
-function onEnter(key: KeyboardEvent) {
+function onEnterKey(key: KeyboardEvent) {
   if (key.key == "Enter" && isEntryValid.value) {
     add();
   }

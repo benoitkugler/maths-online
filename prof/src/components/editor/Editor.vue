@@ -47,6 +47,7 @@
         <tag-list-field
           label="Catégories"
           v-model="tags"
+          :all-tags="props.allTags"
           @update:model-value="saveTags"
         ></tag-list-field>
       </v-col>
@@ -68,11 +69,11 @@
 
         <v-divider vertical></v-divider>
         <v-btn
-          icon
           class="mx-2"
+          icon
           @click="save"
           :disabled="!session_id"
-          title="Prévisualiser"
+          title="Enregistrer et prévisualiser"
           size="small"
         >
           <v-icon icon="mdi-content-save"></v-icon>
@@ -80,7 +81,7 @@
         <v-btn
           size="small"
           icon
-          class="mx-2"
+          class="mr-2"
           @click="download"
           :disabled="!session_id"
           title="Télécharger"
@@ -202,6 +203,7 @@ interface Props {
   session_id: string;
   question: Question;
   tags: string[];
+  allTags: string[]; // to provide auto completion
 }
 
 const props = defineProps<Props>();

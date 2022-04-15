@@ -8,10 +8,11 @@
           @back="backToQuestions"
           :question="currentQuestion!"
           :tags="currentTags"
+          :all-tags="allKnownTags"
         ></Editor>
         <QuestionList
           v-if="viewKind == 'questions'"
-          :tags="questionTags"
+          :tags="allKnownTags"
           @edit="editQuestion"
         ></QuestionList>
       </v-col>
@@ -34,7 +35,8 @@ import Preview from "../components/editor/Preview.vue";
 import QuestionList from "../components/editor/QuestionList.vue";
 
 let sessionID = $ref("");
-let questionTags = $ref<string[]>([]);
+let allKnownTags = $ref<string[]>([]);
+
 let viewKind: "questions" | "editor" = $ref("questions");
 let currentQuestion: Question | null = $ref(null);
 let currentTags: string[] = $ref([]);
@@ -54,11 +56,16 @@ onMounted(async () => {
     }
   });
 
-  const tags = await controller.EditorGetTags();
-  questionTags = tags || [];
+  fetchTags();
 });
 
+async function fetchTags() {
+  const tags = await controller.EditorGetTags();
+  allKnownTags = tags || [];
+}
+
 function backToQuestions() {
+  fetchTags();
   controller.EditorPausePreview({ sessionID: sessionID });
   viewKind = "questions";
 }
