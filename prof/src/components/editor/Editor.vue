@@ -217,7 +217,7 @@ let tags = $ref(props.tags);
 
 watch(props, () => {
   question = props.question;
-  //   tags = props.tags;
+  tags = props.tags;
 });
 
 const rows = computed(() => props.question.enonce?.map(dataToBlock) || []);
@@ -313,10 +313,12 @@ function swapBlocks(origin: number, target: number) {
 }
 
 function addRandomParameter() {
-  question.parameters.Variables?.push({
+  const l = question.parameters.Variables || [];
+  l.push({
     variable: { Name: xRune, Indice: "" },
     expression: "randint(1;10)"
   });
+  question.parameters.Variables = l;
 }
 
 function updateRandomParameter(index: number, param: randomParameter) {
@@ -330,7 +332,9 @@ function deleteRandomParameter(index: number) {
 }
 
 function addIntrinsic() {
-  question.parameters.Intrinsics?.push("a,b,c = pythagorians()");
+  const l = question.parameters.Intrinsics || [];
+  l.push("a,b,c = pythagorians()");
+  question.parameters.Intrinsics = l;
 }
 
 function updateIntrinsic(index: number, param: string) {
