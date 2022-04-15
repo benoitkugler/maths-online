@@ -29,6 +29,7 @@ type fieldInstance interface {
 	// validateAnswerSyntax is called during editing for complex fields,
 	// to catch syntax mistake before validating the answer
 	// an error may also be returned against malicious query
+	// if non nil, the error is of type InvalidFieldAnswer
 	validateAnswerSyntax(answer client.Answer) error
 
 	// evaluateAnswer evaluate the given answer against the reference

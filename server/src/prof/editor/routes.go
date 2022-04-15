@@ -141,6 +141,19 @@ func (ct *Controller) EditorPausePreview(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+// EditorEndPreview cleanly remove the loopback controller instead
+// of waiting for it to timeout.
+func (ct *Controller) EditorEndPreview(c echo.Context) error {
+	sessionID := c.Param("sessionID")
+
+	err := ct.endPreview(sessionID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
 type UpdateTagsIn struct {
 	Tags       []string
 	IdQuestion int64

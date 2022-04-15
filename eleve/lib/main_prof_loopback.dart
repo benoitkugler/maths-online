@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
+import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:flutter/material.dart';
@@ -76,7 +77,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     // websocket is closed in case of inactivity
     // prevent it by sending pings
     _keepAliveTimmer = Timer.periodic(const Duration(seconds: 50), (timer) {
-      channel.sink.add("Ping");
+      channel.sink.add(jsonEncode({"Kind": LoopbackClientDataKind.ping}));
     });
 
     super.initState();
@@ -97,14 +98,72 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     ));
   }
 
+  void _onServerState(LoopbackState state) {
+    setState(() {
+      question = state;
+    });
+  }
+
+  void _onServerCheckSyntax(QuestionSyntaxCheckOut rep) {
+    if (rep.isValid) {
+      return;
+    }
+    final reason = rep.reason;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: Colors.red,
+      content: Text.rich(TextSpan(children: [
+        const TextSpan(text: "Syntaxe invalide: "),
+        TextSpan(
+            text: reason, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ])),
+    ));
+  }
+
+  void _onServerValidAnswer(QuestionAnswersOut rep) {
+    final crible = rep.data;
+    final errors = crible.values.where((value) => !value).toList();
+    final isValid = errors.isEmpty;
+    final errorMessage = errors.length >= 2
+        ? "${errors.length} champs sont incorrects"
+        : "Un champ est incorrect";
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: isValid ? Colors.lightGreen : Colors.red,
+      content: Text(isValid ? "Bonne réponse" : errorMessage),
+    ));
+  }
+
   void listen(dynamic event) {
     try {
-      setState(() {
-        question = loopbackStateFromJson(jsonDecode(event as String));
-      });
+      final data = jsonDecode(event as String) as Map<String, dynamic>;
+      final kind = loopbackServerDataKindFromJson(data["Kind"]);
+      switch (kind) {
+        case LoopbackServerDataKind.state:
+          return _onServerState(loopbackStateFromJson(data["Data"]));
+        case LoopbackServerDataKind.checkSyntaxeOut:
+          return _onServerCheckSyntax(
+              questionSyntaxCheckOutFromJson(data["Data"]));
+        case LoopbackServerDataKind.validAnswerOut:
+          return _onServerValidAnswer(questionAnswersOutFromJson(data["Data"]));
+      }
     } catch (e) {
       showError(e);
     }
+  }
+
+  void _checkSyntax(CheckQuestionSyntaxeNotification notif) {
+    channel.sink.add(jsonEncode({
+      "Kind":
+          loopbackClientDataKindToJson(LoopbackClientDataKind.checkSyntaxIn),
+      "Data": questionSyntaxCheckInToJson(notif.data)
+    }));
+  }
+
+  void _validAnswer(ValidQuestionNotification notif) {
+    channel.sink.add(jsonEncode({
+      "Kind":
+          loopbackClientDataKindToJson(LoopbackClientDataKind.validAnswerIn),
+      "Data": questionAnswersInToJson(notif.data)
+    }));
   }
 
   @override
@@ -127,8 +186,8 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
               question!.question,
               Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
                   Random().nextInt(256)),
-              (p0) {},
-              (p0) {},
+              _checkSyntax,
+              _validAnswer,
               showTimeout: false,
             ),
           );

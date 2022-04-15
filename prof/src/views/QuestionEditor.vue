@@ -46,6 +46,14 @@ onMounted(async () => {
   }
   sessionID = session.ID;
 
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      navigator.sendBeacon(
+        controller.getURL(`/prof/editor/api/end-preview/${sessionID}`)
+      );
+    }
+  });
+
   const tags = await controller.EditorGetTags();
   questionTags = tags || [];
 });

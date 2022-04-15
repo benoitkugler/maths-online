@@ -168,7 +168,20 @@ func (ct *Controller) pausePreview(sessionID string) error {
 		return fmt.Errorf("invalid session ID %s", sessionID)
 	}
 
-	loopback.broadcast <- LoopbackState{IsPaused: true}
+	loopback.unsetQuestion()
+	return nil
+}
+
+func (ct *Controller) endPreview(sessionID string) error {
+	ct.lock.Lock()
+	defer ct.lock.Unlock()
+
+	loopback, ok := ct.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("invalid session ID %s", sessionID)
+	}
+
+	loopback.clientLeft <- true
 	return nil
 }
 
@@ -179,7 +192,7 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
 		return err
 	}
 
-	question := params.Question.Instantiate().ToClient()
+	question := params.Question.Instantiate()
 
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
@@ -189,6 +202,6 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
 		return fmt.Errorf("invalid session ID %s", params.SessionID)
 	}
 
-	loopback.broadcast <- LoopbackState{Question: question}
+	loopback.setQuestion(question)
 	return nil
 }

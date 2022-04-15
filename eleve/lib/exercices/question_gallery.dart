@@ -47,11 +47,10 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     final pageIndex = _controller.page!.toInt();
     final uri =
         Uri.parse(widget.buildMode.serverURL("/questions/syntaxe/$pageIndex"));
-    final resp = await http.post(uri,
-        body: jsonEncode({"ID": v.id, "Answer": answerToJson(v.answer)}),
-        headers: {
-          'Content-type': 'application/json',
-        });
+    final resp = await http
+        .post(uri, body: questionSyntaxCheckInToJson(v.data), headers: {
+      'Content-type': 'application/json',
+    });
     return questionSyntaxCheckOutFromJson(jsonDecode(resp.body));
   }
 

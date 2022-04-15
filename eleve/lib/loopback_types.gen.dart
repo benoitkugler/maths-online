@@ -33,3 +33,41 @@ JSON loopbackStateToJson(LoopbackState item) {
     "IsPaused": boolToJson(item.isPaused)
   };
 }
+
+// github.com/benoitkugler/maths-online/prof/editor.loopbackClientDataKind
+enum LoopbackClientDataKind { ping, checkSyntaxIn, validAnswerIn }
+
+extension _LoopbackClientDataKindExt on LoopbackClientDataKind {
+  static LoopbackClientDataKind fromValue(int i) {
+    return LoopbackClientDataKind.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+LoopbackClientDataKind loopbackClientDataKindFromJson(dynamic json) =>
+    _LoopbackClientDataKindExt.fromValue(json as int);
+
+dynamic loopbackClientDataKindToJson(LoopbackClientDataKind item) =>
+    item.toValue();
+
+// github.com/benoitkugler/maths-online/prof/editor.loopbackServerDataKind
+enum LoopbackServerDataKind { state, checkSyntaxeOut, validAnswerOut }
+
+extension _LoopbackServerDataKindExt on LoopbackServerDataKind {
+  static LoopbackServerDataKind fromValue(int i) {
+    return LoopbackServerDataKind.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+LoopbackServerDataKind loopbackServerDataKindFromJson(dynamic json) =>
+    _LoopbackServerDataKindExt.fromValue(json as int);
+
+dynamic loopbackServerDataKindToJson(LoopbackServerDataKind item) =>
+    item.toValue();

@@ -50,16 +50,21 @@ func (qu QuestionInstance) fields() map[int]fieldInstance {
 }
 
 // CheckSyntaxe returns an error message if the syntaxe is not
-func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) error {
+func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) client.QuestionSyntaxCheckOut {
 	field, ok := qu.fields()[answer.ID]
 	if !ok {
-		return InvalidFieldAnswer{
-			ID:     answer.ID,
+		return client.QuestionSyntaxCheckOut{
 			Reason: fmt.Sprintf("champ %d inconnu", answer.ID),
 		}
 	}
 
-	return field.validateAnswerSyntax(answer.Answer)
+	if err := field.validateAnswerSyntax(answer.Answer); err != nil {
+		return client.QuestionSyntaxCheckOut{
+			Reason: err.(InvalidFieldAnswer).Reason,
+		}
+	}
+
+	return client.QuestionSyntaxCheckOut{IsValid: true}
 }
 
 // EvaluateAnswer check if the given answers are correct, and complete.

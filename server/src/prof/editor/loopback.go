@@ -2,10 +2,13 @@ package editor
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
@@ -17,28 +20,43 @@ var upgrader = websocket.Upgrader{
 }
 
 type loopbackController struct {
-	// the question to display in the preview
-	broadcast  chan LoopbackState
+	incomingClient chan *previewClient
+	broadcast      chan serverData
+
 	clientLeft chan bool
-	client     *previewClient // initialy empty
-	sessionID  string
+
+	client *previewClient // initialy empty
+
+	sessionID       string
+	currentQuestion exercice.QuestionInstance
 }
 
 func newLoopbackController(sessionID string) *loopbackController {
 	return &loopbackController{
-		broadcast:  make(chan LoopbackState),
-		clientLeft: make(chan bool),
-		sessionID:  sessionID,
+		incomingClient: make(chan *previewClient),
+		broadcast:      make(chan serverData),
+		clientLeft:     make(chan bool),
+		sessionID:      sessionID,
 	}
+}
+
+func (ct *loopbackController) setQuestion(question exercice.QuestionInstance) {
+	ct.currentQuestion = question
+	ct.broadcast <- serverData{Kind: State, Data: LoopbackState{Question: question.ToClient()}}
+}
+
+func (ct *loopbackController) unsetQuestion() {
+	ct.broadcast <- serverData{Kind: State, Data: LoopbackState{IsPaused: true}}
 }
 
 func (ct *loopbackController) startLoop(ctx context.Context) {
 	for {
 		select {
+		case client := <-ct.incomingClient:
+			ct.client = client
 		case <-ct.clientLeft: // client is done
 			log.Println("Client is done")
-			// return
-
+			return
 		case <-ctx.Done(): // terminate the session on timeout
 			log.Println("Session timed out")
 			if ct.client != nil {
@@ -46,16 +64,52 @@ func (ct *loopbackController) startLoop(ctx context.Context) {
 			}
 			return
 
-		case question := <-ct.broadcast:
-			log.Println("Sending question...")
+		case data := <-ct.broadcast:
 			if ct.client != nil {
-				err := ct.client.sendQuestion(question)
-				if err != nil {
-					log.Printf("Broadcasting to client (session %s) failed: %s", ct.sessionID, err)
-				}
+				log.Println("Sending data...")
+				ct.client.send(data)
 			}
 		}
 	}
+}
+
+type serverData struct {
+	Data interface{}
+	Kind loopbackServerDataKind
+}
+
+type clientData struct {
+	Data interface{}
+	Kind loopbackClientDataKind
+}
+
+func (cld *clientData) UnmarshalJSON(data []byte) error {
+	var wr struct {
+		Kind loopbackClientDataKind
+		Data json.RawMessage
+	}
+	if err := json.Unmarshal(data, &wr); err != nil {
+		return err
+	}
+	cld.Kind = wr.Kind
+	switch wr.Kind {
+	case Ping: // nothing to do
+	case CheckSyntaxIn:
+		var content client.QuestionSyntaxCheckIn
+		err := json.Unmarshal(wr.Data, &content)
+		if err != nil {
+			return err
+		}
+		cld.Data = content
+	case ValidAnswerIn:
+		var content client.QuestionAnswersIn
+		err := json.Unmarshal(wr.Data, &content)
+		if err != nil {
+			return err
+		}
+		cld.Data = content
+	}
+	return nil
 }
 
 type previewClient struct {
@@ -63,26 +117,38 @@ type previewClient struct {
 	controller *loopbackController
 }
 
-func (cl *previewClient) sendQuestion(question LoopbackState) error {
-	return cl.conn.WriteJSON(question)
+func (cl *previewClient) send(data serverData) {
+	err := cl.conn.WriteJSON(data)
+	if err != nil {
+		log.Printf("Broadcasting to client (session %s) failed: %s", cl.controller.sessionID, err)
+	}
 }
 
 // startLoop listens for new messages being sent to our WebSocket
 // endpoint, only returning on error.
 // the connection is not closed yet
 func (cl *previewClient) startLoop() {
-	defer func() {
-		cl.controller.clientLeft <- true
-	}()
-
 	for {
-		// read in a message, expecting a stay alive ping
-		_, _, err := cl.conn.ReadMessage()
+		// read in a message
+		var data clientData
+		err := cl.conn.ReadJSON(&data)
 		if err != nil {
-			log.Printf("client connection: %s", err)
+			log.Printf("invalid client messsage: %s", err)
 			return
 		}
+
+		switch data.Kind {
+		case CheckSyntaxIn:
+			out := cl.controller.currentQuestion.CheckSyntaxe(data.Data.(client.QuestionSyntaxCheckIn))
+			cl.controller.broadcast <- serverData{Kind: CheckSyntaxeOut, Data: out}
+		case ValidAnswerIn:
+			out := cl.controller.currentQuestion.EvaluateAnswer(data.Data.(client.QuestionAnswersIn))
+			cl.controller.broadcast <- serverData{Kind: ValidAnswerOut, Data: out}
+		}
 	}
+
+	// do not close the connection when the client is leaving
+	// so that iframe reloads may use the same controller
 }
 
 func (ct *loopbackController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +161,7 @@ func (ct *loopbackController) setupWebSocket(w http.ResponseWriter, r *http.Requ
 	defer ws.Close()
 
 	client := &previewClient{conn: ws, controller: ct}
-	ct.client = client
+	ct.incomingClient <- client
 
 	client.startLoop()
 }

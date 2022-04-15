@@ -131,6 +131,8 @@ func serveEleveApp(c echo.Context) error {
 
 func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor.Controller) {
 	setupProfAPI(e, trivial, edit)
+	// to sync with the client navigator.sendBeacon
+	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip()).Static("/*", "static")
@@ -176,17 +178,9 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 			return err
 		}
 
-		var out client.QuestionSyntaxCheckOut
-		err = exercice.PredefinedQuestions[index].CheckSyntaxe(data)
-		if err != nil {
-			out.Reason = err.(exercice.InvalidFieldAnswer).Reason
-		} else {
-			out.IsValid = true
-		}
+		out := exercice.PredefinedQuestions[index].CheckSyntaxe(data)
 
-		c.JSON(200, out)
-
-		return nil
+		return c.JSON(200, out)
 	})
 
 	e.POST("/questions/answer/:index", func(c echo.Context) error {
@@ -199,8 +193,7 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 		}
 
 		out := exercice.PredefinedQuestions[index].EvaluateAnswer(data)
-		c.JSON(200, out)
 
-		return nil
+		return c.JSON(200, out)
 	})
 }

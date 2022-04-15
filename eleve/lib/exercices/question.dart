@@ -344,13 +344,12 @@ class _ContentBuilder {
 /// CheckQuestionSyntaxeNotification is emitted when the player
 /// has edited one field
 class CheckQuestionSyntaxeNotification extends Notification {
-  final int id;
-  final Answer answer;
-  CheckQuestionSyntaxeNotification(this.id, this.answer);
+  final QuestionSyntaxCheckIn data;
+  CheckQuestionSyntaxeNotification(this.data);
 
   @override
   String toString() {
-    return "CheckQuestionSyntaxeNotification($id, $answer)";
+    return "CheckQuestionSyntaxeNotification($data)";
   }
 }
 
@@ -532,7 +531,8 @@ class _QuestionPageState extends State<_QuestionPage> {
     if (!ct.hasValidData()) {
       return;
     }
-    CheckQuestionSyntaxeNotification(id, ct.getData()).dispatch(context);
+    CheckQuestionSyntaxeNotification(QuestionSyntaxCheckIn(ct.getData(), id))
+        .dispatch(context);
   }
 
   @override
