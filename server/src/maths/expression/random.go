@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -128,33 +129,79 @@ func sieveOfEratosthenes(min, max int) (primes []int) {
 	return
 }
 
-func randPrime(min, max int) int {
+func generateRandPrime(min, max int) int {
 	choices := sieveOfEratosthenes(min, max)
 	L := len(choices)
 	index := rand.Intn(L)
 	return choices[index]
 }
 
-func (rd random) validate(pos int) error {
-	if rd.start > rd.end {
-		return InvalidExpr{
-			Reason: "ordre invalide entre les arguments de randInt",
-			Pos:    pos,
+func generateDivisors(n, threshold int) (out []int) {
+	max := int(math.Sqrt(float64(n)))
+	for i := 1; i <= max; i++ {
+		if n%i == 0 {
+			if i <= threshold {
+				out = append(out, i)
+			}
+			if n/i <= threshold {
+				out = append(out, n/i)
+			}
 		}
 	}
+	return out
+}
 
-	if rd.isPrime && rd.start < 0 {
-		return InvalidExpr{
-			Reason: "randPrime n'accepte que des nombres positifs",
-			Pos:    pos,
+func (rd specialFunctionA) validate(pos int) error {
+	switch rd.kind {
+	case randInt, randPrime:
+		if len(rd.args) < 2 {
+			return InvalidExpr{
+				Reason: "randXXX attend deux paramètres",
+				Pos:    pos,
+			}
 		}
-	}
 
-	if rd.isPrime && len(sieveOfEratosthenes(rd.start, rd.end)) == 0 {
-		return InvalidExpr{
-			Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", rd.start, rd.end),
-			Pos:    pos,
+		start, okStart := isInt(float64(rd.args[0]))
+		end, okEnd := isInt(float64(rd.args[1]))
+		if !(okStart && okEnd) {
+			return InvalidExpr{
+				Reason: "randXXX attend deux entiers en paramètres",
+				Pos:    pos,
+			}
 		}
+
+		if start > end {
+			return InvalidExpr{
+				Reason: "ordre invalide entre les arguments de randXXX",
+				Pos:    pos,
+			}
+		}
+
+		if rd.kind == randPrime && start < 0 {
+			return InvalidExpr{
+				Reason: "randPrime n'accepte que des nombres positifs",
+				Pos:    pos,
+			}
+		}
+
+		if rd.kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
+			return InvalidExpr{
+				Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", start, end),
+				Pos:    pos,
+			}
+		}
+
+	case randChoice:
+		if len(rd.args) == 0 {
+			return InvalidExpr{
+				Reason: "randChoice doit préciser au moins un argument",
+				Pos:    pos,
+			}
+		}
+	case randDenominator: // nothing to validate
+
+	default:
+		panic(exhaustiveSpecialFunctionSwitch)
 	}
 
 	return nil

@@ -119,6 +119,15 @@ func Test_Expression_eval(t *testing.T) {
 			"2 * randPrime(8; 12)", nil, 22,
 		},
 		{
+			"2 * randChoice(8)", nil, 16,
+		},
+		{
+			"0 * randChoice(8; -1)", nil, 0,
+		},
+		{
+			"0 * randDecDen( )", nil, 0,
+		},
+		{
 			"2 * isPrime(8)", nil, 0,
 		},
 		{
@@ -241,6 +250,22 @@ func Test_isPrime(t *testing.T) {
 	for _, p := range primes {
 		if !isPrime(p) {
 			t.Fatal(p)
+		}
+	}
+}
+
+func TestIsDecimal(t *testing.T) {
+	atom := specialFunctionA{kind: randDenominator}
+	for range [200]int{} {
+		n, err := atom.eval(0, 0, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, is := isInt(n * maxDecDen); !is {
+			t.Fatal(n)
+		}
+		if n <= 0 || n > thresholdDecDen {
+			t.Fatal(n)
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -65,18 +66,14 @@ func compareNodes(n1, n2 *Expression) int {
 			} else {
 				return compareNodes(n1.right, n2.right)
 			}
-		case random:
-			a2 := a2.(random)
-			if a1.isPrime && !a2.isPrime {
-				return 1
-			} else if !a1.isPrime && a2.isPrime {
+		case specialFunctionA:
+			a2 := a2.(specialFunctionA)
+			if a1.kind < a2.kind {
 				return -1
+			} else if a1.kind > a2.kind {
+				return 1
 			} else {
-				if a1.start == a2.start {
-					return a1.end - a2.end
-				} else {
-					return a1.start - a2.start
-				}
+				return strings.Compare(fmt.Sprint(a1.args), fmt.Sprint(a2.args))
 			}
 		case Variable:
 			a2 := a2.(Variable)

@@ -5,15 +5,17 @@ package expression
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 const (
-	exhaustiveFunctionSwitch = "function"
-	exhaustiveOperatorSwitch = "operator"
-	exhaustiveConstantSwitch = "constant"
-	exhaustiveSymbolSwitch   = "symbol"
-	exhaustiveTokenSwitch    = "token"
-	exhaustiveAtomSwitch     = "atom"
+	exhaustiveSpecialFunctionSwitch = "specialFunction"
+	exhaustiveFunctionSwitch        = "function"
+	exhaustiveOperatorSwitch        = "operator"
+	exhaustiveConstantSwitch        = "constant"
+	exhaustiveSymbolSwitch          = "symbol"
+	exhaustiveTokenSwitch           = "token"
+	exhaustiveAtomSwitch            = "atom"
 
 	exhaustiveIntrinsicSwitch = "intrinsic"
 )
@@ -69,7 +71,7 @@ func (expr *Expression) equals(other *Expression) bool {
 		return false
 	}
 
-	if expr.atom != other.atom {
+	if expr.atom.String() != other.atom.String() {
 		return false
 	}
 
@@ -86,12 +88,12 @@ type atom interface {
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
-func (operator) lexicographicOrder() int { return 5 }
-func (random) lexicographicOrder() int   { return 4 }
-func (function) lexicographicOrder() int { return 3 }
-func (Variable) lexicographicOrder() int { return 2 }
-func (constant) lexicographicOrder() int { return 1 }
-func (Number) lexicographicOrder() int   { return 0 }
+func (operator) lexicographicOrder() int         { return 5 }
+func (specialFunctionA) lexicographicOrder() int { return 4 }
+func (function) lexicographicOrder() int         { return 3 }
+func (Variable) lexicographicOrder() int         { return 2 }
+func (constant) lexicographicOrder() int         { return 1 }
+func (Number) lexicographicOrder() int           { return 0 }
 
 type operator uint8
 
@@ -245,16 +247,30 @@ func (v Number) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }
 
-// random is an integer random parameter, used to create unique and distinct
-// version of the same general formula
-type random struct {
-	start, end int  // inclusive, only accepts number as arguments (not expression)
-	isPrime    bool // if true, only generate prime numbers
+type specialFunctionA struct {
+	kind specialFunction
+	args []Number // the correct length of args is check during parsing
 }
 
-func (r random) String() string {
-	if r.isPrime {
-		return fmt.Sprintf("randPrime(%d; %d)", r.start, r.end)
+func (sf specialFunctionA) String() string {
+	var name string
+	switch sf.kind {
+	case randInt:
+		name = "randInt"
+	case randPrime:
+		name = "randPrime"
+	case randChoice:
+		name = "randChoice"
+	case randDenominator:
+		name = "randDecDen"
+	default:
+		panic(exhaustiveSpecialFunctionSwitch)
 	}
-	return fmt.Sprintf("randInt(%d; %d)", r.start, r.end)
+
+	var args []string
+	for _, n := range sf.args {
+		args = append(args, n.String())
+	}
+
+	return name + "(" + strings.Join(args, " ; ") + ")"
 }

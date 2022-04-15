@@ -129,8 +129,8 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 		}
 	case operator:
 		return pr.parseOperator(data, tok.pos)
-	case randFunction:
-		rd, err := pr.parseRandFunction(tok.pos, data.isPrime)
+	case specialFunction:
+		rd, err := pr.parseSpecialFunction(tok.pos, data)
 		if err != nil {
 			return nil, err
 		}
@@ -300,8 +300,8 @@ func parseNumber(v numberText, pos int) (Number, error) {
 	return Number(out), nil
 }
 
-// accept a possibly negative integer
-func (pr *parser) parseInt() (int, error) {
+// also accept a negative value
+func (pr *parser) parseFloat() (Number, error) {
 	arg := pr.tk.Next()
 
 	var isNegative bool
@@ -313,7 +313,7 @@ func (pr *parser) parseInt() (int, error) {
 	v, ok := arg.data.(numberText)
 	if !ok {
 		return 0, InvalidExpr{
-			Reason: "nombre entier attendu",
+			Reason: "nombre attendu",
 			Pos:    arg.pos,
 		}
 	}
@@ -323,18 +323,10 @@ func (pr *parser) parseInt() (int, error) {
 		return 0, err
 	}
 
-	if _, isInt := isInt(float64(n)); !isInt {
-		return 0, InvalidExpr{
-			Reason: "nombre entier attendu",
-			Pos:    arg.pos,
-		}
-	}
-
-	out := int(n)
 	if isNegative {
-		out = -out
+		n = -n
 	}
-	return out, nil
+	return n, nil
 }
 
 func isInt(v float64) (int, bool) {
@@ -345,42 +337,37 @@ func isInt(v float64) (int, bool) {
 	return 0, false
 }
 
-// special case for randInt or randPrime
-// to keep the parser simple, we only accept randXXX(number, number)
-func (pr *parser) parseRandFunction(pos int, isPrime bool) (rd random, err error) {
+// special case for special functions
+// to keep the parser simple, we only accept <function>(number; number ...)
+func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialFunctionA, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
 	par := pr.tk.Next()
 
 	if par.data != openPar {
-		return random{}, InvalidExpr{
-			Reason: "parenthèse ouvrante manquante après randInt",
+		return rd, InvalidExpr{
+			Reason: "parenthèse ouvrante manquante après randXXX",
 			Pos:    pos,
 		}
 	}
 
-	rd.isPrime = isPrime
+	rd.kind = fn
 
-	rd.start, err = pr.parseInt()
-	if err != nil {
-		return random{}, err
-	}
+	for pr.tk.Peek().data != closePar {
+		arg, err := pr.parseFloat()
+		if err != nil {
+			return rd, err
+		}
+		rd.args = append(rd.args, arg)
 
-	if tok := pr.tk.Next(); tok.data != semicolon {
-		return random{}, InvalidExpr{
-			Reason: "virgule manquant entre les arguments de randInt",
-			Pos:    tok.pos,
+		if pr.tk.Peek().data == semicolon {
+			pr.tk.Next() // consume it
 		}
 	}
 
-	rd.end, err = pr.parseInt()
-	if err != nil {
-		return random{}, err
-	}
-
 	if tok := pr.tk.Next(); tok.data != closePar {
-		return random{}, InvalidExpr{
-			Reason: "parenthèse fermante manquante après randInt",
+		return rd, InvalidExpr{
+			Reason: "parenthèse fermante manquante après randXXX",
 			Pos:    tok.pos,
 		}
 	}

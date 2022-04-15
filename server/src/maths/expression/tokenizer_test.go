@@ -49,7 +49,9 @@ func TestImplicitMult(t *testing.T) {
 		{"(x + 3)*(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("4"), closePar}},
 		{" (1+ 2 ) (x + 3) ", []tokenData{openPar, numberText("1"), plus, numberText("2"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar}},
 		{"7log(10)", []tokenData{numberText("7"), mult, logFn, openPar, numberText("10"), closePar}},
-		{"7randPrime(1;10)", []tokenData{numberText("7"), mult, randFunction{true}, openPar, numberText("1"), semicolon, numberText("10"), closePar}},
+		{"7randPrime(1;10)", []tokenData{numberText("7"), mult, randPrime, openPar, numberText("1"), semicolon, numberText("10"), closePar}},
+		{"randChoice(1;2)", []tokenData{randChoice, openPar, numberText("1"), semicolon, numberText("2"), closePar}},
+		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

@@ -14,17 +14,24 @@ type tokenData interface {
 	isToken()
 }
 
-func (symbol) isToken()       {}
-func (numberText) isToken()   {}
-func (constant) isToken()     {}
-func (Variable) isToken()     {}
-func (function) isToken()     {}
-func (randFunction) isToken() {}
-func (operator) isToken()     {}
+func (symbol) isToken()          {}
+func (numberText) isToken()      {}
+func (constant) isToken()        {}
+func (Variable) isToken()        {}
+func (function) isToken()        {}
+func (specialFunction) isToken() {}
+func (operator) isToken()        {}
 
-type randFunction struct {
-	isPrime bool
-}
+// differs on regular function by the parsing
+// of its arguments
+type specialFunction uint8
+
+const (
+	randInt specialFunction = iota
+	randPrime
+	randChoice
+	randDenominator
+)
 
 type symbol uint8
 
@@ -173,10 +180,8 @@ func (tk *tokenizer) readToken() (tok token) {
 		out.data = op
 		tk.pos++
 	case unicode.IsLetter(c): // either a function, a variable or a constant
-		if tk.tryReadRandint() {
-			out.data = randFunction{isPrime: false}
-		} else if tk.tryReadRandPrime() {
-			out.data = randFunction{isPrime: true}
+		if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
+			out.data = fn
 		} else if fn, isFunction := tk.tryReadFunction(); isFunction {
 			out.data = fn
 		} else if ct, isConst := tk.tryReadConstant(); isConst {
@@ -206,7 +211,7 @@ func isImplicitMultRight(t token) bool {
 		return true
 	case function: // (...)log()
 		return true
-	case randFunction: // (...)randPrime()
+	case specialFunction: // (...)randPrime()
 		return true
 	default:
 		return false
@@ -234,39 +239,30 @@ func isImplicitMult(t1, t2 token) bool {
 	return isImplicitMultLeft(t1) && isImplicitMultRight(t2)
 }
 
-func (tk *tokenizer) tryReadRandint() bool {
-	const runeLen = len("randint")
-
-	if len(tk.src) < tk.pos+runeLen {
-		return false
+func (tk *tokenizer) tryReadSpecialFunction() (specialFunction, bool) {
+	letters := tk.peekLetters()
+	var fn specialFunction
+	switch string(letters) {
+	case "randint", "randInt":
+		fn = randInt
+	case "randPrime", "randprime":
+		fn = randPrime
+	case "randChoice", "randchoice":
+		fn = randChoice
+	case "randDecDen", "randdecden":
+		fn = randDenominator
+	default:
+		_ = exhaustiveSpecialFunctionSwitch
+		return 0, false
 	}
 
-	word := string(tk.src[tk.pos : tk.pos+runeLen])
-	if word == "randInt" || word == "randint" {
-		tk.pos += runeLen
-		return true
-	}
-
-	return false
+	// found a function, advance the position
+	tk.pos += len(letters)
+	return fn, true
 }
 
-func (tk *tokenizer) tryReadRandPrime() bool {
-	const runeLen = len("randPrime")
-
-	if len(tk.src) < tk.pos+runeLen {
-		return false
-	}
-
-	word := string(tk.src[tk.pos : tk.pos+runeLen])
-	if word == "randPrime" || word == "randprime" {
-		tk.pos += runeLen
-		return true
-	}
-
-	return false
-}
-
-func (tk *tokenizer) tryReadFunction() (function, bool) {
+// return the next letters; without advancing
+func (tk *tokenizer) peekLetters() []rune {
 	L := len(tk.src)
 
 	// read subsequent letters
@@ -274,6 +270,11 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 	for i := tk.pos; i < L && unicode.IsLetter(tk.src[i]); i++ {
 		letters = append(letters, tk.src[i])
 	}
+	return letters
+}
+
+func (tk *tokenizer) tryReadFunction() (function, bool) {
+	letters := tk.peekLetters()
 
 	var fn function
 	switch string(letters) {

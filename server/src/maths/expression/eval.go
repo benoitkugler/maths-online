@@ -245,12 +245,31 @@ func isPrime(n int) bool {
 	return n > 1
 }
 
+const (
+	maxDecDen       = 10_000
+	thresholdDecDen = 100
+)
+
+var decimalDividors = generateDivisors(maxDecDen, thresholdDecDen)
+
 // return a random number
-func (r random) eval(_, _ float64, _ ValueResolver) (float64, error) {
-	if r.isPrime {
-		return float64(randPrime(r.start, r.end)), nil
+func (r specialFunctionA) eval(_, _ float64, _ ValueResolver) (float64, error) {
+	switch r.kind {
+	case randInt:
+		start, end := int(r.args[0]), int(r.args[1])
+		return float64(start + rand.Intn(end-start+1)), nil
+	case randPrime:
+		start, end := int(r.args[0]), int(r.args[1])
+		return float64(generateRandPrime(start, end)), nil
+	case randChoice:
+		index := rand.Intn(len(r.args))
+		return float64(r.args[index]), nil
+	case randDenominator:
+		index := rand.Intn(len(decimalDividors))
+		return float64(decimalDividors[index]), nil
+	default:
+		panic(exhaustiveSpecialFunctionSwitch)
 	}
-	return float64(r.start + rand.Intn(r.end-r.start+1)), nil
 }
 
 // partial evaluation a.k.a substitution

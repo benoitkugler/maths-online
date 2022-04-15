@@ -364,14 +364,21 @@ var expressions = [...]struct {
 	{"randInt(2 * 4; 1)", nil, true}, // not supported for now
 	{"randPrime(-1; 12)", nil, true},
 	{"randPrime(4; 4)", nil, true},
-	{"randInt(0; 1)", &Expression{atom: random{0, 1, false}}, false},
-	{"randInt(2; 12)", &Expression{atom: random{2, 12, false}}, false},
-	{"randInt(-1; 4)", &Expression{atom: random{-1, 4, false}}, false},
-	{"randPrime(0; 2)", &Expression{atom: random{0, 2, true}}, false},
-	{"randPrime(2; 12)", &Expression{atom: random{2, 12, true}}, false},
+	{"randInt(0; 1)", &Expression{atom: specialFunctionA{kind: randInt, args: []Number{0, 1}}}, false},
+	{"randInt(2; 12)", &Expression{atom: specialFunctionA{kind: randInt, args: []Number{2, 12}}}, false},
+	{"randInt(-1; 4)", &Expression{atom: specialFunctionA{kind: randInt, args: []Number{-1, 4}}}, false},
+	{"randPrime(0; 2)", &Expression{atom: specialFunctionA{kind: randPrime, args: []Number{0, 2}}}, false},
+	{"randPrime(2; 12)", &Expression{atom: specialFunctionA{kind: randPrime, args: []Number{2, 12}}}, false},
+	{"randChoice(1.2;4 ; -3)", &Expression{atom: specialFunctionA{kind: randChoice, args: []Number{1.2, 4, -3}}}, false},
+	{"randDecDen( )", &Expression{atom: specialFunctionA{kind: randDenominator, args: nil}}, false},
 	{"randInt(15; 12)", nil, true},
+	{"randChoice( )", nil, true},
 	{
-		"2 + 3 * randInt(2; 12)", &Expression{atom: plus, left: NewNumber(2), right: &Expression{atom: mult, left: NewNumber(3), right: &Expression{atom: random{2, 12, false}}}}, false,
+		"2 + 3 * randInt(2; 12)", &Expression{
+			atom:  plus,
+			left:  NewNumber(2),
+			right: &Expression{atom: mult, left: NewNumber(3), right: &Expression{atom: specialFunctionA{kind: randInt, args: []Number{2, 12}}}},
+		}, false,
 	},
 	{
 		"isPrime(2 * x)", &Expression{atom: isPrimeFn, left: nil, right: &Expression{atom: mult, left: NewNumber(2), right: newVarExpr('x')}}, false,

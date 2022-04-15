@@ -115,11 +115,8 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	}
 }
 
-func (r random) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
-	if r.isPrime {
-		return fmt.Sprintf(`\text{randPrime(%d, %d)}`, r.start, r.end)
-	}
-	return fmt.Sprintf(`\text{randInt(%d, %d)}`, r.start, r.end)
+func (r specialFunctionA) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
+	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
 func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {
