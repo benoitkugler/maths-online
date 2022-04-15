@@ -39,7 +39,7 @@ func MustEvaluate(expr string, vars Variables) float64 {
 func (expr *Expression) MustEvaluate(bindings ValueResolver) float64 {
 	out, err := expr.Evaluate(bindings)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("%s: %s", expr.String(), err))
 	}
 	return out
 }

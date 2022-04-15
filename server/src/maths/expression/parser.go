@@ -49,7 +49,7 @@ func Parse(s string) (*Expression, VarMap, error) {
 func MustParse(s string) *Expression {
 	expr, _, err := Parse(s)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("%s: %s", s, err))
 	}
 	return expr
 }

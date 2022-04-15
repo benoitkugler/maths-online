@@ -74,6 +74,14 @@ var expressions = [...]struct {
 	{
 		" e ", &Expression{atom: eConstant}, false,
 	},
+	// variable with indice
+	{
+		"(x_a  +x_b) /2", &Expression{atom: div, left: &Expression{
+			atom:  plus,
+			left:  &Expression{atom: Variable{Name: 'x', Indice: "a"}},
+			right: &Expression{atom: Variable{Name: 'x', Indice: "b"}},
+		}, right: NewNumber(2)}, false,
+	},
 	// custom variables
 	{
 		" \uE000 + 2", &Expression{atom: plus, left: newVarExpr('\uE000'), right: NewNumber(2)}, false,

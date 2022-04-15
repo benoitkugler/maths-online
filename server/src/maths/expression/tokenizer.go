@@ -98,6 +98,10 @@ func (tk *tokenizer) readTokenImplicitMult() (current, next token) {
 	return
 }
 
+func isIdentifier(r rune) bool {
+	return 'A' <= r && r <= 'z' || '0' <= r && r <= '9'
+}
+
 func isWhiteSpace(r rune) bool {
 	switch r {
 	case ' ', '\n', '\t', '\r', '\f':
@@ -333,7 +337,7 @@ func (tk *tokenizer) readVariable() Variable {
 		tk.pos++
 		start := tk.pos
 		for ; tk.pos < len(tk.src); tk.pos++ {
-			if isWhiteSpace(tk.src[tk.pos]) {
+			if !isIdentifier(tk.src[tk.pos]) {
 				break
 			}
 		}
