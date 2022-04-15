@@ -105,7 +105,7 @@
                   label
                   class="ma-1"
                   color="primary"
-                  >{{ tag }}</v-chip
+                  >{{ tag.toUpperCase() }}</v-chip
                 >
               </v-list-item-media>
             </v-list-item>
