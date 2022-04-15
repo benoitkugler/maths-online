@@ -13,6 +13,7 @@
 </template>
 
 <script setup lang="ts">
+import { variableToString } from "@/controller/editor";
 import type { Variable } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
@@ -29,13 +30,7 @@ const emit = defineEmits<{
   (e: "update:model-value", v: Variable): void;
 }>();
 
-const variableString = computed(() => {
-  let name = String.fromCodePoint(props.modelValue.Name);
-  if (props.modelValue.Indice) {
-    name += "_" + props.modelValue.Indice;
-  }
-  return name;
-});
+const variableString = computed(() => variableToString(props.modelValue));
 
 function onVariableChange(s: string) {
   if (s == "") {

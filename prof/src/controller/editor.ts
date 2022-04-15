@@ -566,3 +566,11 @@ export function completePoint(s: string, point: CoordExpression) {
     }
   }
 }
+
+export function variableToString(v: Variable) {
+  let name = String.fromCodePoint(v.Name);
+  if (v.Indice) {
+    name += "_" + v.Indice;
+  }
+  return name;
+}

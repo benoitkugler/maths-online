@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { ExpressionColor } from "@/controller/editor";
 import type { FunctionPointsFieldBlock } from "@/controller/exercice_gen";
-import VariableField from "../VariableField.vue";
+import VariableField from "../utils/VariableField.vue";
 import IntListField from "./IntListField.vue";
 
 interface Props {

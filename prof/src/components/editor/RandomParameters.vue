@@ -74,7 +74,7 @@ import type {
   randomParameter,
   randomParameters
 } from "@/controller/exercice_gen";
-import VariableField from "./VariableField.vue";
+import VariableField from "./utils/VariableField.vue";
 
 interface Props {
   parameters: randomParameters;

@@ -22,7 +22,7 @@
           <v-row>
             <v-col cols="10">
               <v-row>
-                <v-col md="2" align-self="center">
+                <v-col md="3" align-self="center">
                   <v-text-field
                     draggable="false"
                     variant="outlined"
@@ -32,16 +32,10 @@
                     hide-details
                   ></v-text-field>
                 </v-col>
-                <v-col md="4" align-self="center">
-                  <VariableField
-                    prefix="("
-                    suffix=") ="
-                    v-model="fn.Variable"
-                    label="Variable"
-                  >
-                  </VariableField>
+                <v-col md="2" align-self="center">
+                  ( {{ variableToString(fn.Variable) }} ) =
                 </v-col>
-                <v-col cols="6" align-self="center">
+                <v-col cols="7" align-self="center">
                   <v-text-field
                     variant="outlined"
                     density="compact"
@@ -52,22 +46,16 @@
                   ></v-text-field>
                 </v-col>
                 <v-col md="4" align-self="center">
-                  <v-text-field
-                    variant="outlined"
-                    density="compact"
-                    v-model.number="fn.Range[0]"
+                  <NumberTextField
+                    v-model="fn.Range[0]"
                     label="Xmin"
-                    hide-details
-                  ></v-text-field>
+                  ></NumberTextField>
                 </v-col>
                 <v-col md="4">
-                  <v-text-field
-                    variant="outlined"
-                    density="compact"
-                    v-model.number="fn.Range[1]"
+                  <NumberTextField
+                    v-model="fn.Range[1]"
                     label="Xmax"
-                    hide-details
-                  ></v-text-field>
+                  ></NumberTextField>
                 </v-col>
                 <v-col>
                   <BtnColorPicker
@@ -91,9 +79,9 @@
 </template>
 
 <script setup lang="ts">
-import { ExpressionColor, xRune } from "@/controller/editor";
+import { ExpressionColor, variableToString, xRune } from "@/controller/editor";
 import type { FunctionGraphBlock } from "@/controller/exercice_gen";
-import VariableField from "../VariableField.vue";
+import NumberTextField from "../utils/NumberTextField.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
@@ -128,4 +116,4 @@ function deleteFunction(index: number) {
 const color = ExpressionColor;
 </script>
 
-<style></style>
+<style scoped></style>
