@@ -18,7 +18,8 @@ type DB struct {
 	Port     int    // default to 5432
 }
 
-// NewDB uses env variables to build DB credentials.
+// NewDB uses env variables to build DB credentials :
+// DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
 func NewDB() (out DB, err error) {
 	out.Host = os.Getenv("DB_HOST")
 	if out.Host == "" {

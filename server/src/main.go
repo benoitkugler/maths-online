@@ -19,21 +19,34 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func connectDB() (*sql.DB, error) {
-	// TODO: setup production DB
-
-	credentials := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "maths_dev",
+func connectDB(dev bool) (*sql.DB, error) {
+	var credentials pass.DB
+	if dev {
+		credentials = pass.DB{
+			Host:     "localhost",
+			User:     "benoit",
+			Password: "dummy",
+			Name:     "maths_dev",
+		}
+	} else { // in production, read from env
+		var err error
+		credentials, err = pass.NewDB()
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	db, err := credentials.ConnectPostgres()
 	if err != nil {
 		return nil, err
 	}
 
 	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("DB configured with %v connected.\n", credentials)
 
 	return db, err
 }
@@ -45,12 +58,11 @@ func main() {
 
 	host := getAdress(*devPtr)
 
-	db, err := connectDB()
+	db, err := connectDB(*devPtr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	fmt.Println("DB connected.")
 
 	trivial := trivialpoursuit.NewController(host)
 	// for now, show the logs
