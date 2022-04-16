@@ -340,7 +340,7 @@ function addPoint() {
   const points = props.modelValue.Drawings.Points || [];
   points.push({
     Name: "",
-    Point: { Coord: { X: "", Y: "" }, Pos: LabelPos.Top }
+    Point: { Coord: { X: "", Y: "" }, Pos: LabelPos.TopRight }
   });
   props.modelValue.Drawings.Points = points;
 }
