@@ -13,11 +13,14 @@ type ValueResolver interface {
 var _ ValueResolver = Variables{}
 
 // Variables maps variables to a chosen value.
-type Variables map[Variable]float64
+type Variables map[Variable]ResolvedVariable
 
 func (vrs Variables) resolve(v Variable) (float64, bool) {
 	value, ok := vrs[v]
-	return value, ok
+	if !ok || value.IsVariable {
+		return 0, false
+	}
+	return value.N, ok
 }
 
 type MissingVariableErr struct {
@@ -184,6 +187,10 @@ func (va Variable) eval(_, _ float64, b ValueResolver) (float64, error) {
 	return out, nil
 }
 
+func (rv randVariable) eval(_, _ float64, _ ValueResolver) (float64, error) {
+	return 0, nil
+}
+
 func (fn function) eval(left, right float64, _ ValueResolver) (float64, error) {
 	arg := right
 	switch fn {
@@ -269,24 +276,6 @@ func (r specialFunctionA) eval(_, _ float64, _ ValueResolver) (float64, error) {
 		return float64(decimalDividors[index]), nil
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
-	}
-}
-
-// partial evaluation a.k.a substitution
-
-// Substitute replaces variables contained in `vars`.
-func (expr *Expression) Substitute(vars Variables) {
-	if expr == nil {
-		return
-	}
-	expr.left.Substitute(vars)
-	expr.right.Substitute(vars)
-
-	if v, isVariable := expr.atom.(Variable); isVariable {
-		value, has := vars[v]
-		if has {
-			expr.atom = Number(value)
-		}
 	}
 }
 

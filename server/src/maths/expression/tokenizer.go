@@ -20,6 +20,7 @@ func (constant) isToken()        {}
 func (Variable) isToken()        {}
 func (function) isToken()        {}
 func (specialFunction) isToken() {}
+func (randVariable) isToken()    {}
 func (operator) isToken()        {}
 
 // differs on regular function by the parsing
@@ -31,6 +32,8 @@ const (
 	randPrime
 	randChoice
 	randDenominator
+
+	invalidSpecialFunction
 )
 
 type symbol uint8
@@ -180,7 +183,9 @@ func (tk *tokenizer) readToken() (tok token) {
 		out.data = op
 		tk.pos++
 	case unicode.IsLetter(c): // either a function, a variable or a constant
-		if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
+		if tk.tryReadRandVariable() {
+			out.data = randVariable{}
+		} else if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
 			out.data = fn
 		} else if fn, isFunction := tk.tryReadFunction(); isFunction {
 			out.data = fn
@@ -237,6 +242,14 @@ func isImplicitMultLeft(t token) bool {
 // between t1 and t2
 func isImplicitMult(t1, t2 token) bool {
 	return isImplicitMultLeft(t1) && isImplicitMultRight(t2)
+}
+
+func (tk *tokenizer) tryReadRandVariable() bool {
+	if s := string(tk.peekLetters()); s == "randLetter" || s == "randletter" {
+		tk.pos += len("randLetter")
+		return true
+	}
+	return false
 }
 
 func (tk *tokenizer) tryReadSpecialFunction() (specialFunction, bool) {

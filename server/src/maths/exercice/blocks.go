@@ -155,10 +155,25 @@ func (tp TextPart) instantiateAndEvaluate(params expression.Variables) client.Te
 
 type TextParts []TextPart
 
+// instantiate merges adjacent math chunks so that latex expression are not split up
+// and may be successfully parsed
 func (tp TextParts) instantiate(params expression.Variables) []client.TextOrMath {
-	parts := make([]client.TextOrMath, len(tp))
-	for i, p := range tp {
-		parts[i] = p.instantiate(params)
+	var parts []client.TextOrMath
+	for _, p := range tp {
+		sample := p.instantiate(params)
+		L := len(parts)
+		if L == 0 {
+			parts = append(parts, sample)
+			continue
+		}
+
+		// check if the previous chunk as same type
+		if parts[L-1].IsMath == sample.IsMath {
+			// simply merge the contents
+			parts[L-1].Text = parts[L-1].Text + sample.Text
+		} else { // start a new chunk
+			parts = append(parts, sample)
+		}
 	}
 	return parts
 }

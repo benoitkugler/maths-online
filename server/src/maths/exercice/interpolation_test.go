@@ -3,6 +3,8 @@ package exercice
 import (
 	"reflect"
 	"testing"
+
+	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
 const regularText = "This is a regular text"
@@ -84,5 +86,17 @@ func Test_splitByExpression(t *testing.T) {
 		if got := splitByExpression(tt.args); !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("splitByExpression() = %v, want %v", got, tt.want)
 		}
+	}
+}
+
+func TestLatexOutput(t *testing.T) {
+	s := Interpolated(`$\overset{\rightarrow}{ #{P} #{P} }$`)
+	parts, err := s.Parse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sample := parts.instantiate(expression.Variables{expression.NewVariable('P'): expression.NewRV(expression.NewVariable('B'))})
+	if len(sample) != 1 {
+		t.Fatal(len(sample))
 	}
 }

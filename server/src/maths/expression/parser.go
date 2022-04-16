@@ -129,6 +129,12 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 		}
 	case operator:
 		return pr.parseOperator(data, tok.pos)
+	case randVariable:
+		rd, err := pr.parseRandVariable(tok.pos)
+		if err != nil {
+			return nil, err
+		}
+		return &Expression{atom: rd}, nil
 	case specialFunction:
 		rd, err := pr.parseSpecialFunction(tok.pos, data)
 		if err != nil {
@@ -337,6 +343,63 @@ func isInt(v float64) (int, bool) {
 	return 0, false
 }
 
+func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
+	// after a function name, their must be a (
+	// with optional whitespaces
+	par := pr.tk.Next()
+
+	if par.data != openPar {
+		return nil, InvalidExpr{
+			Reason: "parenthèse ouvrante manquante après randLetter",
+			Pos:    pos,
+		}
+	}
+
+	for {
+		if t := pr.tk.Peek().data; t == closePar || t == nil {
+			break
+		}
+
+		arg := pr.tk.Next()
+		if v, isVariable := arg.data.(Variable); isVariable {
+			rv = append(rv, v)
+		} else {
+			return nil, InvalidExpr{
+				Reason: "randLetter n'accepte que des variables comme arguments",
+				Pos:    pos,
+			}
+		}
+
+		if pr.tk.Peek().data == closePar {
+			continue
+		}
+
+		// consume the separator
+		if pr.tk.Next().data != semicolon {
+			return nil, InvalidExpr{
+				Reason: "randLetter utilise ';' comme séparateur",
+				Pos:    pos,
+			}
+		}
+	}
+
+	if tok := pr.tk.Next(); tok.data != closePar {
+		return nil, InvalidExpr{
+			Reason: "parenthèse fermante manquante après randLetter",
+			Pos:    tok.pos,
+		}
+	}
+
+	if len(rv) == 0 {
+		return nil, InvalidExpr{
+			Reason: "randLetter attend au moins un argument",
+			Pos:    pos,
+		}
+	}
+
+	return rv, nil
+}
+
 // special case for special functions
 // to keep the parser simple, we only accept <function>(number; number ...)
 func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialFunctionA, err error) {
@@ -353,15 +416,27 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 
 	rd.kind = fn
 
-	for pr.tk.Peek().data != closePar {
+	for {
+		if t := pr.tk.Peek().data; t == closePar || t == nil {
+			break
+		}
+
 		arg, err := pr.parseFloat()
 		if err != nil {
 			return rd, err
 		}
 		rd.args = append(rd.args, arg)
 
-		if pr.tk.Peek().data == semicolon {
-			pr.tk.Next() // consume it
+		if pr.tk.Peek().data == closePar {
+			continue
+		}
+
+		// consume the separator
+		if pr.tk.Next().data != semicolon {
+			return rd, InvalidExpr{
+				Reason: "randXXX utilise ';' comme séparateur",
+				Pos:    pos,
+			}
 		}
 	}
 

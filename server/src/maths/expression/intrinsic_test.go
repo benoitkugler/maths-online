@@ -23,7 +23,7 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			a, b, c := vr[NewVariable('a')], vr[NewVariable('b')], vr[NewVariable('c')]
+			a, b, c := vr[NewVariable('a')].N, vr[NewVariable('b')].N, vr[NewVariable('c')].N
 			if _, ok := isInt(a); !ok {
 				t.Fatal()
 			}
@@ -68,22 +68,22 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 			expr := mustParse(t, "4*((3/4)X^4 + bX^3 + cX^2 + dX)")
 			expr.Substitute(vs)
 
-			if v := expr.MustEvaluate(Variables{NewVariable('X'): 0}); v != 0 {
+			if v := expr.MustEvaluate(Variables{NewVariable('X'): NewRN(0)}); v != 0 {
 				t.Fatal(v)
 			}
 
-			x1, x2, x3 := vs[NewVariable('u')], vs[NewVariable('v')], vs[NewVariable('w')]
+			x1, x2, x3 := vs[NewVariable('u')].N, vs[NewVariable('v')].N, vs[NewVariable('w')].N
 
 			derivative := mustParse(t, "3X^3 + 3bX^2 + 2cX + d")
 			derivative.Substitute(vs)
 
-			if v := derivative.MustEvaluate(Variables{NewVariable('X'): x1}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVariable('X'): NewRN(x1)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x1, v)
 			}
-			if v := derivative.MustEvaluate(Variables{NewVariable('X'): x2}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVariable('X'): NewRN(x2)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x2, v)
 			}
-			if v := derivative.MustEvaluate(Variables{NewVariable('X'): x3}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVariable('X'): NewRN(x3)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x3, v)
 			}
 
@@ -141,7 +141,7 @@ func TestOrthogonalProjection_MergeTo(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v[op.Hx] != tt.expectedX || v[op.Hy] != tt.expectedY {
+		if v[op.Hx].N != tt.expectedX || v[op.Hy].N != tt.expectedY {
 			t.Fatal()
 		}
 	}

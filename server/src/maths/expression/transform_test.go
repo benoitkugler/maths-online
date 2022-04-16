@@ -283,3 +283,31 @@ func TestExpression_extractNegativeInMults(t *testing.T) {
 		}
 	}
 }
+
+func TestExpression_Substitute(t *testing.T) {
+	tests := []struct {
+		expr string
+		vars Variables
+		want string
+	}{
+		{"a + b", Variables{}, "a+b"},
+		{"a + b", Variables{NewVariable('a'): NewRN(4)}, "4+b"},
+		{"a + b / 2*a", Variables{NewVariable('a'): NewRN(4)}, "4+b/2*4"},
+		{"a + b", Variables{NewVariable('a'): NewRN(4), NewVariable('b'): NewRN(5)}, "4+5"},
+		{
+			"P + 2 + x", Variables{
+				NewVariable('P'): NewRV(NewVariable('A')),
+				NewVariable('x'): NewRN(3),
+			}, "A+2+3",
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		expr.Substitute(tt.vars)
+
+		want := mustParse(t, tt.want)
+		if !reflect.DeepEqual(expr, want) {
+			t.Errorf("Substitute(%s) = %v, want %v", tt.expr, expr, tt.want)
+		}
+	}
+}

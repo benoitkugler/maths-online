@@ -99,17 +99,29 @@ func (rv RandomParameters) Instantiate() (Variables, error) {
 	}
 
 	out := make(Variables, len(rv))
-	for v := range rv {
+	for v, expr := range rv {
+		// special case for randVariable
+		if randV, isRandVariable := expr.atom.(randVariable); isRandVariable {
+			resolver.seen[v] = true
+			out[v] = NewRV(randV.choice())
+			continue
+		}
+
 		value, _ := resolver.resolve(v) // this triggers the evaluation of the expression
 
 		if resolver.err != nil {
 			return nil, resolver.err
 		}
 
-		out[v] = value
+		out[v] = NewRN(value)
 	}
 
 	return out, nil
+}
+
+func (rv randVariable) choice() Variable {
+	index := rand.Intn(len(rv))
+	return rv[index]
 }
 
 // return list of primes between min and max (inclusive)
@@ -237,7 +249,7 @@ func (expr *Expression) AreFxsIntegers(parameters RandomParameters, x Variable, 
 		// checks that all grid values are integers
 		areIntegers := true
 		for _, xValue := range grid {
-			ps[x] = float64(xValue)
+			ps[x] = NewRN(float64(xValue))
 			value, _ := expr.Evaluate(ps)
 			_, ok := isInt(value)
 			areIntegers = areIntegers && ok

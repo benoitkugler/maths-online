@@ -373,6 +373,15 @@ var expressions = [...]struct {
 	{"randDecDen( )", &Expression{atom: specialFunctionA{kind: randDenominator, args: nil}}, false},
 	{"randInt(15; 12)", nil, true},
 	{"randChoice( )", nil, true},
+	{"randChoice(2;", nil, true},
+	{"randLetter(A; x_A; b;  B; B)", &Expression{atom: randVariable{
+		NewVariable('A'), Variable{Name: 'x', Indice: "A"}, NewVariable('b'), NewVariable('B'), NewVariable('B'),
+	}}, false},
+	{"randLetter( )", nil, true},
+	{"randLetter)", nil, true},
+	{"randLetter(0.2 )", nil, true},
+	{"randLetter(x;", nil, true},
+	{"randLetter(x,y)", nil, true},
 	{
 		"2 + 3 * randInt(2; 12)", &Expression{
 			atom:  plus,

@@ -8,7 +8,7 @@ import (
 
 func TestEvalMissingVariable(t *testing.T) {
 	e := mustParse(t, "x + y")
-	_, err := e.Evaluate(Variables{NewVariable('x'): 7})
+	_, err := e.Evaluate(Variables{NewVariable('x'): NewRN(7)})
 	if err == nil {
 		t.Fatal()
 	}
@@ -98,7 +98,7 @@ func Test_Expression_eval(t *testing.T) {
 			"1 + 1 * 3 ^ 3 * 2 - 1", nil, 54,
 		},
 		{
-			"x + 2", Variables{NewVariable('x'): 4}, 6,
+			"x + 2", Variables{NewVariable('x'): NewRN(4)}, 6,
 		},
 		{
 			"2 + 0 * randInt(1;3)", nil, 2,
@@ -140,6 +140,9 @@ func Test_Expression_eval(t *testing.T) {
 			"2 * isPrime(11.4)", nil, 0,
 		},
 		{
+			"randLetter(A;B)", nil, 0, // 0 by convention
+		},
+		{
 			"8 % 3", nil, 2,
 		},
 		{
@@ -158,20 +161,20 @@ func Test_Expression_eval(t *testing.T) {
 			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVariable('a'): 2}, 2,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVariable('a'): NewRN(2)}, 2,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				NewVariable('a'): 8,  // BC
-				NewVariable('b'): 12, // AC
-				NewVariable('c'): 4,  // AB
+				NewVariable('a'): NewRN(8),  // BC
+				NewVariable('b'): NewRN(12), // AC
+				NewVariable('c'): NewRN(4),  // AB
 			}, 0,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				NewVariable('a'): 3, // BC
-				NewVariable('b'): 4, // AC
-				NewVariable('c'): 5, // AB
+				NewVariable('a'): NewRN(3), // BC
+				NewVariable('b'): NewRN(4), // AC
+				NewVariable('c'): NewRN(5), // AB
 			}, 3,
 		},
 	}
@@ -219,28 +222,6 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 		want.simplifyNumbers()
 		if !reflect.DeepEqual(expr, want) {
 			t.Errorf("node.simplifyNumbers() = %v, want %v", expr, tt.want)
-		}
-	}
-}
-
-func TestExpression_Substitute(t *testing.T) {
-	tests := []struct {
-		expr string
-		vars Variables
-		want string
-	}{
-		{"a + b", Variables{}, "a+b"},
-		{"a + b", Variables{NewVariable('a'): 4}, "4+b"},
-		{"a + b / 2*a", Variables{NewVariable('a'): 4}, "4+b/2*4"},
-		{"a + b", Variables{NewVariable('a'): 4, NewVariable('b'): 5}, "4+5"},
-	}
-	for _, tt := range tests {
-		expr := mustParse(t, tt.expr)
-		expr.Substitute(tt.vars)
-
-		want := mustParse(t, tt.want)
-		if !reflect.DeepEqual(expr, want) {
-			t.Errorf("Substitute(%s) = %v, want %v", tt.expr, expr, tt.want)
 		}
 	}
 }

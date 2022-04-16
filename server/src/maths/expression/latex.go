@@ -119,6 +119,10 @@ func (r specialFunctionA) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
+func (r randVariable) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
+	return fmt.Sprintf(`\text{%s}`, r.String())
+}
+
 func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {
 	name := res(v)
 	if v.Indice != "" {

@@ -210,13 +210,13 @@ func init() {
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
 			TextInstance{Parts: []client.TextOrMath{
 				text("Soient les points F("),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('A')]).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVariable('A')].N).String()),
 				text(";"),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('B')]).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVariable('B')].N).String()),
 				text(") et G("),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('X')]).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVariable('X')].N).String()),
 				text(";"),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('Y')]).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVariable('Y')].N).String()),
 				text("). Calculer FG."),
 			}},
 			// TextInstance{
@@ -236,7 +236,7 @@ func init() {
 			TextInstance{Parts: []client.TextOrMath{
 				staticMath("FG = "),
 			}},
-			NumberFieldInstance{ID: 0, Answer: distanceSample[expression.NewVariable('c')]},
+			NumberFieldInstance{ID: 0, Answer: distanceSample[expression.NewVariable('c')].N},
 		},
 	},
 	)
@@ -615,9 +615,9 @@ var PredefinedQuestions = []QuestionInstance{
 			RadioFieldInstance{
 				ID: 0,
 				Answer: int(mustEvaluate("1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", expression.Variables{
-					expression.NewVariable('a'): 8,  // BC
-					expression.NewVariable('b'): 12, // AC
-					expression.NewVariable('c'): 4,  // AB
+					expression.NewVariable('a'): expression.NewRN(8),  // BC
+					expression.NewVariable('b'): expression.NewRN(12), // AC
+					expression.NewVariable('c'): expression.NewRN(4),  // AB
 				})),
 				Proposals: []client.ListFieldProposal{
 					{Content: []client.TextOrMath{{Text: `ABC n'est pas rectangle.`, IsMath: false}}},

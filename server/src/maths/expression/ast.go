@@ -88,12 +88,25 @@ type atom interface {
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
-func (operator) lexicographicOrder() int         { return 5 }
+func (operator) lexicographicOrder() int         { return 6 }
+func (randVariable) lexicographicOrder() int     { return 5 }
 func (specialFunctionA) lexicographicOrder() int { return 4 }
 func (function) lexicographicOrder() int         { return 3 }
 func (Variable) lexicographicOrder() int         { return 2 }
 func (constant) lexicographicOrder() int         { return 1 }
 func (Number) lexicographicOrder() int           { return 0 }
+
+// randVariable is a special atom, randomly choosing a variable
+// among the propositions
+type randVariable []Variable
+
+func (rv randVariable) String() string {
+	var args []string
+	for _, v := range rv {
+		args = append(args, v.String())
+	}
+	return fmt.Sprintf("randLetter(%s)", strings.Join(args, ";"))
+}
 
 type operator uint8
 

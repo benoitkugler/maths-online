@@ -17,6 +17,7 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { (invalidFn).eval(0, 0, nil) })
 	shouldPanic(t, func() { (invalidConstant).eval(0, 0, nil) })
 	shouldPanic(t, func() { (invalidOperator).eval(0, 0, nil) })
+	shouldPanic(t, func() { (specialFunctionA{kind: invalidSpecialFunction}).eval(0, 0, nil) })
 
 	shouldPanic(t, func() { _ = (invalidFn).String() })
 	shouldPanic(t, func() { _ = (invalidConstant).String() })
