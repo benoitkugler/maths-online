@@ -129,6 +129,15 @@ func noCache(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// cacheStatic adopt a very aggressive caching policy, suitable
+// for immutable content
+func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "max-age=31536000")
+		return next(c)
+	}
+}
+
 func serveProfApp(c echo.Context) error {
 	return c.File("static/prof/index.html")
 }
@@ -147,15 +156,15 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
 	// global static files used by frontend apps
-	e.Group("/static", middleware.Gzip()).Static("/*", "static")
+	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
 
 	e.GET("/test-eleve", serveEleveApp, noCache)
 	e.GET("/test-eleve/", serveEleveApp, noCache)
-	e.Group("/test-eleve/*", middleware.Gzip()).Static("/*", "static/eleve")
+	e.Group("/test-eleve/*", middleware.Gzip(), cacheStatic).Static("/*", "static/eleve")
 
 	e.GET("/prof-loopback-app", serveProfLoopbackApp, noCache)
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
-	e.Group("/prof-loopback-app/*", middleware.Gzip()).Static("/*", "static/prof_loopback")
+	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
 
 	e.GET("/trivial/stats", trivial.ShowStats)
 	e.GET(trivialpoursuit.GameEndPoint, trivial.AccessGame)
