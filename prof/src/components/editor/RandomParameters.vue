@@ -1,6 +1,10 @@
 <template>
   <v-card class="ma-2 border-red">
-    <v-row style="background-color: lightgray">
+    <v-row
+      :style="{
+        'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
+      }"
+    >
       <v-col md="9" align-self="center">
         <v-card-subtitle class="py-2">Paramètres aléatoires</v-card-subtitle>
       </v-col>
@@ -37,6 +41,7 @@
         </v-btn> -->
       </v-col>
     </v-row>
+    <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
     <v-row no-gutters>
       <v-col>
         <v-list>
@@ -78,6 +83,8 @@ import VariableField from "./utils/VariableField.vue";
 
 interface Props {
   parameters: randomParameters;
+  isLoading: boolean;
+  isValidated: boolean;
 }
 
 const props = defineProps<Props>();

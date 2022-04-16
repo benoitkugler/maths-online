@@ -50,7 +50,11 @@
   </v-dialog>
 
   <v-card class="ma-2 border-red">
-    <v-row style="background-color: lightgray">
+    <v-row
+      :style="{
+        'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
+      }"
+    >
       <v-col md="5" align-self="center">
         <v-card-subtitle class="py-2">Fonctions spéciales</v-card-subtitle>
       </v-col>
@@ -75,6 +79,7 @@
         </v-btn>
       </v-col>
     </v-row>
+    <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
     <v-row no-gutters>
       <v-col>
         <v-list>
@@ -115,6 +120,8 @@ import { ref } from "@vue/reactivity";
 
 interface Props {
   parameters: string[];
+  isLoading: boolean;
+  isValidated: boolean;
 }
 
 const props = defineProps<Props>();

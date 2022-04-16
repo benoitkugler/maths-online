@@ -96,6 +96,8 @@
         <div style="height: 70vh; overflow-y: auto">
           <random-parameters
             :parameters="question.parameters.Variables"
+            :is-loading="isCheckingParameters"
+            :is-validated="!showErrorParameters"
             @add="addRandomParameter"
             @update="updateRandomParameter"
             @delete="deleteRandomParameter"
@@ -103,6 +105,8 @@
           ></random-parameters>
           <intrinsics
             :parameters="question.parameters.Intrinsics || []"
+            :is-loading="isCheckingParameters"
+            :is-validated="!showErrorParameters"
             @add="addIntrinsic"
             @update="updateIntrinsic"
             @delete="deleteIntrinsic"
@@ -389,12 +393,15 @@ function onDragoverJSON(ev: DragEvent) {
 const errorParameters = ref<ErrParameters>({ Origin: "", Details: "" });
 const showErrorParameters = computed(() => errorParameters.value.Origin != "");
 const availableParameters = ref<Variable[]>([]);
+let isCheckingParameters = $ref(false);
 
 async function checkParameters() {
+  isCheckingParameters = true;
   const out = await controller.EditorCheckParameters({
     SessionID: props.session_id || "",
     Parameters: question.parameters
   });
+  isCheckingParameters = false;
   if (out === undefined) return;
 
   errorParameters.value = out.ErrDefinition;
