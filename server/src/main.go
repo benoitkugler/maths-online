@@ -174,6 +174,9 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 		"/prof",
 		"/prof/",
 		"/prof/trivial",
+		"/prof/trivial/",
+		"/prof/editor",
+		"/prof/editor/",
 	} {
 		e.GET(route, serveProfApp, noCache)
 	}
