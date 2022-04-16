@@ -6,12 +6,14 @@
     <v-card title="Confirmer">
       <v-card-text
         >Etes-vous certain de vouloir supprimer la question
-        {{ questionToDelete?.Title }} ? <br />
+        <i>{{ questionToDelete?.Title }}</i> ? <br />
         Cette opération est irréversible.
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteQuestion"> Supprimer </v-btn>
+        <v-btn color="red" @click="deleteQuestion" variant="contained">
+          Supprimer
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
