@@ -89,69 +89,104 @@ export function itemize(s: string): TextPart[] {
   return out;
 }
 
+export const sortedBlockKindLabels = [
+  [BlockKind.TextBlock, { label: "Texte", isAnswerField: false }],
+  [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
+  [BlockKind.FigureBlock, { label: "Figure", isAnswerField: false }],
+  [
+    BlockKind.FunctionGraphBlock,
+    {
+      label: "Graphe (expression)",
+      isAnswerField: false
+    }
+  ],
+  [
+    BlockKind.FunctionVariationGraphBlock,
+    {
+      label: "Graphe (variations)",
+      isAnswerField: false
+    }
+  ],
+  [BlockKind.TableBlock, { label: "Tableau", isAnswerField: false }],
+  [
+    BlockKind.SignTableBlock,
+    {
+      label: "Tableau de signes",
+      isAnswerField: false
+    }
+  ],
+  [
+    BlockKind.VariationTableBlock,
+    {
+      label: "Tableau de variations",
+      isAnswerField: false
+    }
+  ],
+  [BlockKind.NumberFieldBlock, { label: "Nombre", isAnswerField: true }],
+  [
+    BlockKind.FormulaFieldBlock,
+    {
+      label: "Expression",
+      isAnswerField: true
+    }
+  ],
+  [
+    BlockKind.OrderedListFieldBlock,
+    {
+      label: "Liste ordonnée",
+      isAnswerField: true
+    }
+  ],
+  [BlockKind.RadioFieldBlock, { label: "QCM", isAnswerField: true }],
+  [
+    BlockKind.FigurePointFieldBlock,
+    {
+      label: "Point (sur une figure)",
+      isAnswerField: true
+    }
+  ],
+  [
+    BlockKind.FigureVectorFieldBlock,
+    {
+      label: "Vecteur (sur une figure)",
+      isAnswerField: true
+    }
+  ],
+  [
+    BlockKind.FunctionPointsFieldBlock,
+    {
+      label: "Construction de fonction",
+      isAnswerField: true
+    }
+  ],
+  [
+    BlockKind.VariationTableFieldBlock,
+    {
+      label: "Tableau de variations",
+      isAnswerField: true
+    }
+  ],
+  [
+    BlockKind.FigureAffineLineFieldBlock,
+    {
+      label: "Fonction affine",
+      isAnswerField: true
+    }
+  ],
+  [
+    BlockKind.FigureVectorPairFieldBlock,
+    {
+      label: "Construction de vecteurs",
+      isAnswerField: true
+    }
+  ],
+  [BlockKind.TableFieldBlock, { label: "Tableau", isAnswerField: true }],
+  [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }]
+] as const;
+
 export const BlockKindLabels: {
   [T in BlockKind]: { label: string; isAnswerField: boolean };
-} = {
-  [BlockKind.TextBlock]: { label: "Texte", isAnswerField: false },
-  [BlockKind.FormulaBlock]: { label: "Formule", isAnswerField: false },
-  [BlockKind.FigureBlock]: { label: "Figure", isAnswerField: false },
-  [BlockKind.FunctionGraphBlock]: {
-    label: "Graphe (expression)",
-    isAnswerField: false
-  },
-  [BlockKind.FunctionVariationGraphBlock]: {
-    label: "Graphe (variations)",
-    isAnswerField: false
-  },
-  [BlockKind.VariationTableBlock]: {
-    label: "Tableau de variations",
-    isAnswerField: false
-  },
-  [BlockKind.SignTableBlock]: {
-    label: "Tableau de signes",
-    isAnswerField: false
-  },
-  [BlockKind.TableBlock]: { label: "Tableau", isAnswerField: false },
-  [BlockKind.NumberFieldBlock]: { label: "Nombre", isAnswerField: true },
-  [BlockKind.FormulaFieldBlock]: { label: "Expression", isAnswerField: true },
-  [BlockKind.RadioFieldBlock]: { label: "QCM", isAnswerField: true },
-  [BlockKind.OrderedListFieldBlock]: {
-    label: "Liste ordonnée",
-    isAnswerField: true
-  },
-  [BlockKind.FigurePointFieldBlock]: {
-    label: "Point (sur une figure)",
-    isAnswerField: true
-  },
-  [BlockKind.FigureVectorFieldBlock]: {
-    label: "Vecteur (sur une figure)",
-    isAnswerField: true
-  },
-  [BlockKind.VariationTableFieldBlock]: {
-    label: "Tableau de variations",
-    isAnswerField: true
-  },
-  [BlockKind.FunctionPointsFieldBlock]: {
-    label: "Construction de fonction",
-    isAnswerField: true
-  },
-  [BlockKind.FigureAffineLineFieldBlock]: {
-    label: "Fonction affine",
-    isAnswerField: true
-  },
-  [BlockKind.FigureVectorPairFieldBlock]: {
-    label: "Construction de vecteurs",
-    isAnswerField: true
-  },
-  [BlockKind.TreeFieldBlock]: {
-    label: "Arbre",
-    isAnswerField: true
-  },
-  [BlockKind.TableFieldBlock]: {
-    label: "Tableau",
-    isAnswerField: true
-  }
-};
+} = Object.fromEntries(sortedBlockKindLabels);
 
 interface BlockKindTypes {
   [BlockKind.FigureBlock]: FigureBlock;
