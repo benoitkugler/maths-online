@@ -139,7 +139,11 @@
             v-if="showDropZone"
             @drop="origin => swapBlocks(origin, 0)"
           ></drop-zone>
-          <div v-for="(row, index) in rows" :key="index">
+          <div
+            v-for="(row, index) in rows"
+            :key="index"
+            :ref="el => (blockWidgets[index] = el as Element)"
+          >
             <container
               @delete="removeBlock(index)"
               @swap="swapBlocks"
@@ -174,7 +178,7 @@ import type { Block, Question, Variable } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
-import { computed, watch } from "@vue/runtime-core";
+import { computed, nextTick, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import Container from "./blocks/Container.vue";
@@ -278,8 +282,18 @@ function dataToBlock(data: Block): block {
   }
 }
 
+const blockWidgets = ref<Element[]>([]);
+
 function addBlock(kind: BlockKind) {
   question.enonce!.push(newBlock(kind));
+  nextTick(() => {
+    console.log(blockWidgets.value);
+
+    const L = blockWidgets.value?.length;
+    if (L) {
+      blockWidgets.value![L - 1].scrollIntoView();
+    }
+  });
 }
 
 function updateBlock(index: number, data: Block["Data"]) {

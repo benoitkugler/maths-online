@@ -42,7 +42,7 @@ const text = computed(() => {
       }
       return "$" + props.modelValue.Content + "$";
     case TextKind.Expression:
-      return "#{" + props.modelValue.Content + "}";
+      return "!" + props.modelValue.Content + "!";
   }
 });
 
@@ -50,12 +50,12 @@ const color = computed(() => colorByKind[props.modelValue.Kind]);
 
 function onTextChange(s: string) {
   s = s.trim();
-  if (s.startsWith("$") && s.endsWith("$") && s.length >= 2) {
+  if (s.startsWith("$") && s.endsWith("$") && s.length >= 3) {
     emit("update:model-value", {
       Kind: TextKind.StaticMath,
       Content: s.substring(1, s.length - 1)
     });
-  } else if (s.startsWith("#{") && s.endsWith("}")) {
+  } else if (s.startsWith("!") && s.endsWith("!") && s.length >= 3) {
     emit("update:model-value", {
       Kind: TextKind.Expression,
       Content: s.substring(2, s.length - 1)

@@ -12,7 +12,7 @@
         <v-col md="12">
           <small class="text-grey mt-1 d-block">
             Insérer du code LaTeX avec : $\frac{a}{b}$. Insérer une expression
-            avec : #{2x + 1}
+            avec : !2x + 1!
           </small>
         </v-col>
       </v-row>

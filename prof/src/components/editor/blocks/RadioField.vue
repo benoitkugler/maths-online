@@ -2,7 +2,7 @@
   <v-row>
     <v-col md="9" align-self="center">
       Réponses possibles (insérer du code LaTeX avec $$ et une expression avec
-      #{}).</v-col
+      !2x+1!).</v-col
     >
     <v-spacer></v-spacer>
     <v-col align-self="center" style="text-align: right">

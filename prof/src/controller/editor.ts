@@ -40,8 +40,8 @@ export const colorByKind: { [key in TextKind]: string } = {
   [TextKind.Expression]: ExpressionColor
 };
 
-const reLaTeX = /\$([^$]*)\$/g;
-const reExpression = /#{([^}]*)}/g;
+const reLaTeX = /\$([^$]+)\$/g;
+const reExpression = /!([^!]+)!/g;
 
 function splitByRegexp(
   re: RegExp,

@@ -4,8 +4,8 @@
       <v-col md="9" align-self="center">
         Réponse ordonnée attendue.
         <small>
-          Les champs sont interprétés comme du code LaTeX (utiliser #{} pour une
-          expression).
+          Les champs sont interprétés comme du code LaTeX (utiliser !2x+1! pour
+          une expression).
         </small>
       </v-col>
       <v-spacer></v-spacer>
@@ -54,8 +54,8 @@
       <v-col md="9" align-self="center">
         Champs additionnels.
         <small>
-          Les champs sont interprétés comme du code LaTeX (utiliser #{} pour une
-          expression).
+          Les champs sont interprétés comme du code LaTeX (utiliser !2x+1! pour
+          une expression).
         </small>
       </v-col>
       <v-spacer></v-spacer>
