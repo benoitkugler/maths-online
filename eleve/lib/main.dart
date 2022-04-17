@@ -7,7 +7,7 @@ import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
 final bm = buildMode();
-// final bm = BuildMode.dev;
+// final bm = BuildMode.debug;
 
 void main() {
   final audio = Audio();
@@ -50,21 +50,7 @@ class EleveApp extends StatelessWidget {
           ],
         ),
         body: _HomePage(audioPlayer),
-        // body: Center(
-        // child: Tree(
-        //     Colors.blue,
-        //     TreeController(
-        //         TreeFieldBlock([
-        //           [2, 2],
-        //           [2, 3],
-        //           [3, 2],
-        //           [2, 2, 2],
-        //         ], [
-        //           TextOrMath("A", false),
-        //           TextOrMath("x", true),
-        //           TextOrMath("C", false),
-        //         ], 0),
-        //         () {})))
+        // body: TrivialPoursuitController("")
       ),
     );
   }

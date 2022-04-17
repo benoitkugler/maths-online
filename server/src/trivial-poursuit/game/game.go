@@ -253,7 +253,7 @@ func (gs *Game) EmitQuestion() showQuestion {
 }
 
 // QuestionTimeoutAction closes the current question session,
-// and start a new turn
+// but doest not start a new turn.
 func (gs *Game) QuestionTimeoutAction() StateUpdates {
 	return gs.concludeQuestion(true)
 }

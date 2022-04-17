@@ -343,6 +343,11 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       for (var event in events.events) {
         await _processEvent(event);
       }
+
+      if (events.events.any((element) => element is PlayerAnswerResult)) {
+        // do no yet update the state
+        continue;
+      }
       setState(() {
         state = events.state;
       });
