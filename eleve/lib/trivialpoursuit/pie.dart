@@ -4,11 +4,13 @@ import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'categories.dart';
+import "categories.dart";
 
 /// Pie displays the current sucesses of the player,
 /// using a pie chart.
 class Pie extends StatelessWidget {
+  static const size = 80.0;
+
   final double glowWidth;
   final Success success;
   const Pie(this.glowWidth, this.success, {Key? key}) : super(key: key);
@@ -26,11 +28,14 @@ class Pie extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final nbSections = Categorie.values.length;
+    final angularSection = 2 * pi / nbSections;
+
     return Stack(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: size,
+          height: size,
           decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
             BoxShadow(
               color: Colors.white,
@@ -38,34 +43,39 @@ class Pie extends StatelessWidget {
             )
           ]),
         ),
+        ...Categorie.values.map((cat) => AnimatedRotation(
+              turns: success[cat.index] ? 0 : 0.5,
+              duration: const Duration(milliseconds: 1000),
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 1000),
+                scale: success[cat.index] ? 1 : 1.5,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 1500),
+                  opacity: success[cat.index] ? 1 : 0,
+                  child: _PieFraction(
+                      cat.color, (cat.index + 0.5) * angularSection, size),
+                ),
+              ),
+            )),
         CustomPaint(
-          size: const Size(80, 80),
-          painter: _PiePainter(success),
+          size: const Size(size, size),
+          painter: _PieBackgroundPainter(),
         ),
       ],
     );
   }
 }
 
-class _PiePainter extends CustomPainter {
-  final Success success;
-
-  _PiePainter(this.success);
+class _PieBackgroundPainter extends CustomPainter {
+  static const radiusRatio = 0.45;
+  _PieBackgroundPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final radius = size.shortestSide * 0.45;
+    final radius = size.shortestSide * radiusRatio;
     final nbSections = Categorie.values.length;
     final angularSection = 2 * pi / nbSections;
     final center = size.center(Offset.zero);
-
-    // white background
-    canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..color = Colors.white.withOpacity(0.8)
-          ..style = PaintingStyle.fill);
 
     final arcRect = Rect.fromCircle(center: center, radius: radius);
     for (var i in Categorie.values) {
@@ -78,16 +88,6 @@ class _PiePainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..color = Colors.black.withOpacity(0.5)
             ..strokeWidth = 1);
-      if (success[i.index]) {
-        canvas.drawArc(
-            arcRect,
-            i.index * angularSection,
-            angularSection,
-            true,
-            Paint()
-              ..style = PaintingStyle.fill
-              ..color = i.color.withOpacity(0.8));
-      }
     }
 
     // external circle drawn on top
@@ -101,7 +101,63 @@ class _PiePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PiePainter oldDelegate) {
-    return !listEquals(oldDelegate.success, success);
+  bool shouldRepaint(covariant _PieBackgroundPainter oldDelegate) {
+    return false;
+  }
+}
+
+class _PieFraction extends StatelessWidget {
+  final Color color;
+  final double angle;
+  final double size;
+
+  const _PieFraction(this.color, this.angle, this.size, {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _PiePartPainter(color, angle),
+    );
+  }
+}
+
+class _PiePartPainter extends CustomPainter {
+  final Color color;
+  final double angle;
+
+  _PiePartPainter(this.color, this.angle);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final radius = size.shortestSide * _PieBackgroundPainter.radiusRatio;
+    final nbSections = Categorie.values.length;
+    final angularSection = 2 * pi / nbSections;
+    final center = size.center(Offset.zero);
+
+    final arcRect = Rect.fromCircle(center: center, radius: radius);
+    canvas.drawArc(
+        arcRect,
+        angle - angularSection / 2,
+        angularSection,
+        true,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..color = Colors.black.withOpacity(0.5)
+          ..strokeWidth = 1);
+    canvas.drawArc(
+        arcRect,
+        angle - angularSection / 2,
+        angularSection,
+        true,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PiePartPainter oldDelegate) {
+    return color != oldDelegate.color || angle != oldDelegate.angle;
   }
 }

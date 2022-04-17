@@ -376,9 +376,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      child: _game,
-      duration: const Duration(seconds: 3),
+    return GestureDetector(
+      // simplify developpement
+      onDoubleTap: widget.apiURL.isEmpty ? processEventsDebug : null,
+      child: AnimatedSwitcher(
+        child: _game,
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 }
