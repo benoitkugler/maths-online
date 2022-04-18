@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
@@ -27,10 +28,14 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
+type noDataProvider struct{}
+
+func (noDataProvider) FetchName(pass.EncryptedID) string { return "" }
+
 // RegisterTestGame starts a new game at the given `apiPath`,
 // and registers the route.
 func RegisterTestGame(apiPath string, options GameOptions) {
-	ct := newGameController(options)
+	ct := newGameController("testGame", noDataProvider{}, options, nil)
 	go func() {
 		for {
 			ct.startLoop(context.Background()) // never timeout for tests
@@ -52,7 +57,9 @@ func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 	}
 	defer ws.Close()
 
-	client := &client{conn: ws, game: ct, isAccepted: make(chan bool)}
+	clientID := r.URL.Query().Get("client_id")
+
+	client := &client{conn: ws, game: ct, isAccepted: make(chan bool), clientID: pass.EncryptedID(clientID)}
 	ct.join <- client
 
 	isAccepted := <-client.isAccepted // wait for the controller to check the access
@@ -70,6 +77,8 @@ type client struct {
 	game *gameController // to accept user events
 
 	isAccepted chan bool // valid the access to the game
+
+	clientID pass.EncryptedID // optional, used to identify registred students
 }
 
 func (cl *client) sendEvent(er game.StateUpdates) error { return cl.conn.WriteJSON(er) }
@@ -116,6 +125,10 @@ type GameOptions struct {
 
 // gameController handle one game session
 type gameController struct {
+	id         gameID
+	provider   MetadataProvider
+	summaryOut chan<- GameSummary
+
 	join, leave chan *client
 
 	incomingEvents  chan game.ClientEvent
@@ -128,8 +141,11 @@ type gameController struct {
 	options GameOptions
 }
 
-func newGameController(options GameOptions) *gameController {
+func newGameController(id gameID, provider MetadataProvider, options GameOptions, summary chan<- GameSummary) *gameController {
 	return &gameController{
+		id:              id,
+		provider:        provider,
+		summaryOut:      summary,
 		join:            make(chan *client, 1),
 		leave:           make(chan *client),
 		incomingEvents:  make(chan game.ClientEvent),
@@ -161,6 +177,10 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				}
 			}
 
+			if gc.summaryOut != nil { // notify the monitor
+				gc.summaryOut <- gc.summary()
+			}
+
 			if isGameOver {
 				ProgressLogger.Println("Game is over: exitting game loop.")
 				return
@@ -179,6 +199,10 @@ func (gc *gameController) startLoop(ctx context.Context) {
 			nbPlayers := gc.game.NumberPlayers()
 			delete(gc.clients, client)
 			gc.gameLock.Unlock()
+
+			if gc.summaryOut != nil { // notify the monitor
+				gc.summaryOut <- gc.summary()
+			}
 
 			// end the game only if the game has already started and all
 			// players have left
@@ -209,7 +233,8 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				client.isAccepted <- true
 			}
 
-			event := gc.game.AddPlayer("") // TODO: name for players
+			displayedName := gc.provider.FetchName(client.clientID)
+			event := gc.game.AddPlayer(displayedName)
 			gc.clients[client] = event.Player
 
 			// only notifie the player who joined ...
@@ -227,6 +252,10 @@ func (gc *gameController) startLoop(ctx context.Context) {
 					Events: game.Events{event},
 					State:  gc.game.GameState,
 				}}
+			}
+
+			if gc.summaryOut != nil { // notify the monitor
+				gc.summaryOut <- gc.summary()
 			}
 
 		case message := <-gc.incomingEvents:
@@ -247,5 +276,62 @@ func (gc *gameController) startLoop(ctx context.Context) {
 			}
 
 		}
+	}
+}
+
+// MetadataProvider is a hook providing information
+// or acting on data not really linked to the game logic,
+// such as fetching player names or updating their
+// global progress.
+type MetadataProvider interface {
+	// FetchName returns the registred named of the player, or an empty string
+	// ID is optionnal.
+	FetchName(ID pass.EncryptedID) string
+
+	// TODO: register question Marks
+}
+
+type Player struct {
+	ID   pass.EncryptedID
+	Name string // used for anonymous players
+}
+
+// GameSummary is emitted back to the teacher monitor,
+// and provides an high level overview to one game.
+type GameSummary struct {
+	PlayerTurn *Player // nil before game start
+	Successes  map[Player]game.Success
+	ID         gameID
+}
+
+func (gc *gameController) summary() GameSummary {
+	gc.gameLock.Lock()
+	defer gc.gameLock.Unlock()
+
+	state := gc.game.GameState
+	players := make(map[game.PlayerID]*client)
+	for k, v := range gc.clients {
+		players[v] = k
+	}
+
+	idToPlayer := func(id game.PlayerID) *Player {
+		if id == -1 {
+			return nil
+		}
+		return &Player{
+			Name: state.Players[id].Name,
+			ID:   players[id].clientID,
+		}
+	}
+
+	successes := make(map[Player]game.Success)
+	for k, v := range state.Players {
+		successes[*idToPlayer(k)] = v.Success
+	}
+
+	return GameSummary{
+		ID:         gc.id,
+		PlayerTurn: idToPlayer(state.Player),
+		Successes:  successes,
 	}
 }

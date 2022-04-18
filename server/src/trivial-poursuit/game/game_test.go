@@ -9,7 +9,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
 
-func playersFromSuccess(scs ...success) map[int]*PlayerStatus {
+func playersFromSuccess(scs ...Success) map[int]*PlayerStatus {
 	out := make(map[int]*PlayerStatus)
 	for i, s := range scs {
 		out[i] = &PlayerStatus{Success: s}
@@ -22,9 +22,9 @@ func Test_gameState_winners(t *testing.T) {
 		sc      map[int]*PlayerStatus
 		wantOut []int
 	}{
-		{playersFromSuccess(success{true}, success{true}, success{true, true, true, true, true}), []int{2}},
-		{playersFromSuccess(success{true}, success{true}, success{true, true, true, true}), nil},
-		{playersFromSuccess(success{true, true, true, true, true}, success{true}, success{true, true, true, true, true}), []int{0, 2}},
+		{playersFromSuccess(Success{true}, Success{true}, Success{true, true, true, true, true}), []int{2}},
+		{playersFromSuccess(Success{true}, Success{true}, Success{true, true, true, true}), nil},
+		{playersFromSuccess(Success{true, true, true, true, true}, Success{true}, Success{true, true, true, true, true}), []int{0, 2}},
 	}
 	for _, tt := range tests {
 		gs := &Game{

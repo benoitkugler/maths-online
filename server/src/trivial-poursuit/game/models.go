@@ -15,13 +15,13 @@ import (
 type GameState struct {
 	Players  map[PlayerID]*PlayerStatus // per-player advance
 	PawnTile int                        // position of the pawn
-	Player   int                        // the player currently playing (choosing where to move)
+	Player   PlayerID                   // the player currently playing (choosing where to move)
 }
 
 // PlayerStatus exposes the information about one player
 type PlayerStatus struct {
 	Name    string
-	Success success
+	Success Success
 }
 
 type StateUpdates = []StateUpdate

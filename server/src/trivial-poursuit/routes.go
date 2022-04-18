@@ -28,6 +28,8 @@ type Controller struct {
 
 	games       map[gameID]*gameController // active games
 	gameTimeout time.Duration              // max duration of a game (useful is nobody joins)
+
+	summary chan<- GameSummary
 }
 
 // NewController initialize the controller. It will panic
@@ -99,7 +101,15 @@ func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 		return taken
 	})
 
-	game := newGameController(GameOptions{PlayersNumber: options.NbPlayers, QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds)})
+	// TODO:
+	var provider noDataProvider
+	game := newGameController(
+		newID, provider,
+		GameOptions{
+			PlayersNumber:   options.NbPlayers,
+			QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds),
+		},
+		ct.summary)
 	// register the controller...
 	ct.games[newID] = game
 	// ...and start it

@@ -26,11 +26,15 @@ func websocketURL(t *testing.T, s string) string {
 	return u.String()
 }
 
+func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
+	return websocketURL(t, urlS) + "?client_id=" + clientID
+}
+
 func TestConcurrentEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 	// ProgressLogger.SetOutput(os.Stdout)
 
-	ct := newGameController(GameOptions{4, 0}) // do not start a game
+	ct := newGameController("testGame", noDataProvider{}, GameOptions{4, 0}, nil) // do not start a game
 	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -70,7 +74,7 @@ func TestConcurrentEvents(t *testing.T) {
 func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
-	ct := newGameController(GameOptions{4, time.Millisecond * 50})
+	ct := newGameController("testGame", noDataProvider{}, GameOptions{4, time.Millisecond * 50}, nil)
 	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -96,7 +100,7 @@ func TestEvents(t *testing.T) {
 func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := newGameController(GameOptions{2, 0})
+	ct := newGameController("testGame", noDataProvider{}, GameOptions{2, 0}, nil)
 	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -130,7 +134,7 @@ func TestClientInvalidMessage(t *testing.T) {
 func TestStartGame(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := newGameController(GameOptions{2, 0})
+	ct := newGameController("testGame", noDataProvider{}, GameOptions{2, 0}, nil)
 
 	go ct.startLoop(context.Background())
 
@@ -177,7 +181,7 @@ func TestStartGame(t *testing.T) {
 func TestInvalidJoin(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := newGameController(GameOptions{1, 0})
+	ct := newGameController("testGame", noDataProvider{}, GameOptions{1, 0}, nil)
 
 	go ct.startLoop(context.Background())
 
@@ -199,5 +203,57 @@ func TestInvalidJoin(t *testing.T) {
 	_, _, err = client2.ReadMessage()
 	if err == nil {
 		t.Fatal("expected error when joining started game")
+	}
+}
+
+func TestSummary(t *testing.T) {
+	WarningLogger.SetOutput(io.Discard)
+
+	notif := make(chan GameSummary)
+	go func() {
+		for {
+			if sum, has := <-notif; has {
+				fmt.Println(sum)
+			}
+		}
+	}()
+
+	ct := newGameController("testGame", noDataProvider{}, GameOptions{2, 0}, notif)
+
+	go ct.startLoop(context.Background())
+
+	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
+	defer server.Close()
+
+	client1, _, err := websocket.DefaultDialer.Dial(websocketURLWithClientID(t, server.URL, "client1"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var events game.StateUpdates
+	if err = client1.ReadJSON(&events); err != nil {
+		t.Fatal(err)
+	}
+
+	if sum := ct.summary(); len(sum.Successes) != 1 || sum.PlayerTurn != nil {
+		t.Fatal(sum)
+	}
+
+	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 20)
+
+	if err = client2.ReadJSON(&events); err != nil { // PlayerJoin event
+		t.Fatal(err)
+	}
+	if err = client2.ReadJSON(&events); err != nil { // GameStart event
+		t.Fatal(err)
+	}
+
+	if sum := ct.summary(); len(sum.Successes) != 2 || sum.PlayerTurn == nil {
+		t.Fatal(sum)
 	}
 }

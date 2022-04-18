@@ -13,7 +13,8 @@ import (
 
 const defautQuestionTimeout = time.Minute / 10
 
-// const defautQuestionTimeout = time.Minute
+// NbCategories is the number of categories of question
+const NbCategories = nbCategories
 
 // PlayerID identifies a player in the game
 type PlayerID = int
@@ -381,10 +382,10 @@ func (gs *Game) idToNames(players []PlayerID) []string {
 	return out
 }
 
-// the categories completed by a player
-type success [nbCategories]bool
+// Success are the categories completed by a player
+type Success [NbCategories]bool
 
-func (sc success) isDone() bool {
+func (sc Success) isDone() bool {
 	for _, b := range sc {
 		if !b {
 			return false
