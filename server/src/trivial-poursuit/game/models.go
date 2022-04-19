@@ -132,6 +132,7 @@ type showQuestion struct {
 	Question       string
 	TimeoutSeconds int
 	Categorie      categorie
+	ID             int64 // TODO use it
 }
 
 // playerAnswerResult indicates

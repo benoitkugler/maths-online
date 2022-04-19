@@ -170,6 +170,15 @@ func (g *Game) StartGame() StateUpdate {
 	return evs
 }
 
+// ShouldMarkQuestion returns true and the question and player IDs
+// when a player asks to mark a given question for following training.
+func (g *Game) ShouldMarkQuestion(event ClientEvent) (int64, PlayerID, bool) {
+	if mark, ok := event.Event.(wantNextTurn); ok && mark.MarkQuestion {
+		return g.question.ID, event.Player, true
+	}
+	return 0, 0, false
+}
+
 // HandleClientEvent handles the given `event`, or returns
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).

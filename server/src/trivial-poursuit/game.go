@@ -28,27 +28,10 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-type noDataProvider struct{}
-
-func (noDataProvider) FetchName(pass.EncryptedID) string { return "" }
-
-// RegisterTestGame starts a new game at the given `apiPath`,
-// and registers the route.
-func RegisterTestGame(apiPath string, options GameOptions) {
-	ct := newGameController("testGame", noDataProvider{}, options, nil)
-	go func() {
-		for {
-			ct.startLoop(context.Background()) // never timeout for tests
-
-			// when game ends, just reset it and start again
-			ct.game = *game.NewGame(options.QuestionTimeout)
-		}
-	}()
-
-	http.HandleFunc(apiPath, ct.setupWebSocket)
-}
-
-func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
+// AddClient uses the given connection to start a web socket, registred
+// with given `player`.
+// Errors are send to the websocket, and the function blocks until the game ends
+func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, player Player) {
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -57,9 +40,7 @@ func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 	}
 	defer ws.Close()
 
-	clientID := r.URL.Query().Get("client_id")
-
-	client := &client{conn: ws, game: ct, isAccepted: make(chan bool), clientID: pass.EncryptedID(clientID)}
+	client := &client{conn: ws, game: ct, isAccepted: make(chan bool), player: player}
 	ct.join <- client
 
 	isAccepted := <-client.isAccepted // wait for the controller to check the access
@@ -74,11 +55,11 @@ func (ct *gameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 
 type client struct {
 	conn *websocket.Conn
-	game *gameController // to accept user events
+	game *GameController // to accept user events
 
 	isAccepted chan bool // valid the access to the game
 
-	clientID pass.EncryptedID // optional, used to identify registred students
+	player Player
 }
 
 func (cl *client) sendEvent(er game.StateUpdates) error { return cl.conn.WriteJSON(er) }
@@ -123,12 +104,15 @@ type GameOptions struct {
 	QuestionTimeout time.Duration
 }
 
-// gameController handle one game session
-type gameController struct {
-	id         gameID
-	provider   MetadataProvider
-	summaryOut chan<- GameSummary
+type Monitor struct {
+	Summary      chan<- GameSummary
+	MarkQuestion chan<- MarkQuestion
+}
 
+// GameController handles one game room
+type GameController struct {
+	id          GameID
+	monitor     Monitor
 	join, leave chan *client
 
 	incomingEvents  chan game.ClientEvent
@@ -141,11 +125,12 @@ type gameController struct {
 	options GameOptions
 }
 
-func newGameController(id gameID, provider MetadataProvider, options GameOptions, summary chan<- GameSummary) *gameController {
-	return &gameController{
+// NewGameController creates a new game, with given `id` and `options`.
+// `monitor` is an option group of channels to write back the main progress of the game.
+func NewGameController(id GameID, options GameOptions, monitor Monitor) *GameController {
+	return &GameController{
 		id:              id,
-		provider:        provider,
-		summaryOut:      summary,
+		monitor:         monitor,
 		join:            make(chan *client, 1),
 		leave:           make(chan *client),
 		incomingEvents:  make(chan game.ClientEvent),
@@ -156,7 +141,15 @@ func newGameController(id gameID, provider MetadataProvider, options GameOptions
 	}
 }
 
-func (gc *gameController) startLoop(ctx context.Context) {
+func (gc *GameController) playerIDsToClients() map[game.PlayerID]*client {
+	players := make(map[game.PlayerID]*client)
+	for k, v := range gc.clients {
+		players[v] = k
+	}
+	return players
+}
+
+func (gc *GameController) startLoop(ctx context.Context) {
 	var isGameOver bool // if true, broadcast the last events and quit
 	for {
 		select {
@@ -177,8 +170,8 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				}
 			}
 
-			if gc.summaryOut != nil { // notify the monitor
-				gc.summaryOut <- gc.summary()
+			if gc.monitor.Summary != nil { // notify the monitor
+				gc.monitor.Summary <- gc.summary()
 			}
 
 			if isGameOver {
@@ -200,8 +193,8 @@ func (gc *gameController) startLoop(ctx context.Context) {
 			delete(gc.clients, client)
 			gc.gameLock.Unlock()
 
-			if gc.summaryOut != nil { // notify the monitor
-				gc.summaryOut <- gc.summary()
+			if gc.monitor.Summary != nil { // notify the monitor
+				gc.monitor.Summary <- gc.summary()
 			}
 
 			// end the game only if the game has already started and all
@@ -233,8 +226,7 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				client.isAccepted <- true
 			}
 
-			displayedName := gc.provider.FetchName(client.clientID)
-			event := gc.game.AddPlayer(displayedName)
+			event := gc.game.AddPlayer(client.player.Name)
 			gc.clients[client] = event.Player
 
 			// only notifie the player who joined ...
@@ -254,8 +246,8 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				}}
 			}
 
-			if gc.summaryOut != nil { // notify the monitor
-				gc.summaryOut <- gc.summary()
+			if gc.monitor.Summary != nil { // notify the monitor
+				gc.monitor.Summary <- gc.summary()
 			}
 
 		case message := <-gc.incomingEvents:
@@ -271,6 +263,16 @@ func (gc *gameController) startLoop(ctx context.Context) {
 				continue
 			}
 
+			if question, player, ok := gc.game.ShouldMarkQuestion(message); ok {
+				mq := MarkQuestion{
+					IdQuestion: question,
+					Player:     gc.playerIDsToClients()[player].player,
+				}
+				if gc.monitor.MarkQuestion != nil {
+					gc.monitor.MarkQuestion <- mq
+				}
+			}
+
 			if len(events) != 0 {
 				gc.broadcastEvents <- events
 			}
@@ -279,59 +281,42 @@ func (gc *gameController) startLoop(ctx context.Context) {
 	}
 }
 
-// MetadataProvider is a hook providing information
-// or acting on data not really linked to the game logic,
-// such as fetching player names or updating their
-// global progress.
-type MetadataProvider interface {
-	// FetchName returns the registred named of the player, or an empty string
-	// ID is optionnal.
-	FetchName(ID pass.EncryptedID) string
-
-	// TODO: register question Marks
-}
-
 type Player struct {
 	ID   pass.EncryptedID
 	Name string // used for anonymous players
 }
 
 // GameSummary is emitted back to the teacher monitor,
-// and provides an high level overview to one game.
+// and provides an high level overview of one game.
 type GameSummary struct {
 	PlayerTurn *Player // nil before game start
 	Successes  map[Player]game.Success
-	ID         gameID
+	ID         GameID
 }
 
-func (gc *gameController) summary() GameSummary {
+func (gc *GameController) summary() GameSummary {
 	gc.gameLock.Lock()
 	defer gc.gameLock.Unlock()
 
 	state := gc.game.GameState
-	players := make(map[game.PlayerID]*client)
-	for k, v := range gc.clients {
-		players[v] = k
-	}
-
-	idToPlayer := func(id game.PlayerID) *Player {
-		if id == -1 {
-			return nil
-		}
-		return &Player{
-			Name: state.Players[id].Name,
-			ID:   players[id].clientID,
-		}
-	}
+	players := gc.playerIDsToClients()
 
 	successes := make(map[Player]game.Success)
 	for k, v := range state.Players {
-		successes[*idToPlayer(k)] = v.Success
+		successes[players[k].player] = v.Success
+	}
+	out := GameSummary{
+		ID:        gc.id,
+		Successes: successes,
+	}
+	if id := state.Player; id != -1 {
+		out.PlayerTurn = &players[id].player
 	}
 
-	return GameSummary{
-		ID:         gc.id,
-		PlayerTurn: idToPlayer(state.Player),
-		Successes:  successes,
-	}
+	return out
+}
+
+type MarkQuestion struct {
+	IdQuestion int64
+	Player     Player
 }

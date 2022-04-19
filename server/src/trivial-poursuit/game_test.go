@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/gorilla/websocket"
 )
@@ -30,11 +31,16 @@ func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
 	return websocketURL(t, urlS) + "?client_id=" + clientID
 }
 
+func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
+	clientID := r.URL.Query().Get("client_id")
+	ct.AddClient(w, r, Player{Name: "annonymous", ID: pass.EncryptedID(clientID)})
+}
+
 func TestConcurrentEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 	// ProgressLogger.SetOutput(os.Stdout)
 
-	ct := newGameController("testGame", noDataProvider{}, GameOptions{4, 0}, nil) // do not start a game
+	ct := NewGameController("testGame", GameOptions{4, 0}, Monitor{}) // do not start a game
 	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -74,7 +80,7 @@ func TestConcurrentEvents(t *testing.T) {
 func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
-	ct := newGameController("testGame", noDataProvider{}, GameOptions{4, time.Millisecond * 50}, nil)
+	ct := NewGameController("testGame", GameOptions{4, time.Millisecond * 50}, Monitor{})
 	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -100,7 +106,7 @@ func TestEvents(t *testing.T) {
 func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := newGameController("testGame", noDataProvider{}, GameOptions{2, 0}, nil)
+	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{})
 	go ct.startLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -134,7 +140,7 @@ func TestClientInvalidMessage(t *testing.T) {
 func TestStartGame(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := newGameController("testGame", noDataProvider{}, GameOptions{2, 0}, nil)
+	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{})
 
 	go ct.startLoop(context.Background())
 
@@ -181,7 +187,7 @@ func TestStartGame(t *testing.T) {
 func TestInvalidJoin(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := newGameController("testGame", noDataProvider{}, GameOptions{1, 0}, nil)
+	ct := NewGameController("testGame", GameOptions{1, 0}, Monitor{})
 
 	go ct.startLoop(context.Background())
 
@@ -218,7 +224,7 @@ func TestSummary(t *testing.T) {
 		}
 	}()
 
-	ct := newGameController("testGame", noDataProvider{}, GameOptions{2, 0}, notif)
+	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{Summary: notif})
 
 	go ct.startLoop(context.Background())
 

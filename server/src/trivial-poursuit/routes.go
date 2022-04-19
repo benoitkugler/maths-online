@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -19,17 +20,18 @@ const (
 	gameTimeout  = time.Hour * 24
 )
 
-type gameID = string
+// GameID is an in-memory identifier for a game room.
+type GameID = string
 
 type Controller struct {
 	host *url.URL // current URL start, such as http://localhost:1323, or https://www.deployed.fr
 
 	lock sync.Mutex
 
-	games       map[gameID]*gameController // active games
+	games       map[GameID]*GameController // active games
 	gameTimeout time.Duration              // max duration of a game (useful is nobody joins)
 
-	summary chan<- GameSummary
+	monitor Monitor
 }
 
 // NewController initialize the controller. It will panic
@@ -41,17 +43,17 @@ func NewController(host string) *Controller {
 	}
 	return &Controller{
 		host:        u,
-		games:       make(map[string]*gameController),
+		games:       make(map[string]*GameController),
 		gameTimeout: gameTimeout,
 	}
 }
 
 // return the active game and the number of players in it
-func (ct *Controller) stats() map[gameID]int {
+func (ct *Controller) stats() map[GameID]int {
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
 
-	out := make(map[gameID]int)
+	out := make(map[GameID]int)
 	for k, v := range ct.games {
 		out[k] = len(v.clients)
 	}
@@ -101,15 +103,13 @@ func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
 		return taken
 	})
 
-	// TODO:
-	var provider noDataProvider
-	game := newGameController(
-		newID, provider,
+	game := NewGameController(
+		newID,
 		GameOptions{
 			PlayersNumber:   options.NbPlayers,
 			QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds),
 		},
-		ct.summary)
+		ct.monitor)
 	// register the controller...
 	ct.games[newID] = game
 	// ...and start it
@@ -142,7 +142,8 @@ func (ct *Controller) AccessGame(c echo.Context) error {
 	}
 
 	// connect to the websocket handler, which handle errors
-	game.setupWebSocket(c.Response().Writer, c.Request())
+	clientID := c.QueryParam("client_id")
+	game.AddClient(c.Response().Writer, c.Request(), Player{ID: pass.EncryptedID(clientID), Name: ""}) // TODO: name
 	return nil
 }
 
