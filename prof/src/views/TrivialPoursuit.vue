@@ -1,10 +1,14 @@
 <template>
   <v-dialog
-    fullscreen
     :model-value="editedConfig != null"
     @update:model-value="editedConfig = null"
   >
-    <v-card v-if="editedConfig != null">
+    <v-card
+      v-if="editedConfig != null"
+      max-height="80vh"
+      width="800"
+      class="overflow-y-auto"
+    >
       <v-row>
         <v-col>
           <v-card-title>Modifier la session de TrivialPoursuit</v-card-title>
@@ -31,7 +35,15 @@
         </v-row>
 
         <v-list>
-          <v-list-subheader>Choix des questions</v-list-subheader>
+          <v-list-subheader>
+            <h3>Choix des questions</h3>
+            <small
+              >Chaque catégorie est définie par une <i>union</i> d'<i
+                >intersections</i
+              >
+              d'étiquettes.</small
+            >
+          </v-list-subheader>
           <v-list-item
             v-for="(categorie, index) in editedConfig?.Questions"
             rounded
@@ -53,6 +65,12 @@
           </v-list-item>
         </v-list>
       </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="success" @click="updateConfig">
+          Enregistrer les modifications
+        </v-btn>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 
@@ -90,7 +108,7 @@
     </v-form>
   </v-dialog>
 
-  <v-card class="ma-3">
+  <v-card class="my-3 mx-auto" width="60%">
     <v-row>
       <v-col>
         <v-card-title>Trivial Poursuit</v-card-title>
@@ -112,22 +130,53 @@
     </v-row>
 
     <v-list>
-      <v-list-item v-for="config in configs">
-        <v-list-item-media>
-          <v-btn
-            icon
-            size="x-small"
-            title="Editer"
-            class="mx-2"
-            @click="editedConfig = config"
-          >
-            <v-icon icon="mdi-pencil"></v-icon>
-          </v-btn>
-          <v-btn icon size="x-small" title="Lancer" class="mx-2">
-            <v-icon icon="mdi-play" color="green"></v-icon>
-          </v-btn>
-        </v-list-item-media>
-        {{ config }}
+      <v-list-item v-for="config in configs" class="my-2">
+        <v-row>
+          <v-col cols="auto" align-self="center">
+            <v-btn
+              icon
+              size="x-small"
+              title="Editer"
+              class="mx-2"
+              @click="editedConfig = config"
+            >
+              <v-icon icon="mdi-pencil"></v-icon>
+            </v-btn>
+            <v-btn icon size="x-small" title="Lancer" class="mx-2">
+              <v-icon icon="mdi-play" color="green"></v-icon>
+            </v-btn>
+            <v-btn
+              class="mx-2"
+              size="x-small"
+              icon
+              @click="deleteConfig(config)"
+              title="Supprimer cette session"
+              :disabled="config.IsLaunched"
+            >
+              <v-icon icon="mdi-delete" color="red"></v-icon>
+            </v-btn>
+          </v-col>
+          <v-col align-self="center" md="8">
+            <v-row justify="center">
+              <v-col
+                cols="6"
+                align-self="center"
+                style="text-align: center"
+                v-if="config.Questions!.every(v=>!v)"
+              >
+                <i>Aucune question</i>
+              </v-col>
+              <v-col
+                cols="2"
+                align-self="center"
+                v-for="(categorie, index) in config.Questions || []"
+                v-show="categorie && categorie.length != 0"
+              >
+                <v-chip :color="colors[index]" variant="outlined">AAAA</v-chip>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
       </v-list-item>
     </v-list>
   </v-card>
@@ -153,7 +202,13 @@ let allKnownTags = $ref<string[]>([]);
 
 let editedConfig = $ref<TrivialConfig | null>(null);
 
-let configs = $ref<TrivialConfig[]>([]);
+let _configs = $ref<TrivialConfig[]>([]);
+
+const configs = computed(() => {
+  const a = _configs.map(v => v);
+  a.sort((u, v) => u.Id - v.Id);
+  return a;
+});
 
 const isValid = computed(
   () => !isSpinning && launchOptions.GroupStrategy.Data.MaxPlayersPerGroup >= 1
@@ -170,7 +225,7 @@ onMounted(async () => {
   if (res === undefined) {
     return;
   }
-  configs = Object.values(res || {});
+  _configs = Object.values(res || {});
 
   const tags = await controller.EditorGetTags();
   allKnownTags = tags || [];
@@ -193,7 +248,21 @@ async function createConfig() {
   if (res === undefined) {
     return;
   }
-  configs.push(res);
+  _configs.push(res);
+}
+
+async function updateConfig() {
+  // remove empty categories
+  editedConfig!.Questions = editedConfig!.Questions.map(q =>
+    (q || []).filter(v => v && v.length != 0)
+  );
+  await controller.UpdateTrivialPoursuit(editedConfig!);
+  editedConfig = null;
+}
+
+async function deleteConfig(config: TrivialConfig) {
+  await controller.DeleteTrivialPoursuit({ id: config.Id });
+  _configs = _configs.filter(c => c.Id != config.Id);
 }
 </script>
 

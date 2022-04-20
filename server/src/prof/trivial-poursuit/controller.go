@@ -50,6 +50,9 @@ func NewController(db *sql.DB, key pass.Encrypter) *Controller {
 	return &Controller{db: db, key: key, sessions: make(map[string]*gameSession)}
 }
 
+// TODO: compute the questions matching tag filters
+// func (ct *Controller)
+
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 	out, err := SelectAllTrivialConfigs(ct.db)
 	if err != nil {

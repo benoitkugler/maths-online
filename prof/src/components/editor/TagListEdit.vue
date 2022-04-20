@@ -14,7 +14,7 @@
     </v-col>
     <v-col :cols="props.horizontal ? 5 : 12">
       <v-autocomplete
-        :items="allTags"
+        :items="tagItems"
         variant="outlined"
         :density="props.horizontal ? 'compact' : 'comfortable'"
         hide-details
@@ -22,10 +22,10 @@
         :search="entry"
         @update:search="s => (entry = s)"
         @keyup="onEnterKey"
+        @update:model-value="onSelectItem"
         append-icon=""
         hide-no-data
         auto-select-first
-        hide-selected
       >
         <template v-slot:appendInner>
           <v-btn
@@ -62,6 +62,10 @@ const emit = defineEmits<{
 
 let entry = $ref("");
 
+const tagItems = computed(() => {
+  return props.allTags.filter(t => !props.modelValue.includes(t));
+});
+
 const isEntryValid = computed(() => {
   const e = entry.trim();
   if (e.length == 0) {
@@ -80,6 +84,11 @@ function onEnterKey(key: KeyboardEvent) {
   if (key.key == "Enter" && isEntryValid.value) {
     add();
   }
+}
+
+function onSelectItem(s: string) {
+  entry = s;
+  add();
 }
 
 function onDelete(e: Event, index: number) {
