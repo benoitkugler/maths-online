@@ -2,10 +2,10 @@ package editor
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -59,10 +59,9 @@ func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
-	idS := c.QueryParam("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
+	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
-		return fmt.Errorf("invalid ID parameter: %s", err)
+		return err
 	}
 
 	_, err = exercice.DeleteQuestionById(ct.db, id)
@@ -74,10 +73,9 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) EditorGetQuestion(c echo.Context) error {
-	idS := c.QueryParam("id")
-	id, err := strconv.ParseInt(idS, 10, 64)
+	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
-		return fmt.Errorf("invalid ID parameter: %s", err)
+		return err
 	}
 
 	question, err := exercice.SelectQuestion(ct.db, id)

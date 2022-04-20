@@ -28,6 +28,9 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
+// GameID is an in-memory identifier for a game room.
+type GameID = string
+
 // AddClient uses the given connection to start a web socket, registred
 // with given `player`.
 // Errors are send to the websocket, and the function blocks until the game ends
@@ -105,8 +108,8 @@ type GameOptions struct {
 }
 
 type Monitor struct {
-	Summary      chan<- GameSummary
-	MarkQuestion chan<- MarkQuestion
+	Summary      chan GameSummary
+	MarkQuestion chan MarkQuestion
 }
 
 // GameController handles one game room
@@ -149,7 +152,7 @@ func (gc *GameController) playerIDsToClients() map[game.PlayerID]*client {
 	return players
 }
 
-func (gc *GameController) startLoop(ctx context.Context) {
+func (gc *GameController) StartLoop(ctx context.Context) {
 	var isGameOver bool // if true, broadcast the last events and quit
 	for {
 		select {
@@ -171,7 +174,7 @@ func (gc *GameController) startLoop(ctx context.Context) {
 			}
 
 			if gc.monitor.Summary != nil { // notify the monitor
-				gc.monitor.Summary <- gc.summary()
+				gc.monitor.Summary <- gc.Summary()
 			}
 
 			if isGameOver {
@@ -194,7 +197,7 @@ func (gc *GameController) startLoop(ctx context.Context) {
 			gc.gameLock.Unlock()
 
 			if gc.monitor.Summary != nil { // notify the monitor
-				gc.monitor.Summary <- gc.summary()
+				gc.monitor.Summary <- gc.Summary()
 			}
 
 			// end the game only if the game has already started and all
@@ -247,7 +250,7 @@ func (gc *GameController) startLoop(ctx context.Context) {
 			}
 
 			if gc.monitor.Summary != nil { // notify the monitor
-				gc.monitor.Summary <- gc.summary()
+				gc.monitor.Summary <- gc.Summary()
 			}
 
 		case message := <-gc.incomingEvents:
@@ -294,7 +297,7 @@ type GameSummary struct {
 	ID         GameID
 }
 
-func (gc *GameController) summary() GameSummary {
+func (gc *GameController) Summary() GameSummary {
 	gc.gameLock.Lock()
 	defer gc.gameLock.Unlock()
 

@@ -41,7 +41,7 @@ func TestConcurrentEvents(t *testing.T) {
 	// ProgressLogger.SetOutput(os.Stdout)
 
 	ct := NewGameController("testGame", GameOptions{4, 0}, Monitor{}) // do not start a game
-	go ct.startLoop(context.Background())
+	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -81,7 +81,7 @@ func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
 	ct := NewGameController("testGame", GameOptions{4, time.Millisecond * 50}, Monitor{})
-	go ct.startLoop(context.Background())
+	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -107,7 +107,7 @@ func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
 	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{})
-	go ct.startLoop(context.Background())
+	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -142,7 +142,7 @@ func TestStartGame(t *testing.T) {
 
 	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{})
 
-	go ct.startLoop(context.Background())
+	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -189,7 +189,7 @@ func TestInvalidJoin(t *testing.T) {
 
 	ct := NewGameController("testGame", GameOptions{1, 0}, Monitor{})
 
-	go ct.startLoop(context.Background())
+	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -226,7 +226,7 @@ func TestSummary(t *testing.T) {
 
 	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{Summary: notif})
 
-	go ct.startLoop(context.Background())
+	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -241,7 +241,7 @@ func TestSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if sum := ct.summary(); len(sum.Successes) != 1 || sum.PlayerTurn != nil {
+	if sum := ct.Summary(); len(sum.Successes) != 1 || sum.PlayerTurn != nil {
 		t.Fatal(sum)
 	}
 
@@ -259,7 +259,7 @@ func TestSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if sum := ct.summary(); len(sum.Successes) != 2 || sum.PlayerTurn == nil {
+	if sum := ct.Summary(); len(sum.Successes) != 2 || sum.PlayerTurn == nil {
 		t.Fatal(sum)
 	}
 }

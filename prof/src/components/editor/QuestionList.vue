@@ -17,6 +17,7 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
   <v-card class="pt-2">
     <v-row>
       <v-col> <v-card-title>Liste des questions</v-card-title> </v-col>
@@ -175,7 +176,7 @@ async function createQuestion() {
 }
 
 async function startEdit(question: QuestionHeader) {
-  const out = await controller.EditorGetQuestion({ id: String(question.Id) });
+  const out = await controller.EditorGetQuestion({ id: question.Id });
   if (out == undefined) {
     return;
   }
@@ -184,7 +185,7 @@ async function startEdit(question: QuestionHeader) {
 
 let questionToDelete: QuestionHeader | null = $ref(null);
 async function deleteQuestion() {
-  await controller.EditorDeleteQuestion({ id: String(questionToDelete?.Id) });
+  await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
   questions = questions.filter(qu => qu.Id != questionToDelete?.Id);
   questionToDelete = null;
 }

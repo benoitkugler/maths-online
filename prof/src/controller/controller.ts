@@ -1,13 +1,31 @@
 import type {
   CheckParametersOut,
-  LaunchGameOut,
+  LaunchSessionOut,
   Question,
   QuestionHeader,
-  StartSessionOut
+  StartSessionOut,
+  TrivialConfig,
+  TrivialConfigs
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
 class Controller extends AbstractAPI {
+  protected onSuccessGetTrivialPoursuit(data: TrivialConfigs): void {
+    this.inRequest = false;
+  }
+  protected onSuccessCreateTrivialPoursuit(data: TrivialConfig): void {
+    this.inRequest = false;
+  }
+  protected onSuccessUpdateTrivialPoursuit(data: TrivialConfig): void {
+    this.inRequest = false;
+  }
+  protected onSuccessDeleteTrivialPoursuit(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessLaunchSession(data: LaunchSessionOut): void {
+    console.log(`Game started at ${data.SessionID}`);
+    this.inRequest = false;
+  }
   inRequest = false;
   requestError = "";
 
@@ -23,11 +41,6 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
-  }
-
-  protected onSuccessLaunchGame(data: LaunchGameOut): void {
-    console.log(`Game started at ${data.URL}`);
-    this.inRequest = false;
   }
 
   protected onSuccessEditorStartSession(data: StartSessionOut): void {

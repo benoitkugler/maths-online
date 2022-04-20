@@ -4,6 +4,9 @@ INSERT INTO questions (id, title, parameters, enonce)
 INSERT INTO question_tags (id_question, tag)
     VALUES (1, 'Cat1'), (1, 'Cat2'), (2, 'Cat1'), (2, 'Cat3'), (3, 'Cat3'), (4, 'Cat3'), (5, 'Cat3'), (6, 'Cat3');
 
+INSERT INTO students (id, name, surname)
+    VALUES (1, 'K', 'Benoit'), (2, 'L', 'GuiGui');
+
 SELECT
     setval('questions_id_seq', (
             SELECT

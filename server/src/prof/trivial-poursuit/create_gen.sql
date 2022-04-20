@@ -77,8 +77,6 @@ CREATE TABLE trivial_configs (
     Id serial PRIMARY KEY,
     IsLaunched boolean NOT NULL,
     Questions jsonb NOT NULL CONSTRAINT Questions_structgen_validate_json_array_5_array_array_string CHECK (structgen_validate_json_array_5_array_array_string (Questions)),
-    QuestionTimeout integer NOT NULL,
-    GroupStrategy integer CHECK (GroupStrategy IN (0)) NOT NULL,
-    MaxPlayersPerGroup integer NOT NULL
+    QuestionTimeout integer NOT NULL
 );
 

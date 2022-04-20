@@ -14,7 +14,8 @@ import (
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
-	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
+	trivialpoursuit "github.com/benoitkugler/maths-online/prof/trivial-poursuit"
+	tvGame "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -51,6 +52,17 @@ func connectDB(dev bool) (*sql.DB, error) {
 	return db, err
 }
 
+func getEncrypter(dev bool) (out pass.Encrypter, err error) {
+	if dev {
+		out = pass.Encrypter{1, 2, 3, 4, 5, 6}
+	} else {
+		out, err = pass.NewEncrypter("ENC_KEY")
+	}
+
+	fmt.Printf("Encrypter setup with key %v.\n", out)
+	return out, err
+}
+
 func main() {
 	devPtr := flag.Bool("dev", false, "run in dev mode (localhost)")
 	dryPtr := flag.Bool("dry", false, "do not listen, but quit early")
@@ -58,16 +70,22 @@ func main() {
 
 	host := getAdress(*devPtr)
 
+	key, err := getEncrypter(*devPtr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := connectDB(*devPtr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	trivial := trivialpoursuit.NewController(host)
+	trivial := trivialpoursuit.NewController(db, key)
+
 	// for now, show the logs
-	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
-	trivialpoursuit.WarningLogger.SetOutput(os.Stdout)
+	tvGame.ProgressLogger.SetOutput(os.Stdout)
+	tvGame.WarningLogger.SetOutput(os.Stdout)
 
 	edit := editor.NewController(db)
 
@@ -166,8 +184,9 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
 	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
 
-	e.GET("/trivial/stats", trivial.ShowStats)
-	e.GET(trivialpoursuit.GameEndPoint, trivial.AccessGame)
+	// e.GET("/trivial/stats", trivial.ShowStats)
+	e.GET("/prof/trivial/monitor", trivial.ConnectTeacherMonitor)
+	e.GET(trivialpoursuit.GameEndPoint, trivial.ConnectStudentSession)
 
 	// prof. back office
 	for _, route := range []string{

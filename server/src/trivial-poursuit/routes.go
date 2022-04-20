@@ -1,155 +1,134 @@
 package trivialpoursuit
 
-import (
-	"context"
-	"fmt"
-	"net/url"
-	"strings"
-	"sync"
-	"time"
-
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/utils"
-	"github.com/labstack/echo/v4"
-)
-
 // exposes some routes used to control and launch games
 
-const (
-	GameEndPoint = "/trivial/game/:game_id"
-	gameTimeout  = time.Hour * 24
-)
+// type Controller struct {
+// 	host *url.URL // current URL start, such as http://localhost:1323, or https://www.deployed.fr
 
-// GameID is an in-memory identifier for a game room.
-type GameID = string
+// 	lock sync.Mutex
 
-type Controller struct {
-	host *url.URL // current URL start, such as http://localhost:1323, or https://www.deployed.fr
+// 	games       map[GameID]*GameController // active games
+// 	gameTimeout time.Duration              // max duration of a game (useful is nobody joins)
 
-	lock sync.Mutex
+// 	monitor Monitor
+// }
 
-	games       map[GameID]*GameController // active games
-	gameTimeout time.Duration              // max duration of a game (useful is nobody joins)
+// // NewController initialize the controller. It will panic
+// // if the given host is an invalid url
+// func NewController(host string) *Controller {
+// 	u, err := url.Parse("http://" + host)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return &Controller{
+// 		host:        u,
+// 		games:       make(map[string]*GameController),
+// 		gameTimeout: gameTimeout,
+// 	}
+// }
 
-	monitor Monitor
-}
+// // return the active game and the number of players in it
+// func (ct *Controller) stats() map[GameID]int {
+// 	ct.lock.Lock()
+// 	defer ct.lock.Unlock()
 
-// NewController initialize the controller. It will panic
-// if the given host is an invalid url
-func NewController(host string) *Controller {
-	u, err := url.Parse("http://" + host)
-	if err != nil {
-		panic(err)
-	}
-	return &Controller{
-		host:        u,
-		games:       make(map[string]*GameController),
-		gameTimeout: gameTimeout,
-	}
-}
+// 	out := make(map[GameID]int)
+// 	for k, v := range ct.games {
+// 		out[k] = len(v.clients)
+// 	}
+// 	return out
+// }
 
-// return the active game and the number of players in it
-func (ct *Controller) stats() map[GameID]int {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
+// func (ct *Controller) buildURL(path string, isWebSocket bool) string {
+// 	u := *ct.host
+// 	u.RawPath = path
+// 	u.Path = path
 
-	out := make(map[GameID]int)
-	for k, v := range ct.games {
-		out[k] = len(v.clients)
-	}
-	return out
-}
+// 	if isWebSocket {
+// 		u.Scheme = "ws"
+// 	}
 
-func (ct *Controller) buildURL(path string, isWebSocket bool) string {
-	u := *ct.host
-	u.RawPath = path
-	u.Path = path
+// 	return u.String()
+// }
 
-	if isWebSocket {
-		u.Scheme = "ws"
-	}
+// type LaunchGameIn struct {
+// 	NbPlayers      int
+// 	TimeoutSeconds int
+// }
 
-	return u.String()
-}
+// type LaunchGameOut struct {
+// 	URL string
+// }
 
-type LaunchGameIn struct {
-	NbPlayers      int
-	TimeoutSeconds int
-}
+// // LaunchGame starts a new game and return the WebSocket URL to
+// // access it.
+// func (ct *Controller) LaunchGame(c echo.Context) error {
+// 	var in LaunchGameIn
+// 	if err := c.Bind(&in); err != nil {
+// 		return fmt.Errorf("invalid parameters format: %s", err)
+// 	}
 
-type LaunchGameOut struct {
-	URL string
-}
+// 	out := ct.launchGame(in)
 
-// LaunchGame starts a new game and return the WebSocket URL to
-// access it.
-func (ct *Controller) LaunchGame(c echo.Context) error {
-	var in LaunchGameIn
-	if err := c.Bind(&in); err != nil {
-		return fmt.Errorf("invalid parameters format: %s", err)
-	}
+// 	return c.JSON(200, out)
+// }
 
-	out := ct.launchGame(in)
+// func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
+// 	ct.lock.Lock()
+// 	defer ct.lock.Unlock()
 
-	return c.JSON(200, out)
-}
+// 	newID := utils.RandomID(true, 3, func(s string) bool {
+// 		_, taken := ct.games[s]
+// 		return taken
+// 	})
 
-func (ct *Controller) launchGame(options LaunchGameIn) LaunchGameOut {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
+// 	game := NewGameController(
+// 		newID,
+// 		GameOptions{
+// 			PlayersNumber:   options.NbPlayers,
+// 			QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds),
+// 		},
+// 		ct.monitor)
+// 	// register the controller...
+// 	ct.games[newID] = game
+// 	// ...and start it
+// 	go func() {
+// 		ctx, cancelFunc := context.WithTimeout(context.Background(), ct.gameTimeout)
+// 		game.StartLoop(ctx)
 
-	newID := utils.RandomID(true, 3, func(s string) bool {
-		_, taken := ct.games[s]
-		return taken
-	})
+// 		cancelFunc()
 
-	game := NewGameController(
-		newID,
-		GameOptions{
-			PlayersNumber:   options.NbPlayers,
-			QuestionTimeout: time.Second * time.Duration(options.TimeoutSeconds),
-		},
-		ct.monitor)
-	// register the controller...
-	ct.games[newID] = game
-	// ...and start it
-	go func() {
-		ctx, cancelFunc := context.WithTimeout(context.Background(), ct.gameTimeout)
-		game.startLoop(ctx)
+// 		// remove the game controller when the game is over
+// 		ct.lock.Lock()
+// 		defer ct.lock.Unlock()
+// 		delete(ct.games, newID)
+// 	}()
 
-		cancelFunc()
+// 	var out LaunchGameOut
+// 	out.URL = ct.buildURL(strings.ReplaceAll(GameEndPoint, ":game_id", newID), true)
+// 	return out
+// }
 
-		// remove the game controller when the game is over
-		ct.lock.Lock()
-		defer ct.lock.Unlock()
-		delete(ct.games, newID)
-	}()
+// // AccessGame establish a connection to a game session, using
+// // WebSockets
+// func (ct *Controller) AccessGame(c echo.Context) error {
+// 	gameID := c.Param("game_id")
 
-	var out LaunchGameOut
-	out.URL = ct.buildURL(strings.ReplaceAll(GameEndPoint, ":game_id", newID), true)
-	return out
-}
+// 	game, ok := ct.games[gameID]
+// 	if !ok {
+// 		WarningLogger.Printf("invalid game ID %s", gameID)
+// 		return fmt.Errorf("La partie n'existe pas ou est déjà terminée.")
+// 	}
 
-// AccessGame establish a connection to a game session, using
-// WebSockets
-func (ct *Controller) AccessGame(c echo.Context) error {
-	gameID := c.Param("game_id")
+// 	// connect to the websocket handler, which handle errors
+// 	clientID := c.QueryParam("client_id")
+// 	game.AddClient(c.Response().Writer, c.Request(), Player{ID: pass.EncryptedID(clientID), Name: ""}) // TODO: name
+// 	return nil
+// }
 
-	game, ok := ct.games[gameID]
-	if !ok {
-		WarningLogger.Printf("invalid game ID %s", gameID)
-		return fmt.Errorf("La partie n'existe pas ou est déjà terminée.")
-	}
-
-	// connect to the websocket handler, which handle errors
-	clientID := c.QueryParam("client_id")
-	game.AddClient(c.Response().Writer, c.Request(), Player{ID: pass.EncryptedID(clientID), Name: ""}) // TODO: name
-	return nil
-}
-
-// ShowStats returns a JSON dict of current games, usable as
-// debug tool.
-// TODO: protect the access
-func (ct *Controller) ShowStats(c echo.Context) error {
-	return c.JSON(200, ct.stats())
-}
+// // ShowStats returns a JSON dict of current games, usable as
+// // debug tool.
+// // TODO: protect the access
+// func (ct *Controller) ShowStats(c echo.Context) error {
+// 	return c.JSON(200, ct.stats())
+// }

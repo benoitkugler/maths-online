@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
 )
 
 func randomID(numberOnly bool, length int) string {
@@ -32,4 +35,18 @@ func RandomID(numberOnly bool, length int, isTaken func(string) bool) string {
 func WebsocketError(ws *websocket.Conn, err error) {
 	message := websocket.FormatCloseMessage(websocket.CloseUnsupportedData, err.Error())
 	ws.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
+}
+
+func SQLError(err error) error {
+	return fmt.Errorf("SQL request failed : %s", err)
+}
+
+// QueryParamInt64 parse the query param `name` to an int64
+func QueryParamInt64(c echo.Context, name string) (int64, error) {
+	idS := c.QueryParam(name)
+	id, err := strconv.ParseInt(idS, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid ID parameter %s : %s", idS, err)
+	}
+	return id, nil
 }
