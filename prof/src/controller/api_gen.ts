@@ -3,8 +3,10 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+// github.com/benoitkugler/maths-online/prof/trivial-poursuit.QuestionCriterion
+export type QuestionCriterion = (string[] | null)[] | null;
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.CategoriesQuestions
-export type CategoriesQuestions = ((string[] | null)[] | null)[];
+export type CategoriesQuestions = QuestionCriterion[];
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfig
 export interface TrivialConfig {
   Id: number;
@@ -12,8 +14,11 @@ export interface TrivialConfig {
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
 }
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfigs
-export type TrivialConfigs = { [key: number]: TrivialConfig } | null;
+// github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfigExt
+export interface TrivialConfigExt {
+  Config: TrivialConfig;
+  NbQuestionsByCategories: number[];
+}
 
 export enum GroupStrategyKind {
   RandomGroupStrategy = 0,
@@ -365,9 +370,10 @@ export abstract class AbstractAPI {
 
   protected async rawGetTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
-    const rep: AxiosResponse<TrivialConfigs> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<TrivialConfigExt[] | null> = await Axios.get(
+      fullUrl,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -383,13 +389,17 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessGetTrivialPoursuit(data: TrivialConfigs): void;
+  protected abstract onSuccessGetTrivialPoursuit(
+    data: TrivialConfigExt[] | null
+  ): void;
 
   protected async rawCreateTrivialPoursuit(params: any) {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
-    const rep: AxiosResponse<TrivialConfig> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<TrivialConfigExt> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -405,11 +415,13 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessCreateTrivialPoursuit(data: TrivialConfig): void;
+  protected abstract onSuccessCreateTrivialPoursuit(
+    data: TrivialConfigExt
+  ): void;
 
   protected async rawUpdateTrivialPoursuit(params: TrivialConfig) {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
-    const rep: AxiosResponse<TrivialConfig> = await Axios.post(
+    const rep: AxiosResponse<TrivialConfigExt> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -429,7 +441,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessUpdateTrivialPoursuit(data: TrivialConfig): void;
+  protected abstract onSuccessUpdateTrivialPoursuit(
+    data: TrivialConfigExt
+  ): void;
 
   protected async rawDeleteTrivialPoursuit(params: { id: number }) {
     const fullUrl = this.baseUrl + "/prof/trivial/config";

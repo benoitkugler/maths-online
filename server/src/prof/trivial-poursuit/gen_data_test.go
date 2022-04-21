@@ -42,16 +42,20 @@ func randSliceSlicestring() [][]string {
 	return out
 }
 
-func randArray5SliceSlicestring() [5][][]string {
-	var out [5][][]string
+func randQuestionCriterion() QuestionCriterion {
+	return QuestionCriterion(randSliceSlicestring())
+}
+
+func randArray5QuestionCriterion() [5]QuestionCriterion {
+	var out [5]QuestionCriterion
 	for i := range out {
-		out[i] = randSliceSlicestring()
+		out[i] = randQuestionCriterion()
 	}
 	return out
 }
 
 func randCategoriesQuestions() CategoriesQuestions {
-	return CategoriesQuestions(randArray5SliceSlicestring())
+	return CategoriesQuestions(randArray5QuestionCriterion())
 }
 
 func randint() int {

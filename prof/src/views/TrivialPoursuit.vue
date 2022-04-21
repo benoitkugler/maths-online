@@ -138,20 +138,26 @@
               size="x-small"
               title="Editer"
               class="mx-2"
-              @click="editedConfig = config"
+              @click="editedConfig = config.Config"
             >
               <v-icon icon="mdi-pencil"></v-icon>
             </v-btn>
-            <v-btn icon size="x-small" title="Lancer" class="mx-2">
+            <v-btn
+              icon
+              size="x-small"
+              title="Lancer"
+              class="mx-2"
+              :disabled="!config.NbQuestionsByCategories.every(v => v > 0)"
+            >
               <v-icon icon="mdi-play" color="green"></v-icon>
             </v-btn>
             <v-btn
               class="mx-2"
               size="x-small"
               icon
-              @click="deleteConfig(config)"
+              @click="deleteConfig(config.Config)"
               title="Supprimer cette session"
-              :disabled="config.IsLaunched"
+              :disabled="config.Config.IsLaunched"
             >
               <v-icon icon="mdi-delete" color="red"></v-icon>
             </v-btn>
@@ -162,17 +168,19 @@
                 cols="6"
                 align-self="center"
                 style="text-align: center"
-                v-if="config.Questions!.every(v=>!v)"
+                v-if="config.Config.Questions!.every(v=>!v)"
               >
-                <i>Aucune question</i>
+                <i>Aucune question configurée.</i>
               </v-col>
               <v-col
                 cols="2"
                 align-self="center"
-                v-for="(categorie, index) in config.Questions || []"
+                v-for="(categorie, index) in config.Config.Questions || []"
                 v-show="categorie && categorie.length != 0"
               >
-                <v-chip :color="colors[index]" variant="outlined">AAAA</v-chip>
+                <v-chip :color="colors[index]" variant="outlined">
+                  {{ config.NbQuestionsByCategories[index] }}
+                </v-chip>
               </v-col>
             </v-row>
           </v-col>
@@ -183,7 +191,11 @@
 </template>
 
 <script setup lang="ts">
-import type { LaunchSessionIn, TrivialConfig } from "@/controller/api_gen";
+import type {
+  LaunchSessionIn,
+  TrivialConfig,
+  TrivialConfigExt
+} from "@/controller/api_gen";
 import { GroupStrategyKind } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onMounted, reactive } from "@vue/runtime-core";
@@ -202,11 +214,11 @@ let allKnownTags = $ref<string[]>([]);
 
 let editedConfig = $ref<TrivialConfig | null>(null);
 
-let _configs = $ref<TrivialConfig[]>([]);
+let _configs = $ref<TrivialConfigExt[]>([]);
 
 const configs = computed(() => {
   const a = _configs.map(v => v);
-  a.sort((u, v) => u.Id - v.Id);
+  a.sort((u, v) => u.Config.Id - v.Config.Id);
   return a;
 });
 
@@ -256,13 +268,18 @@ async function updateConfig() {
   editedConfig!.Questions = editedConfig!.Questions.map(q =>
     (q || []).filter(v => v && v.length != 0)
   );
-  await controller.UpdateTrivialPoursuit(editedConfig!);
+  const res = await controller.UpdateTrivialPoursuit(editedConfig!);
+  if (res === undefined) {
+    return;
+  }
+  const index = _configs.findIndex(v => v.Config.Id == editedConfig!.Id);
+  _configs[index] = res;
   editedConfig = null;
 }
 
 async function deleteConfig(config: TrivialConfig) {
   await controller.DeleteTrivialPoursuit({ id: config.Id });
-  _configs = _configs.filter(c => c.Id != config.Id);
+  _configs = _configs.filter(c => c.Config.Id != config.Id);
 }
 </script>
 

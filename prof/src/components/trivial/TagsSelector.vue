@@ -7,6 +7,7 @@
             :model-value="row || []"
             @update:model-value="r => (modelValue[index] = r)"
             :all-tags="allTags"
+            :ref="(el:any) => (rows[index] = el as TF)"
           ></tag-list-field>
         </v-col>
         <v-col cols="1" align-self="center" style="text-align: center">
@@ -36,6 +37,8 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick } from "@vue/runtime-core";
+import { $ref } from "vue/macros";
 import TagListField from "../editor/TagListField.vue";
 
 interface Props {
@@ -50,9 +53,16 @@ const emit = defineEmits<{
   (e: "update:model-value", v: (string[] | null)[]): void;
 }>();
 
+type TF = InstanceType<typeof TagListField>;
+
+let rows = $ref<TF[]>([]);
+
 function addIntersection() {
   props.modelValue.push([]);
   emit("update:model-value", props.modelValue);
+  nextTick(() => {
+    rows[rows.length - 1].startEdit();
+  });
 }
 
 function deleteRow(index: number) {

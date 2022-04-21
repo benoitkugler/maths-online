@@ -130,6 +130,11 @@ func (ct *Controller) updateTags(params UpdateTagsIn) error {
 	}
 	var tags exercice.QuestionTags
 	for _, tag := range params.Tags {
+		tag = strings.ToUpper(strings.TrimSpace(tag))
+		if tag == "" {
+			continue
+		}
+
 		tags = append(tags, exercice.QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
 	}
 	err = exercice.InsertManyQuestionTags(tx, tags...)

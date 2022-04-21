@@ -29,8 +29,8 @@ func SelectAllTags(db DB) ([]string, error) {
 
 // SelectQuestionByTags returns the question matching ALL the tags given
 // It panis if tags is empty.
-func SelectQuestionByTags(db DB, tags ...string) (Questions, error) {
-	firstSelection, err := selectQuestionByTag(db, tags[0])
+func SelectQuestionByTags(db DB, queryTags ...string) (Questions, error) {
+	firstSelection, err := selectQuestionByTag(db, queryTags[0])
 	if err != nil {
 		return nil, err
 	}
@@ -40,26 +40,11 @@ func SelectQuestionByTags(db DB, tags ...string) (Questions, error) {
 		return nil, err
 	}
 
-	crible := make(map[int64]map[string]bool)
-	for _, tag := range quTags {
-		m := crible[tag.IdQuestion]
-		if m == nil {
-			m = make(map[string]bool)
-		}
-		m[tag.Tag] = true
-		crible[tag.IdQuestion] = m
-	}
-
 	var ids IDs
-	for idQuestion, m := range crible {
-		hasAll := true
-		for _, tag := range tags {
-			if !m[tag] {
-				hasAll = false
-				break
-			}
-		}
-		if hasAll {
+	for idQuestion, thisTags := range quTags.ByIdQuestion() {
+		crible := thisTags.Crible()
+
+		if crible.HasAll(queryTags) {
 			ids = append(ids, idQuestion)
 		}
 	}
@@ -77,6 +62,28 @@ func selectQuestionByTag(db DB, tag string) (Questions, error) {
 		return nil, err
 	}
 	return ScanQuestions(rs)
+}
+
+// Crible is a set of tags.
+type Crible map[string]bool
+
+// HasAll returns `true` is all the `tags` are present in the crible.
+func (cr Crible) HasAll(tags []string) bool {
+	for _, tag := range tags {
+		if !cr[tag] {
+			return false
+		}
+	}
+	return true
+}
+
+// Crible build a set from the tags
+func (qus QuestionTags) Crible() Crible {
+	out := make(Crible, len(qus))
+	for _, qt := range qus {
+		out[qt.Tag] = true
+	}
+	return out
 }
 
 // func SelectExerciceQuestions(db DB, id int64) (ExerciceQuestions, error) {

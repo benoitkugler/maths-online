@@ -4,19 +4,18 @@ import type {
   Question,
   QuestionHeader,
   StartSessionOut,
-  TrivialConfig,
-  TrivialConfigs
+  TrivialConfigExt
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
 class Controller extends AbstractAPI {
-  protected onSuccessGetTrivialPoursuit(data: TrivialConfigs): void {
+  protected onSuccessGetTrivialPoursuit(data: TrivialConfigExt[] | null): void {
     this.inRequest = false;
   }
-  protected onSuccessCreateTrivialPoursuit(data: TrivialConfig): void {
+  protected onSuccessCreateTrivialPoursuit(data: TrivialConfigExt): void {
     this.inRequest = false;
   }
-  protected onSuccessUpdateTrivialPoursuit(data: TrivialConfig): void {
+  protected onSuccessUpdateTrivialPoursuit(data: TrivialConfigExt): void {
     this.inRequest = false;
   }
   protected onSuccessDeleteTrivialPoursuit(data: any): void {

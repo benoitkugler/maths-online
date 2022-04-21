@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
@@ -54,19 +55,32 @@ func NewController(db *sql.DB, key pass.Encrypter) *Controller {
 // func (ct *Controller)
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
-	out, err := SelectAllTrivialConfigs(ct.db)
+	configs, err := SelectAllTrivialConfigs(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
+	}
+
+	tags, err := exercice.SelectAllQuestionTags(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tagsDict := tags.ByIdQuestion()
+	var out []TrivialConfigExt
+	for _, config := range configs {
+		out = append(out, config.withQuestionsNumber(tagsDict))
 	}
 
 	return c.JSON(200, out)
 }
 
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
-	out, err := TrivialConfig{QuestionTimeout: 60}.Insert(ct.db)
+	tc, err := TrivialConfig{QuestionTimeout: 60}.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+
+	out := TrivialConfigExt{Config: tc} // 0 questions by categories
 
 	return c.JSON(200, out)
 }
@@ -77,10 +91,17 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return err
 	}
 
-	out, err := params.Update(ct.db)
+	config, err := params.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+
+	tags, err := exercice.SelectAllQuestionTags(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	out := config.withQuestionsNumber(tags.ByIdQuestion())
 
 	return c.JSON(200, out)
 }

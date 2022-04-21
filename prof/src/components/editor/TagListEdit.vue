@@ -87,6 +87,11 @@ function onEnterKey(key: KeyboardEvent) {
 }
 
 function onSelectItem(s: string) {
+  s = s.toUpperCase();
+  if (props.modelValue.includes(s)) {
+    entry = "";
+    return;
+  }
   entry = s;
   add();
 }

@@ -17,7 +17,7 @@
     </v-card>
   </v-dialog>
 
-  <v-btn variant="outlined" @click="onEdit" color="secondary">
+  <v-btn variant="outlined" @click="startEdit" color="secondary">
     <v-chip
       v-for="tag in props.modelValue"
       :key="tag"
@@ -48,10 +48,12 @@ const emit = defineEmits<{
   (e: "update:model-value", v: string[]): void;
 }>();
 
+defineExpose({ startEdit });
+
 let isEditing = $ref(false);
 let tmpList = $ref<string[]>([]);
 
-function onEdit() {
+function startEdit() {
   isEditing = true;
   tmpList = props.modelValue.map(v => v.toUpperCase());
 }
