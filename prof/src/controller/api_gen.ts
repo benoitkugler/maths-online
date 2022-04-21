@@ -10,7 +10,7 @@ export type CategoriesQuestions = QuestionCriterion[];
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfig
 export interface TrivialConfig {
   Id: number;
-  IsLaunched: boolean;
+  LaunchSessionID: string;
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
 }
@@ -37,10 +37,6 @@ export interface RandomGroupStrategy {
 export interface LaunchSessionIn {
   IdConfig: number;
   GroupStrategy: GroupStrategy;
-}
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.LaunchSessionOut
-export interface LaunchSessionOut {
-  SessionID: string;
 }
 // github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
 export interface StartSessionOut {
@@ -468,9 +464,9 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessDeleteTrivialPoursuit(data: any): void;
 
-  protected async rawLaunchSession(params: LaunchSessionIn) {
+  protected async rawLaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
     const fullUrl = this.baseUrl + "/trivial/launch_session";
-    const rep: AxiosResponse<LaunchSessionOut> = await Axios.post(
+    const rep: AxiosResponse<TrivialConfig> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -478,19 +474,21 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** LaunchSession wraps rawLaunchSession and handles the error */
-  async LaunchSession(params: LaunchSessionIn) {
+  /** LaunchSessionTrivialPoursuit wraps rawLaunchSessionTrivialPoursuit and handles the error */
+  async LaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
     this.startRequest();
     try {
-      const out = await this.rawLaunchSession(params);
-      this.onSuccessLaunchSession(out);
+      const out = await this.rawLaunchSessionTrivialPoursuit(params);
+      this.onSuccessLaunchSessionTrivialPoursuit(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessLaunchSession(data: LaunchSessionOut): void;
+  protected abstract onSuccessLaunchSessionTrivialPoursuit(
+    data: TrivialConfig
+  ): void;
 
   protected async rawEditorStartSession(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/new";

@@ -1,14 +1,17 @@
 import type {
   CheckParametersOut,
-  LaunchSessionOut,
   Question,
   QuestionHeader,
   StartSessionOut,
+  TrivialConfig,
   TrivialConfigExt
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
 class Controller extends AbstractAPI {
+  protected onSuccessLaunchSessionTrivialPoursuit(data: TrivialConfig): void {
+    throw new Error("Method not implemented.");
+  }
   protected onSuccessGetTrivialPoursuit(data: TrivialConfigExt[] | null): void {
     this.inRequest = false;
   }
@@ -21,8 +24,8 @@ class Controller extends AbstractAPI {
   protected onSuccessDeleteTrivialPoursuit(data: any): void {
     this.inRequest = false;
   }
-  protected onSuccessLaunchSession(data: LaunchSessionOut): void {
-    console.log(`Game started at ${data.SessionID}`);
+  protected onSuccessLaunchSession(data: TrivialConfig): void {
+    console.log(`Game started at ${data.LaunchSessionID}`);
     this.inRequest = false;
   }
   inRequest = false;

@@ -119,13 +119,9 @@ func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-type LaunchSessionOut struct {
-	SessionID SessionID
-}
-
-// LaunchSession starts a new TrivialPoursuit session with
-// the given config.
-func (ct *Controller) LaunchSession(c echo.Context) error {
+// LaunchSessionTrivialPoursuit starts a new TrivialPoursuit session with
+// the given config, and returns the updated version of the config.
+func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	var in LaunchSessionIn
 	if err := c.Bind(&in); err != nil {
 		return fmt.Errorf("invalid parameters format: %s", err)
@@ -139,14 +135,14 @@ func (ct *Controller) LaunchSession(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, error) {
+func (ct *Controller) launchSession(params LaunchSessionIn) (TrivialConfig, error) {
 	config, err := SelectTrivialConfig(ct.db, params.IdConfig)
 	if err != nil {
-		return LaunchSessionOut{}, utils.SQLError(err)
+		return TrivialConfig{}, utils.SQLError(err)
 	}
 
-	if config.IsLaunched {
-		return LaunchSessionOut{}, errors.New("session already running")
+	if config.IsLaunched() {
+		return TrivialConfig{}, errors.New("session already running")
 	}
 
 	ct.lock.Lock()
@@ -176,13 +172,13 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, e
 	}()
 
 	// mark the session as started
-	config.IsLaunched = true
-	_, err = config.Update(ct.db)
+	config.LaunchSessionID = newID
+	config, err = config.Update(ct.db)
 	if err != nil {
-		return LaunchSessionOut{}, utils.SQLError(err)
+		return TrivialConfig{}, utils.SQLError(err)
 	}
 
-	return LaunchSessionOut{SessionID: newID}, nil
+	return config, nil
 }
 
 func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {

@@ -1,11 +1,14 @@
 package trivialpoursuit
 
 import (
+	"encoding/json"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
+
+//go:generate ../../../../../structgen/structgen -source=types.go -mode=itfs-json:gen_itfs.go
 
 // QuestionCriterion is an union of intersection of tags.
 type QuestionCriterion [][]string
@@ -65,6 +68,18 @@ func (tc TrivialConfig) withQuestionsNumber(dict map[int64]exercice.QuestionTags
 type LaunchSessionIn struct {
 	IdConfig      int64
 	GroupStrategy GroupStrategy
+}
+
+func (ls *LaunchSessionIn) UnmarshalJSON(data []byte) error {
+	var tmp struct {
+		IdConfig      int64
+		GroupStrategy GroupStrategyWrapper
+	}
+	err := json.Unmarshal(data, &tmp)
+	ls.IdConfig = tmp.IdConfig
+	ls.GroupStrategy = tmp.GroupStrategy.Data
+
+	return err
 }
 
 var _ GroupStrategy = RandomGroupStrategy{}

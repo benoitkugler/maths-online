@@ -8,11 +8,6 @@ func randint64() int64 {
 	return int64(rand.Intn(1000000))
 }
 
-func randbool() bool {
-	i := rand.Int31n(2)
-	return i == 1
-}
-
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
 
 func randstring() string {
@@ -65,7 +60,7 @@ func randint() int {
 func randTrivialConfig() TrivialConfig {
 	return TrivialConfig{
 		Id:              randint64(),
-		IsLaunched:      randbool(),
+		LaunchSessionID: randstring(),
 		Questions:       randCategoriesQuestions(),
 		QuestionTimeout: randint(),
 	}

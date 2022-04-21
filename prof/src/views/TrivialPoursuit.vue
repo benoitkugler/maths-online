@@ -74,38 +74,58 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog title="Démarrer la session">
-    <v-form class="mx-4 my-2">
-      <v-text-field
-        label="Nombre de joueurs"
-        type="number"
-        min="1"
-        v-model.number="launchOptions.GroupStrategy.Data.MaxPlayersPerGroup"
-      ></v-text-field>
+  <v-dialog
+    :model-value="launchingConfig != null"
+    @update:model-value="launchingConfig = null"
+  >
+    <v-card title="Démarrer la session">
+      <v-card-text>
+        <v-form class="mx-4 my-2" v-if="launchingConfig != null">
+          <v-text-field
+            label="Nombre de joueurs par groupe"
+            type="number"
+            min="1"
+            v-model.number="launchOptions.Data.MaxPlayersPerGroup"
+          ></v-text-field>
 
-      <v-row>
-        <v-col cols="4" sm="6" md="9"></v-col>
-        <v-col cols="8" sm="6" md="3" class="text-right">
-          <v-btn block @click="launchGame" :disabled="!isValid" color="success">
-            Lancer la partie
-          </v-btn>
-        </v-col>
-      </v-row>
+          <v-text-field
+            label="Nombre total de joueurs"
+            type="number"
+            min="0"
+            v-model.number="launchOptions.Data.TotalPlayersNumber"
+          ></v-text-field>
+        </v-form>
 
-      <v-alert class="px-4 my-2" :model-value="gameCode != ''" color="info">
-        <v-row no-gutters>
-          <v-col align-self="center">
-            Code de
-            <a href="/test-eleve" target="_blank">la partie à rejoindre</a> :
-          </v-col>
-          <v-col>
-            <v-chip size="big" class="pa-3"
-              ><b>{{ gameCode }}</b></v-chip
+        <v-alert class="px-4 my-2" :model-value="gameCode != ''" color="info">
+          <v-row no-gutters>
+            <v-col align-self="center">
+              Code de
+              <a href="/test-eleve" target="_blank">la partie à rejoindre</a>
+              :
+            </v-col>
+            <v-col>
+              <v-chip size="big" class="pa-3"
+                ><b>{{ gameCode }}</b></v-chip
+              >
+            </v-col>
+          </v-row>
+        </v-alert>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-col cols="auto" class="text-right">
+            <v-btn
+              block
+              @click="launchSession"
+              :disabled="!isValid"
+              color="success"
             >
+              Lancer la partie
+            </v-btn>
           </v-col>
-        </v-row>
-      </v-alert>
-    </v-form>
+        </v-card-actions>
+      </v-card-text>
+    </v-card>
   </v-dialog>
 
   <v-card class="my-3 mx-auto" width="60%">
@@ -142,12 +162,17 @@
             >
               <v-icon icon="mdi-pencil"></v-icon>
             </v-btn>
+            <v-btn v-if="config.Config.LaunchSessionID != ''"> Suivre </v-btn>
             <v-btn
+              v-else
               icon
               size="x-small"
               title="Lancer"
               class="mx-2"
-              :disabled="!config.NbQuestionsByCategories.every(v => v > 0)"
+              @click="launchingConfig = config.Config"
+              :disabled="
+                isLaunching || !config.NbQuestionsByCategories.every(v => v > 0)
+              "
             >
               <v-icon icon="mdi-play" color="green"></v-icon>
             </v-btn>
@@ -157,7 +182,7 @@
               icon
               @click="deleteConfig(config.Config)"
               title="Supprimer cette session"
-              :disabled="config.Config.IsLaunched"
+              :disabled="config.Config.LaunchSessionID != ''"
             >
               <v-icon icon="mdi-delete" color="red"></v-icon>
             </v-btn>
@@ -192,23 +217,15 @@
 
 <script setup lang="ts">
 import type {
-  LaunchSessionIn,
+  GroupStrategy,
   TrivialConfig,
   TrivialConfigExt
 } from "@/controller/api_gen";
 import { GroupStrategyKind } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onMounted, reactive } from "@vue/runtime-core";
+import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagsSelector from "../components/trivial/TagsSelector.vue";
-
-let launchOptions: LaunchSessionIn = reactive({
-  IdConfig: 1,
-  GroupStrategy: {
-    Kind: GroupStrategyKind.RandomGroupStrategy,
-    Data: { MaxPlayersPerGroup: 2, TotalPlayersNumber: 5 }
-  }
-});
 
 let allKnownTags = $ref<string[]>([]);
 
@@ -223,9 +240,10 @@ const configs = computed(() => {
 });
 
 const isValid = computed(
-  () => !isSpinning && launchOptions.GroupStrategy.Data.MaxPlayersPerGroup >= 1
+  () =>
+    !isLaunching && launchOptions && launchOptions.Data.MaxPlayersPerGroup >= 1
 );
-let isSpinning = $ref(false);
+let isLaunching = $ref(false);
 
 let gameCode = $ref("");
 
@@ -242,18 +260,6 @@ onMounted(async () => {
   const tags = await controller.EditorGetTags();
   allKnownTags = tags || [];
 });
-
-async function launchGame(): Promise<void> {
-  isSpinning = true;
-  const res = await controller.LaunchSession(launchOptions);
-  isSpinning = false;
-
-  if (res === undefined) {
-    return;
-  }
-
-  gameCode = res.SessionID;
-}
 
 async function createConfig() {
   const res = await controller.CreateTrivialPoursuit(null);
@@ -280,6 +286,32 @@ async function updateConfig() {
 async function deleteConfig(config: TrivialConfig) {
   await controller.DeleteTrivialPoursuit({ id: config.Id });
   _configs = _configs.filter(c => c.Config.Id != config.Id);
+}
+
+let launchOptions = $ref<GroupStrategy>({
+  Kind: GroupStrategyKind.RandomGroupStrategy,
+  Data: { MaxPlayersPerGroup: 4, TotalPlayersNumber: 0 }
+});
+
+let launchingConfig = $ref<TrivialConfig | null>(null);
+
+async function launchSession() {
+  if (launchingConfig == null) {
+    return;
+  }
+  isLaunching = true;
+  const res = await controller.LaunchSessionTrivialPoursuit({
+    IdConfig: launchingConfig.Id,
+    GroupStrategy: launchOptions!
+  });
+  isLaunching = false;
+
+  if (res === undefined) {
+    return;
+  }
+
+  const index = _configs.findIndex(v => v.Config.Id == launchingConfig!.Id);
+  _configs[index].Config = res;
 }
 </script>
 
