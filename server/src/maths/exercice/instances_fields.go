@@ -117,7 +117,7 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 		}
 	}
 
-	_, _, err := expression.Parse(expr.Expression)
+	_, err := expression.Parse(expr.Expression)
 	if err != nil {
 		err := err.(expression.InvalidExpr)
 		return InvalidFieldAnswer{
@@ -129,7 +129,7 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 }
 
 func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	expr, _, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
+	expr, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
 
 	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
 }

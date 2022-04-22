@@ -27,15 +27,254 @@ export interface QuestionHeader {
   Title: string;
   Tags: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Block
-export type Block = any;
-// github.com/benoitkugler/maths-online/maths/exercice.Enonce
-export type Enonce = Block[] | null;
+
+export enum BlockKind {
+  FigureAffineLineFieldBlock = 0,
+  FigureBlock = 1,
+  FigurePointFieldBlock = 2,
+  FigureVectorFieldBlock = 3,
+  FigureVectorPairFieldBlock = 4,
+  FormulaBlock = 5,
+  FormulaFieldBlock = 6,
+  FunctionGraphBlock = 7,
+  FunctionPointsFieldBlock = 8,
+  FunctionVariationGraphBlock = 9,
+  NumberFieldBlock = 10,
+  OrderedListFieldBlock = 11,
+  RadioFieldBlock = 12,
+  SignTableBlock = 13,
+  TableBlock = 14,
+  TableFieldBlock = 15,
+  TextBlock = 16,
+  TreeFieldBlock = 17,
+  VariationTableBlock = 18,
+  VariationTableFieldBlock = 19,
+}
+
+export interface Block {
+  Kind: BlockKind;
+  Data:
+    | FigureAffineLineFieldBlock
+    | FigureBlock
+    | FigurePointFieldBlock
+    | FigureVectorFieldBlock
+    | FigureVectorPairFieldBlock
+    | FormulaBlock
+    | FormulaFieldBlock
+    | FunctionGraphBlock
+    | FunctionPointsFieldBlock
+    | FunctionVariationGraphBlock
+    | NumberFieldBlock
+    | OrderedListFieldBlock
+    | RadioFieldBlock
+    | SignTableBlock
+    | TableBlock
+    | TableFieldBlock
+    | TextBlock
+    | TreeFieldBlock
+    | VariationTableBlock
+    | VariationTableFieldBlock;
+}
+// github.com/benoitkugler/maths-online/maths/repere.RandomCoord
+export interface RandomCoord {
+  X: string;
+  Y: string;
+}
+// github.com/benoitkugler/maths-online/maths/repere.LabelPos
+export type LabelPos = number;
+// github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
+export interface RandomLabeledPoint {
+  Coord: RandomCoord;
+  Pos: LabelPos;
+}
+// github.com/benoitkugler/maths-online/maths/repere.NamedRandomLabeledPoint
+export interface NamedRandomLabeledPoint {
+  Name: string;
+  Point: RandomLabeledPoint;
+}
+// github.com/benoitkugler/maths-online/maths/repere.Segment
+export interface Segment {
+  LabelName: string;
+  From: string;
+  To: string;
+  LabelPos: LabelPos;
+  AsVector: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/repere.RandomLine
+export interface RandomLine {
+  Label: string;
+  A: string;
+  B: string;
+  Color: string;
+}
+// github.com/benoitkugler/maths-online/maths/repere.RandomDrawings
+export interface RandomDrawings {
+  Points: NamedRandomLabeledPoint[] | null;
+  Segments: Segment[] | null;
+  Lines: RandomLine[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/repere.Coord
+export interface Coord {
+  X: number;
+  Y: number;
+}
+// github.com/benoitkugler/maths-online/maths/repere.RepereBounds
+export interface RepereBounds {
+  Width: number;
+  Height: number;
+  Origin: Coord;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FigureBlock
+export interface FigureBlock {
+  Drawings: RandomDrawings;
+  Bounds: RepereBounds;
+  ShowGrid: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FigureAffineLineFieldBlock
+export interface FigureAffineLineFieldBlock {
+  Label: string;
+  A: string;
+  B: string;
+  Figure: FigureBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.CoordExpression
+export interface CoordExpression {
+  X: string;
+  Y: string;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FigurePointFieldBlock
+export interface FigurePointFieldBlock {
+  Answer: CoordExpression;
+  Figure: FigureBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorFieldBlock
+export interface FigureVectorFieldBlock {
+  Answer: CoordExpression;
+  AnswerOrigin: CoordExpression;
+  Figure: FigureBlock;
+  MustHaveOrigin: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.VectorPairCriterion
+export type VectorPairCriterion = number;
+// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorPairFieldBlock
+export interface FigureVectorPairFieldBlock {
+  Figure: FigureBlock;
+  Criterion: VectorPairCriterion;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.Interpolated
+export type Interpolated = string;
+// github.com/benoitkugler/maths-online/maths/exercice.FormulaBlock
+export interface FormulaBlock {
+  Parts: Interpolated;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TextKind
+export type TextKind = number;
+// github.com/benoitkugler/maths-online/maths/exercice.TextPart
+export interface TextPart {
+  Content: string;
+  Kind: TextKind;
+}
+// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
+export type ComparisonLevel = number;
+// github.com/benoitkugler/maths-online/maths/exercice.FormulaFieldBlock
+export interface FormulaFieldBlock {
+  Expression: string;
+  Label: TextPart;
+  ComparisonLevel: ComparisonLevel;
+}
+// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
+export interface FunctionDecoration {
+  Label: string;
+  Color: string;
+}
 // github.com/benoitkugler/maths-online/maths/expression.Variable
 export interface Variable {
   Indice: string;
   Name: number;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionDefinition
+export interface FunctionDefinition {
+  Function: string;
+  Decoration: FunctionDecoration;
+  Variable: Variable;
+  Range: number[];
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
+export interface FunctionGraphBlock {
+  Functions: FunctionDefinition[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionPointsFieldBlock
+export interface FunctionPointsFieldBlock {
+  Function: string;
+  Label: string;
+  Variable: Variable;
+  XGrid: number[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
+export interface VariationTableBlock {
+  Xs: string[] | null;
+  Fxs: string[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
+export type FunctionVariationGraphBlock = VariationTableBlock;
+// github.com/benoitkugler/maths-online/maths/exercice.NumberFieldBlock
+export interface NumberFieldBlock {
+  Expression: string;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
+export interface OrderedListFieldBlock {
+  Label: string;
+  Answer: TextPart[] | null;
+  AdditionalProposals: TextPart[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
+export interface RadioFieldBlock {
+  Answer: string;
+  Proposals: Interpolated[] | null;
+  AsDropDown: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
+export type SignSymbol = number;
+// github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
+export interface SignTableBlock {
+  Xs: Interpolated[] | null;
+  FxSymbols: SignSymbol[] | null;
+  Signs: boolean[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TableBlock
+export interface TableBlock {
+  HorizontalHeaders: TextPart[] | null;
+  VerticalHeaders: TextPart[] | null;
+  Values: (TextPart[] | null)[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TableFieldBlock
+export interface TableFieldBlock {
+  HorizontalHeaders: TextPart[] | null;
+  VerticalHeaders: TextPart[] | null;
+  Answer: (string[] | null)[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TextBlock
+export interface TextBlock {
+  Parts: Interpolated;
+  IsHint: boolean;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TreeNodeAnswer
+export interface TreeNodeAnswer {
+  Children: TreeNodeAnswer[] | null;
+  Probabilities: string[] | null;
+  Value: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TreeFieldBlock
+export interface TreeFieldBlock {
+  EventsProposals: string[] | null;
+  AnswerRoot: TreeNodeAnswer;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.VariationTableFieldBlock
+export interface VariationTableFieldBlock {
+  Answer: VariationTableBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.Enonce
+export type Enonce = Block[] | null;
 // github.com/benoitkugler/maths-online/maths/exercice.randomParameter
 export interface randomParameter {
   expression: string;
@@ -60,6 +299,27 @@ export interface SaveAndPreviewIn {
   SessionID: string;
   Question: Question;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.ErrParameters
+export interface ErrParameters {
+  Origin: string;
+  Details: string;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.errEnonce
+export interface errEnonce {
+  Error: string;
+  Block: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.ErrQuestionInvalid
+export interface ErrQuestionInvalid {
+  ErrParameters: ErrParameters;
+  ErrEnonce: errEnonce;
+  ParametersInvalid: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewOut
+export interface SaveAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
+}
 // github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
 export interface UpdateTagsIn {
   Tags: string[] | null;
@@ -69,11 +329,6 @@ export interface UpdateTagsIn {
 export interface CheckParametersIn {
   SessionID: string;
   Parameters: Parameters;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.ErrParameters
-export interface ErrParameters {
-  Origin: string;
-  Details: string;
 }
 // github.com/benoitkugler/maths-online/prof/editor.CheckParametersOut
 export interface CheckParametersOut {
@@ -150,7 +405,7 @@ export abstract class AbstractAPI {
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/prof/editor/api/tags";
     const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -198,7 +453,7 @@ export abstract class AbstractAPI {
   protected async rawEditorCreateQuestion(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -221,7 +476,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: params["id"] },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -244,7 +499,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: params["id"] },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -265,9 +520,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorSaveAndPreview(params: SaveAndPreviewIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
-    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
-    });
+    const rep: AxiosResponse<SaveAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -283,13 +540,15 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSaveAndPreview(data: any): void;
+  protected abstract onSuccessEditorSaveAndPreview(
+    data: SaveAndPreviewOut
+  ): void;
 
   protected async rawEditorPausePreview(params: { sessionID: string }) {
     const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
     const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
       params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -311,7 +570,7 @@ export abstract class AbstractAPI {
   protected async rawEditorUpdateTags(params: UpdateTagsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
     const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }

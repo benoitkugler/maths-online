@@ -8,7 +8,7 @@ import (
 func mustParse(t *testing.T, s string) *Expression {
 	t.Helper()
 
-	want, _, err := Parse(s)
+	want, err := Parse(s)
 	if err != nil {
 		t.Fatal(s, err)
 	}

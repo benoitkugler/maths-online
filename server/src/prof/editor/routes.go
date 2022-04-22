@@ -116,18 +116,23 @@ type SaveAndPreviewIn struct {
 	Question  exercice.Question
 }
 
+type SaveAndPreviewOut struct {
+	Error   exercice.ErrQuestionInvalid
+	IsValid bool
+}
+
 func (ct *Controller) EditorSaveAndPreview(c echo.Context) error {
 	var args SaveAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.saveAndPreview(args)
+	out, err := ct.saveAndPreview(args)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) EditorPausePreview(c echo.Context) error {

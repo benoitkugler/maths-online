@@ -21,6 +21,28 @@
     </v-row>
   </v-snackbar>
 
+  <v-snackbar :model-value="showErrorEnnonce" color="warning">
+    <v-row v-if="errorEnnonce != null">
+      <v-col>
+        <v-row no-gutters>
+          <v-col>
+            Erreur dans la définition <b>{{ errorParameters.Origin }}</b> :
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <div>{{ errorParameters.Details }}</div>
+          </v-col>
+        </v-row>
+      </v-col>
+      <v-col cols="2" align-self="center" style="text-align: right">
+        <v-btn icon size="x-small" flat @click="errorParameters.Origin = ''">
+          <v-icon icon="mdi-close" color="warning"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+  </v-snackbar>
+
   <v-card class="ma-1">
     <v-row class="mb-1 px-2">
       <v-col cols="auto" align-self="center" class="pr-0">
@@ -171,7 +193,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ErrParameters, randomParameter } from "@/controller/api_gen";
+import type {
+  errEnonce,
+  ErrParameters,
+  randomParameter
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { newBlock, saveData, xRune } from "@/controller/editor";
 import type { Block, Question, Variable } from "@/controller/exercice_gen";
@@ -375,12 +401,32 @@ function onDragEnd(ev: DragEvent) {
   showDropZone = false;
 }
 
+// TODO: show the error
+const errorEnnonce = ref<errEnonce | null>(null);
+const showErrorEnnonce = computed(() => errorEnnonce.value != null);
+
 async function save() {
   question.enonce = rows.value.map(v => v.Props);
-  await controller.EditorSaveAndPreview({
+  const res = await controller.EditorSaveAndPreview({
     SessionID: props.session_id || "",
     Question: question
   });
+  if (res == undefined) {
+    return;
+  }
+
+  if (res.IsValid) {
+    errorEnnonce.value = null;
+    errorParameters.value = { Origin: "", Details: "" };
+  } else {
+    if (res.Error.ParametersInvalid) {
+      errorEnnonce.value = null;
+      errorParameters.value = res.Error.ErrParameters;
+    } else {
+      errorEnnonce.value = res.Error.ErrEnonce;
+      errorParameters.value = { Origin: "", Details: "" };
+    }
+  }
 }
 
 function download() {

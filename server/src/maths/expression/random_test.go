@@ -137,6 +137,94 @@ func Test_sieveOfEratosthenes(t *testing.T) {
 	}
 }
 
+func TestExpression_IsValidNumber(t *testing.T) {
+	tests := []struct {
+		expr           string
+		parameters     RandomParameters
+		checkPrecision bool
+		want           bool
+	}{
+		{
+			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVariable('a'): mustParse(t, "2")}, false, true,
+		},
+		{
+			"2a + b", RandomParameters{NewVariable('a'): mustParse(t, "2")}, false, false,
+		},
+		{
+			"1/0", RandomParameters{}, false, false,
+		},
+		{
+			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;4)")}, false, false,
+		},
+		{
+			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(1;4)")}, false, true,
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		got, _ := expr.IsValidNumber(tt.parameters, tt.checkPrecision)
+		if got != tt.want {
+			t.Errorf("Expression.IsValidIndex() got = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func TestExpression_IsValidProba(t *testing.T) {
+	tests := []struct {
+		expr       string
+		parameters RandomParameters
+		want       bool
+	}{
+		{
+			"1.1", RandomParameters{}, false,
+		},
+		{
+			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(4;5)")}, true,
+		},
+		{
+			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randDecDen()")}, true,
+		},
+		{
+			"0.2 + 1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(1;4)")}, false,
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		got, _ := expr.IsValidProba(tt.parameters)
+		if got != tt.want {
+			t.Errorf("Expression.IsValidProba(%s) got = %v, want %v", tt.expr, got, tt.want)
+		}
+	}
+}
+
+func TestExpression_AreSortedNumbers(t *testing.T) {
+	tests := []struct {
+		exprs      []string
+		parameters RandomParameters
+		want       bool
+	}{
+		{
+			[]string{"1", "2", "a"}, RandomParameters{NewVariable('a'): mustParse(t, "randInt(2;5)")}, true,
+		},
+		{
+			[]string{"1", "2", "a"}, RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;5)")}, false,
+		},
+		{
+			[]string{"1", "2", "b"}, RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;5)")}, false,
+		},
+	}
+	for _, tt := range tests {
+		exprs := make([]*Expression, len(tt.exprs))
+		for i, s := range tt.exprs {
+			exprs[i] = mustParse(t, s)
+		}
+		got, _ := AreSortedNumbers(exprs, tt.parameters)
+		if got != tt.want {
+			t.Errorf("Expression.IsValidIndex() got = %v, want %v", got, tt.want)
+		}
+	}
+}
+
 func TestExpression_IsValidIndex(t *testing.T) {
 	tests := []struct {
 		expr       string
@@ -174,8 +262,8 @@ func TestExpression_IsValidIndex(t *testing.T) {
 }
 
 func TestExample(t *testing.T) {
-	expr, _, _ := Parse("1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
-	randExpr, _, _ := Parse("randInt(0;3)")
+	expr, _ := Parse("1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
+	randExpr, _ := Parse("randInt(0;3)")
 	params := RandomParameters{NewVariable('a'): randExpr}
 
 	_, freq := expr.IsValidIndex(params, 3)
@@ -196,6 +284,45 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
 		got, freq := expr.AreFxsIntegers(tt.parameters, NewVariable('x'), tt.grid)
+		if got != tt.want {
+			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
+		}
+	}
+}
+
+func TestFunctionDefinition_IsValid(t *testing.T) {
+	tests := []struct {
+		expr       string
+		variable   rune
+		parameters RandomParameters
+		bound      float64 // extrema on [-10;10]
+		want       bool
+	}{
+		{"2x + 1", 'x', nil, 25, true},
+		{"2x + 1", 'x', nil, 10, false},
+		{"2x + a", 'x', nil, 10, false},
+		{"1/x", 'x', nil, 100, false},
+		{"exp(x)", 'x', nil, 100, false},
+		{"ax + b", 'x', RandomParameters{
+			NewVariable('a'): mustParse(t, "randInt(2;4)"),
+			NewVariable('b'): mustParse(t, "7"),
+		}, 100, true},
+		{"ax + b", 'x', RandomParameters{
+			NewVariable('a'): mustParse(t, "randInt(2;100)"),
+			NewVariable('b'): mustParse(t, "7"),
+		}, 100, false},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		fn := FunctionDefinition{
+			FunctionExpr: FunctionExpr{
+				Function: expr,
+				Variable: NewVariable(tt.variable),
+			},
+			From: -10,
+			To:   10,
+		}
+		got, freq := fn.IsValid(tt.parameters, tt.bound)
 		if got != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
 		}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 )
 
 // ErrInvalidRandomParameters is returned when instantiating
@@ -219,6 +220,84 @@ func (rd specialFunctionA) validate(pos int) error {
 	return nil
 }
 
+// IsValidNumber instantiates the expression using `parameters`, then evaluate the resulting
+// expression, checking it is a valid finite number.
+// If `checkPrecision` is true, it also checks that the numbers are not exceeding the
+// float precision used in `AreFloatEqual`.
+// It also returns the frequency of successul tries, in % (between 0 and 100)
+// `parameters` must be a valid set of parameters
+func (expr *Expression) IsValidNumber(parameters RandomParameters, checkPrecision bool) (bool, int) {
+	const nbTries = 1000
+	var nbSuccess int
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+		value, err := expr.Evaluate(ps)
+
+		isValid := err == nil && !(math.IsInf(value, 0) || math.IsNaN(value))
+
+		if checkPrecision && isFloatExceedingPrecision(value) {
+			continue
+		}
+
+		if isValid {
+			nbSuccess++
+		}
+	}
+	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+}
+
+// IsValidProba is the same as IsValidNumber, but also checks the number
+// are in [0;1]
+func (expr *Expression) IsValidProba(parameters RandomParameters) (bool, int) {
+	const checkPrecision = true
+	const nbTries = 1000
+	var nbSuccess int
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+		value, err := expr.Evaluate(ps)
+
+		isValid := err == nil && !(math.IsInf(value, 0) || math.IsNaN(value))
+
+		if checkPrecision && isFloatExceedingPrecision(value) {
+			continue
+		}
+
+		isValid = isValid && (0 <= value && value <= 1)
+
+		if isValid {
+			nbSuccess++
+		}
+	}
+	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+}
+
+// AreSortedNumbers instantiates the expressions using `parameters`, then evaluate the resulting
+// expression, checking if all are valid numbers and are sorted (in ascending order)
+// It also returns the frequency of successul tries, in % (between 0 and 100)
+// `parameters` must be a valid set of parameters
+func AreSortedNumbers(exprs []*Expression, parameters RandomParameters) (bool, int) {
+	const nbTries = 1000
+	var nbSuccess int
+	values := make([]float64, len(exprs))
+outer:
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+
+		for j, expr := range exprs {
+			var err error
+			values[j], err = expr.Evaluate(ps)
+			if err != nil || math.IsNaN(values[j]) {
+				continue outer
+			}
+		}
+
+		if sort.Float64sAreSorted(values) {
+			nbSuccess++
+		}
+	}
+	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+}
+
 // IsValidIndex instantiates the expression using `parameters`, then evaluate the resulting
 // expression and checks if it is usable as input in a slice of length `length`, that is if
 // the result is an integer in [0, length[
@@ -239,7 +318,7 @@ func (expr *Expression) IsValidIndex(parameters RandomParameters, length int) (b
 
 // AreFxsIntegers instantiates the expression using `parameters`, then evaluate the resulting
 // expression replacing `x` by the values from `grid` and checks if the values are integers.
-// It also returns the frequency of successul tries, in % (between 0 and 100)
+// It returns the frequency of successul tries, in % (between 0 and 100)
 // `parameters` must be a valid set of parameters
 func (expr *Expression) AreFxsIntegers(parameters RandomParameters, x Variable, grid []int) (bool, int) {
 	const nbTries = 1000
@@ -258,6 +337,37 @@ func (expr *Expression) AreFxsIntegers(parameters RandomParameters, x Variable, 
 		if areIntegers {
 			nbSuccess++
 		}
+	}
+	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+}
+
+// IsValid instantiates the function expression using `parameters`, then checks
+// if the (estimated) extrema of |f| is less than `bound`.
+// It returns the frequency of successul tries, in % (between 0 and 100)
+// `parameters` must be a valid set of parameters.
+func (fn FunctionDefinition) IsValid(parameters RandomParameters, bound float64) (bool, int) {
+	const nbTries = 1000
+	var nbSuccess int
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+
+		fnExpr := fn.Function.copy()
+		fnExpr.Substitute(ps)
+
+		// by design, it is enough to check against one value
+		// to see if the expression is valid
+		_, err := fnExpr.Evaluate(singleVarResolver{v: fn.Variable, value: 0})
+		if err != nil {
+			continue
+		}
+
+		def := fn
+		def.FunctionExpr.Function = fnExpr
+		if ext := def.extrema(); ext == -1 || ext > bound {
+			continue
+		}
+
+		nbSuccess++
 	}
 	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
 }

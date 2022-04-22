@@ -409,7 +409,7 @@ var expressions = [...]struct {
 
 func Test_parseExpression(t *testing.T) {
 	for _, tt := range expressions {
-		got, _, err := Parse(tt.expr)
+		got, err := Parse(tt.expr)
 		if err != nil {
 			_ = err.Error()
 			_ = err.(InvalidExpr).PortionOf(tt.expr)
@@ -428,14 +428,14 @@ func Test_parseExpression(t *testing.T) {
 
 func TestVarMap(t *testing.T) {
 	for _, tt := range []struct {
-		want VarMap
+		want varMap
 		expr string
 	}{
-		{VarMap{}, "2 + 3"},
-		{VarMap{0: NewVariable('a'), 4: NewVariable('b')}, "a + b"},
-		{VarMap{0: NewVariable('a'), 4: NewVariable('b'), 9: NewVariable('a')}, "a + b * (a + 2)"},
+		{varMap{}, "2 + 3"},
+		{varMap{0: NewVariable('a'), 4: NewVariable('b')}, "a + b"},
+		{varMap{0: NewVariable('a'), 4: NewVariable('b'), 9: NewVariable('a')}, "a + b * (a + 2)"},
 	} {
-		_, vm, err := Parse(tt.expr)
+		_, vm, err := parseBytes([]byte(tt.expr))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -467,7 +467,7 @@ func TestVarMap_Positions(t *testing.T) {
 			rv[v] = nil
 		}
 
-		_, vm, err := Parse(tt.expr)
+		_, vm, err := parseBytes([]byte(tt.expr))
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -21,13 +21,13 @@ func (inv InvalidExpr) PortionOf(expr string) string {
 	return string([]rune(expr)[:inv.Pos])
 }
 
-// VarMap register the position of each variable occurence in
+// varMap register the position of each variable occurence in
 // an expression rune slice.
-type VarMap map[int]Variable
+type varMap map[int]Variable
 
 // Positions returns the indices in the original expression rune slice
 // of every occurence of the given variables
-func (vm VarMap) Positions(subset RandomParameters) []int {
+func (vm varMap) Positions(subset RandomParameters) []int {
 	var out []int
 	for index, v := range vm {
 		if _, has := subset[v]; has {
@@ -41,13 +41,14 @@ func (vm VarMap) Positions(subset RandomParameters) []int {
 }
 
 // Parse parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
-func Parse(s string) (*Expression, VarMap, error) {
-	return parseBytes([]byte(s))
+func Parse(s string) (*Expression, error) {
+	expr, _, err := parseBytes([]byte(s))
+	return expr, err
 }
 
 // MustParse is the same as Parse but panics on invalid expressions.
 func MustParse(s string) *Expression {
-	expr, _, err := Parse(s)
+	expr, err := Parse(s)
 	if err != nil {
 		panic(fmt.Sprintf("%s: %s", s, err))
 	}
@@ -55,7 +56,7 @@ func MustParse(s string) *Expression {
 }
 
 // parseBytes parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
-func parseBytes(text []byte) (*Expression, VarMap, error) {
+func parseBytes(text []byte) (*Expression, varMap, error) {
 	pr := newParser(text)
 	e, err := pr.parseExpression()
 
@@ -66,7 +67,7 @@ func parseBytes(text []byte) (*Expression, VarMap, error) {
 type parser struct {
 	tk *tokenizer
 
-	variablePos VarMap // index of variable in input rune slice
+	variablePos varMap // index of variable in input rune slice
 
 	stack []*Expression // waiting to be consumed by operators
 }
