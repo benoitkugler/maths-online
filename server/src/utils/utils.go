@@ -33,3 +33,21 @@ func WebsocketError(ws *websocket.Conn, err error) {
 	message := websocket.FormatCloseMessage(websocket.CloseUnsupportedData, err.Error())
 	ws.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
 }
+
+// Sample choose an index between 0 and len(weights)-1 at random, with the given weights,
+// which must sum up to 1.
+func SampleIndex(weights []float64) int {
+	cumWeights := make([]float64, len(weights)) // last entry is 1
+	sum := 0.
+	for i, w := range weights {
+		sum += w
+		cumWeights[i] = sum
+	}
+	alea := rand.Float64()
+	for i, cumWeight := range cumWeights {
+		if alea < cumWeight {
+			return i
+		}
+	}
+	return len(weights) - 1
+}
