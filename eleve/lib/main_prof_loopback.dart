@@ -36,7 +36,7 @@ class LoopbackApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Isiro',
+      title: 'Isyro',
       theme: theme,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: localizations,

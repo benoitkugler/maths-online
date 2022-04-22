@@ -8,7 +8,7 @@ typedef UserSettings = Map<String, String>;
 
 Future<File> _settingFile() async {
   final directory = await getApplicationDocumentsDirectory();
-  return File('${directory.path}/.isiro_settings.json');
+  return File('${directory.path}/.isyro_settings.json');
 }
 
 Future<UserSettings> loadUserSettings() async {
