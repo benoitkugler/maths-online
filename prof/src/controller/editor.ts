@@ -41,7 +41,7 @@ export const colorByKind: { [key in TextKind]: string } = {
 };
 
 const reLaTeX = /\$([^$]+)\$/g;
-const reExpression = /!([^!]+)!/g;
+const reExpression = /&([^&]+)&/g;
 
 function splitByRegexp(
   re: RegExp,

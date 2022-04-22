@@ -19,7 +19,7 @@ func TestParseInterpolatedString(t *testing.T) {
 			regularText, TextParts{{Content: regularText}}, false,
 		},
 		{
-			"Regular $Latex$ !2x +1! regular end", TextParts{
+			"Regular $Latex$ &2x +1& regular end", TextParts{
 				{Content: "Regular ", Kind: Text},
 				{Content: "Latex", Kind: StaticMath},
 				{Content: " ", Kind: Text},
@@ -28,14 +28,14 @@ func TestParseInterpolatedString(t *testing.T) {
 			}, false,
 		},
 		{ // expression inside latex
-			"Regular $A = !a!$", TextParts{
+			"Regular $A = &a&$", TextParts{
 				{Content: "Regular ", Kind: Text},
 				{Content: "A = ", Kind: StaticMath},
 				{Content: "a", Kind: Expression},
 			}, false,
 		},
 		{
-			"!45x - +!", nil, true,
+			"&45x - +&", nil, true,
 		},
 	}
 	for _, tt := range tests {
@@ -59,7 +59,7 @@ func Test_splitByLaTeX(t *testing.T) {
 		{"$L$$L$", []TextPart{{Content: "L", Kind: StaticMath}, {Content: "L", Kind: StaticMath}}},
 		{"Plain text $2x +3$", []TextPart{{Content: "Plain text "}, {Content: "2x +3", Kind: StaticMath}}},
 		{"Plain text $2x +3$", []TextPart{{Content: "Plain text "}, {Content: "2x +3", Kind: StaticMath}}},
-		{"Plain text $!2x +3!$ end", []TextPart{{Content: "Plain text "}, {Content: "!2x +3!", Kind: StaticMath}, {Content: " end"}}},
+		{"Plain text $&2x +3&$ end", []TextPart{{Content: "Plain text "}, {Content: "&2x +3&", Kind: StaticMath}, {Content: " end"}}},
 	}
 	for _, tt := range tests {
 		if gotOut := splitByLaTeX(tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
@@ -77,10 +77,10 @@ func Test_splitByExpression(t *testing.T) {
 			TextPart{Content: "mlqk "}, []TextPart{{Content: "mlqk "}},
 		},
 		{
-			TextPart{Content: "mlqk !lsd! smdl"}, []TextPart{{Content: "mlqk "}, {Content: "lsd", Kind: Expression}, {Content: " smdl"}},
+			TextPart{Content: "mlqk &lsd& smdl"}, []TextPart{{Content: "mlqk "}, {Content: "lsd", Kind: Expression}, {Content: " smdl"}},
 		},
 		{
-			TextPart{Content: "mlqk !lsd!", Kind: StaticMath}, []TextPart{{Content: "mlqk ", Kind: StaticMath}, {Content: "lsd", Kind: Expression}},
+			TextPart{Content: "mlqk &lsd&", Kind: StaticMath}, []TextPart{{Content: "mlqk ", Kind: StaticMath}, {Content: "lsd", Kind: Expression}},
 		},
 	}
 	for _, tt := range tests {
@@ -91,7 +91,7 @@ func Test_splitByExpression(t *testing.T) {
 }
 
 func TestLatexOutput(t *testing.T) {
-	s := Interpolated(`$\overset{\rightarrow}{ !P! !P! }$`)
+	s := Interpolated(`$\overset{\rightarrow}{ &P& &P& }$`)
 	parts, err := s.Parse()
 	if err != nil {
 		t.Fatal(err)

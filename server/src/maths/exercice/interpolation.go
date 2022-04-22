@@ -34,7 +34,7 @@ func (s Interpolated) Parse() (TextParts, error) {
 
 var (
 	reLaTeX      = regexp.MustCompile(`\$([^$]+)\$`)
-	reExpression = regexp.MustCompile(`!([^!\n]+)!`)
+	reExpression = regexp.MustCompile(`&([^&\n]+)&`)
 )
 
 func splitByRegexp(re *regexp.Regexp, s string, kindMatch, kindDefault TextKind) (out []TextPart) {
