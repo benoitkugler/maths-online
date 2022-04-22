@@ -49,7 +49,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.maths.isiro"
+        applicationId "com.maths.isyro"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()

@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.maths.isiro">
+    package="com.maths.isyro">
    <application
-        android:label="Isiro"
+        android:label="Isyro"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

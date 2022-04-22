@@ -430,7 +430,7 @@ async function save() {
 }
 
 function download() {
-  saveData(question, "question.isiro.json");
+  saveData(question, "question.isyro.json");
 }
 
 async function onDropJSON(ev: DragEvent) {
