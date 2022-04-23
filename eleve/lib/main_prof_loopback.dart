@@ -77,7 +77,8 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     // websocket is closed in case of inactivity
     // prevent it by sending pings
     _keepAliveTimmer = Timer.periodic(const Duration(seconds: 50), (timer) {
-      channel.sink.add(jsonEncode({"Kind": LoopbackClientDataKind.ping}));
+      channel.sink.add(jsonEncode(
+          {"Kind": loopbackClientDataKindToJson(LoopbackClientDataKind.ping)}));
     });
 
     super.initState();
