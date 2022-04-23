@@ -1,14 +1,44 @@
 <template>
+  <v-dialog v-model="showHelp" min-width="1200px" width="max-content">
+    <v-card
+      title="Paramètres aléatoires"
+      subtitle="Description"
+      style="width: 800px; max-height: 70vh"
+      class="overflow-y-auto"
+    >
+      <v-card-text>
+        Les paramètres aléatoires sont des variables dont les valeurs sont
+        générées à chaque fois qu'une question est posée à l'élève. <br />
+        Leur définition se fait avec une syntaxe de type calculatrice. En
+        particulier, les fonctions suivantes peuvent être utilisées.
+
+        <v-list color="info" rounded>
+          <v-list-item v-for="content in helpContent">
+            <v-row>
+              <v-col cols="6">
+                <v-list-item-title> {{ content[0] }} </v-list-item-title>
+              </v-col>
+              <v-col align-self="center">
+                <v-list-item-subtitle>
+                  {{ content[1] }}
+                </v-list-item-subtitle>
+              </v-col>
+            </v-row>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
   <v-card class="ma-2 border-red">
     <v-row
       :style="{
         'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
       }"
     >
-      <v-col md="9" align-self="center">
+      <v-col md="5" align-self="center">
         <v-card-subtitle class="py-2">Paramètres aléatoires</v-card-subtitle>
       </v-col>
-      <v-spacer></v-spacer>
       <v-col align-self="center" style="text-align: right">
         <v-btn
           icon
@@ -19,26 +49,15 @@
         >
           <v-icon icon="mdi-plus" color="green" small></v-icon>
         </v-btn>
-
-        <!-- <v-menu offset-y close-on-content-click>
-          <template v-slot:activator="{ isActive, props }">
-            <v-btn
-              small
-              icon
-              title="Ajouter un paramètre"
-              v-on="{ isActive }"
-              v-bind="props"
-            >
-              <v-icon icon="mdi-plus" color="green"></v-icon>
-            </v-btn>
-          </template>
-          <block-bar @add="addBlock"></block-bar>
-        </v-menu> -->
-
-        <!-- <v-divider vertical></v-divider>
-        <v-btn icon class="mx-2" @click="save" :disabled="!session_id">
-          <v-icon icon="mdi-content-save"></v-icon>
-        </v-btn> -->
+        <v-btn
+          icon
+          @click="showHelp = true"
+          title="Aide"
+          size="x-small"
+          class="mr-2 my-2"
+        >
+          <v-icon icon="mdi-help" color="info"></v-icon>
+        </v-btn>
       </v-col>
     </v-row>
     <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
@@ -50,6 +69,7 @@
               <variable-field
                 v-model="param.variable"
                 @update:model-value="emit('update', index, param)"
+                @blur="emit('done')"
               >
               </variable-field>
             </v-list-item-title>
@@ -79,6 +99,7 @@ import type {
   randomParameter,
   randomParameters
 } from "@/controller/exercice_gen";
+import { $ref } from "vue/macros";
 import VariableField from "./utils/VariableField.vue";
 
 interface Props {
@@ -98,11 +119,35 @@ const emit = defineEmits<{
 
 const expressionColor = ExpressionColor;
 
+let showHelp = $ref(false);
+
 function onExpressionChange(s: string, index: number) {
   const param = props.parameters![index];
   param.expression = s;
   emit("update", index, param);
 }
+
+const helpContent = [
+  [
+    "randchoice(-4;12;99)",
+    "Renvoie un nombre aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}."
+  ],
+  ["randprime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
+  [
+    "randdecden()",
+    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)"
+  ],
+  ["exp(x)", "Fonction exponentielle"],
+  ["ln(x)", "Fonction logarithme"],
+  ["sin(x)", "Fonction sinus"],
+  ["cos(x)", "Fonction cosinus"],
+  ["tan(x)", "Fonction tangente"],
+  ["asin(x)", "Fonction arcsinus"],
+  ["acos(x)", "Fonction arccos"],
+  ["atan(x)", "Fonction arctan"],
+  ["abs(x)", "Fonction valeur absolue"],
+  ["sqrt(x)", "Fonction racine carrée"]
+] as const;
 </script>
 
 <style scoped>
