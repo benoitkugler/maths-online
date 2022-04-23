@@ -47,7 +47,6 @@
         top
         right
       >
-        <!-- <v-progress-linear indeterminate></v-progress-linear> -->
         {{ message }}
       </v-snackbar>
       <v-snackbar
