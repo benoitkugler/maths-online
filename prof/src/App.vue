@@ -67,7 +67,7 @@
 import { $ref } from "vue/macros";
 import { controller } from "./controller/controller";
 
-const showSideBar = false;
+let showSideBar = $ref(false);
 const version = process.env.VERSION;
 
 let message = $ref("");
