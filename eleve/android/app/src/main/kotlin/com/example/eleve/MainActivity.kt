@@ -1,4 +1,4 @@
-package com.maths.isiro
+package com.maths.isyro
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -55,7 +55,7 @@ func Test_newSegment(t *testing.T) {
 		{"ln(x)", 1, 2, segment{from: repere.Coord{X: 1, Y: 0}, to: repere.Coord{X: 2, Y: math.Log(2)}, dFrom: 1, dTo: 1. / 2}},
 	}
 	for _, tt := range tests {
-		expr, _, err := expression.Parse(tt.expr)
+		expr, err := expression.Parse(tt.expr)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -120,7 +120,7 @@ func TestGraph(t *testing.T) {
 		{"cos(4x)", expression.NewVariable('x'), -5, 5},
 	}
 	for _, tt := range tests {
-		expr, _, _ := expression.Parse(tt.expr)
+		expr, _ := expression.Parse(tt.expr)
 
 		got := newFunctionGraph(expression.FunctionDefinition{FunctionExpr: expression.FunctionExpr{Function: expr, Variable: tt.vari}, From: tt.from, To: tt.to})
 		if len(got) != nbStep {
@@ -142,7 +142,7 @@ func TestGraph(t *testing.T) {
 }
 
 func TestGraphArtifact(t *testing.T) {
-	expr, _, _ := expression.Parse("cos(4x)")
+	expr, _ := expression.Parse("cos(4x)")
 	fn := expression.FunctionDefinition{FunctionExpr: expression.FunctionExpr{Function: expr, Variable: expression.NewVariable('x')}, From: -5, To: 5}
 	got := newFunctionGraph(fn)
 	for _, seg := range got {
@@ -161,7 +161,7 @@ func TestBoundsFromExpression(t *testing.T) {
 		{"2x + 1", []int{-2, -1, 0, 1, 2}, repere.RepereBounds{Width: 6, Height: 10, Origin: repere.Coord{X: 3, Y: 4}}, []int{-3, -1, 1, 3, 5}, []float64{2, 2, 2, 2, 2}},
 	}
 	for _, tt := range tests {
-		expr, _, err := expression.Parse(tt.expr)
+		expr, err := expression.Parse(tt.expr)
 		if err != nil {
 			t.Fatal(err)
 		}

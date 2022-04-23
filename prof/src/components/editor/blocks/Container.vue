@@ -2,18 +2,14 @@
   <v-card class="my-2" elevation="3">
     <v-row
       no-gutters
-      :class="{
-        'px-2': true,
-        'bg-pink-lighten-3': isAnswer,
-        'bg-purple-lighten-3': !isAnswer
-      }"
+      :class="'px-2 ' + colorClass"
       @dragstart="onDragStart"
       draggable="true"
     >
       <v-col align-self="center" cols="8">
         <v-card-subtitle>
-          <template v-if="isAnswer">Champ de réponse :</template>
-          {{ kindLabels[props.kind].label }}
+          <b>{{ kindLabels[props.kind].label }}</b>
+          <span v-if="isAnswer" class="ml-1">(Champ de réponse)</span>
         </v-card-subtitle>
       </v-col>
       <v-col cols="4" style="text-align: right" class="my-2">
@@ -44,6 +40,7 @@ interface ContainerProps {
   index: number;
   kind: BlockKind;
   hideContent: boolean;
+  hasError: boolean;
 }
 
 const props = defineProps<ContainerProps>();
@@ -51,6 +48,13 @@ const props = defineProps<ContainerProps>();
 const kindLabels = BlockKindLabels;
 
 const isAnswer = computed(() => kindLabels[props.kind].isAnswerField);
+
+const colorClass = computed(() => {
+  if (props.hasError) {
+    return "bg-red";
+  }
+  return isAnswer.value ? "bg-pink-lighten-3" : "bg-purple-lighten-3";
+});
 
 function onDragStart(payload: DragEvent) {
   payload.dataTransfer?.setData(

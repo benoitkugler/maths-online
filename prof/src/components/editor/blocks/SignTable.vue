@@ -1,6 +1,6 @@
 <template>
   <small class="text-grey mt-1">
-    Utiliser !2a - 4! pour insérer une expression dans la ligne x.
+    Utiliser &2a - 4& pour insérer une expression dans la ligne x.
   </small>
   <v-row>
     <v-col md="10" align-self="center">

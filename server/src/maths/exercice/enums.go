@@ -33,3 +33,9 @@ const (
 	VectorColinear                              // Vecteurs colinéaires
 	VectorOrthogonal                            // Vecteurs orthogonaux
 )
+
+const (
+	Difficulty1 DifficultyTag = "__PRIVATE_1_STAR" // 1 étoile
+	Difficulty2 DifficultyTag = "__PRIVATE_2_STAR" // 2 étoiles
+	Difficulty3 DifficultyTag = "__PRIVATE_3_STAR" // 3 étoiles
+)

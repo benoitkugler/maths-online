@@ -190,11 +190,14 @@ func (ct *Controller) endPreview(sessionID string) error {
 	return nil
 }
 
-func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
-	// TODO validation step before saving
+func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut, error) {
+	if err := params.Question.Validate(); err != nil {
+		return SaveAndPreviewOut{Error: err.(exercice.ErrQuestionInvalid)}, nil
+	}
+
 	_, err := params.Question.Update(ct.db)
 	if err != nil {
-		return err
+		return SaveAndPreviewOut{}, err
 	}
 
 	question := params.Question.Instantiate()
@@ -204,9 +207,9 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) error {
 
 	loopback, ok := ct.sessions[params.SessionID]
 	if !ok {
-		return fmt.Errorf("invalid session ID %s", params.SessionID)
+		return SaveAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
 	}
 
 	loopback.setQuestion(question)
-	return nil
+	return SaveAndPreviewOut{IsValid: true}, nil
 }

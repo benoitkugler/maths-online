@@ -31,14 +31,14 @@ class EleveApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Isiro',
+      title: 'Isyro',
       theme: theme,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: localizations,
       supportedLocales: locales,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Isiro'),
+          title: const Text('Isyro'),
           actions: [
             Builder(
               builder: (context) => IconButton(
@@ -90,7 +90,7 @@ class _HomePageState extends State<_HomePage> {
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                "Bienvenue dans Isiro",
+                "Bienvenue dans Isyro",
                 style: TextStyle(fontSize: 25),
               ),
             ),

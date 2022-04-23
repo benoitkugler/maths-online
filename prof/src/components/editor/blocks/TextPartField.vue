@@ -32,6 +32,8 @@ const emit = defineEmits<{
   (e: "update:model-value", v: TextPart): void;
 }>();
 
+const exprSeparator = "&";
+
 const text = computed(() => {
   switch (props.modelValue.Kind) {
     case TextKind.Text:
@@ -42,7 +44,7 @@ const text = computed(() => {
       }
       return "$" + props.modelValue.Content + "$";
     case TextKind.Expression:
-      return "!" + props.modelValue.Content + "!";
+      return exprSeparator + props.modelValue.Content + exprSeparator;
   }
 });
 
@@ -55,7 +57,11 @@ function onTextChange(s: string) {
       Kind: TextKind.StaticMath,
       Content: s.substring(1, s.length - 1)
     });
-  } else if (s.startsWith("!") && s.endsWith("!") && s.length >= 3) {
+  } else if (
+    s.startsWith(exprSeparator) &&
+    s.endsWith(exprSeparator) &&
+    s.length >= 3
+  ) {
     emit("update:model-value", {
       Kind: TextKind.Expression,
       Content: s.substring(2, s.length - 1)

@@ -10,7 +10,7 @@ import (
 )
 
 func mustParse(s string) *expression.Expression {
-	e, _, err := expression.Parse(s)
+	e, err := expression.Parse(s)
 	if err != nil {
 		panic(err)
 	}

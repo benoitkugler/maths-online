@@ -19,3 +19,8 @@ type QuestionTag struct {
 	Tag        string `json:"tag"`
 	IdQuestion int64  `sql_on_delete:"CASCADE" json:"id_question"`
 }
+
+// DifficultyTag are special question tags used to indicate the
+// difficulty of one question.
+// It is used to select question among implicit groups
+type DifficultyTag string

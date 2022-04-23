@@ -1,6 +1,10 @@
 <template>
-  <v-snackbar :model-value="showErrorParameters" color="warning">
-    <v-row>
+  <v-snackbar
+    :model-value="showErrorParameters"
+    @update:model-value="errorParameters = null"
+    color="warning"
+  >
+    <v-row v-if="errorParameters != null">
       <v-col>
         <v-row no-gutters>
           <v-col>
@@ -14,7 +18,29 @@
         </v-row>
       </v-col>
       <v-col cols="2" align-self="center" style="text-align: right">
-        <v-btn icon size="x-small" flat @click="errorParameters.Origin = ''">
+        <v-btn icon size="x-small" flat @click="errorParameters = null">
+          <v-icon icon="mdi-close" color="warning"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+  </v-snackbar>
+
+  <v-snackbar :model-value="showErrorEnnonce" color="warning">
+    <v-row v-if="errorEnnonce != null">
+      <v-col>
+        <v-row no-gutters>
+          <v-col> <b>Erreur dans la contenu de la question</b> </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <div>
+              <i>{{ errorEnnonce.Error }}</i>
+            </div>
+          </v-col>
+        </v-row>
+      </v-col>
+      <v-col cols="2" align-self="center" style="text-align: right">
+        <v-btn icon size="x-small" flat @click="errorEnnonce = null">
           <v-icon icon="mdi-close" color="warning"></v-icon>
         </v-btn>
       </v-col>
@@ -35,7 +61,7 @@
       </v-col>
       <v-col align-self="center">
         <v-text-field
-          class="mt-2"
+          class="my-2"
           variant="outlined"
           density="compact"
           label="Nom de la question"
@@ -51,17 +77,16 @@
           @update:model-value="saveTags"
         ></tag-list-field>
       </v-col>
-      <v-col align-self="center" style="text-align: right" cols="3">
+      <v-col align-self="center" style="text-align: right" cols="auto">
         <v-menu offset-y close-on-content-click>
           <template v-slot:activator="{ isActive, props }">
             <v-btn
-              icon
               title="Ajouter un contenu"
               v-on="{ isActive }"
               v-bind="props"
-              size="small"
             >
               <v-icon icon="mdi-plus" color="green"></v-icon>
+              Insérer
             </v-btn>
           </template>
           <block-bar @add="addBlock"></block-bar>
@@ -121,13 +146,14 @@
           class="d-flex"
           style="
             border: 1px solid blue;
-            height: 100%;
+            border-radius: 10px;
+            height: 96%;
             justify-content: center;
             align-items: center;
           "
           v-if="rows.length == 0"
         >
-          <div>Glisser un fichier .json ...</div>
+          Importer une question en faisant glisser un fichier (.isyro.json) ...
         </div>
 
         <div
@@ -151,6 +177,7 @@
               :nb-blocks="rows.length"
               :kind="row.Props.Kind"
               :hide-content="showDropZone"
+              :has-error="errorEnnonce?.Block == index"
             >
               <component
                 :model-value="row.Props.Data"
@@ -171,7 +198,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ErrParameters, randomParameter } from "@/controller/api_gen";
+import type {
+  errEnonce,
+  ErrParameters,
+  randomParameter
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { newBlock, saveData, xRune } from "@/controller/editor";
 import type { Block, Question, Variable } from "@/controller/exercice_gen";
@@ -282,7 +313,7 @@ function dataToBlock(data: Block): block {
   }
 }
 
-const blockWidgets = ref<Element[]>([]);
+const blockWidgets = ref<(Element | null)[]>([]);
 
 function addBlock(kind: BlockKind) {
   question.enonce!.push(newBlock(kind));
@@ -291,7 +322,7 @@ function addBlock(kind: BlockKind) {
 
     const L = blockWidgets.value?.length;
     if (L) {
-      blockWidgets.value![L - 1].scrollIntoView();
+      blockWidgets.value[L - 1]?.scrollIntoView();
     }
   });
 }
@@ -375,16 +406,37 @@ function onDragEnd(ev: DragEvent) {
   showDropZone = false;
 }
 
+const errorEnnonce = ref<errEnonce | null>(null);
+const showErrorEnnonce = computed(() => errorEnnonce.value != null);
+
 async function save() {
   question.enonce = rows.value.map(v => v.Props);
-  await controller.EditorSaveAndPreview({
+  const res = await controller.EditorSaveAndPreview({
     SessionID: props.session_id || "",
     Question: question
   });
+  if (res == undefined) {
+    return;
+  }
+
+  if (res.IsValid) {
+    errorEnnonce.value = null;
+    errorParameters.value = null;
+  } else {
+    if (res.Error.ParametersInvalid) {
+      errorEnnonce.value = null;
+      errorParameters.value = res.Error.ErrParameters;
+    } else {
+      errorEnnonce.value = res.Error.ErrEnonce;
+      errorParameters.value = null;
+
+      blockWidgets.value[res.Error.ErrEnonce.Block]?.scrollIntoView();
+    }
+  }
 }
 
 function download() {
-  saveData(question, "question.isiro.json");
+  saveData(question, "question.isyro.json");
 }
 
 async function onDropJSON(ev: DragEvent) {
@@ -404,8 +456,8 @@ function onDragoverJSON(ev: DragEvent) {
   }
 }
 
-const errorParameters = ref<ErrParameters>({ Origin: "", Details: "" });
-const showErrorParameters = computed(() => errorParameters.value.Origin != "");
+const errorParameters = ref<ErrParameters | null>(null);
+const showErrorParameters = computed(() => errorParameters.value != null);
 const availableParameters = ref<Variable[]>([]);
 let isCheckingParameters = $ref(false);
 

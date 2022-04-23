@@ -117,19 +117,19 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 		}
 	}
 
-	_, _, err := expression.Parse(expr.Expression)
+	_, err := expression.Parse(expr.Expression)
 	if err != nil {
-		err := err.(expression.InvalidExpr)
+		err := err.(expression.ErrInvalidExpr)
 		return InvalidFieldAnswer{
 			ID:     f.ID,
-			Reason: fmt.Sprintf(`Expression invalide : %s (à "%s")`, err.Reason, err.PortionOf(expr.Expression)),
+			Reason: fmt.Sprintf(`L'expression %s est invalide: %s (à "%s")`, err.Input, err.Reason, err.Portion()),
 		}
 	}
 	return nil
 }
 
 func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	expr, _, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
+	expr, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
 
 	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
 }

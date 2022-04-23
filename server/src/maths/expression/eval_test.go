@@ -21,7 +21,9 @@ func TestPrecision(t *testing.T) {
 	}
 
 	// Note : we could use math.Big with a large precision to better handle
-	// floating point arithmetic issues
+	// floating point arithmetic issues, but is seems to worth it, especially
+	// since we almost never want the student to precise more than 8 digits
+
 	// b := big.NewFloat(0.25)
 	// b.SetPrec(100)
 	// b.Add(b, big.NewFloat(0.1))
@@ -267,6 +269,9 @@ func TestExpression_Extrema(t *testing.T) {
 		{
 			"exp(x)", -2, 10, math.Exp(10),
 		},
+		{
+			"sqrt(x)", -2, 2, -1,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -274,8 +279,27 @@ func TestExpression_Extrema(t *testing.T) {
 			FunctionExpr: FunctionExpr{Function: expr, Variable: NewVariable('x')},
 			From:         tt.from, To: tt.to,
 		}
-		if got := fn.Extrema(); got != tt.want {
+		if got := fn.extrema(); got != tt.want {
 			t.Errorf("Expression.Extrema() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func Test_isFloatExceedingPrecision(t *testing.T) {
+	tests := []struct {
+		args float64
+		want bool
+	}{
+		{1, false},
+		{1.1456, false},
+		{1.145678, false},
+		{1.12345678, false},
+		{1.123456789, true},
+		{1. / 3, true},
+	}
+	for _, tt := range tests {
+		if got := isFloatExceedingPrecision(tt.args); got != tt.want {
+			t.Errorf("isFloatExceedingPrecision() = %v, want %v", got, tt.want)
 		}
 	}
 }

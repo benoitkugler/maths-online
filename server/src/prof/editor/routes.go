@@ -21,11 +21,18 @@ func (ct *Controller) EditorStartSession(c echo.Context) error {
 }
 
 // EditorGetTags return all tags currently used by questions.
+// It also add the special difficulty tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
 	out, err := exercice.SelectAllTags(ct.db)
 	if err != nil {
 		return err
 	}
+
+	// add the special difficulty tags among the proposition
+	out = append([]string{
+		string(exercice.Difficulty1), string(exercice.Difficulty2), string(exercice.Difficulty3),
+	}, out...)
+
 	return c.JSON(200, out)
 }
 
@@ -114,18 +121,23 @@ type SaveAndPreviewIn struct {
 	Question  exercice.Question
 }
 
+type SaveAndPreviewOut struct {
+	Error   exercice.ErrQuestionInvalid
+	IsValid bool
+}
+
 func (ct *Controller) EditorSaveAndPreview(c echo.Context) error {
 	var args SaveAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.saveAndPreview(args)
+	out, err := ct.saveAndPreview(args)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) EditorPausePreview(c echo.Context) error {

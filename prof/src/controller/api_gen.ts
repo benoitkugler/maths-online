@@ -21,7 +21,7 @@ export interface TrivialConfigExt {
 }
 
 export enum GroupStrategyKind {
-  RandomGroupStrategy = 0,
+  RandomGroupStrategy = 0
 }
 
 export interface GroupStrategy {
@@ -74,7 +74,7 @@ export enum BlockKind {
   TextBlock = 16,
   TreeFieldBlock = 17,
   VariationTableBlock = 18,
-  VariationTableFieldBlock = 19,
+  VariationTableFieldBlock = 19
 }
 
 export interface Block {
@@ -325,6 +325,27 @@ export interface SaveAndPreviewIn {
   SessionID: string;
   Question: Question;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.ErrParameters
+export interface ErrParameters {
+  Origin: string;
+  Details: string;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.errEnonce
+export interface errEnonce {
+  Error: string;
+  Block: number;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.ErrQuestionInvalid
+export interface ErrQuestionInvalid {
+  ErrParameters: ErrParameters;
+  ErrEnonce: errEnonce;
+  ParametersInvalid: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewOut
+export interface SaveAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
+}
 // github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
 export interface UpdateTagsIn {
   Tags: string[] | null;
@@ -334,11 +355,6 @@ export interface UpdateTagsIn {
 export interface CheckParametersIn {
   SessionID: string;
   Parameters: Parameters;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.ErrParameters
-export interface ErrParameters {
-  Origin: string;
-  Details: string;
 }
 // github.com/benoitkugler/maths-online/prof/editor.CheckParametersOut
 export interface CheckParametersOut {
@@ -445,7 +461,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -517,7 +533,7 @@ export abstract class AbstractAPI {
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/prof/editor/api/tags";
     const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -565,7 +581,7 @@ export abstract class AbstractAPI {
   protected async rawEditorCreateQuestion(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -587,8 +603,8 @@ export abstract class AbstractAPI {
   protected async rawEditorGetQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      params: { id: params["id"] },
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -610,8 +626,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDeleteQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      params: { id: params["id"] },
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -632,9 +648,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorSaveAndPreview(params: SaveAndPreviewIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
-    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<SaveAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -650,13 +668,15 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSaveAndPreview(data: any): void;
+  protected abstract onSuccessEditorSaveAndPreview(
+    data: SaveAndPreviewOut
+  ): void;
 
   protected async rawEditorPausePreview(params: { sessionID: string }) {
     const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
     const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
       params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -678,7 +698,7 @@ export abstract class AbstractAPI {
   protected async rawEditorUpdateTags(params: UpdateTagsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
     const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }

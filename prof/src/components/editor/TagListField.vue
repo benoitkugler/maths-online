@@ -24,15 +24,16 @@
       size="small"
       label
       class="ma-1"
-      color="primary"
+      :color="tagColor(tag)"
       style="cursor: pointer"
-      >{{ tag }}</v-chip
+      >{{ tagString(tag) }}</v-chip
     >
     <div v-if="props.modelValue.length == 0">Ajouter une étiquette...</div>
   </v-btn>
 </template>
 
 <script setup lang="ts">
+import { tagColor, tagString } from "@/controller/editor";
 import { $ref } from "vue/macros";
 import TagListEdit from "./TagListEdit.vue";
 

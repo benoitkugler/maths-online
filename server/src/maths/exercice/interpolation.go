@@ -11,7 +11,8 @@ import (
 // #{} are allowed in $$.
 type Interpolated string
 
-// Parse extracts each parts of the interpolated string.
+// Parse extracts each parts of the interpolated string,
+// as well as parsing expressions found.
 // It returns an error for invalid expressions
 func (s Interpolated) Parse() (TextParts, error) {
 	latex := splitByLaTeX(string(s))
@@ -20,21 +21,20 @@ func (s Interpolated) Parse() (TextParts, error) {
 		newChunks := splitByExpression(c)
 		for _, part := range newChunks {
 			if part.Kind == Expression {
-				_, _, err := expression.Parse(part.Content)
+				_, err := expression.Parse(part.Content)
 				if err != nil {
 					return nil, err
 				}
 			}
 		}
 		out = append(out, newChunks...)
-
 	}
 	return out, nil
 }
 
 var (
 	reLaTeX      = regexp.MustCompile(`\$([^$]+)\$`)
-	reExpression = regexp.MustCompile(`!([^!\n]+)!`)
+	reExpression = regexp.MustCompile(`&([^&\n]+)&`)
 )
 
 func splitByRegexp(re *regexp.Regexp, s string, kindMatch, kindDefault TextKind) (out []TextPart) {

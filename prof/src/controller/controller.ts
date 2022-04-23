@@ -51,12 +51,10 @@ class Controller extends AbstractAPI {
   }
 
   protected onSuccessEditorSaveAndPreview(data: any): void {
-    console.log("OK", data);
     this.inRequest = false;
   }
 
   protected onSuccessEditorCheckParameters(data: CheckParametersOut): void {
-    console.log("OK", data);
     this.inRequest = false;
   }
 

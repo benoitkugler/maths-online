@@ -1,5 +1,7 @@
 package exercice
 
+// SelectAllTags returns all the tags already used.
+// Note that it does not include the special DifficultyTags
 func SelectAllTags(db DB) ([]string, error) {
 	rs, err := db.Query("SELECT DISTINCT tag FROM question_tags ORDER BY tag")
 	if err != nil {

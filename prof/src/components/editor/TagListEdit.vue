@@ -7,9 +7,9 @@
         label
         closable
         class="ma-1"
-        color="primary"
+        :color="tagColor(tag)"
         @click:close="e => onDelete(e, index)"
-        >{{ tag }}</v-chip
+        >{{ tagString(tag) }}</v-chip
       >
     </v-col>
     <v-col :cols="props.horizontal ? 5 : 12">
@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import { tagColor, tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 

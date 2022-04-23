@@ -52,7 +52,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"9 // 2",
 		"24x^2 - 27x + 18",
 	} {
-		e, _, err := Parse(expr)
+		e, err := Parse(expr)
 		if err != nil {
 			t.Fatal(err)
 		}

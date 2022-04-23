@@ -78,16 +78,21 @@ func (f FunctionExpr) Closure() func(float64) float64 {
 	}
 }
 
-// Extrema returns an approximation of max |f(x)| on its definition domain.
+// extrema returns an approximation of max |f(x)| on its definition domain.
 // The approximation is exact for monotonous functions.
-// `Extrema` will panic if the expression if not a valid function.
-func (f FunctionDefinition) Extrema() float64 {
+// `extrema` will panic if the expression if not a valid function.
+// It returns -1 if one of the values is not a finite number.
+func (f FunctionDefinition) extrema() float64 {
 	const nbSteps = 100
 	fn := f.Closure()
 	step := (f.To - f.From) / nbSteps
 	var max float64
 	for i := 0; i <= nbSteps; i++ {
 		fx := math.Abs(fn(f.From + float64(i)*step))
+		if math.IsInf(fx, 0) || math.IsNaN(fx) {
+			return -1
+		}
+
 		if fx > max {
 			max = fx
 		}
@@ -95,11 +100,17 @@ func (f FunctionDefinition) Extrema() float64 {
 	return max
 }
 
+const floatPrec = 1e-8
+
 // AreFloatEqual returns `true` if v1 and v2 are equal up to
 // a small threshold, so that floating point rouding errors are ignored
 func AreFloatEqual(v1, v2 float64) bool {
-	const floatPrec = 1e-8
 	return math.Abs(v1-v2) < floatPrec
+}
+
+func isFloatExceedingPrecision(v float64) bool {
+	_, ok := isInt(v * (1 / floatPrec))
+	return !ok
 }
 
 // Evaluate uses the given variables values to evaluate the formula.
