@@ -28,12 +28,22 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 		return err
 	}
 
-	// add the special difficulty tags among the proposition
-	out = append([]string{
-		string(exercice.Difficulty1), string(exercice.Difficulty2), string(exercice.Difficulty3),
-	}, out...)
+	// add the special difficulty tags among the proposition,
+	// in first choices
+	filtred := make([]string, 0, len(out))
+	for _, tag := range out {
+		switch exercice.DifficultyTag(tag) {
+		case exercice.Diff1, exercice.Diff2, exercice.Diff3:
+		default:
+			filtred = append(filtred, tag)
+		}
+	}
 
-	return c.JSON(200, out)
+	filtred = append([]string{
+		string(exercice.Diff1), string(exercice.Diff2), string(exercice.Diff3),
+	}, filtred...)
+
+	return c.JSON(200, filtred)
 }
 
 type ListQuestionsIn struct {
@@ -63,6 +73,20 @@ func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
 	}
 
 	return c.JSON(200, question)
+}
+
+func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.duplicateWithDifficulty(id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
 }
 
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {

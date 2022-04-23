@@ -611,25 +611,27 @@ export function variableToString(v: Variable) {
   return name;
 }
 
-export function tagString(tag: string) {
-  if (tag == DifficultyTag.Difficulty1) {
-    return `\u2605`;
-  } else if (tag == DifficultyTag.Difficulty2) {
-    return `\u2605\u2605`;
-  } else if (tag == DifficultyTag.Difficulty3) {
-    return `\u2605\u2605\u2605`;
-  } else {
-    return tag;
-  }
-}
-
 export function tagColor(tag: string) {
   if (
-    tag == DifficultyTag.Difficulty1 ||
-    tag == DifficultyTag.Difficulty2 ||
-    tag == DifficultyTag.Difficulty3
+    tag == DifficultyTag.Diff1 ||
+    tag == DifficultyTag.Diff2 ||
+    tag == DifficultyTag.Diff3
   ) {
     return "secondary";
   }
   return "primary";
+}
+
+// returns 0 for question without difficulty
+export function questionDifficulty(tags: string[]): number {
+  for (const tag of tags) {
+    if (tag == DifficultyTag.Diff1) {
+      return 1;
+    } else if (tag == DifficultyTag.Diff2) {
+      return 2;
+    } else if (tag == DifficultyTag.Diff3) {
+      return 3;
+    }
+  }
+  return 0;
 }

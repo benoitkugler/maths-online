@@ -38,34 +38,50 @@
         </transition>
       </router-view>
 
-      <v-snackbar app :model-value="showLoadingSnackbar">
-        <v-progress-linear indeterminate></v-progress-linear>
+      <v-snackbar
+        app
+        :model-value="message != ''"
+        @update:model-value="message = ''"
+        :timeout="4000"
+        color="primary"
+        top
+        right
+      >
+        <!-- <v-progress-linear indeterminate></v-progress-linear> -->
+        {{ message }}
+      </v-snackbar>
+      <v-snackbar
+        app
+        :model-value="errorKind != ''"
+        @update:model-value="errorKind = ''"
+        :timeout="4000"
+        color="red"
+      >
+        <b>{{ errorKind }}</b>
+        <div v-html="errorHtml"></div>
       </v-snackbar>
     </v-main>
   </v-app>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { $ref } from "vue/macros";
 import { controller } from "./controller/controller";
 
-// TODO: cleanly cancel server preview socket
-// window.onbeforeunload((ev)=> {
-//     controller.EditorLeavePreview
-// })
+const showSideBar = false;
+const version = process.env.VERSION;
 
-export default defineComponent({
-  name: "App",
-  data() {
-    return {
-      showSideBar: false,
-      version: process.env.VERSION,
-      tmp: ""
-    };
-  },
-  computed: {
-    showLoadingSnackbar: () => controller.inRequest
-  },
-  components: {}
-});
+let message = $ref("");
+
+let errorKind = $ref("");
+let errorHtml = $ref("");
+
+controller.onError = (s, m) => {
+  errorKind = s;
+  errorHtml = m;
+};
+
+controller.showMessage = s => {
+  message = s;
+};
 </script>

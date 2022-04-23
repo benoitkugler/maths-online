@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	ex "github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -80,18 +80,18 @@ type QuestionHeader struct {
 func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHeader, err error) {
 	const pagination = 30
 
-	var questions exercice.Questions
+	var questions ex.Questions
 	if len(query.Tags) != 0 {
-		questions, err = exercice.SelectQuestionByTags(ct.db, query.Tags...)
+		questions, err = ex.SelectQuestionByTags(ct.db, query.Tags...)
 	} else {
-		questions, err = exercice.SelectAllQuestions(ct.db)
+		questions, err = ex.SelectAllQuestions(ct.db)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
-	var ids exercice.IDs
+	var ids ex.IDs
 	for _, question := range questions {
 		thisTitle := strings.TrimSpace(strings.ToLower(question.Title))
 		if strings.Contains(thisTitle, queryTitle) {
@@ -100,7 +100,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHead
 		}
 	}
 
-	tags, err := exercice.SelectQuestionTagsByIdQuestions(ct.db, ids...)
+	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, ids...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,26 +118,115 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHead
 	return out, nil
 }
 
-func (ct *Controller) updateTags(params UpdateTagsIn) error {
+// duplicateWithDifficulty creates new questions with the same title
+// and content as the given question, but with difficulty levels
+func (ct *Controller) duplicateWithDifficulty(idQuestion int64) error {
+	qu, err := ex.SelectQuestion(ct.db, idQuestion)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// if the question already has a difficulty, respect it
+	// otherwise, attribute the difficulty one
+	crible := tags.Crible()
+	var currentDifficulty string
+	var newDifficulties [2]ex.DifficultyTag
+	if d := string(ex.Diff1); crible[d] {
+		currentDifficulty = d
+		newDifficulties = [2]ex.DifficultyTag{ex.Diff2, ex.Diff3}
+	} else if d := string(ex.Diff2); crible[d] {
+		currentDifficulty = d
+		newDifficulties = [2]ex.DifficultyTag{ex.Diff1, ex.Diff3}
+	} else if d := string(ex.Diff3); crible[d] {
+		currentDifficulty = d
+		newDifficulties = [2]ex.DifficultyTag{ex.Diff1, ex.Diff2}
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return err
+		return utils.SQLError(err)
 	}
-	_, err = exercice.DeleteQuestionTagsByIdQuestions(tx, params.IdQuestion)
+
+	if currentDifficulty == "" {
+		// update the current question
+		newTags := append(tags, ex.QuestionTag{IdQuestion: idQuestion, Tag: string(ex.Diff1)})
+		err = updateTags(tx, newTags, idQuestion)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+		newDifficulties = [2]ex.DifficultyTag{ex.Diff2, ex.Diff3}
+	}
+
+	for _, diff := range newDifficulties {
+		newQuestion := qu // shallow copy is enough
+		newQuestion, err = newQuestion.Insert(tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+		var newTags ex.QuestionTags
+		for _, t := range tags {
+			// do not add existing difficulties
+			switch ex.DifficultyTag(t.Tag) {
+			case ex.Diff1, ex.Diff2, ex.Diff3:
+				continue
+			}
+
+			t.IdQuestion = newQuestion.Id
+			newTags = append(newTags, t)
+		}
+		newTags = append(newTags, ex.QuestionTag{IdQuestion: newQuestion.Id, Tag: string(diff)})
+		err = updateTags(tx, newTags, newQuestion.Id)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
 	if err != nil {
-		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
+// do NOT commit or rollback
+func updateTags(tx *sql.Tx, tags ex.QuestionTags, idQuestion int64) error {
+	_, err := ex.DeleteQuestionTagsByIdQuestions(tx, idQuestion)
+	if err != nil {
 		return err
 	}
-	var tags exercice.QuestionTags
+	err = ex.InsertManyQuestionTags(tx, tags...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ct *Controller) updateTags(params UpdateTagsIn) error {
+	var tags ex.QuestionTags
 	for _, tag := range params.Tags {
+		// enforce proper tags
 		tag = strings.ToUpper(strings.TrimSpace(tag))
 		if tag == "" {
 			continue
 		}
 
-		tags = append(tags, exercice.QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
+		tags = append(tags, ex.QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
 	}
-	err = exercice.InsertManyQuestionTags(tx, tags...)
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = updateTags(tx, tags, params.IdQuestion)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -150,7 +239,7 @@ func (ct *Controller) updateTags(params UpdateTagsIn) error {
 func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
 	err := params.Parameters.Validate()
 	if err != nil {
-		return CheckParametersOut{ErrDefinition: err.(exercice.ErrParameters)}
+		return CheckParametersOut{ErrDefinition: err.(ex.ErrParameters)}
 	}
 
 	var out CheckParametersOut
@@ -192,7 +281,7 @@ func (ct *Controller) endPreview(sessionID string) error {
 
 func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut, error) {
 	if err := params.Question.Validate(); err != nil {
-		return SaveAndPreviewOut{Error: err.(exercice.ErrQuestionInvalid)}, nil
+		return SaveAndPreviewOut{Error: err.(ex.ErrQuestionInvalid)}, nil
 	}
 
 	_, err := params.Question.Update(ct.db)

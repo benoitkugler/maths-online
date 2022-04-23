@@ -35,7 +35,7 @@ const (
 )
 
 const (
-	Difficulty1 DifficultyTag = "__PRIVATE_1_STAR" // 1 étoile
-	Difficulty2 DifficultyTag = "__PRIVATE_2_STAR" // 2 étoiles
-	Difficulty3 DifficultyTag = "__PRIVATE_3_STAR" // 3 étoiles
+	Diff1 DifficultyTag = "\u2605"             // 1 étoile
+	Diff2 DifficultyTag = "\u2605\u2605"       // 2 étoiles
+	Diff3 DifficultyTag = "\u2605\u2605\u2605" // 3 étoiles
 )

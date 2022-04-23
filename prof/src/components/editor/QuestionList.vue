@@ -81,37 +81,62 @@
                 }}
               </i>
             </div>
-            <v-list-item
-              dense
-              class="py-0"
-              v-for="question in questions"
-              @click="startEdit(question)"
-            >
-              <v-list-item-media class="mr-3">
-                <v-btn
-                  size="x-small"
-                  icon
-                  @click.stop="questionToDelete = question"
-                >
-                  <v-icon icon="mdi-delete" color="red"></v-icon>
-                </v-btn>
-              </v-list-item-media>
-              <v-list-item-title>
-                {{ question.Title ? question.Title : "..." }}
-              </v-list-item-title>
-              <v-spacer></v-spacer>
-              <v-list-item-media>
-                <v-chip
-                  v-for="tag in question.Tags"
-                  :key="tag"
-                  size="small"
-                  label
-                  class="ma-1"
-                  :color="tagColor(tag)"
-                  >{{ tagString(tag).toUpperCase() }}</v-chip
-                >
-              </v-list-item-media>
-            </v-list-item>
+            <div v-for="(question, index) in questions">
+              <v-divider
+                v-if="isStartGroup(index) && !isEndGroup(index - 1)"
+                class="my-1"
+              ></v-divider>
+              <v-list-item
+                dense
+                rounded
+                :class="{
+                  'py-0': true,
+                  'bg-lime-lighten-3': isInGroup(index)
+                }"
+                @click="startEdit(question)"
+              >
+                <v-list-item-media class="mr-3">
+                  <v-btn
+                    size="x-small"
+                    icon
+                    @click.stop="questionToDelete = question"
+                    title="Supprimer"
+                  >
+                    <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-if="!isInGroup(index)"
+                    class="mx-1"
+                    size="x-small"
+                    icon
+                    @click.stop="duplicateDifficulty(question)"
+                    title="Dupliquer en niveaux de difficulté"
+                  >
+                    <v-icon
+                      icon="mdi-content-copy"
+                      color="info"
+                      size="small"
+                    ></v-icon>
+                  </v-btn>
+                </v-list-item-media>
+                <v-list-item-title>
+                  {{ question.Title ? question.Title : "..." }}
+                </v-list-item-title>
+                <v-spacer></v-spacer>
+                <v-list-item-media>
+                  <v-chip
+                    v-for="tag in question.Tags"
+                    :key="tag"
+                    size="small"
+                    label
+                    class="ma-1"
+                    :color="tagColor(tag)"
+                    >{{ tag.toUpperCase() }}</v-chip
+                  >
+                </v-list-item-media>
+              </v-list-item>
+              <v-divider v-if="isEndGroup(index)" class="my-1"></v-divider>
+            </div>
           </v-list>
         </v-col>
       </v-row>
@@ -122,10 +147,10 @@
 <script setup lang="ts">
 import type { QuestionHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { tagColor, tagString } from "@/controller/editor";
+import { questionDifficulty, tagColor } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { $computed, $ref } from "vue/macros";
 
 interface Props {
   tags: string[];
@@ -136,12 +161,51 @@ const emit = defineEmits<{
   (e: "edit", question: Question, tags: string[]): void;
 }>();
 
-let questions = $ref<QuestionHeader[]>([]);
+const questions = $computed(() => {
+  const out = _questions.map(v => v);
+  out.sort(
+    (a, b) =>
+      questionDifficulty(a.Tags || []) - questionDifficulty(b.Tags || [])
+  );
+  out.sort((a, b) => a.Title.localeCompare(b.Title));
+  return out;
+});
+
+let _questions = $ref<QuestionHeader[]>([]);
 
 let querySearch = $ref("");
 let queryTags = $ref<string[]>([]);
 
 let timerId = 0;
+
+function isInGroup(index: number) {
+  const sameAsPrevious =
+    index > 0 && questions[index - 1].Title == questions[index].Title;
+  const sameAsNext =
+    index < questions.length - 1 &&
+    questions[index + 1].Title == questions[index].Title;
+  return sameAsPrevious || sameAsNext;
+}
+
+function isStartGroup(index: number) {
+  if (index == 0 || index == questions.length - 1) {
+    return false;
+  }
+  return (
+    questions[index - 1].Title != questions[index].Title &&
+    questions[index + 1].Title == questions[index].Title
+  );
+}
+
+function isEndGroup(index: number) {
+  if (index == 0 || index == questions.length - 1) {
+    return false;
+  }
+  return (
+    questions[index - 1].Title == questions[index].Title &&
+    questions[index + 1].Title != questions[index].Title
+  );
+}
 
 onMounted(fetchQuestions);
 
@@ -165,7 +229,7 @@ async function fetchQuestions() {
     TitleQuery: querySearch,
     Tags: queryTags
   });
-  questions = result || [];
+  _questions = result || [];
 }
 
 async function createQuestion() {
@@ -174,6 +238,11 @@ async function createQuestion() {
     return;
   }
   emit("edit", out, []);
+}
+
+async function duplicateDifficulty(question: QuestionHeader) {
+  await controller.EditorDuplicateQuestion({ id: question.Id });
+  await fetchQuestions();
 }
 
 async function startEdit(question: QuestionHeader) {
@@ -187,7 +256,7 @@ async function startEdit(question: QuestionHeader) {
 let questionToDelete: QuestionHeader | null = $ref(null);
 async function deleteQuestion() {
   await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
-  questions = questions.filter(qu => qu.Id != questionToDelete?.Id);
+  _questions = _questions.filter(qu => qu.Id != questionToDelete?.Id);
   questionToDelete = null;
 }
 </script>

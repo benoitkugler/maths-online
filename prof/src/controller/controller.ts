@@ -8,9 +8,24 @@ import type {
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
+function arrayBufferToString(buffer: ArrayBuffer) {
+  const uintArray = new Uint8Array(buffer);
+  const encodedString = String.fromCharCode.apply(null, Array.from(uintArray));
+  return decodeURIComponent(escape(encodedString));
+}
+
 class Controller extends AbstractAPI {
+  public onError?: (kind: string, htmlError: string) => void;
+  public showMessage?: (message: string) => void;
+
+  protected onSuccessEditorDuplicateQuestion(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question dupliquée.");
+    }
+  }
   protected onSuccessLaunchSessionTrivialPoursuit(data: TrivialConfig): void {
-    throw new Error("Method not implemented.");
+    this.inRequest = false;
   }
   protected onSuccessGetTrivialPoursuit(data: TrivialConfigExt[] | null): void {
     this.inRequest = false;
@@ -29,7 +44,6 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
   inRequest = false;
-  requestError = "";
 
   getURL(endpoint: string) {
     return this.baseUrl + endpoint;
@@ -37,7 +51,45 @@ class Controller extends AbstractAPI {
 
   handleError(error: any): void {
     this.inRequest = false;
-    this.requestError = `${error}`;
+
+    let kind: string,
+      messageHtml: string,
+      code = null;
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      kind = `Erreur côté serveur`;
+      code = error.response.status;
+
+      messageHtml = error.response.data.message;
+      if (messageHtml) {
+        messageHtml = "<i>" + messageHtml + "</i>";
+      } else {
+        try {
+          const json = arrayBufferToString(error.response.data);
+          messageHtml = JSON.parse(json).message;
+        } catch (error) {
+          messageHtml = `Le format d'erreur du serveur n'a pu être décodé.<br/>
+        Détails : <i>${error}</i>`;
+        }
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      kind = "Aucune réponse du serveur";
+      messageHtml =
+        "La requête a bien été envoyée, mais le serveur n'a donné aucune réponse...";
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      kind = "Erreur du client";
+      messageHtml = `La requête n'a pu être mise en place. <br/>
+                  Détails :  ${error.message} `;
+    }
+
+    if (this.onError) {
+      this.onError(kind, messageHtml);
+    }
   }
 
   startRequest(): void {

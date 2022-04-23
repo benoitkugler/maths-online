@@ -20,6 +20,7 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *edito
 	e.PUT("/prof/editor/api/new", edit.EditorStartSession)
 	e.GET("/prof/editor/api/tags", edit.EditorGetTags)
 	e.POST("/prof/editor/api/questions", edit.EditorSearchQuestions)
+	e.GET("/prof/editor/api/question-duplicate", edit.EditorDuplicateQuestion)
 	e.PUT("/prof/editor/api/question", edit.EditorCreateQuestion)
 	e.GET("/prof/editor/api/question", edit.EditorGetQuestion)
 	e.DELETE("/prof/editor/api/question", edit.EditorDeleteQuestion)

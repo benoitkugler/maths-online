@@ -9,7 +9,7 @@
         class="ma-1"
         :color="tagColor(tag)"
         @click:close="e => onDelete(e, index)"
-        >{{ tagString(tag) }}</v-chip
+        >{{ tag }}</v-chip
       >
     </v-col>
     <v-col :cols="props.horizontal ? 5 : 12">
@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { tagColor, tagString } from "@/controller/editor";
+import { tagColor } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
