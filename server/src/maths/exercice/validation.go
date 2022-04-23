@@ -62,6 +62,15 @@ func (pr Parameters) Validate() error {
 		}
 	}
 
+	for v := range params {
+		if v.Name == 'e' {
+			return ErrParameters{
+				Origin:  v.String(),
+				Details: "La variable e n'est pas autorisée (car utilisée pour exp).",
+			}
+		}
+	}
+
 	_, err := params.Instantiate()
 	if err != nil {
 		return ErrParameters{
