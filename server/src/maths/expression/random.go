@@ -168,7 +168,7 @@ func (rd specialFunctionA) validate(pos int) error {
 	switch rd.kind {
 	case randInt, randPrime:
 		if len(rd.args) < 2 {
-			return InvalidExpr{
+			return ErrInvalidExpr{
 				Reason: "randXXX attend deux paramètres",
 				Pos:    pos,
 			}
@@ -177,28 +177,28 @@ func (rd specialFunctionA) validate(pos int) error {
 		start, okStart := isInt(float64(rd.args[0]))
 		end, okEnd := isInt(float64(rd.args[1]))
 		if !(okStart && okEnd) {
-			return InvalidExpr{
+			return ErrInvalidExpr{
 				Reason: "randXXX attend deux entiers en paramètres",
 				Pos:    pos,
 			}
 		}
 
 		if start > end {
-			return InvalidExpr{
+			return ErrInvalidExpr{
 				Reason: "ordre invalide entre les arguments de randXXX",
 				Pos:    pos,
 			}
 		}
 
 		if rd.kind == randPrime && start < 0 {
-			return InvalidExpr{
+			return ErrInvalidExpr{
 				Reason: "randPrime n'accepte que des nombres positifs",
 				Pos:    pos,
 			}
 		}
 
 		if rd.kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
-			return InvalidExpr{
+			return ErrInvalidExpr{
 				Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", start, end),
 				Pos:    pos,
 			}
@@ -206,7 +206,7 @@ func (rd specialFunctionA) validate(pos int) error {
 
 	case randChoice:
 		if len(rd.args) == 0 {
-			return InvalidExpr{
+			return ErrInvalidExpr{
 				Reason: "randChoice doit préciser au moins un argument",
 				Pos:    pos,
 			}

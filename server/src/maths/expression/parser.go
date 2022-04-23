@@ -6,19 +6,20 @@ import (
 	"strconv"
 )
 
-// InvalidExpr is returned by `Parse`.
-type InvalidExpr struct {
+// ErrInvalidExpr is returned by `Parse`.
+type ErrInvalidExpr struct {
+	Input  string
 	Reason string // in french
 	Pos    int    // index in the input rune slice
 }
 
-func (inv InvalidExpr) Error() string {
-	return fmt.Sprintf("Expression invalide (position %d) : %s", inv.Pos, inv.Reason)
+func (inv ErrInvalidExpr) Error() string {
+	return fmt.Sprintf(`L'expression %s est invalide : %s`, inv.Input, inv.Reason)
 }
 
-// PortionOf returns the start of `expr` until the error.
-func (inv InvalidExpr) PortionOf(expr string) string {
-	return string([]rune(expr)[:inv.Pos])
+// Portion returns the start of `expr` until the error.
+func (inv ErrInvalidExpr) Portion() string {
+	return string([]rune(inv.Input)[:inv.Pos])
 }
 
 // varMap register the position of each variable occurence in
@@ -40,10 +41,15 @@ func (vm varMap) Positions(subset RandomParameters) []int {
 	return out
 }
 
-// Parse parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
+// Parse parses a mathematical expression. If invalid, an `ErrInvalidExpr` is returned.
 func Parse(s string) (*Expression, error) {
 	expr, _, err := parseBytes([]byte(s))
-	return expr, err
+	if err != nil {
+		errV := err.(ErrInvalidExpr)
+		errV.Input = s
+		return nil, errV
+	}
+	return expr, nil
 }
 
 // MustParse is the same as Parse but panics on invalid expressions.
@@ -97,7 +103,7 @@ func (pr *parser) parseExpression() (*Expression, error) {
 	}
 
 	if len(pr.stack) != 1 {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: fmt.Sprintf("expression mal formée (%d termes trouvés)", len(pr.stack)),
 			Pos:    0,
 		}
@@ -116,12 +122,12 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 		case openPar:
 			return pr.parseParenthesisBlock(tok.pos)
 		case closePar:
-			return nil, InvalidExpr{
+			return nil, ErrInvalidExpr{
 				Reason: "parenthèse fermante invalide",
 				Pos:    tok.pos,
 			}
 		case semicolon:
-			return nil, InvalidExpr{
+			return nil, ErrInvalidExpr{
 				Reason: "point-virgule inattendue",
 				Pos:    tok.pos,
 			}
@@ -173,7 +179,7 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 	// pop the left member
 	left := pr.pop()
 	if left == nil && !leftIsOptional {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: fmt.Sprintf("expression manquante avant l'opération %s", op),
 			Pos:    pos,
 		}
@@ -193,7 +199,7 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 	}
 
 	if right == nil {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: fmt.Sprintf("expression manquante après l'opération %s", op),
 			Pos:    pos,
 		}
@@ -248,7 +254,7 @@ func (pr *parser) parseParenthesisBlock(pos int) (*Expression, error) {
 		}
 
 		if tok.data == nil { // unexpected EOF
-			return nil, InvalidExpr{
+			return nil, ErrInvalidExpr{
 				Reason: "parenthèse fermante manquante",
 				Pos:    pos,
 			}
@@ -269,7 +275,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 	par := pr.tk.Next()
 
 	if par.data != openPar {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: "parenthèse ouvrante manquante après une fonction",
 			Pos:    pos,
 		}
@@ -282,7 +288,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 	}
 
 	if arg == nil {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: fmt.Sprintf("argument manquant pour la fonction %s", fn),
 			Pos:    pos,
 		}
@@ -298,7 +304,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 func parseNumber(v numberText, pos int) (Number, error) {
 	out, err := strconv.ParseFloat(string(v), 64)
 	if err != nil {
-		return 0, InvalidExpr{
+		return 0, ErrInvalidExpr{
 			Reason: fmt.Sprintf(`syntaxe "%s" non reconnue pour un nombre`, v),
 			Pos:    pos,
 		}
@@ -319,7 +325,7 @@ func (pr *parser) parseFloat() (Number, error) {
 
 	v, ok := arg.data.(numberText)
 	if !ok {
-		return 0, InvalidExpr{
+		return 0, ErrInvalidExpr{
 			Reason: "nombre attendu",
 			Pos:    arg.pos,
 		}
@@ -350,7 +356,7 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 	par := pr.tk.Next()
 
 	if par.data != openPar {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: "parenthèse ouvrante manquante après randLetter",
 			Pos:    pos,
 		}
@@ -365,7 +371,7 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 		if v, isVariable := arg.data.(Variable); isVariable {
 			rv = append(rv, v)
 		} else {
-			return nil, InvalidExpr{
+			return nil, ErrInvalidExpr{
 				Reason: "randLetter n'accepte que des variables comme arguments",
 				Pos:    pos,
 			}
@@ -377,7 +383,7 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 
 		// consume the separator
 		if pr.tk.Next().data != semicolon {
-			return nil, InvalidExpr{
+			return nil, ErrInvalidExpr{
 				Reason: "randLetter utilise ';' comme séparateur",
 				Pos:    pos,
 			}
@@ -385,14 +391,14 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 	}
 
 	if tok := pr.tk.Next(); tok.data != closePar {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: "parenthèse fermante manquante après randLetter",
 			Pos:    tok.pos,
 		}
 	}
 
 	if len(rv) == 0 {
-		return nil, InvalidExpr{
+		return nil, ErrInvalidExpr{
 			Reason: "randLetter attend au moins un argument",
 			Pos:    pos,
 		}
@@ -409,7 +415,7 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 	par := pr.tk.Next()
 
 	if par.data != openPar {
-		return rd, InvalidExpr{
+		return rd, ErrInvalidExpr{
 			Reason: "parenthèse ouvrante manquante après randXXX",
 			Pos:    pos,
 		}
@@ -434,7 +440,7 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 
 		// consume the separator
 		if pr.tk.Next().data != semicolon {
-			return rd, InvalidExpr{
+			return rd, ErrInvalidExpr{
 				Reason: "randXXX utilise ';' comme séparateur",
 				Pos:    pos,
 			}
@@ -442,7 +448,7 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 	}
 
 	if tok := pr.tk.Next(); tok.data != closePar {
-		return rd, InvalidExpr{
+		return rd, ErrInvalidExpr{
 			Reason: "parenthèse fermante manquante après randXXX",
 			Pos:    tok.pos,
 		}

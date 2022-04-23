@@ -103,7 +103,7 @@ func (rf RadioFieldBlock) validate(params expression.RandomParameters) error {
 		return err
 	}
 	if ok, freq := expr.IsValidIndex(params, len(rf.Proposals)); !ok {
-		return fmt.Errorf("L'expression %s ne définit pas un index valide dans la liste des propositions (%d %% des tests ont échoué)", rf.Answer, freq)
+		return fmt.Errorf("L'expression %s ne définit pas un index valide dans la liste des propositions (%d %% des tests ont échoué)", rf.Answer, 100-freq)
 	}
 
 	return nil
@@ -392,7 +392,7 @@ func (tf TreeFieldBlock) validate(params expression.RandomParameters) error {
 			}
 
 			if ok, freq := expr.IsValidProba(params); !ok {
-				return fmt.Errorf("L'expression %s ne définit pas une probabilité valide. (%d %% des tests ont échoué)", c, freq)
+				return fmt.Errorf("L'expression %s ne définit pas une probabilité valide. (%d %% des tests ont échoué)", c, 100-freq)
 			}
 		}
 		for _, c := range node.Children {

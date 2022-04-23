@@ -50,7 +50,7 @@ func validateNumberExpression(s string, params expression.RandomParameters, chec
 		if checkPrecision {
 			dec = "decimal "
 		}
-		return fmt.Errorf("L'expression %s n'est pas un nombre %svalide (%d %% des tests ont échoué)", s, dec, freq)
+		return fmt.Errorf("L'expression %s n'est pas un nombre %svalide (%d %% des tests ont échoué)", s, dec, 100-freq)
 	}
 
 	return nil
@@ -362,7 +362,7 @@ func (vt VariationTableBlock) validate(params expression.RandomParameters) error
 	}
 
 	if ok, freq := expression.AreSortedNumbers(xExprs, params); !ok {
-		return fmt.Errorf("Les expressions x ne sont pas en ordre croissant (%d %% des tests ont échoué)", freq)
+		return fmt.Errorf("Les expressions x ne sont pas en ordre croissant (%d %% des tests ont échoué)", 100-freq)
 	}
 
 	for _, c := range vt.Fxs {
@@ -536,7 +536,7 @@ func (fg FunctionDefinition) validate(params expression.RandomParameters) error 
 	}
 
 	if ok, freq := fn.IsValid(params, maxFunctionBound); !ok {
-		return fmt.Errorf("L'expression %s ne définit pas une fonction acceptable (%d %% des tests ont échoué)", fg.Function, freq)
+		return fmt.Errorf("L'expression %s ne définit pas une fonction acceptable (%d %% des tests ont échoué)", fg.Function, 100-freq)
 	}
 
 	return nil

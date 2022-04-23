@@ -119,10 +119,10 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 
 	_, err := expression.Parse(expr.Expression)
 	if err != nil {
-		err := err.(expression.InvalidExpr)
+		err := err.(expression.ErrInvalidExpr)
 		return InvalidFieldAnswer{
 			ID:     f.ID,
-			Reason: fmt.Sprintf(`Expression invalide : %s (à "%s")`, err.Reason, err.PortionOf(expr.Expression)),
+			Reason: fmt.Sprintf(`L'expression %s est invalide: %s (à "%s")`, err.Input, err.Reason, err.Portion()),
 		}
 	}
 	return nil

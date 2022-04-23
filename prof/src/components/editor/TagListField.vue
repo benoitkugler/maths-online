@@ -80,7 +80,7 @@
     </v-card>
   </v-dialog>
 
-  <v-btn variant="outlined" class="mt-2" @click="onEdit" color="secondary">
+  <v-btn variant="outlined" @click="onEdit" color="secondary">
     <v-chip
       v-for="tag in props.modelValue"
       :key="tag"

@@ -1,7 +1,7 @@
 <template>
   <small class="text-grey mt-1">
     Chaque case peut être du texte, une formule LaTeX ($$) ou une expression
-    (!2x+1!).
+    (&2x+1&).
   </small>
   <v-row>
     <v-col cols="10" align-self="center">

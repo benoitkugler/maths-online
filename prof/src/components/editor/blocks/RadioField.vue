@@ -2,7 +2,7 @@
   <v-row>
     <v-col md="9" align-self="center">
       Réponses possibles (insérer du code LaTeX avec $$ et une expression avec
-      !2x+1!).</v-col
+      &2x+1&).</v-col
     >
     <v-spacer></v-spacer>
     <v-col align-self="center" style="text-align: right">
@@ -87,9 +87,9 @@ const emit = defineEmits<{
 
 const hint = computed(
   () =>
-    "Expression s'évaluant en un indice dans la liste des choix (de 0 à " +
-    (props.modelValue.Proposals?.length || 0 - 1) +
-    ")."
+    "Expression s'évaluant en un indice dans la liste des choix, de 0 à " +
+    ((props.modelValue.Proposals?.length || 0) - 1) +
+    "."
 );
 
 function addProposal() {

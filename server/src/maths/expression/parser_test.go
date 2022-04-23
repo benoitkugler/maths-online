@@ -412,7 +412,7 @@ func Test_parseExpression(t *testing.T) {
 		got, err := Parse(tt.expr)
 		if err != nil {
 			_ = err.Error()
-			_ = err.(InvalidExpr).PortionOf(tt.expr)
+			_ = err.(ErrInvalidExpr).Portion()
 		}
 
 		if (err != nil) != tt.wantErr {
