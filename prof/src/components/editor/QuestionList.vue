@@ -10,6 +10,7 @@
         Cette opération est irréversible.
       </v-card-text>
       <v-card-actions>
+        <v-btn @click="questionToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteQuestion" variant="contained">
           Supprimer
@@ -91,7 +92,7 @@
                 rounded
                 :class="{
                   'py-0': true,
-                  'bg-lime-lighten-3': isInGroup(index)
+                  'bg-lime-lighten-3': question.IsInGroup
                 }"
                 @click="startEdit(question)"
               >
@@ -105,12 +106,12 @@
                     <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
                   </v-btn>
                   <v-btn
-                    v-if="!isInGroup(index)"
+                    v-if="!question.IsInGroup"
                     class="mx-1"
                     size="x-small"
                     icon
                     @click.stop="duplicateDifficulty(question)"
-                    title="Dupliquer en niveaux de difficulté"
+                    title="Dupliquer en différenciant la difficulté"
                   >
                     <v-icon
                       icon="mdi-content-copy"
@@ -177,15 +178,6 @@ let querySearch = $ref("");
 let queryTags = $ref<string[]>([]);
 
 let timerId = 0;
-
-function isInGroup(index: number) {
-  const sameAsPrevious =
-    index > 0 && questions[index - 1].Title == questions[index].Title;
-  const sameAsNext =
-    index < questions.length - 1 &&
-    questions[index + 1].Title == questions[index].Title;
-  return sameAsPrevious || sameAsNext;
-}
 
 function isStartGroup(index: number) {
   if (index == 0 || index == questions.length - 1) {
@@ -256,7 +248,7 @@ async function startEdit(question: QuestionHeader) {
 let questionToDelete: QuestionHeader | null = $ref(null);
 async function deleteQuestion() {
   await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
-  _questions = _questions.filter(qu => qu.Id != questionToDelete?.Id);
+  await fetchQuestions(); // delete modify the groups
   questionToDelete = null;
 }
 </script>

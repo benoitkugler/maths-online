@@ -49,9 +49,10 @@ export interface ListQuestionsIn {
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
-  Id: number;
   Title: string;
   Tags: string[] | null;
+  Id: number;
+  IsInGroup: boolean;
 }
 
 export enum BlockKind {

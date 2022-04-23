@@ -72,42 +72,61 @@ func (ct *Controller) startSession() StartSessionOut {
 }
 
 type QuestionHeader struct {
-	Id    int64
-	Title string
-	Tags  []string
+	Title     string
+	Tags      []string
+	Id        int64
+	IsInGroup bool // true if the question is in an implicit group
 }
 
 func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHeader, err error) {
-	const pagination = 30
+	const pagination = 50
 
-	var questions ex.Questions
-	if len(query.Tags) != 0 {
-		questions, err = ex.SelectQuestionByTags(ct.db, query.Tags...)
-	} else {
-		questions, err = ex.SelectAllQuestions(ct.db)
-	}
+	// to find implicit groups, we need all the questions
+	questions, err := ex.SelectAllQuestions(ct.db)
 	if err != nil {
 		return nil, err
 	}
 
+	// the group are not modified by the title query though
+
 	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
-	var ids ex.IDs
+	var (
+		ids ex.IDs
+		tmp []QuestionHeader
+	)
 	for _, question := range questions {
 		thisTitle := strings.TrimSpace(strings.ToLower(question.Title))
 		if strings.Contains(thisTitle, queryTitle) {
-			out = append(out, QuestionHeader{Id: question.Id, Title: question.Title})
+			tmp = append(tmp, QuestionHeader{Id: question.Id, Title: question.Title})
 			ids = append(ids, question.Id)
 		}
 	}
 
+	// now check for implicit groups
+	sort.Slice(tmp, func(i, j int) bool { return tmp[i].Title < tmp[j].Title })
+
+	for index := range tmp {
+		sameAsPrevious := index > 0 && tmp[index-1].Title == tmp[index].Title
+		sameAsNext := index < len(tmp)-1 &&
+			tmp[index+1].Title == tmp[index].Title
+		tmp[index].IsInGroup = sameAsPrevious || sameAsNext
+	}
+
+	// and finally restrict to tags
 	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, ids...)
 	if err != nil {
 		return nil, err
 	}
+
 	tagsMap := tags.ByIdQuestion()
-	for i, question := range out {
-		for _, tag := range tagsMap[question.Id] {
-			out[i].Tags = append(out[i].Tags, tag.Tag)
+	for _, question := range tmp {
+		crible := tagsMap[question.Id].Crible()
+
+		if crible.HasAll(query.Tags) {
+			for _, tag := range tagsMap[question.Id] {
+				question.Tags = append(question.Tags, tag.Tag)
+			}
+			out = append(out, question)
 		}
 	}
 
