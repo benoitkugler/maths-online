@@ -10,9 +10,9 @@
               label
               closable
               class="ma-1"
-              color="primary"
+              :color="tagColor(tag)"
               @click:close="e => onDelete(e, index)"
-              >{{ tag }}</v-chip
+              >{{ tagString(tag) }}</v-chip
             >
           </v-col>
         </v-row>
@@ -47,29 +47,6 @@
             </v-autocomplete>
           </v-col>
         </v-row>
-        <!-- <v-row>
-          <v-col>
-            <v-text-field
-              hide-details
-              label="Ajouter..."
-              v-model="entry"
-              @keyup="onEnter"
-            >
-              <template v-slot:appendInner>
-                <v-btn
-                  icon
-                  size="x-small"
-                  class="my-1"
-                  color="success"
-                  :disabled="!isEntryValid"
-                  @click="add"
-                >
-                  <v-icon icon="mdi-plus"></v-icon>
-                </v-btn>
-              </template>
-            </v-text-field>
-          </v-col>
-        </v-row> -->
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -87,15 +64,16 @@
       size="small"
       label
       class="ma-1"
-      color="primary"
+      :color="tagColor(tag)"
       style="cursor: pointer"
-      >{{ tag }}</v-chip
+      >{{ tagString(tag) }}</v-chip
     >
     <div v-if="props.modelValue.length == 0">Ajouter une étiquette...</div>
   </v-btn>
 </template>
 
 <script setup lang="ts">
+import { tagColor, tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 

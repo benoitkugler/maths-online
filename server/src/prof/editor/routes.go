@@ -21,11 +21,18 @@ func (ct *Controller) EditorStartSession(c echo.Context) error {
 }
 
 // EditorGetTags return all tags currently used by questions.
+// It also add the special difficulty tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
 	out, err := exercice.SelectAllTags(ct.db)
 	if err != nil {
 		return err
 	}
+
+	// add the special difficulty tags among the proposition
+	out = append([]string{
+		string(exercice.Difficulty1), string(exercice.Difficulty2), string(exercice.Difficulty3),
+	}, out...)
+
 	return c.JSON(200, out)
 }
 

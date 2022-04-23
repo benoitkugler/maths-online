@@ -106,8 +106,8 @@
                   size="small"
                   label
                   class="ma-1"
-                  color="primary"
-                  >{{ tag.toUpperCase() }}</v-chip
+                  :color="tagColor(tag)"
+                  >{{ tagString(tag).toUpperCase() }}</v-chip
                 >
               </v-list-item-media>
             </v-list-item>
@@ -121,6 +121,7 @@
 <script setup lang="ts">
 import type { QuestionHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { tagColor, tagString } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";

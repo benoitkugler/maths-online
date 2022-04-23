@@ -27,6 +27,7 @@ import type {
 import {
   BlockKind,
   ComparisonLevel,
+  DifficultyTag,
   SignSymbol,
   TextKind,
   VectorPairCriterion
@@ -608,4 +609,27 @@ export function variableToString(v: Variable) {
     name += "_" + v.Indice;
   }
   return name;
+}
+
+export function tagString(tag: string) {
+  if (tag == DifficultyTag.Difficulty1) {
+    return `\u2605`;
+  } else if (tag == DifficultyTag.Difficulty2) {
+    return `\u2605\u2605`;
+  } else if (tag == DifficultyTag.Difficulty3) {
+    return `\u2605\u2605\u2605`;
+  } else {
+    return tag;
+  }
+}
+
+export function tagColor(tag: string) {
+  if (
+    tag == DifficultyTag.Difficulty1 ||
+    tag == DifficultyTag.Difficulty2 ||
+    tag == DifficultyTag.Difficulty3
+  ) {
+    return "secondary";
+  }
+  return "primary";
 }
