@@ -470,7 +470,8 @@ async function checkParameters() {
   isCheckingParameters = false;
   if (out === undefined) return;
 
-  errorParameters.value = out.ErrDefinition;
+  errorParameters.value =
+    out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
   availableParameters.value = out.Variables || [];
 }
 
