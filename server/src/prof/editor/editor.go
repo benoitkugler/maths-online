@@ -5,6 +5,7 @@ package editor
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -71,11 +72,13 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
+// QuestionHeader is a sumary of the meta data of a question
 type QuestionHeader struct {
-	Title     string
-	Tags      []string
-	Id        int64
-	IsInGroup bool // true if the question is in an implicit group
+	Title      string
+	Tags       []string
+	Id         int64
+	Difficulty ex.DifficultyTag // deduced from the tags
+	IsInGroup  bool             // true if the question is in an implicit group
 }
 
 func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHeader, err error) {
@@ -122,12 +125,16 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHead
 	for _, question := range tmp {
 		crible := tagsMap[question.Id].Crible()
 
-		if crible.HasAll(query.Tags) {
-			for _, tag := range tagsMap[question.Id] {
-				question.Tags = append(question.Tags, tag.Tag)
-			}
-			out = append(out, question)
+		if !crible.HasAll(query.Tags) {
+			continue
 		}
+
+		for _, tag := range tagsMap[question.Id] {
+			question.Tags = append(question.Tags, tag.Tag)
+		}
+		question.Difficulty = crible.Difficulty()
+
+		out = append(out, question)
 	}
 
 	if len(out) > pagination {
@@ -151,17 +158,14 @@ func (ct *Controller) duplicateWithDifficulty(idQuestion int64) error {
 
 	// if the question already has a difficulty, respect it
 	// otherwise, attribute the difficulty one
-	crible := tags.Crible()
-	var currentDifficulty string
+	currentDifficulty := tags.Crible().Difficulty()
 	var newDifficulties [2]ex.DifficultyTag
-	if d := string(ex.Diff1); crible[d] {
-		currentDifficulty = d
+	switch currentDifficulty {
+	case ex.Diff1:
 		newDifficulties = [2]ex.DifficultyTag{ex.Diff2, ex.Diff3}
-	} else if d := string(ex.Diff2); crible[d] {
-		currentDifficulty = d
+	case ex.Diff2:
 		newDifficulties = [2]ex.DifficultyTag{ex.Diff1, ex.Diff3}
-	} else if d := string(ex.Diff3); crible[d] {
-		currentDifficulty = d
+	case ex.Diff3:
 		newDifficulties = [2]ex.DifficultyTag{ex.Diff1, ex.Diff2}
 	}
 
@@ -217,6 +221,17 @@ func (ct *Controller) duplicateWithDifficulty(idQuestion int64) error {
 
 // do NOT commit or rollback
 func updateTags(tx *sql.Tx, tags ex.QuestionTags, idQuestion int64) error {
+	var nbDiff int
+	for _, tag := range tags {
+		switch ex.DifficultyTag(tag.Tag) {
+		case ex.Diff1, ex.Diff2, ex.Diff3:
+			nbDiff++
+		}
+	}
+	if nbDiff > 1 {
+		return errors.New("Un seul niveau de difficulté est autorisé par question.")
+	}
+
 	_, err := ex.DeleteQuestionTagsByIdQuestions(tx, idQuestion)
 	if err != nil {
 		return err

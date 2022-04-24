@@ -51,9 +51,6 @@ func NewController(db *sql.DB, key pass.Encrypter) *Controller {
 	return &Controller{db: db, key: key, sessions: make(map[string]*gameSession)}
 }
 
-// TODO: compute the questions matching tag filters
-// func (ct *Controller)
-
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 	configs, err := SelectAllTrivialConfigs(ct.db)
 	if err != nil {
@@ -145,6 +142,12 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (TrivialConfig, erro
 		return TrivialConfig{}, errors.New("session already running")
 	}
 
+	// select the questions
+	questionPool, err := config.Questions.selectQuestions(ct.db)
+	if err != nil {
+		return TrivialConfig{}, err
+	}
+
 	ct.lock.Lock()
 	newID := utils.RandomID(true, 4, func(s string) bool {
 		_, taken := ct.sessions[s]
@@ -152,8 +155,10 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (TrivialConfig, erro
 	})
 	ct.lock.Unlock()
 
-	session := newGameSession(ct.db, config, params.GroupStrategy)
+	session := newGameSession(ct.db, config, params.GroupStrategy, questionPool)
 
+	// the rooms may be either created initially, or during client connection
+	// (see connectStudent)
 	session.group.initGames(session) // initial setup of rooms
 
 	// register the controller...

@@ -3,13 +3,15 @@ package trivialpoursuit
 import (
 	"testing"
 	"time"
+
+	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
 
 func TestGameTimeout(t *testing.T) {
 	// ProgressLogger.SetOutput(os.Stdout)
 	const timeout = time.Second / 10
 
-	ct := newGameSession(nil, TrivialConfig{}, RandomGroupStrategy{2, 2})
+	ct := newGameSession(nil, TrivialConfig{}, RandomGroupStrategy{2, 2}, game.QuestionPool{})
 	gameTimeout = timeout
 
 	ct.createGame(2)

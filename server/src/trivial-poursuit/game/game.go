@@ -9,6 +9,8 @@ import (
 	"os"
 	"sort"
 	"time"
+
+	"github.com/benoitkugler/maths-online/maths/exercice"
 )
 
 const defautQuestionTimeout = time.Minute / 10
@@ -21,9 +23,20 @@ type PlayerID = int
 
 var DebugLogger = log.New(os.Stdout, "game-debug:", log.LstdFlags)
 
+type WeigthedQuestions struct {
+	Questions []exercice.Question
+	Weights   []float64 // same length as `Questions`
+}
+
+type QuestionPool [NbCategories]WeigthedQuestions
+
 type Game struct {
 	// GameState is the exposed game state, shared by clients
 	GameState
+
+	// QuestionPool is the list of the question
+	// being asked, for each category
+	QuestionPool QuestionPool
 
 	// QuestionTimeout is started when emitting a new question
 	// and cleared early if all players have answered
@@ -246,8 +259,8 @@ func (g *Game) handleAnswer(a answer, player PlayerID) StateUpdates {
 	return g.concludeQuestion(false) // wait for other players if needed
 }
 
-// EmitQuestion generate a question with the right categorie,
-// and reset the current answers
+// EmitQuestion generate a question with the right categorie
+// TODO: use the real questions
 func (gs *Game) EmitQuestion() showQuestion {
 	cat := categories[gs.PawnTile]
 	question := showQuestion{

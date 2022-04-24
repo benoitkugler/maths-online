@@ -10,8 +10,8 @@ import (
 
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/students"
-	ga "github.com/benoitkugler/maths-online/trivial-poursuit"
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
+	ga "github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -28,24 +28,25 @@ type gameSession struct {
 	db *sql.DB
 
 	teacherClient *teacherClient
-	monitor       ga.Monitor
-
-	games map[GameID]*ga.GameController // active games, either in lobby or playing
+	monitor       tv.Monitor
+	questions     ga.QuestionPool
+	games         map[GameID]*tv.GameController // active games, either in lobby or playing
 
 	config TrivialConfig // database entry, cached for simplicity
 	group  GroupStrategy // specified when starting the session
 }
 
-func newGameSession(db *sql.DB, config TrivialConfig, group GroupStrategy) *gameSession {
+func newGameSession(db *sql.DB, config TrivialConfig, group GroupStrategy, questions ga.QuestionPool) *gameSession {
 	return &gameSession{
 		db:     db,
 		config: config,
 		group:  group,
-		monitor: ga.Monitor{
-			Summary:      make(chan ga.GameSummary),
-			MarkQuestion: make(chan ga.MarkQuestion),
+		monitor: tv.Monitor{
+			Summary:      make(chan tv.GameSummary),
+			MarkQuestion: make(chan tv.MarkQuestion),
 		},
-		games: make(map[string]*ga.GameController),
+		games:     make(map[string]*tv.GameController),
+		questions: questions,
 	}
 }
 
@@ -149,7 +150,7 @@ func (gs *gameSession) generateName() string {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	allPlayers := make(map[ga.Player]bool)
+	allPlayers := make(map[tv.Player]bool)
 	for _, game := range gs.games {
 		for p := range game.Summary().Successes {
 			allPlayers[p] = true
@@ -161,7 +162,7 @@ func (gs *gameSession) generateName() string {
 	}
 
 	id := utils.RandomID(true, 5, func(s string) bool {
-		return allPlayers[ga.Player{Name: nameFromID(s)}]
+		return allPlayers[tv.Player{Name: nameFromID(s)}]
 	})
 
 	return nameFromID(id)
@@ -172,7 +173,7 @@ type teacherClient struct {
 	conn *websocket.Conn
 }
 
-func (tc *teacherClient) sendSummary(gs ga.GameSummary) {
+func (tc *teacherClient) sendSummary(gs tv.GameSummary) {
 	tc.conn.WriteJSON(gs)
 }
 
