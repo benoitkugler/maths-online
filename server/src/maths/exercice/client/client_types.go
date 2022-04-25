@@ -311,6 +311,16 @@ type QuestionAnswersOut struct {
 	Data map[int]bool
 }
 
+// IsCorrect returns `true` if all the fields are correct.
+func (qu QuestionAnswersOut) IsCorrect() bool {
+	for _, v := range qu.Data {
+		if !v {
+			return false
+		}
+	}
+	return true
+}
+
 // QuestionSyntaxCheckIn is emitted by the client
 // to perform a preliminary check of the syntax,
 // without validating the answer

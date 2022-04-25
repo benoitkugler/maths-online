@@ -1,8 +1,6 @@
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
 
-import 'categories.dart';
-
 class WantNextTurnNotification extends Notification {
   final WantNextTurn event;
   WantNextTurnNotification(this.event);
@@ -49,36 +47,35 @@ class _QuestionResultState extends State<QuestionResult> {
                 style: TextStyle(fontSize: 22),
               ),
               Card(
-                  color: backgroundColor,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: content,
-                  )),
-              if (!widget.event.success)
-                _ExpectedAnswer(
-                    widget.event.correctAnwser, widget.event.categorie.color),
+                color: backgroundColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: content,
+                ),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  InkWell(
-                    onTap: () => setState(() {
-                      markQuestion = !markQuestion;
-                    }),
-                    borderRadius: BorderRadius.circular(5),
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                              value: markQuestion,
-                              onChanged: (checked) => setState(() {
-                                    markQuestion = checked ?? false;
-                                  })),
-                          const Text("Retenir cette question"),
-                        ],
+                  if (!widget.event.success)
+                    InkWell(
+                      onTap: () => setState(() {
+                        markQuestion = !markQuestion;
+                      }),
+                      borderRadius: BorderRadius.circular(5),
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                                value: markQuestion,
+                                onChanged: (checked) => setState(() {
+                                      markQuestion = checked ?? false;
+                                    })),
+                            const Text("Retenir cette question"),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   ElevatedButton(
                       onPressed: () =>
                           WantNextTurnNotification(WantNextTurn(markQuestion))
@@ -103,21 +100,21 @@ class _QuestionResultState extends State<QuestionResult> {
   }
 }
 
-class _ExpectedAnswer extends StatelessWidget {
-  final String content;
-  final Color color;
+// class _ExpectedAnswer extends StatelessWidget {
+//   final String content;
+//   final Color color;
 
-  const _ExpectedAnswer(this.content, this.color, {Key? key}) : super(key: key);
+//   const _ExpectedAnswer(this.content, this.color, {Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Text("La bonne réponse est : $content"),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         border: Border.all(color: color),
+//         borderRadius: BorderRadius.circular(6),
+//       ),
+//       padding: const EdgeInsets.all(12),
+//       child: Text("La bonne réponse est : $content"),
+//     );
+//   }
+// }

@@ -28,7 +28,7 @@ type gameSession struct {
 	db *sql.DB
 
 	teacherClient *teacherClient
-	monitor       tv.Monitor
+	monitor       chan tv.GameSummary
 	questions     ga.QuestionPool
 	games         map[GameID]*tv.GameController // active games, either in lobby or playing
 
@@ -38,13 +38,10 @@ type gameSession struct {
 
 func newGameSession(db *sql.DB, config TrivialConfig, group GroupStrategy, questions ga.QuestionPool) *gameSession {
 	return &gameSession{
-		db:     db,
-		config: config,
-		group:  group,
-		monitor: tv.Monitor{
-			Summary:      make(chan tv.GameSummary),
-			MarkQuestion: make(chan tv.MarkQuestion),
-		},
+		db:        db,
+		config:    config,
+		group:     group,
+		monitor:   make(chan tv.GameSummary),
 		games:     make(map[string]*tv.GameController),
 		questions: questions,
 	}
@@ -60,6 +57,7 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 	})
 
 	game := tv.NewGameController(gameID,
+		gs.questions,
 		tv.GameOptions{
 			PlayersNumber:   nbPlayers,
 			QuestionTimeout: time.Second * time.Duration(gs.config.QuestionTimeout),
@@ -70,7 +68,10 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 	// ...and start it
 	go func() {
 		ctx, cancelFunc := context.WithTimeout(context.Background(), gameTimeout)
-		game.StartLoop(ctx)
+		review, ok := game.StartLoop(ctx)
+		if ok { // exploit the review
+			gs.exploitReview(review)
+		}
 
 		cancelFunc()
 
@@ -81,6 +82,11 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 	}()
 
 	return gameID
+}
+
+// TODO:
+func (gs *gameSession) exploitReview(review tv.Review) {
+	log.Printf("GAME REVIEW: %v", review)
 }
 
 func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID, key pass.Encrypter) error {
@@ -123,13 +129,10 @@ func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID,
 func (gs *gameSession) startLoop(ctx context.Context) {
 	for {
 		select {
-		case summary := <-gs.monitor.Summary:
+		case summary := <-gs.monitor:
 			if gs.teacherClient != nil {
 				gs.teacherClient.sendSummary(summary)
 			}
-		case mark := <-gs.monitor.MarkQuestion:
-			// TODO: update DB
-			log.Println("marking", mark)
 		}
 	}
 }

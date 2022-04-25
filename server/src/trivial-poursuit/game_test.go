@@ -10,10 +10,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
+	exClient "github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/gorilla/websocket"
 )
+
+var enonce = exercice.Enonce{
+	exercice.NumberFieldBlock{Expression: "1"},
+}
+
+var exQu = game.WeigthedQuestions{
+	Questions: []exercice.Question{{Id: 1, Enonce: enonce}, {Id: 2, Enonce: enonce}},
+	Weights:   []float64{1. / 3, 2. / 3},
+}
+
+var questions = game.QuestionPool{exQu, exQu, exQu, exQu, exQu}
 
 func websocketURL(t *testing.T, s string) string {
 	t.Helper()
@@ -33,14 +46,14 @@ func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
 
 func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 	clientID := r.URL.Query().Get("client_id")
-	ct.AddClient(w, r, Player{Name: "annonymous", ID: pass.EncryptedID(clientID)})
+	ct.AddClient(w, r, Player{Name: "testName", ID: pass.EncryptedID(clientID)})
 }
 
 func TestConcurrentEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 	// ProgressLogger.SetOutput(os.Stdout)
 
-	ct := NewGameController("testGame", GameOptions{4, 0}, Monitor{}) // do not start a game
+	ct := NewGameController("testGame", questions, GameOptions{4, 0}, nil) // do not start a game
 	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -80,7 +93,7 @@ func TestConcurrentEvents(t *testing.T) {
 func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", GameOptions{4, time.Millisecond * 50}, Monitor{})
+	ct := NewGameController("testGame", questions, GameOptions{4, time.Millisecond * 50}, nil)
 	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -106,7 +119,7 @@ func TestEvents(t *testing.T) {
 func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{})
+	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
 	go ct.StartLoop(context.Background())
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -117,11 +130,11 @@ func TestClientInvalidMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = client.ReadJSON(&[]game.StateUpdate{}) // player join
+	err = client.ReadJSON(&game.StateUpdate{}) // player join
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.ReadJSON(&[]game.StateUpdate{}) // game lobby
+	err = client.ReadJSON(&game.StateUpdate{}) // game lobby
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +153,7 @@ func TestClientInvalidMessage(t *testing.T) {
 func TestStartGame(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{})
+	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
 
 	go ct.StartLoop(context.Background())
 
@@ -152,7 +165,7 @@ func TestStartGame(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var events game.StateUpdates
+	var events game.MaybeUpdate
 	if err = client1.ReadJSON(&events); err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +200,7 @@ func TestStartGame(t *testing.T) {
 func TestInvalidJoin(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", GameOptions{1, 0}, Monitor{})
+	ct := NewGameController("testGame", questions, GameOptions{1, 0}, nil)
 
 	go ct.StartLoop(context.Background())
 
@@ -224,7 +237,7 @@ func TestSummary(t *testing.T) {
 		}
 	}()
 
-	ct := NewGameController("testGame", GameOptions{2, 0}, Monitor{Summary: notif})
+	ct := NewGameController("testGame", questions, GameOptions{2, 0}, notif)
 
 	go ct.StartLoop(context.Background())
 
@@ -236,7 +249,7 @@ func TestSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var events game.StateUpdates
+	var events game.MaybeUpdate
 	if err = client1.ReadJSON(&events); err != nil {
 		t.Fatal(err)
 	}
@@ -261,5 +274,87 @@ func TestSummary(t *testing.T) {
 
 	if sum := ct.Summary(); len(sum.Successes) != 2 || sum.PlayerTurn == nil {
 		t.Fatal(sum)
+	}
+}
+
+func TestReview(t *testing.T) {
+	WarningLogger.SetOutput(io.Discard)
+
+	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
+
+	ctx, cancelGame := context.WithCancel(context.Background())
+	go ct.StartLoop(ctx)
+
+	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
+	defer server.Close()
+
+	client1, _, err := websocket.DefaultDialer.Dial(websocketURLWithClientID(t, server.URL, "client1"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 20)
+
+	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, _ = client1.ReadMessage() // player joined
+	_, _, _ = client2.ReadMessage() // player joined
+	_, _, _ = client1.ReadMessage() // player joined
+	_, _, _ = client2.ReadMessage() // player joined
+
+	time.Sleep(time.Millisecond * 20)
+
+	_, _, _ = client1.ReadMessage() // game start & playerTurn
+
+	err = client1.WriteJSON(game.ClientEvent{Event: game.DiceClicked{}, Player: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var update game.StateUpdate
+	if err = client1.ReadJSON(&update); err != nil { // dice throw and possibleMoves
+		t.Fatal(err)
+	}
+	choosenTile := update.Events[1].(game.PossibleMoves).Tiles[0]
+
+	err = client1.WriteJSON(game.ClientEvent{Event: game.Move{Tile: choosenTile}, Player: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = client1.ReadJSON(&update); err != nil { // move and showQuestion
+		t.Fatal(err)
+	}
+
+	err = client1.WriteJSON(game.ClientEvent{Event: game.Answer{Answer: exClient.QuestionAnswersIn{}}, Player: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = client2.WriteJSON(game.ClientEvent{Event: game.Answer{Answer: exClient.QuestionAnswersIn{}}, Player: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = client1.ReadJSON(&update); err != nil { // playerAnswerResult 1 & 2
+		t.Fatal(err)
+	}
+
+	err = client1.WriteJSON(game.ClientEvent{Event: game.WantNextTurn{MarkQuestion: true}, Player: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 20)
+
+	cancelGame()
+
+	time.Sleep(time.Millisecond * 20)
+
+	history := ct.review().QuestionHistory[Player{ID: "client1", Name: "testName"}]
+	if len(history.MarkedQuestions) != 1 || len(history.QuestionHistory) != 1 {
+		t.Fatal(history)
 	}
 }

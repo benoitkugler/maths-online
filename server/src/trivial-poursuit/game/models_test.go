@@ -12,28 +12,28 @@ import (
 func TestEventsJSON(t *testing.T) {
 	dice := newDiceThrow()
 	moves := Board.choices(0, int(dice.Face)).list()
-	payload := StateUpdates{{
+	payload := StateUpdate{
 		Events: []GameEvent{
 			gameStart{},
 			playerTurn{"Haha", 2},
 			dice,
-			possibleMoves{"", moves, 2},
-			move{Tile: moves[0]},
+			PossibleMoves{"", moves, 2},
+			Move{Tile: moves[0]},
 			playerLeft{1},
-			showQuestion{Question: "Super", Categorie: 0},
+			showQuestion{ID: 1, Categorie: 0},
 			playerAnswerResult{Player: 0, Success: true},
 			playerAnswerResult{Player: 1, Success: false},
 			playerAnswerResult{Player: 2, Success: true},
 			playerTurn{"", 0},
 			diceThrow{3},
-			move{Tile: 4},
-			showQuestion{Question: "Super", Categorie: 1},
+			Move{Tile: 4},
+			showQuestion{ID: 2, Categorie: 1},
 			playerAnswerResult{Player: 0, Success: false},
 			playerAnswerResult{Player: 1, Success: true},
 			playerAnswerResult{Player: 2, Success: true},
 			playerTurn{"", 1},
 		},
-	}}
+	}
 
 	b, err := json.MarshalIndent(payload, "", " ")
 	if err != nil {
@@ -41,7 +41,7 @@ func TestEventsJSON(t *testing.T) {
 	}
 	fmt.Println(string(b))
 
-	err = json.Unmarshal(b, &[]StateUpdate{})
+	err = json.Unmarshal(b, &StateUpdate{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,8 +64,8 @@ func TestGameStateJSON(t *testing.T) {
 
 func TestClientEventJSON(t *testing.T) {
 	for _, event := range []clientEventData{
-		move{Tile: 4, Path: []int{}},
-		answer{client.QuestionAnswersIn{Data: make(map[int]client.Answer)}, "ma réponse"},
+		Move{Tile: 4, Path: []int{}},
+		Answer{client.QuestionAnswersIn{Data: make(map[int]client.Answer)}},
 		Ping{"Test"},
 	} {
 		payload := ClientEvent{Event: event, Player: 0}
@@ -92,11 +92,11 @@ func TestMethodTag(t *testing.T) {
 	playerLeft{}.isGameEvent()
 	playerTurn{}.isGameEvent()
 	diceThrow{}.isGameEvent()
-	move{}.isGameEvent()
-	possibleMoves{}.isGameEvent()
+	Move{}.isGameEvent()
+	PossibleMoves{}.isGameEvent()
 	showQuestion{}.isGameEvent()
 	playerAnswerResult{}.isGameEvent()
 	gameEnd{}.isGameEvent()
-	move{}.isClientEvent()
-	answer{}.isClientEvent()
+	Move{}.isClientEvent()
+	Answer{}.isClientEvent()
 }

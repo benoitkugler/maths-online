@@ -2,14 +2,16 @@ package game
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
 
 // interaction with the client
 
-//go:generate ../../../../../structgen/structgen -source=models.go -mode=dart:../../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen.go
+//go:generate ../../../../../structgen/structgen -source=models.go -mode=dart:../../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen_itfs.go
 
 // GameState represents an on-going game.
 type GameState struct {
@@ -18,13 +20,25 @@ type GameState struct {
 	Player   PlayerID                   // the player currently playing (choosing where to move)
 }
 
+type QuestionResult struct {
+	IdQuestion int64
+	Success    bool
+}
+
+// QuestionReview stores the results of one player
+// against the questions asked during the game
+type QuestionReview struct {
+	QuestionHistory []QuestionResult
+	// Ids of question the player wants to mark for further work
+	MarkedQuestions []int64
+}
+
 // PlayerStatus exposes the information about one player
 type PlayerStatus struct {
 	Name    string
+	Review  QuestionReview
 	Success Success
 }
-
-type StateUpdates = []StateUpdate
 
 // StateUpdate describes a list of events yielding
 // a new game state.
@@ -35,25 +49,15 @@ type StateUpdate struct {
 	State  GameState
 }
 
+func (su StateUpdate) String() string {
+	var events []string
+	for _, ev := range su.Events {
+		events = append(events, fmt.Sprintf("\t%T: %v", ev, ev))
+	}
+	return fmt.Sprintf("Events:\n %s\n--> New state: %v", strings.Join(events, "\n"), su.State)
+}
+
 type Events []GameEvent
-
-func (evs Events) MarshalJSON() ([]byte, error) {
-	tmp := make([]GameEventWrapper, len(evs))
-	for i, v := range evs {
-		tmp[i] = GameEventWrapper{Data: v}
-	}
-	return json.Marshal(tmp)
-}
-
-func (evs *Events) UnmarshalJSON(data []byte) error {
-	var tmp []GameEventWrapper
-	err := json.Unmarshal(data, &tmp)
-	*evs = make(Events, len(tmp))
-	for i, v := range tmp {
-		(*evs)[i] = v.Data
-	}
-	return err
-}
 
 // GameEvent is an action (created by the server) advancing the game
 // or requiring to update the UI
@@ -67,8 +71,8 @@ func (gameStart) isGameEvent()          {}
 func (playerLeft) isGameEvent()         {}
 func (playerTurn) isGameEvent()         {}
 func (diceThrow) isGameEvent()          {}
-func (move) isGameEvent()               {}
-func (possibleMoves) isGameEvent()      {}
+func (Move) isGameEvent()               {}
+func (PossibleMoves) isGameEvent()      {}
 func (showQuestion) isGameEvent()       {}
 func (playerAnswerResult) isGameEvent() {}
 func (gameEnd) isGameEvent()            {}
@@ -110,17 +114,17 @@ func newDiceThrow() diceThrow {
 	return diceThrow{uint8(rand.Int31n(maxFaceNumber) + 1)}
 }
 
-// move is emitted when a player choose to move the
+// Move is emitted when a player choose to Move the
 // pawn
-type move struct {
+type Move struct {
 	// the tiles to go through to animate the move
 	// (only valid when send by the server)
 	Path []int
 	Tile int
 }
 
-// possibleMoves is emitted after a diceThrow
-type possibleMoves struct {
+// PossibleMoves is emitted after a diceThrow
+type PossibleMoves struct {
 	PlayerName string
 	Tiles      []int    // the tile indices where the current player may move
 	Player     PlayerID // the player allowed to play
@@ -129,20 +133,20 @@ type possibleMoves struct {
 // showQuestion is emitted when a player
 // should answer a question
 type showQuestion struct {
-	Question       string
 	TimeoutSeconds int
 	Categorie      categorie
-	ID             int64 // TODO use it
+	ID             int64           // to facilitate the tracking of the question results
+	Question       client.Question `dart-extern:"../exercices/types.gen.dart"` // the actual question
 }
 
 // playerAnswerResult indicates
 // if the player has answered correctly to the
 // current question
 type playerAnswerResult struct {
-	CorrectAnwser string // TODO:
-	Player        int
-	Success       bool
-	Categorie     categorie
+	Player     int
+	Success    bool
+	Categorie  categorie
+	AskForMask bool // true if Success is false and if the player has not already marked 3
 }
 
 // gameEnd is emitted when at least one player has won
@@ -156,25 +160,24 @@ type clientEventData interface {
 	isClientEvent()
 }
 
-func (move) isClientEvent()         {}
-func (answer) isClientEvent()       {}
-func (diceClicked) isClientEvent()  {}
-func (wantNextTurn) isClientEvent() {}
+func (Move) isClientEvent()         {}
+func (Answer) isClientEvent()       {}
+func (DiceClicked) isClientEvent()  {}
+func (WantNextTurn) isClientEvent() {}
 func (Ping) isClientEvent()         {}
 
 // the proposition of a client to a question
-type answer struct {
-	NewField client.QuestionAnswersIn `dart-extern:"../exercices/types.gen.dart"`
-	Content  string
+type Answer struct {
+	Answer client.QuestionAnswersIn `dart-extern:"../exercices/types.gen.dart"`
 }
 
-// diceClicked is emitted when the current player
+// DiceClicked is emitted when the current player
 // throws the dice
-type diceClicked struct{}
+type DiceClicked struct{}
 
-// wantNextTurn is emitted when a player is done
+// WantNextTurn is emitted when a player is done
 // looking at the question answer panel
-type wantNextTurn struct {
+type WantNextTurn struct {
 	// MarkQuestion is true if the player wants to
 	// keep the question for following trainings
 	MarkQuestion bool

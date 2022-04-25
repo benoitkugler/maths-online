@@ -4,58 +4,7 @@ import '../exercices/types.gen.dart';
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
-String stringFromJson(dynamic json) => json as String;
-
-String stringToJson(String item) => item;
-
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.Ping
-class Ping implements ClientEventData {
-  final String info;
-
-  const Ping(this.info);
-
-  @override
-  String toString() {
-    return "Ping($info)";
-  }
-}
-
-Ping pingFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return Ping(stringFromJson(json['Info']));
-}
-
-JSON pingToJson(Ping item) {
-  return {"Info": stringToJson(item.info)};
-}
-
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.answer
-class Answer implements ClientEventData {
-  final QuestionAnswersIn newField;
-  final String content;
-
-  const Answer(this.newField, this.content);
-
-  @override
-  String toString() {
-    return "Answer($newField, $content)";
-  }
-}
-
-Answer answerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return Answer(questionAnswersInFromJson(json['NewField']),
-      stringFromJson(json['Content']));
-}
-
-JSON answerToJson(Answer item) {
-  return {
-    "NewField": questionAnswersInToJson(item.newField),
-    "Content": stringToJson(item.content)
-  };
-}
-
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.diceClicked
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.DiceClicked
 class DiceClicked implements ClientEventData {
   const DiceClicked();
 
@@ -89,7 +38,7 @@ List<dynamic> listIntToJson(List<int> item) {
   return item.map(intToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.move
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.Move
 class Move implements GameEvent, ClientEventData {
   final List<int> path;
   final int tile;
@@ -111,11 +60,36 @@ JSON moveToJson(Move item) {
   return {"Path": listIntToJson(item.path), "Tile": intToJson(item.tile)};
 }
 
+String stringFromJson(dynamic json) => json as String;
+
+String stringToJson(String item) => item;
+
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.Ping
+class Ping implements ClientEventData {
+  final String info;
+
+  const Ping(this.info);
+
+  @override
+  String toString() {
+    return "Ping($info)";
+  }
+}
+
+Ping pingFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Ping(stringFromJson(json['Info']));
+}
+
+JSON pingToJson(Ping item) {
+  return {"Info": stringToJson(item.info)};
+}
+
 bool boolFromJson(dynamic json) => json as bool;
 
 bool boolToJson(bool item) => item;
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.wantNextTurn
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.WantNextTurn
 class WantNextTurn implements ClientEventData {
   final bool markQuestion;
 
@@ -136,6 +110,27 @@ JSON wantNextTurnToJson(WantNextTurn item) {
   return {"MarkQuestion": boolToJson(item.markQuestion)};
 }
 
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.answer
+class Answer implements ClientEventData {
+  final QuestionAnswersIn answer;
+
+  const Answer(this.answer);
+
+  @override
+  String toString() {
+    return "Answer($answer)";
+  }
+}
+
+Answer answerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Answer(questionAnswersInFromJson(json['Answer']));
+}
+
+JSON answerToJson(Answer item) {
+  return {"Answer": questionAnswersInToJson(item.answer)};
+}
+
 abstract class ClientEventData {}
 
 ClientEventData clientEventDataFromJson(dynamic json_) {
@@ -144,31 +139,31 @@ ClientEventData clientEventDataFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return pingFromJson(data);
-    case 1:
-      return answerFromJson(data);
-    case 2:
       return diceClickedFromJson(data);
-    case 3:
+    case 1:
       return moveFromJson(data);
-    case 4:
+    case 2:
+      return pingFromJson(data);
+    case 3:
       return wantNextTurnFromJson(data);
+    case 4:
+      return answerFromJson(data);
     default:
       throw ("unexpected type");
   }
 }
 
 JSON clientEventDataToJson(ClientEventData item) {
-  if (item is Ping) {
-    return {'Kind': 0, 'Data': pingToJson(item)};
-  } else if (item is Answer) {
-    return {'Kind': 1, 'Data': answerToJson(item)};
-  } else if (item is DiceClicked) {
-    return {'Kind': 2, 'Data': diceClickedToJson(item)};
+  if (item is DiceClicked) {
+    return {'Kind': 0, 'Data': diceClickedToJson(item)};
   } else if (item is Move) {
-    return {'Kind': 3, 'Data': moveToJson(item)};
+    return {'Kind': 1, 'Data': moveToJson(item)};
+  } else if (item is Ping) {
+    return {'Kind': 2, 'Data': pingToJson(item)};
   } else if (item is WantNextTurn) {
-    return {'Kind': 4, 'Data': wantNextTurnToJson(item)};
+    return {'Kind': 3, 'Data': wantNextTurnToJson(item)};
+  } else if (item is Answer) {
+    return {'Kind': 4, 'Data': answerToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -344,7 +339,7 @@ JSON gameStartToJson(GameStart item) {
 }
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.categorie
-enum Categorie { purple, green, orange, yellow, blue }
+enum Categorie { purple, green, orange, yellow, blue, nbCategories }
 
 extension _CategorieExt on Categorie {
   static Categorie fromValue(int i) {
@@ -363,35 +358,35 @@ dynamic categorieToJson(Categorie item) => item.toValue();
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.playerAnswerResult
 class PlayerAnswerResult implements GameEvent {
-  final String correctAnwser;
   final int player;
   final bool success;
   final Categorie categorie;
+  final bool askForMask;
 
   const PlayerAnswerResult(
-      this.correctAnwser, this.player, this.success, this.categorie);
+      this.player, this.success, this.categorie, this.askForMask);
 
   @override
   String toString() {
-    return "PlayerAnswerResult($correctAnwser, $player, $success, $categorie)";
+    return "PlayerAnswerResult($player, $success, $categorie, $askForMask)";
   }
 }
 
 PlayerAnswerResult playerAnswerResultFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return PlayerAnswerResult(
-      stringFromJson(json['CorrectAnwser']),
       intFromJson(json['Player']),
       boolFromJson(json['Success']),
-      categorieFromJson(json['Categorie']));
+      categorieFromJson(json['Categorie']),
+      boolFromJson(json['AskForMask']));
 }
 
 JSON playerAnswerResultToJson(PlayerAnswerResult item) {
   return {
-    "CorrectAnwser": stringToJson(item.correctAnwser),
     "Player": intToJson(item.player),
     "Success": boolToJson(item.success),
-    "Categorie": categorieToJson(item.categorie)
+    "Categorie": categorieToJson(item.categorie),
+    "AskForMask": boolToJson(item.askForMask)
   };
 }
 
@@ -472,31 +467,35 @@ JSON possibleMovesToJson(PossibleMoves item) {
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.showQuestion
 class ShowQuestion implements GameEvent {
-  final String question;
   final int timeoutSeconds;
   final Categorie categorie;
+  final int iD;
+  final Question question;
 
-  const ShowQuestion(this.question, this.timeoutSeconds, this.categorie);
+  const ShowQuestion(
+      this.timeoutSeconds, this.categorie, this.iD, this.question);
 
   @override
   String toString() {
-    return "ShowQuestion($question, $timeoutSeconds, $categorie)";
+    return "ShowQuestion($timeoutSeconds, $categorie, $iD, $question)";
   }
 }
 
 ShowQuestion showQuestionFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return ShowQuestion(
-      stringFromJson(json['Question']),
       intFromJson(json['TimeoutSeconds']),
-      categorieFromJson(json['Categorie']));
+      categorieFromJson(json['Categorie']),
+      intFromJson(json['ID']),
+      questionFromJson(json['Question']));
 }
 
 JSON showQuestionToJson(ShowQuestion item) {
   return {
-    "Question": stringToJson(item.question),
     "TimeoutSeconds": intToJson(item.timeoutSeconds),
-    "Categorie": categorieToJson(item.categorie)
+    "Categorie": categorieToJson(item.categorie),
+    "ID": intToJson(item.iD),
+    "Question": questionToJson(item.question)
   };
 }
 
@@ -510,15 +509,15 @@ GameEvent gameEventFromJson(dynamic json_) {
     case 0:
       return lobbyUpdateFromJson(data);
     case 1:
-      return playerJoinFromJson(data);
-    case 2:
-      return diceThrowFromJson(data);
-    case 3:
-      return gameEndFromJson(data);
-    case 4:
-      return gameStartFromJson(data);
-    case 5:
       return moveFromJson(data);
+    case 2:
+      return playerJoinFromJson(data);
+    case 3:
+      return diceThrowFromJson(data);
+    case 4:
+      return gameEndFromJson(data);
+    case 5:
+      return gameStartFromJson(data);
     case 6:
       return playerAnswerResultFromJson(data);
     case 7:
@@ -537,16 +536,16 @@ GameEvent gameEventFromJson(dynamic json_) {
 JSON gameEventToJson(GameEvent item) {
   if (item is LobbyUpdate) {
     return {'Kind': 0, 'Data': lobbyUpdateToJson(item)};
-  } else if (item is PlayerJoin) {
-    return {'Kind': 1, 'Data': playerJoinToJson(item)};
-  } else if (item is DiceThrow) {
-    return {'Kind': 2, 'Data': diceThrowToJson(item)};
-  } else if (item is GameEnd) {
-    return {'Kind': 3, 'Data': gameEndToJson(item)};
-  } else if (item is GameStart) {
-    return {'Kind': 4, 'Data': gameStartToJson(item)};
   } else if (item is Move) {
-    return {'Kind': 5, 'Data': moveToJson(item)};
+    return {'Kind': 1, 'Data': moveToJson(item)};
+  } else if (item is PlayerJoin) {
+    return {'Kind': 2, 'Data': playerJoinToJson(item)};
+  } else if (item is DiceThrow) {
+    return {'Kind': 3, 'Data': diceThrowToJson(item)};
+  } else if (item is GameEnd) {
+    return {'Kind': 4, 'Data': gameEndToJson(item)};
+  } else if (item is GameStart) {
+    return {'Kind': 5, 'Data': gameStartToJson(item)};
   } else if (item is PlayerAnswerResult) {
     return {'Kind': 6, 'Data': playerAnswerResultToJson(item)};
   } else if (item is PlayerLeft) {
@@ -576,6 +575,69 @@ List<dynamic> listGameEventToJson(List<GameEvent> item) {
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.Events
 typedef Events = List<GameEvent>;
 
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.QuestionResult
+class QuestionResult {
+  final int idQuestion;
+  final bool success;
+
+  const QuestionResult(this.idQuestion, this.success);
+
+  @override
+  String toString() {
+    return "QuestionResult($idQuestion, $success)";
+  }
+}
+
+QuestionResult questionResultFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return QuestionResult(
+      intFromJson(json['IdQuestion']), boolFromJson(json['Success']));
+}
+
+JSON questionResultToJson(QuestionResult item) {
+  return {
+    "IdQuestion": intToJson(item.idQuestion),
+    "Success": boolToJson(item.success)
+  };
+}
+
+List<QuestionResult> listQuestionResultFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(questionResultFromJson).toList();
+}
+
+List<dynamic> listQuestionResultToJson(List<QuestionResult> item) {
+  return item.map(questionResultToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.QuestionReview
+class QuestionReview {
+  final List<QuestionResult> questionHistory;
+  final List<int> markedQuestions;
+
+  const QuestionReview(this.questionHistory, this.markedQuestions);
+
+  @override
+  String toString() {
+    return "QuestionReview($questionHistory, $markedQuestions)";
+  }
+}
+
+QuestionReview questionReviewFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return QuestionReview(listQuestionResultFromJson(json['QuestionHistory']),
+      listIntFromJson(json['MarkedQuestions']));
+}
+
+JSON questionReviewToJson(QuestionReview item) {
+  return {
+    "QuestionHistory": listQuestionResultToJson(item.questionHistory),
+    "MarkedQuestions": listIntToJson(item.markedQuestions)
+  };
+}
+
 List<bool> listBoolFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -587,31 +649,35 @@ List<dynamic> listBoolToJson(List<bool> item) {
   return item.map(boolToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.success
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.Success
 typedef Success = List<bool>;
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.PlayerStatus
 class PlayerStatus {
   final String name;
+  final QuestionReview review;
   final Success success;
 
-  const PlayerStatus(this.name, this.success);
+  const PlayerStatus(this.name, this.review, this.success);
 
   @override
   String toString() {
-    return "PlayerStatus($name, $success)";
+    return "PlayerStatus($name, $review, $success)";
   }
 }
 
 PlayerStatus playerStatusFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return PlayerStatus(
-      stringFromJson(json['Name']), listBoolFromJson(json['Success']));
+      stringFromJson(json['Name']),
+      questionReviewFromJson(json['Review']),
+      listBoolFromJson(json['Success']));
 }
 
 JSON playerStatusToJson(PlayerStatus item) {
   return {
     "Name": stringToJson(item.name),
+    "Review": questionReviewToJson(item.review),
     "Success": listBoolToJson(item.success)
   };
 }

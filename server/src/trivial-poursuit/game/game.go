@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/utils"
 )
 
 const defautQuestionTimeout = time.Minute / 10
@@ -28,7 +29,21 @@ type WeigthedQuestions struct {
 	Weights   []float64 // same length as `Questions`
 }
 
+func (wq WeigthedQuestions) sample() exercice.Question {
+	index := utils.SampleIndex(wq.Weights)
+	return wq.Questions[index]
+}
+
 type QuestionPool [NbCategories]WeigthedQuestions
+
+type currentQuestion struct {
+	Question  exercice.QuestionInstance // the instantiated version
+	categorie categorie                 // the origin
+	ID        int64                     // the origin
+}
+
+// MaybeUpdate is an optional update
+type MaybeUpdate = *StateUpdate
 
 type Game struct {
 	// GameState is the exposed game state, shared by clients
@@ -36,7 +51,7 @@ type Game struct {
 
 	// QuestionPool is the list of the question
 	// being asked, for each category
-	QuestionPool QuestionPool
+	questionPool QuestionPool
 
 	// QuestionTimeout is started when emitting a new question
 	// and cleared early if all players have answered
@@ -45,7 +60,7 @@ type Game struct {
 
 	// refreshed for each question
 	currentAnswers map[PlayerID]playerAnswerResult
-	question       showQuestion // the question to answer, or empty
+	question       currentQuestion // the question to answer, or empty
 
 	// refreshed for each new turn
 	currentWantNextTurn map[PlayerID]bool
@@ -55,10 +70,10 @@ type Game struct {
 	questionDurationLimit time.Duration
 }
 
-// NewGame returns an empty game, waiting for players to be
+// NewGame returns an empty game, using the given `questions`, waiting for players to be
 // added.
 // `questionTimeout` is an optionnal parameter which default to one minute
-func NewGame(questionTimeout time.Duration) *Game {
+func NewGame(questionTimeout time.Duration, questions QuestionPool) *Game {
 	if questionTimeout == 0 {
 		questionTimeout = defautQuestionTimeout
 	}
@@ -74,6 +89,7 @@ func NewGame(questionTimeout time.Duration) *Game {
 		currentWantNextTurn:   make(map[int]bool),
 		QuestionTimeout:       timer,
 		questionDurationLimit: questionTimeout,
+		questionPool:          questions,
 	}
 }
 
@@ -84,7 +100,7 @@ func (gs GameState) NumberPlayers() int { return len(gs.Players) }
 func (g *Game) IsPlaying() bool {
 	return g.Player != -1 &&
 		(len(g.winners()) == 0 ||
-			!g.arePlayersReady())
+			!g.arePlayersReadyForNextTurn())
 }
 
 // AddPlayer add a player to the game and returns
@@ -118,7 +134,10 @@ func (g *Game) AddPlayer(name string) LobbyUpdate {
 // RemovePlayer remove `player` from the game.
 func (g *Game) RemovePlayer(player PlayerID) LobbyUpdate {
 	playerName := g.playerName(player)
-	delete(g.Players, player)
+	delete(g.GameState.Players, player)
+	if g.GameState.Player == player {
+		g.GameState.Player = -1
+	}
 	return LobbyUpdate{
 		Player:     player,
 		Names:      g.playerNames(),
@@ -169,7 +188,7 @@ func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
 	return StateUpdate{
 		Events: Events{
 			g.dice,
-			possibleMoves{PlayerName: g.playerName(g.Player), Player: g.Player, Tiles: choices},
+			PossibleMoves{PlayerName: g.playerName(g.Player), Player: g.Player, Tiles: choices},
 		},
 		State: g.GameState,
 	}, nil
@@ -183,36 +202,27 @@ func (g *Game) StartGame() StateUpdate {
 	return evs
 }
 
-// ShouldMarkQuestion returns true and the question and player IDs
-// when a player asks to mark a given question for following training.
-func (g *Game) ShouldMarkQuestion(event ClientEvent) (int64, PlayerID, bool) {
-	if mark, ok := event.Event.(wantNextTurn); ok && mark.MarkQuestion {
-		return g.question.ID, event.Player, true
-	}
-	return 0, 0, false
-}
-
 // HandleClientEvent handles the given `event`, or returns
 // an error if the `event` is not valid with respect to the current
 // state (enforcing rules).
 // Caller should check and ignore empty return values, which mean
 // nothing should happen.
-func (g *Game) HandleClientEvent(event ClientEvent) (updates StateUpdates, isGameOver bool, err error) {
+func (g *Game) HandleClientEvent(event ClientEvent) (updates MaybeUpdate, isGameOver bool, err error) {
 	switch eventData := event.Event.(type) {
-	case diceClicked:
+	case DiceClicked:
 		update, err := g.handleDiceClicked(event.Player)
-		return StateUpdates{update}, false, err
-	case move:
+		return &update, false, err
+	case Move:
 		evs, err := g.handleMove(eventData, event.Player)
 		if err != nil {
 			return nil, false, err
 		}
-		return StateUpdates{{Events: evs, State: g.GameState}}, false, nil
-	case answer:
+		return &StateUpdate{Events: evs, State: g.GameState}, false, nil
+	case Answer:
 		updates = g.handleAnswer(eventData, event.Player)
 		return updates, false, nil
-	case wantNextTurn:
-		updates = g.tryAndConcludeTurn(eventData, event.Player)
+	case WantNextTurn:
+		updates = g.handleWantNextTurn(eventData, event.Player)
 		isGameOver = !g.IsPlaying()
 		return updates, isGameOver, nil
 	case Ping:
@@ -223,7 +233,7 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates StateUpdates, isGam
 	return nil, false, fmt.Errorf("invalid client event %T", event.Event)
 }
 
-func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
+func (g *Game) handleMove(m Move, player PlayerID) (Events, error) {
 	// check if the player is allowed to move
 	if g.Player != player {
 		return nil, fmt.Errorf("player %d is not allowed to move during turn of player %d", player, g.Player)
@@ -238,7 +248,7 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	g.dice = diceThrow{}
 	question := g.EmitQuestion()
 	return Events{
-		move{
+		Move{
 			Tile: m.Tile, // now valid
 			Path: choices[m.Tile],
 		},
@@ -246,58 +256,75 @@ func (g *Game) handleMove(m move, player PlayerID) (Events, error) {
 	}, nil
 }
 
-func (g *Game) handleAnswer(a answer, player PlayerID) StateUpdates {
-	isValid, expected := g.isAnswerValid(a)
-	g.Players[player].Success[g.question.Categorie] = isValid
+func (g *Game) handleAnswer(a Answer, player PlayerID) MaybeUpdate {
+	isValid := g.isAnswerValid(a)
+
+	playerState := g.Players[player]
+	playerState.Success[g.question.categorie] = isValid
+	playerState.Review.QuestionHistory = append(playerState.Review.QuestionHistory, QuestionResult{
+		IdQuestion: g.question.ID,
+		Success:    isValid,
+	})
+	askForMark := !isValid && len(playerState.Review.MarkedQuestions) < 3
+
 	g.currentAnswers[player] = playerAnswerResult{
-		Player:        player,
-		Success:       isValid,
-		CorrectAnwser: expected,
-		Categorie:     g.question.Categorie,
+		Player:     player,
+		Success:    isValid,
+		AskForMask: askForMark,
+		Categorie:  g.question.categorie,
 	}
 
 	return g.concludeQuestion(false) // wait for other players if needed
 }
 
 // EmitQuestion generate a question with the right categorie
-// TODO: use the real questions
 func (gs *Game) EmitQuestion() showQuestion {
+	// select the category
 	cat := categories[gs.PawnTile]
-	question := showQuestion{
-		Question:       fmt.Sprintf("Quelle est la catégorie %d", cat),
-		Categorie:      cat,
-		TimeoutSeconds: int(gs.questionDurationLimit.Seconds()),
+	// select the question among the pool...
+	question := gs.questionPool[cat].sample()
+	// ...and instantiate it
+	instance := question.Instantiate()
+
+	gs.question = currentQuestion{
+		categorie: cat,
+		ID:        question.Id,
+		Question:  instance,
 	}
-	gs.question = question
+
+	out := showQuestion{
+		TimeoutSeconds: int(gs.questionDurationLimit.Seconds()),
+		ID:             question.Id,
+		Categorie:      cat,
+		Question:       instance.ToClient(),
+	}
 
 	gs.QuestionTimeout.Reset(gs.questionDurationLimit)
 
-	return question
+	return out
 }
 
 // QuestionTimeoutAction closes the current question session,
 // but doest not start a new turn.
-func (gs *Game) QuestionTimeoutAction() StateUpdates {
+func (gs *Game) QuestionTimeoutAction() MaybeUpdate {
 	return gs.concludeQuestion(true)
 }
 
-func (gs *Game) concludeQuestion(force bool) StateUpdates {
+func (gs *Game) concludeQuestion(force bool) MaybeUpdate {
 	evs := gs.endQuestion(force)
 	if len(evs) == 0 { // nothing has changed
 		return nil
 	}
-	return StateUpdates{{Events: evs, State: gs.GameState}}
+	return &StateUpdate{Events: evs, State: gs.GameState}
 }
 
 // isAnswerValid validate `a` against the current question
-// and returns the expected answer
-func (gs *Game) isAnswerValid(a answer) (bool, string) {
-	// TODO: à implémenter, using the real questions
-	expected := fmt.Sprintf("%d", gs.question.Categorie)
-	return a.Content == expected, expected
+func (gs *Game) isAnswerValid(a Answer) bool {
+	result := gs.question.Question.EvaluateAnswer(a.Answer).IsCorrect()
+	return result
 }
 
-func (gs *Game) arePlayersReady() bool {
+func (gs *Game) arePlayersReadyForNextTurn() bool {
 	for player := range gs.Players {
 		if ok := gs.currentWantNextTurn[player]; !ok {
 			return false
@@ -306,24 +333,32 @@ func (gs *Game) arePlayersReady() bool {
 	return true
 }
 
-// TODO: handle MarkQuestion
-func (gs *Game) tryAndConcludeTurn(event wantNextTurn, player PlayerID) (updates StateUpdates) {
+func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates MaybeUpdate) {
 	gs.currentWantNextTurn[player] = true
 
-	if !gs.arePlayersReady() { // do nothing
+	pReview := &gs.Players[player].Review
+	if event.MarkQuestion {
+		pReview.MarkedQuestions = append(pReview.MarkedQuestions, gs.question.ID)
+	}
+
+	if !gs.arePlayersReadyForNextTurn() { // do nothing
 		return nil
 	}
+
+	// reset the question
+	gs.question = currentQuestion{}
 
 	// check for winners
 	winners := gs.winners()
 	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
-		updates = StateUpdates{{
+		updates = &StateUpdate{
 			Events: Events{gameEnd{Winners: winners, WinnerNames: gs.idToNames(winners)}},
 			State:  gs.GameState,
-		}}
+		}
 	} else { // start a new turn
-		updates = StateUpdates{gs.startTurn()}
+		v := gs.startTurn()
+		updates = &v
 	}
 
 	return updates
@@ -360,7 +395,7 @@ func (gs *Game) endQuestion(force bool) Events {
 		<-gs.QuestionTimeout.C // drain the channel
 	}
 
-	gs.question = showQuestion{}
+	// question is used in wantNextTurn
 	for k := range gs.currentAnswers {
 		delete(gs.currentAnswers, k)
 	}

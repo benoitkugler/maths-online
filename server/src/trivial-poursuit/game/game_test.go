@@ -6,8 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 )
+
+var exQu = WeigthedQuestions{
+	Questions: []exercice.Question{{Id: 1}, {Id: 2}},
+	Weights:   []float64{1. / 2, 1. / 2},
+}
 
 func playersFromSuccess(scs ...Success) map[int]*PlayerStatus {
 	out := make(map[int]*PlayerStatus)
@@ -90,7 +96,7 @@ func TestGameState_nextPlayer(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
-	g := NewGame(0)
+	g := NewGame(0, QuestionPool{})
 	p1 := g.AddPlayer("").Player
 	if p1 != 0 {
 		t.Fatalf("unexpected player id %d", p1)
@@ -101,6 +107,11 @@ func TestStart(t *testing.T) {
 	if p1 == p2 || p2 == p3 {
 		t.Fatal()
 	}
+
+	if g.NumberPlayers() != 3 {
+		t.Fatal()
+	}
+
 	g.RemovePlayer(p2)
 	g.StartGame()
 	if g.Player != p1 {
@@ -109,7 +120,8 @@ func TestStart(t *testing.T) {
 }
 
 func TestEmitQuestion(t *testing.T) {
-	g := NewGame(time.Second / 2)
+	g := NewGame(time.Second/2, QuestionPool{exQu, exQu, exQu, exQu, exQu})
+
 	g.AddPlayer("")
 
 	if g.QuestionTimeout.Stop() {
@@ -129,7 +141,7 @@ outer:
 	}
 
 	g.EmitQuestion()
-	g.handleAnswer(answer{client.QuestionAnswersIn{}, "dd"}, 0)
+	g.handleAnswer(Answer{client.QuestionAnswersIn{}}, 0)
 	g.endQuestion(false)
 	if g.QuestionTimeout.Stop() {
 		t.Fatal("timer should have been stopped")
@@ -137,34 +149,48 @@ outer:
 }
 
 func TestHandleClientEvent(t *testing.T) {
-	g := NewGame(0)
+	g := NewGame(0, QuestionPool{exQu, exQu, exQu, exQu, exQu})
 	g.AddPlayer("")
-	g.startTurn()
 
-	_, _, err := g.HandleClientEvent(ClientEvent{})
+	// check nextTurn is properly reset
+	g.currentWantNextTurn = map[int]bool{2: true}
+	g.startTurn()
+	if len(g.currentWantNextTurn) != 0 {
+		t.Fatal("currentWantNextTurn should be reset")
+	}
+
+	up, isOver, err := g.HandleClientEvent(ClientEvent{Event: Ping{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if up != nil || isOver {
+		t.Fatal("Ping should be ignored")
+	}
+
+	_, _, err = g.HandleClientEvent(ClientEvent{})
 	if err == nil {
 		t.Fatal("expected error for invalid client event type")
 	}
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: diceClicked{}, Player: 2})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: DiceClicked{}, Player: 2})
 	if err == nil {
 		t.Fatal("expected error for invalid click")
 	}
 
-	g.HandleClientEvent(ClientEvent{Event: diceClicked{}})
+	g.HandleClientEvent(ClientEvent{Event: DiceClicked{}})
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{}, Player: 2})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: Move{}, Player: 2})
 	if err == nil {
 		t.Fatal("expected error for invalid move")
 	}
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{Tile: 89}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: Move{Tile: 89}})
 	if err == nil {
 		t.Fatal("expected error for invalid tile")
 	}
 
 	expected := g.dice.Face
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: move{Tile: int(g.dice.Face)}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: Move{Tile: int(g.dice.Face)}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,15 +201,15 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal()
 	}
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{client.QuestionAnswersIn{}, "wrong answer"}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: Answer{client.QuestionAnswersIn{}}})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for cat := categorie(0); cat < nbCategories; cat++ {
 		g.EmitQuestion()
-		g.question.Categorie = cat
-		_, _, err = g.HandleClientEvent(ClientEvent{Event: answer{client.QuestionAnswersIn{}, fmt.Sprintf("%d", cat)}})
+		g.question.categorie = cat
+		_, _, err = g.HandleClientEvent(ClientEvent{Event: Answer{client.QuestionAnswersIn{}}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -197,7 +223,7 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal("game should still be active")
 	}
 
-	g.HandleClientEvent(ClientEvent{Player: 0, Event: wantNextTurn{}})
+	g.HandleClientEvent(ClientEvent{Player: 0, Event: WantNextTurn{MarkQuestion: true}})
 
 	if g.IsPlaying() {
 		t.Fatal("game should be over")
