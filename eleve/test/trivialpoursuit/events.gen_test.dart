@@ -8,143 +8,165 @@ void main() {
     "load events JSON",
     () {
       const input = """
-        [
  {
-  "Events": [
-   {
-    "Data": {},
-    "Kind": 3
+ "Events": [
+  {
+   "Data": {},
+   "Kind": 6
+  },
+  {
+   "Data": {
+    "PlayerName": "Haha",
+    "Player": 2
    },
-   {
-    "Data": {
-     "Player": 2,
-     "PlayerName": "Haha"
-    },
-    "Kind": 7
+   "Kind": 9
+  },
+  {
+   "Data": {
+    "Face": 3
    },
-   {
-    "Data": {
-     "Face": 3
-    },
-    "Kind": 1
+   "Kind": 4
+  },
+  {
+   "Data": {
+    "PlayerName": "",
+    "Tiles": [
+     3,
+     9
+    ],
+    "Player": 2
    },
-   {
-    "Data": {
-     "CurrentPlayer": 2,
-     "Tiles": [
-      3,
-      16
-     ]
-    },
-    "Kind": 8
+   "Kind": 3
+  },
+  {
+   "Data": {
+    "Path": null,
+    "Tile": 3
    },
-   {
-    "Data": {
-     "Tile": 3
-    },
-    "Kind": 4
+   "Kind": 1
+  },
+  {
+   "Data": {
+    "Player": 1
    },
-   {
-    "Data": {
-     "Player": 1
-    },
-    "Kind": 6
+   "Kind": 8
+  },
+  {
+   "Data": {
+    "TimeoutSeconds": 0,
+    "Categorie": 0,
+    "ID": 1,
+    "Question": {
+     "Title": "",
+     "Enonce": []
+    }
    },
-   {
-    "Data": {
-     "Question": "Super",
-     "Categorie": 0
-    },
-    "Kind": 9
+   "Kind": 10
+  },
+  {
+   "Data": {
+    "Player": 0,
+    "Success": true,
+    "Categorie": 0,
+    "AskForMask": false
    },
-   {
-    "Data": {
-     "Player": 0,
-     "Success": true
-    },
-    "Kind": 5
+   "Kind": 7
+  },
+  {
+   "Data": {
+    "Player": 1,
+    "Success": false,
+    "Categorie": 0,
+    "AskForMask": false
    },
-   {
-    "Data": {
-     "Player": 1,
-     "Success": false
-    },
-    "Kind": 5
+   "Kind": 7
+  },
+  {
+   "Data": {
+    "Player": 2,
+    "Success": true,
+    "Categorie": 0,
+    "AskForMask": false
    },
-   {
-    "Data": {
-     "Player": 2,
-     "Success": true
-    },
-    "Kind": 5
+   "Kind": 7
+  },
+  {
+   "Data": {
+    "PlayerName": "",
+    "Player": 0
    },
-   {
-    "Data": {
-     "Player": 0,
-     "PlayerName": ""
-    },
-    "Kind": 7
+   "Kind": 9
+  },
+  {
+   "Data": {
+    "Face": 3
    },
-   {
-    "Data": {
-     "Face": 3
-    },
-    "Kind": 1
+   "Kind": 4
+  },
+  {
+   "Data": {
+    "Path": null,
+    "Tile": 4
    },
-   {
-    "Data": {
-     "Tile": 4
-    },
-    "Kind": 4
+   "Kind": 1
+  },
+  {
+   "Data": {
+    "TimeoutSeconds": 0,
+    "Categorie": 1,
+    "ID": 2,
+    "Question": {
+     "Title": "",
+     "Enonce": []
+    }
    },
-   {
-    "Data": {
-     "Question": "Super",
-     "Categorie": 1
-    },
-    "Kind": 9
+   "Kind": 10
+  },
+  {
+   "Data": {
+    "Player": 0,
+    "Success": false,
+    "Categorie": 0,
+    "AskForMask": false
    },
-   {
-    "Data": {
-     "Player": 0,
-     "Success": false
-    },
-    "Kind": 5
+   "Kind": 7
+  },
+  {
+   "Data": {
+    "Player": 1,
+    "Success": true,
+    "Categorie": 0,
+    "AskForMask": false
    },
-   {
-    "Data": {
-     "Player": 1,
-     "Success": true
-    },
-    "Kind": 5
+   "Kind": 7
+  },
+  {
+   "Data": {
+    "Player": 2,
+    "Success": true,
+    "Categorie": 0,
+    "AskForMask": false
    },
-   {
-    "Data": {
-     "Player": 2,
-     "Success": true
-    },
-    "Kind": 5
+   "Kind": 7
+  },
+  {
+   "Data": {
+    "PlayerName": "",
+    "Player": 1
    },
-   {
-    "Data": {
-     "Player": 1,
-     "PlayerName": ""
-    },
-    "Kind": 7
-   }
-  ],
-  "State": {
-   "Successes": null,
-   "PawnTile": 0,
-   "Player": 0
+   "Kind": 9
   }
+ ],
+ "State": {
+  "Players": null,
+  "PawnTile": 0,
+  "Player": 0
  }
-]
+}
     """;
-      final ev = listStateUpdateFromJson(jsonDecode(input));
-      expect(ev.length, equals(1));
-      expect(ev[0].events.length, equals(18));
-      expect(ev[0].events[0] is GameStart, equals(true));
+      final ev = stateUpdateFromJson(jsonDecode(input));
+      expect(ev.events.length, equals(18));
+      expect(ev.events[0] is GameStart, equals(true));
     },
   );
 

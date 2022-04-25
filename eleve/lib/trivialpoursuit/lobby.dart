@@ -1,3 +1,4 @@
+import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
 
 class GameLobby extends StatelessWidget {
@@ -19,11 +20,29 @@ class GameLobby extends StatelessWidget {
             style: TextStyle(fontSize: 20),
           ),
           const CircularProgressIndicator(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: sorted
-                .map((e) => _PlayerAvatar(players[e]!, e == player))
-                .toList(),
+          Container(
+            padding: const EdgeInsets.all(15.0),
+            child: Text(
+              pickQuote(),
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontStyle: FontStyle.italic,
+                  shadows: [
+                    BoxShadow(
+                        color: Colors.white, blurRadius: 10, spreadRadius: 5)
+                  ]),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Wrap(
+              spacing: 20,
+              runSpacing: 15,
+              alignment: WrapAlignment.spaceEvenly,
+              children: sorted
+                  .map((e) => _PlayerAvatar(players[e]!, e == player))
+                  .toList(),
+            ),
           ),
         ],
       ),
@@ -44,7 +63,7 @@ class _PlayerAvatar extends StatelessWidget {
           boxShadow: [
             BoxShadow(
                 color: isCurrentPlayer ? Colors.yellow : Colors.white,
-                blurRadius: 10)
+                blurRadius: 5)
           ],
           color:
               isCurrentPlayer ? Colors.yellow : Colors.white.withOpacity(0.8),

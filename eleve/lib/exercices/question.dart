@@ -85,8 +85,6 @@ class _ContentBuilder {
       } else if (block is TableFieldBlock) {
         controllers[block.iD] = TableController(block, onChange);
       }
-
-      // TODO: handle more fields
     }
     return controllers;
   }
@@ -329,8 +327,6 @@ class _ContentBuilder {
         _handleTreeFieldBlock(element);
       } else if (element is TableFieldBlock) {
         _handleTableFieldBlock(element);
-      } else {
-        // TODO:
       }
 
       lastIsText = element is TextBlock;
@@ -342,7 +338,9 @@ class _ContentBuilder {
 }
 
 /// CheckQuestionSyntaxeNotification is emitted when the player
-/// has edited one field
+/// has edited one field.
+/// It should usually trigger a call to the backend to check early
+/// if the syntax is correct, before doing the real correction of the answer.
 class CheckQuestionSyntaxeNotification extends Notification {
   final QuestionSyntaxCheckIn data;
   CheckQuestionSyntaxeNotification(this.data);
@@ -354,7 +352,7 @@ class CheckQuestionSyntaxeNotification extends Notification {
 }
 
 /// ValidQuestionNotification is emitted when the player
-/// validates his answer
+/// validates his answer.
 class ValidQuestionNotification extends Notification {
   final QuestionAnswersIn data;
   ValidQuestionNotification(this.data);
@@ -445,16 +443,32 @@ class _OptionScrollListState extends State<_OptionScrollList> {
   }
 }
 
-class QuestionPage extends StatelessWidget {
+/// [QuestionW] is the widget used to display a question
+/// The interactivity is handled internally; with the two
+/// hooks [onCheckSyntax] and [onValid] provided as external API.
+class QuestionW extends StatelessWidget {
   final Question question;
   final Color color;
   final void Function(CheckQuestionSyntaxeNotification) onCheckSyntax;
   final void Function(ValidQuestionNotification) onValid;
-  final bool showTimeout;
 
-  const QuestionPage(
-      this.question, this.color, this.onCheckSyntax, this.onValid,
-      {Key? key, this.showTimeout = true})
+  /// [timeout] is the duration for the question
+  /// It may be set to [null] to hide the timeout bar.
+  final Duration? timeout;
+
+  /// [footerQuote] is displayed at the bottom of the screen when the
+  /// question has been answered
+  final String footerQuote;
+
+  /// If [blockOnSubmit] is true, the validate button is disabled
+  /// after one validation
+  final bool blockOnSubmit;
+
+  const QuestionW(this.question, this.color, this.onCheckSyntax, this.onValid,
+      {Key? key,
+      this.timeout = const Duration(seconds: 60),
+      this.footerQuote = "",
+      this.blockOnSubmit = true})
       : super(key: key);
 
   @override
@@ -469,7 +483,8 @@ class QuestionPage extends StatelessWidget {
           onValid(v);
           return true;
         },
-        child: _QuestionPage(question, color, showTimeout),
+        child:
+            _QuestionPage(question, color, timeout, footerQuote, blockOnSubmit),
       ),
     );
   }
@@ -478,8 +493,13 @@ class QuestionPage extends StatelessWidget {
 class _QuestionPage extends StatefulWidget {
   final Question question;
   final Color color;
-  final bool showTimeout;
-  const _QuestionPage(this.question, this.color, this.showTimeout, {Key? key})
+  final Duration? timeout;
+  final String footerQuote;
+  final bool blockOnSubmit;
+
+  const _QuestionPage(this.question, this.color, this.timeout, this.footerQuote,
+      this.blockOnSubmit,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -487,6 +507,7 @@ class _QuestionPage extends StatefulWidget {
 }
 
 class _QuestionPageState extends State<_QuestionPage> {
+  bool _hasAnswered = false;
   late Map<int, FieldController> _controllers;
 
   _ContentBuilder? builder;
@@ -515,16 +536,9 @@ class _QuestionPageState extends State<_QuestionPage> {
     builder!.build();
   }
 
-  bool get areAnswersValid =>
+  bool get enableValidate =>
+      (!widget.blockOnSubmit || !_hasAnswered) &&
       _controllers.values.every((ct) => ct.hasValidData());
-
-  ValidQuestionNotification answers() {
-    return ValidQuestionNotification(
-      QuestionAnswersIn(
-        _controllers.map((key, ct) => MapEntry(key, ct.getData())),
-      ),
-    );
-  }
 
   void _emitCheckSyntax(int id) {
     final ct = _controllers[id]!;
@@ -533,6 +547,18 @@ class _QuestionPageState extends State<_QuestionPage> {
     }
     CheckQuestionSyntaxeNotification(QuestionSyntaxCheckIn(ct.getData(), id))
         .dispatch(context);
+  }
+
+  void _validate() {
+    final answers = ValidQuestionNotification(
+      QuestionAnswersIn(
+        _controllers.map((key, ct) => MapEntry(key, ct.getData())),
+      ),
+    );
+    setState(() {
+      _hasAnswered = true;
+    });
+    answers.dispatch(context);
   }
 
   @override
@@ -544,26 +570,22 @@ class _QuestionPageState extends State<_QuestionPage> {
           blurRadius: 1.3)
     ];
     const spacing = SizedBox(height: 20.0);
-
+    final timeout = widget.timeout;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Text(
-            "Thème test",
-            style: TextStyle(fontSize: 22, shadows: shadows),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: widget.color),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Text(
-                widget.question.title,
-                style: TextStyle(
-                  shadows: shadows,
-                  fontSize: 20,
-                ),
+                "Question",
+                style: TextStyle(fontSize: 22, shadows: shadows),
               ),
             ),
           ),
@@ -572,20 +594,29 @@ class _QuestionPageState extends State<_QuestionPage> {
                 child: _OptionScrollList(
               builder!,
               ElevatedButton(
-                onPressed:
-                    areAnswersValid ? () => answers().dispatch(context) : null,
+                onPressed: enableValidate ? _validate : null,
                 style: ElevatedButton.styleFrom(primary: widget.color),
-                child: const Text(
-                  "Valider",
-                  style: TextStyle(fontSize: 18),
+                child: Text(
+                  widget.blockOnSubmit && _hasAnswered
+                      ? "En attente..."
+                      : "Valider",
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             )),
-          if (widget.showTimeout) ...[
+          if (timeout != null) ...[
             spacing,
-            TimeoutBar(const Duration(seconds: 60), widget.color),
-            spacing,
-            const Text("", style: TextStyle(fontSize: 16)),
+            TimeoutBar(timeout, widget.color),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: AnimatedOpacity(
+                duration: const Duration(seconds: 2),
+                opacity: _hasAnswered ? 1 : 0,
+                child: Text(_hasAnswered ? widget.footerQuote : "",
+                    style: const TextStyle(
+                        fontSize: 16, fontStyle: FontStyle.italic)),
+              ),
+            ),
           ]
         ],
       ),

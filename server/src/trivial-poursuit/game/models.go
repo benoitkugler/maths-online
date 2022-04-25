@@ -20,7 +20,7 @@ type GameState struct {
 	Player   PlayerID                   // the player currently playing (choosing where to move)
 }
 
-type QuestionResult struct {
+type QR struct {
 	IdQuestion int64
 	Success    bool
 }
@@ -28,7 +28,7 @@ type QuestionResult struct {
 // QuestionReview stores the results of one player
 // against the questions asked during the game
 type QuestionReview struct {
-	QuestionHistory []QuestionResult
+	QuestionHistory []QR
 	// Ids of question the player wants to mark for further work
 	MarkedQuestions []int64
 }

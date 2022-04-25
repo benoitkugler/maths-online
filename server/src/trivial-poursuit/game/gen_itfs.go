@@ -21,23 +21,23 @@ func (out *clientEventDataWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data DiceClicked
+		var data Answer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data Move
+		var data DiceClicked
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data Ping
+		var data Move
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data WantNextTurn
+		var data Ping
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data Answer
+		var data WantNextTurn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -54,15 +54,15 @@ func (item clientEventDataWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case DiceClicked:
-		wr = wrapper{Kind: 0, Data: data}
-	case Move:
-		wr = wrapper{Kind: 1, Data: data}
-	case Ping:
-		wr = wrapper{Kind: 2, Data: data}
-	case WantNextTurn:
-		wr = wrapper{Kind: 3, Data: data}
 	case Answer:
+		wr = wrapper{Kind: 0, Data: data}
+	case DiceClicked:
+		wr = wrapper{Kind: 1, Data: data}
+	case Move:
+		wr = wrapper{Kind: 2, Data: data}
+	case Ping:
+		wr = wrapper{Kind: 3, Data: data}
+	case WantNextTurn:
 		wr = wrapper{Kind: 4, Data: data}
 
 	default:
@@ -100,31 +100,31 @@ func (out *GameEventWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data diceThrow
+		var data PossibleMoves
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data gameEnd
+		var data diceThrow
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data gameStart
+		var data gameEnd
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data playerAnswerResult
+		var data gameStart
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data playerLeft
+		var data playerAnswerResult
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data playerTurn
+		var data playerLeft
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
-		var data PossibleMoves
+		var data playerTurn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 10:
@@ -151,19 +151,19 @@ func (item GameEventWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 1, Data: data}
 	case PlayerJoin:
 		wr = wrapper{Kind: 2, Data: data}
-	case diceThrow:
-		wr = wrapper{Kind: 3, Data: data}
-	case gameEnd:
-		wr = wrapper{Kind: 4, Data: data}
-	case gameStart:
-		wr = wrapper{Kind: 5, Data: data}
-	case playerAnswerResult:
-		wr = wrapper{Kind: 6, Data: data}
-	case playerLeft:
-		wr = wrapper{Kind: 7, Data: data}
-	case playerTurn:
-		wr = wrapper{Kind: 8, Data: data}
 	case PossibleMoves:
+		wr = wrapper{Kind: 3, Data: data}
+	case diceThrow:
+		wr = wrapper{Kind: 4, Data: data}
+	case gameEnd:
+		wr = wrapper{Kind: 5, Data: data}
+	case gameStart:
+		wr = wrapper{Kind: 6, Data: data}
+	case playerAnswerResult:
+		wr = wrapper{Kind: 7, Data: data}
+	case playerLeft:
+		wr = wrapper{Kind: 8, Data: data}
+	case playerTurn:
 		wr = wrapper{Kind: 9, Data: data}
 	case showQuestion:
 		wr = wrapper{Kind: 10, Data: data}

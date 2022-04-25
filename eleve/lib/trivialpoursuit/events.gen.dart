@@ -4,6 +4,27 @@ import '../exercices/types.gen.dart';
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.Answer
+class Answer implements ClientEventData {
+  final QuestionAnswersIn answer;
+
+  const Answer(this.answer);
+
+  @override
+  String toString() {
+    return "Answer($answer)";
+  }
+}
+
+Answer answerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Answer(questionAnswersInFromJson(json['Answer']));
+}
+
+JSON answerToJson(Answer item) {
+  return {"Answer": questionAnswersInToJson(item.answer)};
+}
+
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.DiceClicked
 class DiceClicked implements ClientEventData {
   const DiceClicked();
@@ -60,7 +81,7 @@ JSON moveToJson(Move item) {
   return {"Path": listIntToJson(item.path), "Tile": intToJson(item.tile)};
 }
 
-String stringFromJson(dynamic json) => json as String;
+String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
@@ -110,27 +131,6 @@ JSON wantNextTurnToJson(WantNextTurn item) {
   return {"MarkQuestion": boolToJson(item.markQuestion)};
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.answer
-class Answer implements ClientEventData {
-  final QuestionAnswersIn answer;
-
-  const Answer(this.answer);
-
-  @override
-  String toString() {
-    return "Answer($answer)";
-  }
-}
-
-Answer answerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return Answer(questionAnswersInFromJson(json['Answer']));
-}
-
-JSON answerToJson(Answer item) {
-  return {"Answer": questionAnswersInToJson(item.answer)};
-}
-
 abstract class ClientEventData {}
 
 ClientEventData clientEventDataFromJson(dynamic json_) {
@@ -139,31 +139,31 @@ ClientEventData clientEventDataFromJson(dynamic json_) {
   final data = json['Data'];
   switch (kind) {
     case 0:
-      return diceClickedFromJson(data);
-    case 1:
-      return moveFromJson(data);
-    case 2:
-      return pingFromJson(data);
-    case 3:
-      return wantNextTurnFromJson(data);
-    case 4:
       return answerFromJson(data);
+    case 1:
+      return diceClickedFromJson(data);
+    case 2:
+      return moveFromJson(data);
+    case 3:
+      return pingFromJson(data);
+    case 4:
+      return wantNextTurnFromJson(data);
     default:
       throw ("unexpected type");
   }
 }
 
 JSON clientEventDataToJson(ClientEventData item) {
-  if (item is DiceClicked) {
-    return {'Kind': 0, 'Data': diceClickedToJson(item)};
+  if (item is Answer) {
+    return {'Kind': 0, 'Data': answerToJson(item)};
+  } else if (item is DiceClicked) {
+    return {'Kind': 1, 'Data': diceClickedToJson(item)};
   } else if (item is Move) {
-    return {'Kind': 1, 'Data': moveToJson(item)};
+    return {'Kind': 2, 'Data': moveToJson(item)};
   } else if (item is Ping) {
-    return {'Kind': 2, 'Data': pingToJson(item)};
+    return {'Kind': 3, 'Data': pingToJson(item)};
   } else if (item is WantNextTurn) {
-    return {'Kind': 3, 'Data': wantNextTurnToJson(item)};
-  } else if (item is Answer) {
-    return {'Kind': 4, 'Data': answerToJson(item)};
+    return {'Kind': 4, 'Data': wantNextTurnToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -261,6 +261,34 @@ JSON playerJoinToJson(PlayerJoin item) {
   return {"Player": intToJson(item.player)};
 }
 
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.PossibleMoves
+class PossibleMoves implements GameEvent {
+  final String playerName;
+  final List<int> tiles;
+  final int player;
+
+  const PossibleMoves(this.playerName, this.tiles, this.player);
+
+  @override
+  String toString() {
+    return "PossibleMoves($playerName, $tiles, $player)";
+  }
+}
+
+PossibleMoves possibleMovesFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PossibleMoves(stringFromJson(json['PlayerName']),
+      listIntFromJson(json['Tiles']), intFromJson(json['Player']));
+}
+
+JSON possibleMovesToJson(PossibleMoves item) {
+  return {
+    "PlayerName": stringToJson(item.playerName),
+    "Tiles": listIntToJson(item.tiles),
+    "Player": intToJson(item.player)
+  };
+}
+
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.diceThrow
 class DiceThrow implements GameEvent {
   final int face;
@@ -339,7 +367,7 @@ JSON gameStartToJson(GameStart item) {
 }
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.categorie
-enum Categorie { purple, green, orange, yellow, blue, nbCategories }
+enum Categorie { purple, green, orange, yellow, blue }
 
 extension _CategorieExt on Categorie {
   static Categorie fromValue(int i) {
@@ -437,34 +465,6 @@ JSON playerTurnToJson(PlayerTurn item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.possibleMoves
-class PossibleMoves implements GameEvent {
-  final String playerName;
-  final List<int> tiles;
-  final int player;
-
-  const PossibleMoves(this.playerName, this.tiles, this.player);
-
-  @override
-  String toString() {
-    return "PossibleMoves($playerName, $tiles, $player)";
-  }
-}
-
-PossibleMoves possibleMovesFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return PossibleMoves(stringFromJson(json['PlayerName']),
-      listIntFromJson(json['Tiles']), intFromJson(json['Player']));
-}
-
-JSON possibleMovesToJson(PossibleMoves item) {
-  return {
-    "PlayerName": stringToJson(item.playerName),
-    "Tiles": listIntToJson(item.tiles),
-    "Player": intToJson(item.player)
-  };
-}
-
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.showQuestion
 class ShowQuestion implements GameEvent {
   final int timeoutSeconds;
@@ -513,19 +513,19 @@ GameEvent gameEventFromJson(dynamic json_) {
     case 2:
       return playerJoinFromJson(data);
     case 3:
-      return diceThrowFromJson(data);
-    case 4:
-      return gameEndFromJson(data);
-    case 5:
-      return gameStartFromJson(data);
-    case 6:
-      return playerAnswerResultFromJson(data);
-    case 7:
-      return playerLeftFromJson(data);
-    case 8:
-      return playerTurnFromJson(data);
-    case 9:
       return possibleMovesFromJson(data);
+    case 4:
+      return diceThrowFromJson(data);
+    case 5:
+      return gameEndFromJson(data);
+    case 6:
+      return gameStartFromJson(data);
+    case 7:
+      return playerAnswerResultFromJson(data);
+    case 8:
+      return playerLeftFromJson(data);
+    case 9:
+      return playerTurnFromJson(data);
     case 10:
       return showQuestionFromJson(data);
     default:
@@ -540,20 +540,20 @@ JSON gameEventToJson(GameEvent item) {
     return {'Kind': 1, 'Data': moveToJson(item)};
   } else if (item is PlayerJoin) {
     return {'Kind': 2, 'Data': playerJoinToJson(item)};
-  } else if (item is DiceThrow) {
-    return {'Kind': 3, 'Data': diceThrowToJson(item)};
-  } else if (item is GameEnd) {
-    return {'Kind': 4, 'Data': gameEndToJson(item)};
-  } else if (item is GameStart) {
-    return {'Kind': 5, 'Data': gameStartToJson(item)};
-  } else if (item is PlayerAnswerResult) {
-    return {'Kind': 6, 'Data': playerAnswerResultToJson(item)};
-  } else if (item is PlayerLeft) {
-    return {'Kind': 7, 'Data': playerLeftToJson(item)};
-  } else if (item is PlayerTurn) {
-    return {'Kind': 8, 'Data': playerTurnToJson(item)};
   } else if (item is PossibleMoves) {
-    return {'Kind': 9, 'Data': possibleMovesToJson(item)};
+    return {'Kind': 3, 'Data': possibleMovesToJson(item)};
+  } else if (item is DiceThrow) {
+    return {'Kind': 4, 'Data': diceThrowToJson(item)};
+  } else if (item is GameEnd) {
+    return {'Kind': 5, 'Data': gameEndToJson(item)};
+  } else if (item is GameStart) {
+    return {'Kind': 6, 'Data': gameStartToJson(item)};
+  } else if (item is PlayerAnswerResult) {
+    return {'Kind': 7, 'Data': playerAnswerResultToJson(item)};
+  } else if (item is PlayerLeft) {
+    return {'Kind': 8, 'Data': playerLeftToJson(item)};
+  } else if (item is PlayerTurn) {
+    return {'Kind': 9, 'Data': playerTurnToJson(item)};
   } else if (item is ShowQuestion) {
     return {'Kind': 10, 'Data': showQuestionToJson(item)};
   } else {
@@ -575,46 +575,45 @@ List<dynamic> listGameEventToJson(List<GameEvent> item) {
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.Events
 typedef Events = List<GameEvent>;
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.QuestionResult
-class QuestionResult {
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.QR
+class QR {
   final int idQuestion;
   final bool success;
 
-  const QuestionResult(this.idQuestion, this.success);
+  const QR(this.idQuestion, this.success);
 
   @override
   String toString() {
-    return "QuestionResult($idQuestion, $success)";
+    return "QR($idQuestion, $success)";
   }
 }
 
-QuestionResult questionResultFromJson(dynamic json_) {
+QR qRFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return QuestionResult(
-      intFromJson(json['IdQuestion']), boolFromJson(json['Success']));
+  return QR(intFromJson(json['IdQuestion']), boolFromJson(json['Success']));
 }
 
-JSON questionResultToJson(QuestionResult item) {
+JSON qRToJson(QR item) {
   return {
     "IdQuestion": intToJson(item.idQuestion),
     "Success": boolToJson(item.success)
   };
 }
 
-List<QuestionResult> listQuestionResultFromJson(dynamic json) {
+List<QR> listQRFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
-  return (json as List<dynamic>).map(questionResultFromJson).toList();
+  return (json as List<dynamic>).map(qRFromJson).toList();
 }
 
-List<dynamic> listQuestionResultToJson(List<QuestionResult> item) {
-  return item.map(questionResultToJson).toList();
+List<dynamic> listQRToJson(List<QR> item) {
+  return item.map(qRToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.QuestionReview
 class QuestionReview {
-  final List<QuestionResult> questionHistory;
+  final List<QR> questionHistory;
   final List<int> markedQuestions;
 
   const QuestionReview(this.questionHistory, this.markedQuestions);
@@ -627,13 +626,13 @@ class QuestionReview {
 
 QuestionReview questionReviewFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return QuestionReview(listQuestionResultFromJson(json['QuestionHistory']),
+  return QuestionReview(listQRFromJson(json['QuestionHistory']),
       listIntFromJson(json['MarkedQuestions']));
 }
 
 JSON questionReviewToJson(QuestionReview item) {
   return {
-    "QuestionHistory": listQuestionResultToJson(item.questionHistory),
+    "QuestionHistory": listQRToJson(item.questionHistory),
     "MarkedQuestions": listIntToJson(item.markedQuestions)
   };
 }
@@ -747,15 +746,4 @@ JSON stateUpdateToJson(StateUpdate item) {
     "Events": listGameEventToJson(item.events),
     "State": gameStateToJson(item.state)
   };
-}
-
-List<StateUpdate> listStateUpdateFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(stateUpdateFromJson).toList();
-}
-
-List<dynamic> listStateUpdateToJson(List<StateUpdate> item) {
-  return item.map(stateUpdateToJson).toList();
 }

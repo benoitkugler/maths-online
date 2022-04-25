@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
 import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -47,10 +48,11 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     final pageIndex = _controller.page!.toInt();
     final uri =
         Uri.parse(widget.buildMode.serverURL("/questions/syntaxe/$pageIndex"));
-    final resp = await http
-        .post(uri, body: questionSyntaxCheckInToJson(v.data), headers: {
-      'Content-type': 'application/json',
-    });
+    final resp = await http.post(uri,
+        body: jsonEncode(questionSyntaxCheckInToJson(v.data)),
+        headers: {
+          'Content-type': 'application/json',
+        });
     return questionSyntaxCheckOutFromJson(jsonDecode(resp.body));
   }
 
@@ -94,12 +96,15 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   }
 
   Widget _buildQuestion(Question question, BuildContext context) {
-    return QuestionPage(
+    return QuestionW(
       question,
       Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
           Random().nextInt(256)),
       (v) => _checkSyntax(v, context),
-      (v) => _validate(v, context),
+      // (v) => _validate(v, context),
+      (v) => {},
+      footerQuote: pickQuote(),
+      blockOnSubmit: false,
     );
   }
 

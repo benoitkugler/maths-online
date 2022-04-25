@@ -183,13 +183,14 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
           ))
         : Padding(
             padding: const EdgeInsets.all(8.0),
-            child: QuestionPage(
+            child: QuestionW(
               question!.question,
               Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
                   Random().nextInt(256)),
               _checkSyntax,
               _validAnswer,
-              showTimeout: false,
+              timeout: null,
+              blockOnSubmit: false,
             ),
           );
   }

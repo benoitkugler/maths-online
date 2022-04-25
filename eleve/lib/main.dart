@@ -3,11 +3,12 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
+import 'package:eleve/trivialpoursuit/lobby.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
-final bm = buildMode();
-// final bm = BuildMode.debug;
+// final bm = buildMode();
+final bm = BuildMode.dev;
 
 void main() {
   final audio = Audio();
@@ -37,21 +38,27 @@ class EleveApp extends StatelessWidget {
       localizationsDelegates: localizations,
       supportedLocales: locales,
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Isyro'),
-          actions: [
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => _showAudioSettings(context),
-                icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
-                tooltip: "Choisir la musique",
-              ),
-            )
-          ],
-        ),
-        body: _HomePage(audioPlayer),
-        // body: TrivialPoursuitController("")
-      ),
+          appBar: AppBar(
+            title: const Text('Isyro'),
+            actions: [
+              Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => _showAudioSettings(context),
+                  icon:
+                      const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
+                  tooltip: "Choisir la musique",
+                ),
+              )
+            ],
+          ),
+          // body: _HomePage(audioPlayer),
+          body: GameLobby({
+            1: "Bebe",
+            0: "Toi",
+            2: "JeanJAcqe",
+            3: "JeanJAcqe",
+            4: "JeanJAcqe"
+          }, 0)),
     );
   }
 }

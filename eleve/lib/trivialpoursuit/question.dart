@@ -4,13 +4,6 @@ import 'package:flutter/material.dart';
 import 'categories.dart';
 import 'events.gen.dart';
 
-/// SubmitAnswerNotification is emitted when the player
-/// validates his answer
-class SubmitAnswerNotification extends Notification {
-  final String answer;
-  SubmitAnswerNotification(this.answer);
-}
-
 class QuestionRoute extends StatefulWidget {
   final ShowQuestion question;
   final Duration timeout;
@@ -21,6 +14,8 @@ class QuestionRoute extends StatefulWidget {
   @override
   State<QuestionRoute> createState() => _QuestionRouteState();
 }
+
+// TODO: use real question widget
 
 class _QuestionRouteState extends State<QuestionRoute> {
   late TextEditingController _controller;
@@ -47,7 +42,8 @@ class _QuestionRouteState extends State<QuestionRoute> {
 
   void _onValidated() {
     // send the anwser and wait others players
-    SubmitAnswerNotification(_controller.text).dispatch(context);
+    // TODO:
+    // SubmitAnswerNotification(_controller.text).dispatch(context);
 
     setState(() {
       _waiting = true;

@@ -17,7 +17,7 @@ import (
 const defautQuestionTimeout = time.Minute / 10
 
 // NbCategories is the number of categories of question
-const NbCategories = nbCategories
+const NbCategories = int(nbCategories)
 
 // PlayerID identifies a player in the game
 type PlayerID = int
@@ -261,7 +261,7 @@ func (g *Game) handleAnswer(a Answer, player PlayerID) MaybeUpdate {
 
 	playerState := g.Players[player]
 	playerState.Success[g.question.categorie] = isValid
-	playerState.Review.QuestionHistory = append(playerState.Review.QuestionHistory, QuestionResult{
+	playerState.Review.QuestionHistory = append(playerState.Review.QuestionHistory, QR{
 		IdQuestion: g.question.ID,
 		Success:    isValid,
 	})

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:eleve/exercices/types.gen.dart' as exercices;
+import 'package:eleve/exercices/question.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
@@ -36,7 +36,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   Map<int, String> lobby = {};
 
   GameState state = const GameState({
-    0: PlayerStatus("", [false, false, false, false, false])
+    0: PlayerStatus(
+        "", QuestionReview([], []), [false, false, false, false, false])
   }, 0, 0);
   Set<int> highligthedTiles = {};
 
@@ -99,8 +100,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   void listen(dynamic event) {
     try {
-      final events = listStateUpdateFromJson(jsonDecode(event as String));
-      processEvents(events);
+      final update = stateUpdateFromJson(jsonDecode(event as String));
+      processEvents(update);
     } catch (e) {
       showError(e);
     }
@@ -255,11 +256,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   Future<void> _onShowQuestion(ShowQuestion event) async {
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
-      builder: (context) => NotificationListener<SubmitAnswerNotification>(
+      builder: (context) => NotificationListener<ValidQuestionNotification>(
         onNotification: (notification) {
           // do not close the page now, it is handled when receiving result
-          _sendEvent(Answer(
-              const exercices.QuestionAnswersIn({}), notification.answer));
+          _sendEvent(Answer(notification.data));
           return true;
         },
         child: QuestionRoute(event, Duration(seconds: event.timeoutSeconds)),
@@ -338,20 +338,18 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     }
   }
 
-  Future<void> processEvents(List<StateUpdate> eventList) async {
-    for (var events in eventList) {
-      for (var event in events.events) {
-        await _processEvent(event);
-      }
-
-      if (events.events.any((element) => element is PlayerAnswerResult)) {
-        // do no yet update the state
-        continue;
-      }
-      setState(() {
-        state = events.state;
-      });
+  Future<void> processEvents(StateUpdate update) async {
+    for (var event in update.events) {
+      await _processEvent(event);
     }
+
+    if (update.events.any((element) => element is PlayerAnswerResult)) {
+      // do no yet update the state
+      return;
+    }
+    setState(() {
+      state = update.state;
+    });
   }
 
   Widget get _game {
