@@ -1,101 +1,35 @@
-import 'package:eleve/trivialpoursuit/timeout_bar.dart';
+import 'package:eleve/exercices/question.dart';
+import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
 
 import 'categories.dart';
 import 'events.gen.dart';
 
-class QuestionRoute extends StatefulWidget {
+class QuestionRoute extends StatelessWidget {
   final ShowQuestion question;
-  final Duration timeout;
+  final void Function(ValidQuestionNotification) onValid;
+  final void Function(CheckQuestionSyntaxeNotification) onCheckSyntax;
 
-  const QuestionRoute(this.question, this.timeout, {Key? key})
+  const QuestionRoute(this.question, this.onValid, this.onCheckSyntax,
+      {Key? key})
       : super(key: key);
 
   @override
-  State<QuestionRoute> createState() => _QuestionRouteState();
-}
-
-// TODO: use real question widget
-
-class _QuestionRouteState extends State<QuestionRoute> {
-  late TextEditingController _controller;
-
-  bool _enabledValid = false;
-  bool _waiting = false;
-
-  @override
-  void initState() {
-    _controller = TextEditingController();
-    _controller.addListener(() {
-      setState(() {
-        _enabledValid = _controller.text.isNotEmpty;
-      });
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onValidated() {
-    // send the anwser and wait others players
-    // TODO:
-    // SubmitAnswerNotification(_controller.text).dispatch(context);
-
-    setState(() {
-      _waiting = true;
-      _enabledValid = false; // do no permit answering again
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final color = widget.question.categorie.color;
+    // make the route block until validated
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
         ),
-        body: Padding(
-          padding:
-              const EdgeInsets.only(top: 40, bottom: 10, left: 20, right: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text(
-                "Thème ${widget.question.categorie}",
-                style: const TextStyle(fontSize: 20),
-              ),
-              const Text("Quel est le numéro du thème actuel ?",
-                  style: TextStyle(fontSize: 18)),
-              TextField(
-                controller: _controller,
-                cursorColor: color,
-                decoration: InputDecoration(
-                  focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                    color: color,
-                  )),
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: _enabledValid ? _onValidated : null,
-                style: ElevatedButton.styleFrom(primary: color),
-                child: const Text(
-                  "Valider",
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-              TimeoutBar(widget.timeout, color),
-              Text(_waiting ? "En attente des autres joueurs..." : "",
-                  style: const TextStyle(fontSize: 16)),
-            ],
-          ),
+        body: QuestionW(
+          question.question,
+          question.categorie.color,
+          onCheckSyntax,
+          onValid,
+          footerQuote: pickQuote(),
+          timeout: Duration(seconds: question.timeoutSeconds),
         ),
       ),
     );

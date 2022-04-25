@@ -2,10 +2,8 @@ import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/main_shared.dart';
-import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
-import 'package:eleve/trivialpoursuit/question_result.dart';
 import 'package:flutter/material.dart';
 
 // final bm = buildMode();
@@ -51,21 +49,7 @@ class EleveApp extends StatelessWidget {
             )
           ],
         ),
-        // body: _HomePage(audioPlayer),
-        body: const QuestionResult(
-            0,
-            PlayerAnswerResults(Categorie.blue, {
-              0: PlayerAnswerResult(false, true),
-              1: PlayerAnswerResult(false, true),
-              2: PlayerAnswerResult(false, true),
-              3: PlayerAnswerResult(false, true),
-            }),
-            {
-              0: PlayerStatus("Joueur 0", QuestionReview([], []), []),
-              1: PlayerStatus("Joueur 1", QuestionReview([], []), []),
-              2: PlayerStatus("Joueur 2", QuestionReview([], []), []),
-              3: PlayerStatus("Joueur 3", QuestionReview([], []), []),
-            }),
+        body: _HomePage(audioPlayer),
       ),
     );
   }

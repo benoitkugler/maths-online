@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:eleve/exercices/question.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
@@ -256,13 +255,16 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   Future<void> _onShowQuestion(ShowQuestion event) async {
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
-      builder: (context) => NotificationListener<ValidQuestionNotification>(
-        onNotification: (notification) {
+      builder: (context) => QuestionRoute(
+        event,
+        (a) {
           // do not close the page now, it is handled when receiving result
-          _sendEvent(Answer(notification.data));
-          return true;
+          _sendEvent(Answer(a.data));
         },
-        child: QuestionRoute(event, Duration(seconds: event.timeoutSeconds)),
+        // TODO: handle prevalidation
+        (c) {
+          print(c);
+        },
       ),
     ));
   }
