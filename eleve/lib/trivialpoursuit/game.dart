@@ -267,12 +267,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     ));
   }
 
-  Future<void> _onPlayerAnswerResult(PlayerAnswerResult event) async {
-    // for now, we simply ignore other player success
-    if (event.player != playerID) {
-      return;
-    }
-
+  Future<void> _onPlayerAnswerResults(PlayerAnswerResults event) async {
     // close the additional routes (question or recap)
     // until the "main" board
     Navigator.of(context).popUntil((route) {
@@ -290,7 +285,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
           _sendEvent(notification.event);
           return true;
         },
-        child: QuestionResult(event),
+        child: QuestionResult(playerID, event, state.players),
       ),
     ));
   }
@@ -328,8 +323,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return _onMove(event);
     } else if (event is ShowQuestion) {
       return _onShowQuestion(event);
-    } else if (event is PlayerAnswerResult) {
-      return _onPlayerAnswerResult(event);
+    } else if (event is PlayerAnswerResults) {
+      return _onPlayerAnswerResults(event);
     } else if (event is GameEnd) {
       _onGameEnd(event);
     } else {

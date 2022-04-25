@@ -268,10 +268,8 @@ func (g *Game) handleAnswer(a Answer, player PlayerID) MaybeUpdate {
 	askForMark := !isValid && len(playerState.Review.MarkedQuestions) < 3
 
 	g.currentAnswers[player] = playerAnswerResult{
-		Player:     player,
 		Success:    isValid,
 		AskForMask: askForMark,
-		Categorie:  g.question.categorie,
 	}
 
 	return g.concludeQuestion(false) // wait for other players if needed
@@ -378,15 +376,19 @@ func (gs *Game) endQuestion(force bool) Events {
 		return nil
 	}
 
+	out := playerAnswerResults{
+		Categorie: gs.question.categorie,
+		Results:   make(map[int]playerAnswerResult),
+	}
+
 	// return the answers event, defaulting to
 	// false for no answer
-	var out Events
 	for player := range gs.Players {
 		answer, has := gs.currentAnswers[player]
 		if !has {
-			answer = playerAnswerResult{Player: player, Success: false}
+			answer = playerAnswerResult{Success: false, AskForMask: false}
 		}
-		out = append(out, answer)
+		out.Results[player] = answer
 	}
 
 	// cleanup
@@ -400,7 +402,7 @@ func (gs *Game) endQuestion(force bool) Events {
 		delete(gs.currentAnswers, k)
 	}
 
-	return out
+	return Events{out}
 }
 
 // winners returns the players who win, or an empty slice

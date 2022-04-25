@@ -1,5 +1,8 @@
+import 'package:eleve/exercices/question.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
+
+import 'categories.dart';
 
 class WantNextTurnNotification extends Notification {
   final WantNextTurn event;
@@ -8,9 +11,12 @@ class WantNextTurnNotification extends Notification {
 
 /// [QuestionResult] shows the result of the last question
 class QuestionResult extends StatefulWidget {
-  final PlayerAnswerResult event;
+  final int playerID;
+  final PlayerAnswerResults event;
+  final Map<int, PlayerStatus> players;
 
-  const QuestionResult(this.event, {Key? key}) : super(key: key);
+  const QuestionResult(this.playerID, this.event, this.players, {Key? key})
+      : super(key: key);
 
   @override
   State<QuestionResult> createState() => _QuestionResultState();
@@ -19,21 +25,52 @@ class QuestionResult extends StatefulWidget {
 class _QuestionResultState extends State<QuestionResult> {
   bool markQuestion = false;
 
+  PlayerAnswerResult get ownResult => widget.event.results[widget.playerID]!;
+
+  List<String> get playersCorrect => widget.players.entries
+      .where((entry) => widget.event.results[entry.key]!.success)
+      .map((e) => e.value.name)
+      .toList();
+
+  List<String> get playersIncorrect => widget.players.entries
+      .where((entry) => !widget.event.results[entry.key]!.success)
+      .map((e) => e.value.name)
+      .toList();
+
+  void _onContinue() {
+    if (ownResult.success && playersCorrect.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 5),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: Text(
+            "Peut-être peux-tu expliquer à ${playersIncorrect.join(", ")} cette question ?"),
+      ));
+    }
+
+    WantNextTurnNotification(WantNextTurn(markQuestion)).dispatch(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final backgroundColor =
-        widget.event.success ? Colors.lightGreen.shade400 : Colors.red;
+        ownResult.success ? Colors.lightGreen.shade400 : Colors.red;
     final content = Row(mainAxisSize: MainAxisSize.min, children: [
       Padding(
         padding: const EdgeInsets.only(right: 5),
-        child: Icon(widget.event.success
+        child: Icon(ownResult.success
             ? const IconData(0xe156, fontFamily: 'MaterialIcons')
             : const IconData(0xe868, fontFamily: 'MaterialIcons')),
       ),
-      Text(widget.event.success
+      Text(ownResult.success
           ? "Bonne réponse, bravo !"
           : "Réponse incorrecte, dommage...")
     ]);
+
+    final correct =
+        playersCorrect.isEmpty ? "" : " à ${playersCorrect.join(", ")} ou";
+    final hint = ownResult.success
+        ? ""
+        : "N'hésite pas à demander de l'aide$correct au prof. avant de continuer !";
 
     return Scaffold(
       body: Padding(
@@ -42,10 +79,7 @@ class _QuestionResultState extends State<QuestionResult> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Text(
-                "Résultat",
-                style: TextStyle(fontSize: 22),
-              ),
+              ColoredTitle("Résultat", widget.event.categorie.color),
               Card(
                 color: backgroundColor,
                 child: Padding(
@@ -53,17 +87,24 @@ class _QuestionResultState extends State<QuestionResult> {
                   child: content,
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  hint,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (!widget.event.success)
+                  if (ownResult.askForMask)
                     InkWell(
                       onTap: () => setState(() {
                         markQuestion = !markQuestion;
                       }),
                       borderRadius: BorderRadius.circular(5),
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
+                        padding: const EdgeInsets.only(right: 20.0),
                         child: Row(
                           children: [
                             Checkbox(
@@ -77,9 +118,7 @@ class _QuestionResultState extends State<QuestionResult> {
                       ),
                     ),
                   ElevatedButton(
-                      onPressed: () =>
-                          WantNextTurnNotification(WantNextTurn(markQuestion))
-                              .dispatch(context),
+                      onPressed: _onContinue,
                       child:
                           Row(mainAxisSize: MainAxisSize.min, children: const [
                         Text("Continuer"),

@@ -563,12 +563,6 @@ class _QuestionPageState extends State<_QuestionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final shadows = [
-      Shadow(
-          color: widget.color.withOpacity(0.9),
-          offset: const Offset(2, -2),
-          blurRadius: 1.3)
-    ];
     const spacing = SizedBox(height: 20.0);
     final timeout = widget.timeout;
     return Padding(
@@ -576,19 +570,7 @@ class _QuestionPageState extends State<_QuestionPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(color: widget.color),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Question",
-                style: TextStyle(fontSize: 22, shadows: shadows),
-              ),
-            ),
-          ),
+          ColoredTitle("Question", widget.color),
           if (builder != null)
             Expanded(
                 child: _OptionScrollList(
@@ -619,6 +601,35 @@ class _QuestionPageState extends State<_QuestionPage> {
             ),
           ]
         ],
+      ),
+    );
+  }
+}
+
+class ColoredTitle extends StatelessWidget {
+  final String title;
+  final Color color;
+  const ColoredTitle(this.title, this.color, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final shadows = [
+      Shadow(
+          color: color.withOpacity(0.9),
+          offset: const Offset(2, -2),
+          blurRadius: 1.3)
+    ];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          title,
+          style: TextStyle(fontSize: 22, shadows: shadows),
+        ),
       ),
     );
   }

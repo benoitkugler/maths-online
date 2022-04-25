@@ -65,17 +65,17 @@ type GameEvent interface {
 	isGameEvent()
 }
 
-func (PlayerJoin) isGameEvent()         {}
-func (LobbyUpdate) isGameEvent()        {}
-func (gameStart) isGameEvent()          {}
-func (playerLeft) isGameEvent()         {}
-func (playerTurn) isGameEvent()         {}
-func (diceThrow) isGameEvent()          {}
-func (Move) isGameEvent()               {}
-func (PossibleMoves) isGameEvent()      {}
-func (showQuestion) isGameEvent()       {}
-func (playerAnswerResult) isGameEvent() {}
-func (gameEnd) isGameEvent()            {}
+func (PlayerJoin) isGameEvent()          {}
+func (LobbyUpdate) isGameEvent()         {}
+func (gameStart) isGameEvent()           {}
+func (playerLeft) isGameEvent()          {}
+func (playerTurn) isGameEvent()          {}
+func (diceThrow) isGameEvent()           {}
+func (Move) isGameEvent()                {}
+func (PossibleMoves) isGameEvent()       {}
+func (showQuestion) isGameEvent()        {}
+func (playerAnswerResults) isGameEvent() {}
+func (gameEnd) isGameEvent()             {}
 
 // PlayerJoin is only emitted to the actual player
 // who join the game
@@ -139,13 +139,16 @@ type showQuestion struct {
 	Question       client.Question `dart-extern:"../exercices/types.gen.dart"` // the actual question
 }
 
-// playerAnswerResult indicates
-// if the player has answered correctly to the
+// playerAnswerResults indicates
+// if the players have answered correctly to the
 // current question
+type playerAnswerResults struct {
+	Categorie categorie
+	Results   map[PlayerID]playerAnswerResult
+}
+
 type playerAnswerResult struct {
-	Player     int
 	Success    bool
-	Categorie  categorie
 	AskForMask bool // true if Success is false and if the player has not already marked 3
 }
 

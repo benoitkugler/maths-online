@@ -116,7 +116,7 @@ func (out *GameEventWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data playerAnswerResult
+		var data playerAnswerResults
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
@@ -159,7 +159,7 @@ func (item GameEventWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 5, Data: data}
 	case gameStart:
 		wr = wrapper{Kind: 6, Data: data}
-	case playerAnswerResult:
+	case playerAnswerResults:
 		wr = wrapper{Kind: 7, Data: data}
 	case playerLeft:
 		wr = wrapper{Kind: 8, Data: data}

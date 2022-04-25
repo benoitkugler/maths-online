@@ -385,36 +385,68 @@ Categorie categorieFromJson(dynamic json) =>
 dynamic categorieToJson(Categorie item) => item.toValue();
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.playerAnswerResult
-class PlayerAnswerResult implements GameEvent {
-  final int player;
+class PlayerAnswerResult {
   final bool success;
-  final Categorie categorie;
   final bool askForMask;
 
-  const PlayerAnswerResult(
-      this.player, this.success, this.categorie, this.askForMask);
+  const PlayerAnswerResult(this.success, this.askForMask);
 
   @override
   String toString() {
-    return "PlayerAnswerResult($player, $success, $categorie, $askForMask)";
+    return "PlayerAnswerResult($success, $askForMask)";
   }
 }
 
 PlayerAnswerResult playerAnswerResultFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return PlayerAnswerResult(
-      intFromJson(json['Player']),
-      boolFromJson(json['Success']),
-      categorieFromJson(json['Categorie']),
-      boolFromJson(json['AskForMask']));
+      boolFromJson(json['Success']), boolFromJson(json['AskForMask']));
 }
 
 JSON playerAnswerResultToJson(PlayerAnswerResult item) {
   return {
-    "Player": intToJson(item.player),
     "Success": boolToJson(item.success),
-    "Categorie": categorieToJson(item.categorie),
     "AskForMask": boolToJson(item.askForMask)
+  };
+}
+
+Map<int, PlayerAnswerResult> dictIntPlayerAnswerResultFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON)
+      .map((k, v) => MapEntry(int.parse(k), playerAnswerResultFromJson(v)));
+}
+
+Map<String, dynamic> dictIntPlayerAnswerResultToJson(
+    Map<int, PlayerAnswerResult> item) {
+  return item.map(
+      (k, v) => MapEntry(intToJson(k).toString(), playerAnswerResultToJson(v)));
+}
+
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.playerAnswerResults
+class PlayerAnswerResults implements GameEvent {
+  final Categorie categorie;
+  final Map<int, PlayerAnswerResult> results;
+
+  const PlayerAnswerResults(this.categorie, this.results);
+
+  @override
+  String toString() {
+    return "PlayerAnswerResults($categorie, $results)";
+  }
+}
+
+PlayerAnswerResults playerAnswerResultsFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PlayerAnswerResults(categorieFromJson(json['Categorie']),
+      dictIntPlayerAnswerResultFromJson(json['Results']));
+}
+
+JSON playerAnswerResultsToJson(PlayerAnswerResults item) {
+  return {
+    "Categorie": categorieToJson(item.categorie),
+    "Results": dictIntPlayerAnswerResultToJson(item.results)
   };
 }
 
@@ -521,7 +553,7 @@ GameEvent gameEventFromJson(dynamic json_) {
     case 6:
       return gameStartFromJson(data);
     case 7:
-      return playerAnswerResultFromJson(data);
+      return playerAnswerResultsFromJson(data);
     case 8:
       return playerLeftFromJson(data);
     case 9:
@@ -548,8 +580,8 @@ JSON gameEventToJson(GameEvent item) {
     return {'Kind': 5, 'Data': gameEndToJson(item)};
   } else if (item is GameStart) {
     return {'Kind': 6, 'Data': gameStartToJson(item)};
-  } else if (item is PlayerAnswerResult) {
-    return {'Kind': 7, 'Data': playerAnswerResultToJson(item)};
+  } else if (item is PlayerAnswerResults) {
+    return {'Kind': 7, 'Data': playerAnswerResultsToJson(item)};
   } else if (item is PlayerLeft) {
     return {'Kind': 8, 'Data': playerLeftToJson(item)};
   } else if (item is PlayerTurn) {
