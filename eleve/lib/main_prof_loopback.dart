@@ -185,7 +185,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
             padding: const EdgeInsets.all(8.0),
             child: QuestionW(
               question!.question,
-              Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
+              Color.fromARGB(255, 150+Random().nextInt(100), 150+Random().nextInt(100),
                   Random().nextInt(256)),
               _checkSyntax,
               _validAnswer,
