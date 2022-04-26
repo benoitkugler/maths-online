@@ -129,14 +129,19 @@ function onExpressionChange(s: string, index: number) {
 
 const helpContent = [
   [
-    "randchoice(-4;12;99)",
+    "randChoice(-4;12;99)",
     "Renvoie un nombre aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}."
   ],
-  ["randprime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [
-    "randdecden()",
+    "randLetter(A, B, C)",
+    "Renvoie une variable dont le nom sera choisi parmi ceux proposés, ici {A, B, C}."
+  ],
+  ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
+  [
+    "randDecDen()",
     "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)"
   ],
+  ["round(x; 3)", "Arrondi x à trois chiffres après la virgule"],
   ["exp(x)", "Fonction exponentielle"],
   ["ln(x)", "Fonction logarithme"],
   ["sin(x)", "Fonction sinus"],
