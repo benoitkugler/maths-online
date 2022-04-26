@@ -109,8 +109,10 @@ func AreFloatEqual(v1, v2 float64) bool {
 }
 
 func isFloatExceedingPrecision(v float64) bool {
-	_, ok := isInt(v * (1 / floatPrec))
-	return !ok
+	// we rely on go format routine to avoid issue with floating
+	// point computation
+	s := fmt.Sprintf("%.9f", v) // 9 is one more than floatPrec exponent
+	return s[len(s)-1] != '0'
 }
 
 // Evaluate uses the given variables values to evaluate the formula.
