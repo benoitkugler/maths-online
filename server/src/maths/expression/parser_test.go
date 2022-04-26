@@ -375,7 +375,7 @@ var expressions = [...]struct {
 	{"randChoice( )", nil, true},
 	{"randChoice(2;", nil, true},
 	{"randLetter(A; x_A; b;  B; B)", &Expression{atom: randVariable{
-		NewVariable('A'), Variable{Name: 'x', Indice: "A"}, NewVariable('b'), NewVariable('B'), NewVariable('B'),
+		NewVar('A'), Variable{Name: 'x', Indice: "A"}, NewVar('b'), NewVar('B'), NewVar('B'),
 	}}, false},
 	{"randLetter( )", nil, true},
 	{"randLetter)", nil, true},
@@ -432,8 +432,8 @@ func TestVarMap(t *testing.T) {
 		expr string
 	}{
 		{varMap{}, "2 + 3"},
-		{varMap{0: NewVariable('a'), 4: NewVariable('b')}, "a + b"},
-		{varMap{0: NewVariable('a'), 4: NewVariable('b'), 9: NewVariable('a')}, "a + b * (a + 2)"},
+		{varMap{0: NewVar('a'), 4: NewVar('b')}, "a + b"},
+		{varMap{0: NewVar('a'), 4: NewVar('b'), 9: NewVar('a')}, "a + b * (a + 2)"},
 	} {
 		_, vm, err := parseBytes([]byte(tt.expr))
 		if err != nil {
@@ -455,10 +455,10 @@ func TestVarMap_Positions(t *testing.T) {
 			"a + (x * b)", []Variable{}, nil,
 		},
 		{
-			"a + (x * b)", []Variable{NewVariable('a'), NewVariable('b')}, []int{0, 9},
+			"a + (x * b)", []Variable{NewVar('a'), NewVar('b')}, []int{0, 9},
 		},
 		{
-			"a + (x * b - b)", []Variable{NewVariable('a'), NewVariable('b')}, []int{0, 9, 13},
+			"a + (x * b - b)", []Variable{NewVar('a'), NewVar('b')}, []int{0, 9, 13},
 		},
 	}
 	for _, tt := range tests {

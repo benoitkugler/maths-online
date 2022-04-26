@@ -8,7 +8,7 @@ import (
 
 func TestEvalMissingVariable(t *testing.T) {
 	e := mustParse(t, "x + y")
-	_, err := e.Evaluate(Variables{NewVariable('x'): NewRN(7)})
+	_, err := e.Evaluate(Variables{NewVar('x'): NewRN(7)})
 	if err == nil {
 		t.Fatal()
 	}
@@ -100,7 +100,7 @@ func Test_Expression_eval(t *testing.T) {
 			"1 + 1 * 3 ^ 3 * 2 - 1", nil, 54,
 		},
 		{
-			"x + 2", Variables{NewVariable('x'): NewRN(4)}, 6,
+			"x + 2", Variables{NewVar('x'): NewRN(4)}, 6,
 		},
 		{
 			"2 + 0 * randInt(1;3)", nil, 2,
@@ -163,20 +163,20 @@ func Test_Expression_eval(t *testing.T) {
 			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVariable('a'): NewRN(2)}, 2,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVar('a'): NewRN(2)}, 2,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				NewVariable('a'): NewRN(8),  // BC
-				NewVariable('b'): NewRN(12), // AC
-				NewVariable('c'): NewRN(4),  // AB
+				NewVar('a'): NewRN(8),  // BC
+				NewVar('b'): NewRN(12), // AC
+				NewVar('c'): NewRN(4),  // AB
 			}, 0,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				NewVariable('a'): NewRN(3), // BC
-				NewVariable('b'): NewRN(4), // AC
-				NewVariable('c'): NewRN(5), // AB
+				NewVar('a'): NewRN(3), // BC
+				NewVar('b'): NewRN(4), // AC
+				NewVar('c'): NewRN(5), // AB
 			}, 3,
 		},
 	}
@@ -276,7 +276,7 @@ func TestExpression_Extrema(t *testing.T) {
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
 		fn := FunctionDefinition{
-			FunctionExpr: FunctionExpr{Function: expr, Variable: NewVariable('x')},
+			FunctionExpr: FunctionExpr{Function: expr, Variable: NewVar('x')},
 			From:         tt.from, To: tt.to,
 		}
 		if got := fn.extrema(); got != tt.want {
@@ -296,6 +296,8 @@ func Test_isFloatExceedingPrecision(t *testing.T) {
 		{1.12345678, false},
 		{1.123456789, true},
 		{1. / 3, true},
+		{-1. / 3, true},
+		{-0.55, false},
 	}
 	for _, tt := range tests {
 		if got := isFloatExceedingPrecision(tt.args); got != tt.want {

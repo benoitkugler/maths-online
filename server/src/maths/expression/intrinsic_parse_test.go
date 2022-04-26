@@ -18,22 +18,22 @@ func Test_parseIntrisic(t *testing.T) {
 		// pythagorians
 		{
 			"a,b,c = pythagorians()", PythagorianTriplet{
-				NewVariable('a'), NewVariable('b'), NewVariable('c'), 10,
+				NewVar('a'), NewVar('b'), NewVar('c'), 10,
 			}, false,
 		},
 		{
 			"a,b, c = pythagorians( )", PythagorianTriplet{
-				NewVariable('a'), NewVariable('b'), NewVariable('c'), 10,
+				NewVar('a'), NewVar('b'), NewVar('c'), 10,
 			}, false,
 		},
 		{
 			"a,b_21, c = pythagorians( )", PythagorianTriplet{
-				NewVariable('a'), Variable{Name: 'b', Indice: "21"}, NewVariable('c'), 10,
+				NewVar('a'), Variable{Name: 'b', Indice: "21"}, NewVar('c'), 10,
 			}, false,
 		},
 		{
 			"a,b,c = pythagorians(12)", PythagorianTriplet{
-				NewVariable('a'), NewVariable('b'), NewVariable('c'), 12,
+				NewVar('a'), NewVar('b'), NewVar('c'), 12,
 			}, false,
 		},
 		{"a, b = pythagorians()", PythagorianTriplet{}, true},

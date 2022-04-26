@@ -185,14 +185,14 @@ var (
 // pythagorian triplet
 var (
 	pythagorians = expression.PythagorianTriplet{
-		A: expression.NewVariable('a'), B: expression.NewVariable('b'), C: expression.NewVariable('c'),
+		A: expression.NewVar('a'), B: expression.NewVar('b'), C: expression.NewVar('c'),
 		Bound: 20,
 	}
 	distanceParams = expression.RandomParameters{
-		expression.NewVariable('X'): mustParse("-randInt(100;200)"),
-		expression.NewVariable('Y'): mustParse("300"),
-		expression.NewVariable('A'): mustParse("a + X"),
-		expression.NewVariable('B'): mustParse("b + Y"),
+		expression.NewVar('X'): mustParse("-randInt(100;200)"),
+		expression.NewVar('Y'): mustParse("300"),
+		expression.NewVar('A'): mustParse("a + X"),
+		expression.NewVar('B'): mustParse("b + Y"),
 	}
 	distanceSample expression.Variables
 )
@@ -210,13 +210,13 @@ func init() {
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
 			TextInstance{Parts: []client.TextOrMath{
 				text("Soient les points F("),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('A')].N).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVar('A')].N).String()),
 				text(";"),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('B')].N).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVar('B')].N).String()),
 				text(") et G("),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('X')].N).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVar('X')].N).String()),
 				text(";"),
-				staticMath(expression.Number(distanceSample[expression.NewVariable('Y')].N).String()),
+				staticMath(expression.Number(distanceSample[expression.NewVar('Y')].N).String()),
 				text("). Calculer FG."),
 			}},
 			// TextInstance{
@@ -236,7 +236,7 @@ func init() {
 			TextInstance{Parts: []client.TextOrMath{
 				staticMath("FG = "),
 			}},
-			NumberFieldInstance{ID: 0, Answer: distanceSample[expression.NewVariable('c')].N},
+			NumberFieldInstance{ID: 0, Answer: distanceSample[expression.NewVar('c')].N},
 		},
 	},
 	)
@@ -615,9 +615,9 @@ var PredefinedQuestions = []QuestionInstance{
 			RadioFieldInstance{
 				ID: 0,
 				Answer: int(mustEvaluate("1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", expression.Variables{
-					expression.NewVariable('a'): expression.NewRN(8),  // BC
-					expression.NewVariable('b'): expression.NewRN(12), // AC
-					expression.NewVariable('c'): expression.NewRN(4),  // AB
+					expression.NewVar('a'): expression.NewRN(8),  // BC
+					expression.NewVar('b'): expression.NewRN(12), // AC
+					expression.NewVar('c'): expression.NewRN(4),  // AB
 				})),
 				Proposals: []client.ListFieldProposal{
 					{Content: []client.TextOrMath{{Text: `ABC n'est pas rectangle.`, IsMath: false}}},
@@ -926,7 +926,7 @@ var PredefinedQuestions = []QuestionInstance{
 				ID: 0,
 				Function: expression.FunctionExpr{
 					Function: mustParse("x^2 − 3x + 1"),
-					Variable: expression.NewVariable('x'),
+					Variable: expression.NewVar('x'),
 				},
 				Label: "g(x)",
 				XGrid: []int{-2, -1, 0, 1, 2, 3, 4, 5},
@@ -940,7 +940,7 @@ var PredefinedQuestions = []QuestionInstance{
 				Functions: []expression.FunctionDefinition{{
 					FunctionExpr: expression.FunctionExpr{
 						Function: mustParse("10*(1.1(x/10)^4 - 2.2(x/10)^3+(x/10)) + 0.047"),
-						Variable: expression.NewVariable('x'),
+						Variable: expression.NewVar('x'),
 					},
 					From: -5,
 					To:   16,

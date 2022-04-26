@@ -212,10 +212,14 @@ type Variable struct {
 
 const firstPrivateVariable rune = '\uE001'
 
-func NewVariable(x rune) Variable { return Variable{Name: x} }
+// NewVar is a convenience constructor for a simple variable
+func NewVar(x rune) Variable { return Variable{Name: x} }
+
+// NewVarI is a convenience constructor supporting indices
+func NewVarI(x rune, indice string) Variable { return Variable{Name: x, Indice: indice} }
 
 func newVarExpr(r rune) *Expression {
-	return &Expression{atom: NewVariable(r)}
+	return &Expression{atom: NewVar(r)}
 }
 
 func (v Variable) String() string {

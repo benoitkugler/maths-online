@@ -14,32 +14,32 @@ func TestRandomVariables_instantiate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			map[Variable]string{NewVariable('a'): "a +1"}, nil, true,
+			map[Variable]string{NewVar('a'): "a +1"}, nil, true,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "a + b + 1", NewVariable('b'): "8"}, nil, true,
+			map[Variable]string{NewVar('a'): "a + b + 1", NewVar('b'): "8"}, nil, true,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "b + 1", NewVariable('b'): "a+2"}, nil, true,
+			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): "a+2"}, nil, true,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "b + 1"}, nil, true,
+			map[Variable]string{NewVar('a'): "b + 1"}, nil, true,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "b + 1", NewVariable('b'): " 2 * 3"}, Variables{NewVariable('a'): NewRN(7), NewVariable('b'): NewRN(6)}, false,
+			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): " 2 * 3"}, Variables{NewVar('a'): NewRN(7), NewVar('b'): NewRN(6)}, false,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "b + 1", NewVariable('b'): " c+1", NewVariable('c'): "8"}, Variables{NewVariable('a'): NewRN(10), NewVariable('b'): NewRN(9), NewVariable('c'): NewRN(8)}, false,
+			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): " c+1", NewVar('c'): "8"}, Variables{NewVar('a'): NewRN(10), NewVar('b'): NewRN(9), NewVar('c'): NewRN(8)}, false,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "0*randInt(1;3)"}, Variables{NewVariable('a'): NewRN(0)}, false,
+			map[Variable]string{NewVar('a'): "0*randInt(1;3)"}, Variables{NewVar('a'): NewRN(0)}, false,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "randInt(1;1)", NewVariable('b'): "2*a"}, Variables{NewVariable('a'): NewRN(1), NewVariable('b'): NewRN(2)}, false,
+			map[Variable]string{NewVar('a'): "randInt(1;1)", NewVar('b'): "2*a"}, Variables{NewVar('a'): NewRN(1), NewVar('b'): NewRN(2)}, false,
 		},
 		{
-			map[Variable]string{NewVariable('a'): "randLetter(A)", NewVariable('b'): "randInt(1;1)"},
-			Variables{NewVariable('a'): NewRV(NewVariable('A')), NewVariable('b'): NewRN(1)},
+			map[Variable]string{NewVar('a'): "randLetter(A)", NewVar('b'): "randInt(1;1)"},
+			Variables{NewVar('a'): NewRV(NewVar('A')), NewVar('b'): NewRN(1)},
 			false,
 		},
 	}
@@ -69,12 +69,12 @@ func TestRandomVariables_instantiate(t *testing.T) {
 
 func TestRandLetter(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{NewVariable('P'): mustParse(t, "randLetter(A;B;C)")}
+		rv := RandomParameters{NewVar('P'): mustParse(t, "randLetter(A;B;C)")}
 		vars, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
 		}
-		resolved := vars[NewVariable('P')]
+		resolved := vars[NewVar('P')]
 		if !resolved.IsVariable {
 			t.Fatal(resolved)
 		}
@@ -87,33 +87,33 @@ func TestRandLetter(t *testing.T) {
 func TestRandomVariables_range(t *testing.T) {
 	for range [10]int{} {
 		rv := RandomParameters{
-			NewVariable('a'): mustParse(t, "3*randInt(1; 10)"),
-			NewVariable('b'): mustParse(t, "-a"),
+			NewVar('a'): mustParse(t, "3*randInt(1; 10)"),
+			NewVar('b'): mustParse(t, "-a"),
 		}
 		values, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
 		}
-		if values[NewVariable('a')].N != -values[NewVariable('b')].N {
+		if values[NewVar('a')].N != -values[NewVar('b')].N {
 			t.Fatal(values)
 		}
 
-		if a := values[NewVariable('a')].N; a < 3 || a > 30 {
+		if a := values[NewVar('a')].N; a < 3 || a > 30 {
 			t.Fatal(a)
 		}
 
 		rv = RandomParameters{
-			NewVariable('a'): mustParse(t, "randInt(1; 10)"),
-			NewVariable('b'): mustParse(t, "sgn(2*randInt(0;1)-1) * a"),
+			NewVar('a'): mustParse(t, "randInt(1; 10)"),
+			NewVar('b'): mustParse(t, "sgn(2*randInt(0;1)-1) * a"),
 		}
 		values, err = rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
 		}
-		if a := values[NewVariable('a')].N; a < 1 || a > 10 {
+		if a := values[NewVar('a')].N; a < 1 || a > 10 {
 			t.Fatal(a)
 		}
-		if a, b := values[NewVariable('a')].N, values[NewVariable('b')].N; math.Abs(a) != math.Abs(b) {
+		if a, b := values[NewVar('a')].N, values[NewVar('b')].N; math.Abs(a) != math.Abs(b) {
 			t.Fatal(a, b)
 		}
 	}
@@ -145,26 +145,32 @@ func TestExpression_IsValidNumber(t *testing.T) {
 		want           bool
 	}{
 		{
-			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVariable('a'): mustParse(t, "2")}, false, true,
+			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, true,
 		},
 		{
-			"2a + b", RandomParameters{NewVariable('a'): mustParse(t, "2")}, false, false,
+			"2a + b", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, false,
 		},
 		{
 			"1/0", RandomParameters{}, false, false,
 		},
 		{
-			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;4)")}, false, false,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;4)")}, false, false,
 		},
 		{
-			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(1;4)")}, false, true,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false, true,
+		},
+		{
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randDecDen()")}, true, true,
+		},
+		{
+			"(v_f - v_i) / v_i", RandomParameters{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}, true, true,
 		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		got, _ := expr.IsValidNumber(tt.parameters, tt.checkPrecision)
+		got, freq := expr.IsValidNumber(tt.parameters, tt.checkPrecision)
 		if got != tt.want {
-			t.Errorf("Expression.IsValidIndex() got = %v, want %v", got, tt.want)
+			t.Errorf("Expression.IsValidNumber(%s) got = %v (%d %%), want %v", tt.expr, got, freq, tt.want)
 		}
 	}
 }
@@ -179,13 +185,13 @@ func TestExpression_IsValidProba(t *testing.T) {
 			"1.1", RandomParameters{}, false,
 		},
 		{
-			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(4;5)")}, true,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(4;5)")}, true,
 		},
 		{
-			"1/a", RandomParameters{NewVariable('a'): mustParse(t, "randDecDen()")}, true,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randDecDen()")}, true,
 		},
 		{
-			"0.2 + 1/a", RandomParameters{NewVariable('a'): mustParse(t, "randInt(1;4)")}, false,
+			"0.2 + 1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false,
 		},
 	}
 	for _, tt := range tests {
@@ -204,13 +210,13 @@ func TestExpression_AreSortedNumbers(t *testing.T) {
 		want       bool
 	}{
 		{
-			[]string{"1", "2", "a"}, RandomParameters{NewVariable('a'): mustParse(t, "randInt(2;5)")}, true,
+			[]string{"1", "2", "a"}, RandomParameters{NewVar('a'): mustParse(t, "randInt(2;5)")}, true,
 		},
 		{
-			[]string{"1", "2", "a"}, RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;5)")}, false,
+			[]string{"1", "2", "a"}, RandomParameters{NewVar('a'): mustParse(t, "randInt(0;5)")}, false,
 		},
 		{
-			[]string{"1", "2", "b"}, RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;5)")}, false,
+			[]string{"1", "2", "b"}, RandomParameters{NewVar('a'): mustParse(t, "randInt(0;5)")}, false,
 		},
 	}
 	for _, tt := range tests {
@@ -233,22 +239,22 @@ func TestExpression_IsValidIndex(t *testing.T) {
 		want       bool
 	}{
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVariable('a'): mustParse(t, "2")}, 4, true,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "2")}, 4, true,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;3)")}, 4, true,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, true,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;3)")}, 4, false,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, false,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", RandomParameters{NewVariable('a'): mustParse(t, "randInt(0;3)")}, 4, false,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, false,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", RandomParameters{
-				NewVariable('a'): mustParse(t, "randInt(3;12)"), // BC
-				NewVariable('b'): mustParse(t, "randInt(3;12)"), // AC
-				NewVariable('c'): mustParse(t, "randInt(3;12)"), // AB
+				NewVar('a'): mustParse(t, "randInt(3;12)"), // BC
+				NewVar('b'): mustParse(t, "randInt(3;12)"), // AC
+				NewVar('c'): mustParse(t, "randInt(3;12)"), // AB
 			}, 4, true,
 		},
 	}
@@ -264,7 +270,7 @@ func TestExpression_IsValidIndex(t *testing.T) {
 func TestExample(t *testing.T) {
 	expr, _ := Parse("1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
 	randExpr, _ := Parse("randInt(0;3)")
-	params := RandomParameters{NewVariable('a'): randExpr}
+	params := RandomParameters{NewVar('a'): randExpr}
 
 	_, freq := expr.IsValidIndex(params, 3)
 	fmt.Println(freq) // approx 100 - 25 = 75
@@ -278,12 +284,12 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 		want       bool
 	}{
 		{"2x + 1", nil, []int{-2, -1, 0, 4}, true},
-		{"ax^2 - 2x + c", RandomParameters{NewVariable('a'): mustParse(t, "randInt(2;4)"), NewVariable('c'): mustParse(t, "7")}, []int{-2, -1, 0, 4}, true},
+		{"ax^2 - 2x + c", RandomParameters{NewVar('a'): mustParse(t, "randInt(2;4)"), NewVar('c'): mustParse(t, "7")}, []int{-2, -1, 0, 4}, true},
 		{"2x + 0.5", nil, []int{-2, -1, 0, 4}, false},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		got, freq := expr.AreFxsIntegers(tt.parameters, NewVariable('x'), tt.grid)
+		got, freq := expr.AreFxsIntegers(tt.parameters, NewVar('x'), tt.grid)
 		if got != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
 		}
@@ -304,12 +310,12 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 		{"1/x", 'x', nil, 100, false},
 		{"exp(x)", 'x', nil, 100, false},
 		{"ax + b", 'x', RandomParameters{
-			NewVariable('a'): mustParse(t, "randInt(2;4)"),
-			NewVariable('b'): mustParse(t, "7"),
+			NewVar('a'): mustParse(t, "randInt(2;4)"),
+			NewVar('b'): mustParse(t, "7"),
 		}, 100, true},
 		{"ax + b", 'x', RandomParameters{
-			NewVariable('a'): mustParse(t, "randInt(2;100)"),
-			NewVariable('b'): mustParse(t, "7"),
+			NewVar('a'): mustParse(t, "randInt(2;100)"),
+			NewVar('b'): mustParse(t, "7"),
 		}, 100, false},
 	}
 	for _, tt := range tests {
@@ -317,7 +323,7 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 		fn := FunctionDefinition{
 			FunctionExpr: FunctionExpr{
 				Function: expr,
-				Variable: NewVariable(tt.variable),
+				Variable: NewVar(tt.variable),
 			},
 			From: -10,
 			To:   10,

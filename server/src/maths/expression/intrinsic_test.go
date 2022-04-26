@@ -13,7 +13,7 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		pt := PythagorianTriplet{
-			A: NewVariable('a'), B: NewVariable('b'), C: NewVariable('c'),
+			A: NewVar('a'), B: NewVar('b'), C: NewVar('c'),
 			Bound: tt.Bound,
 		}
 		out := buildParams(pt)
@@ -23,7 +23,7 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			a, b, c := vr[NewVariable('a')].N, vr[NewVariable('b')].N, vr[NewVariable('c')].N
+			a, b, c := vr[NewVar('a')].N, vr[NewVar('b')].N, vr[NewVar('c')].N
 			if _, ok := isInt(a); !ok {
 				t.Fatal()
 			}
@@ -49,12 +49,12 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		qp := PolynomialCoeffs{
-			B:          NewVariable('b'),
-			C:          NewVariable('c'),
-			D:          NewVariable('d'),
-			X1:         NewVariable('u'),
-			X2:         NewVariable('v'),
-			X3:         NewVariable('w'),
+			B:          NewVar('b'),
+			C:          NewVar('c'),
+			D:          NewVar('d'),
+			X1:         NewVar('u'),
+			X2:         NewVar('v'),
+			X3:         NewVar('w'),
 			RootsStart: tt.RootsStart,
 			RootsEnd:   tt.RootsEnd,
 		}
@@ -68,22 +68,22 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 			expr := mustParse(t, "4*((3/4)X^4 + bX^3 + cX^2 + dX)")
 			expr.Substitute(vs)
 
-			if v := expr.MustEvaluate(Variables{NewVariable('X'): NewRN(0)}); v != 0 {
+			if v := expr.MustEvaluate(Variables{NewVar('X'): NewRN(0)}); v != 0 {
 				t.Fatal(v)
 			}
 
-			x1, x2, x3 := vs[NewVariable('u')].N, vs[NewVariable('v')].N, vs[NewVariable('w')].N
+			x1, x2, x3 := vs[NewVar('u')].N, vs[NewVar('v')].N, vs[NewVar('w')].N
 
 			derivative := mustParse(t, "3X^3 + 3bX^2 + 2cX + d")
 			derivative.Substitute(vs)
 
-			if v := derivative.MustEvaluate(Variables{NewVariable('X'): NewRN(x1)}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVar('X'): NewRN(x1)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x1, v)
 			}
-			if v := derivative.MustEvaluate(Variables{NewVariable('X'): NewRN(x2)}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVar('X'): NewRN(x2)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x2, v)
 			}
-			if v := derivative.MustEvaluate(Variables{NewVariable('X'): NewRN(x3)}); v != 0 {
+			if v := derivative.MustEvaluate(Variables{NewVar('X'): NewRN(x3)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x3, v)
 			}
 
