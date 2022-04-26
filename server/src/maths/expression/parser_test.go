@@ -392,6 +392,24 @@ var expressions = [...]struct {
 	{
 		"isPrime(2 * x)", &Expression{atom: isPrimeFn, left: nil, right: &Expression{atom: mult, left: NewNumber(2), right: newVarExpr('x')}}, false,
 	},
+	// round
+	{"round(x,y)", nil, true},
+	{"round(x)", nil, true},
+	{"round(x;2.2)", nil, true},
+	{"round(x;)", nil, true},
+	{"round(x;2", nil, true},
+	{"round(x;2)", &Expression{atom: roundFn{2}, right: newVarExpr('x')}, false},
+	{"round(x + randInt(1;5);2)", &Expression{
+		atom: roundFn{2},
+		right: &Expression{
+			atom: plus,
+			left: newVarExpr('x'),
+			right: &Expression{atom: specialFunctionA{
+				kind: randInt,
+				args: []Number{1, 5},
+			}},
+		},
+	}, false},
 	// space are optional
 	{
 		"(x−6)*(4*x−3)", &Expression{

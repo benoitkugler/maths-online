@@ -204,7 +204,16 @@ func (rv randVariable) eval(_, _ float64, _ ValueResolver) (float64, error) {
 	return 0, nil
 }
 
-func (fn function) eval(left, right float64, _ ValueResolver) (float64, error) {
+func roundTo(v float64, digits int) float64 {
+	exp := math.Pow10(digits)
+	return math.Round(v*exp) / exp
+}
+
+func (round roundFn) eval(_, right float64, _ ValueResolver) (float64, error) {
+	return roundTo(right, round.nbDigits), nil
+}
+
+func (fn function) eval(_, right float64, _ ValueResolver) (float64, error) {
 	arg := right
 	switch fn {
 	case logFn:

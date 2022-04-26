@@ -66,6 +66,15 @@ func compareNodes(n1, n2 *Expression) int {
 			} else {
 				return compareNodes(n1.right, n2.right)
 			}
+		case roundFn:
+			a2 := a2.(roundFn)
+			if a1.nbDigits < a2.nbDigits {
+				return -1
+			} else if a1.nbDigits > a2.nbDigits {
+				return 1
+			} else {
+				return compareNodes(n1.right, n2.right)
+			}
 		case specialFunctionA:
 			a2 := a2.(specialFunctionA)
 			if a1.kind < a2.kind {

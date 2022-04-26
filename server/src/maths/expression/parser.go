@@ -64,7 +64,7 @@ func MustParse(s string) *Expression {
 // parseBytes parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
 func parseBytes(text []byte) (*Expression, varMap, error) {
 	pr := newParser(text)
-	e, err := pr.parseExpression()
+	e, err := pr.parseExpression(false)
 
 	return e, pr.variablePos, err
 }
@@ -92,9 +92,16 @@ func (pr *parser) pop() *Expression {
 	return out
 }
 
-func (pr *parser) parseExpression() (*Expression, error) {
-	for pr.tk.Peek().data != nil {
-		node, err := pr.parseOneNode()
+// if `acceptSemiColon` is true, a semi colon at the end
+// of the expression is interpreted as EOF (but not consumed)
+func (pr *parser) parseExpression(acceptSemiColon bool) (*Expression, error) {
+	for {
+		peeked := pr.tk.Peek().data
+		if peeked == nil || (acceptSemiColon && peeked == semicolon) {
+			break
+		}
+
+		node, err := pr.parseOneNode(acceptSemiColon)
 		if err != nil {
 			return nil, err
 		}
@@ -109,11 +116,11 @@ func (pr *parser) parseExpression() (*Expression, error) {
 		}
 	}
 
-	return pr.stack[0], nil
+	return pr.pop(), nil
 }
 
 // the next token has already been checked for emptyness
-func (pr *parser) parseOneNode() (*Expression, error) {
+func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expression, error) {
 	tok := pr.tk.Next()
 	c := tok.data
 	switch data := c.(type) {
@@ -128,20 +135,22 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 			}
 		case semicolon:
 			return nil, ErrInvalidExpr{
-				Reason: "point-virgule inattendue",
+				Reason: "point-virgule inattendu",
 				Pos:    tok.pos,
 			}
 		default:
 			panic(exhaustiveSymbolSwitch)
 		}
 	case operator:
-		return pr.parseOperator(data, tok.pos)
+		return pr.parseOperator(data, tok.pos, acceptSemiColon)
 	case randVariable:
 		rd, err := pr.parseRandVariable(tok.pos)
 		if err != nil {
 			return nil, err
 		}
 		return &Expression{atom: rd}, nil
+	case roundFn:
+		return pr.parseRoundFunction(tok.pos)
 	case specialFunction:
 		rd, err := pr.parseSpecialFunction(tok.pos, data)
 		if err != nil {
@@ -169,7 +178,7 @@ func (pr *parser) parseOneNode() (*Expression, error) {
 }
 
 // pr.src[pr.pos] must be an operator
-func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
+func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Expression, error) {
 	var leftIsOptional bool
 	switch op {
 	case plus, minus: // an expression before the sign is optional
@@ -193,7 +202,7 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 	if op == pow {
 		stopOp = mult
 	}
-	right, err := pr.parseUntil(stopOp)
+	right, err := pr.parseUntil(stopOp, acceptSemiColon)
 	if err != nil {
 		return nil, err
 	}
@@ -213,13 +222,13 @@ func (pr *parser) parseOperator(op operator, pos int) (*Expression, error) {
 }
 
 // parse while the operator have strictly higher precedence than `op`
-func (pr *parser) parseUntil(op operator) (*Expression, error) {
+func (pr *parser) parseUntil(op operator, acceptSemiColon bool) (*Expression, error) {
 	for {
 		tok := pr.tk.Peek()
 		// if we reach EOF, return
 		// same if we encouter a closing )
 		// such as log(  2 + x  )
-		if tok.data == closePar || tok.data == nil {
+		if tok.data == closePar || tok.data == nil || (acceptSemiColon && tok.data == semicolon) {
 			break
 		}
 
@@ -229,7 +238,7 @@ func (pr *parser) parseUntil(op operator) (*Expression, error) {
 			break
 		}
 
-		node, err := pr.parseOneNode()
+		node, err := pr.parseOneNode(acceptSemiColon)
 		if err != nil {
 			return nil, err
 		}
@@ -260,7 +269,7 @@ func (pr *parser) parseParenthesisBlock(pos int) (*Expression, error) {
 			}
 		}
 
-		arg, err := pr.parseOneNode()
+		arg, err := pr.parseOneNode(false)
 		if err != nil {
 			return nil, err
 		}
@@ -407,13 +416,62 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 	return rv, nil
 }
 
+// special case for the round function,
+// which accept one expression and number of digits
+func (pr *parser) parseRoundFunction(pos int) (expr *Expression, err error) {
+	// after a function name, their must be a (
+	// with optional whitespaces
+	par := pr.tk.Next()
+	if par.data != openPar {
+		return nil, ErrInvalidExpr{
+			Reason: "parenthèse ouvrante manquante après round",
+			Pos:    pos,
+		}
+	}
+
+	// we then accept a whole expression
+	arg, err := pr.parseExpression(true)
+	if err != nil {
+		return nil, err
+	}
+
+	// we then look for a ; token ...
+	if tok := pr.tk.Next(); tok.data != semicolon {
+		return nil, ErrInvalidExpr{
+			Reason: "point-virgule manquant entre les arguments de round",
+			Pos:    tok.pos,
+		}
+	}
+
+	// ... and finally for an integer
+	nbDigits, err := pr.parseFloat()
+	if err != nil {
+		return nil, err
+	}
+	nbDigitsI, ok := isInt(float64(nbDigits))
+	if !ok {
+		return nil, ErrInvalidExpr{
+			Reason: "le nombre de chiffres après la virgule doit être un entier",
+			Pos:    pos,
+		}
+	}
+
+	if tok := pr.tk.Next(); tok.data != closePar {
+		return nil, ErrInvalidExpr{
+			Reason: "parenthèse fermante manquante après round",
+			Pos:    tok.pos,
+		}
+	}
+
+	return &Expression{atom: roundFn{nbDigits: nbDigitsI}, right: arg}, nil
+}
+
 // special case for special functions
 // to keep the parser simple, we only accept <function>(number; number ...)
 func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialFunctionA, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
 	par := pr.tk.Next()
-
 	if par.data != openPar {
 		return rd, ErrInvalidExpr{
 			Reason: "parenthèse ouvrante manquante après randXXX",

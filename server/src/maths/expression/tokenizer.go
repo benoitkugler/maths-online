@@ -19,6 +19,7 @@ func (numberText) isToken()      {}
 func (constant) isToken()        {}
 func (Variable) isToken()        {}
 func (function) isToken()        {}
+func (roundFn) isToken()         {}
 func (specialFunction) isToken() {}
 func (randVariable) isToken()    {}
 func (operator) isToken()        {}
@@ -185,6 +186,8 @@ func (tk *tokenizer) readToken() (tok token) {
 	case unicode.IsLetter(c): // either a function, a variable or a constant
 		if tk.tryReadRandVariable() {
 			out.data = randVariable{}
+		} else if isRound := tk.tryReadRoundFunction(); isRound {
+			out.data = roundFn{}
 		} else if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
 			out.data = fn
 		} else if fn, isFunction := tk.tryReadFunction(); isFunction {
@@ -242,6 +245,14 @@ func isImplicitMultLeft(t token) bool {
 // between t1 and t2
 func isImplicitMult(t1, t2 token) bool {
 	return isImplicitMultLeft(t1) && isImplicitMultRight(t2)
+}
+
+func (tk *tokenizer) tryReadRoundFunction() bool {
+	if s := string(tk.peekLetters()); s == "round" {
+		tk.pos += len("round")
+		return true
+	}
+	return false
 }
 
 func (tk *tokenizer) tryReadRandVariable() bool {

@@ -255,6 +255,8 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"sqrt(16)", "4", ExpandedSubstitutions, true},
 		{"(x+10)^2", "x^2 + 20x + 100", ExpandedSubstitutions, true},
 		{"(x-10)^2", "x^2 - 20x + 100", ExpandedSubstitutions, true},
+		{"round(2.2; 4) + 1", "1 + round(2.2;4)", ExpandedSubstitutions, true},
+		{"round(2.2; 4) + round(2.2; 5)", "round(2.2; 5) + round(2.2; 4)", ExpandedSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)

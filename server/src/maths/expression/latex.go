@@ -115,6 +115,10 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	}
 }
 
+func (r roundFn) asLaTeX(_, right *Expression, res LaTeXResolver) string {
+	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(res), r.nbDigits)
+}
+
 func (r specialFunctionA) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
@@ -150,7 +154,7 @@ func (v Number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.Str
 // else this is ... op expr
 func (expr Expression) needParenthesis(op operator, isLeft bool) bool {
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, Variable:
+	case Number, constant, function, Variable, roundFn:
 		return false
 	case operator:
 		switch op {

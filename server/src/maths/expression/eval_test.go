@@ -179,6 +179,9 @@ func Test_Expression_eval(t *testing.T) {
 				NewVar('c'): NewRN(5), // AB
 			}, 3,
 		},
+		{
+			"round(2.235; 2)", nil, 2.24,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -302,6 +305,25 @@ func Test_isFloatExceedingPrecision(t *testing.T) {
 	for _, tt := range tests {
 		if got := isFloatExceedingPrecision(tt.args); got != tt.want {
 			t.Errorf("isFloatExceedingPrecision() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func Test_roundTo(t *testing.T) {
+	tests := []struct {
+		v      float64
+		digits int
+		want   float64
+	}{
+		{2.256, 1, 2.3},
+		{2.224, 1, 2.2},
+		{2, 1, 2},
+		{-1.123, 2, -1.12},
+		{-1.98, 0, -2},
+	}
+	for _, tt := range tests {
+		if got := roundTo(tt.v, tt.digits); got != tt.want {
+			t.Errorf("roundTo() = %v, want %v", got, tt.want)
 		}
 	}
 }

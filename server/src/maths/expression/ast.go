@@ -33,20 +33,18 @@ type Expression struct {
 // The returned error is always nil.
 // See `AsLaTeX` for a better display format.
 func (expr *Expression) String() string {
-	return string(expr.serialize())
+	return expr.serialize()
 }
 
-func (expr *Expression) serialize() []byte {
-	out := []byte{'('}
+func (expr *Expression) serialize() string {
+	var left, right string
 	if expr.left != nil {
-		out = append(out, expr.left.serialize()...)
+		left = expr.left.serialize()
 	}
-	out = append(out, fmt.Sprint(expr.atom)...)
 	if expr.right != nil {
-		out = append(out, expr.right.serialize()...)
+		right = expr.right.serialize()
 	}
-	out = append(out, ')')
-	return out
+	return expr.atom.serialize(left, right)
 }
 
 // returns a deep copy
@@ -81,20 +79,37 @@ func (expr *Expression) equals(other *Expression) bool {
 // atom is either an operator, a function,
 // a variable, a predefined constant or a numerical value
 type atom interface {
-	fmt.Stringer
+	fmt.Stringer // used to compare atom in equals
+
+	serialize(left, right string) string
 
 	lexicographicOrder() int // smaller is first; unique among concrete types
 	eval(left, right float64, context ValueResolver) (float64, error)
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
-func (operator) lexicographicOrder() int         { return 6 }
-func (randVariable) lexicographicOrder() int     { return 5 }
+func (operator) lexicographicOrder() int         { return 7 }
+func (randVariable) lexicographicOrder() int     { return 6 }
+func (roundFn) lexicographicOrder() int          { return 5 }
 func (specialFunctionA) lexicographicOrder() int { return 4 }
 func (function) lexicographicOrder() int         { return 3 }
 func (Variable) lexicographicOrder() int         { return 2 }
 func (constant) lexicographicOrder() int         { return 1 }
 func (Number) lexicographicOrder() int           { return 0 }
+
+// roundFn act as a function, but takes an integer parameter
+// in addition to its regular parameter
+type roundFn struct {
+	nbDigits int
+}
+
+func (rd roundFn) String() string {
+	return rd.serialize("", "")
+}
+
+func (rd roundFn) serialize(_, right string) string {
+	return fmt.Sprintf("round(%s ; %d)", right, rd.nbDigits)
+}
 
 // randVariable is a special atom, randomly choosing a variable
 // among the propositions
@@ -107,6 +122,8 @@ func (rv randVariable) String() string {
 	}
 	return fmt.Sprintf("randLetter(%s)", strings.Join(args, ";"))
 }
+
+func (rv randVariable) serialize(_, _ string) string { return rv.String() }
 
 type operator uint8
 
@@ -145,6 +162,10 @@ func (op operator) String() string {
 	}
 }
 
+func (op operator) serialize(left, right string) string {
+	return fmt.Sprintf("(%s) %s (%s)", left, op.String(), right)
+}
+
 type function uint8
 
 const (
@@ -161,7 +182,7 @@ const (
 	sgnFn     // returns -1 0 or 1
 	isZeroFn  // returns 1 is its argument is 0, 0 otherwise
 	isPrimeFn // returns 0 or 1
-	// round
+	round     // round(<expr>; <digits>) : round(1.1256, 2) = 1.123
 
 	invalidFn
 )
@@ -199,6 +220,8 @@ func (fn function) String() string {
 	}
 }
 
+func (fn function) serialize(_, right string) string { return fn.String() + "(" + right + ")" }
+
 // Variable is a (one letter) mathematical variable,
 // such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3.
 // Indices are also permitted, written in LaTeX format :
@@ -231,6 +254,8 @@ func (v Variable) String() string {
 	return out
 }
 
+func (v Variable) serialize(_, _ string) string { return v.String() }
+
 type constant uint8
 
 const (
@@ -252,6 +277,8 @@ func (c constant) String() string {
 	}
 }
 
+func (c constant) serialize(_, _ string) string { return c.String() }
+
 type Number float64
 
 // NewNumber returns the one element expression containing
@@ -263,6 +290,8 @@ func NewNumber(v float64) *Expression {
 func (v Number) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }
+
+func (v Number) serialize(_, _ string) string { return v.String() }
 
 type specialFunctionA struct {
 	kind specialFunction
@@ -291,3 +320,5 @@ func (sf specialFunctionA) String() string {
 
 	return name + "(" + strings.Join(args, " ; ") + ")"
 }
+
+func (sf specialFunctionA) serialize(_, _ string) string { return sf.String() }

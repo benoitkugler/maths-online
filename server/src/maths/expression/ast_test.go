@@ -22,6 +22,7 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { _ = (invalidFn).String() })
 	shouldPanic(t, func() { _ = (invalidConstant).String() })
 	shouldPanic(t, func() { _ = (invalidOperator).String() })
+	shouldPanic(t, func() { _ = (specialFunctionA{kind: invalidSpecialFunction}).String() })
 
 	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil, nil) })
 	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
@@ -36,13 +37,13 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() {
 		tk := tokenizer{currentToken: token{data: symbol(invalidSymbol)}}
 		pr := parser{tk: &tk}
-		pr.parseOneNode()
+		pr.parseOneNode(true)
 	})
 
 	shouldPanic(t, func() {
 		tk := tokenizer{}
 		pr := parser{tk: &tk}
-		pr.parseOneNode()
+		pr.parseOneNode(true)
 	})
 
 	shouldPanic(t, func() {
@@ -52,6 +53,10 @@ func TestPanics(t *testing.T) {
 		expr := MustParse("x+2")
 		expr.MustEvaluate(nil)
 	})
+
+	shouldPanic(t, func() {
+		MustParse("x + ")
+	})
 }
 
 func TestExpression_String(t *testing.T) {
@@ -59,20 +64,20 @@ func TestExpression_String(t *testing.T) {
 		expr string
 		want string
 	}{
-		{"2 + x", "((2)+(x))"},
-		{"2 / x", "((2)/(x))"},
-		{"2 * x", "((2)*(x))"},
-		{"2 - x", "((2)-(x))"},
-		{"2 ^ x", "((2)^(x))"},
-		{"e * \u03C0", "((e)*(\u03C0))"},
-		{"\uE001", "(\uE001)"},
+		{"2 + x", "(2) + (x)"},
+		{"2 / x", "(2) / (x)"},
+		{"2 * x", "(2) * (x)"},
+		{"2 - x", "(2) - (x)"},
+		{"2 ^ x", "(2) ^ (x)"},
+		{"e * \u03C0", "(e) * (\u03C0)"},
+		{"\uE001", "\uE001"},
 
-		{"exp(2)", "(exp(2))"},
-		{"sin(2)", "(sin(2))"},
-		{"cos(2)", "(cos(2))"},
-		{"abs(2)", "(abs(2))"},
-		{"sqrt(2)", "(sqrt(2))"},
-		{"2 + x + log(10)", "(((2)+(x))+(log(10)))"},
+		{"exp(2)", "exp(2)"},
+		{"sin(2)", "sin(2)"},
+		{"cos(2)", "cos(2)"},
+		{"abs(2)", "abs(2)"},
+		{"sqrt(2)", "sqrt(2)"},
+		{"2 + x + log(10)", "((2) + (x)) + (log(10))"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

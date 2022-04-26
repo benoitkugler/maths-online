@@ -165,6 +165,9 @@ func TestExpression_IsValidNumber(t *testing.T) {
 		{
 			"(v_f - v_i) / v_i", RandomParameters{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}, true, true,
 		},
+		{
+			"round(1/3; 3)", nil, true, true,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -192,6 +195,9 @@ func TestExpression_IsValidProba(t *testing.T) {
 		},
 		{
 			"0.2 + 1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false,
+		},
+		{
+			"round(1/3; 3)", nil, true,
 		},
 	}
 	for _, tt := range tests {
