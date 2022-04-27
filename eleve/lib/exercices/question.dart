@@ -1,3 +1,4 @@
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/dropdown.dart';
 import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
@@ -20,6 +21,88 @@ import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
+/// [QuestionController] is the controller for a whole
+/// question (internally, it is composed of multiple controllers, one for each field)
+/// It should be created when displaying a question, then manipulated inside the [setState]
+/// method of a [StatefulWidget].
+class QuestionController {
+  /// If [blockOnSubmit] is true, the validate button is disabled
+  /// after one validation
+  final bool blockOnSubmit;
+
+  final Map<int, FieldController> _fields = {};
+  bool _hasAnswered = false;
+
+  bool get hasAnswered => _hasAnswered;
+
+  void answer() {
+    _hasAnswered = true;
+    final enableFields = !blockOnSubmit || !_hasAnswered;
+    if (!enableFields) {
+      for (var element in _fields.values) {
+        element.disable();
+      }
+    }
+  }
+
+  bool get enableValidate {
+    final areAnswersValid =
+        _fields.values.every((ct) => !ct.syntaxError && ct.hasValidData());
+    return (!blockOnSubmit || !hasAnswered) && areAnswersValid;
+  }
+
+  QuestionAnswersIn answsers() {
+    return QuestionAnswersIn(
+      _fields.map((key, ct) => MapEntry(key, ct.getData())),
+    );
+  }
+
+  /// Walks throught the question content and creates the field controllers,
+  /// later used when building widgets.
+  /// [onEditDone] is called when one field is updated by the user
+  /// It should in return trigger a setState on the widget using the controller.
+  /// [buildMode] is used to select the correct server endpoint
+  /// when validating expression syntax
+  QuestionController(List<Block> enonce, BuildMode buildMode,
+      this.blockOnSubmit, void Function(int fieldID) onEditDone) {
+    for (var block in enonce) {
+      if (block is NumberFieldBlock) {
+        _fields[block.iD] = NumberController(() => onEditDone(block.iD));
+      } else if (block is ExpressionFieldBlock) {
+        _fields[block.iD] =
+            ExpressionController(buildMode, () => onEditDone(block.iD));
+      } else if (block is RadioFieldBlock) {
+        _fields[block.iD] =
+            RadioController(() => onEditDone(block.iD), block.proposals);
+      } else if (block is DropDownFieldBlock) {
+        _fields[block.iD] =
+            DropDownController(() => onEditDone(block.iD), block.proposals);
+      } else if (block is OrderedListFieldBlock) {
+        _fields[block.iD] =
+            OrderedListController(() => onEditDone(block.iD), block);
+      } else if (block is FigurePointFieldBlock) {
+        _fields[block.iD] = FigurePointController(() => onEditDone(block.iD));
+      } else if (block is FigureVectorFieldBlock) {
+        _fields[block.iD] =
+            FigureVectorController(block, () => onEditDone(block.iD));
+      } else if (block is FigureVectorPairFieldBlock) {
+        _fields[block.iD] = FigureVectorPairController(
+            block.figure, () => onEditDone(block.iD));
+      } else if (block is VariationTableFieldBlock) {
+        _fields[block.iD] =
+            VariationTableController(block.length, () => onEditDone(block.iD));
+      } else if (block is FunctionPointsFieldBlock) {
+        _fields[block.iD] =
+            FunctionPointsController(block, () => onEditDone(block.iD));
+      } else if (block is TreeFieldBlock) {
+        _fields[block.iD] = TreeController(block, () => onEditDone(block.iD));
+      } else if (block is TableFieldBlock) {
+        _fields[block.iD] = TableController(block, () => onEditDone(block.iD));
+      }
+    }
+  }
+}
+
 WidgetSpan _inlineMath(String content, double fontSize) {
   return WidgetSpan(
     baseline: TextBaseline.alphabetic,
@@ -35,11 +118,9 @@ WidgetSpan _inlineMath(String content, double fontSize) {
 
 /// utility class used to layout the blocks
 class _ContentBuilder {
-  final void Function(int) onFieldDone;
   final List<Block> _content;
   final Color _color;
 
-  /// field controllers created by [initControllers]
   final Map<int, FieldController> _controllers;
 
   final List<Widget> rows = []; // final output
@@ -49,45 +130,7 @@ class _ContentBuilder {
   bool lastIsText = false; // used to insert new line between to text block
   static const fontSize = 18.0;
 
-  _ContentBuilder(
-      this.onFieldDone, this._content, this._controllers, this._color);
-
-  /// walks throught the question content and creates field controllers,
-  /// later used when building widgets
-  static Map<int, FieldController> initControllers(
-      List<Block> content, void Function() onChange) {
-    final controllers = <int, FieldController>{};
-    for (var block in content) {
-      if (block is NumberFieldBlock) {
-        controllers[block.iD] = NumberController(onChange);
-      } else if (block is ExpressionFieldBlock) {
-        controllers[block.iD] = ExpressionController(onChange);
-      } else if (block is RadioFieldBlock) {
-        controllers[block.iD] = RadioController(onChange, block.proposals);
-      } else if (block is DropDownFieldBlock) {
-        controllers[block.iD] = DropDownController(onChange, block.proposals);
-      } else if (block is OrderedListFieldBlock) {
-        controllers[block.iD] = OrderedListController(onChange, block);
-      } else if (block is FigurePointFieldBlock) {
-        controllers[block.iD] = FigurePointController(onChange);
-      } else if (block is FigureVectorFieldBlock) {
-        controllers[block.iD] = FigureVectorController(block, onChange);
-      } else if (block is FigureVectorPairFieldBlock) {
-        controllers[block.iD] =
-            FigureVectorPairController(block.figure, onChange);
-      } else if (block is VariationTableFieldBlock) {
-        controllers[block.iD] =
-            VariationTableController(block.length, onChange);
-      } else if (block is FunctionPointsFieldBlock) {
-        controllers[block.iD] = FunctionPointsController(block, onChange);
-      } else if (block is TreeFieldBlock) {
-        controllers[block.iD] = TreeController(block, onChange);
-      } else if (block is TableFieldBlock) {
-        controllers[block.iD] = TableController(block, onChange);
-      }
-    }
-    return controllers;
-  }
+  _ContentBuilder(this._content, this._controllers, this._color);
 
   void _flushCurrentRow() {
     if (_currentRow.isEmpty) {
@@ -160,8 +203,7 @@ class _ContentBuilder {
   void _handleExpressionFieldBlock(ExpressionFieldBlock element) {
     final ct = _controllers[element.iD] as ExpressionController;
 
-    final field = WidgetSpan(
-        child: ExpressionField(_color, ct, () => onFieldDone(element.iD)));
+    final field = WidgetSpan(child: ExpressionField(_color, ct));
     if (element.label.isNotEmpty) {
       // start a new line
       _flushCurrentRow();
@@ -445,11 +487,13 @@ class _OptionScrollListState extends State<_OptionScrollList> {
 
 /// [QuestionW] is the widget used to display a question
 /// The interactivity is handled internally; with the two
-/// hooks [onCheckSyntax] and [onValid] provided as external API.
-class QuestionW extends StatelessWidget {
+/// hooks [onCheckSyntax] and [onValid] provided as external API,
+/// as well as the [syntaxFeedback] parameter
+class QuestionW extends StatefulWidget {
+  final BuildMode buildMode;
+
   final Question question;
   final Color color;
-  final void Function(CheckQuestionSyntaxeNotification) onCheckSyntax;
   final void Function(ValidQuestionNotification) onValid;
 
   /// [timeout] is the duration for the question
@@ -464,101 +508,67 @@ class QuestionW extends StatelessWidget {
   /// after one validation
   final bool blockOnSubmit;
 
-  const QuestionW(this.question, this.color, this.onCheckSyntax, this.onValid,
-      {Key? key,
-      this.timeout = const Duration(seconds: 60),
-      this.footerQuote = "",
-      this.blockOnSubmit = true})
-      : super(key: key);
+  const QuestionW(
+    this.buildMode,
+    this.question,
+    this.color,
+    this.onValid, {
+    Key? key,
+    this.timeout = const Duration(seconds: 60),
+    this.footerQuote = "",
+    this.blockOnSubmit = true,
+  }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return NotificationListener<CheckQuestionSyntaxeNotification>(
-      onNotification: (v) {
-        onCheckSyntax(v);
-        return true;
-      },
-      child: NotificationListener<ValidQuestionNotification>(
-        onNotification: (v) {
-          onValid(v);
-          return true;
-        },
-        child:
-            _QuestionPage(question, color, timeout, footerQuote, blockOnSubmit),
-      ),
-    );
-  }
+  State<QuestionW> createState() => _QuestionWState();
 }
 
-class _QuestionPage extends StatefulWidget {
-  final Question question;
-  final Color color;
-  final Duration? timeout;
-  final String footerQuote;
-  final bool blockOnSubmit;
-
-  const _QuestionPage(this.question, this.color, this.timeout, this.footerQuote,
-      this.blockOnSubmit,
-      {Key? key})
-      : super(key: key);
-
-  @override
-  State<_QuestionPage> createState() => _QuestionPageState();
-}
-
-class _QuestionPageState extends State<_QuestionPage> {
-  bool _hasAnswered = false;
-  late Map<int, FieldController> _controllers;
-
-  _ContentBuilder? builder;
+class _QuestionWState extends State<QuestionW> {
+  late _ContentBuilder builder;
+  late QuestionController controller;
 
   @override
   void initState() {
+    _initController();
     _buildFields();
 
     super.initState();
   }
 
   @override
-  void didUpdateWidget(_QuestionPage oldWidget) {
+  void didUpdateWidget(QuestionW oldWidget) {
+    _initController();
     _buildFields();
 
     super.didUpdateWidget(oldWidget);
   }
 
-  void _buildFields() {
-    _controllers = _ContentBuilder.initControllers(widget.question.enonce, () {
-      setState(() {});
-    });
-
-    builder = _ContentBuilder(
-        _emitCheckSyntax, widget.question.enonce, _controllers, widget.color);
-    builder!.build();
+  void _initController() {
+    controller = QuestionController(widget.question.enonce, widget.buildMode,
+        widget.blockOnSubmit, _onEditDone);
+    // controller.answer(); // TODO:
   }
 
-  bool get enableValidate =>
-      (!widget.blockOnSubmit || !_hasAnswered) &&
-      _controllers.values.every((ct) => ct.hasValidData());
+  void _buildFields() {
+    builder = _ContentBuilder(
+        widget.question.enonce, controller._fields, widget.color);
+    builder.build();
+  }
 
-  void _emitCheckSyntax(int id) {
-    final ct = _controllers[id]!;
+  void _onEditDone(int fieldID) async {
+    final ct = controller._fields[fieldID]!;
     if (!ct.hasValidData()) {
       return;
     }
-    CheckQuestionSyntaxeNotification(QuestionSyntaxCheckIn(ct.getData(), id))
-        .dispatch(context);
+    setState(() {});
   }
 
   void _validate() {
-    final answers = ValidQuestionNotification(
-      QuestionAnswersIn(
-        _controllers.map((key, ct) => MapEntry(key, ct.getData())),
-      ),
-    );
-    setState(() {
-      _hasAnswered = true;
-    });
-    answers.dispatch(context);
+    final answers = ValidQuestionNotification(controller.answsers());
+    controller.answer();
+    _buildFields();
+    setState(() {});
+    widget.onValid(answers);
   }
 
   @override
@@ -570,22 +580,24 @@ class _QuestionPageState extends State<_QuestionPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          ColoredTitle("Question", widget.color),
-          if (builder != null)
-            Expanded(
-                child: _OptionScrollList(
-              builder!,
-              ElevatedButton(
-                onPressed: enableValidate ? _validate : null,
-                style: ElevatedButton.styleFrom(primary: widget.color),
-                child: Text(
-                  widget.blockOnSubmit && _hasAnswered
-                      ? "En attente..."
-                      : "Valider",
-                  style: const TextStyle(fontSize: 18),
-                ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: ColoredTitle("Question", widget.color),
+          ),
+          Expanded(
+              child: _OptionScrollList(
+            builder,
+            ElevatedButton(
+              onPressed: controller.enableValidate ? _validate : null,
+              style: ElevatedButton.styleFrom(primary: widget.color),
+              child: Text(
+                controller.blockOnSubmit && controller.hasAnswered
+                    ? "En attente..."
+                    : "Valider",
+                style: const TextStyle(fontSize: 18),
               ),
-            )),
+            ),
+          )),
           if (timeout != null) ...[
             spacing,
             TimeoutBar(timeout, widget.color),
@@ -593,8 +605,8 @@ class _QuestionPageState extends State<_QuestionPage> {
               padding: const EdgeInsets.only(top: 6),
               child: AnimatedOpacity(
                 duration: const Duration(seconds: 2),
-                opacity: _hasAnswered ? 1 : 0,
-                child: Text(_hasAnswered ? widget.footerQuote : "",
+                opacity: controller.hasAnswered ? 1 : 0,
+                child: Text(controller.hasAnswered ? widget.footerQuote : "",
                     style: const TextStyle(
                         fontSize: 16, fontStyle: FontStyle.italic)),
               ),

@@ -19,7 +19,9 @@ class QuestionGallery extends StatefulWidget {
 
 class _QuestionGalleryState extends State<QuestionGallery> {
   List<Question> questions = [];
-  final _controller = PageController(initialPage: 0);
+
+  int? currentQuestionIndex;
+  Color? questionColor;
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
 
   Future<QuestionSyntaxCheckOut> _checkSyntaxCall(
       CheckQuestionSyntaxeNotification v) async {
-    final pageIndex = _controller.page!.toInt();
+    final pageIndex = currentQuestionIndex!;
     final uri =
         Uri.parse(widget.buildMode.serverURL("/questions/syntaxe/$pageIndex"));
     final resp = await http.post(uri,
@@ -57,7 +59,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
   }
 
   Future<QuestionAnswersOut> _validateCall(ValidQuestionNotification v) async {
-    final pageIndex = _controller.page!.toInt();
+    final pageIndex = currentQuestionIndex!;
     final uri =
         Uri.parse(widget.buildMode.serverURL("/questions/answer/$pageIndex"));
     final resp = await http
@@ -65,24 +67,6 @@ class _QuestionGalleryState extends State<QuestionGallery> {
       'Content-type': 'application/json',
     });
     return questionAnswersOutFromJson(jsonDecode(resp.body));
-  }
-
-  void _checkSyntax(
-      CheckQuestionSyntaxeNotification v, BuildContext context) async {
-    final rep = await _checkSyntaxCall(v);
-    if (rep.isValid) {
-      print("OK !");
-      return;
-    }
-    final reason = rep.reason;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Colors.red,
-      content: Text.rich(TextSpan(children: [
-        const TextSpan(text: "Syntaxe invalide: "),
-        TextSpan(
-            text: reason, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ])),
-    ));
   }
 
   void _validate(ValidQuestionNotification v, BuildContext context) async {
@@ -95,17 +79,24 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     ));
   }
 
-  Widget _buildQuestion(Question question, BuildContext context) {
-    return QuestionW(
-      question,
-      Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
-          Random().nextInt(256)),
-      (v) => _checkSyntax(v, context),
-      // (v) => _validate(v, context),
-      (v) => {},
-      footerQuote: pickQuote(),
-      blockOnSubmit: false,
-    );
+  // Widget _buildQuestion(Question question, BuildContext context) {
+  //   return QuestionW(
+  //     question,
+  //     Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
+  //         Random().nextInt(256)),
+  //     (v) => _checkSyntax(v, context),
+  //     (v) => _validate(v, context),
+  //     footerQuote: pickQuote(),
+  //     blockOnSubmit: false,
+  //   );
+  // }
+
+  void _showQuestion(int index) {
+    setState(() {
+      currentQuestionIndex = index;
+      questionColor = Color.fromARGB(255, Random().nextInt(256),
+          Random().nextInt(256), Random().nextInt(256));
+    });
   }
 
   void _showSummary() {
@@ -120,7 +111,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
                             title: Text(
                                 "(${index + 1}) " + questions[index].title),
                             onTap: () {
-                              _controller.jumpToPage(index);
+                              _showQuestion(index);
                               Navigator.of(ct).pop();
                             },
                           )).toList(),
@@ -137,11 +128,15 @@ class _QuestionGalleryState extends State<QuestionGallery> {
       ]),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: PageView(
-          controller: _controller,
-          physics: const NeverScrollableScrollPhysics(),
-          children: questions.map((q) => _buildQuestion(q, context)).toList(),
-        ),
+        child: currentQuestionIndex != null
+            ? QuestionW(
+                widget.buildMode,
+                questions[currentQuestionIndex!],
+                questionColor!,
+                (v) => _validate(v, context),
+                footerQuote: pickQuote(),
+              )
+            : const Text("Chargement"),
       ),
     );
   }

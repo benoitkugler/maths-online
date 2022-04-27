@@ -16,16 +16,5 @@ void main() {
 
     final roundrip = jsonDecode(json) as Map<String, dynamic>;
     expect(roundrip.length, equals(2));
-
-    final notif2 = CheckQuestionSyntaxeNotification(
-        const QuestionSyntaxCheckIn(NumberAnswer(1), 0));
-    final json2 = jsonEncode({
-      "Kind":
-          loopbackClientDataKindToJson(LoopbackClientDataKind.checkSyntaxIn),
-      "Data": questionSyntaxCheckInToJson(notif2.data)
-    });
-
-    final roundrip2 = jsonDecode(json2) as Map<String, dynamic>;
-    expect(roundrip2.length, equals(2));
   });
 }

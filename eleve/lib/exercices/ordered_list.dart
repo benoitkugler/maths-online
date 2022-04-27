@@ -113,6 +113,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
       children: [
         _AnswerRow(
             widget._color,
+            ct.enabled,
             answers,
             ct.label,
             (symbol, isStart) => setState(() {
@@ -120,7 +121,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
                   ct.insertAnswerAt(symbol.item, isStart ? 0 : answers.length);
                 })),
         const SizedBox(height: 20),
-        _PropsRow(widget._color, props, (symbol) {
+        _PropsRow(widget._color, ct.enabled, props, (symbol) {
           setState(() {
             ct.removeAnswer(symbol.item);
           });
@@ -132,14 +133,19 @@ class _OrderedListFieldState extends State<OrderedListField> {
 
 class _Symbol extends StatelessWidget {
   final bool isAnswer;
+  final bool enabled;
   final _PositionnedItem symbol;
-  const _Symbol(this.isAnswer, this.symbol, {Key? key}) : super(key: key);
+  const _Symbol(this.isAnswer, this.enabled, this.symbol, {Key? key})
+      : super(key: key);
 
   static const fontSize = 16.0;
 
-  static List<_Symbol> fromList(bool dense, List<IndexedText> list) {
-    return List<_Symbol>.generate(list.length,
-        (index) => _Symbol(dense, _PositionnedItem(list[index], index)));
+  static List<_Symbol> fromList(
+      bool dense, bool enabled, List<IndexedText> list) {
+    return List<_Symbol>.generate(
+        list.length,
+        (index) =>
+            _Symbol(dense, enabled, _PositionnedItem(list[index], index)));
   }
 
   @override
@@ -152,6 +158,7 @@ class _Symbol extends StatelessWidget {
       child: textMath(symbol.item.text, fontSize),
     );
     return Draggable<_PositionnedItem>(
+      maxSimultaneousDrags: enabled ? null : 0,
       data: symbol,
       feedback: Material(
         elevation: 8,
@@ -180,12 +187,14 @@ class _Symbol extends StatelessWidget {
 
 class _AnswerRow extends StatelessWidget {
   final Color color;
+  final bool enabled;
   final List<IndexedText> answers;
   final String label; // optional
 
   final void Function(_PositionnedItem, bool isStart) addAnswer;
 
-  const _AnswerRow(this.color, this.answers, this.label, this.addAnswer,
+  const _AnswerRow(
+      this.color, this.enabled, this.answers, this.label, this.addAnswer,
       {Key? key})
       : super(key: key);
 
@@ -227,7 +236,7 @@ class _AnswerRow extends StatelessWidget {
                 },
               ),
             ),
-            ..._Symbol.fromList(true, answers),
+            ..._Symbol.fromList(true, enabled, answers),
             Expanded(
               child: DragTarget<_PositionnedItem>(
                 builder: (context, candidateData, rejectedData) => Padding(
@@ -258,11 +267,13 @@ class _AnswerRow extends StatelessWidget {
 
 class _PropsRow extends StatelessWidget {
   final Color color;
+  final bool enabled;
   final List<IndexedText> props;
 
   final void Function(_PositionnedItem) removeAnswer;
 
-  const _PropsRow(this.color, this.props, this.removeAnswer, {Key? key})
+  const _PropsRow(this.color, this.enabled, this.props, this.removeAnswer,
+      {Key? key})
       : super(key: key);
 
   bool _isProposition(_PositionnedItem? candidate) {
@@ -287,7 +298,7 @@ class _PropsRow extends StatelessWidget {
           child: Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
-            children: _Symbol.fromList(false, props),
+            children: _Symbol.fromList(false, enabled, props),
           ),
         );
       },

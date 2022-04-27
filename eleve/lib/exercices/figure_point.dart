@@ -68,7 +68,9 @@ class _FigurePrivateState extends State<_FigurePrivate> {
     final metrics = RepereMetrics(widget.figure.bounds, context);
     final point = widget.controller.point;
     return GestureDetector(
-      onTapUp: (details) => _setCurrentPoint(details.localPosition, metrics),
+      onTapUp: widget.controller.enabled
+          ? (details) => _setCurrentPoint(details.localPosition, metrics)
+          : null,
       child: BaseRepere(
         metrics,
         widget.figure.showGrid,

@@ -493,9 +493,10 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
 
   /// used to adjust feedback when used in an InteractiveViewer
   final double zoomFactor;
+  final bool disabled;
 
   const DraggableGridPoint(this.logical, this.visual, this.id, this.zoomFactor,
-      {Key? key, this.color = Colors.orange})
+      {Key? key, this.color = Colors.orange, this.disabled = false})
       : super(key: key);
 
   static const outerRadius = 20.0;
@@ -507,6 +508,7 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
         left: visual.dx - outerRadius / 2,
         top: visual.dy - outerRadius / 2,
         child: Draggable<T>(
+          maxSimultaneousDrags: disabled ? 0 : null,
           data: id,
           child: Container(
             color: Colors.transparent,

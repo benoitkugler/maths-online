@@ -1,19 +1,24 @@
+import 'dart:convert';
+
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 class ExpressionController extends FieldController {
+  final BuildMode buildMode;
   final TextEditingController textController;
 
   bool _isDirty = false;
 
-  ExpressionController(void Function() onChange)
+  ExpressionController(this.buildMode, void Function() onEditDone)
       : textController = TextEditingController(),
-        super(onChange) {
+        super(onEditDone) {
     textController.addListener(() {
       _isDirty = true;
-      onChange();
     });
   }
 
@@ -22,25 +27,35 @@ class ExpressionController extends FieldController {
     onChange();
   }
 
+  Future<CheckExpressionOut> _checkExpressionSyntax() async {
+    final uri = Uri.parse(buildMode.serverURL("/api/check-expression"))
+        .replace(queryParameters: {"expression": getExpression()});
+
+    final resp = await http.get(uri);
+    return checkExpressionOutFromJson(jsonDecode(resp.body));
+  }
+
   @override
   bool hasValidData() {
     final content = textController.text.trim();
     return !_isDirty && content.isNotEmpty;
   }
 
+  String getExpression() {
+    return textController.text.trim();
+  }
+
   @override
   Answer getData() {
-    final content = textController.text.trim();
-    return ExpressionAnswer(content);
+    return ExpressionAnswer(getExpression());
   }
 }
 
-class ExpressionField extends StatelessWidget {
-  final Color _color;
+class ExpressionField extends StatefulWidget {
+  final Color color;
   final ExpressionController _controller;
-  final void Function() onDone;
 
-  const ExpressionField(this._color, this._controller, this.onDone, {Key? key})
+  const ExpressionField(this.color, this._controller, {Key? key})
       : super(key: key);
 
   static bool isTypingFunc(
@@ -71,18 +86,47 @@ class ExpressionField extends StatelessWidget {
   }
 
   @override
+  State<ExpressionField> createState() => _ExpressionFieldState();
+}
+
+class _ExpressionFieldState extends State<ExpressionField> {
+  void _submit() async {
+    final rep = await widget._controller._checkExpressionSyntax();
+    setState(() {
+      widget._controller.syntaxError = !rep.isValid;
+    });
+
+    if (!rep.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red,
+        content: Text.rich(TextSpan(children: [
+          const TextSpan(text: "Syntaxe invalide: "),
+          TextSpan(
+              text: rep.reason,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+        ])),
+      ));
+    }
+
+    widget._controller.submit();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final color = widget._controller.syntaxError ? Colors.red : widget.color;
+    final textColor =
+        widget._controller.syntaxError ? Colors.red : Colors.yellow.shade100;
     return Container(
       width: MediaQuery.of(context).size.width * 0.4,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: TextField(
+        enabled: widget._controller.enabled,
         onSubmitted: (_) {
-          _controller.submit();
-          onDone();
+          _submit();
         },
         inputFormatters: [
           TextInputFormatter.withFunction((oldValue, newValue) {
-            if (isTypingFunc(oldValue, newValue)) {
+            if (ExpressionField.isTypingFunc(oldValue, newValue)) {
               final sel = newValue.selection;
               return newValue.copyWith(
                   text: newValue.text + "()",
@@ -93,18 +137,23 @@ class ExpressionField extends StatelessWidget {
             return newValue;
           })
         ],
-        controller: _controller.textController,
+        controller: widget._controller.textController,
         decoration: InputDecoration(
           isDense: true,
           contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
           focusedBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: _color,
+              color: color,
+            ),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: color,
             ),
           ),
         ),
-        cursorColor: _color,
-        style: TextStyle(color: Colors.yellow.shade100, letterSpacing: 1.5),
+        cursorColor: color,
+        style: TextStyle(color: textColor, letterSpacing: 1.5),
         textAlign: TextAlign.center,
         textAlignVertical: TextAlignVertical.center,
       ),

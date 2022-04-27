@@ -140,23 +140,12 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
       switch (kind) {
         case LoopbackServerDataKind.state:
           return _onServerState(loopbackStateFromJson(data["Data"]));
-        case LoopbackServerDataKind.checkSyntaxeOut:
-          return _onServerCheckSyntax(
-              questionSyntaxCheckOutFromJson(data["Data"]));
         case LoopbackServerDataKind.validAnswerOut:
           return _onServerValidAnswer(questionAnswersOutFromJson(data["Data"]));
       }
     } catch (e) {
       showError(e);
     }
-  }
-
-  void _checkSyntax(CheckQuestionSyntaxeNotification notif) {
-    channel.sink.add(jsonEncode({
-      "Kind":
-          loopbackClientDataKindToJson(LoopbackClientDataKind.checkSyntaxIn),
-      "Data": questionSyntaxCheckInToJson(notif.data)
-    }));
   }
 
   void _validAnswer(ValidQuestionNotification notif) {
@@ -184,10 +173,10 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
         : Padding(
             padding: const EdgeInsets.all(8.0),
             child: QuestionW(
+              widget.buildMode,
               question!.question,
-              Color.fromARGB(255, 150+Random().nextInt(100), 150+Random().nextInt(100),
-                  Random().nextInt(256)),
-              _checkSyntax,
+              Color.fromARGB(255, 150 + Random().nextInt(100),
+                  150 + Random().nextInt(100), Random().nextInt(256)),
               _validAnswer,
               timeout: null,
               blockOnSubmit: false,

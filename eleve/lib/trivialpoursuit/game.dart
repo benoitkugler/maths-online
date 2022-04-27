@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
@@ -15,10 +16,13 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class TrivialPoursuitController extends StatefulWidget {
-  /// empty for no remote connection
-  final String apiURL;
+  final BuildMode buildMode;
+  final String gameCode;
 
-  const TrivialPoursuitController(this.apiURL, {Key? key}) : super(key: key);
+  String get apiURL => buildMode.websocketURL('/trivial/game/$gameCode');
+
+  const TrivialPoursuitController(this.buildMode, this.gameCode, {Key? key})
+      : super(key: key);
 
   @override
   _TrivialPoursuitControllerState createState() =>
@@ -256,14 +260,11 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
       builder: (context) => QuestionRoute(
+        widget.buildMode,
         event,
         (a) {
           // do not close the page now, it is handled when receiving result
           _sendEvent(Answer(a.data));
-        },
-        // TODO: handle prevalidation
-        (c) {
-          print(c);
         },
       ),
     ));

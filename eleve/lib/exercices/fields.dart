@@ -3,6 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 abstract class FieldController {
+  /// [syntaxError] should be set to true to indicate
+  /// that the answers doest not follow the correct syntax
+  bool syntaxError = false;
+
+  bool _enabled = true;
+  bool get enabled => _enabled;
+
+  void disable() {
+    _enabled = false;
+  }
+
   /// [onChange] should be called when the state change
   /// to notify the question widget
   final void Function() onChange;

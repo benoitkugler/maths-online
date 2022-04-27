@@ -17,7 +17,7 @@ class TreeController extends FieldController {
     selectedShape = shapeIndex;
     if (shapeIndex != null) {
       controllers = _NodeController.editableFromShape(onChange,
-          data.shapeProposals[shapeIndex], true, data.eventsProposals);
+          data.shapeProposals[shapeIndex], true, data.eventsProposals, enabled);
     }
   }
 
@@ -32,6 +32,13 @@ class TreeController extends FieldController {
   @override
   Answer getData() {
     return TreeAnswer(controllers!.getData());
+  }
+
+  @override
+  void disable() {
+    // also disable children controllers
+    super.disable();
+    controllers?.disable();
   }
 }
 
@@ -61,7 +68,7 @@ class _NodeController {
   }
 
   factory _NodeController.editableFromShape(void Function() onChange,
-      TreeShape shape, bool isRoot, List<TextOrMath> proposals) {
+      TreeShape shape, bool isRoot, List<TextOrMath> proposals, bool enabled) {
     final controller = DropDownController(
         onChange, proposals.map((e) => ListFieldProposal([e])).toList());
 
@@ -72,16 +79,21 @@ class _NodeController {
     final children = List<_NodeController>.generate(
         shape[0],
         (index) => _NodeController.editableFromShape(
-            onChange, shape.sublist(1), false, proposals));
+            onChange, shape.sublist(1), false, proposals, enabled));
 
     final edgesControllers = List<NumberController>.generate(
         children.length, (index) => NumberController(onChange));
-    return _NodeController(
-        isRoot,
-        DropDownController(
-            onChange, proposals.map((e) => ListFieldProposal([e])).toList()),
-        children,
-        edgesControllers);
+    final dd = DropDownController(
+        onChange, proposals.map((e) => ListFieldProposal([e])).toList());
+    return _NodeController(isRoot, dd, children, edgesControllers);
+  }
+
+  void disable() {
+    valueController?.disable();
+    edgesController?.forEach((c) => c.disable());
+    for (var c in children) {
+      c.disable();
+    }
   }
 
   bool hasValidData() {
@@ -144,7 +156,7 @@ class _TreeFieldState extends State<TreeField> {
     final ct = widget.controller;
     return ct.selectedShape == null
         ? InkWell(
-            onTap: _showShapeSelection,
+            onTap: ct.enabled ? _showShapeSelection : null,
             child: Container(
               padding: const EdgeInsets.all(12),
               child: const Text(
@@ -202,7 +214,9 @@ class _OneTree extends StatelessWidget {
                       left: 3,
                       child: FloatingActionButton(
                           mini: true,
-                          onPressed: onBack,
+                          onPressed: controller.valueController?.enabled == true
+                              ? onBack
+                              : null,
                           tooltip: "Changer de forme",
                           child: const Icon(
                             IconData(0xe092,
@@ -291,12 +305,14 @@ class _NodeState extends State<_Node> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: GestureDetector(
-        onTapUp: (details) {
-          final index = painter.onHit(details.localPosition);
-          if (index != null) {
-            editEdge(index);
-          }
-        },
+        onTapUp: valueCt?.enabled == true
+            ? (details) {
+                final index = painter.onHit(details.localPosition);
+                if (index != null) {
+                  editEdge(index);
+                }
+              }
+            : null,
         child: CustomPaint(
           painter: painter,
           child: Column(

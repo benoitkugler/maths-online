@@ -45,6 +45,17 @@ class VariationTableController extends FieldController {
   }
 
   @override
+  void disable() {
+    super.disable();
+    for (var ct in xs) {
+      ct.disable();
+    }
+    for (var ct in fxs) {
+      ct.disable();
+    }
+  }
+
+  @override
   bool hasValidData() {
     return xs.every((element) => element.hasValidData()) &&
         fxs.every((element) => element.hasValidData()) &&
@@ -130,9 +141,11 @@ class _VariationTableFieldState extends State<VariationTableField> {
                         })),
               )
             : VariationArrow(isUp,
-                onTap: () => setState(() {
-                      ct.toggleArrow(i);
-                    })));
+                onTap: ct.enabled
+                    ? () => setState(() {
+                          ct.toggleArrow(i);
+                        })
+                    : null));
       }
     }
 

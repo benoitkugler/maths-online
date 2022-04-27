@@ -1,3 +1,4 @@
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +7,11 @@ import 'categories.dart';
 import 'events.gen.dart';
 
 class QuestionRoute extends StatelessWidget {
+  final BuildMode buildMode;
   final ShowQuestion question;
   final void Function(ValidQuestionNotification) onValid;
-  final void Function(CheckQuestionSyntaxeNotification) onCheckSyntax;
 
-  const QuestionRoute(this.question, this.onValid, this.onCheckSyntax,
-      {Key? key})
+  const QuestionRoute(this.buildMode, this.question, this.onValid, {Key? key})
       : super(key: key);
 
   @override
@@ -24,12 +24,12 @@ class QuestionRoute extends StatelessWidget {
           automaticallyImplyLeading: false,
         ),
         body: QuestionW(
+          buildMode,
           question.question,
           question.categorie.color,
-          onCheckSyntax,
           onValid,
-          footerQuote: pickQuote(),
           timeout: Duration(seconds: question.timeoutSeconds),
+          footerQuote: pickQuote(),
         ),
       ),
     );

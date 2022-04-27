@@ -104,6 +104,16 @@ class TableController extends FieldController {
         super(onChange);
 
   @override
+  void disable() {
+    super.disable();
+    for (var row in _controllers) {
+      for (var cell in row) {
+        cell.disable();
+      }
+    }
+  }
+
+  @override
   bool hasValidData() {
     return _controllers
         .every((row) => row.every((cell) => cell.hasValidData()));

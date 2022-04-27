@@ -50,9 +50,11 @@ class _DropDownFieldState extends State<DropDownField> {
                       1),
                 ),
               )),
-      onChanged: (v) => setState(() {
-        ct.setIndex(v);
-      }),
+      onChanged: ct.enabled
+          ? (v) => setState(() {
+                ct.setIndex(v);
+              })
+          : null,
     );
   }
 }

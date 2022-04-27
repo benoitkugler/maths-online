@@ -115,10 +115,12 @@ class _FunctionPointsState extends State<FunctionPoints> {
           ...List<Widget>.generate(ct.fxs.length, (index) {
             final logical = IntCoord(ct.data.xs[index], ct.fxs[index] ?? 0);
             return DraggableGridPoint<_PointID>(
-                logical,
-                metrics.logicalIntToVisual(logical),
-                index,
-                _zoomController.value.getMaxScaleOnAxis());
+              logical,
+              metrics.logicalIntToVisual(logical),
+              index,
+              _zoomController.value.getMaxScaleOnAxis(),
+              disabled: !widget.controller.enabled,
+            );
           }),
         ]),
       ),

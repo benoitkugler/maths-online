@@ -86,7 +86,7 @@ JSON doublePointPairAnswerToJson(DoublePointPairAnswer item) {
   };
 }
 
-String stringFromJson(dynamic json) => json as String;
+String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
@@ -1467,25 +1467,27 @@ JSON questionSyntaxCheckInToJson(QuestionSyntaxCheckIn item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.QuestionSyntaxCheckOut
 class QuestionSyntaxCheckOut {
   final String reason;
+  final int iD;
   final bool isValid;
 
-  const QuestionSyntaxCheckOut(this.reason, this.isValid);
+  const QuestionSyntaxCheckOut(this.reason, this.iD, this.isValid);
 
   @override
   String toString() {
-    return "QuestionSyntaxCheckOut($reason, $isValid)";
+    return "QuestionSyntaxCheckOut($reason, $iD, $isValid)";
   }
 }
 
 QuestionSyntaxCheckOut questionSyntaxCheckOutFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return QuestionSyntaxCheckOut(
-      stringFromJson(json['Reason']), boolFromJson(json['IsValid']));
+  return QuestionSyntaxCheckOut(stringFromJson(json['Reason']),
+      intFromJson(json['ID']), boolFromJson(json['IsValid']));
 }
 
 JSON questionSyntaxCheckOutToJson(QuestionSyntaxCheckOut item) {
   return {
     "Reason": stringToJson(item.reason),
+    "ID": intToJson(item.iD),
     "IsValid": boolToJson(item.isValid)
   };
 }

@@ -51,11 +51,13 @@ class _RadioFieldState extends State<RadioField> {
           title: TextRow(buildText(prop.content, false, 18), 2),
           value: index,
           groupValue: widget._controller.index,
-          onChanged: (int? value) {
-            setState(() {
-              widget._controller.setIndex(value);
-            });
-          },
+          onChanged: widget._controller.enabled
+              ? (int? value) {
+                  setState(() {
+                    widget._controller.setIndex(value);
+                  });
+                }
+              : null,
         );
       })),
     );

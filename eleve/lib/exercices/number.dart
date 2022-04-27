@@ -51,6 +51,7 @@ class NumberField extends StatelessWidget {
       child: SizedBox(
         width: 50,
         child: TextField(
+          enabled: _controller.enabled,
           onSubmitted: onSubmitted,
           autofocus: autofocus,
           controller: _controller.textController,
