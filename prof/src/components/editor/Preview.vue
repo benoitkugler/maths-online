@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { BuildMode, controller } from "@/controller/controller";
+import { controller, PreviewMode } from "@/controller/controller";
 import { computed } from "@vue/runtime-core";
 
 const props = defineProps({
@@ -24,7 +24,7 @@ const props = defineProps({
 
 let src = computed(() =>
   controller.getURL(
-    `/prof-loopback-app?sessionID=${props.session_id}&mode=${BuildMode}`
+    `/prof-loopback-app?sessionID=${props.session_id}&mode=${PreviewMode}`
   )
 );
 </script>

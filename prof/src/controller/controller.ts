@@ -135,10 +135,20 @@ class Controller extends AbstractAPI {
   }
 }
 
-export const BuildMode = import.meta.env.DEV ? "dev" : "prod";
+const localhost = "http://localhost:1323";
+const buildMode = import.meta.env.DEV ? "dev" : "prod";
+
+// when building for production, the mode for the preview client
+// may actually still be "dev", for instance when served in test
+export const PreviewMode =
+  buildMode == "dev"
+    ? "dev"
+    : window.location.origin == localhost
+    ? "dev"
+    : "prod";
 
 export const controller = new Controller(
-  BuildMode == "dev" ? "http://localhost:1323" : window.location.origin,
+  buildMode == "dev" ? localhost : window.location.origin,
   "",
   {}
 );
