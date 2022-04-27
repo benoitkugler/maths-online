@@ -3,9 +3,6 @@ package trivialpoursuit
 func (rd RandomGroupStrategy) initGames(*gameSession) {}
 
 func (rd RandomGroupStrategy) selectGame(_ int64, session *gameSession) (GameID, int) {
-	session.lock.Lock()
-	defer session.lock.Unlock()
-
 	// first try to find a room with some space left
 	for id, room := range session.games {
 		sum := room.Summary()

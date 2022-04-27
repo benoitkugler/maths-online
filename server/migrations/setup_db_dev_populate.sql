@@ -16,3 +16,9 @@ SELECT
                 MAX(id)
             FROM questions));
 
+SELECT
+    setval('trivial_configs_id_seq', (
+            SELECT
+                MAX(id)
+            FROM trivial_configs));
+

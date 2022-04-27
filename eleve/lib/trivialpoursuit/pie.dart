@@ -45,12 +45,12 @@ class Pie extends StatelessWidget {
         ),
         ...Categorie.values.map((cat) => AnimatedRotation(
               turns: success[cat.index] ? 2 : 0.5,
-              duration: const Duration(milliseconds: 2000),
+              duration: const Duration(milliseconds: 3000),
               child: AnimatedScale(
-                duration: const Duration(milliseconds: 2000),
+                duration: const Duration(milliseconds: 3000),
                 scale: success[cat.index] ? 1 : 1.5,
                 child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 2500),
+                  duration: const Duration(milliseconds: 3500),
                   opacity: success[cat.index] ? 1 : 0,
                   child: _PieFraction(
                       cat.color, (cat.index + 0.5) * angularSection, size),

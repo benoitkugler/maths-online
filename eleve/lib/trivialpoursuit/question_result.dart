@@ -38,7 +38,7 @@ class _QuestionResultState extends State<QuestionResult> {
       .toList();
 
   void _onContinue() {
-    if (ownResult.success && playersCorrect.isNotEmpty) {
+    if (ownResult.success && playersIncorrect.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: const Duration(seconds: 5),
         backgroundColor: Theme.of(context).colorScheme.secondary,

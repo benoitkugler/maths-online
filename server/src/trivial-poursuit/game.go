@@ -18,8 +18,8 @@ import (
 )
 
 var (
-	WarningLogger  = log.New(os.Stdout, "trivial-poursuit:ERROR:", log.LstdFlags)
-	ProgressLogger = log.New(io.Discard, "trivial-poursuit:INFO:", log.LstdFlags)
+	WarningLogger  = log.New(os.Stdout, "trivial-poursuit-game:ERROR:", log.LstdFlags)
+	ProgressLogger = log.New(io.Discard, "trivial-poursuit-game:INFO:", log.LstdFlags)
 )
 
 var upgrader = websocket.Upgrader{

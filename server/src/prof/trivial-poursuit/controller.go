@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -15,6 +16,11 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+)
+
+var (
+	WarningLogger  = log.New(os.Stdout, "trivial-poursuit-session:ERROR:", log.LstdFlags)
+	ProgressLogger = log.New(os.Stdout, "trivial-poursuit-session:INFO:", log.LstdFlags)
 )
 
 const (
@@ -155,6 +161,8 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (TrivialConfig, erro
 	})
 	ct.lock.Unlock()
 
+	ProgressLogger.Printf("Launching session %s", newID)
+
 	session := newGameSession(ct.db, config, params.GroupStrategy, questionPool)
 
 	// the rooms may be either created initially, or during client connection
@@ -174,6 +182,8 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (TrivialConfig, erro
 		ct.lock.Lock()
 		defer ct.lock.Unlock()
 		delete(ct.sessions, newID)
+
+		ProgressLogger.Printf("Removed session %s", newID)
 	}()
 
 	// mark the session as started
@@ -222,11 +232,15 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 
 	session, ok := ct.sessions[sessionID]
 	if !ok {
-		log.Printf("invalid session ID %s", sessionID)
+
+		WarningLogger.Printf("invalid session ID %s", sessionID)
+
 		return fmt.Errorf("L'activité n'existe pas ou est déjà terminée.")
 	}
 
 	clientID := pass.EncryptedID(c.QueryParam("client-id"))
+
+	ProgressLogger.Println("Connecting student", clientID, sessionID)
 
 	err := session.connectStudent(c, clientID, ct.key)
 

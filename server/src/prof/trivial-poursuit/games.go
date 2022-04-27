@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -86,7 +85,7 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 
 // TODO:
 func (gs *gameSession) exploitReview(review tv.Review) {
-	log.Printf("GAME REVIEW: %v", review)
+	ProgressLogger.Printf("GAME REVIEW: %v", review)
 }
 
 func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID, key pass.Encrypter) error {
@@ -113,6 +112,9 @@ func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID,
 	gameID, newGamePlayers := gs.group.selectGame(studentID, gs)
 
 	if gameID == "" { // first create a new game
+
+		ProgressLogger.Printf("Creating game room (for %d players)", newGamePlayers)
+
 		gameID = gs.createGame(newGamePlayers)
 	}
 
@@ -123,6 +125,7 @@ func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID,
 
 	// connect to the websocket handler, which handle errors
 	game.AddClient(c.Response().Writer, c.Request(), player) // block on the client WS
+
 	return nil
 }
 
@@ -186,7 +189,7 @@ func (tc *teacherClient) startLoop() {
 		// read in a message
 		_, _, err := tc.conn.ReadMessage()
 		if err != nil {
-			log.Printf("teacher connection: %s", err)
+			WarningLogger.Printf("teacher connection: %s", err)
 			return
 		}
 	}
