@@ -54,17 +54,22 @@ func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) cli
 	field, ok := qu.fields()[answer.ID]
 	if !ok {
 		return client.QuestionSyntaxCheckOut{
+			ID:     answer.ID,
 			Reason: fmt.Sprintf("champ %d inconnu", answer.ID),
 		}
 	}
 
 	if err := field.validateAnswerSyntax(answer.Answer); err != nil {
 		return client.QuestionSyntaxCheckOut{
+			ID:     answer.ID,
 			Reason: err.(InvalidFieldAnswer).Reason,
 		}
 	}
 
-	return client.QuestionSyntaxCheckOut{IsValid: true}
+	return client.QuestionSyntaxCheckOut{
+		ID:      answer.ID,
+		IsValid: true,
+	}
 }
 
 // EvaluateAnswer check if the given answers are correct, and complete.

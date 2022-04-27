@@ -1,7 +1,5 @@
 package client
 
-// TODO: autogenerate JSON wrappers for type using interfaces
-
 import (
 	"encoding/json"
 
@@ -354,5 +352,6 @@ func (out QuestionSyntaxCheckIn) MarshalJSON() ([]byte, error) {
 
 type QuestionSyntaxCheckOut struct {
 	Reason  string
+	ID      int
 	IsValid bool
 }

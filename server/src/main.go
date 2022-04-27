@@ -203,6 +203,9 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 	// embeded preview app
 	e.GET(editor.LoopbackEndpoint, edit.AccessLoopback)
 
+	// shared expression syntax check endpoint
+	e.GET("/api/check-expression", checkExpressionSyntax)
+
 	// temporary question quick access
 
 	e.GET("/questions", func(c echo.Context) error {

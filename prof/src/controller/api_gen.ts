@@ -47,11 +47,14 @@ export interface ListQuestionsIn {
   TitleQuery: string;
   Tags: string[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/exercice.DifficultyTag
+export type DifficultyTag = string;
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Title: string;
   Tags: string[] | null;
   Id: number;
+  Difficulty: DifficultyTag;
   IsInGroup: boolean;
 }
 

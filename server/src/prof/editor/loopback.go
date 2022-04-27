@@ -94,13 +94,6 @@ func (cld *clientData) UnmarshalJSON(data []byte) error {
 	cld.Kind = wr.Kind
 	switch wr.Kind {
 	case Ping: // nothing to do
-	case CheckSyntaxIn:
-		var content client.QuestionSyntaxCheckIn
-		err := json.Unmarshal(wr.Data, &content)
-		if err != nil {
-			return err
-		}
-		cld.Data = content
 	case ValidAnswerIn:
 		var content client.QuestionAnswersIn
 		err := json.Unmarshal(wr.Data, &content)
@@ -138,9 +131,6 @@ func (cl *previewClient) startLoop() {
 		}
 
 		switch data.Kind {
-		case CheckSyntaxIn:
-			out := cl.controller.currentQuestion.CheckSyntaxe(data.Data.(client.QuestionSyntaxCheckIn))
-			cl.controller.broadcast <- serverData{Kind: CheckSyntaxeOut, Data: out}
 		case ValidAnswerIn:
 			out := cl.controller.currentQuestion.EvaluateAnswer(data.Data.(client.QuestionAnswersIn))
 			cl.controller.broadcast <- serverData{Kind: ValidAnswerOut, Data: out}

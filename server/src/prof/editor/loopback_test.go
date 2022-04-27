@@ -52,20 +52,9 @@ func TestLoopback(t *testing.T) {
 		exercice.NumberFieldInstance{ID: 0},
 	}})
 
-	err = cl.WriteJSON(clientData{Kind: CheckSyntaxIn, Data: client.QuestionSyntaxCheckIn{Answer: client.NumberAnswer{}}})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, json, err := cl.ReadMessage()
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(string(json))
-
 	loopback.unsetQuestion()
 
-	_, json, err = cl.ReadMessage()
+	_, json, err := cl.ReadMessage()
 	if err != nil {
 		t.Fatal(err)
 	}
