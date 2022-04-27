@@ -1,6 +1,8 @@
 package exercice
 
 import (
+	_ "embed"
+	"encoding/json"
 	"math"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -8,6 +10,18 @@ import (
 	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
+
+//go:embed all_fields.json
+var allFieldsFile []byte
+
+func loadAllFieldsQuestion() QuestionInstance {
+	var question Question
+	err := json.Unmarshal(allFieldsFile, &question)
+	if err != nil {
+		panic(err)
+	}
+	return question.Instantiate()
+}
 
 func mustParse(s string) *expression.Expression {
 	e, err := expression.Parse(s)
@@ -205,6 +219,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	PredefinedQuestions = append([]QuestionInstance{loadAllFieldsQuestion()}, PredefinedQuestions...)
 
 	PredefinedQuestions = append(PredefinedQuestions, QuestionInstance{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
