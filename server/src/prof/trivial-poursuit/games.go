@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -22,14 +23,16 @@ type GameID = string
 // gameSession monitor the games of one session (think one classroom)
 // and broadcast the main advances from all the games to the teacher client
 type gameSession struct {
+	quit chan bool
+
 	lock sync.Mutex
 
 	db *sql.DB
 
-	teacherClient *teacherClient
-	monitor       chan tv.GameSummary
-	questions     ga.QuestionPool
-	games         map[GameID]*tv.GameController // active games, either in lobby or playing
+	teacherClients map[*teacherClient]bool
+	monitor        chan tv.GameSummary
+	questions      ga.QuestionPool
+	games          map[GameID]*tv.GameController // active games, either in lobby or playing
 
 	config TrivialConfig // database entry, cached for simplicity
 	group  GroupStrategy // specified when starting the session
@@ -37,12 +40,14 @@ type gameSession struct {
 
 func newGameSession(db *sql.DB, config TrivialConfig, group GroupStrategy, questions ga.QuestionPool) *gameSession {
 	return &gameSession{
-		db:        db,
-		config:    config,
-		group:     group,
-		monitor:   make(chan tv.GameSummary),
-		games:     make(map[string]*tv.GameController),
-		questions: questions,
+		db:             db,
+		config:         config,
+		group:          group,
+		quit:           make(chan bool),
+		monitor:        make(chan tv.GameSummary),
+		games:          make(map[string]*tv.GameController),
+		teacherClients: make(map[*teacherClient]bool),
+		questions:      questions,
 	}
 }
 
@@ -129,12 +134,33 @@ func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID,
 	return nil
 }
 
+func (gs *gameSession) connectTeacher(ws *websocket.Conn) *teacherClient {
+	client := &teacherClient{conn: ws, currentSummaries: make(map[string]tv.GameSummary)}
+
+	// start with the current summary for all running sessions
+	gs.lock.Lock()
+	defer gs.lock.Unlock()
+
+	for k, ga := range gs.games {
+		client.currentSummaries[k] = ga.Summary()
+	}
+	gs.teacherClients[client] = true
+
+	client.conn.WriteJSON(client.socketData())
+
+	return client
+}
+
 func (gs *gameSession) startLoop(ctx context.Context) {
 	for {
 		select {
+		case <-gs.quit:
+			return
+		case <-ctx.Done():
+			return
 		case summary := <-gs.monitor:
-			if gs.teacherClient != nil {
-				gs.teacherClient.sendSummary(summary)
+			for client := range gs.teacherClients {
+				client.sendSummary(summary)
 			}
 		}
 	}
@@ -176,11 +202,27 @@ func (gs *gameSession) generateName() string {
 
 // teacherClient represents the teacher browser
 type teacherClient struct {
-	conn *websocket.Conn
+	conn             *websocket.Conn
+	currentSummaries map[GameID]tv.GameSummary
+}
+
+func (tc *teacherClient) socketData() (out teacherSocketData) {
+	for _, su := range tc.currentSummaries {
+		out.Games = append(out.Games, newGameSummary(su))
+	}
+
+	sort.Slice(out.Games, func(i, j int) bool {
+		return out.Games[i].GameID < out.Games[j].GameID
+	})
+
+	return out
 }
 
 func (tc *teacherClient) sendSummary(gs tv.GameSummary) {
-	tc.conn.WriteJSON(gs)
+	// update the list
+	tc.currentSummaries[gs.ID] = gs
+
+	tc.conn.WriteJSON(tc.socketData())
 }
 
 // start loop listen for ping messages

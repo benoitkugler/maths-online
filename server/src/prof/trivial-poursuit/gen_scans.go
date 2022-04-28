@@ -109,7 +109,6 @@ func scanOneTrivialConfig(row scanner) (TrivialConfig, error) {
 	var s TrivialConfig
 	err := row.Scan(
 		&s.Id,
-		&s.LaunchSessionID,
 		&s.Questions,
 		&s.QuestionTimeout,
 	)
@@ -181,24 +180,24 @@ func ScanTrivialConfigs(rs *sql.Rows) (TrivialConfigs, error) {
 // Insert TrivialConfig in the database and returns the item with id filled.
 func (item TrivialConfig) Insert(tx DB) (out TrivialConfig, err error) {
 	row := tx.QueryRow(`INSERT INTO trivial_configs (
-		LaunchSessionID,Questions,QuestionTimeout
+		Questions,QuestionTimeout
 		) VALUES (
-		$1,$2,$3
+		$1,$2
 		) RETURNING 
-		Id,LaunchSessionID,Questions,QuestionTimeout;
-		`, item.LaunchSessionID, item.Questions, item.QuestionTimeout)
+		Id,Questions,QuestionTimeout;
+		`, item.Questions, item.QuestionTimeout)
 	return ScanTrivialConfig(row)
 }
 
 // Update TrivialConfig in the database and returns the new version.
 func (item TrivialConfig) Update(tx DB) (out TrivialConfig, err error) {
 	row := tx.QueryRow(`UPDATE trivial_configs SET (
-		LaunchSessionID,Questions,QuestionTimeout
+		Questions,QuestionTimeout
 		) = (
-		$2,$3,$4
+		$2,$3
 		) WHERE id = $1 RETURNING 
-		Id,LaunchSessionID,Questions,QuestionTimeout;
-		`, item.Id, item.LaunchSessionID, item.Questions, item.QuestionTimeout)
+		Id,Questions,QuestionTimeout;
+		`, item.Id, item.Questions, item.QuestionTimeout)
 	return ScanTrivialConfig(row)
 }
 

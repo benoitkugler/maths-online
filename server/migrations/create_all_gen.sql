@@ -254,7 +254,6 @@ IMMUTABLE;
 
 CREATE TABLE trivial_configs (
     Id serial PRIMARY KEY,
-    LaunchSessionID varchar NOT NULL,
     Questions jsonb NOT NULL CONSTRAINT Questions_structgen_validate_json_array_5_array_array_string CHECK (structgen_validate_json_array_5_array_array_string (Questions)),
     QuestionTimeout integer NOT NULL
 );

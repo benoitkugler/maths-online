@@ -16,6 +16,7 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *edito
 
 	// trivialpoursuit game server
 	e.POST("/trivial/launch_session", trivial.LaunchSessionTrivialPoursuit)
+	e.DELETE("/trivial/launch_session", trivial.StopSessionTrivialPoursuit)
 
 	e.PUT("/prof/editor/api/new", edit.EditorStartSession)
 	e.GET("/prof/editor/api/tags", edit.EditorGetTags)

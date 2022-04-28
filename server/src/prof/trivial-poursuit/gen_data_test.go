@@ -60,7 +60,6 @@ func randint() int {
 func randTrivialConfig() TrivialConfig {
 	return TrivialConfig{
 		Id:              randint64(),
-		LaunchSessionID: randstring(),
 		Questions:       randCategoriesQuestions(),
 		QuestionTimeout: randint(),
 	}

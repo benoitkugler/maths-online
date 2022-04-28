@@ -6,9 +6,6 @@ package trivialpoursuit
 // stored in the DB, one per activity.
 type TrivialConfig struct {
 	Id              int64
-	LaunchSessionID string // empty before launch
 	Questions       CategoriesQuestions
 	QuestionTimeout int // in seconds
 }
-
-func (tc *TrivialConfig) IsLaunched() bool { return tc.LaunchSessionID != "" }

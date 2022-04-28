@@ -291,6 +291,7 @@ type GameSummary struct {
 	ID         GameID
 }
 
+// Summary locks and returns the current game summary.
 func (gc *GameController) Summary() GameSummary {
 	gc.gameLock.Lock()
 	defer gc.gameLock.Unlock()

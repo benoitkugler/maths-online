@@ -54,11 +54,13 @@ type CategoriesQuestions [game.NbCategories]QuestionCriterion
 type TrivialConfigExt struct {
 	Config TrivialConfig
 
+	SessionID               string // empty when not running
 	NbQuestionsByCategories [game.NbCategories]int
 }
 
-func (tc TrivialConfig) withQuestionsNumber(dict map[int64]exercice.QuestionTags) TrivialConfigExt {
+func (tc TrivialConfig) withDetails(dict map[int64]exercice.QuestionTags, sessions map[int64]SessionID) TrivialConfigExt {
 	out := TrivialConfigExt{Config: tc}
+	out.SessionID = sessions[tc.Id]
 	for i, cat := range tc.Questions {
 		out.NbQuestionsByCategories[i] = len(cat.filter(dict))
 	}
