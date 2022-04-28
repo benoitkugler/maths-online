@@ -10,7 +10,7 @@
             :ref="(el:any) => (rows[index] = el as TF)"
           ></tag-list-field>
         </v-col>
-        <v-col cols="1" align-self="center" style="text-align: center">
+        <v-col cols="2" align-self="center" style="text-align: center">
           <v-btn
             class="ml-2"
             size="x-small"

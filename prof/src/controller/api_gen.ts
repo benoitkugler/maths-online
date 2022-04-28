@@ -10,13 +10,13 @@ export type CategoriesQuestions = QuestionCriterion[];
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfig
 export interface TrivialConfig {
   Id: number;
-  LaunchSessionID: string;
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
 }
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfigExt
 export interface TrivialConfigExt {
   Config: TrivialConfig;
+  SessionID: string;
   NbQuestionsByCategories: number[];
 }
 
@@ -486,11 +486,9 @@ export abstract class AbstractAPI {
 
   protected async rawLaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
     const fullUrl = this.baseUrl + "/trivial/launch_session";
-    const rep: AxiosResponse<TrivialConfig> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
+    const rep: AxiosResponse<string> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
@@ -506,9 +504,30 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessLaunchSessionTrivialPoursuit(
-    data: TrivialConfig
-  ): void;
+  protected abstract onSuccessLaunchSessionTrivialPoursuit(data: string): void;
+
+  protected async rawStopSessionTrivialPoursuit(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/trivial/launch_session";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** StopSessionTrivialPoursuit wraps rawStopSessionTrivialPoursuit and handles the error */
+  async StopSessionTrivialPoursuit(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawStopSessionTrivialPoursuit(params);
+      this.onSuccessStopSessionTrivialPoursuit(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessStopSessionTrivialPoursuit(data: any): void;
 
   protected async rawEditorStartSession(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/new";

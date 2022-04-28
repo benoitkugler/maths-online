@@ -6,7 +6,6 @@ export type CategoriesQuestions = QuestionCriterion[];
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfig
 export interface TrivialConfig {
   Id: number;
-  LaunchSessionID: string;
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
 }

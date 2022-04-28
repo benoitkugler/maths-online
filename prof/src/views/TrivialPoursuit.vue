@@ -7,7 +7,7 @@
       v-if="editedConfig != null"
       max-height="80vh"
       width="800"
-      class="overflow-y-auto"
+      class="overflow-y-auto py-2"
     >
       <v-row>
         <v-col>
@@ -20,20 +20,6 @@
         </v-col>
       </v-row>
       <v-card-text>
-        <v-row justify="center">
-          <v-col cols="6">
-            <v-text-field
-              density="comfortable"
-              variant="outlined"
-              label="Durée limite pour une question"
-              type="number"
-              min="1"
-              suffix="sec"
-              v-model.number="editedConfig!.QuestionTimeout"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-
         <v-list>
           <v-list-subheader>
             <h3>Choix des questions</h3>
@@ -64,7 +50,22 @@
             ></tags-selector>
           </v-list-item>
         </v-list>
+
+        <v-row class="mt-2">
+          <v-col cols="6">
+            <v-text-field
+              density="compact"
+              variant="outlined"
+              label="Durée limite pour une question"
+              type="number"
+              min="1"
+              suffix="sec"
+              v-model.number="editedConfig!.QuestionTimeout"
+            ></v-text-field>
+          </v-col>
+        </v-row>
       </v-card-text>
+
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="success" @click="updateConfig">
@@ -128,6 +129,17 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog
+    fullscreen
+    :model-value="sessionToMonitor != null"
+    @update:model-value="sessionToMonitor = null"
+  >
+    <session-monitor
+      :session-i-d="sessionToMonitor?.SessionID || ''"
+      @close="sessionToMonitor = null"
+    ></session-monitor>
+  </v-dialog>
+
   <v-card class="my-3 mx-auto" width="60%">
     <v-row>
       <v-col>
@@ -159,10 +171,13 @@
               title="Editer"
               class="mx-2"
               @click="editedConfig = config.Config"
+              :disabled="config.SessionID != ''"
             >
               <v-icon icon="mdi-pencil"></v-icon>
             </v-btn>
-            <v-btn v-if="config.Config.LaunchSessionID != ''"> Suivre </v-btn>
+            <v-btn v-if="config.SessionID != ''" @click="monitor(config)">
+              Suivre
+            </v-btn>
             <v-btn
               v-else
               icon
@@ -176,19 +191,30 @@
             >
               <v-icon icon="mdi-play" color="green"></v-icon>
             </v-btn>
+
             <v-btn
+              v-if="config.SessionID == ''"
               class="mx-2"
               size="x-small"
               icon
               @click="deleteConfig(config.Config)"
               title="Supprimer cette session"
-              :disabled="config.Config.LaunchSessionID != ''"
             >
               <v-icon icon="mdi-delete" color="red"></v-icon>
             </v-btn>
+            <v-btn
+              v-else
+              class="mx-2"
+              size="x-small"
+              icon
+              @click="stopSession(config.Config)"
+              title="Stopper la session"
+            >
+              <v-icon icon="mdi-close" color="red"></v-icon>
+            </v-btn>
           </v-col>
           <v-col align-self="center" md="8">
-            <v-row justify="center">
+            <v-row justify="center" class="bg-grey-lighten-1 rounded">
               <v-col
                 cols="6"
                 align-self="center"
@@ -223,8 +249,10 @@ import type {
 } from "@/controller/api_gen";
 import { GroupStrategyKind } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { colorsPerCategorie } from "@/controller/trivial";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import TagsSelector from "../components/trivial/TagsSelector.vue";
 
 let allKnownTags = $ref<string[]>([]);
@@ -247,7 +275,7 @@ let isLaunching = $ref(false);
 
 let gameCode = $ref("");
 
-const colors = ["purple", "green", "orange", "yellow", "blue"];
+const colors = colorsPerCategorie;
 
 onMounted(async () => {
   const res = await controller.GetTrivialPoursuit();
@@ -294,24 +322,40 @@ let launchOptions = $ref<GroupStrategy>({
 });
 
 let launchingConfig = $ref<TrivialConfig | null>(null);
-
 async function launchSession() {
   if (launchingConfig == null) {
     return;
   }
+  const configID = launchingConfig.Id;
   isLaunching = true;
   const res = await controller.LaunchSessionTrivialPoursuit({
-    IdConfig: launchingConfig.Id,
+    IdConfig: configID,
     GroupStrategy: launchOptions!
   });
   isLaunching = false;
-
+  launchingConfig = null;
   if (res === undefined) {
     return;
   }
 
-  const index = _configs.findIndex(v => v.Config.Id == launchingConfig!.Id);
-  _configs[index].Config = res;
+  const index = _configs.findIndex(v => v.Config.Id == configID);
+  _configs[index].SessionID = res;
+}
+
+async function stopSession(config: TrivialConfig) {
+  const configID = config.Id;
+  const res = await controller.StopSessionTrivialPoursuit({ id: config.Id });
+  if (res === undefined) {
+    return;
+  }
+
+  const index = _configs.findIndex(v => v.Config.Id == configID);
+  _configs[index].SessionID = "";
+}
+
+let sessionToMonitor = $ref<TrivialConfigExt | null>(null);
+function monitor(config: TrivialConfigExt) {
+  sessionToMonitor = config;
 }
 </script>
 

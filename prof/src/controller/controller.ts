@@ -3,7 +3,6 @@ import type {
   Question,
   QuestionHeader,
   StartSessionOut,
-  TrivialConfig,
   TrivialConfigExt
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
@@ -15,6 +14,12 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  protected onSuccessStopSessionTrivialPoursuit(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Session terminée.");
+    }
+  }
   protected onSuccessEditorDuplicateQuestion(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -31,9 +36,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Groupe de question créé.");
     }
   }
-  protected onSuccessLaunchSessionTrivialPoursuit(data: TrivialConfig): void {
-    this.inRequest = false;
-  }
+
   protected onSuccessGetTrivialPoursuit(data: TrivialConfigExt[] | null): void {
     this.inRequest = false;
   }
@@ -46,10 +49,14 @@ class Controller extends AbstractAPI {
   protected onSuccessDeleteTrivialPoursuit(data: any): void {
     this.inRequest = false;
   }
-  protected onSuccessLaunchSession(data: TrivialConfig): void {
-    console.log(`Game started at ${data.LaunchSessionID}`);
+
+  protected onSuccessLaunchSessionTrivialPoursuit(sessionID: string): void {
     this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage(`Session de Trivial lancée : ${sessionID}`);
+    }
   }
+
   inRequest = false;
 
   getURL(endpoint: string) {
