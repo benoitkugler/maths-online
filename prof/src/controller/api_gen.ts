@@ -583,8 +583,8 @@ export abstract class AbstractAPI {
   ): void;
 
   protected async rawEditorDuplicateQuestion(params: { id: number }) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate";
-    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate-one";
+    const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
@@ -603,7 +603,34 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDuplicateQuestion(data: any): void;
+  protected abstract onSuccessEditorDuplicateQuestion(data: Question): void;
+
+  protected async rawEditorDuplicateQuestionWithDifficulty(params: {
+    id: number;
+  }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate";
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorDuplicateQuestionWithDifficulty wraps rawEditorDuplicateQuestionWithDifficulty and handles the error */
+  async EditorDuplicateQuestionWithDifficulty(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDuplicateQuestionWithDifficulty(params);
+      this.onSuccessEditorDuplicateQuestionWithDifficulty(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDuplicateQuestionWithDifficulty(
+    data: any
+  ): void;
 
   protected async rawEditorCreateQuestion(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";

@@ -81,7 +81,21 @@ func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.duplicateWithDifficulty(id)
+	out, err := ct.duplicateQuestion(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.duplicateQuestionWithDifficulty(id)
 	if err != nil {
 		return err
 	}

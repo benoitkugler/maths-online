@@ -15,13 +15,20 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
-  public onError?: (kind: string, htmlError: string) => void;
-  public showMessage?: (message: string) => void;
-
   protected onSuccessEditorDuplicateQuestion(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question dupliquée.");
+    }
+  }
+
+  public onError?: (kind: string, htmlError: string) => void;
+  public showMessage?: (message: string) => void;
+
+  protected onSuccessEditorDuplicateQuestionWithDifficulty(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Groupe de question créé.");
     }
   }
   protected onSuccessLaunchSessionTrivialPoursuit(data: TrivialConfig): void {

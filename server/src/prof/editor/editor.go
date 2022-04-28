@@ -144,9 +144,50 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHead
 	return out, nil
 }
 
-// duplicateWithDifficulty creates new questions with the same title
+// duplicateQuestion duplicate the given question, returning
+// the newly created one
+func (ct *Controller) duplicateQuestion(idQuestion int64) (ex.Question, error) {
+	qu, err := ex.SelectQuestion(ct.db, idQuestion)
+	if err != nil {
+		return ex.Question{}, utils.SQLError(err)
+	}
+	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
+	if err != nil {
+		return ex.Question{}, utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ex.Question{}, utils.SQLError(err)
+	}
+
+	newQuestion := qu // shallow copy is enough
+	newQuestion, err = newQuestion.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ex.Question{}, utils.SQLError(err)
+	}
+
+	for i := range tags {
+		tags[i].IdQuestion = newQuestion.Id
+	}
+	err = updateTags(tx, tags, newQuestion.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return ex.Question{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ex.Question{}, utils.SQLError(err)
+	}
+
+	return newQuestion, nil
+}
+
+// duplicateQuestionWithDifficulty creates new questions with the same title
 // and content as the given question, but with difficulty levels
-func (ct *Controller) duplicateWithDifficulty(idQuestion int64) error {
+func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
 	qu, err := ex.SelectQuestion(ct.db, idQuestion)
 	if err != nil {
 		return utils.SQLError(err)

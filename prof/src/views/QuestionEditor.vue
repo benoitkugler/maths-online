@@ -6,6 +6,7 @@
           v-if="viewKind == 'editor'"
           :session_id="sessionID"
           @back="backToQuestions"
+          @duplicated="onDuplicated"
           :question="currentQuestion!"
           :tags="currentTags"
           :all-tags="allKnownTags"
@@ -68,6 +69,12 @@ function backToQuestions() {
   fetchTags();
   controller.EditorPausePreview({ sessionID: sessionID });
   viewKind = "questions";
+}
+
+function onDuplicated(question: Question) {
+  currentQuestion = question;
+  // copy to avoid potential side effects
+  currentTags = currentTags.map(v => v);
 }
 
 function editQuestion(question: Question, tags: string[]) {

@@ -59,9 +59,9 @@
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
       </v-col>
-      <v-col align-self="center">
+      <v-col cols="3" align-self="center">
         <v-text-field
-          class="my-2"
+          class="my-2 input-small"
           variant="outlined"
           density="compact"
           label="Nom de la question"
@@ -101,18 +101,47 @@
           title="Enregistrer et prévisualiser"
           size="small"
         >
-          <v-icon icon="mdi-content-save"></v-icon>
+          <v-icon icon="mdi-content-save" size="small"></v-icon>
         </v-btn>
-        <v-btn
-          size="small"
-          icon
-          class="mr-2"
-          @click="download"
-          :disabled="!session_id"
-          title="Télécharger"
-        >
-          <v-icon icon="mdi-download"></v-icon>
-        </v-btn>
+
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
+            <v-btn
+              icon
+              title="Plus d'options"
+              v-on="{ isActive }"
+              v-bind="props"
+              size="small"
+            >
+              <v-icon icon="mdi-dots-vertical"></v-icon>
+            </v-btn>
+          </template>
+          <v-toolbar vertical density="compact" rounded>
+            <v-btn
+              size="small"
+              icon
+              class="mr-2"
+              @click="download"
+              :disabled="!session_id"
+              title="Télécharger"
+            >
+              <v-icon icon="mdi-download" size="small"></v-icon>
+            </v-btn>
+            <v-btn
+              class="mx-1"
+              size="small"
+              icon
+              @click="duplicate"
+              title="Dupliquer la question"
+            >
+              <v-icon
+                icon="mdi-content-copy"
+                color="info"
+                size="small"
+              ></v-icon>
+            </v-btn>
+          </v-toolbar>
+        </v-menu>
       </v-col>
     </v-row>
 
@@ -249,6 +278,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "duplicated", question: Question): void;
 }>();
 
 let question = $ref(props.question);
@@ -479,9 +509,24 @@ async function saveTags() {
   await controller.EditorUpdateTags({ IdQuestion: question.id, Tags: tags });
 }
 
+async function duplicate() {
+  const newQuestion = await controller.EditorDuplicateQuestion({
+    id: question.id
+  });
+  if (newQuestion == undefined) {
+    return;
+  }
+  emit("duplicated", newQuestion);
+}
+
 function backToList() {
   emit("back");
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.input-small:deep(input) {
+  font-size: 14px;
+  width: 100%;
+}
+</style>

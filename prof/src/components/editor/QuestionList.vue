@@ -19,6 +19,26 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog
+    :model-value="questionToDuplicate != null"
+    @update:model-value="questionToDuplicate = null"
+  >
+    <v-card title="Dupliquer avec difficulté" max-width="600">
+      <v-card-text
+        >Voulez-vous dupliquer la question
+        <i>{{ questionToDuplicate?.Title }}</i> en générant les étiquettes des
+        niveaux de difficulté manquants ? <br />
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="questionToDuplicate = null">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="green" @click="duplicateDifficulty" variant="contained">
+          Dupliquer
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-card class="pt-2">
     <v-row>
       <v-col> <v-card-title>Liste des questions</v-card-title> </v-col>
@@ -110,7 +130,7 @@
                     class="mx-1"
                     size="x-small"
                     icon
-                    @click.stop="duplicateDifficulty(question)"
+                    @click.stop="questionToDuplicate = question"
                     title="Dupliquer en différenciant la difficulté"
                   >
                     <v-icon
@@ -232,8 +252,12 @@ async function createQuestion() {
   emit("edit", out, []);
 }
 
-async function duplicateDifficulty(question: QuestionHeader) {
-  await controller.EditorDuplicateQuestion({ id: question.Id });
+let questionToDuplicate: QuestionHeader | null = $ref(null);
+async function duplicateDifficulty() {
+  await controller.EditorDuplicateQuestionWithDifficulty({
+    id: questionToDuplicate!.Id
+  });
+  questionToDuplicate = null;
   await fetchQuestions();
 }
 
