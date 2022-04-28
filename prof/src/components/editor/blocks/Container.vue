@@ -2,7 +2,7 @@
   <v-card class="my-2" elevation="3">
     <v-row
       no-gutters
-      :class="'px-2 ' + colorClass"
+      :class="'px-2 rounded ' + colorClass"
       @dragstart="onDragStart"
       draggable="true"
     >
@@ -13,7 +13,7 @@
         </v-card-subtitle>
       </v-col>
       <v-col cols="4" style="text-align: right" class="my-2">
-        <v-btn icon flat title="Supprimer" size="small">
+        <v-btn icon flat title="Supprimer" size="x-small">
           <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
         </v-btn>
       </v-col>

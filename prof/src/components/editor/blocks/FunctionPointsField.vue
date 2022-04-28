@@ -1,6 +1,6 @@
 <template>
   Les valeurs f(x) sont arrondies à l'unité avant d'être comparées.
-  <v-row class="mt-2">
+  <v-row class="mt-2 fix-input-width">
     <v-col md="2" align-self="center">
       <v-text-field
         draggable="false"
@@ -31,7 +31,7 @@
       ></v-text-field>
     </v-col>
   </v-row>
-  <v-row>
+  <v-row class="fix-input-width">
     <v-col md="12">
       <IntListField
         :model-value="props.modelValue.XGrid || []"
@@ -60,4 +60,8 @@ const emit = defineEmits<{
 const color = ExpressionColor;
 </script>
 
-<style></style>
+<style scoped>
+.fix-input-width:deep(input) {
+  width: 100%;
+}
+</style>

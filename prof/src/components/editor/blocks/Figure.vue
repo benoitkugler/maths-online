@@ -79,7 +79,7 @@
     <v-list>
       <div v-for="(point, index) in props.modelValue.Drawings.Points">
         <v-list-item>
-          <v-row>
+          <v-row class="fix-input-width">
             <v-col md="3" align-self="center">
               <v-text-field
                 density="compact"
@@ -162,7 +162,7 @@
     <v-list>
       <div v-for="(segment, index) in props.modelValue.Drawings.Segments">
         <v-list-item>
-          <v-row>
+          <v-row class="fix-input-width">
             <v-col align-self="center" md="4">
               <v-row>
                 <v-col md="12">
@@ -253,7 +253,7 @@
     <v-list>
       <div v-for="(line, index) in props.modelValue.Drawings.Lines">
         <v-list-item>
-          <v-row>
+          <v-row class="fix-input-width">
             <v-col cols="10">
               <v-row>
                 <v-col align-self="center">
@@ -414,5 +414,9 @@ function onTypePointName(index: number, name: string) {
 <style scoped>
 .no-hint-padding:deep(.v-input__details) {
   padding-inline: 0px;
+}
+
+.fix-input-width:deep(input) {
+  width: 100%;
 }
 </style>

@@ -26,7 +26,7 @@
           <th>x</th>
           <td
             v-for="(x, index) in props.modelValue.Xs"
-            style="text-align: center; width: 80px"
+            style="text-align: center; width: 60px"
           >
             <v-text-field
               class="centered-input"
@@ -43,7 +43,7 @@
           <th class="px-2">f(x)</th>
           <td
             v-for="(fx, index) in props.modelValue.Fxs"
-            style="text-align: center; width: 80px"
+            style="text-align: center; width: 60px"
           >
             <v-text-field
               class="centered-input"
@@ -102,5 +102,6 @@ function removeColumn(index: number) {
 <style>
 .centered-input:deep(input) {
   text-align: center;
+  width: 100%;
 }
 </style>

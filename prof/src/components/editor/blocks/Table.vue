@@ -89,7 +89,7 @@
     </v-col>
   </v-row>
   <v-row>
-    <v-col align-self="center">
+    <v-col cols="4" align-self="center">
       <v-btn
         @click="addRow"
         title="Ajouter une ligne"
@@ -100,7 +100,7 @@
         Nouvelle ligne
       </v-btn>
     </v-col>
-    <v-col>
+    <v-col cols="4">
       <v-switch
         label="Entête horizontal"
         hide-details
@@ -109,7 +109,7 @@
         color="secondary"
       ></v-switch>
     </v-col>
-    <v-col>
+    <v-col cols="4">
       <v-switch
         label="Entête vertical"
         hide-details

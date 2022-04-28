@@ -4,7 +4,7 @@
       >Définition de la réponse</v-card-subtitle
     >
     <v-card-text>
-      <v-row>
+      <v-row class="fix-input-width">
         <v-col align-self="center" cols="4">
           <v-text-field
             density="compact"
@@ -70,5 +70,9 @@ const expressionColor = colorByKind[TextKind.Expression];
 <style scoped>
 .no-hint-padding:deep(.v-input__details) {
   padding-inline: 0px;
+}
+
+.fix-input-width:deep(input) {
+  width: 100%;
 }
 </style>

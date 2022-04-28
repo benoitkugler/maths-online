@@ -49,16 +49,23 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="ma-2 border-red">
+  <v-card>
     <v-row
       :style="{
         'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
       }"
+      class="rounded"
+      no-gutters
     >
       <v-col md="5" align-self="center">
         <v-card-subtitle class="py-2">Fonctions spéciales</v-card-subtitle>
       </v-col>
       <v-col align-self="center" style="text-align: right">
+        <v-progress-circular
+          v-show="isLoading"
+          indeterminate
+          class="mx-1"
+        ></v-progress-circular>
         <v-btn
           icon
           @click="emit('add')"
@@ -79,13 +86,12 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
     <v-row no-gutters>
       <v-col>
-        <v-list>
+        <v-list v-if="props.parameters?.length">
           <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
             <v-row>
-              <v-col>
+              <v-col cols="9">
                 <v-text-field
                   class="small-input"
                   hide-details
@@ -153,5 +159,6 @@ function autocomplete(index: number, text: string) {
 <style>
 .small-input:deep(input) {
   font-size: 14px;
+  width: 100%;
 }
 </style>

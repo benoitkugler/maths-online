@@ -47,7 +47,7 @@
     </v-row>
   </v-snackbar>
 
-  <v-card class="ma-1">
+  <v-card class="mx-1 mt-3">
     <v-row class="mb-1 px-2">
       <v-col cols="auto" align-self="center" class="pr-0">
         <v-btn
@@ -117,8 +117,8 @@
     </v-row>
 
     <v-row no-gutters>
-      <v-col md="4" class="mx-2">
-        <div style="height: 70vh; overflow-y: auto">
+      <v-col md="4">
+        <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
           <random-parameters
             :parameters="question.parameters.Variables"
             :is-loading="isCheckingParameters"
@@ -139,7 +139,7 @@
           ></intrinsics>
         </div>
       </v-col>
-      <v-col class="mr-2">
+      <v-col class="pr-1">
         <div
           @drop="onDropJSON"
           @dragover="onDragoverJSON"

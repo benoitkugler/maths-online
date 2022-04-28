@@ -1,6 +1,6 @@
 <template>
-  <v-card class="mb-2">
-    <v-row class="bg-secondary pa-2">
+  <v-card class="my-2">
+    <v-row class="bg-secondary px-2 rounded">
       <v-col md="9" align-self="center">
         Réponse ordonnée attendue.
         <small>
@@ -21,7 +21,7 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-row no-gutters>
+    <v-row no-gutters class="mt-3">
       <v-col>
         <v-list>
           <v-list-item
@@ -50,7 +50,7 @@
   </v-card>
 
   <v-card>
-    <v-row class="bg-secondary pa-2">
+    <v-row class="bg-secondary px-2 rounded">
       <v-col md="9" align-self="center">
         Champs additionnels.
         <small>
@@ -71,7 +71,7 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-row no-gutters>
+    <v-row no-gutters class="mt-3">
       <v-col>
         <v-list>
           <v-list-item

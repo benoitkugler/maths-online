@@ -30,22 +30,29 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="ma-2 border-red">
+  <v-card class="mb-2">
     <v-row
       :style="{
         'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
       }"
+      class="rounded"
+      no-gutters
     >
-      <v-col md="5" align-self="center">
+      <v-col cols="5" align-self="center">
         <v-card-subtitle class="py-2">Paramètres aléatoires</v-card-subtitle>
       </v-col>
       <v-col align-self="center" style="text-align: right">
+        <v-progress-circular
+          v-show="isLoading"
+          indeterminate
+          class="mx-1"
+        ></v-progress-circular>
         <v-btn
           icon
           @click="emit('add')"
           title="Ajouter un paramètre"
           size="x-small"
-          class="mr-2 my-2"
+          class="mx-1 my-2"
         >
           <v-icon icon="mdi-plus" color="green" small></v-icon>
         </v-btn>
@@ -54,38 +61,43 @@
           @click="showHelp = true"
           title="Aide"
           size="x-small"
-          class="mr-2 my-2"
+          class="mx-1 my-2"
         >
           <v-icon icon="mdi-help" color="info"></v-icon>
         </v-btn>
       </v-col>
     </v-row>
-    <v-progress-linear v-if="isLoading" indeterminate></v-progress-linear>
     <v-row no-gutters>
       <v-col>
-        <v-list>
+        <v-list v-if="props.parameters?.length">
           <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
-            <v-list-item-title>
-              <variable-field
-                v-model="param.variable"
-                @update:model-value="emit('update', index, param)"
-                @blur="emit('done')"
-              >
-              </variable-field>
-            </v-list-item-title>
-            <v-text-field
-              class="ml-2 small-input"
-              variant="underlined"
-              density="compact"
-              hide-details
-              :model-value="param.expression"
-              @update:model-value="s => onExpressionChange(s, index)"
-              @blur="emit('done')"
-              :color="expressionColor"
-            ></v-text-field>
-            <v-btn icon size="small" flat @click="emit('delete', index)">
-              <v-icon icon="mdi-delete" color="red"></v-icon>
-            </v-btn>
+            <v-row no-gutters>
+              <v-col cols="3">
+                <variable-field
+                  v-model="param.variable"
+                  @update:model-value="emit('update', index, param)"
+                  @blur="emit('done')"
+                >
+                </variable-field>
+              </v-col>
+              <v-col cols="7">
+                <v-text-field
+                  class="ml-2 small-input"
+                  variant="underlined"
+                  density="compact"
+                  hide-details
+                  :model-value="param.expression"
+                  @update:model-value="s => onExpressionChange(s, index)"
+                  @blur="emit('done')"
+                  :color="expressionColor"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="2">
+                <v-btn icon size="small" flat @click="emit('delete', index)">
+                  <v-icon icon="mdi-delete" color="red"></v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
           </v-list-item>
         </v-list>
       </v-col>
@@ -158,5 +170,6 @@ const helpContent = [
 <style scoped>
 .small-input:deep(input) {
   font-size: 14px;
+  width: 100%;
 }
 </style>

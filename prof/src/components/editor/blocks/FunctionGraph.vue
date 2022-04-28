@@ -22,9 +22,8 @@
           <v-row>
             <v-col cols="10">
               <v-row>
-                <v-col md="3" align-self="center">
+                <v-col cols="3" align-self="center">
                   <v-text-field
-                    draggable="false"
                     variant="outlined"
                     density="compact"
                     v-model="fn.Decoration.Label"
@@ -116,4 +115,8 @@ function deleteFunction(index: number) {
 const color = ExpressionColor;
 </script>
 
-<style scoped></style>
+<style scoped>
+:deep(input) {
+  width: 100%;
+}
+</style>
