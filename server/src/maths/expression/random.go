@@ -316,6 +316,23 @@ func (expr *Expression) IsValidIndex(parameters RandomParameters, length int) (b
 	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
 }
 
+// IsValidInteger instantiates the expression using `parameters`, then evaluate the resulting
+// expression and checks if it yields an integer.
+// It also returns the frequency of successul tries, in % (between 0 and 100)
+// `parameters` must be a valid set of parameters
+func (expr *Expression) IsValidInteger(parameters RandomParameters) (bool, int) {
+	const nbTries = 1000
+	var nbSuccess int
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+		value, _ := expr.Evaluate(ps)
+		if _, ok := isInt(value); ok {
+			nbSuccess++
+		}
+	}
+	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+}
+
 // AreFxsIntegers instantiates the expression using `parameters`, then evaluate the resulting
 // expression replacing `x` by the values from `grid` and checks if the values are integers.
 // It returns the frequency of successul tries, in % (between 0 and 100)

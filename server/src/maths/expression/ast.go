@@ -26,25 +26,11 @@ type Expression struct {
 	atom        atom
 }
 
-// String returns a human readable form of the expression.
-// It is also suitable as a storage format, since
-// it always produces a valid expression output, whose parsing
-// yields a structurally equal expression.
-// The returned error is always nil.
-// See `AsLaTeX` for a better display format.
-func (expr *Expression) String() string {
-	return expr.serialize()
-}
-
 func (expr *Expression) serialize() string {
-	var left, right string
-	if expr.left != nil {
-		left = expr.left.serialize()
+	if expr == nil {
+		return ""
 	}
-	if expr.right != nil {
-		right = expr.right.serialize()
-	}
-	return expr.atom.serialize(left, right)
+	return expr.atom.serialize(expr.left, expr.right)
 }
 
 // returns a deep copy
@@ -81,7 +67,10 @@ func (expr *Expression) equals(other *Expression) bool {
 type atom interface {
 	fmt.Stringer // used to compare atom in equals
 
-	serialize(left, right string) string
+	// given the serialized form of the left and right terms,
+	// serialize returns plain text, prettified, valid form
+	// of the expression node
+	serialize(left, right *Expression) string
 
 	lexicographicOrder() int // smaller is first; unique among concrete types
 	eval(left, right float64, context ValueResolver) (float64, error)
@@ -104,11 +93,11 @@ type roundFn struct {
 }
 
 func (rd roundFn) String() string {
-	return rd.serialize("", "")
+	return rd.serialize(nil, nil)
 }
 
-func (rd roundFn) serialize(_, right string) string {
-	return fmt.Sprintf("round(%s ; %d)", right, rd.nbDigits)
+func (rd roundFn) serialize(_, right *Expression) string {
+	return fmt.Sprintf("round(%s ; %d)", right.serialize(), rd.nbDigits)
 }
 
 // randVariable is a special atom, randomly choosing a variable
@@ -123,7 +112,7 @@ func (rv randVariable) String() string {
 	return fmt.Sprintf("randLetter(%s)", strings.Join(args, ";"))
 }
 
-func (rv randVariable) serialize(_, _ string) string { return rv.String() }
+func (rv randVariable) serialize(_, _ *Expression) string { return rv.String() }
 
 type operator uint8
 
@@ -160,10 +149,6 @@ func (op operator) String() string {
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
-}
-
-func (op operator) serialize(left, right string) string {
-	return fmt.Sprintf("(%s) %s (%s)", left, op.String(), right)
 }
 
 type function uint8
@@ -220,7 +205,9 @@ func (fn function) String() string {
 	}
 }
 
-func (fn function) serialize(_, right string) string { return fn.String() + "(" + right + ")" }
+func (fn function) serialize(_, right *Expression) string {
+	return fn.String() + "(" + right.serialize() + ")"
+}
 
 // Variable is a (one letter) mathematical variable,
 // such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3.
@@ -254,7 +241,7 @@ func (v Variable) String() string {
 	return out
 }
 
-func (v Variable) serialize(_, _ string) string { return v.String() }
+func (v Variable) serialize(_, _ *Expression) string { return v.String() }
 
 type constant uint8
 
@@ -277,7 +264,7 @@ func (c constant) String() string {
 	}
 }
 
-func (c constant) serialize(_, _ string) string { return c.String() }
+func (c constant) serialize(_, _ *Expression) string { return c.String() }
 
 type Number float64
 
@@ -291,7 +278,7 @@ func (v Number) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }
 
-func (v Number) serialize(_, _ string) string { return v.String() }
+func (v Number) serialize(_, _ *Expression) string { return v.String() }
 
 type specialFunctionA struct {
 	kind specialFunction
@@ -321,4 +308,4 @@ func (sf specialFunctionA) String() string {
 	return name + "(" + strings.Join(args, " ; ") + ")"
 }
 
-func (sf specialFunctionA) serialize(_, _ string) string { return sf.String() }
+func (sf specialFunctionA) serialize(_, _ *Expression) string { return sf.String() }

@@ -312,7 +312,7 @@ func (expr *Expression) contractPlusMinus() {
 	}
 }
 
-// replace + (- 8) by -8 to have a better formatted output
+// replace - (- 8) by +8 to have a better formatted output
 func (expr *Expression) contractMinusMinus() {
 	if expr == nil {
 		return
@@ -456,8 +456,9 @@ func (expr *Expression) basicSimplification() (nbPasses int) {
 
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
-		expr.sortPlusAndMultOperands()
 		expr.expandMinus()
+		expr.sortPlusAndMultOperands()
+		expr.simplifyForPrint()
 
 		if expr.equals(ref) {
 			break

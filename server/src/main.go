@@ -81,6 +81,13 @@ func main() {
 	}
 	defer db.Close()
 
+	go func() {
+		if err = exercice.ValidateAllQuestions(db); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Question table checked.")
+	}()
+
 	trivial := trivialpoursuit.NewController(db, key)
 
 	// for now, show the logs

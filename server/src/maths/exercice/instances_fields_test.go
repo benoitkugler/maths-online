@@ -6,6 +6,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
 func TestFieldInstance_validateAnswerSyntax(t *testing.T) {
@@ -74,5 +75,28 @@ func TestOrderedList(t *testing.T) {
 	p2 := field.proposals()
 	if !reflect.DeepEqual(p1, p2) {
 		t.Fatal(p1, p2)
+	}
+
+	// check that the correct answer is indeed correct
+	ans := field.correctAnswer()
+
+	if !field.evaluateAnswer(ans) {
+		t.Fatalf("invalid answer %v", ans)
+	}
+}
+
+func TestFigureAffineLineField(t *testing.T) {
+	field := FigureAffineLineFieldInstance{
+		Figure: repere.Figure{
+			Bounds: repere.RepereBounds{
+				Width: 20, Height: 20,
+				Origin: repere.Coord{4, 4},
+			},
+		},
+		AnswerA: 1 / 3,
+		AnswerB: +3,
+	}
+	if ans := field.correctAnswer(); !field.evaluateAnswer(ans) {
+		t.Fatalf("inconsistent answer %v", ans)
 	}
 }

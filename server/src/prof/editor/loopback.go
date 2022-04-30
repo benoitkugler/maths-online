@@ -134,6 +134,9 @@ func (cl *previewClient) startLoop() {
 		case ValidAnswerIn:
 			out := cl.controller.currentQuestion.EvaluateAnswer(data.Data.(client.QuestionAnswersIn))
 			cl.controller.broadcast <- serverData{Kind: ValidAnswerOut, Data: out}
+		case ShowCorrectAnswerIn:
+			out := cl.controller.currentQuestion.CorrectAnswer()
+			cl.controller.broadcast <- serverData{Kind: ShowCorrectAnswerOut, Data: out}
 		}
 	}
 

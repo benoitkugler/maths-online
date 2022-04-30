@@ -13,6 +13,12 @@ type LaTeXResolver = func(v Variable) string
 // for usual maths symbols.
 func DefaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
+func (expr *Expression) simplifyForPrint() {
+	expr.contractPlusMinus()
+	expr.contractMinusMinus()
+	expr.simplify0And1()
+}
+
 // AsLaTeX returns a valid LaTeX code displaying the expression.
 // `res` is an optional mapping from variables to latex symbols
 func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
@@ -24,15 +30,29 @@ func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
 		res = DefaultLatexResolver
 	}
 
-	expr.contractPlusMinus()
-	expr.contractMinusMinus()
-	expr.simplify0And1()
+	expr = expr.copy()
+	expr.simplifyForPrint()
 
 	return expr.atom.asLaTeX(expr.left, expr.right, res)
 }
 
-func addParenthesis(s string) string {
+// String returns a human readable form of the expression.
+// The expression is prettified, meaning the structure of the
+// returned expression may slightly differ, but is garanteed
+// to be mathematically equivalent.
+// See `AsLaTeX` for a better display format.
+func (expr *Expression) String() string {
+	expr = expr.copy()
+	expr.simplifyForPrint()
+	return expr.serialize()
+}
+
+func addParenthesisLatex(s string) string {
 	return `\left(` + s + `\right)`
+}
+
+func addParenthesisPlain(s string) string {
+	return `(` + s + `)`
 }
 
 func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
@@ -45,35 +65,35 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf("%s + %s", leftCode, rightCode)
 	case minus:
 		if right.needParenthesis(op, false) {
-			rightCode = addParenthesis(rightCode)
+			rightCode = addParenthesisLatex(rightCode)
 		}
 		return fmt.Sprintf("%s - %s", leftCode, rightCode)
 	case mult:
 		if left.needParenthesis(op, true) {
-			leftCode = addParenthesis(leftCode)
+			leftCode = addParenthesisLatex(leftCode)
 		}
-		if right.needParenthesis(op, false) {
-			rightCode = addParenthesis(rightCode)
+		rightHasParenthesis := right.needParenthesis(op, false)
+		if rightHasParenthesis {
+			rightCode = addParenthesisLatex(rightCode)
 		}
 
 		// check for implicit multiplication
-		// the only case where x is required is for two numbers
-		if _, isRightNumber := right.atom.(Number); isRightNumber {
-			return fmt.Sprintf(`%s \times %s`, leftCode, rightCode)
+		if shouldOmitTimes(rightHasParenthesis, right) {
+			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
 		}
-		return fmt.Sprintf(`%s%s`, leftCode, rightCode)
+		return fmt.Sprintf(`%s \times %s`, leftCode, rightCode)
 	case div:
 		return fmt.Sprintf(`\frac{%s}{%s}`, leftCode, rightCode)
 	case mod:
-		return fmt.Sprintf(`\text{mod}\left(%s, %s\right)`, leftCode, rightCode)
+		return fmt.Sprintf(`\text{mod}\left(%s; %s\right)`, leftCode, rightCode)
 	case rem:
-		return fmt.Sprintf(`\text{rem}\left(%s, %s\right)`, leftCode, rightCode)
+		return fmt.Sprintf(`\text{rem}\left(%s; %s\right)`, leftCode, rightCode)
 	case pow:
 		if left.needParenthesis(op, true) {
-			leftCode = addParenthesis(leftCode)
+			leftCode = addParenthesisLatex(leftCode)
 		}
 		if right.needParenthesis(op, false) {
-			rightCode = addParenthesis(rightCode)
+			rightCode = addParenthesisLatex(rightCode)
 		}
 		return fmt.Sprintf(`{%s}^{%s}`, leftCode, rightCode)
 	default:
@@ -152,9 +172,13 @@ func (v Number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.Str
 // when used with `op`
 // if `isLeft` is true, this is expr op ...
 // else this is ... op expr
-func (expr Expression) needParenthesis(op operator, isLeft bool) bool {
+func (expr *Expression) needParenthesis(op operator, isLeft bool) bool {
+	if expr == nil {
+		return false
+	}
+
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, Variable, roundFn:
+	case Number, constant, function, Variable, roundFn, specialFunctionA:
 		return false
 	case operator:
 		switch op {
@@ -171,4 +195,71 @@ func (expr Expression) needParenthesis(op operator, isLeft bool) bool {
 	default:
 		panic(exhaustiveAtomSwitch)
 	}
+}
+
+// plain text, pretty output
+
+func (op operator) serialize(left, right *Expression) string {
+	leftCode, rightCode := left.serialize(), right.serialize()
+
+	if left.needParenthesis(op, true) {
+		leftCode = addParenthesisPlain(leftCode)
+	}
+	rightHasParenthesis := right.needParenthesis(op, false)
+	if rightHasParenthesis {
+		rightCode = addParenthesisPlain(rightCode)
+	}
+
+	switch op {
+	case plus:
+		if leftCode == "" {
+			return rightCode // plus is optional
+		}
+		return fmt.Sprintf("%s + %s", leftCode, rightCode)
+	case minus:
+		if leftCode == "" { // remove the space
+			return fmt.Sprintf("-%s", rightCode)
+		}
+		return fmt.Sprintf("%s - %s", leftCode, rightCode)
+	case mult:
+		// check for implicit multiplication
+		if shouldOmitTimes(rightHasParenthesis, right) {
+			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
+		}
+		return fmt.Sprintf(`%s * %s`, leftCode, rightCode)
+	case div:
+		return fmt.Sprintf(`%s / %s`, leftCode, rightCode)
+	case mod:
+		return fmt.Sprintf(`%s %% %s`, leftCode, rightCode)
+	case rem:
+		return fmt.Sprintf(`%s // %s`, leftCode, rightCode)
+	case pow:
+		return fmt.Sprintf(`%s ^ %s`, leftCode, rightCode)
+	default:
+		panic(exhaustiveOperatorSwitch)
+	}
+}
+
+// left and right are assumed not to be nil
+// we are conservative here : only omit * when we are
+// certain it results in valid ouput
+func shouldOmitTimes(rightHasParenthesis bool, right *Expression) bool {
+	// with parenthesis, it is always valid to omit times
+	if rightHasParenthesis {
+		return true
+	}
+
+	switch right.atom.(type) {
+	case Variable, constant, function, specialFunctionA, roundFn:
+		return true
+	case operator:
+		// if the first term is not a number, it is safe to remove the *
+		// but otherwise not : 2 * 4 ^ 2
+		if right.left != nil {
+			if _, isNumber := right.left.atom.(Number); !isNumber {
+				return true
+			}
+		}
+	}
+	return false
 }

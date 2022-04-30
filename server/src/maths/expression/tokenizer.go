@@ -215,7 +215,7 @@ func isImplicitMultRight(t token) bool {
 	switch t := t.data.(type) {
 	case symbol:
 		return t == openPar // (...)(...)
-	case Variable: // (...)y
+	case Variable, constant: // (...)y or ...(pi)
 		return true
 	case function: // (...)log()
 		return true

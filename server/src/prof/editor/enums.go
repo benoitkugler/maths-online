@@ -1,11 +1,13 @@
 package editor
 
 const (
-	Ping          loopbackClientDataKind = iota // nil
-	ValidAnswerIn                               // exercice/client.QuestionAnswersIn
+	State                loopbackServerDataKind = iota // LoopbackState
+	ValidAnswerOut                                     // exercice/client.QuestionAnswersOut
+	ShowCorrectAnswerOut                               // exercice/client.QuestionAnswersIn
 )
 
 const (
-	State          loopbackServerDataKind = iota // LoopbackState
-	ValidAnswerOut                               // exercice/client.QuestionAnswersOut
+	Ping          loopbackClientDataKind = iota // nil
+	ValidAnswerIn                               // exercice/client.QuestionAnswersIn
+	ShowCorrectAnswerIn
 )

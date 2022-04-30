@@ -208,7 +208,7 @@ func Test_Expression_basicSimplification(t *testing.T) {
 		{"x+2", "2+x"},
 		// {"2+3+x", "5+x"},
 		{"2*(x+ 2)", "2*(2+x)"},
-		{"2 - y", "2 + (-y)"},
+		{"2 - y", "2 - y"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

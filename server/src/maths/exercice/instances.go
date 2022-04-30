@@ -98,6 +98,16 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 	return client.QuestionAnswersOut{Data: out}
 }
 
+// CorrectAnswer returns the expected answer for the question.
+func (qu QuestionInstance) CorrectAnswer() (out client.QuestionAnswersIn) {
+	fields := qu.fields()
+	out.Data = make(map[int]client.Answer, len(fields))
+	for k, v := range fields {
+		out.Data[k] = v.correctAnswer()
+	}
+	return out
+}
+
 // ToClient convert the question to a client version, stripping
 // expected answers and converting expressions to LaTeX strings.
 func (qi QuestionInstance) ToClient() client.Question {
@@ -155,7 +165,7 @@ func (vt VariationTableInstance) inferAlignment(i int) (isUp bool) {
 	if i == len(vt.Xs)-1 { // compute isUp from previous
 		return vt.Fxs[i-1] < vt.Fxs[i]
 	}
-	// else continue from following
+	// else, i < len(vt.Xs)-1, compute from following
 	return vt.Fxs[i] > vt.Fxs[i+1]
 }
 
@@ -171,7 +181,7 @@ func (vt VariationTableInstance) toClient() client.Block {
 			IsUp: numberIsUp,
 		})
 
-		if i <= len(vt.Xs)-1 {
+		if i < len(vt.Xs)-1 {
 			// add the arrow column
 			out.Arrows = append(out.Arrows, !numberIsUp)
 		}

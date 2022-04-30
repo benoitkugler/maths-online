@@ -273,6 +273,31 @@ func TestExpression_IsValidIndex(t *testing.T) {
 	}
 }
 
+func TestExpression_IsValidInteger(t *testing.T) {
+	tests := []struct {
+		expr       string
+		parameters RandomParameters
+		want       bool
+	}{
+		{
+			"1 * a - 1", RandomParameters{NewVar('a'): mustParse(t, "2")}, true,
+		},
+		{
+			"1 / a - 1", RandomParameters{NewVar('a'): mustParse(t, "2")}, false,
+		},
+		{
+			"2.5", nil, false,
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		got, _ := expr.IsValidInteger(tt.parameters)
+		if got != tt.want {
+			t.Errorf("Expression.IsValidInteger() got = %v, want %v", got, tt.want)
+		}
+	}
+}
+
 func TestExample(t *testing.T) {
 	expr, _ := Parse("1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
 	randExpr, _ := Parse("randInt(0;3)")

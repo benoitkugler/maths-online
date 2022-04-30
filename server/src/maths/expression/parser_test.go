@@ -394,6 +394,7 @@ var expressions = [...]struct {
 	},
 	// round
 	{"round(x,y)", nil, true},
+	{"round x", nil, true},
 	{"round(x)", nil, true},
 	{"round(x;2.2)", nil, true},
 	{"round(x;)", nil, true},

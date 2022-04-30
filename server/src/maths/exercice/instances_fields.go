@@ -2,6 +2,7 @@ package exercice
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -36,6 +37,11 @@ type fieldInstance interface {
 	// validateAnswerSyntax is assumed to have already been called on `answer`
 	// so that is has a valid format.
 	evaluateAnswer(answer client.Answer) (isCorrect bool)
+
+	// correctAnswer returns the expected answer for this field
+	// it may not always be unique, in such case the returned value
+	// is one of the possible solutions
+	correctAnswer() client.Answer
 }
 
 var (
@@ -79,6 +85,10 @@ func (f NumberFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 
 func (f NumberFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	return expression.AreFloatEqual(f.Answer, answer.(client.NumberAnswer).Value)
+}
+
+func (f NumberFieldInstance) correctAnswer() client.Answer {
+	return client.NumberAnswer{f.Answer}
 }
 
 // ExpressionFieldInstance is an answer field where a single mathematical expression
@@ -134,34 +144,9 @@ func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect
 	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
 }
 
-// type expressionOrText struct {
-// 	Expression *expression.Expression
-// 	Text       string
-// 	IsMath     bool
-// }
-
-// func (e expressionOrText) instantiate() (out client.TextOrMath) {
-// 	if e.Expression != nil {
-// 		out.Content = e.Expression.AsLaTeX(nil)
-// 		out.IsMath = true
-// 	} else {
-// 		out.Content = e.Text
-// 		out.IsMath = e.IsMath
-// 	}
-// 	return out
-// }
-
-// type listFieldProposal struct {
-// 	Content []expressionOrText
-// }
-
-// func (lf listFieldProposal) toClient() client.ListFieldProposal {
-// 	out := client.ListFieldProposal{Content: make([]client.ListFieldProposalBlock, len(lf.Content))}
-// 	for i, f := range lf.Content {
-// 		out.Content[i] = f.toClient()
-// 	}
-// 	return out
-// }
+func (f ExpressionFieldInstance) correctAnswer() client.Answer {
+	return client.ExpressionAnswer{f.Answer.String()}
+}
 
 // RadioFieldInstance is an answer field where one choice
 // is to be made against a fixed list
@@ -197,6 +182,10 @@ func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool
 	return f.Answer == answer.(client.RadioAnswer).Index
 }
 
+func (f RadioFieldInstance) correctAnswer() client.Answer {
+	return client.RadioAnswer{f.Answer}
+}
+
 type DropDownFieldInstance RadioFieldInstance
 
 func (rf DropDownFieldInstance) fieldID() int { return rf.ID }
@@ -216,6 +205,10 @@ func (f DropDownFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect b
 	return RadioFieldInstance(f).evaluateAnswer(answer)
 }
 
+func (f DropDownFieldInstance) correctAnswer() client.Answer {
+	return RadioFieldInstance(f).correctAnswer()
+}
+
 func deterministicRand(i, j int) *rand.Rand {
 	return rand.New(rand.NewSource(int64(i*1000 + j)))
 }
@@ -232,11 +225,11 @@ type OrderedListFieldInstance struct {
 func (olf OrderedListFieldInstance) fieldID() int { return olf.ID }
 
 // proposals groups Answer and AdditionalProposals and shuffle the list
-// according to
+// in a random way, which only depends on the field content though
 func (olf OrderedListFieldInstance) proposals() (out []string) {
 	out = append(append(out, olf.Answer...), olf.AdditionalProposals...)
 	// shuffle in a deterministic way
-	rd := deterministicRand(len(olf.Answer), len(olf.AdditionalProposals))
+	rd := olf.shuffler()
 	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
 	return out
 }
@@ -300,6 +293,20 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 	return true
 }
 
+func (olf OrderedListFieldInstance) shuffler() *rand.Rand {
+	return deterministicRand(len(olf.Answer), len(olf.AdditionalProposals))
+}
+
+func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
+	rd := olf.shuffler()
+	indices := make([]int, len(olf.Answer))
+	for i := range olf.Answer {
+		indices[i] = i
+	}
+	rd.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
+	return client.OrderedListAnswer{Indices: indices}
+}
+
 type FigurePointFieldInstance struct {
 	Figure repere.Figure
 	Answer repere.IntCoord
@@ -325,6 +332,10 @@ func (f FigurePointFieldInstance) validateAnswerSyntax(answer client.Answer) err
 
 func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	return f.Answer == answer.(client.PointAnswer).Point
+}
+
+func (f FigurePointFieldInstance) correctAnswer() client.Answer {
+	return client.PointAnswer{f.Answer}
 }
 
 type FigureVectorFieldInstance struct {
@@ -366,11 +377,20 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 	return f.Answer == vector
 }
 
+func (f FigureVectorFieldInstance) correctAnswer() client.Answer {
+	to := repere.IntCoord{
+		f.AnswerOrigin.X + f.Answer.X,
+		f.AnswerOrigin.Y + f.Answer.Y,
+	}
+	return client.DoublePointAnswer{From: f.AnswerOrigin, To: to}
+}
+
 type FigureAffineLineFieldInstance struct {
-	Label  string        // of the expected affine function
-	Figure repere.Figure // usually empty, but set width and height
-	ID     int
-	Answer [2]float64 // a, b
+	Label   string        // of the expected affine function
+	Figure  repere.Figure // usually empty, but set width and height
+	ID      int
+	AnswerA float64
+	AnswerB int
 }
 
 func (f FigureAffineLineFieldInstance) fieldID() int { return f.ID }
@@ -400,8 +420,24 @@ func (f FigureAffineLineFieldInstance) validateAnswerSyntax(answer client.Answer
 func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointAnswer)
 	a := float64(ans.To.Y-ans.From.Y) / float64(ans.To.X-ans.From.X)
-	b := float64(ans.From.Y) - a*float64(ans.From.X)
-	return f.Answer == [2]float64{a, b}
+	b := int(float64(ans.From.Y) - a*float64(ans.From.X))
+	return f.AnswerA == a && f.AnswerB == b
+}
+
+func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
+	origin := f.Figure.Bounds.Origin.Round()
+	// try to get an integer point
+	x := -origin.X
+	for ; x < f.Figure.Bounds.Width-origin.X; x++ {
+		y := f.AnswerA * float64(x)
+		if math.Trunc(y) == y {
+			break
+		}
+	}
+	return client.DoublePointAnswer{
+		From: repere.IntCoord{X: 0, Y: f.AnswerB},
+		To:   repere.IntCoord{X: x, Y: int(f.AnswerA*float64(x)) + f.AnswerB},
+	}
 }
 
 type FigureVectorPairFieldInstance struct {
@@ -444,6 +480,34 @@ func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isC
 		return vector1.X*vector2.Y-vector1.Y*vector2.X == 0
 	case VectorOrthogonal: // check if v1.v2 = 0
 		return vector1.X*vector2.X+vector1.Y*vector2.Y == 0
+	default:
+		panic("exhaustive switch")
+	}
+}
+
+func (f FigureVectorPairFieldInstance) correctAnswer() client.Answer {
+	switch f.Criterion {
+	case VectorEquals:
+		return client.DoublePointPairAnswer{
+			From1: repere.IntCoord{0, 0},
+			To1:   repere.IntCoord{3, 3},
+			From2: repere.IntCoord{0, 1},
+			To2:   repere.IntCoord{3, 4},
+		}
+	case VectorColinear:
+		return client.DoublePointPairAnswer{
+			From1: repere.IntCoord{0, 0},
+			To1:   repere.IntCoord{3, 3},
+			From2: repere.IntCoord{3, 4},
+			To2:   repere.IntCoord{-1, 0},
+		}
+	case VectorOrthogonal:
+		return client.DoublePointPairAnswer{
+			From1: repere.IntCoord{0, 0},
+			To1:   repere.IntCoord{4, 0},
+			From2: repere.IntCoord{0, -2},
+			To2:   repere.IntCoord{0, 2},
+		}
 	default:
 		panic("exhaustive switch")
 	}
@@ -506,6 +570,18 @@ func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 	return true
 }
 
+func (f VariationTableFieldInstance) correctAnswer() client.Answer {
+	out := client.VariationTableAnswer{
+		Xs:     f.Answer.Xs,
+		Fxs:    f.Answer.Fxs,
+		Arrows: make([]bool, len(f.Answer.Xs)-1),
+	}
+	for i := range out.Arrows {
+		out.Arrows[i] = f.Answer.inferAlignment(i)
+	}
+	return out
+}
+
 type FunctionPointsFieldInstance struct {
 	Function expression.FunctionExpr
 	Label    string
@@ -553,6 +629,11 @@ func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 		}
 	}
 	return true
+}
+
+func (f FunctionPointsFieldInstance) correctAnswer() client.Answer {
+	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	return client.FunctionPointsAnswer{Fxs: ys}
 }
 
 type TreeFieldInstance struct {
@@ -634,6 +715,10 @@ func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool)
 	return isNodeCorrect(f.Answer.Root, ans.Root)
 }
 
+func (f TreeFieldInstance) correctAnswer() client.Answer {
+	return f.Answer
+}
+
 type TableFieldInstance struct {
 	HorizontalHeaders []client.TextOrMath
 	VerticalHeaders   []client.TextOrMath
@@ -675,4 +760,8 @@ func (f TableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool
 		}
 	}
 	return true
+}
+
+func (f TableFieldInstance) correctAnswer() client.Answer {
+	return f.Answer
 }

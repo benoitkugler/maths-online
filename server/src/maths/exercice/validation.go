@@ -1,6 +1,9 @@
 package exercice
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
@@ -118,4 +121,27 @@ func (qu Question) Validate() error {
 	}
 
 	return nil
+}
+
+// ValidateAllQuestions fetches all questions from the DB
+// and calls Validate, returning all the errors encountered.
+// It should be used as a maintenance helper when migrating the DB.
+func ValidateAllQuestions(db DB) error {
+	qu, err := SelectAllQuestions(db)
+	if err != nil {
+		return err
+	}
+
+	var errs []string
+	for id, q := range qu {
+		err := q.Validate()
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("ID: %d -> %s", id, err))
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("inconsistent table questions: %s", strings.Join(errs, "\n"))
 }

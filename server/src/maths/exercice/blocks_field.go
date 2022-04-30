@@ -38,7 +38,8 @@ func (n NumberFieldBlock) instantiate(params expression.Variables, ID int) insta
 
 func (n NumberFieldBlock) validate(params expression.RandomParameters) error {
 	// note that we dont allow non decimal solutions, since it is confusing for the student.
-	// they should rahter be handled with an expression field
+	// they should rahter be handled with an expression field, or rounded using the
+	// builtin round() function
 	return validateNumberExpression(n.Expression, params, true)
 }
 
@@ -54,16 +55,18 @@ func (f FormulaFieldBlock) instantiate(params expression.Variables, ID int) inst
 		label = StringOrExpression{Expression: mustParse(f.Label.Content)}
 		label.Expression.Substitute(params)
 	}
+	answer := mustParse(f.Expression)
+	answer.Substitute(params)
 	return ExpressionFieldInstance{
 		Label:           label,
-		Answer:          mustParse(f.Expression),
+		Answer:          answer,
 		ComparisonLevel: f.ComparisonLevel,
 		ID:              ID,
 	}
 }
 
-func (n FormulaFieldBlock) validate(params expression.RandomParameters) error {
-	_, err := expression.Parse(n.Expression)
+func (f FormulaFieldBlock) validate(params expression.RandomParameters) error {
+	_, err := expression.Parse(f.Expression)
 	return err
 }
 
@@ -315,13 +318,11 @@ type FigureAffineLineFieldBlock struct {
 
 func (fa FigureAffineLineFieldBlock) instantiate(params expression.Variables, ID int) instance {
 	return FigureAffineLineFieldInstance{
-		ID:     ID,
-		Label:  fa.Label,
-		Figure: fa.Figure.instantiateF(params).Figure,
-		Answer: [2]float64{
-			expression.MustEvaluate(fa.A, params),
-			expression.MustEvaluate(fa.B, params),
-		},
+		ID:      ID,
+		Label:   fa.Label,
+		Figure:  fa.Figure.instantiateF(params).Figure,
+		AnswerA: expression.MustEvaluate(fa.A, params),
+		AnswerB: int(expression.MustEvaluate(fa.B, params)),
 	}
 }
 
@@ -334,6 +335,11 @@ func (fa FigureAffineLineFieldBlock) validate(params expression.RandomParameters
 	}
 	if err := validateNumberExpression(fa.B, params, false); err != nil {
 		return err
+	}
+
+	bExpr := mustParse(fa.B)
+	if ok, freq := bExpr.IsValidInteger(params); !ok {
+		return fmt.Errorf("L'expression de B n'est pas un nombre entier (%d %% des tests ont échoué).", 100-freq)
 	}
 	return nil
 }

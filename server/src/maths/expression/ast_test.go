@@ -1,7 +1,6 @@
 package expression
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -28,7 +27,7 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
 	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
 
-	shouldPanic(t, func() { Expression{}.needParenthesis(0, false) })
+	shouldPanic(t, func() { (&Expression{}).needParenthesis(0, false) })
 	shouldPanic(t, func() {
 		e := &Expression{atom: invalidOperator}
 		e.simplifyNumbers()
@@ -64,12 +63,15 @@ func TestExpression_String(t *testing.T) {
 		expr string
 		want string
 	}{
-		{"2 + x", "(2) + (x)"},
-		{"2 / x", "(2) / (x)"},
-		{"2 * x", "(2) * (x)"},
-		{"2 - x", "(2) - (x)"},
-		{"2 ^ x", "(2) ^ (x)"},
-		{"e * \u03C0", "(e) * (\u03C0)"},
+		{"2 + x", "2 + x"},
+		{"2 / x", "2 / x"},
+		{"2 * x", "2x"},
+		{"a * x", "ax"},
+		{"2 * 3", "2 * 3"},
+		{"2 - x", "2 - x"},
+		{"2 ^ x", "2 ^ x"},
+		{"2 ^ (x+1)", "2 ^ (x + 1)"},
+		{"e * \u03C0", "e\u03C0"},
 		{"\uE001", "\uE001"},
 
 		{"exp(2)", "exp(2)"},
@@ -77,7 +79,9 @@ func TestExpression_String(t *testing.T) {
 		{"cos(2)", "cos(2)"},
 		{"abs(2)", "abs(2)"},
 		{"sqrt(2)", "sqrt(2)"},
-		{"2 + x + log(10)", "((2) + (x)) + (log(10))"},
+		{"2 + x + log(10)", "2 + x + log(10)"},
+		{"- x + 3", "-x + 3"},
+		{"1x", "x"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -87,8 +91,11 @@ func TestExpression_String(t *testing.T) {
 		}
 
 		expr2 := mustParse(t, got)
-		if !reflect.DeepEqual(expr, expr2) {
+		if expr.String() != expr2.String() {
 			t.Fatalf("inconsitent String() for %s", tt.expr)
+		}
+		if !AreExpressionsEquivalent(expr, expr2, SimpleSubstitutions) {
+			t.Fatalf("inconsitent String() for %s:  %s", tt.expr, got)
 		}
 	}
 }
@@ -102,8 +109,11 @@ func TestExpression_StringRoundtrip(t *testing.T) {
 		expr := mustParse(t, tt.expr)
 		got := expr.String()
 		expr2 := mustParse(t, got)
-		if !reflect.DeepEqual(expr, expr2) {
+		if expr.String() != expr2.String() {
 			t.Fatalf("inconsitent String() for %s", tt.expr)
+		}
+		if !AreExpressionsEquivalent(expr, expr2, SimpleSubstitutions) {
+			t.Fatalf("inconsitent String() for %s:  %s", tt.expr, got)
 		}
 	}
 }
