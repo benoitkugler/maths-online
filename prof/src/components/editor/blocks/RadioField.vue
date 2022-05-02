@@ -25,7 +25,7 @@
           class="pr-0"
         >
           <v-list-item-title style="width: 120px">
-            Choix {{ index }} :
+            Choix {{ index + 1 }} :
           </v-list-item-title>
           <interpolated-text v-model="props.modelValue.Proposals![index]">
           </interpolated-text>
@@ -87,8 +87,8 @@ const emit = defineEmits<{
 
 const hint = computed(
   () =>
-    "Expression s'évaluant en un indice dans la liste des choix, de 0 à " +
-    ((props.modelValue.Proposals?.length || 0) - 1) +
+    "Expression s'évaluant en un indice dans la liste des choix, de 1 à " +
+    (props.modelValue.Proposals?.length || 0) +
     "."
 );
 
