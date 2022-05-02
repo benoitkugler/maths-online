@@ -64,7 +64,7 @@ function onTextChange(s: string) {
   ) {
     emit("update:model-value", {
       Kind: TextKind.Expression,
-      Content: s.substring(2, s.length - 1)
+      Content: s.substring(1, s.length - 1)
     });
   } else {
     emit("update:model-value", {
