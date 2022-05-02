@@ -41,10 +41,13 @@ function onVariableChange(s: string) {
     return;
   }
 
-  const variable = { Name: chunks[0].codePointAt(0)!, Indice: "" };
-  if (chunks.length >= 2) {
-    variable.Indice = chunks[1].trim();
+  let indice = chunks.length >= 2 ? chunks[1].trim() : "";
+  // for 'Vi', insert _ automatically
+  if (chunks[0].length > 1) {
+    indice = chunks[0].substr(1) + indice;
   }
+
+  const variable = { Name: chunks[0].codePointAt(0)!, Indice: indice };
 
   emit("update:model-value", variable);
 }
