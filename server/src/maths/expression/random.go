@@ -312,8 +312,9 @@ outer:
 }
 
 // IsValidIndex instantiates the expression using `parameters`, then evaluate the resulting
-// expression and checks if it is usable as input in a slice of length `length`, that is if
-// the result is an integer in [0, length[
+// expression and checks if it is usable as input in a slice of length `length`.
+// Note that we adopt the mathematical convention, with indices starting at 1. Thus the result is
+// valid if it is an integer in [1, length]
 // It also returns the frequency of successul tries, in % (between 0 and 100)
 // `parameters` must be a valid set of parameters
 func (expr *Expression) IsValidIndex(parameters RandomParameters, length int) (bool, int) {
@@ -322,7 +323,7 @@ func (expr *Expression) IsValidIndex(parameters RandomParameters, length int) (b
 	for i := 0; i < nbTries; i++ {
 		ps, _ := parameters.Instantiate()
 		value, _ := expr.Evaluate(ps)
-		if index, ok := isInt(value); ok && 0 <= index && index < length {
+		if index, ok := isInt(value); ok && 1 <= index && index <= length {
 			nbSuccess++
 		}
 	}

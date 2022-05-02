@@ -245,19 +245,19 @@ func TestExpression_IsValidIndex(t *testing.T) {
 		want       bool
 	}{
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "2")}, 4, true,
+			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "2")}, 4, true,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, true,
+			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, true,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, false,
+			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, false,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, false,
+			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;3)")}, 4, false,
 		},
 		{
-			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", RandomParameters{
+			"+1 + 1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", RandomParameters{
 				NewVar('a'): mustParse(t, "randInt(3;12)"), // BC
 				NewVar('b'): mustParse(t, "randInt(3;12)"), // AC
 				NewVar('c'): mustParse(t, "randInt(3;12)"), // AB
@@ -299,7 +299,7 @@ func TestExpression_IsValidInteger(t *testing.T) {
 }
 
 func TestExample(t *testing.T) {
-	expr, _ := Parse("1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
+	expr, _ := Parse("1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)")
 	randExpr, _ := Parse("randInt(0;3)")
 	params := RandomParameters{NewVar('a'): randExpr}
 

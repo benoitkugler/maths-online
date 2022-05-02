@@ -145,7 +145,7 @@ func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect
 }
 
 func (f ExpressionFieldInstance) correctAnswer() client.Answer {
-	return client.ExpressionAnswer{f.Answer.String()}
+	return client.ExpressionAnswer{Expression: f.Answer.String()}
 }
 
 // RadioFieldInstance is an answer field where one choice
@@ -153,7 +153,7 @@ func (f ExpressionFieldInstance) correctAnswer() client.Answer {
 type RadioFieldInstance struct {
 	Proposals []client.ListFieldProposal
 	ID        int
-	Answer    int // index into Proposals
+	Answer    int // index into Proposals, starting at 1
 }
 
 func (rf RadioFieldInstance) fieldID() int {
@@ -179,11 +179,11 @@ func (f RadioFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 }
 
 func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	return f.Answer == answer.(client.RadioAnswer).Index
+	return f.Answer-1 == answer.(client.RadioAnswer).Index
 }
 
 func (f RadioFieldInstance) correctAnswer() client.Answer {
-	return client.RadioAnswer{f.Answer}
+	return client.RadioAnswer{Index: f.Answer - 1}
 }
 
 type DropDownFieldInstance RadioFieldInstance
@@ -299,12 +299,25 @@ func (olf OrderedListFieldInstance) shuffler() *rand.Rand {
 
 func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
 	rd := olf.shuffler()
-	indices := make([]int, len(olf.Answer))
-	for i := range olf.Answer {
+	indices := make([]int, len(olf.Answer)+len(olf.AdditionalProposals))
+	for i := range indices {
 		indices[i] = i
 	}
 	rd.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
-	return client.OrderedListAnswer{Indices: indices}
+	// build the reverse map (quadratic complexity)
+	answer := make([]int, len(olf.Answer))
+	for i := range answer {
+		// find the new index of i into indices
+		rep := -1
+		for r, val := range indices {
+			if val == i {
+				rep = r
+				break
+			}
+		}
+		answer[i] = rep
+	}
+	return client.OrderedListAnswer{Indices: answer}
 }
 
 type FigurePointFieldInstance struct {
