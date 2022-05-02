@@ -553,6 +553,9 @@ class _QuestionWState extends State<QuestionW> {
   void _initController() {
     controller = QuestionController(widget.question.enonce, widget.buildMode,
         widget.blockOnSubmit, _onEditDone);
+    if (widget.answer != null) {
+      controller.setAnswers(widget.answer!);
+    }
   }
 
   void _buildFields() {

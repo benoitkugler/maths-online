@@ -41,9 +41,7 @@ class LoopbackApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       localizationsDelegates: localizations,
       supportedLocales: locales,
-      home: Scaffold(
-        body: _QuestionLoopback(sessionID, buildMode),
-      ),
+      home: _QuestionLoopback(sessionID, buildMode),
     );
   }
 }
@@ -64,6 +62,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   late Timer _keepAliveTimmer;
 
   LoopbackState? question;
+  QuestionAnswersIn? serverAnswer;
 
   @override
   void initState() {
@@ -105,21 +104,6 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     });
   }
 
-  void _onServerCheckSyntax(QuestionSyntaxCheckOut rep) {
-    if (rep.isValid) {
-      return;
-    }
-    final reason = rep.reason;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Colors.red,
-      content: Text.rich(TextSpan(children: [
-        const TextSpan(text: "Syntaxe invalide: "),
-        TextSpan(
-            text: reason, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ])),
-    ));
-  }
-
   void _onServerValidAnswer(QuestionAnswersOut rep) {
     final crible = rep.data;
     final errors = crible.values.where((value) => !value).toList();
@@ -134,7 +118,9 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   }
 
   void _onServerShowCorrectAnswer(QuestionAnswersIn answer) {
-    print(answer);
+    setState(() {
+      serverAnswer = answer;
+    });
   }
 
   void listen(dynamic event) {
@@ -163,31 +149,47 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     }));
   }
 
+  void _showCorrectAnswer() {
+    channel.sink.add(jsonEncode({
+      "Kind": loopbackClientDataKindToJson(
+          LoopbackClientDataKind.showCorrectAnswerIn),
+      "Data": null,
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return question == null || question!.isPaused
-        ? Center(
-            child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              CircularProgressIndicator(),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text("En attente de prévisualisation..."),
+    return Scaffold(
+      appBar: AppBar(actions: [
+        TextButton(
+            onPressed: _showCorrectAnswer,
+            child: const Text("Afficher la réponse."))
+      ]),
+      body: question == null || question!.isPaused
+          ? Center(
+              child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                CircularProgressIndicator(),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text("En attente de prévisualisation..."),
+                ),
+              ],
+            ))
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: QuestionW(
+                widget.buildMode,
+                question!.question,
+                Color.fromARGB(255, 150 + Random().nextInt(100),
+                    150 + Random().nextInt(100), Random().nextInt(256)),
+                _validAnswer,
+                timeout: null,
+                blockOnSubmit: false,
+                answer: serverAnswer,
               ),
-            ],
-          ))
-        : Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: QuestionW(
-              widget.buildMode,
-              question!.question,
-              Color.fromARGB(255, 150 + Random().nextInt(100),
-                  150 + Random().nextInt(100), Random().nextInt(256)),
-              _validAnswer,
-              timeout: null,
-              blockOnSubmit: false,
             ),
-          );
+    );
   }
 }
