@@ -28,6 +28,15 @@ class NumberController extends FieldController {
   Answer getData() {
     return NumberAnswer(getNumber());
   }
+
+  void setNumber(double n) {
+    textController.text = n.toString();
+  }
+
+  @override
+  void setData(Answer answer) {
+    setNumber((answer as NumberAnswer).value);
+  }
 }
 
 class NumberField extends StatelessWidget {

@@ -7,7 +7,7 @@ const (
 )
 
 const (
-	Ping          loopbackClientDataKind = iota // nil
-	ValidAnswerIn                               // exercice/client.QuestionAnswersIn
-	ShowCorrectAnswerIn
+	Ping                loopbackClientDataKind = iota // nil
+	ValidAnswerIn                                     // exercice/client.QuestionAnswersIn
+	ShowCorrectAnswerIn                               // nil
 )

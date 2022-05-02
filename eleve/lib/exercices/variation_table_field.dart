@@ -70,6 +70,20 @@ class VariationTableController extends FieldController {
       arrows.map((e) => e!).toList(),
     );
   }
+
+  @override
+  void setData(Answer answer) {
+    final ans = answer as VariationTableAnswer;
+    for (var i = 0; i < xs.length; i++) {
+      xs[i].setNumber(ans.xs[i]);
+    }
+    for (var i = 0; i < fxs.length; i++) {
+      fxs[i].setNumber(ans.fxs[i]);
+    }
+    for (var i = 0; i < arrows.length; i++) {
+      arrows[i] = ans.arrows[i];
+    }
+  }
 }
 
 class _NumberCell extends StatelessWidget {

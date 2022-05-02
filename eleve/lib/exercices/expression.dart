@@ -49,6 +49,11 @@ class ExpressionController extends FieldController {
   Answer getData() {
     return ExpressionAnswer(getExpression());
   }
+
+  @override
+  void setData(Answer answer) {
+    textController.text = (answer as ExpressionAnswer).expression;
+  }
 }
 
 class ExpressionField extends StatefulWidget {

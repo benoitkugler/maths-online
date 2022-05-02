@@ -22,6 +22,11 @@ class FigurePointController extends FieldController {
   Answer getData() {
     return PointAnswer(point!);
   }
+
+  @override
+  void setData(Answer answer) {
+    point = (answer as PointAnswer).point;
+  }
 }
 
 class FigurePointField extends StatelessWidget {

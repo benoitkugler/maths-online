@@ -129,6 +129,17 @@ class TableController extends FieldController {
             .toList())
         .toList());
   }
+
+  @override
+  void setData(Answer answer) {
+    final rows = (answer as TableAnswer).rows;
+    for (var i = 0; i < _controllers.length; i++) {
+      final ctRow = _controllers[i];
+      for (var j = 0; j < ctRow.length; j++) {
+        ctRow[j].setNumber(rows[i][j]);
+      }
+    }
+  }
 }
 
 class TableField extends StatefulWidget {

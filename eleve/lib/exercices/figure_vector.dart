@@ -53,6 +53,14 @@ class FigureVectorController extends FieldController {
   Answer getData() {
     return DoublePointAnswer(from, to);
   }
+
+  @override
+  void setData(Answer answer) {
+    final ans = answer as DoublePointAnswer;
+    from = ans.from;
+    to = ans.to;
+    _hasData = true;
+  }
 }
 
 enum VectorPointID { from, to }

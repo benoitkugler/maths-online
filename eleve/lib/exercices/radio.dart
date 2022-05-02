@@ -22,6 +22,11 @@ class RadioController extends FieldController {
     this.index = index;
     onChange();
   }
+
+  @override
+  void setData(Answer answer) {
+    setIndex((answer as RadioAnswer).index);
+  }
 }
 
 class RadioField extends StatefulWidget {

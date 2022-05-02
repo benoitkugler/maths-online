@@ -2,22 +2,35 @@ import 'package:eleve/exercices/dropdown.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/types.gen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+TreeShape shape(TreeNodeAnswer tree) {
+  if (tree.children.isEmpty) {
+    return [];
+  }
+  final levelWidth = tree.children.length;
+  return [levelWidth] + shape(tree.children[0]);
+}
 
 class TreeController extends FieldController {
   final TreeFieldBlock data;
 
-  int? selectedShape;
+  TreeShape? selectedShape;
   // setup when the shape is chosen
   _NodeController? controllers;
 
   TreeController(this.data, void Function() onChange) : super(onChange);
 
-  void setShape(int? shapeIndex) {
-    selectedShape = shapeIndex;
-    if (shapeIndex != null) {
-      controllers = _NodeController.editableFromShape(onChange,
-          data.shapeProposals[shapeIndex], true, data.eventsProposals, enabled);
+  void setShapeIndex(int? index) {
+    setShape(index == null ? null : data.shapeProposals[index]);
+  }
+
+  void setShape(TreeShape? shape) {
+    selectedShape = shape;
+    if (shape != null) {
+      controllers = _NodeController.editableFromShape(
+          onChange, shape, true, data.eventsProposals, enabled);
     }
   }
 
@@ -32,6 +45,13 @@ class TreeController extends FieldController {
   @override
   Answer getData() {
     return TreeAnswer(controllers!.getData());
+  }
+
+  @override
+  void setData(Answer answer) {
+    final tree = (answer as TreeAnswer).root;
+    setShape(shape(tree));
+    controllers!.setData(tree);
   }
 
   @override
@@ -116,6 +136,21 @@ class _NodeController {
     return TreeNodeAnswer(
         childrenAnswers, edgesAnswers, isRoot ? 0 : valueController!.index!);
   }
+
+  void setData(TreeNodeAnswer answer) {
+    if (!isRoot) {
+      valueController!.setIndex(answer.value);
+    }
+
+    for (var i = 0; i < edgesController!.length; i++) {
+      edgesController![i].setNumber(answer.probabilities[i]);
+    }
+
+    // recurse
+    for (var i = 0; i < children.length; i++) {
+      children[i].setData(answer.children[i]);
+    }
+  }
 }
 
 class TreeField extends StatefulWidget {
@@ -131,7 +166,7 @@ class TreeField extends StatefulWidget {
 class _TreeFieldState extends State<TreeField> {
   void _onSelectShape(int? shapeIndex) {
     setState(() {
-      widget.controller.setShape(shapeIndex);
+      widget.controller.setShapeIndex(shapeIndex);
     });
   }
 
@@ -235,7 +270,7 @@ class _OneTree extends StatelessWidget {
 class _ShapeSelection extends StatelessWidget {
   final Color color;
   final List<TreeShape> proposals;
-  final int? selected;
+  final TreeShape? selected;
   final void Function(int) onSelect;
 
   const _ShapeSelection(
@@ -249,12 +284,17 @@ class _ShapeSelection extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: List<Widget>.generate(
-            proposals.length,
-            (index) => InkWell(
-                  onTap: () => onSelect(index),
-                  child: _OneTree(index == selected, color, null,
-                      _NodeController.staticFromShape(proposals[index], true)),
-                )),
+          proposals.length,
+          (index) {
+            final shapeI = proposals[index];
+            final isSelected = listEquals(selected, shapeI);
+            return InkWell(
+              onTap: () => onSelect(index),
+              child: _OneTree(isSelected, color, null,
+                  _NodeController.staticFromShape(shapeI, true)),
+            );
+          },
+        ),
       ),
     );
   }

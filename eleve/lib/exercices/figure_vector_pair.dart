@@ -62,6 +62,16 @@ class FigureVectorPairController extends FieldController {
   Answer getData() {
     return DoublePointPairAnswer(from1, to1, from2, to2);
   }
+
+  @override
+  void setData(Answer answer) {
+    final ans = (answer as DoublePointPairAnswer);
+    from1 = ans.from1;
+    to1 = ans.to1;
+    from2 = ans.from2;
+    to2 = ans.to2;
+    _hasData = true;
+  }
 }
 
 class FigureVectorPairField extends StatefulWidget {

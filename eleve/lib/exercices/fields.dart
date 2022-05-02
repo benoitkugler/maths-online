@@ -25,6 +25,9 @@ abstract class FieldController {
 
   /// returns the current answer
   Answer getData();
+
+  /// [setData] set the controller data using the given answer
+  void setData(Answer answer);
 }
 
 Widget textMath(String content, double fontSize, {Key? key}) {

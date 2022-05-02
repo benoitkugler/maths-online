@@ -35,7 +35,7 @@ JSON loopbackStateToJson(LoopbackState item) {
 }
 
 // github.com/benoitkugler/maths-online/prof/editor.loopbackClientDataKind
-enum LoopbackClientDataKind { ping, validAnswerIn }
+enum LoopbackClientDataKind { ping, validAnswerIn, showCorrectAnswerIn }
 
 extension _LoopbackClientDataKindExt on LoopbackClientDataKind {
   static LoopbackClientDataKind fromValue(int i) {
@@ -54,7 +54,7 @@ dynamic loopbackClientDataKindToJson(LoopbackClientDataKind item) =>
     item.toValue();
 
 // github.com/benoitkugler/maths-online/prof/editor.loopbackServerDataKind
-enum LoopbackServerDataKind { state, validAnswerOut }
+enum LoopbackServerDataKind { state, validAnswerOut, showCorrectAnswerOut }
 
 extension _LoopbackServerDataKindExt on LoopbackServerDataKind {
   static LoopbackServerDataKind fromValue(int i) {

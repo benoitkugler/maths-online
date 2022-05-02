@@ -23,23 +23,13 @@ class FunctionPointsController extends FieldController {
     return FunctionPointsAnswer(fxs.map((e) => e!).toList());
   }
 
-  // // choose the derivative by averaging the left and right slope
-  // List<double> get derivatives => List<double>.generate(fxs.length, (index) {
-  //       final y = fxs[index] ?? 0;
-  //       final leftSlope = index == 0
-  //           ? 0
-  //           : (y - (fxs[index - 1] ?? 0)) /
-  //               (data.xs[index] - data.xs[index - 1]);
-  //       final rightSlope = index == fxs.length - 1
-  //           ? 0
-  //           : ((fxs[index + 1] ?? 0) - y) /
-  //               (data.xs[index + 1] - data.xs[index]);
-  //       print("$leftSlope $rightSlope");
-  //       return (leftSlope + rightSlope) / 2;
-  //     });
-
-  // List<double> get weightedDerivatives => List<double>.generate(
-  //     fxs.length, (index) => (derivatives[index] + data.dfxs[index]) / 2);
+  @override
+  void setData(Answer answer) {
+    final ans = (answer as FunctionPointsAnswer).fxs;
+    for (var i = 0; i < fxs.length; i++) {
+      fxs[i] = ans[i];
+    }
+  }
 }
 
 class FunctionPoints extends StatefulWidget {

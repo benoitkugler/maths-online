@@ -642,6 +642,8 @@ type TreeFieldInstance struct {
 	ID              int
 }
 
+// compute the shape of the given tree
+// it assumes the tree is regular
 func shape(tree client.TreeNodeAnswer) (out client.TreeShape) {
 	if len(tree.Children) == 0 {
 		return nil

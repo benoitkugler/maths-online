@@ -133,6 +133,10 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     ));
   }
 
+  void _onServerShowCorrectAnswer(QuestionAnswersIn answer) {
+    print(answer);
+  }
+
   void listen(dynamic event) {
     try {
       final data = jsonDecode(event as String) as Map<String, dynamic>;
@@ -142,6 +146,9 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
           return _onServerState(loopbackStateFromJson(data["Data"]));
         case LoopbackServerDataKind.validAnswerOut:
           return _onServerValidAnswer(questionAnswersOutFromJson(data["Data"]));
+        case LoopbackServerDataKind.showCorrectAnswerOut:
+          return _onServerShowCorrectAnswer(
+              questionAnswersInFromJson(data["Data"]));
       }
     } catch (e) {
       showError(e);

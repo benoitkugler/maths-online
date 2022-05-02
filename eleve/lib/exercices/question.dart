@@ -57,6 +57,12 @@ class QuestionController {
     );
   }
 
+  void setAnswers(QuestionAnswersIn answers) {
+    _fields.forEach((key, value) {
+      _fields[key]!.setData(answers.data[key]!);
+    });
+  }
+
   /// Walks throught the question content and creates the field controllers,
   /// later used when building widgets.
   /// [onEditDone] is called when one field is updated by the user
@@ -508,16 +514,17 @@ class QuestionW extends StatefulWidget {
   /// after one validation
   final bool blockOnSubmit;
 
-  const QuestionW(
-    this.buildMode,
-    this.question,
-    this.color,
-    this.onValid, {
-    Key? key,
-    this.timeout = const Duration(seconds: 60),
-    this.footerQuote = "",
-    this.blockOnSubmit = true,
-  }) : super(key: key);
+  /// If [answer] is provided, the question controllers and fields
+  /// are filled using the answers given.
+  final QuestionAnswersIn? answer;
+
+  const QuestionW(this.buildMode, this.question, this.color, this.onValid,
+      {Key? key,
+      this.timeout = const Duration(seconds: 60),
+      this.footerQuote = "",
+      this.blockOnSubmit = true,
+      this.answer})
+      : super(key: key);
 
   @override
   State<QuestionW> createState() => _QuestionWState();

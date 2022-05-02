@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class IndexedText {
   // as send by the server, it is also the
-  // indice into the reference proposal list
+  // indice into the _references proposal list
   final int index;
   final String text;
   IndexedText(this.index, this.text);
@@ -83,6 +83,16 @@ class OrderedListController extends FieldController {
   @override
   Answer getData() {
     return OrderedListAnswer(answers.map((item) => item.index).toList());
+  }
+
+  @override
+  void setData(Answer answer) {
+    final ans = (answer as OrderedListAnswer).indices;
+    answers = ans.map((e) => IndexedText(e, _references[e].text)).toList();
+    // set the proposals to the remaining items
+    final used = ans.toSet();
+    proposals =
+        _references.where((element) => !used.contains(element.index)).toList();
   }
 }
 
