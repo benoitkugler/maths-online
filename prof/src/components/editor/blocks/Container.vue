@@ -26,14 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { BlockKindLabels } from "@/controller/editor";
+import { BlockKindLabels, onDragListItemStart } from "@/controller/editor";
 import type { BlockKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
 const emit = defineEmits<{
   (e: "delete"): void;
-  (e: "swap", origin: number, target: number): void;
-  (e: "dragStart"): void;
 }>();
 
 interface ContainerProps {
@@ -57,11 +55,7 @@ const colorClass = computed(() => {
 });
 
 function onDragStart(payload: DragEvent) {
-  payload.dataTransfer?.setData(
-    "text/json",
-    JSON.stringify({ index: props.index })
-  );
-  payload.dataTransfer!.dropEffect = "move";
+  onDragListItemStart(payload, props.index);
 }
 </script>
 

@@ -69,36 +69,50 @@
     </v-row>
     <v-row no-gutters>
       <v-col>
-        <v-list v-if="props.parameters?.length">
-          <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
-            <v-row no-gutters>
-              <v-col cols="3">
-                <variable-field
-                  v-model="param.variable"
-                  @update:model-value="emit('update', index, param)"
-                  @blur="emit('done')"
-                >
-                </variable-field>
-              </v-col>
-              <v-col cols="7">
-                <v-text-field
-                  class="ml-2 small-input"
-                  variant="underlined"
-                  density="compact"
-                  hide-details
-                  :model-value="param.expression"
-                  @update:model-value="s => onExpressionChange(s, index)"
-                  @blur="emit('done')"
-                  :color="expressionColor"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="2">
-                <v-btn icon size="small" flat @click="emit('delete', index)">
-                  <v-icon icon="mdi-delete" color="red"></v-icon>
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-list-item>
+        <v-list v-if="props.parameters?.length" @dragend="showDropZone = false">
+          <drop-zone
+            v-if="showDropZone"
+            @drop="origin => emit('swap', origin, 0)"
+          ></drop-zone>
+          <div v-for="(param, index) in props.parameters">
+            <v-list-item
+              class="pr-0"
+              @dragstart="e => onItemDragStart(e, index)"
+              draggable="true"
+            >
+              <v-row no-gutters class="my-1">
+                <v-col cols="3">
+                  <variable-field
+                    v-model="param.variable"
+                    @update:model-value="emit('update', index, param)"
+                    @blur="emit('done')"
+                  >
+                  </variable-field>
+                </v-col>
+                <v-col cols="7">
+                  <v-text-field
+                    class="ml-2 small-input"
+                    variant="underlined"
+                    density="compact"
+                    hide-details
+                    :model-value="param.expression"
+                    @update:model-value="s => onExpressionChange(s, index)"
+                    @blur="emit('done')"
+                    :color="expressionColor"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="2">
+                  <v-btn icon size="small" flat @click="emit('delete', index)">
+                    <v-icon icon="mdi-delete" color="red"></v-icon>
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-list-item>
+            <drop-zone
+              v-if="showDropZone"
+              @drop="origin => emit('swap', origin, index + 1)"
+            ></drop-zone>
+          </div>
         </v-list>
       </v-col>
     </v-row>
@@ -106,12 +120,13 @@
 </template>
 
 <script setup lang="ts">
-import { ExpressionColor } from "@/controller/editor";
+import { ExpressionColor, onDragListItemStart } from "@/controller/editor";
 import type {
   randomParameter,
   randomParameters
 } from "@/controller/exercice_gen";
 import { $ref } from "vue/macros";
+import DropZone from "./DropZone.vue";
 import VariableField from "./utils/VariableField.vue";
 
 interface Props {
@@ -126,6 +141,7 @@ const emit = defineEmits<{
   (e: "add"): void;
   (e: "update", index: number, param: randomParameter): void;
   (e: "delete", index: number): void;
+  (e: "swap", origin: number, target: number): void;
   (e: "done"): void;
 }>();
 
@@ -137,6 +153,12 @@ function onExpressionChange(s: string, index: number) {
   const param = props.parameters![index];
   param.expression = s;
   emit("update", index, param);
+}
+
+let showDropZone = $ref(false);
+function onItemDragStart(payload: DragEvent, index: number) {
+  onDragListItemStart(payload, index);
+  showDropZone = true;
 }
 
 const helpContent = [

@@ -155,6 +155,7 @@
             @add="addRandomParameter"
             @update="updateRandomParameter"
             @delete="deleteRandomParameter"
+            @swap="swapRandomParameters"
             @done="checkParameters"
           ></random-parameters>
           <intrinsics
@@ -201,7 +202,6 @@
           >
             <container
               @delete="removeBlock(index)"
-              @swap="swapBlocks"
               :index="index"
               :nb-blocks="rows.length"
               :kind="row.Props.Kind"
@@ -233,7 +233,7 @@ import type {
   randomParameter
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { newBlock, saveData, xRune } from "@/controller/editor";
+import { newBlock, saveData, swapItems, xRune } from "@/controller/editor";
 import type { Block, Question, Variable } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
@@ -369,26 +369,7 @@ function removeBlock(index: number) {
 the block at index `target` (which is between 0 and nbBlocks)
  */
 function swapBlocks(origin: number, target: number) {
-  if (target == origin || target == origin + 1) {
-    // nothing to do
-    return;
-  }
-
-  if (origin < target) {
-    const after = question.enonce!.slice(target);
-    const before = question.enonce!.slice(0, target);
-    const originRow = before.splice(origin, 1);
-    before.push(...originRow);
-    before.push(...after);
-    question.enonce = before;
-  } else {
-    const before = question.enonce!.slice(0, target);
-    const originRow = question.enonce!.splice(origin, 1);
-    const after = question.enonce!.slice(target);
-    before.push(...originRow);
-    before.push(...after);
-    question.enonce = before;
-  }
+  question.enonce = swapItems(origin, target, question.enonce!);
 }
 
 function addRandomParameter() {
@@ -408,6 +389,14 @@ function deleteRandomParameter(index: number) {
   question.parameters.Variables!.splice(index, 1);
 
   checkParameters();
+}
+
+function swapRandomParameters(origin: number, target: number) {
+  question.parameters.Variables = swapItems(
+    origin,
+    target,
+    question.parameters.Variables!
+  );
 }
 
 function addIntrinsic() {

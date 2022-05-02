@@ -635,3 +635,34 @@ export function questionDifficulty(tags: string[]): number {
   }
   return 0;
 }
+
+export function onDragListItemStart(payload: DragEvent, index: number) {
+  payload.dataTransfer?.setData("text/json", JSON.stringify({ index: index }));
+  payload.dataTransfer!.dropEffect = "move";
+}
+
+/** take the block at the index `origin` and insert it right before
+the block at index `target` (which is between 0 and nbBlocks)
+ */
+export function swapItems<T>(origin: number, target: number, list: T[]) {
+  if (target == origin || target == origin + 1) {
+    // nothing to do
+    return list;
+  }
+
+  if (origin < target) {
+    const after = list.slice(target);
+    const before = list.slice(0, target);
+    const originRow = before.splice(origin, 1);
+    before.push(...originRow);
+    before.push(...after);
+    return before;
+  } else {
+    const before = list.slice(0, target);
+    const originRow = list.splice(origin, 1);
+    const after = list.slice(target);
+    before.push(...originRow);
+    before.push(...after);
+    return before;
+  }
+}
