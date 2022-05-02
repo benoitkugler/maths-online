@@ -238,7 +238,7 @@ func (expr *Expression) groupAdditions() {
 			if count > 1 {
 				newNodes = append(newNodes, &Expression{
 					atom:  mult,
-					left:  NewNumber(float64(count)),
+					left:  NewNb(float64(count)),
 					right: ref,
 				})
 			} else {
@@ -253,7 +253,7 @@ func (expr *Expression) groupAdditions() {
 	if count > 1 {
 		newNodes = append(newNodes, &Expression{
 			atom:  mult,
-			left:  NewNumber(float64(count)),
+			left:  NewNb(float64(count)),
 			right: ref,
 		})
 	} else {
@@ -357,7 +357,7 @@ func (expr *Expression) simplify0And1() {
 
 	left := expr.left
 	if expr.left == nil { // 0 is a valid default value
-		left = NewNumber(0)
+		left = NewNb(0)
 	}
 	right := expr.right
 

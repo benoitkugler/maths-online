@@ -268,9 +268,14 @@ func (c constant) serialize(_, _ *Expression) string { return c.String() }
 
 type Number float64
 
-// NewNumber returns the one element expression containing
-// the given number
-func NewNumber(v float64) *Expression {
+// NewNb returns the one element expression containing
+// the given number.
+// For consistency with the parser, negative numbers are actually
+// returned as -(...)
+func NewNb(v float64) *Expression {
+	if v < 0 {
+		return &Expression{atom: minus, right: NewNb(-v)}
+	}
 	return &Expression{atom: Number(v)}
 }
 
@@ -282,7 +287,7 @@ func (v Number) serialize(_, _ *Expression) string { return v.String() }
 
 type specialFunctionA struct {
 	kind specialFunction
-	args []Number // the correct length of args is check during parsing
+	args []*Expression // the correct length of args is check during parsing
 }
 
 func (sf specialFunctionA) String() string {

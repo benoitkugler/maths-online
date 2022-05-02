@@ -23,11 +23,11 @@ func (vrs Variables) resolve(v Variable) (float64, bool) {
 	return value.N, ok
 }
 
-type MissingVariableErr struct {
+type ErrMissingVariable struct {
 	Missing Variable
 }
 
-func (mv MissingVariableErr) Error() string {
+func (mv ErrMissingVariable) Error() string {
 	return fmt.Sprintf("missing value for variable %s", mv.Missing)
 }
 
@@ -117,7 +117,8 @@ func isFloatExceedingPrecision(v float64) bool {
 
 // Evaluate uses the given variables values to evaluate the formula.
 // If a variable is referenced in the expression but not in the bindings,
-// `MissingVariableErr` is returned.
+// `ErrMissingVariable` is returned.
+// If the expression is not valid, like in randInt(2; -2), `ErrInvalidExpr` is returned
 func (expr *Expression) Evaluate(bindings ValueResolver) (float64, error) {
 	var (
 		left, right float64 // 0 is a valid default value
@@ -190,12 +191,12 @@ func (v Number) eval(_, _ float64, _ ValueResolver) (float64, error) { return fl
 
 func (va Variable) eval(_, _ float64, b ValueResolver) (float64, error) {
 	if b == nil {
-		return 0, MissingVariableErr{Missing: va}
+		return 0, ErrMissingVariable{Missing: va}
 	}
 
 	out, has := b.resolve(va)
 	if !has {
-		return 0, MissingVariableErr{Missing: va}
+		return 0, ErrMissingVariable{Missing: va}
 	}
 	return out, nil
 }
@@ -281,18 +282,48 @@ const (
 
 var decimalDividors = generateDivisors(maxDecDen, thresholdDecDen)
 
+func (r specialFunctionA) startEnd(res ValueResolver) (float64, float64, error) {
+	start, err := r.args[0].Evaluate(res)
+	if err != nil {
+		return 0, 0, err
+	}
+	end, err := r.args[1].Evaluate(res)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return start, end, nil
+}
+
 // return a random number
-func (r specialFunctionA) eval(_, _ float64, _ ValueResolver) (float64, error) {
+func (r specialFunctionA) eval(_, _ float64, res ValueResolver) (float64, error) {
 	switch r.kind {
 	case randInt:
-		start, end := int(r.args[0]), int(r.args[1])
-		return float64(start + rand.Intn(end-start+1)), nil
+		start, end, err := r.startEnd(res)
+		if err != nil {
+			return 0, err
+		}
+
+		err = r.validateStartEnd(start, end, 0)
+		if err != nil {
+			return 0, err
+		}
+		return start + float64(rand.Intn(int(end-start)+1)), nil
 	case randPrime:
-		start, end := int(r.args[0]), int(r.args[1])
-		return float64(generateRandPrime(start, end)), nil
+		start, end, err := r.startEnd(res)
+		if err != nil {
+			return 0, err
+		}
+
+		err = r.validateStartEnd(start, end, 0)
+		if err != nil {
+			return 0, err
+		}
+
+		return float64(generateRandPrime(int(start), int(end))), nil
 	case randChoice:
 		index := rand.Intn(len(r.args))
-		return float64(r.args[index]), nil
+		return r.args[index].Evaluate(res)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
 		return float64(decimalDividors[index]), nil
@@ -324,7 +355,7 @@ func (expr *Expression) simplifyNumbers() {
 
 	left := expr.left
 	if expr.left == nil { // 0 is a valid default value
-		left = NewNumber(0)
+		left = NewNb(0)
 	}
 	right := expr.right
 

@@ -121,6 +121,9 @@ func Test_Expression_eval(t *testing.T) {
 			"2 * randPrime(8; 12)", nil, 22,
 		},
 		{
+			"2 * randInt(8; a)", Variables{NewVar('a'): NewRN(8)}, 16,
+		},
+		{
 			"2 * randChoice(8)", nil, 16,
 		},
 		{
@@ -192,6 +195,40 @@ func Test_Expression_eval(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("node.eval() = %v, want %v", got, tt.want)
 		}
+	}
+}
+
+func TestExpression_Evaluate_err(t *testing.T) {
+	tests := []struct {
+		expr     string
+		bindings Variables
+	}{
+		{
+			"randInt(1;b)", nil,
+		},
+		{
+			"randPrime(1;b)", nil,
+		},
+		{
+			"randInt(a;b)", nil,
+		},
+		{
+			"randInt(a;3)", Variables{NewVar('a'): NewRN(6)},
+		},
+		{
+			"randPrime(a;3)", Variables{NewVar('a'): NewRN(-6)},
+		},
+		{
+			"randPrime(a;9)", Variables{NewVar('a'): NewRN(8)},
+		},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		_, err := expr.Evaluate(tt.bindings)
+		if err == nil {
+			t.Fatal("expected error on", tt.expr)
+		}
+
 	}
 }
 

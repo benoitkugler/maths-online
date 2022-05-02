@@ -198,7 +198,7 @@ func (tp TextPart) instantiateAndEvaluate(params expression.Variables) client.Te
 		expr.Substitute(params)
 		v, err := expr.Evaluate(nil)
 		if err == nil {
-			expr = expression.NewNumber(v)
+			expr = expression.NewNb(v)
 		}
 		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}
 	}

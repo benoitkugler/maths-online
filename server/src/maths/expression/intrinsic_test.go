@@ -120,17 +120,17 @@ func TestOrthogonalProjection_MergeTo(t *testing.T) {
 	}{
 		{
 			RandomParameters{
-				op.Ax: NewNumber(0), op.Ay: NewNumber(2),
-				op.Bx: NewNumber(-1), op.By: NewNumber(0),
-				op.Cx: NewNumber(4), op.Cy: NewNumber(0),
+				op.Ax: NewNb(0), op.Ay: NewNb(2),
+				op.Bx: NewNb(-1), op.By: NewNb(0),
+				op.Cx: NewNb(4), op.Cy: NewNb(0),
 			},
 			0, 0,
 		},
 		{
 			RandomParameters{
-				op.Ax: NewNumber(-1), op.Ay: NewNumber(1),
-				op.Bx: NewNumber(-1), op.By: NewNumber(-1),
-				op.Cx: NewNumber(1), op.Cy: NewNumber(1),
+				op.Ax: NewNb(-1), op.Ay: NewNb(1),
+				op.Bx: NewNb(-1), op.By: NewNb(-1),
+				op.Cx: NewNb(1), op.Cy: NewNb(1),
 			},
 			0, 0,
 		},

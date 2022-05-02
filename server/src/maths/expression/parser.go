@@ -65,6 +65,17 @@ func MustParse(s string) *Expression {
 func parseBytes(text []byte) (*Expression, varMap, error) {
 	pr := newParser(text)
 	e, err := pr.parseExpression(false)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check if we properly reached EOF
+	if tk := pr.tk.Peek().data; tk != nil {
+		return nil, nil, ErrInvalidExpr{
+			Reason: fmt.Sprintf("expression mal formée (symbol %s restant)", tk),
+			Pos:    0,
+		}
+	}
 
 	return e, pr.variablePos, err
 }
@@ -97,7 +108,7 @@ func (pr *parser) pop() *Expression {
 func (pr *parser) parseExpression(acceptSemiColon bool) (*Expression, error) {
 	for {
 		peeked := pr.tk.Peek().data
-		if peeked == nil || (acceptSemiColon && peeked == semicolon) {
+		if peeked == nil || peeked == closePar || (acceptSemiColon && peeked == semicolon) {
 			break
 		}
 
@@ -119,7 +130,8 @@ func (pr *parser) parseExpression(acceptSemiColon bool) (*Expression, error) {
 	return pr.pop(), nil
 }
 
-// the next token has already been checked for emptyness
+// the next token has already been checked for emptyness,
+// and is assumed not to be a closing )
 func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expression, error) {
 	tok := pr.tk.Next()
 	c := tok.data
@@ -129,10 +141,7 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expression, error) {
 		case openPar:
 			return pr.parseParenthesisBlock(tok.pos)
 		case closePar:
-			return nil, ErrInvalidExpr{
-				Reason: "parenthèse fermante invalide",
-				Pos:    tok.pos,
-			}
+			panic("internal error")
 		case semicolon:
 			return nil, ErrInvalidExpr{
 				Reason: "point-virgule inattendu",
@@ -323,14 +332,8 @@ func parseNumber(v numberText, pos int) (Number, error) {
 }
 
 // also accept a negative value
-func (pr *parser) parseFloat() (Number, error) {
+func (pr *parser) parsePositiveInt() (int, error) {
 	arg := pr.tk.Next()
-
-	var isNegative bool
-	if arg.data == minus { // read another token
-		isNegative = true
-		arg = pr.tk.Next()
-	}
 
 	v, ok := arg.data.(numberText)
 	if !ok {
@@ -345,10 +348,15 @@ func (pr *parser) parseFloat() (Number, error) {
 		return 0, err
 	}
 
-	if isNegative {
-		n = -n
+	nI, ok := isInt(float64(n))
+	if !ok {
+		return 0, ErrInvalidExpr{
+			Reason: "nombre entier attendu",
+			Pos:    arg.pos,
+		}
 	}
-	return n, nil
+
+	return nI, nil
 }
 
 func isInt(v float64) (int, bool) {
@@ -443,17 +451,10 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expression, err error) {
 		}
 	}
 
-	// ... and finally for an integer
-	nbDigits, err := pr.parseFloat()
+	// ... and finally for a positive integer
+	nbDigitsI, err := pr.parsePositiveInt()
 	if err != nil {
 		return nil, err
-	}
-	nbDigitsI, ok := isInt(float64(nbDigits))
-	if !ok {
-		return nil, ErrInvalidExpr{
-			Reason: "le nombre de chiffres après la virgule doit être un entier",
-			Pos:    pos,
-		}
 	}
 
 	if tok := pr.tk.Next(); tok.data != closePar {
@@ -466,8 +467,8 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expression, err error) {
 	return &Expression{atom: roundFn{nbDigits: nbDigitsI}, right: arg}, nil
 }
 
-// special case for special functions
-// to keep the parser simple, we only accept <function>(number; number ...)
+// special case for special functions, which are of the form
+// <function>(<expr>; <expr> ...)
 func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialFunctionA, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
@@ -486,7 +487,8 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 			break
 		}
 
-		arg, err := pr.parseFloat()
+		// we then accept a whole expression
+		arg, err := pr.parseExpression(true)
 		if err != nil {
 			return rd, err
 		}

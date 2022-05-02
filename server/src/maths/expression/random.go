@@ -142,6 +142,7 @@ func sieveOfEratosthenes(min, max int) (primes []int) {
 	return
 }
 
+// generateRandPrime panics if no prime is between min and max
 func generateRandPrime(min, max int) int {
 	choices := sieveOfEratosthenes(min, max)
 	L := len(choices)
@@ -164,18 +165,11 @@ func generateDivisors(n, threshold int) (out []int) {
 	return out
 }
 
-func (rd specialFunctionA) validate(pos int) error {
+func (rd specialFunctionA) validateStartEnd(start, end float64, pos int) error {
 	switch rd.kind {
 	case randInt, randPrime:
-		if len(rd.args) < 2 {
-			return ErrInvalidExpr{
-				Reason: "randXXX attend deux paramètres",
-				Pos:    pos,
-			}
-		}
-
-		start, okStart := isInt(float64(rd.args[0]))
-		end, okEnd := isInt(float64(rd.args[1]))
+		start, okStart := isInt(start)
+		end, okEnd := isInt(end)
 		if !(okStart && okEnd) {
 			return ErrInvalidExpr{
 				Reason: "randXXX attend deux entiers en paramètres",
@@ -203,7 +197,26 @@ func (rd specialFunctionA) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
+	}
+	return nil
+}
 
+func (rd specialFunctionA) validate(pos int) error {
+	switch rd.kind {
+	case randInt, randPrime:
+		if len(rd.args) < 2 {
+			return ErrInvalidExpr{
+				Reason: "randXXX attend deux paramètres",
+				Pos:    pos,
+			}
+		}
+
+		// eagerly try to eval start and end in case their are constant,
+		// so that the error is detected during parameter setup
+		start, end, err := rd.startEnd(nil)
+		if err == nil {
+			return rd.validateStartEnd(start, end, pos)
+		}
 	case randChoice:
 		if len(rd.args) == 0 {
 			return ErrInvalidExpr{

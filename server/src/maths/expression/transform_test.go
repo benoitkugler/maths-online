@@ -22,30 +22,30 @@ func Test_Expression_extractOperator(t *testing.T) {
 		want []*Expression
 	}{
 		{"1 +  2 + ( 3 + 4)", plus, []*Expression{
-			NewNumber(1),
-			NewNumber(2),
-			NewNumber(3),
-			NewNumber(4),
+			NewNb(1),
+			NewNb(2),
+			NewNb(3),
+			NewNb(4),
 		}},
 		{"1 + (2 * x) + 3", plus, []*Expression{
-			NewNumber(1),
-			{atom: mult, left: NewNumber(2), right: newVarExpr('x')},
-			NewNumber(3),
+			NewNb(1),
+			{atom: mult, left: NewNb(2), right: newVarExpr('x')},
+			NewNb(3),
 		}},
 		{"1 + 2 * (x + y) + 3", plus, []*Expression{
-			NewNumber(1),
+			NewNb(1),
 			{
 				atom:  mult,
-				left:  NewNumber(2),
+				left:  NewNb(2),
 				right: &Expression{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')},
 			},
-			NewNumber(3),
+			NewNb(3),
 		}},
 		{"1 *  2 * ( 3 * 4)", mult, []*Expression{
-			NewNumber(1),
-			NewNumber(2),
-			NewNumber(3),
-			NewNumber(4),
+			NewNb(1),
+			NewNb(2),
+			NewNb(3),
+			NewNb(4),
 		}},
 	}
 	for _, tt := range tests {

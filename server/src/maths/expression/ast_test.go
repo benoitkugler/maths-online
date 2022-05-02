@@ -46,6 +46,12 @@ func TestPanics(t *testing.T) {
 	})
 
 	shouldPanic(t, func() {
+		tk := newTokenizer([]byte{')'})
+		pr := parser{tk: tk}
+		pr.parseOneNode(true)
+	})
+
+	shouldPanic(t, func() {
 		MustEvaluate("x+2", nil)
 	})
 	shouldPanic(t, func() {
@@ -82,6 +88,7 @@ func TestExpression_String(t *testing.T) {
 		{"2 + x + log(10)", "2 + x + log(10)"},
 		{"- x + 3", "-x + 3"},
 		{"1x", "x"},
+		{"+x", "x"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
