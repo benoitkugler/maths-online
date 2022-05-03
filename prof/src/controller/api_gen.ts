@@ -286,7 +286,9 @@ export interface TableFieldBlock {
 // github.com/benoitkugler/maths-online/maths/exercice.TextBlock
 export interface TextBlock {
   Parts: Interpolated;
-  IsHint: boolean;
+  Bold: boolean;
+  Italic: boolean;
+  Smaller: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TreeNodeAnswer
 export interface TreeNodeAnswer {

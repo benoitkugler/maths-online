@@ -49,14 +49,6 @@ onMounted(async () => {
   }
   sessionID = session.ID;
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      navigator.sendBeacon(
-        controller.getURL(`/prof/editor/api/end-preview/${sessionID}`)
-      );
-    }
-  });
-
   fetchTags();
 });
 

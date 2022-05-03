@@ -260,8 +260,10 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          IsHint: false,
-          Parts: ""
+          Parts: "",
+          Bold: false,
+          Italic: false,
+          Smaller: false
         }
       };
       return out;
