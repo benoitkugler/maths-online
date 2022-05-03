@@ -28,3 +28,10 @@ func TestClientExerciceJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestAllFields(t *testing.T) {
+	_, err := loadAllFieldsQuestion()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -1088,26 +1088,33 @@ JSON tableFieldBlockToJson(TableFieldBlock item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
 class TextBlock implements Block {
   final List<TextOrMath> parts;
-  final bool isHint;
+  final bool bold;
+  final bool italic;
+  final bool smaller;
 
-  const TextBlock(this.parts, this.isHint);
+  const TextBlock(this.parts, this.bold, this.italic, this.smaller);
 
   @override
   String toString() {
-    return "TextBlock($parts, $isHint)";
+    return "TextBlock($parts, $bold, $italic, $smaller)";
   }
 }
 
 TextBlock textBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return TextBlock(
-      listTextOrMathFromJson(json['Parts']), boolFromJson(json['IsHint']));
+      listTextOrMathFromJson(json['Parts']),
+      boolFromJson(json['Bold']),
+      boolFromJson(json['Italic']),
+      boolFromJson(json['Smaller']));
 }
 
 JSON textBlockToJson(TextBlock item) {
   return {
     "Parts": listTextOrMathToJson(item.parts),
-    "IsHint": boolToJson(item.isHint)
+    "Bold": boolToJson(item.bold),
+    "Italic": boolToJson(item.italic),
+    "Smaller": boolToJson(item.smaller)
   };
 }
 

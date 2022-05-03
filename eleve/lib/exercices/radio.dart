@@ -53,7 +53,7 @@ class _RadioFieldState extends State<RadioField> {
         final prop = widget._controller.proposals[index];
         return RadioListTile<int>(
           activeColor: widget._color,
-          title: TextRow(buildText(prop.content, false, 18), 2),
+          title: TextRow(buildText(prop.content, TextS(), 18), 2),
           value: index,
           groupValue: widget._controller.index,
           onChanged: widget._controller.enabled

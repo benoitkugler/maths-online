@@ -254,15 +254,19 @@ func (tp TextParts) validate() error {
 // which may contain maths
 // It support basic interpolation syntax.
 type TextBlock struct {
-	Parts  Interpolated
-	IsHint bool
+	Parts   Interpolated
+	Bold    bool
+	Italic  bool
+	Smaller bool
 }
 
 func (t TextBlock) instantiate(params expression.Variables, _ int) instance {
 	content, _ := t.Parts.Parse()
 	return TextInstance{
-		IsHint: t.IsHint,
-		Parts:  content.instantiate(params),
+		Parts:   content.instantiate(params),
+		Bold:    t.Bold,
+		Italic:  t.Italic,
+		Smaller: t.Smaller,
 	}
 }
 

@@ -151,7 +151,8 @@ class _ContentBuilder {
     if (lastIsText) {
       _flushCurrentRow();
     }
-    _currentRow.addAll(buildText(element.parts, element.isHint, fontSize));
+    _currentRow.addAll(
+        buildText(element.parts, TextS.fromTextBlock(element), fontSize));
   }
 
   void _handleFormulaBlock(FormulaBlock element) {

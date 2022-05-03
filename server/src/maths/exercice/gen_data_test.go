@@ -449,8 +449,10 @@ func randTableFieldBlock() TableFieldBlock {
 
 func randTextBlock() TextBlock {
 	return TextBlock{
-		Parts:  randInterpolated(),
-		IsHint: randbool(),
+		Parts:   randInterpolated(),
+		Bold:    randbool(),
+		Italic:  randbool(),
+		Smaller: randbool(),
 	}
 }
 

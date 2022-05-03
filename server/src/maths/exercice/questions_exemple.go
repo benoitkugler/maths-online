@@ -14,13 +14,13 @@ import (
 //go:embed all_fields.json
 var allFieldsFile []byte
 
-func loadAllFieldsQuestion() QuestionInstance {
+func loadAllFieldsQuestion() (QuestionInstance, error) {
 	var question Question
 	err := json.Unmarshal(allFieldsFile, &question)
 	if err != nil {
-		panic(err)
+		return QuestionInstance{}, err
 	}
-	return question.Instantiate()
+	return question.Instantiate(), nil
 }
 
 func mustParse(s string) *expression.Expression {
@@ -220,7 +220,12 @@ func init() {
 		panic(err)
 	}
 
-	PredefinedQuestions = append([]QuestionInstance{loadAllFieldsQuestion()}, PredefinedQuestions...)
+	allFields, err := loadAllFieldsQuestion()
+	if err != nil {
+		panic(err)
+	}
+
+	PredefinedQuestions = append([]QuestionInstance{allFields}, PredefinedQuestions...)
 
 	PredefinedQuestions = append(PredefinedQuestions, QuestionInstance{
 		Title: "Repérage dans le plan", Enonce: EnonceInstance{
@@ -1089,7 +1094,7 @@ Parmi les hommes, 48 sont inexpérimentés et parmi les femmes, 191 sont expéri
 				text(`Construire l’arbre pondéré associé à l’expérience aléatoire suivante :
 on lance une pièce de monnaie truquée deux fois d’affilé, la probabilité d’obtenir Pile (P) est de 0,3.`),
 			}},
-			TextInstance{IsHint: true, Parts: []client.TextOrMath{
+			TextInstance{Bold: true, Parts: []client.TextOrMath{
 				text(`On ordonnera les issues par ordre alphabétique.`),
 			}},
 			TreeFieldInstance{

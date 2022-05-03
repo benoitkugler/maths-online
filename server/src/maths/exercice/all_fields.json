@@ -2,396 +2,398 @@
     "id": 36,
     "title": "Tous les champs",
     "enonce": [
-      {
-        "Data": {
-          "Parts": "Nombre",
-          "IsHint": false
+        {
+            "Data": {
+                "Parts": "Nombre",
+                "Italic": false,
+                "Bold": false,
+                "Smaller": false
+            },
+            "Kind": 16
         },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Expression": "1.2"
+        {
+            "Data": {
+                "Expression": "1.2"
+            },
+            "Kind": 10
         },
-        "Kind": 10
-      },
-      {
-        "Data": {
-          "Parts": "\nExpression",
-          "IsHint": false
+        {
+            "Data": {
+                "Parts": "\nExpression",
+                "IsHint": false
+            },
+            "Kind": 16
         },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Expression": "x^2 + 2x + 1",
-          "Label": {
-            "Content": "x",
+        {
+            "Data": {
+                "Expression": "x^2 + 2x + 1",
+                "Label": {
+                    "Content": "x",
+                    "Kind": 0
+                },
+                "ComparisonLevel": 1
+            },
+            "Kind": 6
+        },
+        {
+            "Data": {
+                "Parts": "Liste ordonnée",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Label": "x \\in ",
+                "Answer": [
+                    {
+                        "Content": "[",
+                        "Kind": 1
+                    },
+                    {
+                        "Content": "-12",
+                        "Kind": 1
+                    },
+                    {
+                        "Content": ";",
+                        "Kind": 1
+                    },
+                    {
+                        "Content": "30",
+                        "Kind": 1
+                    },
+                    {
+                        "Content": "]",
+                        "Kind": 1
+                    }
+                ],
+                "AdditionalProposals": []
+            },
+            "Kind": 11
+        },
+        {
+            "Data": {
+                "Parts": "QCM 1",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Answer": "1",
+                "Proposals": [
+                    "Oui",
+                    "Non"
+                ],
+                "AsDropDown": false
+            },
+            "Kind": 12
+        },
+        {
+            "Data": {
+                "Parts": "QCM 2",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Answer": "1",
+                "Proposals": [
+                    "Oui",
+                    "Non"
+                ],
+                "AsDropDown": true
+            },
+            "Kind": 12
+        },
+        {
+            "Data": {
+                "Parts": "\nPoint",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Answer": {
+                    "X": "3",
+                    "Y": "4"
+                },
+                "Figure": {
+                    "Drawings": {
+                        "Points": [],
+                        "Segments": [],
+                        "Lines": []
+                    },
+                    "Bounds": {
+                        "Width": 10,
+                        "Height": 10,
+                        "Origin": {
+                            "X": 3,
+                            "Y": 3
+                        }
+                    },
+                    "ShowGrid": true
+                }
+            },
+            "Kind": 2
+        },
+        {
+            "Data": {
+                "Parts": "Vecteur",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Answer": {
+                    "X": "3",
+                    "Y": "4"
+                },
+                "AnswerOrigin": {
+                    "X": "",
+                    "Y": ""
+                },
+                "Figure": {
+                    "Drawings": {
+                        "Points": [],
+                        "Segments": [],
+                        "Lines": []
+                    },
+                    "Bounds": {
+                        "Width": 10,
+                        "Height": 10,
+                        "Origin": {
+                            "X": 3,
+                            "Y": 3
+                        }
+                    },
+                    "ShowGrid": true
+                },
+                "MustHaveOrigin": false
+            },
+            "Kind": 3
+        },
+        {
+            "Data": {
+                "Parts": "Construction de fonction",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Function": "(x/2)^2",
+                "Label": "f",
+                "Variable": {
+                    "Indice": "",
+                    "Name": 120
+                },
+                "XGrid": [
+                    -4,
+                    -2,
+                    0,
+                    2,
+                    4
+                ]
+            },
+            "Kind": 8
+        },
+        {
+            "Data": {
+                "Parts": "Tableau de variations",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Answer": {
+                    "Xs": [
+                        "-5",
+                        "0",
+                        "5"
+                    ],
+                    "Fxs": [
+                        "-3",
+                        "2",
+                        "-1"
+                    ]
+                }
+            },
+            "Kind": 19
+        },
+        {
+            "Data": {
+                "Parts": "Fonction affine",
+                "IsHint": false
+            },
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Label": "f",
+                "A": "1",
+                "B": "3",
+                "Figure": {
+                    "Drawings": {
+                        "Points": [],
+                        "Segments": [],
+                        "Lines": []
+                    },
+                    "Bounds": {
+                        "Width": 10,
+                        "Height": 10,
+                        "Origin": {
+                            "X": 3,
+                            "Y": 3
+                        }
+                    },
+                    "ShowGrid": true
+                }
+            },
             "Kind": 0
-          },
-          "ComparisonLevel": 1
         },
-        "Kind": 6
-      },
-      {
-        "Data": {
-          "Parts": "Liste ordonnée",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Label": "x \\in ",
-          "Answer": [
-            {
-              "Content": "[",
-              "Kind": 1
+        {
+            "Data": {
+                "Parts": "Construction de vecteurs",
+                "IsHint": false
             },
-            {
-              "Content": "-12",
-              "Kind": 1
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "Figure": {
+                    "Drawings": {
+                        "Points": [],
+                        "Segments": [],
+                        "Lines": []
+                    },
+                    "Bounds": {
+                        "Width": 10,
+                        "Height": 10,
+                        "Origin": {
+                            "X": 3,
+                            "Y": 3
+                        }
+                    },
+                    "ShowGrid": true
+                },
+                "Criterion": 1
             },
-            {
-              "Content": ";",
-              "Kind": 1
+            "Kind": 4
+        },
+        {
+            "Data": {
+                "Parts": "Tableau",
+                "IsHint": false
             },
-            {
-              "Content": "30",
-              "Kind": 1
+            "Kind": 16
+        },
+        {
+            "Data": {
+                "HorizontalHeaders": [
+                    {
+                        "Content": "Colonne 1",
+                        "Kind": 0
+                    },
+                    {
+                        "Content": "Colonne 2",
+                        "Kind": 0
+                    }
+                ],
+                "VerticalHeaders": [
+                    {
+                        "Content": "Ligne 1",
+                        "Kind": 0
+                    },
+                    {
+                        "Content": "Ligne 2",
+                        "Kind": 0
+                    }
+                ],
+                "Answer": [
+                    [
+                        "0",
+                        "1"
+                    ],
+                    [
+                        "2",
+                        "3"
+                    ]
+                ]
             },
-            {
-              "Content": "]",
-              "Kind": 1
-            }
-          ],
-          "AdditionalProposals": []
+            "Kind": 15
         },
-        "Kind": 11
-      },
-      {
-        "Data": {
-          "Parts": "QCM 1",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Answer": "1",
-          "Proposals": [
-            "Oui",
-            "Non"
-          ],
-          "AsDropDown": false
-        },
-        "Kind": 12
-      },
-      {
-        "Data": {
-          "Parts": "QCM 2",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Answer": "1",
-          "Proposals": [
-            "Oui",
-            "Non"
-          ],
-          "AsDropDown": true
-        },
-        "Kind": 12
-      },
-      {
-        "Data": {
-          "Parts": "\nPoint",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Answer": {
-            "X": "3",
-            "Y": "4"
-          },
-          "Figure": {
-            "Drawings": {
-              "Points": [],
-              "Segments": [],
-              "Lines": []
+        {
+            "Data": {
+                "Parts": "Arbre",
+                "IsHint": false
             },
-            "Bounds": {
-              "Width": 10,
-              "Height": 10,
-              "Origin": {
-                "X": 3,
-                "Y": 3
-              }
-            },
-            "ShowGrid": true
-          }
+            "Kind": 16
         },
-        "Kind": 2
-      },
-      {
-        "Data": {
-          "Parts": "Vecteur",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Answer": {
-            "X": "3",
-            "Y": "4"
-          },
-          "AnswerOrigin": {
-            "X": "",
-            "Y": ""
-          },
-          "Figure": {
-            "Drawings": {
-              "Points": [],
-              "Segments": [],
-              "Lines": []
-            },
-            "Bounds": {
-              "Width": 10,
-              "Height": 10,
-              "Origin": {
-                "X": 3,
-                "Y": 3
-              }
-            },
-            "ShowGrid": true
-          },
-          "MustHaveOrigin": false
-        },
-        "Kind": 3
-      },
-      {
-        "Data": {
-          "Parts": "Construction de fonction",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Function": "(x/2)^2",
-          "Label": "f",
-          "Variable": {
-            "Indice": "",
-            "Name": 120
-          },
-          "XGrid": [
-            -4,
-            -2,
-            0,
-            2,
-            4
-          ]
-        },
-        "Kind": 8
-      },
-      {
-        "Data": {
-          "Parts": "Tableau de variations",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Answer": {
-            "Xs": [
-              "-5",
-              "0",
-              "5"
-            ],
-            "Fxs": [
-              "-3",
-              "2",
-              "-1"
-            ]
-          }
-        },
-        "Kind": 19
-      },
-      {
-        "Data": {
-          "Parts": "Fonction affine",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Label": "f",
-          "A": "1",
-          "B": "3",
-          "Figure": {
-            "Drawings": {
-              "Points": [],
-              "Segments": [],
-              "Lines": []
-            },
-            "Bounds": {
-              "Width": 10,
-              "Height": 10,
-              "Origin": {
-                "X": 3,
-                "Y": 3
-              }
-            },
-            "ShowGrid": true
-          }
-        },
-        "Kind": 0
-      },
-      {
-        "Data": {
-          "Parts": "Construction de vecteurs",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Figure": {
-            "Drawings": {
-              "Points": [],
-              "Segments": [],
-              "Lines": []
-            },
-            "Bounds": {
-              "Width": 10,
-              "Height": 10,
-              "Origin": {
-                "X": 3,
-                "Y": 3
-              }
-            },
-            "ShowGrid": true
-          },
-          "Criterion": 1
-        },
-        "Kind": 4
-      },
-      {
-        "Data": {
-          "Parts": "Tableau",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "HorizontalHeaders": [
-            {
-              "Content": "Colonne 1",
-              "Kind": 0
-            },
-            {
-              "Content": "Colonne 2",
-              "Kind": 0
-            }
-          ],
-          "VerticalHeaders": [
-            {
-              "Content": "Ligne 1",
-              "Kind": 0
-            },
-            {
-              "Content": "Ligne 2",
-              "Kind": 0
-            }
-          ],
-          "Answer": [
-            [
-              "0",
-              "1"
-            ],
-            [
-              "2",
-              "3"
-            ]
-          ]
-        },
-        "Kind": 15
-      },
-      {
-        "Data": {
-          "Parts": "Arbre",
-          "IsHint": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "EventsProposals": [
-            "P",
-            "F",
-            "?"
-          ],
-          "AnswerRoot": {
-            "Children": [
-              {
-                "Children": [
-                  {
-                    "Children": [],
-                    "Probabilities": [],
+        {
+            "Data": {
+                "EventsProposals": [
+                    "P",
+                    "F",
+                    "?"
+                ],
+                "AnswerRoot": {
+                    "Children": [
+                        {
+                            "Children": [
+                                {
+                                    "Children": [],
+                                    "Probabilities": [],
+                                    "Value": 0
+                                },
+                                {
+                                    "Children": [],
+                                    "Probabilities": [],
+                                    "Value": 1
+                                }
+                            ],
+                            "Probabilities": [
+                                "0.7",
+                                "0.3"
+                            ],
+                            "Value": 0
+                        },
+                        {
+                            "Children": [
+                                {
+                                    "Children": [],
+                                    "Probabilities": [],
+                                    "Value": 0
+                                },
+                                {
+                                    "Children": [],
+                                    "Probabilities": [],
+                                    "Value": 1
+                                }
+                            ],
+                            "Probabilities": [
+                                "0.7",
+                                "0.3"
+                            ],
+                            "Value": 1
+                        }
+                    ],
+                    "Probabilities": [
+                        "0.7",
+                        "0.3"
+                    ],
                     "Value": 0
-                  },
-                  {
-                    "Children": [],
-                    "Probabilities": [],
-                    "Value": 1
-                  }
-                ],
-                "Probabilities": [
-                  "0.7",
-                  "0.3"
-                ],
-                "Value": 0
-              },
-              {
-                "Children": [
-                  {
-                    "Children": [],
-                    "Probabilities": [],
-                    "Value": 0
-                  },
-                  {
-                    "Children": [],
-                    "Probabilities": [],
-                    "Value": 1
-                  }
-                ],
-                "Probabilities": [
-                  "0.7",
-                  "0.3"
-                ],
-                "Value": 1
-              }
-            ],
-            "Probabilities": [
-              "0.7",
-              "0.3"
-            ],
-            "Value": 0
-          }
-        },
-        "Kind": 17
-      }
+                }
+            },
+            "Kind": 17
+        }
     ],
     "parameters": {
-      "Variables": null,
-      "Intrinsics": null
+        "Variables": null,
+        "Intrinsics": null
     }
-  }
+}

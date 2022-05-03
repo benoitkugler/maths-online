@@ -19,11 +19,28 @@
     </v-col>
     <v-col md="2">
       <v-checkbox
+        density="compact"
         class="pr-2"
         hide-details
-        label="Comme conseil"
-        :model-value="props.modelValue.IsHint"
-        @update:model-value="onIsHintChanged"
+        label="Gras"
+        :model-value="props.modelValue.Bold"
+        @update:model-value="onBoldChanged"
+      ></v-checkbox>
+      <v-checkbox
+        density="compact"
+        class="pr-2"
+        hide-details
+        label="Italic"
+        :model-value="props.modelValue.Italic"
+        @update:model-value="onItalicChanged"
+      ></v-checkbox>
+      <v-checkbox
+        density="compact"
+        class="pr-2"
+        hide-details
+        label="Taille réduite"
+        :model-value="props.modelValue.Smaller"
+        @update:model-value="onSmallerChanged"
       ></v-checkbox>
     </v-col>
   </v-row>
@@ -47,8 +64,16 @@ function onTextChanged(s: string) {
   emit("update:modelValue", props.modelValue);
 }
 
-function onIsHintChanged(b: boolean) {
-  props.modelValue.IsHint = b;
+function onBoldChanged(b: boolean) {
+  props.modelValue.Bold = b;
+  emit("update:modelValue", props.modelValue);
+}
+function onItalicChanged(b: boolean) {
+  props.modelValue.Italic = b;
+  emit("update:modelValue", props.modelValue);
+}
+function onSmallerChanged(b: boolean) {
+  props.modelValue.Smaller = b;
   emit("update:modelValue", props.modelValue);
 }
 </script>

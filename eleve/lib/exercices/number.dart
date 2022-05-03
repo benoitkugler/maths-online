@@ -58,7 +58,7 @@ class NumberField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
-        width: 50,
+        width: 80,
         child: TextField(
           enabled: _controller.enabled,
           onSubmitted: onSubmitted,

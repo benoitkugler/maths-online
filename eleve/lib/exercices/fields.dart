@@ -49,12 +49,27 @@ WidgetSpan _inlineMath(
   );
 }
 
-List<InlineSpan> buildText(List<TextOrMath> parts, bool isHint, double fontSize,
+class TextS {
+  final bool bold;
+  final bool italic;
+  final bool smaller;
+
+  TextS({this.bold = false, this.italic = false, this.smaller = false});
+
+  factory TextS.fromTextBlock(TextBlock block) {
+    return TextS(
+        bold: block.bold, italic: block.italic, smaller: block.smaller);
+  }
+}
+
+List<InlineSpan> buildText(List<TextOrMath> parts, TextS style, double fontSize,
     {bool inTable = false}) {
   final out = <InlineSpan>[];
-  if (isHint) {
-    fontSize = fontSize - 2;
-  }
+
+  final ts = TextStyle(
+      fontSize: style.smaller ? fontSize - 2 : fontSize,
+      fontStyle: style.italic ? FontStyle.italic : FontStyle.normal,
+      fontWeight: style.bold ? FontWeight.bold : FontWeight.normal);
   for (var part in parts) {
     if (part.isMath) {
       out.add(const TextSpan(text: " "));
@@ -65,11 +80,7 @@ List<InlineSpan> buildText(List<TextOrMath> parts, bool isHint, double fontSize,
           null));
       out.add(const TextSpan(text: " "));
     } else {
-      out.add(TextSpan(
-          text: part.text,
-          style: TextStyle(
-              fontSize: fontSize,
-              fontStyle: isHint ? FontStyle.italic : FontStyle.normal)));
+      out.add(TextSpan(text: part.text, style: ts));
     }
   }
   return out;
