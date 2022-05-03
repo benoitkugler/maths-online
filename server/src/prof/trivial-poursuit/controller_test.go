@@ -3,28 +3,23 @@ package trivialpoursuit
 import (
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
 
-func TestGameTimeout(t *testing.T) {
-	// ProgressLogger.SetOutput(os.Stdout)
-	const timeout = time.Second / 10
-
+func TestGameTermination(t *testing.T) {
 	ct := newGameSession("test", nil, TrivialConfig{}, RandomGroupStrategy{2, 2}, game.QuestionPool{})
-	gameTimeout = timeout
 
-	ct.createGame(2)
+	id := ct.createGame(2)
 
 	if len(ct.games) != 1 {
 		t.Fatal("expected one game")
 	}
 
-	time.Sleep(2 * timeout) // wait for the timeout
+	ct.games[id].Terminate <- true
 
 	if len(ct.games) != 0 {
-		t.Fatal("game should have timed out")
+		t.Fatal("game should have been removed")
 	}
 }
 

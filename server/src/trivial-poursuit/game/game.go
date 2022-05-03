@@ -212,7 +212,7 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates MaybeUpdate, isGame
 	case DiceClicked:
 		update, err := g.handleDiceClicked(event.Player)
 		return &update, false, err
-	case Move:
+	case ClientMove:
 		evs, err := g.handleMove(eventData, event.Player)
 		if err != nil {
 			return nil, false, err
@@ -233,7 +233,7 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates MaybeUpdate, isGame
 	return nil, false, fmt.Errorf("invalid client event %T", event.Event)
 }
 
-func (g *Game) handleMove(m Move, player PlayerID) (Events, error) {
+func (g *Game) handleMove(m ClientMove, player PlayerID) (Events, error) {
 	// check if the player is allowed to move
 	if g.Player != player {
 		return nil, fmt.Errorf("player %d is not allowed to move during turn of player %d", player, g.Player)
@@ -248,7 +248,7 @@ func (g *Game) handleMove(m Move, player PlayerID) (Events, error) {
 	g.dice = diceThrow{}
 	question := g.EmitQuestion()
 	return Events{
-		Move{
+		move{
 			Tile: m.Tile, // now valid
 			Path: choices[m.Tile],
 		},

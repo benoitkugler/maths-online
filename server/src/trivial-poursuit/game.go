@@ -1,7 +1,6 @@
 package trivialpoursuit
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -109,7 +108,14 @@ type GameOptions struct {
 
 // GameController handles one game room
 type GameController struct {
-	ID          GameID
+	ID GameID
+
+	// Terminate may be used to cleanly exit the game,
+	// noticing clients and exiting the main goroutine.
+	// It is however not considered as a normal exit,
+	// so that the review is not emitted.
+	Terminate chan bool
+
 	monitor     chan GameSummary
 	join, leave chan *client
 
@@ -129,6 +135,7 @@ func NewGameController(id GameID, questions game.QuestionPool, options GameOptio
 	return &GameController{
 		ID:              id,
 		monitor:         monitor,
+		Terminate:       make(chan bool),
 		join:            make(chan *client, 1),
 		leave:           make(chan *client),
 		incomingEvents:  make(chan game.ClientEvent),
@@ -148,19 +155,21 @@ func (gc *GameController) playerIDsToClients() map[game.PlayerID]*client {
 }
 
 // StartLoop starts the main game loop.
-// The function blocks until the game is over (or  `ctx` is cancelled),
+// The function blocks until the game is over,
 // and then returns the game review.
-// It returns false if the game ended abnormally, due to timeout or all players leaving
-func (gc *GameController) StartLoop(ctx context.Context) (Review, bool) {
+// It returns false if the game ended abnormally, due to forced termination or all players leaving
+func (gc *GameController) StartLoop() (Review, bool) {
 	var isGameOver bool // if true, broadcast the last events and quit
 	for {
 		select {
-		case <-ctx.Done(): // terminate the game on timeout
-			ProgressLogger.Println("Game timed out")
-			for client := range gc.clients {
-				utils.WebsocketError(client.conn, errors.New("game timeout reached"))
+		case <-gc.Terminate:
+			ProgressLogger.Println("Terminating game")
+			gc.broadcastEvents <- game.StateUpdate{
+				Events: game.Events{
+					game.GameTerminated{},
+				},
+				State: gc.game.GameState,
 			}
-
 			return Review{}, false
 
 		case event := <-gc.broadcastEvents:

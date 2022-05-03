@@ -18,7 +18,7 @@ func TestEventsJSON(t *testing.T) {
 			playerTurn{"Haha", 2},
 			dice,
 			PossibleMoves{"", moves, 2},
-			Move{Tile: moves[0]},
+			move{Tile: moves[0]},
 			playerLeft{1},
 			showQuestion{ID: 1, Categorie: 0},
 			playerAnswerResults{
@@ -30,7 +30,7 @@ func TestEventsJSON(t *testing.T) {
 			},
 			playerTurn{"", 0},
 			diceThrow{3},
-			Move{Tile: 4},
+			move{Tile: 4},
 			showQuestion{ID: 2, Categorie: 1},
 			playerAnswerResults{
 				Results: map[int]playerAnswerResult{
@@ -72,7 +72,7 @@ func TestGameStateJSON(t *testing.T) {
 
 func TestClientEventJSON(t *testing.T) {
 	for _, event := range []clientEventData{
-		Move{Tile: 4, Path: []int{}},
+		ClientMove{Tile: 4, Path: []int{}},
 		Answer{client.QuestionAnswersIn{Data: make(map[int]client.Answer)}},
 		Ping{"Test"},
 	} {
@@ -100,11 +100,12 @@ func TestMethodTag(t *testing.T) {
 	playerLeft{}.isGameEvent()
 	playerTurn{}.isGameEvent()
 	diceThrow{}.isGameEvent()
-	Move{}.isGameEvent()
+	move{}.isGameEvent()
 	PossibleMoves{}.isGameEvent()
 	showQuestion{}.isGameEvent()
 	playerAnswerResults{}.isGameEvent()
 	gameEnd{}.isGameEvent()
-	Move{}.isClientEvent()
+
+	ClientMove{}.isClientEvent()
 	Answer{}.isClientEvent()
 }

@@ -98,7 +98,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       backgroundColor: Theme.of(context).colorScheme.error,
       content: Text("Une erreur est survenue : $error"),
     ));
-    Navigator.of(context).pop();
+    popRouteToHome();
   }
 
   void listen(dynamic event) {
@@ -301,6 +301,24 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     });
   }
 
+  void popRouteToHome() {
+    Navigator.of(context).popUntil((route) {
+      if (route.settings.name == null || route.settings.name!.isEmpty) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  void _onGameTerminated() {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 5),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: const Text("La partie a été interrompue par son créateur.")));
+
+    popRouteToHome();
+  }
+
   void _showSuccessRecap() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -330,6 +348,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return _onPlayerAnswerResults(event);
     } else if (event is GameEnd) {
       _onGameEnd(event);
+    } else if (event is GameTerminated) {
+      _onGameTerminated();
     } else {
       // exhaustive switch
       throw Exception("unexpected event type ${event.runtimeType}");

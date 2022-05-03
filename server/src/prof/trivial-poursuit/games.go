@@ -79,13 +79,10 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 	gs.games[gameID] = game
 	// ...and start it
 	go func() {
-		ctx, cancelFunc := context.WithTimeout(context.Background(), gameTimeout)
-		review, ok := game.StartLoop(ctx)
+		review, ok := game.StartLoop()
 		if ok { // exploit the review
 			gs.exploitReview(review)
 		}
-
-		cancelFunc()
 
 		// remove the game controller when the game is over
 		gs.lock.Lock()
@@ -161,8 +158,14 @@ func (gs *gameSession) startLoop(ctx context.Context) {
 	for {
 		select {
 		case <-gs.quit:
+			for _, game := range gs.games {
+				game.Terminate <- true
+			}
 			return
 		case <-ctx.Done():
+			for _, game := range gs.games {
+				game.Terminate <- true
+			}
 			return
 		case summary := <-gs.monitor:
 			summary.ID = gs.id + summary.ID

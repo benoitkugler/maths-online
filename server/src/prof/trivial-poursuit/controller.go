@@ -27,10 +27,7 @@ const (
 	GameEndPoint = "/trivial/game/:session-id"
 )
 
-var (
-	sessionTimeout = 12 * time.Hour
-	gameTimeout    = 6 * time.Hour
-)
+var sessionTimeout = 12 * time.Hour
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,

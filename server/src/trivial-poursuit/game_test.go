@@ -1,7 +1,6 @@
 package trivialpoursuit
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -54,7 +53,7 @@ func TestConcurrentEvents(t *testing.T) {
 	// ProgressLogger.SetOutput(os.Stdout)
 
 	ct := NewGameController("testGame", questions, GameOptions{4, 0}, nil) // do not start a game
-	go ct.StartLoop(context.Background())
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -94,7 +93,7 @@ func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
 	ct := NewGameController("testGame", questions, GameOptions{4, time.Millisecond * 50}, nil)
-	go ct.StartLoop(context.Background())
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -120,7 +119,7 @@ func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
 	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
-	go ct.StartLoop(context.Background())
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -155,7 +154,7 @@ func TestStartGame(t *testing.T) {
 
 	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
 
-	go ct.StartLoop(context.Background())
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -202,7 +201,7 @@ func TestInvalidJoin(t *testing.T) {
 
 	ct := NewGameController("testGame", questions, GameOptions{1, 0}, nil)
 
-	go ct.StartLoop(context.Background())
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -239,7 +238,7 @@ func TestSummary(t *testing.T) {
 
 	ct := NewGameController("testGame", questions, GameOptions{2, 0}, notif)
 
-	go ct.StartLoop(context.Background())
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -282,8 +281,7 @@ func TestReview(t *testing.T) {
 
 	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
 
-	ctx, cancelGame := context.WithCancel(context.Background())
-	go ct.StartLoop(ctx)
+	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
@@ -320,7 +318,7 @@ func TestReview(t *testing.T) {
 	}
 	choosenTile := update.Events[1].(game.PossibleMoves).Tiles[0]
 
-	err = client1.WriteJSON(game.ClientEvent{Event: game.Move{Tile: choosenTile}, Player: 0})
+	err = client1.WriteJSON(game.ClientEvent{Event: game.ClientMove{Tile: choosenTile}, Player: 0})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -349,7 +347,7 @@ func TestReview(t *testing.T) {
 
 	time.Sleep(time.Millisecond * 20)
 
-	cancelGame()
+	ct.Terminate <- true
 
 	time.Sleep(time.Millisecond * 20)
 

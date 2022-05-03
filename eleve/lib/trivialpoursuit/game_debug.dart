@@ -21,19 +21,25 @@ const updates = [
         2: PlayerStatus("Player 2", QuestionReview([], []),
             [true, true, false, false, false]),
       }, 0, 0)),
-  StateUpdate(
-      [
-        // Move([0, 1, 2, 3, 4, 5], 5),
-        // DiceThrow(2)
-        // PlayerAnswerResult(0, true),
-        // GameEnd([0], ["Pierre"])
-      ],
-      GameState({
-        0: PlayerStatus("Player 1", QuestionReview([], []),
-            [true, false, false, true, false]),
-        1: PlayerStatus("Player 2", QuestionReview([], []),
-            [true, false, false, false, false]),
-        2: PlayerStatus("Player 3", QuestionReview([], []),
-            [false, true, false, false, false]),
-      }, 0, 0)),
+  // StateUpdate(
+  //     [
+  //       // Move([0, 1, 2, 3, 4, 5], 5),
+  //       // DiceThrow(2)
+  //       // PlayerAnswerResult(0, true),
+  //       // GameEnd([0], ["Pierre"])
+  //     ],
+  //     GameState({
+  //       0: PlayerStatus("Player 1", QuestionReview([], []),
+  //           [true, false, false, true, false]),
+  //       1: PlayerStatus("Player 2", QuestionReview([], []),
+  //           [true, false, false, false, false]),
+  //       2: PlayerStatus("Player 3", QuestionReview([], []),
+  //           [false, true, false, false, false]),
+  //     }, 0, 0)),
+  // StateUpdate(
+  //     [GameTerminated()],
+  //     GameState({
+  //       0: PlayerStatus(
+  //           "", QuestionReview([], []), [true, false, true, true, false])
+  //     }, 0, 0))
 ];

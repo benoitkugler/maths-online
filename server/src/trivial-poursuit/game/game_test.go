@@ -179,18 +179,18 @@ func TestHandleClientEvent(t *testing.T) {
 
 	g.HandleClientEvent(ClientEvent{Event: DiceClicked{}})
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: Move{}, Player: 2})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: ClientMove{}, Player: 2})
 	if err == nil {
 		t.Fatal("expected error for invalid move")
 	}
 
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: Move{Tile: 89}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: ClientMove{Tile: 89}})
 	if err == nil {
 		t.Fatal("expected error for invalid tile")
 	}
 
 	expected := g.dice.Face
-	_, _, err = g.HandleClientEvent(ClientEvent{Event: Move{Tile: int(g.dice.Face)}})
+	_, _, err = g.HandleClientEvent(ClientEvent{Event: ClientMove{Tile: int(g.dice.Face)}})
 	if err != nil {
 		t.Fatal(err)
 	}

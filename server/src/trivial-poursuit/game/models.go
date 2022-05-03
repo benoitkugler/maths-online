@@ -71,11 +71,12 @@ func (gameStart) isGameEvent()           {}
 func (playerLeft) isGameEvent()          {}
 func (playerTurn) isGameEvent()          {}
 func (diceThrow) isGameEvent()           {}
-func (Move) isGameEvent()                {}
+func (move) isGameEvent()                {}
 func (PossibleMoves) isGameEvent()       {}
 func (showQuestion) isGameEvent()        {}
 func (playerAnswerResults) isGameEvent() {}
 func (gameEnd) isGameEvent()             {}
+func (GameTerminated) isGameEvent()      {}
 
 // PlayerJoin is only emitted to the actual player
 // who join the game
@@ -114,9 +115,9 @@ func newDiceThrow() diceThrow {
 	return diceThrow{uint8(rand.Int31n(maxFaceNumber) + 1)}
 }
 
-// Move is emitted when a player choose to Move the
+// move is emitted when a player choose to move the
 // pawn
-type Move struct {
+type move struct {
 	// the tiles to go through to animate the move
 	// (only valid when send by the server)
 	Path []int
@@ -158,16 +159,22 @@ type gameEnd struct {
 	WinnerNames []string
 }
 
+// GameTerminated is emitted when the game
+// is manually terminated by the teacher
+type GameTerminated struct{}
+
 // clientEventData is send by a client to the game server
 type clientEventData interface {
 	isClientEvent()
 }
 
-func (Move) isClientEvent()         {}
+func (ClientMove) isClientEvent()   {}
 func (Answer) isClientEvent()       {}
 func (DiceClicked) isClientEvent()  {}
 func (WantNextTurn) isClientEvent() {}
 func (Ping) isClientEvent()         {}
+
+type ClientMove move
 
 // the proposition of a client to a question
 type Answer struct {
