@@ -6,12 +6,15 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
+
+var LoopackLogger = log.New(os.Stdout, "editor-loopback", log.LstdFlags)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -55,10 +58,10 @@ func (ct *loopbackController) startLoop(ctx context.Context) {
 		case client := <-ct.incomingClient:
 			ct.client = client
 		case <-ct.clientLeft: // client is done
-			log.Println("Client is done")
+			LoopackLogger.Println("Client is done, terminating session.")
 			return
 		case <-ctx.Done(): // terminate the session on timeout
-			log.Println("Session timed out")
+			LoopackLogger.Println("Session timed out")
 			if ct.client != nil {
 				utils.WebsocketError(ct.client.conn, errors.New("session timeout reached"))
 			}
@@ -66,7 +69,7 @@ func (ct *loopbackController) startLoop(ctx context.Context) {
 
 		case data := <-ct.broadcast:
 			if ct.client != nil {
-				log.Println("Sending data...")
+				LoopackLogger.Println("Sending data...")
 				ct.client.send(data)
 			}
 		}
@@ -113,7 +116,7 @@ type previewClient struct {
 func (cl *previewClient) send(data serverData) {
 	err := cl.conn.WriteJSON(data)
 	if err != nil {
-		log.Printf("Broadcasting to client (session %s) failed: %s", cl.controller.sessionID, err)
+		LoopackLogger.Printf("Broadcasting to client (session %s) failed: %s", cl.controller.sessionID, err)
 	}
 }
 
@@ -126,7 +129,7 @@ func (cl *previewClient) startLoop() {
 		var data clientData
 		err := cl.conn.ReadJSON(&data)
 		if err != nil {
-			log.Printf("invalid client messsage: %s", err)
+			LoopackLogger.Printf("invalid client messsage: %s", err)
 			return
 		}
 
@@ -137,6 +140,8 @@ func (cl *previewClient) startLoop() {
 		case ShowCorrectAnswerIn:
 			out := cl.controller.currentQuestion.CorrectAnswer()
 			cl.controller.broadcast <- serverData{Kind: ShowCorrectAnswerOut, Data: out}
+		case Ping:
+			LoopackLogger.Println("Ping")
 		}
 	}
 
@@ -148,7 +153,7 @@ func (ct *loopbackController) setupWebSocket(w http.ResponseWriter, r *http.Requ
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Failed to init websocket: ", err)
+		LoopackLogger.Println("Failed to init websocket: ", err)
 		return
 	}
 	defer ws.Close()

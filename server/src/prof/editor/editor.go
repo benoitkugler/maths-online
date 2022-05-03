@@ -16,7 +16,7 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 )
 
-const sessionTimeout = 12 * time.Hour
+const sessionTimeout = 6 * time.Hour
 
 // Controller is the global object responsible to
 // handle incoming requests regarding the editor.
@@ -341,6 +341,7 @@ func (ct *Controller) pausePreview(sessionID string) error {
 	return nil
 }
 
+// endPreview terminates the current session
 func (ct *Controller) endPreview(sessionID string) error {
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
