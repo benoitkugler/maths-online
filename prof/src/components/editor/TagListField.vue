@@ -10,7 +10,13 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn class="my-1" color="success" @click="endEdit">
+        <v-btn
+          class="my-1"
+          color="success"
+          @click="endEdit"
+          :disabled="!saveEnabled"
+          variant="contained"
+        >
           Enregistrer
         </v-btn>
       </v-card-actions>
@@ -34,6 +40,7 @@
 
 <script setup lang="ts">
 import { tagColor } from "@/controller/editor";
+import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListEdit from "./TagListEdit.vue";
 
@@ -58,6 +65,13 @@ function startEdit() {
   isEditing = true;
   tmpList = props.modelValue.map(v => v.toUpperCase());
 }
+
+const saveEnabled = computed(() => {
+  if (tmpList.length != props.modelValue.length) {
+    return true;
+  }
+  return !tmpList.every((tag, index) => props.modelValue[index] == tag);
+});
 
 function endEdit() {
   isEditing = false;
