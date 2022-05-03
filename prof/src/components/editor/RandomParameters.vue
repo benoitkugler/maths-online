@@ -80,7 +80,7 @@
               @dragstart="e => onItemDragStart(e, index)"
               draggable="true"
             >
-              <v-row no-gutters class="my-1">
+              <v-row no-gutters>
                 <v-col cols="3">
                   <variable-field
                     v-model="param.variable"

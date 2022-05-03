@@ -88,33 +88,47 @@
     </v-row>
     <v-row no-gutters>
       <v-col>
-        <v-list v-if="props.parameters?.length">
-          <v-list-item v-for="(param, index) in props.parameters" class="pr-0">
-            <v-row>
-              <v-col cols="9">
-                <v-text-field
-                  class="small-input"
-                  hide-details
-                  variant="underlined"
-                  density="compact"
-                  :model-value="param"
-                  @update:model-value="v => autocomplete(index, v)"
-                  @blur="emit('done')"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="3" align-self="center">
-                <v-btn
-                  icon
-                  size="small"
-                  flat
-                  @click="emit('delete', index)"
-                  title="Supprimer cette fonction spéciale"
-                >
-                  <v-icon icon="mdi-delete" color="red"></v-icon>
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-list-item>
+        <v-list v-if="props.parameters?.length" @dragend="showDropZone = false">
+          <drop-zone
+            v-if="showDropZone"
+            @drop="origin => emit('swap', origin, 0)"
+          ></drop-zone>
+          <div v-for="(param, index) in props.parameters">
+            <v-list-item
+              class="pr-0"
+              @dragstart="e => onItemDragStart(e, index)"
+              draggable="true"
+            >
+              <v-row>
+                <v-col cols="9">
+                  <v-text-field
+                    class="small-input"
+                    hide-details
+                    variant="underlined"
+                    density="compact"
+                    :model-value="param"
+                    @update:model-value="v => autocomplete(index, v)"
+                    @blur="emit('done')"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="3" align-self="center">
+                  <v-btn
+                    icon
+                    size="small"
+                    flat
+                    @click="emit('delete', index)"
+                    title="Supprimer cette fonction spéciale"
+                  >
+                    <v-icon icon="mdi-delete" color="red"></v-icon>
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-list-item>
+            <drop-zone
+              v-if="showDropZone"
+              @drop="origin => emit('swap', origin, index + 1)"
+            ></drop-zone>
+          </div>
         </v-list>
       </v-col>
     </v-row>
@@ -122,7 +136,10 @@
 </template>
 
 <script setup lang="ts">
+import { onDragListItemStart } from "@/controller/editor";
 import { ref } from "@vue/reactivity";
+import { $ref } from "vue/macros";
+import DropZone from "./DropZone.vue";
 
 interface Props {
   parameters: string[];
@@ -136,10 +153,17 @@ const emit = defineEmits<{
   (e: "add"): void;
   (e: "update", index: number, param: string): void;
   (e: "delete", index: number): void;
+  (e: "swap", origin: number, target: number): void;
   (e: "done"): void;
 }>();
 
 const showHelp = ref(false);
+
+let showDropZone = $ref(false);
+function onItemDragStart(payload: DragEvent, index: number) {
+  onDragListItemStart(payload, index);
+  showDropZone = true;
+}
 
 // to keep sync with the server
 const intrincics = ["pythagorians", "projection"];
@@ -156,7 +180,7 @@ function autocomplete(index: number, text: string) {
 }
 </script>
 
-<style>
+<style scoped>
 .small-input:deep(input) {
   font-size: 14px;
   width: 100%;
