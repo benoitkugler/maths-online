@@ -311,6 +311,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   void _onGameTerminated() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: const Duration(seconds: 5),
         backgroundColor: Theme.of(context).colorScheme.secondary,

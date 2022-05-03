@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 /// Pin is a centered view asking for a game code
 class Pin extends StatelessWidget {
   final String label;
+  final TextEditingController controller;
   final void Function(String) onValid;
-  const Pin(this.label, this.onValid, {Key? key}) : super(key: key);
+  const Pin(this.label, this.controller, this.onValid, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +28,7 @@ class Pin extends StatelessWidget {
               child: SizedBox(
                 width: 200,
                 child: TextField(
+                  controller: controller,
                   onSubmitted: onValid,
                   keyboardType: TextInputType.number,
                   autofocus: true,

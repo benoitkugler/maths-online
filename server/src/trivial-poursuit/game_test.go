@@ -351,6 +351,13 @@ func TestReview(t *testing.T) {
 
 	time.Sleep(time.Millisecond * 20)
 
+	if err = client1.ReadJSON(&update); err != nil { // playerAnswerResult 1 & 2
+		t.Fatal(err)
+	}
+	if _, isTerm := update.Events[0].(game.GameTerminated); !isTerm {
+		t.Fatal("unexepected events", update.Events)
+	}
+
 	history := ct.review().QuestionHistory[Player{ID: "client1", Name: "testName"}]
 	if len(history.MarkedQuestions) != 1 || len(history.QuestionHistory) != 1 {
 		t.Fatal(history)

@@ -14,6 +14,8 @@ class TrivialPoursuitLoggin extends StatefulWidget {
 }
 
 class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
+  final pinController = TextEditingController();
+
   @override
   void initState() {
     if (widget.buildMode == BuildMode.debug) {
@@ -31,7 +33,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
       appBar: AppBar(
         title: const Text("Rejoindre une partie"),
       ),
-      body: Pin("Code de la partie", _launchTrivialPoursuit),
+      body: Pin("Code de la partie", pinController, _launchTrivialPoursuit),
     );
   }
 
@@ -43,8 +45,10 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
           body: TrivialPoursuitController(widget.buildMode, code)),
     ));
 
-    // route.then((value) {
-    //   otpController.clear();
-    // });
+    route.then((value) {
+      setState(() {
+        pinController.clear();
+      });
+    });
   }
 }

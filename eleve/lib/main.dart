@@ -6,8 +6,8 @@ import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
-// final bm = buildMode();
-final bm = BuildMode.debug;
+final bm = buildMode();
+// final bm = BuildMode.debug;
 
 void main() {
   final audio = Audio();

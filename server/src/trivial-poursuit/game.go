@@ -75,10 +75,17 @@ func (cl *client) startLoop() {
 	}()
 
 	for {
+
 		// read in a message
 		_, r, err := cl.conn.NextReader()
+
+		if err, isClose := err.(*websocket.CloseError); isClose {
+			ProgressLogger.Printf("Client left (%v)", err)
+			return
+		}
+
 		if err != nil {
-			WarningLogger.Printf("client connection: %s", err)
+			WarningLogger.Printf("unexpected client error: %s", err)
 			return
 		}
 
@@ -164,12 +171,19 @@ func (gc *GameController) StartLoop() (Review, bool) {
 		select {
 		case <-gc.Terminate:
 			ProgressLogger.Println("Terminating game")
-			gc.broadcastEvents <- game.StateUpdate{
-				Events: game.Events{
-					game.GameTerminated{},
-				},
-				State: gc.game.GameState,
+
+			for client, clientID := range gc.clients {
+				err := client.sendEvent(game.StateUpdate{
+					Events: game.Events{
+						game.GameTerminated{},
+					},
+					State: gc.game.GameState,
+				})
+				if err != nil {
+					WarningLogger.Printf("Broadcasting to client %d failed: %s", clientID, err)
+				}
 			}
+
 			return Review{}, false
 
 		case event := <-gc.broadcastEvents:
