@@ -8,6 +8,7 @@ export interface gamePlayers {
 }
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.gameSummary
 export interface gameSummary {
+  GameID: string;
   CurrentPlayer: string;
   Players: gamePlayers[] | null;
 }

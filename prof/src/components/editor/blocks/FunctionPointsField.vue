@@ -37,6 +37,8 @@
         :model-value="props.modelValue.XGrid || []"
         @update:model-value="g => (props.modelValue.XGrid = g)"
         label="Valeurs de X"
+        :sorted="true"
+        disallow-repeat
       ></IntListField>
     </v-col>
   </v-row>

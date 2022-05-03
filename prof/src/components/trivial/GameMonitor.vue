@@ -1,6 +1,14 @@
 <template>
   <v-card class="ma-2">
     <v-card-text>
+      <v-row v-if="props.showID" justify="center" class="mb-2">
+        <v-col cols="8">
+          Code de la partie :
+          <v-chip>
+            {{ props.summary.GameID }}
+          </v-chip>
+        </v-col>
+      </v-row>
       <v-row no-gutters class="my-1">
         <v-col v-if="!props.summary.Players?.length">
           <i>En attente de joueurs...</i>
@@ -23,6 +31,7 @@ import Pie from "./Pie.vue";
 
 interface Props {
   summary: gameSummary;
+  showID: boolean;
 }
 
 const props = defineProps<Props>();

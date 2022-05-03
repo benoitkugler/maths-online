@@ -12,16 +12,16 @@
     </v-row>
 
     <v-card-text>
-      <v-alert color="info" class="mb-2">
+      <v-alert color="info" class="mb-2" v-if="showSessionID">
         Code de la session :
         <v-chip>
-          {{ sessionID }}
+          {{ props.runningSession.SessionID }}
         </v-chip>
       </v-alert>
 
       <v-row>
         <v-col cols="4" v-for="game in summaries">
-          <GameMonitor :summary="game"></GameMonitor>
+          <GameMonitor :summary="game" :show-i-d="showGamesID"></GameMonitor>
         </v-col>
       </v-row>
     </v-card-text>
@@ -29,17 +29,19 @@
 </template>
 
 <script setup lang="ts">
+import type { LaunchSessionOut } from "@/controller/api_gen";
+import { GroupStrategyKind } from "@/controller/api_gen";
 import { TrivialMonitorController } from "@/controller/trivial";
 import type {
   gameSummary,
   teacherSocketData
 } from "@/controller/trivial_config_socket_gen";
-import { onMounted } from "@vue/runtime-core";
+import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import GameMonitor from "./GameMonitor.vue";
 
 interface Props {
-  sessionID: string;
+  runningSession: LaunchSessionOut;
 }
 
 const props = defineProps<Props>();
@@ -48,11 +50,26 @@ const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
+const showSessionID = computed(
+  () =>
+    props.runningSession.GroupStrategyKind ==
+    GroupStrategyKind.RandomGroupStrategy
+);
+
+const showGamesID = computed(
+  () =>
+    props.runningSession.GroupStrategyKind ==
+    GroupStrategyKind.FixedSizeGroupStrategy
+);
+
 let summaries = $ref<gameSummary[]>([]);
 
 let ct: TrivialMonitorController;
 onMounted(() => {
-  ct = new TrivialMonitorController(props.sessionID, onServerData);
+  ct = new TrivialMonitorController(
+    props.runningSession.SessionID,
+    onServerData
+  );
 });
 
 function onServerData(data: teacherSocketData) {

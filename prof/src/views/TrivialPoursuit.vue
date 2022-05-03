@@ -79,54 +79,7 @@
     :model-value="launchingConfig != null"
     @update:model-value="launchingConfig = null"
   >
-    <v-card title="Démarrer la session">
-      <v-card-text>
-        <v-form class="mx-4 my-2" v-if="launchingConfig != null">
-          <v-text-field
-            label="Nombre de joueurs par groupe"
-            type="number"
-            min="1"
-            v-model.number="launchOptions.Data.MaxPlayersPerGroup"
-          ></v-text-field>
-
-          <v-text-field
-            label="Nombre total de joueurs"
-            type="number"
-            min="0"
-            v-model.number="launchOptions.Data.TotalPlayersNumber"
-          ></v-text-field>
-        </v-form>
-
-        <v-alert class="px-4 my-2" :model-value="gameCode != ''" color="info">
-          <v-row no-gutters>
-            <v-col align-self="center">
-              Code de
-              <a href="/test-eleve" target="_blank">la partie à rejoindre</a>
-              :
-            </v-col>
-            <v-col>
-              <v-chip size="big" class="pa-3"
-                ><b>{{ gameCode }}</b></v-chip
-              >
-            </v-col>
-          </v-row>
-        </v-alert>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-col cols="auto" class="text-right">
-            <v-btn
-              block
-              @click="launchSession"
-              :disabled="!isValid"
-              color="success"
-            >
-              Lancer la partie
-            </v-btn>
-          </v-col>
-        </v-card-actions>
-      </v-card-text>
-    </v-card>
+    <launch-options @launch="launchSession"></launch-options>
   </v-dialog>
 
   <v-dialog
@@ -135,7 +88,8 @@
     @update:model-value="sessionToMonitor = null"
   >
     <session-monitor
-      :session-i-d="sessionToMonitor?.SessionID || ''"
+      v-if="sessionToMonitor != null"
+      :running-session="sessionToMonitor!.Running "
       @close="sessionToMonitor = null"
     ></session-monitor>
   </v-dialog>
@@ -171,11 +125,14 @@
               title="Editer"
               class="mx-2"
               @click="editedConfig = config.Config"
-              :disabled="config.SessionID != ''"
+              :disabled="config.Running.SessionID != ''"
             >
               <v-icon icon="mdi-pencil"></v-icon>
             </v-btn>
-            <v-btn v-if="config.SessionID != ''" @click="monitor(config)">
+            <v-btn
+              v-if="config.Running.SessionID != ''"
+              @click="monitor(config)"
+            >
               Suivre
             </v-btn>
             <v-btn
@@ -193,7 +150,7 @@
             </v-btn>
 
             <v-btn
-              v-if="config.SessionID == ''"
+              v-if="config.Running.SessionID == ''"
               class="mx-2"
               size="x-small"
               icon
@@ -247,11 +204,11 @@ import type {
   TrivialConfig,
   TrivialConfigExt
 } from "@/controller/api_gen";
-import { GroupStrategyKind } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { colorsPerCategorie } from "@/controller/trivial";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import TagsSelector from "../components/trivial/TagsSelector.vue";
 
@@ -267,10 +224,6 @@ const configs = computed(() => {
   return a;
 });
 
-const isValid = computed(
-  () =>
-    !isLaunching && launchOptions && launchOptions.Data.MaxPlayersPerGroup >= 1
-);
 let isLaunching = $ref(false);
 
 let gameCode = $ref("");
@@ -316,13 +269,8 @@ async function deleteConfig(config: TrivialConfig) {
   _configs = _configs.filter(c => c.Config.Id != config.Id);
 }
 
-let launchOptions = $ref<GroupStrategy>({
-  Kind: GroupStrategyKind.RandomGroupStrategy,
-  Data: { MaxPlayersPerGroup: 4, TotalPlayersNumber: 0 }
-});
-
 let launchingConfig = $ref<TrivialConfig | null>(null);
-async function launchSession() {
+async function launchSession(options: GroupStrategy) {
   if (launchingConfig == null) {
     return;
   }
@@ -330,16 +278,16 @@ async function launchSession() {
   isLaunching = true;
   const res = await controller.LaunchSessionTrivialPoursuit({
     IdConfig: configID,
-    GroupStrategy: launchOptions!
+    GroupStrategy: options
   });
-  isLaunching = false;
   launchingConfig = null;
+  isLaunching = false;
   if (res === undefined) {
     return;
   }
 
   const index = _configs.findIndex(v => v.Config.Id == configID);
-  _configs[index].SessionID = res;
+  _configs[index].Running = res;
 }
 
 async function stopSession(config: TrivialConfig) {
@@ -350,7 +298,11 @@ async function stopSession(config: TrivialConfig) {
   }
 
   const index = _configs.findIndex(v => v.Config.Id == configID);
-  _configs[index].SessionID = "";
+  _configs[index].Running = {
+    SessionID: "",
+    GroupStrategyKind: 0,
+    GroupsID: []
+  };
 }
 
 let sessionToMonitor = $ref<TrivialConfigExt | null>(null);

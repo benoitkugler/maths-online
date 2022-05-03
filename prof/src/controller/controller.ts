@@ -1,5 +1,6 @@
 import type {
   CheckParametersOut,
+  LaunchSessionOut,
   Question,
   QuestionHeader,
   StartSessionOut,
@@ -50,10 +51,12 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessLaunchSessionTrivialPoursuit(sessionID: string): void {
+  protected onSuccessLaunchSessionTrivialPoursuit(
+    options: LaunchSessionOut
+  ): void {
     this.inRequest = false;
     if (this.showMessage) {
-      this.showMessage(`Session de Trivial lancée : ${sessionID}`);
+      this.showMessage(`Session de Trivial lancée : ${options.SessionID}`);
     }
   }
 

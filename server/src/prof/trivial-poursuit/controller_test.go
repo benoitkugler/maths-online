@@ -1,6 +1,7 @@
 package trivialpoursuit
 
 import (
+	"sort"
 	"testing"
 	"time"
 
@@ -11,7 +12,7 @@ func TestGameTimeout(t *testing.T) {
 	// ProgressLogger.SetOutput(os.Stdout)
 	const timeout = time.Second / 10
 
-	ct := newGameSession(nil, TrivialConfig{}, RandomGroupStrategy{2, 2}, game.QuestionPool{})
+	ct := newGameSession("test", nil, TrivialConfig{}, RandomGroupStrategy{2, 2}, game.QuestionPool{})
 	gameTimeout = timeout
 
 	ct.createGame(2)
@@ -24,5 +25,16 @@ func TestGameTimeout(t *testing.T) {
 
 	if len(ct.games) != 0 {
 		t.Fatal("game should have timed out")
+	}
+}
+
+func TestGameID(t *testing.T) {
+	s := make([]string, 20)
+	for i := range s {
+		s[i] = gameIDFromSerial(i)
+	}
+
+	if !sort.StringsAreSorted(s) {
+		t.Fatal("game ids are not sorted")
 	}
 }

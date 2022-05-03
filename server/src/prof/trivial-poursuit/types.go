@@ -54,13 +54,13 @@ type CategoriesQuestions [game.NbCategories]QuestionCriterion
 type TrivialConfigExt struct {
 	Config TrivialConfig
 
-	SessionID               string // empty when not running
+	Running                 LaunchSessionOut // empty when not running
 	NbQuestionsByCategories [game.NbCategories]int
 }
 
-func (tc TrivialConfig) withDetails(dict map[int64]exercice.QuestionTags, sessions map[int64]SessionID) TrivialConfigExt {
+func (tc TrivialConfig) withDetails(dict map[int64]exercice.QuestionTags, sessions map[int64]LaunchSessionOut) TrivialConfigExt {
 	out := TrivialConfigExt{Config: tc}
-	out.SessionID = sessions[tc.Id]
+	out.Running = sessions[tc.Id]
 	for i, cat := range tc.Questions {
 		out.NbQuestionsByCategories[i] = len(cat.filter(dict))
 	}
@@ -70,6 +70,12 @@ func (tc TrivialConfig) withDetails(dict map[int64]exercice.QuestionTags, sessio
 type LaunchSessionIn struct {
 	IdConfig      int64
 	GroupStrategy GroupStrategy
+}
+
+type LaunchSessionOut struct {
+	SessionID         string
+	GroupsID          []string // used for FixedGroupStrategy
+	GroupStrategyKind int
 }
 
 func (ls *LaunchSessionIn) UnmarshalJSON(data []byte) error {
@@ -84,17 +90,23 @@ func (ls *LaunchSessionIn) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-var _ GroupStrategy = RandomGroupStrategy{}
+var (
+	_ GroupStrategy = RandomGroupStrategy{}
+	_ GroupStrategy = FixedSizeGroupStrategy{}
+)
 
 // GroupStrategy defines how players are matched
 type GroupStrategy interface {
-	// initGames is called once when creating a new sesssion
+	kind() int
+
+	// initGames is called once when creating a new sesssion,
 	initGames(*gameSession)
 
-	// selectGame return the game `player` should join,
-	// or an empty string to start a new room with the returned number of players
+	// selectOrCreateGame return the game `studentID` should join,
+	// or an empty string to start a new room with the returned number of players.
 	// `studentID` is -1 for anonymous players
-	selectGame(studentID int64, session *gameSession) (GameID, int)
+	// `selectOrCreateGame` must also validate `clientGameID` when needed
+	selectOrCreateGame(clientGameID string, studentID int64, session *gameSession) (GameID, error)
 }
 
 // RandomGroupStrategy groups players at random,
@@ -102,6 +114,12 @@ type GroupStrategy interface {
 type RandomGroupStrategy struct {
 	MaxPlayersPerGroup int
 	TotalPlayersNumber int
+}
+
+// FixedSizeGroupStrategy is a broader version of `FixedGroupStrategy`,
+// in which only the size of the groups are fixed by the teacher.
+type FixedSizeGroupStrategy struct {
+	Groups []int
 }
 
 // FixedGroupStrategy follow the groups precised by

@@ -58,14 +58,18 @@ func NewController(db *sql.DB, key pass.Encrypter) *Controller {
 }
 
 // lookupSession locks and revese the sessionID -> session map
-func (ct *Controller) sessionMap() map[int64]SessionID {
+func (ct *Controller) sessionMap() map[int64]LaunchSessionOut {
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
 
-	out := make(map[int64]SessionID, len(ct.sessions))
+	out := make(map[int64]LaunchSessionOut, len(ct.sessions))
 
 	for sessionID, session := range ct.sessions {
-		out[session.config.Id] = sessionID
+		out[session.config.Id] = LaunchSessionOut{
+			SessionID:         sessionID,
+			GroupStrategyKind: session.group.kind(),
+			GroupsID:          session.groupIDs(),
+		}
 	}
 
 	return out
@@ -154,38 +158,45 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) launchSession(params LaunchSessionIn) (SessionID, error) {
-	if dict := ct.sessionMap(); dict[params.IdConfig] != "" {
-		return "", errors.New("session already running")
+func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, error) {
+	if dict := ct.sessionMap(); dict[params.IdConfig].SessionID != "" {
+		return LaunchSessionOut{}, errors.New("session already running")
 	}
 
 	config, err := SelectTrivialConfig(ct.db, params.IdConfig)
 	if err != nil {
-		return "", utils.SQLError(err)
+		return LaunchSessionOut{}, utils.SQLError(err)
 	}
 
 	// select the questions
 	questionPool, err := config.Questions.selectQuestions(ct.db)
 	if err != nil {
-		return "", err
+		return LaunchSessionOut{}, err
 	}
 
-	session := newGameSession(ct.db, config, params.GroupStrategy, questionPool)
+	var out LaunchSessionOut
+	out.GroupStrategyKind = params.GroupStrategy.kind()
+
+	ct.lock.Lock()
+	out.SessionID = utils.RandomID(true, 4, func(s string) bool {
+		_, taken := ct.sessions[s]
+		return taken
+	})
+	ct.lock.Unlock()
+
+	session := newGameSession(out.SessionID, ct.db, config, params.GroupStrategy, questionPool)
 
 	// the rooms may be either created initially, or during client connection
 	// (see connectStudent)
 	session.group.initGames(session) // initial setup of rooms
+	out.GroupsID = session.groupIDs()
 
 	ct.lock.Lock()
-	newID := utils.RandomID(true, 4, func(s string) bool {
-		_, taken := ct.sessions[s]
-		return taken
-	})
 	// register the controller...
-	ct.sessions[newID] = session
+	ct.sessions[out.SessionID] = session
 	ct.lock.Unlock()
 
-	ProgressLogger.Printf("Launching session %s", newID)
+	ProgressLogger.Printf("Launching session %s", out.SessionID)
 	// ...and start it
 	go func() {
 		ctx, cancelFunc := context.WithTimeout(context.Background(), sessionTimeout)
@@ -196,12 +207,12 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (SessionID, error) {
 		// remove the game controller when the game is over
 		ct.lock.Lock()
 		defer ct.lock.Unlock()
-		delete(ct.sessions, newID)
+		delete(ct.sessions, out.SessionID)
 
-		ProgressLogger.Printf("Removed session %s", newID)
+		ProgressLogger.Printf("Removed session %s", out.SessionID)
 	}()
 
-	return newID, nil
+	return out, nil
 }
 
 // StopSessionTrivialPoursuit stops a running session,
@@ -212,7 +223,7 @@ func (ct *Controller) StopSessionTrivialPoursuit(c echo.Context) error {
 		return err
 	}
 
-	sessionID := ct.sessionMap()[id]
+	sessionID := ct.sessionMap()[id].SessionID
 
 	ct.lock.Lock()
 	session, ok := ct.sessions[sessionID]
@@ -256,7 +267,13 @@ func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {
 
 // ConnectStudentSession handles the connection of one student to the activity
 func (ct *Controller) ConnectStudentSession(c echo.Context) error {
-	sessionID := c.Param("session-id")
+	completeID := c.Param("session-id")
+
+	if len(completeID) < 4 {
+		return fmt.Errorf("invalid ID %s", completeID)
+	}
+	sessionID := completeID[:4]
+	gameID := completeID[4:]
 
 	ct.lock.Lock()
 	session, ok := ct.sessions[sessionID]
@@ -272,7 +289,7 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 
 	ProgressLogger.Println("Connecting student", clientID, sessionID)
 
-	err := session.connectStudent(c, clientID, ct.key)
+	err := session.connectStudent(c, gameID, clientID, ct.key)
 
 	return err
 }

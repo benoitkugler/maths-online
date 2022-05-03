@@ -85,7 +85,7 @@ func main() {
 		if err = exercice.ValidateAllQuestions(db); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("Question table checked.")
+		fmt.Println("Question table validated.")
 	}()
 
 	trivial := trivialpoursuit.NewController(db, key)

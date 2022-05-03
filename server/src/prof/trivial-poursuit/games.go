@@ -17,12 +17,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GameID is an in-memory identifier for a game room.
+// GameID is an in-memory identifier for a game room,
+// with length 2 (meaning only 100 games per session are allowed)
+// It is meant to be associated with a session ID.
 type GameID = string
 
 // gameSession monitor the games of one session (think one classroom)
 // and broadcast the main advances from all the games to the teacher client
 type gameSession struct {
+	id   SessionID
 	quit chan bool
 
 	lock sync.Mutex
@@ -38,8 +41,9 @@ type gameSession struct {
 	group  GroupStrategy // specified when starting the session
 }
 
-func newGameSession(db *sql.DB, config TrivialConfig, group GroupStrategy, questions ga.QuestionPool) *gameSession {
+func newGameSession(id SessionID, db *sql.DB, config TrivialConfig, group GroupStrategy, questions ga.QuestionPool) *gameSession {
 	return &gameSession{
+		id:             id,
 		db:             db,
 		config:         config,
 		group:          group,
@@ -51,14 +55,18 @@ func newGameSession(db *sql.DB, config TrivialConfig, group GroupStrategy, quest
 	}
 }
 
+// make sure game id are properly sorted when
+// created from groups
+func gameIDFromSerial(serial int) string {
+	return fmt.Sprintf("%02d", serial+1)
+}
+
+// createGame locks and starts a new game
 func (gs *gameSession) createGame(nbPlayers int) GameID {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	gameID := utils.RandomID(false, 10, func(s string) bool {
-		_, taken := gs.games[s]
-		return taken
-	})
+	gameID := gameIDFromSerial(len(gs.games))
 
 	game := tv.NewGameController(gameID,
 		gs.questions,
@@ -93,7 +101,7 @@ func (gs *gameSession) exploitReview(review tv.Review) {
 	ProgressLogger.Printf("GAME REVIEW: %v", review)
 }
 
-func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID, key pass.Encrypter) error {
+func (gs *gameSession) connectStudent(c echo.Context, clientGameID string, clientID pass.EncryptedID, key pass.Encrypter) error {
 	player := tv.Player{ID: clientID}
 	var studentID int64 = -1
 	if clientID == "" { // anonymous connection
@@ -113,14 +121,10 @@ func (gs *gameSession) connectStudent(c echo.Context, clientID pass.EncryptedID,
 		player.Name = student.Surname
 	}
 
-	// select the game
-	gameID, newGamePlayers := gs.group.selectGame(studentID, gs)
-
-	if gameID == "" { // first create a new game
-
-		ProgressLogger.Printf("Creating game room (for %d players)", newGamePlayers)
-
-		gameID = gs.createGame(newGamePlayers)
+	// select or create the game
+	gameID, err := gs.group.selectOrCreateGame(clientGameID, studentID, gs)
+	if err != nil {
+		return err
 	}
 
 	// then add the player
@@ -142,7 +146,9 @@ func (gs *gameSession) connectTeacher(ws *websocket.Conn) *teacherClient {
 	defer gs.lock.Unlock()
 
 	for k, ga := range gs.games {
-		client.currentSummaries[k] = ga.Summary()
+		su := ga.Summary()
+		su.ID = gs.id + su.ID
+		client.currentSummaries[k] = su
 	}
 	gs.teacherClients[client] = true
 
@@ -159,6 +165,7 @@ func (gs *gameSession) startLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case summary := <-gs.monitor:
+			summary.ID = gs.id + summary.ID
 			for client := range gs.teacherClients {
 				client.sendSummary(summary)
 			}
@@ -176,6 +183,20 @@ func (gs *gameSession) nbPlayers() int {
 		allPlayers += len(game.Summary().Successes)
 	}
 	return allPlayers
+}
+
+// groupIDs locks and returns the COMPLETE group ids
+func (gs *gameSession) groupIDs() []string {
+	gs.lock.Lock()
+	defer gs.lock.Unlock()
+
+	var out []string
+	for _, game := range gs.games {
+		out = append(out, gs.id+game.ID)
+	}
+
+	sort.Strings(out)
+	return out
 }
 
 func (gs *gameSession) generateName() string {

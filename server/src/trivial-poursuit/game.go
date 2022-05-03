@@ -109,7 +109,7 @@ type GameOptions struct {
 
 // GameController handles one game room
 type GameController struct {
-	id          GameID
+	ID          GameID
 	monitor     chan GameSummary
 	join, leave chan *client
 
@@ -120,14 +120,14 @@ type GameController struct {
 	game     game.Game // game logic
 	gameLock sync.Mutex
 
-	options GameOptions
+	Options GameOptions
 }
 
 // NewGameController creates a new game, with given `id` and `options`.
 // `monitor` is an optionnal channel to write back the main progress of the game.
 func NewGameController(id GameID, questions game.QuestionPool, options GameOptions, monitor chan GameSummary) *GameController {
 	return &GameController{
-		id:              id,
+		ID:              id,
 		monitor:         monitor,
 		join:            make(chan *client, 1),
 		leave:           make(chan *client),
@@ -135,7 +135,7 @@ func NewGameController(id GameID, questions game.QuestionPool, options GameOptio
 		broadcastEvents: make(chan game.StateUpdate, 1), // the main loop write in this channel
 		clients:         map[*client]game.PlayerID{},
 		game:            *game.NewGame(options.QuestionTimeout, questions),
-		options:         options,
+		Options:         options,
 	}
 }
 
@@ -243,7 +243,7 @@ func (gc *GameController) StartLoop(ctx context.Context) (Review, bool) {
 			})
 
 			// ... check if the new player triggers a game start
-			if gc.game.NumberPlayers() >= gc.options.PlayersNumber {
+			if gc.game.NumberPlayers() >= gc.Options.PlayersNumber {
 				events := gc.game.StartGame()
 				gc.broadcastEvents <- events
 			} else { // update the lobby
@@ -304,7 +304,7 @@ func (gc *GameController) Summary() GameSummary {
 		successes[players[k].player] = v.Success
 	}
 	out := GameSummary{
-		ID:        gc.id,
+		ID:        gc.ID,
 		Successes: successes,
 	}
 	if id := state.Player; id != -1 {
@@ -327,7 +327,7 @@ func (gc *GameController) review() Review {
 	defer gc.gameLock.Unlock()
 
 	out := Review{
-		ID:              gc.id,
+		ID:              gc.ID,
 		QuestionHistory: make(map[Player]game.QuestionReview),
 	}
 

@@ -1,13 +1,15 @@
 <template>
   <v-row>
-    <v-col>
+    <v-col cols="8">
       <v-autocomplete
         variant="outlined"
         density="compact"
         multiple
         :label="label"
         chips
-        :model-value="props.modelValue.map(v => String(v))"
+        :model-value="
+          props.modelValue.map((v, i) => ({ value: i, title: String(v) }))
+        "
         @update:model-value="onDelete"
         hide-no-data
         closable-chips
@@ -19,13 +21,14 @@
     </v-col>
     <v-col cols="4">
       <v-text-field
+        class="fix-input-width"
         variant="outlined"
         density="compact"
         label="Ajouter"
         color="green"
         v-model="entry"
         @click:append-inner="add"
-        hint="Ajouter un intervalle avec a:b"
+        :hint="entryHint"
         @keyup="onEnter"
       >
         <template v-slot:appendInner>
@@ -45,6 +48,9 @@ import { $ref } from "vue/macros";
 interface Props {
   modelValue: number[];
   label?: string;
+  disallowIntervals?: boolean;
+  disallowRepeat?: boolean;
+  sorted: boolean;
 }
 
 const props = defineProps<Props>();
@@ -53,10 +59,10 @@ const emit = defineEmits<{
   (e: "update:model-value", v: number[]): void;
 }>();
 
-function onDelete(s: string[]) {
+function onDelete(s: number[]) {
   emit(
     "update:model-value",
-    s.map(s => Number(s))
+    s.map(index => props.modelValue[index])
   );
 }
 
@@ -64,40 +70,67 @@ let entry = $ref("");
 
 const isEntryValid = computed(() => parseEntry(entry) !== undefined);
 
-function parseEntry(s: string) {
+const entryHint = computed(() => {
+  let out = "";
+  if (!props.disallowIntervals) {
+    out += "Ajouter un intervalle avec a:b. ";
+  }
+  if (!props.disallowRepeat) {
+    out += "Ajouter a fois le nombre b avec a*b. ";
+  }
+  return out;
+});
+
+function parseEntry(s: string): number[] {
   s = s.trim();
   if (s == "") {
-    return;
+    return [];
   }
   let chunks = s.split(",");
-  if (chunks.length != 2) {
+  if (chunks.length == 1) {
     chunks = s.split(";");
   }
-  if (chunks.length != 2) {
-    chunks = s.split(":");
+  if (chunks.length > 1) {
+    return chunks.map(v => Number(v.trim())).filter(n => !isNaN(n));
   }
+
+  chunks = s.split(":");
   if (chunks.length == 2) {
     const start = Number(chunks[0].trim());
     const end = Number(chunks[1].trim());
     if (isNaN(start) || isNaN(end)) {
-      return;
+      return [];
     }
-    return { start, end };
+    const out = [];
+    for (let index = start; index <= end; index++) {
+      out.push(index);
+    }
+    return out;
+  }
+
+  chunks = s.split("*");
+  if (chunks.length == 2) {
+    const a = Number(chunks[0].trim());
+    const b = Number(chunks[1].trim());
+    if (isNaN(a) || isNaN(b)) {
+      return [];
+    }
+    return Array.from({ length: a }, (v, i) => b);
   }
 
   const v = Number(s);
   if (isNaN(v)) {
-    return;
+    return [];
   }
-  return { start: v, end: v };
+  return [v];
 }
 
 function add() {
-  const range = parseEntry(entry)!;
-  for (let index = range.start; index <= range.end; index++) {
-    props.modelValue.push(index);
+  const values = parseEntry(entry)!;
+  props.modelValue.push(...values);
+  if (props.sorted) {
+    props.modelValue.sort((a, b) => a - b);
   }
-  props.modelValue.sort((a, b) => a - b);
   entry = "";
   emit("update:model-value", props.modelValue);
 }
@@ -116,5 +149,9 @@ function onEnter(key: KeyboardEvent) {
 
 :deep(.v-field__append-inner) {
   padding-top: 4px;
+}
+
+.fix-input-width:deep(input) {
+  width: 100%;
 }
 </style>
