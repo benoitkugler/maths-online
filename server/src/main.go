@@ -27,7 +27,8 @@ func connectDB(dev bool) (*sql.DB, error) {
 			Host:     "localhost",
 			User:     "benoit",
 			Password: "dummy",
-			Name:     "maths_dev",
+			// Name:     "maths_dev",
+			Name: "isyro_prod",
 		}
 	} else { // in production, read from env
 		var err error
