@@ -45108,7 +45108,9 @@ A.aqB.prototype={
 $1(a){A.d(this.a.d,"channel").gl_().a.B(0,B.bF.ww(A.af(["Kind",0],t.N,t.z),null))},
 $S:65}
 A.aqz.prototype={
-$0(){this.a.f=this.b},
+$0(){var s=this.a
+s.f=this.b
+s.r=null},
 $S:0}
 A.aqA.prototype={
 $1(a){return!a},
