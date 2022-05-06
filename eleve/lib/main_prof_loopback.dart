@@ -101,6 +101,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   void _onServerState(LoopbackState state) {
     setState(() {
       question = state;
+      serverAnswer = null;
     });
   }
 
