@@ -99,7 +99,10 @@ type ErrQuestionInvalid struct {
 }
 
 func (e ErrQuestionInvalid) Error() string {
-	return "invalid question content"
+	if e.ParametersInvalid {
+		return fmt.Sprintf("invalid question parameters: %v", e.ErrParameters)
+	}
+	return fmt.Sprintf("invalid question blocks: %v", e.ErrEnonce)
 }
 
 // Validate ensure the enonce blocks are sound.
@@ -136,7 +139,7 @@ func ValidateAllQuestions(db DB) error {
 	for id, q := range qu {
 		err := q.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("ID: %d -> %s", id, err))
+			errs = append(errs, fmt.Sprintf("%s (ID: %d) -> %s", q.Title, id, err))
 		}
 	}
 	if len(errs) == 0 {
