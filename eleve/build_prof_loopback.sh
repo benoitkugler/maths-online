@@ -1,4 +1,5 @@
 flutter build web -t lib/main_prof_loopback.dart --base-href=/prof-loopback-app/ && 
+# uncomment to build in "debug" mode
 # flutter build web --profile --dart-define=Dart2jsOptimization=O0 -t lib/main_prof_loopback.dart --base-href=/prof-loopback-app/ && 
 echo "Moving build to server/static/prof_loopback..." && 
 rm -r ../server/static/prof_loopback/ && 
