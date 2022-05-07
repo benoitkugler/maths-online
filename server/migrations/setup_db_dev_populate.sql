@@ -7,8 +7,8 @@ INSERT INTO question_tags (id_question, tag)
 INSERT INTO students (id, name, surname)
     VALUES (1, 'K', 'Benoit'), (2, 'L', 'GuiGui');
 
-INSERT INTO trivial_configs (Id, LaunchSessionID, Questions, QuestionTimeout)
-    VALUES (1, '', '[[], [], [], [], []]', 60);
+INSERT INTO trivial_configs (Id, Questions, QuestionTimeout)
+    VALUES (1, '[[], [], [], [], []]', 60);
 
 SELECT
     setval('questions_id_seq', (
