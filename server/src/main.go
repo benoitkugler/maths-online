@@ -213,6 +213,9 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)
+	e.POST("/api/evaluate-question", func(c echo.Context) error {
+		return evaluateQuestion(edit, c)
+	})
 
 	// temporary question quick access
 

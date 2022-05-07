@@ -13,6 +13,8 @@ import (
 	"time"
 
 	ex "github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -377,4 +379,22 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut
 
 	loopback.setQuestion(question)
 	return SaveAndPreviewOut{IsValid: true}, nil
+}
+
+// ------------------------------------------------------------------------------
+
+// EvaluateQuestion instantiate the given question with the given parameters,
+// and evaluate the given answer.
+func (ct *Controller) EvaluateQuestion(id int64, params expression.Variables, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {
+	qu, err := ex.SelectQuestion(ct.db, id)
+	if err != nil {
+		return client.QuestionAnswersOut{}, utils.SQLError(err)
+	}
+
+	instance, err := qu.InstantiateWith(params)
+	if err != nil {
+		return client.QuestionAnswersOut{}, err
+	}
+
+	return instance.EvaluateAnswer(answer), nil
 }

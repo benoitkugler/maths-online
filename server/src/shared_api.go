@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,5 +23,26 @@ func checkExpressionSyntax(c echo.Context) error {
 	if err != nil {
 		out.Reason = err.Error()
 	}
+	return c.JSON(200, out)
+}
+
+type EvaluateQuestionIn struct {
+	Answer     client.QuestionAnswersIn `dart-extern:"exercices/types.gen.dart"`
+	Params     expression.Variables
+	IdQuestion int64
+}
+
+// standalone endpoint to check if an answer is correct
+func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
+	var args EvaluateQuestionIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.EvaluateQuestion(args.IdQuestion, args.Params, args.Answer)
+	if err != nil {
+		return err
+	}
+
 	return c.JSON(200, out)
 }
