@@ -31,7 +31,7 @@ type Enonce []Block
 // against random parameter values
 type Block interface {
 	// ID is only used by answer fields
-	instantiate(params expression.Variables, ID int) instance
+	instantiate(params expression.Variables, ID int) (instance, error)
 
 	// validate is called on teacher input
 	// it must validate expressions and enforce invariants used by
@@ -116,7 +116,7 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 	out.Questions = make([]QuestionInstance, len(eq.Questions))
 
 	for i, qu := range eq.Questions {
-		out.Questions[i] = qu.instantiateWith(params)
+		out.Questions[i], _ = qu.InstantiateWith(params)
 	}
 
 	return out
@@ -124,39 +124,48 @@ func (eq ExerciceQuestions) instantiate() ExerciceInstance {
 
 // Instantiate returns a deep copy of `qu`, where all random parameters
 // have been resolved.
-// It assumes that the expressions and random parameters definitions are valid.
+// It assumes that the expressions and random parameters definitions are valid :
+// if an error is encountered, it is returned as a TextInstance displaying the error.
 func (qu Question) Instantiate() (out QuestionInstance) {
-	defer func() {
-		if err := recover(); err != nil {
-			out = QuestionInstance{Title: "Erreur", Enonce: EnonceInstance{
-				TextInstance{
-					Parts: []client.TextOrMath{
-						{
-							Text: fmt.Sprintf("Erreur inatendue :%v", err),
-						},
+	out, err := qu.instantiate()
+	if err != nil {
+		return QuestionInstance{Title: "Erreur", Enonce: EnonceInstance{
+			TextInstance{
+				Parts: []client.TextOrMath{
+					{
+						Text: fmt.Sprintf("Erreur inatendue :%v", err),
 					},
 				},
-			}}
-		}
-	}()
-
-	// generate random params
-	rp, _ := qu.Parameters.ToMap().Instantiate()
-	out = qu.instantiateWith(rp)
-
-	return
+			},
+		}}
+	}
+	return out
 }
 
-func (qu Question) instantiateWith(params expression.Variables) QuestionInstance {
+func (qu Question) instantiate() (QuestionInstance, error) {
+	// generate random params
+	rp, err := qu.Parameters.ToMap().Instantiate()
+	if err != nil {
+		return QuestionInstance{}, err
+	}
+	return qu.InstantiateWith(rp)
+}
+
+// InstantiateWith uses the given values to instantiate the general question
+func (qu Question) InstantiateWith(params expression.Variables) (QuestionInstance, error) {
 	enonce := make(EnonceInstance, len(qu.Enonce))
 	var currentID int
 	for j, bl := range qu.Enonce {
-		enonce[j] = bl.instantiate(params, currentID)
+		var err error
+		enonce[j], err = bl.instantiate(params, currentID)
+		if err != nil {
+			return QuestionInstance{}, err
+		}
 		if _, isField := enonce[j].(fieldInstance); isField {
 			currentID++
 		}
 	}
-	return QuestionInstance{Title: qu.Title, Enonce: enonce}
+	return QuestionInstance{Title: qu.Title, Enonce: enonce}, nil
 }
 
 // TextPart is either a plain text, a LaTeX code or an expression
@@ -165,16 +174,19 @@ type TextPart struct {
 	Kind    TextKind
 }
 
-func (tp TextPart) instantiate(params expression.Variables) client.TextOrMath {
+func (tp TextPart) instantiate(params expression.Variables) (client.TextOrMath, error) {
 	switch tp.Kind {
 	case Text:
-		return client.TextOrMath{Text: tp.Content}
+		return client.TextOrMath{Text: tp.Content}, nil
 	case StaticMath:
-		return client.TextOrMath{Text: tp.Content, IsMath: true}
+		return client.TextOrMath{Text: tp.Content, IsMath: true}, nil
 	case Expression:
-		expr, _ := expression.Parse(tp.Content)
+		expr, err := expression.Parse(tp.Content)
+		if err != nil {
+			return client.TextOrMath{}, err
+		}
 		expr.Substitute(params)
-		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}
+		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}, nil
 	default:
 		panic(ExhaustiveTextKind)
 	}
@@ -192,15 +204,19 @@ func (tp TextPart) validate() error {
 	}
 }
 
-func (tp TextPart) instantiateAndEvaluate(params expression.Variables) client.TextOrMath {
+func (tp TextPart) instantiateAndEvaluate(params expression.Variables) (client.TextOrMath, error) {
 	if tp.Kind == Expression {
-		expr, _ := expression.Parse(tp.Content)
+		expr, err := expression.Parse(tp.Content)
+		if err != nil {
+			return client.TextOrMath{}, err
+		}
 		expr.Substitute(params)
+		// try to evaluate
 		v, err := expr.Evaluate(nil)
 		if err == nil {
 			expr = expression.NewNb(v)
 		}
-		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}
+		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}, nil
 	}
 	return tp.instantiate(params)
 }
@@ -209,10 +225,13 @@ type TextParts []TextPart
 
 // instantiate merges adjacent math chunks so that latex expression are not split up
 // and may be successfully parsed
-func (tp TextParts) instantiate(params expression.Variables) []client.TextOrMath {
+func (tp TextParts) instantiate(params expression.Variables) ([]client.TextOrMath, error) {
 	var parts []client.TextOrMath
 	for _, p := range tp {
-		sample := p.instantiate(params)
+		sample, err := p.instantiate(params)
+		if err != nil {
+			return nil, err
+		}
 		L := len(parts)
 		if L == 0 {
 			parts = append(parts, sample)
@@ -227,18 +246,22 @@ func (tp TextParts) instantiate(params expression.Variables) []client.TextOrMath
 			parts = append(parts, sample)
 		}
 	}
-	return parts
+	return parts, nil
 }
 
 // assume all parts are either static math or expression.
 // after instantiating, tries to evaluate the expression
 // and returns the LaTeX concatenated code
-func (tp TextParts) instantiateAndEvaluate(params expression.Variables) string {
+func (tp TextParts) instantiateAndEvaluate(params expression.Variables) (string, error) {
 	parts := make([]string, len(tp))
 	for i, p := range tp {
-		parts[i] = p.instantiateAndEvaluate(params).Text
+		v, err := p.instantiateAndEvaluate(params)
+		if err != nil {
+			return "", err
+		}
+		parts[i] = v.Text
 	}
-	return strings.Join(parts, "")
+	return strings.Join(parts, ""), nil
 }
 
 func (tp TextParts) validate() error {
@@ -260,14 +283,18 @@ type TextBlock struct {
 	Smaller bool
 }
 
-func (t TextBlock) instantiate(params expression.Variables, _ int) instance {
-	content, _ := t.Parts.Parse()
+func (t TextBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+	content, err := t.Parts.Parse()
+	if err != nil {
+		return nil, err
+	}
+	parts, err := content.instantiate(params)
 	return TextInstance{
-		Parts:   content.instantiate(params),
+		Parts:   parts,
 		Bold:    t.Bold,
 		Italic:  t.Italic,
 		Smaller: t.Smaller,
-	}
+	}, err
 }
 
 func (t TextBlock) validate(expression.RandomParameters) error {
@@ -292,14 +319,17 @@ type FormulaPart struct {
 }
 
 // assume the expression is valid
-func (fp FormulaPart) instantiate(params expression.Variables) StringOrExpression {
+func (fp FormulaPart) instantiate(params expression.Variables) (StringOrExpression, error) {
 	if !fp.IsExpression { // nothing to do
-		return StringOrExpression{String: fp.Content}
+		return StringOrExpression{String: fp.Content}, nil
 	}
 
-	expr, _ := expression.Parse(fp.Content)
+	expr, err := expression.Parse(fp.Content)
+	if err != nil {
+		return StringOrExpression{}, err
+	}
 	expr.Substitute(params)
-	return StringOrExpression{Expression: expr}
+	return StringOrExpression{Expression: expr}, nil
 }
 
 // FormulaBlock is a math formula, which should be display using
@@ -308,14 +338,20 @@ type FormulaBlock struct {
 	Parts Interpolated
 }
 
-func (f FormulaBlock) instantiate(params expression.Variables, _ int) instance {
-	parts, _ := f.Parts.Parse()
-	partsInstance := parts.instantiate(params)
+func (f FormulaBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+	parts, err := f.Parts.Parse()
+	if err != nil {
+		return nil, err
+	}
+	partsInstance, err := parts.instantiate(params)
+	if err != nil {
+		return nil, err
+	}
 	out := make(FormulaDisplayInstance, len(partsInstance))
 	for i, c := range partsInstance {
 		out[i] = c.Text
 	}
-	return out
+	return out, nil
 }
 
 func (f FormulaBlock) validate(expression.RandomParameters) error {
@@ -323,27 +359,42 @@ func (f FormulaBlock) validate(expression.RandomParameters) error {
 	return err
 }
 
+func evaluateExpr(expr string, params expression.Variables) (float64, error) {
+	e, err := expression.Parse(expr)
+	if err != nil {
+		return 0, err
+	}
+	return e.Evaluate(params)
+}
+
 type VariationTableBlock struct {
 	Xs  []string // expressions
 	Fxs []string // expressions
 }
 
-func (vt VariationTableBlock) instantiateVT(params expression.Variables) VariationTableInstance {
+func (vt VariationTableBlock) instantiateVT(params expression.Variables) (VariationTableInstance, error) {
 	out := VariationTableInstance{
 		Xs:  make([]float64, len(vt.Xs)),
 		Fxs: make([]float64, len(vt.Fxs)),
 	}
+	var err error
 	for i, c := range vt.Xs {
-		out.Xs[i] = mustEvaluate(c, params)
+		out.Xs[i], err = evaluateExpr(c, params)
+		if err != nil {
+			return out, err
+		}
 	}
 	for i, c := range vt.Fxs {
-		out.Fxs[i] = mustEvaluate(c, params)
+		out.Fxs[i], err = evaluateExpr(c, params)
+		if err != nil {
+			return out, err
+		}
 	}
 
-	return out
+	return out, nil
 }
 
-func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) instance {
+func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
 	return vt.instantiateVT(params)
 }
 
@@ -385,17 +436,23 @@ type SignTableBlock struct {
 	Signs     []bool // with length len(Xs) - 1
 }
 
-func (st SignTableBlock) instantiate(params expression.Variables, _ int) instance {
+func (st SignTableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
 	out := SignTableInstance{
 		Xs: make([]string, len(st.Xs)),
 	}
 	for i, c := range st.Xs {
-		parts, _ := c.Parse()
-		out.Xs[i] = parts.instantiateAndEvaluate(params)
+		parts, err := c.Parse()
+		if err != nil {
+			return nil, err
+		}
+		out.Xs[i], err = parts.instantiateAndEvaluate(params)
+		if err != nil {
+			return nil, err
+		}
 	}
 	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
 	out.Signs = append([]bool(nil), st.Signs...)
-	return out
+	return out, nil
 }
 
 func (st SignTableBlock) validate(expression.RandomParameters) error {
@@ -423,11 +480,11 @@ type FigureBlock struct {
 	ShowGrid bool
 }
 
-func (f FigureBlock) instantiate(params expression.Variables, _ int) instance {
+func (f FigureBlock) instantiate(params expression.Variables, _ int) (instance, error) {
 	return f.instantiateF(params)
 }
 
-func (f FigureBlock) instantiateF(params expression.Variables) FigureInstance {
+func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, error) {
 	out := FigureInstance{
 		Figure: repere.Figure{
 			Drawings: repere.Drawings{
@@ -440,24 +497,40 @@ func (f FigureBlock) instantiateF(params expression.Variables) FigureInstance {
 		},
 	}
 	for _, v := range f.Drawings.Points {
+		x, err := evaluateExpr(v.Point.Coord.X, params)
+		if err != nil {
+			return out, err
+		}
+		y, err := evaluateExpr(v.Point.Coord.Y, params)
+		if err != nil {
+			return out, err
+		}
 		out.Figure.Drawings.Points[v.Name] = repere.LabeledPoint{
 			Point: repere.Coord{
-				X: mustEvaluate(v.Point.Coord.X, params),
-				Y: mustEvaluate(v.Point.Coord.Y, params),
+				X: x,
+				Y: y,
 			},
 			Pos: v.Point.Pos,
 		}
 	}
 
 	for i, l := range f.Drawings.Lines {
+		a, err := evaluateExpr(l.A, params)
+		if err != nil {
+			return out, err
+		}
+		b, err := evaluateExpr(l.B, params)
+		if err != nil {
+			return out, err
+		}
 		out.Figure.Drawings.Lines[i] = repere.Line{
 			Label: l.Label,
-			A:     mustEvaluate(l.A, params),
-			B:     mustEvaluate(l.B, params),
+			A:     a,
+			B:     b,
 			Color: l.Color,
 		}
 	}
-	return out
+	return out, nil
 }
 
 func (f FigureBlock) validate(params expression.RandomParameters) error {
@@ -511,8 +584,11 @@ type FunctionDefinition struct {
 	Range      [2]float64          // definition domain
 }
 
-func (fg FunctionDefinition) instantiate(params expression.Variables) expression.FunctionDefinition {
-	expr := mustParse(fg.Function)
+func (fg FunctionDefinition) instantiate(params expression.Variables) (expression.FunctionDefinition, error) {
+	expr, err := expression.Parse(fg.Function)
+	if err != nil {
+		return expression.FunctionDefinition{}, err
+	}
 	expr.Substitute(params)
 	return expression.FunctionDefinition{
 		FunctionExpr: expression.FunctionExpr{
@@ -521,7 +597,7 @@ func (fg FunctionDefinition) instantiate(params expression.Variables) expression
 		},
 		From: fg.Range[0],
 		To:   fg.Range[1],
-	}
+	}, nil
 }
 
 func (fg FunctionDefinition) validate(params expression.RandomParameters) error {
@@ -550,16 +626,20 @@ type FunctionGraphBlock struct {
 	Functions []FunctionDefinition
 }
 
-func (fg FunctionGraphBlock) instantiate(params expression.Variables, _ int) instance {
+func (fg FunctionGraphBlock) instantiate(params expression.Variables, _ int) (instance, error) {
 	out := FunctionGraphInstance{
 		Functions:   make([]expression.FunctionDefinition, len(fg.Functions)),
 		Decorations: make([]functiongrapher.FunctionDecoration, len(fg.Functions)),
 	}
 	for i, f := range fg.Functions {
-		out.Functions[i] = f.instantiate(params)
+		var err error
+		out.Functions[i], err = f.instantiate(params)
+		if err != nil {
+			return nil, err
+		}
 		out.Decorations[i] = f.Decoration
 	}
-	return out
+	return out, nil
 }
 
 func (fg FunctionGraphBlock) validate(params expression.RandomParameters) error {
@@ -573,8 +653,9 @@ func (fg FunctionGraphBlock) validate(params expression.RandomParameters) error 
 
 type FunctionVariationGraphBlock VariationTableBlock
 
-func (f FunctionVariationGraphBlock) instantiate(params expression.Variables, _ int) instance {
-	return FunctionVariationGraphInstance(VariationTableBlock(f).instantiateVT(params))
+func (f FunctionVariationGraphBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+	out, err := VariationTableBlock(f).instantiateVT(params)
+	return FunctionVariationGraphInstance(out), err
 }
 
 func (f FunctionVariationGraphBlock) validate(params expression.RandomParameters) error {
@@ -587,27 +668,37 @@ type TableBlock struct {
 	Values            [][]TextPart
 }
 
-func (t TableBlock) instantiate(params expression.Variables, _ int) instance {
+func (t TableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
 	out := TableInstance{
 		HorizontalHeaders: make([]client.TextOrMath, len(t.HorizontalHeaders)),
 		VerticalHeaders:   make([]client.TextOrMath, len(t.VerticalHeaders)),
 		Values:            make([][]client.TextOrMath, len(t.Values)),
 	}
+	var err error
 	for i, cell := range t.HorizontalHeaders {
-		out.HorizontalHeaders[i] = cell.instantiate(params)
+		out.HorizontalHeaders[i], err = cell.instantiate(params)
+		if err != nil {
+			return nil, err
+		}
 	}
 	for i, cell := range t.VerticalHeaders {
-		out.VerticalHeaders[i] = cell.instantiate(params)
+		out.VerticalHeaders[i], err = cell.instantiate(params)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for i, row := range t.Values {
 		rowInstance := make([]client.TextOrMath, len(row))
 		for j, cell := range row {
-			rowInstance[j] = cell.instantiate(params)
+			rowInstance[j], err = cell.instantiate(params)
+			if err != nil {
+				return nil, err
+			}
 		}
 		out.Values[i] = rowInstance
 	}
-	return out
+	return out, nil
 }
 
 func (t TableBlock) validate(params expression.RandomParameters) error {
