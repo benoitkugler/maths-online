@@ -161,6 +161,29 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(wr)
 }
 
+const (
+	FigureAffineLineFieldBlockKind = iota
+	FigureBlockKind
+	FigurePointFieldBlockKind
+	FigureVectorFieldBlockKind
+	FigureVectorPairFieldBlockKind
+	FormulaBlockKind
+	FormulaFieldBlockKind
+	FunctionGraphBlockKind
+	FunctionPointsFieldBlockKind
+	FunctionVariationGraphBlockKind
+	NumberFieldBlockKind
+	OrderedListFieldBlockKind
+	RadioFieldBlockKind
+	SignTableBlockKind
+	TableBlockKind
+	TableFieldBlockKind
+	TextBlockKind
+	TreeFieldBlockKind
+	VariationTableBlockKind
+	VariationTableFieldBlockKind
+)
+
 func (ct Enonce) MarshalJSON() ([]byte, error) {
 	tmp := make([]BlockWrapper, len(ct))
 	for i, v := range ct {
