@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { tagColor } from "@/controller/editor";
+import { tagColor, tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
@@ -76,7 +76,7 @@ const isEntryValid = computed(() => {
 });
 
 function add() {
-  props.modelValue.push(entry.toUpperCase());
+  props.modelValue.push(tagString(entry));
   entry = "";
   emit("update:model-value", props.modelValue);
 }
@@ -88,7 +88,7 @@ function onEnterKey(key: KeyboardEvent) {
 }
 
 function onSelectItem(s: string) {
-  s = s.toUpperCase();
+  s = tagString(s);
   if (props.modelValue.includes(s)) {
     entry = "";
     return;

@@ -10,8 +10,8 @@
               </v-col>
               <v-col cols="12" v-if="state == 0">
                 <small>
-                  ({{ props.group.Questions?.length || 0 }} /
-                  {{ props.group.Size }} questions)
+                  ({{ props.group.Questions?.length || 0 }} question(s)
+                  affichée(s) / {{ props.group.Size }} questions)
                 </small>
               </v-col>
             </v-row>

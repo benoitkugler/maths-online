@@ -13,9 +13,13 @@ import (
 // QuestionCriterion is an union of intersection of tags.
 type QuestionCriterion [][]string
 
-// remove empty intersection
+// remove empty intersection and normalizes tags
 func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	for _, q := range qc {
+		for i, t := range q {
+			q[i] = exercice.NormalizeTag(t)
+		}
+
 		if len(q) != 0 {
 			out = append(out, q)
 		}

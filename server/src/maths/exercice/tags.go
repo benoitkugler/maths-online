@@ -1,5 +1,30 @@
 package exercice
 
+import (
+	"strings"
+	"unicode"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
+)
+
+var noAccent = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+
+// NormalizeTag returns `tag` with accents stripped
+// and in upper case.
+func NormalizeTag(tag string) string {
+	return strings.ToUpper(removeAccents(strings.TrimSpace((tag))))
+}
+
+func removeAccents(s string) string {
+	output, _, e := transform.String(noAccent, s)
+	if e != nil {
+		return s
+	}
+	return output
+}
+
 // List returns the tags from the relation table.
 func (qus QuestionTags) List() []string {
 	out := make([]string, len(qus))
@@ -16,7 +41,7 @@ type Crible map[string]bool
 func (qus QuestionTags) Crible() Crible {
 	out := make(Crible, len(qus))
 	for _, qt := range qus {
-		out[qt.Tag] = true
+		out[NormalizeTag(qt.Tag)] = true
 	}
 	return out
 }

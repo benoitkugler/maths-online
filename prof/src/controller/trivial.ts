@@ -1,4 +1,5 @@
 import { controller } from "./controller";
+import type { CategoriesQuestions } from "./trivial_config_gen";
 import type { teacherSocketData } from "./trivial_config_socket_gen";
 
 export const colorsPerCategorie = [
@@ -30,3 +31,38 @@ export class TrivialMonitorController {
     });
   }
 }
+
+/** questionPropositions is a list of question to use in a 
+trivial configuration, working nicely with the officialy supported questions
+*/
+export const questionPropositions: {
+  name: string;
+  Questions: CategoriesQuestions;
+}[] = [
+  {
+    name: "Pourcentages",
+    Questions: [
+      [
+        ["Pourcentages", "Valeur initiale"],
+        ["Pourcentages", "Valeur finale"]
+      ],
+      [
+        ["Pourcentages", "Taux global"],
+        ["Pourcentages", "Taux réciproque"]
+      ],
+      [
+        ["Pourcentages", "Proportion"],
+        ["Pourcentages", "Proportion de proportion"]
+      ],
+      [
+        ["Pourcentages", "Evolutions identiques"],
+        ["Pourcentages", "Evolution unique"],
+        ["Pourcentages", "Evolutions successives"]
+      ],
+      [
+        ["Pourcentages", "Coefficient multiplicateur"],
+        ["Pourcentages", "Taux d'évolution"]
+      ]
+    ]
+  }
+];

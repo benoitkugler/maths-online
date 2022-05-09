@@ -614,6 +614,15 @@ export function variableToString(v: Variable) {
   return name;
 }
 
+/** tagString returns a normalized version of the `tag` */
+export function tagString(tag: string) {
+  return tag
+    .trim()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+}
+
 export function tagColor(tag: string) {
   if (
     tag == DifficultyTag.Diff1 ||

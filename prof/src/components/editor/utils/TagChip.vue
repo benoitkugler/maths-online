@@ -1,11 +1,11 @@
 <template>
   <v-chip size="small" label class="mx-1" :color="tagColor(tag)">{{
-    tag.toUpperCase()
+    tagString(tag)
   }}</v-chip>
 </template>
 
 <script setup lang="ts">
-import { tagColor } from "@/controller/editor";
+import { tagColor, tagString } from "@/controller/editor";
 interface Props {
   tag: string;
 }

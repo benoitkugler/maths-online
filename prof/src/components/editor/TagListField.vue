@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { tagColor } from "@/controller/editor";
+import { tagColor, tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListEdit from "./TagListEdit.vue";
@@ -63,7 +63,7 @@ let tmpList = $ref<string[]>([]);
 
 function startEdit() {
   isEditing = true;
-  tmpList = props.modelValue.map(v => v.toUpperCase());
+  tmpList = props.modelValue.map(v => tagString(v));
 }
 
 const saveEnabled = computed(() => {

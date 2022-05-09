@@ -128,6 +128,11 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsO
 	}
 	tagsMap := tags.ByIdQuestion()
 
+	// normalize query
+	for i, t := range query.Tags {
+		query.Tags[i] = ex.NormalizeTag(t)
+	}
+
 	// .. and build the group, restricting the questions matching the given tags
 	out.Questions = make([]QuestionGroup, 0, len(groups))
 	for title, ids := range groups {
@@ -318,7 +323,7 @@ func (ct *Controller) updateTags(params UpdateTagsIn) error {
 	var tags ex.QuestionTags
 	for _, tag := range params.Tags {
 		// enforce proper tags
-		tag = strings.ToUpper(strings.TrimSpace(tag))
+		tag = ex.NormalizeTag(tag)
 		if tag == "" {
 			continue
 		}
