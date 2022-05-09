@@ -1,5 +1,5 @@
 <template>
-  <v-chip size="small" label class="mx-1" :color="tagColor(tag)">{{
+  <v-chip size="x-small" label class="ml-1" :color="tagColor(tag)">{{
     tagString(tag)
   }}</v-chip>
 </template>
