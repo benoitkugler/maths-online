@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col md="8">
+    <v-col md="7">
       <v-row no-gutters>
         <v-col md="12">
           <interpolated-text
@@ -17,31 +17,41 @@
         </v-col>
       </v-row>
     </v-col>
-    <v-col md="2">
-      <v-checkbox
-        density="compact"
-        class="pr-2"
-        hide-details
-        label="Gras"
-        :model-value="props.modelValue.Bold"
-        @update:model-value="onBoldChanged"
-      ></v-checkbox>
-      <v-checkbox
-        density="compact"
-        class="pr-2"
-        hide-details
-        label="Italic"
-        :model-value="props.modelValue.Italic"
-        @update:model-value="onItalicChanged"
-      ></v-checkbox>
-      <v-checkbox
-        density="compact"
-        class="pr-2"
-        hide-details
-        label="Taille réduite"
-        :model-value="props.modelValue.Smaller"
-        @update:model-value="onSmallerChanged"
-      ></v-checkbox>
+    <v-col md="5">
+      <v-row no-gutters>
+        <v-col>
+          <v-checkbox
+            density="compact"
+            class="pr-2"
+            hide-details
+            label="Gras"
+            :model-value="props.modelValue.Bold"
+            @update:model-value="onBoldChanged"
+          ></v-checkbox>
+        </v-col>
+        <v-col>
+          <v-checkbox
+            density="compact"
+            class="pr-2"
+            hide-details
+            label="Italique"
+            :model-value="props.modelValue.Italic"
+            @update:model-value="onItalicChanged"
+          ></v-checkbox>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-checkbox
+            density="compact"
+            class="pr-2"
+            hide-details
+            label="Taille réduite"
+            :model-value="props.modelValue.Smaller"
+            @update:model-value="onSmallerChanged"
+          ></v-checkbox>
+        </v-col>
+      </v-row>
     </v-col>
   </v-row>
 </template>
