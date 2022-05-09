@@ -50,13 +50,13 @@ import FixedSizeGroupsVue from "./FixedSizeGroups.vue";
 import RandomGroupsVue from "./RandomGroups.vue";
 
 // interface Props {}
+// const props = defineProps<Props>();
+//
 
 const emit = defineEmits<{
   (e: "launch", v: GroupStrategy): void;
 }>();
 
-// const props = defineProps<Props>();
-//
 let launchOptions = $ref<GroupStrategy>({
   Kind: GroupStrategyKind.FixedSizeGroupStrategy,
   Data: { Groups: [] }

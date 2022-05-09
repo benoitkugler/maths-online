@@ -4,6 +4,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
 
@@ -31,5 +32,64 @@ func TestGameID(t *testing.T) {
 
 	if !sort.StringsAreSorted(s) {
 		t.Fatal("game ids are not sorted")
+	}
+}
+
+func TestMissingQuestions(t *testing.T) {
+	creds := pass.DB{
+		Host:     "localhost",
+		User:     "benoit",
+		Password: "dummy",
+		Name:     "isyro_prod",
+	}
+	db, err := creds.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", creds, err)
+		return
+	}
+
+	ct := NewController(db, pass.Encrypter{})
+
+	criteria := CategoriesQuestions{
+		{
+			{
+				"POURCENTAGES",
+				"VIOLET",
+			},
+			{
+				"POURCENTAGES",
+			},
+		},
+		{
+			{
+				"POURCENTAGES",
+				"VERT",
+			},
+		},
+		{
+			{
+				"POURCENTAGES",
+				"ORANGE",
+			},
+		},
+		{
+			{
+				"POURCENTAGES",
+				"JAUNE",
+			},
+		},
+		{
+			{
+				"POURCENTAGES",
+				"BLEU",
+			},
+		},
+	}
+	out, err := ct.checkMissingQuestions(criteria)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(out.Missing) != 0 {
+		t.Fatal()
 	}
 }

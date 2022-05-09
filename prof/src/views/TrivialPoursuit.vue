@@ -3,76 +3,14 @@
     :model-value="editedConfig != null"
     @update:model-value="editedConfig = null"
   >
-    <v-card
+    <edit-config
       v-if="editedConfig != null"
-      max-height="80vh"
-      width="800"
-      class="overflow-y-auto py-2"
+      :edited="editedConfig"
+      :all-known-tags="allKnownTags"
+      @close="editedConfig = null"
+      @update="updateConfig"
     >
-      <v-row>
-        <v-col>
-          <v-card-title>Modifier la session de TrivialPoursuit</v-card-title>
-        </v-col>
-        <v-col style="text-align: right">
-          <v-btn icon flat class="mx-2" @click="editedConfig = null">
-            <v-icon icon="mdi-close"></v-icon>
-          </v-btn>
-        </v-col>
-      </v-row>
-      <v-card-text>
-        <v-list>
-          <v-list-subheader>
-            <h3>Choix des questions</h3>
-            <small
-              >Chaque catégorie est définie par une <i>union</i> d'<i
-                >intersections</i
-              >
-              d'étiquettes.</small
-            >
-          </v-list-subheader>
-          <v-list-item
-            v-for="(categorie, index) in editedConfig?.Questions"
-            rounded
-            :style="{
-              'border-color': colors[index],
-              borderWidth: '2px',
-              borderStyle: 'solid'
-            }"
-            class="my-2"
-          >
-            <v-list-item-subtitle
-              >Catégorie {{ index + 1 }}</v-list-item-subtitle
-            >
-            <tags-selector
-              :all-tags="allKnownTags"
-              :model-value="categorie || []"
-              @update:model-value="v => editedConfig!.Questions[index] = v"
-            ></tags-selector>
-          </v-list-item>
-        </v-list>
-
-        <v-row class="mt-2">
-          <v-col cols="6">
-            <v-text-field
-              density="compact"
-              variant="outlined"
-              label="Durée limite pour une question"
-              type="number"
-              min="1"
-              suffix="sec"
-              v-model.number="editedConfig!.QuestionTimeout"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="success" @click="updateConfig">
-          Enregistrer les modifications
-        </v-btn>
-      </v-card-actions>
-    </v-card>
+    </edit-config>
   </v-dialog>
 
   <v-dialog
@@ -208,9 +146,9 @@ import { controller } from "@/controller/controller";
 import { colorsPerCategorie } from "@/controller/trivial";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
-import TagsSelector from "../components/trivial/TagsSelector.vue";
 
 let allKnownTags = $ref<string[]>([]);
 
@@ -225,8 +163,6 @@ const configs = computed(() => {
 });
 
 let isLaunching = $ref(false);
-
-let gameCode = $ref("");
 
 const colors = colorsPerCategorie;
 
@@ -250,16 +186,16 @@ async function createConfig() {
   _configs.push(res);
 }
 
-async function updateConfig() {
+async function updateConfig(config: TrivialConfig) {
   // remove empty categories
-  editedConfig!.Questions = editedConfig!.Questions.map(q =>
+  config.Questions = config.Questions.map(q =>
     (q || []).filter(v => v && v.length != 0)
   );
-  const res = await controller.UpdateTrivialPoursuit(editedConfig!);
+  const res = await controller.UpdateTrivialPoursuit(config);
   if (res === undefined) {
     return;
   }
-  const index = _configs.findIndex(v => v.Config.Id == editedConfig!.Id);
+  const index = _configs.findIndex(v => v.Config.Id == config.Id);
   _configs[index] = res;
   editedConfig = null;
 }

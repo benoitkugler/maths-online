@@ -5,7 +5,7 @@
         <v-col cols="10">
           <tag-list-field
             :model-value="row || []"
-            @update:model-value="r => (modelValue[index] = r)"
+            @update:model-value="r => updateRow(index, r)"
             :all-tags="allTags"
             :ref="(el:any) => (rows[index] = el as TF)"
           ></tag-list-field>
@@ -63,6 +63,11 @@ function addIntersection() {
   nextTick(() => {
     rows[rows.length - 1].startEdit();
   });
+}
+
+function updateRow(index: number, r: string[]) {
+  props.modelValue[index] = r;
+  emit("update:model-value", props.modelValue);
 }
 
 function deleteRow(index: number) {

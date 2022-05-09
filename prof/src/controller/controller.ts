@@ -1,5 +1,4 @@
-import {
-  AbstractAPI,
+import type {
   CheckMissingQuestionsOut,
   CheckParametersOut,
   LaunchSessionOut,
@@ -8,6 +7,7 @@ import {
   StartSessionOut,
   TrivialConfigExt
 } from "./api_gen";
+import { AbstractAPI } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
