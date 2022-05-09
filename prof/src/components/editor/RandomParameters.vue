@@ -176,6 +176,9 @@ const helpContent = [
     "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)"
   ],
   ["round(x; 3)", "Arrondi x à trois chiffres après la virgule"],
+  ["isPrime(n)", "Renvoie 1 is n est un nombre premier, 0 sinon"],
+  ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0"],
+  ["isZero(x)", "Renvoie 1 si x vaut 0, 0 sinon"],
   ["exp(x)", "Fonction exponentielle"],
   ["ln(x)", "Fonction logarithme"],
   ["sin(x)", "Fonction sinus"],
