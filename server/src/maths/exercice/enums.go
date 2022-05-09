@@ -1,6 +1,10 @@
 package exercice
 
-import "github.com/benoitkugler/maths-online/maths/expression"
+import (
+	"encoding/json"
+
+	"github.com/benoitkugler/maths-online/maths/expression"
+)
 
 type TextKind uint8
 
@@ -17,6 +21,10 @@ const (
 	Zero                             // 0
 	ForbiddenValue                   // ||
 )
+
+// By default a slice of SignSymbol is marshalled as string
+// by Go, which is not recognized by the PSQL JSON constraints
+func (s SignSymbol) MarshalJSON() ([]byte, error) { return json.Marshal(uint8(s)) }
 
 type ComparisonLevel = expression.ComparisonLevel
 

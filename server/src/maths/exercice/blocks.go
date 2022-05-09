@@ -431,9 +431,9 @@ func (vt VariationTableBlock) validate(params expression.RandomParameters) error
 }
 
 type SignTableBlock struct {
-	Xs        []Interpolated // always math content
 	FxSymbols []SignSymbol
-	Signs     []bool // with length len(Xs) - 1
+	Xs        []Interpolated // always math content
+	Signs     []bool         // with length len(Xs) - 1
 }
 
 func (st SignTableBlock) instantiate(params expression.Variables, _ int) (instance, error) {

@@ -16,6 +16,7 @@ func TestRoot(t *testing.T) {
 
 	// t.Run("CRUD for Exercice", func(t *testing.T) { testExercice(t, db) })
 	t.Run("CRUD for Question", func(t *testing.T) { testQuestion(t, db) })
+	t.Run("Insert SignTable", func(t *testing.T) { testInsertSignTable(t, db) })
 }
 
 func testQuestion(t *testing.T, db *sql.DB) {
@@ -61,6 +62,15 @@ func testQuestion(t *testing.T, db *sql.DB) {
 	}
 
 	_, err = DeleteQuestionById(db, qu.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testInsertSignTable(t *testing.T, db *sql.DB) {
+	qu := randQuestion()
+	qu.Enonce = Enonce{randSignTableBlock()}
+	qu, err := qu.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}

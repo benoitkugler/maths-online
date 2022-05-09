@@ -407,8 +407,8 @@ func randSlicebool() []bool {
 
 func randSignTableBlock() SignTableBlock {
 	return SignTableBlock{
-		Xs:        randSliceInterpolated(),
 		FxSymbols: randSliceSignSymbol(),
+		Xs:        randSliceInterpolated(),
 		Signs:     randSlicebool(),
 	}
 }

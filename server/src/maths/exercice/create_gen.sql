@@ -948,11 +948,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Xs', 'FxSymbols', 'Signs'))
+            bool_and(key IN ('FxSymbols', 'Xs', 'Signs'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_SignSymbol (data -> 'FxSymbols')
+        AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
 END;
