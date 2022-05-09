@@ -45,15 +45,13 @@
   </v-row>
   <v-row class="mt-2 mb-0 pb-0">
     <v-col class="mb-0 pb-0">
-      <v-text-field
-        variant="outlined"
-        density="compact"
+      <expression-field
         v-model="props.modelValue.Answer"
         label="Réponse"
         :hint="hint"
-        :color="color"
+        prefix="Choix"
       >
-      </v-text-field>
+      </expression-field>
     </v-col>
   </v-row>
   <v-row class="mt-0 pt-0">
@@ -74,6 +72,7 @@ import type { RadioFieldBlock } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import InterpolatedText from "../InterpolatedText.vue";
+import ExpressionField from "../utils/ExpressionField.vue";
 
 interface Props {
   modelValue: RadioFieldBlock;
@@ -101,4 +100,8 @@ function removeProposal(index: number) {
 }
 </script>
 
-<style></style>
+<style scoped>
+.fix-prefix:deep(.v-field__input) {
+  margin-bottom: 5px;
+}
+</style>

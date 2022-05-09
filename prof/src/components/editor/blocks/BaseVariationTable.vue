@@ -24,36 +24,26 @@
         </tr>
         <tr>
           <th>x</th>
-          <td
-            v-for="(x, index) in props.modelValue.Xs"
-            style="text-align: center; width: 40px"
-          >
-            <v-text-field
-              class="centered-input"
-              variant="outlined"
-              density="compact"
+          <td v-for="(x, index) in props.modelValue.Xs">
+            <expression-field
               :model-value="x"
               @update:model-value="s => props.modelValue.Xs![index] = s"
-              hide-details
-              :color="expressionColor"
-            ></v-text-field>
+              center
+              width="50px"
+            >
+            </expression-field>
           </td>
         </tr>
         <tr>
           <th class="px-2">f(x)</th>
-          <td
-            v-for="(fx, index) in props.modelValue.Fxs"
-            style="text-align: center; width: 40px"
-          >
-            <v-text-field
-              class="centered-input"
-              variant="outlined"
-              density="compact"
+          <td v-for="(fx, index) in props.modelValue.Fxs">
+            <expression-field
               :model-value="fx"
               @update:model-value="s => props.modelValue.Fxs![index] = s"
-              hide-details
-              :color="expressionColor"
-            ></v-text-field>
+              center
+              width="50px"
+            >
+            </expression-field>
           </td>
         </tr>
       </v-table>
@@ -75,6 +65,7 @@
 <script setup lang="ts">
 import { ExpressionColor } from "@/controller/editor";
 import type { FunctionVariationGraphBlock } from "@/controller/exercice_gen";
+import ExpressionField from "../utils/ExpressionField.vue";
 
 interface Props {
   modelValue: FunctionVariationGraphBlock;
@@ -99,13 +90,4 @@ function removeColumn(index: number) {
 }
 </script>
 
-<style scoped>
-.centered-input:deep(input) {
-  text-align: center;
-  width: 50px;
-}
-.centered-input:deep(.v-field__input) {
-  padding-left: 6px;
-  padding-right: 6px;
-}
-</style>
+<style scoped></style>
