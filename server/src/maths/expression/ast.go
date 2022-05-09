@@ -280,7 +280,7 @@ func NewNb(v float64) *Expression {
 }
 
 func (v Number) String() string {
-	return strconv.FormatFloat(float64(v), 'f', -1, 64)
+	return strconv.FormatFloat(RoundFloat(float64(v)), 'f', -1, 64)
 }
 
 func (v Number) serialize(_, _ *Expression) string { return v.String() }

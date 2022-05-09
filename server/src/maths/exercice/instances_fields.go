@@ -61,8 +61,9 @@ var (
 )
 
 // NumberFieldInstance is an answer field where only
-// numbers are allowed
-// answers are compared as float values
+// numbers are allowed.
+// Answers are compared as float values, with a fixed
+// precision.
 type NumberFieldInstance struct {
 	ID     int
 	Answer float64 // expected answer
@@ -88,7 +89,7 @@ func (f NumberFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect boo
 }
 
 func (f NumberFieldInstance) correctAnswer() client.Answer {
-	return client.NumberAnswer{f.Answer}
+	return client.NumberAnswer{Value: expression.RoundFloat(f.Answer)}
 }
 
 // ExpressionFieldInstance is an answer field where a single mathematical expression

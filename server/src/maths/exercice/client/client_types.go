@@ -216,7 +216,8 @@ func (FunctionPointsAnswer) isAnswer()  {}
 func (TreeAnswer) isAnswer()            {}
 func (TableAnswer) isAnswer()           {}
 
-// NumberAnswer is compared with exact float equality
+// NumberAnswer is compared with float equality, with a fixed
+// precision of 8 digits
 type NumberAnswer struct {
 	Value float64
 }

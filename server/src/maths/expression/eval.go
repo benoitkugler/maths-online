@@ -108,6 +108,13 @@ func AreFloatEqual(v1, v2 float64) bool {
 	return math.Abs(v1-v2) < floatPrec
 }
 
+// RoundFloat returns `v` rounded to the precision used by `AreFloatEqual`.
+// It should be used to avoid float imprecision when displaying numbers.
+// It used internally when to display expressions.
+func RoundFloat(v float64) float64 {
+	return math.Round(v/floatPrec) * floatPrec
+}
+
 func isFloatExceedingPrecision(v float64) bool {
 	// we rely on go format routine to avoid issue with floating
 	// point computation

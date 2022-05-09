@@ -15,8 +15,27 @@ func TestEvalMissingVariable(t *testing.T) {
 	_ = err.Error()
 }
 
+func TestRoundFloat(t *testing.T) {
+	tests := []struct {
+		args float64
+		want float64
+	}{
+		{1, 1},
+		{1.123, 1.123},
+		{1 - 7./100, 0.93},
+	}
+	for _, tt := range tests {
+		if got := RoundFloat(tt.args); got != tt.want {
+			t.Errorf("RoundFloat() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
 func TestPrecision(t *testing.T) {
 	if !AreFloatEqual(MustEvaluate("3 * (1 - (0.25 + 0.1)) / 4", nil), 0.4875) {
+		t.Fatal("precision error")
+	}
+	if !AreFloatEqual(MustEvaluate("1 - 7/100", nil), 0.93) {
 		t.Fatal("precision error")
 	}
 
