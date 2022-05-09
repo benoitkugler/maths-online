@@ -383,6 +383,43 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut
 
 // ------------------------------------------------------------------------------
 
+type InstantiatedQuestion struct {
+	Id       int64
+	Question client.Question `dart-extern:"exercices/types.gen.dart"`
+	Params   expression.Variables
+}
+
+type InstantiateQuestionsOut []InstantiatedQuestion
+
+// InstantiateQuestions loads and instantiates the given questions,
+// also returning the paramerters used to do so.
+func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut, error) {
+	questions, err := ex.SelectQuestions(ct.db, ids...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make(InstantiateQuestionsOut, len(ids))
+	for index, id := range ids {
+		qu := questions[id]
+		vars, err := qu.Parameters.ToMap().Instantiate()
+		if err != nil {
+			return nil, err
+		}
+		instance, err := qu.InstantiateWith(vars)
+		if err != nil {
+			return nil, err
+		}
+		out[index] = InstantiatedQuestion{
+			Id:       id,
+			Question: instance.ToClient(),
+			Params:   vars,
+		}
+	}
+
+	return out, nil
+}
+
 // EvaluateQuestion instantiate the given question with the given parameters,
 // and evaluate the given answer.
 func (ct *Controller) EvaluateQuestion(id int64, params expression.Variables, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {

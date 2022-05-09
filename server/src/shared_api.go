@@ -26,6 +26,23 @@ func checkExpressionSyntax(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type InstantiateQuestionsOut = editor.InstantiateQuestionsOut
+
+// standalone endpoint to check if an answer is correct
+func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
+	var args []int64
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.InstantiateQuestions(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
 type EvaluateQuestionIn struct {
 	Answer     client.QuestionAnswersIn `dart-extern:"exercices/types.gen.dart"`
 	Params     expression.Variables

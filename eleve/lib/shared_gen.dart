@@ -143,3 +143,47 @@ JSON evaluateQuestionInToJson(EvaluateQuestionIn item) {
     "IdQuestion": intToJson(item.idQuestion)
   };
 }
+
+// github.com/benoitkugler/maths-online/prof/editor.InstantiatedQuestion
+class InstantiatedQuestion {
+  final int id;
+  final Question question;
+  final Variables params;
+
+  const InstantiatedQuestion(this.id, this.question, this.params);
+
+  @override
+  String toString() {
+    return "InstantiatedQuestion($id, $question, $params)";
+  }
+}
+
+InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return InstantiatedQuestion(
+      intFromJson(json['Id']),
+      questionFromJson(json['Question']),
+      dictVariableResolvedVariableFromJson(json['Params']));
+}
+
+JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
+  return {
+    "Id": intToJson(item.id),
+    "Question": questionToJson(item.question),
+    "Params": dictVariableResolvedVariableToJson(item.params)
+  };
+}
+
+List<InstantiatedQuestion> listInstantiatedQuestionFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(instantiatedQuestionFromJson).toList();
+}
+
+List<dynamic> listInstantiatedQuestionToJson(List<InstantiatedQuestion> item) {
+  return item.map(instantiatedQuestionToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/prof/editor.InstantiateQuestionsOut
+typedef InstantiateQuestionsOut = List<InstantiatedQuestion>;
