@@ -68,6 +68,17 @@ export interface QuestionHeader {
   Difficulty: DifficultyTag;
   IsInGroup: boolean;
 }
+// github.com/benoitkugler/maths-online/prof/editor.QuestionGroup
+export interface QuestionGroup {
+  Title: string;
+  Questions: QuestionHeader[] | null;
+  Size: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ListQuestionsOut
+export interface ListQuestionsOut {
+  Questions: QuestionGroup[] | null;
+  Size: number;
+}
 
 export enum BlockKind {
   FigureAffineLineFieldBlock = 0,
@@ -278,8 +289,8 @@ export interface RadioFieldBlock {
 export type SignSymbol = number;
 // github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
 export interface SignTableBlock {
-  Xs: Interpolated[] | null;
   FxSymbols: SignSymbol[] | null;
+  Xs: Interpolated[] | null;
   Signs: boolean[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TableBlock
@@ -594,7 +605,7 @@ export abstract class AbstractAPI {
 
   protected async rawEditorSearchQuestions(params: ListQuestionsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/questions";
-    const rep: AxiosResponse<QuestionHeader[] | null> = await Axios.post(
+    const rep: AxiosResponse<ListQuestionsOut> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -615,7 +626,7 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorSearchQuestions(
-    data: QuestionHeader[] | null
+    data: ListQuestionsOut
   ): void;
 
   protected async rawEditorDuplicateQuestion(params: { id: number }) {

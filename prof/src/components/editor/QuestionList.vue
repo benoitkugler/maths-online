@@ -39,7 +39,7 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="pt-2">
+  <v-card class="pt-2 pb-0">
     <v-row>
       <v-col> <v-card-title>Liste des questions</v-card-title> </v-col>
 
@@ -55,7 +55,7 @@
       </v-col>
     </v-row>
 
-    <v-card-text>
+    <v-card-text class="py-1">
       <v-row>
         <v-col>
           <v-text-field
@@ -66,6 +66,7 @@
             v-model="querySearch"
             @update:model-value="updateQuerySearch"
             persistent-hint
+            clearable
           ></v-text-field>
         </v-col>
         <v-col>
@@ -87,7 +88,7 @@
           ></v-select>
         </v-col>
       </v-row>
-      <v-row>
+      <v-row no-gutters>
         <v-col>
           <v-list style="height: 52vh" class="overflow-y-auto">
             <div
@@ -102,63 +103,30 @@
                 }}
               </i>
             </div>
-            <div v-for="(question, index) in questions">
-              <v-divider
+
+            <div v-for="(questionGroup, index) in questions">
+              <!-- <v-divider
                 v-if="isStartGroup(index) && !isEndGroup(index - 1)"
                 class="my-1"
-              ></v-divider>
-              <v-list-item
-                dense
-                rounded
-                :class="{
-                  'py-0': true,
-                  'bg-lime-lighten-3': question.IsInGroup
-                }"
-                @click="startEdit(question)"
-              >
-                <v-list-item-media class="mr-3">
-                  <v-btn
-                    size="x-small"
-                    icon
-                    @click.stop="questionToDelete = question"
-                    title="Supprimer"
-                  >
-                    <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
-                  </v-btn>
-                  <v-btn
-                    v-if="!question.IsInGroup"
-                    class="mx-1"
-                    size="x-small"
-                    icon
-                    @click.stop="questionToDuplicate = question"
-                    title="Dupliquer en différenciant la difficulté"
-                  >
-                    <v-icon
-                      icon="mdi-content-copy"
-                      color="info"
-                      size="small"
-                    ></v-icon>
-                  </v-btn>
-                </v-list-item-media>
-                <v-list-item-title>
-                  {{ question.Title ? question.Title : "..." }}
-                </v-list-item-title>
-                <v-spacer></v-spacer>
-                <v-list-item-media>
-                  <v-chip
-                    v-for="tag in question.Tags"
-                    :key="tag"
-                    size="small"
-                    label
-                    class="ma-1"
-                    :color="tagColor(tag)"
-                    >{{ tag.toUpperCase() }}</v-chip
-                  >
-                </v-list-item-media>
-              </v-list-item>
-              <v-divider v-if="isEndGroup(index)" class="my-1"></v-divider>
+              ></v-divider> -->
+              <question-row
+                v-if="questionGroup.Size == 1"
+                :question="questionGroup.Questions![0]"
+                @clicked="startEdit"
+                @delete="question => (questionToDelete = question)"
+                @duplicate="question => (questionToDuplicate = question)"
+              ></question-row>
+              <question-group-row
+                v-else
+                :group="questionGroup"
+                @clicked="startEdit"
+                @delete="question => (questionToDelete = question)"
+              ></question-group-row>
             </div>
           </v-list>
+          <div class="my-2">
+            {{ questions.length }} / {{ size }} questions affichées.
+          </div>
         </v-col>
       </v-row>
     </v-card-text>
@@ -166,12 +134,13 @@
 </template>
 
 <script setup lang="ts">
-import type { QuestionHeader } from "@/controller/api_gen";
+import type { QuestionGroup, QuestionHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { questionDifficulty, tagColor } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $computed, $ref } from "vue/macros";
+import QuestionGroupRow from "./QuestionGroupRow.vue";
+import QuestionRow from "./QuestionRow.vue";
 
 interface Props {
   tags: string[];
@@ -184,15 +153,16 @@ const emit = defineEmits<{
 
 const questions = $computed(() => {
   const out = _questions.map(v => v);
-  out.sort(
-    (a, b) =>
-      questionDifficulty(a.Tags || []) - questionDifficulty(b.Tags || [])
-  );
-  out.sort((a, b) => a.Title.localeCompare(b.Title));
+  //   out.sort(
+  //     (a, b) =>
+  //       questionDifficulty(a.Tags || []) - questionDifficulty(b.Tags || [])
+  //   );
+  //   out.sort((a, b) => a.Title.localeCompare(b.Title));
   return out;
 });
 
-let _questions = $ref<QuestionHeader[]>([]);
+let _questions = $ref<QuestionGroup[]>([]);
+let size = $ref(0);
 
 let querySearch = $ref("");
 let queryTags = $ref<string[]>([]);
@@ -241,7 +211,11 @@ async function fetchQuestions() {
     TitleQuery: querySearch,
     Tags: queryTags
   });
-  _questions = result || [];
+  if (result == undefined) {
+    return;
+  }
+  _questions = result.Questions || [];
+  size = result.Size;
 }
 
 async function createQuestion() {

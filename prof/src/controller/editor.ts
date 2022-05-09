@@ -1,3 +1,4 @@
+import type { QuestionHeader } from "./api_gen";
 import type {
   Block,
   CoordExpression,
@@ -667,4 +668,17 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
     before.push(...after);
     return before;
   }
+}
+
+/** return the list of tags shared by all the questions */
+export function commonTags(questions: QuestionHeader[]) {
+  const crible: { [key: string]: number } = {};
+  questions.forEach(qu =>
+    (qu.Tags || []).forEach(tag => (crible[tag] = (crible[tag] || 0) + 1))
+  );
+  console.log(crible);
+
+  return Object.entries(crible)
+    .filter(entry => entry[1] == questions.length)
+    .map(entry => entry[0]);
 }

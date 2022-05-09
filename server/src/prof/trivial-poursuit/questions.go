@@ -72,7 +72,7 @@ func weightQuestions(questions []questionDiff) []float64 {
 		groups[qu.question.Title] = append(groups[qu.question.Title], qu)
 	}
 	// now differentiate against the difficulty;
-	// we consider that question without difficulty form a sub-group of their own
+	// to simplify, we consider that question without difficulty form a sub-group of their own
 	difficulties := make(map[string]map[exercice.DifficultyTag][]questionDiff)
 	for ti, group := range groups {
 		perDifficulty := make(map[exercice.DifficultyTag][]questionDiff)

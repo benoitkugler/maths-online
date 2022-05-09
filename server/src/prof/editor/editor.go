@@ -74,73 +74,101 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
+type ListQuestionsOut struct {
+	Questions []QuestionGroup // limited by `pagination`
+	Size      int             // total number of groups
+}
+
+// QuestionGroup groups the question forming an implicit
+// group, defined by a shared title
+// Standalone question are represented by a group of length one.
+type QuestionGroup struct {
+	Title     string
+	Questions []QuestionHeader
+	Size      int // the total size of the group, regardless of the current filter
+}
+
 // QuestionHeader is a sumary of the meta data of a question
 type QuestionHeader struct {
 	Title      string
 	Tags       []string
 	Id         int64
 	Difficulty ex.DifficultyTag // deduced from the tags
-	IsInGroup  bool             // true if the question is in an implicit group
+	IsInGroup  bool             // true if the question is in an implicit group, ignoring the current filter
 }
 
-func (ct *Controller) searchQuestions(query ListQuestionsIn) (out []QuestionHeader, err error) {
-	const pagination = 50
+func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsOut, err error) {
+	const pagination = 100
 
 	// to find implicit groups, we need all the questions
 	questions, err := ex.SelectAllQuestions(ct.db)
 	if err != nil {
-		return nil, err
+		return out, utils.SQLError(err)
 	}
 
 	// the group are not modified by the title query though
 
 	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
 	var (
-		ids ex.IDs
-		tmp []QuestionHeader
+		ids    ex.IDs
+		groups = make(map[string][]int64)
 	)
 	for _, question := range questions {
 		thisTitle := strings.TrimSpace(strings.ToLower(question.Title))
 		if strings.Contains(thisTitle, queryTitle) {
-			tmp = append(tmp, QuestionHeader{Id: question.Id, Title: question.Title})
+			groups[question.Title] = append(groups[question.Title], question.Id)
 			ids = append(ids, question.Id)
 		}
 	}
 
-	// now check for implicit groups
-	sort.Slice(tmp, func(i, j int) bool { return tmp[i].Title < tmp[j].Title })
-
-	for index := range tmp {
-		sameAsPrevious := index > 0 && tmp[index-1].Title == tmp[index].Title
-		sameAsNext := index < len(tmp)-1 &&
-			tmp[index+1].Title == tmp[index].Title
-		tmp[index].IsInGroup = sameAsPrevious || sameAsNext
-	}
-
-	// and finally restrict to tags
+	// load the tags ...
 	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, ids...)
 	if err != nil {
-		return nil, err
+		return out, utils.SQLError(err)
 	}
-
 	tagsMap := tags.ByIdQuestion()
-	for _, question := range tmp {
-		crible := tagsMap[question.Id].Crible()
 
-		if !crible.HasAll(query.Tags) {
-			continue
+	// .. and build the group, restricting the questions matching the given tags
+	out.Questions = make([]QuestionGroup, 0, len(groups))
+	for title, ids := range groups {
+		group := QuestionGroup{
+			Title: title,
+			Size:  len(ids),
+		}
+		// select the questions
+		for _, id := range ids {
+			crible := tagsMap[id].Crible()
+
+			if !crible.HasAll(query.Tags) {
+				continue
+			}
+
+			question := QuestionHeader{
+				Id:         id,
+				Title:      title,
+				Difficulty: crible.Difficulty(),
+				IsInGroup:  len(ids) > 1,
+				Tags:       tagsMap[id].List(),
+			}
+			group.Questions = append(group.Questions, question)
 		}
 
-		for _, tag := range tagsMap[question.Id] {
-			question.Tags = append(question.Tags, tag.Tag)
-		}
-		question.Difficulty = crible.Difficulty()
+		// sort to make sure the display is consistent between two queries
+		sort.Slice(group.Questions, func(i, j int) bool { return group.Questions[i].Id < group.Questions[j].Id })
+		sort.SliceStable(group.Questions, func(i, j int) bool { return group.Questions[i].Difficulty < group.Questions[j].Difficulty })
 
-		out = append(out, question)
+		// ignore empty groups
+		if len(group.Questions) != 0 {
+			out.Questions = append(out.Questions, group)
+		}
 	}
 
-	if len(out) > pagination {
-		out = out[:pagination]
+	// sort before pagination
+	sort.Slice(out.Questions, func(i, j int) bool { return out.Questions[i].Title < out.Questions[j].Title })
+
+	out.Size = len(out.Questions)
+	if len(out.Questions) > pagination {
+		out.Questions = out.Questions[:pagination]
 	}
 
 	return out, nil

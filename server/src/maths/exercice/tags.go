@@ -1,5 +1,14 @@
 package exercice
 
+// List returns the tags from the relation table.
+func (qus QuestionTags) List() []string {
+	out := make([]string, len(qus))
+	for index, qt := range qus {
+		out[index] = qt.Tag
+	}
+	return out
+}
+
 // Crible is a set of tags.
 type Crible map[string]bool
 

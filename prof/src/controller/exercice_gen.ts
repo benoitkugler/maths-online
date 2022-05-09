@@ -288,8 +288,8 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
 
 // github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
 export interface SignTableBlock {
-  Xs: Interpolated[] | null;
   FxSymbols: SignSymbol[] | null;
+  Xs: Interpolated[] | null;
   Signs: boolean[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TableBlock
