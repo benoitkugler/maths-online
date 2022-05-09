@@ -25,6 +25,11 @@ export interface TrivialConfigExt {
   Running: LaunchSessionOut;
   NbQuestionsByCategories: number[];
 }
+// github.com/benoitkugler/maths-online/prof/trivial-poursuit.CheckMissingQuestionsOut
+export interface CheckMissingQuestionsOut {
+  Pattern: string[] | null;
+  Missing: (string[] | null)[] | null;
+}
 
 export enum GroupStrategyKind {
   FixedSizeGroupStrategy = 0,
@@ -483,6 +488,33 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessUpdateTrivialPoursuit(
     data: TrivialConfigExt
+  ): void;
+
+  protected async rawCheckMissingQuestions(params: CategoriesQuestions) {
+    const fullUrl =
+      this.baseUrl + "/prof/trivial/config/check-missing-questions";
+    const rep: AxiosResponse<CheckMissingQuestionsOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** CheckMissingQuestions wraps rawCheckMissingQuestions and handles the error */
+  async CheckMissingQuestions(params: CategoriesQuestions) {
+    this.startRequest();
+    try {
+      const out = await this.rawCheckMissingQuestions(params);
+      this.onSuccessCheckMissingQuestions(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessCheckMissingQuestions(
+    data: CheckMissingQuestionsOut
   ): void;
 
   protected async rawDeleteTrivialPoursuit(params: { id: number }) {

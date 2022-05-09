@@ -41,6 +41,32 @@ func selectQuestionByTag(db DB, tag string) (Questions, error) {
 	return ScanQuestions(rs)
 }
 
+// SelectQuestionByTags returns the question matching ALL the tags given
+// It panics if tags is empty.
+func SelectQuestionByTags(db DB, tags ...string) (map[int64]QuestionTags, error) {
+	firstSelection, err := selectQuestionByTag(db, tags[0])
+	if err != nil {
+		return nil, err
+	}
+
+	quTags, err := SelectQuestionTagsByIdQuestions(db, firstSelection.IDs()...)
+	if err != nil {
+		return nil, err
+	}
+
+	dict := quTags.ByIdQuestion()
+
+	// remove questions not matching all the tags
+	for idQuestion, cr := range dict {
+		hasAll := cr.Crible().HasAll(tags)
+		if !hasAll {
+			delete(dict, idQuestion)
+		}
+	}
+
+	return dict, nil
+}
+
 // func SelectExerciceQuestions(db DB, id int64) (ExerciceQuestions, error) {
 // 	ex, err := SelectExercice(db, id)
 // 	if err != nil {

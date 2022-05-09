@@ -126,6 +126,60 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type CheckMissingQuestionsOut struct {
+	Pattern []string   // empty if no pattern is found
+	Missing [][]string // missing tags, may be empty if OK
+}
+
+// CheckMissingQuestions is an hint to avoid forgetting a tag
+// when setting up the questions.
+// It first finds the current common tags, and then checks that no
+// questions sharing the same tags are left behind.
+func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
+	var criteria CategoriesQuestions
+	if err := c.Bind(&criteria); err != nil {
+		return err
+	}
+
+	out, err := ct.checkMissingQuestions(criteria)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (CheckMissingQuestionsOut, error) {
+	pattern := criteria.commonTags()
+	if len(pattern) == 0 { // no pattern found, return early
+		return CheckMissingQuestionsOut{}, nil
+	}
+
+	existingQuestions, err := exercice.SelectQuestionByTags(ct.db, pattern...)
+	if err != nil {
+		return CheckMissingQuestionsOut{}, utils.SQLError(err)
+	}
+
+	usedQuestions, err := criteria.selectQuestionIds(ct.db)
+	if err != nil {
+		return CheckMissingQuestionsOut{}, err
+	}
+
+	// check is existingQuestions is included in usedQuestions
+	// if not, add the tags as hint
+	hint := exercice.NewTagListSet()
+	for idExisting, tags := range existingQuestions {
+		if !usedQuestions.Has(idExisting) {
+			hint.Add(tags.List())
+		}
+	}
+
+	return CheckMissingQuestionsOut{
+		Pattern: pattern,
+		Missing: hint.List(),
+	}, nil
+}
+
 func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {

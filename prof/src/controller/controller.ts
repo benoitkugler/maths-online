@@ -1,12 +1,13 @@
-import type {
+import {
+  AbstractAPI,
+  CheckMissingQuestionsOut,
   CheckParametersOut,
   LaunchSessionOut,
+  ListQuestionsOut,
   Question,
-  QuestionHeader,
   StartSessionOut,
   TrivialConfigExt
 } from "./api_gen";
-import { AbstractAPI } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -15,6 +16,12 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  protected onSuccessCheckMissingQuestions(
+    data: CheckMissingQuestionsOut
+  ): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessStopSessionTrivialPoursuit(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -127,9 +134,7 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessEditorSearchQuestions(
-    data: QuestionHeader[] | null
-  ): void {
+  protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {
     this.inRequest = false;
   }
   protected onSuccessEditorCreateQuestion(data: Question): void {
