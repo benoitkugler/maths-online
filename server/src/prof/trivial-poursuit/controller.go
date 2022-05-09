@@ -150,6 +150,8 @@ func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
 }
 
 func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (CheckMissingQuestionsOut, error) {
+	criteria.normalize()
+
 	pattern := criteria.commonTags()
 	if len(pattern) == 0 { // no pattern found, return early
 		return CheckMissingQuestionsOut{}, nil

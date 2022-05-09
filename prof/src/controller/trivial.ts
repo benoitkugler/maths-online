@@ -52,7 +52,8 @@ export const questionPropositions: {
       ],
       [
         ["Pourcentages", "Proportion"],
-        ["Pourcentages", "Proportion de proportion"]
+        ["Pourcentages", "Proportion de proportion"],
+        ["Pourcentages", "Pourcentage d'un nombre"]
       ],
       [
         ["Pourcentages", "Evolutions identiques"],

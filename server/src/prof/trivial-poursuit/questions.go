@@ -9,6 +9,50 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 )
 
+// remove empty intersection and normalizes tags
+func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
+	for _, q := range qc {
+		for i, t := range q {
+			q[i] = exercice.NormalizeTag(t)
+		}
+
+		if len(q) != 0 {
+			out = append(out, q)
+		}
+	}
+	return out
+}
+
+func (qc QuestionCriterion) filter(dict map[int64]exercice.QuestionTags) (out IDs) {
+	qc = qc.normalize()
+
+	// an empty criterion is interpreted as an invalid criterion,
+	// since it is never something you want in practice (at least the class level should be specified)
+	if len(qc) == 0 {
+		return nil
+	}
+
+	for idQuestion, questions := range dict {
+		questionTags := questions.Crible()
+		for _, union := range qc { // at least one union must match
+			if questionTags.HasAll(union) {
+				out = append(out, idQuestion)
+				break // no need to check the other unions
+			}
+		}
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] }) // deterministic order
+
+	return out
+}
+
+func (cats *CategoriesQuestions) normalize() {
+	for i := range cats {
+		cats[i] = cats[i].normalize()
+	}
+}
+
 func (cats CategoriesQuestions) selectQuestions(db DB) (out tv.QuestionPool, err error) {
 	// select the questions...
 	tags, err := exercice.SelectAllQuestionTags(db)

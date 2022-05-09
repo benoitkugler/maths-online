@@ -92,4 +92,56 @@ func TestMissingQuestions(t *testing.T) {
 	if len(out.Missing) != 0 {
 		t.Fatal()
 	}
+
+	criteria = CategoriesQuestions{
+		{
+			{
+				"Pourcentages",
+				"Valeur finale",
+			},
+		},
+		{
+			{
+				"Pourcentages",
+				"Taux réciproque",
+			},
+		},
+		{
+			{
+				"Pourcentages",
+				"Proportion",
+			},
+			{
+				"Pourcentages",
+				"Proportion de proportion",
+			},
+		},
+		{
+			{
+				"Pourcentages",
+				"Evolutions identiques",
+			},
+			{
+				"Pourcentages",
+				"Evolutions successives",
+			},
+		},
+		{
+			{
+				"Pourcentages",
+				"Coefficient multiplicateur",
+			},
+			{
+				"Pourcentages",
+				"Taux d'évolution",
+			},
+		},
+	}
+	out, err = ct.checkMissingQuestions(criteria)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(out.Missing) == 0 {
+		t.Fatal("categories should be missing")
+	}
 }

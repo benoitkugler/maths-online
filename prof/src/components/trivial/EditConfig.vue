@@ -11,18 +11,47 @@
       </v-col>
     </v-row>
     <v-card-text>
-      <v-list>
-        <v-list-subheader>
-          <h3>Choix des questions</h3>
-          <small
-            >Chaque catégorie est définie par une <i>union</i> d'<i
-              >intersections</i
+      <v-row>
+        <v-col>
+          <v-list-subheader>
+            <h3>Choix des questions</h3>
+            <small
+              >Chaque catégorie est définie par une <i>union</i> d'<i
+                >intersections</i
+              >
+              d'étiquettes.</small
             >
-            d'étiquettes.</small
-          >
-        </v-list-subheader>
+          </v-list-subheader>
+        </v-col>
+        <v-col cols="auto" align-self="center">
+          <v-menu offset-y close-on-content-click>
+            <template v-slot:activator="{ isActive, props }">
+              <v-btn
+                title="Utiliser une configuration de référence"
+                v-on="{ isActive }"
+                v-bind="props"
+                size="small"
+              >
+                <v-icon icon="mdi-plus" color="green"></v-icon>
+                Importer un modèle
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item
+                v-for="prop in propositions"
+                rounded
+                class="py-0"
+                @click="importQuestions(prop.Questions)"
+              >
+                {{ prop.name }}
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-col>
+      </v-row>
+      <v-list>
         <v-alert
-          class="mx-2 mt-1"
+          class="mx-2 mt-1 py-2 px-3"
           variant="outlined"
           v-if="hint.Pattern?.length"
           :color="hint.Missing?.length ? 'info' : 'success'"
@@ -102,7 +131,8 @@ import type {
   TrivialConfig
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { colorsPerCategorie } from "@/controller/trivial";
+import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
+import type { CategoriesQuestions } from "@/controller/trivial_config_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagChip from "../editor/utils/TagChip.vue";
@@ -122,8 +152,15 @@ const emit = defineEmits<{
 
 const colors = colorsPerCategorie;
 
+const propositions = questionPropositions;
+
 function updateCategorie(index: number, cat: QuestionCriterion) {
   props.edited.Questions[index] = cat;
+  fetchHint();
+}
+
+function importQuestions(criteria: CategoriesQuestions) {
+  props.edited.Questions = criteria;
   fetchHint();
 }
 
