@@ -1,6 +1,6 @@
 <template>
   <v-card class="my-2">
-    <v-row class="bg-secondary px-2 rounded">
+    <v-row class="bg-secondary pa-2 rounded" no-gutters>
       <v-col md="9" align-self="center">
         Réponse ordonnée attendue.
         <small>
@@ -23,10 +23,11 @@
     </v-row>
     <v-row no-gutters class="mt-3">
       <v-col>
-        <v-list>
+        <v-list class="overflow-y-auto" style="max-height: 50vh">
           <v-list-item
             v-for="(param, index) in props.modelValue.Answer"
             class="pr-0"
+            :ref="(el:any) => (answerPropsRefs[index] = el as Element)"
           >
             <text-part-field
               v-model="props.modelValue.Answer![index]"
@@ -50,7 +51,7 @@
   </v-card>
 
   <v-card>
-    <v-row class="bg-secondary px-2 rounded">
+    <v-row class="bg-secondary pa-2 rounded" no-gutters>
       <v-col md="9" align-self="center">
         Champs additionnels.
         <small>
@@ -107,6 +108,7 @@
         v-model="props.modelValue.Label"
         variant="outlined"
         density="compact"
+        color="green"
       >
       </v-text-field>
     </v-col>
@@ -116,6 +118,8 @@
 <script setup lang="ts">
 import type { OrderedListFieldBlock } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
+import { ref } from "@vue/reactivity";
+import { nextTick } from "@vue/runtime-core";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
@@ -127,8 +131,15 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: OrderedListFieldBlock): void;
 }>();
 
+const answerPropsRefs = ref<any>([]);
+
 function addAnswer() {
   props.modelValue.Answer?.push({ Kind: TextKind.StaticMath, Content: "x" });
+  nextTick(() => {
+    answerPropsRefs.value[
+      answerPropsRefs.value.length - 1
+    ]?.$el.scrollIntoView();
+  });
 }
 
 function removeAnswer(index: number) {
