@@ -47,14 +47,23 @@ class BezierCurvesPainter extends CustomPainter {
     }
     canvas.drawPath(path, paint);
 
-    // TODO: better choose the label position to avoid painting outside
-    // the figure
     final labelIndex = fn.segments.length * 3 ~/ 4;
     final labelPos = fn.segments[labelIndex].p0;
+    // adjust the position based on space available
+    final visualLabelPos = metrics.logicalToVisual(labelPos);
+    final putTop = (visualLabelPos.dy > size.height / 2);
+    final putLeft = (visualLabelPos.dx > size.width / 2);
+    LabelPos pos;
+    if (putTop) {
+      pos = putLeft ? LabelPos.topLeft : LabelPos.topRight;
+    } else {
+      pos = putLeft ? LabelPos.bottomLeft : LabelPos.bottomRight;
+    }
+
     DrawingsPainter.paintText(
         metrics,
         canvas,
-        LabeledPoint(Coord(labelPos.x, labelPos.y + 1), LabelPos.top),
+        LabeledPoint(Coord(labelPos.x, labelPos.y + 1), pos),
         fn.decoration.label,
         color: color);
   }

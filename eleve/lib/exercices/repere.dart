@@ -335,6 +335,48 @@ Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   return Color(int.parse(color, radix: 16));
 }
 
+/// fontSize must be set
+List<InlineSpan> parseSubscript(String text, TextStyle regularStyle) {
+  final out = <InlineSpan>[];
+  while (true) {
+    final index = text.indexOf("_");
+    if (index == -1) {
+      if (text.isNotEmpty) {
+        out.add(TextSpan(text: text, style: regularStyle));
+      }
+      break;
+    }
+
+    if (index > 0) {
+      // add the regular chunk
+      out.add(TextSpan(text: text.substring(0, index), style: regularStyle));
+    }
+
+    // skip the _ ...
+    text = text.substring(index + 1);
+    // then end the subscript at the next white space
+    var end = text.indexOf(RegExp(r'\s'));
+    if (end == -1) {
+      end = text.length;
+    }
+
+    final subscript = text.substring(0, end);
+    text = text.substring(end);
+    if (subscript.isNotEmpty) {
+      const textScaleFactor = 0.7; // superscript is usually smaller in size
+      // add the subscript chunck
+      out.add(TextSpan(
+        text: subscript,
+        style: regularStyle.copyWith(
+          fontSize: regularStyle.fontSize! * textScaleFactor,
+        ),
+      ));
+    }
+  }
+
+  return out;
+}
+
 class DrawingsPainter extends CustomPainter {
   final RepereMetrics metrics;
   final Drawings drawings;
@@ -385,16 +427,17 @@ class DrawingsPainter extends CustomPainter {
       {Color? color}) {
     color = color ?? Colors.blue.shade800;
     const weight = FontWeight.bold;
+    final spans = parseSubscript(
+        name,
+        TextStyle(
+          fontSize: 16,
+          fontWeight: weight,
+          color: color,
+          backgroundColor: Colors.white.withOpacity(0.5),
+        ));
+
     final pt = TextPainter(
-        text: TextSpan(
-          text: name,
-          style: TextStyle(
-            fontWeight: weight,
-            color: color,
-            backgroundColor: Colors.white.withOpacity(0.5),
-          ),
-        ),
-        textDirection: TextDirection.ltr);
+        text: TextSpan(children: spans), textDirection: TextDirection.ltr);
     pt.layout();
 
     final textWidth = pt.width;
