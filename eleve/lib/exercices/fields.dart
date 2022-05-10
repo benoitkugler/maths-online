@@ -122,7 +122,7 @@ class MathTableCell extends StatelessWidget {
       child: Align(
         alignment: Alignment.center,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
           child: textMath(mathContent, fontSize - 1),
         ),
       ),

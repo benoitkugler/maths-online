@@ -1237,29 +1237,29 @@ JSON variationTableBlockToJson(VariationTableBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableFieldBlock
 class VariationTableFieldBlock implements Block {
-  final int iD;
   final String label;
-  final int length;
+  final List<int> lengthProposals;
+  final int iD;
 
-  const VariationTableFieldBlock(this.iD, this.label, this.length);
+  const VariationTableFieldBlock(this.label, this.lengthProposals, this.iD);
 
   @override
   String toString() {
-    return "VariationTableFieldBlock($iD, $label, $length)";
+    return "VariationTableFieldBlock($label, $lengthProposals, $iD)";
   }
 }
 
 VariationTableFieldBlock variationTableFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationTableFieldBlock(intFromJson(json['ID']),
-      stringFromJson(json['Label']), intFromJson(json['Length']));
+  return VariationTableFieldBlock(stringFromJson(json['Label']),
+      listIntFromJson(json['LengthProposals']), intFromJson(json['ID']));
 }
 
 JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
   return {
-    "ID": intToJson(item.iD),
     "Label": stringToJson(item.label),
-    "Length": intToJson(item.length)
+    "LengthProposals": listIntToJson(item.lengthProposals),
+    "ID": intToJson(item.iD)
   };
 }
 

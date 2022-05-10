@@ -534,11 +534,21 @@ type VariationTableFieldInstance struct {
 
 func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 
+// lengthProposals returns proposals for the number of arrows to fill,
+// depending on the answer
+func (vtf VariationTableFieldInstance) lengthProposals() []int {
+	L := len(vtf.Answer.Xs) - 1
+	if L <= 1 {
+		return []int{L, L + 1}
+	}
+	return []int{L - 1, L, L + 1}
+}
+
 func (f VariationTableFieldInstance) toClient() client.Block {
 	return client.VariationTableFieldBlock{
-		Label:  f.Answer.Label,
-		Length: len(f.Answer.Xs),
-		ID:     f.ID,
+		Label:           f.Answer.Label,
+		LengthProposals: f.lengthProposals(),
+		ID:              f.ID,
 	}
 }
 

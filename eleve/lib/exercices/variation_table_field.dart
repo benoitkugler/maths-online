@@ -4,19 +4,22 @@ import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:flutter/material.dart';
 
-class VariationTableController extends FieldController {
-  final VariationTableFieldBlock data;
+/// [_VTController] is the controller for one table (the length is known)
+class _VTController {
+  bool enabled = true;
+
   final List<NumberController> xs; // with length [length]
   final List<NumberController> fxs; // with length [length]
   final List<bool?> arrows; // up, down or not set, with length [length-1]
 
-  VariationTableController(this.data, void Function() onChange)
+  final void Function() onChange;
+
+  _VTController(int arrowLength, this.onChange)
       : xs = List<NumberController>.generate(
-            data.length, (index) => NumberController(onChange)),
+            arrowLength + 1, (index) => NumberController(onChange)),
         fxs = List<NumberController>.generate(
-            data.length, (index) => NumberController(onChange)),
-        arrows = List<bool?>.filled(data.length - 1, null),
-        super(onChange);
+            arrowLength + 1, (index) => NumberController(onChange)),
+        arrows = List<bool?>.filled(arrowLength, null);
 
   void toggleArrow(int index) {
     if (arrows[index] == null) {
@@ -28,7 +31,7 @@ class VariationTableController extends FieldController {
   }
 
   TableCellVerticalAlignment numberAlignment(int index) {
-    if (index == data.length - 1) {
+    if (index == xs.length - 1) {
       final arrow = arrows[index - 1];
       return arrow == null
           ? TableCellVerticalAlignment.middle
@@ -44,9 +47,8 @@ class VariationTableController extends FieldController {
             : TableCellVerticalAlignment.top);
   }
 
-  @override
   void disable() {
-    super.disable();
+    enabled = false;
     for (var ct in xs) {
       ct.disable();
     }
@@ -55,14 +57,12 @@ class VariationTableController extends FieldController {
     }
   }
 
-  @override
   bool hasValidData() {
     return xs.every((element) => element.hasValidData()) &&
         fxs.every((element) => element.hasValidData()) &&
         arrows.every((element) => element != null);
   }
 
-  @override
   Answer getData() {
     return VariationTableAnswer(
       xs.map((e) => e.getNumber()).toList(),
@@ -71,18 +71,55 @@ class VariationTableController extends FieldController {
     );
   }
 
+  void setData(VariationTableAnswer answer) {
+    for (var i = 0; i < xs.length; i++) {
+      xs[i].setNumber(answer.xs[i]);
+    }
+    for (var i = 0; i < fxs.length; i++) {
+      fxs[i].setNumber(answer.fxs[i]);
+    }
+    for (var i = 0; i < arrows.length; i++) {
+      arrows[i] = answer.arrows[i];
+    }
+  }
+}
+
+class VariationTableController extends FieldController {
+  final VariationTableFieldBlock data;
+
+  // setup when selecting a length
+  _VTController? ct;
+
+  int? get selectedArrowLength => ct == null ? null : ct!.arrows.length;
+
+  VariationTableController(this.data, void Function() onChange)
+      : super(onChange);
+
+  void setArrowLength(int? length) {
+    ct = length == null ? null : _VTController(length, onChange);
+  }
+
+  @override
+  void disable() {
+    super.disable();
+    ct?.disable();
+  }
+
+  @override
+  bool hasValidData() {
+    return ct != null && ct!.hasValidData();
+  }
+
+  @override
+  Answer getData() {
+    return ct!.getData();
+  }
+
   @override
   void setData(Answer answer) {
     final ans = answer as VariationTableAnswer;
-    for (var i = 0; i < xs.length; i++) {
-      xs[i].setNumber(ans.xs[i]);
-    }
-    for (var i = 0; i < fxs.length; i++) {
-      fxs[i].setNumber(ans.fxs[i]);
-    }
-    for (var i = 0; i < arrows.length; i++) {
-      arrows[i] = ans.arrows[i];
-    }
+    setArrowLength(ans.arrows.length);
+    ct!.setData(ans);
   }
 }
 
@@ -122,12 +159,74 @@ class VariationTableField extends StatefulWidget {
 }
 
 class _VariationTableFieldState extends State<VariationTableField> {
+  void _resetArrowLength() {
+    setState(() {
+      widget.controller.ct = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = widget.controller;
+    return ct.selectedArrowLength == null
+        ? Container(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Choisir le nombre de flèches :",
+                  style: TextStyle(fontStyle: FontStyle.italic, fontSize: 14),
+                ),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: ct.data.lengthProposals
+                        .map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    primary: widget.color),
+                                child: Text(e.toString()),
+                                onPressed: () => setState(() {
+                                      ct.setArrowLength(e);
+                                    })),
+                          ),
+                        )
+                        .toList()),
+              ],
+            ),
+            decoration: BoxDecoration(
+              border: Border.all(color: widget.color),
+              borderRadius: BorderRadius.circular(5),
+            ),
+          )
+        : _OneTable(widget.color, ct.ct!, ct.data.label,
+            ct.enabled ? _resetArrowLength : null);
+  }
+}
+
+class _OneTable extends StatefulWidget {
+  final Color color;
+  final _VTController controller;
+  final String functionLabel;
+  final void Function()? onBack;
+
+  const _OneTable(this.color, this.controller, this.functionLabel, this.onBack,
+      {Key? key})
+      : super(key: key);
+
+  @override
+  __OneTableState createState() => __OneTableState();
+}
+
+class __OneTableState extends State<_OneTable> {
   @override
   Widget build(BuildContext context) {
     final ct = widget.controller;
     final List<Widget> xRow = [];
     final List<Widget> fxRow = [];
-    for (var i = 0; i < ct.data.length; i++) {
+    for (var i = 0; i < ct.xs.length; i++) {
       // number column
       xRow.add(_NumberCell(widget.color, widget.controller.xs[i],
           TableCellVerticalAlignment.middle));
@@ -135,7 +234,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
           widget.color, widget.controller.fxs[i], ct.numberAlignment(i)));
 
       // arrow column
-      if (i < ct.data.length - 1) {
+      if (i < ct.xs.length - 1) {
         final isUp = widget.controller.arrows[i];
         xRow.add(const SizedBox());
         fxRow.add(isUp == null
@@ -145,6 +244,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
                       height: 20,
+                      width: 30,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -163,6 +263,14 @@ class _VariationTableFieldState extends State<VariationTableField> {
       }
     }
 
-    return BaseVariationTable(ct.data.label, xRow, fxRow);
+    return Column(children: [
+      Row(children: [
+        IconButton(
+            onPressed: widget.onBack,
+            icon: const Icon(IconData(0xe092,
+                fontFamily: 'MaterialIcons', matchTextDirection: true)))
+      ]),
+      BaseVariationTable(widget.functionLabel, xRow, fxRow)
+    ]);
   }
 }

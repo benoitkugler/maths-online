@@ -168,9 +168,9 @@ type FigureVectorPairFieldBlock struct {
 // VariationTableFieldBlock asks to complete a
 // variation table (with fixed length)
 type VariationTableFieldBlock struct {
-	ID     int
-	Label  string
-	Length int // number of (x, f(x)) pairs, always >= 2
+	Label           string
+	LengthProposals []int // propositions of the number of arrows
+	ID              int
 }
 
 // FunctionPointsFieldBlock asks to place points

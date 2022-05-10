@@ -14,26 +14,30 @@ class BaseVariationTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Table(
-        border: const TableBorder(
-          top: BorderSide(width: 1.5),
-          left: BorderSide(width: 1.5),
-          right: BorderSide(width: 1.5),
-          bottom: BorderSide(width: 1.5),
-          horizontalInside: BorderSide(),
-        ),
-        children: [
-          TableRow(
-              decoration: BoxDecoration(color: Colors.grey.shade600),
-              children: [
-                const MathTableCell(TableCellVerticalAlignment.middle, "x"),
-                ...xRow
-              ]),
-          TableRow(children: [
-            MathTableCell(TableCellVerticalAlignment.middle, label),
-            ...fxRow,
-          ])
-        ]);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Table(
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          border: const TableBorder(
+            top: BorderSide(width: 1.5),
+            left: BorderSide(width: 1.5),
+            right: BorderSide(width: 1.5),
+            bottom: BorderSide(width: 1.5),
+            horizontalInside: BorderSide(),
+          ),
+          children: [
+            TableRow(
+                decoration: BoxDecoration(color: Colors.grey.shade600),
+                children: [
+                  const MathTableCell(TableCellVerticalAlignment.middle, "x"),
+                  ...xRow
+                ]),
+            TableRow(children: [
+              MathTableCell(TableCellVerticalAlignment.middle, label),
+              ...fxRow,
+            ])
+          ]),
+    );
   }
 }
 
@@ -82,13 +86,14 @@ class VariationArrow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40.0),
+          padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 5),
           child: Transform.rotate(
               angle: isUp ? -angle : angle,
               child: Transform.scale(
                   scaleX: 3,
                   child: const Icon(
-                      IconData(0xe09f, fontFamily: 'MaterialIcons')))),
+                    IconData(0xe09f, fontFamily: 'MaterialIcons'),
+                  ))),
         ),
       ),
     );

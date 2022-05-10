@@ -40,26 +40,30 @@ class SignTable extends StatelessWidget {
       fxRow.add(pair.fx);
     }
 
-    return Table(
-        border: const TableBorder(
-          top: BorderSide(width: 1.5),
-          left: BorderSide(width: 1.5),
-          right: BorderSide(width: 1.5),
-          bottom: BorderSide(width: 1.5),
-          horizontalInside: BorderSide(),
-        ),
-        children: [
-          TableRow(
-              decoration: BoxDecoration(color: Colors.red.shade200),
-              children: [
-                const MathTableCell(TableCellVerticalAlignment.middle, "x"),
-                ...xRow
-              ]),
-          TableRow(children: [
-            MathTableCell(TableCellVerticalAlignment.middle, data.label),
-            ...fxRow,
-          ])
-        ]);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Table(
+          border: const TableBorder(
+            top: BorderSide(width: 1.5),
+            left: BorderSide(width: 1.5),
+            right: BorderSide(width: 1.5),
+            bottom: BorderSide(width: 1.5),
+            horizontalInside: BorderSide(),
+          ),
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          children: [
+            TableRow(
+                decoration: BoxDecoration(color: Colors.red.shade200),
+                children: [
+                  const MathTableCell(TableCellVerticalAlignment.middle, "x"),
+                  ...xRow
+                ]),
+            TableRow(children: [
+              MathTableCell(TableCellVerticalAlignment.middle, data.label),
+              ...fxRow,
+            ])
+          ]),
+    );
   }
 }
 
