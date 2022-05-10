@@ -5,17 +5,17 @@ import 'package:eleve/exercices/variation_table.dart';
 import 'package:flutter/material.dart';
 
 class VariationTableController extends FieldController {
-  final int length;
+  final VariationTableFieldBlock data;
   final List<NumberController> xs; // with length [length]
   final List<NumberController> fxs; // with length [length]
   final List<bool?> arrows; // up, down or not set, with length [length-1]
 
-  VariationTableController(this.length, void Function() onChange)
+  VariationTableController(this.data, void Function() onChange)
       : xs = List<NumberController>.generate(
-            length, (index) => NumberController(onChange)),
+            data.length, (index) => NumberController(onChange)),
         fxs = List<NumberController>.generate(
-            length, (index) => NumberController(onChange)),
-        arrows = List<bool?>.filled(length - 1, null),
+            data.length, (index) => NumberController(onChange)),
+        arrows = List<bool?>.filled(data.length - 1, null),
         super(onChange);
 
   void toggleArrow(int index) {
@@ -28,7 +28,7 @@ class VariationTableController extends FieldController {
   }
 
   TableCellVerticalAlignment numberAlignment(int index) {
-    if (index == length - 1) {
+    if (index == data.length - 1) {
       final arrow = arrows[index - 1];
       return arrow == null
           ? TableCellVerticalAlignment.middle
@@ -127,7 +127,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
     final ct = widget.controller;
     final List<Widget> xRow = [];
     final List<Widget> fxRow = [];
-    for (var i = 0; i < ct.length; i++) {
+    for (var i = 0; i < ct.data.length; i++) {
       // number column
       xRow.add(_NumberCell(widget.color, widget.controller.xs[i],
           TableCellVerticalAlignment.middle));
@@ -135,7 +135,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
           widget.color, widget.controller.fxs[i], ct.numberAlignment(i)));
 
       // arrow column
-      if (i < ct.length - 1) {
+      if (i < ct.data.length - 1) {
         final isUp = widget.controller.arrows[i];
         xRow.add(const SizedBox());
         fxRow.add(isUp == null
@@ -163,6 +163,6 @@ class _VariationTableFieldState extends State<VariationTableField> {
       }
     }
 
-    return BaseVariationTable(xRow, fxRow);
+    return BaseVariationTable(ct.data.label, xRow, fxRow);
   }
 }

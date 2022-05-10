@@ -320,6 +320,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
+          Label: "C_f",
           Xs: ["-5", "0", "5"],
           Fxs: ["-3", "2", "-1"]
         }
@@ -330,6 +331,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
+          Label: "f(x)",
           Xs: ["-5", "0", "5"],
           Fxs: ["-3", "2", "-1"]
         }
@@ -340,6 +342,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
+          Label: "f(x)",
           FxSymbols: [
             SignSymbol.Nothing,
             SignSymbol.Zero,
@@ -483,6 +486,7 @@ export function newBlock(kind: BlockKind): Block {
         Kind: kind,
         Data: {
           Answer: {
+            Label: "f(x)",
             Xs: ["-5", "0", "5"],
             Fxs: ["-3", "2", "-1"]
           }
@@ -495,7 +499,7 @@ export function newBlock(kind: BlockKind): Block {
         Kind: kind,
         Data: {
           Function: "(x/2)^2",
-          Label: "f",
+          Label: "C_f",
           Variable: { Name: xRune, Indice: "" },
           XGrid: [-4, -2, 0, 2, 4]
         }

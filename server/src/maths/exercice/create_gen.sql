@@ -774,9 +774,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Xs', 'Fxs'))
+            bool_and(key IN ('Label', 'Xs', 'Fxs'))
         FROM
             jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Label')
         AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_string (data -> 'Fxs');
     RETURN is_valid;
@@ -948,9 +949,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('FxSymbols', 'Xs', 'Signs'))
+            bool_and(key IN ('Label', 'FxSymbols', 'Xs', 'Signs'))
         FROM
             jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Label')
         AND structgen_validate_json_array_SignSymbol (data -> 'FxSymbols')
         AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_boolean (data -> 'Signs');
@@ -1155,9 +1157,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Xs', 'Fxs'))
+            bool_and(key IN ('Label', 'Xs', 'Fxs'))
         FROM
             jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Label')
         AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_string (data -> 'Fxs');
     RETURN is_valid;

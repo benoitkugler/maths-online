@@ -5,10 +5,12 @@ import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 
 class BaseVariationTable extends StatelessWidget {
+  final String label;
   final List<Widget> xRow;
   final List<Widget> fxRow;
 
-  const BaseVariationTable(this.xRow, this.fxRow, {Key? key}) : super(key: key);
+  const BaseVariationTable(this.label, this.xRow, this.fxRow, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class BaseVariationTable extends StatelessWidget {
                 ...xRow
               ]),
           TableRow(children: [
-            const MathTableCell(TableCellVerticalAlignment.middle, "f(x)"),
+            MathTableCell(TableCellVerticalAlignment.middle, label),
             ...fxRow,
           ])
         ]);
@@ -62,7 +64,7 @@ class VariationTable extends StatelessWidget {
       }
     }
 
-    return BaseVariationTable(xRow, fxRow);
+    return BaseVariationTable(data.label, xRow, fxRow);
   }
 }
 

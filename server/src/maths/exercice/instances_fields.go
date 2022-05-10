@@ -535,7 +535,11 @@ type VariationTableFieldInstance struct {
 func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 
 func (f VariationTableFieldInstance) toClient() client.Block {
-	return client.VariationTableFieldBlock{Length: len(f.Answer.Xs), ID: f.ID}
+	return client.VariationTableFieldBlock{
+		Label:  f.Answer.Label,
+		Length: len(f.Answer.Xs),
+		ID:     f.ID,
+	}
 }
 
 func (f VariationTableFieldInstance) validateAnswerSyntax(answer client.Answer) error {

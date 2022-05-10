@@ -56,7 +56,7 @@ class SignTable extends StatelessWidget {
                 ...xRow
               ]),
           TableRow(children: [
-            const MathTableCell(TableCellVerticalAlignment.middle, "f(x)"),
+            MathTableCell(TableCellVerticalAlignment.middle, data.label),
             ...fxRow,
           ])
         ]);

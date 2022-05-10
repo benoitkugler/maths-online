@@ -68,6 +68,7 @@ type VariationColumnNumber struct {
 }
 
 type VariationTableBlock struct {
+	Label   string
 	Columns []VariationColumnNumber
 	// Arrows displays the arrows between two local extrema.
 	Arrows []bool
@@ -82,6 +83,7 @@ type SignColumn struct {
 }
 
 type SignTableBlock struct {
+	Label   string
 	Columns []SignColumn
 }
 
@@ -167,6 +169,7 @@ type FigureVectorPairFieldBlock struct {
 // variation table (with fixed length)
 type VariationTableFieldBlock struct {
 	ID     int
+	Label  string
 	Length int // number of (x, f(x)) pairs, always >= 2
 }
 

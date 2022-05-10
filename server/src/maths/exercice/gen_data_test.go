@@ -336,8 +336,9 @@ func randSlicestring() []string {
 
 func randFunctionVariationGraphBlock() FunctionVariationGraphBlock {
 	return FunctionVariationGraphBlock{
-		Xs:  randSlicestring(),
-		Fxs: randSlicestring(),
+		Label: randstring(),
+		Xs:    randSlicestring(),
+		Fxs:   randSlicestring(),
 	}
 }
 
@@ -407,6 +408,7 @@ func randSlicebool() []bool {
 
 func randSignTableBlock() SignTableBlock {
 	return SignTableBlock{
+		Label:     randstring(),
 		FxSymbols: randSliceSignSymbol(),
 		Xs:        randSliceInterpolated(),
 		Signs:     randSlicebool(),
@@ -472,8 +474,9 @@ func randTreeFieldBlock() TreeFieldBlock {
 
 func randVariationTableBlock() VariationTableBlock {
 	return VariationTableBlock{
-		Xs:  randSlicestring(),
-		Fxs: randSlicestring(),
+		Label: randstring(),
+		Xs:    randSlicestring(),
+		Fxs:   randSlicestring(),
 	}
 }
 

@@ -27,7 +27,7 @@
                     variant="outlined"
                     density="compact"
                     v-model="fn.Decoration.Label"
-                    label="Nom"
+                    label="Légende"
                     hide-details
                   ></v-text-field>
                 </v-col>

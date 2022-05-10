@@ -156,8 +156,9 @@ func (fi FormulaDisplayInstance) toClient() client.Block {
 }
 
 type VariationTableInstance struct {
-	Xs  []float64 // sorted values for x
-	Fxs []float64 // corresponding values for f(x)
+	Label string
+	Xs    []float64 // sorted values for x
+	Fxs   []float64 // corresponding values for f(x)
 }
 
 // inferAlignment return the alignment of the number at index i
@@ -171,7 +172,9 @@ func (vt VariationTableInstance) inferAlignment(i int) (isUp bool) {
 
 // assume at least two columns
 func (vt VariationTableInstance) toClient() client.Block {
-	out := client.VariationTableBlock{}
+	out := client.VariationTableBlock{
+		Label: vt.Label,
+	}
 	for i := range vt.Xs {
 		numberIsUp := vt.inferAlignment(i)
 		// add the number column
@@ -190,6 +193,7 @@ func (vt VariationTableInstance) toClient() client.Block {
 }
 
 type SignTableInstance struct {
+	Label     string
 	Xs        []string
 	FxSymbols []SignSymbol
 	Signs     []bool // with length len(Xs) - 1
@@ -218,7 +222,10 @@ func (st SignTableInstance) toClient() client.Block {
 			})
 		}
 	}
-	return client.SignTableBlock{Columns: columns}
+	return client.SignTableBlock{
+		Label:   st.Label,
+		Columns: columns,
+	}
 }
 
 type FigureInstance client.FigureBlock
@@ -242,7 +249,7 @@ type FunctionVariationGraphInstance VariationTableInstance
 
 func (fg FunctionVariationGraphInstance) toClient() client.Block {
 	return client.FunctionGraphBlock{
-		Graph: functiongrapher.GraphFromVariations(functiongrapher.FunctionDecoration{Label: "y = f(x)"}, fg.Xs, fg.Fxs),
+		Graph: functiongrapher.GraphFromVariations(functiongrapher.FunctionDecoration{Label: fg.Label}, fg.Xs, fg.Fxs),
 	}
 }
 

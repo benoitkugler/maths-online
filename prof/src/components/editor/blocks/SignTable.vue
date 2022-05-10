@@ -6,7 +6,7 @@
     <v-col md="10" align-self="center">
       <v-table style="overflow-x: auto; max-width: 70vh">
         <tr>
-          <th></th>
+          <th style="width: 60px"></th>
           <template v-for="(x, index) in props.modelValue.Xs">
             <td v-if="index"></td>
             <td style="text-align: center; width: 40px">
@@ -23,7 +23,7 @@
           </template>
         </tr>
         <tr>
-          <th>x</th>
+          <th style="width: 60px">x</th>
           <template v-for="(x, index) in props.modelValue.Xs">
             <td v-if="index"></td>
             <td style="text-align: center; width: 80px">
@@ -36,7 +36,16 @@
           </template>
         </tr>
         <tr>
-          <th class="px-2">f(x)</th>
+          <td class="px-2" style="width: 60px">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="props.modelValue.Label"
+              label="Légende"
+              hide-details
+              class="fix-input-width"
+            ></v-text-field>
+          </td>
           <template v-for="(fx, index) in props.modelValue.FxSymbols">
             <td v-if="index">
               <v-btn
@@ -105,7 +114,11 @@ function removeColumn(index: number) {
   padding-right: 0;
 }
 
-:deep(v-select__selections input) {
+:deep(.v-select__selections input) {
   padding: 0px;
+}
+
+.fix-input-width:deep(input) {
+  width: 45px;
 }
 </style>

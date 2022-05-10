@@ -368,14 +368,16 @@ func evaluateExpr(expr string, params expression.Variables) (float64, error) {
 }
 
 type VariationTableBlock struct {
-	Xs  []string // expressions
-	Fxs []string // expressions
+	Label string
+	Xs    []string // expressions
+	Fxs   []string // expressions
 }
 
 func (vt VariationTableBlock) instantiateVT(params expression.Variables) (VariationTableInstance, error) {
 	out := VariationTableInstance{
-		Xs:  make([]float64, len(vt.Xs)),
-		Fxs: make([]float64, len(vt.Fxs)),
+		Label: vt.Label,
+		Xs:    make([]float64, len(vt.Xs)),
+		Fxs:   make([]float64, len(vt.Fxs)),
 	}
 	var err error
 	for i, c := range vt.Xs {
@@ -431,6 +433,7 @@ func (vt VariationTableBlock) validate(params expression.RandomParameters) error
 }
 
 type SignTableBlock struct {
+	Label     string
 	FxSymbols []SignSymbol
 	Xs        []Interpolated // always math content
 	Signs     []bool         // with length len(Xs) - 1
@@ -438,7 +441,8 @@ type SignTableBlock struct {
 
 func (st SignTableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
 	out := SignTableInstance{
-		Xs: make([]string, len(st.Xs)),
+		Label: st.Label,
+		Xs:    make([]string, len(st.Xs)),
 	}
 	for i, c := range st.Xs {
 		parts, err := c.Parse()

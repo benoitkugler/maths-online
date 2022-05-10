@@ -997,23 +997,28 @@ List<dynamic> listSignColumnToJson(List<SignColumn> item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.SignTableBlock
 class SignTableBlock implements Block {
+  final String label;
   final List<SignColumn> columns;
 
-  const SignTableBlock(this.columns);
+  const SignTableBlock(this.label, this.columns);
 
   @override
   String toString() {
-    return "SignTableBlock($columns)";
+    return "SignTableBlock($label, $columns)";
   }
 }
 
 SignTableBlock signTableBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return SignTableBlock(listSignColumnFromJson(json['Columns']));
+  return SignTableBlock(
+      stringFromJson(json['Label']), listSignColumnFromJson(json['Columns']));
 }
 
 JSON signTableBlockToJson(SignTableBlock item) {
-  return {"Columns": listSignColumnToJson(item.columns)};
+  return {
+    "Label": stringToJson(item.label),
+    "Columns": listSignColumnToJson(item.columns)
+  };
 }
 
 List<List<TextOrMath>> listListTextOrMathFromJson(dynamic json) {
@@ -1202,25 +1207,29 @@ List<dynamic> listVariationColumnNumberToJson(
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableBlock
 class VariationTableBlock implements Block {
+  final String label;
   final List<VariationColumnNumber> columns;
   final List<bool> arrows;
 
-  const VariationTableBlock(this.columns, this.arrows);
+  const VariationTableBlock(this.label, this.columns, this.arrows);
 
   @override
   String toString() {
-    return "VariationTableBlock($columns, $arrows)";
+    return "VariationTableBlock($label, $columns, $arrows)";
   }
 }
 
 VariationTableBlock variationTableBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationTableBlock(listVariationColumnNumberFromJson(json['Columns']),
+  return VariationTableBlock(
+      stringFromJson(json['Label']),
+      listVariationColumnNumberFromJson(json['Columns']),
       listBoolFromJson(json['Arrows']));
 }
 
 JSON variationTableBlockToJson(VariationTableBlock item) {
   return {
+    "Label": stringToJson(item.label),
     "Columns": listVariationColumnNumberToJson(item.columns),
     "Arrows": listBoolToJson(item.arrows)
   };
@@ -1229,24 +1238,29 @@ JSON variationTableBlockToJson(VariationTableBlock item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableFieldBlock
 class VariationTableFieldBlock implements Block {
   final int iD;
+  final String label;
   final int length;
 
-  const VariationTableFieldBlock(this.iD, this.length);
+  const VariationTableFieldBlock(this.iD, this.label, this.length);
 
   @override
   String toString() {
-    return "VariationTableFieldBlock($iD, $length)";
+    return "VariationTableFieldBlock($iD, $label, $length)";
   }
 }
 
 VariationTableFieldBlock variationTableFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationTableFieldBlock(
-      intFromJson(json['ID']), intFromJson(json['Length']));
+  return VariationTableFieldBlock(intFromJson(json['ID']),
+      stringFromJson(json['Label']), intFromJson(json['Length']));
 }
 
 JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
-  return {"ID": intToJson(item.iD), "Length": intToJson(item.length)};
+  return {
+    "ID": intToJson(item.iD),
+    "Label": stringToJson(item.label),
+    "Length": intToJson(item.length)
+  };
 }
 
 abstract class Block {}

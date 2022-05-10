@@ -35,7 +35,16 @@
           </td>
         </tr>
         <tr>
-          <th class="px-2">f(x)</th>
+          <td class="px-2" style="width: 40px">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="props.modelValue.Label"
+              label="Légende"
+              hide-details
+              class="fix-input-width"
+            ></v-text-field>
+          </td>
           <td v-for="(fx, index) in props.modelValue.Fxs">
             <expression-field
               :model-value="fx"
@@ -90,4 +99,8 @@ function removeColumn(index: number) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.fix-input-width:deep(input) {
+  width: 100%;
+}
+</style>

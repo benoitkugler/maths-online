@@ -107,6 +107,20 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(wr)
 }
 
+const (
+	DoublePointAnswerKind = iota
+	DoublePointPairAnswerKind
+	ExpressionAnswerKind
+	FunctionPointsAnswerKind
+	NumberAnswerKind
+	OrderedListAnswerKind
+	PointAnswerKind
+	RadioAnswerKind
+	TableAnswerKind
+	TreeAnswerKind
+	VariationTableAnswerKind
+)
+
 // BlockWrapper may be used as replacements for Block
 // when working with JSON
 type BlockWrapper struct {
@@ -257,6 +271,28 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(wr)
 }
+
+const (
+	DropDownFieldBlockKind = iota
+	ExpressionFieldBlockKind
+	FigureBlockKind
+	FigurePointFieldBlockKind
+	FigureVectorFieldBlockKind
+	FigureVectorPairFieldBlockKind
+	FormulaBlockKind
+	FunctionGraphBlockKind
+	FunctionPointsFieldBlockKind
+	NumberFieldBlockKind
+	OrderedListFieldBlockKind
+	RadioFieldBlockKind
+	SignTableBlockKind
+	TableBlockKind
+	TableFieldBlockKind
+	TextBlockKind
+	TreeFieldBlockKind
+	VariationTableBlockKind
+	VariationTableFieldBlockKind
+)
 
 func (ct Enonce) MarshalJSON() ([]byte, error) {
 	tmp := make([]BlockWrapper, len(ct))
