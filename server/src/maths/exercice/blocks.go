@@ -204,23 +204,6 @@ func (tp TextPart) validate() error {
 	}
 }
 
-func (tp TextPart) instantiateAndEvaluate(params expression.Variables) (client.TextOrMath, error) {
-	if tp.Kind == Expression {
-		expr, err := expression.Parse(tp.Content)
-		if err != nil {
-			return client.TextOrMath{}, err
-		}
-		expr.Substitute(params)
-		// try to evaluate
-		v, err := expr.Evaluate(nil)
-		if err == nil {
-			expr = expression.NewNb(v)
-		}
-		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}, nil
-	}
-	return tp.instantiate(params)
-}
-
 type TextParts []TextPart
 
 // instantiate merges adjacent math chunks so that latex expression are not split up
@@ -250,18 +233,16 @@ func (tp TextParts) instantiate(params expression.Variables) ([]client.TextOrMat
 }
 
 // assume all parts are either static math or expression.
-// after instantiating, tries to evaluate the expression
-// and returns the LaTeX concatenated code
-func (tp TextParts) instantiateAndEvaluate(params expression.Variables) (string, error) {
-	parts := make([]string, len(tp))
-	for i, p := range tp {
-		v, err := p.instantiateAndEvaluate(params)
-		if err != nil {
-			return "", err
-		}
-		parts[i] = v.Text
+func (tp TextParts) instantiateAndMerge(params expression.Variables) (string, error) {
+	parts, err := tp.instantiate(params)
+	if err != nil {
+		return "", err
 	}
-	return strings.Join(parts, ""), nil
+	chunks := make([]string, len(parts))
+	for i, p := range parts {
+		chunks[i] = p.Text
+	}
+	return strings.Join(chunks, ""), nil
 }
 
 func (tp TextParts) validate() error {
@@ -449,7 +430,7 @@ func (st SignTableBlock) instantiate(params expression.Variables, _ int) (instan
 		if err != nil {
 			return nil, err
 		}
-		out.Xs[i], err = parts.instantiateAndEvaluate(params)
+		out.Xs[i], err = parts.instantiateAndMerge(params)
 		if err != nil {
 			return nil, err
 		}
