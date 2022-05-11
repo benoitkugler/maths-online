@@ -269,6 +269,7 @@ export interface FunctionPointsFieldBlock {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
 export interface VariationTableBlock {
+  Label: string;
   Xs: string[] | null;
   Fxs: string[] | null;
 }
@@ -294,6 +295,7 @@ export interface RadioFieldBlock {
 export type SignSymbol = number;
 // github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
 export interface SignTableBlock {
+  Label: string;
   FxSymbols: SignSymbol[] | null;
   Xs: Interpolated[] | null;
   Signs: boolean[] | null;

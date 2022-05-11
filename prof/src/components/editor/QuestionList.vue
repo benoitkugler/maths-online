@@ -135,10 +135,10 @@
 
 <script setup lang="ts">
 import type { QuestionGroup, QuestionHeader } from "@/controller/api_gen";
-import { controller } from "@/controller/controller";
+import { controller, IsDev } from "@/controller/controller";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
-import { $computed, $ref } from "vue/macros";
+import { $ref } from "vue/macros";
 import QuestionGroupRow from "./QuestionGroupRow.vue";
 import QuestionRow from "./QuestionRow.vue";
 
@@ -151,43 +151,13 @@ const emit = defineEmits<{
   (e: "edit", question: Question, tags: string[]): void;
 }>();
 
-const questions = $computed(() => {
-  const out = _questions.map(v => v);
-  //   out.sort(
-  //     (a, b) =>
-  //       questionDifficulty(a.Tags || []) - questionDifficulty(b.Tags || [])
-  //   );
-  //   out.sort((a, b) => a.Title.localeCompare(b.Title));
-  return out;
-});
-
-let _questions = $ref<QuestionGroup[]>([]);
+let questions = $ref<QuestionGroup[]>([]);
 let size = $ref(0);
 
 let querySearch = $ref("");
-let queryTags = $ref<string[]>([]);
+let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
 
 let timerId = 0;
-
-function isStartGroup(index: number) {
-  if (index == 0 || index == questions.length - 1) {
-    return false;
-  }
-  return (
-    questions[index - 1].Title != questions[index].Title &&
-    questions[index + 1].Title == questions[index].Title
-  );
-}
-
-function isEndGroup(index: number) {
-  if (index == 0 || index == questions.length - 1) {
-    return false;
-  }
-  return (
-    questions[index - 1].Title == questions[index].Title &&
-    questions[index + 1].Title != questions[index].Title
-  );
-}
 
 onMounted(fetchQuestions);
 
@@ -214,7 +184,7 @@ async function fetchQuestions() {
   if (result == undefined) {
     return;
   }
-  _questions = result.Questions || [];
+  questions = result.Questions || [];
   size = result.Size;
 }
 
