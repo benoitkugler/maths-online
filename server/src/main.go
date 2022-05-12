@@ -12,6 +12,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/exercice/examples"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	trivialpoursuit "github.com/benoitkugler/maths-online/prof/trivial-poursuit"
@@ -218,13 +219,13 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 	})
 
 	// temporary question quick access
-
+	sampleQuestions := examples.Questions()
 	e.GET("/questions", func(c echo.Context) error {
 		var out []client.Question
-		for _, qu := range exercice.PredefinedQuestions {
+		for _, qu := range sampleQuestions {
 			out = append(out, qu.ToClient())
 		}
-		return c.JSON(200, out)
+		return c.JSONPretty(200, out, " ")
 	})
 
 	e.POST("/questions/syntaxe/:index", func(c echo.Context) error {
@@ -235,7 +236,7 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 			return err
 		}
 
-		out := exercice.PredefinedQuestions[index].CheckSyntaxe(data)
+		out := sampleQuestions[index].CheckSyntaxe(data)
 
 		return c.JSON(200, out)
 	})
@@ -249,7 +250,7 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 			return err
 		}
 
-		out := exercice.PredefinedQuestions[index].EvaluateAnswer(data)
+		out := sampleQuestions[index].EvaluateAnswer(data)
 
 		return c.JSON(200, out)
 	})
