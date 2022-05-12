@@ -2,6 +2,11 @@
 -- add Label to VariationTableBlock (18), SignTableBlock (13), FunctionVariationGraphBlock (9),
 -- VariationTableFieldBlock (19)
 -- defaulting to f
+--
+-- First remove the constraint (should be added back after the migration)
+
+ALTER TABLE questions
+    DROP CONSTRAINT enonce_structgen_validate_json_array_exe_Block;
 
 UPDATE
     questions

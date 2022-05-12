@@ -1,5 +1,6 @@
+import 'package:eleve/build_mode.dart';
+import 'package:eleve/exercices/expression.dart';
 import 'package:eleve/exercices/fields.dart';
-import 'package:eleve/exercices/number.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:flutter/material.dart';
@@ -8,17 +9,17 @@ import 'package:flutter/material.dart';
 class _VTController {
   bool enabled = true;
 
-  final List<NumberController> xs; // with length [length]
-  final List<NumberController> fxs; // with length [length]
+  final List<ExpressionController> xs; // with length [length]
+  final List<ExpressionController> fxs; // with length [length]
   final List<bool?> arrows; // up, down or not set, with length [length-1]
 
   final void Function() onChange;
 
-  _VTController(int arrowLength, this.onChange)
-      : xs = List<NumberController>.generate(
-            arrowLength + 1, (index) => NumberController(onChange)),
-        fxs = List<NumberController>.generate(
-            arrowLength + 1, (index) => NumberController(onChange)),
+  _VTController(BuildMode buildMode, int arrowLength, this.onChange)
+      : xs = List<ExpressionController>.generate(arrowLength + 1,
+            (index) => ExpressionController(buildMode, onChange)),
+        fxs = List<ExpressionController>.generate(arrowLength + 1,
+            (index) => ExpressionController(buildMode, onChange)),
         arrows = List<bool?>.filled(arrowLength, null);
 
   void toggleArrow(int index) {
@@ -65,18 +66,18 @@ class _VTController {
 
   Answer getData() {
     return VariationTableAnswer(
-      xs.map((e) => e.getNumber()).toList(),
-      fxs.map((e) => e.getNumber()).toList(),
+      xs.map((e) => e.getExpression()).toList(),
+      fxs.map((e) => e.getExpression()).toList(),
       arrows.map((e) => e!).toList(),
     );
   }
 
   void setData(VariationTableAnswer answer) {
     for (var i = 0; i < xs.length; i++) {
-      xs[i].setNumber(answer.xs[i]);
+      xs[i].setExpression(answer.xs[i]);
     }
     for (var i = 0; i < fxs.length; i++) {
-      fxs[i].setNumber(answer.fxs[i]);
+      fxs[i].setExpression(answer.fxs[i]);
     }
     for (var i = 0; i < arrows.length; i++) {
       arrows[i] = answer.arrows[i];
@@ -85,6 +86,7 @@ class _VTController {
 }
 
 class VariationTableController extends FieldController {
+  final BuildMode buildMode;
   final VariationTableFieldBlock data;
 
   // setup when selecting a length
@@ -92,11 +94,11 @@ class VariationTableController extends FieldController {
 
   int? get selectedArrowLength => ct == null ? null : ct!.arrows.length;
 
-  VariationTableController(this.data, void Function() onChange)
+  VariationTableController(this.buildMode, this.data, void Function() onChange)
       : super(onChange);
 
   void setArrowLength(int? length) {
-    ct = length == null ? null : _VTController(length, onChange);
+    ct = length == null ? null : _VTController(buildMode, length, onChange);
   }
 
   @override
@@ -123,12 +125,12 @@ class VariationTableController extends FieldController {
   }
 }
 
-class _NumberCell extends StatelessWidget {
+class _ExpressionCell extends StatelessWidget {
   final Color color;
-  final NumberController controller;
+  final ExpressionController controller;
   final TableCellVerticalAlignment align;
 
-  const _NumberCell(this.color, this.controller, this.align, {Key? key})
+  const _ExpressionCell(this.color, this.controller, this.align, {Key? key})
       : super(key: key);
 
   @override
@@ -137,10 +139,10 @@ class _NumberCell extends StatelessWidget {
       verticalAlignment: align,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: NumberField(
+        child: ExpressionField(
           color,
           controller,
-          outlined: true,
+          widthFactor: 0.2,
         ),
       ),
     );
@@ -228,9 +230,9 @@ class __OneTableState extends State<_OneTable> {
     final List<Widget> fxRow = [];
     for (var i = 0; i < ct.xs.length; i++) {
       // number column
-      xRow.add(_NumberCell(widget.color, widget.controller.xs[i],
+      xRow.add(_ExpressionCell(widget.color, widget.controller.xs[i],
           TableCellVerticalAlignment.middle));
-      fxRow.add(_NumberCell(
+      fxRow.add(_ExpressionCell(
           widget.color, widget.controller.fxs[i], ct.numberAlignment(i)));
 
       // arrow column

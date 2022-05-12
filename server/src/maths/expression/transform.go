@@ -512,7 +512,8 @@ type ComparisonLevel uint8
 const (
 	// Expressions are compared structurally
 	// This is usually too restrictive to be useful
-	// For instance, x + 2 != 2 + x according to this level
+	// For instance, x + 2 != 2 + x according to this level,
+	// or 1/4 != 0.25
 	Strict ComparisonLevel = iota
 	// Expressions are compared after performing some basic transformations,
 	// such as reording operands.
@@ -536,7 +537,7 @@ func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
 	// start by evaluating
 	v1, err1 := e1.Evaluate(nil)
 	v2, err2 := e2.Evaluate(nil)
-	if err1 == nil && err2 == nil && v1 == v2 {
+	if err1 == nil && err2 == nil && AreFloatEqual(v1, v2) {
 		return true
 	}
 

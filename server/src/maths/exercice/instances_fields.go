@@ -552,6 +552,24 @@ func (f VariationTableFieldInstance) toClient() client.Block {
 	}
 }
 
+func parseVariationTableAnswer(answer client.VariationTableAnswer) (xs, fxs []*expression.Expression, err error) {
+	xs = make([]*expression.Expression, len(answer.Xs))
+	fxs = make([]*expression.Expression, len(answer.Fxs))
+	for i, x := range answer.Xs {
+		xs[i], err = expression.Parse(x)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	for i, fx := range answer.Fxs {
+		fxs[i], err = expression.Parse(fx)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return xs, fxs, nil
+}
+
 func (f VariationTableFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 	ans, ok := answer.(client.VariationTableAnswer)
 	if !ok {
@@ -561,14 +579,15 @@ func (f VariationTableFieldInstance) validateAnswerSyntax(answer client.Answer) 
 		}
 	}
 
-	if L := len(f.Answer.Xs); len(ans.Xs) != L || len(ans.Fxs) != L || len(ans.Arrows) != L-1 {
+	if L := len(ans.Xs); len(ans.Fxs) != L || len(ans.Arrows) != L-1 {
 		return InvalidFieldAnswer{
 			ID:     f.ID,
-			Reason: fmt.Sprintf("invalid lengths %d %d %d", len(ans.Xs), len(ans.Fxs), len(ans.Arrows)),
+			Reason: fmt.Sprintf("invalid lengths Xs: %d Fxs: %d Arrows: %d", len(ans.Xs), len(ans.Fxs), len(ans.Arrows)),
 		}
 	}
 
-	return nil
+	_, _, err := parseVariationTableAnswer(ans)
+	return err
 }
 
 func areNumbersEqual(s1, s2 []float64) bool {
@@ -583,14 +602,27 @@ func areNumbersEqual(s1, s2 []float64) bool {
 	return true
 }
 
+func areExpressionsEquals(got []*expression.Expression, exp []evaluatedExpression) bool {
+	if len(got) != len(exp) {
+		return false
+	}
+	for i, v := range got {
+		if !expression.AreExpressionsEquivalent(v, exp[i].Expr, expression.SimpleSubstitutions) {
+			return false
+		}
+	}
+	return true
+}
+
 func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.VariationTableAnswer)
-	if !(areNumbersEqual(ans.Xs, f.Answer.Xs) && areNumbersEqual(ans.Fxs, f.Answer.Fxs)) {
+	xs, fxs, _ := parseVariationTableAnswer(ans)
+	if !(areExpressionsEquals(xs, f.Answer.Xs) && areExpressionsEquals(fxs, f.Answer.Fxs)) {
 		return false
 	}
 
 	for i, arrow := range ans.Arrows {
-		if !f.Answer.inferAlignment(i) != arrow {
+		if f.Answer.inferAlignment(i) != arrow {
 			return false
 		}
 	}
@@ -600,9 +632,15 @@ func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 
 func (f VariationTableFieldInstance) correctAnswer() client.Answer {
 	out := client.VariationTableAnswer{
-		Xs:     f.Answer.Xs,
-		Fxs:    f.Answer.Fxs,
+		Xs:     make([]string, len(f.Answer.Xs)),
+		Fxs:    make([]string, len(f.Answer.Fxs)),
 		Arrows: make([]bool, len(f.Answer.Xs)-1),
+	}
+	for i, x := range f.Answer.Xs {
+		out.Xs[i] = x.Expr.String()
+	}
+	for i, x := range f.Answer.Fxs {
+		out.Fxs[i] = x.Expr.String()
 	}
 	for i := range out.Arrows {
 		out.Arrows[i] = f.Answer.inferAlignment(i)

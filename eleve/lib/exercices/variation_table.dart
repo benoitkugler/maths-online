@@ -33,7 +33,8 @@ class BaseVariationTable extends StatelessWidget {
                   ...xRow
                 ]),
             TableRow(children: [
-              MathTableCell(TableCellVerticalAlignment.middle, label),
+              MathTableCell(TableCellVerticalAlignment.middle, label,
+                  width: 70),
               ...fxRow,
             ])
           ]),
@@ -53,13 +54,12 @@ class VariationTable extends StatelessWidget {
 
     for (var i = 0; i < data.columns.length; i++) {
       final numberCol = data.columns[i];
-      xRow.add(
-          MathTableCell(TableCellVerticalAlignment.middle, "${numberCol.x}"));
+      xRow.add(MathTableCell(TableCellVerticalAlignment.middle, numberCol.x));
       fxRow.add(MathTableCell(
         numberCol.isUp
             ? TableCellVerticalAlignment.top
             : TableCellVerticalAlignment.bottom,
-        "${numberCol.y}",
+        numberCol.y,
       ));
 
       if (i < data.columns.length - 1) {

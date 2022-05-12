@@ -89,7 +89,7 @@ type randomParameter struct {
 func (rp randomParameters) toMap() expression.RandomParameters {
 	out := make(expression.RandomParameters, len(rp))
 	for _, item := range rp {
-		out[expression.Variable(item.Variable)] = mustParse(item.Expression)
+		out[expression.Variable(item.Variable)] = expression.MustParse(item.Expression)
 	}
 	return out
 }
@@ -172,6 +172,18 @@ func (qu Question) InstantiateWith(params expression.Variables) (QuestionInstanc
 type TextPart struct {
 	Content string
 	Kind    TextKind
+}
+
+func NewPText(content string) TextPart {
+	return TextPart{Content: content, Kind: Text}
+}
+
+func NewPMath(content string) TextPart {
+	return TextPart{Content: content, Kind: StaticMath}
+}
+
+func NewPExpr(content string) TextPart {
+	return TextPart{Content: content, Kind: Expression}
 }
 
 func (tp TextPart) instantiate(params expression.Variables) (client.TextOrMath, error) {
@@ -357,18 +369,18 @@ type VariationTableBlock struct {
 func (vt VariationTableBlock) instantiateVT(params expression.Variables) (VariationTableInstance, error) {
 	out := VariationTableInstance{
 		Label: vt.Label,
-		Xs:    make([]float64, len(vt.Xs)),
-		Fxs:   make([]float64, len(vt.Fxs)),
+		Xs:    make([]evaluatedExpression, len(vt.Xs)),
+		Fxs:   make([]evaluatedExpression, len(vt.Fxs)),
 	}
 	var err error
 	for i, c := range vt.Xs {
-		out.Xs[i], err = evaluateExpr(c, params)
+		out.Xs[i], err = newEvaluatedExpression(c, params)
 		if err != nil {
 			return out, err
 		}
 	}
 	for i, c := range vt.Fxs {
-		out.Fxs[i], err = evaluateExpr(c, params)
+		out.Fxs[i], err = newEvaluatedExpression(c, params)
 		if err != nil {
 			return out, err
 		}

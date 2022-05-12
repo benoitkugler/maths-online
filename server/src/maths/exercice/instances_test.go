@@ -40,12 +40,12 @@ func TestQuestionInstance_CompareAnswer(t *testing.T) {
 			map[int]bool{0: true, 1: true},
 		},
 		{
-			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}},
+			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: expression.MustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}},
 			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.ExpressionAnswer{Expression: "x+3"}},
 			map[int]bool{0: true, 1: false},
 		},
 		{
-			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: mustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}},
+			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: expression.MustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}},
 			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.ExpressionAnswer{Expression: "x+ 2"}},
 			map[int]bool{0: true, 1: true},
 		},

@@ -45,6 +45,10 @@ class ExpressionController extends FieldController {
     return textController.text.trim();
   }
 
+  void setExpression(String expr) {
+    textController.text = expr;
+  }
+
   @override
   Answer getData() {
     return ExpressionAnswer(getExpression());
@@ -52,15 +56,17 @@ class ExpressionController extends FieldController {
 
   @override
   void setData(Answer answer) {
-    textController.text = (answer as ExpressionAnswer).expression;
+    setExpression((answer as ExpressionAnswer).expression);
   }
 }
 
 class ExpressionField extends StatefulWidget {
   final Color color;
   final ExpressionController _controller;
+  final double widthFactor;
 
-  const ExpressionField(this.color, this._controller, {Key? key})
+  const ExpressionField(this.color, this._controller,
+      {Key? key, this.widthFactor = 0.4})
       : super(key: key);
 
   static bool isTypingFunc(
@@ -96,6 +102,9 @@ class ExpressionField extends StatefulWidget {
 
 class _ExpressionFieldState extends State<ExpressionField> {
   void _submit() async {
+    if (widget._controller.getExpression().isEmpty) {
+      return;
+    }
     final rep = await widget._controller._checkExpressionSyntax();
     setState(() {
       widget._controller.syntaxError = !rep.isValid;
@@ -122,45 +131,50 @@ class _ExpressionFieldState extends State<ExpressionField> {
     final textColor =
         widget._controller.syntaxError ? Colors.red : Colors.yellow.shade100;
     return Container(
-      width: MediaQuery.of(context).size.width * 0.4,
+      width: MediaQuery.of(context).size.width * widget.widthFactor,
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: TextField(
-        enabled: widget._controller.enabled,
-        onSubmitted: (_) {
-          _submit();
+      child: Focus(
+        onFocusChange: (getFocus) {
+          if (!getFocus) _submit();
         },
-        inputFormatters: [
-          TextInputFormatter.withFunction((oldValue, newValue) {
-            if (ExpressionField.isTypingFunc(oldValue, newValue)) {
-              final sel = newValue.selection;
-              return newValue.copyWith(
-                  text: newValue.text + "()",
-                  selection: sel.copyWith(
-                      baseOffset: sel.baseOffset + 1,
-                      extentOffset: sel.extentOffset + 1));
-            }
-            return newValue;
-          })
-        ],
-        controller: widget._controller.textController,
-        decoration: InputDecoration(
-          isDense: true,
-          contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-              color: color,
+        child: TextField(
+          enabled: widget._controller.enabled,
+          onSubmitted: (_) {
+            _submit();
+          },
+          inputFormatters: [
+            TextInputFormatter.withFunction((oldValue, newValue) {
+              if (ExpressionField.isTypingFunc(oldValue, newValue)) {
+                final sel = newValue.selection;
+                return newValue.copyWith(
+                    text: newValue.text + "()",
+                    selection: sel.copyWith(
+                        baseOffset: sel.baseOffset + 1,
+                        extentOffset: sel.extentOffset + 1));
+              }
+              return newValue;
+            })
+          ],
+          controller: widget._controller.textController,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: color,
+              ),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: color,
+              ),
             ),
           ),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-              color: color,
-            ),
-          ),
+          cursorColor: color,
+          style: TextStyle(color: textColor, letterSpacing: 1.5),
+          textAlign: TextAlign.center,
+          textAlignVertical: TextAlignVertical.center,
         ),
-        cursorColor: color,
-        style: TextStyle(color: textColor, letterSpacing: 1.5),
-        textAlign: TextAlign.center,
-        textAlignVertical: TextAlignVertical.center,
       ),
     );
   }

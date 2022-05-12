@@ -111,20 +111,19 @@ class MathTableCell extends StatelessWidget {
 
   final TableCellVerticalAlignment align;
   final String mathContent;
-
-  const MathTableCell(this.align, this.mathContent, {Key? key})
+  final double? width;
+  const MathTableCell(this.align, this.mathContent, {Key? key, this.width})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TableCell(
       verticalAlignment: align,
-      child: Align(
+      child: Container(
         alignment: Alignment.center,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-          child: textMath(mathContent, fontSize - 1),
-        ),
+        width: width,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        child: textMath(mathContent, fontSize - 1),
       ),
     );
   }

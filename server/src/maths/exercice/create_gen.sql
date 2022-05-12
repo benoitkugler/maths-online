@@ -14,6 +14,83 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_TextKind (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (2, 1, 0);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a TextKind', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TextPart (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Content', 'Kind'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Content')
+        AND structgen_validate_json_TextKind (data -> 'Kind');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_ComparisonLevel (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (2, 1, 0);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a ComparisonLevel', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_exe_ExpressionFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Expression')
+        AND structgen_validate_json_exe_TextPart (data -> 'Label')
+        AND structgen_validate_json_ComparisonLevel (data -> 'ComparisonLevel');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_rep_RandomCoord (data jsonb)
     RETURNS boolean
     AS $$
@@ -480,83 +557,6 @@ BEGIN
         FROM
             jsonb_each(data))
         AND structgen_validate_json_string (data -> 'Parts');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_TextKind (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (2, 1, 0);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a TextKind', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TextPart (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Content', 'Kind'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_string (data -> 'Content')
-        AND structgen_validate_json_TextKind (data -> 'Kind');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_ComparisonLevel (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (2, 1, 0);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a ComparisonLevel', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FormulaFieldBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_string (data -> 'Expression')
-        AND structgen_validate_json_exe_TextPart (data -> 'Label')
-        AND structgen_validate_json_ComparisonLevel (data -> 'ComparisonLevel');
     RETURN is_valid;
 END;
 $$
@@ -1198,19 +1198,19 @@ BEGIN
         RETURN FALSE;
     END IF;
     CASE WHEN (data -> 'Kind')::int = 0 THEN
-        RETURN structgen_validate_json_exe_FigureAffineLineFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_ExpressionFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 1 THEN
-        RETURN structgen_validate_json_exe_FigureBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_FigureAffineLineFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 2 THEN
-        RETURN structgen_validate_json_exe_FigurePointFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_FigureBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 3 THEN
-        RETURN structgen_validate_json_exe_FigureVectorFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_FigurePointFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 4 THEN
-        RETURN structgen_validate_json_exe_FigureVectorPairFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_FigureVectorFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 5 THEN
-        RETURN structgen_validate_json_exe_FormulaBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_FigureVectorPairFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 6 THEN
-        RETURN structgen_validate_json_exe_FormulaFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_exe_FormulaBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 7 THEN
         RETURN structgen_validate_json_exe_FunctionGraphBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 8 THEN

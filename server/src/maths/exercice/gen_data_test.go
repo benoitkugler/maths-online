@@ -33,13 +33,13 @@ func randstring() string {
 
 func randBlock() Block {
 	choix := [...]Block{
+		randExpressionFieldBlock(),
 		randFigureAffineLineFieldBlock(),
 		randFigureBlock(),
 		randFigurePointFieldBlock(),
 		randFigureVectorFieldBlock(),
 		randFigureVectorPairFieldBlock(),
 		randFormulaBlock(),
-		randFormulaFieldBlock(),
 		randFunctionGraphBlock(),
 		randFunctionPointsFieldBlock(),
 		randFunctionVariationGraphBlock(),
@@ -56,6 +56,33 @@ func randBlock() Block {
 	}
 	i := rand.Intn(20)
 	return choix[i]
+}
+
+func randTextKind() TextKind {
+	choix := [...]TextKind{Expression, StaticMath, Text}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randTextPart() TextPart {
+	return TextPart{
+		Content: randstring(),
+		Kind:    randTextKind(),
+	}
+}
+
+func randComparisonLevel() expression.ComparisonLevel {
+	choix := [...]expression.ComparisonLevel{expression.ExpandedSubstitutions, expression.SimpleSubstitutions, expression.Strict}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randExpressionFieldBlock() ExpressionFieldBlock {
+	return ExpressionFieldBlock{
+		Expression:      randstring(),
+		Label:           randTextPart(),
+		ComparisonLevel: randComparisonLevel(),
+	}
 }
 
 func randrepereRandomCoord() repere.RandomCoord {
@@ -227,33 +254,6 @@ func randInterpolated() Interpolated {
 func randFormulaBlock() FormulaBlock {
 	return FormulaBlock{
 		Parts: randInterpolated(),
-	}
-}
-
-func randTextKind() TextKind {
-	choix := [...]TextKind{Expression, StaticMath, Text}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
-func randTextPart() TextPart {
-	return TextPart{
-		Content: randstring(),
-		Kind:    randTextKind(),
-	}
-}
-
-func randComparisonLevel() expression.ComparisonLevel {
-	choix := [...]expression.ComparisonLevel{expression.ExpandedSubstitutions, expression.SimpleSubstitutions, expression.Strict}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
-func randFormulaFieldBlock() FormulaFieldBlock {
-	return FormulaFieldBlock{
-		Expression:      randstring(),
-		Label:           randTextPart(),
-		ComparisonLevel: randComparisonLevel(),
 	}
 }
 

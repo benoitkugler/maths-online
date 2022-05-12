@@ -12,7 +12,7 @@ import (
 
 var (
 	_ Block = NumberFieldBlock{}
-	_ Block = FormulaFieldBlock{}
+	_ Block = ExpressionFieldBlock{}
 	_ Block = RadioFieldBlock{}
 	_ Block = OrderedListFieldBlock{}
 	_ Block = FigurePointFieldBlock{}
@@ -43,13 +43,13 @@ func (n NumberFieldBlock) validate(params expression.RandomParameters) error {
 	return validateNumberExpression(n.Expression, params, true)
 }
 
-type FormulaFieldBlock struct {
+type ExpressionFieldBlock struct {
 	Expression      string   // a valid expression, in the format used by expression.Expression
 	Label           TextPart // optional
 	ComparisonLevel ComparisonLevel
 }
 
-func (f FormulaFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (f ExpressionFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
 	label := StringOrExpression{String: f.Label.Content}
 	if f.Label.Kind == Expression {
 		e, err := expression.Parse(f.Label.Content)
@@ -72,7 +72,7 @@ func (f FormulaFieldBlock) instantiate(params expression.Variables, ID int) (ins
 	}, nil
 }
 
-func (f FormulaFieldBlock) validate(params expression.RandomParameters) error {
+func (f ExpressionFieldBlock) validate(params expression.RandomParameters) error {
 	_, err := expression.Parse(f.Expression)
 	return err
 }
@@ -409,7 +409,7 @@ func (fa FigureAffineLineFieldBlock) validate(params expression.RandomParameters
 		return err
 	}
 
-	bExpr := mustParse(fa.B)
+	bExpr := expression.MustParse(fa.B) // guarded by `validateNumberExpression`
 	if ok, freq := bExpr.IsValidInteger(params); !ok {
 		return fmt.Errorf("L'expression de B n'est pas un nombre entier (%d %% des tests ont échoué).", 100-freq)
 	}

@@ -155,19 +155,39 @@ func (fi FormulaDisplayInstance) toClient() client.Block {
 	return client.FormulaBlock{Formula: strings.Join(fi, " ")}
 }
 
+// evaluatedExpression groups an expression and its
+// result. It is meant to handle cases where we want
+// to display 1/3, but a numeric value is also needed.
+type evaluatedExpression struct {
+	Expr  *expression.Expression
+	Value float64
+}
+
+func newEvaluatedExpression(s string, params expression.Variables) (evaluatedExpression, error) {
+	e, err := expression.Parse(s)
+	if err != nil {
+		return evaluatedExpression{}, err
+	}
+	v, err := e.Evaluate(params)
+	if err != nil {
+		return evaluatedExpression{}, err
+	}
+	return evaluatedExpression{Expr: e, Value: v}, nil
+}
+
 type VariationTableInstance struct {
 	Label string
-	Xs    []float64 // sorted values for x
-	Fxs   []float64 // corresponding values for f(x)
+	Xs    []evaluatedExpression // sorted expression values for x
+	Fxs   []evaluatedExpression // corresponding values for f(x)
 }
 
 // inferAlignment return the alignment of the number at index i
 func (vt VariationTableInstance) inferAlignment(i int) (isUp bool) {
 	if i == len(vt.Xs)-1 { // compute isUp from previous
-		return vt.Fxs[i-1] < vt.Fxs[i]
+		return vt.Fxs[i-1].Value < vt.Fxs[i].Value
 	}
 	// else, i < len(vt.Xs)-1, compute from following
-	return vt.Fxs[i] > vt.Fxs[i+1]
+	return vt.Fxs[i].Value < vt.Fxs[i+1].Value
 }
 
 // assume at least two columns
@@ -179,8 +199,8 @@ func (vt VariationTableInstance) toClient() client.Block {
 		numberIsUp := vt.inferAlignment(i)
 		// add the number column
 		out.Columns = append(out.Columns, client.VariationColumnNumber{
-			X:    vt.Xs[i],
-			Y:    vt.Fxs[i],
+			X:    vt.Xs[i].Expr.AsLaTeX(nil),
+			Y:    vt.Fxs[i].Expr.AsLaTeX(nil),
 			IsUp: numberIsUp,
 		})
 
@@ -247,9 +267,22 @@ func (fg FunctionGraphInstance) toClient() client.Block {
 // but displays its content as a graph
 type FunctionVariationGraphInstance VariationTableInstance
 
+func (fg FunctionVariationGraphInstance) values() (xs, fxs []float64) {
+	xs = make([]float64, len(fg.Xs))
+	fxs = make([]float64, len(fg.Fxs))
+	for i, v := range fg.Xs {
+		xs[i] = v.Value
+	}
+	for i, v := range fg.Fxs {
+		fxs[i] = v.Value
+	}
+	return
+}
+
 func (fg FunctionVariationGraphInstance) toClient() client.Block {
+	xs, fxs := fg.values()
 	return client.FunctionGraphBlock{
-		Graph: functiongrapher.GraphFromVariations(functiongrapher.FunctionDecoration{Label: fg.Label}, fg.Xs, fg.Fxs),
+		Graph: functiongrapher.GraphFromVariations(functiongrapher.FunctionDecoration{Label: fg.Label}, xs, fxs),
 	}
 }
 

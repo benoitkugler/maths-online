@@ -10,6 +10,10 @@ import (
 
 // Questions returns a version of the examples.
 func Questions() (out []exercice.QuestionInstance) {
+	for _, qu := range questions {
+		out = append(out, qu.Instantiate())
+	}
+
 	for _, block := range blockList {
 		title := fmt.Sprintf("%T", block)
 		enonce := exercice.Enonce{
@@ -25,5 +29,6 @@ func Questions() (out []exercice.QuestionInstance) {
 		}
 		out = append(out, qu.Instantiate())
 	}
+
 	return out
 }

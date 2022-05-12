@@ -135,6 +135,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
                 questionColor!,
                 (v) => _validate(v, context),
                 footerQuote: pickQuote(),
+                blockOnSubmit: false,
               )
             : const Text("Chargement"),
       ),

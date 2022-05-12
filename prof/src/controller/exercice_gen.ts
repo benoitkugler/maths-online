@@ -13,13 +13,13 @@ export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
 };
 
 export enum BlockKind {
-  FigureAffineLineFieldBlock = 0,
-  FigureBlock = 1,
-  FigurePointFieldBlock = 2,
-  FigureVectorFieldBlock = 3,
-  FigureVectorPairFieldBlock = 4,
-  FormulaBlock = 5,
-  FormulaFieldBlock = 6,
+  ExpressionFieldBlock = 0,
+  FigureAffineLineFieldBlock = 1,
+  FigureBlock = 2,
+  FigurePointFieldBlock = 3,
+  FigureVectorFieldBlock = 4,
+  FigureVectorPairFieldBlock = 5,
+  FormulaBlock = 6,
   FunctionGraphBlock = 7,
   FunctionPointsFieldBlock = 8,
   FunctionVariationGraphBlock = 9,
@@ -38,13 +38,13 @@ export enum BlockKind {
 export interface Block {
   Kind: BlockKind;
   Data:
+    | ExpressionFieldBlock
     | FigureAffineLineFieldBlock
     | FigureBlock
     | FigurePointFieldBlock
     | FigureVectorFieldBlock
     | FigureVectorPairFieldBlock
     | FormulaBlock
-    | FormulaFieldBlock
     | FunctionGraphBlock
     | FunctionPointsFieldBlock
     | FunctionVariationGraphBlock
@@ -58,6 +58,43 @@ export interface Block {
     | TreeFieldBlock
     | VariationTableBlock
     | VariationTableFieldBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TextKind
+export enum TextKind {
+  Expression = 2,
+  StaticMath = 1,
+  Text = 0,
+}
+
+export const TextKindLabels: { [key in TextKind]: string } = {
+  [TextKind.Expression]: "Expression",
+  [TextKind.StaticMath]: "Code LaTeX",
+  [TextKind.Text]: "Text simple",
+};
+
+// github.com/benoitkugler/maths-online/maths/exercice.TextPart
+export interface TextPart {
+  Content: string;
+  Kind: TextKind;
+}
+// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
+export enum ComparisonLevel {
+  ExpandedSubstitutions = 2,
+  SimpleSubstitutions = 1,
+  Strict = 0,
+}
+
+export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
+  [ComparisonLevel.ExpandedSubstitutions]: "Complète",
+  [ComparisonLevel.SimpleSubstitutions]: "Simple",
+  [ComparisonLevel.Strict]: "Exacte",
+};
+
+// github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
+export interface ExpressionFieldBlock {
+  Expression: string;
+  Label: TextPart;
+  ComparisonLevel: ComparisonLevel;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomCoord
 export interface RandomCoord {
@@ -184,43 +221,6 @@ export type Interpolated = string;
 // github.com/benoitkugler/maths-online/maths/exercice.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.TextKind
-export enum TextKind {
-  Expression = 2,
-  StaticMath = 1,
-  Text = 0,
-}
-
-export const TextKindLabels: { [key in TextKind]: string } = {
-  [TextKind.Expression]: "Expression",
-  [TextKind.StaticMath]: "Code LaTeX",
-  [TextKind.Text]: "Text simple",
-};
-
-// github.com/benoitkugler/maths-online/maths/exercice.TextPart
-export interface TextPart {
-  Content: string;
-  Kind: TextKind;
-}
-// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
-export enum ComparisonLevel {
-  ExpandedSubstitutions = 2,
-  SimpleSubstitutions = 1,
-  Strict = 0,
-}
-
-export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
-  [ComparisonLevel.ExpandedSubstitutions]: "Complète",
-  [ComparisonLevel.SimpleSubstitutions]: "Simple",
-  [ComparisonLevel.Strict]: "Exacte",
-};
-
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaFieldBlock
-export interface FormulaFieldBlock {
-  Expression: string;
-  Label: TextPart;
-  ComparisonLevel: ComparisonLevel;
 }
 // github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
 export interface FunctionDecoration {

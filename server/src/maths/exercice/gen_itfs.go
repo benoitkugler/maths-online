@@ -21,31 +21,31 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data FigureAffineLineFieldBlock
+		var data ExpressionFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data FigureBlock
+		var data FigureAffineLineFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data FigurePointFieldBlock
+		var data FigureBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data FigureVectorFieldBlock
+		var data FigurePointFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data FigureVectorPairFieldBlock
+		var data FigureVectorFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data FormulaBlock
+		var data FigureVectorPairFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data FormulaFieldBlock
+		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
@@ -114,19 +114,19 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case FigureAffineLineFieldBlock:
+	case ExpressionFieldBlock:
 		wr = wrapper{Kind: 0, Data: data}
-	case FigureBlock:
+	case FigureAffineLineFieldBlock:
 		wr = wrapper{Kind: 1, Data: data}
-	case FigurePointFieldBlock:
+	case FigureBlock:
 		wr = wrapper{Kind: 2, Data: data}
-	case FigureVectorFieldBlock:
+	case FigurePointFieldBlock:
 		wr = wrapper{Kind: 3, Data: data}
-	case FigureVectorPairFieldBlock:
+	case FigureVectorFieldBlock:
 		wr = wrapper{Kind: 4, Data: data}
-	case FormulaBlock:
+	case FigureVectorPairFieldBlock:
 		wr = wrapper{Kind: 5, Data: data}
-	case FormulaFieldBlock:
+	case FormulaBlock:
 		wr = wrapper{Kind: 6, Data: data}
 	case FunctionGraphBlock:
 		wr = wrapper{Kind: 7, Data: data}
@@ -162,13 +162,13 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	FigureAffineLineFieldBlockKind = iota
+	ExpressionFieldBlockKind = iota
+	FigureAffineLineFieldBlockKind
 	FigureBlockKind
 	FigurePointFieldBlockKind
 	FigureVectorFieldBlockKind
 	FigureVectorPairFieldBlockKind
 	FormulaBlockKind
-	FormulaFieldBlockKind
 	FunctionGraphBlockKind
 	FunctionPointsFieldBlockKind
 	FunctionVariationGraphBlockKind

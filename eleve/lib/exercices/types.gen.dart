@@ -334,6 +334,17 @@ JSON treeAnswerToJson(TreeAnswer item) {
   return {"Root": treeNodeAnswerToJson(item.root)};
 }
 
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
+}
+
+List<dynamic> listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
+}
+
 bool boolFromJson(dynamic json) => json as bool;
 
 bool boolToJson(bool item) => item;
@@ -351,8 +362,8 @@ List<dynamic> listBoolToJson(List<bool> item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableAnswer
 class VariationTableAnswer implements Answer {
-  final List<double> xs;
-  final List<double> fxs;
+  final List<String> xs;
+  final List<String> fxs;
   final List<bool> arrows;
 
   const VariationTableAnswer(this.xs, this.fxs, this.arrows);
@@ -365,14 +376,14 @@ class VariationTableAnswer implements Answer {
 
 VariationTableAnswer variationTableAnswerFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationTableAnswer(listDoubleFromJson(json['Xs']),
-      listDoubleFromJson(json['Fxs']), listBoolFromJson(json['Arrows']));
+  return VariationTableAnswer(listStringFromJson(json['Xs']),
+      listStringFromJson(json['Fxs']), listBoolFromJson(json['Arrows']));
 }
 
 JSON variationTableAnswerToJson(VariationTableAnswer item) {
   return {
-    "Xs": listDoubleToJson(item.xs),
-    "Fxs": listDoubleToJson(item.fxs),
+    "Xs": listStringToJson(item.xs),
+    "Fxs": listStringToJson(item.fxs),
     "Arrows": listBoolToJson(item.arrows)
   };
 }
@@ -879,17 +890,6 @@ JSON numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD)};
 }
 
-List<String> listStringFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(stringFromJson).toList();
-}
-
-List<dynamic> listStringToJson(List<String> item) {
-  return item.map(stringToJson).toList();
-}
-
 // github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListFieldBlock
 class OrderedListFieldBlock implements Block {
   final String label;
@@ -1167,8 +1167,8 @@ JSON treeFieldBlockToJson(TreeFieldBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumnNumber
 class VariationColumnNumber {
-  final double x;
-  final double y;
+  final String x;
+  final String y;
   final bool isUp;
 
   const VariationColumnNumber(this.x, this.y, this.isUp);
@@ -1181,14 +1181,14 @@ class VariationColumnNumber {
 
 VariationColumnNumber variationColumnNumberFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VariationColumnNumber(doubleFromJson(json['X']),
-      doubleFromJson(json['Y']), boolFromJson(json['IsUp']));
+  return VariationColumnNumber(stringFromJson(json['X']),
+      stringFromJson(json['Y']), boolFromJson(json['IsUp']));
 }
 
 JSON variationColumnNumberToJson(VariationColumnNumber item) {
   return {
-    "X": doubleToJson(item.x),
-    "Y": doubleToJson(item.y),
+    "X": stringToJson(item.x),
+    "Y": stringToJson(item.y),
     "IsUp": boolToJson(item.isUp)
   };
 }

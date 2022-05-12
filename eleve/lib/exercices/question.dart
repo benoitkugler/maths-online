@@ -95,8 +95,8 @@ class QuestionController {
         _fields[block.iD] = FigureVectorPairController(
             block.figure, () => onEditDone(block.iD));
       } else if (block is VariationTableFieldBlock) {
-        _fields[block.iD] =
-            VariationTableController(block, () => onEditDone(block.iD));
+        _fields[block.iD] = VariationTableController(
+            buildMode, block, () => onEditDone(block.iD));
       } else if (block is FunctionPointsFieldBlock) {
         _fields[block.iD] =
             FunctionPointsController(block, () => onEditDone(block.iD));

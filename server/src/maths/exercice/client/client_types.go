@@ -63,8 +63,8 @@ type FormulaBlock struct {
 // VariationColumnNumber is a column in a variation table
 // displaying (x, f(x)) values
 type VariationColumnNumber struct {
-	X, Y float64
-	IsUp bool // to adjust the vertical alignment
+	X, Y string // LaTeX
+	IsUp bool   // to adjust the vertical alignment
 }
 
 type VariationTableBlock struct {
@@ -258,9 +258,9 @@ type DoublePointPairAnswer struct {
 }
 
 type VariationTableAnswer struct {
-	Xs     []float64
-	Fxs    []float64
-	Arrows []bool
+	Xs     []string // expressions
+	Fxs    []string // expressions
+	Arrows []bool   // isUp
 }
 
 type FunctionPointsAnswer struct {

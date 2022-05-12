@@ -101,6 +101,6 @@ function removeColumn(index: number) {
 
 <style scoped>
 .fix-input-width:deep(input) {
-  width: 100%;
+  width: 30px;
 }
 </style>
