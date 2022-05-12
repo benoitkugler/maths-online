@@ -155,6 +155,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
               return newValue;
             })
           ],
+          keyboardType: TextInputType.visiblePassword,
           controller: widget._controller.textController,
           decoration: InputDecoration(
             isDense: true,
