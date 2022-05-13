@@ -17,6 +17,7 @@ import 'package:eleve/exercices/table.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:eleve/exercices/variation_table_field.dart';
+import 'package:eleve/quotes.dart';
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -509,7 +510,7 @@ class QuestionW extends StatefulWidget {
 
   /// [footerQuote] is displayed at the bottom of the screen when the
   /// question has been answered
-  final String footerQuote;
+  final QuoteData footerQuote;
 
   /// If [blockOnSubmit] is true, the validate button is disabled
   /// after one validation
@@ -522,7 +523,7 @@ class QuestionW extends StatefulWidget {
   const QuestionW(this.buildMode, this.question, this.color, this.onValid,
       {Key? key,
       this.timeout = const Duration(seconds: 60),
-      this.footerQuote = "",
+      this.footerQuote = const QuoteData("", "", ""),
       this.blockOnSubmit = true,
       this.answer})
       : super(key: key);
@@ -614,12 +615,11 @@ class _QuestionWState extends State<QuestionW> {
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: AnimatedOpacity(
-                duration: const Duration(seconds: 2),
-                opacity: controller.hasAnswered ? 1 : 0,
-                child: Text(controller.hasAnswered ? widget.footerQuote : "",
-                    style: const TextStyle(
-                        fontSize: 16, fontStyle: FontStyle.italic)),
-              ),
+                  duration: const Duration(seconds: 2),
+                  opacity: controller.hasAnswered ? 1 : 0,
+                  child: Quote(controller.hasAnswered
+                      ? widget.footerQuote
+                      : const QuoteData("", "", ""))),
             ),
           ]
         ],

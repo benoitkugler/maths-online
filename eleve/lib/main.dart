@@ -7,8 +7,8 @@ import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
-// final bm = buildMode();
-final bm = BuildMode.dev;
+final bm = buildMode();
+// final bm = BuildMode.debug;
 
 void main() {
   final audio = Audio();
@@ -30,8 +30,8 @@ class EleveApp extends StatelessWidget {
   }
 
   void _showAppSettings(BuildContext context) {
-    final onPop = Navigator.of(context)
-        .push<void>(MaterialPageRoute<void>(builder: (_) => Settings()));
+    Navigator.of(context)
+        .push<void>(MaterialPageRoute<void>(builder: (_) => const Settings()));
   }
 
   @override
@@ -63,7 +63,6 @@ class EleveApp extends StatelessWidget {
           ],
         ),
         body: _HomePage(audioPlayer),
-        // body:  ,
       ),
     );
   }

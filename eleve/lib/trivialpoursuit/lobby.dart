@@ -20,19 +20,7 @@ class GameLobby extends StatelessWidget {
             style: TextStyle(fontSize: 20),
           ),
           const CircularProgressIndicator(),
-          Container(
-            padding: const EdgeInsets.all(15.0),
-            child: Text(
-              pickQuote(),
-              style: const TextStyle(
-                  fontSize: 20,
-                  fontStyle: FontStyle.italic,
-                  shadows: [
-                    BoxShadow(
-                        color: Colors.white, blurRadius: 10, spreadRadius: 5)
-                  ]),
-            ),
-          ),
+          Quote(pickQuote()),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Wrap(
