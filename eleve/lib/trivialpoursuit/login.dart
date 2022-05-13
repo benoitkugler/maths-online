@@ -51,7 +51,9 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     final route = Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/board"),
       builder: (_) => Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(
+              automaticallyImplyLeading: false,
+              title: const Text("Trivial Poursuit")),
           body: TrivialPoursuitController(widget.buildMode, student)),
     ));
 
