@@ -98,14 +98,23 @@ func (gs *gameSession) exploitReview(review tv.Review) {
 	ProgressLogger.Printf("GAME REVIEW: %v", review)
 }
 
-func (gs *gameSession) connectStudent(c echo.Context, clientGameID string, clientID pass.EncryptedID, key pass.Encrypter) error {
-	player := tv.Player{ID: clientID}
+type studentMeta struct {
+	id     pass.EncryptedID
+	gameID string // as requested by the client
+	pseudo string // used for annonymous connection
+}
+
+func (gs *gameSession) connectStudent(c echo.Context, student studentMeta, key pass.Encrypter) error {
+	player := tv.Player{ID: student.id}
 	var studentID int64 = -1
-	if clientID == "" { // anonymous connection
-		player.Name = gs.generateName()
+	if student.id == "" { // anonymous connection
+		player.Name = student.pseudo
+		if player.Name == "" {
+			player.Name = gs.generateName() // finaly generate a random pseudo
+		}
 	} else { // fetch name from DB
 		var err error
-		studentID, err = clientID.Decrypt(key)
+		studentID, err = student.id.Decrypt(key)
 		if err != nil {
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
@@ -119,7 +128,7 @@ func (gs *gameSession) connectStudent(c echo.Context, clientGameID string, clien
 	}
 
 	// select or create the game
-	gameID, err := gs.group.selectOrCreateGame(clientGameID, studentID, gs)
+	gameID, err := gs.group.selectOrCreateGame(student.gameID, studentID, gs)
 	if err != nil {
 		return err
 	}

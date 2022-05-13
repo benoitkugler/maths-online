@@ -326,7 +326,8 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 		return fmt.Errorf("invalid ID %s", completeID)
 	}
 	sessionID := completeID[:4]
-	gameID := completeID[4:]
+	var student studentMeta
+	student.gameID = completeID[4:]
 
 	ct.lock.Lock()
 	session, ok := ct.sessions[sessionID]
@@ -338,11 +339,12 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 	}
 	ct.lock.Unlock()
 
-	clientID := pass.EncryptedID(c.QueryParam("client-id"))
+	student.id = pass.EncryptedID(c.QueryParam("client-id"))
+	student.pseudo = c.QueryParam("client-pseudo")
 
-	ProgressLogger.Println("Connecting student", clientID, sessionID)
+	ProgressLogger.Printf("Connecting student %v at %s", student, sessionID)
 
-	err := session.connectStudent(c, gameID, clientID, ct.key)
+	err := session.connectStudent(c, student, ct.key)
 
 	return err
 }
