@@ -212,13 +212,14 @@ class _AnswerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const minHeight = 80.0;
     final widgets = answers.isEmpty
         ? [
             Expanded(
               child: DragTarget<_PositionnedItem>(
                   builder: (context, candidateData, rejectedData) => Container(
                         constraints: const BoxConstraints(
-                          minHeight: 40,
+                          minHeight: minHeight,
                         ),
                         decoration: BoxDecoration(
                           color: candidateData.isEmpty ? null : color,
@@ -240,7 +241,7 @@ class _AnswerRow extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8.0),
                   child: Container(
                     constraints: const BoxConstraints(
-                      minHeight: 40,
+                      minHeight: minHeight,
                     ),
                     color: candidateData.isEmpty ? null : color,
                   ),
@@ -264,7 +265,7 @@ class _AnswerRow extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 8.0),
                   child: Container(
                     constraints: const BoxConstraints(
-                      minHeight: 40,
+                      minHeight: minHeight,
                     ),
                     color: candidateData.isEmpty ? null : color,
                   ),
