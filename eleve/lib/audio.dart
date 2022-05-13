@@ -111,20 +111,24 @@ class _PlaylistState extends State<Playlist> {
   @override
   Widget build(BuildContext context) {
     const l = Audio.availableSongs;
-    return ListView(
-      children: List<CheckboxListTile>.generate(
-          l.length,
-          (index) => CheckboxListTile(
-                title: Text(l[index].title),
-                subtitle: Text(l[index].categorie.label()),
-                selected: widget.controller.contains(index),
-                value: widget.controller.contains(index),
-                onChanged: (_) => setState(() {
-                  widget.controller.contains(index)
-                      ? widget.controller.remove(index)
-                      : widget.controller.add(index);
-                }),
-              )),
-    );
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Playlist"),
+        ),
+        body: ListView(
+          children: List<CheckboxListTile>.generate(
+              l.length,
+              (index) => CheckboxListTile(
+                    title: Text(l[index].title),
+                    subtitle: Text(l[index].categorie.label()),
+                    selected: widget.controller.contains(index),
+                    value: widget.controller.contains(index),
+                    onChanged: (_) => setState(() {
+                      widget.controller.contains(index)
+                          ? widget.controller.remove(index)
+                          : widget.controller.add(index);
+                    }),
+                  )),
+        ));
   }
 }

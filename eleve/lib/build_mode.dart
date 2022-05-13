@@ -25,12 +25,17 @@ extension APISetting on BuildMode {
   /// websocketURL returns url ending by the [endpoint],
   /// or an empty string
   /// [endpoint] is expected to start with a slash
-  String websocketURL(String endpoint) {
+  String websocketURL(String endpoint,
+      {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
-        return "wss://education.alwaysdata.net" + endpoint;
+        return Uri.parse("wss://education.alwaysdata.net" + endpoint)
+            .replace(queryParameters: query)
+            .toString();
       case BuildMode.dev:
-        return "ws://localhost:1323" + endpoint;
+        return Uri.parse("ws://localhost:1323" + endpoint)
+            .replace(queryParameters: query)
+            .toString();
       case BuildMode.debug:
         return "";
     }

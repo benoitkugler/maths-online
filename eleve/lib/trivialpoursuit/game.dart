@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
 import 'package:eleve/trivialpoursuit/events.gen.dart';
@@ -15,13 +16,22 @@ import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+class StudentMeta {
+  final String pseudo;
+  final String id;
+  final String gameCode;
+  StudentMeta(this.id, this.pseudo, this.gameCode);
+}
+
 class TrivialPoursuitController extends StatefulWidget {
   final BuildMode buildMode;
-  final String gameCode;
+  final StudentMeta student;
 
-  String get apiURL => buildMode.websocketURL('/trivial/game/$gameCode');
+  String get apiURL =>
+      buildMode.websocketURL('/trivial/game/${student.gameCode}',
+          query: {studentPseudoKey: student.pseudo, studentIDKey: student.id});
 
-  const TrivialPoursuitController(this.buildMode, this.gameCode, {Key? key})
+  const TrivialPoursuitController(this.buildMode, this.student, {Key? key})
       : super(key: key);
 
   @override

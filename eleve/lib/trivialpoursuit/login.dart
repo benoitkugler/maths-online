@@ -1,4 +1,5 @@
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/settings.dart';
 import 'package:eleve/shared/pin.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +16,11 @@ class TrivialPoursuitLoggin extends StatefulWidget {
 
 class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   final pinController = TextEditingController();
+  UserSettings settings = {};
 
   @override
   void initState() {
+    _loadSettings();
     if (widget.buildMode == BuildMode.debug) {
       // skip loggin screen
       Future.delayed(
@@ -25,6 +28,10 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     }
 
     super.initState();
+  }
+
+  void _loadSettings() async {
+    settings = await loadUserSettings();
   }
 
   @override
@@ -38,11 +45,14 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   }
 
   void _launchTrivialPoursuit(String code) {
+    // we assume that the time to type the code is enough to load the settings
+    final student = StudentMeta(
+        settings[studentIDKey] ?? "", settings[studentPseudoKey] ?? "", code);
     final route = Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/board"),
       builder: (_) => Scaffold(
           appBar: AppBar(),
-          body: TrivialPoursuitController(widget.buildMode, code)),
+          body: TrivialPoursuitController(widget.buildMode, student)),
     ));
 
     route.then((value) {

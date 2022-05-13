@@ -2,6 +2,7 @@ import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +24,14 @@ class EleveApp extends StatelessWidget {
 
   void _showAudioSettings(BuildContext context) {
     final ct = audioPlayer.playlist.toList();
-    final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(appBar: AppBar(), body: Playlist(ct))));
+    final onPop = Navigator.of(context)
+        .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
     onPop.then((_) => audioPlayer.setSongs(ct));
+  }
+
+  void _showAppSettings(BuildContext context) {
+    final onPop = Navigator.of(context)
+        .push<void>(MaterialPageRoute<void>(builder: (_) => Settings()));
   }
 
   @override
@@ -45,6 +51,13 @@ class EleveApp extends StatelessWidget {
                 onPressed: () => _showAudioSettings(context),
                 icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
                 tooltip: "Choisir la musique",
+              ),
+            ),
+            Builder(
+              builder: (context) => IconButton(
+                onPressed: () => _showAppSettings(context),
+                icon: const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
+                tooltip: "Paramètres",
               ),
             )
           ],
