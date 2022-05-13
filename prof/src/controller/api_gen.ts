@@ -33,7 +33,7 @@ export interface CheckMissingQuestionsOut {
 
 export enum GroupStrategyKind {
   FixedSizeGroupStrategy = 0,
-  RandomGroupStrategy = 1,
+  RandomGroupStrategy = 1
 }
 
 export interface GroupStrategy {
@@ -92,7 +92,7 @@ export enum BlockKind {
   FigureVectorFieldBlock = 3,
   FigureVectorPairFieldBlock = 4,
   FormulaBlock = 5,
-  FormulaFieldBlock = 6,
+  ExpressionFieldBlock = 6,
   FunctionGraphBlock = 7,
   FunctionPointsFieldBlock = 8,
   FunctionVariationGraphBlock = 9,
@@ -105,7 +105,7 @@ export enum BlockKind {
   TextBlock = 16,
   TreeFieldBlock = 17,
   VariationTableBlock = 18,
-  VariationTableFieldBlock = 19,
+  VariationTableFieldBlock = 19
 }
 
 export interface Block {
@@ -117,7 +117,7 @@ export interface Block {
     | FigureVectorFieldBlock
     | FigureVectorPairFieldBlock
     | FormulaBlock
-    | FormulaFieldBlock
+    | ExpressionFieldBlock
     | FunctionGraphBlock
     | FunctionPointsFieldBlock
     | FunctionVariationGraphBlock
@@ -233,8 +233,8 @@ export interface TextPart {
 }
 // github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
 export type ComparisonLevel = number;
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaFieldBlock
-export interface FormulaFieldBlock {
+// github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
+export interface ExpressionFieldBlock {
   Expression: string;
   Label: TextPart;
   ComparisonLevel: ComparisonLevel;
@@ -523,7 +523,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -572,7 +572,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/trivial/launch_session";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -618,7 +618,7 @@ export abstract class AbstractAPI {
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/prof/editor/api/tags";
     const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -667,7 +667,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate-one";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -692,7 +692,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate";
     const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -716,7 +716,7 @@ export abstract class AbstractAPI {
   protected async rawEditorCreateQuestion(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -739,7 +739,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -762,7 +762,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -811,7 +811,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
     const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
       params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }
@@ -833,7 +833,7 @@ export abstract class AbstractAPI {
   protected async rawEditorUpdateTags(params: UpdateTagsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
     const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
+      headers: this.getHeaders()
     });
     return rep.data;
   }

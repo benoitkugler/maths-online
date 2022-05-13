@@ -3,6 +3,7 @@ package exercice
 import (
 	"regexp"
 
+	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 )
 
@@ -30,6 +31,14 @@ func (s Interpolated) Parse() (TextParts, error) {
 		out = append(out, newChunks...)
 	}
 	return out, nil
+}
+
+func (s Interpolated) instantiate(params expression.Variables) (client.TextLine, error) {
+	parsed, err := s.Parse()
+	if err != nil {
+		return nil, err
+	}
+	return parsed.instantiate(params)
 }
 
 var (

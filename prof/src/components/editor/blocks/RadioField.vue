@@ -71,8 +71,8 @@ import { colorByKind } from "@/controller/editor";
 import type { RadioFieldBlock } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
-import InterpolatedText from "../InterpolatedText.vue";
 import ExpressionField from "../utils/ExpressionField.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: RadioFieldBlock;

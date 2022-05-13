@@ -2,13 +2,13 @@ import type { QuestionHeader } from "./api_gen";
 import type {
   Block,
   CoordExpression,
+  ExpressionFieldBlock,
   FigureAffineLineFieldBlock,
   FigureBlock,
   FigurePointFieldBlock,
   FigureVectorFieldBlock,
   FigureVectorPairFieldBlock,
   FormulaBlock,
-  FormulaFieldBlock,
   FunctionGraphBlock,
   FunctionPointsFieldBlock,
   FunctionVariationGraphBlock,
@@ -126,7 +126,7 @@ export const sortedBlockKindLabels = [
   ],
   [BlockKind.NumberFieldBlock, { label: "Nombre", isAnswerField: true }],
   [
-    BlockKind.FormulaFieldBlock,
+    BlockKind.ExpressionFieldBlock,
     {
       label: "Expression",
       isAnswerField: true
@@ -193,7 +193,7 @@ export const BlockKindLabels: {
 interface BlockKindTypes {
   [BlockKind.FigureBlock]: FigureBlock;
   [BlockKind.FormulaBlock]: FormulaBlock;
-  [BlockKind.FormulaFieldBlock]: FormulaFieldBlock;
+  [BlockKind.ExpressionFieldBlock]: ExpressionFieldBlock;
   [BlockKind.FunctionGraphBlock]: FunctionGraphBlock;
   [BlockKind.FunctionVariationGraphBlock]: FunctionVariationGraphBlock;
   [BlockKind.NumberFieldBlock]: NumberFieldBlock;
@@ -390,7 +390,7 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
-    case BlockKind.FormulaFieldBlock: {
+    case BlockKind.ExpressionFieldBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
@@ -416,13 +416,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Answer: [
-            { Kind: TextKind.StaticMath, Content: "[" },
-            { Kind: TextKind.StaticMath, Content: "-12" },
-            { Kind: TextKind.StaticMath, Content: ";" },
-            { Kind: TextKind.StaticMath, Content: "30" },
-            { Kind: TextKind.StaticMath, Content: "]" }
-          ],
+          Answer: ["$\\{$", "-12", ";", "30", "$\\}$"],
           AdditionalProposals: [],
           Label: "x \\in "
         }

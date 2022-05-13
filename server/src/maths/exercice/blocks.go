@@ -219,7 +219,7 @@ func (tp TextPart) validate() error {
 type TextParts []TextPart
 
 // instantiate merges adjacent math chunks so that latex expression are not split up
-// and may be successfully parsed
+// and may be successfully parsed by the client
 func (tp TextParts) instantiate(params expression.Variables) ([]client.TextOrMath, error) {
 	var parts []client.TextOrMath
 	for _, p := range tp {
@@ -277,17 +277,16 @@ type TextBlock struct {
 }
 
 func (t TextBlock) instantiate(params expression.Variables, _ int) (instance, error) {
-	content, err := t.Parts.Parse()
+	parts, err := t.Parts.instantiate(params)
 	if err != nil {
 		return nil, err
 	}
-	parts, err := content.instantiate(params)
 	return TextInstance{
 		Parts:   parts,
 		Bold:    t.Bold,
 		Italic:  t.Italic,
 		Smaller: t.Smaller,
-	}, err
+	}, nil
 }
 
 func (t TextBlock) validate(expression.RandomParameters) error {

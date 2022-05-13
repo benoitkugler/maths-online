@@ -316,7 +316,7 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(TableVue) };
     case BlockKind.NumberFieldBlock:
       return { Props: data, Component: markRaw(NumberFieldVue) };
-    case BlockKind.FormulaFieldBlock:
+    case BlockKind.ExpressionFieldBlock:
       return { Props: data, Component: markRaw(FormulaFieldVue) };
     case BlockKind.RadioFieldBlock:
       return { Props: data, Component: markRaw(RadioFieldVue) };

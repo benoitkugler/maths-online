@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import type { TextBlock } from "@/controller/exercice_gen";
-import InterpolatedText from "../InterpolatedText.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: TextBlock;

@@ -72,7 +72,6 @@
 </template>
 
 <script setup lang="ts">
-import { ExpressionColor } from "@/controller/editor";
 import type { FunctionVariationGraphBlock } from "@/controller/exercice_gen";
 import ExpressionField from "../utils/ExpressionField.vue";
 
@@ -85,8 +84,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionVariationGraphBlock): void;
 }>();
-
-const expressionColor = ExpressionColor;
 
 function addColumn() {
   props.modelValue.Xs?.push("5");

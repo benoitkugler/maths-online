@@ -3,7 +3,7 @@ import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 
 class RadioController extends FieldController {
-  List<ListFieldProposal> proposals;
+  List<TextLine> proposals;
   int? index;
 
   RadioController(void Function() onChange, this.proposals) : super(onChange);
@@ -53,7 +53,7 @@ class _RadioFieldState extends State<RadioField> {
         final prop = widget._controller.proposals[index];
         return RadioListTile<int>(
           activeColor: widget._color,
-          title: TextRow(buildText(prop.content, TextS(), 18), 2),
+          title: TextRow(buildText(prop, TextS(), 18), verticalPadding: 2),
           value: index,
           groupValue: widget._controller.index,
           onChanged: widget._controller.enabled

@@ -1,13 +1,7 @@
 <template>
   <v-card class="my-2">
     <v-row class="bg-secondary pa-2 rounded" no-gutters>
-      <v-col md="9" align-self="center">
-        Réponse ordonnée attendue.
-        <small>
-          Les champs sont interprétés comme du code LaTeX (utiliser &2x+1& pour
-          une expression).
-        </small>
-      </v-col>
+      <v-col md="9" align-self="center"> Réponse ordonnée attendue. </v-col>
       <v-spacer></v-spacer>
       <v-col align-self="center" style="text-align: right">
         <v-btn
@@ -15,13 +9,13 @@
           @click="addAnswer"
           title="Ajouter un élément"
           size="x-small"
-          class="mr-2 my-2"
+          class="mr-2"
         >
           <v-icon icon="mdi-plus" color="green" small></v-icon>
         </v-btn>
       </v-col>
     </v-row>
-    <v-row no-gutters class="mt-3">
+    <v-row no-gutters class="">
       <v-col>
         <v-list class="overflow-y-auto" style="max-height: 50vh">
           <v-list-item
@@ -29,11 +23,8 @@
             class="pr-0"
             :ref="(el:any) => (answerPropsRefs[index] = el as Element)"
           >
-            <text-part-field
-              v-model="props.modelValue.Answer![index]"
-              force-latex
-            >
-            </text-part-field>
+            <interpolated-text v-model="props.modelValue.Answer![index]">
+            </interpolated-text>
 
             <v-btn
               icon
@@ -52,13 +43,7 @@
 
   <v-card>
     <v-row class="bg-secondary pa-2 rounded" no-gutters>
-      <v-col md="9" align-self="center">
-        Champs additionnels.
-        <small>
-          Les champs sont interprétés comme du code LaTeX (utiliser &2x+1& pour
-          une expression).
-        </small>
-      </v-col>
+      <v-col md="9" align-self="center"> Champs additionnels. </v-col>
       <v-spacer></v-spacer>
       <v-col align-self="center" style="text-align: right">
         <v-btn
@@ -66,7 +51,7 @@
           @click="addAdditionalProposal"
           title="Ajouter un élément"
           size="x-small"
-          class="mr-2 my-2"
+          class="mr-2"
         >
           <v-icon icon="mdi-plus" color="green" small></v-icon>
         </v-btn>
@@ -79,11 +64,10 @@
             v-for="(param, index) in props.modelValue.AdditionalProposals"
             class="pr-0"
           >
-            <text-part-field
+            <interpolated-text
               v-model="props.modelValue.AdditionalProposals![index]"
-              force-latex
             >
-            </text-part-field>
+            </interpolated-text>
 
             <v-btn
               icon
@@ -117,10 +101,9 @@
 
 <script setup lang="ts">
 import type { OrderedListFieldBlock } from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
 import { ref } from "@vue/reactivity";
 import { nextTick } from "@vue/runtime-core";
-import TextPartField from "./TextPartField.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: OrderedListFieldBlock;
@@ -134,7 +117,8 @@ const emit = defineEmits<{
 const answerPropsRefs = ref<any>([]);
 
 function addAnswer() {
-  props.modelValue.Answer?.push({ Kind: TextKind.StaticMath, Content: "x" });
+  props.modelValue.Answer?.push("$x$");
+  emit("update:modelValue", props.modelValue);
   nextTick(() => {
     answerPropsRefs.value[
       answerPropsRefs.value.length - 1
@@ -144,17 +128,17 @@ function addAnswer() {
 
 function removeAnswer(index: number) {
   props.modelValue.Answer?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
 }
 
 function addAdditionalProposal() {
-  props.modelValue.AdditionalProposals?.push({
-    Kind: TextKind.StaticMath,
-    Content: "x"
-  });
+  props.modelValue.AdditionalProposals?.push("$y$");
+  emit("update:modelValue", props.modelValue);
 }
 
 function removeAdditionalProposal(index: number) {
   props.modelValue.AdditionalProposals?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
 }
 </script>
 

@@ -163,11 +163,13 @@ type evaluatedExpression struct {
 	Value float64
 }
 
+// subsitute variables
 func newEvaluatedExpression(s string, params expression.Variables) (evaluatedExpression, error) {
 	e, err := expression.Parse(s)
 	if err != nil {
 		return evaluatedExpression{}, err
 	}
+	e.Substitute(params)
 	v, err := e.Evaluate(params)
 	if err != nil {
 		return evaluatedExpression{}, err
@@ -181,13 +183,14 @@ type VariationTableInstance struct {
 	Fxs   []evaluatedExpression // corresponding values for f(x)
 }
 
-// inferAlignment return the alignment of the number at index i
-func (vt VariationTableInstance) inferAlignment(i int) (isUp bool) {
+// inferNumberAlignment return the alignment of the number at index i
+// the arrow at index i is has then the opposite direction
+func (vt VariationTableInstance) inferNumberAlignment(i int) (isUp bool) {
 	if i == len(vt.Xs)-1 { // compute isUp from previous
 		return vt.Fxs[i-1].Value < vt.Fxs[i].Value
 	}
 	// else, i < len(vt.Xs)-1, compute from following
-	return vt.Fxs[i].Value < vt.Fxs[i+1].Value
+	return vt.Fxs[i].Value > vt.Fxs[i+1].Value
 }
 
 // assume at least two columns
@@ -196,7 +199,7 @@ func (vt VariationTableInstance) toClient() client.Block {
 		Label: vt.Label,
 	}
 	for i := range vt.Xs {
-		numberIsUp := vt.inferAlignment(i)
+		numberIsUp := vt.inferNumberAlignment(i)
 		// add the number column
 		out.Columns = append(out.Columns, client.VariationColumnNumber{
 			X:    vt.Xs[i].Expr.AsLaTeX(nil),

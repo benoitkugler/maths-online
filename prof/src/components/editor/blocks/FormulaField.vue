@@ -34,19 +34,19 @@
 
 <script setup lang="ts">
 import { colorByKind } from "@/controller/editor";
-import type { FormulaFieldBlock } from "@/controller/exercice_gen";
+import type { ExpressionFieldBlock } from "@/controller/exercice_gen";
 import { ComparisonLevel, TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
-  modelValue: FormulaFieldBlock;
+  modelValue: ExpressionFieldBlock;
 }
 const props = defineProps<Props>();
 const color = colorByKind[TextKind.Expression];
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: FormulaFieldBlock): void;
+  (event: "update:modelValue", value: ExpressionFieldBlock): void;
 }>();
 
 const isComparaisonStrict = computed(

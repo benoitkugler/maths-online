@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import type { FormulaBlock } from "@/controller/exercice_gen";
-import InterpolatedText from "../InterpolatedText.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: FormulaBlock;

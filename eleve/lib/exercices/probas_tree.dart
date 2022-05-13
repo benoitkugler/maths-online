@@ -89,8 +89,8 @@ class _NodeController {
 
   factory _NodeController.editableFromShape(void Function() onChange,
       TreeShape shape, bool isRoot, List<TextOrMath> proposals, bool enabled) {
-    final controller = DropDownController(
-        onChange, proposals.map((e) => ListFieldProposal([e])).toList());
+    final controller =
+        DropDownController(onChange, proposals.map((e) => [e]).toList());
 
     if (shape.isEmpty) {
       return _NodeController(isRoot, controller, [], []);
@@ -103,8 +103,7 @@ class _NodeController {
 
     final edgesControllers = List<NumberController>.generate(
         children.length, (index) => NumberController(onChange));
-    final dd = DropDownController(
-        onChange, proposals.map((e) => ListFieldProposal([e])).toList());
+    final dd = DropDownController(onChange, proposals.map((e) => [e]).toList());
     return _NodeController(isRoot, dd, children, edgesControllers);
   }
 

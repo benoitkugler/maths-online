@@ -27,7 +27,3 @@ SET
         FROM
             jsonb_array_elements(enonce));
 
--- Put the constraint back
-ALTER TABLE questions
-    ADD CONSTRAINT enonce_structgen_validate_json_array_exe_Block CHECK (structgen_validate_json_array_exe_Block (enonce));
-

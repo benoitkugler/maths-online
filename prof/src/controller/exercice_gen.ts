@@ -265,8 +265,8 @@ export interface NumberFieldBlock {
 // github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
   Label: string;
-  Answer: TextPart[] | null;
-  AdditionalProposals: TextPart[] | null;
+  Answer: Interpolated[] | null;
+  AdditionalProposals: Interpolated[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
 export interface RadioFieldBlock {

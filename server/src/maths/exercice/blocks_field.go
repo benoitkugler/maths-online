@@ -89,20 +89,16 @@ func (rf RadioFieldBlock) instantiate(params expression.Variables, ID int) (inst
 		return nil, err
 	}
 	out := RadioFieldInstance{
-		Proposals: make([]client.ListFieldProposal, len(rf.Proposals)),
+		Proposals: make([]client.TextLine, len(rf.Proposals)),
 		Answer:    int(ans),
 		ID:        ID,
 	}
 	for i, p := range rf.Proposals {
-		parts, err := p.Parse()
+		props, err := p.instantiate(params)
 		if err != nil {
 			return nil, err
 		}
-		props, err := parts.instantiate(params)
-		if err != nil {
-			return nil, err
-		}
-		out.Proposals[i] = client.ListFieldProposal{Content: props}
+		out.Proposals[i] = props
 	}
 
 	if rf.AsDropDown {
@@ -131,33 +127,32 @@ func (rf RadioFieldBlock) validate(params expression.RandomParameters) error {
 }
 
 type OrderedListFieldBlock struct {
-	Label               string     // optionnal, LaTeX code displayed in front of the anwser field
-	Answer              []TextPart // always math
-	AdditionalProposals []TextPart // always math
+	Label               string         // optionnal, LaTeX code displayed in front of the anwser field
+	Answer              []Interpolated // the order matters
+	AdditionalProposals []Interpolated
 }
 
 func (ol OrderedListFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
 	out := OrderedListFieldInstance{
 		Label:               ol.Label,
-		Answer:              make([]string, len(ol.Answer)),
-		AdditionalProposals: make([]string, len(ol.AdditionalProposals)),
+		Answer:              make([]client.TextLine, len(ol.Answer)),
+		AdditionalProposals: make([]client.TextLine, len(ol.AdditionalProposals)),
 		ID:                  ID,
 	}
 
+	var err error
 	for i, a := range ol.Answer {
-		ans, err := a.instantiate(params)
+		out.Answer[i], err = a.instantiate(params)
 		if err != nil {
 			return nil, err
 		}
-		out.Answer[i] = ans.Text
 	}
 
 	for i, a := range ol.AdditionalProposals {
-		ans, err := a.instantiate(params)
+		out.AdditionalProposals[i], err = a.instantiate(params)
 		if err != nil {
 			return nil, err
 		}
-		out.AdditionalProposals[i] = ans.Text
 	}
 
 	return out, nil
@@ -165,13 +160,13 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Variables, ID int)
 
 func (ol OrderedListFieldBlock) validate(params expression.RandomParameters) error {
 	for _, a := range ol.Answer {
-		if err := a.validate(); err != nil {
+		if _, err := a.Parse(); err != nil {
 			return err
 		}
 	}
 
 	for _, a := range ol.AdditionalProposals {
-		if err := a.validate(); err != nil {
+		if _, err := a.Parse(); err != nil {
 			return err
 		}
 	}

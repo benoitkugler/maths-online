@@ -807,29 +807,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_TextPart (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(structgen_validate_json_exe_TextPart (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION structgen_validate_json_exe_OrderedListFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -845,8 +822,8 @@ BEGIN
         FROM
             jsonb_each(data))
         AND structgen_validate_json_string (data -> 'Label')
-        AND structgen_validate_json_array_exe_TextPart (data -> 'Answer')
-        AND structgen_validate_json_array_exe_TextPart (data -> 'AdditionalProposals');
+        AND structgen_validate_json_array_string (data -> 'Answer')
+        AND structgen_validate_json_array_string (data -> 'AdditionalProposals');
     RETURN is_valid;
 END;
 $$
@@ -957,6 +934,29 @@ BEGIN
         AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_TextPart (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_exe_TextPart (value))
+        FROM
+            jsonb_array_elements(data));
 END;
 $$
 LANGUAGE 'plpgsql'

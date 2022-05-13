@@ -143,7 +143,7 @@ class _ContentBuilder {
       return;
     }
 
-    rows.add(TextRow(_currentRow, 6));
+    rows.add(TextRow(_currentRow, verticalPadding: 6));
     _currentRow = [];
   }
 

@@ -138,17 +138,20 @@ var blockList = [...]ex.Block{
 	ex.NumberFieldBlock{Expression: "1.2"},
 	ex.OrderedListFieldBlock{
 		Label: "x \\in",
-		Answer: []ex.TextPart{
-			ex.NewPMath("["),
-			ex.NewPMath("-2"),
-			ex.NewPMath(";"),
-			ex.NewPMath("+\\infty"),
-			ex.NewPMath("["),
+		Answer: []ex.Interpolated{
+			"[",
+			"-2",
+			";",
+			"$+\\infty$",
+			"[",
 		},
-		AdditionalProposals: []ex.TextPart{
-			ex.NewPMath("\\{"),
-			ex.NewPMath("\\}"),
-			ex.NewPMath("3"),
+		AdditionalProposals: []ex.Interpolated{
+			"$\\{$",
+			"$\\}$",
+			"3",
+			"Un long texte",
+			"Un long texte",
+			"Un long texte",
 		},
 	},
 	ex.RadioFieldBlock{

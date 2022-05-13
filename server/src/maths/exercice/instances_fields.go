@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -152,7 +153,7 @@ func (f ExpressionFieldInstance) correctAnswer() client.Answer {
 // RadioFieldInstance is an answer field where one choice
 // is to be made against a fixed list
 type RadioFieldInstance struct {
-	Proposals []client.ListFieldProposal
+	Proposals []client.TextLine
 	ID        int
 	Answer    int // index into Proposals, starting at 1
 }
@@ -218,8 +219,8 @@ func deterministicRand(i, j int) *rand.Rand {
 // given symbols
 type OrderedListFieldInstance struct {
 	Label               string
-	Answer              []string // LaTeX code
-	AdditionalProposals []string // added to Answer when displaying the field
+	Answer              []client.TextLine // LaTeX code
+	AdditionalProposals []client.TextLine // added to Answer when displaying the field
 	ID                  int
 }
 
@@ -227,7 +228,7 @@ func (olf OrderedListFieldInstance) fieldID() int { return olf.ID }
 
 // proposals groups Answer and AdditionalProposals and shuffle the list
 // in a random way, which only depends on the field content though
-func (olf OrderedListFieldInstance) proposals() (out []string) {
+func (olf OrderedListFieldInstance) proposals() (out []client.TextLine) {
 	out = append(append(out, olf.Answer...), olf.AdditionalProposals...)
 	// shuffle in a deterministic way
 	rd := olf.shuffler()
@@ -275,6 +276,20 @@ func (olf OrderedListFieldInstance) validateAnswerSyntax(answer client.Answer) e
 	return nil
 }
 
+func areParagraphEqual(p1, p2 client.TextLine) bool {
+	// to avoid suprising errors, we compare the values
+	// by concatenating the text
+	// for instance x and $x$ are thus equal
+	var s1, s2 strings.Builder
+	for _, c := range p1 {
+		s1.WriteString(c.Text)
+	}
+	for _, c := range p2 {
+		s2.WriteString(c.Text)
+	}
+	return s1.String() == s2.String()
+}
+
 func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	list := answer.(client.OrderedListAnswer).Indices
 
@@ -286,7 +301,7 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 		// we compare by value, not indices, since two different indices may have the same
 		// value and then not be distinguable by the student,
 		// and also, the indices has been shuffled
-		if ref != got {
+		if !areParagraphEqual(got, ref) {
 			return false
 		}
 	}
@@ -622,7 +637,8 @@ func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 	}
 
 	for i, arrow := range ans.Arrows {
-		if f.Answer.inferAlignment(i) != arrow {
+		arrowExp := !f.Answer.inferNumberAlignment(i)
+		if arrowExp != arrow {
 			return false
 		}
 	}
@@ -643,7 +659,7 @@ func (f VariationTableFieldInstance) correctAnswer() client.Answer {
 		out.Fxs[i] = x.Expr.String()
 	}
 	for i := range out.Arrows {
-		out.Arrows[i] = f.Answer.inferAlignment(i)
+		out.Arrows[i] = !f.Answer.inferNumberAlignment(i)
 	}
 	return out
 }

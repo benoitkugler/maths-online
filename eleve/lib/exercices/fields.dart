@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -62,7 +64,7 @@ class TextS {
   }
 }
 
-List<InlineSpan> buildText(List<TextOrMath> parts, TextS style, double fontSize,
+List<InlineSpan> buildText(TextLine parts, TextS style, double fontSize,
     {bool inTable = false}) {
   final out = <InlineSpan>[];
 
@@ -89,8 +91,10 @@ List<InlineSpan> buildText(List<TextOrMath> parts, TextS style, double fontSize,
 class TextRow extends StatelessWidget {
   final List<InlineSpan> content;
   final double verticalPadding;
+  final double lineHeight;
 
-  const TextRow(this.content, this.verticalPadding, {Key? key})
+  const TextRow(this.content,
+      {Key? key, this.verticalPadding = 0, this.lineHeight = 1.5})
       : super(key: key);
 
   @override
@@ -98,7 +102,7 @@ class TextRow extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: verticalPadding),
       child: Text.rich(
-        TextSpan(style: const TextStyle(height: 1.5), children: content),
+        TextSpan(style: TextStyle(height: lineHeight), children: content),
       ),
     );
   }

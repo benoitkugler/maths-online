@@ -84,7 +84,7 @@
 <script setup lang="ts">
 import type { SignTableBlock } from "@/controller/exercice_gen";
 import { SignSymbol } from "@/controller/exercice_gen";
-import InterpolatedText from "../InterpolatedText.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 import SignSymbolField from "./SignSymbolField.vue";
 
 interface Props {

@@ -348,23 +348,6 @@ func randNumberFieldBlock() NumberFieldBlock {
 	}
 }
 
-func randSliceTextPart() []TextPart {
-	l := 40 + rand.Intn(10)
-	out := make([]TextPart, l)
-	for i := range out {
-		out[i] = randTextPart()
-	}
-	return out
-}
-
-func randOrderedListFieldBlock() OrderedListFieldBlock {
-	return OrderedListFieldBlock{
-		Label:               randstring(),
-		Answer:              randSliceTextPart(),
-		AdditionalProposals: randSliceTextPart(),
-	}
-}
-
 func randSliceInterpolated() []Interpolated {
 	l := 40 + rand.Intn(10)
 	out := make([]Interpolated, l)
@@ -372,6 +355,14 @@ func randSliceInterpolated() []Interpolated {
 		out[i] = randInterpolated()
 	}
 	return out
+}
+
+func randOrderedListFieldBlock() OrderedListFieldBlock {
+	return OrderedListFieldBlock{
+		Label:               randstring(),
+		Answer:              randSliceInterpolated(),
+		AdditionalProposals: randSliceInterpolated(),
+	}
 }
 
 func randRadioFieldBlock() RadioFieldBlock {
@@ -413,6 +404,15 @@ func randSignTableBlock() SignTableBlock {
 		Xs:        randSliceInterpolated(),
 		Signs:     randSlicebool(),
 	}
+}
+
+func randSliceTextPart() []TextPart {
+	l := 40 + rand.Intn(10)
+	out := make([]TextPart, l)
+	for i := range out {
+		out[i] = randTextPart()
+	}
+	return out
 }
 
 func randSliceSliceTextPart() [][]TextPart {

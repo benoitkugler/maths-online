@@ -70,7 +70,8 @@ type VariationColumnNumber struct {
 type VariationTableBlock struct {
 	Label   string
 	Columns []VariationColumnNumber
-	// Arrows displays the arrows between two local extrema.
+	// Arrows displays the arrows between two local extrema,
+	// with the convention that `true` means `isUp`.
 	Arrows []bool
 }
 
@@ -112,27 +113,26 @@ type ExpressionFieldBlock struct {
 	ID    int
 }
 
-type ListFieldProposal struct {
-	Content []TextOrMath
-}
+// TextLine is the general form of a static chunk of text,
+// alternating LaTeX or basic text
+type TextLine []TextOrMath
 
 type RadioFieldBlock struct {
-	Proposals []ListFieldProposal
+	Proposals []TextLine
 	ID        int
 }
 
 // DropDownFieldBlock is the same has RadioFieldBlock,
 // but is displayed inline.
 type DropDownFieldBlock struct {
-	Proposals []ListFieldProposal
+	Proposals []TextLine
 	ID        int
 }
 
 type OrderedListFieldBlock struct {
 	Label string // as LaTeX, optional, displayed before the answer
-	// Proposals is a shuffled version of the list,
-	// displayed as math text
-	Proposals    []string
+	// Proposals is a shuffled version of the list
+	Proposals    []TextLine
 	AnswerLength int
 	ID           int
 }

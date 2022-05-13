@@ -483,41 +483,23 @@ List<dynamic> listTextOrMathToJson(List<TextOrMath> item) {
   return item.map(textOrMathToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.ListFieldProposal
-class ListFieldProposal {
-  final List<TextOrMath> content;
+// github.com/benoitkugler/maths-online/maths/exercice/client.TextLine
+typedef TextLine = List<TextOrMath>;
 
-  const ListFieldProposal(this.content);
-
-  @override
-  String toString() {
-    return "ListFieldProposal($content)";
-  }
-}
-
-ListFieldProposal listFieldProposalFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return ListFieldProposal(listTextOrMathFromJson(json['Content']));
-}
-
-JSON listFieldProposalToJson(ListFieldProposal item) {
-  return {"Content": listTextOrMathToJson(item.content)};
-}
-
-List<ListFieldProposal> listListFieldProposalFromJson(dynamic json) {
+List<TextLine> listListTextOrMathFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
-  return (json as List<dynamic>).map(listFieldProposalFromJson).toList();
+  return (json as List<dynamic>).map(listTextOrMathFromJson).toList();
 }
 
-List<dynamic> listListFieldProposalToJson(List<ListFieldProposal> item) {
-  return item.map(listFieldProposalToJson).toList();
+List<dynamic> listListTextOrMathToJson(List<TextLine> item) {
+  return item.map(listTextOrMathToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.DropDownFieldBlock
 class DropDownFieldBlock implements Block {
-  final List<ListFieldProposal> proposals;
+  final List<TextLine> proposals;
   final int iD;
 
   const DropDownFieldBlock(this.proposals, this.iD);
@@ -530,13 +512,13 @@ class DropDownFieldBlock implements Block {
 
 DropDownFieldBlock dropDownFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return DropDownFieldBlock(listListFieldProposalFromJson(json['Proposals']),
-      intFromJson(json['ID']));
+  return DropDownFieldBlock(
+      listListTextOrMathFromJson(json['Proposals']), intFromJson(json['ID']));
 }
 
 JSON dropDownFieldBlockToJson(DropDownFieldBlock item) {
   return {
-    "Proposals": listListFieldProposalToJson(item.proposals),
+    "Proposals": listListTextOrMathToJson(item.proposals),
     "ID": intToJson(item.iD)
   };
 }
@@ -893,7 +875,7 @@ JSON numberFieldBlockToJson(NumberFieldBlock item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListFieldBlock
 class OrderedListFieldBlock implements Block {
   final String label;
-  final List<String> proposals;
+  final List<TextLine> proposals;
   final int answerLength;
   final int iD;
 
@@ -910,7 +892,7 @@ OrderedListFieldBlock orderedListFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return OrderedListFieldBlock(
       stringFromJson(json['Label']),
-      listStringFromJson(json['Proposals']),
+      listListTextOrMathFromJson(json['Proposals']),
       intFromJson(json['AnswerLength']),
       intFromJson(json['ID']));
 }
@@ -918,7 +900,7 @@ OrderedListFieldBlock orderedListFieldBlockFromJson(dynamic json_) {
 JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
-    "Proposals": listStringToJson(item.proposals),
+    "Proposals": listListTextOrMathToJson(item.proposals),
     "AnswerLength": intToJson(item.answerLength),
     "ID": intToJson(item.iD)
   };
@@ -926,7 +908,7 @@ JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.RadioFieldBlock
 class RadioFieldBlock implements Block {
-  final List<ListFieldProposal> proposals;
+  final List<TextLine> proposals;
   final int iD;
 
   const RadioFieldBlock(this.proposals, this.iD);
@@ -939,13 +921,13 @@ class RadioFieldBlock implements Block {
 
 RadioFieldBlock radioFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return RadioFieldBlock(listListFieldProposalFromJson(json['Proposals']),
-      intFromJson(json['ID']));
+  return RadioFieldBlock(
+      listListTextOrMathFromJson(json['Proposals']), intFromJson(json['ID']));
 }
 
 JSON radioFieldBlockToJson(RadioFieldBlock item) {
   return {
-    "Proposals": listListFieldProposalToJson(item.proposals),
+    "Proposals": listListTextOrMathToJson(item.proposals),
     "ID": intToJson(item.iD)
   };
 }
@@ -1019,17 +1001,6 @@ JSON signTableBlockToJson(SignTableBlock item) {
     "Label": stringToJson(item.label),
     "Columns": listSignColumnToJson(item.columns)
   };
-}
-
-List<List<TextOrMath>> listListTextOrMathFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(listTextOrMathFromJson).toList();
-}
-
-List<dynamic> listListTextOrMathToJson(List<List<TextOrMath>> item) {
-  return item.map(listTextOrMathToJson).toList();
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.TableBlock

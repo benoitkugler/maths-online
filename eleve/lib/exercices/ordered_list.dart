@@ -2,29 +2,29 @@ import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
 
-class IndexedText {
+class _IndexedProposal {
   // as send by the server, it is also the
   // indice into the _references proposal list
   final int index;
-  final String text;
-  IndexedText(this.index, this.text);
+  final TextLine text;
+  _IndexedProposal(this.index, this.text);
 }
 
 class OrderedListController extends FieldController {
-  final List<IndexedText> _references = [];
+  final List<_IndexedProposal> _references = [];
   final String label;
   final int expectedLength;
 
-  List<IndexedText> answers = [];
+  List<_IndexedProposal> answers = [];
 
-  List<IndexedText> proposals = [];
+  List<_IndexedProposal> proposals = [];
 
   OrderedListController(void Function() onChange, OrderedListFieldBlock field)
       : expectedLength = field.answerLength,
         label = field.label,
         super(onChange) {
     for (var i = 0; i < field.proposals.length; i++) {
-      _references.add(IndexedText(i, field.proposals[i]));
+      _references.add(_IndexedProposal(i, field.proposals[i]));
     }
     // start with all propositions
     proposals = _references;
@@ -34,7 +34,7 @@ class OrderedListController extends FieldController {
   /// in the answers array
   /// is is also removed from its old location if it was already in
   /// the answers
-  void insertAnswerAt(IndexedText symbol, int location) {
+  void insertAnswerAt(_IndexedProposal symbol, int location) {
     proposals.removeWhere((element) => element.index == symbol.index);
     final existing =
         answers.indexWhere((element) => element.index == symbol.index);
@@ -52,7 +52,7 @@ class OrderedListController extends FieldController {
 
   /// swapWithAnswer adds [symbol] into the answers, removing the
   /// previous element at [answerIndex]
-  void swapWithAnswer(IndexedText symbol, int answerIndex) {
+  void swapWithAnswer(_IndexedProposal symbol, int answerIndex) {
     proposals.add(answers[answerIndex]);
     answers[answerIndex] = symbol;
     onChange();
@@ -69,7 +69,7 @@ class OrderedListController extends FieldController {
 
   /// remove [symbol] from the chosen answer and put it back
   /// in the proposals
-  void removeAnswer(IndexedText symbol) {
+  void removeAnswer(_IndexedProposal symbol) {
     answers.removeWhere((element) => element.index == symbol.index);
     proposals.add(symbol);
     onChange();
@@ -88,7 +88,7 @@ class OrderedListController extends FieldController {
   @override
   void setData(Answer answer) {
     final ans = (answer as OrderedListAnswer).indices;
-    answers = ans.map((e) => IndexedText(e, _references[e].text)).toList();
+    answers = ans.map((e) => _IndexedProposal(e, _references[e].text)).toList();
     // set the proposals to the remaining items
     final used = ans.toSet();
     proposals =
@@ -97,7 +97,7 @@ class OrderedListController extends FieldController {
 }
 
 class _PositionnedItem {
-  final IndexedText item;
+  final _IndexedProposal item;
   final int position;
   _PositionnedItem(this.item, this.position);
 }
@@ -151,7 +151,7 @@ class _Symbol extends StatelessWidget {
   static const fontSize = 16.0;
 
   static List<_Symbol> fromList(
-      bool dense, bool enabled, List<IndexedText> list) {
+      bool dense, bool enabled, List<_IndexedProposal> list) {
     return List<_Symbol>.generate(
         list.length,
         (index) =>
@@ -162,10 +162,11 @@ class _Symbol extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Padding(
       padding: EdgeInsets.symmetric(
-        vertical: 8,
+        vertical: 6,
         horizontal: isAnswer ? 8 : 12,
       ),
-      child: textMath(symbol.item.text, fontSize),
+      child: TextRow(buildText(symbol.item.text, TextS(), fontSize),
+          lineHeight: 1),
     );
     return Draggable<_PositionnedItem>(
       maxSimultaneousDrags: enabled ? null : 0,
@@ -175,7 +176,8 @@ class _Symbol extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: textMath(symbol.item.text, fontSize),
+          child: TextRow(buildText(symbol.item.text, TextS(), fontSize),
+              lineHeight: 1),
         ),
       ),
       child: Padding(
@@ -186,7 +188,7 @@ class _Symbol extends StatelessWidget {
           child: isAnswer
               ? SizedBox(
                   height: 35,
-                  child: Center(child: text),
+                  child: text,
                 )
               : text,
         ),
@@ -198,7 +200,7 @@ class _Symbol extends StatelessWidget {
 class _AnswerRow extends StatelessWidget {
   final Color color;
   final bool enabled;
-  final List<IndexedText> answers;
+  final List<_IndexedProposal> answers;
   final String label; // optional
 
   final void Function(_PositionnedItem, bool isStart) addAnswer;
@@ -237,7 +239,9 @@ class _AnswerRow extends StatelessWidget {
                 builder: (context, candidateData, rejectedData) => Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 40),
+                    constraints: const BoxConstraints(
+                      minHeight: 40,
+                    ),
                     color: candidateData.isEmpty ? null : color,
                   ),
                 ),
@@ -246,13 +250,22 @@ class _AnswerRow extends StatelessWidget {
                 },
               ),
             ),
-            ..._Symbol.fromList(true, enabled, answers),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 2 / 3),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                children: _Symbol.fromList(true, enabled, answers),
+              ),
+            ),
             Expanded(
               child: DragTarget<_PositionnedItem>(
                 builder: (context, candidateData, rejectedData) => Padding(
                   padding: const EdgeInsets.only(left: 8.0),
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 40),
+                    constraints: const BoxConstraints(
+                      minHeight: 40,
+                    ),
                     color: candidateData.isEmpty ? null : color,
                   ),
                 ),
@@ -278,7 +291,7 @@ class _AnswerRow extends StatelessWidget {
 class _PropsRow extends StatelessWidget {
   final Color color;
   final bool enabled;
-  final List<IndexedText> props;
+  final List<_IndexedProposal> props;
 
   final void Function(_PositionnedItem) removeAnswer;
 
