@@ -52,7 +52,7 @@ func TestConcurrentEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 	// ProgressLogger.SetOutput(os.Stdout)
 
-	ct := NewGameController("testGame", questions, GameOptions{4, 0}, nil) // do not start a game
+	ct := NewGameController("testGame", questions, GameOptions{4, 0, true}, nil) // do not start a game
 	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -92,7 +92,7 @@ func TestConcurrentEvents(t *testing.T) {
 func TestEvents(t *testing.T) {
 	game.DebugLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{4, time.Millisecond * 50}, nil)
+	ct := NewGameController("testGame", questions, GameOptions{4, time.Millisecond * 50, true}, nil)
 	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -118,7 +118,7 @@ func TestEvents(t *testing.T) {
 func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
+	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
 	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -152,7 +152,7 @@ func TestClientInvalidMessage(t *testing.T) {
 func TestStartGame(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
+	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
 
 	go ct.StartLoop()
 
@@ -199,7 +199,7 @@ func TestStartGame(t *testing.T) {
 func TestInvalidJoin(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{1, 0}, nil)
+	ct := NewGameController("testGame", questions, GameOptions{1, 0, true}, nil)
 
 	go ct.StartLoop()
 
@@ -236,7 +236,7 @@ func TestSummary(t *testing.T) {
 		}
 	}()
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0}, notif)
+	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, notif)
 
 	go ct.StartLoop()
 
@@ -279,7 +279,7 @@ func TestSummary(t *testing.T) {
 func TestReview(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0}, nil)
+	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
 
 	go ct.StartLoop()
 

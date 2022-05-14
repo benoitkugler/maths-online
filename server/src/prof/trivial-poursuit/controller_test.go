@@ -3,6 +3,7 @@ package trivialpoursuit
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
@@ -19,9 +20,13 @@ func TestGameTermination(t *testing.T) {
 
 	ct.games[id].Terminate <- true
 
+	time.Sleep(20 * time.Millisecond)
+
+	ct.lock.Lock()
 	if len(ct.games) != 0 {
 		t.Fatal("game should have been removed")
 	}
+	ct.lock.Unlock()
 }
 
 func TestGameID(t *testing.T) {

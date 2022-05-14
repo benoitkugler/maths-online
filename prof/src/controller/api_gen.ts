@@ -12,6 +12,7 @@ export interface TrivialConfig {
   Id: number;
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
+  ShowDecrassage: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.LaunchSessionOut
 export interface LaunchSessionOut {
@@ -33,7 +34,7 @@ export interface CheckMissingQuestionsOut {
 
 export enum GroupStrategyKind {
   FixedSizeGroupStrategy = 0,
-  RandomGroupStrategy = 1
+  RandomGroupStrategy = 1,
 }
 
 export interface GroupStrategy {
@@ -86,13 +87,13 @@ export interface ListQuestionsOut {
 }
 
 export enum BlockKind {
-  FigureAffineLineFieldBlock = 0,
-  FigureBlock = 1,
-  FigurePointFieldBlock = 2,
-  FigureVectorFieldBlock = 3,
-  FigureVectorPairFieldBlock = 4,
-  FormulaBlock = 5,
-  ExpressionFieldBlock = 6,
+  ExpressionFieldBlock = 0,
+  FigureAffineLineFieldBlock = 1,
+  FigureBlock = 2,
+  FigurePointFieldBlock = 3,
+  FigureVectorFieldBlock = 4,
+  FigureVectorPairFieldBlock = 5,
+  FormulaBlock = 6,
   FunctionGraphBlock = 7,
   FunctionPointsFieldBlock = 8,
   FunctionVariationGraphBlock = 9,
@@ -105,19 +106,19 @@ export enum BlockKind {
   TextBlock = 16,
   TreeFieldBlock = 17,
   VariationTableBlock = 18,
-  VariationTableFieldBlock = 19
+  VariationTableFieldBlock = 19,
 }
 
 export interface Block {
   Kind: BlockKind;
   Data:
+    | ExpressionFieldBlock
     | FigureAffineLineFieldBlock
     | FigureBlock
     | FigurePointFieldBlock
     | FigureVectorFieldBlock
     | FigureVectorPairFieldBlock
     | FormulaBlock
-    | ExpressionFieldBlock
     | FunctionGraphBlock
     | FunctionPointsFieldBlock
     | FunctionVariationGraphBlock
@@ -131,6 +132,21 @@ export interface Block {
     | TreeFieldBlock
     | VariationTableBlock
     | VariationTableFieldBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.TextKind
+export type TextKind = number;
+// github.com/benoitkugler/maths-online/maths/exercice.TextPart
+export interface TextPart {
+  Content: string;
+  Kind: TextKind;
+}
+// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
+export type ComparisonLevel = number;
+// github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
+export interface ExpressionFieldBlock {
+  Expression: string;
+  Label: TextPart;
+  ComparisonLevel: ComparisonLevel;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomCoord
 export interface RandomCoord {
@@ -224,21 +240,6 @@ export type Interpolated = string;
 export interface FormulaBlock {
   Parts: Interpolated;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TextKind
-export type TextKind = number;
-// github.com/benoitkugler/maths-online/maths/exercice.TextPart
-export interface TextPart {
-  Content: string;
-  Kind: TextKind;
-}
-// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
-export type ComparisonLevel = number;
-// github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
-export interface ExpressionFieldBlock {
-  Expression: string;
-  Label: TextPart;
-  ComparisonLevel: ComparisonLevel;
-}
 // github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
 export interface FunctionDecoration {
   Label: string;
@@ -282,8 +283,8 @@ export interface NumberFieldBlock {
 // github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
   Label: string;
-  Answer: TextPart[] | null;
-  AdditionalProposals: TextPart[] | null;
+  Answer: Interpolated[] | null;
+  AdditionalProposals: Interpolated[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
 export interface RadioFieldBlock {
@@ -523,7 +524,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -572,7 +573,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/trivial/launch_session";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -618,7 +619,7 @@ export abstract class AbstractAPI {
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/prof/editor/api/tags";
     const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -667,7 +668,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate-one";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -692,7 +693,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question-duplicate";
     const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -716,7 +717,7 @@ export abstract class AbstractAPI {
   protected async rawEditorCreateQuestion(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -739,7 +740,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -762,7 +763,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -811,7 +812,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
     const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
       params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -833,7 +834,7 @@ export abstract class AbstractAPI {
   protected async rawEditorUpdateTags(params: UpdateTagsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
     const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }

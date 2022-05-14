@@ -68,12 +68,13 @@ type Game struct {
 	dice diceThrow // last dice thrown
 
 	questionDurationLimit time.Duration
+	showDecrassage        bool
 }
 
 // NewGame returns an empty game, using the given `questions`, waiting for players to be
 // added.
 // `questionTimeout` is an optionnal parameter which default to one minute
-func NewGame(questionTimeout time.Duration, questions QuestionPool) *Game {
+func NewGame(questionTimeout time.Duration, showDecrassage bool, questions QuestionPool) *Game {
 	if questionTimeout == 0 {
 		questionTimeout = defautQuestionTimeout
 	}
@@ -90,6 +91,7 @@ func NewGame(questionTimeout time.Duration, questions QuestionPool) *Game {
 		QuestionTimeout:       timer,
 		questionDurationLimit: questionTimeout,
 		questionPool:          questions,
+		showDecrassage:        showDecrassage,
 	}
 }
 
@@ -351,8 +353,12 @@ func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates
 	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
 		updates = &StateUpdate{
-			Events: Events{gameEnd{Winners: winners, WinnerNames: gs.idToNames(winners)}},
-			State:  gs.GameState,
+			Events: Events{gameEnd{
+				Winners:               winners,
+				WinnerNames:           gs.idToNames(winners),
+				QuestionDecrassageIds: gs.decrassage(),
+			}},
+			State: gs.GameState,
 		}
 	} else { // start a new turn
 		v := gs.startTurn()
@@ -415,6 +421,30 @@ func (gs *Game) winners() (out []int) {
 	}
 	sort.Ints(out)
 	return out
+}
+
+// returns nil if !showDecrassage
+func (gs *Game) decrassage() (ids map[int][]int64) {
+	if !gs.showDecrassage {
+		return nil
+	}
+
+	const nbMax = 3
+	ids = make(map[int][]int64)
+	for player, state := range gs.Players {
+		questions := state.Review.MarkedQuestions
+		// add from the failed questions
+		for _, question := range state.Review.QuestionHistory {
+			if len(questions) >= nbMax {
+				break
+			}
+			if !question.Success {
+				questions = append(questions, question.IdQuestion)
+			}
+		}
+		ids[player] = questions
+	}
+	return ids
 }
 
 func generatePlayerName(player PlayerID) string {

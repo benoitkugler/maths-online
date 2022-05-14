@@ -8,4 +8,5 @@ export interface TrivialConfig {
   Id: number;
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
+  ShowDecrassage: boolean;
 }

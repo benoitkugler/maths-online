@@ -155,8 +155,9 @@ type playerAnswerResult struct {
 
 // gameEnd is emitted when at least one player has won
 type gameEnd struct {
-	Winners     []int
-	WinnerNames []string
+	QuestionDecrassageIds map[int][]int64 // player->questions
+	Winners               []int
+	WinnerNames           []string
 }
 
 // GameTerminated is emitted when the game

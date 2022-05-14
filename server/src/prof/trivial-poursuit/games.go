@@ -73,6 +73,7 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 		tv.GameOptions{
 			PlayersNumber:   nbPlayers,
 			QuestionTimeout: time.Second * time.Duration(gs.config.QuestionTimeout),
+			ShowDecrassage:  gs.config.ShowDecrassage,
 		},
 		gs.monitor)
 	// register the controller...

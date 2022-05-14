@@ -112,6 +112,13 @@
             v-model.number="props.edited.QuestionTimeout"
           ></v-text-field>
         </v-col>
+        <v-col cols="6">
+          <v-checkbox
+            density="compact"
+            label="Afficher un décrassage en fin de partie"
+            v-model.number="props.edited.ShowDecrassage"
+          ></v-checkbox>
+        </v-col>
       </v-row>
     </v-card-text>
 
@@ -169,7 +176,7 @@ onMounted(fetchHint);
 let hint = $ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
 async function fetchHint() {
   const criteria = props.edited.Questions;
-  // fetch the hint if the all categories have been filled,
+  // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
   if (!criteria.every(qu => qu?.length)) {
     hint = { Pattern: [], Missing: [] };

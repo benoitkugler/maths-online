@@ -57,10 +57,16 @@ func randint() int {
 	return int(rand.Intn(1000000))
 }
 
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
+}
+
 func randTrivialConfig() TrivialConfig {
 	return TrivialConfig{
 		Id:              randint64(),
 		Questions:       randCategoriesQuestions(),
 		QuestionTimeout: randint(),
+		ShowDecrassage:  randbool(),
 	}
 }

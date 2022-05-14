@@ -329,6 +329,19 @@ JSON diceThrowToJson(DiceThrow item) {
   return {"Face": intToJson(item.face)};
 }
 
+Map<int, List<int>> dictIntListIntFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON)
+      .map((k, v) => MapEntry(int.parse(k), listIntFromJson(v)));
+}
+
+Map<String, dynamic> dictIntListIntToJson(Map<int, List<int>> item) {
+  return item
+      .map((k, v) => MapEntry(intToJson(k).toString(), listIntToJson(v)));
+}
+
 List<String> listStringFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -342,25 +355,29 @@ List<dynamic> listStringToJson(List<String> item) {
 
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.gameEnd
 class GameEnd implements GameEvent {
+  final Map<int, List<int>> questionDecrassageIds;
   final List<int> winners;
   final List<String> winnerNames;
 
-  const GameEnd(this.winners, this.winnerNames);
+  const GameEnd(this.questionDecrassageIds, this.winners, this.winnerNames);
 
   @override
   String toString() {
-    return "GameEnd($winners, $winnerNames)";
+    return "GameEnd($questionDecrassageIds, $winners, $winnerNames)";
   }
 }
 
 GameEnd gameEndFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return GameEnd(listIntFromJson(json['Winners']),
+  return GameEnd(
+      dictIntListIntFromJson(json['QuestionDecrassageIds']),
+      listIntFromJson(json['Winners']),
       listStringFromJson(json['WinnerNames']));
 }
 
 JSON gameEndToJson(GameEnd item) {
   return {
+    "QuestionDecrassageIds": dictIntListIntToJson(item.questionDecrassageIds),
     "Winners": listIntToJson(item.winners),
     "WinnerNames": listStringToJson(item.winnerNames)
   };

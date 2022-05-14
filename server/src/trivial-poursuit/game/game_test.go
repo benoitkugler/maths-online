@@ -96,7 +96,7 @@ func TestGameState_nextPlayer(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
-	g := NewGame(0, QuestionPool{})
+	g := NewGame(0, true, QuestionPool{})
 	p1 := g.AddPlayer("").Player
 	if p1 != 0 {
 		t.Fatalf("unexpected player id %d", p1)
@@ -120,7 +120,7 @@ func TestStart(t *testing.T) {
 }
 
 func TestEmitQuestion(t *testing.T) {
-	g := NewGame(time.Second/2, QuestionPool{exQu, exQu, exQu, exQu, exQu})
+	g := NewGame(time.Second/2, true, QuestionPool{exQu, exQu, exQu, exQu, exQu})
 
 	g.AddPlayer("")
 
@@ -149,7 +149,7 @@ outer:
 }
 
 func TestHandleClientEvent(t *testing.T) {
-	g := NewGame(0, QuestionPool{exQu, exQu, exQu, exQu, exQu})
+	g := NewGame(0, true, QuestionPool{exQu, exQu, exQu, exQu, exQu})
 	g.AddPlayer("")
 
 	// check nextTurn is properly reset

@@ -111,6 +111,7 @@ func (cl *client) startLoop() {
 type GameOptions struct {
 	PlayersNumber   int
 	QuestionTimeout time.Duration
+	ShowDecrassage  bool
 }
 
 // GameController handles one game room
@@ -148,7 +149,7 @@ func NewGameController(id GameID, questions game.QuestionPool, options GameOptio
 		incomingEvents:  make(chan game.ClientEvent),
 		broadcastEvents: make(chan game.StateUpdate, 1), // the main loop write in this channel
 		clients:         map[*client]game.PlayerID{},
-		game:            *game.NewGame(options.QuestionTimeout, questions),
+		game:            *game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
 		Options:         options,
 	}
 }

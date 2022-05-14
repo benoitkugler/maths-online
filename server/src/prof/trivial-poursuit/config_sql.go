@@ -8,4 +8,5 @@ type TrivialConfig struct {
 	Id              int64
 	Questions       CategoriesQuestions
 	QuestionTimeout int // in seconds
+	ShowDecrassage  bool
 }
