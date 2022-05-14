@@ -1,7 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-enum SongCategorie { guitare, disco }
+enum SongCategorie { guitare, disco, alternative }
 
 extension SongLabel on SongCategorie {
   String label() {
@@ -10,6 +10,8 @@ extension SongLabel on SongCategorie {
         return "Disco";
       case SongCategorie.guitare:
         return "Guitare";
+      case SongCategorie.alternative:
+        return "Alternative";
     }
   }
 }
@@ -30,16 +32,17 @@ class Audio {
   /// in the app.
   static const availableSongs = <Song>[
     Song("GrooveBow.mp3", SongCategorie.disco),
+    Song("EntreCielEtTerre.mp3", SongCategorie.alternative),
     Song("NouvelleTrajectoire.mp3", SongCategorie.disco),
     Song("AlternativeConnect.mp3", SongCategorie.disco),
     Song("AuroreBoreale.mp3", SongCategorie.disco),
     Song("DropFlow.mp3", SongCategorie.disco),
-    Song("Envolées.mp3", SongCategorie.guitare),
+    // Song("Envolées.mp3", SongCategorie.guitare),
     Song("FarUp.mp3", SongCategorie.guitare),
     Song("Forgive.mp3", SongCategorie.guitare),
     Song("PremiersPas.mp3", SongCategorie.guitare),
-    Song("SetOnFire.mp3", SongCategorie.guitare),
-    Song("Solitude.mp3", SongCategorie.guitare),
+    // Song("SetOnFire.mp3", SongCategorie.guitare),
+    // Song("Solitude.mp3", SongCategorie.guitare),
     Song("Suspens.mp3", SongCategorie.guitare),
     Song("Tempos.mp3", SongCategorie.guitare),
   ];
@@ -52,8 +55,8 @@ class Audio {
 
   int _currentSong = -1;
 
-  /// set the songs to play in loop, as indexes in [availableSongs]
-  /// Note that is does not start playing music
+  /// Set the songs to play in loop, as indexes in [availableSongs].
+  /// Note that is does not start playing music.
   void setSongs(PlaylistController playlist) {
     _currentSong = -1;
     this.playlist = playlist;
