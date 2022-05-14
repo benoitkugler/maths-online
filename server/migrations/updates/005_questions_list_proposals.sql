@@ -7,7 +7,6 @@ CREATE OR REPLACE FUNCTION __migration_textPartToInterpolated (textPart jsonb)
     AS $$
 DECLARE
 BEGIN
-    RAISE INFO '% %', textPart, to_jsonb (textPart ->> 'Content');
     CASE WHEN (textPart -> 'Kind')::int = 0 THEN
         -- simple text
         RETURN to_jsonb (textPart ->> 'Content');
