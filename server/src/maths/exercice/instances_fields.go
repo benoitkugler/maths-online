@@ -2,6 +2,7 @@ package exercice
 
 import (
 	"fmt"
+	"hash/fnv"
 	"math"
 	"math/rand"
 	"strings"
@@ -211,8 +212,11 @@ func (f DropDownFieldInstance) correctAnswer() client.Answer {
 	return RadioFieldInstance(f).correctAnswer()
 }
 
-func deterministicRand(i, j int) *rand.Rand {
-	return rand.New(rand.NewSource(int64(i*1000 + j)))
+func deterministicRand(hash []byte) *rand.Rand {
+	s := fnv.New32()
+	s.Write(hash)
+	seed := int64(s.Sum32())
+	return rand.New(rand.NewSource(seed))
 }
 
 // OrderedListFieldInstance asks the student to reorder part of the
@@ -276,18 +280,19 @@ func (olf OrderedListFieldInstance) validateAnswerSyntax(answer client.Answer) e
 	return nil
 }
 
-func areParagraphEqual(p1, p2 client.TextLine) bool {
+func textLineToString(l client.TextLine) string {
+	var s strings.Builder
+	for _, c := range l {
+		s.WriteString(c.Text)
+	}
+	return s.String()
+}
+
+func areLineEquals(l1, l2 client.TextLine) bool {
 	// to avoid suprising errors, we compare the values
 	// by concatenating the text
 	// for instance x and $x$ are thus equal
-	var s1, s2 strings.Builder
-	for _, c := range p1 {
-		s1.WriteString(c.Text)
-	}
-	for _, c := range p2 {
-		s2.WriteString(c.Text)
-	}
-	return s1.String() == s2.String()
+	return textLineToString(l1) == textLineToString(l2)
 }
 
 func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
@@ -301,7 +306,7 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 		// we compare by value, not indices, since two different indices may have the same
 		// value and then not be distinguable by the student,
 		// and also, the indices has been shuffled
-		if !areParagraphEqual(got, ref) {
+		if !areLineEquals(got, ref) {
 			return false
 		}
 	}
@@ -310,7 +315,11 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 }
 
 func (olf OrderedListFieldInstance) shuffler() *rand.Rand {
-	return deterministicRand(len(olf.Answer), len(olf.AdditionalProposals))
+	var hash []byte
+	for _, a := range olf.Answer {
+		hash = append(hash, []byte(textLineToString(a))...)
+	}
+	return deterministicRand(hash)
 }
 
 func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
@@ -747,7 +756,7 @@ func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
 		alternative2,
 	}
 
-	rd := deterministicRand(len(f.EventsProposals), f.ID)
+	rd := deterministicRand([]byte(textLineToString(f.EventsProposals)))
 	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
 	return out
 }
