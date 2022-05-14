@@ -65,7 +65,7 @@ class TextS {
 }
 
 List<InlineSpan> buildText(TextLine parts, TextS style, double fontSize,
-    {bool inTable = false}) {
+    {bool baselineMiddle = false}) {
   final out = <InlineSpan>[];
 
   final ts = TextStyle(
@@ -78,7 +78,9 @@ List<InlineSpan> buildText(TextLine parts, TextS style, double fontSize,
       out.add(_inlineMath(
           part.text,
           fontSize,
-          inTable ? PlaceholderAlignment.middle : PlaceholderAlignment.baseline,
+          baselineMiddle
+              ? PlaceholderAlignment.middle
+              : PlaceholderAlignment.baseline,
           null));
       out.add(const TextSpan(text: " "));
     } else {

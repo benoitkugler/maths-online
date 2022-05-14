@@ -23,7 +23,7 @@ class _Cell extends StatelessWidget {
           color: isHeader ? Colors.grey : Colors.transparent,
           child: Center(
             child: TextRow(
-                buildText([content], TextS(), fontSize, inTable: true),
+                buildText([content], TextS(), fontSize, baselineMiddle: true),
                 verticalPadding: 2),
           ),
         ));

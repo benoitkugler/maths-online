@@ -165,8 +165,11 @@ class _Symbol extends StatelessWidget {
         vertical: 6,
         horizontal: isAnswer ? 8 : 12,
       ),
-      child: TextRow(buildText(symbol.item.text, TextS(), fontSize),
-          lineHeight: 1),
+      child: TextRow(
+        buildText(symbol.item.text, TextS(), fontSize, baselineMiddle: true),
+        lineHeight: 1,
+        verticalPadding: 2,
+      ),
     );
     return Draggable<_PositionnedItem>(
       maxSimultaneousDrags: enabled ? null : 0,
@@ -183,15 +186,9 @@ class _Symbol extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: isAnswer ? 0 : 6),
         child: Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(isAnswer ? 1 : 10),
-          child: isAnswer
-              ? SizedBox(
-                  height: 35,
-                  child: text,
-                )
-              : text,
-        ),
+            elevation: 8,
+            borderRadius: BorderRadius.circular(isAnswer ? 1 : 10),
+            child: text),
       ),
     );
   }
