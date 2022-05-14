@@ -163,10 +163,25 @@ func (rf RadioFieldInstance) fieldID() int {
 	return rf.ID
 }
 
+func (rf RadioFieldInstance) shuffler() *rand.Rand {
+	var hash []byte
+	for _, a := range rf.Proposals {
+		hash = append(hash, []byte(textLineToString(a))...)
+	}
+	return deterministicRand(hash)
+}
+
+// returns the shuffled proposals
+func (rf RadioFieldInstance) proposals() []client.TextLine {
+	out := append([]client.TextLine(nil), rf.Proposals...) // copy
+	rf.shuffler().Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	return out
+}
+
 func (rf RadioFieldInstance) toClient() client.Block {
 	return client.RadioFieldBlock{
 		ID:        rf.ID,
-		Proposals: rf.Proposals,
+		Proposals: rf.proposals(),
 	}
 }
 
@@ -182,11 +197,15 @@ func (f RadioFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 }
 
 func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	return f.Answer-1 == answer.(client.RadioAnswer).Index
+	ma := shufflingMap(f.shuffler(), len(f.Proposals))
+	expected := ma[f.Answer-1]
+	return expected == answer.(client.RadioAnswer).Index
 }
 
 func (f RadioFieldInstance) correctAnswer() client.Answer {
-	return client.RadioAnswer{Index: f.Answer - 1}
+	ma := shufflingMap(f.shuffler(), len(f.Proposals))
+	expected := ma[f.Answer-1]
+	return client.RadioAnswer{Index: expected}
 }
 
 type DropDownFieldInstance RadioFieldInstance
@@ -217,6 +236,30 @@ func deterministicRand(hash []byte) *rand.Rand {
 	s.Write(hash)
 	seed := int64(s.Sum32())
 	return rand.New(rand.NewSource(seed))
+}
+
+// shufflingMap returns the mapping from originalIndex -> shuffledIndex
+// for the list [0, 1, ..., n-1]
+func shufflingMap(shuffler *rand.Rand, n int) []int {
+	indices := make([]int, n)
+	for i := range indices {
+		indices[i] = i
+	}
+	shuffler.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
+	// build the reverse map (quadratic complexity)
+	answer := make([]int, n)
+	for i := range answer {
+		// find the new index of i into indices
+		rep := -1
+		for r, val := range indices {
+			if val == i {
+				rep = r
+				break
+			}
+		}
+		answer[i] = rep
+	}
+	return answer
 }
 
 // OrderedListFieldInstance asks the student to reorder part of the
@@ -324,24 +367,10 @@ func (olf OrderedListFieldInstance) shuffler() *rand.Rand {
 
 func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
 	rd := olf.shuffler()
-	indices := make([]int, len(olf.Answer)+len(olf.AdditionalProposals))
-	for i := range indices {
-		indices[i] = i
-	}
-	rd.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
-	// build the reverse map (quadratic complexity)
-	answer := make([]int, len(olf.Answer))
-	for i := range answer {
-		// find the new index of i into indices
-		rep := -1
-		for r, val := range indices {
-			if val == i {
-				rep = r
-				break
-			}
-		}
-		answer[i] = rep
-	}
+
+	answer := shufflingMap(rd, len(olf.Answer)+len(olf.AdditionalProposals))
+	answer = answer[0:len(olf.Answer)] // restrict to answer
+
 	return client.OrderedListAnswer{Indices: answer}
 }
 

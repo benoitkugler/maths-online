@@ -40,7 +40,7 @@ func TestNumberFieldInstance_evaluateAnswer(t *testing.T) {
 	}{
 		{NumberFieldInstance{Answer: 1}, client.NumberAnswer{Value: 1}, true},
 		{NumberFieldInstance{Answer: 1}, client.NumberAnswer{Value: 1.1}, false},
-		{RadioFieldInstance{Answer: 2}, client.RadioAnswer{Index: 1}, true},
+		{RadioFieldInstance{Answer: 2, Proposals: []client.TextLine{{}, {}}}, client.RadioAnswer{Index: 0}, true}, // the answer is swapped
 		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "x + 2"}, true},
 		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "2+x "}, true},
 		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: expression.ExpandedSubstitutions}, client.ExpressionAnswer{Expression: "2+ 1*x "}, true},
@@ -86,6 +86,33 @@ func TestOrderedList(t *testing.T) {
 	}
 }
 
+func TestRadio(t *testing.T) {
+	field := RadioFieldInstance{
+		Proposals: []client.TextLine{ // [12;+infty]
+			{{Text: "["}},
+			{{Text: "12"}},
+			{{Text: ";"}},
+			{{Text: "+"}},
+			{{Text: `\infty`}},
+			{{Text: `]`}},
+		},
+		Answer: 6,
+	}
+
+	p1 := field.proposals()
+	p2 := field.proposals()
+	if !reflect.DeepEqual(p1, p2) {
+		t.Fatal(p1, p2)
+	}
+
+	// check that the correct answer is indeed correct
+	ans := field.correctAnswer()
+
+	if !field.evaluateAnswer(ans) {
+		t.Fatalf("invalid answer %v (proposals : %v)", ans, p1)
+	}
+}
+
 func TestFigureAffineLineField(t *testing.T) {
 	field := FigureAffineLineFieldInstance{
 		Figure: repere.Figure{
@@ -99,5 +126,28 @@ func TestFigureAffineLineField(t *testing.T) {
 	}
 	if ans := field.correctAnswer(); !field.evaluateAnswer(ans) {
 		t.Fatalf("inconsistent answer %v", ans)
+	}
+}
+
+func Test_shufflingMap(t *testing.T) {
+	tests := []struct {
+		n int
+	}{
+		{5}, {6}, {7},
+	}
+	for _, tt := range tests {
+		shuffler := deterministicRand([]byte{'a', 'b', 'c'})
+		got := shufflingMap(shuffler, tt.n)
+		indices := make([]int, tt.n)
+		for i := range indices {
+			indices[i] = i
+		}
+		shuffler = deterministicRand([]byte{'a', 'b', 'c'})
+		shuffler.Shuffle(len(indices), reflect.Swapper(indices))
+
+		new4 := got[4]
+		if indices[new4] != 4 {
+			t.Errorf("shufflingMap() = %v", got)
+		}
 	}
 }
