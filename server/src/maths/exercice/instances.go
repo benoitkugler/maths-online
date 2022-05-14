@@ -83,7 +83,7 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 	}
 	for id, reference := range fields {
 		out.ExpectedAnswers[id] = reference.correctAnswer()
-
+		out.Results[id] = false
 		answer, ok := answers.Data[id]
 		if !ok { // should not happen since the client forces the user to fill all fields
 			log.Println("invalid id")
