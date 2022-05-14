@@ -4,30 +4,29 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
   "manifest.json": "6be06c3ebad0d6a2ecb2cdd71690d463",
-"main.dart.js": "cf55175b94fb819eeff5c0987b52f44b",
-"index.html": "62a139140a248807c4a1a532166c609d",
-"/": "62a139140a248807c4a1a532166c609d",
+"main.dart.js": "f4f1445c15e37e102925bb430d6cb79f",
+"index.html": "4657b12c68226dedf5efe946c759d28d",
+"/": "4657b12c68226dedf5efe946c759d28d",
+"flutter.js": "0816e65a103ba8ba51b174eeeeb2cb67",
 "canvaskit/profiling/canvaskit.js": "ae2949af4efc61d28a4a80fffa1db900",
 "canvaskit/profiling/canvaskit.wasm": "95e736ab31147d1b2c7b25f11d4c32cd",
 "canvaskit/canvaskit.js": "c2b4e5f3d7a3d82aed024e7249a78487",
 "canvaskit/canvaskit.wasm": "4b83d89d9fecbea8ca46f2f760c5a9ba",
-"assets/NOTICES": "bff25ac89bd885e11612e50440ff8416",
-"assets/fonts/MaterialIcons-Regular.otf": "7e7a6cccddf6d7b20012a548461d5d81",
+"assets/NOTICES": "0c71ec52e6e9c369d859cb4ab4e0e8f0",
+"assets/fonts/MaterialIcons-Regular.otf": "95db9098c58fd6db106f1116bae85a0b",
 "assets/lib/music/PremiersPas.mp3": "417ae4956516ac0a5996ace1044d4f54",
 "assets/lib/music/Forgive.mp3": "2f7e56852ae5e980cd33caf0f213960c",
-"assets/lib/music/Solitude.mp3": "a4570d1bdce2d504389bf1eb05160a39",
 "assets/lib/music/Tempos.mp3": "b96b2d19ace72eb75c9d51cc62de3aa5",
 "assets/lib/music/AuroreBoreale.mp3": "a2c37483dc75ed82a4572f8b62f8a8a0",
 "assets/lib/music/NouvelleTrajectoire.mp3": "182f7a976b0a7c5e3eb57b995f31ded3",
 "assets/lib/music/Suspens.mp3": "4b337f8440090b15737903491c671b2b",
 "assets/lib/music/GrooveBow.mp3": "bfa8818a49a1f1e5e477089d2abff70f",
+"assets/lib/music/EntreCielEtTerre.mp3": "853808c4ba7b035232448a7dca4a8739",
 "assets/lib/music/AlternativeConnect.mp3": "bb0001db630de66ebf6ae3d0a0a3f545",
-"assets/lib/music/SetOnFire.mp3": "a8fd8b886f93ca42c814cb1f75dff0b3",
 "assets/lib/music/DropFlow.mp3": "95b2166c9db3a54c8018cabecc49d1aa",
-"assets/lib/music/Envol%25C3%25A9es.mp3": "b6185c44e1f4086d11aee392c875b74f",
 "assets/lib/music/FarUp.mp3": "3ad010e041559e7de611fd56bbb537e6",
 "assets/lib/images/grey-wood.png": "bd0ccd0b83244e6556952255a2bca327",
-"assets/AssetManifest.json": "1f5735b35efcf48fb99baf74a15e6ad9",
+"assets/AssetManifest.json": "13f127cf7e9951b1586a9c747532c6b9",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Main-Bold.ttf": "9eef86c1f9efa78ab93d41a0551948f7",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Size1-Regular.ttf": "1e6a3368d660edc3a2fbbe72edfeaa85",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Caligraphic-Bold.ttf": "a9c8e437146ef63fcd6fae7cf65ca859",
@@ -55,14 +54,13 @@ const RESOURCES = {
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
-"version.json": "af203033b056cae94909cc768bae0ec4"
+"version.json": "a83779ee771d021145da244e1e98da91"
 };
 
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = [
-  "/",
-"main.dart.js",
+  "main.dart.js",
 "index.html",
 "assets/NOTICES",
 "assets/AssetManifest.json",
