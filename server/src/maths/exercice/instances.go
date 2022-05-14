@@ -77,25 +77,29 @@ func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) cli
 func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) client.QuestionAnswersOut {
 	fields := qu.fields()
 
-	out := make(map[int]bool, len(fields))
+	out := client.QuestionAnswersOut{
+		Results:         make(map[int]bool, len(fields)),
+		ExpectedAnswers: make(map[int]client.Answer, len(fields)),
+	}
 	for id, reference := range fields {
+		out.ExpectedAnswers[id] = reference.correctAnswer()
+
 		answer, ok := answers.Data[id]
 		if !ok { // should not happen since the client forces the user to fill all fields
-			out[id] = false
 			log.Println("invalid id")
 			continue
 		}
 
 		if err := reference.validateAnswerSyntax(answer); err != nil {
 			log.Println("invalid field", err)
-			out[id] = false
+			out.Results[id] = false
 			continue
 		}
 
-		out[id] = reference.evaluateAnswer(answer)
+		out.Results[id] = reference.evaluateAnswer(answer)
 	}
 
-	return client.QuestionAnswersOut{Data: out}
+	return out
 }
 
 // CorrectAnswer returns the expected answer for the question.

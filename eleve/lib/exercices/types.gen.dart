@@ -1414,23 +1414,28 @@ Map<String, dynamic> dictIntBoolToJson(Map<int, bool> item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersOut
 class QuestionAnswersOut {
-  final Map<int, bool> data;
+  final Map<int, bool> results;
+  final Map<int, Answer> expectedAnswers;
 
-  const QuestionAnswersOut(this.data);
+  const QuestionAnswersOut(this.results, this.expectedAnswers);
 
   @override
   String toString() {
-    return "QuestionAnswersOut($data)";
+    return "QuestionAnswersOut($results, $expectedAnswers)";
   }
 }
 
 QuestionAnswersOut questionAnswersOutFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return QuestionAnswersOut(dictIntBoolFromJson(json['Data']));
+  return QuestionAnswersOut(dictIntBoolFromJson(json['Results']),
+      dictIntAnswerFromJson(json['ExpectedAnswers']));
 }
 
 JSON questionAnswersOutToJson(QuestionAnswersOut item) {
-  return {"Data": dictIntBoolToJson(item.data)};
+  return {
+    "Results": dictIntBoolToJson(item.results),
+    "ExpectedAnswers": dictIntAnswerToJson(item.expectedAnswers)
+  };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.QuestionSyntaxCheckIn

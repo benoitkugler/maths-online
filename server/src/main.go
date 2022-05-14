@@ -218,6 +218,14 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 		return evaluateQuestion(edit, c)
 	})
 
+	// standalone question
+	e.POST("/api/questions/instantiate", func(c echo.Context) error {
+		return instantiateQuestions(edit, c)
+	})
+	e.POST("/api/questions/evaluate", func(c echo.Context) error {
+		return evaluateQuestion(edit, c)
+	})
+
 	// temporary question quick access
 	sampleQuestions := examples.Questions()
 	e.GET("/questions", func(c echo.Context) error {

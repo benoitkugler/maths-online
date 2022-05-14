@@ -283,41 +283,39 @@ type TableAnswer struct {
 
 // QuestionAnswersIn map the field ids to their answer
 type QuestionAnswersIn struct {
-	Data map[int]Answer
+	Data Answers
 }
 
-func (out *QuestionAnswersIn) UnmarshalJSON(src []byte) error {
-	var wr struct {
-		Data map[int]AnswerWrapper
-	}
+type Answers map[int]Answer
+
+func (out *Answers) UnmarshalJSON(src []byte) error {
+	var wr map[int]AnswerWrapper
 
 	err := json.Unmarshal(src, &wr)
-	out.Data = make(map[int]Answer)
-	for i, v := range wr.Data {
-		out.Data[i] = v.Data
+	*out = make(map[int]Answer)
+	for i, v := range wr {
+		(*out)[i] = v.Data
 	}
 
 	return err
 }
 
-func (out QuestionAnswersIn) MarshalJSON() ([]byte, error) {
-	var tmp struct {
-		Data map[int]AnswerWrapper
-	}
-	tmp.Data = make(map[int]AnswerWrapper)
-	for k, v := range out.Data {
-		tmp.Data[k] = AnswerWrapper{v}
+func (out Answers) MarshalJSON() ([]byte, error) {
+	tmp := make(map[int]AnswerWrapper)
+	for k, v := range out {
+		tmp[k] = AnswerWrapper{v}
 	}
 	return json.Marshal(tmp)
 }
 
 type QuestionAnswersOut struct {
-	Data map[int]bool
+	Results         map[int]bool
+	ExpectedAnswers Answers
 }
 
 // IsCorrect returns `true` if all the fields are correct.
 func (qu QuestionAnswersOut) IsCorrect() bool {
-	for _, v := range qu.Data {
+	for _, v := range qu.Results {
 		if !v {
 			return false
 		}

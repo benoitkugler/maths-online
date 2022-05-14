@@ -106,7 +106,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
   }
 
   void _onServerValidAnswer(QuestionAnswersOut rep) {
-    final crible = rep.data;
+    final crible = rep.results;
     final errors = crible.values.where((value) => !value).toList();
     final isValid = errors.isEmpty;
     final errorMessage = errors.length >= 2
@@ -188,7 +188,7 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
                 _validAnswer,
                 timeout: null,
                 blockOnSubmit: false,
-                answer: serverAnswer,
+                answer: serverAnswer?.data,
               ),
             ),
     );

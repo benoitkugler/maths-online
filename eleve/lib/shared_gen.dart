@@ -96,28 +96,47 @@ JSON resolvedVariableToJson(ResolvedVariable item) {
   };
 }
 
-Map<Variable, ResolvedVariable> dictVariableResolvedVariableFromJson(
-    dynamic json) {
-  if (json == null) {
-    return {};
+// github.com/benoitkugler/maths-online/prof/editor.VarEntry
+class VarEntry {
+  final Variable variable;
+  final ResolvedVariable resolved;
+
+  const VarEntry(this.variable, this.resolved);
+
+  @override
+  String toString() {
+    return "VarEntry($variable, $resolved)";
   }
-  return (json as JSON)
-      .map((k, v) => MapEntry(k as Variable, resolvedVariableFromJson(v)));
 }
 
-Map<String, dynamic> dictVariableResolvedVariableToJson(
-    Map<Variable, ResolvedVariable> item) {
-  return item.map((k, v) =>
-      MapEntry(variableToJson(k).toString(), resolvedVariableToJson(v)));
+VarEntry varEntryFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VarEntry(variableFromJson(json['Variable']),
+      resolvedVariableFromJson(json['Resolved']));
 }
 
-// github.com/benoitkugler/maths-online/maths/expression.Variables
-typedef Variables = Map<Variable, ResolvedVariable>;
+JSON varEntryToJson(VarEntry item) {
+  return {
+    "Variable": variableToJson(item.variable),
+    "Resolved": resolvedVariableToJson(item.resolved)
+  };
+}
+
+List<VarEntry> listVarEntryFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(varEntryFromJson).toList();
+}
+
+List<dynamic> listVarEntryToJson(List<VarEntry> item) {
+  return item.map(varEntryToJson).toList();
+}
 
 // github.com/benoitkugler/maths-online.EvaluateQuestionIn
 class EvaluateQuestionIn {
   final QuestionAnswersIn answer;
-  final Variables params;
+  final List<VarEntry> params;
   final int idQuestion;
 
   const EvaluateQuestionIn(this.answer, this.params, this.idQuestion);
@@ -130,16 +149,14 @@ class EvaluateQuestionIn {
 
 EvaluateQuestionIn evaluateQuestionInFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return EvaluateQuestionIn(
-      questionAnswersInFromJson(json['Answer']),
-      dictVariableResolvedVariableFromJson(json['Params']),
-      intFromJson(json['IdQuestion']));
+  return EvaluateQuestionIn(questionAnswersInFromJson(json['Answer']),
+      listVarEntryFromJson(json['Params']), intFromJson(json['IdQuestion']));
 }
 
 JSON evaluateQuestionInToJson(EvaluateQuestionIn item) {
   return {
     "Answer": questionAnswersInToJson(item.answer),
-    "Params": dictVariableResolvedVariableToJson(item.params),
+    "Params": listVarEntryToJson(item.params),
     "IdQuestion": intToJson(item.idQuestion)
   };
 }
@@ -148,7 +165,7 @@ JSON evaluateQuestionInToJson(EvaluateQuestionIn item) {
 class InstantiatedQuestion {
   final int id;
   final Question question;
-  final Variables params;
+  final List<VarEntry> params;
 
   const InstantiatedQuestion(this.id, this.question, this.params);
 
@@ -160,17 +177,15 @@ class InstantiatedQuestion {
 
 InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return InstantiatedQuestion(
-      intFromJson(json['Id']),
-      questionFromJson(json['Question']),
-      dictVariableResolvedVariableFromJson(json['Params']));
+  return InstantiatedQuestion(intFromJson(json['Id']),
+      questionFromJson(json['Question']), listVarEntryFromJson(json['Params']));
 }
 
 JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
   return {
     "Id": intToJson(item.id),
     "Question": questionToJson(item.question),
-    "Params": dictVariableResolvedVariableToJson(item.params)
+    "Params": listVarEntryToJson(item.params)
   };
 }
 

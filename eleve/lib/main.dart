@@ -7,8 +7,8 @@ import 'package:eleve/trivialpoursuit/game.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
-final bm = buildMode();
-// final bm = BuildMode.debug;
+// final bm = buildMode();
+final bm = BuildMode.debug;
 
 void main() {
   final audio = Audio();
@@ -37,34 +37,35 @@ class EleveApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Isyro',
-      theme: theme,
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: localizations,
-      supportedLocales: locales,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Isyro'),
-          actions: [
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => _showAudioSettings(context),
-                icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
-                tooltip: "Choisir la musique",
+        title: 'Isyro',
+        theme: theme,
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: localizations,
+        supportedLocales: locales,
+        home: Scaffold(
+          appBar: AppBar(
+            title: const Text('Isyro'),
+            actions: [
+              Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => _showAudioSettings(context),
+                  icon:
+                      const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
+                  tooltip: "Choisir la musique",
+                ),
               ),
-            ),
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => _showAppSettings(context),
-                icon: const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
-                tooltip: "Paramètres",
-              ),
-            )
-          ],
-        ),
-        body: _HomePage(audioPlayer),
-      ),
-    );
+              Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => _showAppSettings(context),
+                  icon:
+                      const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
+                  tooltip: "Paramètres",
+                ),
+              )
+            ],
+          ),
+          body: _HomePage(audioPlayer),
+        ));
   }
 }
 

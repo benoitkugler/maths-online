@@ -58,9 +58,9 @@ class QuestionController {
     );
   }
 
-  void setAnswers(QuestionAnswersIn answers) {
+  void setAnswers(Map<int, Answer> answers) {
     _fields.forEach((key, value) {
-      _fields[key]!.setData(answers.data[key]!);
+      _fields[key]!.setData(answers[key]!);
     });
   }
 
@@ -518,10 +518,13 @@ class QuestionW extends StatefulWidget {
 
   /// If [answer] is provided, the question controllers and fields
   /// are filled using the answers given.
-  final QuestionAnswersIn? answer;
+  final Map<int, Answer>? answer;
+
+  final String title;
 
   const QuestionW(this.buildMode, this.question, this.color, this.onValid,
       {Key? key,
+      this.title = "Question",
       this.timeout = const Duration(seconds: 60),
       this.footerQuote = const QuoteData("", "", ""),
       this.blockOnSubmit = true,
@@ -593,7 +596,7 @@ class _QuestionWState extends State<QuestionW> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: ColoredTitle("Question", widget.color),
+            child: ColoredTitle(widget.title, widget.color),
           ),
           Expanded(
               child: _OptionScrollList(

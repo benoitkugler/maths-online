@@ -71,11 +71,13 @@ class _QuestionGalleryState extends State<QuestionGallery> {
 
   void _validate(ValidQuestionNotification v, BuildContext context) async {
     final rep = await _validateCall(v);
-    final crible = rep.data;
+    final crible = rep.results;
     final isValid = crible.values.every((element) => element);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: isValid ? Colors.lightGreen : Colors.red,
-      content: Text(isValid ? "Bonne réponse" : "Réponse incomplète $crible"),
+      content: Text(isValid
+          ? "Bonne réponse"
+          : "Certains champs sont incorrects ($crible)."),
     ));
   }
 

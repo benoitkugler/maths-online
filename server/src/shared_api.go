@@ -45,7 +45,7 @@ func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
 
 type EvaluateQuestionIn struct {
 	Answer     client.QuestionAnswersIn `dart-extern:"exercices/types.gen.dart"`
-	Params     expression.Variables
+	Params     []editor.VarEntry
 	IdQuestion int64
 }
 

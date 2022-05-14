@@ -416,10 +416,15 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut
 
 // ------------------------------------------------------------------------------
 
+type VarEntry struct {
+	Variable expression.Variable
+	Resolved expression.ResolvedVariable
+}
+
 type InstantiatedQuestion struct {
 	Id       int64
 	Question client.Question `dart-extern:"exercices/types.gen.dart"`
-	Params   expression.Variables
+	Params   []VarEntry
 }
 
 type InstantiateQuestionsOut []InstantiatedQuestion
@@ -439,6 +444,10 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 		if err != nil {
 			return nil, err
 		}
+		varList := make([]VarEntry, 0, len(vars))
+		for k, v := range vars {
+			varList = append(varList, VarEntry{Variable: k, Resolved: v})
+		}
 		instance, err := qu.InstantiateWith(vars)
 		if err != nil {
 			return nil, err
@@ -446,7 +455,7 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 		out[index] = InstantiatedQuestion{
 			Id:       id,
 			Question: instance.ToClient(),
-			Params:   vars,
+			Params:   varList,
 		}
 	}
 
@@ -455,13 +464,18 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 
 // EvaluateQuestion instantiate the given question with the given parameters,
 // and evaluate the given answer.
-func (ct *Controller) EvaluateQuestion(id int64, params expression.Variables, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {
+func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {
 	qu, err := ex.SelectQuestion(ct.db, id)
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
 
-	instance, err := qu.InstantiateWith(params)
+	paramsDict := make(expression.Variables)
+	for _, entry := range params {
+		paramsDict[entry.Variable] = entry.Resolved
+	}
+
+	instance, err := qu.InstantiateWith(paramsDict)
 	if err != nil {
 		return client.QuestionAnswersOut{}, err
 	}

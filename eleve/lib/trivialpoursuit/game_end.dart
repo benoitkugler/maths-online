@@ -1,23 +1,38 @@
+import 'package:eleve/build_mode.dart';
+import 'package:eleve/decrassage/decrassage.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 
 class GameEndPannel extends StatelessWidget {
-  final List<int> winners;
+  final BuildMode buildMode;
+  final GameEnd data;
   final Map<int, PlayerStatus> players;
   final int ownID;
 
-  const GameEndPannel(this.winners, this.players, this.ownID, {Key? key})
+  const GameEndPannel(this.buildMode, this.data, this.players, this.ownID,
+      {Key? key})
       : super(key: key);
 
+  List<int> get winners => data.winners;
   bool get hasWon => winners.contains(ownID);
   Success get ownSuccess => players[ownID]!.success;
+
+  /// may be empty if the teacher disabled decrassage
+  List<int> get decrassage => data.questionDecrassageIds[ownID] ?? [];
 
   void _showRecap(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
           builder: (context) => SuccessRecapScaffold(players)),
+    );
+  }
+
+  void _showDecrassage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+          builder: (context) => Decrassage(decrassage, buildMode)),
     );
   }
 
@@ -72,7 +87,11 @@ class GameEndPannel extends StatelessWidget {
                 }).toList(),
               ),
             ],
-          )
+          ),
+          if (decrassage.isNotEmpty)
+            ElevatedButton(
+                onPressed: () => _showDecrassage(context),
+                child: const Text("Continuer vers le décrassage"))
         ],
       ),
     );

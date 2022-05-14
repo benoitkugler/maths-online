@@ -59,8 +59,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   bool diceDisabled = true;
 
   /// empty until game end
-  List<int> winners = [];
-  List<String> winnerNames = [];
+  GameEnd? gameEnd;
 
   double pieGlowWidth = 10;
 
@@ -306,8 +305,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   void _onGameEnd(GameEnd event) {
     setState(() {
       hasGameStarted = false;
-      winners = event.winners;
-      winnerNames = event.winnerNames;
+      gameEnd = event;
     });
   }
 
@@ -382,8 +380,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   Widget get _game {
-    if (winners.isNotEmpty) {
-      return GameEndPannel(winners, state.players, playerID);
+    if (gameEnd != null) {
+      return GameEndPannel(widget.buildMode, gameEnd!, state.players, playerID);
     }
 
     return hasGameStarted
