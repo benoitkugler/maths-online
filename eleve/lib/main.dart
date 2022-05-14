@@ -116,10 +116,10 @@ class _HomePageState extends State<_HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   GameIcon(_launchTrivialPoursuit),
-                  // TODO: polish
-                  ElevatedButton(
-                      onPressed: _launchQuestionGallery,
-                      child: const Text("Galerie de questions")),
+                  if (bm != BuildMode.production)
+                    ElevatedButton(
+                        onPressed: _launchQuestionGallery,
+                        child: const Text("Galerie de questions")),
                 ],
               ),
             )
