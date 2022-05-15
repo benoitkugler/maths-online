@@ -8,7 +8,7 @@ import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
 final bm = buildMode();
-// final bm = BuildMode.debug;
+// final bm = BuildMode.dev;
 
 void main() {
   final audio = Audio();
