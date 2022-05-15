@@ -150,3 +150,28 @@ func TestMissingQuestions(t *testing.T) {
 		t.Fatal("categories should be missing")
 	}
 }
+
+func TestGetTrivials(t *testing.T) {
+	creds := pass.DB{
+		Host:     "localhost",
+		User:     "benoit",
+		Password: "dummy",
+		Name:     "isyro_prod",
+	}
+	db, err := creds.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", creds, err)
+		return
+	}
+
+	ct := NewController(db, pass.Encrypter{})
+
+	for range [10]int{} {
+		t.Run("", func(t *testing.T) {
+			_, err := ct.getTrivialPoursuits()
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}

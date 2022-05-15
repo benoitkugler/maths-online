@@ -72,15 +72,15 @@ func (ct *Controller) sessionMap() map[int64]LaunchSessionOut {
 	return out
 }
 
-func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
+func (ct *Controller) getTrivialPoursuits() ([]TrivialConfigExt, error) {
 	configs, err := SelectAllTrivialConfigs(ct.db)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 
 	tags, err := exercice.SelectAllQuestionTags(ct.db)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 
 	dict := ct.sessionMap()
@@ -90,7 +90,14 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 	for _, config := range configs {
 		out = append(out, config.withDetails(tagsDict, dict))
 	}
+	return out, nil
+}
 
+func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
+	out, err := ct.getTrivialPoursuits()
+	if err != nil {
+		return err
+	}
 	return c.JSON(200, out)
 }
 
