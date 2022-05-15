@@ -65,6 +65,13 @@ dev_dependencies:
 
   test: ^1.19.5
 
+  flutter_native_splash: ^2.2.0+1
+
+# flutter pub run flutter_native_splash:create
+flutter_native_splash:
+  color: "#1b3652"
+  image: icon.png
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
