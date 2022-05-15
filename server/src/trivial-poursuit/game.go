@@ -214,7 +214,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 
 			gc.gameLock.Lock()
 			event := gc.game.RemovePlayer(gc.clients[client])
-			hasStarted := gc.game.IsPlaying()
+			hasStarted := gc.game.HasStarted()
 			nbPlayers := gc.game.NumberPlayers()
 			delete(gc.clients, client)
 			gc.gameLock.Unlock()
@@ -249,7 +249,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			ProgressLogger.Println("Adding player...")
 
 			// we do not allow connection into an already started game
-			if gc.game.IsPlaying() {
+			if gc.game.HasStarted() {
 				// the game at this end point is not usable: close the connection with an error
 				client.isAccepted <- false
 				continue

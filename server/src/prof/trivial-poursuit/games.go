@@ -25,8 +25,9 @@ type GameID = string
 // gameSession monitor the games of one session (think one classroom)
 // and broadcast the main advances from all the games to the teacher client
 type gameSession struct {
-	id   SessionID
-	quit chan bool
+	id                   SessionID
+	quit                 chan bool
+	notifyMonitorEndGame chan string // partial game ID
 
 	lock sync.Mutex
 
@@ -43,15 +44,16 @@ type gameSession struct {
 
 func newGameSession(id SessionID, db *sql.DB, config TrivialConfig, group GroupStrategy, questions ga.QuestionPool) *gameSession {
 	return &gameSession{
-		id:             id,
-		db:             db,
-		config:         config,
-		group:          group,
-		quit:           make(chan bool),
-		monitor:        make(chan tv.GameSummary),
-		games:          make(map[string]*tv.GameController),
-		teacherClients: make(map[*teacherClient]bool),
-		questions:      questions,
+		id:                   id,
+		db:                   db,
+		config:               config,
+		group:                group,
+		quit:                 make(chan bool),
+		notifyMonitorEndGame: make(chan string),
+		monitor:              make(chan tv.GameSummary),
+		games:                make(map[string]*tv.GameController),
+		teacherClients:       make(map[*teacherClient]bool),
+		questions:            questions,
 	}
 }
 
@@ -85,9 +87,11 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 			gs.exploitReview(review)
 		}
 
-		// remove the game controller when the game is over
+		gs.notifyMonitorEndGame <- gameID
+
 		gs.lock.Lock()
 		defer gs.lock.Unlock()
+		// remove the game controller when the game is over
 		delete(gs.games, gameID)
 	}()
 
@@ -177,6 +181,11 @@ func (gs *gameSession) startLoop(ctx context.Context) {
 				game.Terminate <- true
 			}
 			return
+		case gameID := <-gs.notifyMonitorEndGame:
+			// notify the monitor
+			for client := range gs.teacherClients {
+				client.removeGame(gs.id + gameID)
+			}
 		case summary := <-gs.monitor:
 			summary.ID = gs.id + summary.ID
 			for client := range gs.teacherClients {
@@ -250,6 +259,11 @@ func (tc *teacherClient) socketData() (out teacherSocketData) {
 	})
 
 	return out
+}
+
+func (tc *teacherClient) removeGame(fullID string) {
+	delete(tc.currentSummaries, fullID)
+	tc.conn.WriteJSON(tc.socketData())
 }
 
 func (tc *teacherClient) sendSummary(gs tv.GameSummary) {

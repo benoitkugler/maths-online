@@ -69,6 +69,8 @@ type Game struct {
 
 	questionDurationLimit time.Duration
 	showDecrassage        bool
+
+	hasStarted bool
 }
 
 // NewGame returns an empty game, using the given `questions`, waiting for players to be
@@ -98,9 +100,11 @@ func NewGame(questionTimeout time.Duration, showDecrassage bool, questions Quest
 // NumberPlayers return the number of players actually in the game.
 func (gs GameState) NumberPlayers() int { return len(gs.Players) }
 
+func (g *Game) HasStarted() bool { return g.hasStarted }
+
 // IsPlaying returns true if the game has started and is not finished yet.
 func (g *Game) IsPlaying() bool {
-	return g.Player != -1 &&
+	return g.HasStarted() && g.Player != -1 &&
 		(len(g.winners()) == 0 ||
 			!g.arePlayersReadyForNextTurn())
 }
@@ -199,6 +203,7 @@ func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
 // StartGame actually launch the game with the players
 // registred so far, which must not be empty.
 func (g *Game) StartGame() StateUpdate {
+	g.hasStarted = true
 	evs := g.startTurn()
 	evs.Events = append(Events{gameStart{}}, evs.Events...)
 	return evs
