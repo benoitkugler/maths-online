@@ -3,12 +3,12 @@ import 'package:eleve/trivialpoursuit/events.gen.dart';
 const updates = [
   StateUpdate(
       [
-        // PlayerJoin(0),
-        // GameStart(),
-        // PlayerTurn("", 0),
-        // DiceThrow(2),
-        // PossibleMoves("Katia", [1, 3, 7], 0),
-        // Move([0, 1, 2, 3, 4, 5], 5),
+        PlayerJoin(0),
+        GameStart(),
+        PlayerTurn("", 0),
+        DiceThrow(2),
+        PossibleMoves("Katia", [1, 3, 7], 0),
+        Move([0, 1, 2, 3, 4, 5], 5),
         // ShowQuestion("test", 60, Categorie.orange),
         // PlayerAnswerResult(true, false),
         // GameEnd({
