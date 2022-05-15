@@ -519,12 +519,8 @@ class _GameStarted extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 5, bottom: 10),
-                child: pie,
-              ),
-              // const Spacer(),
-              Expanded(child: SizedBox(height: 100, child: recapRow))
+              pie,
+              Expanded(child: SizedBox(height: 95, child: recapRow))
             ],
           ),
           Expanded(child: Center(

@@ -62,9 +62,11 @@ class SuccessRecapRow extends StatelessWidget {
     return ListView(
       shrinkWrap: true,
       scrollDirection: Axis.horizontal,
+      reverse: true,
       children: sortedPlayers(successes)
           .where((element) => element != ownPlayer)
           .map((e) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Transform.scale(
                       scale: 0.8, child: Pie(2, successes[e]!.success)),

@@ -20,7 +20,7 @@ class Pie extends StatelessWidget {
       onPressed: onPressed,
       elevation: 2.0,
       child: Pie(glowWidth, success),
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(5.0),
       shape: const CircleBorder(),
     );
   }
