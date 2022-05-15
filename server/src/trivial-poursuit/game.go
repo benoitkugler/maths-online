@@ -313,6 +313,7 @@ type GameSummary struct {
 	PlayerTurn *Player // nil before game start
 	Successes  map[Player]game.Success
 	ID         GameID
+	RoomSize   int // number of player expected
 }
 
 // Summary locks and returns the current game summary.
@@ -330,6 +331,7 @@ func (gc *GameController) Summary() GameSummary {
 	out := GameSummary{
 		ID:        gc.ID,
 		Successes: successes,
+		RoomSize:  gc.Options.PlayersNumber,
 	}
 	if id := state.Player; id != -1 {
 		out.PlayerTurn = &players[id].player

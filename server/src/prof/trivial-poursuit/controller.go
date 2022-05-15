@@ -95,7 +95,10 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
-	tc, err := TrivialConfig{QuestionTimeout: 60}.Insert(ct.db)
+	tc, err := TrivialConfig{
+		QuestionTimeout: 120,
+		ShowDecrassage:  true,
+	}.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -320,6 +323,8 @@ func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {
 
 // ConnectStudentSession handles the connection of one student to the activity
 func (ct *Controller) ConnectStudentSession(c echo.Context) error {
+	fmt.Println("ConnectStudentSession")
+
 	completeID := c.Param("session-id")
 
 	if len(completeID) < 4 {

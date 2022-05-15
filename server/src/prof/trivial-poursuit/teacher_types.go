@@ -18,10 +18,12 @@ type gameSummary struct {
 	GameID        GameID
 	CurrentPlayer string // empty when no one is playing
 	Players       []gamePlayers
+	RoomSize      int
 }
 
 func newGameSummary(s tv.GameSummary) (out gameSummary) {
 	out.GameID = s.ID
+	out.RoomSize = s.RoomSize
 	for p, su := range s.Successes {
 		out.Players = append(out.Players, gamePlayers{
 			Player:    p.Name,

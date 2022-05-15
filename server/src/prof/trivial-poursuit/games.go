@@ -111,7 +111,7 @@ func (gs *gameSession) connectStudent(c echo.Context, student studentMeta, key p
 	if student.id == "" { // anonymous connection
 		player.Name = student.pseudo
 		if player.Name == "" {
-			player.Name = gs.generateName() // finaly generate a random pseudo
+			player.Name = gs.generateName() // finally generate a random pseudo
 		}
 	} else { // fetch name from DB
 		var err error
@@ -134,11 +134,13 @@ func (gs *gameSession) connectStudent(c echo.Context, student studentMeta, key p
 		return err
 	}
 
+	fmt.Println("locing")
 	// then add the player
 	gs.lock.Lock()
 	game := gs.games[gameID]
 	gs.lock.Unlock()
 
+	fmt.Println("add client")
 	// connect to the websocket handler, which handle errors
 	game.AddClient(c.Response().Writer, c.Request(), player) // block on the client WS
 
@@ -152,10 +154,10 @@ func (gs *gameSession) connectTeacher(ws *websocket.Conn) *teacherClient {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	for k, ga := range gs.games {
+	for _, ga := range gs.games {
 		su := ga.Summary()
 		su.ID = gs.id + su.ID
-		client.currentSummaries[k] = su
+		client.currentSummaries[su.ID] = su
 	}
 	gs.teacherClients[client] = true
 
