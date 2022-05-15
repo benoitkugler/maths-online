@@ -503,27 +503,28 @@ class _GameStarted extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
       decoration: BoxDecoration(
         image: DecorationImage(
             image: const AssetImage("lib/images/grey-wood.png"),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-                Colors.grey.withOpacity(0.6), BlendMode.srcATop)),
+                const Color.fromARGB(255, 57, 115, 119).withOpacity(0.6),
+                BlendMode.srcATop)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 5, left: 40, bottom: 10),
+                padding: const EdgeInsets.only(top: 5, bottom: 10),
                 child: pie,
               ),
-              const Spacer(),
-              Padding(
-                  padding: const EdgeInsets.only(right: 30),
-                  child: dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
+              // const Spacer(),
+              Expanded(child: SizedBox(height: 100, child: recapRow))
             ],
           ),
           Expanded(child: Center(
@@ -534,28 +535,27 @@ class _GameStarted extends StatelessWidget {
               },
             ),
           )),
-          Padding(
-            padding: const EdgeInsets.only(top: 5, bottom: 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  child: FloatingActionButton(
-                    foregroundColor: Colors.lightBlue,
-                    backgroundColor: Colors.lightBlue.shade100,
-                    onPressed: () => _showRules(context),
-                    child: const Icon(
-                      IconData(0xe33d, fontFamily: 'MaterialIcons'),
-                      size: 40,
-                    ),
-                    tooltip: "Afficher la règle du jeu",
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                child: FloatingActionButton(
+                  foregroundColor: const Color.fromARGB(255, 60, 209, 255),
+                  backgroundColor: const Color.fromARGB(255, 110, 171, 182),
+                  onPressed: () => _showRules(context),
+                  child: const Icon(
+                    IconData(0xe33d, fontFamily: 'MaterialIcons'),
+                    size: 40,
                   ),
+                  tooltip: "Afficher la règle du jeu",
                 ),
-                recapRow,
-              ],
-            ),
+              ),
+              Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
+            ],
           ),
         ],
       ),

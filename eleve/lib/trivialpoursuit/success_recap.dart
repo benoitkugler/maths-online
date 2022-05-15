@@ -59,8 +59,9 @@ class SuccessRecapRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return ListView(
+      shrinkWrap: true,
+      scrollDirection: Axis.horizontal,
       children: sortedPlayers(successes)
           .where((element) => element != ownPlayer)
           .map((e) => Column(
@@ -69,7 +70,14 @@ class SuccessRecapRow extends StatelessWidget {
                       scale: 0.8, child: Pie(2, successes[e]!.success)),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 5),
-                    child: Text(successes[e]!.name),
+                    child: SizedBox(
+                      width: 80,
+                      child: Text(
+                        successes[e]!.name,
+                        style: const TextStyle(fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   )
                 ],
               ))

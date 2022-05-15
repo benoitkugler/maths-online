@@ -1,7 +1,7 @@
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/pin.dart';
-import 'package:eleve/trivialpoursuit/game.dart';
+import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:flutter/material.dart';
 
 /// Loggin is an introduction screen to access

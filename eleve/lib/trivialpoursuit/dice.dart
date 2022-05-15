@@ -89,31 +89,39 @@ class Dice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RawMaterialButton(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      elevation: 2,
-      onPressed: isDisabled ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        decoration: BoxDecoration(
-          color: isDisabled ? Colors.grey : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(color: shadow, blurRadius: 10),
-          ],
+    return SizedBox(
+      // wrap the actual button into a box large enough to contain the animated version
+      // so thaht the layout is not shaken
+      height: 110,
+      child: Center(
+        child: RawMaterialButton(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          elevation: 2,
+          onPressed: isDisabled ? null : onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            decoration: BoxDecoration(
+              color: isDisabled ? Colors.grey : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(color: shadow, blurRadius: 10),
+              ],
+            ),
+            width: faceSize,
+            height: faceSize,
+            child: StreamBuilder<Face>(
+                stream: animation,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return _DiceDots(faceSize: faceSize, face: snapshot.data!);
+                  }
+                  // this is actually never reached
+                  return _DiceDots(faceSize: faceSize, face: Face.one);
+                }),
+          ),
         ),
-        width: faceSize,
-        height: faceSize,
-        child: StreamBuilder<Face>(
-            stream: animation,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return _DiceDots(faceSize: faceSize, face: snapshot.data!);
-              }
-              // this is actually never reached
-              return _DiceDots(faceSize: faceSize, face: Face.one);
-            }),
       ),
     );
   }

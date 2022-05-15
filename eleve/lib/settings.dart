@@ -92,8 +92,8 @@ Future<File> _settingFile() async {
 }
 
 Future<UserSettings> loadUserSettings() async {
-  final file = await _settingFile();
   try {
+    final file = await _settingFile();
     final content = await file.readAsString();
     final dict = jsonDecode(content) as Map<String, dynamic>;
     return dict.map((key, value) => MapEntry(key, value as String));
@@ -104,8 +104,12 @@ Future<UserSettings> loadUserSettings() async {
 }
 
 Future<void> saveUserSettings(UserSettings settings) async {
-  final file = await _settingFile();
-  await file.writeAsString(jsonEncode(settings));
-  Logger.root.info("settings saved in ${file.path}");
+  try {
+    final file = await _settingFile();
+    await file.writeAsString(jsonEncode(settings));
+    Logger.root.info("settings saved in ${file.path}");
+  } catch (e) {
+    Logger.root.info("saving settings: $e");
+  }
   return;
 }

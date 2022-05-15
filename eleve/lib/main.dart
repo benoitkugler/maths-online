@@ -3,7 +3,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/settings.dart';
-import 'package:eleve/trivialpoursuit/game.dart';
+import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 

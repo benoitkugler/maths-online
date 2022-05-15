@@ -8,7 +8,7 @@ import "categories.dart";
 /// Pie displays the current sucesses of the player,
 /// using a pie chart.
 class Pie extends StatelessWidget {
-  static const size = 80.0;
+  static const size = 60.0;
 
   final double glowWidth;
   final Success success;
@@ -43,13 +43,16 @@ class Pie extends StatelessWidget {
           ]),
         ),
         ...Categorie.values.map((cat) => AnimatedRotation(
-              turns: success[cat.index] ? 2 : 0.5,
+              turns: success[cat.index] ? 3 : 0.5,
+              curve: Curves.easeOut,
               duration: const Duration(milliseconds: 3000),
               child: AnimatedScale(
                 duration: const Duration(milliseconds: 3000),
+                curve: Curves.easeOut,
                 scale: success[cat.index] ? 1 : 1.5,
                 child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 3500),
+                  duration: const Duration(milliseconds: 3000),
+                  curve: Curves.easeOut,
                   opacity: success[cat.index] ? 1 : 0,
                   child: _PieFraction(
                       cat.color, (cat.index + 0.5) * angularSection, size),
