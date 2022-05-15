@@ -343,13 +343,11 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 
 	ct.lock.Lock()
 	session, ok := ct.sessions[sessionID]
+	ct.lock.Unlock()
 	if !ok {
-
 		WarningLogger.Printf("invalid session ID %s", sessionID)
-
 		return fmt.Errorf("L'activité n'existe pas ou est déjà terminée.")
 	}
-	ct.lock.Unlock()
 
 	student.id = pass.EncryptedID(c.QueryParam("client-id"))
 	student.pseudo = c.QueryParam("client-pseudo")
