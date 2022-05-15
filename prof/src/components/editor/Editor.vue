@@ -60,7 +60,7 @@
         </v-btn>
       </v-col>
       <v-col class="pr-2">
-        <v-row
+        <v-row no-gutters
           ><v-col>
             <v-text-field
               class="my-2 input-small"

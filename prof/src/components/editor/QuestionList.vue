@@ -105,10 +105,6 @@
             </div>
 
             <div v-for="(questionGroup, index) in questions">
-              <!-- <v-divider
-                v-if="isStartGroup(index) && !isEndGroup(index - 1)"
-                class="my-1"
-              ></v-divider> -->
               <question-row
                 v-if="questionGroup.Size == 1"
                 :question="questionGroup.Questions![0]"

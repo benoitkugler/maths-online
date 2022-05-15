@@ -2,41 +2,45 @@
   <v-list-item
     dense
     rounded
-    :class="{
-      'py-0': true
-    }"
+    class="py-1 my-2"
     @click="emit('clicked', props.question)"
   >
-    <v-list-item-media class="mr-3">
-      <v-btn
-        size="x-small"
-        icon
-        @click.stop="emit('delete', props.question)"
-        title="Supprimer"
-      >
-        <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
-      </v-btn>
-      <v-btn
-        v-if="!props.question.IsInGroup"
-        class="mx-1"
-        size="x-small"
-        icon
-        @click.stop="emit('duplicate', props.question)"
-        title="Dupliquer en différenciant la difficulté"
-      >
-        <v-icon icon="mdi-content-copy" color="info" size="small"></v-icon>
-      </v-btn>
-    </v-list-item-media>
-    <i>
-      <small> ({{ props.question.Id }}) </small>
-    </i>
-    <div class="ml-2">
-      {{ props.question.Title ? props.question.Title : "..." }}
-    </div>
-    <v-spacer></v-spacer>
-    <v-list-item-media>
-      <TagChip :tag="tag" :key="tag" v-for="tag in question.Tags"></TagChip>
-    </v-list-item-media>
+    <v-row no-gutters>
+      <v-col cols="auto" align-self="center"
+        ><v-btn
+          size="x-small"
+          icon
+          @click.stop="emit('delete', props.question)"
+          title="Supprimer"
+        >
+          <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
+        </v-btn>
+        <v-btn
+          v-if="!props.question.IsInGroup"
+          class="mx-1"
+          size="x-small"
+          icon
+          @click.stop="emit('duplicate', props.question)"
+          title="Dupliquer en différenciant la difficulté"
+        >
+          <v-icon
+            icon="mdi-content-copy"
+            color="info"
+            size="small"
+          ></v-icon> </v-btn
+      ></v-col>
+      <v-col align-self="center">
+        <div class="ml-2">
+          <i>
+            <small> ({{ props.question.Id }}) </small>
+          </i>
+          {{ props.question.Title ? props.question.Title : "..." }}
+        </div>
+      </v-col>
+      <v-col style="text-align: right" align-self="center">
+        <TagChip :tag="tag" :key="tag" v-for="tag in question.Tags"></TagChip>
+      </v-col>
+    </v-row>
   </v-list-item>
 </template>
 
