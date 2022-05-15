@@ -134,13 +134,11 @@ func (gs *gameSession) connectStudent(c echo.Context, student studentMeta, key p
 		return err
 	}
 
-	fmt.Println("locing")
 	// then add the player
 	gs.lock.Lock()
 	game := gs.games[gameID]
 	gs.lock.Unlock()
 
-	fmt.Println("add client")
 	// connect to the websocket handler, which handle errors
 	game.AddClient(c.Response().Writer, c.Request(), player) // block on the client WS
 
