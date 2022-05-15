@@ -23,19 +23,28 @@
     </v-card>
   </v-dialog>
 
-  <v-btn variant="outlined" @click="startEdit" color="secondary">
-    <v-chip
-      v-for="tag in props.modelValue"
-      :key="tag"
-      size="small"
-      label
-      class="ma-1"
-      :color="tagColor(tag)"
-      style="cursor: pointer"
-      >{{ tag }}</v-chip
-    >
+  <v-sheet
+    variant="outlined"
+    @click="startEdit"
+    rounded
+    border="secondary"
+    style="border-width: 2px; cursor: pointer"
+  >
     <div v-if="props.modelValue.length == 0">Ajouter une étiquette...</div>
-  </v-btn>
+    <v-row no-gutters v-else justify="center">
+      <v-col v-for="tag in props.modelValue" cols="auto">
+        <v-chip
+          :key="tag"
+          size="small"
+          label
+          class="ma-1"
+          :color="tagColor(tag)"
+          style="cursor: pointer"
+          >{{ tag }}</v-chip
+        >
+      </v-col>
+    </v-row>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">

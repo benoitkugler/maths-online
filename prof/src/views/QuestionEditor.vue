@@ -17,7 +17,7 @@
           @edit="editQuestion"
         ></QuestionList>
       </v-col>
-      <v-col md="auto">
+      <v-col cols="auto">
         <keep-alive>
           <Preview :session_id="sessionID"></Preview>
         </keep-alive>

@@ -47,9 +47,9 @@
     </v-row>
   </v-snackbar>
 
-  <v-card class="mx-1 mt-3">
-    <v-row class="mb-1 px-2">
-      <v-col cols="auto" align-self="center" class="pr-0">
+  <v-card class="mt-3 px-2">
+    <v-row no-gutters class="mb-1">
+      <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
           icon
@@ -59,89 +59,98 @@
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
       </v-col>
-      <v-col cols="3" align-self="center">
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="compact"
-          label="Nom de la question"
-          v-model="question.title"
-          hide-details
-        ></v-text-field>
-      </v-col>
-      <v-col align-self="center">
-        <tag-list-field
-          label="Catégories"
-          v-model="tags"
-          :all-tags="props.allTags"
-          @update:model-value="saveTags"
-        ></tag-list-field>
+      <v-col class="pr-2">
+        <v-row
+          ><v-col>
+            <v-text-field
+              class="my-2 input-small"
+              variant="outlined"
+              density="compact"
+              label="Nom de la question"
+              v-model="question.title"
+              hide-details
+            ></v-text-field></v-col
+        ></v-row>
+        <v-row
+          ><v-col
+            ><tag-list-field
+              label="Catégories"
+              v-model="tags"
+              :all-tags="props.allTags"
+              @update:model-value="saveTags"
+            ></tag-list-field></v-col
+        ></v-row>
       </v-col>
       <v-col align-self="center" style="text-align: right" cols="auto">
-        <v-menu offset-y close-on-content-click>
-          <template v-slot:activator="{ isActive, props }">
+        <v-row no-gutters justify="center" class="mb-2">
+          <v-col>
             <v-btn
-              title="Ajouter un contenu"
-              v-on="{ isActive }"
-              v-bind="props"
-            >
-              <v-icon icon="mdi-plus" color="green"></v-icon>
-              Insérer
-            </v-btn>
-          </template>
-          <block-bar @add="addBlock"></block-bar>
-        </v-menu>
-
-        <v-divider vertical></v-divider>
-        <v-btn
-          class="mx-2"
-          icon
-          @click="save"
-          :disabled="!session_id"
-          title="Enregistrer et prévisualiser"
-          size="small"
-        >
-          <v-icon icon="mdi-content-save" size="small"></v-icon>
-        </v-btn>
-
-        <v-menu offset-y close-on-content-click>
-          <template v-slot:activator="{ isActive, props }">
-            <v-btn
+              class="mx-2"
               icon
-              title="Plus d'options"
-              v-on="{ isActive }"
-              v-bind="props"
-              size="small"
-            >
-              <v-icon icon="mdi-dots-vertical"></v-icon>
-            </v-btn>
-          </template>
-          <v-toolbar vertical density="compact" rounded>
-            <v-btn
-              size="small"
-              icon
-              class="mr-2"
-              @click="download"
+              @click="save"
               :disabled="!session_id"
-              title="Télécharger"
-            >
-              <v-icon icon="mdi-download" size="small"></v-icon>
-            </v-btn>
-            <v-btn
-              class="mx-1"
+              title="Enregistrer et prévisualiser"
               size="small"
-              icon
-              @click="duplicate"
-              title="Dupliquer la question"
             >
-              <v-icon
-                icon="mdi-content-copy"
-                color="info"
-                size="small"
-              ></v-icon>
+              <v-icon icon="mdi-content-save" size="small"></v-icon>
             </v-btn>
-          </v-toolbar>
-        </v-menu>
+          </v-col>
+          <v-col>
+            <v-menu offset-y close-on-content-click>
+              <template v-slot:activator="{ isActive, props }">
+                <v-btn
+                  icon
+                  title="Plus d'options"
+                  v-on="{ isActive }"
+                  v-bind="props"
+                  size="small"
+                >
+                  <v-icon icon="mdi-dots-vertical"></v-icon>
+                </v-btn>
+              </template>
+              <v-toolbar vertical density="compact" rounded>
+                <v-btn
+                  size="small"
+                  icon
+                  class="mr-2"
+                  @click="download"
+                  :disabled="!session_id"
+                  title="Télécharger"
+                >
+                  <v-icon icon="mdi-download" size="small"></v-icon>
+                </v-btn>
+                <v-btn
+                  class="mx-1"
+                  size="small"
+                  icon
+                  @click="duplicate"
+                  title="Dupliquer la question"
+                >
+                  <v-icon
+                    icon="mdi-content-copy"
+                    color="info"
+                    size="small"
+                  ></v-icon>
+                </v-btn>
+              </v-toolbar>
+            </v-menu> </v-col
+        ></v-row>
+        <v-row no-gutters
+          ><v-col>
+            <v-menu offset-y close-on-content-click>
+              <template v-slot:activator="{ isActive, props }">
+                <v-btn
+                  title="Ajouter un contenu"
+                  v-on="{ isActive }"
+                  v-bind="props"
+                >
+                  <v-icon icon="mdi-plus" color="green"></v-icon>
+                  Insérer
+                </v-btn>
+              </template>
+              <block-bar @add="addBlock"></block-bar>
+            </v-menu> </v-col
+        ></v-row>
       </v-col>
     </v-row>
 
