@@ -12,14 +12,21 @@
     </v-row>
 
     <v-card-text>
-      <v-alert color="info" class="mb-2" v-if="showSessionID">
+      <v-alert
+        color="info"
+        class="mb-2"
+        v-if="showSessionID"
+        style="text-align: center"
+      >
         Code de la session :
         <v-chip>
-          {{ props.runningSession.SessionID }}
+          <b>
+            {{ props.runningSession.SessionID }}
+          </b>
         </v-chip>
       </v-alert>
 
-      <v-row>
+      <v-row justify="center">
         <v-col cols="4" v-for="game in summaries">
           <GameMonitor :summary="game" :show-i-d="showGamesID"></GameMonitor>
         </v-col>

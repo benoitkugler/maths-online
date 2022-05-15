@@ -51,7 +51,7 @@
       </v-row>
       <v-list>
         <v-alert
-          class="mx-2 mt-1 py-2 px-3"
+          class="mt-1 py-2 px-3"
           variant="outlined"
           v-if="hint.Pattern?.length"
           :color="hint.Missing?.length ? 'info' : 'success'"

@@ -224,6 +224,9 @@ async function launchSession(options: GroupStrategy) {
 
   const index = _configs.findIndex(v => v.Config.Id == configID);
   _configs[index].Running = res;
+
+  // automatically jump to monitor screen
+  sessionToMonitor = _configs[index];
 }
 
 async function stopSession(config: TrivialConfig) {

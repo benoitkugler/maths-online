@@ -1,11 +1,22 @@
 <template>
   <v-card class="ma-2">
     <v-card-text>
-      <v-row v-if="props.showID" justify="center" class="mb-2">
+      <v-row justify="center" class="mb-2">
         <v-col cols="8">
-          Code de la partie :
-          <v-chip>
-            {{ props.summary.GameID }}
+          <div v-if="props.showID">
+            Code de la partie :
+            <v-chip>
+              <b>
+                {{ props.summary.GameID }}
+              </b>
+            </v-chip>
+          </div>
+        </v-col>
+        <v-col cols="4" style="text-align: right">
+          <v-chip color="info">
+            {{ props.summary.RoomSize }} joueur{{
+              props.summary.RoomSize > 1 ? "s" : ""
+            }}
           </v-chip>
         </v-col>
       </v-row>

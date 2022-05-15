@@ -7,7 +7,7 @@ import type {
   StartSessionOut,
   TrivialConfigExt
 } from "./api_gen";
-import { AbstractAPI } from "./api_gen";
+import { AbstractAPI, GroupStrategyKind } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -63,7 +63,11 @@ class Controller extends AbstractAPI {
   ): void {
     this.inRequest = false;
     if (this.showMessage) {
-      this.showMessage(`Session de Trivial lancée : ${options.SessionID}`);
+      if (options.GroupStrategyKind == GroupStrategyKind.RandomGroupStrategy) {
+        this.showMessage(`Session de Trivial lancée : ${options.SessionID}`);
+      } else {
+        this.showMessage(`Session de Trivial lancée.`);
+      }
     }
   }
 

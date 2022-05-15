@@ -11,6 +11,7 @@ export interface gameSummary {
   GameID: string;
   CurrentPlayer: string;
   Players: gamePlayers[] | null;
+  RoomSize: number;
 }
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.teacherSocketData
 export interface teacherSocketData {
