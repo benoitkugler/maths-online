@@ -71,7 +71,7 @@ const _quotes = [
       "",
       ""),
   QuoteData(
-      "Ne laisse pas le monde changer ton sourir mais laisse ton sourire changer le monde !",
+      "Ne laisse pas le monde changer ton sourire mais laisse ton sourire changer le monde !",
       "",
       ""),
   QuoteData(
