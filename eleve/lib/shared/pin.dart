@@ -10,6 +10,7 @@ class Pin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     return Card(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -30,7 +31,10 @@ class Pin extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   onSubmitted: onValid,
-                  keyboardType: TextInputType.number,
+                  // ios do not display a submit button in number mode
+                  keyboardType: isIOS
+                      ? const TextInputType.numberWithOptions(signed: true)
+                      : TextInputType.number,
                   autofocus: true,
                   style: const TextStyle(fontSize: 25, letterSpacing: 3),
                   textAlign: TextAlign.center,

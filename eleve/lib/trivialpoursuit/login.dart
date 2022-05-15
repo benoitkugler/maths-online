@@ -52,7 +52,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
       settings: const RouteSettings(name: "/board"),
       builder: (_) => Scaffold(
           appBar: AppBar(
-              automaticallyImplyLeading: false,
+              automaticallyImplyLeading: true,
               title: const Text("Trivial Poursuit")),
           body: TrivialPoursuitController(widget.buildMode, student)),
     ));
