@@ -38,15 +38,6 @@ class _QuestionResultState extends State<QuestionResult> {
       .toList();
 
   void _onContinue() {
-    if (ownResult.success && playersIncorrect.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        duration: const Duration(seconds: 5),
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        content: Text(
-            "Peut-être peux-tu expliquer à ${playersIncorrect.join(", ")} cette question ?"),
-      ));
-    }
-
     WantNextTurnNotification(WantNextTurn(markQuestion)).dispatch(context);
   }
 
@@ -68,8 +59,11 @@ class _QuestionResultState extends State<QuestionResult> {
 
     final correct =
         playersCorrect.isEmpty ? "" : " à ${playersCorrect.join(", ")} ou";
-    final hint = ownResult.success
+    final hintSuccess = playersIncorrect.isEmpty
         ? ""
+        : "Peut-être peux-tu expliquer à ${playersIncorrect.join(", ")} cette question ?";
+    final hint = ownResult.success
+        ? hintSuccess
         : "N'hésite pas à demander de l'aide$correct au prof. avant de continuer !";
 
     return Scaffold(
