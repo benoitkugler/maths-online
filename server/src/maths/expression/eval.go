@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 )
 
 type ValueResolver interface {
@@ -112,7 +113,11 @@ func AreFloatEqual(v1, v2 float64) bool {
 // It should be used to avoid float imprecision when displaying numbers.
 // It used internally when to display expressions.
 func RoundFloat(v float64) float64 {
-	return math.Round(v/floatPrec) * floatPrec
+	// round to avoid errors in previous computation
+	// and use FormatFloat to avoid imprecision if this computation
+	s := strconv.FormatFloat(math.Round(v/floatPrec)*floatPrec, 'f', 8, 64)
+	v, _ = strconv.ParseFloat(s, 64)
+	return v
 }
 
 func isFloatExceedingPrecision(v float64) bool {

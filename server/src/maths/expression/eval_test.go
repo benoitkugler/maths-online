@@ -23,6 +23,7 @@ func TestRoundFloat(t *testing.T) {
 		{1, 1},
 		{1.123, 1.123},
 		{1 - 7./100, 0.93},
+		{1908 * (1 - 68./100), 610.56},
 	}
 	for _, tt := range tests {
 		if got := RoundFloat(tt.args); got != tt.want {
@@ -36,6 +37,9 @@ func TestPrecision(t *testing.T) {
 		t.Fatal("precision error")
 	}
 	if !AreFloatEqual(MustEvaluate("1 - 7/100", nil), 0.93) {
+		t.Fatal("precision error")
+	}
+	if !AreFloatEqual(MustEvaluate("1908 * (1 - 68/100)", nil), 610.56) {
 		t.Fatal("precision error")
 	}
 
