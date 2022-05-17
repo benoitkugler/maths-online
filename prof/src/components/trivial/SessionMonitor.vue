@@ -2,7 +2,7 @@
   <v-card>
     <v-row>
       <v-col>
-        <v-card-title>Suivre la session de TrivialPoursuit</v-card-title>
+        <v-card-title>Suivre la session de Triv'Maths</v-card-title>
       </v-col>
       <v-col style="text-align: right">
         <v-btn icon flat class="mx-2" @click="emit('close')">

@@ -2,7 +2,7 @@
   <v-card max-height="80vh" width="800" class="overflow-y-auto py-2">
     <v-row>
       <v-col>
-        <v-card-title>Modifier la session de TrivialPoursuit</v-card-title>
+        <v-card-title>Modifier la session de Triv'Maths</v-card-title>
       </v-col>
       <v-col style="text-align: right">
         <v-btn icon flat class="mx-2" @click="emit('close')">

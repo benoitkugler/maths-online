@@ -11,7 +11,7 @@
             <v-row
               ><v-col>
                 <v-btn link :to="{ name: 'trivial' }" color="primary">
-                  Trivial poursuit
+                  Triv'Maths
                 </v-btn>
               </v-col>
               <v-col>

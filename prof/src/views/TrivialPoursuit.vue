@@ -35,9 +35,9 @@
   <v-card class="my-3 mx-auto" width="60%">
     <v-row>
       <v-col>
-        <v-card-title>Trivial Poursuit</v-card-title>
+        <v-card-title>Triv'Maths</v-card-title>
         <v-card-subtitle
-          >Configurer et lancer une partie de Trivial Poursuit</v-card-subtitle
+          >Configurer et lancer une partie de Triv'Maths</v-card-subtitle
         >
       </v-col>
 

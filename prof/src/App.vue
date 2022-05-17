@@ -10,7 +10,7 @@
         <v-btn link :to="{ name: 'home' }">Accueil</v-btn>
       </v-list-item>
       <v-list-item>
-        <v-btn link :to="{ name: 'trivial' }">Trivial Poursuit</v-btn>
+        <v-btn link :to="{ name: 'trivial' }">Triv'Maths</v-btn>
       </v-list-item>
       <v-list-item>
         <v-btn link :to="{ name: 'editor' }">Editeur de question</v-btn>
