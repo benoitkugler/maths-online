@@ -65,6 +65,13 @@ func getEncrypter(dev bool) (out pass.Encrypter, err error) {
 	return out, err
 }
 
+func sanityChecks(db *sql.DB) {
+	if err := exercice.ValidateAllQuestions(db); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Question table validated.")
+}
+
 func main() {
 	devPtr := flag.Bool("dev", false, "run in dev mode (localhost)")
 	dryPtr := flag.Bool("dry", false, "do not listen, but quit early")
@@ -88,13 +95,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
-	go func() {
-		if err = exercice.ValidateAllQuestions(db); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Question table validated.")
-	}()
 
 	trivial := trivialpoursuit.NewController(db, key, demoPinTrivial)
 
@@ -124,10 +124,13 @@ func main() {
 	setupRoutes(e, trivial, edit)
 
 	if *dryPtr {
+		sanityChecks(db)
 		fmt.Println("Setup done, leaving early.")
 		return
+	} else {
+		go sanityChecks(db)
 	}
-	fmt.Println("Setup done")
+	fmt.Println("Setup done (pending sanityChecks)")
 
 	err = e.Start(host) // start and block
 	e.Logger.Fatal(err) // report error and quit
