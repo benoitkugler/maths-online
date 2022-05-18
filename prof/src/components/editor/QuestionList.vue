@@ -70,7 +70,7 @@
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-select
+          <v-autocomplete
             variant="outlined"
             density="comfortable"
             multiple
@@ -85,7 +85,7 @@
             @blur="updateQueryTags"
             hint="Restreint la recherche à l'intersection des catégories sélectionnées."
             persistent-hint
-          ></v-select>
+          ></v-autocomplete>
         </v-col>
       </v-row>
       <v-row no-gutters>
