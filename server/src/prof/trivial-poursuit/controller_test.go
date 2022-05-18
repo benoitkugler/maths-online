@@ -53,7 +53,7 @@ func TestMissingQuestions(t *testing.T) {
 		return
 	}
 
-	ct := NewController(db, pass.Encrypter{})
+	ct := NewController(db, pass.Encrypter{}, "")
 
 	criteria := CategoriesQuestions{
 		{
@@ -164,7 +164,7 @@ func TestGetTrivials(t *testing.T) {
 		return
 	}
 
-	ct := NewController(db, pass.Encrypter{})
+	ct := NewController(db, pass.Encrypter{}, "")
 
 	for range [10]int{} {
 		t.Run("", func(t *testing.T) {
@@ -173,5 +173,28 @@ func TestGetTrivials(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func TestController_isDemoSessionID(t *testing.T) {
+	const demoPin = "1234"
+	tests := []struct {
+		args          string
+		wantRoom      string
+		wantNbPlayers int
+	}{
+		{"1234.abc.4", "abc", 4},
+		{"1234.12.1", "12", 1},
+		{"", "", 0},
+		{"789456qsd", "", 0},
+		{"1234.a", "", 0},
+	}
+	for _, tt := range tests {
+		ct := &Controller{
+			demoPin: demoPin,
+		}
+		if gotRoom, gotNbPlayers := ct.isDemoSessionID(tt.args); gotRoom != tt.wantRoom || gotNbPlayers != tt.wantNbPlayers {
+			t.Errorf("Controller.isDemoSessionID() = %v, want %v", gotNbPlayers, tt.wantNbPlayers)
+		}
 	}
 }

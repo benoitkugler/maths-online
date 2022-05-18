@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -48,10 +50,17 @@ type Controller struct {
 	key      pass.Encrypter
 	lock     sync.Mutex
 	sessions map[SessionID]*gameSession
+	// demoPin is used to create testing games on the fly
+	demoPin string
 }
 
-func NewController(db *sql.DB, key pass.Encrypter) *Controller {
-	return &Controller{db: db, key: key, sessions: make(map[string]*gameSession)}
+func NewController(db *sql.DB, key pass.Encrypter, demoPin string) *Controller {
+	return &Controller{
+		db:       db,
+		key:      key,
+		sessions: make(map[string]*gameSession),
+		demoPin:  demoPin,
+	}
 }
 
 // lookupSession locks and revese the sessionID -> session map
@@ -221,45 +230,25 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, error) {
-	if dict := ct.sessionMap(); dict[params.IdConfig].SessionID != "" {
-		return LaunchSessionOut{}, errors.New("session already running")
-	}
-
-	config, err := SelectTrivialConfig(ct.db, params.IdConfig)
-	if err != nil {
-		return LaunchSessionOut{}, utils.SQLError(err)
-	}
-
+func (ct *Controller) createGameSession(sessionID string, config TrivialConfig, group GroupStrategy) (*gameSession, error) {
 	// select the questions
 	questionPool, err := config.Questions.selectQuestions(ct.db)
 	if err != nil {
-		return LaunchSessionOut{}, err
+		return nil, err
 	}
 
-	var out LaunchSessionOut
-	out.GroupStrategyKind = params.GroupStrategy.kind()
-
-	ct.lock.Lock()
-	out.SessionID = utils.RandomID(true, 4, func(s string) bool {
-		_, taken := ct.sessions[s]
-		return taken
-	})
-	ct.lock.Unlock()
-
-	session := newGameSession(out.SessionID, ct.db, config, params.GroupStrategy, questionPool)
+	session := newGameSession(sessionID, ct.db, config, group, questionPool)
 
 	// the rooms may be either created initially, or during client connection
 	// (see connectStudent)
 	session.group.initGames(session) // initial setup of rooms
-	out.GroupsID = session.groupIDs()
 
 	ct.lock.Lock()
 	// register the controller...
-	ct.sessions[out.SessionID] = session
+	ct.sessions[sessionID] = session
 	ct.lock.Unlock()
 
-	ProgressLogger.Printf("Launching session %s", out.SessionID)
+	ProgressLogger.Printf("Launching session %s", sessionID)
 	// ...and start it
 	go func() {
 		ctx, cancelFunc := context.WithTimeout(context.Background(), sessionTimeout)
@@ -270,11 +259,41 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, e
 		// remove the game controller when the game is over
 		ct.lock.Lock()
 		defer ct.lock.Unlock()
-		delete(ct.sessions, out.SessionID)
+		delete(ct.sessions, sessionID)
 
-		ProgressLogger.Printf("Removed session %s", out.SessionID)
+		ProgressLogger.Printf("Removed session %s", sessionID)
 	}()
 
+	return session, nil
+}
+
+func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, error) {
+	if dict := ct.sessionMap(); dict[params.IdConfig].SessionID != "" {
+		return LaunchSessionOut{}, errors.New("session already running")
+	}
+
+	config, err := SelectTrivialConfig(ct.db, params.IdConfig)
+	if err != nil {
+		return LaunchSessionOut{}, utils.SQLError(err)
+	}
+
+	ct.lock.Lock()
+	sessionID := utils.RandomID(true, 4, func(s string) bool {
+		_, taken := ct.sessions[s]
+		return taken
+	})
+	ct.lock.Unlock()
+
+	session, err := ct.createGameSession(sessionID, config, params.GroupStrategy)
+	if err != nil {
+		return LaunchSessionOut{}, err
+	}
+
+	out := LaunchSessionOut{
+		GroupStrategyKind: params.GroupStrategy.kind(),
+		SessionID:         sessionID,
+		GroupsID:          session.groupIDs(),
+	}
 	return out, nil
 }
 
@@ -328,11 +347,66 @@ func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {
 	return nil
 }
 
+// expects <demoPin>.<number>
+// or return 0
+func (ct *Controller) isDemoSessionID(completeID string) (room string, nbPlayers int) {
+	cuts := strings.Split(completeID, ".")
+	if len(cuts) != 3 {
+		return "", 0
+	}
+	if ct.demoPin != cuts[0] {
+		return "", 0
+	}
+	room = cuts[1]
+	nbPlayers, _ = strconv.Atoi(cuts[2])
+	return room, nbPlayers
+}
+
+func (ct *Controller) connectDemo(c echo.Context, room string, nbPlayers int) error {
+	sessionID := fmt.Sprintf("%s.%s.%d", ct.demoPin, room, nbPlayers)
+
+	// check if the session is running and waiting for players
+	ct.lock.Lock()
+	session, ok := ct.sessions[sessionID]
+	ct.lock.Unlock()
+
+	if !ok {
+		// create the session
+		var err error
+		session, err = ct.createGameSession(sessionID, TrivialConfig{
+			Id:              -1,
+			Questions:       demoQuestions,
+			QuestionTimeout: 120,
+			ShowDecrassage:  true,
+		}, RandomGroupStrategy{
+			MaxPlayersPerGroup: nbPlayers,
+			TotalPlayersNumber: nbPlayers,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	student := studentMeta{
+		pseudo: c.QueryParam("client-pseudo"),
+	}
+
+	ProgressLogger.Printf("Connecting student %v at (demo) %s", student, sessionID)
+
+	err := session.connectStudent(c, student, ct.key)
+
+	return err
+}
+
 // ConnectStudentSession handles the connection of one student to the activity
 func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 	fmt.Println("ConnectStudentSession")
 
 	completeID := c.Param("session-id")
+
+	if room, nbPlayers := ct.isDemoSessionID(completeID); nbPlayers != 0 {
+		return ct.connectDemo(c, room, nbPlayers)
+	}
 
 	if len(completeID) < 4 {
 		return fmt.Errorf("invalid ID %s", completeID)

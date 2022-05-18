@@ -77,6 +77,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	demoPinTrivial := os.Getenv("DEMO_PIN_TRIVIAL")
+	if demoPinTrivial == "" {
+		log.Fatal("Missing DEMO_PIN_TRIVIAL env. variable")
+	}
+	fmt.Println("Demo pin for Trivial:", demoPinTrivial)
+
 	db, err := connectDB(*devPtr)
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +96,7 @@ func main() {
 		fmt.Println("Question table validated.")
 	}()
 
-	trivial := trivialpoursuit.NewController(db, key)
+	trivial := trivialpoursuit.NewController(db, key, demoPinTrivial)
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)

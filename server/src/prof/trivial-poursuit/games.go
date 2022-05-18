@@ -87,12 +87,12 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 			gs.exploitReview(review)
 		}
 
-		gs.notifyMonitorEndGame <- gameID
-
 		gs.lock.Lock()
 		defer gs.lock.Unlock()
 		// remove the game controller when the game is over
 		delete(gs.games, gameID)
+
+		gs.notifyMonitorEndGame <- gameID
 	}()
 
 	return gameID
@@ -168,6 +168,10 @@ func (gs *gameSession) connectTeacher(ws *websocket.Conn) *teacherClient {
 	return client
 }
 
+func (gs *gameSession) isDemo() bool {
+	return gs.config.Id == -1
+}
+
 func (gs *gameSession) startLoop(ctx context.Context) {
 	for {
 		select {
@@ -185,6 +189,12 @@ func (gs *gameSession) startLoop(ctx context.Context) {
 			// notify the monitor
 			for client := range gs.teacherClients {
 				client.removeGame(gs.id + gameID)
+			}
+
+			// for demonstration session, we simply terminate the session
+			// if there is no more games
+			if gs.isDemo() && len(gs.games) == 0 {
+				return
 			}
 		case summary := <-gs.monitor:
 			summary.ID = gs.id + summary.ID

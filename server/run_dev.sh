@@ -3,4 +3,4 @@ cd src &&
 go build *.go && 
 mv main .. && 
 cd .. && 
-./main -dev
+DEMO_PIN_TRIVIAL=1234 ./main -dev

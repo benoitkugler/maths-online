@@ -9,6 +9,31 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 )
 
+var demoQuestions = CategoriesQuestions{
+	{
+		{"Pourcentages", "Valeur initiale"},
+		{"Pourcentages", "Valeur finale"},
+	},
+	{
+		{"Pourcentages", "Taux global"},
+		{"Pourcentages", "Taux réciproque"},
+	},
+	{
+		{"Pourcentages", "Proportion"},
+		{"Pourcentages", "Proportion de proportion"},
+		{"Pourcentages", "Pourcentage d'un nombre"},
+	},
+	{
+		{"Pourcentages", "Evolutions identiques"},
+		{"Pourcentages", "Evolution unique"},
+		{"Pourcentages", "Evolutions successives"},
+	},
+	{
+		{"Pourcentages", "Coefficient multiplicateur"},
+		{"Pourcentages", "Taux d'évolution"},
+	},
+}
+
 // remove empty intersection and normalizes tags
 func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	for _, q := range qc {
