@@ -69,18 +69,22 @@
     </v-row>
     <v-row no-gutters>
       <v-col>
-        <v-list v-if="props.parameters?.length" @dragend="showDropZone = false">
+        <v-list v-if="props.parameters?.length" @dragend="onDragend">
           <drop-zone
             v-if="showDropZone"
             @drop="origin => emit('swap', origin, 0)"
           ></drop-zone>
           <div v-for="(param, index) in props.parameters">
-            <v-list-item
-              class="pr-0"
-              @dragstart="e => onItemDragStart(e, index)"
-              draggable="true"
-            >
+            <v-list-item class="pr-0 pl-1">
               <v-row no-gutters>
+                <v-col cols="1">
+                  <div
+                    class="bg-green-lighten-3 rounded fill-height mr-1"
+                    style="cursor: grab"
+                    @dragstart="e => onItemDragStart(e, index)"
+                    draggable="true"
+                  ></div>
+                </v-col>
                 <v-col cols="3">
                   <variable-field
                     v-model="param.variable"
@@ -89,7 +93,7 @@
                   >
                   </variable-field>
                 </v-col>
-                <v-col cols="7">
+                <v-col cols="6">
                   <v-text-field
                     class="ml-2 small-input"
                     variant="underlined"
@@ -158,7 +162,11 @@ function onExpressionChange(s: string, index: number) {
 let showDropZone = $ref(false);
 function onItemDragStart(payload: DragEvent, index: number) {
   onDragListItemStart(payload, index);
-  showDropZone = true;
+  setTimeout(() => (showDropZone = true), 100); // workaround bug
+}
+
+function onDragend() {
+  showDropZone = false;
 }
 
 const helpContent = [

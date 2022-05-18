@@ -427,7 +427,7 @@ function deleteIntrinsic(index: number) {
 let showDropZone = $ref(false);
 
 function onDragStart() {
-  showDropZone = true;
+  setTimeout(() => (showDropZone = true), 100); // workaround bug
 }
 
 function onDragEnd(ev: DragEvent) {

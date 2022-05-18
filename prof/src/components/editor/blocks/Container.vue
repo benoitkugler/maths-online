@@ -5,6 +5,7 @@
       :class="'px-2 rounded ' + colorClass"
       @dragstart="onDragStart"
       draggable="true"
+      style="cursor: grab"
     >
       <v-col align-self="center" cols="8">
         <v-card-subtitle>

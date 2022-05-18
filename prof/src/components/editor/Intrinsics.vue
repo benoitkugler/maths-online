@@ -94,13 +94,17 @@
             @drop="origin => emit('swap', origin, 0)"
           ></drop-zone>
           <div v-for="(param, index) in props.parameters">
-            <v-list-item
-              class="pr-0"
-              @dragstart="e => onItemDragStart(e, index)"
-              draggable="true"
-            >
-              <v-row>
-                <v-col cols="9">
+            <v-list-item class="pr-0 pl-1">
+              <v-row no-gutters>
+                <v-col cols="1">
+                  <div
+                    class="bg-green-lighten-3 rounded fill-height mr-1"
+                    style="cursor: grab"
+                    @dragstart="e => onItemDragStart(e, index)"
+                    draggable="true"
+                  ></div>
+                </v-col>
+                <v-col cols="9" class="pl-1">
                   <v-text-field
                     class="small-input"
                     hide-details
@@ -111,7 +115,7 @@
                     @blur="emit('done')"
                   ></v-text-field>
                 </v-col>
-                <v-col cols="3" align-self="center">
+                <v-col cols="2" align-self="center">
                   <v-btn
                     icon
                     size="small"
@@ -162,7 +166,7 @@ const showHelp = ref(false);
 let showDropZone = $ref(false);
 function onItemDragStart(payload: DragEvent, index: number) {
   onDragListItemStart(payload, index);
-  showDropZone = true;
+  setTimeout(() => (showDropZone = true), 100); // workaround bug
 }
 
 // to keep sync with the server
