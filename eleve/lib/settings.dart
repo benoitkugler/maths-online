@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
 typedef UserSettings = Map<String, String>;
@@ -19,11 +20,13 @@ const studentIDKey = "client-id";
 
 class _SettingsState extends State<Settings> {
   UserSettings settings = {};
+  String version = "";
   var pseudoController = TextEditingController();
 
   @override
   void initState() {
     _loadUserSettings();
+    _loadVersion();
     super.initState();
   }
 
@@ -31,6 +34,13 @@ class _SettingsState extends State<Settings> {
     settings = await loadUserSettings();
     setState(() {
       pseudoController.text = settings[studentPseudoKey] ?? "";
+    });
+  }
+
+  void _loadVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      version = packageInfo.version;
     });
   }
 
@@ -53,32 +63,47 @@ class _SettingsState extends State<Settings> {
       body: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    "Nom de joueur :",
-                    style: TextStyle(fontSize: 16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          "Nom de joueur :",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                      SizedBox(
+                          width: 200,
+                          child: TextField(
+                            textAlign: TextAlign.center,
+                            controller: pseudoController,
+                          ))
+                    ],
                   ),
-                ),
-                SizedBox(
-                    width: 200,
-                    child: TextField(
-                      textAlign: TextAlign.center,
-                      controller: pseudoController,
-                    ))
-              ],
+                  const SizedBox(height: 30),
+                  Center(
+                      child: ElevatedButton(
+                    child: const Text("Enregistrer"),
+                    onPressed: _saveUserSettings,
+                  )),
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
-            Center(
-                child: ElevatedButton(
-              child: const Text("Enregistrer"),
-              onPressed: _saveUserSettings,
-            ))
+            if (version.isNotEmpty)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Text(
+                  "Version : $version",
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
+              )
           ],
         ),
       ),
