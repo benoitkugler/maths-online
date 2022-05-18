@@ -358,6 +358,9 @@ func (ct *Controller) isDemoSessionID(completeID string) (room string, nbPlayers
 		return "", 0
 	}
 	room = cuts[1]
+	if len(room) < 2 {
+		return "", 0
+	}
 	nbPlayers, _ = strconv.Atoi(cuts[2])
 	return room, nbPlayers
 }
