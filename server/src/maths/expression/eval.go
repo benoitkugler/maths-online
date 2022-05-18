@@ -111,10 +111,10 @@ func AreFloatEqual(v1, v2 float64) bool {
 
 // RoundFloat returns `v` rounded to the precision used by `AreFloatEqual`.
 // It should be used to avoid float imprecision when displaying numbers.
-// It used internally when to display expressions.
+// It used internally when displaying expressions.
 func RoundFloat(v float64) float64 {
 	// round to avoid errors in previous computation
-	// and use FormatFloat to avoid imprecision if this computation
+	// and use FormatFloat to avoid imprecision in this computation
 	s := strconv.FormatFloat(math.Round(v/floatPrec)*floatPrec, 'f', 8, 64)
 	v, _ = strconv.ParseFloat(s, 64)
 	return v
