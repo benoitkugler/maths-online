@@ -21,3 +21,26 @@ func TestEncryption(t *testing.T) {
 		}
 	}
 }
+
+func TestJSON(t *testing.T) {
+	type T struct {
+		A int
+		B string
+	}
+	v := T{
+		A: 456, B: "sld",
+	}
+	var k Encrypter
+	s, err := k.EncryptJSON(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var v2 T
+	err = k.DecryptJSON(s, &v2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v != v2 {
+		t.Fatal()
+	}
+}
