@@ -29,18 +29,17 @@ class Pin extends StatelessWidget {
               child: SizedBox(
                 width: 200,
                 child: TextField(
-                  controller: controller,
-                  onSubmitted: onValid,
-                  // ios do not display a submit button in number mode
-                  keyboardType: isIOS
-                      ? const TextInputType.numberWithOptions(signed: true)
-                      : TextInputType.number,
-                  autofocus: true,
-                  style: const TextStyle(fontSize: 25, letterSpacing: 3),
-                  textAlign: TextAlign.center,
-                  decoration:
-                      const InputDecoration(border: OutlineInputBorder()),
-                ),
+                    controller: controller,
+                    onSubmitted: onValid,
+                    // ios do not display a submit button in number mode
+                    keyboardType: isIOS
+                        ? const TextInputType.numberWithOptions(signed: true)
+                        : TextInputType.number,
+                    autofocus: true,
+                    style: const TextStyle(fontSize: 25, letterSpacing: 3),
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(), hintText: "Code")),
               )),
         ],
       ),

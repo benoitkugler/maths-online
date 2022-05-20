@@ -84,6 +84,8 @@ class _SettingsState extends State<Settings> {
                           child: TextField(
                             textAlign: TextAlign.center,
                             controller: pseudoController,
+                            decoration:
+                                const InputDecoration(hintText: "Pseudo"),
                           ))
                     ],
                   ),
