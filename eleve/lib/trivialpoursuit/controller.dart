@@ -16,20 +16,25 @@ import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-class StudentMeta {
+class GameAcces {
   final String pseudo;
   final String id;
-  final String gameCode;
-  StudentMeta(this.id, this.pseudo, this.gameCode);
+  final String gameMeta;
+  const GameAcces(this.id, this.pseudo, this.gameMeta);
 }
+
+/// [GameTerminatedNotification] is emitted when a game is definitively
+/// closed by the server.
+class GameTerminatedNotification extends Notification {}
 
 class TrivialPoursuitController extends StatefulWidget {
   final BuildMode buildMode;
-  final StudentMeta student;
+  final GameAcces student;
 
-  String get apiURL =>
-      buildMode.websocketURL('/trivial/game/${student.gameCode}',
-          query: {studentPseudoKey: student.pseudo, studentIDKey: student.id});
+  static const gameMetaKey = "game-meta";
+
+  String get apiURL => buildMode.websocketURL('/trivial/game/connect',
+      query: {studentPseudoKey: student.pseudo, gameMetaKey: student.gameMeta});
 
   const TrivialPoursuitController(this.buildMode, this.student, {Key? key})
       : super(key: key);
@@ -43,14 +48,14 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   late WebSocketChannel channel;
   late Timer _keepAliveTimmer;
 
-  int playerID = 0;
+  int playerID = -1;
   bool hasGameStarted = false;
 
   Map<int, String> lobby = {};
 
   GameState state = const GameState({
     0: PlayerStatus(
-        "", QuestionReview([], []), [false, false, false, false, false])
+        "", QuestionReview([], []), [false, false, false, false, false], false)
   }, 0, 0);
   Set<int> highligthedTiles = {};
 
@@ -71,7 +76,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     } else {
       /// API connection
       channel = WebSocketChannel.connect(Uri.parse(widget.apiURL));
-      channel.stream.listen(listen, onError: showError);
+      channel.stream.listen(listen, onError: _onNetworkError);
 
       /// websocket is close in case of inactivity
       /// prevent it by sending pings
@@ -101,13 +106,15 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     super.dispose();
   }
 
-  void showError(dynamic error) {
+  void _onNetworkError(dynamic error) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.error,
       content: Text("Une erreur est survenue : $error"),
     ));
     popRouteToHome();
+    // clean the cache on error
+    GameTerminatedNotification().dispatch(context);
   }
 
   void listen(dynamic event) {
@@ -115,7 +122,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       final update = stateUpdateFromJson(jsonDecode(event as String));
       processEvents(update);
     } catch (e) {
-      showError(e);
+      _onNetworkError(e);
     }
   }
 
@@ -289,7 +296,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       return false;
     });
 
-    Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/answer"),
       builder: (context) => NotificationListener<WantNextTurnNotification>(
         onNotification: (notification) {
@@ -302,11 +309,28 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     ));
   }
 
+  void _onPlayerReconnected(PlayerReconnected event) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 2),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        content: Text("${event.playerName} s'est reconnecté(e) !")));
+
+    // our own playerID is -1 only if we are reconnecting
+    if (playerID == -1) {
+      setState(() {
+        playerID = event.playerID;
+      });
+      _onGameStart();
+    }
+  }
+
   void _onGameEnd(GameEnd event) {
     setState(() {
       hasGameStarted = false;
       gameEnd = event;
     });
+
+    GameTerminatedNotification().dispatch(context);
   }
 
   void popRouteToHome() {
@@ -326,6 +350,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
         content: const Text("La partie a été interrompue par son créateur.")));
 
     popRouteToHome();
+
+    GameTerminatedNotification().dispatch(context);
   }
 
   void _showSuccessRecap() {
@@ -359,6 +385,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       _onGameEnd(event);
     } else if (event is GameTerminated) {
       _onGameTerminated();
+    } else if (event is PlayerReconnected) {
+      _onPlayerReconnected(event);
     } else {
       // exhaustive switch
       throw Exception("unexpected event type ${event.runtimeType}");
@@ -366,14 +394,24 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   Future<void> processEvents(StateUpdate update) async {
+    if (update.events.any((element) => element is PlayerReconnected)) {
+      // update the state before triggering game start,
+      // since it is needed when reonnecting
+      state = update.state;
+    }
+
+    if (widget.buildMode != BuildMode.production) {
+      print("Processing ${update.events.map((e) => e.runtimeType)}...");
+    }
+
     for (var event in update.events) {
       await _processEvent(event);
     }
 
-    if (update.events.any((element) => element is PlayerAnswerResult)) {
-      // do no yet update the state
-      return;
+    if (widget.buildMode != BuildMode.production) {
+      print("Done.");
     }
+
     setState(() {
       state = update.state;
     });

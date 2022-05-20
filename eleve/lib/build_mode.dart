@@ -10,6 +10,10 @@ enum BuildMode {
   debug,
 }
 
+String _withQuery(String baseUrl, Map<String, dynamic> query) {
+  return Uri.parse(baseUrl).replace(queryParameters: query).toString();
+}
+
 extension APISetting on BuildMode {
   static BuildMode fromString(String bm) {
     switch (bm) {
@@ -29,13 +33,9 @@ extension APISetting on BuildMode {
       {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
-        return Uri.parse("wss://education.alwaysdata.net" + endpoint)
-            .replace(queryParameters: query)
-            .toString();
+        return _withQuery("wss://education.alwaysdata.net" + endpoint, query);
       case BuildMode.dev:
-        return Uri.parse("ws://localhost:1323" + endpoint)
-            .replace(queryParameters: query)
-            .toString();
+        return _withQuery("ws://localhost:1323" + endpoint, query);
       case BuildMode.debug:
         return "";
     }
@@ -44,12 +44,12 @@ extension APISetting on BuildMode {
   /// serverURL returns url ending by the [endpoint],
   /// or an empty string
   /// [endpoint] is expected to start with a slash
-  String serverURL(String endpoint) {
+  String serverURL(String endpoint, {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
-        return "https://education.alwaysdata.net" + endpoint;
+        return _withQuery("https://education.alwaysdata.net" + endpoint, query);
       case BuildMode.dev:
-        return "http://localhost:1323" + endpoint;
+        return _withQuery("http://localhost:1323" + endpoint, query);
       case BuildMode.debug:
         return "";
     }

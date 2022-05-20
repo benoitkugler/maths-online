@@ -204,7 +204,8 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 
 	// e.GET("/trivial/stats", trivial.ShowStats)
 	e.GET("/prof/trivial/monitor", trivial.ConnectTeacherMonitor)
-	e.GET(trivialpoursuit.GameEndPoint, trivial.ConnectStudentSession)
+	e.GET("/trivial/game/setup", trivial.SetupStudentClient)
+	e.GET("/trivial/game/connect", trivial.ConnectStudentSession)
 
 	// prof. back office
 	for _, route := range []string{

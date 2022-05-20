@@ -280,6 +280,58 @@ JSON playerJoinToJson(PlayerJoin item) {
   return {"Player": intToJson(item.player)};
 }
 
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.PlayerReconnected
+class PlayerReconnected implements GameEvent {
+  final int playerID;
+  final String playerName;
+
+  const PlayerReconnected(this.playerID, this.playerName);
+
+  @override
+  String toString() {
+    return "PlayerReconnected($playerID, $playerName)";
+  }
+}
+
+PlayerReconnected playerReconnectedFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PlayerReconnected(
+      intFromJson(json['PlayerID']), stringFromJson(json['PlayerName']));
+}
+
+JSON playerReconnectedToJson(PlayerReconnected item) {
+  return {
+    "PlayerID": intToJson(item.playerID),
+    "PlayerName": stringToJson(item.playerName)
+  };
+}
+
+// github.com/benoitkugler/maths-online/trivial-poursuit/game.PlayerTurn
+class PlayerTurn implements GameEvent {
+  final String playerName;
+  final int player;
+
+  const PlayerTurn(this.playerName, this.player);
+
+  @override
+  String toString() {
+    return "PlayerTurn($playerName, $player)";
+  }
+}
+
+PlayerTurn playerTurnFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PlayerTurn(
+      stringFromJson(json['PlayerName']), intFromJson(json['Player']));
+}
+
+JSON playerTurnToJson(PlayerTurn item) {
+  return {
+    "PlayerName": stringToJson(item.playerName),
+    "Player": intToJson(item.player)
+  };
+}
+
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.PossibleMoves
 class PossibleMoves implements GameEvent {
   final String playerName;
@@ -507,32 +559,6 @@ JSON playerLeftToJson(PlayerLeft item) {
   return {"Player": intToJson(item.player)};
 }
 
-// github.com/benoitkugler/maths-online/trivial-poursuit/game.playerTurn
-class PlayerTurn implements GameEvent {
-  final String playerName;
-  final int player;
-
-  const PlayerTurn(this.playerName, this.player);
-
-  @override
-  String toString() {
-    return "PlayerTurn($playerName, $player)";
-  }
-}
-
-PlayerTurn playerTurnFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return PlayerTurn(
-      stringFromJson(json['PlayerName']), intFromJson(json['Player']));
-}
-
-JSON playerTurnToJson(PlayerTurn item) {
-  return {
-    "PlayerName": stringToJson(item.playerName),
-    "Player": intToJson(item.player)
-  };
-}
-
 // github.com/benoitkugler/maths-online/trivial-poursuit/game.showQuestion
 class ShowQuestion implements GameEvent {
   final int timeoutSeconds;
@@ -581,22 +607,24 @@ GameEvent gameEventFromJson(dynamic json_) {
     case 2:
       return playerJoinFromJson(data);
     case 3:
-      return possibleMovesFromJson(data);
+      return playerReconnectedFromJson(data);
     case 4:
-      return diceThrowFromJson(data);
-    case 5:
-      return gameEndFromJson(data);
-    case 6:
-      return gameStartFromJson(data);
-    case 7:
-      return moveFromJson(data);
-    case 8:
-      return playerAnswerResultsFromJson(data);
-    case 9:
-      return playerLeftFromJson(data);
-    case 10:
       return playerTurnFromJson(data);
+    case 5:
+      return possibleMovesFromJson(data);
+    case 6:
+      return diceThrowFromJson(data);
+    case 7:
+      return gameEndFromJson(data);
+    case 8:
+      return gameStartFromJson(data);
+    case 9:
+      return moveFromJson(data);
+    case 10:
+      return playerAnswerResultsFromJson(data);
     case 11:
+      return playerLeftFromJson(data);
+    case 12:
       return showQuestionFromJson(data);
     default:
       throw ("unexpected type");
@@ -610,24 +638,26 @@ JSON gameEventToJson(GameEvent item) {
     return {'Kind': 1, 'Data': lobbyUpdateToJson(item)};
   } else if (item is PlayerJoin) {
     return {'Kind': 2, 'Data': playerJoinToJson(item)};
-  } else if (item is PossibleMoves) {
-    return {'Kind': 3, 'Data': possibleMovesToJson(item)};
-  } else if (item is DiceThrow) {
-    return {'Kind': 4, 'Data': diceThrowToJson(item)};
-  } else if (item is GameEnd) {
-    return {'Kind': 5, 'Data': gameEndToJson(item)};
-  } else if (item is GameStart) {
-    return {'Kind': 6, 'Data': gameStartToJson(item)};
-  } else if (item is Move) {
-    return {'Kind': 7, 'Data': moveToJson(item)};
-  } else if (item is PlayerAnswerResults) {
-    return {'Kind': 8, 'Data': playerAnswerResultsToJson(item)};
-  } else if (item is PlayerLeft) {
-    return {'Kind': 9, 'Data': playerLeftToJson(item)};
+  } else if (item is PlayerReconnected) {
+    return {'Kind': 3, 'Data': playerReconnectedToJson(item)};
   } else if (item is PlayerTurn) {
-    return {'Kind': 10, 'Data': playerTurnToJson(item)};
+    return {'Kind': 4, 'Data': playerTurnToJson(item)};
+  } else if (item is PossibleMoves) {
+    return {'Kind': 5, 'Data': possibleMovesToJson(item)};
+  } else if (item is DiceThrow) {
+    return {'Kind': 6, 'Data': diceThrowToJson(item)};
+  } else if (item is GameEnd) {
+    return {'Kind': 7, 'Data': gameEndToJson(item)};
+  } else if (item is GameStart) {
+    return {'Kind': 8, 'Data': gameStartToJson(item)};
+  } else if (item is Move) {
+    return {'Kind': 9, 'Data': moveToJson(item)};
+  } else if (item is PlayerAnswerResults) {
+    return {'Kind': 10, 'Data': playerAnswerResultsToJson(item)};
+  } else if (item is PlayerLeft) {
+    return {'Kind': 11, 'Data': playerLeftToJson(item)};
   } else if (item is ShowQuestion) {
-    return {'Kind': 11, 'Data': showQuestionToJson(item)};
+    return {'Kind': 12, 'Data': showQuestionToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -728,12 +758,13 @@ class PlayerStatus {
   final String name;
   final QuestionReview review;
   final Success success;
+  final bool isInactive;
 
-  const PlayerStatus(this.name, this.review, this.success);
+  const PlayerStatus(this.name, this.review, this.success, this.isInactive);
 
   @override
   String toString() {
-    return "PlayerStatus($name, $review, $success)";
+    return "PlayerStatus($name, $review, $success, $isInactive)";
   }
 }
 
@@ -742,14 +773,16 @@ PlayerStatus playerStatusFromJson(dynamic json_) {
   return PlayerStatus(
       stringFromJson(json['Name']),
       questionReviewFromJson(json['Review']),
-      listBoolFromJson(json['Success']));
+      listBoolFromJson(json['Success']),
+      boolFromJson(json['IsInactive']));
 }
 
 JSON playerStatusToJson(PlayerStatus item) {
   return {
     "Name": stringToJson(item.name),
     "Review": questionReviewToJson(item.review),
-    "Success": listBoolToJson(item.success)
+    "Success": listBoolToJson(item.success),
+    "IsInactive": boolToJson(item.isInactive)
   };
 }
 

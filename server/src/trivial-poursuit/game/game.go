@@ -98,7 +98,20 @@ func NewGame(questionTimeout time.Duration, showDecrassage bool, questions Quest
 }
 
 // NumberPlayers return the number of players actually in the game.
-func (gs GameState) NumberPlayers() int { return len(gs.Players) }
+// If `onlyActive` is true, inactive players are not considered.
+func (gs GameState) NumberPlayers(onlyActive bool) int {
+	if onlyActive {
+		var nb int
+		for _, pl := range gs.Players {
+			if pl.IsInactive {
+				continue
+			}
+			nb++
+		}
+		return nb
+	}
+	return len(gs.Players)
+}
 
 func (g *Game) HasStarted() bool { return g.hasStarted }
 
@@ -112,7 +125,7 @@ func (g *Game) IsPlaying() bool {
 // AddPlayer add a player to the game and returns
 // its id.
 // If name is empty, a name is generated.
-func (g *Game) AddPlayer(name string) LobbyUpdate {
+func (g *Game) AddPlayer(name string) (PlayerID, LobbyUpdate) {
 	max := -1
 	for id := range g.Players {
 		if id > max {
@@ -129,7 +142,7 @@ func (g *Game) AddPlayer(name string) LobbyUpdate {
 		Name: name,
 	}
 
-	return LobbyUpdate{
+	return playerID, LobbyUpdate{
 		Player:     playerID,
 		Names:      g.playerNames(),
 		PlayerName: name,
@@ -137,25 +150,57 @@ func (g *Game) AddPlayer(name string) LobbyUpdate {
 	}
 }
 
+// ReconnectPlayer marks `player` has active again.
+func (g *Game) ReconnectPlayer(player PlayerID) PlayerReconnected {
+	var name string
+	if pl := g.Players[player]; pl != nil {
+		pl.IsInactive = false
+		name = g.playerName(player)
+	}
+	return PlayerReconnected{
+		PlayerID:   player,
+		PlayerName: name,
+	}
+}
+
 // RemovePlayer remove `player` from the game.
-func (g *Game) RemovePlayer(player PlayerID) LobbyUpdate {
+// The exact behavior depends on whether or not the game has started.
+// If so, the player is only put in inactive mode.
+// It not, the player is entirely removed.
+// If the player was currently throwing or choosing the tile,
+// the turn is reset to the next player.
+func (g *Game) RemovePlayer(player PlayerID) (LobbyUpdate, *PlayerTurn) {
 	playerName := g.playerName(player)
-	delete(g.GameState.Players, player)
-	if g.GameState.Player == player {
-		g.GameState.Player = -1
+
+	if g.HasStarted() {
+		g.GameState.Players[player].IsInactive = true
+	} else {
+		delete(g.GameState.Players, player)
+	}
+
+	var resetTurn *PlayerTurn
+	if g.GameState.Player == player && g.NumberPlayers(true) > 0 {
+		g.GameState.Player = g.nextPlayer()
+		resetTurn = &PlayerTurn{
+			Player:     g.GameState.Player,
+			PlayerName: g.playerName(g.GameState.Player),
+		}
 	}
 	return LobbyUpdate{
 		Player:     player,
 		Names:      g.playerNames(),
 		PlayerName: playerName,
 		IsJoining:  false,
-	}
+	}, resetTurn
 }
 
-// panic if no players are present
+// panic if no active players are present
 func (g *Game) nextPlayer() PlayerID {
 	var sortedIds []int
 	for player := range g.Players {
+		if g.Players[player].IsInactive { // ignore inactive players
+			continue
+		}
 		sortedIds = append(sortedIds, player)
 	}
 	sort.Ints(sortedIds)
@@ -176,7 +221,7 @@ func (g *Game) startTurn() StateUpdate {
 
 	g.Player = g.nextPlayer()
 	return StateUpdate{
-		Events: Events{playerTurn{g.playerName(g.Player), g.Player}},
+		Events: Events{PlayerTurn{g.playerName(g.Player), g.Player}},
 		State:  g.GameState,
 	}
 }
@@ -202,10 +247,11 @@ func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
 
 // StartGame actually launch the game with the players
 // registred so far, which must not be empty.
+// It also starts the first turn.
 func (g *Game) StartGame() StateUpdate {
 	g.hasStarted = true
 	evs := g.startTurn()
-	evs.Events = append(Events{gameStart{}}, evs.Events...)
+	evs.Events = append(Events{GameStart{}}, evs.Events...)
 	return evs
 }
 
@@ -330,7 +376,10 @@ func (gs *Game) isAnswerValid(a Answer) bool {
 }
 
 func (gs *Game) arePlayersReadyForNextTurn() bool {
-	for player := range gs.Players {
+	for player, pl := range gs.Players {
+		if pl.IsInactive {
+			continue
+		}
 		if ok := gs.currentWantNextTurn[player]; !ok {
 			return false
 		}
@@ -377,8 +426,8 @@ func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates
 // if `force` is false, it only does so if every player have answered
 func (gs *Game) endQuestion(force bool) Events {
 	hasAllAnswered := true
-	for player := range gs.Players {
-		if _, has := gs.currentAnswers[player]; !has {
+	for player, pl := range gs.Players {
+		if _, has := gs.currentAnswers[player]; !has && !pl.IsInactive {
 			hasAllAnswered = false
 			break
 		}
@@ -399,6 +448,8 @@ func (gs *Game) endQuestion(force bool) Events {
 		if !has {
 			answer = playerAnswerResult{Success: false, AskForMask: false}
 		}
+		// we still mark invalid answsers for inactive player,
+		// to avoid cheating by leaving before right before the question
 		out.Results[player] = answer
 	}
 

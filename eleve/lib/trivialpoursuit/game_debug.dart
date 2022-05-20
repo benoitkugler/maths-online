@@ -23,15 +23,15 @@ const updates = [
       ],
       GameState({
         0: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [true, true, false, true, false]),
+            [true, true, false, true, false], false),
         1: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false]),
+            [false, false, false, false, false], false),
         2: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false]),
+            [false, false, false, false, false], false),
         3: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false]),
+            [false, false, false, false, false], false),
         4: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false]),
+            [false, false, false, false, false], false),
       }, 0, 0)),
   StateUpdate(
       [
@@ -41,16 +41,16 @@ const updates = [
         //       // GameEnd([0], ["Pierre"])
       ],
       GameState({
-        0: PlayerStatus(
-            "Player 1", QuestionReview([], []), [true, true, true, true, true]),
+        0: PlayerStatus("Player 1", QuestionReview([], []),
+            [true, true, true, true, true], false),
         1: PlayerStatus("Player 2", QuestionReview([], []),
-            [true, false, false, false, false]),
+            [true, false, false, false, false], false),
         2: PlayerStatus("Player 3", QuestionReview([], []),
-            [false, true, false, false, false]),
+            [false, true, false, false, false], false),
         3: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false]),
+            [false, false, false, false, false], false),
         4: PlayerStatus("Annonymous 065686", QuestionReview([], []),
-            [false, false, false, false, false]),
+            [false, false, false, false, false], false),
       }, 0, 0)),
   // StateUpdate(
   //     [GameTerminated()],

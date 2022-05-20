@@ -1,4 +1,5 @@
-flutter build web --base-href=/test-eleve/ && 
+flutter build web --base-href=/test-eleve/   && 
+# flutter build web --base-href=/test-eleve/ --dart-define=mode=dev && 
 echo "Moving build to server/static/eleve..." && 
 rm -r ../server/static/eleve/ && 
 mkdir ../server/static/eleve && 

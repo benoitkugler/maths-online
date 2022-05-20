@@ -65,25 +65,34 @@ class SuccessRecapRow extends StatelessWidget {
       reverse: true,
       children: sortedPlayers(successes)
           .where((element) => element != ownPlayer)
-          .map((e) => Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Transform.scale(
-                      scale: 0.8, child: Pie(2, successes[e]!.success)),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: SizedBox(
-                      width: 80,
-                      child: Text(
-                        successes[e]!.name,
-                        style: const TextStyle(fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                ],
-              ))
-          .toList(),
+          .map((e) {
+        final isInactive = successes[e]!.isInactive;
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Transform.scale(
+                scale: 0.8,
+                child: Pie(
+                  2,
+                  successes[e]!.success,
+                  backgroundColor: isInactive ? Colors.grey : Colors.white,
+                )),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: SizedBox(
+                width: 80,
+                child: Text(
+                  successes[e]!.name,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: isInactive ? Colors.grey.shade400 : null),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          ],
+        );
+      }).toList(),
     );
   }
 }

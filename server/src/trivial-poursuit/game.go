@@ -33,43 +33,51 @@ type GameID = string
 // AddClient uses the given connection to start a web socket, registred
 // with given `player`.
 // Errors are send to the websocket, and the function blocks until the game ends
-func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, player Player) {
+func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, player Player, playerID game.PlayerID) *Client {
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		WarningLogger.Println("Failed to init websocket: ", err)
-		return
+		return nil
 	}
-	defer ws.Close()
 
-	client := &client{conn: ws, game: ct, isAccepted: make(chan bool), player: player}
+	client := &Client{
+		WS:         ws,
+		game:       ct,
+		isAccepted: make(chan bool),
+		player:     player,
+		PlayerID:   playerID,
+	}
+
 	ct.join <- client
 
 	isAccepted := <-client.isAccepted // wait for the controller to check the access
 	if !isAccepted {
 		// the game at this end point is not usable: close the connection with an error
 		utils.WebsocketError(ws, errors.New("game is closed"))
-		return
+		return nil
 	}
 
-	client.startLoop()
+	return client
 }
 
-type client struct {
-	conn *websocket.Conn
+type Client struct {
+	// WS should be close when StartLoop ends
+	WS   *websocket.Conn
 	game *GameController // to accept user events
 
 	isAccepted chan bool // valid the access to the game
 
-	player Player
+	player   Player
+	PlayerID game.PlayerID // used to handle reconnection
 }
 
-func (cl *client) sendEvent(er game.StateUpdate) error { return cl.conn.WriteJSON(er) }
+func (cl *Client) sendEvent(er game.StateUpdate) error { return cl.WS.WriteJSON(er) }
 
-// startLoop listens for new messages being sent to our WebSocket
+// StartLoop listens for new messages being sent to our WebSocket
 // endpoint, only returning on error.
 // the connection is not closed yet
-func (cl *client) startLoop() {
+func (cl *Client) StartLoop() {
 	defer func() {
 		cl.game.leave <- cl
 	}()
@@ -77,7 +85,7 @@ func (cl *client) startLoop() {
 	for {
 
 		// read in a message
-		_, r, err := cl.conn.NextReader()
+		_, r, err := cl.WS.NextReader()
 
 		if err, isClose := err.(*websocket.CloseError); isClose {
 			ProgressLogger.Printf("Client left (%v)", err)
@@ -95,7 +103,7 @@ func (cl *client) startLoop() {
 			WarningLogger.Printf("invalid event format: %s", err)
 
 			// return an error to the client and close
-			utils.WebsocketError(cl.conn, err)
+			utils.WebsocketError(cl.WS, err)
 
 			return
 		}
@@ -125,11 +133,11 @@ type GameController struct {
 	Terminate chan bool
 
 	monitor     chan GameSummary
-	join, leave chan *client
+	join, leave chan *Client
 
 	incomingEvents  chan game.ClientEvent
 	broadcastEvents chan game.StateUpdate
-	clients         map[*client]game.PlayerID // current clients in the game
+	clients         map[*Client]game.PlayerID // current clients in the game
 
 	game     game.Game // game logic
 	gameLock sync.Mutex
@@ -144,18 +152,18 @@ func NewGameController(id GameID, questions game.QuestionPool, options GameOptio
 		ID:              id,
 		monitor:         monitor,
 		Terminate:       make(chan bool),
-		join:            make(chan *client, 1),
-		leave:           make(chan *client),
+		join:            make(chan *Client, 1),
+		leave:           make(chan *Client),
 		incomingEvents:  make(chan game.ClientEvent),
 		broadcastEvents: make(chan game.StateUpdate, 1), // the main loop write in this channel
-		clients:         map[*client]game.PlayerID{},
+		clients:         map[*Client]game.PlayerID{},
 		game:            *game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
 		Options:         options,
 	}
 }
 
-func (gc *GameController) playerIDsToClients() map[game.PlayerID]*client {
-	players := make(map[game.PlayerID]*client)
+func (gc *GameController) playerIDsToClients() map[game.PlayerID]*Client {
+	players := make(map[game.PlayerID]*Client)
 	for k, v := range gc.clients {
 		players[v] = k
 	}
@@ -213,9 +221,9 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			ProgressLogger.Printf("Removing player %d...", gc.clients[client])
 
 			gc.gameLock.Lock()
-			event := gc.game.RemovePlayer(gc.clients[client])
+			event, resetTurn := gc.game.RemovePlayer(gc.clients[client])
 			hasStarted := gc.game.HasStarted()
-			nbPlayers := gc.game.NumberPlayers()
+			nbPlayers := gc.game.NumberPlayers(true)
 			delete(gc.clients, client)
 			gc.gameLock.Unlock()
 
@@ -230,11 +238,15 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				// did not end properly
 				// also, game.Players would be empty here
 				return Review{}, false
-			} else if !hasStarted { // update the lobby if the game has to started
-				gc.broadcastEvents <- game.StateUpdate{
-					Events: game.Events{event},
-					State:  gc.game.GameState,
-				}
+			}
+
+			events := game.Events{event}
+			if hasStarted && resetTurn != nil {
+				events = append(events, *resetTurn)
+			}
+			gc.broadcastEvents <- game.StateUpdate{
+				Events: events,
+				State:  gc.game.GameState,
 			}
 
 		case <-gc.game.QuestionTimeout.C:
@@ -246,35 +258,51 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 
 		case client := <-gc.join:
-			ProgressLogger.Println("Adding player...")
+			// we do not allow fresh connection into an already started game
+			if client.PlayerID == -1 { // fresh connection
+				if gc.game.HasStarted() {
+					client.isAccepted <- false
+					continue
+				}
+				ProgressLogger.Println("Adding player...")
 
-			// we do not allow connection into an already started game
-			if gc.game.HasStarted() {
-				// the game at this end point is not usable: close the connection with an error
-				client.isAccepted <- false
-				continue
-			} else {
+				playerID, event := gc.game.AddPlayer(client.player.Name)
+				// register the playerID so that it can be send back
+				client.PlayerID = playerID
+				gc.clients[client] = playerID
+
 				client.isAccepted <- true
-			}
 
-			event := gc.game.AddPlayer(client.player.Name)
-			gc.clients[client] = event.Player
+				// only notifie the player who joined ...
+				client.sendEvent(game.StateUpdate{
+					Events: game.Events{game.PlayerJoin{Player: playerID}},
+					State:  gc.game.GameState,
+				})
 
-			// only notifie the player who joined ...
-			client.sendEvent(game.StateUpdate{
-				Events: game.Events{game.PlayerJoin{Player: event.Player}},
-				State:  gc.game.GameState,
-			})
+				// ... check if the new player triggers a game start
+				if gc.game.NumberPlayers(true) >= gc.Options.PlayersNumber {
+					events := gc.game.StartGame()
+					gc.broadcastEvents <- events
+				} else { // update the lobby
+					gc.broadcastEvents <- game.StateUpdate{
+						Events: game.Events{event},
+						State:  gc.game.GameState,
+					}
+				}
+			} else { // reconnection
+				ProgressLogger.Println("Reconnecting player...", client.PlayerID)
 
-			// ... check if the new player triggers a game start
-			if gc.game.NumberPlayers() >= gc.Options.PlayersNumber {
-				events := gc.game.StartGame()
-				gc.broadcastEvents <- events
-			} else { // update the lobby
+				gc.clients[client] = client.PlayerID // register the new client connection
+				client.isAccepted <- true
+				gc.gameLock.Lock()
+				event := gc.game.ReconnectPlayer(client.PlayerID)
+				gc.gameLock.Unlock()
+
 				gc.broadcastEvents <- game.StateUpdate{
 					Events: game.Events{event},
 					State:  gc.game.GameState,
 				}
+
 			}
 
 			if gc.monitor != nil { // notify the monitor
@@ -326,6 +354,10 @@ func (gc *GameController) Summary() GameSummary {
 
 	successes := make(map[Player]game.Success)
 	for k, v := range state.Players {
+		client := players[k]
+		if client == nil { // inactive player
+			continue
+		}
 		successes[players[k].player] = v.Success
 	}
 	out := GameSummary{
@@ -334,7 +366,9 @@ func (gc *GameController) Summary() GameSummary {
 		RoomSize:  gc.Options.PlayersNumber,
 	}
 	if id := state.Player; id != -1 {
-		out.PlayerTurn = &players[id].player
+		if pl := players[id]; pl != nil {
+			out.PlayerTurn = &pl.player
+		}
 	}
 
 	return out

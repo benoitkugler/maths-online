@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -45,7 +46,11 @@ func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
 
 func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 	clientID := r.URL.Query().Get("client_id")
-	ct.AddClient(w, r, Player{Name: "testName", ID: pass.EncryptedID(clientID)})
+	client := ct.AddClient(w, r, Player{Name: "testName", ID: pass.EncryptedID(clientID)}, -1)
+	if client != nil {
+		client.StartLoop()
+		client.WS.Close()
+	}
 }
 
 func TestConcurrentEvents(t *testing.T) {
@@ -116,7 +121,8 @@ func TestEvents(t *testing.T) {
 }
 
 func TestClientInvalidMessage(t *testing.T) {
-	WarningLogger.SetOutput(io.Discard)
+	WarningLogger.SetOutput(os.Stdout)
+	ProgressLogger.SetOutput(os.Stdout)
 
 	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
 	go ct.StartLoop()
@@ -129,14 +135,18 @@ func TestClientInvalidMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = client.ReadJSON(&game.StateUpdate{}) // player join
+	var ev game.StateUpdate
+	err = client.ReadJSON(&ev) // player join
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.ReadJSON(&game.StateUpdate{}) // game lobby
+	fmt.Println(ev)
+
+	err = client.ReadJSON(&ev) // game lobby
 	if err != nil {
 		t.Fatal(err)
 	}
+	fmt.Println(ev)
 
 	err = client.WriteMessage(websocket.TextMessage, []byte("BAD"))
 	if err != nil {

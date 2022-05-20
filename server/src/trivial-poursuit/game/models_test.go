@@ -14,8 +14,8 @@ func TestEventsJSON(t *testing.T) {
 	moves := Board.choices(0, int(dice.Face)).list()
 	payload := StateUpdate{
 		Events: []GameEvent{
-			gameStart{},
-			playerTurn{"Haha", 2},
+			GameStart{},
+			PlayerTurn{"Haha", 2},
 			dice,
 			PossibleMoves{"", moves, 2},
 			move{Tile: moves[0]},
@@ -28,7 +28,7 @@ func TestEventsJSON(t *testing.T) {
 					2: {Success: true},
 				},
 			},
-			playerTurn{"", 0},
+			PlayerTurn{"", 0},
 			diceThrow{3},
 			move{Tile: 4},
 			showQuestion{ID: 2, Categorie: 1},
@@ -39,7 +39,7 @@ func TestEventsJSON(t *testing.T) {
 					2: {Success: true},
 				},
 			},
-			playerTurn{"", 1},
+			PlayerTurn{"", 1},
 		},
 	}
 
@@ -96,9 +96,9 @@ func TestClientEventJSON(t *testing.T) {
 }
 
 func TestMethodTag(t *testing.T) {
-	gameStart{}.isGameEvent()
+	GameStart{}.isGameEvent()
 	playerLeft{}.isGameEvent()
-	playerTurn{}.isGameEvent()
+	PlayerTurn{}.isGameEvent()
 	diceThrow{}.isGameEvent()
 	move{}.isGameEvent()
 	PossibleMoves{}.isGameEvent()

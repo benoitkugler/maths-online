@@ -8,8 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -23,10 +21,6 @@ import (
 var (
 	WarningLogger  = log.New(os.Stdout, "trivial-poursuit-session:ERROR:", log.LstdFlags)
 	ProgressLogger = log.New(os.Stdout, "trivial-poursuit-session:INFO:", log.LstdFlags)
-)
-
-const (
-	GameEndPoint = "/trivial/game/:session-id"
 )
 
 var sessionTimeout = 12 * time.Hour
@@ -345,93 +339,4 @@ func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {
 	session.lock.Unlock()
 
 	return nil
-}
-
-// expects <demoPin>.<number>
-// or return 0
-func (ct *Controller) isDemoSessionID(completeID string) (room string, nbPlayers int) {
-	cuts := strings.Split(completeID, ".")
-	if len(cuts) != 3 {
-		return "", 0
-	}
-	if ct.demoPin != cuts[0] {
-		return "", 0
-	}
-	room = cuts[1]
-	if len(room) < 2 {
-		return "", 0
-	}
-	nbPlayers, _ = strconv.Atoi(cuts[2])
-	return room, nbPlayers
-}
-
-func (ct *Controller) connectDemo(c echo.Context, room string, nbPlayers int) error {
-	sessionID := fmt.Sprintf("%s.%s.%d", ct.demoPin, room, nbPlayers)
-
-	// check if the session is running and waiting for players
-	ct.lock.Lock()
-	session, ok := ct.sessions[sessionID]
-	ct.lock.Unlock()
-
-	if !ok {
-		// create the session
-		var err error
-		session, err = ct.createGameSession(sessionID, TrivialConfig{
-			Id:              -1,
-			Questions:       demoQuestions,
-			QuestionTimeout: 120,
-			ShowDecrassage:  true,
-		}, RandomGroupStrategy{
-			MaxPlayersPerGroup: nbPlayers,
-			TotalPlayersNumber: nbPlayers,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	student := studentMeta{
-		pseudo: c.QueryParam("client-pseudo"),
-	}
-
-	ProgressLogger.Printf("Connecting student %v at (demo) %s", student, sessionID)
-
-	err := session.connectStudent(c, student, ct.key)
-
-	return err
-}
-
-// ConnectStudentSession handles the connection of one student to the activity
-func (ct *Controller) ConnectStudentSession(c echo.Context) error {
-	fmt.Println("ConnectStudentSession")
-
-	completeID := c.Param("session-id")
-
-	if room, nbPlayers := ct.isDemoSessionID(completeID); nbPlayers != 0 {
-		return ct.connectDemo(c, room, nbPlayers)
-	}
-
-	if len(completeID) < 4 {
-		return fmt.Errorf("invalid ID %s", completeID)
-	}
-	sessionID := completeID[:4]
-	var student studentMeta
-	student.gameID = completeID[4:]
-
-	ct.lock.Lock()
-	session, ok := ct.sessions[sessionID]
-	ct.lock.Unlock()
-	if !ok {
-		WarningLogger.Printf("invalid session ID %s", sessionID)
-		return fmt.Errorf("L'activité n'existe pas ou est déjà terminée.")
-	}
-
-	student.id = pass.EncryptedID(c.QueryParam("client-id"))
-	student.pseudo = c.QueryParam("client-pseudo")
-
-	ProgressLogger.Printf("Connecting student %v at %s", student, sessionID)
-
-	err := session.connectStudent(c, student, ct.key)
-
-	return err
 }

@@ -97,18 +97,18 @@ func TestGameState_nextPlayer(t *testing.T) {
 
 func TestStart(t *testing.T) {
 	g := NewGame(0, true, QuestionPool{})
-	p1 := g.AddPlayer("").Player
+	p1, _ := g.AddPlayer("")
 	if p1 != 0 {
 		t.Fatalf("unexpected player id %d", p1)
 	}
 
-	p2 := g.AddPlayer("").Player
-	p3 := g.AddPlayer("").Player
+	p2, _ := g.AddPlayer("")
+	p3, _ := g.AddPlayer("")
 	if p1 == p2 || p2 == p3 {
 		t.Fatal()
 	}
 
-	if g.NumberPlayers() != 3 {
+	if g.NumberPlayers(true) != 3 {
 		t.Fatal()
 	}
 
@@ -116,6 +116,23 @@ func TestStart(t *testing.T) {
 	g.StartGame()
 	if g.Player != p1 {
 		t.Fatalf("unexpected first player %d", g.Player)
+	}
+
+	g.RemovePlayer(p3)
+	if g.NumberPlayers(false) != 2 {
+		t.Fatal()
+	}
+}
+
+func TestDisconnect(t *testing.T) {
+	g := NewGame(0, true, QuestionPool{})
+	p1, _ := g.AddPlayer("")
+	p2, _ := g.AddPlayer("")
+
+	g.StartGame()
+	_, resetTurn := g.RemovePlayer(p1)
+	if resetTurn == nil || resetTurn.Player != p2 {
+		t.Fatal(resetTurn)
 	}
 }
 
@@ -151,6 +168,7 @@ outer:
 func TestHandleClientEvent(t *testing.T) {
 	g := NewGame(0, true, QuestionPool{exQu, exQu, exQu, exQu, exQu})
 	g.AddPlayer("")
+	g.StartGame()
 
 	// check nextTurn is properly reset
 	g.currentWantNextTurn = map[int]bool{2: true}

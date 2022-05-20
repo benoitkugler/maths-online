@@ -79,10 +79,15 @@ class _HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<_HomePage> {
+  /// [trivialMetaCache] stores the credentials needed
+  /// to reconnect in game.
+  Map<String, String> trivialMetaCache = {};
+
   void _launchTrivialPoursuit() {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(body: TrivialPoursuitLoggin(bm))));
+        builder: (_) =>
+            Scaffold(body: TrivialPoursuitLoggin(bm, trivialMetaCache))));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 

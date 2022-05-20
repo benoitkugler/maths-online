@@ -38,6 +38,8 @@ type PlayerStatus struct {
 	Name    string
 	Review  QuestionReview
 	Success Success
+	// Has the player disconnect ?
+	IsInactive bool
 }
 
 // StateUpdate describes a list of events yielding
@@ -66,10 +68,11 @@ type GameEvent interface {
 }
 
 func (PlayerJoin) isGameEvent()          {}
+func (PlayerReconnected) isGameEvent()   {}
 func (LobbyUpdate) isGameEvent()         {}
-func (gameStart) isGameEvent()           {}
+func (GameStart) isGameEvent()           {}
 func (playerLeft) isGameEvent()          {}
-func (playerTurn) isGameEvent()          {}
+func (PlayerTurn) isGameEvent()          {}
 func (diceThrow) isGameEvent()           {}
 func (move) isGameEvent()                {}
 func (PossibleMoves) isGameEvent()       {}
@@ -84,6 +87,11 @@ type PlayerJoin struct {
 	Player PlayerID
 }
 
+type PlayerReconnected struct {
+	PlayerID   PlayerID
+	PlayerName string
+}
+
 type LobbyUpdate struct {
 	Names      map[PlayerID]string // the new players in the lobby
 	PlayerName string
@@ -91,15 +99,15 @@ type LobbyUpdate struct {
 	IsJoining  bool     // false for leaving
 }
 
-type gameStart struct{}
+type GameStart struct{}
 
 type playerLeft struct {
 	Player PlayerID
 }
 
-// playerTurn is emitted at the start of
+// PlayerTurn is emitted at the start of
 // a player
-type playerTurn struct {
+type PlayerTurn struct {
 	PlayerName string
 	Player     PlayerID
 }

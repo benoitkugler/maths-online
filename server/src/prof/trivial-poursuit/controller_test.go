@@ -1,15 +1,19 @@
 package trivialpoursuit
 
 import (
+	"os"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
+	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
 
 func TestGameTermination(t *testing.T) {
+	tv.ProgressLogger.SetOutput(os.Stdout)
+
 	ct := newGameSession("test", nil, TrivialConfig{}, RandomGroupStrategy{2, 2}, game.QuestionPool{})
 
 	id := ct.createGame(2)
@@ -17,7 +21,6 @@ func TestGameTermination(t *testing.T) {
 	if len(ct.games) != 1 {
 		t.Fatal("expected one game")
 	}
-
 	ct.games[id].Terminate <- true
 
 	time.Sleep(20 * time.Millisecond)

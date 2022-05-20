@@ -108,38 +108,42 @@ func (out *GameEventWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 3:
-		var data PossibleMoves
+		var data PlayerReconnected
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 4:
-		var data diceThrow
+		var data PlayerTurn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 5:
-		var data gameEnd
+		var data PossibleMoves
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 6:
-		var data gameStart
+		var data diceThrow
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data move
+		var data gameEnd
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
-		var data playerAnswerResults
+		var data GameStart
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 9:
-		var data playerLeft
+		var data move
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 10:
-		var data playerTurn
+		var data playerAnswerResults
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 11:
+		var data playerLeft
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 12:
 		var data showQuestion
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -163,24 +167,26 @@ func (item GameEventWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 1, Data: data}
 	case PlayerJoin:
 		wr = wrapper{Kind: 2, Data: data}
-	case PossibleMoves:
+	case PlayerReconnected:
 		wr = wrapper{Kind: 3, Data: data}
-	case diceThrow:
+	case PlayerTurn:
 		wr = wrapper{Kind: 4, Data: data}
-	case gameEnd:
+	case PossibleMoves:
 		wr = wrapper{Kind: 5, Data: data}
-	case gameStart:
+	case diceThrow:
 		wr = wrapper{Kind: 6, Data: data}
-	case move:
+	case gameEnd:
 		wr = wrapper{Kind: 7, Data: data}
-	case playerAnswerResults:
+	case GameStart:
 		wr = wrapper{Kind: 8, Data: data}
-	case playerLeft:
+	case move:
 		wr = wrapper{Kind: 9, Data: data}
-	case playerTurn:
+	case playerAnswerResults:
 		wr = wrapper{Kind: 10, Data: data}
-	case showQuestion:
+	case playerLeft:
 		wr = wrapper{Kind: 11, Data: data}
+	case showQuestion:
+		wr = wrapper{Kind: 12, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -192,6 +198,8 @@ const (
 	GameTerminatedKind = iota
 	LobbyUpdateKind
 	PlayerJoinKind
+	PlayerReconnectedKind
+	PlayerTurnKind
 	PossibleMovesKind
 	diceThrowKind
 	gameEndKind
@@ -199,7 +207,6 @@ const (
 	moveKind
 	playerAnswerResultsKind
 	playerLeftKind
-	playerTurnKind
 	showQuestionKind
 )
 

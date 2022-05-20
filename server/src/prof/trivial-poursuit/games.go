@@ -11,6 +11,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/students"
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
+	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	ga "github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
@@ -33,6 +34,8 @@ type gameSession struct {
 
 	db *sql.DB
 
+	playerIDs map[string]game.PlayerID
+
 	teacherClients map[*teacherClient]bool
 	monitor        chan tv.GameSummary
 	questions      ga.QuestionPool
@@ -48,6 +51,7 @@ func newGameSession(id SessionID, db *sql.DB, config TrivialConfig, group GroupS
 		db:                   db,
 		config:               config,
 		group:                group,
+		playerIDs:            make(map[string]int),
 		quit:                 make(chan bool),
 		notifyMonitorEndGame: make(chan string),
 		monitor:              make(chan tv.GameSummary),
@@ -55,6 +59,18 @@ func newGameSession(id SessionID, db *sql.DB, config TrivialConfig, group GroupS
 		teacherClients:       make(map[*teacherClient]bool),
 		questions:            questions,
 	}
+}
+
+// locks and add a new player entry
+func (gs *gameSession) registerPlayer() string {
+	gs.lock.Lock()
+	defer gs.lock.Unlock()
+	playerID := utils.RandomID(false, 20, func(s string) bool {
+		_, has := gs.playerIDs[s]
+		return has
+	})
+	gs.playerIDs[playerID] = -1 // register with an initial sentinel value
+	return playerID
 }
 
 // make sure game id are properly sorted when
@@ -66,7 +82,6 @@ func gameIDFromSerial(serial int) string {
 // createGame locks and starts a new game
 func (gs *gameSession) createGame(nbPlayers int) GameID {
 	gs.lock.Lock()
-	defer gs.lock.Unlock()
 
 	gameID := gameIDFromSerial(len(gs.games))
 
@@ -80,6 +95,8 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 		gs.monitor)
 	// register the controller...
 	gs.games[gameID] = game
+	gs.lock.Unlock()
+
 	// ...and start it
 	go func() {
 		review, ok := game.StartLoop()
@@ -88,9 +105,9 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 		}
 
 		gs.lock.Lock()
-		defer gs.lock.Unlock()
 		// remove the game controller when the game is over
 		delete(gs.games, gameID)
+		gs.lock.Unlock()
 
 		gs.notifyMonitorEndGame <- gameID
 	}()
@@ -109,17 +126,17 @@ type studentMeta struct {
 	pseudo string // used for annonymous connection
 }
 
-func (gs *gameSession) connectStudent(c echo.Context, student studentMeta, key pass.Encrypter) error {
-	player := tv.Player{ID: student.id}
+func (gs *gameSession) connectStudent(c echo.Context, student gameConnection, pseudo string, key pass.Encrypter) error {
+	player := tv.Player{ID: student.StudentID}
 	var studentID int64 = -1
-	if student.id == "" { // anonymous connection
-		player.Name = student.pseudo
+	if student.StudentID == "" { // anonymous connection
+		player.Name = pseudo
 		if player.Name == "" {
 			player.Name = gs.generateName() // finally generate a random pseudo
 		}
 	} else { // fetch name from DB
 		var err error
-		studentID, err = student.id.Decrypt(key)
+		studentID, err = student.StudentID.Decrypt(key)
 		if err != nil {
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
@@ -132,19 +149,30 @@ func (gs *gameSession) connectStudent(c echo.Context, student studentMeta, key p
 		player.Name = student.Surname
 	}
 
-	// select or create the game
-	gameID, err := gs.group.selectOrCreateGame(student.gameID, studentID, gs)
-	if err != nil {
-		return err
-	}
-
 	// then add the player
 	gs.lock.Lock()
-	game := gs.games[gameID]
+	game := gs.games[student.GameID]
+	playerID, has := gs.playerIDs[student.PlayerID]
+	if !has {
+		playerID = -1
+	}
 	gs.lock.Unlock()
 
+	if game == nil {
+		return fmt.Errorf("invalid game ID %s", student.StudentID)
+	}
+
 	// connect to the websocket handler, which handle errors
-	game.AddClient(c.Response().Writer, c.Request(), player) // block on the client WS
+	client := game.AddClient(c.Response().Writer, c.Request(), player, playerID) // block on the client WS
+	if client != nil {
+		// register the playerID
+		gs.lock.Lock()
+		gs.playerIDs[student.PlayerID] = client.PlayerID
+		gs.lock.Unlock()
+
+		client.StartLoop()
+		client.WS.Close()
+	}
 
 	return nil
 }

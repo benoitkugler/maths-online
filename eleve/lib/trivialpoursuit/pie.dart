@@ -12,7 +12,10 @@ class Pie extends StatelessWidget {
 
   final double glowWidth;
   final Success success;
-  const Pie(this.glowWidth, this.success, {Key? key}) : super(key: key);
+  final Color backgroundColor;
+  const Pie(this.glowWidth, this.success,
+      {Key? key, this.backgroundColor = Colors.white})
+      : super(key: key);
 
   static RawMaterialButton asButton(
       void Function() onPressed, double glowWidth, Success success) {
@@ -37,7 +40,7 @@ class Pie extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
             BoxShadow(
-              color: Colors.white,
+              color: backgroundColor,
               blurRadius: glowWidth,
             )
           ]),

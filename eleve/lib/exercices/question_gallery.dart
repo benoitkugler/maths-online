@@ -81,18 +81,6 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     ));
   }
 
-  // Widget _buildQuestion(Question question, BuildContext context) {
-  //   return QuestionW(
-  //     question,
-  //     Color.fromARGB(255, Random().nextInt(256), Random().nextInt(256),
-  //         Random().nextInt(256)),
-  //     (v) => _checkSyntax(v, context),
-  //     (v) => _validate(v, context),
-  //     footerQuote: pickQuote(),
-  //     blockOnSubmit: false,
-  //   );
-  // }
-
   void _showQuestion(int index) {
     setState(() {
       currentQuestionIndex = index;
