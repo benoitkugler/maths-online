@@ -99,6 +99,10 @@ const _quotes = [
       "",
       ""),
   QuoteData(
+      "Le problème n'est pas d'être têtu mais de l'être pour les bonnes choses.",
+      "",
+      ""),
+  QuoteData(
       "N’oublie jamais : ta vie a de la valeur, elle est précieuse…", "", ""),
   QuoteData("Ta vie est trop précieuse pour être jetée en l’air.", "", ""),
   QuoteData("Quelle que soit la situation, ne perds pas espoir !", "", ""),
@@ -109,6 +113,11 @@ const _quotes = [
   QuoteData(
       "Tout est possible, laisse toi surprendre... et si on essayait", "", ""),
   QuoteData("Etre en apprentissage, ce n'est pas être incompétent.", "", ""),
+  QuoteData("Sois ressourcé et fortifié !", "", ""),
+  QuoteData("Garde le cap, persévère !", "", ""),
+  QuoteData(
+      "Ta valeur n'est pas définie par ce que tu réussis ou non !", "", ""),
+  QuoteData("Ne te fies pas à tout ce que tu penses ou ressens.", "", ""),
 ];
 
 QuoteData pickQuote() {
