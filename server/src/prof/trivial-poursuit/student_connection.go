@@ -181,7 +181,7 @@ func (gs *gameSession) setupStudent(studentID pass.EncryptedID, requestedGameID 
 	var studentIDInt int64 = -1
 	if studentID != "" { // decode ID
 		var err error
-		studentIDInt, err = studentID.Decrypt(key)
+		studentIDInt, err = key.DecryptID(studentID)
 		if err != nil {
 			return out, fmt.Errorf("ID personnel %s invalide (%s).", studentID, err)
 		}

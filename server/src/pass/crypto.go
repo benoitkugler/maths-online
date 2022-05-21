@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -59,6 +60,24 @@ func (pass Encrypter) decrypt(data []byte) ([]byte, error) {
 	return plaintext, err
 }
 
+// EncryptPassword crypt the user provided password
+func (key Encrypter) EncryptPassword(pass string) []byte {
+	out, err := key.encrypt([]byte(pass))
+	if err != nil {
+		log.Println("internal error when crypting password", err)
+	}
+	return out
+}
+
+// DecryptPassword returns the clear user password.
+func (key Encrypter) DecryptPassword(crypted []byte) string {
+	out, err := key.decrypt(crypted)
+	if err != nil {
+		log.Println("internal error when decrypting password", err)
+	}
+	return string(out)
+}
+
 type wrappedID struct {
 	ID   int64
 	Salt [4]byte
@@ -68,7 +87,7 @@ type wrappedID struct {
 // In particular, it is suitable to be included in URLs
 type EncryptedID string
 
-func NewEncryptedID(ID int64, key Encrypter) EncryptedID {
+func (key Encrypter) EncryptID(ID int64) EncryptedID {
 	out, _ := newEncryptedID(ID, key) // errors should never happen on safe data
 	return out
 }
@@ -88,7 +107,7 @@ func newEncryptedID(ID int64, key Encrypter) (EncryptedID, error) {
 	return out, nil
 }
 
-func (enc EncryptedID) Decrypt(key Encrypter) (int64, error) {
+func (key Encrypter) DecryptID(enc EncryptedID) (int64, error) {
 	text, err := base64.RawURLEncoding.DecodeString(string(enc))
 	if err != nil {
 		return 0, fmt.Errorf("invalid ID format: %s", err)

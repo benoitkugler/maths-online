@@ -12,7 +12,7 @@ func TestEncryption(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		v2, err := s.Decrypt(enc)
+		v2, err := enc.DecryptID(s)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -41,6 +41,15 @@ func TestJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 	if v != v2 {
+		t.Fatal()
+	}
+}
+
+func TestPassword(t *testing.T) {
+	pass := "mysuperbepassword"
+	enc := newEncrypter("5s6d897e4q87mùlds54")
+
+	if enc.DecryptPassword(enc.EncryptPassword(pass)) != pass {
 		t.Fatal()
 	}
 }

@@ -136,7 +136,7 @@ func (gs *gameSession) connectStudent(c echo.Context, student gameConnection, ps
 		}
 	} else { // fetch name from DB
 		var err error
-		studentID, err = student.StudentID.Decrypt(key)
+		studentID, err = key.DecryptID(student.StudentID)
 		if err != nil {
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
