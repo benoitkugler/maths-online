@@ -3,7 +3,9 @@ package utils
 import (
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -67,4 +69,22 @@ func SampleIndex(weights []float64) int {
 		}
 	}
 	return len(weights) - 1
+}
+
+// BuildUrl returns the url composed of <host><path>?<query>.
+func BuildUrl(host, path string, query map[string]string) string {
+	pm := url.Values{}
+	for k, v := range query {
+		pm.Add(k, v)
+	}
+	u := url.URL{
+		Host:     host,
+		Scheme:   "https",
+		Path:     path,
+		RawQuery: pm.Encode(),
+	}
+	if strings.HasPrefix(host, "localhost") {
+		u.Scheme = "http"
+	}
+	return u.String()
 }

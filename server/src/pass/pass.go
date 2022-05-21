@@ -55,3 +55,38 @@ func (db DB) ConnectPostgres() (*sql.DB, error) {
 		db.Host, port, db.User, db.Password, db.Name)
 	return sql.Open("postgres", connStr)
 }
+
+// SMTP provides mailing credentials.
+type SMTP struct {
+	Host string
+	// Should be a valid adress mail
+	User     string
+	Password string
+	Port     string
+}
+
+// NewSMTP uses env variables to build SMTP credentials :
+// SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT
+func NewSMTP() (out SMTP, err error) {
+	out.Host = os.Getenv("SMTP_HOST")
+	if out.Host == "" {
+		return SMTP{}, errors.New("missing env SMTP_HOST")
+	}
+
+	out.User = os.Getenv("SMTP_USER")
+	if out.User == "" {
+		return SMTP{}, errors.New("missing env SMTP_USER")
+	}
+
+	out.Password = os.Getenv("SMTP_PASSWORD")
+	if out.Password == "" {
+		return SMTP{}, errors.New("missing env SMTP_PASSWORD")
+	}
+
+	out.Port = os.Getenv("SMTP_PORT")
+	if out.Port == "" {
+		return SMTP{}, errors.New("missing env SMTP_PORT")
+	}
+
+	return out, nil
+}

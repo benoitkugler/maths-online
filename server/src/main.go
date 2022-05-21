@@ -15,6 +15,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/exercice/examples"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	trivialpoursuit "github.com/benoitkugler/maths-online/prof/trivial-poursuit"
 	tvGame "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
@@ -28,8 +29,8 @@ func connectDB(dev bool) (*sql.DB, error) {
 			Host:     "localhost",
 			User:     "benoit",
 			Password: "dummy",
-			// Name:     "maths_dev",
-			Name: "isyro_prod",
+			Name:     "maths_dev",
+			// Name: "isyro_prod",
 		}
 	} else { // in production, read from env
 		var err error
@@ -54,14 +55,25 @@ func connectDB(dev bool) (*sql.DB, error) {
 	return db, err
 }
 
-func getEncrypter(dev bool) (out pass.Encrypter, err error) {
+func getStudentEncrypter(dev bool) (out pass.Encrypter, err error) {
 	if dev {
 		out = pass.Encrypter{1, 2, 3, 4, 5, 6}
 	} else {
-		out, err = pass.NewEncrypter("ENC_KEY")
+		out, err = pass.NewEncrypter("STUDENT_ENC_KEY")
 	}
 
-	fmt.Printf("Encrypter setup with key %v.\n", out)
+	fmt.Printf("Student encrypter setup with key %v.\n", out)
+	return out, err
+}
+
+func getTeacherEncrypter(dev bool) (out pass.Encrypter, err error) {
+	if dev {
+		out = pass.Encrypter{4, 5, 6, 7, 8, 9}
+	} else {
+		out, err = pass.NewEncrypter("TEACHER_ENC_KEY")
+	}
+
+	fmt.Printf("Teacher encrypter setup with key %v.\n", out)
 	return out, err
 }
 
@@ -79,7 +91,12 @@ func main() {
 
 	host := getAdress(*devPtr)
 
-	key, err := getEncrypter(*devPtr)
+	studentKey, err := getStudentEncrypter(*devPtr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	teacherKey, err := getTeacherEncrypter(*devPtr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,7 +113,15 @@ func main() {
 	}
 	defer db.Close()
 
-	trivial := trivialpoursuit.NewController(db, key, demoPinTrivial)
+	smtp, err := pass.NewSMTP()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("SMTP configured with %v.\n", smtp)
+
+	trivial := trivialpoursuit.NewController(db, studentKey, demoPinTrivial)
+
+	tc := teacher.NewController(db, smtp, teacherKey, host)
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -121,7 +146,7 @@ func main() {
 		fmt.Println("CORS activé.")
 	}
 
-	setupRoutes(e, trivial, edit)
+	setupRoutes(e, trivial, edit, tc)
 
 	if *dryPtr {
 		sanityChecks(db)
@@ -186,8 +211,8 @@ func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
 
-func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor.Controller) {
-	setupProfAPI(e, trivial, edit)
+func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor.Controller, tc *teacher.Controller) {
+	setupProfAPI(e, trivial, edit, tc)
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 

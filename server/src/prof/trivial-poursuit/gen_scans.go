@@ -105,6 +105,93 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
+func scanOneTeacherTrivialConfig(row scanner) (TeacherTrivialConfig, error) {
+	var s TeacherTrivialConfig
+	err := row.Scan(
+		&s.IdTeacher,
+		&s.IdTrivialConfig,
+		&s.IsPublic,
+	)
+	return s, err
+}
+
+func ScanTeacherTrivialConfig(row *sql.Row) (TeacherTrivialConfig, error) {
+	return scanOneTeacherTrivialConfig(row)
+}
+
+func SelectAllTeacherTrivialConfigs(tx DB) (TeacherTrivialConfigs, error) {
+	rows, err := tx.Query("SELECT * FROM teacher_trivial_configs")
+	if err != nil {
+		return nil, err
+	}
+	return ScanTeacherTrivialConfigs(rows)
+}
+
+type TeacherTrivialConfigs []TeacherTrivialConfig
+
+func ScanTeacherTrivialConfigs(rs *sql.Rows) (TeacherTrivialConfigs, error) {
+	var (
+		s   TeacherTrivialConfig
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(TeacherTrivialConfigs, 0, 16)
+	for rs.Next() {
+		s, err = scanOneTeacherTrivialConfig(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links TeacherTrivialConfig in the database.
+func InsertManyTeacherTrivialConfigs(tx *sql.Tx, items ...TeacherTrivialConfig) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("teacher_trivial_configs",
+		"id_teacher", "id_trivial_config", "is_public",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdTeacher, item.IdTrivialConfig, item.IsPublic)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link TeacherTrivialConfig in the database.
+// Only the 'IdTeacher' 'IdTrivialConfig' fields are used.
+func (item TeacherTrivialConfig) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM teacher_trivial_configs WHERE 
+	id_teacher = $1 AND id_trivial_config = $2;`, item.IdTeacher, item.IdTrivialConfig)
+	return err
+}
+
 func scanOneTrivialConfig(row scanner) (TrivialConfig, error) {
 	var s TrivialConfig
 	err := row.Scan(
@@ -219,3 +306,63 @@ func DeleteTrivialConfigsByIDs(tx DB, ids ...int64) (IDs, error) {
 
 func (s *CategoriesQuestions) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s CategoriesQuestions) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func SelectTeacherTrivialConfigsByIdTeachers(tx DB, idTeachers ...int64) (TeacherTrivialConfigs, error) {
+	rows, err := tx.Query("SELECT * FROM teacher_trivial_configs WHERE id_teacher = ANY($1)", pq.Int64Array(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTeacherTrivialConfigs(rows)
+}
+
+func DeleteTeacherTrivialConfigsByIdTeachers(tx DB, idTeachers ...int64) (TeacherTrivialConfigs, error) {
+	rows, err := tx.Query("DELETE FROM teacher_trivial_configs WHERE id_teacher = ANY($1) RETURNING *", pq.Int64Array(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTeacherTrivialConfigs(rows)
+}
+
+// SelectTeacherTrivialConfigByIdTrivialConfig return zero or one item, thanks to a UNIQUE constraint
+func SelectTeacherTrivialConfigByIdTrivialConfig(tx DB, idTrivialConfig int64) (item TeacherTrivialConfig, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM teacher_trivial_configs WHERE id_trivial_config = $1", idTrivialConfig)
+	item, err = ScanTeacherTrivialConfig(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func SelectTeacherTrivialConfigsByIdTrivialConfigs(tx DB, idTrivialConfigs ...int64) (TeacherTrivialConfigs, error) {
+	rows, err := tx.Query("SELECT * FROM teacher_trivial_configs WHERE id_trivial_config = ANY($1)", pq.Int64Array(idTrivialConfigs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTeacherTrivialConfigs(rows)
+}
+
+func DeleteTeacherTrivialConfigsByIdTrivialConfigs(tx DB, idTrivialConfigs ...int64) (TeacherTrivialConfigs, error) {
+	rows, err := tx.Query("DELETE FROM teacher_trivial_configs WHERE id_trivial_config = ANY($1) RETURNING *", pq.Int64Array(idTrivialConfigs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTeacherTrivialConfigs(rows)
+}
+
+// ByIdTeacher returns a map with 'IdTeacher' as keys.
+func (items TeacherTrivialConfigs) ByIdTeacher() map[int64]TeacherTrivialConfigs {
+	out := make(map[int64]TeacherTrivialConfigs)
+	for _, target := range items {
+		out[target.IdTeacher] = append(out[target.IdTeacher], target)
+	}
+	return out
+}
+
+// ByIdTrivialConfig returns a map with 'IdTrivialConfig' as keys.
+func (items TeacherTrivialConfigs) ByIdTrivialConfig() map[int64]TeacherTrivialConfig {
+	out := make(map[int64]TeacherTrivialConfig, len(items))
+	for _, target := range items {
+		out[target.IdTrivialConfig] = target
+	}
+	return out
+}
