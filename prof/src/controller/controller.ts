@@ -16,6 +16,12 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  protected onSuccessDuplicateTrivialPoursuit(data: TrivialConfigExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Session dupliquée.");
+    }
+  }
   protected onSuccessCheckMissingQuestions(
     data: CheckMissingQuestionsOut
   ): void {

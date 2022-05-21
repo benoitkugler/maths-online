@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -93,6 +94,9 @@ func (ct *Controller) getTrivialPoursuits() ([]TrivialConfigExt, error) {
 	for _, config := range configs {
 		out = append(out, config.withDetails(tagsDict, dict))
 	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Config.Id < out[j].Config.Id })
+
 	return out, nil
 }
 
@@ -114,6 +118,45 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	}
 
 	out := TrivialConfigExt{Config: tc} // 0 questions by categories, not running
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+	_, err = DeleteTrivialConfigById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	in, err := SelectTrivialConfig(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	config, err := in.Insert(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tags, err := exercice.SelectAllQuestionTags(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap())
 
 	return c.JSON(200, out)
 }
@@ -193,19 +236,6 @@ func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (Check
 		Pattern: pattern,
 		Missing: hint.List(),
 	}, nil
-}
-
-func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
-	id, err := utils.QueryParamInt64(c, "id")
-	if err != nil {
-		return err
-	}
-	_, err = DeleteTrivialConfigById(ct.db, id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	return c.NoContent(200)
 }
 
 // LaunchSessionTrivialPoursuit starts a new TrivialPoursuit session with

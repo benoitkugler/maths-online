@@ -12,8 +12,9 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *edito
 	e.GET("/prof/trivial/config", trivial.GetTrivialPoursuit)
 	e.PUT("/prof/trivial/config", trivial.CreateTrivialPoursuit)
 	e.POST("/prof/trivial/config", trivial.UpdateTrivialPoursuit)
-	e.POST("/prof/trivial/config/check-missing-questions", trivial.CheckMissingQuestions)
 	e.DELETE("/prof/trivial/config", trivial.DeleteTrivialPoursuit)
+	e.GET("/prof/trivial/config/duplicate", trivial.DuplicateTrivialPoursuit)
+	e.POST("/prof/trivial/config/check-missing-questions", trivial.CheckMissingQuestions)
 
 	// trivialpoursuit game server
 	e.POST("/trivial/launch_session", trivial.LaunchSessionTrivialPoursuit)

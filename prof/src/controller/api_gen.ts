@@ -493,6 +493,54 @@ export abstract class AbstractAPI {
     data: TrivialConfigExt
   ): void;
 
+  protected async rawDeleteTrivialPoursuit(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/prof/trivial/config";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** DeleteTrivialPoursuit wraps rawDeleteTrivialPoursuit and handles the error */
+  async DeleteTrivialPoursuit(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawDeleteTrivialPoursuit(params);
+      this.onSuccessDeleteTrivialPoursuit(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessDeleteTrivialPoursuit(data: any): void;
+
+  protected async rawDuplicateTrivialPoursuit(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/prof/trivial/config/duplicate";
+    const rep: AxiosResponse<TrivialConfigExt> = await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** DuplicateTrivialPoursuit wraps rawDuplicateTrivialPoursuit and handles the error */
+  async DuplicateTrivialPoursuit(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawDuplicateTrivialPoursuit(params);
+      this.onSuccessDuplicateTrivialPoursuit(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessDuplicateTrivialPoursuit(
+    data: TrivialConfigExt
+  ): void;
+
   protected async rawCheckMissingQuestions(params: CategoriesQuestions) {
     const fullUrl =
       this.baseUrl + "/prof/trivial/config/check-missing-questions";
@@ -519,29 +567,6 @@ export abstract class AbstractAPI {
   protected abstract onSuccessCheckMissingQuestions(
     data: CheckMissingQuestionsOut
   ): void;
-
-  protected async rawDeleteTrivialPoursuit(params: { id: number }) {
-    const fullUrl = this.baseUrl + "/prof/trivial/config";
-    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** DeleteTrivialPoursuit wraps rawDeleteTrivialPoursuit and handles the error */
-  async DeleteTrivialPoursuit(params: { id: number }) {
-    this.startRequest();
-    try {
-      const out = await this.rawDeleteTrivialPoursuit(params);
-      this.onSuccessDeleteTrivialPoursuit(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessDeleteTrivialPoursuit(data: any): void;
 
   protected async rawLaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
     const fullUrl = this.baseUrl + "/trivial/launch_session";

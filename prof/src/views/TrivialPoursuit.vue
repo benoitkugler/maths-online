@@ -54,7 +54,7 @@
     </v-row>
 
     <v-list>
-      <v-list-item v-for="config in configs" class="my-2">
+      <v-list-item v-for="config in configs" class="my-3">
         <v-row>
           <v-col cols="auto" align-self="center">
             <v-btn
@@ -87,6 +87,15 @@
               <v-icon icon="mdi-play" color="green"></v-icon>
             </v-btn>
 
+            <v-btn
+              class="mx-2"
+              size="x-small"
+              icon
+              @click="duplicateConfig(config.Config)"
+              title="Dupliquer cette session"
+            >
+              <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+            </v-btn>
             <v-btn
               v-if="config.Running.SessionID == ''"
               class="mx-2"
@@ -198,6 +207,16 @@ async function updateConfig(config: TrivialConfig) {
   const index = _configs.findIndex(v => v.Config.Id == config.Id);
   _configs[index] = res;
   editedConfig = null;
+}
+
+async function duplicateConfig(config: TrivialConfig) {
+  const res = await controller.DuplicateTrivialPoursuit({ id: config.Id });
+  if (res === undefined) {
+    return;
+  }
+  console.log(config, res);
+
+  _configs.push(res);
 }
 
 async function deleteConfig(config: TrivialConfig) {
