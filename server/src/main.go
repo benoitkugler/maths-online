@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/exercice/examples"
 	"github.com/benoitkugler/maths-online/pass"
@@ -29,8 +28,8 @@ func connectDB(dev bool) (*sql.DB, error) {
 			Host:     "localhost",
 			User:     "benoit",
 			Password: "dummy",
-			Name:     "maths_dev",
-			// Name: "isyro_prod",
+			// Name:     "maths_dev",
+			Name: "isyro_prod",
 		}
 	} else { // in production, read from env
 		var err error
@@ -78,7 +77,7 @@ func getTeacherEncrypter(dev bool) (out pass.Encrypter, err error) {
 }
 
 func sanityChecks(db *sql.DB) {
-	if err := exercice.ValidateAllQuestions(db); err != nil {
+	if err := editor.ValidateAllQuestions(db); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Question table validated.")
@@ -122,6 +121,10 @@ func main() {
 	trivial := trivialpoursuit.NewController(db, studentKey, demoPinTrivial)
 
 	tc := teacher.NewController(db, smtp, teacherKey, host)
+	if err = tc.LoadAdminTeacher(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Admin teacher loaded.")
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)

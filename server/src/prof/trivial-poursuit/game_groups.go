@@ -2,7 +2,7 @@ package trivialpoursuit
 
 import "fmt"
 
-func (RandomGroupStrategy) kind() int { return RandomGroupStrategyKind }
+func (RandomGroupStrategy) kind() int { return RandomGroupStrategyGrKind }
 
 func (rd RandomGroupStrategy) initGames(*gameSession) {}
 
@@ -31,7 +31,7 @@ func (rd RandomGroupStrategy) selectOrCreateGame(_ string, _ int64, session *gam
 	return gameID, nil
 }
 
-func (FixedSizeGroupStrategy) kind() int { return FixedSizeGroupStrategyKind }
+func (FixedSizeGroupStrategy) kind() int { return FixedSizeGroupStrategyGrKind }
 
 func (fs FixedSizeGroupStrategy) initGames(session *gameSession) {
 	for _, groupSize := range fs.Groups {

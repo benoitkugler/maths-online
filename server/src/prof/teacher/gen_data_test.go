@@ -40,10 +40,16 @@ func randSliceuint8() []byte {
 	return out
 }
 
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
+}
+
 func randTeacher() Teacher {
 	return Teacher{
 		Id:              randint64(),
 		Mail:            randstring(),
 		PasswordCrypted: randSliceuint8(),
+		IsAdmin:         randbool(),
 	}
 }

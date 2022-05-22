@@ -1,15 +1,24 @@
 package editor
 
-//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql
+import "github.com/benoitkugler/maths-online/maths/exercice"
 
-// TeacherQuestion is a link table listing the questions owned
-// by one teacher.
-// Admin questions are owned by no one
-//
-// A question have at most one owner.
-// sql:ADD UNIQUE(id_question)
-type TeacherQuestion struct {
-	IdTeacher  int64 `json:"id_teacher"`
-	IdQuestion int64 `json:"id_question"`
-	IsPublic   bool  `json:"is_public"` // If true, the question is available to other teachers (as read-only)
+//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql -mode=rand:gen_randdata_test.go -mode=ts:../../../../prof/src/controller/exercice_gen.ts
+
+// Question is a standalone question, used for instance in games.
+type Question struct {
+	Id        int64                 `json:"id"`
+	Page      exercice.QuestionPage `json:"page"`
+	Public    bool                  `json:"public"`
+	IdTeacher int64                 `json:"id_teacher"`
 }
+
+// sql: ADD UNIQUE(id_question, tag)
+type QuestionTag struct {
+	Tag        string `json:"tag"`
+	IdQuestion int64  `sql_on_delete:"CASCADE" json:"id_question"`
+}
+
+// DifficultyTag are special question tags used to indicate the
+// difficulty of one question.
+// It is used to select question among implicit groups
+type DifficultyTag string

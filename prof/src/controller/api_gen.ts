@@ -3,6 +3,21 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+// github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionIn
+export interface AskInscriptionIn {
+  Mail: string;
+  Password: string;
+}
+// github.com/benoitkugler/maths-online/prof/teacher.LogginIn
+export interface LogginIn {
+  Mail: string;
+  Password: string;
+}
+// github.com/benoitkugler/maths-online/prof/teacher.LogginOut
+export interface LogginOut {
+  Error: string;
+  Token: string;
+}
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.CategoriesQuestions
@@ -415,6 +430,73 @@ export abstract class AbstractAPI {
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
   }
+
+  protected async rawAskInscription(params: AskInscriptionIn) {
+    const fullUrl = this.baseUrl + "/prof/inscription";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** AskInscription wraps rawAskInscription and handles the error */
+  async AskInscription(params: AskInscriptionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawAskInscription(params);
+      this.onSuccessAskInscription(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessAskInscription(data: any): void;
+
+  protected async rawValidateInscription(params: { data: string }) {
+    const fullUrl = this.baseUrl + "inscription";
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      params: { data: params["data"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ValidateInscription wraps rawValidateInscription and handles the error */
+  async ValidateInscription(params: { data: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawValidateInscription(params);
+      this.onSuccessValidateInscription(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessValidateInscription(data: any): void;
+
+  protected async rawLoggin(params: LogginIn) {
+    const fullUrl = this.baseUrl + "/prof/loggin";
+    const rep: AxiosResponse<LogginOut> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** Loggin wraps rawLoggin and handles the error */
+  async Loggin(params: LogginIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawLoggin(params);
+      this.onSuccessLoggin(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessLoggin(data: LogginOut): void;
 
   protected async rawGetTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/prof/trivial/config";

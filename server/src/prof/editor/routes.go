@@ -23,7 +23,7 @@ func (ct *Controller) EditorStartSession(c echo.Context) error {
 // EditorGetTags return all tags currently used by questions.
 // It also add the special difficulty tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
-	out, err := exercice.SelectAllTags(ct.db)
+	out, err := SelectAllTags(ct.db)
 	if err != nil {
 		return err
 	}
@@ -32,15 +32,15 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 	// in first choices
 	filtred := make([]string, 0, len(out))
 	for _, tag := range out {
-		switch exercice.DifficultyTag(tag) {
-		case exercice.Diff1, exercice.Diff2, exercice.Diff3:
+		switch DifficultyTag(tag) {
+		case Diff1, Diff2, Diff3:
 		default:
 			filtred = append(filtred, tag)
 		}
 	}
 
 	filtred = append([]string{
-		string(exercice.Diff1), string(exercice.Diff2), string(exercice.Diff3),
+		string(Diff1), string(Diff2), string(Diff3),
 	}, filtred...)
 
 	return c.JSON(200, filtred)
@@ -66,7 +66,7 @@ func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 }
 
 func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
-	var question exercice.Question
+	var question Question
 	question, err := question.Insert(ct.db)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 		return err
 	}
 
-	_, err = exercice.DeleteQuestionById(ct.db, id)
+	_, err = DeleteQuestionById(ct.db, id)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (ct *Controller) EditorGetQuestion(c echo.Context) error {
 		return err
 	}
 
-	question, err := exercice.SelectQuestion(ct.db, id)
+	question, err := SelectQuestion(ct.db, id)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (ct *Controller) EditorCheckParameters(c echo.Context) error {
 
 type SaveAndPreviewIn struct {
 	SessionID string
-	Question  exercice.Question
+	Question  Question
 }
 
 type SaveAndPreviewOut struct {

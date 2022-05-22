@@ -1,6 +1,7 @@
 package teacher
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -26,4 +27,11 @@ func TestController_mailInscription(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(text)
+}
+
+func TestPasswordCrypted(t *testing.T) {
+	key := pass.Encrypter{}
+	password := "hehe"
+	fmt.Printf(`'\x%s'`, hex.EncodeToString(key.EncryptPassword(password)))
+	fmt.Println()
 }

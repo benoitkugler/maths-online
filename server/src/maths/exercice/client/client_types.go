@@ -3,7 +3,7 @@ package client
 import (
 	"encoding/json"
 
-	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
+	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 

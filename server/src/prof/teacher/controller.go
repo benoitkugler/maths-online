@@ -20,8 +20,12 @@ type Controller struct {
 	key  pass.Encrypter
 	smtp pass.SMTP
 	host string // used for links
+
+	admin Teacher // loaded at creation
 }
 
+// NewController return a new controller.
+// `LoadAdminTeacher` should be called once.
 func NewController(db *sql.DB, smtp pass.SMTP, key pass.Encrypter, host string) *Controller {
 	return &Controller{
 		db:   db,
@@ -29,6 +33,25 @@ func NewController(db *sql.DB, smtp pass.SMTP, key pass.Encrypter, host string) 
 		smtp: smtp,
 		host: host,
 	}
+}
+
+// LoadAdminTeacher loads and stores the admin account.
+// By convention, only one account has admin rights. It is manually created at
+// DB setup, and never added (neiter removed) at run time.
+func (ct *Controller) LoadAdminTeacher() error {
+	rows, err := ct.db.Query("SELECT * FROM teachers WHERE is_admin = true")
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	teachers, err := ScanTeachers(rows)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if len(teachers) != 1 {
+		return errors.New("exactly one teacher must be admin")
+	}
+	ct.admin = teachers[teachers.IDs()[0]]
+	return nil
 }
 
 const ValidateInscriptionEndPoint = "inscription"
@@ -119,4 +142,40 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 
 	// TODO:
 	return c.HTML(200, "OK")
+}
+
+func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
+	row := ct.db.QueryRow("SELECT * FROM teachers WHERE mail = $1", args.Mail)
+	teacher, err := ScanTeacher(row)
+	if err == sql.ErrNoRows {
+		return LogginOut{Error: "Cette adresse mail n'est pas utilisée."}, nil
+	}
+	if err != nil {
+		return LogginOut{}, err
+	}
+
+	if args.Password != ct.key.DecryptPassword(teacher.PasswordCrypted) {
+		return LogginOut{Error: "Le mot de passe est incorrect."}, nil
+	}
+
+	token, err := ct.newToken(teacher)
+	if err != nil {
+		return LogginOut{}, err
+	}
+
+	return LogginOut{Token: token}, nil
+}
+
+func (ct *Controller) Loggin(c echo.Context) error {
+	var args LogginIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.loggin(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
 }

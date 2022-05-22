@@ -8,9 +8,13 @@ CREATE TABLE classrooms (
 CREATE TABLE teachers (
     id serial PRIMARY KEY,
     mail varchar NOT NULL,
-    password_crypted bytea
+    password_crypted bytea,
+    is_admin boolean NOT NULL
 );
 
 ALTER TABLE classrooms
     ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
+
+ALTER TABLE teachers
+    ADD UNIQUE (mail);
 

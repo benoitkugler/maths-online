@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/prof/editor"
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils"
 )
@@ -38,7 +38,7 @@ var demoQuestions = CategoriesQuestions{
 func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	for _, q := range qc {
 		for i, t := range q {
-			q[i] = exercice.NormalizeTag(t)
+			q[i] = editor.NormalizeTag(t)
 		}
 
 		if len(q) != 0 {
@@ -48,7 +48,7 @@ func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	return out
 }
 
-func (qc QuestionCriterion) filter(dict map[int64]exercice.QuestionTags) (out IDs) {
+func (qc QuestionCriterion) filter(dict map[int64]editor.QuestionTags) (out IDs) {
 	qc = qc.normalize()
 
 	// an empty criterion is interpreted as an invalid criterion,
@@ -80,7 +80,7 @@ func (cats *CategoriesQuestions) normalize() {
 
 func (cats CategoriesQuestions) selectQuestions(db DB) (out tv.QuestionPool, err error) {
 	// select the questions...
-	tags, err := exercice.SelectAllQuestionTags(db)
+	tags, err := editor.SelectAllQuestionTags(db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -93,20 +93,20 @@ func (cats CategoriesQuestions) selectQuestions(db DB) (out tv.QuestionPool, err
 			return out, fmt.Errorf("La catégorie %d n'a aucune question.", i+1)
 		}
 
-		questionsDict, err := exercice.SelectQuestions(db, idQuestions...)
+		questionsDict, err := editor.SelectQuestions(db, idQuestions...)
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
 
 		// select the tags, required for difficulty groups
-		tags, err := exercice.SelectQuestionTagsByIdQuestions(db, idQuestions...)
+		tags, err := editor.SelectQuestionTagsByIdQuestions(db, idQuestions...)
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
 		tagsDict := tags.ByIdQuestion()
 
 		tmp := make([]questionDiff, 0, len(questionsDict))
-		questions := make([]exercice.Question, 0, len(questionsDict))
+		questions := make([]editor.Question, 0, len(questionsDict))
 		for _, question := range questionsDict {
 			diff := tagsDict[question.Id].Crible().Difficulty()
 			tmp = append(tmp, questionDiff{question: question, diff: diff})
@@ -128,8 +128,8 @@ func (cats CategoriesQuestions) selectQuestions(db DB) (out tv.QuestionPool, err
 }
 
 type questionDiff struct {
-	diff     exercice.DifficultyTag
-	question exercice.Question
+	diff     editor.DifficultyTag
+	question editor.Question
 }
 
 // weightQuestions compute the probabilities of each question in
@@ -138,13 +138,13 @@ func weightQuestions(questions []questionDiff) []float64 {
 	// form title groups
 	groups := make(map[string][]questionDiff)
 	for _, qu := range questions {
-		groups[qu.question.Title] = append(groups[qu.question.Title], qu)
+		groups[qu.question.Page.Title] = append(groups[qu.question.Page.Title], qu)
 	}
 	// now differentiate against the difficulty;
 	// to simplify, we consider that question without difficulty form a sub-group of their own
-	difficulties := make(map[string]map[exercice.DifficultyTag][]questionDiff)
+	difficulties := make(map[string]map[editor.DifficultyTag][]questionDiff)
 	for ti, group := range groups {
-		perDifficulty := make(map[exercice.DifficultyTag][]questionDiff)
+		perDifficulty := make(map[editor.DifficultyTag][]questionDiff)
 		for _, question := range group {
 			perDifficulty[question.diff] = append(perDifficulty[question.diff], question)
 		}
@@ -154,7 +154,7 @@ func weightQuestions(questions []questionDiff) []float64 {
 	NG := len(groups)
 	out := make([]float64, len(questions))
 	for i, qu := range questions {
-		perDifficulty := difficulties[qu.question.Title]
+		perDifficulty := difficulties[qu.question.Page.Title]
 		ND := len(perDifficulty) // number of difficulties in the group
 		// each group must have a resulting proba of 1/NG,
 		// now, each subgroup must have a resulting proba of 1/ND,
@@ -209,7 +209,7 @@ func (cats CategoriesQuestions) commonTags() []string {
 func (cats CategoriesQuestions) selectQuestionIds(db DB) (Set, error) {
 	crible := NewSet()
 
-	tags, err := exercice.SelectAllQuestionTags(db)
+	tags, err := editor.SelectAllQuestionTags(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

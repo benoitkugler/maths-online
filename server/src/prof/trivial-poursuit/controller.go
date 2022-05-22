@@ -12,8 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/prof/editor"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -76,13 +77,25 @@ func (ct *Controller) sessionMap() map[int64]LaunchSessionOut {
 	return out
 }
 
-func (ct *Controller) getTrivialPoursuits() ([]TrivialConfigExt, error) {
-	configs, err := SelectAllTrivialConfigs(ct.db)
+func (ct *Controller) getTrivialPoursuits(teacher teacher.Teacher) ([]TrivialConfigExt, error) {
+	// load three kind of configs :
+	//	- personnal
+	//	- public from other teachers
+	//	- admin
+	// TODO:
+	// links, err := SelectAllTeacherTrivialConfigs(ct.db)
+	// if err != nil {
+	// 	return nil, utils.SQLError(err)
+	// }
+
+	// //
+
+	configs, err := SelectTrivialConfigs(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	tags, err := exercice.SelectAllQuestionTags(ct.db)
+	tags, err := editor.SelectAllQuestionTags(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -101,7 +114,8 @@ func (ct *Controller) getTrivialPoursuits() ([]TrivialConfigExt, error) {
 }
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
-	out, err := ct.getTrivialPoursuits()
+	teacher := teacher.JWTTeacherID(c)
+	out, err := ct.getTrivialPoursuits(teacher)
 	if err != nil {
 		return err
 	}
@@ -151,7 +165,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	tags, err := exercice.SelectAllQuestionTags(ct.db)
+	tags, err := editor.SelectAllQuestionTags(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -172,7 +186,7 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	tags, err := exercice.SelectAllQuestionTags(ct.db)
+	tags, err := editor.SelectAllQuestionTags(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -213,7 +227,7 @@ func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (Check
 		return CheckMissingQuestionsOut{}, nil
 	}
 
-	existingQuestions, err := exercice.SelectQuestionByTags(ct.db, pattern...)
+	existingQuestions, err := editor.SelectQuestionByTags(ct.db, pattern...)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, utils.SQLError(err)
 	}
@@ -225,7 +239,7 @@ func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (Check
 
 	// check is existingQuestions is included in usedQuestions
 	// if not, add the tags as hint
-	hint := exercice.NewTagListSet()
+	hint := editor.NewTagListSet()
 	for idExisting, tags := range existingQuestions {
 		if !usedQuestions.Has(idExisting) {
 			hint.Add(tags.List())

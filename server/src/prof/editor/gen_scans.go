@@ -105,33 +105,57 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
-func scanOneTeacherQuestion(row scanner) (TeacherQuestion, error) {
-	var s TeacherQuestion
+func scanOneQuestion(row scanner) (Question, error) {
+	var s Question
 	err := row.Scan(
+		&s.Id,
+		&s.Page,
+		&s.Public,
 		&s.IdTeacher,
-		&s.IdQuestion,
-		&s.IsPublic,
 	)
 	return s, err
 }
 
-func ScanTeacherQuestion(row *sql.Row) (TeacherQuestion, error) {
-	return scanOneTeacherQuestion(row)
+func ScanQuestion(row *sql.Row) (Question, error) {
+	return scanOneQuestion(row)
 }
 
-func SelectAllTeacherQuestions(tx DB) (TeacherQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM teacher_questions")
+func SelectAllQuestions(tx DB) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions")
 	if err != nil {
 		return nil, err
 	}
-	return ScanTeacherQuestions(rows)
+	return ScanQuestions(rows)
 }
 
-type TeacherQuestions []TeacherQuestion
+// SelectQuestion returns the entry matching id.
+func SelectQuestion(tx DB, id int64) (Question, error) {
+	row := tx.QueryRow("SELECT * FROM questions WHERE id = $1", id)
+	return ScanQuestion(row)
+}
 
-func ScanTeacherQuestions(rs *sql.Rows) (TeacherQuestions, error) {
+// SelectQuestions returns the entry matching the given ids.
+func SelectQuestions(tx DB, ids ...int64) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions WHERE id = ANY($1)", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestions(rows)
+}
+
+type Questions map[int64]Question
+
+func (m Questions) IDs() IDs {
+	out := make(IDs, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanQuestions(rs *sql.Rows) (Questions, error) {
 	var (
-		s   TeacherQuestion
+		s   Question
 		err error
 	)
 	defer func() {
@@ -140,9 +164,96 @@ func ScanTeacherQuestions(rs *sql.Rows) (TeacherQuestions, error) {
 			err = errClose
 		}
 	}()
-	structs := make(TeacherQuestions, 0, 16)
+	structs := make(Questions, 16)
 	for rs.Next() {
-		s, err = scanOneTeacherQuestion(rs)
+		s, err = scanOneQuestion(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert Question in the database and returns the item with id filled.
+func (item Question) Insert(tx DB) (out Question, err error) {
+	row := tx.QueryRow(`INSERT INTO questions (
+		page,public,id_teacher
+		) VALUES (
+		$1,$2,$3
+		) RETURNING 
+		id,page,public,id_teacher;
+		`, item.Page, item.Public, item.IdTeacher)
+	return ScanQuestion(row)
+}
+
+// Update Question in the database and returns the new version.
+func (item Question) Update(tx DB) (out Question, err error) {
+	row := tx.QueryRow(`UPDATE questions SET (
+		page,public,id_teacher
+		) = (
+		$2,$3,$4
+		) WHERE id = $1 RETURNING 
+		id,page,public,id_teacher;
+		`, item.Id, item.Page, item.Public, item.IdTeacher)
+	return ScanQuestion(row)
+}
+
+// Deletes the Question and returns the item
+func DeleteQuestionById(tx DB, id int64) (Question, error) {
+	row := tx.QueryRow("DELETE FROM questions WHERE id = $1 RETURNING *;", id)
+	return ScanQuestion(row)
+}
+
+// Deletes the Question in the database and returns the ids.
+func DeleteQuestionsByIDs(tx DB, ids ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}
+
+func scanOneQuestionTag(row scanner) (QuestionTag, error) {
+	var s QuestionTag
+	err := row.Scan(
+		&s.Tag,
+		&s.IdQuestion,
+	)
+	return s, err
+}
+
+func ScanQuestionTag(row *sql.Row) (QuestionTag, error) {
+	return scanOneQuestionTag(row)
+}
+
+func SelectAllQuestionTags(tx DB) (QuestionTags, error) {
+	rows, err := tx.Query("SELECT * FROM question_tags")
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestionTags(rows)
+}
+
+type QuestionTags []QuestionTag
+
+func ScanQuestionTags(rs *sql.Rows) (QuestionTags, error) {
+	var (
+		s   QuestionTag
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(QuestionTags, 0, 16)
+	for rs.Next() {
+		s, err = scanOneQuestionTag(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -154,21 +265,21 @@ func ScanTeacherQuestions(rs *sql.Rows) (TeacherQuestions, error) {
 	return structs, nil
 }
 
-// Insert the links TeacherQuestion in the database.
-func InsertManyTeacherQuestions(tx *sql.Tx, items ...TeacherQuestion) error {
+// Insert the links QuestionTag in the database.
+func InsertManyQuestionTags(tx *sql.Tx, items ...QuestionTag) error {
 	if len(items) == 0 {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("teacher_questions",
-		"id_teacher", "id_question", "is_public",
+	stmt, err := tx.Prepare(pq.CopyIn("question_tags",
+		"tag", "id_question",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdTeacher, item.IdQuestion, item.IsPublic)
+		_, err = stmt.Exec(item.Tag, item.IdQuestion)
 		if err != nil {
 			return err
 		}
@@ -184,70 +295,62 @@ func InsertManyTeacherQuestions(tx *sql.Tx, items ...TeacherQuestion) error {
 	return nil
 }
 
-// Delete the link TeacherQuestion in the database.
-// Only the 'IdTeacher' 'IdQuestion' fields are used.
-func (item TeacherQuestion) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM teacher_questions WHERE 
-	id_teacher = $1 AND id_question = $2;`, item.IdTeacher, item.IdQuestion)
+// Delete the link QuestionTag in the database.
+// Only the 'IdQuestion' fields are used.
+func (item QuestionTag) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM question_tags WHERE 
+	id_question = $1;`, item.IdQuestion)
 	return err
 }
 
-func SelectTeacherQuestionsByIdTeachers(tx DB, idTeachers ...int64) (TeacherQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM teacher_questions WHERE id_teacher = ANY($1)", pq.Int64Array(idTeachers))
+func SelectQuestionsByIdTeachers(tx DB, idTeachers ...int64) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions WHERE id_teacher = ANY($1)", pq.Int64Array(idTeachers))
 	if err != nil {
 		return nil, err
 	}
-	return ScanTeacherQuestions(rows)
+	return ScanQuestions(rows)
 }
 
-func DeleteTeacherQuestionsByIdTeachers(tx DB, idTeachers ...int64) (TeacherQuestions, error) {
-	rows, err := tx.Query("DELETE FROM teacher_questions WHERE id_teacher = ANY($1) RETURNING *", pq.Int64Array(idTeachers))
+func DeleteQuestionsByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE id_teacher = ANY($1) RETURNING id", pq.Int64Array(idTeachers))
 	if err != nil {
 		return nil, err
 	}
-	return ScanTeacherQuestions(rows)
+	return ScanIDs(rows)
 }
 
-// SelectTeacherQuestionByIdQuestion return zero or one item, thanks to a UNIQUE constraint
-func SelectTeacherQuestionByIdQuestion(tx DB, idQuestion int64) (item TeacherQuestion, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM teacher_questions WHERE id_question = $1", idQuestion)
-	item, err = ScanTeacherQuestion(row)
-	if err == sql.ErrNoRows {
-		return item, false, nil
-	}
-	return item, true, err
-}
-
-func SelectTeacherQuestionsByIdQuestions(tx DB, idQuestions ...int64) (TeacherQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM teacher_questions WHERE id_question = ANY($1)", pq.Int64Array(idQuestions))
+func SelectQuestionTagsByIdQuestions(tx DB, idQuestions ...int64) (QuestionTags, error) {
+	rows, err := tx.Query("SELECT * FROM question_tags WHERE id_question = ANY($1)", pq.Int64Array(idQuestions))
 	if err != nil {
 		return nil, err
 	}
-	return ScanTeacherQuestions(rows)
+	return ScanQuestionTags(rows)
 }
 
-func DeleteTeacherQuestionsByIdQuestions(tx DB, idQuestions ...int64) (TeacherQuestions, error) {
-	rows, err := tx.Query("DELETE FROM teacher_questions WHERE id_question = ANY($1) RETURNING *", pq.Int64Array(idQuestions))
+func DeleteQuestionTagsByIdQuestions(tx DB, idQuestions ...int64) (QuestionTags, error) {
+	rows, err := tx.Query("DELETE FROM question_tags WHERE id_question = ANY($1) RETURNING *", pq.Int64Array(idQuestions))
 	if err != nil {
 		return nil, err
 	}
-	return ScanTeacherQuestions(rows)
+	return ScanQuestionTags(rows)
 }
 
-// ByIdTeacher returns a map with 'IdTeacher' as keys.
-func (items TeacherQuestions) ByIdTeacher() map[int64]TeacherQuestions {
-	out := make(map[int64]TeacherQuestions)
+// ByIdQuestion returns a map with 'IdQuestion' as keys.
+func (items QuestionTags) ByIdQuestion() map[int64]QuestionTags {
+	out := make(map[int64]QuestionTags)
 	for _, target := range items {
-		out[target.IdTeacher] = append(out[target.IdTeacher], target)
+		out[target.IdQuestion] = append(out[target.IdQuestion], target)
 	}
 	return out
 }
 
-// ByIdQuestion returns a map with 'IdQuestion' as keys.
-func (items TeacherQuestions) ByIdQuestion() map[int64]TeacherQuestion {
-	out := make(map[int64]TeacherQuestion, len(items))
-	for _, target := range items {
-		out[target.IdQuestion] = target
+// IdQuestions returns the list of ids of IdQuestion
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items QuestionTags) IdQuestions() IDs {
+	out := make(IDs, len(items))
+	for index, target := range items {
+		out[index] = target.IdQuestion
 	}
 	return out
 }

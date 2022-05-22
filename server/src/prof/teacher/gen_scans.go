@@ -222,6 +222,7 @@ func scanOneTeacher(row scanner) (Teacher, error) {
 		&s.Id,
 		&s.Mail,
 		&s.PasswordCrypted,
+		&s.IsAdmin,
 	)
 	return s, err
 }
@@ -291,24 +292,24 @@ func ScanTeachers(rs *sql.Rows) (Teachers, error) {
 // Insert Teacher in the database and returns the item with id filled.
 func (item Teacher) Insert(tx DB) (out Teacher, err error) {
 	row := tx.QueryRow(`INSERT INTO teachers (
-		mail,password_crypted
+		mail,password_crypted,is_admin
 		) VALUES (
-		$1,$2
+		$1,$2,$3
 		) RETURNING 
-		id,mail,password_crypted;
-		`, item.Mail, item.PasswordCrypted)
+		id,mail,password_crypted,is_admin;
+		`, item.Mail, item.PasswordCrypted, item.IsAdmin)
 	return ScanTeacher(row)
 }
 
 // Update Teacher in the database and returns the new version.
 func (item Teacher) Update(tx DB) (out Teacher, err error) {
 	row := tx.QueryRow(`UPDATE teachers SET (
-		mail,password_crypted
+		mail,password_crypted,is_admin
 		) = (
-		$2,$3
+		$2,$3,$4
 		) WHERE id = $1 RETURNING 
-		id,mail,password_crypted;
-		`, item.Id, item.Mail, item.PasswordCrypted)
+		id,mail,password_crypted,is_admin;
+		`, item.Id, item.Mail, item.PasswordCrypted, item.IsAdmin)
 	return ScanTeacher(row)
 }
 

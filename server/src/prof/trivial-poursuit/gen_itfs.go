@@ -54,6 +54,6 @@ func (item GroupStrategyWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	FixedSizeGroupStrategyKind = iota
-	RandomGroupStrategyKind
+	FixedSizeGroupStrategyGrKind = iota
+	RandomGroupStrategyGrKind
 )

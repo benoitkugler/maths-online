@@ -7,7 +7,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
-	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
+	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -23,8 +23,6 @@ var (
 	_ Block = FunctionVariationGraphBlock{}
 	_ Block = TableBlock{}
 )
-
-type Enonce []Block
 
 // Block form the actual content of a question
 // it is stored in a DB in generic form, but may be instantiated
@@ -57,7 +55,7 @@ func validateNumberExpression(s string, params expression.RandomParameters, chec
 }
 
 type Parameters struct {
-	Variables  randomParameters
+	Variables  RandomParameters
 	Intrinsics []string // validated by exercice.ParseIntrinsic
 }
 
@@ -75,10 +73,10 @@ func (pr Parameters) ToMap() expression.RandomParameters {
 	return out
 }
 
-// randomParameters is a serialized form of expression.RandomParameters
-type randomParameters []randomParameter
+// RandomParameters is a serialized form of expression.RandomParameters
+type RandomParameters []RandomParameter
 
-type randomParameter struct {
+type RandomParameter struct {
 	Expression string              `json:"expression"` // as typed by the user, but validated
 	Variable   expression.Variable `json:"variable"`
 }
@@ -86,7 +84,7 @@ type randomParameter struct {
 // toMap assumes `rp` only contains valid expressions,
 // or it will panic
 // It may only be used after `ValidateParameters`
-func (rp randomParameters) toMap() expression.RandomParameters {
+func (rp RandomParameters) toMap() expression.RandomParameters {
 	out := make(expression.RandomParameters, len(rp))
 	for _, item := range rp {
 		out[expression.Variable(item.Variable)] = expression.MustParse(item.Expression)
@@ -94,39 +92,21 @@ func (rp randomParameters) toMap() expression.RandomParameters {
 	return out
 }
 
-// Exercice is a sequence of questions
-type ExerciceQuestions struct {
-	Exercice
-	Questions Questions
-}
-
-// instantiate returns a deep copy of `eq`, where all random parameters
-// have been resolved
-// It assumes that the expressions and random parameters definitions are valid.
-func (eq ExerciceQuestions) instantiate() ExerciceInstance {
-	rp := eq.Parameters.ToMap()
-	// generate random params
-	params, _ := rp.Instantiate()
-
-	out := ExerciceInstance{
-		Id:          eq.Id,
-		Title:       eq.Title,
-		Description: eq.Description,
-	}
-	out.Questions = make([]QuestionInstance, len(eq.Questions))
-
-	for i, qu := range eq.Questions {
-		out.Questions[i], _ = qu.InstantiateWith(params)
-	}
-
-	return out
+// QuestionPage is the fundamental object to build exercices.
+// It is mainly consituted of a list of content blocks, which
+// describes the question (description, question, field answer),
+// and are parametrized by random values.
+type QuestionPage struct {
+	Title      string     `json:"title"` // name of the question, optional
+	Enonce     Enonce     `json:"enonce"`
+	Parameters Parameters `json:"parameters"` // random parameters shared by the all the blocks
 }
 
 // Instantiate returns a deep copy of `qu`, where all random parameters
 // have been resolved.
 // It assumes that the expressions and random parameters definitions are valid :
 // if an error is encountered, it is returned as a TextInstance displaying the error.
-func (qu Question) Instantiate() (out QuestionInstance) {
+func (qu QuestionPage) Instantiate() (out QuestionInstance) {
 	out, err := qu.instantiate()
 	if err != nil {
 		return QuestionInstance{Title: "Erreur", Enonce: EnonceInstance{
@@ -142,7 +122,7 @@ func (qu Question) Instantiate() (out QuestionInstance) {
 	return out
 }
 
-func (qu Question) instantiate() (QuestionInstance, error) {
+func (qu QuestionPage) instantiate() (QuestionInstance, error) {
 	// generate random params
 	rp, err := qu.Parameters.ToMap().Instantiate()
 	if err != nil {
@@ -152,7 +132,7 @@ func (qu Question) instantiate() (QuestionInstance, error) {
 }
 
 // InstantiateWith uses the given values to instantiate the general question
-func (qu Question) InstantiateWith(params expression.Variables) (QuestionInstance, error) {
+func (qu QuestionPage) InstantiateWith(params expression.Variables) (QuestionInstance, error) {
 	enonce := make(EnonceInstance, len(qu.Enonce))
 	var currentID int
 	for j, bl := range qu.Enonce {

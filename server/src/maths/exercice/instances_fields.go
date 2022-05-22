@@ -9,7 +9,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
-	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
+	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 

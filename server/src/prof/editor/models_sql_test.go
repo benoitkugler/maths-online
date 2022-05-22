@@ -1,16 +1,19 @@
-package exercice
+package editor
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
 func TestRoot(t *testing.T) {
 	// create a DB shared by all tests
-	db := testutils.CreateDBDev(t, "create_gen.sql")
+	db := testutils.CreateDBDev(t, "gen_create.sql")
 	defer testutils.RemoveDBDev()
 	defer db.Close()
 
@@ -69,9 +72,29 @@ func testQuestion(t *testing.T, db *sql.DB) {
 
 func testInsertSignTable(t *testing.T, db *sql.DB) {
 	qu := randQuestion()
-	qu.Enonce = Enonce{randSignTableBlock()}
+	qu.Page.Enonce = exercice.Enonce{randexe_SignTableBlock()}
 	qu, err := qu.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestLoadQuestions(t *testing.T) {
+	creds := pass.DB{
+		Host:     "localhost",
+		User:     "benoit",
+		Password: "dummy",
+		Name:     "isyro_prod",
+	}
+	db, err := creds.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", creds, err)
+		return
+	}
+
+	m, err := SelectAllQuestions(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Questions :", len(m))
 }

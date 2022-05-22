@@ -9,6 +9,7 @@ type Teacher struct {
 	Id              int64  `json:"id"`
 	Mail            string `json:"mail"`
 	PasswordCrypted []byte `json:"password_crypted"` // crypted
+	IsAdmin         bool   `json:"is_admin"`         // almost always false
 }
 
 // Classroom is one group of student controlled by a teacher

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -25,11 +26,11 @@ type PlayerID = int
 var DebugLogger = log.New(os.Stdout, "game-debug:", log.LstdFlags)
 
 type WeigthedQuestions struct {
-	Questions []exercice.Question
+	Questions []editor.Question
 	Weights   []float64 // same length as `Questions`
 }
 
-func (wq WeigthedQuestions) sample() exercice.Question {
+func (wq WeigthedQuestions) sample() editor.Question {
 	index := utils.SampleIndex(wq.Weights)
 	return wq.Questions[index]
 }
@@ -335,7 +336,7 @@ func (gs *Game) EmitQuestion() showQuestion {
 	// select the question among the pool...
 	question := gs.questionPool[cat].sample()
 	// ...and instantiate it
-	instance := question.Instantiate()
+	instance := question.Page.Instantiate()
 
 	gs.question = currentQuestion{
 		categorie: cat,

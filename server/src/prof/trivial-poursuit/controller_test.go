@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
@@ -171,7 +172,7 @@ func TestGetTrivials(t *testing.T) {
 
 	for range [10]int{} {
 		t.Run("", func(t *testing.T) {
-			_, err := ct.getTrivialPoursuits()
+			_, err := ct.getTrivialPoursuits(teacher.Teacher{Id: 1, IsAdmin: true})
 			if err != nil {
 				t.Fatal(err)
 			}

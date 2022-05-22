@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/prof/editor"
 )
 
 var exQu = WeigthedQuestions{
-	Questions: []exercice.Question{{Id: 1}, {Id: 2}},
+	Questions: []editor.Question{{Id: 1}, {Id: 2}},
 	Weights:   []float64{1. / 2, 1. / 2},
 }
 

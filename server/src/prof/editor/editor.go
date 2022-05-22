@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	ex "github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/utils"
@@ -93,15 +93,15 @@ type QuestionHeader struct {
 	Title      string
 	Tags       []string
 	Id         int64
-	Difficulty ex.DifficultyTag // deduced from the tags
-	IsInGroup  bool             // true if the question is in an implicit group, ignoring the current filter
+	Difficulty DifficultyTag // deduced from the tags
+	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
 }
 
 func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsOut, err error) {
 	const pagination = 100
 
 	// to find implicit groups, we need all the questions
-	questions, err := ex.SelectAllQuestions(ct.db)
+	questions, err := SelectAllQuestions(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -110,19 +110,19 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsO
 
 	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
 	var (
-		ids    ex.IDs
+		ids    IDs
 		groups = make(map[string][]int64)
 	)
 	for _, question := range questions {
-		thisTitle := strings.TrimSpace(strings.ToLower(question.Title))
+		thisTitle := strings.TrimSpace(strings.ToLower(question.Page.Title))
 		if strings.Contains(thisTitle, queryTitle) {
-			groups[question.Title] = append(groups[question.Title], question.Id)
+			groups[question.Page.Title] = append(groups[question.Page.Title], question.Id)
 			ids = append(ids, question.Id)
 		}
 	}
 
 	// load the tags ...
-	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, ids...)
+	tags, err := SelectQuestionTagsByIdQuestions(ct.db, ids...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -130,7 +130,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsO
 
 	// normalize query
 	for i, t := range query.Tags {
-		query.Tags[i] = ex.NormalizeTag(t)
+		query.Tags[i] = NormalizeTag(t)
 	}
 
 	// .. and build the group, restricting the questions matching the given tags
@@ -181,26 +181,26 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsO
 
 // duplicateQuestion duplicate the given question, returning
 // the newly created one
-func (ct *Controller) duplicateQuestion(idQuestion int64) (ex.Question, error) {
-	qu, err := ex.SelectQuestion(ct.db, idQuestion)
+func (ct *Controller) duplicateQuestion(idQuestion int64) (Question, error) {
+	qu, err := SelectQuestion(ct.db, idQuestion)
 	if err != nil {
-		return ex.Question{}, utils.SQLError(err)
+		return Question{}, utils.SQLError(err)
 	}
-	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
+	tags, err := SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
 	if err != nil {
-		return ex.Question{}, utils.SQLError(err)
+		return Question{}, utils.SQLError(err)
 	}
 
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return ex.Question{}, utils.SQLError(err)
+		return Question{}, utils.SQLError(err)
 	}
 
 	newQuestion := qu // shallow copy is enough
 	newQuestion, err = newQuestion.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
-		return ex.Question{}, utils.SQLError(err)
+		return Question{}, utils.SQLError(err)
 	}
 
 	for i := range tags {
@@ -209,12 +209,12 @@ func (ct *Controller) duplicateQuestion(idQuestion int64) (ex.Question, error) {
 	err = updateTags(tx, tags, newQuestion.Id)
 	if err != nil {
 		_ = tx.Rollback()
-		return ex.Question{}, utils.SQLError(err)
+		return Question{}, utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return ex.Question{}, utils.SQLError(err)
+		return Question{}, utils.SQLError(err)
 	}
 
 	return newQuestion, nil
@@ -223,11 +223,11 @@ func (ct *Controller) duplicateQuestion(idQuestion int64) (ex.Question, error) {
 // duplicateQuestionWithDifficulty creates new questions with the same title
 // and content as the given question, but with difficulty levels
 func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
-	qu, err := ex.SelectQuestion(ct.db, idQuestion)
+	qu, err := SelectQuestion(ct.db, idQuestion)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	tags, err := ex.SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
+	tags, err := SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -235,14 +235,14 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
 	// if the question already has a difficulty, respect it
 	// otherwise, attribute the difficulty one
 	currentDifficulty := tags.Crible().Difficulty()
-	var newDifficulties [2]ex.DifficultyTag
+	var newDifficulties [2]DifficultyTag
 	switch currentDifficulty {
-	case ex.Diff1:
-		newDifficulties = [2]ex.DifficultyTag{ex.Diff2, ex.Diff3}
-	case ex.Diff2:
-		newDifficulties = [2]ex.DifficultyTag{ex.Diff1, ex.Diff3}
-	case ex.Diff3:
-		newDifficulties = [2]ex.DifficultyTag{ex.Diff1, ex.Diff2}
+	case Diff1:
+		newDifficulties = [2]DifficultyTag{Diff2, Diff3}
+	case Diff2:
+		newDifficulties = [2]DifficultyTag{Diff1, Diff3}
+	case Diff3:
+		newDifficulties = [2]DifficultyTag{Diff1, Diff2}
 	}
 
 	tx, err := ct.db.Begin()
@@ -252,13 +252,13 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
 
 	if currentDifficulty == "" {
 		// update the current question
-		newTags := append(tags, ex.QuestionTag{IdQuestion: idQuestion, Tag: string(ex.Diff1)})
+		newTags := append(tags, QuestionTag{IdQuestion: idQuestion, Tag: string(Diff1)})
 		err = updateTags(tx, newTags, idQuestion)
 		if err != nil {
 			_ = tx.Rollback()
 			return utils.SQLError(err)
 		}
-		newDifficulties = [2]ex.DifficultyTag{ex.Diff2, ex.Diff3}
+		newDifficulties = [2]DifficultyTag{Diff2, Diff3}
 	}
 
 	for _, diff := range newDifficulties {
@@ -268,18 +268,18 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
 			_ = tx.Rollback()
 			return utils.SQLError(err)
 		}
-		var newTags ex.QuestionTags
+		var newTags QuestionTags
 		for _, t := range tags {
 			// do not add existing difficulties
-			switch ex.DifficultyTag(t.Tag) {
-			case ex.Diff1, ex.Diff2, ex.Diff3:
+			switch DifficultyTag(t.Tag) {
+			case Diff1, Diff2, Diff3:
 				continue
 			}
 
 			t.IdQuestion = newQuestion.Id
 			newTags = append(newTags, t)
 		}
-		newTags = append(newTags, ex.QuestionTag{IdQuestion: newQuestion.Id, Tag: string(diff)})
+		newTags = append(newTags, QuestionTag{IdQuestion: newQuestion.Id, Tag: string(diff)})
 		err = updateTags(tx, newTags, newQuestion.Id)
 		if err != nil {
 			_ = tx.Rollback()
@@ -296,11 +296,11 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
 }
 
 // do NOT commit or rollback
-func updateTags(tx *sql.Tx, tags ex.QuestionTags, idQuestion int64) error {
+func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion int64) error {
 	var nbDiff int
 	for _, tag := range tags {
-		switch ex.DifficultyTag(tag.Tag) {
-		case ex.Diff1, ex.Diff2, ex.Diff3:
+		switch DifficultyTag(tag.Tag) {
+		case Diff1, Diff2, Diff3:
 			nbDiff++
 		}
 	}
@@ -308,11 +308,11 @@ func updateTags(tx *sql.Tx, tags ex.QuestionTags, idQuestion int64) error {
 		return errors.New("Un seul niveau de difficulté est autorisé par question.")
 	}
 
-	_, err := ex.DeleteQuestionTagsByIdQuestions(tx, idQuestion)
+	_, err := DeleteQuestionTagsByIdQuestions(tx, idQuestion)
 	if err != nil {
 		return err
 	}
-	err = ex.InsertManyQuestionTags(tx, tags...)
+	err = InsertManyQuestionTags(tx, tags...)
 	if err != nil {
 		return err
 	}
@@ -320,15 +320,15 @@ func updateTags(tx *sql.Tx, tags ex.QuestionTags, idQuestion int64) error {
 }
 
 func (ct *Controller) updateTags(params UpdateTagsIn) error {
-	var tags ex.QuestionTags
+	var tags QuestionTags
 	for _, tag := range params.Tags {
 		// enforce proper tags
-		tag = ex.NormalizeTag(tag)
+		tag = NormalizeTag(tag)
 		if tag == "" {
 			continue
 		}
 
-		tags = append(tags, ex.QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
+		tags = append(tags, QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
 	}
 
 	tx, err := ct.db.Begin()
@@ -349,7 +349,7 @@ func (ct *Controller) updateTags(params UpdateTagsIn) error {
 func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
 	err := params.Parameters.Validate()
 	if err != nil {
-		return CheckParametersOut{ErrDefinition: err.(ex.ErrParameters)}
+		return CheckParametersOut{ErrDefinition: err.(exercice.ErrParameters)}
 	}
 
 	var out CheckParametersOut
@@ -391,8 +391,8 @@ func (ct *Controller) endPreview(sessionID string) error {
 }
 
 func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut, error) {
-	if err := params.Question.Validate(); err != nil {
-		return SaveAndPreviewOut{Error: err.(ex.ErrQuestionInvalid)}, nil
+	if err := params.Question.Page.Validate(); err != nil {
+		return SaveAndPreviewOut{Error: err.(exercice.ErrQuestionInvalid)}, nil
 	}
 
 	_, err := params.Question.Update(ct.db)
@@ -400,7 +400,7 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut
 		return SaveAndPreviewOut{}, err
 	}
 
-	question := params.Question.Instantiate()
+	question := params.Question.Page.Instantiate()
 
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
@@ -432,7 +432,7 @@ type InstantiateQuestionsOut []InstantiatedQuestion
 // InstantiateQuestions loads and instantiates the given questions,
 // also returning the paramerters used to do so.
 func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut, error) {
-	questions, err := ex.SelectQuestions(ct.db, ids...)
+	questions, err := SelectQuestions(ct.db, ids...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -440,7 +440,7 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 	out := make(InstantiateQuestionsOut, len(ids))
 	for index, id := range ids {
 		qu := questions[id]
-		vars, err := qu.Parameters.ToMap().Instantiate()
+		vars, err := qu.Page.Parameters.ToMap().Instantiate()
 		if err != nil {
 			return nil, err
 		}
@@ -448,7 +448,7 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 		for k, v := range vars {
 			varList = append(varList, VarEntry{Variable: k, Resolved: v})
 		}
-		instance, err := qu.InstantiateWith(vars)
+		instance, err := qu.Page.InstantiateWith(vars)
 		if err != nil {
 			return nil, err
 		}
@@ -465,7 +465,7 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 // EvaluateQuestion instantiate the given question with the given parameters,
 // and evaluate the given answer.
 func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {
-	qu, err := ex.SelectQuestion(ct.db, id)
+	qu, err := SelectQuestion(ct.db, id)
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
@@ -475,7 +475,7 @@ func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer clien
 		paramsDict[entry.Variable] = entry.Resolved
 	}
 
-	instance, err := qu.InstantiateWith(paramsDict)
+	instance, err := qu.Page.InstantiateWith(paramsDict)
 	if err != nil {
 		return client.QuestionAnswersOut{}, err
 	}
