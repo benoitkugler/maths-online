@@ -443,13 +443,22 @@ func (gs *Game) endQuestion(force bool) Events {
 
 	// return the answers event, defaulting to
 	// false for no answer
-	for player := range gs.Players {
-		answer, has := gs.currentAnswers[player]
-		if !has {
-			answer = playerAnswerResult{Success: false, AskForMask: false}
-		}
+	for player, state := range gs.Players {
 		// we still mark invalid answsers for inactive player,
 		// to avoid cheating by leaving before right before the question
+
+		answer, has := gs.currentAnswers[player]
+		if !has {
+			// update the state like in `handleAnswer`
+			state.Success[gs.question.categorie] = false
+			state.Review.QuestionHistory = append(state.Review.QuestionHistory, QR{
+				IdQuestion: gs.question.ID,
+				Success:    false,
+			})
+
+			askForMark := len(state.Review.MarkedQuestions) < 3
+			answer = playerAnswerResult{Success: false, AskForMask: askForMark}
+		}
 		out.Results[player] = answer
 	}
 
