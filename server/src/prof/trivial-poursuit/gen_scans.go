@@ -219,6 +219,9 @@ func DeleteTrivialConfigsByIDs(tx DB, ids ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
+func (s *CategoriesQuestions) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s CategoriesQuestions) Value() (driver.Value, error) { return dumpJSON(s) }
+
 func SelectTrivialConfigsByIdTeachers(tx DB, idTeachers ...int64) (TrivialConfigs, error) {
 	rows, err := tx.Query("SELECT * FROM trivial_configs WHERE id_teacher = ANY($1)", pq.Int64Array(idTeachers))
 	if err != nil {

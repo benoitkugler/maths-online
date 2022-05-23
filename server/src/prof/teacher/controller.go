@@ -38,20 +38,20 @@ func NewController(db *sql.DB, smtp pass.SMTP, key pass.Encrypter, host string) 
 // LoadAdminTeacher loads and stores the admin account.
 // By convention, only one account has admin rights. It is manually created at
 // DB setup, and never added (neiter removed) at run time.
-func (ct *Controller) LoadAdminTeacher() error {
+func (ct *Controller) LoadAdminTeacher() (Teacher, error) {
 	rows, err := ct.db.Query("SELECT * FROM teachers WHERE is_admin = true")
 	if err != nil {
-		return utils.SQLError(err)
+		return Teacher{}, utils.SQLError(err)
 	}
 	teachers, err := ScanTeachers(rows)
 	if err != nil {
-		return utils.SQLError(err)
+		return Teacher{}, utils.SQLError(err)
 	}
 	if len(teachers) != 1 {
-		return errors.New("exactly one teacher must be admin")
+		return Teacher{}, errors.New("exactly one teacher must be admin")
 	}
 	ct.admin = teachers[teachers.IDs()[0]]
-	return nil
+	return ct.admin, nil
 }
 
 const ValidateInscriptionEndPoint = "inscription"

@@ -78,3 +78,10 @@ func RemoveDBDev() {
 		panic(err)
 	}
 }
+
+var DB = pass.DB{
+	Host:     "localhost",
+	User:     "benoit",
+	Password: "dummy",
+	Name:     "isyro_prod",
+}

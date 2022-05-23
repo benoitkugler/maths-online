@@ -2,6 +2,7 @@ package teacher
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -41,9 +42,9 @@ func (ct *Controller) newToken(teacher Teacher) (string, error) {
 	return token.SignedString(ct.key[:])
 }
 
-// JWTTeacherID expects a JWT authentified request, and must
+// JWTTeacher expects a JWT authentified request, and must
 // only be used in routes protected by `JWTMiddleware`
-func JWTTeacherID(c echo.Context) Teacher {
+func JWTTeacher(c echo.Context) Teacher {
 	meta := c.Get("user").(*jwt.Token).Claims.(*UserMeta) // the token is valid here
 	return meta.Teacher
 }
@@ -51,7 +52,7 @@ func JWTTeacherID(c echo.Context) Teacher {
 // GetDevToken creates a new user and returns a valid token,
 // so that client frontend doesn't have to use password when developping.
 func (ct *Controller) GetDevToken() (string, error) {
-	t, err := Teacher{}.Insert(ct.db)
+	t, err := Teacher{Mail: fmt.Sprintf("%d", time.Now().Unix())}.Insert(ct.db)
 	if err != nil {
 		return "", err
 	}

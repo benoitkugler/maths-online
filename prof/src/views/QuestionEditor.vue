@@ -2,7 +2,7 @@
   <div class="ma-2">
     <v-row>
       <v-col>
-        <Editor
+        <EditorPannel
           v-if="viewKind == 'editor'"
           :session_id="sessionID"
           @back="backToQuestions"
@@ -10,7 +10,7 @@
           :question="currentQuestion!"
           :tags="currentTags"
           :all-tags="allKnownTags"
-        ></Editor>
+        ></EditorPannel>
         <QuestionList
           v-if="viewKind == 'questions'"
           :tags="allKnownTags"
@@ -31,7 +31,7 @@ import { controller } from "@/controller/controller";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
-import Editor from "../components/editor/Editor.vue";
+import EditorPannel from "../components/editor/EditorPannel.vue";
 import Preview from "../components/editor/Preview.vue";
 import QuestionList from "../components/editor/QuestionList.vue";
 
@@ -66,7 +66,7 @@ function backToQuestions() {
 function onDuplicated(question: Question) {
   currentQuestion = question;
   // copy to avoid potential side effects
-  currentTags = currentTags.map(v => v);
+  currentTags = currentTags.map((v) => v);
 }
 
 function editQuestion(question: Question, tags: string[]) {

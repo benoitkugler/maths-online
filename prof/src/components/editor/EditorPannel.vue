@@ -67,7 +67,7 @@
               variant="outlined"
               density="compact"
               label="Nom de la question"
-              v-model="question.title"
+              v-model="question.page.title"
               hide-details
             ></v-text-field></v-col
         ></v-row>
@@ -158,7 +158,7 @@
       <v-col md="4">
         <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
           <random-parameters
-            :parameters="question.parameters.Variables"
+            :parameters="question.page.parameters.Variables"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
             @add="addRandomParameter"
@@ -168,7 +168,7 @@
             @done="checkParameters"
           ></random-parameters>
           <intrinsics
-            :parameters="question.parameters.Intrinsics || []"
+            :parameters="question.page.parameters.Intrinsics || []"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
             @add="addIntrinsic"
@@ -202,7 +202,7 @@
         >
           <drop-zone
             v-if="showDropZone"
-            @drop="origin => swapBlocks(origin, 0)"
+            @drop="(origin) => swapBlocks(origin, 0)"
           ></drop-zone>
           <div
             v-for="(row, index) in rows"
@@ -226,7 +226,7 @@
             </container>
             <drop-zone
               v-if="showDropZone"
-              @drop="origin => swapBlocks(origin, index + 1)"
+              @drop="(origin) => swapBlocks(origin, index + 1)"
             ></drop-zone>
           </div>
         </div>
@@ -236,14 +236,15 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  errEnonce,
-  ErrParameters,
-  randomParameter
-} from "@/controller/api_gen";
+import type { errEnonce, ErrParameters } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { newBlock, saveData, swapItems, xRune } from "@/controller/editor";
-import type { Block, Question, Variable } from "@/controller/exercice_gen";
+import type {
+  Block,
+  Question,
+  RandomParameter,
+  Variable,
+} from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
 import type { Component } from "@vue/runtime-core";
@@ -298,7 +299,7 @@ watch(props, () => {
   tags = props.tags;
 });
 
-const rows = computed(() => props.question.enonce?.map(dataToBlock) || []);
+const rows = computed(() => props.question.page.enonce?.map(dataToBlock) || []);
 
 interface block {
   Props: Block;
@@ -355,7 +356,7 @@ function dataToBlock(data: Block): block {
 const blockWidgets = ref<(Element | null)[]>([]);
 
 function addBlock(kind: BlockKind) {
-  question.enonce!.push(newBlock(kind));
+  question.page.enonce!.push(newBlock(kind));
   nextTick(() => {
     console.log(blockWidgets.value);
 
@@ -367,59 +368,59 @@ function addBlock(kind: BlockKind) {
 }
 
 function updateBlock(index: number, data: Block["Data"]) {
-  question.enonce![index].Data = data;
+  question.page.enonce![index].Data = data;
 }
 
 function removeBlock(index: number) {
-  question.enonce!.splice(index, 1);
+  question.page.enonce!.splice(index, 1);
 }
 
 /** take the block at the index `origin` and insert it right before
 the block at index `target` (which is between 0 and nbBlocks)
  */
 function swapBlocks(origin: number, target: number) {
-  question.enonce = swapItems(origin, target, question.enonce!);
+  question.page.enonce = swapItems(origin, target, question.page.enonce!);
 }
 
 function addRandomParameter() {
-  const l = question.parameters.Variables || [];
+  const l = question.page.parameters.Variables || [];
   l.push({
     variable: { Name: xRune, Indice: "" },
-    expression: "randint(1;10)"
+    expression: "randint(1;10)",
   });
-  question.parameters.Variables = l;
+  question.page.parameters.Variables = l;
 }
 
-function updateRandomParameter(index: number, param: randomParameter) {
-  question.parameters.Variables![index] = param;
+function updateRandomParameter(index: number, param: RandomParameter) {
+  question.page.parameters.Variables![index] = param;
 }
 
 function deleteRandomParameter(index: number) {
-  question.parameters.Variables!.splice(index, 1);
+  question.page.parameters.Variables!.splice(index, 1);
 
   checkParameters();
 }
 
 function swapRandomParameters(origin: number, target: number) {
-  question.parameters.Variables = swapItems(
+  question.page.parameters.Variables = swapItems(
     origin,
     target,
-    question.parameters.Variables!
+    question.page.parameters.Variables!
   );
 }
 
 function addIntrinsic() {
-  const l = question.parameters.Intrinsics || [];
+  const l = question.page.parameters.Intrinsics || [];
   l.push("a,b,c = pythagorians()");
-  question.parameters.Intrinsics = l;
+  question.page.parameters.Intrinsics = l;
 }
 
 function updateIntrinsic(index: number, param: string) {
-  question.parameters.Intrinsics![index] = param;
+  question.page.parameters.Intrinsics![index] = param;
 }
 
 function deleteIntrinsic(index: number) {
-  question.parameters.Intrinsics!.splice(index, 1);
+  question.page.parameters.Intrinsics!.splice(index, 1);
 
   checkParameters();
 }
@@ -438,10 +439,10 @@ const errorEnnonce = ref<errEnonce | null>(null);
 const showErrorEnnonce = computed(() => errorEnnonce.value != null);
 
 async function save() {
-  question.enonce = rows.value.map(v => v.Props);
+  question.page.enonce = rows.value.map((v) => v.Props);
   const res = await controller.EditorSaveAndPreview({
     SessionID: props.session_id || "",
-    Question: question
+    Question: question,
   });
   if (res == undefined) {
     return;
@@ -493,7 +494,7 @@ async function checkParameters() {
   isCheckingParameters = true;
   const out = await controller.EditorCheckParameters({
     SessionID: props.session_id || "",
-    Parameters: question.parameters
+    Parameters: question.page.parameters,
   });
   isCheckingParameters = false;
   if (out === undefined) return;
@@ -509,7 +510,7 @@ async function saveTags() {
 
 async function duplicate() {
   const newQuestion = await controller.EditorDuplicateQuestion({
-    id: question.id
+    id: question.id,
   });
   if (newQuestion == undefined) {
     return;

@@ -1,5 +1,9 @@
 package editor
 
+import (
+	"github.com/benoitkugler/maths-online/utils"
+)
+
 // SelectAllTags returns all the tags already used.
 // Note that it does not include the special DifficultyTags
 func SelectAllTags(db DB) ([]string, error) {
@@ -41,9 +45,16 @@ func selectQuestionByTag(db DB, tag string) (Questions, error) {
 	return ScanQuestions(rs)
 }
 
-// SelectQuestionByTags returns the question matching ALL the tags given
+// IsVisibleBy returns `true` if the question is public or
+// owned by `userID`
+func (qu Question) IsVisibleBy(userID int64) bool {
+	return qu.Public || qu.IdTeacher == userID
+}
+
+// SelectQuestionByTags returns the question matching ALL the tags given,
+// and available to `userID`, returning a map IdQuestion -> Tags
 // It panics if tags is empty.
-func SelectQuestionByTags(db DB, tags ...string) (map[int64]QuestionTags, error) {
+func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]QuestionTags, error) {
 	firstSelection, err := selectQuestionByTag(db, tags[0])
 	if err != nil {
 		return nil, err
@@ -55,12 +66,25 @@ func SelectQuestionByTags(db DB, tags ...string) (map[int64]QuestionTags, error)
 	}
 
 	dict := quTags.ByIdQuestion()
-
+	var selectedIDs IDs
 	// remove questions not matching all the tags
 	for idQuestion, cr := range dict {
 		hasAll := cr.Crible().HasAll(tags)
 		if !hasAll {
 			delete(dict, idQuestion)
+		} else {
+			selectedIDs = append(selectedIDs, idQuestion)
+		}
+	}
+
+	// restrict to available questions
+	questions, err := SelectQuestions(db, selectedIDs...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	for _, qu := range questions {
+		if !qu.IsVisibleBy(userID) {
+			delete(dict, qu.Id)
 		}
 	}
 

@@ -118,13 +118,22 @@ func main() {
 	}
 	fmt.Printf("SMTP configured with %v.\n", smtp)
 
-	trivial := trivialpoursuit.NewController(db, studentKey, demoPinTrivial)
-
 	tc := teacher.NewController(db, smtp, teacherKey, host)
-	if err = tc.LoadAdminTeacher(); err != nil {
+	admin, err := tc.LoadAdminTeacher()
+	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Admin teacher loaded.")
+
+	trivial := trivialpoursuit.NewController(db, studentKey, demoPinTrivial, admin)
+
+	if *devPtr {
+		dev, err := tc.GetDevToken()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(dev)
+	}
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)

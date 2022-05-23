@@ -54,7 +54,11 @@
     </v-row>
 
     <v-list>
-      <v-list-item v-for="config in configs" class="my-3">
+      <v-list-item
+        v-for="config in configs"
+        :key="config.Config.Id"
+        class="my-3"
+      >
         <v-row>
           <v-col cols="auto" align-self="center">
             <v-btn
@@ -81,7 +85,8 @@
               class="mx-2"
               @click="launchingConfig = config.Config"
               :disabled="
-                isLaunching || !config.NbQuestionsByCategories.every(v => v > 0)
+                isLaunching ||
+                !config.NbQuestionsByCategories.every((v) => v > 0)
               "
             >
               <v-icon icon="mdi-play" color="green"></v-icon>
@@ -131,6 +136,7 @@
                 cols="2"
                 align-self="center"
                 v-for="(categorie, index) in config.Config.Questions || []"
+                :key="index"
                 v-show="categorie && categorie.length != 0"
               >
                 <v-chip :color="colors[index]" variant="outlined">
@@ -149,7 +155,7 @@
 import type {
   GroupStrategy,
   TrivialConfig,
-  TrivialConfigExt
+  TrivialConfigExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { colorsPerCategorie } from "@/controller/trivial";
@@ -166,7 +172,7 @@ let editedConfig = $ref<TrivialConfig | null>(null);
 let _configs = $ref<TrivialConfigExt[]>([]);
 
 const configs = computed(() => {
-  const a = _configs.map(v => v);
+  const a = _configs.map((v) => v);
   a.sort((u, v) => u.Config.Id - v.Config.Id);
   return a;
 });
@@ -197,14 +203,14 @@ async function createConfig() {
 
 async function updateConfig(config: TrivialConfig) {
   // remove empty categories
-  config.Questions = config.Questions.map(q =>
-    (q || []).filter(v => v && v.length != 0)
+  config.Questions = config.Questions.map((q) =>
+    (q || []).filter((v) => v && v.length != 0)
   );
   const res = await controller.UpdateTrivialPoursuit(config);
   if (res === undefined) {
     return;
   }
-  const index = _configs.findIndex(v => v.Config.Id == config.Id);
+  const index = _configs.findIndex((v) => v.Config.Id == config.Id);
   _configs[index] = res;
   editedConfig = null;
 }
@@ -221,7 +227,7 @@ async function duplicateConfig(config: TrivialConfig) {
 
 async function deleteConfig(config: TrivialConfig) {
   await controller.DeleteTrivialPoursuit({ id: config.Id });
-  _configs = _configs.filter(c => c.Config.Id != config.Id);
+  _configs = _configs.filter((c) => c.Config.Id != config.Id);
 }
 
 let launchingConfig = $ref<TrivialConfig | null>(null);
@@ -233,7 +239,7 @@ async function launchSession(options: GroupStrategy) {
   isLaunching = true;
   const res = await controller.LaunchSessionTrivialPoursuit({
     IdConfig: configID,
-    GroupStrategy: options
+    GroupStrategy: options,
   });
   launchingConfig = null;
   isLaunching = false;
@@ -241,7 +247,7 @@ async function launchSession(options: GroupStrategy) {
     return;
   }
 
-  const index = _configs.findIndex(v => v.Config.Id == configID);
+  const index = _configs.findIndex((v) => v.Config.Id == configID);
   _configs[index].Running = res;
 
   // automatically jump to monitor screen
@@ -255,11 +261,11 @@ async function stopSession(config: TrivialConfig) {
     return;
   }
 
-  const index = _configs.findIndex(v => v.Config.Id == configID);
+  const index = _configs.findIndex((v) => v.Config.Id == configID);
   _configs[index].Running = {
     SessionID: "",
     GroupStrategyKind: 0,
-    GroupsID: []
+    GroupsID: [],
   };
 }
 

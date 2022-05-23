@@ -117,7 +117,7 @@ func TestSelectQuestions(t *testing.T) {
 	criterion := QuestionCriterion{{"keep"}}
 	cats := CategoriesQuestions{criterion, criterion, criterion, criterion, criterion}
 
-	pool, err := cats.selectQuestions(db)
+	pool, err := cats.selectQuestions(db, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

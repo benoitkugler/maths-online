@@ -11,3 +11,20 @@ const (
 	Shared                      // Partagé par la communauté
 	Admin                       // Officiel
 )
+
+// NewVisibility returns the visilbity of the ressource owned by
+// `ownerID` and requested by `userID`,
+// or `false` if `userID` does not have access to it.
+func NewVisibility(ownerID, userID, adminID int64, public bool) (Visibility, bool) {
+	var vis Visibility
+	if ownerID == userID {
+		vis = Personnal
+	} else if ownerID == adminID {
+		vis = Admin
+	} else if public {
+		vis = Shared
+	} else {
+		return 0, false
+	}
+	return vis, true
+}

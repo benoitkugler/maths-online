@@ -27,6 +27,7 @@
         <QuestionRow
           :question="question"
           v-for="question in props.group.Questions"
+          :key="question.Id"
           @clicked="emit('clicked', question)"
           @delete="emit('delete', question)"
         >

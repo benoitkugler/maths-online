@@ -104,19 +104,19 @@
               </i>
             </div>
 
-            <div v-for="(questionGroup, index) in questions">
+            <div v-for="questionGroup in questions" :key="questionGroup.Title">
               <question-row
                 v-if="questionGroup.Size == 1"
                 :question="questionGroup.Questions![0]"
                 @clicked="startEdit"
-                @delete="question => (questionToDelete = question)"
-                @duplicate="question => (questionToDuplicate = question)"
+                @delete="(question) => (questionToDelete = question)"
+                @duplicate="(question) => (questionToDuplicate = question)"
               ></question-row>
               <question-group-row
                 v-else
                 :group="questionGroup"
                 @clicked="startEdit"
-                @delete="question => (questionToDelete = question)"
+                @delete="(question) => (questionToDelete = question)"
               ></question-group-row>
             </div>
           </v-list>
@@ -175,7 +175,7 @@ async function updateQueryTags() {
 async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: querySearch,
-    Tags: queryTags
+    Tags: queryTags,
   });
   if (result == undefined) {
     return;
@@ -195,7 +195,7 @@ async function createQuestion() {
 let questionToDuplicate: QuestionHeader | null = $ref(null);
 async function duplicateDifficulty() {
   await controller.EditorDuplicateQuestionWithDifficulty({
-    id: questionToDuplicate!.Id
+    id: questionToDuplicate!.Id,
   });
   questionToDuplicate = null;
   await fetchQuestions();

@@ -78,7 +78,7 @@ func (cats *CategoriesQuestions) normalize() {
 	}
 }
 
-func (cats CategoriesQuestions) selectQuestions(db DB) (out tv.QuestionPool, err error) {
+func (cats CategoriesQuestions) selectQuestions(db DB, userID int64) (out tv.QuestionPool, err error) {
 	// select the questions...
 	tags, err := editor.SelectAllQuestionTags(db)
 	if err != nil {
@@ -88,14 +88,21 @@ func (cats CategoriesQuestions) selectQuestions(db DB) (out tv.QuestionPool, err
 	tagsDict := tags.ByIdQuestion()
 	for i, cat := range cats {
 		idQuestions := cat.filter(tagsDict)
-		// this should be avoided by the client side validation
-		if len(idQuestions) == 0 {
-			return out, fmt.Errorf("La catégorie %d n'a aucune question.", i+1)
-		}
 
 		questionsDict, err := editor.SelectQuestions(db, idQuestions...)
 		if err != nil {
 			return out, utils.SQLError(err)
+		}
+
+		for id, qu := range questionsDict {
+			if !qu.IsVisibleBy(userID) {
+				delete(questionsDict, id)
+			}
+		}
+
+		// this should be avoided by the client side validation
+		if len(questionsDict) == 0 {
+			return out, fmt.Errorf("La catégorie %d n'a aucune question.", i+1)
 		}
 
 		// select the tags, required for difficulty groups
@@ -206,7 +213,9 @@ func (cats CategoriesQuestions) commonTags() []string {
 	return intersection(allUnions)
 }
 
-func (cats CategoriesQuestions) selectQuestionIds(db DB) (Set, error) {
+// returns the questions available to `userID` and matching one of the
+// categorie criteria
+func (cats CategoriesQuestions) selectQuestionIds(db DB, userID int64) (Set, error) {
 	crible := NewSet()
 
 	tags, err := editor.SelectAllQuestionTags(db)
@@ -221,5 +230,17 @@ func (cats CategoriesQuestions) selectQuestionIds(db DB) (Set, error) {
 			crible.Add(id)
 		}
 	}
+
+	// restrict to available questions
+	questions, err := editor.SelectQuestions(db, crible.Keys()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	for _, qu := range questions {
+		if !qu.IsVisibleBy(userID) {
+			delete(crible, qu.Id)
+		}
+	}
+
 	return crible, nil
 }

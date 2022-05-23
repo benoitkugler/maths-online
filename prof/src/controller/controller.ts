@@ -3,9 +3,10 @@ import type {
   CheckParametersOut,
   LaunchSessionOut,
   ListQuestionsOut,
+  LogginOut,
   Question,
   StartSessionOut,
-  TrivialConfigExt
+  TrivialConfigExt,
 } from "./api_gen";
 import { AbstractAPI, GroupStrategyKind } from "./api_gen";
 
@@ -16,6 +17,16 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  protected onSuccessAskInscription(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessValidateInscription(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessLoggin(data: LogginOut): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessDuplicateTrivialPoursuit(data: TrivialConfigExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -43,6 +54,10 @@ class Controller extends AbstractAPI {
 
   public onError?: (kind: string, htmlError: string) => void;
   public showMessage?: (message: string) => void;
+
+  setToken(token: string) {
+    this.authToken = token;
+  }
 
   protected onSuccessEditorDuplicateQuestionWithDifficulty(data: any): void {
     this.inRequest = false;
@@ -180,8 +195,13 @@ export const PreviewMode = IsDev
   ? "dev"
   : "prod";
 
+const devLogMeta = {
+  IdTeacher: 5,
+  Token:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjo1LCJtYWlsIjoiMTY1MzMwMjIyNiIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTM1NjE0MjZ9.mYXwpt7hTj3L3vHO7owObAgtY82_Mp2yDlDmc72M2Ds",
+};
+
 export const controller = new Controller(
   IsDev ? localhost : window.location.origin,
-  "",
-  {}
+  IsDev ? devLogMeta.Token : ""
 );

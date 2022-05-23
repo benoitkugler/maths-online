@@ -33,6 +33,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
+var accessForbidden = errors.New("trivial config access forbidden")
+
 // SessionID is a 4 digit identifier used
 // by students to access one activity
 type SessionID = string
@@ -46,16 +48,20 @@ type Controller struct {
 	key      pass.Encrypter
 	lock     sync.Mutex
 	sessions map[SessionID]*gameSession
+
 	// demoPin is used to create testing games on the fly
 	demoPin string
+
+	admin teacher.Teacher
 }
 
-func NewController(db *sql.DB, key pass.Encrypter, demoPin string) *Controller {
+func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher.Teacher) *Controller {
 	return &Controller{
 		db:       db,
 		key:      key,
 		sessions: make(map[string]*gameSession),
 		demoPin:  demoPin,
+		admin:    admin,
 	}
 }
 
@@ -77,20 +83,8 @@ func (ct *Controller) sessionMap() map[int64]LaunchSessionOut {
 	return out
 }
 
-func (ct *Controller) getTrivialPoursuits(teacher teacher.Teacher) ([]TrivialConfigExt, error) {
-	// load three kind of configs :
-	//	- personnal
-	//	- public from other teachers
-	//	- admin
-	// TODO:
-	// links, err := SelectAllTeacherTrivialConfigs(ct.db)
-	// if err != nil {
-	// 	return nil, utils.SQLError(err)
-	// }
-
-	// //
-
-	configs, err := SelectTrivialConfigs(ct.db)
+func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, error) {
+	configs, err := SelectAllTrivialConfigs(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -105,7 +99,11 @@ func (ct *Controller) getTrivialPoursuits(teacher teacher.Teacher) ([]TrivialCon
 	tagsDict := tags.ByIdQuestion()
 	var out []TrivialConfigExt
 	for _, config := range configs {
-		out = append(out, config.withDetails(tagsDict, dict))
+		vis, hasAcces := teacher.NewVisibility(config.IdTeacher, userID, ct.admin.Id, config.Public)
+		if !hasAcces {
+			continue // do not expose
+		}
+		out = append(out, config.withDetails(tagsDict, dict, vis))
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Config.Id < out[j].Config.Id })
@@ -114,8 +112,8 @@ func (ct *Controller) getTrivialPoursuits(teacher teacher.Teacher) ([]TrivialCon
 }
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
-	teacher := teacher.JWTTeacherID(c)
-	out, err := ct.getTrivialPoursuits(teacher)
+	teacher := teacher.JWTTeacher(c)
+	out, err := ct.getTrivialPoursuits(teacher.Id)
 	if err != nil {
 		return err
 	}
@@ -123,9 +121,12 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	tc, err := TrivialConfig{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
+		IdTeacher:       user.Id,
 	}.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -137,19 +138,8 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
-	id, err := utils.QueryParamInt64(c, "id")
-	if err != nil {
-		return err
-	}
-	_, err = DeleteTrivialConfigById(ct.db, id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
+	user := teacher.JWTTeacher(c)
 
-	return c.NoContent(200)
-}
-
-func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
@@ -160,7 +150,41 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	config, err := in.Insert(ct.db)
+	if in.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	_, err = DeleteTrivialConfigById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	in, err := SelectTrivialConfig(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	_, hasAcces := teacher.NewVisibility(in.IdTeacher, user.Id, ct.admin.Id, in.Public)
+	if !hasAcces {
+		return accessForbidden
+	}
+
+	// attribute the new copy to the current owner, and make it private
+	config := in
+	config.IdTeacher = user.Id
+	config.Public = false
+	config, err = config.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -170,7 +194,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap())
+	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Personnal)
 
 	return c.JSON(200, out)
 }
@@ -179,6 +203,17 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 	var params TrivialConfig
 	if err := c.Bind(&params); err != nil {
 		return err
+	}
+
+	user := teacher.JWTTeacher(c)
+
+	in, err := SelectTrivialConfig(ct.db, params.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if in.IdTeacher != user.Id || params.IdTeacher != in.IdTeacher {
+		return accessForbidden
 	}
 
 	config, err := params.Update(ct.db)
@@ -191,7 +226,7 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap())
+	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Personnal)
 
 	return c.JSON(200, out)
 }
@@ -211,7 +246,9 @@ func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.checkMissingQuestions(criteria)
+	user := teacher.JWTTeacher(c)
+
+	out, err := ct.checkMissingQuestions(criteria, user.Id)
 	if err != nil {
 		return err
 	}
@@ -219,7 +256,7 @@ func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (CheckMissingQuestionsOut, error) {
+func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions, userID int64) (CheckMissingQuestionsOut, error) {
 	criteria.normalize()
 
 	pattern := criteria.commonTags()
@@ -227,12 +264,12 @@ func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions) (Check
 		return CheckMissingQuestionsOut{}, nil
 	}
 
-	existingQuestions, err := editor.SelectQuestionByTags(ct.db, pattern...)
+	existingQuestions, err := editor.SelectQuestionByTags(ct.db, userID, pattern...)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, utils.SQLError(err)
 	}
 
-	usedQuestions, err := criteria.selectQuestionIds(ct.db)
+	usedQuestions, err := criteria.selectQuestionIds(ct.db, userID)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, err
 	}
@@ -260,7 +297,9 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 		return fmt.Errorf("invalid parameters format: %s", err)
 	}
 
-	out, err := ct.launchSession(in)
+	user := teacher.JWTTeacher(c)
+
+	out, err := ct.launchSession(in, user.Id)
 	if err != nil {
 		return err
 	}
@@ -268,9 +307,9 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createGameSession(sessionID string, config TrivialConfig, group GroupStrategy) (*gameSession, error) {
+func (ct *Controller) createGameSession(sessionID string, config TrivialConfig, group GroupStrategy, userID int64) (*gameSession, error) {
 	// select the questions
-	questionPool, err := config.Questions.selectQuestions(ct.db)
+	questionPool, err := config.Questions.selectQuestions(ct.db, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +344,7 @@ func (ct *Controller) createGameSession(sessionID string, config TrivialConfig, 
 	return session, nil
 }
 
-func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, error) {
+func (ct *Controller) launchSession(params LaunchSessionIn, userID int64) (LaunchSessionOut, error) {
 	if dict := ct.sessionMap(); dict[params.IdConfig].SessionID != "" {
 		return LaunchSessionOut{}, errors.New("session already running")
 	}
@@ -315,6 +354,10 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, e
 		return LaunchSessionOut{}, utils.SQLError(err)
 	}
 
+	if config.IdTeacher != userID {
+		return LaunchSessionOut{}, accessForbidden
+	}
+
 	ct.lock.Lock()
 	sessionID := utils.RandomID(true, 4, func(s string) bool {
 		_, taken := ct.sessions[s]
@@ -322,7 +365,7 @@ func (ct *Controller) launchSession(params LaunchSessionIn) (LaunchSessionOut, e
 	})
 	ct.lock.Unlock()
 
-	session, err := ct.createGameSession(sessionID, config, params.GroupStrategy)
+	session, err := ct.createGameSession(sessionID, config, params.GroupStrategy, userID)
 	if err != nil {
 		return LaunchSessionOut{}, err
 	}
@@ -341,6 +384,16 @@ func (ct *Controller) StopSessionTrivialPoursuit(c echo.Context) error {
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
+	}
+
+	user := teacher.JWTTeacher(c)
+
+	config, err := SelectTrivialConfig(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if config.IdTeacher != user.Id {
+		return accessForbidden
 	}
 
 	sessionID := ct.sessionMap()[id].SessionID

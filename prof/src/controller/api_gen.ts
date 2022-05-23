@@ -28,7 +28,11 @@ export interface TrivialConfig {
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
   ShowDecrassage: boolean;
+  Public: boolean;
+  id_teacher: number;
 }
+// github.com/benoitkugler/maths-online/prof/teacher.Visibility
+export type Visibility = number;
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.LaunchSessionOut
 export interface LaunchSessionOut {
   SessionID: string;
@@ -38,6 +42,7 @@ export interface LaunchSessionOut {
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfigExt
 export interface TrivialConfigExt {
   Config: TrivialConfig;
+  Visibility: Visibility;
   Running: LaunchSessionOut;
   NbQuestionsByCategories: number[];
 }
@@ -79,7 +84,7 @@ export interface ListQuestionsIn {
   TitleQuery: string;
   Tags: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.DifficultyTag
+// github.com/benoitkugler/maths-online/prof/editor.DifficultyTag
 export type DifficultyTag = string;
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
@@ -255,7 +260,7 @@ export type Interpolated = string;
 export interface FormulaBlock {
   Parts: Interpolated;
 }
-// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
+// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
 export interface FunctionDecoration {
   Label: string;
   Color: string;
@@ -352,24 +357,30 @@ export interface VariationTableFieldBlock {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.Enonce
 export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.randomParameter
-export interface randomParameter {
+// github.com/benoitkugler/maths-online/maths/exercice.RandomParameter
+export interface RandomParameter {
   expression: string;
   variable: Variable;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.randomParameters
-export type randomParameters = randomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/exercice.RandomParameters
+export type RandomParameters = RandomParameter[] | null;
 // github.com/benoitkugler/maths-online/maths/exercice.Parameters
 export interface Parameters {
-  Variables: randomParameters;
+  Variables: RandomParameters;
   Intrinsics: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Question
-export interface Question {
-  id: number;
+// github.com/benoitkugler/maths-online/maths/exercice.QuestionPage
+export interface QuestionPage {
   title: string;
   enonce: Enonce;
   parameters: Parameters;
+}
+// github.com/benoitkugler/maths-online/prof/editor.Question
+export interface Question {
+  id: number;
+  page: QuestionPage;
+  public: boolean;
+  id_teacher: number;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
 export interface SaveAndPreviewIn {
@@ -417,11 +428,7 @@ export interface CheckParametersOut {
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(
-    protected baseUrl: string,
-    protected authToken: string,
-    protected urlParams: {}
-  ) {}
+  constructor(protected baseUrl: string, protected authToken: string) {}
 
   abstract handleError(error: any): void;
 

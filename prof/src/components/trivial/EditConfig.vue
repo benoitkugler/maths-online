@@ -39,6 +39,7 @@
             <v-list>
               <v-list-item
                 v-for="prop in propositions"
+                :key="prop.name"
                 rounded
                 class="py-0"
                 @click="importQuestions(prop.Questions)"
@@ -64,7 +65,7 @@
           >
             Les catégories suivantes ne sont pas utilisées :
             <v-list>
-              <v-list-item v-for="tags in hint.Missing!">
+              <v-list-item v-for="(tags, index) in hint.Missing!" :key="index">
                 <TagChip :tag="tag" :key="tag" v-for="tag in tags"></TagChip>
               </v-list-item>
             </v-list>
@@ -83,11 +84,12 @@
         </v-alert>
         <v-list-item
           v-for="(categorie, index) in props.edited.Questions"
+          :key="index"
           rounded
           :style="{
             'border-color': colors[index],
             borderWidth: '2px',
-            borderStyle: 'solid'
+            borderStyle: 'solid',
           }"
           class="my-2"
         >
@@ -95,7 +97,7 @@
           <tags-selector
             :all-tags="allKnownTags"
             :model-value="categorie || []"
-            @update:model-value="v => updateCategorie(index, v)"
+            @update:model-value="(v) => updateCategorie(index, v)"
           ></tags-selector>
         </v-list-item>
       </v-list>
@@ -135,7 +137,7 @@
 import type {
   CheckMissingQuestionsOut,
   QuestionCriterion,
-  TrivialConfig
+  TrivialConfig,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
@@ -178,7 +180,7 @@ async function fetchHint() {
   const criteria = props.edited.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
-  if (!criteria.every(qu => qu?.length)) {
+  if (!criteria.every((qu) => qu?.length)) {
     hint = { Pattern: [], Missing: [] };
     return;
   }
