@@ -32,7 +32,24 @@ export interface TrivialConfig {
   id_teacher: number;
 }
 // github.com/benoitkugler/maths-online/prof/teacher.Visibility
-export type Visibility = number;
+export enum Visibility {
+  Admin = 2,
+  Personnal = 0,
+  Shared = 1,
+}
+
+export const VisibilityLabels: { [key in Visibility]: string } = {
+  [Visibility.Admin]: "Officiel",
+  [Visibility.Personnal]: "Personnel",
+  [Visibility.Shared]: "Partagé par la communauté",
+};
+
+// github.com/benoitkugler/maths-online/prof/teacher.Origin
+export interface Origin {
+  Owner: string;
+  IsPublic: boolean;
+  Visibility: Visibility;
+}
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.LaunchSessionOut
 export interface LaunchSessionOut {
   SessionID: string;
@@ -42,7 +59,7 @@ export interface LaunchSessionOut {
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfigExt
 export interface TrivialConfigExt {
   Config: TrivialConfig;
-  Visibility: Visibility;
+  Origin: Origin;
   Running: LaunchSessionOut;
   NbQuestionsByCategories: number[];
 }
@@ -85,7 +102,18 @@ export interface ListQuestionsIn {
   Tags: string[] | null;
 }
 // github.com/benoitkugler/maths-online/prof/editor.DifficultyTag
-export type DifficultyTag = string;
+export enum DifficultyTag {
+  Diff1 = "★",
+  Diff2 = "★★",
+  Diff3 = "★★★",
+}
+
+export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
+  [DifficultyTag.Diff1]: "1 étoile",
+  [DifficultyTag.Diff2]: "2 étoiles",
+  [DifficultyTag.Diff3]: "3 étoiles",
+};
+
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Title: string;
@@ -93,6 +121,7 @@ export interface QuestionHeader {
   Id: number;
   Difficulty: DifficultyTag;
   IsInGroup: boolean;
+  Origin: Origin;
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionGroup
 export interface QuestionGroup {
@@ -154,14 +183,36 @@ export interface Block {
     | VariationTableFieldBlock;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TextKind
-export type TextKind = number;
+export enum TextKind {
+  Expression = 2,
+  StaticMath = 1,
+  Text = 0,
+}
+
+export const TextKindLabels: { [key in TextKind]: string } = {
+  [TextKind.Expression]: "Expression",
+  [TextKind.StaticMath]: "Code LaTeX",
+  [TextKind.Text]: "Text simple",
+};
+
 // github.com/benoitkugler/maths-online/maths/exercice.TextPart
 export interface TextPart {
   Content: string;
   Kind: TextKind;
 }
 // github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
-export type ComparisonLevel = number;
+export enum ComparisonLevel {
+  ExpandedSubstitutions = 2,
+  SimpleSubstitutions = 1,
+  Strict = 0,
+}
+
+export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
+  [ComparisonLevel.ExpandedSubstitutions]: "Complète",
+  [ComparisonLevel.SimpleSubstitutions]: "Simple",
+  [ComparisonLevel.Strict]: "Exacte",
+};
+
 // github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
@@ -174,7 +225,28 @@ export interface RandomCoord {
   Y: string;
 }
 // github.com/benoitkugler/maths-online/maths/repere.LabelPos
-export type LabelPos = number;
+export enum LabelPos {
+  Bottom = 1,
+  BottomLeft = 7,
+  BottomRight = 6,
+  Left = 2,
+  Right = 3,
+  Top = 0,
+  TopLeft = 4,
+  TopRight = 5,
+}
+
+export const LabelPosLabels: { [key in LabelPos]: string } = {
+  [LabelPos.Bottom]: "En dessous",
+  [LabelPos.BottomLeft]: "En dessous, à gauche",
+  [LabelPos.BottomRight]: "En dessous, à droite",
+  [LabelPos.Left]: "A gauche",
+  [LabelPos.Right]: "A droite",
+  [LabelPos.Top]: "Au dessus",
+  [LabelPos.TopLeft]: "Au dessus, à gauche",
+  [LabelPos.TopRight]: "Au dessus, à droite",
+};
+
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {
   Coord: RandomCoord;
@@ -248,7 +320,20 @@ export interface FigureVectorFieldBlock {
   MustHaveOrigin: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VectorPairCriterion
-export type VectorPairCriterion = number;
+export enum VectorPairCriterion {
+  VectorColinear = 1,
+  VectorEquals = 0,
+  VectorOrthogonal = 2,
+}
+
+export const VectorPairCriterionLabels: {
+  [key in VectorPairCriterion]: string;
+} = {
+  [VectorPairCriterion.VectorColinear]: "Vecteurs colinéaires",
+  [VectorPairCriterion.VectorEquals]: "Vecteurs égaux",
+  [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
+};
+
 // github.com/benoitkugler/maths-online/maths/exercice.FigureVectorPairFieldBlock
 export interface FigureVectorPairFieldBlock {
   Figure: FigureBlock;
@@ -313,7 +398,18 @@ export interface RadioFieldBlock {
   AsDropDown: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
-export type SignSymbol = number;
+export enum SignSymbol {
+  ForbiddenValue = 2,
+  Nothing = 0,
+  Zero = 1,
+}
+
+export const SignSymbolLabels: { [key in SignSymbol]: string } = {
+  [SignSymbol.ForbiddenValue]: "||",
+  [SignSymbol.Nothing]: "",
+  [SignSymbol.Zero]: "0",
+};
+
 // github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
 export interface SignTableBlock {
   Label: string;
@@ -412,6 +508,11 @@ export interface SaveAndPreviewOut {
 export interface UpdateTagsIn {
   Tags: string[] | null;
   IdQuestion: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestionUpdateVisiblityIn
+export interface QuestionUpdateVisiblityIn {
+  QuestionID: number;
+  Public: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.CheckParametersIn
 export interface CheckParametersIn {
@@ -966,6 +1067,30 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorUpdateTags(data: any): void;
+
+  protected async rawQuestionUpdateVisiblity(
+    params: QuestionUpdateVisiblityIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/visibility";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** QuestionUpdateVisiblity wraps rawQuestionUpdateVisiblity and handles the error */
+  async QuestionUpdateVisiblity(params: QuestionUpdateVisiblityIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawQuestionUpdateVisiblity(params);
+      this.onSuccessQuestionUpdateVisiblity(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessQuestionUpdateVisiblity(data: any): void;
 
   protected async rawEditorCheckParameters(params: CheckParametersIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/check-params";

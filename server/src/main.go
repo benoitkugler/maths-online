@@ -139,7 +139,7 @@ func main() {
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
 	tvGame.WarningLogger.SetOutput(os.Stdout)
 
-	edit := editor.NewController(db)
+	edit := editor.NewController(db, admin)
 
 	e := echo.New()
 	e.HideBanner = true

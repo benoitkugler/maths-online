@@ -15,6 +15,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -30,12 +31,15 @@ type Controller struct {
 	db *sql.DB
 
 	sessions map[string]*loopbackController
+
+	admin teacher.Teacher
 }
 
-func NewController(db *sql.DB) *Controller {
+func NewController(db *sql.DB, admin teacher.Teacher) *Controller {
 	return &Controller{
 		db:       db,
 		sessions: make(map[string]*loopbackController),
+		admin:    admin,
 	}
 }
 
@@ -97,6 +101,7 @@ type QuestionHeader struct {
 	Id         int64
 	Difficulty DifficultyTag // deduced from the tags
 	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
+	Origin     teacher.Origin
 }
 
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
@@ -113,14 +118,16 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 
 	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
 	var (
-		ids    IDs
-		groups = make(map[string][]int64)
+		ids      IDs
+		ownerIDs IDs
+		groups   = make(map[string][]int64)
 	)
 	for _, question := range questions {
 		thisTitle := strings.TrimSpace(strings.ToLower(question.Page.Title))
 		if strings.Contains(thisTitle, queryTitle) {
 			groups[question.Page.Title] = append(groups[question.Page.Title], question.Id)
 			ids = append(ids, question.Id)
+			ownerIDs = append(ownerIDs, question.IdTeacher)
 		}
 	}
 
@@ -130,6 +137,12 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 		return out, utils.SQLError(err)
 	}
 	tagsMap := tags.ByIdQuestion()
+
+	// load the teachers IDs
+	teachers, err := teacher.SelectTeachers(ct.db, ownerIDs...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
 
 	// normalize query
 	for i, t := range query.Tags {
@@ -151,12 +164,20 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 				continue
 			}
 
+			qu := questions[id]
+			vis, _ := teacher.NewVisibility(qu.IdTeacher, userID, ct.admin.Id, qu.Public)
+
 			question := QuestionHeader{
 				Id:         id,
 				Title:      title,
 				Difficulty: crible.Difficulty(),
 				IsInGroup:  len(ids) > 1,
 				Tags:       tagsMap[id].List(),
+				Origin: teacher.Origin{
+					Owner:      teachers[qu.IdTeacher].Mail,
+					IsPublic:   qu.Public,
+					Visibility: vis,
+				},
 			}
 			group.Questions = append(group.Questions, question)
 		}

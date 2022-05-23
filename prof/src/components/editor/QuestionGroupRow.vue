@@ -1,7 +1,7 @@
 <template>
   <v-expansion-panels class="my-1" v-model="state">
     <v-expansion-panel>
-      <v-expansion-panel-title class="py-0 bg-lime-lighten-4 rounded">
+      <v-expansion-panel-title class="py-0 bg-lime-lighten-5 rounded">
         <v-row no-gutters>
           <v-col cols="auto" style="text-align: left" align-self="center">
             <v-row no-gutters>
@@ -30,6 +30,7 @@
           :key="question.Id"
           @clicked="emit('clicked', question)"
           @delete="emit('delete', question)"
+          @update-public="(id, b) => emit('updatePublic', id, b)"
         >
         </QuestionRow>
       </v-expansion-panel-text>
@@ -52,6 +53,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "delete", question: QuestionHeader): void;
   (e: "clicked", question: QuestionHeader): void;
+  (e: "updatePublic", questionID: number, isPublic: boolean): void;
 }>();
 
 const tags = computed(() => commonTags(props.group.Questions || []));

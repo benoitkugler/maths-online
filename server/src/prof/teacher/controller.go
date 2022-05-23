@@ -179,3 +179,9 @@ func (ct *Controller) Loggin(c echo.Context) error {
 
 	return c.JSON(200, out)
 }
+
+type Origin struct {
+	Owner      string // mail adress, used for Shared visibility
+	IsPublic   bool   // used, for Personnal visibility
+	Visibility Visibility
+}

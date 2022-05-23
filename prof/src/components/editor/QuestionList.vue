@@ -111,12 +111,14 @@
                 @clicked="startEdit"
                 @delete="(question) => (questionToDelete = question)"
                 @duplicate="(question) => (questionToDuplicate = question)"
+                @update-public="updatePublic"
               ></question-row>
               <question-group-row
                 v-else
                 :group="questionGroup"
                 @clicked="startEdit"
                 @delete="(question) => (questionToDelete = question)"
+                @update-public="updatePublic"
               ></question-group-row>
             </div>
           </v-list>
@@ -214,5 +216,21 @@ async function deleteQuestion() {
   await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
   await fetchQuestions(); // delete modify the groups
   questionToDelete = null;
+}
+
+async function updatePublic(questionID: number, isPublic: boolean) {
+  const res = await controller.QuestionUpdateVisiblity({
+    QuestionID: questionID,
+    Public: isPublic,
+  });
+  if (res === undefined) {
+    return;
+  }
+  questions.forEach((group) => {
+    const index = group.Questions?.findIndex((qu) => qu.Id == questionID);
+    if (index !== undefined) {
+      group.Questions![index].Origin.IsPublic = isPublic;
+    }
+  });
 }
 </script>

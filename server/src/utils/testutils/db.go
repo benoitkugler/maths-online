@@ -79,6 +79,7 @@ func RemoveDBDev() {
 	}
 }
 
+// DB is a test DB, usually build from importing the current production DB.
 var DB = pass.DB{
 	Host:     "localhost",
 	User:     "benoit",

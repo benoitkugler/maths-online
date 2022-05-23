@@ -102,6 +102,11 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 		return nil, utils.SQLError(err)
 	}
 
+	teachers, err := teacher.SelectAllTeachers(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
 	tags, err := editor.SelectAllQuestionTags(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -116,7 +121,12 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 		if !hasAcces {
 			continue // do not expose
 		}
-		out = append(out, config.withDetails(tagsDict, dict, vis))
+		origin := teacher.Origin{
+			Visibility: vis,
+			Owner:      teachers[config.IdTeacher].Mail,
+			IsPublic:   config.Public,
+		}
+		out = append(out, config.withDetails(tagsDict, dict, origin))
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Config.Id < out[j].Config.Id })
@@ -202,7 +212,12 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Personnal)
+	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Origin{
+		Visibility: teacher.Personnal,
+		Owner:      user.Mail,
+		IsPublic:   config.Public,
+	},
+	)
 
 	return c.JSON(200, out)
 }
@@ -232,7 +247,11 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Personnal)
+	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Origin{
+		Visibility: teacher.Personnal,
+		Owner:      user.Mail,
+		IsPublic:   config.Public,
+	})
 
 	return c.JSON(200, out)
 }

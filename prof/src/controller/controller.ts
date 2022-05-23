@@ -17,6 +17,13 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  protected onSuccessQuestionUpdateVisiblity(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
+  }
+
   protected onSuccessAskInscription(data: any): void {
     this.inRequest = false;
   }
@@ -196,9 +203,9 @@ export const PreviewMode = IsDev
   : "prod";
 
 const devLogMeta = {
-  IdTeacher: 6,
+  IdTeacher: 9,
   Token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjo2LCJtYWlsIjoiMTY1MzMwNjk3MyIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTM1NjYxNzN9.tHLmCB9N9U-546O5-j1uGG7ODNWs-7dyDD-b2X3mHTI",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjo5LCJtYWlsIjoiMTY1MzMyNDI1NiIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTM1ODM0NTZ9.apIhwc7rad7P7pg42HfaxqdrGm94jgSodlNsbbBAxvI",
 };
 
 export const controller = new Controller(

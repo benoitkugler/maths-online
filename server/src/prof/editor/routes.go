@@ -191,6 +191,39 @@ func (ct *Controller) EditorCheckParameters(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type QuestionUpdateVisiblityIn struct {
+	QuestionID int64
+	Public     bool
+}
+
+func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args QuestionUpdateVisiblityIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	qu, err := SelectQuestion(ct.db, args.QuestionID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if qu.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	if !args.Public {
+		// TODO: check that it is not harmful to hide the question again
+	}
+	qu.Public = args.Public
+	qu, err = qu.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
 type SaveAndPreviewIn struct {
 	SessionID string
 	Question  Question

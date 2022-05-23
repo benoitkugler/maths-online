@@ -2,12 +2,12 @@
   <v-list-item
     dense
     rounded
-    class="py-1 my-2"
+    :class="'py-1 my-2 ' + colorClass"
     @click="emit('clicked', props.question)"
   >
     <v-row no-gutters>
-      <v-col cols="auto" align-self="center"
-        ><v-btn
+      <v-col cols="auto" align-self="center">
+        <v-btn
           size="x-small"
           icon
           @click.stop="emit('delete', props.question)"
@@ -15,6 +15,28 @@
         >
           <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
         </v-btn>
+
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
+            <v-btn
+              v-on="{ isActive }"
+              v-bind="props"
+              class="mx-1"
+              size="x-small"
+              icon
+              title="Options de partage"
+              @click.stop
+              :color="isPersonnalAndShared ? 'blue' : undefined"
+            >
+              <v-icon icon="mdi-share-variant" size="small"></v-icon>
+            </v-btn>
+          </template>
+          <OriginCard
+            :origin="props.question.Origin"
+            @update="(b) => emit('updatePublic', props.question.Id, b)"
+          ></OriginCard>
+        </v-menu>
+
         <v-btn
           v-if="!props.question.IsInGroup"
           class="mx-1"
@@ -45,7 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import type { QuestionHeader } from "@/controller/api_gen";
+import { Visibility, type QuestionHeader } from "@/controller/api_gen";
+import { visiblityColors } from "@/controller/editor";
+import { computed } from "vue";
+import OriginCard from "./utils/OriginCard.vue";
 import TagChip from "./utils/TagChip.vue";
 
 interface Props {
@@ -56,5 +81,16 @@ const emit = defineEmits<{
   (e: "delete", question: QuestionHeader): void;
   (e: "clicked", question: QuestionHeader): void;
   (e: "duplicate", question: QuestionHeader): void;
+  (e: "updatePublic", questionID: number, isPublic: boolean): void;
 }>();
+
+const colorClass = computed(
+  () => "bg-" + visiblityColors[props.question.Origin.Visibility]
+);
+
+const isPersonnalAndShared = computed(
+  () =>
+    props.question.Origin.Visibility == Visibility.Personnal &&
+    props.question.Origin.IsPublic
+);
 </script>
