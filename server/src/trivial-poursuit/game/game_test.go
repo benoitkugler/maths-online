@@ -247,3 +247,21 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal("game should be over")
 	}
 }
+
+func TestRemovePieOnTimeout(t *testing.T) {
+	g := NewGame(0, true, QuestionPool{exQu, exQu, exQu, exQu, exQu})
+	g.AddPlayer("")
+	g.StartGame()
+	g.Players[0].Success = Success{true, true, true, true, true}
+
+	qu := g.EmitQuestion()
+	time.Sleep(10 * time.Millisecond)
+	g.QuestionTimeoutAction()
+
+	if g.Players[0].Success[qu.Categorie] {
+		t.Fatal("success must have been lost")
+	}
+	if len(g.Players[0].Review.QuestionHistory) != 1 {
+		t.Fatal("missing question in history")
+	}
+}
