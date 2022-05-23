@@ -83,6 +83,19 @@ func (ct *Controller) sessionMap() map[int64]LaunchSessionOut {
 	return out
 }
 
+func (ct *Controller) checkOwner(configID, userID int64) error {
+	in, err := SelectTrivialConfig(ct.db, configID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if in.IdTeacher != userID {
+		return accessForbidden
+	}
+
+	return nil
+}
+
 func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, error) {
 	configs, err := SelectAllTrivialConfigs(ct.db)
 	if err != nil {
@@ -145,13 +158,8 @@ func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
 		return err
 	}
 
-	in, err := SelectTrivialConfig(ct.db, id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	if in.IdTeacher != user.Id {
-		return accessForbidden
+	if err = ct.checkOwner(id, user.Id); err != nil {
+		return err
 	}
 
 	_, err = DeleteTrivialConfigById(ct.db, id)
@@ -207,14 +215,12 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 
 	user := teacher.JWTTeacher(c)
 
-	in, err := SelectTrivialConfig(ct.db, params.Id)
-	if err != nil {
-		return utils.SQLError(err)
+	if err := ct.checkOwner(params.Id, user.Id); err != nil {
+		return err
 	}
 
-	if in.IdTeacher != user.Id || params.IdTeacher != in.IdTeacher {
-		return accessForbidden
-	}
+	// ensure correct owner
+	params.IdTeacher = user.Id
 
 	config, err := params.Update(ct.db)
 	if err != nil {
@@ -388,12 +394,8 @@ func (ct *Controller) StopSessionTrivialPoursuit(c echo.Context) error {
 
 	user := teacher.JWTTeacher(c)
 
-	config, err := SelectTrivialConfig(ct.db, id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	if config.IdTeacher != user.Id {
-		return accessForbidden
+	if err := ct.checkOwner(id, user.Id); err != nil {
+		return err
 	}
 
 	sessionID := ct.sessionMap()[id].SessionID
