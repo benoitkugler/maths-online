@@ -56,11 +56,11 @@ func testQuestion(t *testing.T, db *sql.DB) {
 		t.Fatal(err)
 	}
 
-	tags, err := SelectAllTags(db)
+	tags, err := SelectAllQuestionTags(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(tags, []string{"calcul", "seconde"}) {
+	if !reflect.DeepEqual(tags.List(), []string{"calcul", "seconde"}) {
 		t.Fatal()
 	}
 

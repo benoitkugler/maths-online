@@ -4,35 +4,6 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 )
 
-// SelectAllTags returns all the tags already used.
-// Note that it does not include the special DifficultyTags
-func SelectAllTags(db DB) ([]string, error) {
-	rs, err := db.Query("SELECT DISTINCT tag FROM question_tags ORDER BY tag")
-	if err != nil {
-		return nil, err
-	}
-	var out []string
-	defer func() {
-		errClose := rs.Close()
-		if err == nil {
-			err = errClose
-		}
-	}()
-	for rs.Next() {
-		var s string
-		err = rs.Scan(&s)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, s)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
 // selectQuestionByTag returns the question matching the given tag
 func selectQuestionByTag(db DB, tag string) (Questions, error) {
 	rs, err := db.Query(`SELECT questions.*
@@ -49,6 +20,15 @@ func selectQuestionByTag(db DB, tag string) (Questions, error) {
 // owned by `userID`
 func (qu Question) IsVisibleBy(userID int64) bool {
 	return qu.Public || qu.IdTeacher == userID
+}
+
+// RestrictVisible remove the question not visible by `userID`
+func (qus Questions) RestrictVisible(userID int64) {
+	for id, qu := range qus {
+		if !qu.IsVisibleBy(userID) {
+			delete(qus, id)
+		}
+	}
 }
 
 // SelectQuestionByTags returns the question matching ALL the tags given,

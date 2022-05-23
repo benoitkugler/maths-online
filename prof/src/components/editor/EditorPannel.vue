@@ -182,7 +182,7 @@
         <div
           @drop="onDropJSON"
           @dragover="onDragoverJSON"
-          class="d-flex"
+          class="d-flex ma-2"
           style="
             border: 1px solid blue;
             border-radius: 10px;
@@ -196,6 +196,7 @@
         </div>
 
         <div
+          v-else
           style="height: 70vh; overflow-y: auto"
           @dragstart="onDragStart"
           @dragend="onDragEnd"

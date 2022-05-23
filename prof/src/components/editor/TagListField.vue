@@ -30,9 +30,15 @@
     border="secondary"
     style="border-width: 2px; cursor: pointer"
   >
-    <div v-if="props.modelValue.length == 0">Ajouter une étiquette...</div>
+    <div
+      v-if="props.modelValue.length == 0"
+      style="text-align: center; font-style: italic"
+      class="px-2"
+    >
+      Ajouter une étiquette...
+    </div>
     <v-row no-gutters v-else justify="center">
-      <v-col v-for="tag in props.modelValue" cols="auto">
+      <v-col v-for="tag in props.modelValue" :key="tag" cols="auto">
         <v-chip
           :key="tag"
           size="small"
@@ -72,7 +78,7 @@ let tmpList = $ref<string[]>([]);
 
 function startEdit() {
   isEditing = true;
-  tmpList = props.modelValue.map(v => tagString(v));
+  tmpList = props.modelValue.map((v) => tagString(v));
 }
 
 const saveEnabled = computed(() => {

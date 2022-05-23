@@ -93,12 +93,7 @@ func (cats CategoriesQuestions) selectQuestions(db DB, userID int64) (out tv.Que
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
-
-		for id, qu := range questionsDict {
-			if !qu.IsVisibleBy(userID) {
-				delete(questionsDict, id)
-			}
-		}
+		questionsDict.RestrictVisible(userID)
 
 		// this should be avoided by the client side validation
 		if len(questionsDict) == 0 {

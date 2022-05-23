@@ -26,12 +26,15 @@ func removeAccents(s string) string {
 	return output
 }
 
-// List returns the tags from the relation table.
+// List returns the tags from the `Tag` attribute,
+// with duplicate removed, and sorted.
 func (qus QuestionTags) List() []string {
-	out := make([]string, len(qus))
-	for index, qt := range qus {
-		out[index] = qt.Tag
+	tmp := qus.Crible()
+	out := make([]string, 0, len(tmp))
+	for tag := range tmp {
+		out = append(out, tag)
 	}
+	sort.Strings(out)
 	return out
 }
 

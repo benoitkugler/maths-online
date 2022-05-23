@@ -5,6 +5,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -23,19 +24,31 @@ func (ct *Controller) EditorStartSession(c echo.Context) error {
 // EditorGetTags return all tags currently used by questions.
 // It also add the special difficulty tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
-	out, err := SelectAllTags(ct.db)
+	user := teacher.JWTTeacher(c)
+
+	tags, err := SelectAllQuestionTags(ct.db)
 	if err != nil {
 		return err
 	}
 
+	// only return tags used by visible questions
+	questions, err := SelectAllQuestions(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
 	// add the special difficulty tags among the proposition,
 	// in first choices
-	filtred := make([]string, 0, len(out))
-	for _, tag := range out {
-		switch DifficultyTag(tag) {
+	var filtred []string
+	for _, tag := range tags {
+		if !questions[tag.IdQuestion].IsVisibleBy(user.Id) {
+			continue
+		}
+
+		switch DifficultyTag(tag.Tag) {
 		case Diff1, Diff2, Diff3:
 		default:
-			filtred = append(filtred, tag)
+			filtred = append(filtred, tag.Tag)
 		}
 	}
 
@@ -52,12 +65,14 @@ type ListQuestionsIn struct {
 }
 
 func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	var args ListQuestionsIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.searchQuestions(args)
+	out, err := ct.searchQuestions(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -66,7 +81,9 @@ func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 }
 
 func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
-	var question Question
+	user := teacher.JWTTeacher(c)
+
+	question := Question{IdTeacher: user.Id, Public: false}
 	question, err := question.Insert(ct.db)
 	if err != nil {
 		return err
@@ -76,12 +93,14 @@ func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.duplicateQuestion(id)
+	out, err := ct.duplicateQuestion(id, user.Id)
 	if err != nil {
 		return err
 	}
@@ -90,12 +109,14 @@ func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.duplicateQuestionWithDifficulty(id)
+	err = ct.duplicateQuestionWithDifficulty(id, user.Id)
 	if err != nil {
 		return err
 	}
@@ -104,9 +125,19 @@ func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) erro
 }
 
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
+	}
+
+	qu, err := SelectQuestion(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if qu.IdTeacher != user.Id {
+		return accessForbidden
 	}
 
 	_, err = DeleteQuestionById(ct.db, id)
@@ -118,6 +149,8 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) EditorGetQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
@@ -126,6 +159,10 @@ func (ct *Controller) EditorGetQuestion(c echo.Context) error {
 	question, err := SelectQuestion(ct.db, id)
 	if err != nil {
 		return err
+	}
+
+	if !question.IsVisibleBy(user.Id) {
+		return accessForbidden
 	}
 
 	return c.JSON(200, question)
@@ -164,13 +201,16 @@ type SaveAndPreviewOut struct {
 	IsValid bool
 }
 
+// For non personnal questions, only preview.
 func (ct *Controller) EditorSaveAndPreview(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	var args SaveAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.saveAndPreview(args)
+	out, err := ct.saveAndPreview(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -208,12 +248,14 @@ type UpdateTagsIn struct {
 }
 
 func (ct *Controller) EditorUpdateTags(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
 	var args UpdateTagsIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.updateTags(args)
+	err := ct.updateTags(args, user.Id)
 	if err != nil {
 		return err
 	}

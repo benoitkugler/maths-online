@@ -20,6 +20,8 @@ import (
 
 const sessionTimeout = 6 * time.Hour
 
+var accessForbidden = errors.New("question access fordidden")
+
 // Controller is the global object responsible to
 // handle incoming requests regarding the editor.
 type Controller struct {
@@ -97,7 +99,7 @@ type QuestionHeader struct {
 	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
 }
 
-func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsOut, err error) {
+func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
 	const pagination = 100
 
 	// to find implicit groups, we need all the questions
@@ -105,6 +107,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsO
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
+	questions.RestrictVisible(userID)
 
 	// the group are not modified by the title query though
 
@@ -181,11 +184,16 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn) (out ListQuestionsO
 
 // duplicateQuestion duplicate the given question, returning
 // the newly created one
-func (ct *Controller) duplicateQuestion(idQuestion int64) (Question, error) {
+func (ct *Controller) duplicateQuestion(idQuestion, userID int64) (Question, error) {
 	qu, err := SelectQuestion(ct.db, idQuestion)
 	if err != nil {
 		return Question{}, utils.SQLError(err)
 	}
+
+	if !qu.IsVisibleBy(userID) {
+		return Question{}, accessForbidden
+	}
+
 	tags, err := SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
 	if err != nil {
 		return Question{}, utils.SQLError(err)
@@ -196,7 +204,10 @@ func (ct *Controller) duplicateQuestion(idQuestion int64) (Question, error) {
 		return Question{}, utils.SQLError(err)
 	}
 
-	newQuestion := qu // shallow copy is enough
+	// shallow copy is enough; make the question private
+	newQuestion := qu
+	newQuestion.IdTeacher = userID
+	newQuestion.Public = false
 	newQuestion, err = newQuestion.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
@@ -222,11 +233,17 @@ func (ct *Controller) duplicateQuestion(idQuestion int64) (Question, error) {
 
 // duplicateQuestionWithDifficulty creates new questions with the same title
 // and content as the given question, but with difficulty levels
-func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion int64) error {
+// only personnal questions are allowed
+func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion, userID int64) error {
 	qu, err := SelectQuestion(ct.db, idQuestion)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+
+	if qu.IdTeacher != userID {
+		return accessForbidden
+	}
+
 	tags, err := SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
 	if err != nil {
 		return utils.SQLError(err)
@@ -319,7 +336,15 @@ func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion int64) error {
 	return nil
 }
 
-func (ct *Controller) updateTags(params UpdateTagsIn) error {
+func (ct *Controller) updateTags(params UpdateTagsIn, userID int64) error {
+	question, err := SelectQuestion(ct.db, params.IdQuestion)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if question.IdTeacher != userID {
+		return accessForbidden
+	}
+
 	var tags QuestionTags
 	for _, tag := range params.Tags {
 		// enforce proper tags
@@ -390,14 +415,26 @@ func (ct *Controller) endPreview(sessionID string) error {
 	return nil
 }
 
-func (ct *Controller) saveAndPreview(params SaveAndPreviewIn) (SaveAndPreviewOut, error) {
+func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (SaveAndPreviewOut, error) {
+	qu, err := SelectQuestion(ct.db, params.Question.Id)
+	if err != nil {
+		return SaveAndPreviewOut{}, err
+	}
+
+	if !qu.IsVisibleBy(userID) {
+		return SaveAndPreviewOut{}, accessForbidden
+	}
+
 	if err := params.Question.Page.Validate(); err != nil {
 		return SaveAndPreviewOut{Error: err.(exercice.ErrQuestionInvalid)}, nil
 	}
 
-	_, err := params.Question.Update(ct.db)
-	if err != nil {
-		return SaveAndPreviewOut{}, err
+	// if the question is owned : save it, else only preview
+	if qu.IdTeacher == userID {
+		_, err := params.Question.Update(ct.db)
+		if err != nil {
+			return SaveAndPreviewOut{}, utils.SQLError(err)
+		}
 	}
 
 	question := params.Question.Page.Instantiate()
