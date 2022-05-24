@@ -414,6 +414,7 @@ func (expr *Expression) simplify0And1() {
 	}
 }
 
+// replace (-a) * b by -(a * b)
 func (expr *Expression) extractNegativeInMults() {
 	if expr == nil {
 		return
@@ -459,6 +460,7 @@ func (expr *Expression) basicSimplification() (nbPasses int) {
 		expr.expandMinus()
 		expr.sortPlusAndMultOperands()
 		expr.simplifyForPrint()
+		expr.extractNegativeInMults()
 
 		if expr.equals(ref) {
 			break
@@ -541,7 +543,7 @@ func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
 		return true
 	}
 
-	e1, e2 = e1.copy(), e2.copy()
+	e1, e2 = e1.copy(), e2.copy() // make sur e1 and e2 are not mutated
 	if level == SimpleSubstitutions {
 		e1.basicSimplification()
 		e2.basicSimplification()

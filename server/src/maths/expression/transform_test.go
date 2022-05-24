@@ -257,6 +257,8 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"(x-10)^2", "x^2 - 20x + 100", ExpandedSubstitutions, true},
 		{"round(2.2; 4) + 1", "1 + round(2.2;4)", ExpandedSubstitutions, true},
 		{"round(2.2; 4) + round(2.2; 5)", "round(2.2; 5) + round(2.2; 4)", ExpandedSubstitutions, true},
+		{"-0.25x+1", "-0,25x+1", SimpleSubstitutions, true},
+		{"1.5x + 1", "(3/2)x+1", ExpandedSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
@@ -311,5 +313,27 @@ func TestExpression_Substitute(t *testing.T) {
 		if !reflect.DeepEqual(expr, want) {
 			t.Errorf("Substitute(%s) = %v, want %v", tt.expr, expr, tt.want)
 		}
+	}
+}
+
+func TestExpressionNegativeParams(t *testing.T) {
+	e := mustParse(t, "m*x + 1")
+	pr := RandomParameters{NewVar('a'): mustParse(t, "-3"), NewVar('b'): mustParse(t, "2"), NewVar('m'): mustParse(t, "a/b")}
+	vars, err := pr.Instantiate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.Substitute(vars)
+
+	e2 := mustParse(t, "-1.5x + 1")
+	e3 := mustParse(t, "-1,5x + 1")
+	if !e2.equals(e3) { // make sur dot or comma is interpreted the same
+		t.Fatal()
+	}
+
+	if !AreExpressionsEquivalent(e, e2, SimpleSubstitutions) {
+		e.basicSimplification()
+		e2.basicSimplification()
+		t.Fatal(e, e2)
 	}
 }

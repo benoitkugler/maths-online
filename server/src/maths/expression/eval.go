@@ -101,7 +101,7 @@ func (f FunctionDefinition) extrema() float64 {
 	return max
 }
 
-const floatPrec = 1e-8
+const floatPrec = 1e-10
 
 // AreFloatEqual returns `true` if v1 and v2 are equal up to
 // a small threshold, so that floating point rouding errors are ignored
@@ -115,7 +115,7 @@ func AreFloatEqual(v1, v2 float64) bool {
 func RoundFloat(v float64) float64 {
 	// round to avoid errors in previous computation
 	// and use FormatFloat to avoid imprecision in this computation
-	s := strconv.FormatFloat(math.Round(v/floatPrec)*floatPrec, 'f', 8, 64)
+	s := strconv.FormatFloat(math.Round(v/floatPrec)*floatPrec, 'f', 11, 64)
 	v, _ = strconv.ParseFloat(s, 64)
 	return v
 }

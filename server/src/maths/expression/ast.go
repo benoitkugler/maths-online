@@ -280,7 +280,9 @@ func NewNb(v float64) *Expression {
 }
 
 func (v Number) String() string {
-	return strconv.FormatFloat(RoundFloat(float64(v)), 'f', -1, 64)
+	const decimalSeparator = ","
+	out := strconv.FormatFloat(RoundFloat(float64(v)), 'f', -1, 64)
+	return strings.ReplaceAll(out, ".", decimalSeparator)
 }
 
 func (v Number) serialize(_, _ *Expression) string { return v.String() }

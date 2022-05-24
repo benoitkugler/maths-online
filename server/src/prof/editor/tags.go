@@ -10,8 +10,6 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-var noAccent = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-
 // NormalizeTag returns `tag` with accents stripped
 // and in upper case.
 func NormalizeTag(tag string) string {
@@ -19,6 +17,7 @@ func NormalizeTag(tag string) string {
 }
 
 func removeAccents(s string) string {
+	noAccent := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	output, _, e := transform.String(noAccent, s)
 	if e != nil {
 		return s
