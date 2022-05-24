@@ -357,7 +357,7 @@ func Test_isFloatExceedingPrecision(t *testing.T) {
 		{1.1456, false},
 		{1.145678, false},
 		{1.12345678, false},
-		{1.123456789, true},
+		{1.12345678901, true},
 		{1. / 3, true},
 		{-1. / 3, true},
 		{-0.55, false},

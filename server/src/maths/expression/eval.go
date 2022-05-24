@@ -101,7 +101,7 @@ func (f FunctionDefinition) extrema() float64 {
 	return max
 }
 
-const floatPrec = 1e-8
+const floatPrec = 1e-10
 
 // AreFloatEqual returns `true` if v1 and v2 are equal up to
 // a small threshold, so that floating point rouding errors are ignored
@@ -123,7 +123,7 @@ func RoundFloat(v float64) float64 {
 func isFloatExceedingPrecision(v float64) bool {
 	// we rely on go format routine to avoid issue with floating
 	// point computation
-	s := fmt.Sprintf("%.9f", v) // 9 is one more than floatPrec exponent
+	s := fmt.Sprintf("%.11f", v) // 11 is one more than floatPrec exponent
 	return s[len(s)-1] != '0'
 }
 
