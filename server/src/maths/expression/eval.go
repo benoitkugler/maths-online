@@ -115,7 +115,7 @@ func AreFloatEqual(v1, v2 float64) bool {
 func RoundFloat(v float64) float64 {
 	// round to avoid errors in previous computation
 	// and use FormatFloat to avoid imprecision in this computation
-	s := strconv.FormatFloat(math.Round(v/floatPrec)*floatPrec, 'f', 8, 64)
+	s := strconv.FormatFloat(math.Round(v/floatPrec)*floatPrec, 'f', 11, 64)
 	v, _ = strconv.ParseFloat(s, 64)
 	return v
 }
@@ -123,7 +123,7 @@ func RoundFloat(v float64) float64 {
 func isFloatExceedingPrecision(v float64) bool {
 	// we rely on go format routine to avoid issue with floating
 	// point computation
-	s := fmt.Sprintf("%.11f", v) // 11 is one more than floatPrec exponent
+	s := fmt.Sprintf("%.9f", v) // 9 is one more than floatPrec exponent
 	return s[len(s)-1] != '0'
 }
 

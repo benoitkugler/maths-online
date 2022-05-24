@@ -2,6 +2,7 @@ package expression
 
 import (
 	"math"
+	"math/rand"
 	"reflect"
 	"testing"
 )
@@ -358,6 +359,7 @@ func Test_isFloatExceedingPrecision(t *testing.T) {
 		{1.145678, false},
 		{1.12345678, false},
 		{1.12345678901, true},
+		{103304.93, false},
 		{1. / 3, true},
 		{-1. / 3, true},
 		{-0.55, false},
@@ -365,6 +367,13 @@ func Test_isFloatExceedingPrecision(t *testing.T) {
 	for _, tt := range tests {
 		if got := isFloatExceedingPrecision(tt.args); got != tt.want {
 			t.Errorf("isFloatExceedingPrecision() = %v, want %v", got, tt.want)
+		}
+	}
+
+	for range [200]int{} {
+		v := 1000 * rand.Float64()
+		if vr := roundTo(v, 2); isFloatExceedingPrecision(vr) {
+			t.Fatal(vr, v)
 		}
 	}
 }
