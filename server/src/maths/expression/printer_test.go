@@ -146,7 +146,7 @@ func Test0And1(t *testing.T) {
 
 func TestFloatPrecision(t *testing.T) {
 	v := Number(MustEvaluate("1908 * (1 - 68/100)", nil))
-	if s := v.String(); s != "610.56" {
+	if s := v.String(); s != "610,56" {
 		t.Fatal(s)
 	}
 }
