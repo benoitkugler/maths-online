@@ -27,6 +27,44 @@
           <v-menu offset-y close-on-content-click>
             <template v-slot:activator="{ isActive, props }">
               <v-btn
+                title="Sélectionner la difficulté"
+                v-on="{ isActive }"
+                v-bind="props"
+                size="small"
+              >
+                Difficulté
+              </v-btn>
+            </template>
+            <v-card subtitle="Ajuster les étiquettes de difficulté.">
+              <v-card-text>
+                <v-checkbox
+                  hide-details
+                  :label="difficulties.Diff1"
+                  v-model="diffChoices[difficulties.Diff1]"
+                >
+                </v-checkbox>
+                <v-checkbox
+                  hide-details
+                  :label="difficulties.Diff2"
+                  v-model="diffChoices[difficulties.Diff2]"
+                >
+                </v-checkbox>
+                <v-checkbox
+                  hide-details
+                  :label="difficulties.Diff3"
+                  v-model="diffChoices[difficulties.Diff3]"
+                >
+                </v-checkbox>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="success" @click="adjustDifficulty">Appliquer</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-menu>
+          <v-menu offset-y close-on-content-click>
+            <template v-slot:activator="{ isActive, props }">
+              <v-btn
                 title="Utiliser une configuration de référence"
                 v-on="{ isActive }"
                 v-bind="props"
@@ -39,6 +77,7 @@
             <v-list>
               <v-list-item
                 v-for="prop in propositions"
+                :key="prop.name"
                 rounded
                 class="py-0"
                 @click="importQuestions(prop.Questions)"
@@ -87,7 +126,7 @@
           :style="{
             'border-color': colors[index],
             borderWidth: '2px',
-            borderStyle: 'solid'
+            borderStyle: 'solid',
           }"
           class="my-2"
         >
@@ -95,7 +134,7 @@
           <tags-selector
             :all-tags="allKnownTags"
             :model-value="categorie || []"
-            @update:model-value="v => updateCategorie(index, v)"
+            @update:model-value="(v) => updateCategorie(index, v)"
           ></tags-selector>
         </v-list-item>
       </v-list>
@@ -133,11 +172,12 @@
 
 <script setup lang="ts">
 import type {
-  CheckMissingQuestionsOut,
-  QuestionCriterion,
-  TrivialConfig
+CheckMissingQuestionsOut,
+QuestionCriterion,
+TrivialConfig
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { DifficultyTag } from "@/controller/exercice_gen";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
 import type { CategoriesQuestions } from "@/controller/trivial_config_gen";
 import { onMounted } from "@vue/runtime-core";
@@ -161,6 +201,16 @@ const colors = colorsPerCategorie;
 
 const propositions = questionPropositions;
 
+const difficulties = DifficultyTag;
+let diffChoices = $ref<{ [key in DifficultyTag]: boolean }>({
+  [DifficultyTag.Diff1]: true,
+  [DifficultyTag.Diff2]: true,
+  [DifficultyTag.Diff3]: true,
+});
+function adjustDifficulty() {
+    // TODO:
+}
+
 function updateCategorie(index: number, cat: QuestionCriterion) {
   props.edited.Questions[index] = cat;
   fetchHint();
@@ -178,7 +228,7 @@ async function fetchHint() {
   const criteria = props.edited.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
-  if (!criteria.every(qu => qu?.length)) {
+  if (!criteria.every((qu) => qu?.length)) {
     hint = { Pattern: [], Missing: [] };
     return;
   }
