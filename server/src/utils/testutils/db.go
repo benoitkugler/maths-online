@@ -3,7 +3,9 @@ package testutils
 import (
 	"bytes"
 	"database/sql"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/pass"
@@ -21,8 +23,8 @@ func getUserName() string {
 }
 
 // CreateDBDev creates a new database and add all the tables
-// as defined in `generateSQLFile`.
-func CreateDBDev(t *testing.T, generateSQLFile string) *sql.DB {
+// as defined in the `generateSQLFile` files.
+func CreateDBDev(t *testing.T, generateSQLFile ...string) *sql.DB {
 	const userPassword = "dummy"
 
 	// cleanup if needed
@@ -36,9 +38,19 @@ func CreateDBDev(t *testing.T, generateSQLFile string) *sql.DB {
 		panic(err)
 	}
 
-	err = exec.Command("bash", "-c", "psql tmp_dev_test < "+generateSQLFile).Run()
-	if err != nil {
-		panic(err)
+	for _, file := range generateSQLFile {
+		file, err = filepath.Abs(file)
+		if err != nil {
+			panic(err)
+		}
+		_, err = os.Stat(file)
+		if err != nil {
+			panic(err)
+		}
+		err = exec.Command("bash", "-c", "psql tmp_dev_test < "+file).Run()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	logs := pass.DB{
