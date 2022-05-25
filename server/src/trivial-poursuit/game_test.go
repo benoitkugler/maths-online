@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -14,6 +13,7 @@ import (
 	exClient "github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	"github.com/benoitkugler/maths-online/utils/testutils"
 	"github.com/gorilla/websocket"
 )
 
@@ -28,20 +28,8 @@ var exQu = game.WeigthedQuestions{
 
 var questions = game.QuestionPool{exQu, exQu, exQu, exQu, exQu}
 
-func websocketURL(t *testing.T, s string) string {
-	t.Helper()
-
-	u, err := url.Parse(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	u.Scheme = "ws"
-	return u.String()
-}
-
 func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
-	return websocketURL(t, urlS) + "?client_id=" + clientID
+	return testutils.WebsocketURL(urlS) + "?client_id=" + clientID
 }
 
 func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -63,17 +51,17 @@ func TestConcurrentEvents(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
 
-	client1, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client1, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client2, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client3, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client3, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +91,7 @@ func TestEvents(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
 
-	client, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +118,7 @@ func TestClientInvalidMessage(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
 
-	client, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,7 +157,7 @@ func TestStartGame(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
 	defer server.Close()
 
-	client1, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client1, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +173,7 @@ func TestStartGame(t *testing.T) {
 	}
 	ct.gameLock.Unlock()
 
-	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client2, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,13 +205,13 @@ func TestInvalidJoin(t *testing.T) {
 	defer server.Close()
 
 	// first client join and launch the game
-	_, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	_, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// second client try to join
-	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client2, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,7 +255,7 @@ func TestSummary(t *testing.T) {
 		t.Fatal(sum)
 	}
 
-	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client2, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +291,7 @@ func TestReview(t *testing.T) {
 
 	time.Sleep(time.Millisecond * 20)
 
-	client2, _, err := websocket.DefaultDialer.Dial(websocketURL(t, server.URL), nil)
+	client2, _, err := websocket.DefaultDialer.Dial(testutils.WebsocketURL(server.URL), nil)
 	if err != nil {
 		t.Fatal(err)
 	}

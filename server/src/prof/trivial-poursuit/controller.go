@@ -360,6 +360,8 @@ func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {
 	}
 	defer ws.Close()
 
+	ProgressLogger.Println("Connecting teacher on session", sessionID)
+
 	client := session.connectTeacher(ws)
 
 	client.startLoop() // block
