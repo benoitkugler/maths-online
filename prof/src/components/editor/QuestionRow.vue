@@ -16,26 +16,10 @@
           <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
         </v-btn>
 
-        <v-menu offset-y close-on-content-click>
-          <template v-slot:activator="{ isActive, props }">
-            <v-btn
-              v-on="{ isActive }"
-              v-bind="props"
-              class="mx-1"
-              size="x-small"
-              icon
-              title="Options de partage"
-              @click.stop
-              :color="isPersonnalAndShared ? 'blue' : undefined"
-            >
-              <v-icon icon="mdi-share-variant" size="small"></v-icon>
-            </v-btn>
-          </template>
-          <OriginCard
-            :origin="props.question.Origin"
-            @update="(b) => emit('updatePublic', props.question.Id, b)"
-          ></OriginCard>
-        </v-menu>
+        <OriginButton
+          :origin="props.question.Origin"
+          @update-public="(b) => emit('updatePublic', props.question.Id, b)"
+        ></OriginButton>
 
         <v-btn
           v-if="!props.question.IsInGroup"
@@ -70,7 +54,7 @@
 import { Visibility, type QuestionHeader } from "@/controller/api_gen";
 import { visiblityColors } from "@/controller/editor";
 import { computed } from "vue";
-import OriginCard from "./utils/OriginCard.vue";
+import OriginButton from "../OriginButton.vue";
 import TagChip from "./utils/TagChip.vue";
 
 interface Props {

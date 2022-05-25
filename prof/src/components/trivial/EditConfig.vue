@@ -24,7 +24,7 @@
           </v-list-subheader>
         </v-col>
         <v-col cols="auto" align-self="center">
-          <v-menu offset-y close-on-content-click>
+          <v-menu offset-y close-on-content-click v-model="showDifficultyCard">
             <template v-slot:activator="{ isActive, props }">
               <v-btn
                 title="Sélectionner la difficulté"
@@ -206,12 +206,14 @@ const colors = colorsPerCategorie;
 const propositions = questionPropositions;
 
 const difficulties = DifficultyTag;
+let showDifficultyCard = $ref(false);
 let diffChoices = $ref<{ [key in DifficultyTag]: boolean }>({
   [DifficultyTag.Diff1]: true,
   [DifficultyTag.Diff2]: true,
   [DifficultyTag.Diff3]: true,
 });
 function adjustDifficulty() {
+  showDifficultyCard = false;
   // first remove any difficulty tags...
   let tmp = props.edited.Questions.map(
     (union) =>
@@ -247,6 +249,7 @@ function adjustDifficulty() {
   console.log(tmp);
 
   props.edited.Questions = tmp;
+  fetchHint();
 }
 
 function updateCategorie(index: number, cat: QuestionCriterion) {

@@ -60,7 +60,18 @@
         class="my-3"
       >
         <v-row>
-          <v-col cols="auto" align-self="center">
+          <v-col cols="6" align-self="center">
+            <origin-button :origin="config.Origin"></origin-button>
+            <v-btn
+              class="mx-2"
+              size="x-small"
+              icon
+              @click="duplicateConfig(config.Config)"
+              title="Dupliquer cette session"
+            >
+              <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+            </v-btn>
+
             <v-btn
               icon
               size="x-small"
@@ -68,17 +79,18 @@
               class="mx-2"
               @click="editedConfig = config.Config"
               :disabled="config.Running.SessionID != ''"
+              v-if="isPersonnal(config)"
             >
               <v-icon icon="mdi-pencil"></v-icon>
             </v-btn>
             <v-btn
-              v-if="config.Running.SessionID != ''"
+              v-if="isPersonnal(config) && config.Running.SessionID != ''"
               @click="monitor(config)"
             >
               Suivre
             </v-btn>
             <v-btn
-              v-else
+              v-else-if="isPersonnal(config)"
               icon
               size="x-small"
               title="Lancer"
@@ -93,16 +105,7 @@
             </v-btn>
 
             <v-btn
-              class="mx-2"
-              size="x-small"
-              icon
-              @click="duplicateConfig(config.Config)"
-              title="Dupliquer cette session"
-            >
-              <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
-            </v-btn>
-            <v-btn
-              v-if="config.Running.SessionID == ''"
+              v-if="isPersonnal(config) && config.Running.SessionID == ''"
               class="mx-2"
               size="x-small"
               icon
@@ -112,7 +115,7 @@
               <v-icon icon="mdi-delete" color="red"></v-icon>
             </v-btn>
             <v-btn
-              v-else
+              v-else-if="isPersonnal(config)"
               class="mx-2"
               size="x-small"
               icon
@@ -122,7 +125,7 @@
               <v-icon icon="mdi-close" color="red"></v-icon>
             </v-btn>
           </v-col>
-          <v-col align-self="center" md="8">
+          <v-col align-self="center" md="6">
             <v-row justify="center" class="bg-grey-lighten-1 rounded">
               <v-col
                 cols="6"
@@ -152,15 +155,17 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  GroupStrategy,
-  TrivialConfig,
-  TrivialConfigExt,
+import {
+  Visibility,
+  type GroupStrategy,
+  type TrivialConfig,
+  type TrivialConfigExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { colorsPerCategorie } from "@/controller/trivial";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import OriginButton from "../components/OriginButton.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
@@ -192,6 +197,10 @@ onMounted(async () => {
   const tags = await controller.EditorGetTags();
   allKnownTags = tags || [];
 });
+
+function isPersonnal(config: TrivialConfigExt) {
+  return config.Origin.Visibility == Visibility.Personnal;
+}
 
 async function createConfig() {
   const res = await controller.CreateTrivialPoursuit(null);
