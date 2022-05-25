@@ -3,6 +3,7 @@ package testutils
 import (
 	"bytes"
 	"database/sql"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -85,4 +86,16 @@ var DB = pass.DB{
 	User:     "benoit",
 	Password: "dummy",
 	Name:     "isyro_prod",
+}
+
+// WebsocketURL transforms `s` to set `ws` as scheme
+// It panics on error.
+func WebsocketURL(s string) string {
+	u, err := url.Parse(s)
+	if err != nil {
+		panic(err)
+	}
+
+	u.Scheme = "ws"
+	return u.String()
 }

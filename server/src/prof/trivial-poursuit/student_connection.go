@@ -42,7 +42,7 @@ type SetupStudentClientOut struct {
 func (ct *Controller) SetupStudentClient(c echo.Context) error {
 	completeID := c.QueryParam("session-id")
 	clientID := c.QueryParam("client-id")
-	gameMetaString := c.QueryParam("game-meta") // optional
+	gameMetaString := c.QueryParam("game-meta") // optional, used to reconnect
 
 	out, err := ct.setupStudentClient(completeID, clientID, gameMetaString)
 	if err != nil {
@@ -132,8 +132,6 @@ func (ct *Controller) setupStudentClient(clientSessionID, clientID, gameMetaStri
 	}
 
 	studentID := pass.EncryptedID(clientID)
-
-	ProgressLogger.Printf("Connecting student %s at %s", studentID, sessionID)
 
 	return session.setupStudent(studentID, gameID, ct.key)
 }

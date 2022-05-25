@@ -179,7 +179,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 	for {
 		select {
 		case <-gc.Terminate:
-			ProgressLogger.Println("Terminating game")
+			ProgressLogger.Println("Terminating game", gc.ID)
 
 			for client, clientID := range gc.clients {
 				err := client.sendEvent(game.StateUpdate{
@@ -196,7 +196,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			return Review{}, false
 
 		case event := <-gc.broadcastEvents:
-			ProgressLogger.Println("Broadcasting...")
+			ProgressLogger.Printf("Game %s : broadcasting...", gc.ID)
 			for client, clientID := range gc.clients {
 				err := client.sendEvent(event)
 				if err != nil {
@@ -209,7 +209,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 
 			if isGameOver {
-				ProgressLogger.Println("Game is over: exitting game loop.")
+				ProgressLogger.Printf("Game %s is over: exitting game loop.", gc.ID)
 				return gc.review(), true
 			}
 
@@ -218,10 +218,15 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				continue
 			}
 
-			ProgressLogger.Printf("Removing player %d...", gc.clients[client])
+			ProgressLogger.Printf("Game %s : removing player %d...", gc.ID, gc.clients[client])
 
 			gc.gameLock.Lock()
-			event, resetTurn := gc.game.RemovePlayer(gc.clients[client])
+			playerID := gc.clients[client]
+			// check if the player is not already removed
+			if gc.game.Players[playerID] == nil {
+				continue
+			}
+			event, resetTurn := gc.game.RemovePlayer(playerID)
 			hasStarted := gc.game.HasStarted()
 			nbPlayers := gc.game.NumberPlayers(true)
 			delete(gc.clients, client)
@@ -250,7 +255,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 
 		case <-gc.game.QuestionTimeout.C:
-			ProgressLogger.Println("QuestionTimeoutAction...")
+			ProgressLogger.Printf("Game %s : questionTimeoutAction...", gc.ID)
 
 			events := gc.game.QuestionTimeoutAction()
 			if events != nil {
@@ -264,7 +269,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 					client.isAccepted <- false
 					continue
 				}
-				ProgressLogger.Println("Adding player...")
+				ProgressLogger.Printf("Game %s : adding player...", gc.ID)
 
 				playerID, event := gc.game.AddPlayer(client.player.Name)
 				// register the playerID so that it can be send back
@@ -290,7 +295,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 					}
 				}
 			} else { // reconnection
-				ProgressLogger.Println("Reconnecting player...", client.PlayerID)
+				ProgressLogger.Printf("Game %s : reconnecting player %d...", gc.ID, client.PlayerID)
 
 				gc.clients[client] = client.PlayerID // register the new client connection
 				client.isAccepted <- true
@@ -310,7 +315,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 
 		case message := <-gc.incomingEvents:
-			ProgressLogger.Println("HandleClientEvent...")
+			ProgressLogger.Printf("Game %s : handleClientEvent...", gc.ID)
 
 			var (
 				events game.MaybeUpdate

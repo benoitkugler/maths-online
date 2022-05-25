@@ -163,7 +163,7 @@ func (gs *gameSession) connectStudent(c echo.Context, student gameConnection, ps
 	}
 
 	// connect to the websocket handler, which handle errors
-	client := game.AddClient(c.Response().Writer, c.Request(), player, playerID) // block on the client WS
+	client := game.AddClient(c.Response().Writer, c.Request(), player, playerID)
 	if client != nil {
 		// register the playerID
 		gs.lock.Lock()
