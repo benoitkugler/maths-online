@@ -180,6 +180,7 @@ import type {
   TrivialConfig,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { removeDuplicates } from "@/controller/editor";
 import { DifficultyTag } from "@/controller/exercice_gen";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
 import type { CategoriesQuestions } from "@/controller/trivial_config_gen";
@@ -211,7 +212,41 @@ let diffChoices = $ref<{ [key in DifficultyTag]: boolean }>({
   [DifficultyTag.Diff3]: true,
 });
 function adjustDifficulty() {
-  // TODO:
+  // first remove any difficulty tags...
+  let tmp = props.edited.Questions.map(
+    (union) =>
+      union?.map(
+        (inter) =>
+          inter?.filter(
+            (tag) =>
+              tag != DifficultyTag.Diff1 &&
+              tag != DifficultyTag.Diff2 &&
+              tag != DifficultyTag.Diff3
+          ) || []
+      ) || []
+  );
+  // and keep unique intersections...
+  tmp = tmp.map((ls) => removeDuplicates(ls));
+  // then duplicate adding wanted tags
+  // unless all tags are selected
+  const allSelected = Object.values(diffChoices).every((v) => v);
+  const toAdd = Object.entries(diffChoices)
+    .filter((entry) => entry[1])
+    .map((entry) => entry[0]);
+
+  if (!allSelected) {
+    tmp = tmp.map((ls) => {
+      const withDiff: string[][] = [];
+      ls.forEach((l) => {
+        toAdd.forEach((diff) => withDiff.push(l.concat(diff)));
+      });
+      return withDiff;
+    });
+  }
+
+  console.log(tmp);
+
+  props.edited.Questions = tmp;
 }
 
 function updateCategorie(index: number, cat: QuestionCriterion) {

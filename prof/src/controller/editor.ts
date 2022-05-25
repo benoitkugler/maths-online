@@ -696,3 +696,14 @@ export const visiblityColors: { [key in Visibility]: string } = {
   [Visibility.Shared]: "yellow-lighten-5",
   [Visibility.Personnal]: "white",
 };
+
+export function removeDuplicates(tags: string[][]) {
+  const unique: string[][] = [];
+  tags.forEach((l) => {
+    if (unique.map((l) => JSON.stringify(l)).includes(JSON.stringify(l))) {
+      return;
+    }
+    unique.push(l);
+  });
+  return unique;
+}
