@@ -221,7 +221,12 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			ProgressLogger.Printf("Removing player %d...", gc.clients[client])
 
 			gc.gameLock.Lock()
-			event, resetTurn := gc.game.RemovePlayer(gc.clients[client])
+			playerID := gc.clients[client]
+			// check if the player is not already removed
+			if gc.game.Players[playerID] == nil {
+				continue
+			}
+			event, resetTurn := gc.game.RemovePlayer(playerID)
 			hasStarted := gc.game.HasStarted()
 			nbPlayers := gc.game.NumberPlayers(true)
 			delete(gc.clients, client)
