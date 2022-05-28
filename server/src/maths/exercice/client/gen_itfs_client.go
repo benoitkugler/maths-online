@@ -108,17 +108,17 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	DoublePointAnswerKind = iota
-	DoublePointPairAnswerKind
-	ExpressionAnswerKind
-	FunctionPointsAnswerKind
-	NumberAnswerKind
-	OrderedListAnswerKind
-	PointAnswerKind
-	RadioAnswerKind
-	TableAnswerKind
-	TreeAnswerKind
-	VariationTableAnswerKind
+	DoublePointAnswerAnKind = iota
+	DoublePointPairAnswerAnKind
+	ExpressionAnswerAnKind
+	FunctionPointsAnswerAnKind
+	NumberAnswerAnKind
+	OrderedListAnswerAnKind
+	PointAnswerAnKind
+	RadioAnswerAnKind
+	TableAnswerAnKind
+	TreeAnswerAnKind
+	VariationTableAnswerAnKind
 )
 
 // BlockWrapper may be used as replacements for Block
@@ -273,25 +273,25 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	DropDownFieldBlockKind = iota
-	ExpressionFieldBlockKind
-	FigureBlockKind
-	FigurePointFieldBlockKind
-	FigureVectorFieldBlockKind
-	FigureVectorPairFieldBlockKind
-	FormulaBlockKind
-	FunctionGraphBlockKind
-	FunctionPointsFieldBlockKind
-	NumberFieldBlockKind
-	OrderedListFieldBlockKind
-	RadioFieldBlockKind
-	SignTableBlockKind
-	TableBlockKind
-	TableFieldBlockKind
-	TextBlockKind
-	TreeFieldBlockKind
-	VariationTableBlockKind
-	VariationTableFieldBlockKind
+	DropDownFieldBlockBlKind = iota
+	ExpressionFieldBlockBlKind
+	FigureBlockBlKind
+	FigurePointFieldBlockBlKind
+	FigureVectorFieldBlockBlKind
+	FigureVectorPairFieldBlockBlKind
+	FormulaBlockBlKind
+	FunctionGraphBlockBlKind
+	FunctionPointsFieldBlockBlKind
+	NumberFieldBlockBlKind
+	OrderedListFieldBlockBlKind
+	RadioFieldBlockBlKind
+	SignTableBlockBlKind
+	TableBlockBlKind
+	TableFieldBlockBlKind
+	TextBlockBlKind
+	TreeFieldBlockBlKind
+	VariationTableBlockBlKind
+	VariationTableFieldBlockBlKind
 )
 
 func (ct Enonce) MarshalJSON() ([]byte, error) {

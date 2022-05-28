@@ -63,10 +63,30 @@ class ExpressionController extends FieldController {
 class ExpressionField extends StatefulWidget {
   final Color color;
   final ExpressionController _controller;
-  final double widthFactor;
+
+  /// [maxWidthFactor] set the width of this widget
+  /// to [maxWidthFactor] * size width, for a full width
+  /// hint
+  final double maxWidthFactor;
+
+  /// [hintWidth] is a positive number enabling the field to
+  /// have lower width than its normal full width.
+  final int hintWidth;
+
+  // returns a float ratio between 0 and 1
+  double get hintWidthRatio {
+    var clamped = hintWidth;
+    if (clamped < 5) {
+      clamped = 5;
+    }
+    if (clamped > 30) {
+      clamped = 30;
+    }
+    return clamped.toDouble() / 30.0;
+  }
 
   const ExpressionField(this.color, this._controller,
-      {Key? key, this.widthFactor = 0.4})
+      {Key? key, this.maxWidthFactor = 0.4, this.hintWidth = 30})
       : super(key: key);
 
   static bool isTypingFunc(
@@ -130,8 +150,12 @@ class _ExpressionFieldState extends State<ExpressionField> {
     final color = widget._controller.syntaxError ? Colors.red : widget.color;
     final textColor =
         widget._controller.syntaxError ? Colors.red : Colors.yellow.shade100;
+
+    final width = MediaQuery.of(context).size.width *
+        widget.maxWidthFactor *
+        widget.hintWidthRatio;
     return Container(
-      width: MediaQuery.of(context).size.width * widget.widthFactor,
+      width: width,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Focus(
         onFocusChange: (getFocus) {
