@@ -57,10 +57,6 @@ func (ct *Controller) LoadAdminTeacher() (Teacher, error) {
 const ValidateInscriptionEndPoint = "inscription"
 
 func (ct *Controller) emailInscription(args AskInscriptionIn) (string, error) {
-	if len(args.Password) < 2 {
-		return "", errors.New("Merci de choisir un mot de passe plus solide.")
-	}
-
 	_, err := mail.ParseAddress(args.Mail)
 	if err != nil {
 		return "", errors.New("L'adresse mail est invalide.")
@@ -78,7 +74,7 @@ func (ct *Controller) emailInscription(args AskInscriptionIn) (string, error) {
 	return fmt.Sprintf(`
 	Bonjour et bienvenue sur Isyro ! <br/><br/>
 
-	Votre adresse mail est bien valide. Merci de terminer votre inscription
+	Nous avons pu vérifier la validité de votre adresse mail. Merci de terminer votre inscription
 	en suivant le lien : <br/>
 	<a href="%s">%s</a> <br/><br/>
 
@@ -95,31 +91,44 @@ func (ct *Controller) AskInscription(c echo.Context) error {
 		return err
 	}
 
+	out, err := ct.askInscription(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) askInscription(args AskInscriptionIn) (AskInscriptionOut, error) {
 	args.Mail = strings.TrimSpace(args.Mail)
 
 	// TODO: should we accept anybody ?
 
 	teachers, err := SelectAllTeachers(ct.db)
 	if err != nil {
-		return utils.SQLError(err)
+		return AskInscriptionOut{}, utils.SQLError(err)
 	}
 	for _, tc := range teachers {
 		if tc.Mail == args.Mail {
-			return errors.New("Cette adresse mail est déjà utilisée.")
+			return AskInscriptionOut{Error: "Cette adresse mail est déjà utilisée."}, nil
 		}
+	}
+
+	if len(args.Password) < 2 {
+		return AskInscriptionOut{Error: "Merci de choisir un mot de passe plus solide.", IsPasswordError: true}, nil
 	}
 
 	mailText, err := ct.emailInscription(args)
 	if err != nil {
-		return err
+		return AskInscriptionOut{Error: err.Error()}, nil
 	}
 
 	err = mailer.SendMail(ct.smtp, args.Mail, "Bienvenue sur Isyro", mailText)
 	if err != nil {
-		return fmt.Errorf("Erreur interne (%s)", err)
+		return AskInscriptionOut{}, fmt.Errorf("Erreur interne (%s)", err)
 	}
 
-	return c.NoContent(200)
+	return AskInscriptionOut{}, nil
 }
 
 func (ct *Controller) ValidateInscription(c echo.Context) error {
@@ -140,8 +149,10 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	// TODO:
-	return c.HTML(200, "OK")
+	url := utils.BuildUrl(ct.host, "/prof", map[string]string{
+		"show-success-inscription": "OK",
+	})
+	return c.Redirect(302, url)
 }
 
 func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
@@ -155,7 +166,7 @@ func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
 	}
 
 	if args.Password != ct.key.DecryptPassword(teacher.PasswordCrypted) {
-		return LogginOut{Error: "Le mot de passe est incorrect."}, nil
+		return LogginOut{Error: "Le mot de passe est incorrect.", IsPasswordError: true}, nil
 	}
 
 	token, err := ct.newToken(teacher)

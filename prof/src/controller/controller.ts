@@ -1,4 +1,5 @@
 import type {
+  AskInscriptionOut,
   CheckMissingQuestionsOut,
   CheckParametersOut,
   LaunchSessionOut,
@@ -17,6 +18,20 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  private isLoggedIn = false;
+
+  public onError?: (kind: string, htmlError: string) => void;
+  public showMessage?: (message: string) => void;
+
+  logout() {
+    this.isLoggedIn = false;
+    this.authToken = "";
+  }
+
+  protected onSuccessAskInscription(data: AskInscriptionOut): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessQuestionUpdateVisiblity(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -24,14 +39,18 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessAskInscription(data: any): void {
-    this.inRequest = false;
-  }
   protected onSuccessValidateInscription(data: any): void {
     this.inRequest = false;
   }
   protected onSuccessLoggin(data: LogginOut): void {
     this.inRequest = false;
+    if (data.Error == "") {
+      this.authToken = data.Token;
+      this.isLoggedIn = true;
+      if (this.showMessage) {
+        this.showMessage("Bienvenue");
+      }
+    }
   }
 
   protected onSuccessDuplicateTrivialPoursuit(data: TrivialConfigExt): void {
@@ -57,13 +76,6 @@ class Controller extends AbstractAPI {
     if (this.showMessage) {
       this.showMessage("Question dupliquée.");
     }
-  }
-
-  public onError?: (kind: string, htmlError: string) => void;
-  public showMessage?: (message: string) => void;
-
-  setToken(token: string) {
-    this.authToken = token;
   }
 
   protected onSuccessEditorDuplicateQuestionWithDifficulty(data: any): void {
@@ -201,6 +213,10 @@ export const PreviewMode = IsDev
   : window.location.origin == localhost
   ? "dev"
   : "prod";
+
+export const ShowSuccessInscription = window.location.search.includes(
+  "show-success-inscription"
+);
 
 const devLogMeta = {
   IdTeacher: 2,

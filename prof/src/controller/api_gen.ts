@@ -8,6 +8,11 @@ export interface AskInscriptionIn {
   Mail: string;
   Password: string;
 }
+// github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionOut
+export interface AskInscriptionOut {
+  Error: string;
+  IsPasswordError: boolean;
+}
 // github.com/benoitkugler/maths-online/prof/teacher.LogginIn
 export interface LogginIn {
   Mail: string;
@@ -16,6 +21,7 @@ export interface LogginIn {
 // github.com/benoitkugler/maths-online/prof/teacher.LogginOut
 export interface LogginOut {
   Error: string;
+  IsPasswordError: boolean;
   Token: string;
 }
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.QuestionCriterion
@@ -541,9 +547,11 @@ export abstract class AbstractAPI {
 
   protected async rawAskInscription(params: AskInscriptionIn) {
     const fullUrl = this.baseUrl + "/prof/inscription";
-    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -559,7 +567,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessAskInscription(data: any): void;
+  protected abstract onSuccessAskInscription(data: AskInscriptionOut): void;
 
   protected async rawValidateInscription(params: { data: string }) {
     const fullUrl = this.baseUrl + "inscription";

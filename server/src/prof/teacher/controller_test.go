@@ -15,10 +15,6 @@ func TestController_mailInscription(t *testing.T) {
 		t.Fatal("expected error on invalid mail")
 	}
 
-	if _, err := ct.emailInscription(AskInscriptionIn{Mail: "ok@free.fr", Password: ""}); err == nil {
-		t.Fatal("expected error on empty password")
-	}
-
 	text, err := ct.emailInscription(AskInscriptionIn{
 		Mail:     "test@free.fr",
 		Password: "my-pass",
