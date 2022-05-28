@@ -588,13 +588,27 @@ type VariationTableFieldInstance struct {
 func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 
 // lengthProposals returns proposals for the number of arrows to fill,
-// depending on the answer
+// depending on the answer and randomized
 func (vtf VariationTableFieldInstance) lengthProposals() []int {
 	L := len(vtf.Answer.Xs) - 1
+	var out []int
+
+	rd := deterministicRand([]byte{byte(L)})
 	if L <= 1 {
-		return []int{L, L + 1}
+		out = []int{L, L + 1}
+	} else {
+		out = []int{L - 1, L, L + 1}
+		// add some random noise to prevent the
+		// right solution (L) to be in the middle of the proposals
+		// note that we need to ensure L - 1 + r >= 1
+		r := rd.Intn(1)
+		for i := range out {
+			out[i] += r
+		}
 	}
-	return []int{L - 1, L, L + 1}
+
+	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	return out
 }
 
 func (f VariationTableFieldInstance) toClient() client.Block {
