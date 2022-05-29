@@ -112,6 +112,8 @@ func scanOneTrivialConfig(row scanner) (TrivialConfig, error) {
 		&s.Questions,
 		&s.QuestionTimeout,
 		&s.ShowDecrassage,
+		&s.Public,
+		&s.IdTeacher,
 	)
 	return s, err
 }
@@ -181,24 +183,24 @@ func ScanTrivialConfigs(rs *sql.Rows) (TrivialConfigs, error) {
 // Insert TrivialConfig in the database and returns the item with id filled.
 func (item TrivialConfig) Insert(tx DB) (out TrivialConfig, err error) {
 	row := tx.QueryRow(`INSERT INTO trivial_configs (
-		Questions,QuestionTimeout,ShowDecrassage
+		Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher
 		) VALUES (
-		$1,$2,$3
+		$1,$2,$3,$4,$5
 		) RETURNING 
-		Id,Questions,QuestionTimeout,ShowDecrassage;
-		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage)
+		Id,Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher;
+		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher)
 	return ScanTrivialConfig(row)
 }
 
 // Update TrivialConfig in the database and returns the new version.
 func (item TrivialConfig) Update(tx DB) (out TrivialConfig, err error) {
 	row := tx.QueryRow(`UPDATE trivial_configs SET (
-		Questions,QuestionTimeout,ShowDecrassage
+		Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher
 		) = (
-		$2,$3,$4
+		$2,$3,$4,$5,$6
 		) WHERE id = $1 RETURNING 
-		Id,Questions,QuestionTimeout,ShowDecrassage;
-		`, item.Id, item.Questions, item.QuestionTimeout, item.ShowDecrassage)
+		Id,Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher;
+		`, item.Id, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher)
 	return ScanTrivialConfig(row)
 }
 
@@ -219,3 +221,19 @@ func DeleteTrivialConfigsByIDs(tx DB, ids ...int64) (IDs, error) {
 
 func (s *CategoriesQuestions) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s CategoriesQuestions) Value() (driver.Value, error) { return dumpJSON(s) }
+
+func SelectTrivialConfigsByIdTeachers(tx DB, idTeachers ...int64) (TrivialConfigs, error) {
+	rows, err := tx.Query("SELECT * FROM trivial_configs WHERE id_teacher = ANY($1)", pq.Int64Array(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTrivialConfigs(rows)
+}
+
+func DeleteTrivialConfigsByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM trivial_configs WHERE id_teacher = ANY($1) RETURNING id", pq.Int64Array(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}

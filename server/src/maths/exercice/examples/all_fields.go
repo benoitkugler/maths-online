@@ -3,11 +3,11 @@ package examples
 import (
 	ex "github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
-	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
+	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
-var questions = [...]ex.Question{
+var questions = [...]ex.QuestionPage{
 	{
 		Title: "Remplir un tableau de variation",
 		Enonce: ex.Enonce{

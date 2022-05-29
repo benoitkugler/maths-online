@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils/testutils"
@@ -103,13 +104,13 @@ func (st *student) decoReco() {
 	st.accessGame(true)
 }
 
-// teacher monitor session
-type teacher struct {
+// teacherC monitor session
+type teacherC struct {
 	serverBaseURL string
 	sessionID     SessionID
 }
 
-func (tc *teacher) monitorRequest() {
+func (tc *teacherC) monitorRequest() {
 	u, err := url.Parse(testutils.WebsocketURL(tc.serverBaseURL + teacherMonitor))
 	check(err)
 
@@ -176,12 +177,13 @@ func TestSessionPlay(t *testing.T) {
 	}
 	defer db.Close()
 
-	config, err := TrivialConfig{Questions: demoQuestions}.Insert(db)
+	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{}) // 0 is the defaut admin
+
+	config, err := TrivialConfig{Questions: demoQuestions, IdTeacher: ct.admin.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, pass.Encrypter{}, "")
 	e := echo.New()
 	s := server{e: e, ct: ct}
 
@@ -191,7 +193,9 @@ func TestSessionPlay(t *testing.T) {
 		GroupStrategy: FixedSizeGroupStrategy{
 			Groups: groupSize,
 		},
-	})
+	},
+		0,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,10 +205,10 @@ func TestSessionPlay(t *testing.T) {
 	listener := httptest.NewServer(http.HandlerFunc(s.handle))
 	defer listener.Close()
 
-	tc1 := teacher{listener.URL, groups.SessionID}
+	tc1 := teacherC{listener.URL, groups.SessionID}
 	go tc1.monitorRequest()
 
-	tc2 := teacher{listener.URL, groups.SessionID}
+	tc2 := teacherC{listener.URL, groups.SessionID}
 	go tc2.monitorRequest()
 
 	time.Sleep(50 * time.Millisecond)

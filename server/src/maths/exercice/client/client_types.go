@@ -3,7 +3,7 @@ package client
 import (
 	"encoding/json"
 
-	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
+	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -110,7 +110,11 @@ type NumberFieldBlock struct {
 }
 type ExpressionFieldBlock struct {
 	Label string // as LaTeX, optional
-	ID    int
+	// SizeHint is the length of the expected answer,
+	// in runes. It may be used by the client to adjust the field width.
+	// Typical values range from 1 to 30
+	SizeHint int
+	ID       int
 }
 
 // TextLine is the general form of a static chunk of text,

@@ -4,18 +4,18 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/prof/editor"
 )
 
 func TestQuestionCriterion_filter(t *testing.T) {
 	tests := []struct {
 		qc      QuestionCriterion
-		args    exercice.QuestionTags
+		args    editor.QuestionTags
 		wantOut IDs
 	}{
 		{
 			QuestionCriterion{},
-			exercice.QuestionTags{
+			editor.QuestionTags{
 				{IdQuestion: 1, Tag: ""},
 				{IdQuestion: 2, Tag: ""},
 			},
@@ -25,7 +25,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 			QuestionCriterion{
 				{"TAG1"},
 			},
-			exercice.QuestionTags{
+			editor.QuestionTags{
 				{IdQuestion: 1, Tag: "TAG1"},
 				{IdQuestion: 1, Tag: "xx"},
 				{IdQuestion: 2, Tag: "xx"},
@@ -36,7 +36,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 			QuestionCriterion{
 				{"TAG1", "TAG2"},
 			},
-			exercice.QuestionTags{
+			editor.QuestionTags{
 				{IdQuestion: 1, Tag: "TAG1"},
 				{IdQuestion: 1, Tag: "xx"},
 				{IdQuestion: 2, Tag: "xx"},
@@ -47,7 +47,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 			QuestionCriterion{
 				{"TAG1", "TAG2"},
 			},
-			exercice.QuestionTags{
+			editor.QuestionTags{
 				{IdQuestion: 1, Tag: "TAG1"},
 				{IdQuestion: 1, Tag: "TAG2"},
 				{IdQuestion: 1, Tag: "TAG1"},
@@ -60,7 +60,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 				{"TAG1", "TAG2"},
 				{"TAG3"},
 			},
-			exercice.QuestionTags{
+			editor.QuestionTags{
 				{IdQuestion: 1, Tag: "TAG1"},
 				{IdQuestion: 1, Tag: "TAG2"},
 				{IdQuestion: 1, Tag: "TAG1"},

@@ -9,7 +9,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
-	functiongrapher "github.com/benoitkugler/maths-online/maths/function_grapher"
+	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -116,8 +116,9 @@ func (f ExpressionFieldInstance) toClient() client.Block {
 		label = f.Label.String
 	}
 	return client.ExpressionFieldBlock{
-		ID:    f.ID,
-		Label: label,
+		ID:       f.ID,
+		Label:    label,
+		SizeHint: len([]rune(f.Answer.String())),
 	}
 }
 

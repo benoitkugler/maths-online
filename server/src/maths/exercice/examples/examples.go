@@ -23,7 +23,7 @@ func Questions() (out []exercice.QuestionInstance) {
 			},
 			block,
 		}
-		qu := exercice.Question{
+		qu := exercice.QuestionPage{
 			Title:  title,
 			Enonce: enonce,
 		}

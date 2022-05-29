@@ -1268,7 +1268,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_randomParameter (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_exe_RandomParameter (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1290,7 +1290,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_randomParameter (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_RandomParameter (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1305,7 +1305,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_exe_randomParameter (value))
+            bool_and(structgen_validate_json_exe_RandomParameter (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1327,8 +1327,31 @@ BEGIN
             bool_and(key IN ('Variables', 'Intrinsics'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_exe_randomParameter (data -> 'Variables')
+        AND structgen_validate_json_array_exe_RandomParameter (data -> 'Variables')
         AND structgen_validate_json_array_string (data -> 'Intrinsics');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_exe_QuestionPage (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('title', 'enonce', 'parameters'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'title')
+        AND structgen_validate_json_array_exe_Block (data -> 'enonce')
+        AND structgen_validate_json_exe_Parameters (data -> 'parameters');
     RETURN is_valid;
 END;
 $$
@@ -1337,15 +1360,18 @@ IMMUTABLE;
 
 CREATE TABLE questions (
     id serial PRIMARY KEY,
-    title varchar NOT NULL,
-    enonce jsonb CONSTRAINT enonce_structgen_validate_json_array_exe_Block CHECK (structgen_validate_json_array_exe_Block (enonce)),
-    parameters jsonb NOT NULL CONSTRAINT parameters_structgen_validate_json_exe_Parameters CHECK (structgen_validate_json_exe_Parameters (parameters))
+    page jsonb NOT NULL CONSTRAINT page_structgen_validate_json_exe_QuestionPage CHECK (structgen_validate_json_exe_QuestionPage (page)),
+    public boolean NOT NULL,
+    id_teacher integer NOT NULL
 );
 
 CREATE TABLE question_tags (
     tag varchar NOT NULL,
     id_question integer NOT NULL
 );
+
+ALTER TABLE questions
+    ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
 
 ALTER TABLE question_tags
     ADD FOREIGN KEY (id_question) REFERENCES questions ON DELETE CASCADE;

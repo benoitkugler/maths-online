@@ -450,6 +450,21 @@ JSON answerToJson(Answer item) {
   }
 }
 
+Map<int, Answer> dictIntAnswerFromJson(dynamic json) {
+  if (json == null) {
+    return {};
+  }
+  return (json as JSON)
+      .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
+}
+
+Map<String, dynamic> dictIntAnswerToJson(Map<int, Answer> item) {
+  return item.map((k, v) => MapEntry(intToJson(k).toString(), answerToJson(v)));
+}
+
+// github.com/benoitkugler/maths-online/maths/exercice/client.Answers
+typedef Answers = Map<int, Answer>;
+
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
 class TextOrMath {
   final String text;
@@ -526,24 +541,29 @@ JSON dropDownFieldBlockToJson(DropDownFieldBlock item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.ExpressionFieldBlock
 class ExpressionFieldBlock implements Block {
   final String label;
+  final int sizeHint;
   final int iD;
 
-  const ExpressionFieldBlock(this.label, this.iD);
+  const ExpressionFieldBlock(this.label, this.sizeHint, this.iD);
 
   @override
   String toString() {
-    return "ExpressionFieldBlock($label, $iD)";
+    return "ExpressionFieldBlock($label, $sizeHint, $iD)";
   }
 }
 
 ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ExpressionFieldBlock(
-      stringFromJson(json['Label']), intFromJson(json['ID']));
+  return ExpressionFieldBlock(stringFromJson(json['Label']),
+      intFromJson(json['SizeHint']), intFromJson(json['ID']));
 }
 
 JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
-  return {"Label": stringToJson(item.label), "ID": intToJson(item.iD)};
+  return {
+    "Label": stringToJson(item.label),
+    "SizeHint": intToJson(item.sizeHint),
+    "ID": intToJson(item.iD)
+  };
 }
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.FigureBlock
@@ -668,7 +688,7 @@ JSON formulaBlockToJson(FormulaBlock item) {
   return {"Formula": stringToJson(item.formula)};
 }
 
-// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionDecoration
+// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
 class FunctionDecoration {
   final String label;
   final String color;
@@ -691,7 +711,7 @@ JSON functionDecorationToJson(FunctionDecoration item) {
   return {"Label": stringToJson(item.label), "Color": stringToJson(item.color)};
 }
 
-// github.com/benoitkugler/maths-online/maths/function_grapher.BezierCurve
+// github.com/benoitkugler/maths-online/maths/functiongrapher.BezierCurve
 class BezierCurve {
   final Coord p0;
   final Coord p1;
@@ -730,7 +750,7 @@ List<dynamic> listBezierCurveToJson(List<BezierCurve> item) {
   return item.map(bezierCurveToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionGraph
+// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionGraph
 class FunctionGraph {
   final FunctionDecoration decoration;
   final List<BezierCurve> segments;
@@ -767,7 +787,7 @@ List<dynamic> listFunctionGraphToJson(List<FunctionGraph> item) {
   return item.map(functionGraphToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/function_grapher.FunctionsGraph
+// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionsGraph
 class FunctionsGraph {
   final List<FunctionGraph> functions;
   final RepereBounds bounds;
@@ -1368,21 +1388,9 @@ JSON questionToJson(Question item) {
   };
 }
 
-Map<int, Answer> dictIntAnswerFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as JSON)
-      .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
-}
-
-Map<String, dynamic> dictIntAnswerToJson(Map<int, Answer> item) {
-  return item.map((k, v) => MapEntry(intToJson(k).toString(), answerToJson(v)));
-}
-
 // github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersIn
 class QuestionAnswersIn {
-  final Map<int, Answer> data;
+  final Answers data;
 
   const QuestionAnswersIn(this.data);
 
@@ -1415,7 +1423,7 @@ Map<String, dynamic> dictIntBoolToJson(Map<int, bool> item) {
 // github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersOut
 class QuestionAnswersOut {
   final Map<int, bool> results;
-  final Map<int, Answer> expectedAnswers;
+  final Answers expectedAnswers;
 
   const QuestionAnswersOut(this.results, this.expectedAnswers);
 

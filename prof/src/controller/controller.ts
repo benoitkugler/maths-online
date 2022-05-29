@@ -1,11 +1,13 @@
 import type {
+  AskInscriptionOut,
   CheckMissingQuestionsOut,
   CheckParametersOut,
   LaunchSessionOut,
   ListQuestionsOut,
+  LogginOut,
   Question,
   StartSessionOut,
-  TrivialConfigExt
+  TrivialConfigExt,
 } from "./api_gen";
 import { AbstractAPI, GroupStrategyKind } from "./api_gen";
 
@@ -16,6 +18,48 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  private isLoggedIn = false;
+
+  public onError?: (kind: string, htmlError: string) => void;
+  public showMessage?: (message: string) => void;
+
+  logout() {
+    this.isLoggedIn = false;
+    this.authToken = "";
+  }
+
+  protected onSuccessUpdateTrivialVisiblity(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
+  }
+
+  protected onSuccessAskInscription(data: AskInscriptionOut): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessQuestionUpdateVisiblity(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
+  }
+
+  protected onSuccessValidateInscription(data: any): void {
+    this.inRequest = false;
+  }
+  protected onSuccessLoggin(data: LogginOut): void {
+    this.inRequest = false;
+    if (data.Error == "") {
+      this.authToken = data.Token;
+      this.isLoggedIn = true;
+      if (this.showMessage) {
+        this.showMessage("Bienvenue");
+      }
+    }
+  }
+
   protected onSuccessDuplicateTrivialPoursuit(data: TrivialConfigExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -40,9 +84,6 @@ class Controller extends AbstractAPI {
       this.showMessage("Question dupliquée.");
     }
   }
-
-  public onError?: (kind: string, htmlError: string) => void;
-  public showMessage?: (message: string) => void;
 
   protected onSuccessEditorDuplicateQuestionWithDifficulty(data: any): void {
     this.inRequest = false;
@@ -180,8 +221,16 @@ export const PreviewMode = IsDev
   ? "dev"
   : "prod";
 
+export const ShowSuccessInscription = window.location.search.includes(
+  "show-success-inscription"
+);
+
+const devLogMeta = {
+  IdTeacher: 5,
+  Token:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjo1LCJtYWlsIjoiMTY1MzgyNjQ3OCIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTQwODU2Nzh9.Xln2BhWbuYNobHgq_g1kUxmjYBVVM0vda-4pMNXL8cI",
+};
 export const controller = new Controller(
   IsDev ? localhost : window.location.origin,
-  "",
-  {}
+  IsDev ? devLogMeta.Token : ""
 );

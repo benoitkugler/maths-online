@@ -82,6 +82,11 @@ CREATE TABLE trivial_configs (
     Id serial PRIMARY KEY,
     Questions jsonb NOT NULL CONSTRAINT Questions_structgen_validate_json_array_5_array_array_string CHECK (structgen_validate_json_array_5_array_array_string (Questions)),
     QuestionTimeout integer NOT NULL,
-    ShowDecrassage boolean NOT NULL
+    ShowDecrassage boolean NOT NULL,
+    Public boolean NOT NULL,
+    id_teacher integer NOT NULL
 );
+
+ALTER TABLE trivial_configs
+    ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
 

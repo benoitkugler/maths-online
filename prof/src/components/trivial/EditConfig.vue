@@ -24,7 +24,7 @@
           </v-list-subheader>
         </v-col>
         <v-col cols="auto" align-self="center">
-          <v-menu offset-y close-on-content-click>
+          <v-menu offset-y close-on-content-click v-model="showDifficultyCard">
             <template v-slot:activator="{ isActive, props }">
               <v-btn
                 title="Sélectionner la difficulté"
@@ -58,7 +58,9 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="success" @click="adjustDifficulty">Appliquer</v-btn>
+                <v-btn color="success" @click="adjustDifficulty"
+                  >Appliquer</v-btn
+                >
               </v-card-actions>
             </v-card>
           </v-menu>
@@ -103,7 +105,7 @@
           >
             Les catégories suivantes ne sont pas utilisées :
             <v-list>
-              <v-list-item v-for="tags in hint.Missing!">
+              <v-list-item v-for="(tags, index) in hint.Missing!" :key="index">
                 <TagChip :tag="tag" :key="tag" v-for="tag in tags"></TagChip>
               </v-list-item>
             </v-list>
@@ -122,6 +124,7 @@
         </v-alert>
         <v-list-item
           v-for="(categorie, index) in props.edited.Questions"
+          :key="index"
           rounded
           :style="{
             'border-color': colors[index],
@@ -172,11 +175,12 @@
 
 <script setup lang="ts">
 import type {
-CheckMissingQuestionsOut,
-QuestionCriterion,
-TrivialConfig
+  CheckMissingQuestionsOut,
+  QuestionCriterion,
+  TrivialConfig,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { removeDuplicates } from "@/controller/editor";
 import { DifficultyTag } from "@/controller/exercice_gen";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
 import type { CategoriesQuestions } from "@/controller/trivial_config_gen";
@@ -202,13 +206,50 @@ const colors = colorsPerCategorie;
 const propositions = questionPropositions;
 
 const difficulties = DifficultyTag;
+let showDifficultyCard = $ref(false);
 let diffChoices = $ref<{ [key in DifficultyTag]: boolean }>({
   [DifficultyTag.Diff1]: true,
   [DifficultyTag.Diff2]: true,
   [DifficultyTag.Diff3]: true,
 });
 function adjustDifficulty() {
-    // TODO:
+  showDifficultyCard = false;
+  // first remove any difficulty tags...
+  let tmp = props.edited.Questions.map(
+    (union) =>
+      union?.map(
+        (inter) =>
+          inter?.filter(
+            (tag) =>
+              tag != DifficultyTag.Diff1 &&
+              tag != DifficultyTag.Diff2 &&
+              tag != DifficultyTag.Diff3
+          ) || []
+      ) || []
+  );
+  // and keep unique intersections...
+  tmp = tmp.map((ls) => removeDuplicates(ls));
+  // then duplicate adding wanted tags
+  // unless all tags are selected
+  const allSelected = Object.values(diffChoices).every((v) => v);
+  const toAdd = Object.entries(diffChoices)
+    .filter((entry) => entry[1])
+    .map((entry) => entry[0]);
+
+  if (!allSelected) {
+    tmp = tmp.map((ls) => {
+      const withDiff: string[][] = [];
+      ls.forEach((l) => {
+        toAdd.forEach((diff) => withDiff.push(l.concat(diff)));
+      });
+      return withDiff;
+    });
+  }
+
+  console.log(tmp);
+
+  props.edited.Questions = tmp;
+  fetchHint();
 }
 
 function updateCategorie(index: number, cat: QuestionCriterion) {

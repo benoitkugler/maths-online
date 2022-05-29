@@ -80,6 +80,14 @@ func RemoveDBDev() {
 	}
 }
 
+// DB is a test DB, usually build from importing the current production DB.
+var DB = pass.DB{
+	Host:     "localhost",
+	User:     "benoit",
+	Password: "dummy",
+	Name:     "isyro_prod",
+}
+
 // WebsocketURL transforms `s` to set `ws` as scheme
 // It panics on error.
 func WebsocketURL(s string) string {

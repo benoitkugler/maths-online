@@ -2,12 +2,13 @@
   <v-list-item
     dense
     rounded
-    class="py-1 my-2"
+    :class="'py-1 my-2 ' + colorClass"
     @click="emit('clicked', props.question)"
   >
     <v-row no-gutters>
-      <v-col cols="auto" align-self="center"
-        ><v-btn
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          v-if="isPersonnal"
           size="x-small"
           icon
           @click.stop="emit('delete', props.question)"
@@ -15,8 +16,14 @@
         >
           <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
         </v-btn>
+
+        <OriginButton
+          :origin="props.question.Origin"
+          @update-public="(b) => emit('updatePublic', props.question.Id, b)"
+        ></OriginButton>
+
         <v-btn
-          v-if="!props.question.IsInGroup"
+          v-if="isPersonnal && !props.question.IsInGroup"
           class="mx-1"
           size="x-small"
           icon
@@ -45,7 +52,10 @@
 </template>
 
 <script setup lang="ts">
-import type { QuestionHeader } from "@/controller/api_gen";
+import { Visibility, type QuestionHeader } from "@/controller/api_gen";
+import { visiblityColors } from "@/controller/editor";
+import { computed } from "vue";
+import OriginButton from "../OriginButton.vue";
 import TagChip from "./utils/TagChip.vue";
 
 interface Props {
@@ -56,5 +66,12 @@ const emit = defineEmits<{
   (e: "delete", question: QuestionHeader): void;
   (e: "clicked", question: QuestionHeader): void;
   (e: "duplicate", question: QuestionHeader): void;
+  (e: "updatePublic", questionID: number, isPublic: boolean): void;
 }>();
+
+const colorClass = computed(
+  () => "bg-" + visiblityColors[props.question.Origin.Visibility]
+);
+
+const isPersonnal = props.question.Origin.Visibility == Visibility.Personnal;
 </script>

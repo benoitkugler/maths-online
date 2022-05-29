@@ -15,14 +15,20 @@
       <v-list-item>
         <v-btn link :to="{ name: 'editor' }">Editeur de question</v-btn>
       </v-list-item>
+
+      <v-divider></v-divider>
+      <v-list-item>
+        <v-btn @click="logout">Déconnexion</v-btn>
+      </v-list-item>
     </v-navigation-drawer>
 
     <v-app-bar app dense color="secondary">
       <v-app-bar-nav-icon
         @click="showSideBar = !showSideBar"
+        v-if="isLoggedIn"
       ></v-app-bar-nav-icon>
       <v-app-bar-title tag="h5">
-        Maths online -
+        Isyro -
         <b>{{ $route.meta.Label }}</b>
       </v-app-bar-title>
       <v-spacer></v-spacer>
@@ -30,7 +36,8 @@
     </v-app-bar>
 
     <v-main>
-      <router-view v-slot="{ Component }">
+      <loggin-screen v-if="!isLoggedIn" @loggin="onLoggin"></loggin-screen>
+      <router-view v-else v-slot="{ Component }">
         <transition>
           <keep-alive>
             <component :is="Component" />
@@ -65,7 +72,8 @@
 
 <script setup lang="ts">
 import { $ref } from "vue/macros";
-import { controller } from "./controller/controller";
+import { controller, IsDev } from "./controller/controller";
+import LogginScreen from "./views/LogginScreen.vue";
 
 let showSideBar = $ref(false);
 const version = process.env.VERSION;
@@ -80,7 +88,19 @@ controller.onError = (s, m) => {
   errorHtml = m;
 };
 
-controller.showMessage = s => {
+controller.showMessage = (s) => {
   message = s;
 };
+
+let isLoggedIn = $ref(IsDev);
+
+function onLoggin() {
+  isLoggedIn = true;
+}
+
+function logout() {
+  isLoggedIn = false;
+  showSideBar = false;
+  controller.logout();
+}
 </script>

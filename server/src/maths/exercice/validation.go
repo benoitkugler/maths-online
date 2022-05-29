@@ -2,7 +2,6 @@ package exercice
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
 )
@@ -107,7 +106,7 @@ func (e ErrQuestionInvalid) Error() string {
 
 // Validate ensure the enonce blocks are sound.
 // If not, an `ErrQuestionInvalid` is returned.
-func (qu Question) Validate() error {
+func (qu QuestionPage) Validate() error {
 	// the client validate the random parameters on the fly,
 	// so they should be valid here
 	// err on the side of caution though
@@ -124,27 +123,4 @@ func (qu Question) Validate() error {
 	}
 
 	return nil
-}
-
-// ValidateAllQuestions fetches all questions from the DB
-// and calls Validate, returning all the errors encountered.
-// It should be used as a maintenance helper when migrating the DB.
-func ValidateAllQuestions(db DB) error {
-	qu, err := SelectAllQuestions(db)
-	if err != nil {
-		return err
-	}
-
-	var errs []string
-	for id, q := range qu {
-		err := q.Validate()
-		if err != nil {
-			errs = append(errs, fmt.Sprintf("%s (ID: %d) -> %s", q.Title, id, err))
-		}
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-
-	return fmt.Errorf("inconsistent table questions: %s", strings.Join(errs, "\n"))
 }

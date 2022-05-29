@@ -3,7 +3,8 @@ package trivialpoursuit
 import (
 	"encoding/json"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/prof/editor"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
 
@@ -18,13 +19,14 @@ type CategoriesQuestions [game.NbCategories]QuestionCriterion
 
 type TrivialConfigExt struct {
 	Config TrivialConfig
+	Origin teacher.Origin
 
 	Running                 LaunchSessionOut // empty when not running
 	NbQuestionsByCategories [game.NbCategories]int
 }
 
-func (tc TrivialConfig) withDetails(dict map[int64]exercice.QuestionTags, sessions map[int64]LaunchSessionOut) TrivialConfigExt {
-	out := TrivialConfigExt{Config: tc}
+func (tc TrivialConfig) withDetails(dict map[int64]editor.QuestionTags, sessions map[int64]LaunchSessionOut, origin teacher.Origin) TrivialConfigExt {
+	out := TrivialConfigExt{Config: tc, Origin: origin}
 	out.Running = sessions[tc.Id]
 	for i, cat := range tc.Questions {
 		out.NbQuestionsByCategories[i] = len(cat.filter(dict))

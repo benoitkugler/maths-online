@@ -155,7 +155,9 @@ func (ct *Controller) setupStudentDemo(room string, nbPlayers int) (gameConnecti
 		}, RandomGroupStrategy{
 			MaxPlayersPerGroup: nbPlayers,
 			TotalPlayersNumber: nbPlayers,
-		})
+		},
+			ct.admin.Id,
+		)
 		if err != nil {
 			return gameConnection{}, fmt.Errorf("Erreur interne : %s", err)
 		}

@@ -8,7 +8,7 @@
         :items="strategyItems"
         :model-value="strategyItems[launchOptions.Kind]"
         @update:model-value="
-          s => (launchOptions.Kind = strategyItems.indexOf(s))
+          (s) => (launchOptions.Kind = strategyItems.indexOf(s))
         "
         :hint="hint"
         persistent-hint
@@ -41,7 +41,7 @@
 import type {
   FixedSizeGroupStrategy,
   GroupStrategy,
-  RandomGroupStrategy
+  RandomGroupStrategy,
 } from "@/controller/api_gen";
 import { GroupStrategyKind } from "@/controller/api_gen";
 import { computed, markRaw } from "@vue/runtime-core";
@@ -59,7 +59,7 @@ const emit = defineEmits<{
 
 let launchOptions = $ref<GroupStrategy>({
   Kind: GroupStrategyKind.FixedSizeGroupStrategy,
-  Data: { Groups: [] }
+  Data: { Groups: [] },
 });
 // let launchOptions = $ref<GroupStrategy>({
 //   Kind: GroupStrategyKind.RandomGroupStrategy,
@@ -77,13 +77,13 @@ const groupStrategyComponent = computed(() => {
 
 const strategyItems = [
   "Taille des groupes fixées",
-  "Création aléatoire des groupes"
+  "Création aléatoire des groupes",
 ];
 
 const hint = computed(() => {
   return [
     "Le nombre et la taille de chaque groupe est fixée au lancement. Chaque groupe est accessible par un code différent.",
-    "Les groupes sont formés au fur et à mesure des connexions. Un seul code permet d'accéder à la partie."
+    "Les groupes sont formés au fur et à mesure des connexions. Un seul code permet d'accéder à la partie.",
   ][launchOptions.Kind];
 });
 
@@ -91,12 +91,14 @@ const isValid = computed(() => isGroupValid(launchOptions));
 
 function isGroupValid(options: GroupStrategy) {
   switch (options.Kind) {
-    case GroupStrategyKind.RandomGroupStrategy:
+    case GroupStrategyKind.RandomGroupStrategy: {
       const d = options.Data as RandomGroupStrategy;
       return d.MaxPlayersPerGroup >= 1 && d.TotalPlayersNumber >= 1;
-    case GroupStrategyKind.FixedSizeGroupStrategy:
+    }
+    case GroupStrategyKind.FixedSizeGroupStrategy: {
       const data = options.Data as FixedSizeGroupStrategy;
-      return data.Groups?.length && data.Groups.every(v => v > 0);
+      return data.Groups?.length && data.Groups.every((v) => v > 0);
+    }
   }
 }
 </script>

@@ -7,9 +7,79 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	"github.com/benoitkugler/maths-online/utils/testutils"
 )
+
+func TestCreateConfig(t *testing.T) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	out, err := TrivialConfig{
+		QuestionTimeout: 120,
+		ShowDecrassage:  true,
+		IdTeacher:       1,
+	}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := DeleteTrivialConfigById(db, out.Id); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetConfig(t *testing.T) {
+	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "gen_create.sql")
+	defer testutils.RemoveDBDev()
+	defer db.Close()
+
+	user1, err := teacher.Teacher{Mail: "1"}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	user2, err := teacher.Teacher{Mail: "2"}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = TrivialConfig{IdTeacher: user1.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c2, err := TrivialConfig{IdTeacher: user2.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})
+	l, err := ct.getTrivialPoursuits(user1.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != 1 {
+		t.Fatal()
+	}
+
+	c2.Public = true
+	if _, err := c2.Update(db); err != nil {
+		t.Fatal(err)
+	}
+
+	l, err = ct.getTrivialPoursuits(user1.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != 2 {
+		t.Fatal()
+	}
+}
 
 func TestGameTermination(t *testing.T) {
 	tv.ProgressLogger.SetOutput(os.Stdout)
@@ -44,19 +114,13 @@ func TestGameID(t *testing.T) {
 }
 
 func TestMissingQuestions(t *testing.T) {
-	creds := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "isyro_prod",
-	}
-	db, err := creds.ConnectPostgres()
+	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", creds, err)
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 
-	ct := NewController(db, pass.Encrypter{}, "")
+	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})
 
 	criteria := CategoriesQuestions{
 		{
@@ -93,7 +157,7 @@ func TestMissingQuestions(t *testing.T) {
 			},
 		},
 	}
-	out, err := ct.checkMissingQuestions(criteria)
+	out, err := ct.checkMissingQuestions(criteria, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +209,7 @@ func TestMissingQuestions(t *testing.T) {
 			},
 		},
 	}
-	out, err = ct.checkMissingQuestions(criteria)
+	out, err = ct.checkMissingQuestions(criteria, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,23 +219,17 @@ func TestMissingQuestions(t *testing.T) {
 }
 
 func TestGetTrivials(t *testing.T) {
-	creds := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "isyro_prod",
-	}
-	db, err := creds.ConnectPostgres()
+	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", creds, err)
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 
-	ct := NewController(db, pass.Encrypter{}, "")
+	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})
 
 	for range [10]int{} {
 		t.Run("", func(t *testing.T) {
-			_, err := ct.getTrivialPoursuits()
+			_, err := ct.getTrivialPoursuits(0)
 			if err != nil {
 				t.Fatal(err)
 			}

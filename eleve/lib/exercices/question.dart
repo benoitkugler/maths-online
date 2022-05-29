@@ -211,7 +211,12 @@ class _ContentBuilder {
   void _handleExpressionFieldBlock(ExpressionFieldBlock element) {
     final ct = _controllers[element.iD] as ExpressionController;
 
-    final field = WidgetSpan(child: ExpressionField(_color, ct));
+    final field = WidgetSpan(
+        child: ExpressionField(
+      _color,
+      ct,
+      hintWidth: element.sizeHint,
+    ));
     if (element.label.isNotEmpty) {
       // start a new line
       _flushCurrentRow();

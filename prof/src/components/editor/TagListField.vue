@@ -28,18 +28,24 @@
     @click="startEdit"
     rounded
     border="secondary"
-    style="border-width: 2px; cursor: pointer"
+    :style="{ 'border-width': '2px', cursor: props.readonly ? '' : 'pointer' }"
   >
-    <div v-if="props.modelValue.length == 0">Ajouter une étiquette...</div>
+    <div
+      v-if="props.modelValue.length == 0"
+      style="text-align: center; font-style: italic"
+      class="px-2"
+    >
+      Ajouter une étiquette...
+    </div>
     <v-row no-gutters v-else justify="center">
-      <v-col v-for="tag in props.modelValue" cols="auto">
+      <v-col v-for="tag in props.modelValue" :key="tag" cols="auto">
         <v-chip
           :key="tag"
           size="small"
           label
           class="ma-1"
           :color="tagColor(tag)"
-          style="cursor: pointer"
+          :style="{ cursor: props.readonly ? '' : 'pointer' }"
           >{{ tag }}</v-chip
         >
       </v-col>
@@ -56,6 +62,7 @@ import TagListEdit from "./TagListEdit.vue";
 interface Props {
   modelValue: string[];
   allTags: string[];
+  readonly: boolean;
   label?: string;
 }
 
@@ -71,8 +78,11 @@ let isEditing = $ref(false);
 let tmpList = $ref<string[]>([]);
 
 function startEdit() {
+  if (props.readonly) {
+    return;
+  }
   isEditing = true;
-  tmpList = props.modelValue.map(v => tagString(v));
+  tmpList = props.modelValue.map((v) => tagString(v));
 }
 
 const saveEnabled = computed(() => {

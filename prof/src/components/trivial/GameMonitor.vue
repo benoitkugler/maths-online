@@ -24,7 +24,11 @@
         <v-col v-if="!props.summary.Players?.length">
           <i>En attente de joueurs...</i>
         </v-col>
-        <v-col cols="6" v-for="player in props.summary.Players">
+        <v-col
+          cols="6"
+          v-for="(player, index) in props.summary.Players"
+          :key="index"
+        >
           <pie
             :label="player.Player"
             :success="player.Successes"

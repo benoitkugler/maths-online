@@ -104,19 +104,21 @@
               </i>
             </div>
 
-            <div v-for="(questionGroup, index) in questions">
+            <div v-for="questionGroup in questions" :key="questionGroup.Title">
               <question-row
                 v-if="questionGroup.Size == 1"
                 :question="questionGroup.Questions![0]"
                 @clicked="startEdit"
-                @delete="question => (questionToDelete = question)"
-                @duplicate="question => (questionToDuplicate = question)"
+                @delete="(question) => (questionToDelete = question)"
+                @duplicate="(question) => (questionToDuplicate = question)"
+                @update-public="updatePublic"
               ></question-row>
               <question-group-row
                 v-else
                 :group="questionGroup"
                 @clicked="startEdit"
-                @delete="question => (questionToDelete = question)"
+                @delete="(question) => (questionToDelete = question)"
+                @update-public="updatePublic"
               ></question-group-row>
             </div>
           </v-list>
@@ -130,8 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import type { QuestionGroup, QuestionHeader } from "@/controller/api_gen";
+import {
+  type Origin,
+  type QuestionGroup,
+  type QuestionHeader,
+} from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
+import { personnalOrigin } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -144,7 +151,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "edit", question: Question, tags: string[]): void;
+  (e: "edit", question: Question, tags: string[], origin: Origin): void;
 }>();
 
 let questions = $ref<QuestionGroup[]>([]);
@@ -175,7 +182,7 @@ async function updateQueryTags() {
 async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: querySearch,
-    Tags: queryTags
+    Tags: queryTags,
   });
   if (result == undefined) {
     return;
@@ -189,13 +196,13 @@ async function createQuestion() {
   if (out == undefined) {
     return;
   }
-  emit("edit", out, []);
+  emit("edit", out, [], personnalOrigin());
 }
 
 let questionToDuplicate: QuestionHeader | null = $ref(null);
 async function duplicateDifficulty() {
   await controller.EditorDuplicateQuestionWithDifficulty({
-    id: questionToDuplicate!.Id
+    id: questionToDuplicate!.Id,
   });
   questionToDuplicate = null;
   await fetchQuestions();
@@ -206,7 +213,7 @@ async function startEdit(question: QuestionHeader) {
   if (out == undefined) {
     return;
   }
-  emit("edit", out, question.Tags || []);
+  emit("edit", out, question.Tags || [], question.Origin);
 }
 
 let questionToDelete: QuestionHeader | null = $ref(null);
@@ -214,5 +221,21 @@ async function deleteQuestion() {
   await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
   await fetchQuestions(); // delete modify the groups
   questionToDelete = null;
+}
+
+async function updatePublic(questionID: number, isPublic: boolean) {
+  const res = await controller.QuestionUpdateVisiblity({
+    QuestionID: questionID,
+    Public: isPublic,
+  });
+  if (res === undefined) {
+    return;
+  }
+  questions.forEach((group) => {
+    const index = group.Questions?.findIndex((qu) => qu.Id == questionID);
+    if (index !== undefined) {
+      group.Questions![index].Origin.IsPublic = isPublic;
+    }
+  });
 }
 </script>

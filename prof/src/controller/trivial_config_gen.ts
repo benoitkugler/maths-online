@@ -9,4 +9,6 @@ export interface TrivialConfig {
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
   ShowDecrassage: boolean;
+  Public: boolean;
+  id_teacher: number;
 }

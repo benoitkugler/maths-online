@@ -12,17 +12,20 @@ import (
 	"github.com/benoitkugler/maths-online/maths/exercice"
 	exClient "github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 	"github.com/gorilla/websocket"
 )
 
-var enonce = exercice.Enonce{
-	exercice.NumberFieldBlock{Expression: "1"},
+var page = exercice.QuestionPage{
+	Enonce: exercice.Enonce{
+		exercice.NumberFieldBlock{Expression: "1"},
+	},
 }
 
 var exQu = game.WeigthedQuestions{
-	Questions: []exercice.Question{{Id: 1, Enonce: enonce}, {Id: 2, Enonce: enonce}},
+	Questions: []editor.Question{{Id: 1, Page: page}, {Id: 2, Page: page}},
 	Weights:   []float64{1. / 3, 2. / 3},
 }
 

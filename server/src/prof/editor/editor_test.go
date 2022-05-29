@@ -5,23 +5,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
 func TestInstantiateQuestions(t *testing.T) {
-	creds := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "isyro_prod",
-	}
-	db, err := creds.ConnectPostgres()
+	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", creds, err)
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 
-	ct := NewController(db)
+	ct := NewController(db, teacher.Teacher{})
 	out, err := ct.InstantiateQuestions([]int64{24, 29, 37})
 	if err != nil {
 		t.Fatal(err)

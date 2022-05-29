@@ -142,7 +142,7 @@ class _ExpressionCell extends StatelessWidget {
         child: ExpressionField(
           color,
           controller,
-          widthFactor: 0.2,
+          maxWidthFactor: 0.2,
         ),
       ),
     );
