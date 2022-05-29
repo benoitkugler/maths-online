@@ -2,7 +2,7 @@
 -- require teacher/gen_create.sql
 
 INSERT INTO teachers (id, mail, password_crypted, is_admin)
-    VALUES (0, 'dummy@gmail.com', '\x5cc8e54c4df92cf6d49a86d85eff01b6b60e6e82d0db551fbb19295ebfd9bd15', TRUE);
+    VALUES (1, 'dummy@gmail.com', '\x5cc8e54c4df92cf6d49a86d85eff01b6b60e6e82d0db551fbb19295ebfd9bd15', TRUE);
 
 SELECT
     setval('teachers_id_seq', (
