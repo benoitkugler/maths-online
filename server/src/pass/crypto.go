@@ -23,10 +23,10 @@ func NewEncrypter(env string) (Encrypter, error) {
 	if key == "" {
 		return Encrypter{}, fmt.Errorf("missing env %s", env)
 	}
-	return newEncrypter(key), nil
+	return NewEncrypterFromKey(key), nil
 }
 
-func newEncrypter(key string) Encrypter { return md5.Sum([]byte(key)) }
+func NewEncrypterFromKey(key string) Encrypter { return md5.Sum([]byte(key)) }
 
 func (pass Encrypter) encrypt(data []byte) ([]byte, error) {
 	block, _ := aes.NewCipher(pass[:])

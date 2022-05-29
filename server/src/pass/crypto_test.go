@@ -5,7 +5,7 @@ import (
 )
 
 func TestEncryption(t *testing.T) {
-	enc := newEncrypter("5s64qsd897e4q87mùlds54")
+	enc := NewEncrypterFromKey("5s64qsd897e4q87mùlds54")
 	for i := range [200]int{} {
 		v1 := 456 + 100*int64(i)
 		s, err := newEncryptedID(v1, enc)
@@ -47,7 +47,7 @@ func TestJSON(t *testing.T) {
 
 func TestPassword(t *testing.T) {
 	pass := "mysuperbepassword"
-	enc := newEncrypter("5s6d897e4q87mùlds54")
+	enc := NewEncrypterFromKey("5s6d897e4q87mùlds54")
 
 	if enc.DecryptPassword(enc.EncryptPassword(pass)) != pass {
 		t.Fatal()
