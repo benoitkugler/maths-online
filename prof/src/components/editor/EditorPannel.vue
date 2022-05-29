@@ -68,6 +68,7 @@
               density="compact"
               label="Nom de la question"
               v-model="question.page.title"
+              :readonly="isReadonly"
               hide-details
             ></v-text-field></v-col
         ></v-row>
@@ -78,6 +79,7 @@
               v-model="tags"
               :all-tags="props.allTags"
               @update:model-value="saveTags"
+              :readonly="isReadonly"
             ></tag-list-field></v-col
         ></v-row>
       </v-col>
@@ -89,10 +91,15 @@
               icon
               @click="save"
               :disabled="!session_id"
-              title="Enregistrer et prévisualiser"
+              :title="
+                isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
+              "
               size="small"
             >
-              <v-icon icon="mdi-content-save" size="small"></v-icon>
+              <v-icon
+                :icon="isReadonly ? 'mdi-eye' : 'mdi-content-save'"
+                size="small"
+              ></v-icon>
             </v-btn>
           </v-col>
           <v-col>
@@ -237,14 +244,19 @@
 </template>
 
 <script setup lang="ts">
-import type { errEnonce, ErrParameters } from "@/controller/api_gen";
+import {
+Visibility,
+type errEnonce,
+type ErrParameters,
+type Origin
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { newBlock, saveData, swapItems, xRune } from "@/controller/editor";
 import type {
-  Block,
-  Question,
-  RandomParameter,
-  Variable,
+Block,
+Question,
+RandomParameter,
+Variable
 } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
@@ -281,6 +293,7 @@ import TagListField from "./TagListField.vue";
 interface Props {
   session_id: string;
   question: Question;
+  origin: Origin;
   tags: string[];
   allTags: string[]; // to provide auto completion
 }
@@ -299,6 +312,10 @@ watch(props, () => {
   question = props.question;
   tags = props.tags;
 });
+
+const isReadonly = computed(
+  () => props.origin.Visibility != Visibility.Personnal
+);
 
 const rows = computed(() => props.question.page.enonce?.map(dataToBlock) || []);
 

@@ -8,6 +8,7 @@
     <v-row no-gutters>
       <v-col cols="auto" align-self="center">
         <v-btn
+          v-if="isPersonnal"
           size="x-small"
           icon
           @click.stop="emit('delete', props.question)"
@@ -22,7 +23,7 @@
         ></OriginButton>
 
         <v-btn
-          v-if="!props.question.IsInGroup"
+          v-if="isPersonnal && !props.question.IsInGroup"
           class="mx-1"
           size="x-small"
           icon
@@ -72,9 +73,5 @@ const colorClass = computed(
   () => "bg-" + visiblityColors[props.question.Origin.Visibility]
 );
 
-const isPersonnalAndShared = computed(
-  () =>
-    props.question.Origin.Visibility == Visibility.Personnal &&
-    props.question.Origin.IsPublic
-);
+const isPersonnal = props.question.Origin.Visibility == Visibility.Personnal;
 </script>

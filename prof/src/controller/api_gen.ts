@@ -69,6 +69,11 @@ export interface TrivialConfigExt {
   Running: LaunchSessionOut;
   NbQuestionsByCategories: number[];
 }
+// github.com/benoitkugler/maths-online/prof/trivial-poursuit.UpdateTrivialVisiblityIn
+export interface UpdateTrivialVisiblityIn {
+  ConfigID: number;
+  Public: boolean;
+}
 // github.com/benoitkugler/maths-online/prof/trivial-poursuit.CheckMissingQuestionsOut
 export interface CheckMissingQuestionsOut {
   Pattern: string[] | null;
@@ -713,6 +718,28 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessDeleteTrivialPoursuit(data: any): void;
+
+  protected async rawUpdateTrivialVisiblity(params: UpdateTrivialVisiblityIn) {
+    const fullUrl = this.baseUrl + "/prof/trivial/config/visibility";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** UpdateTrivialVisiblity wraps rawUpdateTrivialVisiblity and handles the error */
+  async UpdateTrivialVisiblity(params: UpdateTrivialVisiblityIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawUpdateTrivialVisiblity(params);
+      this.onSuccessUpdateTrivialVisiblity(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessUpdateTrivialVisiblity(data: any): void;
 
   protected async rawDuplicateTrivialPoursuit(params: { id: number }) {
     const fullUrl = this.baseUrl + "/prof/trivial/config/duplicate";

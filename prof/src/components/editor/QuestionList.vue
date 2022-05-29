@@ -132,8 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import type { QuestionGroup, QuestionHeader } from "@/controller/api_gen";
+import {
+  type Origin,
+  type QuestionGroup,
+  type QuestionHeader,
+} from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
+import { personnalOrigin } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -146,7 +151,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "edit", question: Question, tags: string[]): void;
+  (e: "edit", question: Question, tags: string[], origin: Origin): void;
 }>();
 
 let questions = $ref<QuestionGroup[]>([]);
@@ -191,7 +196,7 @@ async function createQuestion() {
   if (out == undefined) {
     return;
   }
-  emit("edit", out, []);
+  emit("edit", out, [], personnalOrigin());
 }
 
 let questionToDuplicate: QuestionHeader | null = $ref(null);
@@ -208,7 +213,7 @@ async function startEdit(question: QuestionHeader) {
   if (out == undefined) {
     return;
   }
-  emit("edit", out, question.Tags || []);
+  emit("edit", out, question.Tags || [], question.Origin);
 }
 
 let questionToDelete: QuestionHeader | null = $ref(null);

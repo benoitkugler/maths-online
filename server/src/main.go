@@ -169,6 +169,7 @@ func main() {
 	}
 	fmt.Println("Setup done (pending sanityChecks)")
 
+	e.Use(middleware.Recover())
 	err = e.Start(host) // start and block
 	e.Logger.Fatal(err) // report error and quit
 }

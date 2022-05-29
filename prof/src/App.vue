@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { $ref } from "vue/macros";
-import { controller } from "./controller/controller";
+import { controller, IsDev } from "./controller/controller";
 import LogginScreen from "./views/LogginScreen.vue";
 
 let showSideBar = $ref(false);
@@ -92,7 +92,7 @@ controller.showMessage = (s) => {
   message = s;
 };
 
-let isLoggedIn = $ref(false);
+let isLoggedIn = $ref(IsDev);
 
 function onLoggin() {
   isLoggedIn = true;

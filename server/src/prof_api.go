@@ -22,6 +22,7 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller,
 	gr.PUT("/prof/trivial/config", trivial.CreateTrivialPoursuit)
 	gr.POST("/prof/trivial/config", trivial.UpdateTrivialPoursuit)
 	gr.DELETE("/prof/trivial/config", trivial.DeleteTrivialPoursuit)
+	gr.POST("/prof/trivial/config/visibility", trivial.UpdateTrivialVisiblity)
 	gr.GET("/prof/trivial/config/duplicate", trivial.DuplicateTrivialPoursuit)
 	gr.POST("/prof/trivial/config/check-missing-questions", trivial.CheckMissingQuestions)
 

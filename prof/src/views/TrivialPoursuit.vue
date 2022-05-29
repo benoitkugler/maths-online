@@ -61,7 +61,10 @@
       >
         <v-row>
           <v-col cols="6" align-self="center">
-            <origin-button :origin="config.Origin"></origin-button>
+            <origin-button
+              :origin="config.Origin"
+              @update-public="(b) => updatePublic(config.Config, b)"
+            ></origin-button>
             <v-btn
               class="mx-2"
               size="x-small"
@@ -222,6 +225,18 @@ async function updateConfig(config: TrivialConfig) {
   const index = _configs.findIndex((v) => v.Config.Id == config.Id);
   _configs[index] = res;
   editedConfig = null;
+}
+
+async function updatePublic(config: TrivialConfig, isPublic: boolean) {
+  const res = await controller.UpdateTrivialVisiblity({
+    ConfigID: config.Id,
+    Public: isPublic,
+  });
+  if (res === undefined) {
+    return;
+  }
+  const index = _configs.findIndex((v) => v.Config.Id == config.Id);
+  _configs[index].Origin.IsPublic = isPublic;
 }
 
 async function duplicateConfig(config: TrivialConfig) {

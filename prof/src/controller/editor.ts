@@ -1,4 +1,4 @@
-import type { QuestionHeader } from "./api_gen";
+import type { Origin, QuestionHeader } from "./api_gen";
 import { Visibility } from "./api_gen";
 import type {
   Block,
@@ -706,4 +706,12 @@ export function removeDuplicates(tags: string[][]) {
     unique.push(l);
   });
   return unique;
+}
+
+export function personnalOrigin(): Origin {
+  return {
+    IsPublic: false,
+    Owner: "",
+    Visibility: Visibility.Personnal,
+  };
 }

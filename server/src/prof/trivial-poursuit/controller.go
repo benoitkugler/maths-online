@@ -256,6 +256,36 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type UpdateTrivialVisiblityIn struct {
+	ConfigID int64
+	Public   bool
+}
+
+func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args UpdateTrivialVisiblityIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	qu, err := SelectTrivialConfig(ct.db, args.ConfigID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if qu.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	qu.Public = args.Public
+	qu, err = qu.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
 type CheckMissingQuestionsOut struct {
 	Pattern []string   // empty if no pattern is found
 	Missing [][]string // missing tags, may be empty if OK

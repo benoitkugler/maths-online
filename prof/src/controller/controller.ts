@@ -28,6 +28,13 @@ class Controller extends AbstractAPI {
     this.authToken = "";
   }
 
+  protected onSuccessUpdateTrivialVisiblity(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
+  }
+
   protected onSuccessAskInscription(data: AskInscriptionOut): void {
     this.inRequest = false;
   }
@@ -219,11 +226,10 @@ export const ShowSuccessInscription = window.location.search.includes(
 );
 
 const devLogMeta = {
-  IdTeacher: 2,
+  IdTeacher: 5,
   Token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjoyLCJtYWlsIjoiMTY1MzQ4OTI1NyIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTM3NDg0NTd9.QHpRwvoGcT3iBM4SKvNMpoJuP47graPfPxwegpHgco8",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjo1LCJtYWlsIjoiMTY1MzgyNjQ3OCIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTQwODU2Nzh9.Xln2BhWbuYNobHgq_g1kUxmjYBVVM0vda-4pMNXL8cI",
 };
-
 export const controller = new Controller(
   IsDev ? localhost : window.location.origin,
   IsDev ? devLogMeta.Token : ""

@@ -28,7 +28,7 @@
     @click="startEdit"
     rounded
     border="secondary"
-    style="border-width: 2px; cursor: pointer"
+    :style="{ 'border-width': '2px', cursor: props.readonly ? '' : 'pointer' }"
   >
     <div
       v-if="props.modelValue.length == 0"
@@ -45,7 +45,7 @@
           label
           class="ma-1"
           :color="tagColor(tag)"
-          style="cursor: pointer"
+          :style="{ cursor: props.readonly ? '' : 'pointer' }"
           >{{ tag }}</v-chip
         >
       </v-col>
@@ -62,6 +62,7 @@ import TagListEdit from "./TagListEdit.vue";
 interface Props {
   modelValue: string[];
   allTags: string[];
+  readonly: boolean;
   label?: string;
 }
 
@@ -77,6 +78,9 @@ let isEditing = $ref(false);
 let tmpList = $ref<string[]>([]);
 
 function startEdit() {
+  if (props.readonly) {
+    return;
+  }
   isEditing = true;
   tmpList = props.modelValue.map((v) => tagString(v));
 }
