@@ -54,6 +54,7 @@ func TestTokens(t *testing.T) {
 		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
 		{"randLetter()", []tokenData{randVariable{}, openPar, closePar}},
 		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
+		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

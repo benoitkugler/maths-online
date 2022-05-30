@@ -38,20 +38,22 @@ type Block interface {
 	validate(expression.RandomParameters) error
 }
 
-func validateNumberExpression(s string, params expression.RandomParameters, checkPrecision bool) error {
+func validateNumberExpression(s string, params expression.RandomParameters, checkPrecision, rejectInfinite bool) error {
 	expr, err := expression.Parse(s)
 	if err != nil {
 		return err
 	}
-	if ok, freq := expr.IsValidNumber(params, checkPrecision); !ok {
+
+	err = expr.IsValidNumber(params, checkPrecision, rejectInfinite)
+	if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
 		dec := ""
 		if checkPrecision {
 			dec = "decimal "
 		}
-		return fmt.Errorf("L'expression %s n'est pas un nombre %svalide (%d %% des tests ont échoué)", s, dec, 100-freq)
+		return fmt.Errorf("L'expression %s n'est pas un nombre %svalide (%d %% des tests ont échoué)", s, dec, 100-freq.SuccessFrequency)
 	}
 
-	return nil
+	return err
 }
 
 type Parameters struct {
@@ -395,7 +397,7 @@ func (vt VariationTableBlock) validate(params expression.RandomParameters) error
 	}
 
 	for _, c := range vt.Fxs {
-		err := validateNumberExpression(c, params, false)
+		err := validateNumberExpression(c, params, false, true)
 		if err != nil {
 			return err
 		}
@@ -511,21 +513,21 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 
 func (f FigureBlock) validate(params expression.RandomParameters) error {
 	for _, v := range f.Drawings.Points {
-		if err := validateNumberExpression(v.Point.Coord.X, params, false); err != nil {
+		if err := validateNumberExpression(v.Point.Coord.X, params, false, true); err != nil {
 			return err
 		}
 
-		if err := validateNumberExpression(v.Point.Coord.Y, params, false); err != nil {
+		if err := validateNumberExpression(v.Point.Coord.Y, params, false, true); err != nil {
 			return err
 		}
 	}
 
 	for _, l := range f.Drawings.Lines {
-		if err := validateNumberExpression(l.A, params, false); err != nil {
+		if err := validateNumberExpression(l.A, params, false, false); err != nil {
 			return err
 		}
 
-		if err := validateNumberExpression(l.B, params, false); err != nil {
+		if err := validateNumberExpression(l.B, params, false, true); err != nil {
 			return err
 		}
 	}

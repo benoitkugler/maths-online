@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 )
@@ -426,6 +427,13 @@ var expressions = [...]struct {
 			},
 		},
 		false,
+	},
+	// infinity
+	{
+		"Inf", &Expression{atom: Number(math.Inf(1)), left: nil, right: nil}, false,
+	},
+	{
+		"inf", &Expression{atom: Number(math.Inf(1)), left: nil, right: nil}, false,
 	},
 }
 

@@ -450,15 +450,50 @@ class DrawingsPainter extends CustomPainter {
     pt.paint(canvas, originalPos.translate(offset.dx, offset.dy));
   }
 
+  static void paintLineFromPoints(RepereMetrics metrics, Canvas canvas,
+      Coord from, Coord to, String label, Size size,
+      {String color = "#a832a2"}) {
+    double a, b;
+    if (to.x == from.x) {
+      a = double.infinity;
+      b = to.x;
+    } else {
+      a = (to.y - from.y) / (to.x - from.x);
+      b = from.y - a * from.x;
+    }
+    DrawingsPainter.paintAffineLine(
+        metrics,
+        canvas,
+        Line(
+          label,
+          color,
+          a,
+          b,
+        ),
+        size);
+  }
+
+  /// if line.a is infinite, then line.b is interpreted as the abscisse
+  /// of a vertical line
   static void paintAffineLine(
       RepereMetrics metrics, Canvas canvas, Line line, Size size) {
     final origin = metrics.figure.origin;
-    // start point
-    final logicalStart = Coord(-origin.x, line.a * (-origin.x) + line.b);
 
-    // end point
-    final logicalEnd = Coord(metrics.figure.width - origin.x,
-        line.a * (metrics.figure.width - origin.x) + line.b);
+    Coord logicalStart, logicalEnd;
+    if (line.a.isInfinite) {
+      // start point
+      logicalStart = Coord(line.b, -origin.y);
+
+      // end point
+      logicalEnd = Coord(line.b, metrics.figure.height - origin.y);
+    } else {
+      // start point
+      logicalStart = Coord(-origin.x, line.a * (-origin.x) + line.b);
+
+      // end point
+      logicalEnd = Coord(metrics.figure.width - origin.x,
+          line.a * (metrics.figure.width - origin.x) + line.b);
+    }
 
     final lineColor = fromHex(line.color);
     canvas.save();
@@ -471,14 +506,17 @@ class DrawingsPainter extends CustomPainter {
           ..strokeWidth = 2);
 
     // label position
-    final logicalLabelX = (metrics.figure.width - origin.x) / 2;
-    final logicalLabel = Coord(logicalLabelX, line.a * origin.x + line.b);
-    paintText(
-        metrics,
-        canvas,
-        LabeledPoint(
-            logicalLabel, line.a > 0 ? LabelPos.bottomRight : LabelPos.topLeft),
-        line.label,
+    Coord logicalLabel;
+    LabelPos pos;
+    if (line.a.isInfinite) {
+      logicalLabel = Coord(line.b, 1);
+      pos = LabelPos.left;
+    } else {
+      final logicalLabelX = (metrics.figure.width - origin.x) / 2;
+      logicalLabel = Coord(logicalLabelX, line.a * logicalLabelX + line.b);
+      pos = line.a > 0 ? LabelPos.bottomRight : LabelPos.topLeft;
+    }
+    paintText(metrics, canvas, LabeledPoint(logicalLabel, pos), line.label,
         color: lineColor);
 
     canvas.restore();

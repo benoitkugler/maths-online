@@ -38,9 +38,9 @@ func (n NumberFieldBlock) instantiate(params expression.Variables, ID int) (inst
 
 func (n NumberFieldBlock) validate(params expression.RandomParameters) error {
 	// note that we dont allow non decimal solutions, since it is confusing for the student.
-	// they should rahter be handled with an expression field, or rounded using the
+	// they should rather be handled with an expression field, or rounded using the
 	// builtin round() function
-	return validateNumberExpression(n.Expression, params, true)
+	return validateNumberExpression(n.Expression, params, true, true)
 }
 
 type ExpressionFieldBlock struct {
@@ -195,10 +195,10 @@ func (c CoordExpression) instantiate(params expression.Variables) (repere.IntCoo
 }
 
 func (c CoordExpression) validate(params expression.RandomParameters) error {
-	if err := validateNumberExpression(c.X, params, false); err != nil {
+	if err := validateNumberExpression(c.X, params, false, true); err != nil {
 		return err
 	}
-	if err := validateNumberExpression(c.Y, params, false); err != nil {
+	if err := validateNumberExpression(c.Y, params, false, true); err != nil {
 		return err
 	}
 	return nil
@@ -397,10 +397,10 @@ func (fa FigureAffineLineFieldBlock) validate(params expression.RandomParameters
 	if err := fa.Figure.validate(params); err != nil {
 		return err
 	}
-	if err := validateNumberExpression(fa.A, params, false); err != nil {
+	if err := validateNumberExpression(fa.A, params, false, false); err != nil {
 		return err
 	}
-	if err := validateNumberExpression(fa.B, params, false); err != nil {
+	if err := validateNumberExpression(fa.B, params, false, true); err != nil {
 		return err
 	}
 
@@ -539,7 +539,7 @@ func (tf TableFieldBlock) validate(params expression.RandomParameters) error {
 	}
 	for _, row := range tf.Answer {
 		for _, cell := range row {
-			if err := validateNumberExpression(cell, params, true); err != nil {
+			if err := validateNumberExpression(cell, params, true, true); err != nil {
 				return err
 			}
 		}

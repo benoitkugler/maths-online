@@ -18,20 +18,7 @@ class FigureVectorController extends FieldController {
             data.figure.bounds.width ~/ 4 + 2, data.figure.bounds.height ~/ 4),
         super(onChange);
 
-  bool _checkSameX(IntCoord point, VectorPointID id) {
-    switch (id) {
-      case VectorPointID.from:
-        return point.x != to.x;
-      case VectorPointID.to:
-        return point.x != from.x;
-    }
-  }
-
   void setPoint(IntCoord point, VectorPointID id) {
-    if (data.asLine && !_checkSameX(point, id)) {
-      return;
-    }
-
     switch (id) {
       case VectorPointID.from:
         from = point;
@@ -154,18 +141,9 @@ class _AffineLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final a = (to.y - from.y).toDouble() / (to.x - from.x);
-    final b = from.y - a * from.x;
-    DrawingsPainter.paintAffineLine(
-        metrics,
-        canvas,
-        Line(
-          label,
-          "#a832a2",
-          a,
-          b,
-        ),
-        size);
+    final from = Coord(this.from.x.toDouble(), this.from.y.toDouble());
+    final to = Coord(this.to.x.toDouble(), this.to.y.toDouble());
+    DrawingsPainter.paintLineFromPoints(metrics, canvas, from, to, label, size);
   }
 
   @override

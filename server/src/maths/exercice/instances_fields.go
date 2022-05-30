@@ -468,25 +468,25 @@ func (f FigureAffineLineFieldInstance) toClient() client.Block {
 }
 
 func (f FigureAffineLineFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	ans, ok := answer.(client.DoublePointAnswer)
+	_, ok := answer.(client.DoublePointAnswer)
 	if !ok {
 		return InvalidFieldAnswer{
 			ID:     f.ID,
 			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
 		}
 	}
-
-	if ans.To.X-ans.From.X == 0 {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: "invalid 0 x increment",
-		}
-	}
 	return nil
 }
 
+func (f FigureAffineLineFieldInstance) isAnswerVertical() bool { return math.IsInf(f.AnswerA, 0) }
+
 func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointAnswer)
+
+	if f.isAnswerVertical() {
+		return ans.From.X == f.AnswerB && ans.To.X == f.AnswerB
+	}
+
 	a := float64(ans.To.Y-ans.From.Y) / float64(ans.To.X-ans.From.X)
 	b := int(float64(ans.From.Y) - a*float64(ans.From.X))
 	return f.AnswerA == a && f.AnswerB == b
@@ -494,6 +494,14 @@ func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isC
 
 func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
 	origin := f.Figure.Bounds.Origin.Round()
+
+	if f.isAnswerVertical() { // vertical line
+		return client.DoublePointAnswer{
+			From: repere.IntCoord{X: f.AnswerB, Y: 0},
+			To:   repere.IntCoord{X: f.AnswerB, Y: 1},
+		}
+	}
+
 	// try to get an integer point
 	x := -origin.X
 	for ; x < f.Figure.Bounds.Width-origin.X; x++ {

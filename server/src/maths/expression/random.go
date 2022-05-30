@@ -233,30 +233,50 @@ func (rd specialFunctionA) validate(pos int) error {
 	return nil
 }
 
+// ErrRandomTests is returned when a valid expression does always
+// pass a given criteria
+type ErrRandomTests struct {
+	// frequency of successul tries, between 0 and 100
+	SuccessFrequency int
+}
+
+func (e ErrRandomTests) Error() string {
+	return fmt.Sprintf("success rate: %d", e.SuccessFrequency)
+}
+
 // IsValidNumber instantiates the expression using `parameters`, then evaluate the resulting
 // expression, checking it is a valid finite number.
 // If `checkPrecision` is true, it also checks that the numbers are not exceeding the
 // float precision used in `AreFloatEqual`.
-// It also returns the frequency of successul tries, in % (between 0 and 100)
 // `parameters` must be a valid set of parameters
-func (expr *Expression) IsValidNumber(parameters RandomParameters, checkPrecision bool) (bool, int) {
+func (expr *Expression) IsValidNumber(parameters RandomParameters, checkPrecision, rejectInfinite bool) error {
 	const nbTries = 1000
 	var nbSuccess int
 	for i := 0; i < nbTries; i++ {
 		ps, _ := parameters.Instantiate()
 		value, err := expr.Evaluate(ps)
+		if err != nil { // return early
+			return err
+		}
 
-		isValid := err == nil && !(math.IsInf(value, 0) || math.IsNaN(value))
-
-		if checkPrecision && isFloatExceedingPrecision(value) {
-			continue
+		isValid := !math.IsNaN(value)
+		if rejectInfinite {
+			isValid = isValid && !math.IsInf(value, 0)
+		}
+		if checkPrecision {
+			isValid = isValid && !isFloatExceedingPrecision(value)
 		}
 
 		if isValid {
 			nbSuccess++
 		}
 	}
-	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+
+	if nbSuccess != nbTries {
+		return ErrRandomTests{nbSuccess * 100 / nbTries}
+	}
+
+	return nil
 }
 
 // IsValidProba is the same as IsValidNumber, but also checks the number

@@ -1,6 +1,7 @@
 package exercice
 
 import (
+	"math"
 	"reflect"
 	"testing"
 
@@ -123,6 +124,20 @@ func TestFigureAffineLineField(t *testing.T) {
 		},
 		AnswerA: 1 / 3,
 		AnswerB: +3,
+	}
+	if ans := field.correctAnswer(); !field.evaluateAnswer(ans) {
+		t.Fatalf("inconsistent answer %v", ans)
+	}
+
+	field = FigureAffineLineFieldInstance{
+		Figure: repere.Figure{
+			Bounds: repere.RepereBounds{
+				Width: 20, Height: 20,
+				Origin: repere.Coord{4, 4},
+			},
+		},
+		AnswerA: math.Inf(1),
+		AnswerB: -2,
 	}
 	if ans := field.correctAnswer(); !field.evaluateAnswer(ans) {
 		t.Fatalf("inconsistent answer %v", ans)

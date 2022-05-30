@@ -29,7 +29,7 @@ type ErrMissingVariable struct {
 }
 
 func (mv ErrMissingVariable) Error() string {
-	return fmt.Sprintf("missing value for variable %s", mv.Missing)
+	return fmt.Sprintf("La variable %s n'est pas définie.", mv.Missing)
 }
 
 // MustEvaluate panics if the expression is invalid or if

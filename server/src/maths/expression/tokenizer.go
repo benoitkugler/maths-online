@@ -2,6 +2,7 @@ package expression
 
 import (
 	"bytes"
+	"strings"
 	"unicode"
 )
 
@@ -183,9 +184,11 @@ func (tk *tokenizer) readToken() (tok token) {
 	case isOp:
 		out.data = op
 		tk.pos++
-	case unicode.IsLetter(c): // either a function, a variable or a constant
+	case unicode.IsLetter(c): // either a function, a variable, Inf/inf a constant
 		if tk.tryReadRandVariable() {
 			out.data = randVariable{}
+		} else if isInf := tk.tryReadInf(); isInf {
+			out.data = numberText("inf")
 		} else if isRound := tk.tryReadRoundFunction(); isRound {
 			out.data = roundFn{}
 		} else if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
@@ -250,6 +253,14 @@ func isImplicitMult(t1, t2 token) bool {
 func (tk *tokenizer) tryReadRoundFunction() bool {
 	if s := string(tk.peekLetters()); s == "round" {
 		tk.pos += len("round")
+		return true
+	}
+	return false
+}
+
+func (tk *tokenizer) tryReadInf() bool {
+	if s := strings.ToLower(string(tk.peekLetters())); s == "inf" {
+		tk.pos += len("inf")
 		return true
 	}
 	return false

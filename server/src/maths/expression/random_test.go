@@ -142,38 +142,38 @@ func TestExpression_IsValidNumber(t *testing.T) {
 		expr           string
 		parameters     RandomParameters
 		checkPrecision bool
-		want           bool
+		wantErr        bool
 	}{
 		{
-			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, true,
+			"2a - sin(a) + exp(1 + a)", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, false,
 		},
 		{
-			"2a + b", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, false,
+			"2a + b", RandomParameters{NewVar('a'): mustParse(t, "2")}, false, true,
 		},
 		{
-			"1/0", RandomParameters{}, false, false,
+			"1/0", RandomParameters{}, false, true,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;4)")}, false, false,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(0;4)")}, false, true,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false, true,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randInt(1;4)")}, false, false,
 		},
 		{
-			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randDecDen()")}, true, true,
+			"1/a", RandomParameters{NewVar('a'): mustParse(t, "randDecDen()")}, true, false,
 		},
 		{
-			"(v_f - v_i) / v_i", RandomParameters{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}, true, true,
+			"(v_f - v_i) / v_i", RandomParameters{NewVarI('v', "f"): mustParse(t, "randint(1;10)"), NewVarI('v', "i"): mustParse(t, "randDecDen()")}, true, false,
 		},
 		{
-			"round(1/3; 3)", nil, true, true,
+			"round(1/3; 3)", nil, true, false,
 		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		got, freq := expr.IsValidNumber(tt.parameters, tt.checkPrecision)
-		if got != tt.want {
-			t.Errorf("Expression.IsValidNumber(%s) got = %v (%d %%), want %v", tt.expr, got, freq, tt.want)
+		err := expr.IsValidNumber(tt.parameters, tt.checkPrecision, true)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("Expression.IsValidNumber(%s) got = %v", tt.expr, err)
 		}
 	}
 }
