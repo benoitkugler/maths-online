@@ -75,7 +75,8 @@ class ExpressionField extends StatefulWidget {
 
   // returns a float ratio between 0 and 1
   double get hintWidthRatio {
-    var clamped = hintWidth;
+    // add some additional padding
+    var clamped = hintWidth + 3;
     if (clamped < 5) {
       clamped = 5;
     }
@@ -86,7 +87,7 @@ class ExpressionField extends StatefulWidget {
   }
 
   const ExpressionField(this.color, this._controller,
-      {Key? key, this.maxWidthFactor = 0.4, this.hintWidth = 30})
+      {Key? key, this.maxWidthFactor = 0.9, this.hintWidth = 30})
       : super(key: key);
 
   static bool isTypingFunc(
