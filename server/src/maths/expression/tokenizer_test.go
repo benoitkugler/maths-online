@@ -53,6 +53,8 @@ func TestTokens(t *testing.T) {
 		{"randChoice(1;2)", []tokenData{randChoice, openPar, numberText("1"), semicolon, numberText("2"), closePar}},
 		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
 		{"randLetter()", []tokenData{randVariable{}, openPar, closePar}},
+		{"min(1)", []tokenData{minFn, openPar, numberText("1"), closePar}},
+		{"max(1)", []tokenData{maxFn, openPar, numberText("1"), closePar}},
 		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
 		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
 	} {

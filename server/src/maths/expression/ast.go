@@ -303,6 +303,10 @@ func (sf specialFunctionA) String() string {
 		name = "randChoice"
 	case randDenominator:
 		name = "randDecDen"
+	case minFn:
+		name = "min"
+	case maxFn:
+		name = "max"
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}

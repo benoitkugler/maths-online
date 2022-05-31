@@ -209,6 +209,12 @@ func Test_Expression_eval(t *testing.T) {
 		{
 			"round(2.235; 2)", nil, 2.24,
 		},
+		{
+			"min(2.235; 2)", nil, 2,
+		},
+		{
+			"max(-2; 1.4; 5)", nil, 5,
+		},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

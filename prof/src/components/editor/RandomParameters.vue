@@ -33,7 +33,7 @@
   <v-card class="mb-2">
     <v-row
       :style="{
-        'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
+        'background-color': props.isValidated ? 'lightgreen' : 'lightgray',
       }"
       class="rounded"
       no-gutters
@@ -72,7 +72,7 @@
         <v-list v-if="props.parameters?.length" @dragend="onDragend">
           <drop-zone
             v-if="showDropZone"
-            @drop="origin => emit('swap', origin, 0)"
+            @drop="(origin) => emit('swap', origin, 0)"
           ></drop-zone>
           <div v-for="(param, index) in props.parameters">
             <v-list-item class="pr-0 pl-1">
@@ -81,7 +81,7 @@
                   <div
                     class="bg-green-lighten-3 rounded fill-height mr-1"
                     style="cursor: grab"
-                    @dragstart="e => onItemDragStart(e, index)"
+                    @dragstart="(e) => onItemDragStart(e, index)"
                     draggable="true"
                   ></div>
                 </v-col>
@@ -100,7 +100,7 @@
                     density="compact"
                     hide-details
                     :model-value="param.expression"
-                    @update:model-value="s => onExpressionChange(s, index)"
+                    @update:model-value="(s) => onExpressionChange(s, index)"
                     @blur="emit('done')"
                     :color="expressionColor"
                   ></v-text-field>
@@ -114,7 +114,7 @@
             </v-list-item>
             <drop-zone
               v-if="showDropZone"
-              @drop="origin => emit('swap', origin, index + 1)"
+              @drop="(origin) => emit('swap', origin, index + 1)"
             ></drop-zone>
           </div>
         </v-list>
@@ -127,7 +127,7 @@
 import { ExpressionColor, onDragListItemStart } from "@/controller/editor";
 import type {
   randomParameter,
-  randomParameters
+  randomParameters,
 } from "@/controller/exercice_gen";
 import { $ref } from "vue/macros";
 import DropZone from "./DropZone.vue";
@@ -172,21 +172,23 @@ function onDragend() {
 const helpContent = [
   [
     "randChoice(-4;12;99)",
-    "Renvoie un nombre aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}."
+    "Renvoie un nombre aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
   ],
   [
     "randLetter(A, B, C)",
-    "Renvoie une variable dont le nom sera choisi parmi ceux proposés, ici {A, B, C}."
+    "Renvoie une variable dont le nom sera choisi parmi ceux proposés, ici {A, B, C}.",
   ],
   ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [
     "randDecDen()",
-    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)"
+    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)",
   ],
   ["round(x; 3)", "Arrondi x à trois chiffres après la virgule"],
   ["isPrime(n)", "Renvoie 1 is n est un nombre premier, 0 sinon"],
   ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0"],
   ["isZero(x)", "Renvoie 1 si x vaut 0, 0 sinon"],
+  ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs"],
+  ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs"],
   ["exp(x)", "Fonction exponentielle"],
   ["ln(x)", "Fonction logarithme"],
   ["sin(x)", "Fonction sinus"],
@@ -196,7 +198,7 @@ const helpContent = [
   ["acos(x)", "Fonction arccos"],
   ["atan(x)", "Fonction arctan"],
   ["abs(x)", "Fonction valeur absolue"],
-  ["sqrt(x)", "Fonction racine carrée"]
+  ["sqrt(x)", "Fonction racine carrée"],
 ] as const;
 </script>
 

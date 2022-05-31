@@ -89,6 +89,7 @@ func TestExpression_String(t *testing.T) {
 		{"- x + 3", "-x + 3"},
 		{"1x", "x"},
 		{"+x", "x"},
+		{"min(2) + max(3)", "min(2) + max(3)"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

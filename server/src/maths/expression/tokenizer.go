@@ -34,6 +34,8 @@ const (
 	randPrime
 	randChoice
 	randDenominator
+	minFn
+	maxFn
 
 	invalidSpecialFunction
 )
@@ -277,15 +279,19 @@ func (tk *tokenizer) tryReadRandVariable() bool {
 func (tk *tokenizer) tryReadSpecialFunction() (specialFunction, bool) {
 	letters := tk.peekLetters()
 	var fn specialFunction
-	switch string(letters) {
-	case "randint", "randInt":
+	switch strings.ToLower(string(letters)) {
+	case "randint":
 		fn = randInt
-	case "randPrime", "randprime":
+	case "randprime":
 		fn = randPrime
-	case "randChoice", "randchoice":
+	case "randchoice":
 		fn = randChoice
-	case "randDecDen", "randdecden":
+	case "randdecden":
 		fn = randDenominator
+	case "min":
+		fn = minFn
+	case "max":
+		fn = maxFn
 	default:
 		_ = exhaustiveSpecialFunctionSwitch
 		return 0, false

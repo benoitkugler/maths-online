@@ -307,6 +307,32 @@ func (r specialFunctionA) startEnd(res ValueResolver) (float64, float64, error) 
 	return start, end, nil
 }
 
+func minMax(args []*Expression, res ValueResolver) (float64, float64, error) {
+	if len(args) == 0 {
+		return 0, 0, ErrInvalidExpr{
+			Reason: "min et max requierent au moins un argument",
+		}
+	}
+	min, err := args[0].Evaluate(res)
+	if err != nil {
+		return 0, 0, err
+	}
+	max := min
+	for _, arg := range args[1:] {
+		v, err := arg.Evaluate(res)
+		if err != nil {
+			return 0, 0, err
+		}
+		if v > max {
+			max = v
+		}
+		if v < min {
+			min = v
+		}
+	}
+	return min, max, nil
+}
+
 // return a random number
 func (r specialFunctionA) eval(_, _ float64, res ValueResolver) (float64, error) {
 	switch r.kind {
@@ -339,6 +365,12 @@ func (r specialFunctionA) eval(_, _ float64, res ValueResolver) (float64, error)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
 		return float64(decimalDividors[index]), nil
+	case minFn:
+		min, _, err := minMax(r.args, res)
+		return min, err
+	case maxFn:
+		_, max, err := minMax(r.args, res)
+		return max, err
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}

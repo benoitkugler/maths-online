@@ -435,6 +435,8 @@ var expressions = [...]struct {
 	{
 		"inf", &Expression{atom: Number(math.Inf(1)), left: nil, right: nil}, false,
 	},
+	{"max()", nil, true},
+	{"min()", nil, true},
 }
 
 func Test_parseExpression(t *testing.T) {

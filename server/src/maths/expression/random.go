@@ -226,6 +226,13 @@ func (rd specialFunctionA) validate(pos int) error {
 		}
 	case randDenominator: // nothing to validate
 
+	case minFn, maxFn:
+		if len(rd.args) == 0 {
+			return ErrInvalidExpr{
+				Reason: "min et max requierent au moins un argument",
+				Pos:    pos,
+			}
+		}
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
