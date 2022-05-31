@@ -20,7 +20,7 @@
       >
         Code de la session :
         <v-chip>
-          <b>
+          <b style="font-size: 22px">
             {{ props.runningSession.SessionID }}
           </b>
         </v-chip>
@@ -41,7 +41,7 @@ import { GroupStrategyKind } from "@/controller/api_gen";
 import { TrivialMonitorController } from "@/controller/trivial";
 import type {
   gameSummary,
-  teacherSocketData
+  teacherSocketData,
 } from "@/controller/trivial_config_socket_gen";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";

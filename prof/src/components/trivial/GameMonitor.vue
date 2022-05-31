@@ -1,18 +1,22 @@
 <template>
   <v-card class="ma-2">
-    <v-card-text>
-      <v-row justify="center" class="mb-2">
+    <v-card-text style="font-size: 16px" class="px-2">
+      <v-row
+        :justify="props.showID ? 'space-between' : 'center'"
+        class="mb-2"
+        no-gutters
+      >
         <v-col cols="8">
           <div v-if="props.showID">
-            Code de la partie :
+            Code :
             <v-chip>
-              <b>
+              <b style="font-size: 22px">
                 {{ props.summary.GameID }}
               </b>
             </v-chip>
           </div>
         </v-col>
-        <v-col cols="4" style="text-align: right">
+        <v-col cols="auto" style="text-align: right">
           <v-chip color="info">
             {{ props.summary.RoomSize }} joueur{{
               props.summary.RoomSize > 1 ? "s" : ""
@@ -20,7 +24,7 @@
           </v-chip>
         </v-col>
       </v-row>
-      <v-row no-gutters class="my-1">
+      <v-row no-gutters class="my-1 px-2">
         <v-col v-if="!props.summary.Players?.length">
           <i>En attente de joueurs...</i>
         </v-col>
