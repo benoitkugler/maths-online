@@ -13,6 +13,18 @@
     <v-card-text>
       <v-row>
         <v-col>
+          <v-text-field
+            label="Nom"
+            density="compact"
+            variant="outlined"
+            v-model="props.edited.Name"
+            hint="Usage interne, non visible par les élèves."
+          >
+          </v-text-field>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
           <v-list-subheader>
             <h3>Choix des questions</h3>
             <small

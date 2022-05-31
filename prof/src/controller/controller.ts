@@ -101,6 +101,9 @@ class Controller extends AbstractAPI {
   }
   protected onSuccessUpdateTrivialPoursuit(data: TrivialConfigExt): void {
     this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Configuration mise à jour.");
+    }
   }
   protected onSuccessDeleteTrivialPoursuit(data: any): void {
     this.inRequest = false;

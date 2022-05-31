@@ -114,6 +114,7 @@ func scanOneTrivialConfig(row scanner) (TrivialConfig, error) {
 		&s.ShowDecrassage,
 		&s.Public,
 		&s.IdTeacher,
+		&s.Name,
 	)
 	return s, err
 }
@@ -183,24 +184,24 @@ func ScanTrivialConfigs(rs *sql.Rows) (TrivialConfigs, error) {
 // Insert TrivialConfig in the database and returns the item with id filled.
 func (item TrivialConfig) Insert(tx DB) (out TrivialConfig, err error) {
 	row := tx.QueryRow(`INSERT INTO trivial_configs (
-		Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher
+		Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher,Name
 		) VALUES (
-		$1,$2,$3,$4,$5
+		$1,$2,$3,$4,$5,$6
 		) RETURNING 
-		Id,Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher;
-		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher)
+		Id,Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher,Name;
+		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name)
 	return ScanTrivialConfig(row)
 }
 
 // Update TrivialConfig in the database and returns the new version.
 func (item TrivialConfig) Update(tx DB) (out TrivialConfig, err error) {
 	row := tx.QueryRow(`UPDATE trivial_configs SET (
-		Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher
+		Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher,Name
 		) = (
-		$2,$3,$4,$5,$6
+		$2,$3,$4,$5,$6,$7
 		) WHERE id = $1 RETURNING 
-		Id,Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher;
-		`, item.Id, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher)
+		Id,Questions,QuestionTimeout,ShowDecrassage,Public,id_teacher,Name;
+		`, item.Id, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name)
 	return ScanTrivialConfig(row)
 }
 

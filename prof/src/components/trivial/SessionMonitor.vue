@@ -27,7 +27,7 @@
       </v-alert>
 
       <v-row justify="center">
-        <v-col cols="4" v-for="game in summaries">
+        <v-col cols="4" v-for="game in summaries" :key="game.GameID">
           <GameMonitor :summary="game" :show-i-d="showGamesID"></GameMonitor>
         </v-col>
       </v-row>

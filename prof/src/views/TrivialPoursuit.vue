@@ -32,7 +32,7 @@
     ></session-monitor>
   </v-dialog>
 
-  <v-card class="my-3 mx-auto" width="60%">
+  <v-card class="my-3 mx-auto" width="80%">
     <v-row>
       <v-col>
         <v-card-title>Triv'Maths</v-card-title>
@@ -60,7 +60,7 @@
         class="my-3"
       >
         <v-row>
-          <v-col cols="6" align-self="center">
+          <v-col cols="4" align-self="center">
             <origin-button
               :origin="config.Origin"
               @update-public="(b) => updatePublic(config.Config, b)"
@@ -128,7 +128,10 @@
               <v-icon icon="mdi-close" color="red"></v-icon>
             </v-btn>
           </v-col>
-          <v-col align-self="center" md="6">
+          <v-col cols="3">
+            {{ config.Config.Name }}
+          </v-col>
+          <v-col align-self="center" cols="5">
             <v-row justify="center" class="bg-grey-lighten-1 rounded">
               <v-col
                 cols="6"

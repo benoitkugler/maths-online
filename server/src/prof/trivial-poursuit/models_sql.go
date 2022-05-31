@@ -11,4 +11,5 @@ type TrivialConfig struct {
 	ShowDecrassage  bool
 	Public          bool
 	IdTeacher       int64 `json:"id_teacher"`
+	Name            string
 }

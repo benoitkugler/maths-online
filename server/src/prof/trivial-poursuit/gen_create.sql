@@ -84,7 +84,8 @@ CREATE TABLE trivial_configs (
     QuestionTimeout integer NOT NULL,
     ShowDecrassage boolean NOT NULL,
     Public boolean NOT NULL,
-    id_teacher integer NOT NULL
+    id_teacher integer NOT NULL,
+    Name varchar NOT NULL
 );
 
 ALTER TABLE trivial_configs

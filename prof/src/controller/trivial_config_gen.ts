@@ -11,4 +11,5 @@ export interface TrivialConfig {
   ShowDecrassage: boolean;
   Public: boolean;
   id_teacher: number;
+  Name: string;
 }

@@ -36,6 +36,7 @@ export interface TrivialConfig {
   ShowDecrassage: boolean;
   Public: boolean;
   id_teacher: number;
+  Name: string;
 }
 // github.com/benoitkugler/maths-online/prof/teacher.Visibility
 export enum Visibility {
