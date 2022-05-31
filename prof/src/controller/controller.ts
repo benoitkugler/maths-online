@@ -1,3 +1,4 @@
+import { devLogMeta } from "@/env";
 import type {
   AskInscriptionOut,
   CheckMissingQuestionsOut,
@@ -225,11 +226,6 @@ export const ShowSuccessInscription = window.location.search.includes(
   "show-success-inscription"
 );
 
-const devLogMeta = {
-  IdTeacher: 5,
-  Token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJUZWFjaGVyIjp7ImlkIjo1LCJtYWlsIjoiMTY1MzgyNjQ3OCIsInBhc3N3b3JkX2NyeXB0ZWQiOiIiLCJpc19hZG1pbiI6ZmFsc2V9LCJleHAiOjE2NTQwODU2Nzh9.Xln2BhWbuYNobHgq_g1kUxmjYBVVM0vda-4pMNXL8cI",
-};
 export const controller = new Controller(
   IsDev ? localhost : window.location.origin,
   IsDev ? devLogMeta.Token : ""
