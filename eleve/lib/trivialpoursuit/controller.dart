@@ -76,7 +76,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     } else {
       /// API connection
       channel = WebSocketChannel.connect(Uri.parse(widget.apiURL));
-      channel.stream.listen(listen, onError: _onNetworkError);
+      channel.stream
+          .listen(listen, onError: _onNetworkError, onDone: _onServerDone);
 
       /// websocket is close in case of inactivity
       /// prevent it by sending pings
@@ -104,6 +105,15 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
     }
     diceRollAnimation = null;
     super.dispose();
+  }
+
+  void _onServerDone() {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 5),
+      backgroundColor: Theme.of(context).colorScheme.error,
+      content: const Text("Impossible d'accéder à la partie."),
+    ));
+    popRouteToHome();
   }
 
   void _onNetworkError(dynamic error) {
