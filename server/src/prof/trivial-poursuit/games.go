@@ -112,6 +112,8 @@ func (gs *gameSession) createGame(nbPlayers int) GameID {
 		gs.notifyMonitorEndGame <- gameID
 	}()
 
+	ProgressLogger.Printf("Creating game %s for %d players", gameID, nbPlayers)
+
 	return gameID
 }
 
@@ -130,9 +132,9 @@ func (gs *gameSession) connectStudent(c echo.Context, student gameConnection, ps
 	player := tv.Player{ID: student.StudentID}
 	var studentID int64 = -1
 	if student.StudentID == "" { // anonymous connection
-		player.Name = pseudo
-		if player.Name == "" {
-			player.Name = gs.generateName() // finally generate a random pseudo
+		player.Pseudo = pseudo
+		if player.Pseudo == "" {
+			player.Pseudo = gs.generateName() // finally generate a random pseudo
 		}
 	} else { // fetch name from DB
 		var err error
@@ -146,7 +148,7 @@ func (gs *gameSession) connectStudent(c echo.Context, student gameConnection, ps
 			return utils.SQLError(err)
 		}
 
-		player.Name = student.Surname
+		player.Pseudo = student.Surname
 	}
 
 	// then add the player
@@ -275,7 +277,7 @@ func (gs *gameSession) generateName() string {
 	}
 
 	id := utils.RandomID(true, 5, func(s string) bool {
-		return allPlayers[tv.Player{Name: nameFromID(s)}]
+		return allPlayers[tv.Player{Pseudo: nameFromID(s)}]
 	})
 
 	return nameFromID(id)

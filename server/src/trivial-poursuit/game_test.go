@@ -37,7 +37,7 @@ func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
 
 func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request) {
 	clientID := r.URL.Query().Get("client_id")
-	client := ct.AddClient(w, r, Player{Name: "testName", ID: pass.EncryptedID(clientID)}, -1)
+	client := ct.AddClient(w, r, Player{Pseudo: "testName", ID: pass.EncryptedID(clientID)}, -1)
 	if client != nil {
 		client.StartLoop()
 		client.WS.Close()
@@ -359,7 +359,7 @@ func TestReview(t *testing.T) {
 		t.Fatal("unexepected events", update.Events)
 	}
 
-	history := ct.review().QuestionHistory[Player{ID: "client1", Name: "testName"}]
+	history := ct.review().QuestionHistory[Player{ID: "client1", Pseudo: "testName"}]
 	if len(history.MarkedQuestions) != 1 || len(history.QuestionHistory) != 1 {
 		t.Fatal(history)
 	}

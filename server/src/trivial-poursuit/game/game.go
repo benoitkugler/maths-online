@@ -151,16 +151,13 @@ func (g *Game) AddPlayer(name string) (PlayerID, LobbyUpdate) {
 	}
 }
 
-// ReconnectPlayer marks `player` has active again.
-func (g *Game) ReconnectPlayer(player PlayerID) PlayerReconnected {
-	var name string
-	if pl := g.Players[player]; pl != nil {
-		pl.IsInactive = false
-		name = g.playerName(player)
-	}
+// ReconnectPlayer marks `player` has active again, updating its name.
+func (g *Game) ReconnectPlayer(player PlayerID, pseudo string) PlayerReconnected {
+	g.Players[player].Name = pseudo
+	g.Players[player].IsInactive = false
 	return PlayerReconnected{
 		PlayerID:   player,
-		PlayerName: name,
+		PlayerName: g.playerName(player),
 	}
 }
 

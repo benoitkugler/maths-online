@@ -26,7 +26,7 @@ func newGameSummary(s tv.GameSummary) (out gameSummary) {
 	out.RoomSize = s.RoomSize
 	for p, su := range s.Successes {
 		out.Players = append(out.Players, gamePlayers{
-			Player:    p.Name,
+			Player:    p.Pseudo,
 			Successes: su,
 		})
 	}
@@ -34,7 +34,7 @@ func newGameSummary(s tv.GameSummary) (out gameSummary) {
 	sort.Slice(out.Players, func(i, j int) bool { return out.Players[i].Player < out.Players[j].Player })
 
 	if s.PlayerTurn != nil {
-		out.CurrentPlayer = s.PlayerTurn.Name
+		out.CurrentPlayer = s.PlayerTurn.Pseudo
 	}
 	return out
 }

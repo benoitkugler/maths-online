@@ -53,8 +53,10 @@ func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, play
 
 	isAccepted := <-client.isAccepted // wait for the controller to check the access
 	if !isAccepted {
+		ProgressLogger.Printf("Rejecting connection at %s", ct.ID)
 		// the game at this end point is not usable: close the connection with an error
 		utils.WebsocketError(ws, errors.New("game is closed"))
+		ws.Close()
 		return nil
 	}
 
@@ -263,15 +265,25 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 
 		case client := <-gc.join:
-			// we do not allow fresh connection into an already started game
-			if client.PlayerID == -1 { // fresh connection
+			// Here are the following cases :
+			//	- totally fresh connection
+			//	- reconnection in an already started game
+			//	- reconnection (as detected at the request level) in a waiting game :
+			//		for simplicity we considered this a new connection
+
+			gc.gameLock.Lock()
+			reconnection := client.PlayerID != -1 && gc.game.Players[client.PlayerID] != nil
+			gc.gameLock.Unlock()
+
+			if !reconnection { // fresh connection
 				if gc.game.HasStarted() {
+					// we do not allow fresh connection into an already started game
 					client.isAccepted <- false
 					continue
 				}
 				ProgressLogger.Printf("Game %s : adding player...", gc.ID)
 
-				playerID, event := gc.game.AddPlayer(client.player.Name)
+				playerID, event := gc.game.AddPlayer(client.player.Pseudo)
 				// register the playerID so that it can be send back
 				client.PlayerID = playerID
 				gc.clients[client] = playerID
@@ -286,6 +298,8 @@ func (gc *GameController) StartLoop() (Review, bool) {
 
 				// ... check if the new player triggers a game start
 				if gc.game.NumberPlayers(true) >= gc.Options.PlayersNumber {
+					ProgressLogger.Printf("Game %s : starting", gc.ID)
+
 					events := gc.game.StartGame()
 					gc.broadcastEvents <- events
 				} else { // update the lobby
@@ -300,14 +314,13 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				gc.clients[client] = client.PlayerID // register the new client connection
 				client.isAccepted <- true
 				gc.gameLock.Lock()
-				event := gc.game.ReconnectPlayer(client.PlayerID)
+				event := gc.game.ReconnectPlayer(client.PlayerID, client.player.Pseudo)
 				gc.gameLock.Unlock()
 
 				gc.broadcastEvents <- game.StateUpdate{
 					Events: game.Events{event},
 					State:  gc.game.GameState,
 				}
-
 			}
 
 			if gc.monitor != nil { // notify the monitor
@@ -336,8 +349,8 @@ func (gc *GameController) StartLoop() (Review, bool) {
 }
 
 type Player struct {
-	ID   pass.EncryptedID
-	Name string // used for anonymous players
+	ID     pass.EncryptedID
+	Pseudo string // used for anonymous players
 }
 
 // GameSummary is emitted back to the teacher monitor,

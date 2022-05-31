@@ -2,7 +2,6 @@ package trivialpoursuit
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -177,7 +176,7 @@ func TestSessionPlay(t *testing.T) {
 	}
 	defer db.Close()
 
-	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{}) // 0 is the defaut admin
+	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{Id: 1}) // 1 is the defaut admin
 
 	config, err := TrivialConfig{Questions: demoQuestions, IdTeacher: ct.admin.Id}.Insert(db)
 	if err != nil {
@@ -194,12 +193,11 @@ func TestSessionPlay(t *testing.T) {
 			Groups: groupSize,
 		},
 	},
-		0,
+		1,
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(groups.GroupsID)
 
 	// listen to "externa" requests
 	listener := httptest.NewServer(http.HandlerFunc(s.handle))
