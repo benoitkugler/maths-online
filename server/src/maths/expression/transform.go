@@ -332,10 +332,21 @@ func (expr *Expression) contractMinusMinus() {
 		return
 	}
 
+	// -(-8 / 2) => 8 / 2
+	nextArg := expr.right.left
+	if nextArg != nil {
+		if number, isNumber := nextArg.atom.(Number); isNumber && number < 0 {
+			expr.atom = plus
+			expr.right.left = &Expression{atom: -number}
+			return
+		}
+	}
+
 	// ... - (-9) => ... + 9
 	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
 		expr.atom = plus
 		expr.right = &Expression{atom: -number}
+		return
 	}
 }
 

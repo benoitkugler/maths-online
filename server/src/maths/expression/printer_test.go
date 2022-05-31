@@ -150,3 +150,11 @@ func TestFloatPrecision(t *testing.T) {
 		t.Fatal(s)
 	}
 }
+
+func TestMinusMinus(t *testing.T) {
+	expr := mustParse(t, "(-a/b)")
+	expr.Substitute(Variables{NewVar('a'): NewRN(-2), NewVar('b'): NewRN(4)})
+	if s := expr.String(); s != "2 / 4" {
+		t.Fatalf("%#v: %s", expr.right, s)
+	}
+}
