@@ -39,9 +39,15 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 
 	// add the special difficulty tags among the proposition,
 	// in first choices
-	var filtred []string
+	var (
+		filtred []string
+		seen    = map[string]bool{}
+	)
 	for _, tag := range tags {
 		if !questions[tag.IdQuestion].IsVisibleBy(user.Id) {
+			continue
+		}
+		if seen[tag.Tag] {
 			continue
 		}
 
@@ -49,6 +55,7 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 		case Diff1, Diff2, Diff3:
 		default:
 			filtred = append(filtred, tag.Tag)
+			seen[tag.Tag] = true
 		}
 	}
 
