@@ -303,6 +303,27 @@ func (ct *Controller) EditorUpdateTags(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+type UpdateGroupTagsIn struct {
+	GroupTitle string
+	CommonTags []string
+}
+
+func (ct *Controller) EditorUpdateGroupTags(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args UpdateGroupTagsIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.updateGroupTags(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
 // AccessLoopback establish a connection with the embedded preview app
 func (ct *Controller) AccessLoopback(c echo.Context) error {
 	sessionID := c.Param("session_id")

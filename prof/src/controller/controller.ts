@@ -9,6 +9,7 @@ import type {
   Question,
   StartSessionOut,
   TrivialConfigExt,
+  UpdateGroupTagsOut,
 } from "./api_gen";
 import { AbstractAPI, GroupStrategyKind } from "./api_gen";
 
@@ -27,6 +28,13 @@ class Controller extends AbstractAPI {
   logout() {
     this.isLoggedIn = false;
     this.authToken = "";
+  }
+
+  protected onSuccessEditorUpdateGroupTags(data: UpdateGroupTagsOut): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Etiquettes modifiées avec succès.");
+    }
   }
 
   protected onSuccessUpdateTrivialVisiblity(data: any): void {

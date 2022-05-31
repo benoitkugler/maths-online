@@ -116,9 +116,11 @@
               <question-group-row
                 v-else
                 :group="questionGroup"
+                :all-tags="props.tags"
                 @clicked="startEdit"
                 @delete="(question) => (questionToDelete = question)"
                 @update-public="updatePublic"
+                @update-tags="(tags) => updateGroupTags(questionGroup, tags)"
               ></question-group-row>
             </div>
           </v-list>
@@ -132,10 +134,10 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type Origin,
-  type QuestionGroup,
-  type QuestionHeader,
+import type {
+  Origin,
+  QuestionGroup,
+  QuestionHeader,
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { personnalOrigin } from "@/controller/editor";
@@ -237,5 +239,17 @@ async function updatePublic(questionID: number, isPublic: boolean) {
       group.Questions![index].Origin.IsPublic = isPublic;
     }
   });
+}
+
+async function updateGroupTags(group: QuestionGroup, newTags: string[]) {
+  const res = await controller.EditorUpdateGroupTags({
+    GroupTitle: group.Title,
+    CommonTags: newTags,
+  });
+  if (res == undefined) {
+    return;
+  }
+
+  group.Questions?.forEach((qu) => (qu.Tags = (res.Tags || {})[qu.Id] || []));
 }
 </script>

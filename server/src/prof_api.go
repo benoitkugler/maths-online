@@ -41,6 +41,7 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller,
 	gr.POST("/prof/editor/api/question", edit.EditorSaveAndPreview)
 	gr.GET("/prof/editor/api/pause-preview", edit.EditorPausePreview)
 	gr.POST("/prof/editor/api/question/tags", edit.EditorUpdateTags)
+	gr.POST("/prof/editor/api/question/group-tags", edit.EditorUpdateGroupTags)
 	gr.POST("/prof/editor/api/question/visibility", edit.QuestionUpdateVisiblity)
 	gr.POST("/prof/editor/api/check-params", edit.EditorCheckParameters)
 }

@@ -16,6 +16,12 @@ func NormalizeTag(tag string) string {
 	return strings.ToUpper(removeAccents(strings.TrimSpace((tag))))
 }
 
+func NormalizeTags(tags []string) {
+	for i := range tags {
+		tags[i] = NormalizeTag(tags[i])
+	}
+}
+
 func removeAccents(s string) string {
 	noAccent := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	output, _, e := transform.String(noAccent, s)
@@ -25,28 +31,63 @@ func removeAccents(s string) string {
 	return output
 }
 
-// List returns the tags from the `Tag` attribute,
-// with duplicate removed, and sorted.
+// List returns the sorted tags from the `Tag` attribute.
 func (qus QuestionTags) List() []string {
-	tmp := qus.Crible()
-	out := make([]string, 0, len(tmp))
-	for tag := range tmp {
-		out = append(out, tag)
+	out := make([]string, len(qus))
+	for i, tag := range qus {
+		out[i] = tag.Tag
 	}
 	sort.Strings(out)
+	return out
+}
+
+// CommonTags returns the tags found in every list.
+func CommonTags(tags [][]string) []string {
+	L := len(tags)
+	crible := make(map[string][]bool)
+
+	for index, inter := range tags {
+		for _, tag := range inter {
+			list := crible[tag]
+			if list == nil {
+				list = make([]bool, L)
+			}
+			list[index] = true
+			crible[tag] = list
+		}
+	}
+	var out []string
+	for tag, occurences := range crible {
+		isEverywhere := true
+		for _, b := range occurences {
+			if !b {
+				isEverywhere = false
+				break
+			}
+		}
+		if isEverywhere {
+			out = append(out, tag)
+		}
+	}
 	return out
 }
 
 // Crible is a set of tags.
 type Crible map[string]bool
 
-// Crible build a set from the tags
-func (qus QuestionTags) Crible() Crible {
-	out := make(Crible, len(qus))
-	for _, qt := range qus {
-		out[NormalizeTag(qt.Tag)] = true
+func NewCrible(tags []string) Crible {
+	out := make(Crible, len(tags))
+	for _, tag := range tags {
+		out[tag] = true
 	}
 	return out
+}
+
+// Crible build a set from the tags
+func (qus QuestionTags) Crible() Crible {
+	tmp := qus.List()
+	NormalizeTags(tmp)
+	return NewCrible(tmp)
 }
 
 // Difficulty returns the difficulty of the question,

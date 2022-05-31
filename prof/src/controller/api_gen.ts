@@ -521,6 +521,15 @@ export interface UpdateTagsIn {
   Tags: string[] | null;
   IdQuestion: number;
 }
+// github.com/benoitkugler/maths-online/prof/editor.UpdateGroupTagsIn
+export interface UpdateGroupTagsIn {
+  GroupTitle: string;
+  CommonTags: string[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.UpdateGroupTagsOut
+export interface UpdateGroupTagsOut {
+  Tags: { [key: number]: string[] | null } | null;
+}
 // github.com/benoitkugler/maths-online/prof/editor.QuestionUpdateVisiblityIn
 export interface QuestionUpdateVisiblityIn {
   QuestionID: number;
@@ -1103,6 +1112,32 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorUpdateTags(data: any): void;
+
+  protected async rawEditorUpdateGroupTags(params: UpdateGroupTagsIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/group-tags";
+    const rep: AxiosResponse<UpdateGroupTagsOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorUpdateGroupTags wraps rawEditorUpdateGroupTags and handles the error */
+  async EditorUpdateGroupTags(params: UpdateGroupTagsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorUpdateGroupTags(params);
+      this.onSuccessEditorUpdateGroupTags(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorUpdateGroupTags(
+    data: UpdateGroupTagsOut
+  ): void;
 
   protected async rawQuestionUpdateVisiblity(
     params: QuestionUpdateVisiblityIn

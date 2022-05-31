@@ -2,7 +2,7 @@
   <v-expansion-panels class="my-1" v-model="state">
     <v-expansion-panel>
       <v-expansion-panel-title class="py-0 bg-lime-lighten-5 rounded">
-        <v-row no-gutters>
+        <v-row no-gutters justify="space-between">
           <v-col cols="auto" style="text-align: left" align-self="center">
             <v-row no-gutters>
               <v-col cols="12">
@@ -18,8 +18,15 @@
               </v-col>
             </v-row>
           </v-col>
-          <v-col align-self="center" style="text-align: right">
-            <TagChip :tag="tag" :key="tag" v-for="tag in tags"></TagChip>
+          <v-col cols="auto" align-self="center">
+            <TagListField
+              :readonly="!isEditable"
+              :model-value="tags"
+              @update:model-value="(l) => emit('updateTags', l)"
+              :all-tags="props.allTags"
+              y-padding
+            >
+            </TagListField>
           </v-col>
         </v-row>
       </v-expansion-panel-title>
@@ -39,14 +46,19 @@
 </template>
 
 <script setup lang="ts">
-import type { QuestionGroup, QuestionHeader } from "@/controller/api_gen";
+import {
+  Visibility,
+  type QuestionGroup,
+  type QuestionHeader,
+} from "@/controller/api_gen";
 import { commonTags } from "@/controller/editor";
 import { computed, ref } from "@vue/runtime-core";
 import QuestionRow from "./QuestionRow.vue";
-import TagChip from "./utils/TagChip.vue";
+import TagListField from "./TagListField.vue";
 
 interface Props {
   group: QuestionGroup;
+  allTags: string[];
 }
 const props = defineProps<Props>();
 
@@ -54,10 +66,17 @@ const emit = defineEmits<{
   (e: "delete", question: QuestionHeader): void;
   (e: "clicked", question: QuestionHeader): void;
   (e: "updatePublic", questionID: number, isPublic: boolean): void;
+  (e: "updateTags", tags: string[]): void;
 }>();
 
 const tags = computed(() => commonTags(props.group.Questions || []));
 
+const isEditable = computed(
+  () =>
+    props.group.Questions?.every(
+      (qu) => qu.Origin.Visibility == Visibility.Personnal
+    ) || true
+);
 const state = ref<number | null>(null);
 </script>
 

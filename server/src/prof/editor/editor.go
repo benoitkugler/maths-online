@@ -241,7 +241,7 @@ func (ct *Controller) duplicateQuestion(idQuestion, userID int64) (Question, err
 	err = updateTags(tx, tags, newQuestion.Id)
 	if err != nil {
 		_ = tx.Rollback()
-		return Question{}, utils.SQLError(err)
+		return Question{}, err
 	}
 
 	err = tx.Commit()
@@ -294,7 +294,7 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion, userID int64) 
 		err = updateTags(tx, newTags, idQuestion)
 		if err != nil {
 			_ = tx.Rollback()
-			return utils.SQLError(err)
+			return err
 		}
 		newDifficulties = [2]DifficultyTag{Diff2, Diff3}
 	}
@@ -321,7 +321,7 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion, userID int64) 
 		err = updateTags(tx, newTags, newQuestion.Id)
 		if err != nil {
 			_ = tx.Rollback()
-			return utils.SQLError(err)
+			return err
 		}
 	}
 
@@ -348,11 +348,11 @@ func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion int64) error {
 
 	_, err := DeleteQuestionTagsByIdQuestions(tx, idQuestion)
 	if err != nil {
-		return err
+		return utils.SQLError(err)
 	}
 	err = InsertManyQuestionTags(tx, tags...)
 	if err != nil {
-		return err
+		return utils.SQLError(err)
 	}
 	return nil
 }
@@ -390,6 +390,77 @@ func (ct *Controller) updateTags(params UpdateTagsIn, userID int64) error {
 
 	err = tx.Commit()
 	return err
+}
+
+type UpdateGroupTagsOut struct {
+	Tags map[int64][]string
+}
+
+func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (UpdateGroupTagsOut, error) {
+	questions, err := SelectAllQuestions(ct.db)
+	if err != nil {
+		return UpdateGroupTagsOut{}, utils.SQLError(err)
+	}
+
+	var groupIDs IDs
+	for _, question := range questions {
+		if question.Page.Title == params.GroupTitle && question.IdTeacher == userID {
+			groupIDs = append(groupIDs, question.Id)
+		}
+	}
+
+	// compute the current common tags
+	tags, err := SelectQuestionTagsByIdQuestions(ct.db, groupIDs...)
+	if err != nil {
+		return UpdateGroupTagsOut{}, utils.SQLError(err)
+	}
+	tagsByQuestion := tags.ByIdQuestion()
+	var allTags [][]string
+	for _, qus := range tagsByQuestion {
+		allTags = append(allTags, qus.List())
+	}
+	commonTags := CommonTags(allTags)
+
+	NormalizeTags(params.CommonTags)
+
+	// replace commonTags by the input query
+	crible := NewCrible(commonTags)
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return UpdateGroupTagsOut{}, utils.SQLError(err)
+	}
+	out := UpdateGroupTagsOut{Tags: make(map[int64][]string)}
+	for idQuestion, tags := range tagsByQuestion {
+		var newTags QuestionTags
+		// start with the "exclusive" tags
+		for _, tag := range tags {
+			if !crible[tag.Tag] {
+				newTags = append(newTags, tag)
+			}
+		}
+
+		exclusive := newTags.Crible()
+		// then add the new common tags, making sure
+		// no duplicate is added
+		for _, tag := range params.CommonTags {
+			if exclusive[tag] {
+				continue
+			}
+			newTags = append(newTags, QuestionTag{IdQuestion: idQuestion, Tag: tag})
+		}
+
+		// finally udpate the tags on DB
+		err := updateTags(tx, newTags, idQuestion)
+		if err != nil {
+			_ = tx.Rollback()
+			return out, err
+		}
+
+		out.Tags[idQuestion] = newTags.List()
+	}
+
+	err = tx.Commit()
+	return out, err
 }
 
 func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {

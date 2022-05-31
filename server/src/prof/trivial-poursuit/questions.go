@@ -168,44 +168,13 @@ func weightQuestions(questions []questionDiff) []float64 {
 	return out
 }
 
-// intersection returns the tags found in every list
-func intersection(tags [][]string) []string {
-	L := len(tags)
-	crible := make(map[string][]bool)
-
-	for index, inter := range tags {
-		for _, tag := range inter {
-			list := crible[tag]
-			if list == nil {
-				list = make([]bool, L)
-			}
-			list[index] = true
-			crible[tag] = list
-		}
-	}
-	var out []string
-	for tag, occurences := range crible {
-		isEverywhere := true
-		for _, b := range occurences {
-			if !b {
-				isEverywhere = false
-				break
-			}
-		}
-		if isEverywhere {
-			out = append(out, tag)
-		}
-	}
-	return out
-}
-
 // commonTags returns the tags shared by all categories
 func (cats CategoriesQuestions) commonTags() []string {
 	var allUnions [][]string
 	for _, cat := range cats {
 		allUnions = append(allUnions, cat...)
 	}
-	return intersection(allUnions)
+	return editor.CommonTags(allUnions)
 }
 
 // returns the questions available to `userID` and matching one of the

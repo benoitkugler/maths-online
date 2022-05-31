@@ -74,7 +74,7 @@
             v-if="showDropZone"
             @drop="(origin) => emit('swap', origin, 0)"
           ></drop-zone>
-          <div v-for="(param, index) in props.parameters">
+          <div v-for="(param, index) in props.parameters" :key="index">
             <v-list-item class="pr-0 pl-1">
               <v-row no-gutters>
                 <v-col cols="1">
@@ -126,15 +126,15 @@
 <script setup lang="ts">
 import { ExpressionColor, onDragListItemStart } from "@/controller/editor";
 import type {
-  randomParameter,
-  randomParameters,
+  RandomParameter,
+  RandomParameters,
 } from "@/controller/exercice_gen";
 import { $ref } from "vue/macros";
 import DropZone from "./DropZone.vue";
 import VariableField from "./utils/VariableField.vue";
 
 interface Props {
-  parameters: randomParameters;
+  parameters: RandomParameters;
   isLoading: boolean;
   isValidated: boolean;
 }
@@ -143,7 +143,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "add"): void;
-  (e: "update", index: number, param: randomParameter): void;
+  (e: "update", index: number, param: RandomParameter): void;
   (e: "delete", index: number): void;
   (e: "swap", origin: number, target: number): void;
   (e: "done"): void;

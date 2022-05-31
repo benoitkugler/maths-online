@@ -25,45 +25,40 @@
 
   <v-sheet
     variant="outlined"
-    @click="startEdit"
+    @click.stop="startEdit"
     rounded
     border="secondary"
     :style="{ 'border-width': '2px', cursor: props.readonly ? '' : 'pointer' }"
+    :class="props.yPadding ? 'py-1' : ''"
   >
     <div
       v-if="props.modelValue.length == 0"
       style="text-align: center; font-style: italic"
-      class="px-2"
+      class="pa-2"
     >
       Ajouter une étiquette...
     </div>
     <v-row no-gutters v-else justify="center">
       <v-col v-for="tag in props.modelValue" :key="tag" cols="auto">
-        <v-chip
-          :key="tag"
-          size="small"
-          label
-          class="ma-1"
-          :color="tagColor(tag)"
-          :style="{ cursor: props.readonly ? '' : 'pointer' }"
-          >{{ tag }}</v-chip
-        >
+        <tag-chip :tag="tag" :pointer="!props.readonly"> </tag-chip>
       </v-col>
     </v-row>
   </v-sheet>
 </template>
 
 <script setup lang="ts">
-import { tagColor, tagString } from "@/controller/editor";
+import { tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListEdit from "./TagListEdit.vue";
+import TagChip from "./utils/TagChip.vue";
 
 interface Props {
   modelValue: string[];
   allTags: string[];
   readonly: boolean;
   label?: string;
+  yPadding: boolean;
 }
 
 const props = defineProps<Props>();

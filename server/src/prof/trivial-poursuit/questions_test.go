@@ -2,7 +2,6 @@ package trivialpoursuit
 
 import (
 	"reflect"
-	"sort"
 	"testing"
 
 	ex "github.com/benoitkugler/maths-online/maths/exercice"
@@ -126,44 +125,5 @@ func TestSelectQuestions(t *testing.T) {
 		1. / 9, 1. / 9, 1. / 18, 1. / 18, 1. / 6, 1. / 6, 1. / 3,
 	}) {
 		t.Fatal(pool[0].Weights)
-	}
-}
-
-func Test_intersection(t *testing.T) {
-	tests := []struct {
-		args [][]string
-		want []string
-	}{
-		{
-			[][]string{
-				{"1", "2"},
-				{"1", "3"},
-				{"3"},
-			},
-			nil,
-		},
-		{
-			[][]string{
-				{"1", "2"},
-				{"1", "3"},
-				{"1", "3"},
-			},
-			[]string{"1"},
-		},
-		{
-			[][]string{
-				{"1", "2", "3"},
-				{"1", "3"},
-				{"1", "3"},
-			},
-			[]string{"1", "3"},
-		},
-	}
-	for _, tt := range tests {
-		got := intersection(tt.args)
-		sort.Strings(got)
-		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("intersection() = %v, want %v", got, tt.want)
-		}
 	}
 }
