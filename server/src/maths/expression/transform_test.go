@@ -332,6 +332,16 @@ func TestExpressionNegativeParams(t *testing.T) {
 	}
 
 	if !AreExpressionsEquivalent(e, e2, SimpleSubstitutions) {
+		t.Fatal(e, e2)
+	}
+
+	e = mustParse(t, "m*x + p")
+	vars = Variables{NewVar('m'): NewRN(1), NewVar('p'): NewRN(-0.4)}
+	e.Substitute(vars)
+
+	e2 = mustParse(t, "x - 0.4")
+
+	if !AreExpressionsEquivalent(e, e2, SimpleSubstitutions) {
 		e.basicSimplification()
 		e2.basicSimplification()
 		t.Fatal(e, e2)

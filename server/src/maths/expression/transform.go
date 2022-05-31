@@ -264,7 +264,7 @@ func (expr *Expression) groupAdditions() {
 	*expr = combined
 }
 
-// replace a-c  by a + (-c)
+// replace a-c by a + (-c)
 // so that plus operation may trigger
 func (expr *Expression) expandMinus() {
 	if expr == nil {
@@ -281,7 +281,12 @@ func (expr *Expression) expandMinus() {
 	// do not transform (-a)
 	if expr.left != nil { // a - c => a + (-c)
 		expr.atom = plus
-		expr.right = &Expression{atom: minus, right: expr.right}
+		if number, isNumber := expr.right.atom.(Number); isNumber {
+			expr.right = &Expression{atom: Number(-number)}
+		} else { // general case
+			expr.right = &Expression{atom: minus, right: expr.right}
+		}
+		return
 	}
 }
 
