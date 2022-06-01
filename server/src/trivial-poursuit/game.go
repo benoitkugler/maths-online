@@ -393,7 +393,7 @@ func (gc *GameController) Summary() GameSummary {
 }
 
 // Review contains the information at the end of a game room,
-// and should be used to persit information over sessions.
+// and should be used to persist information over sessions.
 type Review struct {
 	QuestionHistory map[Player]game.QuestionReview
 	ID              GameID
@@ -411,6 +411,9 @@ func (gc *GameController) review() Review {
 
 	players := gc.playerIDsToClients()
 	for k, v := range gc.game.Players {
+		if players[k] == nil { // player not connected anymore
+			continue
+		}
 		out.QuestionHistory[players[k].player] = v.Review
 	}
 	return out
