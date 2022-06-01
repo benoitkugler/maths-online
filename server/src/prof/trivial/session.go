@@ -11,8 +11,9 @@ import (
 )
 
 type stopGame struct {
-	ID      tv.GameID
-	Restart bool // if false, definitively close the game
+	ID              tv.GameID
+	Restart         bool // if false, definitively close the game
+	terminateChanel bool
 }
 
 type createGame struct {
@@ -98,7 +99,9 @@ func (gs *gameSession) createGame(params createGame) {
 		if ok { // exploit the review
 			gs.exploitReview(review)
 		}
-		ProgressLogger.Printf("Game %s is done", params.ID)
+		ProgressLogger.Printf("Game %s is done, cleaning up...", params.ID)
+
+		gs.stopGameEvents <- stopGame{ID: params.ID, terminateChanel: false}
 	}()
 
 	ProgressLogger.Printf("Creating game %s for %d players", params.ID, params.Options.PlayersNumber)
@@ -130,7 +133,9 @@ func (gs *gameSession) stopGame(params stopGame) {
 		Options:   game.Options,
 	}
 
-	game.Terminate <- true
+	if params.terminateChanel {
+		game.Terminate <- true
+	}
 
 	// restart if needed
 	if params.Restart {

@@ -138,9 +138,8 @@ type GameController struct {
 	monitor     chan GameSummary
 	join, leave chan *Client
 
-	incomingEvents  chan game.ClientEvent
-	broadcastEvents chan game.StateUpdate
-	clients         map[*Client]game.PlayerID // current clients in the game
+	incomingEvents chan game.ClientEvent
+	clients        map[*Client]game.PlayerID // current clients in the game
 
 	Game     game.Game // game logic
 	gameLock sync.Mutex
@@ -152,16 +151,15 @@ type GameController struct {
 // `monitor` is an optionnal channel to write back the main progress of the game.
 func NewGameController(id GameID, questions game.QuestionPool, options GameOptions, monitor chan GameSummary) *GameController {
 	return &GameController{
-		ID:              id,
-		monitor:         monitor,
-		Terminate:       make(chan bool),
-		join:            make(chan *Client, 1),
-		leave:           make(chan *Client),
-		incomingEvents:  make(chan game.ClientEvent),
-		broadcastEvents: make(chan game.StateUpdate, 1), // the main loop write in this channel
-		clients:         map[*Client]game.PlayerID{},
-		Game:            game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
-		Options:         options,
+		ID:             id,
+		monitor:        monitor,
+		Terminate:      make(chan bool),
+		join:           make(chan *Client, 1),
+		leave:          make(chan *Client),
+		incomingEvents: make(chan game.ClientEvent),
+		clients:        map[*Client]game.PlayerID{},
+		Game:           game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
+		Options:        options,
 	}
 }
 
@@ -173,12 +171,26 @@ func (gc *GameController) playerIDsToClients() map[game.PlayerID]*Client {
 	return players
 }
 
+func (gc *GameController) broadcastEvents(events game.StateUpdate) {
+	ProgressLogger.Printf("Game %s : broadcasting...", gc.ID)
+
+	for client, clientID := range gc.clients {
+		err := client.sendEvent(events)
+		if err != nil {
+			WarningLogger.Printf("Broadcasting to client %d failed: %s", clientID, err)
+		}
+	}
+
+	if gc.monitor != nil { // notify the monitor
+		gc.monitor <- gc.Summary()
+	}
+}
+
 // StartLoop starts the main game loop.
 // The function blocks until the game is over,
 // and then returns the game review.
 // It returns false if the game ended abnormally, due to forced termination or all players leaving
 func (gc *GameController) StartLoop() (Review, bool) {
-	var isGameOver bool // if true, broadcast the last events and quit
 	for {
 		select {
 		case <-gc.Terminate:
@@ -197,25 +209,6 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 
 			return Review{}, false
-
-		case event := <-gc.broadcastEvents:
-			ProgressLogger.Printf("Game %s : broadcasting...", gc.ID)
-			for client, clientID := range gc.clients {
-				err := client.sendEvent(event)
-				if err != nil {
-					WarningLogger.Printf("Broadcasting to client %d failed: %s", clientID, err)
-				}
-			}
-
-			if gc.monitor != nil { // notify the monitor
-				gc.monitor <- gc.Summary()
-			}
-
-			if isGameOver {
-				ProgressLogger.Printf("Game %s is over: exitting game loop.", gc.ID)
-				return gc.review(), true
-			}
-
 		case client := <-gc.leave:
 			if _, in := gc.clients[client]; !in { // client who never joined may still end up here
 				continue
@@ -252,17 +245,18 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			if hasStarted && resetTurn != nil {
 				events = append(events, *resetTurn)
 			}
-			gc.broadcastEvents <- game.StateUpdate{
+
+			gc.broadcastEvents(game.StateUpdate{
 				Events: events,
 				State:  gc.Game.GameState,
-			}
+			})
 
 		case <-gc.Game.QuestionTimeout.C:
 			ProgressLogger.Printf("Game %s : questionTimeoutAction...", gc.ID)
 
 			events := gc.Game.QuestionTimeoutAction()
 			if events != nil {
-				gc.broadcastEvents <- *events
+				gc.broadcastEvents(*events)
 			}
 
 		case client := <-gc.join:
@@ -302,12 +296,12 @@ func (gc *GameController) StartLoop() (Review, bool) {
 					ProgressLogger.Printf("Game %s : starting", gc.ID)
 
 					events := gc.Game.StartGame()
-					gc.broadcastEvents <- events
+					gc.broadcastEvents(events)
 				} else { // update the lobby
-					gc.broadcastEvents <- game.StateUpdate{
+					gc.broadcastEvents(game.StateUpdate{
 						Events: game.Events{event},
 						State:  gc.Game.GameState,
-					}
+					})
 				}
 			} else { // reconnection
 				ProgressLogger.Printf("Game %s : reconnecting player %d...", gc.ID, client.PlayerID)
@@ -318,33 +312,29 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				event := gc.Game.ReconnectPlayer(client.PlayerID, client.player.Pseudo)
 				gc.gameLock.Unlock()
 
-				gc.broadcastEvents <- game.StateUpdate{
+				gc.broadcastEvents(game.StateUpdate{
 					Events: game.Events{event},
 					State:  gc.Game.GameState,
-				}
-			}
-
-			if gc.monitor != nil { // notify the monitor
-				gc.monitor <- gc.Summary()
+				})
 			}
 
 		case message := <-gc.incomingEvents:
 			ProgressLogger.Printf("Game %s : handleClientEvent...", gc.ID)
 
-			var (
-				events game.MaybeUpdate
-				err    error
-			)
-			events, isGameOver, err = gc.Game.HandleClientEvent(message)
+			events, isGameOver, err := gc.Game.HandleClientEvent(message)
 			if err != nil { // malicious client: ignore the query
 				WarningLogger.Println(err)
 				continue
 			}
 
 			if events != nil {
-				gc.broadcastEvents <- *events
+				gc.broadcastEvents(*events)
 			}
 
+			if isGameOver {
+				ProgressLogger.Printf("Game %s is over: exitting game loop.", gc.ID)
+				return gc.review(), true
+			}
 		}
 	}
 }
