@@ -1,4 +1,4 @@
-package trivialpoursuit
+package trivial
 
 import (
 	"encoding/json"
@@ -15,6 +15,7 @@ import (
 	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
@@ -95,6 +96,7 @@ func (st *student) connectRequest(deconnect bool) {
 }
 
 func (st *student) decoReco() {
+	time.Sleep(time.Second / 10)
 	st.conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second))
 	st.conn.Close()
 
@@ -106,17 +108,11 @@ func (st *student) decoReco() {
 // teacherC monitor session
 type teacherC struct {
 	serverBaseURL string
-	sessionID     SessionID
 }
 
 func (tc *teacherC) monitorRequest() {
 	u, err := url.Parse(testutils.WebsocketURL(tc.serverBaseURL + teacherMonitor))
 	check(err)
-
-	query := make(url.Values)
-	query.Set("session-id", tc.sessionID)
-	// anonymous connection
-	u.RawQuery = query.Encode()
 
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	check(err)
@@ -144,6 +140,8 @@ type server struct {
 func (s server) handle(w http.ResponseWriter, r *http.Request) {
 	var err error
 	context := s.e.NewContext(r, w)
+	context.Set("user", &jwt.Token{Claims: &teacher.UserMeta{Teacher: teacher.Teacher{Id: 1}}})
+
 	switch url := r.URL; url.Path {
 	case studentSetup:
 		err = s.ct.SetupStudentClient(context)
@@ -187,13 +185,11 @@ func TestSessionPlay(t *testing.T) {
 	s := server{e: e, ct: ct}
 
 	groupSize := []int{2, 3, 4}
-	groups, err := ct.launchSession(LaunchSessionIn{
+	groups, err := ct.launchConfig(LaunchSessionIn{
 		IdConfig: config.Id,
-		GroupStrategy: FixedSizeGroupStrategy{
-			Groups: groupSize,
-		},
+		Groups:   groupSize,
 	},
-		1,
+		ct.admin.Id,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -203,22 +199,22 @@ func TestSessionPlay(t *testing.T) {
 	listener := httptest.NewServer(http.HandlerFunc(s.handle))
 	defer listener.Close()
 
-	tc1 := teacherC{listener.URL, groups.SessionID}
+	tc1 := teacherC{listener.URL}
 	go tc1.monitorRequest()
 
-	tc2 := teacherC{listener.URL, groups.SessionID}
+	tc2 := teacherC{listener.URL}
 	go tc2.monitorRequest()
 
 	time.Sleep(50 * time.Millisecond)
 
 	// create the student clients
 	var allStudents [][]*student
-	for i, group := range groups.GroupsID {
+	for i, roomCode := range groups.GameIDs {
 		size := groupSize[i]
 
 		students := make([]*student, size)
 		for j := range students {
-			st := newStudent(listener.URL, group)
+			st := newStudent(listener.URL, roomCode)
 
 			go st.accessGame(j == 0)
 

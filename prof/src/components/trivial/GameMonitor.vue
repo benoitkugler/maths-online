@@ -1,4 +1,19 @@
 <template>
+  <v-dialog v-model="showConfirmStopGame">
+    <v-card title="Terminer la partie">
+      <v-card-text> Confirmez-vous l'interruption de la partie ? </v-card-text>
+      <v-card-actions>
+        <v-btn @click="showConfirmStopGame = false"> Retour </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn @click="emitStopGame(true)" color="warning">
+          Relancer la partie
+        </v-btn>
+        <v-btn @click="emitStopGame(false)" color="red">
+          Terminer la partie
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <v-card class="ma-2">
     <v-card-text style="font-size: 16px" class="px-2">
       <v-row
@@ -6,7 +21,7 @@
         class="mb-2"
         no-gutters
       >
-        <v-col cols="8">
+        <v-col cols="7">
           <div v-if="props.showID">
             Code :
             <v-chip>
@@ -22,6 +37,15 @@
               props.summary.RoomSize > 1 ? "s" : ""
             }}
           </v-chip>
+          <v-btn
+            size="x-small"
+            icon
+            class="ml-1"
+            title="Terminer la partie"
+            @click="showConfirmStopGame = true"
+          >
+            <v-icon icon="mdi-close"></v-icon>
+          </v-btn>
         </v-col>
       </v-row>
       <v-row no-gutters class="my-1 px-2">
@@ -45,7 +69,9 @@
 </template>
 
 <script setup lang="ts">
+import type { stopGame } from "@/controller/api_gen";
 import type { gameSummary } from "@/controller/trivial_config_socket_gen";
+import { $ref } from "vue/macros";
 import Pie from "./Pie.vue";
 
 interface Props {
@@ -54,6 +80,16 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: "stopGame", args: stopGame): void;
+}>();
+
+let showConfirmStopGame = $ref(false);
+function emitStopGame(restart: boolean) {
+  emit("stopGame", { ID: props.summary.GameID, Restart: restart });
+  showConfirmStopGame = false;
+}
 </script>
 
 <style scoped></style>

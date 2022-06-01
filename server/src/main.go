@@ -15,7 +15,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	trivialpoursuit "github.com/benoitkugler/maths-online/prof/trivial-poursuit"
+	"github.com/benoitkugler/maths-online/prof/trivial"
 	tvGame "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -125,7 +125,7 @@ func main() {
 	}
 	fmt.Println("Admin teacher loaded.")
 
-	trivial := trivialpoursuit.NewController(db, studentKey, demoPinTrivial, admin)
+	tvc := trivial.NewController(db, studentKey, demoPinTrivial, admin)
 
 	if *devPtr {
 		dev, err := tc.GetDevToken()
@@ -158,7 +158,7 @@ func main() {
 		fmt.Println("CORS activé.")
 	}
 
-	setupRoutes(e, trivial, edit, tc)
+	setupRoutes(e, tvc, edit, tc)
 
 	if *dryPtr {
 		sanityChecks(db)
@@ -223,8 +223,8 @@ func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
 
-func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor.Controller, tc *teacher.Controller) {
-	setupProfAPI(e, trivial, edit, tc)
+func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller, tc *teacher.Controller) {
+	setupProfAPI(e, tvc, edit, tc)
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
@@ -239,10 +239,9 @@ func setupRoutes(e *echo.Echo, trivial *trivialpoursuit.Controller, edit *editor
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
 	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
 
-	// e.GET("/trivial/stats", trivial.ShowStats)
-	e.GET("/prof/trivial/monitor", trivial.ConnectTeacherMonitor)
-	e.GET("/trivial/game/setup", trivial.SetupStudentClient)
-	e.GET("/trivial/game/connect", trivial.ConnectStudentSession)
+	e.GET("/prof/trivial/monitor", tvc.ConnectTeacherMonitor, tc.JWTMiddlewareForQuery())
+	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
+	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
 
 	// prof. back office
 	for _, route := range []string{

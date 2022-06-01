@@ -118,7 +118,12 @@
             Les catégories suivantes ne sont pas utilisées :
             <v-list>
               <v-list-item v-for="(tags, index) in hint.Missing!" :key="index">
-                <TagChip :tag="tag" :key="tag" v-for="tag in tags"></TagChip>
+                <TagChip
+                  :tag="tag"
+                  :key="tag"
+                  v-for="tag in tags"
+                  :pointer="false"
+                ></TagChip>
               </v-list-item>
             </v-list>
           </div>
@@ -129,6 +134,7 @@
                 :tag="tag"
                 :key="tag"
                 v-for="tag in hint.Pattern"
+                :pointer="false"
               ></TagChip
             ></span>
             sont utilisées.

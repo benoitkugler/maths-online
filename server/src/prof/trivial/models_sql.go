@@ -1,4 +1,4 @@
-package trivialpoursuit
+package trivial
 
 //go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql -mode=ts:../../../../prof/src/controller/trivial_config_gen.ts
 

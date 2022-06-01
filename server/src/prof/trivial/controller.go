@@ -1,7 +1,6 @@
-package trivialpoursuit
+package trivial
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
+	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -34,10 +34,6 @@ var upgrader = websocket.Upgrader{
 }
 
 var accessForbidden = errors.New("trivial config access forbidden")
-
-// SessionID is a 4 digit identifier used
-// by students to access one activity
-type SessionID = string
 
 // Controller is the top level (singleton) objects
 // handling requests related to trivial pousuit setups
@@ -59,28 +55,10 @@ func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher
 	return &Controller{
 		db:       db,
 		key:      key,
-		sessions: make(map[string]*gameSession),
 		demoPin:  demoPin,
 		admin:    admin,
+		sessions: make(map[string]*gameSession),
 	}
-}
-
-// lookupSession locks and revese the sessionID -> session map
-func (ct *Controller) sessionMap() map[int64]LaunchSessionOut {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
-
-	out := make(map[int64]LaunchSessionOut, len(ct.sessions))
-
-	for sessionID, session := range ct.sessions {
-		out[session.config.Id] = LaunchSessionOut{
-			SessionID:         sessionID,
-			GroupStrategyKind: session.group.kind(),
-			GroupsID:          session.groupIDs(),
-		}
-	}
-
-	return out
 }
 
 func (ct *Controller) checkOwner(configID, userID int64) error {
@@ -94,6 +72,35 @@ func (ct *Controller) checkOwner(configID, userID int64) error {
 	}
 
 	return nil
+}
+
+type RunningSessionMetaOut struct {
+	NbGames int
+}
+
+// getSession locks and may return nil if no games has started yet
+func (ct *Controller) getSession(userID int64) *gameSession {
+	ct.lock.Lock()
+	defer ct.lock.Unlock()
+
+	for _, session := range ct.sessions {
+		if session.idTeacher == userID {
+			return session
+		}
+	}
+
+	return nil
+}
+
+func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var out RunningSessionMetaOut
+	if session := ct.getSession(user.Id); session != nil {
+		out = RunningSessionMetaOut{NbGames: len(session.games)}
+	}
+
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, error) {
@@ -112,8 +119,6 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 		return nil, utils.SQLError(err)
 	}
 
-	dict := ct.sessionMap()
-
 	tagsDict := tags.ByIdQuestion()
 	var out []TrivialConfigExt
 	for _, config := range configs {
@@ -126,7 +131,7 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 			Owner:      teachers[config.IdTeacher].Mail,
 			IsPublic:   config.Public,
 		}
-		out = append(out, config.withDetails(tagsDict, dict, origin))
+		out = append(out, config.withDetails(tagsDict, origin))
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Config.Id < out[j].Config.Id })
@@ -212,7 +217,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Origin{
+	out := config.withDetails(tags.ByIdQuestion(), teacher.Origin{
 		Visibility: teacher.Personnal,
 		Owner:      user.Mail,
 		IsPublic:   config.Public,
@@ -247,7 +252,7 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := config.withDetails(tags.ByIdQuestion(), ct.sessionMap(), teacher.Origin{
+	out := config.withDetails(tags.ByIdQuestion(), teacher.Origin{
 		Visibility: teacher.Personnal,
 		Owner:      user.Mail,
 		IsPublic:   config.Public,
@@ -344,8 +349,8 @@ func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions, userID
 	}, nil
 }
 
-// LaunchSessionTrivialPoursuit starts a new TrivialPoursuit session with
-// the given config, and returns the updated version of the config.
+// LaunchSessionTrivialPoursuit starts a new TrivialPoursuit session
+// where the games are setup with the given config.
 func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	var in LaunchSessionIn
 	if err := c.Bind(&in); err != nil {
@@ -354,7 +359,7 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 
 	user := teacher.JWTTeacher(c)
 
-	out, err := ct.launchSession(in, user.Id)
+	out, err := ct.launchConfig(in, user.Id)
 	if err != nil {
 		return err
 	}
@@ -362,48 +367,7 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createGameSession(sessionID string, config TrivialConfig, group GroupStrategy, userID int64) (*gameSession, error) {
-	// select the questions
-	questionPool, err := config.Questions.selectQuestions(ct.db, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	session := newGameSession(sessionID, ct.db, config, group, questionPool)
-
-	// the rooms may be either created initially, or during client connection
-	// (see connectStudent)
-	session.group.initGames(session) // initial setup of rooms
-
-	ct.lock.Lock()
-	// register the controller...
-	ct.sessions[sessionID] = session
-	ct.lock.Unlock()
-
-	ProgressLogger.Printf("Launching session %s", sessionID)
-	// ...and start it
-	go func() {
-		ctx, cancelFunc := context.WithTimeout(context.Background(), sessionTimeout)
-		session.startLoop(ctx)
-
-		cancelFunc()
-
-		// remove the game controller when the game is over
-		ct.lock.Lock()
-		defer ct.lock.Unlock()
-		delete(ct.sessions, sessionID)
-
-		ProgressLogger.Printf("Removed session %s", sessionID)
-	}()
-
-	return session, nil
-}
-
-func (ct *Controller) launchSession(params LaunchSessionIn, userID int64) (LaunchSessionOut, error) {
-	if dict := ct.sessionMap(); dict[params.IdConfig].SessionID != "" {
-		return LaunchSessionOut{}, errors.New("session already running")
-	}
-
+func (ct *Controller) launchConfig(params LaunchSessionIn, userID int64) (LaunchSessionOut, error) {
 	config, err := SelectTrivialConfig(ct.db, params.IdConfig)
 	if err != nil {
 		return LaunchSessionOut{}, utils.SQLError(err)
@@ -413,80 +377,52 @@ func (ct *Controller) launchSession(params LaunchSessionIn, userID int64) (Launc
 		return LaunchSessionOut{}, accessForbidden
 	}
 
-	ct.lock.Lock()
-	sessionID := utils.RandomID(true, 4, func(s string) bool {
-		_, taken := ct.sessions[s]
-		return taken
-	})
-	ct.lock.Unlock()
+	session := ct.getOrCreateSession(userID)
 
-	session, err := ct.createGameSession(sessionID, config, params.GroupStrategy, userID)
+	// populate the session with the required games :
+
+	// select the questions
+	questionPool, err := config.Questions.selectQuestions(ct.db, userID)
 	if err != nil {
 		return LaunchSessionOut{}, err
 	}
 
-	out := LaunchSessionOut{
-		GroupStrategyKind: params.GroupStrategy.kind(),
-		SessionID:         sessionID,
-		GroupsID:          session.groupIDs(),
+	var out LaunchSessionOut
+	for _, nbPlayers := range params.Groups {
+		options := tv.GameOptions{
+			PlayersNumber:   nbPlayers,
+			QuestionTimeout: time.Second * time.Duration(config.QuestionTimeout),
+			ShowDecrassage:  config.ShowDecrassage,
+		}
+
+		gameID := session.newGameID()
+		session.createGame(createGame{
+			ID:        gameID,
+			Questions: questionPool,
+			Options:   options,
+		})
+		out.GameIDs = append(out.GameIDs, string(gameID))
 	}
+
 	return out, nil
 }
 
-// StopSessionTrivialPoursuit stops a running session,
-// cleaning the controllers and interrupting the connection with clients.
-func (ct *Controller) StopSessionTrivialPoursuit(c echo.Context) error {
-	id, err := utils.QueryParamInt64(c, "id")
-	if err != nil {
-		return err
-	}
-
+// StopTrivialGame stops a game, optionnaly restarting it,
+// interrupting the connection with clients.
+func (ct *Controller) StopTrivialGame(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	if err := ct.checkOwner(id, user.Id); err != nil {
-		return err
+	var in stopGame
+	if err := c.Bind(&in); err != nil {
+		return fmt.Errorf("invalid parameters format: %s", err)
 	}
 
-	sessionID := ct.sessionMap()[id].SessionID
-
-	ct.lock.Lock()
-	session, ok := ct.sessions[sessionID]
-	if !ok {
+	session := ct.getSession(user.Id)
+	if session == nil {
 		// gracefully exit
+	} else {
+		session.stopGameEvents <- in
 	}
-	ct.lock.Unlock()
-
-	session.quit <- true
 
 	return c.NoContent(200)
-}
-
-func (ct *Controller) ConnectTeacherMonitor(c echo.Context) error {
-	sessionID := c.QueryParam("session-id")
-
-	ct.lock.Lock()
-	session, ok := ct.sessions[sessionID]
-	if !ok {
-		return fmt.Errorf("invalid session %s", sessionID)
-	}
-	ct.lock.Unlock()
-
-	// upgrade this connection to a WebSocket connection
-	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
-	if err != nil {
-		return err
-	}
-	defer ws.Close()
-
-	ProgressLogger.Println("Connecting teacher on session", sessionID)
-
-	client := session.connectTeacher(ws)
-
-	client.startLoop() // block
-
-	session.lock.Lock() // remove the client
-	delete(session.teacherClients, client)
-	session.lock.Unlock()
-
-	return nil
 }

@@ -20,16 +20,8 @@
     <launch-options @launch="launchSession"></launch-options>
   </v-dialog>
 
-  <v-dialog
-    fullscreen
-    :model-value="sessionToMonitor != null"
-    @update:model-value="sessionToMonitor = null"
-  >
-    <session-monitor
-      v-if="sessionToMonitor != null"
-      :running-session="sessionToMonitor!.Running "
-      @close="sessionToMonitor = null"
-    ></session-monitor>
+  <v-dialog fullscreen v-model="showMonitor">
+    <session-monitor @close="closeMonitor"></session-monitor>
   </v-dialog>
 
   <v-card class="my-3 mx-auto" width="80%">
@@ -52,6 +44,18 @@
         </v-btn>
       </v-col>
     </v-row>
+
+    <v-alert color="secondary" v-if="sessionMeta.NbGames > 0" class="my-2 mx-4">
+      <v-row>
+        <v-col>
+          Parties en cours : <v-chip>{{ sessionMeta.NbGames }}</v-chip>
+        </v-col>
+        <v-spacer></v-spacer>
+        <v-col>
+          <v-btn @click="showMonitor = true"> Suivre les parties </v-btn>
+        </v-col>
+      </v-row>
+    </v-alert>
 
     <v-list>
       <v-list-item
@@ -81,19 +85,13 @@
               title="Editer"
               class="mx-2"
               @click="editedConfig = config.Config"
-              :disabled="config.Running.SessionID != ''"
               v-if="isPersonnal(config)"
             >
               <v-icon icon="mdi-pencil"></v-icon>
             </v-btn>
+
             <v-btn
-              v-if="isPersonnal(config) && config.Running.SessionID != ''"
-              @click="monitor(config)"
-            >
-              Suivre
-            </v-btn>
-            <v-btn
-              v-else-if="isPersonnal(config)"
+              v-if="isPersonnal(config)"
               icon
               size="x-small"
               title="Lancer"
@@ -108,7 +106,7 @@
             </v-btn>
 
             <v-btn
-              v-if="isPersonnal(config) && config.Running.SessionID == ''"
+              v-if="isPersonnal(config)"
               class="mx-2"
               size="x-small"
               icon
@@ -116,16 +114,6 @@
               title="Supprimer cette session"
             >
               <v-icon icon="mdi-delete" color="red"></v-icon>
-            </v-btn>
-            <v-btn
-              v-else-if="isPersonnal(config)"
-              class="mx-2"
-              size="x-small"
-              icon
-              @click="stopSession(config.Config)"
-              title="Stopper la session"
-            >
-              <v-icon icon="mdi-close" color="red"></v-icon>
             </v-btn>
           </v-col>
           <v-col cols="3">
@@ -163,7 +151,8 @@
 <script setup lang="ts">
 import {
   Visibility,
-  type GroupStrategy,
+  type RunningSessionMetaOut,
+  type stopGame,
   type TrivialConfig,
   type TrivialConfigExt,
 } from "@/controller/api_gen";
@@ -193,6 +182,8 @@ let isLaunching = $ref(false);
 const colors = colorsPerCategorie;
 
 onMounted(async () => {
+  fetchSessionMeta();
+
   const res = await controller.GetTrivialPoursuit();
 
   if (res === undefined) {
@@ -258,7 +249,7 @@ async function deleteConfig(config: TrivialConfig) {
 }
 
 let launchingConfig = $ref<TrivialConfig | null>(null);
-async function launchSession(options: GroupStrategy) {
+async function launchSession(groups: number[]) {
   if (launchingConfig == null) {
     return;
   }
@@ -266,39 +257,36 @@ async function launchSession(options: GroupStrategy) {
   isLaunching = true;
   const res = await controller.LaunchSessionTrivialPoursuit({
     IdConfig: configID,
-    GroupStrategy: options,
+    Groups: groups,
   });
   launchingConfig = null;
   isLaunching = false;
   if (res === undefined) {
     return;
   }
-
-  const index = _configs.findIndex((v) => v.Config.Id == configID);
-  _configs[index].Running = res;
+  fetchSessionMeta();
 
   // automatically jump to monitor screen
-  sessionToMonitor = _configs[index];
+  showMonitor = true;
 }
 
-async function stopSession(config: TrivialConfig) {
-  const configID = config.Id;
-  const res = await controller.StopSessionTrivialPoursuit({ id: config.Id });
-  if (res === undefined) {
+async function stopTrivialGame(params: stopGame) {
+  await controller.StopTrivialGame(params);
+}
+
+let sessionMeta = $ref<RunningSessionMetaOut>({ NbGames: 0 });
+async function fetchSessionMeta() {
+  const res = await controller.GetTrivialRunningSessions();
+  if (res == undefined) {
     return;
   }
-
-  const index = _configs.findIndex((v) => v.Config.Id == configID);
-  _configs[index].Running = {
-    SessionID: "",
-    GroupStrategyKind: 0,
-    GroupsID: [],
-  };
+  sessionMeta = res;
 }
 
-let sessionToMonitor = $ref<TrivialConfigExt | null>(null);
-function monitor(config: TrivialConfigExt) {
-  sessionToMonitor = config;
+let showMonitor = $ref(false);
+function closeMonitor() {
+  showMonitor = false;
+  fetchSessionMeta();
 }
 </script>
 

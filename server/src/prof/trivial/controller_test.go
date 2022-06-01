@@ -1,15 +1,13 @@
-package trivialpoursuit
+package trivial
 
 import (
 	"os"
-	"sort"
 	"testing"
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -84,14 +82,14 @@ func TestGetConfig(t *testing.T) {
 func TestGameTermination(t *testing.T) {
 	tv.ProgressLogger.SetOutput(os.Stdout)
 
-	ct := newGameSession("test", nil, TrivialConfig{}, RandomGroupStrategy{2, 2}, game.QuestionPool{})
+	ct := newGameSession("test", -1)
 
-	id := ct.createGame(2)
+	ct.createGame(createGame{ID: "Game1"})
 
 	if len(ct.games) != 1 {
 		t.Fatal("expected one game")
 	}
-	ct.games[id].Terminate <- true
+	ct.stopGame(stopGame{ID: "Game1"})
 
 	time.Sleep(20 * time.Millisecond)
 
@@ -100,17 +98,6 @@ func TestGameTermination(t *testing.T) {
 		t.Fatal("game should have been removed")
 	}
 	ct.lock.Unlock()
-}
-
-func TestGameID(t *testing.T) {
-	s := make([]string, 20)
-	for i := range s {
-		s[i] = gameIDFromSerial(i)
-	}
-
-	if !sort.StringsAreSorted(s) {
-		t.Fatal("game ids are not sorted")
-	}
 }
 
 func TestMissingQuestions(t *testing.T) {

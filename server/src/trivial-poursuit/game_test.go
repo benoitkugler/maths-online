@@ -106,7 +106,7 @@ func TestEvents(t *testing.T) {
 		}
 	}()
 
-	ct.game.EmitQuestion() // launch the timer
+	ct.Game.EmitQuestion() // launch the timer
 
 	time.Sleep(time.Millisecond * 200)
 }
@@ -171,7 +171,7 @@ func TestStartGame(t *testing.T) {
 	}
 
 	ct.gameLock.Lock()
-	if ct.game.IsPlaying() {
+	if ct.Game.IsPlaying() {
 		t.Fatal("game should not have started")
 	}
 	ct.gameLock.Unlock()
@@ -191,7 +191,7 @@ func TestStartGame(t *testing.T) {
 	}
 
 	ct.gameLock.Lock()
-	if !ct.game.IsPlaying() {
+	if !ct.Game.IsPlaying() {
 		t.Fatal("game should have started")
 	}
 	ct.gameLock.Unlock()

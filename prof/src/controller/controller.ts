@@ -7,11 +7,12 @@ import type {
   ListQuestionsOut,
   LogginOut,
   Question,
+  RunningSessionMetaOut,
   StartSessionOut,
   TrivialConfigExt,
   UpdateGroupTagsOut,
 } from "./api_gen";
-import { AbstractAPI, GroupStrategyKind } from "./api_gen";
+import { AbstractAPI } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -28,6 +29,23 @@ class Controller extends AbstractAPI {
   logout() {
     this.isLoggedIn = false;
     this.authToken = "";
+  }
+
+  getToken() {
+    return this.authToken;
+  }
+
+  protected onSuccessGetTrivialRunningSessions(
+    data: RunningSessionMetaOut
+  ): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessStopTrivialGame(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Partie interrompue avec succès");
+    }
   }
 
   protected onSuccessEditorUpdateGroupTags(data: UpdateGroupTagsOut): void {
@@ -81,12 +99,6 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessStopSessionTrivialPoursuit(data: any): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Session terminée.");
-    }
-  }
   protected onSuccessEditorDuplicateQuestion(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -115,6 +127,9 @@ class Controller extends AbstractAPI {
   }
   protected onSuccessDeleteTrivialPoursuit(data: any): void {
     this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Configuration supprimée.");
+    }
   }
 
   protected onSuccessLaunchSessionTrivialPoursuit(
@@ -122,11 +137,7 @@ class Controller extends AbstractAPI {
   ): void {
     this.inRequest = false;
     if (this.showMessage) {
-      if (options.GroupStrategyKind == GroupStrategyKind.RandomGroupStrategy) {
-        this.showMessage(`Session de Trivial lancée : ${options.SessionID}`);
-      } else {
-        this.showMessage(`Session de Trivial lancée.`);
-      }
+      this.showMessage(`Parties lancées avec succès.`);
     }
   }
 

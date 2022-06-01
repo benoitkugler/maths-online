@@ -3,13 +3,13 @@ package main
 import (
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	trivialpoursuit "github.com/benoitkugler/maths-online/prof/trivial-poursuit"
+	"github.com/benoitkugler/maths-online/prof/trivial"
 	"github.com/labstack/echo/v4"
 )
 
 //go:generate ../../../structgen/apigen -source=prof_api.go -out=../../prof/src/controller/api_gen.ts
 
-func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller,
+func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	edit *editor.Controller, tc *teacher.Controller,
 ) {
 	e.POST("/prof/inscription", tc.AskInscription)
@@ -18,17 +18,18 @@ func setupProfAPI(e *echo.Echo, trivial *trivialpoursuit.Controller,
 
 	gr := e.Group("", tc.JWTMiddleware())
 
-	gr.GET("/prof/trivial/config", trivial.GetTrivialPoursuit)
-	gr.PUT("/prof/trivial/config", trivial.CreateTrivialPoursuit)
-	gr.POST("/prof/trivial/config", trivial.UpdateTrivialPoursuit)
-	gr.DELETE("/prof/trivial/config", trivial.DeleteTrivialPoursuit)
-	gr.POST("/prof/trivial/config/visibility", trivial.UpdateTrivialVisiblity)
-	gr.GET("/prof/trivial/config/duplicate", trivial.DuplicateTrivialPoursuit)
-	gr.POST("/prof/trivial/config/check-missing-questions", trivial.CheckMissingQuestions)
+	gr.GET("/prof/trivial/config", tvc.GetTrivialPoursuit)
+	gr.PUT("/prof/trivial/config", tvc.CreateTrivialPoursuit)
+	gr.POST("/prof/trivial/config", tvc.UpdateTrivialPoursuit)
+	gr.DELETE("/prof/trivial/config", tvc.DeleteTrivialPoursuit)
+	gr.POST("/prof/trivial/config/visibility", tvc.UpdateTrivialVisiblity)
+	gr.GET("/prof/trivial/config/duplicate", tvc.DuplicateTrivialPoursuit)
+	gr.POST("/prof/trivial/config/check-missing-questions", tvc.CheckMissingQuestions)
 
 	// trivialpoursuit game server
-	gr.POST("/trivial/launch_session", trivial.LaunchSessionTrivialPoursuit)
-	gr.DELETE("/trivial/launch_session", trivial.StopSessionTrivialPoursuit)
+	gr.GET("/trivial/sessions", tvc.GetTrivialRunningSessions)
+	gr.PUT("/trivial/sessions", tvc.LaunchSessionTrivialPoursuit)
+	gr.POST("/trivial/sessions/stop", tvc.StopTrivialGame)
 
 	gr.PUT("/prof/editor/api/new", edit.EditorStartSession)
 	gr.GET("/prof/editor/api/tags", edit.EditorGetTags)

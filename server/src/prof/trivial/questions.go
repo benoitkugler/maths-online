@@ -1,4 +1,4 @@
-package trivialpoursuit
+package trivial
 
 import (
 	"fmt"

@@ -52,7 +52,7 @@ type Game struct {
 
 	// QuestionPool is the list of the question
 	// being asked, for each category
-	questionPool QuestionPool
+	QuestionPool QuestionPool
 
 	// QuestionTimeout is started when emitting a new question
 	// and cleared early if all players have answered
@@ -77,14 +77,14 @@ type Game struct {
 // NewGame returns an empty game, using the given `questions`, waiting for players to be
 // added.
 // `questionTimeout` is an optionnal parameter which default to one minute
-func NewGame(questionTimeout time.Duration, showDecrassage bool, questions QuestionPool) *Game {
+func NewGame(questionTimeout time.Duration, showDecrassage bool, questions QuestionPool) Game {
 	if questionTimeout == 0 {
 		questionTimeout = defautQuestionTimeout
 	}
 
 	timer := time.NewTimer(time.Second)
 	timer.Stop()
-	return &Game{
+	return Game{
 		GameState: GameState{
 			Players: make(map[int]*PlayerStatus),
 			Player:  -1,
@@ -93,7 +93,7 @@ func NewGame(questionTimeout time.Duration, showDecrassage bool, questions Quest
 		currentWantNextTurn:   make(map[int]bool),
 		QuestionTimeout:       timer,
 		questionDurationLimit: questionTimeout,
-		questionPool:          questions,
+		QuestionPool:          questions,
 		showDecrassage:        showDecrassage,
 	}
 }
@@ -331,7 +331,7 @@ func (gs *Game) EmitQuestion() showQuestion {
 	// select the category
 	cat := categories[gs.PawnTile]
 	// select the question among the pool...
-	question := gs.questionPool[cat].sample()
+	question := gs.QuestionPool[cat].sample()
 	// ...and instantiate it
 	instance := question.Page.Instantiate()
 

@@ -27,8 +27,9 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// GameID is an in-memory identifier for a game room.
-type GameID = string
+// GameID is the full identifier of a game room,
+// usually of the form <sessionID><gameID> (excepted for demonstration games).
+type GameID string
 
 // AddClient uses the given connection to start a web socket, registred
 // with given `player`.
@@ -141,7 +142,7 @@ type GameController struct {
 	broadcastEvents chan game.StateUpdate
 	clients         map[*Client]game.PlayerID // current clients in the game
 
-	game     game.Game // game logic
+	Game     game.Game // game logic
 	gameLock sync.Mutex
 
 	Options GameOptions
@@ -159,7 +160,7 @@ func NewGameController(id GameID, questions game.QuestionPool, options GameOptio
 		incomingEvents:  make(chan game.ClientEvent),
 		broadcastEvents: make(chan game.StateUpdate, 1), // the main loop write in this channel
 		clients:         map[*Client]game.PlayerID{},
-		game:            *game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
+		Game:            game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
 		Options:         options,
 	}
 }
@@ -188,7 +189,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 					Events: game.Events{
 						game.GameTerminated{},
 					},
-					State: gc.game.GameState,
+					State: gc.Game.GameState,
 				})
 				if err != nil {
 					WarningLogger.Printf("Broadcasting to client %d failed: %s", clientID, err)
@@ -225,12 +226,12 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			gc.gameLock.Lock()
 			playerID := gc.clients[client]
 			// check if the player is not already removed
-			if gc.game.Players[playerID] == nil {
+			if gc.Game.Players[playerID] == nil {
 				continue
 			}
-			event, resetTurn := gc.game.RemovePlayer(playerID)
-			hasStarted := gc.game.HasStarted()
-			nbPlayers := gc.game.NumberPlayers(true)
+			event, resetTurn := gc.Game.RemovePlayer(playerID)
+			hasStarted := gc.Game.HasStarted()
+			nbPlayers := gc.Game.NumberPlayers(true)
 			delete(gc.clients, client)
 			gc.gameLock.Unlock()
 
@@ -253,13 +254,13 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			}
 			gc.broadcastEvents <- game.StateUpdate{
 				Events: events,
-				State:  gc.game.GameState,
+				State:  gc.Game.GameState,
 			}
 
-		case <-gc.game.QuestionTimeout.C:
+		case <-gc.Game.QuestionTimeout.C:
 			ProgressLogger.Printf("Game %s : questionTimeoutAction...", gc.ID)
 
-			events := gc.game.QuestionTimeoutAction()
+			events := gc.Game.QuestionTimeoutAction()
 			if events != nil {
 				gc.broadcastEvents <- *events
 			}
@@ -272,18 +273,18 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			//		for simplicity we considered this a new connection
 
 			gc.gameLock.Lock()
-			reconnection := client.PlayerID != -1 && gc.game.Players[client.PlayerID] != nil
+			reconnection := client.PlayerID != -1 && gc.Game.Players[client.PlayerID] != nil
 			gc.gameLock.Unlock()
 
 			if !reconnection { // fresh connection
-				if gc.game.HasStarted() {
+				if gc.Game.HasStarted() {
 					// we do not allow fresh connection into an already started game
 					client.isAccepted <- false
 					continue
 				}
 				ProgressLogger.Printf("Game %s : adding player...", gc.ID)
 
-				playerID, event := gc.game.AddPlayer(client.player.Pseudo)
+				playerID, event := gc.Game.AddPlayer(client.player.Pseudo)
 				// register the playerID so that it can be send back
 				client.PlayerID = playerID
 				gc.clients[client] = playerID
@@ -293,19 +294,19 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				// only notifie the player who joined ...
 				client.sendEvent(game.StateUpdate{
 					Events: game.Events{game.PlayerJoin{Player: playerID}},
-					State:  gc.game.GameState,
+					State:  gc.Game.GameState,
 				})
 
 				// ... check if the new player triggers a game start
-				if gc.game.NumberPlayers(true) >= gc.Options.PlayersNumber {
+				if gc.Game.NumberPlayers(true) >= gc.Options.PlayersNumber {
 					ProgressLogger.Printf("Game %s : starting", gc.ID)
 
-					events := gc.game.StartGame()
+					events := gc.Game.StartGame()
 					gc.broadcastEvents <- events
 				} else { // update the lobby
 					gc.broadcastEvents <- game.StateUpdate{
 						Events: game.Events{event},
-						State:  gc.game.GameState,
+						State:  gc.Game.GameState,
 					}
 				}
 			} else { // reconnection
@@ -314,12 +315,12 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				gc.clients[client] = client.PlayerID // register the new client connection
 				client.isAccepted <- true
 				gc.gameLock.Lock()
-				event := gc.game.ReconnectPlayer(client.PlayerID, client.player.Pseudo)
+				event := gc.Game.ReconnectPlayer(client.PlayerID, client.player.Pseudo)
 				gc.gameLock.Unlock()
 
 				gc.broadcastEvents <- game.StateUpdate{
 					Events: game.Events{event},
-					State:  gc.game.GameState,
+					State:  gc.Game.GameState,
 				}
 			}
 
@@ -334,7 +335,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 				events game.MaybeUpdate
 				err    error
 			)
-			events, isGameOver, err = gc.game.HandleClientEvent(message)
+			events, isGameOver, err = gc.Game.HandleClientEvent(message)
 			if err != nil { // malicious client: ignore the query
 				WarningLogger.Println(err)
 				continue
@@ -367,7 +368,7 @@ func (gc *GameController) Summary() GameSummary {
 	gc.gameLock.Lock()
 	defer gc.gameLock.Unlock()
 
-	state := gc.game.GameState
+	state := gc.Game.GameState
 	players := gc.playerIDsToClients()
 
 	successes := make(map[Player]game.Success)
@@ -410,7 +411,7 @@ func (gc *GameController) review() Review {
 	}
 
 	players := gc.playerIDsToClients()
-	for k, v := range gc.game.Players {
+	for k, v := range gc.Game.Players {
 		if players[k] == nil { // player not connected anymore
 			continue
 		}

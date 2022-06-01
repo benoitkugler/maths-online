@@ -12,23 +12,13 @@
     </v-row>
 
     <v-card-text>
-      <v-alert
-        color="info"
-        class="mb-2"
-        v-if="showSessionID"
-        style="text-align: center"
-      >
-        Code de la session :
-        <v-chip>
-          <b style="font-size: 22px">
-            {{ props.runningSession.SessionID }}
-          </b>
-        </v-chip>
-      </v-alert>
-
       <v-row justify="center">
         <v-col cols="4" v-for="game in summaries" :key="game.GameID">
-          <GameMonitor :summary="game" :show-i-d="showGamesID"></GameMonitor>
+          <GameMonitor
+            :summary="game"
+            :show-i-d="true"
+            @stop-game="stopTrivGame"
+          ></GameMonitor>
         </v-col>
       </v-row>
     </v-card-text>
@@ -36,51 +26,38 @@
 </template>
 
 <script setup lang="ts">
-import type { LaunchSessionOut } from "@/controller/api_gen";
-import { GroupStrategyKind } from "@/controller/api_gen";
+import type { stopGame } from "@/controller/api_gen";
+import { controller } from "@/controller/controller";
 import { TrivialMonitorController } from "@/controller/trivial";
 import type {
   gameSummary,
   teacherSocketData,
 } from "@/controller/trivial_config_socket_gen";
-import { computed, onMounted } from "@vue/runtime-core";
+import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import GameMonitor from "./GameMonitor.vue";
 
-interface Props {
-  runningSession: LaunchSessionOut;
-}
+// type Props = {};
 
-const props = defineProps<Props>();
+// const props = defineProps<any>();
 
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
-const showSessionID = computed(
-  () =>
-    props.runningSession.GroupStrategyKind ==
-    GroupStrategyKind.RandomGroupStrategy
-);
-
-const showGamesID = computed(
-  () =>
-    props.runningSession.GroupStrategyKind ==
-    GroupStrategyKind.FixedSizeGroupStrategy
-);
-
 let summaries = $ref<gameSummary[]>([]);
 
 let ct: TrivialMonitorController;
 onMounted(() => {
-  ct = new TrivialMonitorController(
-    props.runningSession.SessionID,
-    onServerData
-  );
+  ct = new TrivialMonitorController(onServerData);
 });
 
 function onServerData(data: teacherSocketData) {
   summaries = data.Games || [];
+}
+
+async function stopTrivGame(params: stopGame) {
+  await controller.StopTrivialGame(params);
 }
 </script>
 

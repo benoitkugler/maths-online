@@ -1,11 +1,13 @@
-package trivialpoursuit
+package trivial
 
 import (
 	"reflect"
 	"testing"
 
 	ex "github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/prof/editor"
 	ed "github.com/benoitkugler/maths-online/prof/editor"
+	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -15,6 +17,14 @@ func qu(title string) ed.Question {
 
 func quD(title, diff string) questionDiff {
 	return questionDiff{question: qu(title), diff: ed.DifficultyTag(diff)}
+}
+
+var dummyQuestions = game.QuestionPool{
+	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
 }
 
 func Test_weightQuestions(t *testing.T) {
@@ -125,5 +135,74 @@ func TestSelectQuestions(t *testing.T) {
 		1. / 9, 1. / 9, 1. / 18, 1. / 18, 1. / 6, 1. / 6, 1. / 3,
 	}) {
 		t.Fatal(pool[0].Weights)
+	}
+}
+
+func TestQuestionCriterion_filter(t *testing.T) {
+	tests := []struct {
+		qc      QuestionCriterion
+		args    editor.QuestionTags
+		wantOut IDs
+	}{
+		{
+			QuestionCriterion{},
+			editor.QuestionTags{
+				{IdQuestion: 1, Tag: ""},
+				{IdQuestion: 2, Tag: ""},
+			},
+			nil,
+		},
+		{
+			QuestionCriterion{
+				{"TAG1"},
+			},
+			editor.QuestionTags{
+				{IdQuestion: 1, Tag: "TAG1"},
+				{IdQuestion: 1, Tag: "xx"},
+				{IdQuestion: 2, Tag: "xx"},
+			},
+			IDs{1},
+		},
+		{
+			QuestionCriterion{
+				{"TAG1", "TAG2"},
+			},
+			editor.QuestionTags{
+				{IdQuestion: 1, Tag: "TAG1"},
+				{IdQuestion: 1, Tag: "xx"},
+				{IdQuestion: 2, Tag: "xx"},
+			},
+			nil,
+		},
+		{
+			QuestionCriterion{
+				{"TAG1", "TAG2"},
+			},
+			editor.QuestionTags{
+				{IdQuestion: 1, Tag: "TAG1"},
+				{IdQuestion: 1, Tag: "TAG2"},
+				{IdQuestion: 1, Tag: "TAG1"},
+				{IdQuestion: 2, Tag: "xx"},
+			},
+			IDs{1},
+		},
+		{
+			QuestionCriterion{
+				{"TAG1", "TAG2"},
+				{"TAG3"},
+			},
+			editor.QuestionTags{
+				{IdQuestion: 1, Tag: "TAG1"},
+				{IdQuestion: 1, Tag: "TAG2"},
+				{IdQuestion: 1, Tag: "TAG1"},
+				{IdQuestion: 2, Tag: "TAG3"},
+			},
+			IDs{1, 2},
+		},
+	}
+	for _, tt := range tests {
+		if gotOut := tt.qc.filter(tt.args.ByIdQuestion()); !reflect.DeepEqual(gotOut, tt.wantOut) {
+			t.Errorf("QuestionCriterion.filter() = %v, want %v", gotOut, tt.wantOut)
+		}
 	}
 }

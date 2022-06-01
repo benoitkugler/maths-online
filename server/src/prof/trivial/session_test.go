@@ -1,0 +1,67 @@
+package trivial
+
+import (
+	"context"
+	"sort"
+	"testing"
+	"time"
+
+	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
+)
+
+func TestGameID(t *testing.T) {
+	s := make([]string, 20)
+	for i := range s {
+		s[i] = string(gameIDFromSerial("test", i))
+	}
+
+	if !sort.StringsAreSorted(s) {
+		t.Fatal("game ids are not sorted")
+	}
+}
+
+func TestSession(t *testing.T) {
+	session := newGameSession("test", -1)
+
+	go session.mainLoop(context.Background())
+
+	session.createGameEvents <- createGame{ID: "g1", Questions: dummyQuestions, Options: trivialpoursuit.GameOptions{PlayersNumber: 2}}
+	session.createGameEvents <- createGame{ID: "g2", Questions: dummyQuestions, Options: trivialpoursuit.GameOptions{PlayersNumber: 2}}
+
+	time.Sleep(time.Millisecond * 10)
+
+	session.lock.Lock()
+	if L := len(session.games); L != 2 {
+		t.Fatal(L)
+	}
+	session.lock.Unlock()
+
+	// try to remove an inexisting game
+	session.stopGameEvents <- stopGame{ID: "xxx"}
+	time.Sleep(time.Millisecond * 10)
+
+	session.lock.Lock()
+	if L := len(session.games); L != 2 {
+		t.Fatal(L)
+	}
+	session.lock.Unlock()
+
+	session.stopGameEvents <- stopGame{ID: "g1"}
+	time.Sleep(time.Millisecond * 10)
+
+	session.lock.Lock()
+	if L := len(session.games); L != 1 {
+		t.Fatal(L)
+	}
+	session.lock.Unlock()
+
+	// test restart
+	session.stopGameEvents <- stopGame{ID: "g2", Restart: true}
+	time.Sleep(time.Millisecond * 10)
+
+	session.lock.Lock()
+	if L := len(session.games); L != 1 {
+		t.Fatal(L)
+	}
+	session.lock.Unlock()
+}

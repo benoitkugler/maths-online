@@ -7,17 +7,15 @@ export const colorsPerCategorie = [
   "green",
   "orange",
   "yellow",
-  "blue"
+  "blue",
 ];
 
 export class TrivialMonitorController {
-  constructor(
-    sessionID: string,
-    onServerEvent: (data: teacherSocketData) => void
-  ) {
-    const url = controller
-      .getURL(`/prof/trivial/monitor?session-id=${sessionID}`)
-      .replace("http", "ws");
+  constructor(onServerEvent: (data: teacherSocketData) => void) {
+    const url =
+      controller.getURL(`/prof/trivial/monitor`).replace("http", "ws") +
+      "?token=" +
+      controller.getToken();
     const socket = new WebSocket(url);
 
     // Connection opened
@@ -44,26 +42,26 @@ export const questionPropositions: {
     Questions: [
       [
         ["Pourcentages", "Valeur initiale"],
-        ["Pourcentages", "Valeur finale"]
+        ["Pourcentages", "Valeur finale"],
       ],
       [
         ["Pourcentages", "Taux global"],
-        ["Pourcentages", "Taux réciproque"]
+        ["Pourcentages", "Taux réciproque"],
       ],
       [
         ["Pourcentages", "Proportion"],
         ["Pourcentages", "Proportion de proportion"],
-        ["Pourcentages", "Pourcentage d'un nombre"]
+        ["Pourcentages", "Pourcentage d'un nombre"],
       ],
       [
         ["Pourcentages", "Evolutions identiques"],
         ["Pourcentages", "Evolution unique"],
-        ["Pourcentages", "Evolutions successives"]
+        ["Pourcentages", "Evolutions successives"],
       ],
       [
         ["Pourcentages", "Coefficient multiplicateur"],
-        ["Pourcentages", "Taux d'évolution"]
-      ]
-    ]
-  }
+        ["Pourcentages", "Taux d'évolution"],
+      ],
+    ],
+  },
 ];

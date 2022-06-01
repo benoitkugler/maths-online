@@ -24,11 +24,11 @@ export interface LogginOut {
   IsPasswordError: boolean;
   Token: string;
 }
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.QuestionCriterion
+// github.com/benoitkugler/maths-online/prof/trivial.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.CategoriesQuestions
+// github.com/benoitkugler/maths-online/prof/trivial.CategoriesQuestions
 export type CategoriesQuestions = QuestionCriterion[];
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfig
+// github.com/benoitkugler/maths-online/prof/trivial.TrivialConfig
 export interface TrivialConfig {
   Id: number;
   Questions: CategoriesQuestions;
@@ -57,52 +57,41 @@ export interface Origin {
   IsPublic: boolean;
   Visibility: Visibility;
 }
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.LaunchSessionOut
-export interface LaunchSessionOut {
-  SessionID: string;
-  GroupsID: string[] | null;
-  GroupStrategyKind: number;
-}
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.TrivialConfigExt
+// github.com/benoitkugler/maths-online/prof/trivial.TrivialConfigExt
 export interface TrivialConfigExt {
   Config: TrivialConfig;
   Origin: Origin;
-  Running: LaunchSessionOut;
   NbQuestionsByCategories: number[];
 }
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.UpdateTrivialVisiblityIn
+// github.com/benoitkugler/maths-online/prof/trivial.UpdateTrivialVisiblityIn
 export interface UpdateTrivialVisiblityIn {
   ConfigID: number;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.CheckMissingQuestionsOut
+// github.com/benoitkugler/maths-online/prof/trivial.CheckMissingQuestionsOut
 export interface CheckMissingQuestionsOut {
   Pattern: string[] | null;
   Missing: (string[] | null)[] | null;
 }
-
-export enum GroupStrategyKind {
-  FixedSizeGroupStrategy = 0,
-  RandomGroupStrategy = 1,
+// github.com/benoitkugler/maths-online/prof/trivial.RunningSessionMetaOut
+export interface RunningSessionMetaOut {
+  NbGames: number;
 }
-
-export interface GroupStrategy {
-  Kind: GroupStrategyKind;
-  Data: FixedSizeGroupStrategy | RandomGroupStrategy;
-}
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.FixedSizeGroupStrategy
-export interface FixedSizeGroupStrategy {
-  Groups: number[] | null;
-}
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.RandomGroupStrategy
-export interface RandomGroupStrategy {
-  MaxPlayersPerGroup: number;
-  TotalPlayersNumber: number;
-}
-// github.com/benoitkugler/maths-online/prof/trivial-poursuit.LaunchSessionIn
+// github.com/benoitkugler/maths-online/prof/trivial.LaunchSessionIn
 export interface LaunchSessionIn {
   IdConfig: number;
-  GroupStrategy: GroupStrategy;
+  Groups: number[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/trivial.LaunchSessionOut
+export interface LaunchSessionOut {
+  GameIDs: string[] | null;
+}
+// github.com/benoitkugler/maths-online/trivial-poursuit.GameID
+export type GameID = string;
+// github.com/benoitkugler/maths-online/prof/trivial.stopGame
+export interface stopGame {
+  ID: GameID;
+  Restart: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
 export interface StartSessionOut {
@@ -803,9 +792,33 @@ export abstract class AbstractAPI {
     data: CheckMissingQuestionsOut
   ): void;
 
+  protected async rawGetTrivialRunningSessions() {
+    const fullUrl = this.baseUrl + "/trivial/sessions";
+    const rep: AxiosResponse<RunningSessionMetaOut> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** GetTrivialRunningSessions wraps rawGetTrivialRunningSessions and handles the error */
+  async GetTrivialRunningSessions() {
+    this.startRequest();
+    try {
+      const out = await this.rawGetTrivialRunningSessions();
+      this.onSuccessGetTrivialRunningSessions(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessGetTrivialRunningSessions(
+    data: RunningSessionMetaOut
+  ): void;
+
   protected async rawLaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
-    const fullUrl = this.baseUrl + "/trivial/launch_session";
-    const rep: AxiosResponse<LaunchSessionOut> = await Axios.post(
+    const fullUrl = this.baseUrl + "/trivial/sessions";
+    const rep: AxiosResponse<LaunchSessionOut> = await Axios.put(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -829,28 +842,27 @@ export abstract class AbstractAPI {
     data: LaunchSessionOut
   ): void;
 
-  protected async rawStopSessionTrivialPoursuit(params: { id: number }) {
-    const fullUrl = this.baseUrl + "/trivial/launch_session";
-    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
+  protected async rawStopTrivialGame(params: stopGame) {
+    const fullUrl = this.baseUrl + "/trivial/sessions/stop";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
-  /** StopSessionTrivialPoursuit wraps rawStopSessionTrivialPoursuit and handles the error */
-  async StopSessionTrivialPoursuit(params: { id: number }) {
+  /** StopTrivialGame wraps rawStopTrivialGame and handles the error */
+  async StopTrivialGame(params: stopGame) {
     this.startRequest();
     try {
-      const out = await this.rawStopSessionTrivialPoursuit(params);
-      this.onSuccessStopSessionTrivialPoursuit(out);
+      const out = await this.rawStopTrivialGame(params);
+      this.onSuccessStopTrivialGame(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessStopSessionTrivialPoursuit(data: any): void;
+  protected abstract onSuccessStopTrivialGame(data: any): void;
 
   protected async rawEditorStartSession(params: any) {
     const fullUrl = this.baseUrl + "/prof/editor/api/new";

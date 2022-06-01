@@ -26,6 +26,12 @@ func (ct *Controller) JWTMiddleware() echo.MiddlewareFunc {
 	return middleware.JWTWithConfig(config)
 }
 
+// expects the token to be in the `token` query parameters
+func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
+	config := middleware.JWTConfig{SigningKey: ct.key[:], Claims: &UserMeta{}, TokenLookup: "query:token"}
+	return middleware.JWTWithConfig(config)
+}
+
 func (ct *Controller) newToken(teacher Teacher) (string, error) {
 	// Set custom claims
 	claims := &UserMeta{
