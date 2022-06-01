@@ -43,8 +43,7 @@ type gameSession struct {
 	stopGameEvents   chan stopGame   // calls stopGame()
 
 	// channel receiving game progress
-	monitorSummary    chan tv.GameSummary
-	monitorRemoveGame chan tv.GameID
+	monitorSummary chan tv.GameSummary
 
 	// clients to which send the content of `monitor`
 	teacherClients map[*teacherClient]bool
@@ -52,15 +51,14 @@ type gameSession struct {
 
 func newGameSession(id SessionID, idTeacher int64) *gameSession {
 	return &gameSession{
-		id:                id,
-		idTeacher:         idTeacher,
-		games:             make(map[tv.GameID]*tv.GameController),
-		playerIDs:         make(map[PlayerID]gamePosition),
-		createGameEvents:  make(chan createGame),
-		stopGameEvents:    make(chan stopGame),
-		monitorSummary:    make(chan tv.GameSummary),
-		monitorRemoveGame: make(chan tv.GameID, 1), // called in stopGame
-		teacherClients:    make(map[*teacherClient]bool),
+		id:               id,
+		idTeacher:        idTeacher,
+		games:            make(map[tv.GameID]*tv.GameController),
+		playerIDs:        make(map[PlayerID]gamePosition),
+		createGameEvents: make(chan createGame),
+		stopGameEvents:   make(chan stopGame),
+		monitorSummary:   make(chan tv.GameSummary),
+		teacherClients:   make(map[*teacherClient]bool),
 	}
 }
 
@@ -116,7 +114,7 @@ func (gs *gameSession) afterGameEnd(gameID tv.GameID) {
 	delete(gs.games, gameID)
 	gs.lock.Unlock()
 
-	gs.monitorRemoveGame <- gameID
+	gs.monitorRemoveGame(gameID)
 }
 
 func (gs *gameSession) stopGame(params stopGame) {
@@ -155,12 +153,6 @@ func (gs *gameSession) mainLoop(ctx context.Context) {
 			gs.createGame(cg)
 		case sg := <-gs.stopGameEvents:
 			gs.stopGame(sg)
-		case gameID := <-gs.monitorRemoveGame:
-			// notify the monitors
-			for client := range gs.teacherClients {
-				client.removeGame(gameID)
-			}
-
 			// terminate the session if there is no more games
 			if len(gs.games) == 0 {
 				return
@@ -170,6 +162,13 @@ func (gs *gameSession) mainLoop(ctx context.Context) {
 				client.sendSummary(summary)
 			}
 		}
+	}
+}
+
+func (gs *gameSession) monitorRemoveGame(gameID tv.GameID) {
+	// notify the monitors
+	for client := range gs.teacherClients {
+		client.removeGame(gameID)
 	}
 }
 
