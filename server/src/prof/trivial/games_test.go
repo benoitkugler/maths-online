@@ -102,7 +102,7 @@ func (st *student) decoReco() {
 
 	time.Sleep(time.Second / 10)
 
-	st.accessGame(true)
+	st.accessGame(false)
 }
 
 // teacherC monitor session
@@ -161,15 +161,9 @@ func (s server) handle(w http.ResponseWriter, r *http.Request) {
 func TestSessionPlay(t *testing.T) {
 	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
 
-	creds := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "isyro_prod",
-	}
-	db, err := creds.ConnectPostgres()
+	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", creds, err)
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 	defer db.Close()
@@ -195,7 +189,7 @@ func TestSessionPlay(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// listen to "externa" requests
+	// listen to "external" requests
 	listener := httptest.NewServer(http.HandlerFunc(s.handle))
 	defer listener.Close()
 
@@ -223,5 +217,5 @@ func TestSessionPlay(t *testing.T) {
 		allStudents = append(allStudents, students)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(time.Second / 2)
 }

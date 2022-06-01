@@ -23,7 +23,9 @@ func TestGameID(t *testing.T) {
 func TestSession(t *testing.T) {
 	session := newGameSession("test", -1)
 
-	go session.mainLoop(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go session.mainLoop(ctx)
 
 	session.createGameEvents <- createGame{ID: "g1", Questions: dummyQuestions, Options: trivialpoursuit.GameOptions{PlayersNumber: 2}}
 	session.createGameEvents <- createGame{ID: "g2", Questions: dummyQuestions, Options: trivialpoursuit.GameOptions{PlayersNumber: 2}}
