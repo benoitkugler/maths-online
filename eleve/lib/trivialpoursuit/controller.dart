@@ -206,13 +206,19 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
 
   Future<void> _onPlayerTurn(PlayerTurn event) async {
     final isOwnTurn = event.player == playerID;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 4),
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      content: isOwnTurn
-          ? const Text("C'est à toi de lancer le dé !")
-          : Text("Au tour de ${event.playerName}"),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 8),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: isOwnTurn
+            ? const Text("C'est à toi de lancer le dé !")
+            : Text("Au tour de ${event.playerName}"),
+        action: SnackBarAction(
+            label: "OK",
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentSnackBar()),
+      ),
+    );
 
     setState(() {
       diceDisabled = !isOwnTurn;
@@ -222,6 +228,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   // triggers and wait for a dice roll
   // with the given value
   Future<void> _onDiceThrow(DiceThrow event) async {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
     final face =
         dice.Face.values[event.face - 1]; // event.face is the "human" face
 

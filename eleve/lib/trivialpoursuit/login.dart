@@ -31,7 +31,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     if (widget.buildMode == BuildMode.debug) {
       // skip loggin screen
       Future.delayed(
-          const Duration(milliseconds: 50), () => _launchTrivialPoursuit(""));
+          const Duration(milliseconds: 50), () => _showGameBoard("", ""));
     }
 
     super.initState();
@@ -91,12 +91,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     }
   }
 
-  void _launchTrivialPoursuit(String code) async {
-    final gameMeta = await _setupGame(code);
-    if (gameMeta.isEmpty) {
-      return;
-    }
-
+  void _showGameBoard(String gameMeta, String code) {
     final student = GameAcces(
         widget.settings.studentID, widget.settings.studentPseudo, gameMeta);
 
@@ -118,5 +113,14 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
         pinController.clear();
       });
     });
+  }
+
+  void _launchTrivialPoursuit(String code) async {
+    final gameMeta = await _setupGame(code);
+    if (gameMeta.isEmpty) {
+      return;
+    }
+
+    _showGameBoard(code, gameMeta);
   }
 }
