@@ -7,23 +7,48 @@ import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
-class EleveApp extends StatelessWidget {
+class EleveApp extends StatefulWidget {
   final Audio audioPlayer;
   final BuildMode buildMode;
 
   const EleveApp(this.audioPlayer, this.buildMode, {Key? key})
       : super(key: key);
 
-  void _showAudioSettings(BuildContext context) {
-    final ct = audioPlayer.playlist.toList();
-    final onPop = Navigator.of(context)
-        .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
-    onPop.then((_) => audioPlayer.setSongs(ct));
+  @override
+  State<EleveApp> createState() => _EleveAppState();
+}
+
+class _EleveAppState extends State<EleveApp> {
+  UserSettings settings = {};
+
+  @override
+  void initState() {
+    _loadSettings();
+    super.initState();
   }
 
-  void _showAppSettings(BuildContext context) {
-    Navigator.of(context)
-        .push<void>(MaterialPageRoute<void>(builder: (_) => const Settings()));
+  void _loadSettings() async {
+    final _settings = await loadUserSettings();
+    setState(() {
+      settings = _settings;
+    });
+  }
+
+  void _showAudioSettings(BuildContext context) {
+    final ct = widget.audioPlayer.playlist.toList();
+    final onPop = Navigator.of(context)
+        .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
+    onPop.then((_) => widget.audioPlayer.setSongs(ct));
+  }
+
+  void _showAppSettings(BuildContext context) async {
+    final newSettings = await Navigator.of(context).push(
+        MaterialPageRoute<UserSettings>(builder: (_) => const Settings()));
+    if (newSettings != null) {
+      setState(() {
+        settings = newSettings;
+      });
+    }
   }
 
   @override
@@ -56,7 +81,7 @@ class EleveApp extends StatelessWidget {
               )
             ],
           ),
-          body: _HomePage(audioPlayer, buildMode),
+          body: _HomePage(widget.audioPlayer, widget.buildMode, settings),
         ));
   }
 }
@@ -64,8 +89,9 @@ class EleveApp extends StatelessWidget {
 class _HomePage extends StatefulWidget {
   final Audio audioPlayer;
   final BuildMode buildMode;
+  final UserSettings settings;
 
-  const _HomePage(this.audioPlayer, this.buildMode, {Key? key})
+  const _HomePage(this.audioPlayer, this.buildMode, this.settings, {Key? key})
       : super(key: key);
 
   @override
@@ -77,11 +103,12 @@ class _HomePageState extends State<_HomePage> {
   /// to reconnect in game.
   Map<String, String> trivialMetaCache = {};
 
-  void _launchTrivialPoursuit() {
+  void _launchTrivialPoursuit() async {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-            body: TrivialPoursuitLoggin(widget.buildMode, trivialMetaCache))));
+            body: TrivialPoursuitLoggin(
+                widget.buildMode, trivialMetaCache, widget.settings))));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 

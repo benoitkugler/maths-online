@@ -51,7 +51,7 @@ class _SettingsState extends State<Settings> {
       backgroundColor: Theme.of(context).colorScheme.secondary,
       content: const Text("Paramètres enregistrés"),
     ));
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(settings);
   }
 
   @override

@@ -13,8 +13,10 @@ import 'package:http/http.dart' as http;
 class TrivialPoursuitLoggin extends StatefulWidget {
   final BuildMode buildMode;
   final Map<String, String> gameMetaCache;
+  final UserSettings settings;
 
-  const TrivialPoursuitLoggin(this.buildMode, this.gameMetaCache, {Key? key})
+  const TrivialPoursuitLoggin(this.buildMode, this.gameMetaCache, this.settings,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -23,11 +25,9 @@ class TrivialPoursuitLoggin extends StatefulWidget {
 
 class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   final pinController = TextEditingController();
-  UserSettings settings = {};
 
   @override
   void initState() {
-    _loadSettings();
     if (widget.buildMode == BuildMode.debug) {
       // skip loggin screen
       Future.delayed(
@@ -35,10 +35,6 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     }
 
     super.initState();
-  }
-
-  void _loadSettings() async {
-    settings = await loadUserSettings();
   }
 
   void _showError(dynamic error) {
@@ -73,7 +69,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     final uri =
         Uri.parse(widget.buildMode.serverURL("/trivial/game/setup", query: {
       sessionIDKey: code,
-      studentIDKey: settings[studentIDKey],
+      studentIDKey: widget.settings[studentIDKey],
       // send (optional) meta so that we may reconnect
       TrivialPoursuitController.gameMetaKey: widget.gameMetaCache[code] ?? "",
     }));
@@ -101,8 +97,8 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
       return;
     }
 
-    final student = GameAcces(settings[studentIDKey] ?? "",
-        settings[studentPseudoKey] ?? "", gameMeta);
+    final student = GameAcces(widget.settings[studentIDKey] ?? "",
+        widget.settings[studentPseudoKey] ?? "", gameMeta);
 
     final route = Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/board"),
