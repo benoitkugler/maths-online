@@ -7,20 +7,12 @@ import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
-final bm = buildMode();
-// final bm = BuildMode.dev;
-
-void main() {
-  final audio = Audio();
-  // start with some defaults
-  audio.setSongs([0, 1]);
-  runApp(EleveApp(audio));
-}
-
 class EleveApp extends StatelessWidget {
   final Audio audioPlayer;
+  final BuildMode buildMode;
 
-  const EleveApp(this.audioPlayer, {Key? key}) : super(key: key);
+  const EleveApp(this.audioPlayer, this.buildMode, {Key? key})
+      : super(key: key);
 
   void _showAudioSettings(BuildContext context) {
     final ct = audioPlayer.playlist.toList();
@@ -64,15 +56,17 @@ class EleveApp extends StatelessWidget {
               )
             ],
           ),
-          body: _HomePage(audioPlayer),
+          body: _HomePage(audioPlayer, buildMode),
         ));
   }
 }
 
 class _HomePage extends StatefulWidget {
   final Audio audioPlayer;
+  final BuildMode buildMode;
 
-  const _HomePage(this.audioPlayer, {Key? key}) : super(key: key);
+  const _HomePage(this.audioPlayer, this.buildMode, {Key? key})
+      : super(key: key);
 
   @override
   State<_HomePage> createState() => _HomePageState();
@@ -86,15 +80,15 @@ class _HomePageState extends State<_HomePage> {
   void _launchTrivialPoursuit() {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
-        builder: (_) =>
-            Scaffold(body: TrivialPoursuitLoggin(bm, trivialMetaCache))));
+        builder: (_) => Scaffold(
+            body: TrivialPoursuitLoggin(widget.buildMode, trivialMetaCache))));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
   void _launchQuestionGallery() {
     widget.audioPlayer.run();
-    final onPop = Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (_) => QuestionGallery(bm)));
+    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => QuestionGallery(widget.buildMode)));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
@@ -122,7 +116,7 @@ class _HomePageState extends State<_HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   GameIcon(_launchTrivialPoursuit),
-                  if (bm != BuildMode.production)
+                  if (widget.buildMode != BuildMode.production)
                     ElevatedButton(
                         onPressed: _launchQuestionGallery,
                         child: const Text("Galerie de questions")),
