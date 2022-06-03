@@ -5,8 +5,6 @@ package game
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"sort"
 	"time"
 
@@ -22,8 +20,6 @@ const NbCategories = int(nbCategories)
 
 // PlayerID identifies a player in the game
 type PlayerID = int
-
-var DebugLogger = log.New(os.Stdout, "game-debug:", log.LstdFlags)
 
 type WeigthedQuestions struct {
 	Questions []editor.Question
@@ -278,7 +274,6 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates MaybeUpdate, isGame
 		return updates, isGameOver, nil
 	case Ping:
 		// safely ignore the event
-		DebugLogger.Printf("PING event (from player %d): %s", event.Player, eventData.Info)
 		return nil, false, nil
 	}
 	return nil, false, fmt.Errorf("invalid client event %T", event.Event)

@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	WarningLogger  = log.New(os.Stdout, "trivial-poursuit-session:ERROR:", log.LstdFlags)
-	ProgressLogger = log.New(os.Stdout, "trivial-poursuit-session:INFO:", log.LstdFlags)
+	WarningLogger  = log.New(os.Stdout, "tv-session:ERROR:", 0)
+	ProgressLogger = log.New(os.Stdout, "tv-session:INFO:", 0)
 )
 
 var sessionTimeout = 12 * time.Hour

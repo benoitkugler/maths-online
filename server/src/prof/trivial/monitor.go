@@ -75,14 +75,13 @@ func (gs *gameSession) connectTeacher(ws *websocket.Conn) *teacherClient {
 
 	// start with the current summary for all running sessions
 	gs.lock.Lock()
-	defer gs.lock.Unlock()
-
 	for _, ga := range gs.games {
 		su := ga.Summary()
 		client.currentSummaries[su.ID] = su
 	}
 
 	gs.teacherClients[client] = true // register the client
+	gs.lock.Unlock()
 
 	client.conn.WriteJSON(client.socketData())
 

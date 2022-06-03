@@ -45,7 +45,6 @@ func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 }
 
 func TestConcurrentEvents(t *testing.T) {
-	game.DebugLogger.SetOutput(io.Discard)
 	// ProgressLogger.SetOutput(os.Stdout)
 
 	ct := NewGameController("testGame", questions, GameOptions{4, 0, true}, nil) // do not start a game
@@ -86,8 +85,6 @@ func TestConcurrentEvents(t *testing.T) {
 }
 
 func TestEvents(t *testing.T) {
-	game.DebugLogger.SetOutput(io.Discard)
-
 	ct := NewGameController("testGame", questions, GameOptions{4, time.Millisecond * 50, true}, nil)
 	go ct.StartLoop()
 

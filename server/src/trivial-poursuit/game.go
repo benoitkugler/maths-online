@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	WarningLogger  = log.New(os.Stdout, "trivial-poursuit-game:ERROR:", log.LstdFlags)
-	ProgressLogger = log.New(io.Discard, "trivial-poursuit-game:INFO:", log.LstdFlags)
+	WarningLogger  = log.New(os.Stdout, "tv-game:ERROR:", 0)
+	ProgressLogger = log.New(io.Discard, "tv-game:INFO:", 0)
 )
 
 var upgrader = websocket.Upgrader{
@@ -52,7 +52,8 @@ func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, play
 
 	ct.join <- client
 
-	isAccepted := <-client.isAccepted // wait for the controller to check the access
+	// wait for the controller to check the access
+	isAccepted := <-client.isAccepted
 	if !isAccepted {
 		ProgressLogger.Printf("Rejecting connection at %s", ct.ID)
 		// the game at this end point is not usable: close the connection with an error
@@ -267,7 +268,7 @@ func (gc *GameController) StartLoop() (Review, bool) {
 			//		for simplicity we considered this a new connection
 
 			gc.gameLock.Lock()
-			reconnection := client.PlayerID != -1 && gc.Game.Players[client.PlayerID] != nil
+			reconnection := client.PlayerID != -1 && gc.Game.Players[client.PlayerID] != nil && gc.Game.HasStarted()
 			gc.gameLock.Unlock()
 
 			if !reconnection { // fresh connection
