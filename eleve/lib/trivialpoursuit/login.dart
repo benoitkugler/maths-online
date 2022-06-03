@@ -69,7 +69,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     final uri =
         Uri.parse(widget.buildMode.serverURL("/trivial/game/setup", query: {
       sessionIDKey: code,
-      studentIDKey: widget.settings[studentIDKey],
+      studentIDKey: widget.settings.studentID,
       // send (optional) meta so that we may reconnect
       TrivialPoursuitController.gameMetaKey: widget.gameMetaCache[code] ?? "",
     }));
@@ -97,8 +97,8 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
       return;
     }
 
-    final student = GameAcces(widget.settings[studentIDKey] ?? "",
-        widget.settings[studentPseudoKey] ?? "", gameMeta);
+    final student = GameAcces(
+        widget.settings.studentID, widget.settings.studentPseudo, gameMeta);
 
     final route = Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/board"),

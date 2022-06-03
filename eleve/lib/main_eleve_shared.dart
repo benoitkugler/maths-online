@@ -7,6 +7,16 @@ import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart';
 
+Future<Audio> loadAudioFromSettings() async {
+  WidgetsFlutterBinding
+      .ensureInitialized(); // required to load the settings path
+
+  final audio = Audio();
+  final settings = await loadUserSettings();
+  audio.setSongs(settings.songs);
+  return audio;
+}
+
 class EleveApp extends StatefulWidget {
   final Audio audioPlayer;
   final BuildMode buildMode;
@@ -19,7 +29,7 @@ class EleveApp extends StatefulWidget {
 }
 
 class _EleveAppState extends State<EleveApp> {
-  UserSettings settings = {};
+  UserSettings settings = UserSettings();
 
   @override
   void initState() {
@@ -38,7 +48,16 @@ class _EleveAppState extends State<EleveApp> {
     final ct = widget.audioPlayer.playlist.toList();
     final onPop = Navigator.of(context)
         .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
-    onPop.then((_) => widget.audioPlayer.setSongs(ct));
+    onPop.then((_) async {
+      widget.audioPlayer.setSongs(ct);
+      settings.songs = ct;
+      await saveUserSettings(settings); // commit on disk
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        content: const Text("Playlist mise à jour."),
+      ));
+    });
   }
 
   void _showAppSettings(BuildContext context) async {

@@ -10,14 +10,11 @@ void main() {
   });
 
   test('settings ...', () async {
-    await loadUserSettings();
-  });
-
-  test('settings ...', () async {
-    final settings = {"key": "value", "id": "789"};
+    final settings = UserSettings(studentID: "msùlsùd", songs: [4, 56]);
     await saveUserSettings(settings);
 
     final settings2 = await loadUserSettings();
-    expect(mapEquals(settings, settings2), equals(true));
+    expect(settings.studentID, equals(settings2.studentID));
+    expect(listEquals(settings.songs, settings2.songs), equals(true));
   });
 }

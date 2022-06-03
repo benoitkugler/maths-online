@@ -6,7 +6,40 @@ import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-typedef UserSettings = Map<String, String>;
+const studentPseudoKey = "client-pseudo";
+const studentIDKey = "client-id";
+
+class UserSettings {
+  String studentPseudo;
+  String studentID;
+  List<int> songs;
+
+  UserSettings(
+      {this.studentPseudo = "",
+      this.studentID = "",
+      this.songs = const [0, 1]});
+
+  String toJson() {
+    return jsonEncode({
+      studentPseudoKey: studentPseudo,
+      studentIDKey: studentID,
+      "songs": songs
+    });
+  }
+
+  factory UserSettings.fromJson(String source) {
+    final dict = jsonDecode(source) as Map<String, dynamic>;
+    var songs = [0, 1];
+    if (dict["songs"] is List) {
+      songs = (dict["songs"] as List<dynamic>).map((e) => e as int).toList();
+    }
+    return UserSettings(
+      studentPseudo: dict[studentPseudoKey] as String,
+      studentID: dict[studentIDKey] as String,
+      songs: songs,
+    );
+  }
+}
 
 class Settings extends StatefulWidget {
   const Settings({Key? key}) : super(key: key);
@@ -15,11 +48,8 @@ class Settings extends StatefulWidget {
   State<Settings> createState() => _SettingsState();
 }
 
-const studentPseudoKey = "client-pseudo";
-const studentIDKey = "client-id";
-
 class _SettingsState extends State<Settings> {
-  UserSettings settings = {};
+  UserSettings settings = UserSettings();
   String version = "";
   var pseudoController = TextEditingController();
 
@@ -33,7 +63,7 @@ class _SettingsState extends State<Settings> {
   void _loadUserSettings() async {
     settings = await loadUserSettings();
     setState(() {
-      pseudoController.text = settings[studentPseudoKey] ?? "";
+      pseudoController.text = settings.studentPseudo;
     });
   }
 
@@ -45,7 +75,7 @@ class _SettingsState extends State<Settings> {
   }
 
   void _saveUserSettings() async {
-    settings[studentPseudoKey] = pseudoController.text;
+    settings.studentPseudo = pseudoController.text;
     await saveUserSettings(settings);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -122,18 +152,17 @@ Future<UserSettings> loadUserSettings() async {
   try {
     final file = await _settingFile();
     final content = await file.readAsString();
-    final dict = jsonDecode(content) as Map<String, dynamic>;
-    return dict.map((key, value) => MapEntry(key, value as String));
+    return UserSettings.fromJson(content);
   } catch (e) {
     Logger.root.info("loading settings: $e");
-    return {};
+    return UserSettings();
   }
 }
 
 Future<void> saveUserSettings(UserSettings settings) async {
   try {
     final file = await _settingFile();
-    await file.writeAsString(jsonEncode(settings));
+    await file.writeAsString(settings.toJson());
     Logger.root.info("settings saved in ${file.path}");
   } catch (e) {
     Logger.root.info("saving settings: $e");
