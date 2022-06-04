@@ -91,7 +91,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
     }
   }
 
-  void _showGameBoard(String gameMeta, String code) {
+  void _showGameBoard(String code, String gameMeta) {
     final student = GameAcces(
         widget.settings.studentID, widget.settings.studentPseudo, gameMeta);
 
