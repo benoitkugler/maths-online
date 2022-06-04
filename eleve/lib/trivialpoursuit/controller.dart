@@ -14,7 +14,6 @@ import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:eleve/trivialpoursuit/question_result.dart';
 import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
-import 'package:is_lock_screen/is_lock_screen.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class GameAcces {
@@ -102,25 +101,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    super.didChangeAppLifecycleState(state);
-
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-    if (!isIOS) {
-      return;
-    }
-
-    // on iOS, the connection is closed : update the UI accordingly
-    // the student will have to reconnect
-    if (state == AppLifecycleState.inactive) {
-      final isLock = await isLockScreen();
-      if (isLock != null && isLock) {
-        popRouteToHome();
-      }
-    }
-  }
-
-  @override
   void dispose() {
     if (widget.apiURL != "") {
       channel.sink.close(1000, "Bye bye");
@@ -139,11 +119,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.error,
-      content: const Text("Impossible d'accéder à la partie."),
+      content: const Text("Connection interrompue."),
     ));
     popRouteToHome();
-    // clean the cache on error
-    GameTerminatedNotification().dispatch(context);
   }
 
   void _onNetworkError(dynamic error) {
