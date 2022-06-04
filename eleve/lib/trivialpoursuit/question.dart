@@ -21,7 +21,7 @@ class QuestionRoute extends StatelessWidget {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text("Abandonner la question"),
-            content: const Text("Es-tu sur d'abandonner la question ?"),
+            content: const Text("Es-tu sûr d'abandonner la question ?"),
             actions: [
               TextButton(
                   child: const Text("Abandonner"),
