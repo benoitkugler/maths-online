@@ -14,8 +14,8 @@ import 'package:eleve/trivialpoursuit/question.dart';
 import 'package:eleve/trivialpoursuit/question_result.dart';
 import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:is_lock_screen/is_lock_screen.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class GameAcces {
   final String pseudo;
@@ -105,10 +105,16 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     super.didChangeAppLifecycleState(state);
 
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    if (!isIOS) {
+      return;
+    }
+
+    // on iOS, the connection is closed : update the UI accordingly
+    // the student will have to reconnect
     if (state == AppLifecycleState.inactive) {
       final isLock = await isLockScreen();
       if (isLock != null && isLock) {
-        // the connection is closed : update the UI accordingly
         popRouteToHome();
       }
     }

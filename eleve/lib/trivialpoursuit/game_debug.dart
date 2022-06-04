@@ -1,3 +1,4 @@
+import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 
 const updates = [
@@ -9,10 +10,10 @@ const updates = [
         // DiceThrow(2),
         // PossibleMoves("Katia", [1, 3, 7], 0),
         // Move([0, 1, 2, 3, 4, 5], 5),
-        // ShowQuestion("test", 60, Categorie.orange),
-        PlayerAnswerResults(
-            Categorie.orange, {0: PlayerAnswerResult(false, false)}),
-        PlayerTurn("Ben", 0)
+        ShowQuestion(60, Categorie.orange, 0, Question("Test", [])),
+        // PlayerAnswerResults(
+        //     Categorie.orange, {0: PlayerAnswerResult(false, false)}),
+        // PlayerTurn("Ben", 0)
         // GameEnd({
         //   0: [24, 49]
         // }, [
