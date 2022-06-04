@@ -8,20 +8,17 @@ import (
 )
 
 type ValueResolver interface {
-	resolve(v Variable) (float64, bool)
+	resolve(v Variable) (*Expression, bool)
 }
 
 var _ ValueResolver = Variables{}
 
 // Variables maps variables to a chosen value.
-type Variables map[Variable]ResolvedVariable
+type Variables map[Variable]*Expression
 
-func (vrs Variables) resolve(v Variable) (float64, bool) {
+func (vrs Variables) resolve(v Variable) (*Expression, bool) {
 	value, ok := vrs[v]
-	if !ok || value.IsVariable {
-		return 0, false
-	}
-	return value.N, ok
+	return value, ok
 }
 
 type ErrMissingVariable struct {
@@ -53,11 +50,11 @@ type singleVarResolver struct {
 	value float64
 }
 
-func (res singleVarResolver) resolve(v Variable) (float64, bool) {
+func (res singleVarResolver) resolve(v Variable) (*Expression, bool) {
 	if res.v != v {
-		return 0, false
+		return nil, false
 	}
-	return res.value, true
+	return NewNb(res.value), true
 }
 
 type FunctionExpr struct {
@@ -132,89 +129,94 @@ func isFloatExceedingPrecision(v float64) bool {
 // `ErrMissingVariable` is returned.
 // If the expression is not valid, like in randInt(2; -2), `ErrInvalidExpr` is returned
 func (expr *Expression) Evaluate(bindings ValueResolver) (float64, error) {
+	r, err := expr.evalRat(bindings)
+	return r.eval(), err
+}
+
+func (expr *Expression) evalRat(bindings ValueResolver) (rat, error) {
 	var (
-		left, right float64 // 0 is a valid default value
+		left, right = newRat(0), newRat(0) // 0 is a valid default value
 		err         error
 	)
 	if expr.left != nil {
-		left, err = expr.left.Evaluate(bindings)
+		left, err = expr.left.evalRat(bindings)
 		if err != nil {
-			return 0, err
+			return rat{}, err
 		}
 	}
 	if expr.right != nil {
-		right, err = expr.right.Evaluate(bindings)
+		right, err = expr.right.evalRat(bindings)
 		if err != nil {
-			return 0, err
+			return rat{}, err
 		}
 	}
 	return expr.atom.eval(left, right, bindings)
 }
 
-func (op operator) eval(left, right float64, _ ValueResolver) (float64, error) {
+func (op operator) eval(left, right rat, _ ValueResolver) (rat, error) {
 	return op.evaluate(left, right), nil
 }
 
-func (op operator) evaluate(left, right float64) float64 {
+func (op operator) evaluate(left, right rat) rat {
 	// 0 is fine as default value for + and -
 	// the other have mandatory left operands
 	switch op {
 	case plus:
-		return left + right
+		return sumRat(left, right)
 	case minus:
-		return left - right
+		return minusRat(left, right)
 	case mult:
-		return left * right
+		return multRat(left, right)
 	case div:
-		return left / right
+		return divRat(left, right)
 	case mod:
-		leftInt, leftIsInt := isInt(left)
-		rightInt, rightIsInt := isInt(right)
+		leftInt, leftIsInt := isInt(left.eval())
+		rightInt, rightIsInt := isInt(right.eval())
 		if !(leftIsInt && rightIsInt) {
-			return 0
+			return newRat(0)
 		}
-		return float64(leftInt % rightInt)
+		return newRat(float64(leftInt % rightInt))
 	case rem:
-		leftInt, leftIsInt := isInt(left)
-		rightInt, rightIsInt := isInt(right)
+		leftInt, leftIsInt := isInt(left.eval())
+		rightInt, rightIsInt := isInt(right.eval())
 		if !(leftIsInt && rightIsInt) {
-			return 0
+			return newRat(0)
 		}
-		return float64(leftInt / rightInt)
+		return newRat(float64(leftInt / rightInt))
 	case pow:
-		return math.Pow(left, right)
+		return powRat(left, right.eval())
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
 }
 
-func (c constant) eval(_, _ float64, _ ValueResolver) (float64, error) {
+func (c constant) eval(_, _ rat, _ ValueResolver) (rat, error) {
 	switch c {
 	case piConstant:
-		return math.Pi, nil
+		return newRat(math.Pi), nil
 	case eConstant:
-		return math.E, nil
+		return newRat(math.E), nil
 	default:
 		panic(exhaustiveConstantSwitch)
 	}
 }
 
-func (v Number) eval(_, _ float64, _ ValueResolver) (float64, error) { return float64(v), nil }
+func (v Number) eval(_, _ rat, _ ValueResolver) (rat, error) { return newRat(float64(v)), nil }
 
-func (va Variable) eval(_, _ float64, b ValueResolver) (float64, error) {
+func (va Variable) eval(_, _ rat, b ValueResolver) (rat, error) {
 	if b == nil {
-		return 0, ErrMissingVariable{Missing: va}
+		return rat{}, ErrMissingVariable{Missing: va}
 	}
 
 	out, has := b.resolve(va)
 	if !has {
-		return 0, ErrMissingVariable{Missing: va}
+		return rat{}, ErrMissingVariable{Missing: va}
 	}
-	return out, nil
+	return out.evalRat(b)
 }
 
-func (rv randVariable) eval(_, _ float64, _ ValueResolver) (float64, error) {
-	return 0, nil
+func (rv randVariable) eval(_, _ rat, _ ValueResolver) (rat, error) {
+	return newRat(0), nil
 }
 
 func roundTo(v float64, digits int) float64 {
@@ -222,54 +224,54 @@ func roundTo(v float64, digits int) float64 {
 	return math.Round(v*exp) / exp
 }
 
-func (round roundFn) eval(_, right float64, _ ValueResolver) (float64, error) {
-	return roundTo(right, round.nbDigits), nil
+func (round roundFn) eval(_, right rat, _ ValueResolver) (rat, error) {
+	return newRat(roundTo(right.eval(), round.nbDigits)), nil
 }
 
-func (fn function) eval(_, right float64, _ ValueResolver) (float64, error) {
-	arg := right
+func (fn function) eval(_, right rat, _ ValueResolver) (rat, error) {
+	arg := right.eval()
 	switch fn {
 	case logFn:
-		return math.Log(arg), nil
+		return newRat(math.Log(arg)), nil
 	case expFn:
-		return math.Exp(arg), nil
+		return newRat(math.Exp(arg)), nil
 	case sinFn:
-		return math.Sin(arg), nil
+		return newRat(math.Sin(arg)), nil
 	case cosFn:
-		return math.Cos(arg), nil
+		return newRat(math.Cos(arg)), nil
 	case tanFn:
-		return math.Tan(arg), nil
+		return newRat(math.Tan(arg)), nil
 	case asinFn:
-		return math.Asin(arg), nil
+		return newRat(math.Asin(arg)), nil
 	case acosFn:
-		return math.Acos(arg), nil
+		return newRat(math.Acos(arg)), nil
 	case atanFn:
-		return math.Atan(arg), nil
+		return newRat(math.Atan(arg)), nil
 	case absFn:
-		return math.Abs(arg), nil
+		return newRat(math.Abs(arg)), nil
 	case sqrtFn:
-		return math.Sqrt(arg), nil
+		return newRat(math.Sqrt(arg)), nil
 	case sgnFn:
 		if arg > 0 {
-			return 1, nil
+			return newRat(1), nil
 		} else if arg < 0 {
-			return -1, nil
+			return newRat(-1), nil
 		}
-		return 0, nil
+		return newRat(0), nil
 	case isZeroFn:
 		if arg == 0 {
-			return 1, nil
+			return newRat(1), nil
 		}
-		return 0, nil
+		return newRat(0), nil
 	case isPrimeFn:
 		argInt, isInt := isInt(arg)
 		if !isInt {
-			return 0, nil
+			return newRat(0), nil
 		}
 		if isPrime(argInt) {
-			return 1, nil
+			return newRat(1), nil
 		}
-		return 0, nil
+		return newRat(0), nil
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -334,49 +336,157 @@ func minMax(args []*Expression, res ValueResolver) (float64, float64, error) {
 }
 
 // return a random number
-func (r specialFunctionA) eval(_, _ float64, res ValueResolver) (float64, error) {
+func (r specialFunctionA) eval(_, _ rat, res ValueResolver) (rat, error) {
 	switch r.kind {
 	case randInt:
 		start, end, err := r.startEnd(res)
 		if err != nil {
-			return 0, err
+			return rat{}, err
 		}
 
 		err = r.validateStartEnd(start, end, 0)
 		if err != nil {
-			return 0, err
+			return rat{}, err
 		}
-		return start + float64(rand.Intn(int(end-start)+1)), nil
+		return newRat(start + float64(rand.Intn(int(end-start)+1))), nil
 	case randPrime:
 		start, end, err := r.startEnd(res)
 		if err != nil {
-			return 0, err
+			return newRat(0), err
 		}
 
 		err = r.validateStartEnd(start, end, 0)
 		if err != nil {
-			return 0, err
+			return newRat(0), err
 		}
 
-		return float64(generateRandPrime(int(start), int(end))), nil
+		return newRat(float64(generateRandPrime(int(start), int(end)))), nil
 	case randChoice:
 		index := rand.Intn(len(r.args))
-		return r.args[index].Evaluate(res)
+		return r.args[index].evalRat(res)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
-		return float64(decimalDividors[index]), nil
+		return newRat(float64(decimalDividors[index])), nil
 	case minFn:
 		min, _, err := minMax(r.args, res)
-		return min, err
+		return newRat(min), err
 	case maxFn:
 		_, max, err := minMax(r.args, res)
-		return max, err
+		return newRat(max), err
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
 }
 
 // --------------------------- numbers computations ---------------------------
+
+// greatest common divisor (GCD) via Euclidean algorithm
+func gcd(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+// find Least Common Multiple (LCM) via GCD
+func lcm(a, b int) int {
+	return a * b / gcd(a, b)
+}
+
+// rat has the form of a rational number p/q,
+// but no assumption is actually made on the nature of p and q
+// a real x (non rational number) is represented by rat{p:x, q:1}
+type rat struct {
+	p float64
+	q float64
+}
+
+func newRat(v float64) rat { return rat{p: v, q: 1} }
+
+func (r rat) eval() float64 { return r.p / r.q }
+
+// return the better representation for the "rational", after reducing
+// 8 / 1 -> 8
+// 4 / 3 -> 4/3
+// 3/4 -> 0.75
+// 2.4 / 2 -> 1.2
+func (r rat) toExpr() *Expression {
+	r.reduce()
+
+	if r.q == 1 || r.p == 0 {
+		return newNb(r.p)
+	}
+
+	// test if the evaluation is a decimal number
+	val := r.eval()
+	if !isFloatExceedingPrecision(val) {
+		return newNb(val)
+	}
+
+	// else for integers, return a fraction
+	_, ok1 := isInt(r.p)
+	_, ok2 := isInt(r.q)
+	if ok1 && ok2 {
+		return &Expression{atom: div, left: newNb(r.p), right: newNb(r.q)}
+	}
+
+	// general case : evaluate
+	return newNb(val)
+}
+
+// for integers number, update `r` to be in irreductible form
+func (r *rat) reduce() {
+	num, ok1 := isInt(r.p)
+	den, ok2 := isInt(r.q)
+	if ok1 && ok2 {
+		// simplify integer denominators
+		// commonDen = den1 * den2 / gcd()
+		g := float64(gcd(num, den))
+		r.p /= g
+		r.q /= g
+	}
+
+	// simplify the minus
+	if r.q < 0 {
+		r.p = -r.p
+		r.q = -r.q
+	}
+}
+
+func sumRat(r1, r2 rat) rat {
+	den1, ok1 := isInt(r1.q)
+	den2, ok2 := isInt(r2.q)
+	if ok1 && ok2 {
+		// simplify integer denominators
+		// commonDen = den1 * den2 / gcd()
+		commonDen := float64(lcm(den1, den2))
+		factor1 := commonDen / r1.q
+		factor2 := commonDen / r2.q
+		return rat{p: r1.p*factor1 + r2.p*factor2, q: commonDen}
+	}
+	// general case: do not simplify
+	return rat{p: r1.p*r2.q + r2.p*r1.q, q: r1.q * r2.q}
+}
+
+// return r1 - r2
+func minusRat(r1, r2 rat) rat {
+	return sumRat(r1, rat{p: -r2.p, q: r2.q})
+}
+
+func multRat(r1, r2 rat) rat {
+	return rat{p: r1.p * r2.p, q: r1.q * r2.q}
+}
+
+// return r1 / r2
+func divRat(r1, r2 rat) rat {
+	return rat{p: r1.p * r2.q, q: r1.q * r2.p}
+}
+
+func powRat(r rat, pow float64) rat {
+	return rat{p: math.Pow(r.p, pow), q: math.Pow(r.q, pow)}
+}
 
 // performs some basic simplifications to convert expressions to numbers
 // examples :
@@ -407,7 +517,7 @@ func (expr *Expression) simplifyNumbers() {
 	leftNumber, leftOK := left.atom.(Number)
 	rightNumber, rightOK := right.atom.(Number)
 	if leftOK && rightOK {
-		res := op.evaluate(float64(leftNumber), float64(rightNumber))
-		*expr = Expression{atom: Number(res)}
+		res := op.evaluate(newRat(float64(leftNumber)), newRat(float64(rightNumber)))
+		*expr = *res.toExpr()
 	}
 }

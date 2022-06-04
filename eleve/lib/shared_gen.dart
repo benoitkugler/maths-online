@@ -64,42 +64,10 @@ JSON variableToJson(Variable item) {
   return {"Indice": stringToJson(item.indice), "Name": intToJson(item.name)};
 }
 
-double doubleFromJson(dynamic json) => (json as num).toDouble();
-
-double doubleToJson(double item) => item;
-
-// github.com/benoitkugler/maths-online/maths/expression.ResolvedVariable
-class ResolvedVariable {
-  final Variable v;
-  final double n;
-  final bool isVariable;
-
-  const ResolvedVariable(this.v, this.n, this.isVariable);
-
-  @override
-  String toString() {
-    return "ResolvedVariable($v, $n, $isVariable)";
-  }
-}
-
-ResolvedVariable resolvedVariableFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return ResolvedVariable(variableFromJson(json['V']),
-      doubleFromJson(json['N']), boolFromJson(json['IsVariable']));
-}
-
-JSON resolvedVariableToJson(ResolvedVariable item) {
-  return {
-    "V": variableToJson(item.v),
-    "N": doubleToJson(item.n),
-    "IsVariable": boolToJson(item.isVariable)
-  };
-}
-
 // github.com/benoitkugler/maths-online/prof/editor.VarEntry
 class VarEntry {
   final Variable variable;
-  final ResolvedVariable resolved;
+  final String resolved;
 
   const VarEntry(this.variable, this.resolved);
 
@@ -111,14 +79,14 @@ class VarEntry {
 
 VarEntry varEntryFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return VarEntry(variableFromJson(json['Variable']),
-      resolvedVariableFromJson(json['Resolved']));
+  return VarEntry(
+      variableFromJson(json['Variable']), stringFromJson(json['Resolved']));
 }
 
 JSON varEntryToJson(VarEntry item) {
   return {
     "Variable": variableToJson(item.variable),
-    "Resolved": resolvedVariableToJson(item.resolved)
+    "Resolved": stringToJson(item.resolved)
   };
 }
 

@@ -26,7 +26,10 @@ type Expression struct {
 	atom        atom
 }
 
-func (expr *Expression) serialize() string {
+// Serialize returns the expression as text.
+// It is meant to be used for internal exchange; see
+// String() and AsLaTex() for display.
+func (expr *Expression) Serialize() string {
 	if expr == nil {
 		return ""
 	}
@@ -73,7 +76,11 @@ type atom interface {
 	serialize(left, right *Expression) string
 
 	lexicographicOrder() int // smaller is first; unique among concrete types
-	eval(left, right float64, context ValueResolver) (float64, error)
+
+	// return a value is possible as rational, so that
+	// it may be simplified by subsequent operations
+	eval(left, right rat, context ValueResolver) (rat, error)
+
 	asLaTeX(left, right *Expression, res LaTeXResolver) string
 }
 
@@ -97,7 +104,7 @@ func (rd roundFn) String() string {
 }
 
 func (rd roundFn) serialize(_, right *Expression) string {
-	return fmt.Sprintf("round(%s ; %d)", right.serialize(), rd.nbDigits)
+	return fmt.Sprintf("round(%s ; %d)", right.Serialize(), rd.nbDigits)
 }
 
 // randVariable is a special atom, randomly choosing a variable
@@ -206,7 +213,7 @@ func (fn function) String() string {
 }
 
 func (fn function) serialize(_, right *Expression) string {
-	return fn.String() + "(" + right.serialize() + ")"
+	return fn.String() + "(" + right.Serialize() + ")"
 }
 
 // Variable is a (one letter) mathematical variable,
@@ -228,9 +235,9 @@ func NewVar(x rune) Variable { return Variable{Name: x} }
 // NewVarI is a convenience constructor supporting indices
 func NewVarI(x rune, indice string) Variable { return Variable{Name: x, Indice: indice} }
 
-func newVarExpr(r rune) *Expression {
-	return &Expression{atom: NewVar(r)}
-}
+func NewVarExpr(v Variable) *Expression { return &Expression{atom: v} }
+
+func newVarExpr(r rune) *Expression { return NewVarExpr(NewVar(r)) }
 
 func (v Variable) String() string {
 	// we have to output valid expression syntax
@@ -268,15 +275,17 @@ func (c constant) serialize(_, _ *Expression) string { return c.String() }
 
 type Number float64
 
+func newNb(v float64) *Expression { return &Expression{atom: Number(v)} }
+
 // NewNb returns the one element expression containing
 // the given number.
 // For consistency with the parser, negative numbers are actually
 // returned as -(...)
 func NewNb(v float64) *Expression {
 	if v < 0 {
-		return &Expression{atom: minus, right: NewNb(-v)}
+		return &Expression{atom: minus, right: newNb(-v)}
 	}
-	return &Expression{atom: Number(v)}
+	return newNb(v)
 }
 
 func (v Number) String() string {

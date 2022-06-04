@@ -295,13 +295,13 @@ func TestExpression_Substitute(t *testing.T) {
 		want string
 	}{
 		{"a + b", Variables{}, "a+b"},
-		{"a + b", Variables{NewVar('a'): NewRN(4)}, "4+b"},
-		{"a + b / 2*a", Variables{NewVar('a'): NewRN(4)}, "4+b/2*4"},
-		{"a + b", Variables{NewVar('a'): NewRN(4), NewVar('b'): NewRN(5)}, "4+5"},
+		{"a + b", Variables{NewVar('a'): NewNb(4)}, "4+b"},
+		{"a + b / 2*a", Variables{NewVar('a'): NewNb(4)}, "4+b/2*4"},
+		{"a + b", Variables{NewVar('a'): NewNb(4), NewVar('b'): NewNb(5)}, "4+5"},
 		{
 			"P + 2 + x", Variables{
-				NewVar('P'): NewRV(NewVar('A')),
-				NewVar('x'): NewRN(3),
+				NewVar('P'): newVarExpr('A'),
+				NewVar('x'): NewNb(3),
 			}, "A+2+3",
 		},
 	}
@@ -336,7 +336,7 @@ func TestExpressionNegativeParams(t *testing.T) {
 	}
 
 	e = mustParse(t, "m*x + p")
-	vars = Variables{NewVar('m'): NewRN(1), NewVar('p'): NewRN(-0.4)}
+	vars = Variables{NewVar('m'): NewNb(1), NewVar('p'): NewNb(-0.4)}
 	e.Substitute(vars)
 
 	e2 = mustParse(t, "x - 0.4")

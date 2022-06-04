@@ -26,20 +26,25 @@ func TestRandomVariables_instantiate(t *testing.T) {
 			map[Variable]string{NewVar('a'): "b + 1"}, nil, true,
 		},
 		{
-			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): " 2 * 3"}, Variables{NewVar('a'): NewRN(7), NewVar('b'): NewRN(6)}, false,
+			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): " 2 * 3"}, Variables{NewVar('a'): NewNb(7), NewVar('b'): NewNb(6)}, false,
 		},
 		{
-			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): " c+1", NewVar('c'): "8"}, Variables{NewVar('a'): NewRN(10), NewVar('b'): NewRN(9), NewVar('c'): NewRN(8)}, false,
+			map[Variable]string{NewVar('a'): "b + 1", NewVar('b'): " c+1", NewVar('c'): "8"}, Variables{NewVar('a'): NewNb(10), NewVar('b'): NewNb(9), NewVar('c'): NewNb(8)}, false,
 		},
 		{
-			map[Variable]string{NewVar('a'): "0*randInt(1;3)"}, Variables{NewVar('a'): NewRN(0)}, false,
+			map[Variable]string{NewVar('a'): "0*randInt(1;3)"}, Variables{NewVar('a'): NewNb(0)}, false,
 		},
 		{
-			map[Variable]string{NewVar('a'): "randInt(1;1)", NewVar('b'): "2*a"}, Variables{NewVar('a'): NewRN(1), NewVar('b'): NewRN(2)}, false,
+			map[Variable]string{NewVar('a'): "randInt(1;1)", NewVar('b'): "2*a"}, Variables{NewVar('a'): NewNb(1), NewVar('b'): NewNb(2)}, false,
 		},
 		{
 			map[Variable]string{NewVar('a'): "randLetter(A)", NewVar('b'): "randInt(1;1)"},
-			Variables{NewVar('a'): NewRV(NewVar('A')), NewVar('b'): NewRN(1)},
+			Variables{NewVar('a'): newVarExpr('A'), NewVar('b'): NewNb(1)},
+			false,
+		},
+		{
+			map[Variable]string{NewVar('a'): "7/3"},
+			Variables{NewVar('a'): &Expression{atom: div, left: newNb(7), right: newNb(3)}},
 			false,
 		},
 	}
@@ -75,10 +80,11 @@ func TestRandLetter(t *testing.T) {
 			t.Fatal(err)
 		}
 		resolved := vars[NewVar('P')]
-		if !resolved.IsVariable {
+		asVar, isVar := resolved.atom.(Variable)
+		if !isVar {
 			t.Fatal(resolved)
 		}
-		if n := resolved.V.Name; !(n == 'A' || n == 'B' || n == 'C') {
+		if n := asVar.Name; !(n == 'A' || n == 'B' || n == 'C') {
 			t.Fatal(n)
 		}
 	}
@@ -94,11 +100,11 @@ func TestRandomVariables_range(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if values[NewVar('a')].N != -values[NewVar('b')].N {
+		if values[NewVar('a')].MustEvaluate(nil) != -values[NewVar('b')].MustEvaluate(nil) {
 			t.Fatal(values)
 		}
 
-		if a := values[NewVar('a')].N; a < 3 || a > 30 {
+		if a := values[NewVar('a')].MustEvaluate(nil); a < 3 || a > 30 {
 			t.Fatal(a)
 		}
 
@@ -110,10 +116,10 @@ func TestRandomVariables_range(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if a := values[NewVar('a')].N; a < 1 || a > 10 {
+		if a := values[NewVar('a')].MustEvaluate(nil); a < 1 || a > 10 {
 			t.Fatal(a)
 		}
-		if a, b := values[NewVar('a')].N, values[NewVar('b')].N; math.Abs(a) != math.Abs(b) {
+		if a, b := values[NewVar('a')].MustEvaluate(nil), values[NewVar('b')].MustEvaluate(nil); math.Abs(a) != math.Abs(b) {
 			t.Fatal(a, b)
 		}
 	}
