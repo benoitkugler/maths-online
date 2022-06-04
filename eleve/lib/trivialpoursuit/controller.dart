@@ -15,6 +15,7 @@ import 'package:eleve/trivialpoursuit/question_result.dart';
 import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:is_lock_screen/is_lock_screen.dart';
 
 class GameAcces {
   final String pseudo;
@@ -44,7 +45,8 @@ class TrivialPoursuitController extends StatefulWidget {
       _TrivialPoursuitControllerState();
 }
 
-class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
+class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
+    with WidgetsBindingObserver {
   late WebSocketChannel channel;
   late Timer _keepAliveTimmer;
 
@@ -86,6 +88,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
       });
     }
 
+    WidgetsBinding.instance.addObserver(this);
+
     super.initState();
   }
 
@@ -98,25 +102,48 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.inactive) {
+      final isLock = await isLockScreen();
+      if (isLock != null && isLock) {
+        // the connection is closed : update the UI accordingly
+        popRouteToHome();
+      }
+    }
+  }
+
+  @override
   void dispose() {
     if (widget.apiURL != "") {
       channel.sink.close(1000, "Bye bye");
       _keepAliveTimmer.cancel();
     }
     diceRollAnimation = null;
+
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void _onServerDone() {
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.error,
       content: const Text("Impossible d'accéder à la partie."),
     ));
     popRouteToHome();
+    // clean the cache on error
+    GameTerminatedNotification().dispatch(context);
   }
 
   void _onNetworkError(dynamic error) {
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.error,
