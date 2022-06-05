@@ -111,6 +111,8 @@ func scanOneStudent(row scanner) (Student, error) {
 		&s.Id,
 		&s.Name,
 		&s.Surname,
+		&s.TrivialSuccess,
+		&s.IsClientAttached,
 	)
 	return s, err
 }
@@ -180,24 +182,24 @@ func ScanStudents(rs *sql.Rows) (Students, error) {
 // Insert Student in the database and returns the item with id filled.
 func (item Student) Insert(tx DB) (out Student, err error) {
 	row := tx.QueryRow(`INSERT INTO students (
-		Name,Surname
+		Name,Surname,TrivialSuccess,IsClientAttached
 		) VALUES (
-		$1,$2
+		$1,$2,$3,$4
 		) RETURNING 
-		Id,Name,Surname;
-		`, item.Name, item.Surname)
+		Id,Name,Surname,TrivialSuccess,IsClientAttached;
+		`, item.Name, item.Surname, item.TrivialSuccess, item.IsClientAttached)
 	return ScanStudent(row)
 }
 
 // Update Student in the database and returns the new version.
 func (item Student) Update(tx DB) (out Student, err error) {
 	row := tx.QueryRow(`UPDATE students SET (
-		Name,Surname
+		Name,Surname,TrivialSuccess,IsClientAttached
 		) = (
-		$2,$3
+		$2,$3,$4,$5
 		) WHERE id = $1 RETURNING 
-		Id,Name,Surname;
-		`, item.Id, item.Name, item.Surname)
+		Id,Name,Surname,TrivialSuccess,IsClientAttached;
+		`, item.Id, item.Name, item.Surname, item.TrivialSuccess, item.IsClientAttached)
 	return ScanStudent(row)
 }
 

@@ -40,7 +40,7 @@ func WebsocketError(ws *websocket.Conn, err error) {
 }
 
 func SQLError(err error) error {
-	return fmt.Errorf("SQL request failed : %s", err)
+	return fmt.Errorf("La requête SQL a échoué : %s", err)
 }
 
 // QueryParamInt64 parse the query param `name` to an int64

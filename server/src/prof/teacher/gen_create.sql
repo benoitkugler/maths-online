@@ -5,6 +5,11 @@ CREATE TABLE classrooms (
     name varchar NOT NULL
 );
 
+CREATE TABLE student_classrooms (
+    id_student integer NOT NULL,
+    id_classroom integer NOT NULL
+);
+
 CREATE TABLE teachers (
     id serial PRIMARY KEY,
     mail varchar NOT NULL,
@@ -15,6 +20,15 @@ CREATE TABLE teachers (
 ALTER TABLE classrooms
     ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
 
+ALTER TABLE student_classrooms
+    ADD FOREIGN KEY (id_student) REFERENCES students ON DELETE CASCADE;
+
+ALTER TABLE student_classrooms
+    ADD FOREIGN KEY (id_classroom) REFERENCES classrooms ON DELETE CASCADE;
+
 ALTER TABLE teachers
     ADD UNIQUE (mail);
+
+ALTER TABLE student_classrooms
+    ADD UNIQUE (is_student);
 

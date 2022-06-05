@@ -27,6 +27,13 @@ func randClassroom() Classroom {
 	}
 }
 
+func randStudentClassroom() StudentClassroom {
+	return StudentClassroom{
+		IdStudent:   randint64(),
+		IdClassroom: randint64(),
+	}
+}
+
 func randuint8() uint8 {
 	return uint8(rand.Intn(1000000))
 }

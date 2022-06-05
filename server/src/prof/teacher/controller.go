@@ -13,6 +13,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var accessForbidden = errors.New("ressource access forbidden")
+
 // Controller provides the route handling teacher inscription,
 // connection and settings.
 type Controller struct {
@@ -22,16 +24,19 @@ type Controller struct {
 	host string // used for links
 
 	admin Teacher // loaded at creation
+
+	classCodes *classroomsCode
 }
 
 // NewController return a new controller.
 // `LoadAdminTeacher` should be called once.
 func NewController(db *sql.DB, smtp pass.SMTP, key pass.Encrypter, host string) *Controller {
 	return &Controller{
-		db:   db,
-		key:  key,
-		smtp: smtp,
-		host: host,
+		db:         db,
+		key:        key,
+		smtp:       smtp,
+		host:       host,
+		classCodes: &classroomsCode{codes: make(map[string]int64)},
 	}
 }
 

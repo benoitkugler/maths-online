@@ -2,6 +2,8 @@
 CREATE TABLE students (
     Id serial PRIMARY KEY,
     Name varchar NOT NULL,
-    Surname varchar NOT NULL
+    Surname varchar NOT NULL,
+    TrivialSuccess integer NOT NULL,
+    IsClientAttached boolean NOT NULL
 );
 
