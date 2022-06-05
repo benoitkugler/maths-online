@@ -297,7 +297,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
         state = GameState(state.players, tile, state.player);
       });
 
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 800));
     }
   }
 

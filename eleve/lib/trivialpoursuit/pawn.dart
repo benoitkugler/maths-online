@@ -15,6 +15,7 @@ class PawnImage extends StatelessWidget {
       left: center.dx - size / 2,
       width: size,
       height: size,
+      curve: Curves.easeIn,
       child: CustomPaint(
         size: Size(size, size),
         painter: _PawnPainter(),
