@@ -123,12 +123,20 @@ class Board extends StatelessWidget {
       }
     }
 
-    return SizedBox.square(
-        dimension: sideLength,
-        child: Stack(
-          children: // place highligths over regular
-              regular + highligthed + [PawnImage(center, sideLength * 0.05)],
-        ));
+    return Container(
+      decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [
+        BoxShadow(
+            color: Colors.white.withOpacity(0.4),
+            blurRadius: 5,
+            spreadRadius: 2)
+      ]),
+      child: SizedBox.square(
+          dimension: sideLength,
+          child: Stack(
+            children: // place highligths over regular
+                regular + highligthed + [PawnImage(center, sideLength * 0.05)],
+          )),
+    );
   }
 }
 
