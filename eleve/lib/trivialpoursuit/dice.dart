@@ -59,7 +59,7 @@ class _DiceDots extends StatelessWidget {
 ///   - in animation
 ///   - static and enabled
 ///   - disabled
-class Dice extends StatelessWidget {
+class Dice extends StatefulWidget {
   /// [onTap] is ignored if [isDisabled] is true
   final void Function() onTap;
 
@@ -85,10 +85,50 @@ class Dice extends StatelessWidget {
     yield lastFace;
   }
 
-  double get faceSize => animation == null ? 60 : 80;
+  @override
+  State<Dice> createState() => _DiceState();
+}
+
+class _DiceState extends State<Dice> with SingleTickerProviderStateMixin {
+  double get faceSize => widget.animation == null ? 60 : 80;
+
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+    _animation = Tween(begin: 1.0, end: 20.0).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeIn))
+      ..addListener(() {
+        setState(() {});
+      });
+    if (!widget.isDisabled) {
+      _animationController.repeat(reverse: true);
+    }
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant Dice oldWidget) {
+    if (!widget.isDisabled) {
+      _animationController.repeat(reverse: true);
+    } else {
+      _animationController.reset();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // final w = AnimatedContainer(duration: duration)
     return SizedBox(
       // wrap the actual button into a box large enough to contain the animated version
       // so thaht the layout is not shaken
@@ -99,20 +139,23 @@ class Dice extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(vertical: 15),
           elevation: 2,
-          onPressed: isDisabled ? null : onTap,
+          onPressed: widget.isDisabled ? null : widget.onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             decoration: BoxDecoration(
-              color: isDisabled ? Colors.grey : Colors.white,
+              color: widget.isDisabled ? Colors.grey : Colors.white,
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
-                BoxShadow(color: shadow, blurRadius: 10),
+                BoxShadow(
+                    color: shadow,
+                    blurRadius: _animation.value,
+                    spreadRadius: _animation.value),
               ],
             ),
             width: faceSize,
             height: faceSize,
             child: StreamBuilder<Face>(
-                stream: animation,
+                stream: widget.animation,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     return _DiceDots(faceSize: faceSize, face: snapshot.data!);
@@ -127,9 +170,11 @@ class Dice extends StatelessWidget {
   }
 
   Color get shadow {
-    if (isDisabled) {
+    if (widget.isDisabled) {
       return Colors.blueGrey;
     }
-    return animation != null ? Colors.red : Colors.blue;
+    return widget.animation != null
+        ? Colors.red
+        : Color.fromARGB(255, 33, 243, 208);
   }
 }
