@@ -132,3 +132,23 @@ class MathTableCell extends StatelessWidget {
     );
   }
 }
+
+/// SubmitOnLeave will call `submit` if it looses focus.
+/// It should be used for keyboard entries, where the user
+/// will not always validate.
+class SubmitOnLeave extends StatelessWidget {
+  final void Function() submit;
+  final Widget child;
+  const SubmitOnLeave({required this.submit, required this.child, Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      onFocusChange: (getFocus) {
+        if (!getFocus) submit();
+      },
+      child: child,
+    );
+  }
+}

@@ -44,7 +44,7 @@ class NumberField extends StatelessWidget {
   final NumberController _controller;
   final bool outlined;
   final bool autofocus;
-  final void Function(String)? onSubmitted;
+  final void Function()? onSubmitted;
 
   const NumberField(this._color, this._controller,
       {Key? key,
@@ -59,43 +59,46 @@ class NumberField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
         width: 80,
-        child: TextField(
-          enabled: _controller.enabled,
-          onSubmitted: onSubmitted,
-          autofocus: autofocus,
-          controller: _controller.textController,
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
-            focusedBorder: outlined
-                ? OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: _color,
+        child: SubmitOnLeave(
+          submit: onSubmitted ?? () {},
+          child: TextField(
+            enabled: _controller.enabled,
+            onSubmitted: onSubmitted != null ? (_) => onSubmitted!() : null,
+            autofocus: autofocus,
+            controller: _controller.textController,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
+              focusedBorder: outlined
+                  ? OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _color,
+                      ),
+                    )
+                  : UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _color,
+                      ),
                     ),
-                  )
-                : UnderlineInputBorder(
-                    borderSide: BorderSide(
-                      color: _color,
-                    ),
-                  ),
-            border: outlined
-                ? OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: _color,
-                    ),
-                  )
-                : null,
-          ),
+              border: outlined
+                  ? OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _color,
+                      ),
+                    )
+                  : null,
+            ),
 
-          cursorColor: _color,
-          style: TextStyle(color: Colors.yellow.shade100),
-          textAlign: TextAlign.center,
-          textAlignVertical: TextAlignVertical.center,
-          keyboardType: const TextInputType.numberWithOptions(
-              signed: true, decimal: true),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9-,\.]')),
-          ], // Only numbers, minus, dot and comma can be entered
+            cursorColor: _color,
+            style: TextStyle(color: Colors.yellow.shade100),
+            textAlign: TextAlign.center,
+            textAlignVertical: TextAlignVertical.center,
+            keyboardType: const TextInputType.numberWithOptions(
+                signed: true, decimal: true),
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9-,\.]')),
+            ], // Only numbers, minus, dot and comma can be entered
+          ),
         ),
       ),
     );

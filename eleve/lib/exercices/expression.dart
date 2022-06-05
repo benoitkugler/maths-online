@@ -158,10 +158,8 @@ class _ExpressionFieldState extends State<ExpressionField> {
     return Container(
       width: width,
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Focus(
-        onFocusChange: (getFocus) {
-          if (!getFocus) _submit();
-        },
+      child: SubmitOnLeave(
+        submit: _submit,
         child: TextField(
           enabled: widget._controller.enabled,
           onSubmitted: (_) {

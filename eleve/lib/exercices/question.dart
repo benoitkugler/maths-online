@@ -62,6 +62,8 @@ class QuestionController {
     _fields.forEach((key, value) {
       _fields[key]!.setData(answers[key]!);
     });
+    // consider the user has answered, so that the validation is not blocked
+    _hasAnswered = true;
   }
 
   /// Walks throught the question content and creates the field controllers,
@@ -522,7 +524,7 @@ class QuestionW extends StatefulWidget {
   final bool blockOnSubmit;
 
   /// If [answer] is provided, the question controllers and fields
-  /// are filled using the answers given.
+  /// are filled using the answers given, and no input is required to valid.
   final Map<int, Answer>? answer;
 
   final String title;

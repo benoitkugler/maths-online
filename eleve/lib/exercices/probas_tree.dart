@@ -325,7 +325,7 @@ class _NodeState extends State<_Node> {
             child: Center(
               heightFactor: 2,
               child: NumberField(widget.color, cts[index], autofocus: true,
-                  onSubmitted: (_) {
+                  onSubmitted: () {
                 Navigator.of(context).pop();
                 setState(() {});
               }),
