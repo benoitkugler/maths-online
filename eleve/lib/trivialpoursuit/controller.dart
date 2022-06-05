@@ -69,6 +69,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   double pieGlowWidth = 10;
 
+  /// the last question shown, used to go back when displaying
+  /// the result page
+  ShowQuestion? lastQuestion;
+
   @override
   void initState() {
     if (widget.apiURL == "") {
@@ -216,6 +220,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   Future<void> _onPlayerTurn(PlayerTurn event) async {
+    // reset the last question
+    lastQuestion = null;
+
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -302,6 +309,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   Future<void> _onShowQuestion(ShowQuestion event) async {
+    lastQuestion = event;
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
       builder: (context) => QuestionRoute(
@@ -311,6 +319,24 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
           // do not close the page now, it is handled when receiving result
           _sendEvent(Answer(a.data));
         },
+      ),
+    ));
+  }
+
+  void _showLastQuestion() {
+    if (lastQuestion == null) {
+      return;
+    }
+
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      settings: const RouteSettings(name: "/last-question"),
+      builder: (context) => QuestionRoute(
+        widget.buildMode,
+        lastQuestion!,
+        (_) {
+          Navigator.of(context).pop();
+        },
+        readonly: true,
       ),
     ));
   }
@@ -333,7 +359,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
           _sendEvent(notification.event);
           return true;
         },
-        child: QuestionResult(playerID, event, state.players),
+        child:
+            QuestionResult(playerID, event, state.players, _showLastQuestion),
       ),
     ));
   }

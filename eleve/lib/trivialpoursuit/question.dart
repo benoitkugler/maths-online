@@ -12,7 +12,12 @@ class QuestionRoute extends StatelessWidget {
   final ShowQuestion question;
   final void Function(ValidQuestionNotification) onValid;
 
-  const QuestionRoute(this.buildMode, this.question, this.onValid, {Key? key})
+  /// if [readonly] is true, do no block when leaving the question,
+  /// and do not display the timer
+  final bool readonly;
+
+  const QuestionRoute(this.buildMode, this.question, this.onValid,
+      {Key? key, this.readonly = false})
       : super(key: key);
 
   Future<bool> _confirmCancel(BuildContext context) async {
@@ -39,6 +44,10 @@ class QuestionRoute extends StatelessWidget {
     // make the route block until validated
     return WillPopScope(
       onWillPop: () async {
+        if (readonly) {
+          return true;
+        }
+
         final cancel = await _confirmCancel(context);
         if (cancel) {
           // send an empty response
@@ -55,7 +64,7 @@ class QuestionRoute extends StatelessWidget {
           question.question,
           question.categorie.color,
           onValid,
-          timeout: Duration(seconds: question.timeoutSeconds),
+          timeout: readonly ? null : Duration(seconds: question.timeoutSeconds),
           footerQuote: pickQuote(),
         ),
       ),

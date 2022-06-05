@@ -14,8 +14,11 @@ class QuestionResult extends StatefulWidget {
   final int playerID;
   final PlayerAnswerResults event;
   final Map<int, PlayerStatus> players;
+  final void Function() showLastQuestion;
 
-  const QuestionResult(this.playerID, this.event, this.players, {Key? key})
+  const QuestionResult(
+      this.playerID, this.event, this.players, this.showLastQuestion,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -67,6 +70,11 @@ class _QuestionResultState extends State<QuestionResult> {
         : "N'hésite pas à demander de l'aide$correct au prof. avant de continuer !";
 
     return Scaffold(
+      appBar: AppBar(automaticallyImplyLeading: false, actions: [
+        TextButton(
+            onPressed: widget.showLastQuestion,
+            child: const Text("Afficher la question"))
+      ]),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
