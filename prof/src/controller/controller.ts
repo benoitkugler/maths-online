@@ -244,9 +244,9 @@ export const PreviewMode = IsDev
   ? "dev"
   : "prod";
 
-export const ShowSuccessInscription = window.location.search.includes(
-  "show-success-inscription"
-);
+export function isInscriptionValidated() {
+  return window.location.search.includes("show-success-inscription");
+}
 
 export const controller = new Controller(
   IsDev ? localhost : window.location.origin,

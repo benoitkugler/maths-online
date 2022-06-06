@@ -1,5 +1,8 @@
 <template>
-  <v-dialog v-model="showInscriptionValidated">
+  <v-dialog
+    :model-value="showInscriptionValidated"
+    @update:model-value="removeInscriptionValidated"
+  >
     <v-card title="Inscription validée" color="success">
       <v-card-text>
         Votre inscription a bien été validée. <br />
@@ -103,7 +106,7 @@
 
 <script setup lang="ts">
 import type { AskInscriptionOut } from "@/controller/api_gen";
-import { controller, ShowSuccessInscription } from "@/controller/controller";
+import { controller, isInscriptionValidated } from "@/controller/controller";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
 
@@ -111,7 +114,10 @@ const emit = defineEmits<{
   (e: "loggin"): void;
 }>();
 
-let showInscriptionValidated = $ref(ShowSuccessInscription);
+let showInscriptionValidated = $ref(isInscriptionValidated());
+function removeInscriptionValidated() {
+  window.location.search = "";
+}
 
 let mail = $ref("");
 let password = $ref("");
