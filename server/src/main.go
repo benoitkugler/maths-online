@@ -88,7 +88,8 @@ func main() {
 	dryPtr := flag.Bool("dry", false, "do not listen, but quit early")
 	flag.Parse()
 
-	host := getAdress(*devPtr)
+	adress := getAdress(*devPtr)
+	host := getPublicHost(*devPtr)
 
 	studentKey, err := getStudentEncrypter(*devPtr)
 	if err != nil {
@@ -169,8 +170,20 @@ func main() {
 	}
 	fmt.Println("Setup done (pending sanityChecks)")
 
-	err = e.Start(host) // start and block
-	e.Logger.Fatal(err) // report error and quit
+	err = e.Start(adress) // start and block
+	e.Logger.Fatal(err)   // report error and quit
+}
+
+func getPublicHost(dev bool) string {
+	if dev {
+		return "localhost:1323"
+	}
+	// use env variable
+	host := os.Getenv("PUBLIC_HOST")
+	if host == "" {
+		log.Fatal("misssing PUBLIC_HOST env variable")
+	}
+	return host
 }
 
 func getAdress(dev bool) string {
