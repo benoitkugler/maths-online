@@ -367,7 +367,6 @@ func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	crible := links.ByIdStudent()
 
 	stds, err := students.SelectStudents(ct.db, links.IdStudents()...)
 	if err != nil {
@@ -376,17 +375,19 @@ func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
 
 	var out AttachStudentToClassroom1Out
 	for _, student := range stds {
-		if _, isAttached := crible[student.Id]; isAttached {
+		if student.IsClientAttached {
 			continue
 		}
-		out = append(out, StudentHeader{Id: student.Id, Label: student.Surname + " " + student.Name})
+		out = append(out, StudentHeader{Id: student.Id, Label: student.Name + " " + student.Surname})
 	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Label < out[j].Label })
 
 	return c.JSON(200, out)
 }
 
 func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out AttachStudentToClassroom2Out, err error) {
-	idClassroom, err := ct.classCodes.checkCode(args.ClassroomCode)
+	_, err = ct.classCodes.checkCode(args.ClassroomCode)
 	if err != nil {
 		return out, err
 	}
@@ -396,39 +397,20 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 		return out, utils.SQLError(err)
 	}
 
+	// avoid usurpation
+	if student.IsClientAttached {
+		return AttachStudentToClassroom2Out{ErrAlreadyAttached: true}, nil
+	}
+
 	// check if the birthday is correct
 	if args.Birthday != time.Time(student.Birthday).Format(students.DateLayout) {
 		return AttachStudentToClassroom2Out{ErrInvalidBirthday: true}, nil
 	}
 
-	// we allow multiple client to be linked to one student account
-	// thus, if the student is already attached to the classroom,
-	// just return the crypted id
-	classrooms, err := SelectStudentClassroomsByIdStudents(ct.db, student.Id)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
 	out = AttachStudentToClassroom2Out{IdCrypted: string(ct.studentKey.EncryptID(args.IdStudent))}
-	if _, alreadyInClassroom := classrooms.ByIdClassroom()[idClassroom]; alreadyInClassroom {
-		return out, nil
-	}
 
-	// if not present, add the link
-	// it will error if the student is present in another classroom
-
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	err = InsertManyStudentClassrooms(tx, StudentClassroom{IdStudent: args.IdStudent, IdClassroom: idClassroom})
-	if err != nil {
-		_ = tx.Rollback()
-		return out, utils.SQLError(err)
-	}
-
-	err = tx.Commit()
+	student.IsClientAttached = true
+	_, err = student.Update(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -452,8 +434,8 @@ func (ct *Controller) AttachStudentToClassroom2(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// DetachStudentFromClassroom remove the client student from link (without
-// deleting the student account)
+// DetachStudentFromClassroom remove the client student link indication,
+// but keep the student in the classroom.
 func (ct *Controller) DetachStudentFromClassroom(c echo.Context) error {
 	code := pass.EncryptedID(c.QueryParam("id-crypted"))
 
@@ -462,7 +444,13 @@ func (ct *Controller) DetachStudentFromClassroom(c echo.Context) error {
 		return err
 	}
 
-	_, err = DeleteStudentClassroomsByIdStudents(ct.db, idStudent)
+	student, err := students.SelectStudent(ct.db, idStudent)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	student.IsClientAttached = false
+	_, err = student.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}

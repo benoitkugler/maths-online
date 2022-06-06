@@ -31,22 +31,6 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog
-    :model-value="classroomCode != null"
-    @update:model-value="classroomCode = null"
-  >
-    <v-card title="Code de connection" v-if="classroomCode != null">
-      <v-card-text class="my-2">
-        <v-alert color="info" style="text-align: center; font-size: 18pt">
-          <v-chip size="18pt" class="pa-2">{{ classroomCode }}</v-chip>
-        </v-alert>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="classroomCode = null">Retour</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
   <v-card class="mx-auto pa-1" width="80%">
     <v-row>
       <v-col md="9" sm="6">
@@ -72,6 +56,7 @@
               @click="generateClassroomCode"
               title="Générer un code pour rattacher des élèves à la classe"
               variant="text"
+              :disabled="!students.length || classroomCode != null"
             >
               Code de connection
             </v-btn>
@@ -87,9 +72,39 @@
           </v-col>
         </v-row>
         <v-card-text>
+          <v-alert
+            closable
+            color="info"
+            style="text-align: center; font-size: 18pt"
+            :model-value="classroomCode != null"
+            @update:model-value="classroomCode = null"
+          >
+            <v-chip size="18pt" class="pa-2">{{ classroomCode }}</v-chip>
+          </v-alert>
+
           <v-list>
             <v-list-item v-for="student in students" :key="student.Id">
-              {{ student.Name }} {{ student.Surname }}
+              <v-row no-gutters>
+                <v-col> {{ student.Name }} {{ student.Surname }} </v-col>
+                <v-col>
+                  <v-list-item-subtitle
+                    >{{ formatDate(student.Birthday) }}
+                  </v-list-item-subtitle>
+                </v-col>
+                <v-col>
+                  <v-tooltip
+                    style="cursor: pointer"
+                    v-if="student.IsClientAttached"
+                  >
+                    <template v-slot:activator="{ isActive, props }">
+                      <v-badge v-on="{ isActive }" v-bind="props" color="green"
+                        >.</v-badge
+                      >
+                    </template>
+                    L'élève a reliée son application.
+                  </v-tooltip>
+                </v-col>
+              </v-row>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -101,6 +116,7 @@
 <script setup lang="ts">
 import type { Classroom, Student } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { formatDate } from "@/controller/utils";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 
@@ -154,6 +170,15 @@ async function generateClassroomCode() {
     return;
   }
   classroomCode = res.Code;
+
+  const timeout = 5000;
+  const refresh = async () => {
+    if (classroomCode != null) {
+      await fetchStudents();
+      setTimeout(refresh, timeout);
+    }
+  };
+  setTimeout(refresh, timeout);
 }
 
 // async function createClassroom() {

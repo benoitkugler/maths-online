@@ -245,18 +245,18 @@
 
 <script setup lang="ts">
 import {
-Visibility,
-type errEnonce,
-type ErrParameters,
-type Origin
+  Visibility,
+  type errEnonce,
+  type ErrParameters,
+  type Origin,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { newBlock, saveData, swapItems, xRune } from "@/controller/editor";
 import type {
-Block,
-Question,
-RandomParameter,
-Variable
+  Block,
+  Question,
+  RandomParameter,
+  Variable,
 } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";

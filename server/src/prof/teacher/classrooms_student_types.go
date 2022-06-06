@@ -17,5 +17,6 @@ type AttachStudentToClassroom2In struct {
 
 type AttachStudentToClassroom2Out struct {
 	ErrInvalidBirthday bool
+	ErrAlreadyAttached bool
 	IdCrypted          string
 }

@@ -58,7 +58,7 @@ interface Props {
   allTags: string[];
   readonly: boolean;
   label?: string;
-  yPadding: boolean;
+  yPadding?: boolean;
 }
 
 const props = defineProps<Props>();

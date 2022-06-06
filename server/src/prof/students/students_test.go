@@ -1,6 +1,7 @@
 package students
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -11,6 +12,18 @@ func TestTime(t *testing.T) {
 	ti := time.Now()
 	if ti.String()[0:10] != ti.Format(DateLayout) {
 		t.Fatal()
+	}
+
+	d := Date(ti)
+	s, _ := json.Marshal(d)
+
+	var d2 Date
+	err := json.Unmarshal(s, &d2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ti.Equal(time.Time(d2)) {
+		t.Fatal("invalid json", string(s))
 	}
 }
 

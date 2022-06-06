@@ -4,6 +4,7 @@ CREATE TABLE students (
     Name varchar NOT NULL,
     Surname varchar NOT NULL,
     Birthday date NOT NULL,
-    TrivialSuccess integer NOT NULL
+    TrivialSuccess integer NOT NULL,
+    IsClientAttached boolean NOT NULL
 );
 

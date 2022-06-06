@@ -34,12 +34,18 @@ func randint() int {
 	return int(rand.Intn(1000000))
 }
 
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
+}
+
 func randStudent() Student {
 	return Student{
-		Id:             randint64(),
-		Name:           randstring(),
-		Surname:        randstring(),
-		Birthday:       randDate(),
-		TrivialSuccess: randint(),
+		Id:               randint64(),
+		Name:             randstring(),
+		Surname:          randstring(),
+		Birthday:         randDate(),
+		TrivialSuccess:   randint(),
+		IsClientAttached: randbool(),
 	}
 }

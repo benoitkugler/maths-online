@@ -79,26 +79,31 @@ bool boolToJson(bool item) => item;
 // github.com/benoitkugler/maths-online/prof/teacher.AttachStudentToClassroom2Out
 class AttachStudentToClassroom2Out {
   final bool errInvalidBirthday;
+  final bool errAlreadyAttached;
   final String idCrypted;
 
-  const AttachStudentToClassroom2Out(this.errInvalidBirthday, this.idCrypted);
+  const AttachStudentToClassroom2Out(
+      this.errInvalidBirthday, this.errAlreadyAttached, this.idCrypted);
 
   @override
   String toString() {
-    return "AttachStudentToClassroom2Out($errInvalidBirthday, $idCrypted)";
+    return "AttachStudentToClassroom2Out($errInvalidBirthday, $errAlreadyAttached, $idCrypted)";
   }
 }
 
 AttachStudentToClassroom2Out attachStudentToClassroom2OutFromJson(
     dynamic json_) {
   final json = (json_ as JSON);
-  return AttachStudentToClassroom2Out(boolFromJson(json['ErrInvalidBirthday']),
+  return AttachStudentToClassroom2Out(
+      boolFromJson(json['ErrInvalidBirthday']),
+      boolFromJson(json['ErrAlreadyAttached']),
       stringFromJson(json['IdCrypted']));
 }
 
 JSON attachStudentToClassroom2OutToJson(AttachStudentToClassroom2Out item) {
   return {
     "ErrInvalidBirthday": boolToJson(item.errInvalidBirthday),
+    "ErrAlreadyAttached": boolToJson(item.errAlreadyAttached),
     "IdCrypted": stringToJson(item.idCrypted)
   };
 }

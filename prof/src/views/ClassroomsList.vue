@@ -117,7 +117,7 @@
 <script setup lang="ts">
 import type { Classroom, ClassroomExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { copy } from "@/controller/editor";
+import { copy } from "@/controller/utils";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import StudentsList from "../components/classrooms/StudentsList.vue";

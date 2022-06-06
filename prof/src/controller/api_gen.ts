@@ -35,12 +35,29 @@ export interface ClassroomExt {
   Classroom: Classroom;
   NbStudents: number;
 }
+
+class DateTag {
+  private _: "D" = "D";
+}
+
+class TimeTag {
+  private _: "T" = "T";
+}
+
+// AAAA-MM-YY date format
+export type Date_ = string & DateTag;
+
+// ISO date-time string
+export type Time = string & TimeTag;
+
 // github.com/benoitkugler/maths-online/prof/students.Student
 export interface Student {
   Id: number;
   Name: string;
   Surname: string;
+  Birthday: Date_;
   TrivialSuccess: number;
+  IsClientAttached: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
