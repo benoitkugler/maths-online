@@ -2,6 +2,7 @@ package teacher
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -11,6 +12,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/students"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -180,24 +182,35 @@ func parsePronoteName(s string) (name, surname string) {
 }
 
 func parsePronoteStudentList(file io.Reader) ([]students.Student, error) {
+	const pronoteDateLayout = "02/01/2006"
+
 	r := csv.NewReader(file)
 	r.Comma = ';'
 
 	lines, err := r.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Format du fichier d'élèves invalide : %s", err)
+		return nil, fmt.Errorf("Fichier d'élèves invalide : %s", err)
 	}
 
 	// remove the header
 	if len(lines) < 1 {
-		return nil, fmt.Errorf("Format du fichier d'élèves invalide : entête manquant.")
+		return nil, errors.New("Fichier d'élèves invalide : entête manquant.")
 	}
 	lines = lines[1:]
 
 	out := make([]students.Student, len(lines))
 	for i, line := range lines {
+		if len(line) < 2 {
+			return nil, errors.New("Fichier d'élèves invalide : champs manquants")
+		}
 		name, surname := parsePronoteName(line[0])
-		out[i] = students.Student{Name: name, Surname: surname}
+
+		birthday, err := time.Parse(pronoteDateLayout, line[2])
+		if err != nil {
+			return nil, fmt.Errorf("Fichier d'élèves invalide (date) : %s", err)
+		}
+
+		out[i] = students.Student{Name: name, Surname: surname, Birthday: students.Date(birthday)}
 	}
 
 	return out, nil
@@ -339,9 +352,9 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// AttachStudentToClassroom uses a temporary classroom code to
+// AttachStudentToClassroom1 uses a temporary classroom code to
 // attach a student to the classroom.
-func (ct *Controller) AttachStudentToClassroom(c echo.Context) error {
+func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
 	code := c.QueryParam("code")
 
 	idClassroom, err := ct.classCodes.checkCode(code)
@@ -354,19 +367,105 @@ func (ct *Controller) AttachStudentToClassroom(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	crible := links.ByIdStudent()
 
 	stds, err := students.SelectStudents(ct.db, links.IdStudents()...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	var out []students.Student
+	var out AttachStudentToClassroom1Out
 	for _, student := range stds {
-		if student.IsClientAttached {
+		if _, isAttached := crible[student.Id]; isAttached {
 			continue
 		}
-		out = append(out, student)
+		out = append(out, StudentHeader{Id: student.Id, Label: student.Surname + " " + student.Name})
 	}
 
 	return c.JSON(200, out)
+}
+
+func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out AttachStudentToClassroom2Out, err error) {
+	idClassroom, err := ct.classCodes.checkCode(args.ClassroomCode)
+	if err != nil {
+		return out, err
+	}
+
+	student, err := students.SelectStudent(ct.db, args.IdStudent)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	// check if the birthday is correct
+	if args.Birthday != time.Time(student.Birthday).Format(students.DateLayout) {
+		return AttachStudentToClassroom2Out{ErrInvalidBirthday: true}, nil
+	}
+
+	// we allow multiple client to be linked to one student account
+	// thus, if the student is already attached to the classroom,
+	// just return the crypted id
+	classrooms, err := SelectStudentClassroomsByIdStudents(ct.db, student.Id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	out = AttachStudentToClassroom2Out{IdCrypted: string(ct.studentKey.EncryptID(args.IdStudent))}
+	if _, alreadyInClassroom := classrooms.ByIdClassroom()[idClassroom]; alreadyInClassroom {
+		return out, nil
+	}
+
+	// if not present, add the link
+	// it will error if the student is present in another classroom
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	err = InsertManyStudentClassrooms(tx, StudentClassroom{IdStudent: args.IdStudent, IdClassroom: idClassroom})
+	if err != nil {
+		_ = tx.Rollback()
+		return out, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	return out, nil
+}
+
+// AttachStudentToClassroom2 validates the birthday and actually attaches the client to
+// a student account and a classroom.
+func (ct *Controller) AttachStudentToClassroom2(c echo.Context) error {
+	var args AttachStudentToClassroom2In
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.validAttachStudent(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+// DetachStudentFromClassroom remove the client student from link (without
+// deleting the student account)
+func (ct *Controller) DetachStudentFromClassroom(c echo.Context) error {
+	code := pass.EncryptedID(c.QueryParam("id-crypted"))
+
+	idStudent, err := ct.studentKey.DecryptID(code)
+	if err != nil {
+		return err
+	}
+
+	_, err = DeleteStudentClassroomsByIdStudents(ct.db, idStudent)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
 }

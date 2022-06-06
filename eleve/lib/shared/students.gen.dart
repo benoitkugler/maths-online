@@ -10,54 +10,95 @@ String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
+// github.com/benoitkugler/maths-online/prof/teacher.StudentHeader
+class StudentHeader {
+  final int id;
+  final String label;
+
+  const StudentHeader(this.id, this.label);
+
+  @override
+  String toString() {
+    return "StudentHeader($id, $label)";
+  }
+}
+
+StudentHeader studentHeaderFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return StudentHeader(intFromJson(json['Id']), stringFromJson(json['Label']));
+}
+
+JSON studentHeaderToJson(StudentHeader item) {
+  return {"Id": intToJson(item.id), "Label": stringToJson(item.label)};
+}
+
+List<StudentHeader> listStudentHeaderFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(studentHeaderFromJson).toList();
+}
+
+List<dynamic> listStudentHeaderToJson(List<StudentHeader> item) {
+  return item.map(studentHeaderToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/prof/teacher.AttachStudentToClassroom2In
+class AttachStudentToClassroom2In {
+  final String classroomCode;
+  final int idStudent;
+  final String birthday;
+
+  const AttachStudentToClassroom2In(
+      this.classroomCode, this.idStudent, this.birthday);
+
+  @override
+  String toString() {
+    return "AttachStudentToClassroom2In($classroomCode, $idStudent, $birthday)";
+  }
+}
+
+AttachStudentToClassroom2In attachStudentToClassroom2InFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return AttachStudentToClassroom2In(stringFromJson(json['ClassroomCode']),
+      intFromJson(json['IdStudent']), stringFromJson(json['Birthday']));
+}
+
+JSON attachStudentToClassroom2InToJson(AttachStudentToClassroom2In item) {
+  return {
+    "ClassroomCode": stringToJson(item.classroomCode),
+    "IdStudent": intToJson(item.idStudent),
+    "Birthday": stringToJson(item.birthday)
+  };
+}
+
 bool boolFromJson(dynamic json) => json as bool;
 
 bool boolToJson(bool item) => item;
 
-// github.com/benoitkugler/maths-online/prof/students.Student
-class Student {
-  final int id;
-  final String name;
-  final String surname;
-  final int trivialSuccess;
-  final bool isClientAttached;
+// github.com/benoitkugler/maths-online/prof/teacher.AttachStudentToClassroom2Out
+class AttachStudentToClassroom2Out {
+  final bool errInvalidBirthday;
+  final String idCrypted;
 
-  const Student(this.id, this.name, this.surname, this.trivialSuccess,
-      this.isClientAttached);
+  const AttachStudentToClassroom2Out(this.errInvalidBirthday, this.idCrypted);
 
   @override
   String toString() {
-    return "Student($id, $name, $surname, $trivialSuccess, $isClientAttached)";
+    return "AttachStudentToClassroom2Out($errInvalidBirthday, $idCrypted)";
   }
 }
 
-Student studentFromJson(dynamic json_) {
+AttachStudentToClassroom2Out attachStudentToClassroom2OutFromJson(
+    dynamic json_) {
   final json = (json_ as JSON);
-  return Student(
-      intFromJson(json['Id']),
-      stringFromJson(json['Name']),
-      stringFromJson(json['Surname']),
-      intFromJson(json['TrivialSuccess']),
-      boolFromJson(json['IsClientAttached']));
+  return AttachStudentToClassroom2Out(boolFromJson(json['ErrInvalidBirthday']),
+      stringFromJson(json['IdCrypted']));
 }
 
-JSON studentToJson(Student item) {
+JSON attachStudentToClassroom2OutToJson(AttachStudentToClassroom2Out item) {
   return {
-    "Id": intToJson(item.id),
-    "Name": stringToJson(item.name),
-    "Surname": stringToJson(item.surname),
-    "TrivialSuccess": intToJson(item.trivialSuccess),
-    "IsClientAttached": boolToJson(item.isClientAttached)
+    "ErrInvalidBirthday": boolToJson(item.errInvalidBirthday),
+    "IdCrypted": stringToJson(item.idCrypted)
   };
-}
-
-List<Student> listStudentFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(studentFromJson).toList();
-}
-
-List<dynamic> listStudentToJson(List<Student> item) {
-  return item.map(studentToJson).toList();
 }

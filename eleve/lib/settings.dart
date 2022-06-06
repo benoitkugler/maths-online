@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:eleve/build_mode.dart';
+import 'package:eleve/classroom/join_classroom.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -42,7 +44,8 @@ class UserSettings {
 }
 
 class Settings extends StatefulWidget {
-  const Settings({Key? key}) : super(key: key);
+  final BuildMode buildMode;
+  const Settings(this.buildMode, {Key? key}) : super(key: key);
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -84,6 +87,11 @@ class _SettingsState extends State<Settings> {
     Navigator.of(context).pop(settings);
   }
 
+  void _showJoinClassroom() {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => JoinClassroomRoute(widget.buildMode)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,6 +108,10 @@ class _SettingsState extends State<Settings> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  OutlinedButton(
+                      onPressed: _showJoinClassroom,
+                      child: const Text("Rejoindre une classe")),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       const Padding(
