@@ -4,15 +4,15 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
   "manifest.json": "6be06c3ebad0d6a2ecb2cdd71690d463",
-"main.dart.js": "f9f10bb6f54f97125e654ec9a6f4b101",
-"index.html": "053248d6d0fc20e720ba70ebae05986c",
-"/": "053248d6d0fc20e720ba70ebae05986c",
+"main.dart.js": "523b828cc6bf763e3b8b4b6873de7447",
+"index.html": "17cfe0363aa4148c2620eaf2da9b56bf",
+"/": "17cfe0363aa4148c2620eaf2da9b56bf",
 "flutter.js": "0816e65a103ba8ba51b174eeeeb2cb67",
 "canvaskit/profiling/canvaskit.js": "ae2949af4efc61d28a4a80fffa1db900",
 "canvaskit/profiling/canvaskit.wasm": "95e736ab31147d1b2c7b25f11d4c32cd",
 "canvaskit/canvaskit.js": "c2b4e5f3d7a3d82aed024e7249a78487",
 "canvaskit/canvaskit.wasm": "4b83d89d9fecbea8ca46f2f760c5a9ba",
-"assets/NOTICES": "e64c5b81b7c2137da9f3c59dc06379e4",
+"assets/NOTICES": "7a628a703d7d9415e06a8001e7594dff",
 "assets/fonts/MaterialIcons-Regular.otf": "95db9098c58fd6db106f1116bae85a0b",
 "assets/lib/music/PremiersPas.mp3": "417ae4956516ac0a5996ace1044d4f54",
 "assets/lib/music/Forgive.mp3": "2f7e56852ae5e980cd33caf0f213960c",
@@ -64,7 +64,7 @@ const RESOURCES = {
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
-"version.json": "f9a7ec1ab0a6058abb517af6539e91ed"
+"version.json": "8b4dc4593dff10d031c2b6f1450664d6"
 };
 
 // The application shell files that are downloaded before a service worker can
