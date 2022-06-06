@@ -13,7 +13,7 @@ CREATE TABLE teachers (
 );
 
 ALTER TABLE classrooms
-    ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
+    ADD FOREIGN KEY (id_teacher) REFERENCES teachers ON DELETE CASCADE;
 
 ALTER TABLE teachers
     ADD UNIQUE (mail);

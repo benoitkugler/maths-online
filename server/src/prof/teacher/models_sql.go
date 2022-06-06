@@ -15,6 +15,6 @@ type Teacher struct {
 // Classroom is one group of student controlled by a teacher
 type Classroom struct {
 	Id        int64  `json:"id"`
-	IdTeacher int64  `json:"id_teacher"`
+	IdTeacher int64  `json:"id_teacher" sql_on_delete:"CASCADE"`
 	Name      string `json:"name"`
 }
