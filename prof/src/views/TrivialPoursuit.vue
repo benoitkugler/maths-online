@@ -20,7 +20,7 @@
     <launch-options @launch="launchSession"></launch-options>
   </v-dialog>
 
-  <v-dialog fullscreen v-model="showMonitor">
+  <v-dialog fullscreen v-model="showMonitor" :retain-focus="false">
     <session-monitor @close="closeMonitor"></session-monitor>
   </v-dialog>
 
