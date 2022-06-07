@@ -138,12 +138,6 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 	}
 	tagsMap := tags.ByIdQuestion()
 
-	// load the teachers IDs
-	teachers, err := teacher.SelectTeachers(ct.db, ownerIDs...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
 	// normalize query
 	for i, t := range query.Tags {
 		query.Tags[i] = NormalizeTag(t)
@@ -174,9 +168,9 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 				IsInGroup:  len(ids) > 1,
 				Tags:       tagsMap[id].List(),
 				Origin: teacher.Origin{
-					Owner:      teachers[qu.IdTeacher].Mail,
-					IsPublic:   qu.Public,
-					Visibility: vis,
+					AllowPublish: qu.IdTeacher == ct.admin.Id,
+					IsPublic:     qu.Public,
+					Visibility:   vis,
 				},
 			}
 			group.Questions = append(group.Questions, question)

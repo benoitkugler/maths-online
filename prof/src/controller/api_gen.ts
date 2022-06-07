@@ -40,20 +40,18 @@ export interface TrivialConfig {
 }
 // github.com/benoitkugler/maths-online/prof/teacher.Visibility
 export enum Visibility {
-  Admin = 2,
+  Admin = 1,
   Personnal = 0,
-  Shared = 1,
 }
 
 export const VisibilityLabels: { [key in Visibility]: string } = {
   [Visibility.Admin]: "Officiel",
   [Visibility.Personnal]: "Personnel",
-  [Visibility.Shared]: "Partagé par la communauté",
 };
 
 // github.com/benoitkugler/maths-online/prof/teacher.Origin
 export interface Origin {
-  Owner: string;
+  AllowPublish: boolean;
   IsPublic: boolean;
   Visibility: Visibility;
 }

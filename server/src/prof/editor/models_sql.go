@@ -8,7 +8,7 @@ import "github.com/benoitkugler/maths-online/maths/exercice"
 type Question struct {
 	Id        int64                 `json:"id"`
 	Page      exercice.QuestionPage `json:"page"`
-	Public    bool                  `json:"public"`
+	Public    bool                  `json:"public"` // in practice only true for admins
 	IdTeacher int64                 `json:"id_teacher"`
 }
 

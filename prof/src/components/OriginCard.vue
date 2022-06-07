@@ -2,13 +2,16 @@
   <v-card :color="color">
     <v-card-text>
       <span v-html="visibilityLabel"></span>
-      <div v-if="isPersonnal">
+      <div v-if="isPersonnal && props.origin.AllowPublish">
         <v-switch
           label="Partager à la communauté"
           hide-details
           :model-value="props.origin.IsPublic"
           @update:model-value="(b:boolean) => emit('update', b)"
         ></v-switch>
+      </div>
+      <div v-else-if="isPersonnal">
+        <v-btn>TODO: Demander à rendre public</v-btn>
       </div>
     </v-card-text>
   </v-card>
@@ -42,8 +45,6 @@ const visibilityLabel = computed(() => {
       return "<b>" + VisibilityLabels[props.origin.Visibility] + "</b>";
     case Visibility.Personnal:
       return VisibilityLabels[props.origin.Visibility];
-    case Visibility.Shared:
-      return "Partagé par <b>" + props.origin.Owner + "</b>";
     default:
       throw new Error("");
   }

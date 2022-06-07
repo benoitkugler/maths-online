@@ -192,7 +192,7 @@ func (ct *Controller) Loggin(c echo.Context) error {
 }
 
 type Origin struct {
-	Owner      string // mail adress, used for Shared visibility
-	IsPublic   bool   // used, for Personnal visibility
-	Visibility Visibility
+	AllowPublish bool // is the ressource allowed to be made public ?
+	IsPublic     bool // used, for Personnal visibility
+	Visibility   Visibility
 }

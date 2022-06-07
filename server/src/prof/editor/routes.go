@@ -206,6 +206,11 @@ type QuestionUpdateVisiblityIn struct {
 func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
+	// we only accept public question from admin account
+	if user.Id != ct.admin.Id {
+		return accessForbidden
+	}
+
 	var args QuestionUpdateVisiblityIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
