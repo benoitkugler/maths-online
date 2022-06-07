@@ -7,6 +7,7 @@
           label="Partager à la communauté"
           hide-details
           :model-value="props.origin.IsPublic"
+          :color="props.origin.IsPublic ? 'blue' : undefined"
           @update:model-value="(b:boolean) => emit('update', b)"
         ></v-switch>
       </div>
