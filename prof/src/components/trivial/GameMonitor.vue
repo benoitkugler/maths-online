@@ -25,7 +25,7 @@
           <div v-if="props.showID">
             Code :
             <v-chip>
-              <b style="font-size: 22px">
+              <b style="font-size: 26px">
                 {{ props.summary.GameID }}
               </b>
             </v-chip>
