@@ -416,7 +416,6 @@ func (ct *Controller) StopTrivialGame(c echo.Context) error {
 	if session == nil {
 		// gracefully exit
 	} else {
-		in.terminateChanel = true
 		session.stopGameEvents <- in
 	}
 

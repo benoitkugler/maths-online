@@ -190,7 +190,7 @@ func (gc *GameController) broadcastEvents(events game.StateUpdate) {
 // StartLoop starts the main game loop.
 // The function blocks until the game is over,
 // and then returns the game review.
-// It returns false if the game ended abnormally, due to forced termination or all players leaving
+// It returns false if the game ended abnormally, due to forced termination.
 func (gc *GameController) StartLoop() (Review, bool) {
 	for {
 		select {

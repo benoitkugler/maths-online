@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
@@ -11,9 +12,8 @@ import (
 )
 
 type stopGame struct {
-	ID              tv.GameID
-	Restart         bool // if false, definitively close the game
-	terminateChanel bool
+	ID      tv.GameID
+	Restart bool // if false, definitively close the game
 }
 
 type createGame struct {
@@ -40,8 +40,9 @@ type gameSession struct {
 
 	// stopGameEvents and createGameEvents are used by the teacher to control
 	// the current session
-	createGameEvents chan createGame // calls createGame()
-	stopGameEvents   chan stopGame   // calls stopGame()
+	createGameEvents   chan createGame // calls createGame()
+	stopGameEvents     chan stopGame   // calls stopGame()
+	afterGameEndEvents chan tv.GameID  // calls afterGameEnd()
 
 	// channel receiving game progress
 	monitorSummary chan tv.GameSummary
@@ -52,14 +53,15 @@ type gameSession struct {
 
 func newGameSession(id SessionID, idTeacher int64) *gameSession {
 	return &gameSession{
-		id:               id,
-		idTeacher:        idTeacher,
-		games:            make(map[tv.GameID]*tv.GameController),
-		playerIDs:        make(map[PlayerID]gamePosition),
-		createGameEvents: make(chan createGame),
-		stopGameEvents:   make(chan stopGame),
-		monitorSummary:   make(chan tv.GameSummary),
-		teacherClients:   make(map[*teacherClient]bool),
+		id:                 id,
+		idTeacher:          idTeacher,
+		games:              make(map[tv.GameID]*tv.GameController),
+		playerIDs:          make(map[PlayerID]gamePosition),
+		createGameEvents:   make(chan createGame),
+		stopGameEvents:     make(chan stopGame),
+		afterGameEndEvents: make(chan tv.GameID),
+		monitorSummary:     make(chan tv.GameSummary),
+		teacherClients:     make(map[*teacherClient]bool),
 	}
 }
 
@@ -101,7 +103,11 @@ func (gs *gameSession) createGame(params createGame) {
 		}
 		ProgressLogger.Printf("Game %s is done, cleaning up...", params.ID)
 
-		gs.stopGameEvents <- stopGame{ID: params.ID, terminateChanel: false}
+		// if the game was terminated explicitely (by stopGame),
+		// do not perform the cleanup to avoid interfering with restart
+		if ok {
+			gs.afterGameEndEvents <- params.ID
+		}
 	}()
 
 	ProgressLogger.Printf("Creating game %s for %d players", params.ID, params.Options.PlayersNumber)
@@ -113,6 +119,7 @@ func (gs *gameSession) exploitReview(review tv.Review) {
 }
 
 func (gs *gameSession) afterGameEnd(gameID tv.GameID) {
+	fmt.Println("afterGameEnd")
 	gs.lock.Lock()
 	delete(gs.games, gameID)
 	gs.lock.Unlock()
@@ -133,15 +140,14 @@ func (gs *gameSession) stopGame(params stopGame) {
 		Options:   game.Options,
 	}
 
-	if params.terminateChanel {
-		game.Terminate <- true
-	}
+	game.Terminate <- true
 
 	// restart if needed
 	if params.Restart {
+		time.Sleep(time.Millisecond)
 		gs.createGame(create)
-	} else {
-		gs.afterGameEnd(game.ID)
+	} else { // cleanup
+		gs.afterGameEnd(params.ID)
 	}
 }
 
@@ -162,6 +168,8 @@ func (gs *gameSession) mainLoop(ctx context.Context) {
 			if !sg.Restart && len(gs.games) == 0 {
 				return
 			}
+		case gameID := <-gs.afterGameEndEvents:
+			gs.afterGameEnd(gameID)
 		case summary := <-gs.monitorSummary:
 			for client := range gs.teacherClients {
 				client.sendSummary(summary)
