@@ -30,7 +30,8 @@ class NumberController extends FieldController {
   }
 
   void setNumber(double n) {
-    textController.text = n.toString();
+    final s = n.truncateToDouble() == n ? n.toInt().toString() : n.toString();
+    textController.text = s;
   }
 
   @override
