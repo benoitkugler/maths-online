@@ -56,7 +56,7 @@ type Game struct {
 	QuestionTimeout *time.Timer // may be nil
 
 	// refreshed for each question
-	currentAnswers map[PlayerID]playerAnswerResult
+	currentAnswers map[PlayerID]bool
 	question       currentQuestion // the question to answer, or empty
 
 	// refreshed for each new turn
@@ -85,7 +85,7 @@ func NewGame(questionTimeout time.Duration, showDecrassage bool, questions Quest
 			Players: make(map[int]*PlayerStatus),
 			Player:  -1,
 		},
-		currentAnswers:        make(map[int]playerAnswerResult),
+		currentAnswers:        make(map[int]bool),
 		currentWantNextTurn:   make(map[int]bool),
 		QuestionTimeout:       timer,
 		questionDurationLimit: questionTimeout,
@@ -305,18 +305,8 @@ func (g *Game) handleMove(m ClientMove, player PlayerID) (Events, error) {
 func (g *Game) handleAnswer(a Answer, player PlayerID) MaybeUpdate {
 	isValid := g.isAnswerValid(a)
 
-	playerState := g.Players[player]
-	playerState.Success[g.question.categorie] = isValid
-	playerState.Review.QuestionHistory = append(playerState.Review.QuestionHistory, QR{
-		IdQuestion: g.question.ID,
-		Success:    isValid,
-	})
-	askForMark := !isValid && len(playerState.Review.MarkedQuestions) < 3
-
-	g.currentAnswers[player] = playerAnswerResult{
-		Success:    isValid,
-		AskForMask: askForMark,
-	}
+	// we defer the state update to the end of the question
+	g.currentAnswers[player] = isValid
 
 	return g.concludeQuestion(false) // wait for other players if needed
 }
@@ -440,18 +430,15 @@ func (gs *Game) endQuestion(force bool) Events {
 		// we still mark invalid answsers for inactive player,
 		// to avoid cheating by leaving before right before the question
 
-		answer, has := gs.currentAnswers[player]
-		if !has {
-			// update the state like in `handleAnswer`
-			state.Success[gs.question.categorie] = false
-			state.Review.QuestionHistory = append(state.Review.QuestionHistory, QR{
-				IdQuestion: gs.question.ID,
-				Success:    false,
-			})
-
-			askForMark := len(state.Review.MarkedQuestions) < 3
-			answer = playerAnswerResult{Success: false, AskForMask: askForMark}
-		}
+		isValid, _ := gs.currentAnswers[player]
+		// update the success
+		state.Success[gs.question.categorie] = isValid // false if not answered
+		state.Review.QuestionHistory = append(state.Review.QuestionHistory, QR{
+			IdQuestion: gs.question.ID,
+			Success:    isValid,
+		})
+		askForMark := !isValid && len(state.Review.MarkedQuestions) < 3
+		answer := playerAnswerResult{Success: false, AskForMask: askForMark}
 		out.Results[player] = answer
 	}
 

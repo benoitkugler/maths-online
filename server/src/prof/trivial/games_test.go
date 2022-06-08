@@ -20,7 +20,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Simulate a real world exemple to exercice the server
+// Simulate a real world example to exercice the server
 
 func check(err error) {
 	if err != nil {
