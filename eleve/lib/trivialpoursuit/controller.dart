@@ -48,6 +48,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     with WidgetsBindingObserver {
   late WebSocketChannel channel;
   late Timer _keepAliveTimmer;
+  final eventQueue = StreamController<StateUpdate>();
 
   int playerID = -1;
   bool hasGameStarted = false;
@@ -89,6 +90,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       _keepAliveTimmer = Timer.periodic(const Duration(seconds: 50), (timer) {
         _sendEvent(const Ping("keeping alive"));
       });
+
+      // start the main event loop
+      _startLoop();
     }
 
     WidgetsBinding.instance.addObserver(this);
@@ -104,11 +108,27 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     }
   }
 
+  void listen(dynamic event) {
+    try {
+      final update = stateUpdateFromJson(jsonDecode(event as String));
+      eventQueue.add(update);
+    } catch (e) {
+      _onNetworkError(e);
+    }
+  }
+
+  void _startLoop() async {
+    await for (final update in eventQueue.stream) {
+      await processEvents(update);
+    }
+  }
+
   @override
   void dispose() {
     if (widget.apiURL != "") {
       channel.sink.close(1000, "Bye bye");
       _keepAliveTimmer.cancel();
+      eventQueue.close();
     }
     diceRollAnimation = null;
 
@@ -140,15 +160,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     popRouteToHome();
     // clean the cache on error
     GameTerminatedNotification().dispatch(context);
-  }
-
-  void listen(dynamic event) {
-    try {
-      final update = stateUpdateFromJson(jsonDecode(event as String));
-      processEvents(update);
-    } catch (e) {
-      _onNetworkError(e);
-    }
   }
 
   void _sendEvent(ClientEventData event) {
@@ -454,7 +465,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   Future<void> processEvents(StateUpdate update) async {
     if (update.events.any((element) => element is PlayerReconnected)) {
       // update the state before triggering game start,
-      // since it is needed when reonnecting
+      // since it is needed when reconnecting
       state = update.state;
     }
 
