@@ -158,8 +158,8 @@ func (gs *gameSession) mainLoop(ctx context.Context) {
 			gs.createGame(cg)
 		case sg := <-gs.stopGameEvents:
 			gs.stopGame(sg)
-			// terminate the session if there is no more games
-			if len(gs.games) == 0 {
+			// terminate the session if there is no more games and no restart it asked for
+			if !sg.Restart && len(gs.games) == 0 {
 				return
 			}
 		case summary := <-gs.monitorSummary:
