@@ -15,9 +15,10 @@ class QuestionRoute extends StatelessWidget {
   /// if [readonly] is true, do no block when leaving the question,
   /// and do not display the timer
   final bool readonly;
+  final Answers? answer;
 
   const QuestionRoute(this.buildMode, this.question, this.onValid,
-      {Key? key, this.readonly = false})
+      {Key? key, this.readonly = false, this.answer})
       : super(key: key);
 
   Future<bool> _confirmCancel(BuildContext context) async {
@@ -66,6 +67,7 @@ class QuestionRoute extends StatelessWidget {
           onValid,
           timeout: readonly ? null : Duration(seconds: question.timeoutSeconds),
           footerQuote: pickQuote(),
+          answer: answer,
         ),
       ),
     );

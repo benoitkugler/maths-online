@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/exercices/types.gen.dart' as Types;
 import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
@@ -15,6 +16,12 @@ import 'package:eleve/trivialpoursuit/question_result.dart';
 import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
+class _LastQuestion {
+  final ShowQuestion question;
+  final Types.Answers answer;
+  const _LastQuestion(this.question, this.answer);
+}
 
 class GameAcces {
   final String pseudo;
@@ -72,7 +79,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   /// the last question shown, used to go back when displaying
   /// the result page
-  ShowQuestion? lastQuestion;
+  _LastQuestion? lastQuestion;
 
   @override
   void initState() {
@@ -320,7 +327,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   Future<void> _onShowQuestion(ShowQuestion event) async {
-    lastQuestion = event;
+    lastQuestion = _LastQuestion(event, {});
+
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
       builder: (context) => QuestionRoute(
@@ -328,6 +336,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
         event,
         (a) {
           // do not close the page now, it is handled when receiving result
+          lastQuestion = _LastQuestion(event, a.data.data);
           _sendEvent(Answer(a.data));
         },
       ),
@@ -343,11 +352,12 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       settings: const RouteSettings(name: "/last-question"),
       builder: (context) => QuestionRoute(
         widget.buildMode,
-        lastQuestion!,
+        lastQuestion!.question,
         (_) {
           Navigator.of(context).pop();
         },
         readonly: true,
+        answer: lastQuestion!.answer,
       ),
     ));
   }
