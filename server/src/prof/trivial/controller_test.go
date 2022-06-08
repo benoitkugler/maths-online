@@ -46,36 +46,36 @@ func TestGetConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = TrivialConfig{IdTeacher: user1.Id}.Insert(db)
+	c1, err := TrivialConfig{IdTeacher: user1.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	c2, err := TrivialConfig{IdTeacher: user2.Id}.Insert(db)
+	_, err = TrivialConfig{IdTeacher: user2.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})
+	ct := NewController(db, pass.Encrypter{}, "", user1)
 	l, err := ct.getTrivialPoursuits(user1.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(l) != 1 {
-		t.Fatal()
+		t.Fatal(l)
 	}
 
-	c2.Public = true
-	if _, err := c2.Update(db); err != nil {
+	c1.Public = true
+	if _, err = c1.Update(db); err != nil {
 		t.Fatal(err)
 	}
 
-	l, err = ct.getTrivialPoursuits(user1.Id)
+	l, err = ct.getTrivialPoursuits(user2.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(l) != 2 {
-		t.Fatal()
+		t.Fatal(l)
 	}
 }
 

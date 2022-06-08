@@ -217,40 +217,24 @@ func (gc *GameController) StartLoop() (Review, bool) {
 
 			ProgressLogger.Printf("Game %s : removing player %d...", gc.ID, gc.clients[client])
 
-			gc.gameLock.Lock()
 			playerID := gc.clients[client]
+
 			// check if the player is not already removed
 			if gc.Game.Players[playerID] == nil {
 				continue
 			}
-			event, resetTurn := gc.Game.RemovePlayer(playerID)
-			hasStarted := gc.Game.HasStarted()
-			nbPlayers := gc.Game.NumberPlayers(true)
-			delete(gc.clients, client)
+
+			gc.gameLock.Lock()
+			update := gc.Game.RemovePlayer(playerID)
 			gc.gameLock.Unlock()
+
+			delete(gc.clients, client)
 
 			if gc.monitor != nil { // notify the monitor
 				gc.monitor <- gc.Summary()
 			}
 
-			// end the game only if the game has already started and all
-			// players have left
-			if hasStarted && nbPlayers == 0 {
-				// we consider all player leaving early means the game
-				// did not end properly
-				// also, game.Players would be empty here
-				return Review{}, false
-			}
-
-			events := game.Events{event}
-			if hasStarted && resetTurn != nil {
-				events = append(events, *resetTurn)
-			}
-
-			gc.broadcastEvents(game.StateUpdate{
-				Events: events,
-				State:  gc.Game.GameState,
-			})
+			gc.broadcastEvents(update)
 
 		case <-gc.Game.QuestionTimeout.C:
 			ProgressLogger.Printf("Game %s : questionTimeoutAction...", gc.ID)

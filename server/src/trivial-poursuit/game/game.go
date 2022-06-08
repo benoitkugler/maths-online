@@ -119,6 +119,9 @@ func (g *Game) IsPlaying() bool {
 			!g.arePlayersReadyForNextTurn())
 }
 
+// return true when the game is at a question or question result panel
+func (g *Game) inQuestion() bool { return g.question.ID != 0 }
+
 // AddPlayer add a player to the game and returns
 // its id.
 // If name is empty, a name is generated.
@@ -163,7 +166,9 @@ func (g *Game) ReconnectPlayer(player PlayerID, pseudo string) PlayerReconnected
 // It not, the player is entirely removed.
 // If the player was currently throwing or choosing the tile,
 // the turn is reset to the next player.
-func (g *Game) RemovePlayer(player PlayerID) (LobbyUpdate, *PlayerTurn) {
+// If a question is being answered and the `player` was the
+// last answering, the question is concluded.
+func (g *Game) RemovePlayer(player PlayerID) StateUpdate {
 	playerName := g.playerName(player)
 
 	if g.HasStarted() {
@@ -172,20 +177,41 @@ func (g *Game) RemovePlayer(player PlayerID) (LobbyUpdate, *PlayerTurn) {
 		delete(g.GameState.Players, player)
 	}
 
-	var resetTurn *PlayerTurn
-	if g.GameState.Player == player && g.NumberPlayers(true) > 0 {
-		g.GameState.Player = g.nextPlayer()
-		resetTurn = &PlayerTurn{
-			Player:     g.GameState.Player,
-			PlayerName: g.playerName(g.GameState.Player),
-		}
-	}
-	return LobbyUpdate{
+	out := Events{LobbyUpdate{
 		Player:     player,
 		Names:      g.playerNames(),
 		PlayerName: playerName,
 		IsJoining:  false,
-	}, resetTurn
+	}}
+
+	isInQuestion := g.inQuestion()
+
+	if !isInQuestion && g.hasStarted && g.GameState.Player == player && g.NumberPlayers(true) > 0 {
+		g.GameState.Player = g.nextPlayer()
+		resetTurn := PlayerTurn{
+			Player:     g.GameState.Player,
+			PlayerName: g.playerName(g.GameState.Player),
+		}
+		out = append(out, resetTurn)
+	}
+
+	if isInQuestion {
+		if endQuestion := g.concludeQuestion(false); endQuestion != nil {
+			return StateUpdate{
+				State:  g.GameState,
+				Events: append(out, endQuestion.Events...),
+			}
+		}
+
+		if endTurn := g.tryEndTurn(); endTurn != nil {
+			return StateUpdate{
+				State:  g.GameState,
+				Events: append(out, endTurn.Events...),
+			}
+		}
+	}
+
+	return StateUpdate{State: g.GameState, Events: out}
 }
 
 // panic if no active players are present
@@ -370,14 +396,9 @@ func (gs *Game) arePlayersReadyForNextTurn() bool {
 	return true
 }
 
-func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates MaybeUpdate) {
-	gs.currentWantNextTurn[player] = true
-
-	pReview := &gs.Players[player].Review
-	if event.MarkQuestion {
-		pReview.MarkedQuestions = append(pReview.MarkedQuestions, gs.question.ID)
-	}
-
+// if all the players are ready, go to the next turn (or end the game if needed)
+// otherwise, it is a no-op
+func (gs *Game) tryEndTurn() (updates MaybeUpdate) {
 	if !gs.arePlayersReadyForNextTurn() { // do nothing
 		return nil
 	}
@@ -403,6 +424,17 @@ func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates
 	}
 
 	return updates
+}
+
+func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates MaybeUpdate) {
+	gs.currentWantNextTurn[player] = true
+
+	pReview := &gs.Players[player].Review
+	if event.MarkQuestion {
+		pReview.MarkedQuestions = append(pReview.MarkedQuestions, gs.question.ID)
+	}
+
+	return gs.tryEndTurn()
 }
 
 // endQuestion close the current question

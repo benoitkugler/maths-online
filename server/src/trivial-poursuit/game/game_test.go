@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -130,9 +129,61 @@ func TestDisconnect(t *testing.T) {
 	p2, _ := g.AddPlayer("")
 
 	g.StartGame()
-	_, resetTurn := g.RemovePlayer(p1)
-	if resetTurn == nil || resetTurn.Player != p2 {
+	events := g.RemovePlayer(p1).Events
+	if len(events) != 2 {
+		t.Fatal()
+	}
+	resetTurn := events[1].(PlayerTurn)
+	if resetTurn.Player != p2 {
 		t.Fatal(resetTurn)
+	}
+}
+
+func TestDisconnectInQuestion(t *testing.T) {
+	g := NewGame(time.Second/2, true, QuestionPool{exQu, exQu, exQu, exQu, exQu})
+
+	p1, _ := g.AddPlayer("")
+	p2, _ := g.AddPlayer("")
+
+	g.EmitQuestion()
+
+	g.handleAnswer(Answer{}, p1)
+
+	// player1 has answered, waiting for player2
+
+	g.RemovePlayer(p2)
+
+	if g.QuestionTimeout.Stop() {
+		t.Fatal("question should have been closed")
+	}
+}
+
+func TestDisconnectInBeforeNextTurn(t *testing.T) {
+	g := NewGame(time.Second/2, true, QuestionPool{exQu, exQu, exQu, exQu, exQu})
+
+	p1, _ := g.AddPlayer("")
+	p2, _ := g.AddPlayer("")
+	p3, _ := g.AddPlayer("")
+	g.StartGame()
+
+	g.EmitQuestion()
+
+	g.handleAnswer(Answer{}, p1)
+	g.handleAnswer(Answer{}, p2)
+	g.handleAnswer(Answer{}, p3)
+
+	g.handleWantNextTurn(WantNextTurn{}, p1)
+	g.handleWantNextTurn(WantNextTurn{}, p3)
+
+	// player1 wants next turn, waiting for player2
+	if g.GameState.Player != 0 {
+		t.Fatal(g.GameState.Player)
+	}
+
+	g.RemovePlayer(p2)
+
+	if g.GameState.Player != 2 {
+		t.Fatal(g.GameState.Player)
 	}
 }
 
@@ -152,7 +203,6 @@ outer:
 		select {
 		case <-g.QuestionTimeout.C:
 			g.QuestionTimeoutAction()
-			fmt.Println("OK")
 			break outer
 		}
 	}
