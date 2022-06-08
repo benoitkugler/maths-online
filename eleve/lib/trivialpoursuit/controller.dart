@@ -351,18 +351,20 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       return false;
     });
 
-    await Navigator.of(context).push(MaterialPageRoute<void>(
+    var wantNextTurn =
+        await Navigator.of(context).push(MaterialPageRoute<WantNextTurn>(
       settings: const RouteSettings(name: "/answer"),
       builder: (context) => NotificationListener<WantNextTurnNotification>(
         onNotification: (notification) {
-          Navigator.pop(context);
-          _sendEvent(notification.event);
+          Navigator.pop(context, notification.event);
           return true;
         },
         child:
             QuestionResult(playerID, event, state.players, _showLastQuestion),
       ),
     ));
+    wantNextTurn ??= const WantNextTurn(false);
+    _sendEvent(wantNextTurn);
   }
 
   void _onPlayerReconnected(PlayerReconnected event) {
