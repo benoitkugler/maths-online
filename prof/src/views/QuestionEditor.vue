@@ -12,11 +12,13 @@
           :tags="currentTags"
           :all-tags="allKnownTags"
         ></EditorPannel>
-        <QuestionList
-          v-if="viewKind == 'questions'"
-          :tags="allKnownTags"
-          @edit="editQuestion"
-        ></QuestionList>
+        <keep-alive>
+          <QuestionList
+            v-if="viewKind == 'questions'"
+            :tags="allKnownTags"
+            @edit="editQuestion"
+          ></QuestionList>
+        </keep-alive>
       </v-col>
       <v-col cols="auto">
         <keep-alive>
