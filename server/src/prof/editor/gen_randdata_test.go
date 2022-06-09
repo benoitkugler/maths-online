@@ -537,10 +537,11 @@ func randexe_QuestionPage() exercice.QuestionPage {
 
 func randQuestion() Question {
 	return Question{
-		Id:        randint64(),
-		Page:      randexe_QuestionPage(),
-		Public:    randbool(),
-		IdTeacher: randint64(),
+		Id:          randint64(),
+		Page:        randexe_QuestionPage(),
+		Public:      randbool(),
+		IdTeacher:   randint64(),
+		Description: randstring(),
 	}
 }
 

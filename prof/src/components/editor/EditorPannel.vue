@@ -47,8 +47,15 @@
     </v-row>
   </v-snackbar>
 
+  <v-dialog v-model="showEditDescription">
+    <description-pannel
+      v-model="question.description"
+      :readonly="isReadonly"
+    ></description-pannel>
+  </v-dialog>
+
   <v-card class="mt-3 px-2">
-    <v-row no-gutters class="mb-1">
+    <v-row no-gutters class="mb-2">
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
@@ -59,9 +66,10 @@
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
       </v-col>
-      <v-col class="pr-2">
-        <v-row no-gutters
-          ><v-col>
+
+      <v-col>
+        <v-row no-gutters>
+          <v-col>
             <v-text-field
               class="my-2 input-small"
               variant="outlined"
@@ -70,22 +78,19 @@
               v-model="question.page.title"
               :readonly="isReadonly"
               hide-details
-            ></v-text-field></v-col
-        ></v-row>
-        <v-row
-          ><v-col
-            ><tag-list-field
-              label="Catégories"
-              v-model="tags"
-              :all-tags="props.allTags"
-              @update:model-value="saveTags"
-              :readonly="isReadonly"
-            ></tag-list-field></v-col
-        ></v-row>
-      </v-col>
-      <v-col align-self="center" style="text-align: right" cols="auto">
-        <v-row no-gutters justify="center" class="mb-2">
-          <v-col>
+            ></v-text-field
+          ></v-col>
+          <v-col cols="auto" align-self="center">
+            <v-btn
+              class="mx-1"
+              size="x-small"
+              icon
+              @click="showEditDescription = true"
+              title="Editer le commentaire"
+            >
+              <v-icon icon="mdi-message-reply-text" size="x-small"></v-icon>
+            </v-btn>
+
             <v-btn
               class="mx-2"
               icon
@@ -101,8 +106,7 @@
                 size="small"
               ></v-icon>
             </v-btn>
-          </v-col>
-          <v-col>
+
             <v-menu offset-y close-on-content-click>
               <template v-slot:activator="{ isActive, props }">
                 <v-btn
@@ -110,7 +114,7 @@
                   title="Plus d'options"
                   v-on="{ isActive }"
                   v-bind="props"
-                  size="small"
+                  size="x-small"
                 >
                   <v-icon icon="mdi-dots-vertical"></v-icon>
                 </v-btn>
@@ -140,24 +144,37 @@
                   ></v-icon>
                 </v-btn>
               </v-toolbar>
-            </v-menu> </v-col
-        ></v-row>
-        <v-row no-gutters
-          ><v-col>
+            </v-menu>
+          </v-col>
+        </v-row>
+
+        <v-row no-gutters>
+          <v-col class="pr-2">
+            <tag-list-field
+              label="Catégories"
+              v-model="tags"
+              :all-tags="props.allTags"
+              @update:model-value="saveTags"
+              :readonly="isReadonly"
+            ></tag-list-field
+          ></v-col>
+          <v-col cols="auto">
             <v-menu offset-y close-on-content-click>
               <template v-slot:activator="{ isActive, props }">
                 <v-btn
                   title="Ajouter un contenu"
                   v-on="{ isActive }"
                   v-bind="props"
+                  size="small"
                 >
                   <v-icon icon="mdi-plus" color="green"></v-icon>
                   Insérer
                 </v-btn>
               </template>
               <block-bar @add="addBlock"></block-bar>
-            </v-menu> </v-col
-        ></v-row>
+            </v-menu>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
 
@@ -245,18 +262,18 @@
 
 <script setup lang="ts">
 import {
-Visibility,
-type errEnonce,
-type ErrParameters,
-type Origin
+  Visibility,
+  type errEnonce,
+  type ErrParameters,
+  type Origin,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { newBlock, saveData, swapItems, xRune } from "@/controller/editor";
 import type {
-Block,
-Question,
-RandomParameter,
-Variable
+  Block,
+  Question,
+  RandomParameter,
+  Variable,
 } from "@/controller/exercice_gen";
 import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
@@ -285,6 +302,7 @@ import TextVue from "./blocks/Text.vue";
 import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
+import DescriptionPannel from "./DescriptionPannel.vue";
 import DropZone from "./DropZone.vue";
 import Intrinsics from "./Intrinsics.vue";
 import RandomParameters from "./RandomParameters.vue";
@@ -539,6 +557,8 @@ async function duplicate() {
 function backToList() {
   emit("back");
 }
+
+let showEditDescription = $ref(false);
 </script>
 
 <style scoped>

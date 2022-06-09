@@ -1362,7 +1362,8 @@ CREATE TABLE questions (
     id serial PRIMARY KEY,
     page jsonb NOT NULL CONSTRAINT page_structgen_validate_json_exe_QuestionPage CHECK (structgen_validate_json_exe_QuestionPage (page)),
     public boolean NOT NULL,
-    id_teacher integer NOT NULL
+    id_teacher integer NOT NULL,
+    description varchar NOT NULL
 );
 
 CREATE TABLE question_tags (

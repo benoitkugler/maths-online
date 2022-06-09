@@ -6,10 +6,11 @@ import "github.com/benoitkugler/maths-online/maths/exercice"
 
 // Question is a standalone question, used for instance in games.
 type Question struct {
-	Id        int64                 `json:"id"`
-	Page      exercice.QuestionPage `json:"page"`
-	Public    bool                  `json:"public"` // in practice only true for admins
-	IdTeacher int64                 `json:"id_teacher"`
+	Id          int64                 `json:"id"`
+	Page        exercice.QuestionPage `json:"page"`
+	Public      bool                  `json:"public"` // in practice only true for admins
+	IdTeacher   int64                 `json:"id_teacher"`
+	Description string                `json:"description"`
 }
 
 // sql: ADD UNIQUE(id_question, tag)

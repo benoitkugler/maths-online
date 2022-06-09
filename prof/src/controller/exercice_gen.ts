@@ -354,6 +354,7 @@ export interface Question {
   page: QuestionPage;
   public: boolean;
   id_teacher: number;
+  description: string;
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionTag
 export interface QuestionTag {

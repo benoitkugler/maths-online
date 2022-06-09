@@ -33,8 +33,8 @@
   >
     <div
       v-if="props.modelValue.length == 0"
-      style="text-align: center; font-style: italic"
-      class="pa-2"
+      style="text-align: center; font-style: italic; font-size: 10pt"
+      class="pa-1"
     >
       Ajouter une étiquette...
     </div>
@@ -58,7 +58,7 @@ interface Props {
   allTags: string[];
   readonly: boolean;
   label?: string;
-  yPadding: boolean;
+  yPadding?: boolean;
 }
 
 const props = defineProps<Props>();

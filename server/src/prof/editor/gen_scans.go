@@ -112,6 +112,7 @@ func scanOneQuestion(row scanner) (Question, error) {
 		&s.Page,
 		&s.Public,
 		&s.IdTeacher,
+		&s.Description,
 	)
 	return s, err
 }
@@ -181,24 +182,24 @@ func ScanQuestions(rs *sql.Rows) (Questions, error) {
 // Insert Question in the database and returns the item with id filled.
 func (item Question) Insert(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`INSERT INTO questions (
-		page,public,id_teacher
+		page,public,id_teacher,description
 		) VALUES (
-		$1,$2,$3
+		$1,$2,$3,$4
 		) RETURNING 
-		id,page,public,id_teacher;
-		`, item.Page, item.Public, item.IdTeacher)
+		id,page,public,id_teacher,description;
+		`, item.Page, item.Public, item.IdTeacher, item.Description)
 	return ScanQuestion(row)
 }
 
 // Update Question in the database and returns the new version.
 func (item Question) Update(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`UPDATE questions SET (
-		page,public,id_teacher
+		page,public,id_teacher,description
 		) = (
-		$2,$3,$4
+		$2,$3,$4,$5
 		) WHERE id = $1 RETURNING 
-		id,page,public,id_teacher;
-		`, item.Id, item.Page, item.Public, item.IdTeacher)
+		id,page,public,id_teacher,description;
+		`, item.Id, item.Page, item.Public, item.IdTeacher, item.Description)
 	return ScanQuestion(row)
 }
 
