@@ -1,7 +1,7 @@
 <template>
   <v-expansion-panels class="my-1" v-model="state">
     <v-expansion-panel>
-      <v-expansion-panel-title class="py-0 bg-lime-lighten-5 rounded">
+      <v-expansion-panel-title class="py-0 bg-lime-lighten-5 rounded pr-1 pl-2">
         <v-row no-gutters justify="space-between">
           <v-col cols="auto" style="text-align: left" align-self="center">
             <v-row no-gutters>

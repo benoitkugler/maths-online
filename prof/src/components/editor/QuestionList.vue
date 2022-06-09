@@ -160,6 +160,7 @@ let questions = $ref<QuestionGroup[]>([]);
 let size = $ref(0);
 
 let querySearch = $ref("");
+
 let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
 
 let timerId = 0;
