@@ -279,7 +279,8 @@ class _AnswerRow extends StatelessWidget {
           if (label.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: textMath(label, _Symbol.fontSize),
+              child:
+                  textMath(label, const TextStyle(fontSize: _Symbol.fontSize)),
             ),
           ...widgets,
         ]));

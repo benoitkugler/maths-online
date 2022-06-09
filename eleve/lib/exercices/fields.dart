@@ -30,22 +30,23 @@ abstract class FieldController {
   void setData(Answer answer);
 }
 
-Widget textMath(String content, double fontSize, {Key? key}) {
+Widget textMath(String content, TextStyle style, {Key? key}) {
+  style = style.copyWith(fontSize: (style.fontSize ?? 12) - 1);
   return Math.tex(
     content,
     key: key,
     mathStyle: MathStyle.text,
     textScaleFactor: 1.15,
-    textStyle: TextStyle(fontSize: fontSize - 1),
+    textStyle: style,
   );
 }
 
 WidgetSpan _inlineMath(
-    String content, double fontSize, PlaceholderAlignment aligment, Key? key) {
+    String content, TextStyle style, PlaceholderAlignment aligment, Key? key) {
   return WidgetSpan(
     baseline: TextBaseline.alphabetic,
     alignment: aligment,
-    child: textMath(content, fontSize, key: key),
+    child: textMath(content, style, key: key),
   );
 }
 
@@ -75,7 +76,7 @@ List<InlineSpan> buildText(TextLine parts, TextS style, double fontSize,
       out.add(const TextSpan(text: " "));
       out.add(_inlineMath(
           part.text,
-          fontSize,
+          ts,
           baselineMiddle
               ? PlaceholderAlignment.middle
               : PlaceholderAlignment.baseline,
@@ -127,7 +128,7 @@ class MathTableCell extends StatelessWidget {
         alignment: Alignment.center,
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
-        child: textMath(mathContent, fontSize - 1),
+        child: textMath(mathContent, const TextStyle(fontSize: fontSize - 1)),
       ),
     );
   }
