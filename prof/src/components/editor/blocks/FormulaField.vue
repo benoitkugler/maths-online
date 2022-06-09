@@ -20,14 +20,14 @@
       </v-text-field>
     </v-col>
     <v-col cols="12" class="pt-0">
-      <v-switch
+      <v-checkbox
         :model-value="isComparaisonStrict"
         @update:model-value="changeComparaison"
         color="secondary"
         label="Comparaison stricte"
-        hide-details
-        hint="Les expressions ne sont pas transformées : (x+1)^2 et x^2 + 2x + 1 ne sont pas considérées comme égales."
-      ></v-switch>
+        density="compact"
+        :messages="[comparaisonMessage]"
+      ></v-checkbox>
     </v-col>
   </v-row>
 </template>
@@ -37,6 +37,7 @@ import { colorByKind } from "@/controller/editor";
 import type { ExpressionFieldBlock } from "@/controller/exercice_gen";
 import { ComparisonLevel, TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
+import { $computed } from "vue/macros";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
@@ -49,10 +50,16 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: ExpressionFieldBlock): void;
 }>();
 
-const isComparaisonStrict = computed(
+let isComparaisonStrict = $computed(
   () =>
     props.modelValue.ComparisonLevel != ComparisonLevel.ExpandedSubstitutions
 );
+
+const comparaisonMessage = computed(() => {
+  return isComparaisonStrict
+    ? "Les expressions sont peu transformées : (x+1)^2 et x^2 + 2x + 1 ne sont pas considérées comme égales."
+    : "Les formules usuelles de développement et factorisation sont appliquées en évaluant la réponse : (x+1)^2 et x^2 + 2x + 1 sont considérées égales.";
+});
 
 function changeComparaison(b: boolean) {
   props.modelValue.ComparisonLevel = b
