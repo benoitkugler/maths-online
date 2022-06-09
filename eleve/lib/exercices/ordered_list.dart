@@ -77,7 +77,7 @@ class OrderedListController extends FieldController {
 
   @override
   bool hasValidData() {
-    return answers.length == expectedLength;
+    return answers.isNotEmpty;
   }
 
   @override
