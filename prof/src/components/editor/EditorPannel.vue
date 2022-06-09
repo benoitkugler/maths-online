@@ -234,7 +234,7 @@
             :key="index"
             :ref="el => (blockWidgets[index] = el as Element)"
           >
-            <container
+            <BlockContainer
               @delete="removeBlock(index)"
               :index="index"
               :nb-blocks="rows.length"
@@ -248,7 +248,7 @@
                 :is="row.Component"
                 :available-parameters="availableParameters"
               ></component>
-            </container>
+            </BlockContainer>
             <drop-zone
               v-if="showDropZone"
               @drop="(origin) => swapBlocks(origin, index + 1)"
@@ -281,7 +281,7 @@ import type { Component } from "@vue/runtime-core";
 import { computed, nextTick, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
-import Container from "./blocks/Container.vue";
+import BlockContainer from "./blocks/BlockContainer.vue";
 import FigureVue from "./blocks/Figure.vue";
 import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
 import FigurePointFieldVue from "./blocks/FigurePointField.vue";
