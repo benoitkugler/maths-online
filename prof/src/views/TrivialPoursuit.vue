@@ -2,6 +2,7 @@
   <v-dialog
     :model-value="editedConfig != null"
     @update:model-value="editedConfig = null"
+    :retain-focus="false"
   >
     <edit-config
       v-if="editedConfig != null"
@@ -118,6 +119,9 @@
           </v-col>
           <v-col cols="3">
             {{ config.Config.Name }}
+            <small class="text-grey">
+              {{ categorie(config.Config) }}
+            </small>
           </v-col>
           <v-col align-self="center" cols="5">
             <v-row justify="center" class="bg-grey-lighten-1 rounded">
@@ -152,11 +156,11 @@
 import {
   Visibility,
   type RunningSessionMetaOut,
-  type stopGame,
   type TrivialConfig,
   type TrivialConfigExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { commonTags } from "@/controller/editor";
 import { colorsPerCategorie } from "@/controller/trivial";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -270,8 +274,16 @@ async function launchSession(groups: number[]) {
   showMonitor = true;
 }
 
-async function stopTrivialGame(params: stopGame) {
-  await controller.StopTrivialGame(params);
+function categorie(config: TrivialConfig) {
+  const allUnions: string[][] = [];
+  config.Questions.forEach((cat) =>
+    allUnions.push(...(cat || []).map((s) => s || []))
+  );
+  const common = commonTags(allUnions);
+  if (common.length != 0) {
+    return "(" + common.join(", ") + ")";
+  }
+  return "";
 }
 
 let sessionMeta = $ref<RunningSessionMetaOut>({ NbGames: 0 });

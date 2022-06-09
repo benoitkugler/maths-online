@@ -51,7 +51,7 @@ import {
   type QuestionGroup,
   type QuestionHeader,
 } from "@/controller/api_gen";
-import { commonTags } from "@/controller/editor";
+import { commonGroupTags } from "@/controller/editor";
 import { computed, ref } from "@vue/runtime-core";
 import QuestionRow from "./QuestionRow.vue";
 import TagListField from "./TagListField.vue";
@@ -69,7 +69,7 @@ const emit = defineEmits<{
   (e: "updateTags", tags: string[]): void;
 }>();
 
-const tags = computed(() => commonTags(props.group.Questions || []));
+const tags = computed(() => commonGroupTags(props.group.Questions || []));
 
 const isEditable = computed(
   () =>

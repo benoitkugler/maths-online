@@ -679,21 +679,25 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
   }
 }
 
-/** return the list of tags shared by all the questions */
-export function commonTags(questions: QuestionHeader[]) {
+/** return the list of tags shared by all the list */
+export function commonTags(tags: string[][]) {
   const crible: { [key: string]: number } = {};
-  questions.forEach((qu) =>
-    (qu.Tags || []).forEach((tag) => (crible[tag] = (crible[tag] || 0) + 1))
+  tags.forEach((l) =>
+    l.forEach((tag) => (crible[tag] = (crible[tag] || 0) + 1))
   );
   return Object.entries(crible)
-    .filter((entry) => entry[1] == questions.length)
+    .filter((entry) => entry[1] == tags.length)
     .map((entry) => entry[0]);
+}
+
+/** return the list of tags shared by all the questions */
+export function commonGroupTags(questions: QuestionHeader[]) {
+  return commonTags(questions.map((qu) => qu.Tags || []));
 }
 
 /** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
 export const visiblityColors: { [key in Visibility]: string } = {
   [Visibility.Admin]: "yellow-lighten-3",
-  [Visibility.Shared]: "yellow-lighten-5",
   [Visibility.Personnal]: "white",
 };
 
@@ -711,7 +715,7 @@ export function removeDuplicates(tags: string[][]) {
 export function personnalOrigin(): Origin {
   return {
     IsPublic: false,
-    Owner: "",
+    AllowPublish: false,
     Visibility: Visibility.Personnal,
   };
 }

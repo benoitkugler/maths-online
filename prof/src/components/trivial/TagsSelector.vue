@@ -1,13 +1,14 @@
 <template>
   <v-row class="mx-2">
     <v-col cols="10">
-      <v-row v-for="(row, index) in modelValue">
+      <v-row v-for="(row, index) in modelValue" :key="index">
         <v-col cols="10">
           <tag-list-field
             :model-value="row || []"
-            @update:model-value="r => updateRow(index, r)"
+            @update:model-value="(r) => updateRow(index, r)"
             :all-tags="allTags"
             :ref="(el:any) => (rows[index] = el as TF)"
+            :readonly="false"
           ></tag-list-field>
         </v-col>
         <v-col cols="2" align-self="center" style="text-align: center">

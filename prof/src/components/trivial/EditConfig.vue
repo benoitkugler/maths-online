@@ -39,6 +39,7 @@
           <v-menu offset-y close-on-content-click v-model="showDifficultyCard">
             <template v-slot:activator="{ isActive, props }">
               <v-btn
+                class="mr-1"
                 title="Sélectionner la difficulté"
                 v-on="{ isActive }"
                 v-bind="props"
@@ -263,8 +264,6 @@ function adjustDifficulty() {
       return withDiff;
     });
   }
-
-  console.log(tmp);
 
   props.edited.Questions = tmp;
   fetchHint();
