@@ -46,6 +46,7 @@
       </v-col>
       <v-col cols="4" style="text-align: right" class="my-2">
         <v-btn
+          v-if="showLaTeXDoc"
           class="mr-2"
           icon
           title="Documentation de la syntaxe LaTeX"
@@ -69,7 +70,7 @@
 
 <script setup lang="ts">
 import { BlockKindLabels, onDragListItemStart } from "@/controller/editor";
-import type { BlockKind } from "@/controller/exercice_gen";
+import { BlockKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 
@@ -95,6 +96,12 @@ const colorClass = computed(() => {
     return "bg-red";
   }
   return isAnswer.value ? "bg-pink-lighten-3" : "bg-purple-lighten-3";
+});
+
+const showLaTeXDoc = computed(() => {
+  return ![BlockKind.ExpressionFieldBlock, BlockKind.NumberFieldBlock].includes(
+    props.kind
+  );
 });
 
 function onDragStart(payload: DragEvent) {
