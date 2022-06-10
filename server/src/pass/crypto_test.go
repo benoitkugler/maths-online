@@ -1,6 +1,8 @@
 package pass
 
 import (
+	"encoding/hex"
+	"fmt"
 	"testing"
 )
 
@@ -46,10 +48,13 @@ func TestJSON(t *testing.T) {
 }
 
 func TestPassword(t *testing.T) {
-	pass := "mysuperbepassword"
-	enc := NewEncrypterFromKey("5s6d897e4q87mùlds54")
+	pass := "1234"
+	// enc := NewEncrypterFromKey("456789")
+	enc := Encrypter{4, 5, 6, 7, 8, 9}
 
 	if enc.DecryptPassword(enc.EncryptPassword(pass)) != pass {
 		t.Fatal()
 	}
+
+	fmt.Printf("'\\x%s'\n", hex.EncodeToString(enc.EncryptPassword(pass)))
 }
