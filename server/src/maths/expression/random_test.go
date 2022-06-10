@@ -320,7 +320,7 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		got, freq := expr.AreFxsIntegers(tt.parameters, NewVar('x'), tt.grid)
+		got, freq := FunctionExpr{Function: expr, Variable: NewVar('x')}.AreFxsIntegers(tt.parameters, tt.grid)
 		if got != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
 		}

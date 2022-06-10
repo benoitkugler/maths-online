@@ -378,16 +378,23 @@ func (expr *Expression) IsValidInteger(parameters RandomParameters) (bool, int) 
 // expression replacing `x` by the values from `grid` and checks if the values are integers.
 // It returns the frequency of successul tries, in % (between 0 and 100)
 // `parameters` must be a valid set of parameters
-func (expr *Expression) AreFxsIntegers(parameters RandomParameters, x Variable, grid []int) (bool, int) {
+func (fn FunctionExpr) AreFxsIntegers(parameters RandomParameters, grid []int) (bool, int) {
 	const nbTries = 1000
 	var nbSuccess int
 	for i := 0; i < nbTries; i++ {
 		ps, _ := parameters.Instantiate()
+		fnExpr := fn.Function.copy()
+		fnExpr.Substitute(ps)
+
 		// checks that all grid values are integers
 		areIntegers := true
 		for _, xValue := range grid {
-			ps[x] = NewRN(float64(xValue))
-			value, _ := expr.Evaluate(ps)
+			value, err := fnExpr.Evaluate(singleVarResolver{v: fn.Variable, value: float64(xValue)})
+			if err != nil {
+				areIntegers = false
+				break
+			}
+
 			_, ok := isInt(value)
 			areIntegers = areIntegers && ok
 		}
