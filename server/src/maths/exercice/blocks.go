@@ -562,35 +562,40 @@ type FunctionDefinition struct {
 	Range      [2]float64          // definition domain
 }
 
-func (fg FunctionDefinition) instantiate(params expression.Variables) (expression.FunctionDefinition, error) {
+func (fg FunctionDefinition) parse() (expression.FunctionExpr, error) {
 	expr, err := expression.Parse(fg.Function)
+	if err != nil {
+		return expression.FunctionExpr{}, err
+	}
+	return expression.FunctionExpr{
+		Function: expr,
+		Variable: fg.Variable,
+	}, nil
+}
+
+func (fg FunctionDefinition) instantiate(params expression.Variables) (expression.FunctionDefinition, error) {
+	fnExpr, err := fg.parse()
 	if err != nil {
 		return expression.FunctionDefinition{}, err
 	}
-	expr.Substitute(params)
+	fnExpr.Function.Substitute(params)
 	return expression.FunctionDefinition{
-		FunctionExpr: expression.FunctionExpr{
-			Function: expr,
-			Variable: fg.Variable,
-		},
-		From: fg.Range[0],
-		To:   fg.Range[1],
+		FunctionExpr: fnExpr,
+		From:         fg.Range[0],
+		To:           fg.Range[1],
 	}, nil
 }
 
 func (fg FunctionDefinition) validate(params expression.RandomParameters) error {
-	expr, err := expression.Parse(fg.Function)
+	fnExpr, err := fg.parse()
 	if err != nil {
 		return err
 	}
 
 	fn := expression.FunctionDefinition{
-		FunctionExpr: expression.FunctionExpr{
-			Function: expr,
-			Variable: fg.Variable,
-		},
-		From: fg.Range[0],
-		To:   fg.Range[1],
+		FunctionExpr: fnExpr,
+		From:         fg.Range[0],
+		To:           fg.Range[1],
 	}
 
 	if ok, freq := fn.IsValid(params, maxFunctionBound); !ok {

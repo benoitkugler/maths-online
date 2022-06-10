@@ -1,7 +1,9 @@
 package exercice
 
 import (
+	"encoding/json"
 	"math"
+	"os"
 	"reflect"
 	"testing"
 
@@ -164,5 +166,29 @@ func Test_shufflingMap(t *testing.T) {
 		if indices[new4] != 4 {
 			t.Errorf("shufflingMap() = %v", got)
 		}
+	}
+}
+
+func TestInstantiate01(t *testing.T) {
+	by, err := os.ReadFile("examples/bug01.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fullQuestion struct {
+		Page QuestionPage `json:"page"`
+	}
+	if err = json.Unmarshal(by, &fullQuestion); err != nil {
+		t.Fatal(err)
+	}
+
+	qu, err := fullQuestion.Page.instantiate()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	qu.ToClient() // test there is no crash
+
+	if err = fullQuestion.Page.Validate(); err == nil {
+		t.Fatal("expected error because of non integer values")
 	}
 }

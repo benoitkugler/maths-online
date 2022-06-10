@@ -315,6 +315,7 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID i
 	if err != nil {
 		return nil, err
 	}
+	fn.Substitute(params)
 	return FunctionPointsFieldInstance{
 		Function: expression.FunctionExpr{
 			Function: fn,
@@ -343,7 +344,17 @@ func (fp FunctionPointsFieldBlock) validate(params expression.RandomParameters) 
 			float64(fp.XGrid[len(fp.XGrid)-1]),
 		},
 	}
-	return fn.validate(params)
+	if err := fn.validate(params); err != nil {
+		return err
+	}
+
+	// check that every point is an integer (otherwise is can't be selected on the client)
+	fnExpr, _ := fn.parse() // guarded by `validate`
+	if ok, freq := fnExpr.AreFxsIntegers(params, fp.XGrid); !ok {
+		return fmt.Errorf("Les valeurs de la fonction ne sont pas des nombres entiers (%d %% des tests ont échoué).", 100-freq)
+	}
+
+	return nil
 }
 
 type FigureVectorPairFieldBlock struct {
