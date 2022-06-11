@@ -21,6 +21,23 @@ class StaticRepere extends StatelessWidget {
   }
 }
 
+class Tick {
+  final int logical;
+  final double visual;
+  const Tick(this.logical, this.visual);
+}
+
+class Ticks extends Iterable<Tick> {
+  final List<Tick> ticks;
+  const Ticks(this.ticks);
+
+  Iterable<double> get visual => ticks.map((e) => e.visual);
+  Iterable<int> get logical => ticks.map((e) => e.logical);
+
+  @override
+  Iterator<Tick> get iterator => ticks.iterator;
+}
+
 class RepereMetrics {
   final double
       _displayLength; // displayLength is the length of the largest size of the figure
@@ -55,26 +72,27 @@ class RepereMetrics {
         (x - figure.origin.x).round(), (y - figure.origin.y).round());
   }
 
-  List<double> buildXTicks({int logicalStep = 1}) {
+  Ticks buildXTicks({int logicalStep = 1}) {
     final firstLogical = -figure.origin.x.ceil() ~/ logicalStep * logicalStep;
-    final out = <double>[];
+    final ticks = <Tick>[];
     for (var i = 0; i <= figure.width; i += logicalStep) {
       final logical = IntCoord(firstLogical + i, 0);
       final offset = logicalIntToVisual(logical);
-      out.add(offset.dx);
+      ticks.add(Tick(firstLogical + i, offset.dx));
     }
-    return out;
+    return Ticks(ticks);
   }
 
-  List<double> buildYTicks({int logicalStep = 1}) {
+  Ticks buildYTicks({int logicalStep = 1}) {
     final firstLogical = -figure.origin.y.ceil() ~/ logicalStep * logicalStep;
-    final out = <double>[];
+    final ticks = <Tick>[];
+
     for (var i = 0; i <= figure.height; i += logicalStep) {
       final logical = IntCoord(0, firstLogical + i);
       final offset = logicalIntToVisual(logical);
-      out.add(offset.dy);
+      ticks.add(Tick(firstLogical + i, offset.dy));
     }
-    return out;
+    return Ticks(ticks);
   }
 }
 
@@ -238,10 +256,10 @@ class _GridPainter extends CustomPainter {
     final minorPaint = Paint()
       ..color =
           isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
-    for (var x in metrics.buildXTicks()) {
+    for (var x in metrics.buildXTicks().visual) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), minorPaint);
     }
-    for (var y in metrics.buildYTicks()) {
+    for (var y in metrics.buildYTicks().visual) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), minorPaint);
     }
 
@@ -252,16 +270,38 @@ class _GridPainter extends CustomPainter {
           isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
     final ticksPaint = Paint()..strokeWidth = 1;
     final visualOrigin = metrics.logicalIntToVisual(const IntCoord(0, 0));
-    for (var x in metrics.buildXTicks(logicalStep: 5)) {
+    for (var xTick in metrics.buildXTicks(logicalStep: 5)) {
+      final x = xTick.visual;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), tickLinePaint);
-
       canvas.drawLine(Offset(x, visualOrigin.dy - 5),
           Offset(x, visualOrigin.dy + 5), ticksPaint);
+
+      // paint tick legend, expect for 0,0
+      if (xTick.logical == 0) {
+        continue;
+      }
+      DrawingsPainter.paintText(
+          metrics,
+          canvas,
+          LabeledPoint(Coord(xTick.logical.toDouble(), 0), LabelPos.bottom),
+          "${xTick.logical}",
+          color: Colors.black);
     }
-    for (var y in metrics.buildYTicks(logicalStep: 5)) {
+    for (var yTick in metrics.buildYTicks(logicalStep: 5)) {
+      final y = yTick.visual;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), tickLinePaint);
       canvas.drawLine(Offset(visualOrigin.dx - 5, y),
           Offset(visualOrigin.dx + 5, y), ticksPaint);
+
+      if (yTick.logical == 0) {
+        continue;
+      }
+      DrawingsPainter.paintText(
+          metrics,
+          canvas,
+          LabeledPoint(Coord(0, yTick.logical.toDouble()), LabelPos.left),
+          "${yTick.logical} ",
+          color: Colors.black);
     }
   }
 
