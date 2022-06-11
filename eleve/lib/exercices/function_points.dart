@@ -85,6 +85,9 @@ class _FunctionPointsState extends State<FunctionPoints> {
   Widget build(BuildContext context) {
     final ct = widget.controller;
     final metrics = RepereMetrics(ct.data.bounds, context);
+    final painter = BezierCurvesPainter(metrics,
+        [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)]);
+    final texts = painter.extractTexts();
     return InteractiveViewer(
       transformationController: _zoomController,
       child: NotificationListener<PointMovedNotification<_PointID>>(
@@ -95,24 +98,27 @@ class _FunctionPointsState extends State<FunctionPoints> {
           });
           return true;
         },
-        child: BaseRepere<_PointID>(metrics, true, [
-          CustomPaint(
-            size: Size(metrics.canvasWidth, metrics.canvasHeight),
-            painter: BezierCurvesPainter(metrics, [
-              FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)
-            ]),
-          ),
-          ...List<Widget>.generate(ct.fxs.length, (index) {
-            final logical = IntCoord(ct.data.xs[index], ct.fxs[index] ?? 0);
-            return DraggableGridPoint<_PointID>(
-              logical,
-              metrics.logicalIntToVisual(logical),
-              index,
-              _zoomController.value.getMaxScaleOnAxis(),
-              disabled: !widget.controller.enabled,
-            );
-          }),
-        ]),
+        child: BaseRepere<_PointID>(
+          metrics,
+          true,
+          [
+            CustomPaint(
+              size: metrics.size,
+              painter: painter,
+            ),
+            ...List<Widget>.generate(ct.fxs.length, (index) {
+              final logical = IntCoord(ct.data.xs[index], ct.fxs[index] ?? 0);
+              return DraggableGridPoint<_PointID>(
+                logical,
+                metrics.logicalIntToVisual(logical),
+                index,
+                _zoomController.value.getMaxScaleOnAxis(),
+                disabled: !widget.controller.enabled,
+              );
+            }),
+          ],
+          texts,
+        ),
       ),
     );
   }

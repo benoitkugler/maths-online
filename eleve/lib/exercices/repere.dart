@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/repere.gen.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +12,20 @@ class StaticRepere extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metrics = RepereMetrics(figure.bounds, context);
-    return BaseRepere(metrics, figure.showGrid, [
-      // custom drawing
-      CustomPaint(
-        size: Size(metrics.canvasWidth, metrics.canvasHeight),
-        painter: DrawingsPainter(metrics, figure.drawings),
-      ),
-    ]);
+    final painter = DrawingsPainter(metrics, figure.drawings);
+    final texts = painter.extractTexts();
+    return BaseRepere(
+      metrics,
+      figure.showGrid,
+      [
+        // custom drawing
+        CustomPaint(
+          size: metrics.size,
+          painter: painter,
+        ),
+      ],
+      texts,
+    );
   }
 }
 
@@ -50,6 +58,9 @@ class RepereMetrics {
 
   double get canvasWidth => _displayLength * figure.width / resolution;
   double get canvasHeight => _displayLength * figure.height / resolution;
+
+  /// [size] is the actual widget size used
+  Size get size => Size(canvasWidth, canvasHeight);
 
   Offset logicalToVisual(Coord point) {
     // shift by the origin
@@ -111,8 +122,10 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
 
   /// [layers] are added in the stack
   final List<Widget> layers;
+  final List<PositionnedText> texts;
 
-  const BaseRepere(this.metrics, this.showGrid, this.layers, {Key? key})
+  const BaseRepere(this.metrics, this.showGrid, this.layers, this.texts,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -134,7 +147,8 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
                 _GridPainter.asCustomPaint(metrics, hasDropOver),
                 _AxisPainter.asCustomPaint(metrics),
               ],
-              ...layers
+              ...layers,
+              ...texts.map((text) => _PositionnedTextW(metrics, text))
             ],
           );
         },
@@ -149,6 +163,71 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+/// [PositionnedText] is an instruction to draw text on
+/// a figure, with logical coordinates
+/// In order to support latex, it must be extracted in its own widget.
+class PositionnedText {
+  final String text;
+
+  /// [pos] is the logical position, with a relative offset hint.
+  final LabeledPoint pos;
+
+  final Color color;
+
+  const PositionnedText(this.text, this.pos, {this.color = Colors.blue});
+}
+
+// to be used in a stack
+class _PositionnedTextW extends StatelessWidget {
+  final RepereMetrics metrics;
+  final PositionnedText text;
+
+  const _PositionnedTextW(this.metrics, this.text, {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // position without offset adjustement, which is handled by _PosSingleChildLayoutDelegate
+    final originalPos = metrics.logicalToVisual(text.pos.point);
+    return Positioned(
+      left: originalPos.dx,
+      top: originalPos.dy,
+      child: CustomSingleChildLayout(
+        delegate: _PosSingleChildLayoutDelegate(metrics, text.pos.pos),
+        child: Container(
+          child: textMath(text.text, TextStyle(color: text.color)),
+          color: Colors.white.withOpacity(0.85),
+          padding: const EdgeInsets.all(1),
+        ),
+      ),
+    );
+  }
+}
+
+class _PosSingleChildLayoutDelegate extends SingleChildLayoutDelegate {
+  final RepereMetrics metrics;
+  final LabelPos pos;
+
+  _PosSingleChildLayoutDelegate(this.metrics, this.pos);
+
+  @override
+  bool shouldRelayout(covariant SingleChildLayoutDelegate oldDelegate) {
+    return this != oldDelegate;
+  }
+
+  @override
+  Size getSize(BoxConstraints constraints) {
+    return metrics.size;
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final textWidth = childSize.width;
+    final textHeight = childSize.height;
+    return pos.offset(textWidth, textHeight);
   }
 }
 
@@ -212,7 +291,7 @@ class _AxisPainter extends CustomPainter {
 
   static CustomPaint asCustomPaint(RepereMetrics metrics) {
     return CustomPaint(
-      size: Size(metrics.canvasWidth, metrics.canvasHeight),
+      size: metrics.size,
       painter: _AxisPainter(metrics),
     );
   }
@@ -245,7 +324,7 @@ class _GridPainter extends CustomPainter {
 
   static CustomPaint asCustomPaint(RepereMetrics metrics, bool isHighlighted) {
     return CustomPaint(
-      size: Size(metrics.canvasWidth, metrics.canvasHeight),
+      size: metrics.size,
       painter: _GridPainter(metrics, isHighlighted),
     );
   }
@@ -280,7 +359,7 @@ class _GridPainter extends CustomPainter {
       if (xTick.logical == 0) {
         continue;
       }
-      DrawingsPainter.paintText(
+      DrawingsPainter._paintText(
           metrics,
           canvas,
           LabeledPoint(Coord(xTick.logical.toDouble(), 0), LabelPos.bottom),
@@ -296,7 +375,7 @@ class _GridPainter extends CustomPainter {
       if (yTick.logical == 0) {
         continue;
       }
-      DrawingsPainter.paintText(
+      DrawingsPainter._paintText(
           metrics,
           canvas,
           LabeledPoint(Coord(0, yTick.logical.toDouble()), LabelPos.left),
@@ -318,7 +397,7 @@ class _OriginPainter extends CustomPainter {
 
   static CustomPaint asCustomPaint(RepereMetrics metrics) {
     return CustomPaint(
-      size: Size(metrics.canvasWidth, metrics.canvasHeight),
+      size: metrics.size,
       painter: _OriginPainter(metrics),
     );
   }
@@ -330,9 +409,10 @@ class _OriginPainter extends CustomPainter {
     if (origin.x != 0 || origin.y != 0) {
       // note that logicalToVisual already shift by the origin
       final pos = origin.y == 0 ? LabelPos.top : LabelPos.bottomRight;
-      DrawingsPainter.paintPoint(
-          metrics, canvas, LabeledPoint(const Coord(0, 0), pos), "O",
-          color: Colors.black);
+      const point = Coord(0, 0);
+      DrawingsPainter.paintPoint(metrics, canvas, point, color: Colors.black);
+      DrawingsPainter._paintText(
+          metrics, canvas, LabeledPoint(point, pos), "O");
     }
   }
 
@@ -375,65 +455,88 @@ Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   return Color(int.parse(color, radix: 16));
 }
 
-/// fontSize must be set
-List<InlineSpan> parseSubscript(String text, TextStyle regularStyle) {
-  final out = <InlineSpan>[];
-  while (true) {
-    final index = text.indexOf("_");
-    if (index == -1) {
-      if (text.isNotEmpty) {
-        out.add(TextSpan(text: text, style: regularStyle));
-      }
-      break;
-    }
-
-    if (index > 0) {
-      // add the regular chunk
-      out.add(TextSpan(text: text.substring(0, index), style: regularStyle));
-    }
-
-    // skip the _ ...
-    text = text.substring(index + 1);
-    // then end the subscript at the next white space
-    var end = text.indexOf(RegExp(r'\s'));
-    if (end == -1) {
-      end = text.length;
-    }
-
-    final subscript = text.substring(0, end);
-    text = text.substring(end);
-    if (subscript.isNotEmpty) {
-      const textScaleFactor = 0.7; // superscript is usually smaller in size
-      // add the subscript chunck
-      out.add(TextSpan(
-        text: subscript,
-        style: regularStyle.copyWith(
-          fontSize: regularStyle.fontSize! * textScaleFactor,
-        ),
-      ));
-    }
-  }
-
-  return out;
-}
-
 class DrawingsPainter extends CustomPainter {
   final RepereMetrics metrics;
   final Drawings drawings;
 
   DrawingsPainter(this.metrics, this.drawings);
 
+  /// [extractTexts] returns all the text chunks used in
+  /// various items of [drawings], so that they can be rendered
+  /// as LaTeX
+  /// The painter itself then ignore text information.
+  List<PositionnedText> extractTexts() {
+    final List<PositionnedText> out = [];
+
+    drawings.points.forEach((key, value) {
+      out.add(PositionnedText(key, value, color: Colors.blue));
+    });
+
+    for (final segment in drawings.segments) {
+      final from = drawings.points[segment.from]!.point;
+      final to = drawings.points[segment.to]!.point;
+      if (segment.labelName.isNotEmpty) {
+        out.add(
+          PositionnedText(
+            segment.labelName,
+            LabeledPoint(Coord((from.x + to.x) / 2, (from.y + to.y) / 2),
+                segment.labelPos),
+          ),
+        );
+      }
+    }
+
+    for (final line in drawings.lines) {
+      out.add(lineLabel(metrics, line));
+    }
+
+    return out;
+  }
+
   @override
   bool? hitTest(Offset position) {
     return false;
   }
 
-  static void paintPoint(
-      RepereMetrics metrics, Canvas canvas, LabeledPoint point, String name,
+  static PositionnedText lineLabel(RepereMetrics metrics, Line line) {
+    final origin = metrics.figure.origin;
+
+    // label position
+    final Coord logical;
+    final LabelPos pos;
+    if (line.a.isInfinite) {
+      logical = Coord(line.b, 1.5);
+      pos = LabelPos.left;
+    } else if (line.a == 0) {
+      // special case for horizontal lines
+      final logicalLabelX = metrics.figure.width * 2 / 3 - origin.x;
+      logical = Coord(logicalLabelX, line.b);
+      pos = line.b > 0 ? LabelPos.bottom : LabelPos.top;
+    } else {
+      double logicalLabelX = metrics.figure.width - origin.x;
+      double y = line.a * logicalLabelX + line.b;
+      // crop to the visible part
+      y = min(y, metrics.figure.height - origin.y);
+      y = max(y, -origin.y);
+      // adujst the x back
+      logicalLabelX = (y - line.b) / line.a * 0.9;
+      y = line.a * logicalLabelX + line.b;
+
+      logical = Coord(logicalLabelX, y);
+      pos = line.a > 0 ? LabelPos.bottomRight : LabelPos.topRight;
+    }
+
+    return PositionnedText(
+      line.label,
+      LabeledPoint(logical, pos),
+      color: fromHex(line.color),
+    );
+  }
+
+  static void paintPoint(RepereMetrics metrics, Canvas canvas, Coord point,
       {Color color = Colors.blue}) {
-    paintText(metrics, canvas, point, name, color: color);
     canvas.drawCircle(
-        metrics.logicalToVisual(point.point),
+        metrics.logicalToVisual(point),
         2,
         Paint()
           ..style = PaintingStyle.fill
@@ -451,70 +554,38 @@ class DrawingsPainter extends CustomPainter {
       final path = VectorPainter.arrowPath(visualFrom, visualTo);
       canvas.drawPath(path, Paint()..style = PaintingStyle.fill);
     }
-
-    if (line.labelName.isNotEmpty) {
-      paintText(
-          metrics,
-          canvas,
-          LabeledPoint(
-              Coord((from.x + to.x) / 2, (from.y + to.y) / 2), line.labelPos),
-          line.labelName);
-    }
   }
 
-  static void paintText(
-      RepereMetrics metrics, Canvas canvas, LabeledPoint point, String name,
+  // helper method for regular text, not supporting LaTeX
+  static void _paintText(
+      RepereMetrics metrics, Canvas canvas, LabeledPoint point, String text,
       {Color? color}) {
     color = color ?? Colors.blue.shade800;
     const weight = FontWeight.bold;
-    final spans = parseSubscript(
-        name,
-        TextStyle(
-          fontSize: 16,
-          fontWeight: weight,
-          color: color,
-          backgroundColor: Colors.white.withOpacity(0.5),
-        ));
+    final style = TextStyle(
+      fontSize: 14,
+      fontWeight: weight,
+      color: color,
+      backgroundColor: Colors.white.withOpacity(0.5),
+    );
 
     final pt = TextPainter(
-        text: TextSpan(children: spans), textDirection: TextDirection.ltr);
+        text: TextSpan(text: text, style: style),
+        textDirection: TextDirection.ltr);
     pt.layout();
 
     final textWidth = pt.width;
     final textHeight = pt.height;
+    final offset = point.pos.offset(textWidth, textHeight);
 
     final originalPos = metrics.logicalToVisual(point.point);
-
-    final offset = point.pos.offset(textWidth, textHeight);
 
     pt.paint(canvas, originalPos.translate(offset.dx, offset.dy));
   }
 
-  static void paintLineFromPoints(RepereMetrics metrics, Canvas canvas,
-      Coord from, Coord to, String label, Size size,
-      {String color = "#a832a2"}) {
-    double a, b;
-    if (to.x == from.x) {
-      a = double.infinity;
-      b = to.x;
-    } else {
-      a = (to.y - from.y) / (to.x - from.x);
-      b = from.y - a * from.x;
-    }
-    DrawingsPainter.paintAffineLine(
-        metrics,
-        canvas,
-        Line(
-          label,
-          color,
-          a,
-          b,
-        ),
-        size);
-  }
-
   /// if line.a is infinite, then line.b is interpreted as the abscisse
   /// of a vertical line
+  /// the line label is ignored; use [lineLabel] to get it
   static void paintAffineLine(
       RepereMetrics metrics, Canvas canvas, Line line, Size size) {
     final origin = metrics.figure.origin;
@@ -545,20 +616,6 @@ class DrawingsPainter extends CustomPainter {
           ..color = lineColor
           ..strokeWidth = 2);
 
-    // label position
-    Coord logicalLabel;
-    LabelPos pos;
-    if (line.a.isInfinite) {
-      logicalLabel = Coord(line.b, 1);
-      pos = LabelPos.left;
-    } else {
-      final logicalLabelX = (metrics.figure.width - origin.x) / 2;
-      logicalLabel = Coord(logicalLabelX, line.a * logicalLabelX + line.b);
-      pos = line.a > 0 ? LabelPos.bottomRight : LabelPos.topLeft;
-    }
-    paintText(metrics, canvas, LabeledPoint(logicalLabel, pos), line.label,
-        color: lineColor);
-
     canvas.restore();
   }
 
@@ -573,7 +630,7 @@ class DrawingsPainter extends CustomPainter {
     }
 
     drawings.points.forEach((key, value) {
-      paintPoint(metrics, canvas, value, key);
+      paintPoint(metrics, canvas, value.point);
     });
   }
 

@@ -77,6 +77,21 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
     final from = widget.controller.from;
     final to = widget.controller.to;
     final zoomFactor = _zoomController.value.getMaxScaleOnAxis();
+
+    final List<PositionnedText> texts = [];
+    final CustomPainter linePainter;
+    if (widget.controller.data.asLine) {
+      linePainter = _AffineLinePainter(
+          metrics, from, to, widget.controller.data.lineLabel);
+      texts.add((linePainter as _AffineLinePainter).positionnedLabel);
+    } else {
+      linePainter = VectorPainter(
+          metrics.logicalIntToVisual(from), metrics.logicalIntToVisual(to));
+    }
+
+    final figurePainter = DrawingsPainter(metrics, figure.drawings);
+    texts.addAll(figurePainter.extractTexts());
+
     return InteractiveViewer(
       transformationController: _zoomController,
       maxScale: 5,
@@ -93,16 +108,12 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
           [
             // custom drawing
             CustomPaint(
-              size: Size(metrics.canvasWidth, metrics.canvasHeight),
-              painter: DrawingsPainter(metrics, figure.drawings),
+              size: metrics.size,
+              painter: figurePainter,
             ),
             CustomPaint(
-              size: Size(metrics.canvasWidth, metrics.canvasHeight),
-              painter: widget.controller.data.asLine
-                  ? _AffineLinePainter(
-                      metrics, from, to, widget.controller.data.lineLabel)
-                  : VectorPainter(metrics.logicalIntToVisual(from),
-                      metrics.logicalIntToVisual(to)),
+              size: metrics.size,
+              painter: linePainter,
             ),
             DraggableGridPoint(
               from,
@@ -119,6 +130,7 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
               disabled: !widget.controller.enabled,
             ),
           ],
+          texts,
         ),
       ),
     );
@@ -139,11 +151,34 @@ class _AffineLinePainter extends CustomPainter {
 
   _AffineLinePainter(this.metrics, this.from, this.to, this.label);
 
-  @override
-  void paint(Canvas canvas, Size size) {
+  PositionnedText get positionnedLabel =>
+      DrawingsPainter.lineLabel(metrics, _line);
+
+  static const color = "#a832a2";
+
+  /// infer line from the points
+  Line get _line {
     final from = Coord(this.from.x.toDouble(), this.from.y.toDouble());
     final to = Coord(this.to.x.toDouble(), this.to.y.toDouble());
-    DrawingsPainter.paintLineFromPoints(metrics, canvas, from, to, label, size);
+    double a, b;
+    if (to.x == from.x) {
+      a = double.infinity;
+      b = to.x;
+    } else {
+      a = (to.y - from.y) / (to.x - from.x);
+      b = from.y - a * from.x;
+    }
+    return Line(
+      label,
+      color,
+      a,
+      b,
+    );
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    DrawingsPainter.paintAffineLine(metrics, canvas, _line, size);
   }
 
   @override

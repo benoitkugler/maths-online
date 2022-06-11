@@ -72,6 +72,8 @@ class _FigurePrivateState extends State<_FigurePrivate> {
   Widget build(BuildContext context) {
     final metrics = RepereMetrics(widget.figure.bounds, context);
     final point = widget.controller.point;
+    final painter = DrawingsPainter(metrics, widget.figure.drawings);
+    final texts = painter.extractTexts();
     return GestureDetector(
       onTapUp: widget.controller.enabled
           ? (details) => _setCurrentPoint(details.localPosition, metrics)
@@ -82,14 +84,15 @@ class _FigurePrivateState extends State<_FigurePrivate> {
         [
           // custom drawing
           CustomPaint(
-            size: Size(metrics.canvasWidth, metrics.canvasHeight),
-            painter: DrawingsPainter(metrics, widget.figure.drawings),
+            size: metrics.size,
+            painter: painter,
           ),
           if (point != null)
             GridPoint(point, metrics.logicalIntToVisual(point)),
           // if (showTooltip && point != null)
           //   GridPointHighlight(point, metrics.logicalIntToVisual(point)),
         ],
+        texts,
       ),
     );
   }

@@ -96,6 +96,9 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
   Widget build(BuildContext context) {
     final figure = widget.controller.figure;
     final metrics = RepereMetrics(figure.bounds, context);
+    final painter = DrawingsPainter(metrics, figure.drawings);
+    final texts = painter.extractTexts();
+
     final from1 = widget.controller.from1;
     final to1 = widget.controller.to1;
     final from2 = widget.controller.from2;
@@ -115,6 +118,11 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
           metrics,
           figure.showGrid,
           [
+            // static figure
+            CustomPaint(
+              size: metrics.size,
+              painter: painter,
+            ),
             DraggableGridPoint(from1, metrics.logicalIntToVisual(from1),
                 VectorPairPointID.from1, zoomFactor,
                 color: Colors.orange, disabled: !widget.controller.enabled),
@@ -128,18 +136,19 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
                 VectorPairPointID.to2, zoomFactor,
                 color: Colors.deepOrange, disabled: !widget.controller.enabled),
             CustomPaint(
-              size: Size(metrics.canvasWidth, metrics.canvasHeight),
+              size: metrics.size,
               painter: VectorPainter(metrics.logicalIntToVisual(from1),
                   metrics.logicalIntToVisual(to1),
                   color: Colors.blue),
             ),
             CustomPaint(
-              size: Size(metrics.canvasWidth, metrics.canvasHeight),
+              size: metrics.size,
               painter: VectorPainter(metrics.logicalIntToVisual(from2),
                   metrics.logicalIntToVisual(to2),
                   color: Colors.purple),
             ),
           ],
+          texts,
         ),
       ),
     );
