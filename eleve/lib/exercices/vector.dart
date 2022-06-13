@@ -67,7 +67,7 @@ class VectorField extends StatelessWidget {
                   child: Transform.translate(
                     offset: const Offset(0, 6),
                     child: Column(
-                      children: [x, y],
+                      children: [x, const SizedBox(height: 5), y],
                     ),
                   )),
               const TextSpan(
