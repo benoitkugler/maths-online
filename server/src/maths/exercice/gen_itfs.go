@@ -100,6 +100,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 20:
+		var data VectorFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -154,6 +158,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 18, Data: data}
 	case VariationTableFieldBlock:
 		wr = wrapper{Kind: 19, Data: data}
+	case VectorFieldBlock:
+		wr = wrapper{Kind: 20, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -162,26 +168,27 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	ExpressionFieldBlockKind = iota
-	FigureAffineLineFieldBlockKind
-	FigureBlockKind
-	FigurePointFieldBlockKind
-	FigureVectorFieldBlockKind
-	FigureVectorPairFieldBlockKind
-	FormulaBlockKind
-	FunctionGraphBlockKind
-	FunctionPointsFieldBlockKind
-	FunctionVariationGraphBlockKind
-	NumberFieldBlockKind
-	OrderedListFieldBlockKind
-	RadioFieldBlockKind
-	SignTableBlockKind
-	TableBlockKind
-	TableFieldBlockKind
-	TextBlockKind
-	TreeFieldBlockKind
-	VariationTableBlockKind
-	VariationTableFieldBlockKind
+	ExpressionFieldBlockBlKind = iota
+	FigureAffineLineFieldBlockBlKind
+	FigureBlockBlKind
+	FigurePointFieldBlockBlKind
+	FigureVectorFieldBlockBlKind
+	FigureVectorPairFieldBlockBlKind
+	FormulaBlockBlKind
+	FunctionGraphBlockBlKind
+	FunctionPointsFieldBlockBlKind
+	FunctionVariationGraphBlockBlKind
+	NumberFieldBlockBlKind
+	OrderedListFieldBlockBlKind
+	RadioFieldBlockBlKind
+	SignTableBlockBlKind
+	TableBlockBlKind
+	TableFieldBlockBlKind
+	TextBlockBlKind
+	TreeFieldBlockBlKind
+	VariationTableBlockBlKind
+	VariationTableFieldBlockBlKind
+	VectorFieldBlockBlKind
 )
 
 func (ct Enonce) MarshalJSON() ([]byte, error) {

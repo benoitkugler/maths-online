@@ -13,4 +13,13 @@ const (
 	TopRight                    // Au dessus, à droite
 	BottomRight                 // En dessous, à droite
 	BottomLeft                  // En dessous, à gauche
+	Hide                        // Masque la légende
+)
+
+type SegmentKind uint8
+
+const (
+	SKSegment SegmentKind = iota // Segment
+	SKVector                     // Vecteur
+	SKLine                       // Droite (infinie)
 )

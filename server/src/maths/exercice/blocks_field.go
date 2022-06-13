@@ -23,6 +23,7 @@ var (
 	_ Block = FigureAffineLineFieldBlock{}
 	_ Block = TreeFieldBlock{}
 	_ Block = TableFieldBlock{}
+	_ Block = VectorFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -179,26 +180,31 @@ type CoordExpression struct {
 	X, Y string
 }
 
-func (c CoordExpression) instantiate(params expression.Variables) (repere.IntCoord, error) {
+func (c CoordExpression) instantiateToFloat(params expression.Variables) (repere.Coord, error) {
 	x, err := evaluateExpr(c.X, params)
 	if err != nil {
-		return repere.IntCoord{}, err
+		return repere.Coord{}, err
 	}
 	y, err := evaluateExpr(c.Y, params)
 	if err != nil {
-		return repere.IntCoord{}, err
+		return repere.Coord{}, err
 	}
-	return repere.IntCoord{
-		X: int(x),
-		Y: int(y),
+	return repere.Coord{
+		X: x,
+		Y: y,
 	}, nil
 }
 
-func (c CoordExpression) validate(params expression.RandomParameters) error {
-	if err := validateNumberExpression(c.X, params, false, true); err != nil {
+func (c CoordExpression) instantiate(params expression.Variables) (repere.IntCoord, error) {
+	out, err := c.instantiateToFloat(params)
+	return out.Round(), err
+}
+
+func (c CoordExpression) validate(params expression.RandomParameters, checkPrecision bool) error {
+	if err := validateNumberExpression(c.X, params, checkPrecision, true); err != nil {
 		return err
 	}
-	if err := validateNumberExpression(c.Y, params, false, true); err != nil {
+	if err := validateNumberExpression(c.Y, params, checkPrecision, true); err != nil {
 		return err
 	}
 	return nil
@@ -229,7 +235,7 @@ func (fp FigurePointFieldBlock) validate(params expression.RandomParameters) err
 	if err := fp.Figure.validate(params); err != nil {
 		return err
 	}
-	if err := fp.Answer.validate(params); err != nil {
+	if err := fp.Answer.validate(params, false); err != nil {
 		return err
 	}
 	return nil
@@ -275,11 +281,11 @@ func (fp FigureVectorFieldBlock) validate(params expression.RandomParameters) er
 	if err := fp.Figure.validate(params); err != nil {
 		return err
 	}
-	if err := fp.Answer.validate(params); err != nil {
+	if err := fp.Answer.validate(params, false); err != nil {
 		return err
 	}
 	if fp.MustHaveOrigin {
-		if err := fp.AnswerOrigin.validate(params); err != nil {
+		if err := fp.AnswerOrigin.validate(params, false); err != nil {
 			return err
 		}
 	}
@@ -554,6 +560,37 @@ func (tf TableFieldBlock) validate(params expression.RandomParameters) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+// VectorFieldBlock is a two-number field, with
+// option to interpret the answer up to colinearity
+type VectorFieldBlock struct {
+	Answer         CoordExpression
+	AcceptColinear bool // if true, all vectors colinears to `Answer` are accepted
+	DisplayColumn  bool // if true, the field are displayed in column, instead of being on the same line
+}
+
+func (v VectorFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+	ans, err := v.Answer.instantiateToFloat(params)
+	if err != nil {
+		return nil, err
+	}
+
+	out := VectorFieldInstance{
+		ID:             ID,
+		Answer:         ans,
+		AcceptColinear: v.AcceptColinear,
+		DisplayColumn:  v.DisplayColumn,
+	}
+	return out, nil
+}
+
+func (v VectorFieldBlock) validate(params expression.RandomParameters) error {
+	if err := v.Answer.validate(params, true); err != nil {
+		return err
 	}
 
 	return nil

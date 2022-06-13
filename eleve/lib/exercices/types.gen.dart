@@ -388,6 +388,29 @@ JSON variationTableAnswerToJson(VariationTableAnswer item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.VectorNumberAnswer
+class VectorNumberAnswer implements Answer {
+  final double x;
+  final double y;
+
+  const VectorNumberAnswer(this.x, this.y);
+
+  @override
+  String toString() {
+    return "VectorNumberAnswer($x, $y)";
+  }
+}
+
+VectorNumberAnswer vectorNumberAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VectorNumberAnswer(
+      doubleFromJson(json['X']), doubleFromJson(json['Y']));
+}
+
+JSON vectorNumberAnswerToJson(VectorNumberAnswer item) {
+  return {"X": doubleToJson(item.x), "Y": doubleToJson(item.y)};
+}
+
 abstract class Answer {}
 
 Answer answerFromJson(dynamic json_) {
@@ -417,6 +440,8 @@ Answer answerFromJson(dynamic json_) {
       return treeAnswerFromJson(data);
     case 10:
       return variationTableAnswerFromJson(data);
+    case 11:
+      return vectorNumberAnswerFromJson(data);
     default:
       throw ("unexpected type");
   }
@@ -445,6 +470,8 @@ JSON answerToJson(Answer item) {
     return {'Kind': 9, 'Data': treeAnswerToJson(item)};
   } else if (item is VariationTableAnswer) {
     return {'Kind': 10, 'Data': variationTableAnswerToJson(item)};
+  } else if (item is VectorNumberAnswer) {
+    return {'Kind': 11, 'Data': vectorNumberAnswerToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -1254,6 +1281,32 @@ JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/exercice/client.VectorFieldBlock
+class VectorFieldBlock implements Block {
+  final int iD;
+  final bool displayColumn;
+
+  const VectorFieldBlock(this.iD, this.displayColumn);
+
+  @override
+  String toString() {
+    return "VectorFieldBlock($iD, $displayColumn)";
+  }
+}
+
+VectorFieldBlock vectorFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return VectorFieldBlock(
+      intFromJson(json['ID']), boolFromJson(json['DisplayColumn']));
+}
+
+JSON vectorFieldBlockToJson(VectorFieldBlock item) {
+  return {
+    "ID": intToJson(item.iD),
+    "DisplayColumn": boolToJson(item.displayColumn)
+  };
+}
+
 abstract class Block {}
 
 Block blockFromJson(dynamic json_) {
@@ -1299,6 +1352,8 @@ Block blockFromJson(dynamic json_) {
       return variationTableBlockFromJson(data);
     case 18:
       return variationTableFieldBlockFromJson(data);
+    case 19:
+      return vectorFieldBlockFromJson(data);
     default:
       throw ("unexpected type");
   }
@@ -1343,6 +1398,8 @@ JSON blockToJson(Block item) {
     return {'Kind': 17, 'Data': variationTableBlockToJson(item)};
   } else if (item is VariationTableFieldBlock) {
     return {'Kind': 18, 'Data': variationTableFieldBlockToJson(item)};
+  } else if (item is VectorFieldBlock) {
+    return {'Kind': 19, 'Data': vectorFieldBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }

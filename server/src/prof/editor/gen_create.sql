@@ -118,7 +118,7 @@ CREATE OR REPLACE FUNCTION structgen_validate_json_LabelPos (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (1, 7, 6, 2, 3, 0, 4, 5);
+    AND data::int IN (1, 7, 6, 8, 2, 3, 0, 4, 5);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a LabelPos', data;
@@ -140,9 +140,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Coord', 'Pos'))
+            bool_and(key IN ('Color', 'Coord', 'Pos'))
         FROM
             jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Color')
         AND structgen_validate_json_rep_RandomCoord (data -> 'Coord')
         AND structgen_validate_json_LabelPos (data -> 'Pos');
     RETURN is_valid;
@@ -196,14 +197,15 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_boolean (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_SegmentKind (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'boolean';
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (2, 0, 1);
 BEGIN
     IF NOT is_valid THEN
-        RAISE WARNING '% is not a boolean', data;
+        RAISE WARNING '% is not a SegmentKind', data;
     END IF;
     RETURN is_valid;
 END;
@@ -222,14 +224,15 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('LabelName', 'From', 'To', 'LabelPos', 'AsVector'))
+            bool_and(key IN ('LabelName', 'From', 'To', 'Color', 'LabelPos', 'Kind'))
         FROM
             jsonb_each(data))
         AND structgen_validate_json_string (data -> 'LabelName')
         AND structgen_validate_json_string (data -> 'From')
         AND structgen_validate_json_string (data -> 'To')
+        AND structgen_validate_json_string (data -> 'Color')
         AND structgen_validate_json_LabelPos (data -> 'LabelPos')
-        AND structgen_validate_json_boolean (data -> 'AsVector');
+        AND structgen_validate_json_SegmentKind (data -> 'Kind');
     RETURN is_valid;
 END;
 $$
@@ -383,6 +386,21 @@ BEGIN
         AND structgen_validate_json_number (data -> 'Width')
         AND structgen_validate_json_number (data -> 'Height')
         AND structgen_validate_json_rep_Coord (data -> 'Origin');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_boolean (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'boolean';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a boolean', data;
+    END IF;
     RETURN is_valid;
 END;
 $$
@@ -1190,6 +1208,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_exe_VectorFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer', 'AcceptColinear', 'DisplayColumn'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_exe_CoordExpression (data -> 'Answer')
+        AND structgen_validate_json_boolean (data -> 'AcceptColinear')
+        AND structgen_validate_json_boolean (data -> 'DisplayColumn');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_exe_Block (data jsonb)
     RETURNS boolean
     AS $$
@@ -1237,6 +1278,8 @@ BEGIN
         RETURN structgen_validate_json_exe_VariationTableBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 19 THEN
         RETURN structgen_validate_json_exe_VariationTableFieldBlock (data -> 'Data');
+    WHEN (data -> 'Kind')::int = 20 THEN
+        RETURN structgen_validate_json_exe_VectorFieldBlock (data -> 'Data');
     ELSE
         RETURN FALSE;
     END CASE;

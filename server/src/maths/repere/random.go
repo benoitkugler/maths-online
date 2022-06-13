@@ -5,6 +5,7 @@ type RandomCoord struct {
 }
 
 type RandomLabeledPoint struct {
+	Color string // #FFFFFF format
 	Coord RandomCoord
 	Pos   LabelPos
 }

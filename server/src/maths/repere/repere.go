@@ -14,11 +14,6 @@ type Coord struct {
 
 type PointName = string
 
-type LabeledPoint struct {
-	Point Coord
-	Pos   LabelPos
-}
-
 type RepereBounds struct {
 	// Width and Height defines the logical size of
 	// the figure. Since points comparison as performed
@@ -46,12 +41,19 @@ type Figure struct {
 	ShowGrid bool
 }
 
+type LabeledPoint struct {
+	Color string // #FFFFFF format
+	Point Coord
+	Pos   LabelPos
+}
+
 // Segment is a segment from a defined point to another
 type Segment struct {
 	LabelName string // optional
 	From, To  PointName
-	LabelPos  LabelPos // used only if LabelName is not zero
-	AsVector  bool     // if true, add an arrow
+	Color     string      // #FFFFFF format
+	LabelPos  LabelPos    // used only if LabelName is not zero
+	Kind      SegmentKind // what to actually draw
 }
 
 // Line is an infinite line, defined by an equation y = ax + b

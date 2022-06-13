@@ -64,6 +64,10 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 		var data VariationTableAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 11:
+		var data VectorNumberAnswer
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -100,6 +104,8 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 9, Data: data}
 	case VariationTableAnswer:
 		wr = wrapper{Kind: 10, Data: data}
+	case VectorNumberAnswer:
+		wr = wrapper{Kind: 11, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -119,6 +125,7 @@ const (
 	TableAnswerAnKind
 	TreeAnswerAnKind
 	VariationTableAnswerAnKind
+	VectorNumberAnswerAnKind
 )
 
 // BlockWrapper may be used as replacements for Block
@@ -213,6 +220,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 19:
+		var data VectorFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 
 	default:
 		panic("exhaustive switch")
@@ -265,6 +276,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 17, Data: data}
 	case VariationTableFieldBlock:
 		wr = wrapper{Kind: 18, Data: data}
+	case VectorFieldBlock:
+		wr = wrapper{Kind: 19, Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -292,6 +305,7 @@ const (
 	TreeFieldBlockBlKind
 	VariationTableBlockBlKind
 	VariationTableFieldBlockBlKind
+	VectorFieldBlockBlKind
 )
 
 func (ct Enonce) MarshalJSON() ([]byte, error) {

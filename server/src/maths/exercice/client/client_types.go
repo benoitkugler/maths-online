@@ -40,6 +40,7 @@ func (VariationTableFieldBlock) isBlock()   {}
 func (FunctionPointsFieldBlock) isBlock()   {}
 func (TreeFieldBlock) isBlock()             {}
 func (TableFieldBlock) isBlock()            {}
+func (VectorFieldBlock) isBlock()           {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -205,6 +206,11 @@ type TableFieldBlock struct {
 	ID                int
 }
 
+type VectorFieldBlock struct {
+	ID            int
+	DisplayColumn bool
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -222,6 +228,7 @@ func (VariationTableAnswer) isAnswer()  {}
 func (FunctionPointsAnswer) isAnswer()  {}
 func (TreeAnswer) isAnswer()            {}
 func (TableAnswer) isAnswer()           {}
+func (VectorNumberAnswer) isAnswer()    {}
 
 // NumberAnswer is compared with float equality, with a fixed
 // precision of 8 digits
@@ -283,6 +290,10 @@ type TreeAnswer struct {
 
 type TableAnswer struct {
 	Rows [][]float64
+}
+
+type VectorNumberAnswer struct {
+	X, Y float64
 }
 
 // QuestionAnswersIn map the field ids to their answer

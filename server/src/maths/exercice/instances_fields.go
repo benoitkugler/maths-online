@@ -910,3 +910,39 @@ func (f TableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool
 func (f TableFieldInstance) correctAnswer() client.Answer {
 	return f.Answer
 }
+
+type VectorFieldInstance struct {
+	ID             int
+	Answer         repere.Coord
+	AcceptColinear bool
+	DisplayColumn  bool
+}
+
+func (v VectorFieldInstance) fieldID() int { return v.ID }
+
+func (v VectorFieldInstance) toClient() client.Block {
+	return client.VectorFieldBlock{DisplayColumn: v.DisplayColumn, ID: v.ID}
+}
+
+func (v VectorFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	_, ok := answer.(client.VectorNumberAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     v.ID,
+			Reason: fmt.Sprintf("expected VectorNumberAnswer, got %T", answer),
+		}
+	}
+	return nil
+}
+
+func (v VectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.VectorNumberAnswer)
+	if v.AcceptColinear { // check if det(f.Answer, ans) = 0
+		return expression.AreFloatEqual(v.Answer.X*ans.Y-v.Answer.Y*ans.X, 0)
+	}
+	return expression.AreFloatEqual(v.Answer.X, ans.X) && expression.AreFloatEqual(v.Answer.Y, ans.Y)
+}
+
+func (v VectorFieldInstance) correctAnswer() client.Answer {
+	return client.VectorNumberAnswer{X: expression.RoundFloat(v.Answer.X), Y: expression.RoundFloat(v.Answer.Y)}
+}

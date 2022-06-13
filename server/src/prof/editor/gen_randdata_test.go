@@ -54,8 +54,9 @@ func randBlock() exercice.Block {
 		randexe_TreeFieldBlock(),
 		randexe_VariationTableBlock(),
 		randexe_VariationTableFieldBlock(),
+		randexe_VectorFieldBlock(),
 	}
-	i := rand.Intn(20)
+	i := rand.Intn(21)
 	return choix[i]
 }
 
@@ -94,13 +95,14 @@ func randrep_RandomCoord() repere.RandomCoord {
 }
 
 func randLabelPos() repere.LabelPos {
-	choix := [...]repere.LabelPos{repere.Bottom, repere.BottomLeft, repere.BottomRight, repere.Left, repere.Right, repere.Top, repere.TopLeft, repere.TopRight}
+	choix := [...]repere.LabelPos{repere.Bottom, repere.BottomLeft, repere.BottomRight, repere.Hide, repere.Left, repere.Right, repere.Top, repere.TopLeft, repere.TopRight}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
 func randrep_RandomLabeledPoint() repere.RandomLabeledPoint {
 	return repere.RandomLabeledPoint{
+		Color: randstring(),
 		Coord: randrep_RandomCoord(),
 		Pos:   randLabelPos(),
 	}
@@ -122,9 +124,10 @@ func randSlicerep_NamedRandomLabeledPoint() []repere.NamedRandomLabeledPoint {
 	return out
 }
 
-func randbool() bool {
-	i := rand.Int31n(2)
-	return i == 1
+func randSegmentKind() repere.SegmentKind {
+	choix := [...]repere.SegmentKind{repere.SKLine, repere.SKSegment, repere.SKVector}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randrep_Segment() repere.Segment {
@@ -132,8 +135,9 @@ func randrep_Segment() repere.Segment {
 		LabelName: randstring(),
 		From:      randstring(),
 		To:        randstring(),
+		Color:     randstring(),
 		LabelPos:  randLabelPos(),
-		AsVector:  randbool(),
+		Kind:      randSegmentKind(),
 	}
 }
 
@@ -193,6 +197,11 @@ func randrep_RepereBounds() repere.RepereBounds {
 		Height: randint(),
 		Origin: randrep_Coord(),
 	}
+}
+
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
 }
 
 func randexe_FigureBlock() exercice.FigureBlock {
@@ -484,6 +493,14 @@ func randexe_VariationTableBlock() exercice.VariationTableBlock {
 func randexe_VariationTableFieldBlock() exercice.VariationTableFieldBlock {
 	return exercice.VariationTableFieldBlock{
 		Answer: randexe_VariationTableBlock(),
+	}
+}
+
+func randexe_VectorFieldBlock() exercice.VectorFieldBlock {
+	return exercice.VectorFieldBlock{
+		Answer:         randexe_CoordExpression(),
+		AcceptColinear: randbool(),
+		DisplayColumn:  randbool(),
 	}
 }
 

@@ -33,6 +33,7 @@ export enum BlockKind {
   TreeFieldBlock = 17,
   VariationTableBlock = 18,
   VariationTableFieldBlock = 19,
+  VectorFieldBlock = 20,
 }
 
 export interface Block {
@@ -57,7 +58,8 @@ export interface Block {
     | TextBlock
     | TreeFieldBlock
     | VariationTableBlock
-    | VariationTableFieldBlock;
+    | VariationTableFieldBlock
+    | VectorFieldBlock;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.TextKind
 export enum TextKind {
@@ -106,6 +108,7 @@ export enum LabelPos {
   Bottom = 1,
   BottomLeft = 7,
   BottomRight = 6,
+  Hide = 8,
   Left = 2,
   Right = 3,
   Top = 0,
@@ -117,6 +120,7 @@ export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Bottom]: "En dessous",
   [LabelPos.BottomLeft]: "En dessous, à gauche",
   [LabelPos.BottomRight]: "En dessous, à droite",
+  [LabelPos.Hide]: "Masque la légende",
   [LabelPos.Left]: "A gauche",
   [LabelPos.Right]: "A droite",
   [LabelPos.Top]: "Au dessus",
@@ -126,6 +130,7 @@ export const LabelPosLabels: { [key in LabelPos]: string } = {
 
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {
+  Color: string;
   Coord: RandomCoord;
   Pos: LabelPos;
 }
@@ -134,13 +139,27 @@ export interface NamedRandomLabeledPoint {
   Name: string;
   Point: RandomLabeledPoint;
 }
+// github.com/benoitkugler/maths-online/maths/repere.SegmentKind
+export enum SegmentKind {
+  SKLine = 2,
+  SKSegment = 0,
+  SKVector = 1,
+}
+
+export const SegmentKindLabels: { [key in SegmentKind]: string } = {
+  [SegmentKind.SKLine]: "Droite (infinie)",
+  [SegmentKind.SKSegment]: "Segment",
+  [SegmentKind.SKVector]: "Vecteur",
+};
+
 // github.com/benoitkugler/maths-online/maths/repere.Segment
 export interface Segment {
   LabelName: string;
   From: string;
   To: string;
+  Color: string;
   LabelPos: LabelPos;
-  AsVector: boolean;
+  Kind: SegmentKind;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomLine
 export interface RandomLine {
@@ -327,6 +346,12 @@ export interface TreeFieldBlock {
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableFieldBlock
 export interface VariationTableFieldBlock {
   Answer: VariationTableBlock;
+}
+// github.com/benoitkugler/maths-online/maths/exercice.VectorFieldBlock
+export interface VectorFieldBlock {
+  Answer: CoordExpression;
+  AcceptColinear: boolean;
+  DisplayColumn: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.Enonce
 export type Enonce = Block[] | null;

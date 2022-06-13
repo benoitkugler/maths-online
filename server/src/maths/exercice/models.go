@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=itfs-json:gen_itfs.go
+//go:generate ../../../../../structgen/structgen -source=models.go -mode=itfs-json:gen_itfs.go
 
 type Enonce []Block
 
