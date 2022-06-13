@@ -24,6 +24,45 @@ export interface LogginOut {
   IsPasswordError: boolean;
   Token: string;
 }
+// github.com/benoitkugler/maths-online/prof/teacher.Classroom
+export interface Classroom {
+  id: number;
+  id_teacher: number;
+  name: string;
+}
+// github.com/benoitkugler/maths-online/prof/teacher.ClassroomExt
+export interface ClassroomExt {
+  Classroom: Classroom;
+  NbStudents: number;
+}
+
+class DateTag {
+  private _: "D" = "D";
+}
+
+class TimeTag {
+  private _: "T" = "T";
+}
+
+// AAAA-MM-YY date format
+export type Date_ = string & DateTag;
+
+// ISO date-time string
+export type Time = string & TimeTag;
+
+// github.com/benoitkugler/maths-online/prof/students.Student
+export interface Student {
+  Id: number;
+  Name: string;
+  Surname: string;
+  Birthday: Date_;
+  TrivialSuccess: number;
+  IsClientAttached: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/teacher.GenerateClassroomCodeOut
+export interface GenerateClassroomCodeOut {
+  Code: string;
+}
 // github.com/benoitkugler/maths-online/prof/trivial.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
 // github.com/benoitkugler/maths-online/prof/trivial.CategoriesQuestions
@@ -616,6 +655,182 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessLoggin(data: LogginOut): void;
+
+  protected async rawTeacherGetClassrooms() {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api";
+    const rep: AxiosResponse<ClassroomExt[] | null> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherGetClassrooms wraps rawTeacherGetClassrooms and handles the error */
+  async TeacherGetClassrooms() {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherGetClassrooms();
+      this.onSuccessTeacherGetClassrooms(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherGetClassrooms(
+    data: ClassroomExt[] | null
+  ): void;
+
+  protected async rawTeacherCreateClassroom(params: any) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api";
+    const rep: AxiosResponse<any> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherCreateClassroom wraps rawTeacherCreateClassroom and handles the error */
+  async TeacherCreateClassroom(params: any) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherCreateClassroom(params);
+      this.onSuccessTeacherCreateClassroom(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherCreateClassroom(data: any): void;
+
+  protected async rawTeacherUpdateClassroom(params: Classroom) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api";
+    const rep: AxiosResponse<Classroom> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherUpdateClassroom wraps rawTeacherUpdateClassroom and handles the error */
+  async TeacherUpdateClassroom(params: Classroom) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherUpdateClassroom(params);
+      this.onSuccessTeacherUpdateClassroom(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherUpdateClassroom(data: Classroom): void;
+
+  protected async rawTeacherDeleteClassroom(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherDeleteClassroom wraps rawTeacherDeleteClassroom and handles the error */
+  async TeacherDeleteClassroom(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherDeleteClassroom(params);
+      this.onSuccessTeacherDeleteClassroom(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherDeleteClassroom(data: any): void;
+
+  protected async rawTeacherGetClassroomStudents(params: {
+    "id-classroom": number;
+  }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<Student[] | null> = await Axios.get(fullUrl, {
+      params: { "id-classroom": String(params["id-classroom"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherGetClassroomStudents wraps rawTeacherGetClassroomStudents and handles the error */
+  async TeacherGetClassroomStudents(params: { "id-classroom": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherGetClassroomStudents(params);
+      this.onSuccessTeacherGetClassroomStudents(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherGetClassroomStudents(
+    data: Student[] | null
+  ): void;
+
+  protected async rawTeacherImportStudents(
+    params: { "id-classroom": string },
+    file: File
+  ) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students/import";
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+    formData.append("id-classroom", params["id-classroom"]);
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, formData, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherImportStudents wraps rawTeacherImportStudents and handles the error */
+  async TeacherImportStudents(params: { "id-classroom": string }, file: File) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherImportStudents(params, file);
+      this.onSuccessTeacherImportStudents(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherImportStudents(data: any): void;
+
+  protected async rawTeacherGenerateClassroomCode(params: {
+    "id-classroom": number;
+  }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students/connect";
+    const rep: AxiosResponse<GenerateClassroomCodeOut> = await Axios.get(
+      fullUrl,
+      {
+        params: { "id-classroom": String(params["id-classroom"]) },
+        headers: this.getHeaders(),
+      }
+    );
+    return rep.data;
+  }
+
+  /** TeacherGenerateClassroomCode wraps rawTeacherGenerateClassroomCode and handles the error */
+  async TeacherGenerateClassroomCode(params: { "id-classroom": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherGenerateClassroomCode(params);
+      this.onSuccessTeacherGenerateClassroomCode(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherGenerateClassroomCode(
+    data: GenerateClassroomCodeOut
+  ): void;
 
   protected async rawGetTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/prof/trivial/config";

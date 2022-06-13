@@ -119,7 +119,7 @@ func main() {
 	}
 	fmt.Printf("SMTP configured with %v.\n", smtp)
 
-	tc := teacher.NewController(db, smtp, teacherKey, host)
+	tc := teacher.NewController(db, smtp, teacherKey, studentKey, host)
 	admin, err := tc.LoadAdminTeacher()
 	if err != nil {
 		log.Fatal(err)
@@ -255,6 +255,11 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 	e.GET("/prof/trivial/monitor", tvc.ConnectTeacherMonitor, tc.JWTMiddlewareForQuery())
 	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
 	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
+
+	// student client classroom managment
+	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
+	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
+	e.DELETE("/api/classroom/attach", tc.DetachStudentFromClassroom)
 
 	// prof. back office
 	for _, route := range []string{

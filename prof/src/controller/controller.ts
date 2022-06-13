@@ -3,12 +3,16 @@ import type {
   AskInscriptionOut,
   CheckMissingQuestionsOut,
   CheckParametersOut,
+  Classroom,
+  ClassroomExt,
+  GenerateClassroomCodeOut,
   LaunchSessionOut,
   ListQuestionsOut,
   LogginOut,
   Question,
   RunningSessionMetaOut,
   StartSessionOut,
+  Student,
   TrivialConfigExt,
   UpdateGroupTagsOut,
 } from "./api_gen";
@@ -39,6 +43,45 @@ class Controller extends AbstractAPI {
     data: RunningSessionMetaOut
   ): void {
     this.inRequest = false;
+  }
+
+  protected onSuccessTeacherGenerateClassroomCode(
+    data: GenerateClassroomCodeOut
+  ): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessTeacherImportStudents(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Liste importée avec succès.");
+    }
+  }
+
+  protected onSuccessTeacherGetClassroomStudents(data: Student[] | null): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessTeacherGetClassrooms(data: ClassroomExt[] | null): void {
+    this.inRequest = false;
+  }
+  protected onSuccessTeacherCreateClassroom(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Classe créée avec succès.");
+    }
+  }
+  protected onSuccessTeacherUpdateClassroom(data: Classroom): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Classe mise à jour avec succès.");
+    }
+  }
+  protected onSuccessTeacherDeleteClassroom(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Classe supprimée avec succès.");
+    }
   }
 
   protected onSuccessStopTrivialGame(data: any): void {

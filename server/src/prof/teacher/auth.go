@@ -22,13 +22,13 @@ type UserMeta struct {
 }
 
 func (ct *Controller) JWTMiddleware() echo.MiddlewareFunc {
-	config := middleware.JWTConfig{SigningKey: ct.key[:], Claims: &UserMeta{}}
+	config := middleware.JWTConfig{SigningKey: ct.teacherKey[:], Claims: &UserMeta{}}
 	return middleware.JWTWithConfig(config)
 }
 
 // expects the token to be in the `token` query parameters
 func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
-	config := middleware.JWTConfig{SigningKey: ct.key[:], Claims: &UserMeta{}, TokenLookup: "query:token"}
+	config := middleware.JWTConfig{SigningKey: ct.teacherKey[:], Claims: &UserMeta{}, TokenLookup: "query:token"}
 	return middleware.JWTWithConfig(config)
 }
 
@@ -45,7 +45,7 @@ func (ct *Controller) newToken(teacher Teacher) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	return token.SignedString(ct.key[:])
+	return token.SignedString(ct.teacherKey[:])
 }
 
 // JWTTeacher expects a JWT authentified request, and must

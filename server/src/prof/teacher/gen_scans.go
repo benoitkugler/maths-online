@@ -216,6 +216,92 @@ func DeleteClassroomsByIDs(tx DB, ids ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
+func scanOneStudentClassroom(row scanner) (StudentClassroom, error) {
+	var s StudentClassroom
+	err := row.Scan(
+		&s.IdStudent,
+		&s.IdClassroom,
+	)
+	return s, err
+}
+
+func ScanStudentClassroom(row *sql.Row) (StudentClassroom, error) {
+	return scanOneStudentClassroom(row)
+}
+
+func SelectAllStudentClassrooms(tx DB) (StudentClassrooms, error) {
+	rows, err := tx.Query("SELECT * FROM student_classrooms")
+	if err != nil {
+		return nil, err
+	}
+	return ScanStudentClassrooms(rows)
+}
+
+type StudentClassrooms []StudentClassroom
+
+func ScanStudentClassrooms(rs *sql.Rows) (StudentClassrooms, error) {
+	var (
+		s   StudentClassroom
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(StudentClassrooms, 0, 16)
+	for rs.Next() {
+		s, err = scanOneStudentClassroom(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links StudentClassroom in the database.
+func InsertManyStudentClassrooms(tx *sql.Tx, items ...StudentClassroom) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("student_classrooms",
+		"id_student", "id_classroom",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdStudent, item.IdClassroom)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link StudentClassroom in the database.
+// Only the 'IdStudent' 'IdClassroom' fields are used.
+func (item StudentClassroom) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM student_classrooms WHERE 
+	id_student = $1 AND id_classroom = $2;`, item.IdStudent, item.IdClassroom)
+	return err
+}
+
 func scanOneTeacher(row scanner) (Teacher, error) {
 	var s Teacher
 	err := row.Scan(
@@ -342,4 +428,76 @@ func DeleteClassroomsByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
 		return nil, err
 	}
 	return ScanIDs(rows)
+}
+
+func SelectStudentClassroomsByIdStudents(tx DB, idStudents ...int64) (StudentClassrooms, error) {
+	rows, err := tx.Query("SELECT * FROM student_classrooms WHERE id_student = ANY($1)", pq.Int64Array(idStudents))
+	if err != nil {
+		return nil, err
+	}
+	return ScanStudentClassrooms(rows)
+}
+
+func DeleteStudentClassroomsByIdStudents(tx DB, idStudents ...int64) (StudentClassrooms, error) {
+	rows, err := tx.Query("DELETE FROM student_classrooms WHERE id_student = ANY($1) RETURNING *", pq.Int64Array(idStudents))
+	if err != nil {
+		return nil, err
+	}
+	return ScanStudentClassrooms(rows)
+}
+
+func SelectStudentClassroomsByIdClassrooms(tx DB, idClassrooms ...int64) (StudentClassrooms, error) {
+	rows, err := tx.Query("SELECT * FROM student_classrooms WHERE id_classroom = ANY($1)", pq.Int64Array(idClassrooms))
+	if err != nil {
+		return nil, err
+	}
+	return ScanStudentClassrooms(rows)
+}
+
+func DeleteStudentClassroomsByIdClassrooms(tx DB, idClassrooms ...int64) (StudentClassrooms, error) {
+	rows, err := tx.Query("DELETE FROM student_classrooms WHERE id_classroom = ANY($1) RETURNING *", pq.Int64Array(idClassrooms))
+	if err != nil {
+		return nil, err
+	}
+	return ScanStudentClassrooms(rows)
+}
+
+// ByIdStudent returns a map with 'IdStudent' as keys.
+func (items StudentClassrooms) ByIdStudent() map[int64]StudentClassrooms {
+	out := make(map[int64]StudentClassrooms)
+	for _, target := range items {
+		out[target.IdStudent] = append(out[target.IdStudent], target)
+	}
+	return out
+}
+
+// IdStudents returns the list of ids of IdStudent
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items StudentClassrooms) IdStudents() IDs {
+	out := make(IDs, len(items))
+	for index, target := range items {
+		out[index] = target.IdStudent
+	}
+	return out
+}
+
+// ByIdClassroom returns a map with 'IdClassroom' as keys.
+func (items StudentClassrooms) ByIdClassroom() map[int64]StudentClassrooms {
+	out := make(map[int64]StudentClassrooms)
+	for _, target := range items {
+		out[target.IdClassroom] = append(out[target.IdClassroom], target)
+	}
+	return out
+}
+
+// IdClassrooms returns the list of ids of IdClassroom
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items StudentClassrooms) IdClassrooms() IDs {
+	out := make(IDs, len(items))
+	for index, target := range items {
+		out[index] = target.IdClassroom
+	}
+	return out
 }

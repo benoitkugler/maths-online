@@ -9,7 +9,7 @@ import (
 )
 
 func TestController_mailInscription(t *testing.T) {
-	ct := NewController(nil, pass.SMTP{}, pass.Encrypter{}, "localhost:1323")
+	ct := NewController(nil, pass.SMTP{}, pass.Encrypter{}, pass.Encrypter{}, "localhost:1323")
 
 	if _, err := ct.emailInscription(AskInscriptionIn{Mail: "invalid", Password: "qsqmmùs"}); err == nil {
 		t.Fatal("expected error on invalid mail")

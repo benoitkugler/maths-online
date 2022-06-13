@@ -104,7 +104,6 @@ func TestMissingQuestions(t *testing.T) {
 	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
 		t.Skipf("DB %v not available : %s", testutils.DB, err)
-		return
 	}
 
 	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})

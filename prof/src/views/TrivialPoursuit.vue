@@ -25,7 +25,7 @@
     <session-monitor @close="closeMonitor"></session-monitor>
   </v-dialog>
 
-  <v-card class="my-3 mx-auto" width="80%">
+  <v-card class="my-5 mx-auto" width="80%">
     <v-row>
       <v-col>
         <v-card-title>Triv'Maths</v-card-title>

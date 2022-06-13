@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
 import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:flutter/material.dart';
@@ -38,19 +39,7 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
   }
 
   void _showError(dynamic error) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        duration: const Duration(seconds: 6),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        content: RichText(
-            text: TextSpan(children: [
-          const TextSpan(
-              text: "Impossible de se connecter. \n",
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          const TextSpan(text: "Détails : "),
-          TextSpan(
-              text: "$error",
-              style: const TextStyle(fontStyle: FontStyle.italic)),
-        ]))));
+    showError("Impossible de se connecter.", error, context);
   }
 
   @override
@@ -59,7 +48,11 @@ class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
       appBar: AppBar(
         title: const Text("Rejoindre une partie"),
       ),
-      body: Pin("Code de la partie", pinController, _launchTrivialPoursuit),
+      body: Pin(
+        "Code de la partie",
+        _launchTrivialPoursuit,
+        controller: pinController,
+      ),
     );
   }
 

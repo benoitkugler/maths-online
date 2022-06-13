@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -111,6 +112,9 @@ func scanOneStudent(row scanner) (Student, error) {
 		&s.Id,
 		&s.Name,
 		&s.Surname,
+		&s.Birthday,
+		&s.TrivialSuccess,
+		&s.IsClientAttached,
 	)
 	return s, err
 }
@@ -180,24 +184,24 @@ func ScanStudents(rs *sql.Rows) (Students, error) {
 // Insert Student in the database and returns the item with id filled.
 func (item Student) Insert(tx DB) (out Student, err error) {
 	row := tx.QueryRow(`INSERT INTO students (
-		Name,Surname
+		Name,Surname,Birthday,TrivialSuccess,IsClientAttached
 		) VALUES (
-		$1,$2
+		$1,$2,$3,$4,$5
 		) RETURNING 
-		Id,Name,Surname;
-		`, item.Name, item.Surname)
+		Id,Name,Surname,Birthday,TrivialSuccess,IsClientAttached;
+		`, item.Name, item.Surname, item.Birthday, item.TrivialSuccess, item.IsClientAttached)
 	return ScanStudent(row)
 }
 
 // Update Student in the database and returns the new version.
 func (item Student) Update(tx DB) (out Student, err error) {
 	row := tx.QueryRow(`UPDATE students SET (
-		Name,Surname
+		Name,Surname,Birthday,TrivialSuccess,IsClientAttached
 		) = (
-		$2,$3
+		$2,$3,$4,$5,$6
 		) WHERE id = $1 RETURNING 
-		Id,Name,Surname;
-		`, item.Id, item.Name, item.Surname)
+		Id,Name,Surname,Birthday,TrivialSuccess,IsClientAttached;
+		`, item.Id, item.Name, item.Surname, item.Birthday, item.TrivialSuccess, item.IsClientAttached)
 	return ScanStudent(row)
 }
 
@@ -214,4 +218,18 @@ func DeleteStudentsByIDs(tx DB, ids ...int64) (IDs, error) {
 		return nil, err
 	}
 	return ScanIDs(rows)
+}
+
+func (s *Date) Scan(src interface{}) error {
+	var tmp pq.NullTime
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = Date(tmp.Time)
+	return nil
+}
+
+func (s Date) Value() (driver.Value, error) {
+	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
 }

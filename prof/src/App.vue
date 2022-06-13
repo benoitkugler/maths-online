@@ -10,6 +10,9 @@
         <v-btn link :to="{ name: 'home' }">Accueil</v-btn>
       </v-list-item>
       <v-list-item>
+        <v-btn link :to="{ name: 'classrooms' }">Classes et élèves</v-btn>
+      </v-list-item>
+      <v-list-item>
         <v-btn link :to="{ name: 'trivial' }">Triv'Maths</v-btn>
       </v-list-item>
       <v-list-item>

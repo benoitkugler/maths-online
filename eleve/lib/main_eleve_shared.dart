@@ -62,7 +62,8 @@ class _EleveAppState extends State<EleveApp> {
 
   void _showAppSettings(BuildContext context) async {
     final newSettings = await Navigator.of(context).push(
-        MaterialPageRoute<UserSettings>(builder: (_) => const Settings()));
+        MaterialPageRoute<UserSettings>(
+            builder: (_) => Settings(widget.buildMode)));
     if (newSettings != null) {
       setState(() {
         settings = newSettings;

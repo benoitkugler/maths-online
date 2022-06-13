@@ -1,3 +1,4 @@
+import ClassroomsListVue from "@/views/ClassroomsList.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
@@ -10,20 +11,26 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: HomeView,
-      meta: { Label: "Accueil" }
+      meta: { Label: "Accueil" },
+    },
+    {
+      path: "/classrooms",
+      name: "classrooms",
+      component: ClassroomsListVue,
+      meta: { Label: "Classes et élèves" },
     },
     {
       path: "/trivial",
       name: "trivial",
       component: TrivialPoursuit,
-      meta: { Label: "Configuration du TrivialPoursuit" }
+      meta: { Label: "Configuration du TrivialPoursuit" },
     },
     {
       path: "/editor",
       name: "editor",
       component: QuestionEditor,
-      meta: { Label: "Editeur de question" }
-    }
+      meta: { Label: "Editeur de question" },
+    },
     // {
     //   path: '/about',
     //   name: 'Activités',
@@ -32,7 +39,7 @@ const router = createRouter({
     //   // which is lazy-loaded when the route is visited.
     //   component: () => import('../views/AboutView.vue')
     // }
-  ]
+  ],
 });
 
 export default router;

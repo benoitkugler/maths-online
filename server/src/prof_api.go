@@ -18,6 +18,17 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 
 	gr := e.Group("", tc.JWTMiddleware())
 
+	// classrooms
+	gr.GET("/prof/classrooms/api", tc.TeacherGetClassrooms)
+	gr.PUT("/prof/classrooms/api", tc.TeacherCreateClassroom)
+	gr.POST("/prof/classrooms/api", tc.TeacherUpdateClassroom)
+	gr.DELETE("/prof/classrooms/api", tc.TeacherDeleteClassroom)
+
+	gr.GET("/prof/classrooms/api/students", tc.TeacherGetClassroomStudents)
+	gr.POST("/prof/classrooms/api/students/import", tc.TeacherImportStudents)
+	gr.GET("/prof/classrooms/api/students/connect", tc.TeacherGenerateClassroomCode)
+
+	// trivial configurations
 	gr.GET("/prof/trivial/config", tvc.GetTrivialPoursuit)
 	gr.PUT("/prof/trivial/config", tvc.CreateTrivialPoursuit)
 	gr.POST("/prof/trivial/config", tvc.UpdateTrivialPoursuit)

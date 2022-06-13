@@ -13,25 +13,31 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var accessForbidden = errors.New("ressource access forbidden")
+
 // Controller provides the route handling teacher inscription,
 // connection and settings.
 type Controller struct {
-	db   *sql.DB
-	key  pass.Encrypter
-	smtp pass.SMTP
-	host string // used for links
+	db                     *sql.DB
+	teacherKey, studentKey pass.Encrypter
+	smtp                   pass.SMTP
+	host                   string // used for links
 
 	admin Teacher // loaded at creation
+
+	classCodes *classroomsCode
 }
 
 // NewController return a new controller.
 // `LoadAdminTeacher` should be called once.
-func NewController(db *sql.DB, smtp pass.SMTP, key pass.Encrypter, host string) *Controller {
+func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encrypter, host string) *Controller {
 	return &Controller{
-		db:   db,
-		key:  key,
-		smtp: smtp,
-		host: host,
+		db:         db,
+		teacherKey: teacherKey,
+		studentKey: studentKey,
+		smtp:       smtp,
+		host:       host,
+		classCodes: &classroomsCode{codes: make(map[string]int64)},
 	}
 }
 
@@ -62,7 +68,7 @@ func (ct *Controller) emailInscription(args AskInscriptionIn) (string, error) {
 		return "", errors.New("L'adresse mail est invalide.")
 	}
 
-	payload, err := ct.key.EncryptJSON(args)
+	payload, err := ct.teacherKey.EncryptJSON(args)
 	if err != nil {
 		return "", err
 	}
@@ -135,14 +141,14 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 	payload := c.QueryParam("data")
 
 	var args AskInscriptionIn
-	err := ct.key.DecryptJSON(payload, &args)
+	err := ct.teacherKey.DecryptJSON(payload, &args)
 	if err != nil {
 		return err
 	}
 
 	t := Teacher{
 		Mail:            args.Mail,
-		PasswordCrypted: ct.key.EncryptPassword(args.Password),
+		PasswordCrypted: ct.teacherKey.EncryptPassword(args.Password),
 	}
 	t, err = t.Insert(ct.db)
 	if err != nil {
@@ -165,7 +171,7 @@ func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
 		return LogginOut{}, err
 	}
 
-	if args.Password != ct.key.DecryptPassword(teacher.PasswordCrypted) {
+	if args.Password != ct.teacherKey.DecryptPassword(teacher.PasswordCrypted) {
 		return LogginOut{Error: "Le mot de passe est incorrect.", IsPasswordError: true}, nil
 	}
 
