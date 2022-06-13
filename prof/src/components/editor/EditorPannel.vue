@@ -282,8 +282,8 @@ import { computed, nextTick, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import BlockContainer from "./blocks/BlockContainer.vue";
-import FigureVue from "./blocks/Figure.vue";
 import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
+import FigureBlockVue from "./blocks/FigureBlock.vue";
 import FigurePointFieldVue from "./blocks/FigurePointField.vue";
 import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
 import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
@@ -302,6 +302,7 @@ import TextVue from "./blocks/Text.vue";
 import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
+import VectorFieldVue from "./blocks/VectorField.vue";
 import DescriptionPannel from "./DescriptionPannel.vue";
 import DropZone from "./DropZone.vue";
 import Intrinsics from "./Intrinsics.vue";
@@ -349,7 +350,7 @@ function dataToBlock(data: Block): block {
     case BlockKind.FormulaBlock:
       return { Props: data, Component: markRaw(FormulaVue) };
     case BlockKind.FigureBlock:
-      return { Props: data, Component: markRaw(FigureVue) };
+      return { Props: data, Component: markRaw(FigureBlockVue) };
     case BlockKind.FunctionGraphBlock:
       return { Props: data, Component: markRaw(FunctionGraphVue) };
     case BlockKind.FunctionVariationGraphBlock:
@@ -384,6 +385,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(TreeFieldVue) };
     case BlockKind.TableFieldBlock:
       return { Props: data, Component: markRaw(TableFieldVue) };
+    case BlockKind.VectorFieldBlock:
+      return { Props: data, Component: markRaw(VectorFieldVue) };
     default:
       throw "Unexpected Kind";
   }

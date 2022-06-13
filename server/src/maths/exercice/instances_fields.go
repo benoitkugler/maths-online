@@ -937,7 +937,10 @@ func (v VectorFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 
 func (v VectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.VectorNumberAnswer)
-	if v.AcceptColinear { // check if det(f.Answer, ans) = 0
+	if v.AcceptColinear { // check if det(f.Answer, ans) = 0 and ans not 0
+		if ans.X == 0 && ans.Y == 0 {
+			return false
+		}
 		return expression.AreFloatEqual(v.Answer.X*ans.Y-v.Answer.Y*ans.X, 0)
 	}
 	return expression.AreFloatEqual(v.Answer.X, ans.X) && expression.AreFloatEqual(v.Answer.Y, ans.Y)

@@ -7,6 +7,7 @@
       class="py-0 bg-purple-lighten-4 ma-1"
       v-for="kind in staticKinds"
       @click="emit('add', kind)"
+      :key="kind"
     >
       {{ labels[kind].label }}
     </v-list-item>
@@ -19,6 +20,7 @@
       dense
       class="py-0 bg-pink-lighten-4 ma-1"
       v-for="kind in fieldKinds"
+      :key="kind"
       @click="emit('add', kind)"
     >
       {{ labels[kind].label }}
@@ -37,9 +39,9 @@ const emit = defineEmits<{
 const labels = BlockKindLabels;
 
 const staticKinds = sortedBlockKindLabels
-  .filter(k => !k[1].isAnswerField)
-  .map(k => k[0]);
+  .filter((k) => !k[1].isAnswerField)
+  .map((k) => k[0]);
 const fieldKinds = sortedBlockKindLabels
-  .filter(k => k[1].isAnswerField)
-  .map(k => k[0]);
+  .filter((k) => k[1].isAnswerField)
+  .map((k) => k[0]);
 </script>

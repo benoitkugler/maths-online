@@ -38,20 +38,20 @@
       </v-row>
     </v-card-text>
   </v-card>
-  <figure-vue
+  <figure-block-vue
     v-model="props.modelValue.Figure"
     :available-parameters="props.availableParameters"
-  ></figure-vue>
+  ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
 import { colorByKind } from "@/controller/editor";
 import type {
   FigureAffineLineFieldBlock,
-  Variable
+  Variable,
 } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
-import FigureVue from "./Figure.vue";
+import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
   modelValue: FigureAffineLineFieldBlock;

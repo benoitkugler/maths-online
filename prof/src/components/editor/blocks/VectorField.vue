@@ -10,7 +10,7 @@
             variant="outlined"
             density="compact"
             label="X (Vecteur)"
-            hint="Expression, comparée à l'unité prés."
+            hint="Expression, comparée comme nombre à virgule."
             :color="expressionColor"
             v-model="props.modelValue.Answer.X"
             @update:model-value="
@@ -23,74 +23,52 @@
             variant="outlined"
             density="compact"
             label="Y (Vecteur)"
-            hint="Expression, comparée à l'unité prés."
+            hint="Expression, comparée comme nombre à virgule."
             :color="expressionColor"
             v-model="props.modelValue.Answer.Y"
           ></v-text-field>
         </v-col>
       </v-row>
       <v-row class="py-0">
-        <v-col class="py-0">
+        <v-col class="py-0" cols="12">
           <v-switch
-            v-model="props.modelValue.MustHaveOrigin"
+            density="compact"
+            v-model="props.modelValue.AcceptColinear"
             color="secondary"
-            label="Evaluer le point d'origine du vecteur."
+            label="Accepter un vecteur colinéaire (non nul)"
+            hide-details
+          >
+          </v-switch>
+        </v-col>
+        <v-col class="py-0" cols="12">
+          <v-switch
+            density="compact"
+            v-model="props.modelValue.DisplayColumn"
+            color="secondary"
+            label="Afficher en colonne"
             hide-details
           >
           </v-switch>
         </v-col>
       </v-row>
-      <v-row v-if="props.modelValue.MustHaveOrigin">
-        <v-col cols="6">
-          <v-text-field
-            variant="outlined"
-            density="compact"
-            label="X (Origine)"
-            hint="Expression, comparée à l'unité prés."
-            :color="expressionColor"
-            v-model="props.modelValue.AnswerOrigin.X"
-            @update:model-value="
-              (s) => completePoint(s, props.modelValue.AnswerOrigin)
-            "
-          ></v-text-field>
-        </v-col>
-        <v-col cols="6">
-          <v-text-field
-            variant="outlined"
-            density="compact"
-            label="Y (Origine)"
-            hint="Expression, comparée à l'unité prés."
-            :color="expressionColor"
-            v-model="props.modelValue.AnswerOrigin.Y"
-          ></v-text-field>
-        </v-col>
-      </v-row>
     </v-card-text>
   </v-card>
-  <figure-block-vue
-    v-model="props.modelValue.Figure"
-    :available-parameters="props.availableParameters"
-  ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
 import { colorByKind, completePoint } from "@/controller/editor";
-import type {
-  FigureVectorFieldBlock,
-  Variable,
-} from "@/controller/exercice_gen";
+import type { Variable, VectorFieldBlock } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
-import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
-  modelValue: FigureVectorFieldBlock;
+  modelValue: VectorFieldBlock;
   availableParameters: Variable[];
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: FigureVectorFieldBlock): void;
+  (event: "update:modelValue", value: VectorFieldBlock): void;
 }>();
 
 const expressionColor = colorByKind[TextKind.Expression];

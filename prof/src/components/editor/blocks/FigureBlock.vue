@@ -77,19 +77,30 @@
       </v-col>
     </v-row>
     <v-list>
-      <div v-for="(point, index) in props.modelValue.Drawings.Points">
+      <div
+        v-for="(point, index) in props.modelValue.Drawings.Points"
+        :key="index"
+      >
         <v-list-item>
           <v-row class="fix-input-width">
             <v-col md="3" align-self="center">
-              <v-text-field
-                density="compact"
-                variant="outlined"
-                label="Nom"
-                v-model="point.Name"
-                @update:model-value="v => onTypePointName(index, v)"
-                hide-details
-              >
-              </v-text-field>
+              <v-row no-gutters>
+                <v-col cols="12">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="Nom"
+                    v-model="point.Name"
+                    @update:model-value="(v) => onTypePointName(index, v)"
+                  >
+                  </v-text-field> </v-col
+              ></v-row>
+              <v-row no-gutters>
+                <v-col cols="12" align-self="center">
+                  <btn-color-picker
+                    v-model="point.Point.Color"
+                  ></btn-color-picker> </v-col
+              ></v-row>
             </v-col>
             <v-col md="7">
               <v-row no-gutters>
@@ -115,22 +126,12 @@
                   ></v-text-field>
                 </v-col>
                 <v-col md="12">
-                  <v-select
-                    label="Position de la légende"
-                    density="compact"
-                    variant="outlined"
-                    :items="labelPosItems.map(i => i.text)"
-                    :model-value="
-                      labelPosItems.find(v => v.value == point.Point.Pos)?.text
-                    "
-                    @update:model-value="v => onPosChange(v, index)"
-                    hide-details
-                  ></v-select>
+                  <label-pos-field v-model="point.Point.Pos"></label-pos-field>
                 </v-col>
               </v-row>
             </v-col>
-            <v-col md="2" align-self="center">
-              <v-btn icon size="x-small" flat @click="deletePoint(index)">
+            <v-col md="2" align-self="center" class="px-0">
+              <v-btn icon size="x-small" @click="deletePoint(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -144,7 +145,7 @@
   <v-card color="secondary" class="my-1">
     <v-row no-gutters>
       <v-col align-self="center" md="9">
-        <v-card-subtitle> Segments et vecteurs </v-card-subtitle>
+        <v-card-subtitle> Segments, vecteurs et droites </v-card-subtitle>
       </v-col>
       <v-col md="3" style="text-align: right">
         <v-btn
@@ -160,7 +161,10 @@
       </v-col>
     </v-row>
     <v-list>
-      <div v-for="(segment, index) in props.modelValue.Drawings.Segments">
+      <div
+        v-for="(segment, index) in props.modelValue.Drawings.Segments"
+        :key="index"
+      >
         <v-list-item>
           <v-row class="fix-input-width">
             <v-col align-self="center" md="4">
@@ -185,44 +189,34 @@
                     v-model="segment.To"
                   ></v-select>
                 </v-col>
+                <v-col md="12" style="text-align: center">
+                  <btn-color-picker v-model="segment.Color"></btn-color-picker>
+                </v-col>
               </v-row>
             </v-col>
             <v-col md="7">
-              <v-row no-gutters>
+              <v-row class="px-0">
                 <v-col md="12">
-                  <v-switch
-                    label="Représenter un vecteur"
-                    hide-details
-                    v-model="segment.AsVector"
-                    color="secondary"
-                  ></v-switch>
+                  <segment-kind-field
+                    v-model="segment.Kind"
+                  ></segment-kind-field>
                 </v-col>
                 <v-col md="12">
                   <v-text-field
                     density="compact"
                     variant="outlined"
-                    label="Légende"
-                    hint="Optionnelle"
+                    label="Légende (Optionnelle)"
+                    hide-details
                     v-model="segment.LabelName"
                   ></v-text-field>
                 </v-col>
                 <v-col md="12">
-                  <v-select
-                    label="Position de la légende"
-                    density="compact"
-                    variant="outlined"
-                    :items="labelPosItems.map(i => i.text)"
-                    :model-value="
-                      labelPosItems.find(v => v.value == segment.LabelPos)?.text
-                    "
-                    @update:model-value="v => onSegmentLabelPosChange(v, index)"
-                    hide-details
-                  ></v-select>
+                  <label-pos-field v-model="segment.LabelPos"></label-pos-field>
                 </v-col>
               </v-row>
             </v-col>
-            <v-col md="1" align-self="center">
-              <v-btn icon size="x-small" flat @click="deleteSegment(index)">
+            <v-col md="1" align-self="center" class="px-0">
+              <v-btn icon size="x-small" @click="deleteSegment(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -251,7 +245,10 @@
       </v-col>
     </v-row>
     <v-list>
-      <div v-for="(line, index) in props.modelValue.Drawings.Lines">
+      <div
+        v-for="(line, index) in props.modelValue.Drawings.Lines"
+        :key="index"
+      >
         <v-list-item>
           <v-row class="fix-input-width">
             <v-col cols="10">
@@ -286,6 +283,7 @@
                     variant="outlined"
                     label="Légende"
                     v-model="line.Label"
+                    hide-details
                   ></v-text-field>
                 </v-col>
                 <v-col>
@@ -295,7 +293,7 @@
             </v-col>
 
             <v-col md="2" align-self="center">
-              <v-btn icon size="x-small" flat @click="deleteLine(index)">
+              <v-btn icon size="x-small" @click="deleteLine(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -309,9 +307,16 @@
 
 <script setup lang="ts">
 import { colorByKind, extractPoints } from "@/controller/editor";
-import type { FigureBlock, Variable } from "@/controller/exercice_gen";
-import { LabelPos, LabelPosLabels, TextKind } from "@/controller/exercice_gen";
+import {
+  LabelPos,
+  SegmentKind,
+  TextKind,
+  type FigureBlock,
+  type Variable,
+} from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
+import LabelPosField from "../utils/LabelPosField.vue";
+import SegmentKindField from "../utils/SegmentKindField.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
@@ -327,20 +332,19 @@ const emit = defineEmits<{
 
 const expressionColor = colorByKind[TextKind.Expression];
 
-const labelPosItems = Object.entries(LabelPosLabels).map(k => ({
-  value: Number(k[0]) as LabelPos,
-  text: k[1]
-}));
-
 const segmentsPointItems = computed(() =>
-  (props.modelValue.Drawings.Points || []).map(p => p.Name)
+  (props.modelValue.Drawings.Points || []).map((p) => p.Name)
 );
 
 function addPoint() {
   const points = props.modelValue.Drawings.Points || [];
   points.push({
     Name: "",
-    Point: { Coord: { X: "", Y: "" }, Pos: LabelPos.TopRight }
+    Point: {
+      Coord: { X: "", Y: "" },
+      Pos: LabelPos.TopRight,
+      Color: "#0011FF",
+    },
   });
   props.modelValue.Drawings.Points = points;
 }
@@ -357,16 +361,6 @@ function deleteLine(index: number) {
   props.modelValue.Drawings.Lines!.splice(index, 1);
 }
 
-function onPosChange(v: string, index: number) {
-  const pos = labelPosItems.find(item => item.text == v)!.value;
-  props.modelValue.Drawings.Points![index].Point.Pos = pos;
-}
-
-function onSegmentLabelPosChange(v: string, index: number) {
-  const pos = labelPosItems.find(item => item.text == v)!.value;
-  props.modelValue.Drawings.Segments![index].LabelPos = pos;
-}
-
 function addSegment() {
   const points = props.modelValue.Drawings.Points || [];
   if (points.length < 2) {
@@ -378,9 +372,10 @@ function addSegment() {
   segments.push({
     From: from.Name,
     To: to.Name,
-    AsVector: false,
+    Kind: SegmentKind.SKSegment,
     LabelName: "",
-    LabelPos: LabelPos.Top
+    LabelPos: LabelPos.Top,
+    Color: "#0022FF",
   });
   props.modelValue.Drawings.Segments = segments;
 }

@@ -13,7 +13,9 @@
             hint="Expression, comparée à l'unité prés."
             :color="expressionColor"
             v-model="props.modelValue.Answer.X"
-            @update:model-value="s => completePoint(s, props.modelValue.Answer)"
+            @update:model-value="
+              (s) => completePoint(s, props.modelValue.Answer)
+            "
           ></v-text-field>
         </v-col>
         <v-col cols="6">
@@ -29,20 +31,20 @@
       </v-row>
     </v-card-text>
   </v-card>
-  <figure-vue
+  <figure-block-vue
     v-model="props.modelValue.Figure"
     :available-parameters="props.availableParameters"
-  ></figure-vue>
+  ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
 import { colorByKind, completePoint } from "@/controller/editor";
 import type {
   FigurePointFieldBlock,
-  Variable
+  Variable,
 } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
-import FigureVue from "./Figure.vue";
+import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
   modelValue: FigurePointFieldBlock;

@@ -13,7 +13,7 @@ const (
 	TopRight                    // Au dessus, à droite
 	BottomRight                 // En dessous, à droite
 	BottomLeft                  // En dessous, à gauche
-	Hide                        // Masque la légende
+	Hide                        // Masquer la légende
 )
 
 type SegmentKind uint8

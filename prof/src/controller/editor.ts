@@ -25,6 +25,7 @@ import type {
   Variable,
   VariationTableBlock,
   VariationTableFieldBlock,
+  VectorFieldBlock,
 } from "./exercice_gen";
 import {
   BlockKind,
@@ -156,6 +157,10 @@ export const sortedBlockKindLabels = [
     },
   ],
   [
+    BlockKind.VectorFieldBlock,
+    { label: "Vecteur (numérique)", isAnswerField: true },
+  ],
+  [
     BlockKind.FunctionPointsFieldBlock,
     {
       label: "Construction de fonction",
@@ -176,6 +181,7 @@ export const sortedBlockKindLabels = [
       isAnswerField: true,
     },
   ],
+
   [
     BlockKind.FigureVectorPairFieldBlock,
     {
@@ -212,6 +218,7 @@ interface BlockKindTypes {
   [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
   [BlockKind.TreeFieldBlock]: TreeFieldBlock;
   [BlockKind.TableFieldBlock]: TableFieldBlock;
+  [BlockKind.VectorFieldBlock]: VectorFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -590,15 +597,32 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
+    case BlockKind.VectorFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: {
+            X: "3.5",
+            Y: "-4",
+          },
+          AcceptColinear: false,
+          DisplayColumn: true,
+        },
+      };
+      return out;
+    }
     default:
       throw "Unexpected Kind";
   }
 }
 
+/** update the Y field of `point` if it is empty and `s`
+ * has the form 'x_A'
+ */
 export function completePoint(s: string, point: CoordExpression) {
   s = s.trim();
   if (s.startsWith("x_") && s.length > 2) {
-    const name = s.substr(2);
+    const name = s.substring(2);
     if (!point.Y) {
       point.Y = "y_" + name;
     }

@@ -12,7 +12,7 @@
             hint="Caractéristique attendue pour les deux vecteurs à construire"
             variant="outlined"
             density="compact"
-            :items="selectItems.map(e => e.text)"
+            :items="selectItems.map((e) => e.text)"
             :model-value="selectItems.find(e => e.value == props.modelValue.Criterion)!.text"
             @update:model-value="
               s =>
@@ -26,24 +26,24 @@
       </v-row>
     </v-card-text>
   </v-card>
-  <figure-vue
+  <figure-block-vue
     v-model="props.modelValue.Figure"
     :available-parameters="props.availableParameters"
-  ></figure-vue>
+  ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
 import { colorByKind } from "@/controller/editor";
 import type {
   FigureVectorPairFieldBlock,
-  Variable
+  Variable,
 } from "@/controller/exercice_gen";
 import {
   TextKind,
   VectorPairCriterion,
-  VectorPairCriterionLabels
+  VectorPairCriterionLabels,
 } from "@/controller/exercice_gen";
-import FigureVue from "./Figure.vue";
+import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
   modelValue: FigureVectorPairFieldBlock;
@@ -56,9 +56,9 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: FigureVectorPairFieldBlock): void;
 }>();
 
-const selectItems = Object.entries(VectorPairCriterionLabels).map(e => ({
+const selectItems = Object.entries(VectorPairCriterionLabels).map((e) => ({
   text: e[1],
-  value: Number(e[0]) as VectorPairCriterion
+  value: Number(e[0]) as VectorPairCriterion,
 }));
 
 const expressionColor = colorByKind[TextKind.Expression];
