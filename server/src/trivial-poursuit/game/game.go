@@ -470,8 +470,8 @@ func (gs *Game) endQuestion(force bool) Events {
 			Success:    isValid,
 		})
 		askForMark := !isValid && len(state.Review.MarkedQuestions) < 3
-		answer := playerAnswerResult{Success: false, AskForMask: askForMark}
-		out.Results[player] = answer
+
+		out.Results[player] = playerAnswerResult{Success: isValid, AskForMask: askForMark}
 	}
 
 	// cleanup
