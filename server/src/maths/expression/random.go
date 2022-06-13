@@ -35,25 +35,25 @@ func (rp RandomParameters) addAnonymousParam(expr *Expression) Variable {
 	panic("implementation limit reached")
 }
 
-var _ ValueResolver = &randomVarResolver{}
+var _ ValueResolver = (*randomVarResolver)(nil)
 
 type randomVarResolver struct {
 	defs RandomParameters
 
-	seen    map[Variable]bool   // variable that we are currently resolving
-	results map[Variable]Number // resulting values
+	seen    map[Variable]bool // variable that we are currently resolving
+	results map[Variable]rat  // resulting values
 
 	err error
 }
 
-func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
+func (rvv *randomVarResolver) resolve(v Variable) (*Expression, bool) {
 	if rvv.err != nil { // skip
-		return 0, false
+		return nil, false
 	}
 
 	// first, check if it has already been resolved by side effect
 	if nb, has := rvv.results[v]; has {
-		return float64(nb), true
+		return nb.toExpr(), true
 	}
 
 	if rvv.seen[v] {
@@ -61,7 +61,7 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 			Cause:  v,
 			Detail: fmt.Sprintf("%s est présente dans un cycle et ne peut donc pas être calculée", v),
 		}
-		return 0, false
+		return nil, false
 	}
 
 	// start the resolution : to detect invalid cycles,
@@ -74,16 +74,16 @@ func (rvv *randomVarResolver) resolve(v Variable) (float64, bool) {
 			Cause:  v,
 			Detail: fmt.Sprintf("%s n'est pas définie", v),
 		}
-		return 0, false
+		return nil, false
 	}
 
 	// recurse
-	value, _ := expr.Evaluate(rvv)
+	value, _ := expr.evalRat(rvv)
 
 	// register the result
-	rvv.results[v] = Number(value)
+	rvv.results[v] = value
 
-	return value, true
+	return value.toExpr(), true
 }
 
 // Instantiate generate a random version of the
@@ -96,7 +96,7 @@ func (rv RandomParameters) Instantiate() (Variables, error) {
 	resolver := randomVarResolver{
 		defs:    rv,
 		seen:    make(map[Variable]bool),
-		results: make(map[Variable]Number),
+		results: make(map[Variable]rat),
 	}
 
 	out := make(Variables, len(rv))
@@ -104,7 +104,7 @@ func (rv RandomParameters) Instantiate() (Variables, error) {
 		// special case for randVariable
 		if randV, isRandVariable := expr.atom.(randVariable); isRandVariable {
 			resolver.seen[v] = true
-			out[v] = NewRV(randV.choice())
+			out[v] = &Expression{atom: randV.choice()}
 			continue
 		}
 
@@ -114,7 +114,7 @@ func (rv RandomParameters) Instantiate() (Variables, error) {
 			return nil, resolver.err
 		}
 
-		out[v] = NewRN(value)
+		out[v] = value
 	}
 
 	return out, nil

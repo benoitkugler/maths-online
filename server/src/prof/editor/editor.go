@@ -541,7 +541,7 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (Sav
 
 type VarEntry struct {
 	Variable expression.Variable
-	Resolved expression.ResolvedVariable
+	Resolved string
 }
 
 type InstantiatedQuestion struct {
@@ -569,7 +569,7 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 		}
 		varList := make([]VarEntry, 0, len(vars))
 		for k, v := range vars {
-			varList = append(varList, VarEntry{Variable: k, Resolved: v})
+			varList = append(varList, VarEntry{Variable: k, Resolved: v.Serialize()})
 		}
 		instance, err := qu.Page.InstantiateWith(vars)
 		if err != nil {
@@ -595,7 +595,10 @@ func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer clien
 
 	paramsDict := make(expression.Variables)
 	for _, entry := range params {
-		paramsDict[entry.Variable] = entry.Resolved
+		paramsDict[entry.Variable], err = expression.Parse(entry.Resolved)
+		if err != nil {
+			return client.QuestionAnswersOut{}, err
+		}
 	}
 
 	instance, err := qu.Page.InstantiateWith(paramsDict)

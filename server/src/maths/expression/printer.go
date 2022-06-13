@@ -44,7 +44,7 @@ func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
 func (expr *Expression) String() string {
 	expr = expr.copy()
 	expr.simplifyForPrint()
-	return expr.serialize()
+	return expr.Serialize()
 }
 
 func addParenthesisLatex(s string) string {
@@ -200,7 +200,7 @@ func (expr *Expression) needParenthesis(op operator, isLeft bool) bool {
 // plain text, pretty output
 
 func (op operator) serialize(left, right *Expression) string {
-	leftCode, rightCode := left.serialize(), right.serialize()
+	leftCode, rightCode := left.Serialize(), right.Serialize()
 
 	if left.needParenthesis(op, true) {
 		leftCode = addParenthesisPlain(leftCode)

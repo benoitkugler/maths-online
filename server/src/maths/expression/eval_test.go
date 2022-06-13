@@ -9,7 +9,7 @@ import (
 
 func TestEvalMissingVariable(t *testing.T) {
 	e := mustParse(t, "x + y")
-	_, err := e.Evaluate(Variables{NewVar('x'): NewRN(7)})
+	_, err := e.Evaluate(Variables{NewVar('x'): NewNb(7)})
 	if err == nil {
 		t.Fatal()
 	}
@@ -124,7 +124,7 @@ func Test_Expression_eval(t *testing.T) {
 			"1 + 1 * 3 ^ 3 * 2 - 1", nil, 54,
 		},
 		{
-			"x + 2", Variables{NewVar('x'): NewRN(4)}, 6,
+			"x + 2", Variables{NewVar('x'): NewNb(4)}, 6,
 		},
 		{
 			"2 + 0 * randInt(1;3)", nil, 2,
@@ -145,7 +145,7 @@ func Test_Expression_eval(t *testing.T) {
 			"2 * randPrime(8; 12)", nil, 22,
 		},
 		{
-			"2 * randInt(8; a)", Variables{NewVar('a'): NewRN(8)}, 16,
+			"2 * randInt(8; a)", Variables{NewVar('a'): NewNb(8)}, 16,
 		},
 		{
 			"2 * randChoice(8)", nil, 16,
@@ -190,20 +190,20 @@ func Test_Expression_eval(t *testing.T) {
 			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVar('a'): NewRN(2)}, 2,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVar('a'): NewNb(2)}, 2,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				NewVar('a'): NewRN(8),  // BC
-				NewVar('b'): NewRN(12), // AC
-				NewVar('c'): NewRN(4),  // AB
+				NewVar('a'): NewNb(8),  // BC
+				NewVar('b'): NewNb(12), // AC
+				NewVar('c'): NewNb(4),  // AB
 			}, 0,
 		},
 		{
 			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
-				NewVar('a'): NewRN(3), // BC
-				NewVar('b'): NewRN(4), // AC
-				NewVar('c'): NewRN(5), // AB
+				NewVar('a'): NewNb(3), // BC
+				NewVar('b'): NewNb(4), // AC
+				NewVar('c'): NewNb(5), // AB
 			}, 3,
 		},
 		{
@@ -223,7 +223,7 @@ func Test_Expression_eval(t *testing.T) {
 			t.Fatal(err)
 		}
 		if got != tt.want {
-			t.Errorf("node.eval() = %v, want %v", got, tt.want)
+			t.Errorf("node.eval(%s) = %v, want %v", tt.expr, got, tt.want)
 		}
 	}
 }
@@ -243,13 +243,13 @@ func TestExpression_Evaluate_err(t *testing.T) {
 			"randInt(a;b)", nil,
 		},
 		{
-			"randInt(a;3)", Variables{NewVar('a'): NewRN(6)},
+			"randInt(a;3)", Variables{NewVar('a'): NewNb(6)},
 		},
 		{
-			"randPrime(a;3)", Variables{NewVar('a'): NewRN(-6)},
+			"randPrime(a;3)", Variables{NewVar('a'): NewNb(-6)},
 		},
 		{
-			"randPrime(a;9)", Variables{NewVar('a'): NewRN(8)},
+			"randPrime(a;9)", Variables{NewVar('a'): NewNb(8)},
 		},
 	}
 	for _, tt := range tests {
@@ -310,14 +310,14 @@ func Test_isPrime(t *testing.T) {
 func TestIsDecimal(t *testing.T) {
 	atom := specialFunctionA{kind: randDenominator}
 	for range [200]int{} {
-		n, err := atom.eval(0, 0, nil)
+		n, err := atom.eval(newRat(0), newRat(0), nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, is := isInt(n * maxDecDen); !is {
+		if _, is := isInt(n.eval() * maxDecDen); !is {
 			t.Fatal(n)
 		}
-		if n <= 0 || n > thresholdDecDen {
+		if n.eval() <= 0 || n.eval() > thresholdDecDen {
 			t.Fatal(n)
 		}
 	}
@@ -399,6 +399,51 @@ func Test_roundTo(t *testing.T) {
 	for _, tt := range tests {
 		if got := roundTo(tt.v, tt.digits); got != tt.want {
 			t.Errorf("roundTo() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func Test_sumRat(t *testing.T) {
+	tests := []struct {
+		r1   rat
+		r2   rat
+		want rat
+	}{
+		{
+			rat{1, 2}, rat{3, 2}, rat{4, 2},
+		},
+		{
+			rat{1.4, 2}, rat{3, 2}, rat{4.4, 2},
+		},
+		{
+			rat{1.4, 2}, rat{3, 1.5}, rat{1.5*1.4 + 6, 3},
+		},
+	}
+	for _, tt := range tests {
+		if got := sumRat(tt.r1, tt.r2); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("sumRat() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func Test_rat_reduce(t *testing.T) {
+	tests := []struct {
+		p    float64
+		q    float64
+		want rat
+	}{
+		{8, 4, rat{2, 1}},
+		{12, 8, rat{3, 2}},
+		{45.4, 2, rat{45.4, 2}},
+	}
+	for _, tt := range tests {
+		r := rat{
+			p: tt.p,
+			q: tt.q,
+		}
+		r.reduce()
+		if r != tt.want {
+			t.Errorf("sumRat() = %v, want %v", r, tt.want)
 		}
 	}
 }

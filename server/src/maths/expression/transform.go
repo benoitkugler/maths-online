@@ -573,21 +573,21 @@ func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
 
 // partial evaluation a.k.a substitution
 
-// ResolvedVariable stores the value attributed to a variable
-// during instantiation.
-type ResolvedVariable struct {
-	V          Variable
-	N          float64
-	IsVariable bool
-}
+// // ResolvedVariable stores the value attributed to a variable
+// // during instantiation.
+// type ResolvedVariable struct {
+// 	V          Variable
+// 	N          float64
+// 	IsVariable bool
+// }
 
-func NewRN(v float64) ResolvedVariable {
-	return ResolvedVariable{N: v}
-}
+// func NewNb(v float64) ResolvedVariable {
+// 	return ResolvedVariable{N: v}
+// }
 
-func NewRV(value Variable) ResolvedVariable {
-	return ResolvedVariable{IsVariable: true, V: value}
-}
+// func NewRV(value Variable) ResolvedVariable {
+// 	return ResolvedVariable{IsVariable: true, V: value}
+// }
 
 // Substitute replaces variables contained in `vars`.
 func (expr *Expression) Substitute(vars Variables) {
@@ -600,11 +600,7 @@ func (expr *Expression) Substitute(vars Variables) {
 	if v, isVariable := expr.atom.(Variable); isVariable {
 		value, has := vars[v]
 		if has {
-			if value.IsVariable {
-				expr.atom = value.V
-			} else {
-				expr.atom = Number(value.N)
-			}
+			*expr = *value.copy()
 		}
 	}
 }

@@ -624,9 +624,9 @@ package examples
 // 			RadioFieldInstance{
 // 				ID: 0,
 // 				Answer: int(mustEvaluate("1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", expression.Variables{
-// 					expression.NewVar('a'): expression.NewRN(8),  // BC
-// 					expression.NewVar('b'): expression.NewRN(12), // AC
-// 					expression.NewVar('c'): expression.NewRN(4),  // AB
+// 					expression.NewVar('a'): expression.NewNb(8),  // BC
+// 					expression.NewVar('b'): expression.NewNb(12), // AC
+// 					expression.NewVar('c'): expression.NewNb(4),  // AB
 // 				})),
 // 				Proposals: []client.ListFieldProposal{
 // 					{Content: []client.TextOrMath{{Text: `ABC n'est pas rectangle.`, IsMath: false}}},

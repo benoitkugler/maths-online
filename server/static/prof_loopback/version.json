@@ -1,1 +1,6 @@
-{"app_name":"eleve","version":"0.4.3","build_number":"18","package_name":"eleve"}
+{
+    "app_name": "eleve",
+    "version": "0.4.3",
+    "build_number": "18",
+    "package_name": "eleve"
+}
