@@ -484,11 +484,14 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 			return out, err
 		}
 		out.Figure.Drawings.Points[v.Name] = repere.LabeledPoint{
-			Point: repere.Coord{
-				X: x,
-				Y: y,
+			Point: repere.PosPoint{
+				Point: repere.Coord{
+					X: x,
+					Y: y,
+				},
+				Pos: v.Point.Pos,
 			},
-			Pos: v.Point.Pos,
+			Color: v.Point.Color,
 		}
 	}
 

@@ -28,7 +28,7 @@ JSON coordToJson(Coord item) {
   return {"X": doubleToJson(item.x), "Y": doubleToJson(item.y)};
 }
 
-String stringFromJson(dynamic json) => json as String;
+String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
@@ -41,7 +41,8 @@ enum LabelPos {
   topLeft,
   topRight,
   bottomRight,
-  bottomLeft
+  bottomLeft,
+  hide
 }
 
 extension _LabelPosExt on LabelPos {
@@ -58,27 +59,52 @@ LabelPos labelPosFromJson(dynamic json) => _LabelPosExt.fromValue(json as int);
 
 dynamic labelPosToJson(LabelPos item) => item.toValue();
 
-// github.com/benoitkugler/maths-online/maths/repere.LabeledPoint
-class LabeledPoint {
+// github.com/benoitkugler/maths-online/maths/repere.PosPoint
+class PosPoint {
   final Coord point;
   final LabelPos pos;
 
-  const LabeledPoint(this.point, this.pos);
+  const PosPoint(this.point, this.pos);
 
   @override
   String toString() {
-    return "LabeledPoint($point, $pos)";
+    return "PosPoint($point, $pos)";
+  }
+}
+
+PosPoint posPointFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return PosPoint(coordFromJson(json['Point']), labelPosFromJson(json['Pos']));
+}
+
+JSON posPointToJson(PosPoint item) {
+  return {"Point": coordToJson(item.point), "Pos": labelPosToJson(item.pos)};
+}
+
+// github.com/benoitkugler/maths-online/maths/repere.LabeledPoint
+class LabeledPoint {
+  final String color;
+  final PosPoint point;
+
+  const LabeledPoint(this.color, this.point);
+
+  @override
+  String toString() {
+    return "LabeledPoint($color, $point)";
   }
 }
 
 LabeledPoint labeledPointFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return LabeledPoint(
-      coordFromJson(json['Point']), labelPosFromJson(json['Pos']));
+      stringFromJson(json['Color']), posPointFromJson(json['Point']));
 }
 
 JSON labeledPointToJson(LabeledPoint item) {
-  return {"Point": coordToJson(item.point), "Pos": labelPosToJson(item.pos)};
+  return {
+    "Color": stringToJson(item.color),
+    "Point": posPointToJson(item.point)
+  };
 }
 
 Map<String, LabeledPoint> dictStringLabeledPointFromJson(dynamic json) {
@@ -95,24 +121,39 @@ Map<String, dynamic> dictStringLabeledPointToJson(
       (k, v) => MapEntry(stringToJson(k).toString(), labeledPointToJson(v)));
 }
 
-bool boolFromJson(dynamic json) => json as bool;
+// github.com/benoitkugler/maths-online/maths/repere.SegmentKind
+enum SegmentKind { sKSegment, sKVector, sKLine }
 
-bool boolToJson(bool item) => item;
+extension _SegmentKindExt on SegmentKind {
+  static SegmentKind fromValue(int i) {
+    return SegmentKind.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+SegmentKind segmentKindFromJson(dynamic json) =>
+    _SegmentKindExt.fromValue(json as int);
+
+dynamic segmentKindToJson(SegmentKind item) => item.toValue();
 
 // github.com/benoitkugler/maths-online/maths/repere.Segment
 class Segment {
   final String labelName;
   final String from;
   final String to;
+  final String color;
   final LabelPos labelPos;
-  final bool asVector;
+  final SegmentKind kind;
 
   const Segment(
-      this.labelName, this.from, this.to, this.labelPos, this.asVector);
+      this.labelName, this.from, this.to, this.color, this.labelPos, this.kind);
 
   @override
   String toString() {
-    return "Segment($labelName, $from, $to, $labelPos, $asVector)";
+    return "Segment($labelName, $from, $to, $color, $labelPos, $kind)";
   }
 }
 
@@ -122,8 +163,9 @@ Segment segmentFromJson(dynamic json_) {
       stringFromJson(json['LabelName']),
       stringFromJson(json['From']),
       stringFromJson(json['To']),
+      stringFromJson(json['Color']),
       labelPosFromJson(json['LabelPos']),
-      boolFromJson(json['AsVector']));
+      segmentKindFromJson(json['Kind']));
 }
 
 JSON segmentToJson(Segment item) {
@@ -131,8 +173,9 @@ JSON segmentToJson(Segment item) {
     "LabelName": stringToJson(item.labelName),
     "From": stringToJson(item.from),
     "To": stringToJson(item.to),
+    "Color": stringToJson(item.color),
     "LabelPos": labelPosToJson(item.labelPos),
-    "AsVector": boolToJson(item.asVector)
+    "Kind": segmentKindToJson(item.kind)
   };
 }
 
@@ -247,6 +290,10 @@ JSON repereBoundsToJson(RepereBounds item) {
     "Origin": coordToJson(item.origin)
   };
 }
+
+bool boolFromJson(dynamic json) => json as bool;
+
+bool boolToJson(bool item) => item;
 
 // github.com/benoitkugler/maths-online/maths/repere.Figure
 class Figure {

@@ -57,6 +57,7 @@ class QuestionRoute extends StatelessWidget {
         return cancel;
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           automaticallyImplyLeading: true,
         ),

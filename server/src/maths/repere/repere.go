@@ -41,10 +41,14 @@ type Figure struct {
 	ShowGrid bool
 }
 
-type LabeledPoint struct {
-	Color string // #FFFFFF format
+type PosPoint struct {
 	Point Coord
 	Pos   LabelPos
+}
+
+type LabeledPoint struct {
+	Color string // #FFFFFF format
+	Point PosPoint
 }
 
 // Segment is a segment from a defined point to another

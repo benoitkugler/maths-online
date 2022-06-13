@@ -61,8 +61,8 @@ class BezierCurvesPainter extends CustomPainter {
     } else {
       pos = putLeft ? LabelPos.topLeft : LabelPos.topRight;
     }
-    return PositionnedText(fn.decoration.label,
-        LabeledPoint(Coord(labelPos.x, labelPos.y + 1), pos),
+    return PositionnedText(
+        fn.decoration.label, PosPoint(Coord(labelPos.x, labelPos.y + 1), pos),
         color: fromHex(fn.decoration.color));
   }
 

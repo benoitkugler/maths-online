@@ -160,25 +160,12 @@ class _AffineLinePainter extends CustomPainter {
   Line get _line {
     final from = Coord(this.from.x.toDouble(), this.from.y.toDouble());
     final to = Coord(this.to.x.toDouble(), this.to.y.toDouble());
-    double a, b;
-    if (to.x == from.x) {
-      a = double.infinity;
-      b = to.x;
-    } else {
-      a = (to.y - from.y) / (to.x - from.x);
-      b = from.y - a * from.x;
-    }
-    return Line(
-      label,
-      color,
-      a,
-      b,
-    );
+    return DrawingsPainter.inferLine(from, to, label, color);
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    DrawingsPainter.paintAffineLine(metrics, canvas, _line, size);
+    DrawingsPainter.paintAffineLine(metrics, canvas, _line);
   }
 
   @override

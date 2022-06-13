@@ -173,7 +173,7 @@ class PositionnedText {
   final String text;
 
   /// [pos] is the logical position, with a relative offset hint.
-  final LabeledPoint pos;
+  final PosPoint pos;
 
   final Color color;
 
@@ -362,7 +362,7 @@ class _GridPainter extends CustomPainter {
       DrawingsPainter._paintText(
           metrics,
           canvas,
-          LabeledPoint(Coord(xTick.logical.toDouble(), 0), LabelPos.bottom),
+          PosPoint(Coord(xTick.logical.toDouble(), 0), LabelPos.bottom),
           "${xTick.logical}",
           color: Colors.black);
     }
@@ -378,7 +378,7 @@ class _GridPainter extends CustomPainter {
       DrawingsPainter._paintText(
           metrics,
           canvas,
-          LabeledPoint(Coord(0, yTick.logical.toDouble()), LabelPos.left),
+          PosPoint(Coord(0, yTick.logical.toDouble()), LabelPos.left),
           "${yTick.logical} ",
           color: Colors.black);
     }
@@ -411,8 +411,7 @@ class _OriginPainter extends CustomPainter {
       final pos = origin.y == 0 ? LabelPos.top : LabelPos.bottomRight;
       const point = Coord(0, 0);
       DrawingsPainter.paintPoint(metrics, canvas, point, color: Colors.black);
-      DrawingsPainter._paintText(
-          metrics, canvas, LabeledPoint(point, pos), "O");
+      DrawingsPainter._paintText(metrics, canvas, PosPoint(point, pos), "O");
     }
   }
 
@@ -442,6 +441,8 @@ extension _OffsetLabel on LabelPos {
         return Offset(-(textWidth + padding), padding);
       case LabelPos.bottomRight:
         return const Offset(padding, padding);
+      case LabelPos.hide:
+        return Offset.zero;
     }
   }
 }
@@ -469,19 +470,23 @@ class DrawingsPainter extends CustomPainter {
     final List<PositionnedText> out = [];
 
     drawings.points.forEach((key, value) {
-      out.add(PositionnedText(key, value, color: Colors.blue));
+      if (value.point.pos == LabelPos.hide) {
+        return;
+      }
+      out.add(PositionnedText(key, value.point,
+          color: fromHex(value.color, onEmpty: Colors.blue)));
     });
 
     for (final segment in drawings.segments) {
-      final from = drawings.points[segment.from]!.point;
-      final to = drawings.points[segment.to]!.point;
-      if (segment.labelName.isNotEmpty) {
+      final from = drawings.points[segment.from]!.point.point;
+      final to = drawings.points[segment.to]!.point.point;
+      if (segment.labelName.isNotEmpty && segment.labelPos != LabelPos.hide) {
         out.add(
           PositionnedText(
-            segment.labelName,
-            LabeledPoint(Coord((from.x + to.x) / 2, (from.y + to.y) / 2),
-                segment.labelPos),
-          ),
+              segment.labelName,
+              PosPoint(Coord((from.x + to.x) / 2, (from.y + to.y) / 2),
+                  segment.labelPos),
+              color: fromHex(segment.color)),
         );
       }
     }
@@ -528,8 +533,26 @@ class DrawingsPainter extends CustomPainter {
 
     return PositionnedText(
       line.label,
-      LabeledPoint(logical, pos),
+      PosPoint(logical, pos),
       color: fromHex(line.color),
+    );
+  }
+
+  /// infer line from the points
+  static Line inferLine(Coord from, Coord to, String label, String color) {
+    double a, b;
+    if (to.x == from.x) {
+      a = double.infinity;
+      b = to.x;
+    } else {
+      a = (to.y - from.y) / (to.x - from.x);
+      b = from.y - a * from.x;
+    }
+    return Line(
+      label,
+      color,
+      a,
+      b,
     );
   }
 
@@ -544,21 +567,37 @@ class DrawingsPainter extends CustomPainter {
   }
 
   void _paintSegment(Canvas canvas, Segment line) {
-    final from = drawings.points[line.from]!.point;
-    final to = drawings.points[line.to]!.point;
+    final from = drawings.points[line.from]!.point.point;
+    final to = drawings.points[line.to]!.point.point;
     final visualFrom = metrics.logicalToVisual(from);
     final visualTo = metrics.logicalToVisual(to);
-    canvas.drawLine(visualFrom, visualTo, Paint());
-
-    if (line.asVector) {
-      final path = VectorPainter.arrowPath(visualFrom, visualTo);
-      canvas.drawPath(path, Paint()..style = PaintingStyle.fill);
+    final color = fromHex(line.color);
+    switch (line.kind) {
+      case SegmentKind.sKLine: // use affine painter
+        paintAffineLine(
+            metrics, canvas, inferLine(from, to, line.labelName, line.color),
+            width: 1);
+        break;
+      case SegmentKind.sKSegment:
+        canvas.drawLine(visualFrom, visualTo, Paint()..color = color);
+        break;
+      case SegmentKind.sKVector:
+        canvas.drawLine(visualFrom, visualTo, Paint()..color = color);
+        // add arrow
+        final path = VectorPainter.arrowPath(visualFrom, visualTo);
+        canvas.drawPath(
+            path,
+            Paint()
+              ..style = PaintingStyle.fill
+              ..color = color);
+        break;
+      default:
     }
   }
 
   // helper method for regular text, not supporting LaTeX
   static void _paintText(
-      RepereMetrics metrics, Canvas canvas, LabeledPoint point, String text,
+      RepereMetrics metrics, Canvas canvas, PosPoint point, String text,
       {Color? color}) {
     color = color ?? Colors.blue.shade800;
     const weight = FontWeight.bold;
@@ -586,8 +625,8 @@ class DrawingsPainter extends CustomPainter {
   /// if line.a is infinite, then line.b is interpreted as the abscisse
   /// of a vertical line
   /// the line label is ignored; use [lineLabel] to get it
-  static void paintAffineLine(
-      RepereMetrics metrics, Canvas canvas, Line line, Size size) {
+  static void paintAffineLine(RepereMetrics metrics, Canvas canvas, Line line,
+      {double width = 2}) {
     final origin = metrics.figure.origin;
 
     Coord logicalStart, logicalEnd;
@@ -608,13 +647,14 @@ class DrawingsPainter extends CustomPainter {
 
     final lineColor = fromHex(line.color);
     canvas.save();
-    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas
+        .clipRect(Rect.fromLTWH(0, 0, metrics.size.width, metrics.size.height));
     canvas.drawLine(
         metrics.logicalToVisual(logicalStart),
         metrics.logicalToVisual(logicalEnd),
         Paint()
           ..color = lineColor
-          ..strokeWidth = 2);
+          ..strokeWidth = width);
 
     canvas.restore();
   }
@@ -626,11 +666,12 @@ class DrawingsPainter extends CustomPainter {
     }
 
     for (var line in drawings.lines) {
-      paintAffineLine(metrics, canvas, line, size);
+      paintAffineLine(metrics, canvas, line);
     }
 
     drawings.points.forEach((key, value) {
-      paintPoint(metrics, canvas, value.point);
+      paintPoint(metrics, canvas, value.point.point,
+          color: fromHex(value.color));
     });
   }
 

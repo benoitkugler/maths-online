@@ -17,6 +17,7 @@ import 'package:eleve/exercices/table.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/exercices/variation_table.dart';
 import 'package:eleve/exercices/variation_table_field.dart';
+import 'package:eleve/exercices/vector.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,7 @@ class QuestionController {
   bool get enableValidate {
     final areAnswersValid =
         _fields.values.every((ct) => !ct.syntaxError && ct.hasValidData());
+    print(areAnswersValid);
     return (!blockOnSubmit || !hasAnswered) && areAnswersValid;
   }
 
@@ -107,6 +109,8 @@ class QuestionController {
         _fields[block.iD] = TreeController(block, () => onEditDone(block.iD));
       } else if (block is TableFieldBlock) {
         _fields[block.iD] = TableController(block, () => onEditDone(block.iD));
+      } else if (block is VectorFieldBlock) {
+        _fields[block.iD] = VectorController(block, () => onEditDone(block.iD));
       }
     }
   }
@@ -338,6 +342,15 @@ class _ContentBuilder {
     rows.add(Center(child: TableField(_color, ct)));
   }
 
+  void _handleVectorFieldBlock(VectorFieldBlock element) {
+    final ct = _controllers[element.iD] as VectorController;
+    _currentRow.add(WidgetSpan(
+        child: VectorField(_color, ct),
+        alignment: element.displayColumn
+            ? PlaceholderAlignment.middle
+            : PlaceholderAlignment.bottom));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -384,6 +397,8 @@ class _ContentBuilder {
         _handleTreeFieldBlock(element);
       } else if (element is TableFieldBlock) {
         _handleTableFieldBlock(element);
+      } else if (element is VectorFieldBlock) {
+        _handleVectorFieldBlock(element);
       }
 
       lastIsText = element is TextBlock;
@@ -577,10 +592,6 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   void _onEditDone(int fieldID) async {
-    final ct = controller._fields[fieldID]!;
-    if (!ct.hasValidData()) {
-      return;
-    }
     setState(() {});
   }
 

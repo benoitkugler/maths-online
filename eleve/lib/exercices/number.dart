@@ -69,7 +69,7 @@ class NumberField extends StatelessWidget {
             controller: _controller.textController,
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.only(top: 10, bottom: 4),
+              contentPadding: const EdgeInsets.only(top: 10, bottom: 2),
               focusedBorder: outlined
                   ? OutlineInputBorder(
                       borderSide: BorderSide(
