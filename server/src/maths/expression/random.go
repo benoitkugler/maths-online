@@ -78,7 +78,14 @@ func (rvv *randomVarResolver) resolve(v Variable) (*Expression, bool) {
 	}
 
 	// recurse
-	value, _ := expr.evalRat(rvv)
+	value, err := expr.evalRat(rvv)
+	if err != nil {
+		rvv.err = ErrInvalidRandomParameters{
+			Cause:  v,
+			Detail: err.Error(),
+		}
+		return nil, false
+	}
 
 	// register the result
 	rvv.results[v] = value
@@ -86,12 +93,25 @@ func (rvv *randomVarResolver) resolve(v Variable) (*Expression, bool) {
 	return value.toExpr(), true
 }
 
+// Validate calls `Instantiate` many to make sure the parameters are always
+// valid regardless of the random value chosen.
+// If not, it returns the first error encountered.
+func (rv RandomParameters) Validate() error {
+	const nbTries = 1000
+	for i := 0; i < nbTries; i++ {
+		_, err := rv.Instantiate()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Instantiate generate a random version of the
 // variables, resolving possible dependencies.
 // It returns an `ErrInvalidRandomParameters` error for invalid cycles, like a = a +1
 // or a = b + 1; b = a.
-// By design, a set of random parameters is either always valid, or always invalid,
-// meaning this function may be used once as validation step.
+// See `Validate` to statistically check for errors.
 func (rv RandomParameters) Instantiate() (Variables, error) {
 	resolver := randomVarResolver{
 		defs:    rv,

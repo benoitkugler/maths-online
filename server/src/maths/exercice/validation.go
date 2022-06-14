@@ -73,7 +73,7 @@ func (pr Parameters) Validate() error {
 		}
 	}
 
-	_, err := params.Instantiate()
+	err := params.Validate()
 	if err != nil {
 		return ErrParameters{
 			Origin:  "Liste des paramètres",

@@ -47,6 +47,11 @@ func TestRandomVariables_instantiate(t *testing.T) {
 			Variables{NewVar('a'): &Expression{atom: div, left: newNb(7), right: newNb(3)}},
 			false,
 		},
+		{
+			map[Variable]string{NewVar('a'): "randInt(b; 3)", NewVar('b'): "2.8"},
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		rv := make(RandomParameters)
@@ -64,6 +69,10 @@ func TestRandomVariables_instantiate(t *testing.T) {
 		}
 		if (err != nil) != tt.wantErr {
 			t.Errorf("RandomVariables.instantiate() error = %v, wantErr %v", err, tt.wantErr)
+			return
+		}
+		if err := rv.Validate(); (err != nil) != tt.wantErr {
+			t.Errorf("RandomVariables.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			return
 		}
 		if !reflect.DeepEqual(got, tt.want) {
