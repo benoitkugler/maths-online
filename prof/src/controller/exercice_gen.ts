@@ -120,7 +120,7 @@ export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Bottom]: "En dessous",
   [LabelPos.BottomLeft]: "En dessous, à gauche",
   [LabelPos.BottomRight]: "En dessous, à droite",
-  [LabelPos.Hide]: "Masque la légende",
+  [LabelPos.Hide]: "Masquer la légende",
   [LabelPos.Left]: "A gauche",
   [LabelPos.Right]: "A droite",
   [LabelPos.Top]: "Au dessus",
@@ -271,7 +271,7 @@ export interface FunctionPointsFieldBlock {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
 export interface VariationTableBlock {
-  Label: string;
+  Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }

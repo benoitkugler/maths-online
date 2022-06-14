@@ -346,7 +346,7 @@ func randSlicestring() []string {
 
 func randexe_FunctionVariationGraphBlock() exercice.FunctionVariationGraphBlock {
 	return exercice.FunctionVariationGraphBlock{
-		Label: randstring(),
+		Label: randInterpolated(),
 		Xs:    randSlicestring(),
 		Fxs:   randSlicestring(),
 	}
@@ -484,7 +484,7 @@ func randexe_TreeFieldBlock() exercice.TreeFieldBlock {
 
 func randexe_VariationTableBlock() exercice.VariationTableBlock {
 	return exercice.VariationTableBlock{
-		Label: randstring(),
+		Label: randInterpolated(),
 		Xs:    randSlicestring(),
 		Fxs:   randSlicestring(),
 	}
