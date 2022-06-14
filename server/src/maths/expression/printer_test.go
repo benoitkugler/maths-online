@@ -129,6 +129,12 @@ func TestPlusMinus(t *testing.T) {
 	if strings.ContainsRune(latex, '-') {
 		t.Fatal("unexpected -")
 	}
+
+	expr = mustParse(t, "y + (-x)")
+	latex = expr.AsLaTeX(nil)
+	if strings.ContainsRune(latex, '+') {
+		t.Fatal("unexpected +")
+	}
 }
 
 func Test0And1(t *testing.T) {
@@ -162,5 +168,11 @@ func TestMinusMinus(t *testing.T) {
 	expr.Substitute(Variables{NewVar('a'): newNb(-2), NewVar('b'): newNb(4)})
 	if s := expr.String(); s != "2 / 4" {
 		t.Fatalf("%#v: %s", expr.right, s)
+	}
+
+	expr = mustParse(t, "-(-2x)")
+	latex := expr.AsLaTeX(nil)
+	if strings.ContainsRune(latex, '-') {
+		t.Fatal("unexpected +")
 	}
 }

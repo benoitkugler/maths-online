@@ -315,6 +315,16 @@ func (expr *Expression) contractPlusMinus() {
 		expr.atom = minus
 		expr.right = &Expression{atom: -number}
 	}
+
+	// ... + (-9 * ...) => ... - (9 * ...)
+	nextArg := expr.right.left
+	if nextArg != nil {
+		if number, isNumber := nextArg.atom.(Number); isNumber && number < 0 {
+			expr.atom = minus
+			expr.right.left = &Expression{atom: -number}
+			return
+		}
+	}
 }
 
 // replace - (- 8) by +8 to have a better formatted output
@@ -572,22 +582,6 @@ func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
 }
 
 // partial evaluation a.k.a substitution
-
-// // ResolvedVariable stores the value attributed to a variable
-// // during instantiation.
-// type ResolvedVariable struct {
-// 	V          Variable
-// 	N          float64
-// 	IsVariable bool
-// }
-
-// func NewNb(v float64) ResolvedVariable {
-// 	return ResolvedVariable{N: v}
-// }
-
-// func NewRV(value Variable) ResolvedVariable {
-// 	return ResolvedVariable{IsVariable: true, V: value}
-// }
 
 // Substitute replaces variables contained in `vars`.
 func (expr *Expression) Substitute(vars Variables) {
