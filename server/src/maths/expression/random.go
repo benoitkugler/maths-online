@@ -240,7 +240,7 @@ func (rd specialFunctionA) validate(pos int) error {
 	return nil
 }
 
-// ErrRandomTests is returned when a valid expression does always
+// ErrRandomTests is returned when a valid expression does not always
 // pass a given criteria
 type ErrRandomTests struct {
 	// frequency of successul tries, between 0 and 100
@@ -435,4 +435,79 @@ func (fn FunctionDefinition) IsValid(parameters RandomParameters, bound float64)
 		nbSuccess++
 	}
 	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+}
+
+// AreExprsDistincsNames checks that, once instantiated, the given `dict` expressions have distincts
+// (LaTeX) string representations.
+func AreExprsDistincsNames(dict []*Expression, parameters RandomParameters) error {
+	const nbTries = 1000
+	var (
+		nbSuccess   int
+		dictStrings = make(map[string]bool)
+	)
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+
+		for _, expr := range dict {
+			expr = expr.copy()
+			expr.Substitute(ps)
+			dictStrings[expr.AsLaTeX(nil)] = true
+		}
+
+		if isValid := len(dictStrings) == len(dict); isValid {
+			nbSuccess++
+		}
+
+		// map clearing idiom
+		for s := range dictStrings {
+			delete(dictStrings, s)
+		}
+	}
+
+	if nbSuccess != nbTries {
+		return ErrRandomTests{nbSuccess * 100 / nbTries}
+	}
+
+	return nil
+}
+
+// AreExprsValidRefs checks that, once instantiated, the expression in `references` all point to an existing value in `dict`.
+func AreExprsValidRefs(dict []*Expression, references []*Expression, parameters RandomParameters) error {
+	const nbTries = 1000
+	var (
+		nbSuccess   int
+		dictStrings = make(map[string]bool)
+	)
+	for i := 0; i < nbTries; i++ {
+		ps, _ := parameters.Instantiate()
+
+		for _, expr := range dict {
+			expr = expr.copy()
+			expr.Substitute(ps)
+			dictStrings[expr.AsLaTeX(nil)] = true
+		}
+
+		isValid := true
+		for _, ref := range references {
+			ref = ref.copy()
+			ref.Substitute(ps)
+			hasPoint := dictStrings[ref.AsLaTeX(nil)]
+			isValid = isValid && hasPoint
+		}
+
+		if isValid {
+			nbSuccess++
+		}
+
+		// map clearing idiom
+		for s := range dictStrings {
+			delete(dictStrings, s)
+		}
+	}
+
+	if nbSuccess != nbTries {
+		return ErrRandomTests{nbSuccess * 100 / nbTries}
+	}
+
+	return nil
 }

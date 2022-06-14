@@ -215,6 +215,14 @@ func TestExpression_IsValidProba(t *testing.T) {
 	}
 }
 
+func mustParseMany(t *testing.T, exprs []string) []*Expression {
+	out := make([]*Expression, len(exprs))
+	for i, s := range exprs {
+		out[i] = mustParse(t, s)
+	}
+	return out
+}
+
 func TestExpression_AreSortedNumbers(t *testing.T) {
 	tests := []struct {
 		exprs      []string
@@ -232,10 +240,7 @@ func TestExpression_AreSortedNumbers(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		exprs := make([]*Expression, len(tt.exprs))
-		for i, s := range tt.exprs {
-			exprs[i] = mustParse(t, s)
-		}
+		exprs := mustParseMany(t, tt.exprs)
 		got, _ := AreSortedNumbers(exprs, tt.parameters)
 		if got != tt.want {
 			t.Errorf("Expression.IsValidIndex() got = %v, want %v", got, tt.want)
@@ -368,6 +373,36 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 		got, freq := fn.IsValid(tt.parameters, tt.bound)
 		if got != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
+		}
+	}
+}
+
+func TestAreExprsValidDict(t *testing.T) {
+	tests := []struct {
+		exprs      []string
+		refs       []string
+		parameters RandomParameters
+		wantErr1   bool
+		wantErr2   bool
+	}{
+		{[]string{"A", "B"}, nil, nil, false, false},
+		{[]string{"A", "R"}, nil, RandomParameters{NewVar('R'): mustParse(t, "randLetter(U;V)")}, false, false},
+		{[]string{"A", "R"}, nil, RandomParameters{NewVar('R'): mustParse(t, "randLetter(U;A)")}, true, false},
+		{[]string{"A_1", "R"}, nil, RandomParameters{NewVar('R'): mustParse(t, "randLetter(U;A_1)")}, true, false},
+		{[]string{"A_c2", "R"}, nil, RandomParameters{NewVar('R'): mustParse(t, "randLetter(U;A_c2)")}, true, false},
+		{[]string{"A", "B"}, []string{"A", "A"}, nil, false, false},
+		{[]string{"A", "B"}, []string{"A", "C"}, nil, false, true},
+		{[]string{"A", "R"}, []string{"R"}, RandomParameters{NewVar('R'): mustParse(t, "randLetter(U;V)")}, false, false},
+		{[]string{"A", "B", "C"}, []string{"R"}, RandomParameters{NewVar('R'): mustParse(t, "randLetter(A;B;C)")}, false, false},
+	}
+	for _, tt := range tests {
+		exprs := mustParseMany(t, tt.exprs)
+		refs := mustParseMany(t, tt.refs)
+		if err := AreExprsDistincsNames(exprs, tt.parameters); (err != nil) != tt.wantErr1 {
+			t.Errorf("AreExprsDistinctsNames() error = %v, wantErr1 %v", err, tt.wantErr1)
+		}
+		if err := AreExprsValidRefs(exprs, refs, tt.parameters); (err != nil) != tt.wantErr2 {
+			t.Errorf("AreExprsDistinctsNames() error = %v, wantErr2 %v", err, tt.wantErr2)
 		}
 	}
 }

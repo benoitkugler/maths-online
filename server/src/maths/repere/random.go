@@ -17,7 +17,7 @@ type RandomLine struct {
 }
 
 type NamedRandomLabeledPoint struct {
-	Name  PointName
+	Name  string // must be a valid expression.Expression
 	Point RandomLabeledPoint
 }
 

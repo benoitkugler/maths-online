@@ -466,7 +466,7 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 	out := FigureInstance{
 		Figure: repere.Figure{
 			Drawings: repere.Drawings{
-				Segments: f.Drawings.Segments,
+				Segments: make([]repere.Segment, len(f.Drawings.Segments)),
 				Points:   make(map[string]repere.LabeledPoint),
 				Lines:    make([]repere.Line, len(f.Drawings.Lines)),
 			},
@@ -475,6 +475,13 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 		},
 	}
 	for _, v := range f.Drawings.Points {
+		nameExpr, err := expression.Parse(v.Name)
+		if err != nil {
+			return out, err
+		}
+		nameExpr.Substitute(params)
+		name := nameExpr.AsLaTeX(nil)
+
 		x, err := evaluateExpr(v.Point.Coord.X, params)
 		if err != nil {
 			return out, err
@@ -483,7 +490,7 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 		if err != nil {
 			return out, err
 		}
-		out.Figure.Drawings.Points[v.Name] = repere.LabeledPoint{
+		out.Figure.Drawings.Points[name] = repere.LabeledPoint{
 			Point: repere.PosPoint{
 				Point: repere.Coord{
 					X: x,
@@ -493,6 +500,24 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 			},
 			Color: v.Point.Color,
 		}
+	}
+
+	for i, s := range f.Drawings.Segments {
+		fromExpr, err := expression.Parse(s.From)
+		if err != nil {
+			return out, err
+		}
+		fromExpr.Substitute(params)
+		s.From = fromExpr.AsLaTeX(nil)
+
+		toExpr, err := expression.Parse(s.To)
+		if err != nil {
+			return out, err
+		}
+		toExpr.Substitute(params)
+		s.To = toExpr.AsLaTeX(nil)
+
+		out.Figure.Drawings.Segments[i] = s
 	}
 
 	for i, l := range f.Drawings.Lines {
@@ -515,7 +540,17 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 }
 
 func (f FigureBlock) validate(params expression.RandomParameters) error {
-	for _, v := range f.Drawings.Points {
+	pointMap := make(map[string]bool)
+	pointNames := make([]*expression.Expression, len(f.Drawings.Points))
+	for i, v := range f.Drawings.Points {
+		var err error
+		pointNames[i], err = expression.Parse(v.Name)
+		if err != nil {
+			return err
+		}
+
+		pointMap[v.Name] = true
+
 		if err := validateNumberExpression(v.Point.Coord.X, params, false, true); err != nil {
 			return err
 		}
@@ -525,6 +560,35 @@ func (f FigureBlock) validate(params expression.RandomParameters) error {
 		}
 	}
 
+	// check for duplicates ...
+	if err := expression.AreExprsDistincsNames(pointNames, params); err != nil {
+		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
+			return fmt.Errorf("Les noms des points ne sont pas distincts (%d %% des tests ont échoué).", 100-freq.SuccessFrequency)
+		}
+		return err
+	}
+
+	// ... and undefined points
+	references := make([]*expression.Expression, 0, 2*len(f.Drawings.Segments))
+	for _, seg := range f.Drawings.Segments {
+		from, err := expression.Parse(seg.From)
+		if err != nil {
+			return err
+		}
+		to, err := expression.Parse(seg.To)
+		if err != nil {
+			return err
+		}
+		references = append(references, from, to)
+	}
+
+	if err := expression.AreExprsValidRefs(pointNames, references, params); err != nil {
+		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
+			return fmt.Errorf("Certains points ne sont pas définis (%d %% des tests ont échoué).", 100-freq.SuccessFrequency)
+		}
+		return err
+	}
+
 	for _, l := range f.Drawings.Lines {
 		if err := validateNumberExpression(l.A, params, false, false); err != nil {
 			return err
@@ -532,26 +596,6 @@ func (f FigureBlock) validate(params expression.RandomParameters) error {
 
 		if err := validateNumberExpression(l.B, params, false, true); err != nil {
 			return err
-		}
-	}
-
-	pointMap := make(map[string]bool)
-	for _, v := range f.Drawings.Points {
-		pointMap[v.Name] = true
-	}
-
-	// check for duplicates
-	if len(pointMap) != len(f.Drawings.Points) {
-		return errors.New("Le point d'un point doit être unique.")
-	}
-
-	// check if all used points are defined
-	for _, seg := range f.Drawings.Segments {
-		if !pointMap[seg.From] {
-			return fmt.Errorf("Le point %s n'est pas défini.", seg.From)
-		}
-		if !pointMap[seg.To] {
-			return fmt.Errorf("Le point %s n'est pas défini.", seg.To)
 		}
 	}
 

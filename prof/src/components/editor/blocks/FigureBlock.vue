@@ -92,9 +92,12 @@
                     label="Nom"
                     v-model="point.Name"
                     @update:model-value="(v) => onTypePointName(index, v)"
+                    :color="expressionColor"
+                    hint="Expression."
                   >
-                  </v-text-field> </v-col
-              ></v-row>
+                  </v-text-field>
+                </v-col>
+              </v-row>
               <v-row no-gutters>
                 <v-col cols="12" align-self="center">
                   <btn-color-picker
@@ -154,7 +157,7 @@
           title="Ajouter un segment ou un vecteur défini par deux points"
           size="x-small"
           class="mr-2 my-2"
-          :disabled="segmentsPointItems.length < 2"
+          :disabled="segmentsPointSuggestions.length < 2"
         >
           <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
         </v-btn>
@@ -170,24 +173,28 @@
             <v-col align-self="center" md="4">
               <v-row>
                 <v-col md="12">
-                  <v-select
+                  <v-combobox
                     density="compact"
                     variant="outlined"
                     hide-details
+                    hide-no-data
                     label="Origine"
-                    :items="segmentsPointItems"
+                    :items="segmentsPointSuggestions"
                     v-model="segment.From"
-                  ></v-select>
+                    :color="expressionColor"
+                  ></v-combobox>
                 </v-col>
                 <v-col md="12">
-                  <v-select
+                  <v-combobox
                     density="compact"
                     variant="outlined"
                     hide-details
+                    hide-no-data
                     label="Extrémité"
-                    :items="segmentsPointItems"
+                    :items="segmentsPointSuggestions"
                     v-model="segment.To"
-                  ></v-select>
+                    :color="expressionColor"
+                  ></v-combobox>
                 </v-col>
                 <v-col md="12" style="text-align: center">
                   <btn-color-picker v-model="segment.Color"></btn-color-picker>
@@ -332,7 +339,7 @@ const emit = defineEmits<{
 
 const expressionColor = colorByKind[TextKind.Expression];
 
-const segmentsPointItems = computed(() =>
+const segmentsPointSuggestions = computed(() =>
   (props.modelValue.Drawings.Points || []).map((p) => p.Name)
 );
 
