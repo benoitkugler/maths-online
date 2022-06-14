@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -437,6 +438,14 @@ var expressions = [...]struct {
 	},
 	{"max()", nil, true},
 	{"min()", nil, true},
+}
+
+func Test_invalidRandLetter(t *testing.T) {
+	expr := "randLetter(U;V"
+	_, err := Parse(expr)
+	if !strings.Contains(err.Error(), "parenthèse fermante manquante") {
+		t.Fatal(err)
+	}
 }
 
 func Test_parseExpression(t *testing.T) {

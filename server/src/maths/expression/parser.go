@@ -394,12 +394,19 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 			}
 		}
 
-		if pr.tk.Peek().data == closePar {
-			continue
-		}
-
-		// consume the separator
-		if pr.tk.Next().data != semicolon {
+		// four cases here :
+		//	- valid closing parenthesis, closed after the loop
+		//	- valid separator ;
+		//  - invalid character, probably an invalid separator like ,
+		//	- EOF
+		switch next := pr.tk.Peek().data; next {
+		case closePar:
+			continue // without consuming
+		case semicolon: // consume and continue
+			_ = pr.tk.Next()
+		case nil: // EOF, error reported after the loop
+			break
+		default: // invalid separator
 			return nil, ErrInvalidExpr{
 				Reason: "randLetter utilise ';' comme séparateur",
 				Pos:    pos,
