@@ -104,6 +104,10 @@ type QuestionHeader struct {
 	Origin     teacher.Origin
 }
 
+func normalizeTitle(title string) string {
+	return removeAccents(strings.TrimSpace(strings.ToLower(title)))
+}
+
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
 	const pagination = 100
 
@@ -116,14 +120,14 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 
 	// the group are not modified by the title query though
 
-	queryTitle := strings.TrimSpace(strings.ToLower(query.TitleQuery))
+	queryTitle := normalizeTitle(query.TitleQuery)
 	var (
 		ids      IDs
 		ownerIDs IDs
 		groups   = make(map[string][]int64)
 	)
 	for _, question := range questions {
-		thisTitle := strings.TrimSpace(strings.ToLower(question.Page.Title))
+		thisTitle := normalizeTitle(question.Page.Title)
 		if strings.Contains(thisTitle, queryTitle) {
 			groups[question.Page.Title] = append(groups[question.Page.Title], question.Id)
 			ids = append(ids, question.Id)
