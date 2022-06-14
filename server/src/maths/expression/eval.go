@@ -249,6 +249,8 @@ func (fn function) eval(_, right rat, _ ValueResolver) (rat, error) {
 		return newRat(math.Atan(arg)), nil
 	case absFn:
 		return newRat(math.Abs(arg)), nil
+	case floorFn:
+		return newRat(math.Floor(arg)), nil
 	case sqrtFn:
 		return newRat(math.Sqrt(arg)), nil
 	case sgnFn:

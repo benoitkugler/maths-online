@@ -344,6 +344,9 @@ var expressions = [...]struct {
 		"abs(x)", &Expression{atom: absFn, left: nil, right: newVarExpr('x')}, false,
 	},
 	{
+		"floor(x)", &Expression{atom: floorFn, left: nil, right: newVarExpr('x')}, false,
+	},
+	{
 		"ln(x + y)", &Expression{atom: logFn, left: nil, right: &Expression{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')}}, false,
 	},
 	{"3 + ln()", nil, true},

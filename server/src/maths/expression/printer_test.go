@@ -52,6 +52,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"9 // 2",
 		"24x^2 - 27x + 18",
 		"round(x; 4)",
+		"floor(x)",
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -167,6 +168,12 @@ func TestMinusMinus(t *testing.T) {
 	expr := mustParse(t, "(-a/b)")
 	expr.Substitute(Variables{NewVar('a'): newNb(-2), NewVar('b'): newNb(4)})
 	if s := expr.String(); s != "2 / 4" {
+		t.Fatalf("%#v: %s", expr.right, s)
+	}
+
+	expr = mustParse(t, "2 - a")
+	expr.Substitute(Variables{NewVar('a'): newNb(-2)})
+	if s := expr.String(); s != "2 + 2" {
 		t.Fatalf("%#v: %s", expr.right, s)
 	}
 

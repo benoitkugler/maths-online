@@ -170,6 +170,7 @@ const (
 	asinFn // invert
 	atanFn // invert
 	absFn
+	floorFn // floor (partie entière)
 	sqrtFn
 	sgnFn     // returns -1 0 or 1
 	isZeroFn  // returns 1 is its argument is 0, 0 otherwise
@@ -199,6 +200,8 @@ func (fn function) String() string {
 		return "atan"
 	case absFn:
 		return "abs"
+	case floorFn:
+		return "floor"
 	case sqrtFn:
 		return "sqrt"
 	case sgnFn:

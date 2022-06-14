@@ -337,6 +337,8 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = atanFn
 	case "abs":
 		fn = absFn
+	case "floor":
+		fn = floorFn
 	case "sqrt":
 		fn = sqrtFn
 	case "sgn":

@@ -122,6 +122,8 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		return fmt.Sprintf(`\arctan\left(%s\right)`, arg)
 	case absFn:
 		return fmt.Sprintf(`\left|%s\right|`, arg)
+	case floorFn:
+		return fmt.Sprintf(`\left\lfloor %s \right\rfloor`, arg)
 	case sqrtFn:
 		return fmt.Sprintf(`\sqrt{%s}`, arg)
 	case sgnFn:

@@ -97,6 +97,18 @@ func Test_Expression_eval(t *testing.T) {
 			"abs(-3)", nil, 3,
 		},
 		{
+			"floor(-3)", nil, -3,
+		},
+		{
+			"floor(-3.5)", nil, -4,
+		},
+		{
+			"floor(3)", nil, 3,
+		},
+		{
+			"floor(3.8)", nil, 3,
+		},
+		{
 			"ln(e)", nil, 1,
 		},
 		{
