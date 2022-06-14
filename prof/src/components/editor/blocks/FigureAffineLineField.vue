@@ -1,8 +1,34 @@
 <template>
+  <v-dialog v-model="showDocumentation" width="600">
+    <v-card title="Syntaxe de la réponse">
+      <v-card-text>
+        La réponse est une droite définie par son coefficient directeur
+        <i>A</i> et son ordonnée à l'origine <i>B</i>. <br />
+        Une droite verticale est obtenue en utilisant <i>A=Inf</i> et en fixant
+        <i>B</i> à l'abscisse souhaitée. Remarquez que <i>Inf</i> peut s'obtenir
+        par exemple avec l'expression <i>A=1/c</i>, où <i>c=0</i>.
+      </v-card-text>
+    </v-card>
+  </v-dialog>
   <v-card class="my-1">
-    <v-card-subtitle class="bg-secondary py-3"
-      >Définition de la réponse</v-card-subtitle
-    >
+    <v-row no-gutters class="bg-secondary py-2">
+      <v-col align-self="center">
+        <v-card-subtitle>Définition de la réponse</v-card-subtitle>
+      </v-col>
+      <v-col align-self="center" cols="auto">
+        <v-btn
+          class="mr-2"
+          icon
+          title="Documentation de la syntaxe"
+          size="x-small"
+        >
+          <v-icon small color="info" @click="showDocumentation = true"
+            >mdi-help</v-icon
+          >
+        </v-btn>
+      </v-col>
+    </v-row>
+
     <v-card-text>
       <v-row class="fix-input-width">
         <v-col align-self="center" cols="4">
@@ -11,6 +37,7 @@
             variant="outlined"
             label="Légende"
             v-model="props.modelValue.Label"
+            hide-details
           ></v-text-field>
         </v-col>
         <v-col align-self="center">
@@ -18,9 +45,10 @@
             density="compact"
             variant="outlined"
             label="A"
-            hint="Expression du coefficient directeur"
+            hint="Coefficient directeur, Inf pour une droite verticale."
             v-model="props.modelValue.A"
             :color="expressionColor"
+            persistent-hint
             class="no-hint-padding"
           ></v-text-field>
         </v-col>
@@ -30,7 +58,8 @@
             variant="outlined"
             label="B"
             v-model="props.modelValue.B"
-            hint="Expression de l'ordonnée à l'origine"
+            hint="Ordonnée à l'origine ou abscisse pour une droite verticale."
+            persistent-hint
             :color="expressionColor"
             class="no-hint-padding"
           ></v-text-field>
@@ -51,6 +80,7 @@ import type {
   Variable,
 } from "@/controller/exercice_gen";
 import { TextKind } from "@/controller/exercice_gen";
+import { $ref } from "vue/macros";
 import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
@@ -65,6 +95,8 @@ const emit = defineEmits<{
 }>();
 
 const expressionColor = colorByKind[TextKind.Expression];
+
+let showDocumentation = $ref(false);
 </script>
 
 <style scoped>
