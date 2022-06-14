@@ -115,7 +115,7 @@ func (qu QuestionPage) Instantiate() (out QuestionInstance) {
 			TextInstance{
 				Parts: []client.TextOrMath{
 					{
-						Text: fmt.Sprintf("Erreur inatendue :%v", err),
+						Text: fmt.Sprintf("Erreur inatendue : %v", err),
 					},
 				},
 			},
