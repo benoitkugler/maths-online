@@ -64,15 +64,15 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 		}
 		return fmt.Sprintf("%s + %s", leftCode, rightCode)
 	case minus:
-		if right.needParenthesis(op, false) {
+		if op.needParenthesis(right, false) {
 			rightCode = addParenthesisLatex(rightCode)
 		}
 		return fmt.Sprintf("%s - %s", leftCode, rightCode)
 	case mult:
-		if left.needParenthesis(op, true) {
+		if op.needParenthesis(left, true) {
 			leftCode = addParenthesisLatex(leftCode)
 		}
-		rightHasParenthesis := right.needParenthesis(op, false)
+		rightHasParenthesis := op.needParenthesis(right, false)
 		if rightHasParenthesis {
 			rightCode = addParenthesisLatex(rightCode)
 		}
@@ -89,10 +89,10 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	case rem:
 		return fmt.Sprintf(`\text{rem}\left(%s; %s\right)`, leftCode, rightCode)
 	case pow:
-		if left.needParenthesis(op, true) {
+		if op.needParenthesis(left, true) {
 			leftCode = addParenthesisLatex(leftCode)
 		}
-		if right.needParenthesis(op, false) {
+		if op.needParenthesis(right, false) {
 			rightCode = addParenthesisLatex(rightCode)
 		}
 		return fmt.Sprintf(`{%s}^{%s}`, leftCode, rightCode)
@@ -170,9 +170,9 @@ func (v Number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.Str
 
 // returns `true` is the expression is compound and requires parenthesis
 // when used with `op`
-// if `isLeft` is true, this is expr op ...
-// else this is ... op expr
-func (expr *Expression) needParenthesis(op operator, isLeft bool) bool {
+// if `isLeft` is true, this is :  expr op ...
+// else this is :                  ...  op expr
+func (op operator) needParenthesis(expr *Expression, isLeftArg bool) bool {
 	if expr == nil {
 		return false
 	}
@@ -183,10 +183,13 @@ func (expr *Expression) needParenthesis(op operator, isLeft bool) bool {
 	case operator:
 		switch op {
 		case minus:
+			if isLeftArg { // actually rever required
+				return false
+			}
 			return atom <= op // - or +
 		case pow:
 			if atom == pow {
-				return isLeft // (2^3)^5, but 2^(3^5) is usually written 2^3^5
+				return isLeftArg // (2^3)^5, but 2^(3^5) is usually written 2^3^5
 			}
 			return atom < op
 		default:
@@ -202,10 +205,10 @@ func (expr *Expression) needParenthesis(op operator, isLeft bool) bool {
 func (op operator) serialize(left, right *Expression) string {
 	leftCode, rightCode := left.Serialize(), right.Serialize()
 
-	if left.needParenthesis(op, true) {
+	if op.needParenthesis(left, true) {
 		leftCode = addParenthesisPlain(leftCode)
 	}
-	rightHasParenthesis := right.needParenthesis(op, false)
+	rightHasParenthesis := op.needParenthesis(right, false)
 	if rightHasParenthesis {
 		rightCode = addParenthesisPlain(rightCode)
 	}

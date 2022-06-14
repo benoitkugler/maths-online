@@ -109,6 +109,12 @@ func TestParenthesis(t *testing.T) {
 	if strings.ContainsRune(latex, '(') {
 		t.Fatal("unexpected parenthesis")
 	}
+
+	expr = mustParse(t, "1 + 1 + a")
+	expr.Substitute(Variables{NewVar('a'): newNb(-2)})
+	if s := expr.String(); strings.ContainsRune(s, '(') {
+		t.Fatal("unexpected parenthesis :", s)
+	}
 }
 
 func TestPlusMinus(t *testing.T) {

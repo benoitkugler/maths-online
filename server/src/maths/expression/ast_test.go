@@ -27,7 +27,7 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
 	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
 
-	shouldPanic(t, func() { (&Expression{}).needParenthesis(0, false) })
+	shouldPanic(t, func() { plus.needParenthesis(&Expression{}, false) })
 	shouldPanic(t, func() {
 		e := &Expression{atom: invalidOperator}
 		e.simplifyNumbers()
