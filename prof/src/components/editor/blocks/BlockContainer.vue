@@ -116,6 +116,30 @@ const commands = [
     description: "Coordonées d'un vecteur (colonne)",
     command: `\\begin{pmatrix} x \\\\ y \\end{pmatrix}`,
   },
+  {
+    description: "Ensemble des réels",
+    command: `\\R`,
+  },
+  {
+    description: "Ensemble vide",
+    command: `\\empty`,
+  },
+  {
+    description: "Inclus",
+    command: `\\subset`,
+  },
+  {
+    description: "Non inclus",
+    command: `\\not\\subset`,
+  },
+  {
+    description: "Antislash",
+    command: `\\backslash`,
+  },
+  {
+    description: "Infini",
+    command: `\\infty`,
+  },
 ];
 async function copyAndClose(command: string) {
   showDocumentation = false;
