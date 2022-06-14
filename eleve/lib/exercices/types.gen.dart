@@ -1110,7 +1110,7 @@ JSON tableFieldBlockToJson(TableFieldBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
 class TextBlock implements Block {
-  final List<TextOrMath> parts;
+  final TextLine parts;
   final bool bold;
   final bool italic;
   final bool smaller;

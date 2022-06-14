@@ -202,8 +202,8 @@ type TextParts []TextPart
 
 // instantiate merges adjacent math chunks so that latex expression are not split up
 // and may be successfully parsed by the client
-func (tp TextParts) instantiate(params expression.Variables) ([]client.TextOrMath, error) {
-	var parts []client.TextOrMath
+func (tp TextParts) instantiate(params expression.Variables) (client.TextLine, error) {
+	var parts client.TextLine
 	for _, p := range tp {
 		sample, err := p.instantiate(params)
 		if err != nil {
@@ -342,18 +342,26 @@ func evaluateExpr(expr string, params expression.Variables) (float64, error) {
 }
 
 type VariationTableBlock struct {
-	Label string
+	Label Interpolated
 	Xs    []string // expressions
 	Fxs   []string // expressions
 }
 
 func (vt VariationTableBlock) instantiateVT(params expression.Variables) (VariationTableInstance, error) {
 	out := VariationTableInstance{
-		Label: vt.Label,
-		Xs:    make([]evaluatedExpression, len(vt.Xs)),
-		Fxs:   make([]evaluatedExpression, len(vt.Fxs)),
+		Xs:  make([]evaluatedExpression, len(vt.Xs)),
+		Fxs: make([]evaluatedExpression, len(vt.Fxs)),
 	}
-	var err error
+
+	parts, err := vt.Label.Parse()
+	if err != nil {
+		return out, err
+	}
+	out.Label, err = parts.instantiateAndMerge(params)
+	if err != nil {
+		return out, err
+	}
+
 	for i, c := range vt.Xs {
 		out.Xs[i], err = newEvaluatedExpression(c, params)
 		if err != nil {
@@ -375,6 +383,11 @@ func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) (i
 }
 
 func (vt VariationTableBlock) validate(params expression.RandomParameters) error {
+	_, err := vt.Label.Parse()
+	if err != nil {
+		return err
+	}
+
 	if len(vt.Xs) < 2 {
 		return errors.New("Au moins deux colonnes sont attendues.")
 	}

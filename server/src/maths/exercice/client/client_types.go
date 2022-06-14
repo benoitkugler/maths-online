@@ -50,7 +50,7 @@ type TextOrMath struct {
 }
 
 type TextBlock struct {
-	Parts   []TextOrMath
+	Parts   TextLine
 	Bold    bool
 	Italic  bool
 	Smaller bool
@@ -69,7 +69,7 @@ type VariationColumnNumber struct {
 }
 
 type VariationTableBlock struct {
-	Label   string
+	Label   string // LaTeX
 	Columns []VariationColumnNumber
 	// Arrows displays the arrows between two local extrema,
 	// with the convention that `true` means `isUp`.
@@ -173,8 +173,8 @@ type FigureVectorPairFieldBlock struct {
 // VariationTableFieldBlock asks to complete a
 // variation table (with fixed length)
 type VariationTableFieldBlock struct {
-	Label           string
-	LengthProposals []int // propositions of the number of arrows
+	Label           string // LaTeX code
+	LengthProposals []int  // propositions of the number of arrows
 	ID              int
 }
 

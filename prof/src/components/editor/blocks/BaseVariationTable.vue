@@ -10,6 +10,7 @@
           <td
             v-for="(_, index) in props.modelValue.Xs"
             style="text-align: center; width: 40px"
+            :key="index"
           >
             <v-btn
               icon
@@ -24,7 +25,7 @@
         </tr>
         <tr>
           <th>x</th>
-          <td v-for="(x, index) in props.modelValue.Xs">
+          <td v-for="(x, index) in props.modelValue.Xs" :key="index">
             <expression-field
               :model-value="x"
               @update:model-value="s => props.modelValue.Xs![index] = s"
@@ -42,10 +43,11 @@
               v-model="props.modelValue.Label"
               label="Légende"
               hide-details
-              class="fix-input-width"
+              class="label-input"
+              :color="latexColor"
             ></v-text-field>
           </td>
-          <td v-for="(fx, index) in props.modelValue.Fxs">
+          <td v-for="(fx, index) in props.modelValue.Fxs" :key="index">
             <expression-field
               :model-value="fx"
               @update:model-value="s => props.modelValue.Fxs![index] = s"
@@ -72,7 +74,11 @@
 </template>
 
 <script setup lang="ts">
-import type { FunctionVariationGraphBlock } from "@/controller/exercice_gen";
+import { colorByKind } from "@/controller/editor";
+import {
+  TextKind,
+  type FunctionVariationGraphBlock,
+} from "@/controller/exercice_gen";
 import ExpressionField from "../utils/ExpressionField.vue";
 
 interface Props {
@@ -84,6 +90,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionVariationGraphBlock): void;
 }>();
+
+const latexColor = colorByKind[TextKind.StaticMath];
 
 function addColumn() {
   props.modelValue.Xs?.push("5");
@@ -97,7 +105,11 @@ function removeColumn(index: number) {
 </script>
 
 <style scoped>
-.fix-input-width:deep(input) {
-  width: 30px;
+.label-input:deep(input) {
+  width: 50px;
+  text-align: center;
+}
+.label-input:deep(.v-field__input) {
+  padding-inline: 4px;
 }
 </style>
