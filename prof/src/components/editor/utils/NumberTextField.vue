@@ -4,7 +4,7 @@
     variant="outlined"
     density="compact"
     :model-value="props.modelValue"
-    @update:model-value="s => emit('update:model-value', Number(s))"
+    @update:model-value="onChange"
     type="number"
     :label="label"
     hide-details
@@ -22,6 +22,18 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update:model-value", v: number): void;
 }>();
+
+function isNumber(value: string | number): boolean {
+  return value != null && value !== "" && !isNaN(Number(value.toString()));
+}
+
+function onChange(s: string) {
+  if (!isNumber(s)) {
+    return;
+  }
+  const out = Number(s);
+  emit("update:model-value", out);
+}
 </script>
 
 <style scoped>
