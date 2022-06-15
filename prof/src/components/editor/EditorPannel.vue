@@ -82,16 +82,6 @@
           ></v-col>
           <v-col cols="auto" align-self="center">
             <v-btn
-              class="mx-1"
-              size="x-small"
-              icon
-              @click="showEditDescription = true"
-              title="Editer le commentaire"
-            >
-              <v-icon icon="mdi-message-reply-text" size="x-small"></v-icon>
-            </v-btn>
-
-            <v-btn
               class="mx-2"
               icon
               @click="save"
@@ -119,31 +109,52 @@
                   <v-icon icon="mdi-dots-vertical"></v-icon>
                 </v-btn>
               </template>
-              <v-toolbar vertical density="compact" rounded>
-                <v-btn
-                  size="small"
-                  icon
-                  class="mr-2"
-                  @click="download"
-                  :disabled="!session_id"
-                  title="Télécharger"
-                >
-                  <v-icon icon="mdi-download" size="small"></v-icon>
-                </v-btn>
-                <v-btn
-                  class="mx-1"
-                  size="small"
-                  icon
-                  @click="duplicate"
-                  title="Dupliquer la question"
-                >
-                  <v-icon
-                    icon="mdi-content-copy"
-                    color="info"
+              <v-list>
+                <v-list-item>
+                  <v-btn
                     size="small"
-                  ></v-icon>
-                </v-btn>
-              </v-toolbar>
+                    @click="showEditDescription = true"
+                    title="Editer le commentaire"
+                  >
+                    <v-icon
+                      class="mr-2"
+                      icon="mdi-message-reply-text"
+                      size="small"
+                    ></v-icon>
+                    Commentaire
+                  </v-btn>
+                </v-list-item>
+                <v-list-item>
+                  <v-btn
+                    size="small"
+                    @click="download"
+                    :disabled="!session_id"
+                    title="Télécharger la question au format .json"
+                  >
+                    <v-icon
+                      class="mr-2"
+                      icon="mdi-download"
+                      size="small"
+                    ></v-icon>
+                    Télécharger
+                  </v-btn>
+                </v-list-item>
+                <v-list-item>
+                  <v-btn
+                    size="small"
+                    @click="duplicate"
+                    title="Dupliquer la question"
+                  >
+                    <v-icon
+                      class="mr-2"
+                      icon="mdi-content-copy"
+                      color="info"
+                      size="small"
+                    ></v-icon>
+                    Dupliquer
+                  </v-btn>
+                </v-list-item>
+              </v-list>
             </v-menu>
           </v-col>
         </v-row>
@@ -237,7 +248,6 @@
             <BlockContainer
               @delete="removeBlock(index)"
               :index="index"
-              :nb-blocks="rows.length"
               :kind="row.Props.Kind"
               :hide-content="showDropZone"
               :has-error="errorEnnonce?.Block == index"
