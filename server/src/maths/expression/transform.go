@@ -395,12 +395,12 @@ func (expr *Expression) simplify0And1() {
 			*expr = *expr.right
 			return
 		} else if right.atom == Number(0) { // x + 0 = x
-			*expr = *expr.left
+			*expr = *left
 			return
 		}
 	case minus:
 		if right.atom == Number(0) { // x - 0 = x
-			*expr = *expr.left
+			*expr = *left
 			return
 		}
 	case mult:
@@ -408,7 +408,7 @@ func (expr *Expression) simplify0And1() {
 			*expr = *expr.right
 			return
 		} else if right.atom == Number(1) { // x * 1 = x
-			*expr = *expr.left
+			*expr = *left
 			return
 		} else if left.atom == Number(0) { // 0 * x = 0
 			*expr = Expression{atom: Number(0)}
@@ -419,7 +419,7 @@ func (expr *Expression) simplify0And1() {
 		}
 	case div:
 		if right.atom == Number(1) { // x / 1 = x
-			*expr = *expr.left
+			*expr = *left
 			return
 		} else if left.atom == Number(0) && right.atom != Number(0) { // 0 / x = 0
 			*expr = Expression{atom: Number(0)}
@@ -427,7 +427,7 @@ func (expr *Expression) simplify0And1() {
 		}
 	case pow:
 		if right.atom == Number(1) { // x ^ 1 = x
-			*expr = *expr.left
+			*expr = *left
 			return
 		} else if left.atom == Number(1) { // 1 ^ x = 1
 			*expr = Expression{atom: Number(1)}

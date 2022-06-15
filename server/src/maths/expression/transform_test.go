@@ -347,3 +347,28 @@ func TestExpressionNegativeParams(t *testing.T) {
 		t.Fatal(e, e2)
 	}
 }
+
+func TestBug51(t *testing.T) {
+	params := RandomParameters{
+		NewVar(109):       mustParse(t, "randChoice(2;4;5;8;10)*randChoice(-1;1)"),
+		NewVar(112):       mustParse(t, "randint(1;50)*randChoice(-1;0;1)"),
+		NewVarI(97, "0"):  mustParse(t, "randChoice(2;4;5;8;10)*randChoice(-1;1)"),
+		NewVar(98):        mustParse(t, "randint(1;50)*randChoice(-1;1)"),
+		NewVarI(120, "0"): mustParse(t, "-p/m"),
+		NewVarI(120, "1"): mustParse(t, "-b/a_0"),
+		NewVar(116):       mustParse(t, "isZero(x_1-x_0)+1"),
+		NewVar(97):        mustParse(t, "t*a_0"),
+		NewVarI(120, "2"): mustParse(t, "-b/a"),
+	}
+
+	expr := mustParse(t, "-p")
+	for range [100]int{} {
+		vars, err := params.Instantiate()
+		if err != nil {
+			t.Fatal(err)
+		}
+		expr2 := expr.copy()
+		expr2.Substitute(vars)
+		_ = expr2.AsLaTeX(nil) // check for crashes
+	}
+}
