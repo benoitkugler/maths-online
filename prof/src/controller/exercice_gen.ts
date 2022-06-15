@@ -256,7 +256,8 @@ export interface FunctionDefinition {
   Function: string;
   Decoration: FunctionDecoration;
   Variable: Variable;
-  Range: number[];
+  From: string;
+  To: string;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
 export interface FunctionGraphBlock {
@@ -267,7 +268,7 @@ export interface FunctionPointsFieldBlock {
   Function: string;
   Label: string;
   Variable: Variable;
-  XGrid: number[] | null;
+  XGrid: string[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
 export interface VariationTableBlock {

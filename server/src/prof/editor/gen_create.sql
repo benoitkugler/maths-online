@@ -625,24 +625,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_2_number (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(structgen_validate_json_number (value))
-        FROM
-            jsonb_array_elements(data))
-        AND jsonb_array_length(data) = 2;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FunctionDefinition (data jsonb)
     RETURNS boolean
     AS $$
@@ -654,13 +636,14 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Function', 'Decoration', 'Variable', 'Range'))
+            bool_and(key IN ('Function', 'Decoration', 'Variable', 'From', 'To'))
         FROM
             jsonb_each(data))
         AND structgen_validate_json_string (data -> 'Function')
         AND structgen_validate_json_fun_FunctionDecoration (data -> 'Decoration')
         AND structgen_validate_json_exp_Variable (data -> 'Variable')
-        AND structgen_validate_json_array_2_number (data -> 'Range');
+        AND structgen_validate_json_string (data -> 'From')
+        AND structgen_validate_json_string (data -> 'To');
     RETURN is_valid;
 END;
 $$
@@ -711,7 +694,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_number (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_string (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -726,7 +709,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_number (value))
+            bool_and(structgen_validate_json_string (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -751,31 +734,8 @@ BEGIN
         AND structgen_validate_json_string (data -> 'Function')
         AND structgen_validate_json_string (data -> 'Label')
         AND structgen_validate_json_exp_Variable (data -> 'Variable')
-        AND structgen_validate_json_array_number (data -> 'XGrid');
+        AND structgen_validate_json_array_string (data -> 'XGrid');
     RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_string (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(structgen_validate_json_string (value))
-        FROM
-            jsonb_array_elements(data));
 END;
 $$
 LANGUAGE 'plpgsql'

@@ -281,7 +281,7 @@ export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Bottom]: "En dessous",
   [LabelPos.BottomLeft]: "En dessous, à gauche",
   [LabelPos.BottomRight]: "En dessous, à droite",
-  [LabelPos.Hide]: "Masque la légende",
+  [LabelPos.Hide]: "Masquer la légende",
   [LabelPos.Left]: "A gauche",
   [LabelPos.Right]: "A droite",
   [LabelPos.Top]: "Au dessus",
@@ -417,7 +417,8 @@ export interface FunctionDefinition {
   Function: string;
   Decoration: FunctionDecoration;
   Variable: Variable;
-  Range: number[];
+  From: string;
+  To: string;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
 export interface FunctionGraphBlock {
@@ -428,11 +429,11 @@ export interface FunctionPointsFieldBlock {
   Function: string;
   Label: string;
   Variable: Variable;
-  XGrid: number[] | null;
+  XGrid: string[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
 export interface VariationTableBlock {
-  Label: string;
+  Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }

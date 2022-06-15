@@ -619,47 +619,68 @@ type FunctionDefinition struct {
 	Function   string // expression.Expression
 	Decoration functiongrapher.FunctionDecoration
 	Variable   expression.Variable // usually x
-	Range      [2]float64          // definition domain
+	From, To   string              // definition domain, expression.Expression
 }
 
-func (fg FunctionDefinition) parse() (expression.FunctionExpr, error) {
+func (fg FunctionDefinition) parse() (fn expression.FunctionExpr, from, to *expression.Expression, err error) {
 	expr, err := expression.Parse(fg.Function)
 	if err != nil {
-		return expression.FunctionExpr{}, err
+		return fn, from, to, err
 	}
+	from, err = expression.Parse(fg.From)
+	if err != nil {
+		return fn, from, to, err
+	}
+	to, err = expression.Parse(fg.To)
+	if err != nil {
+		return fn, from, to, err
+	}
+
 	return expression.FunctionExpr{
 		Function: expr,
 		Variable: fg.Variable,
-	}, nil
+	}, from, to, nil
 }
 
 func (fg FunctionDefinition) instantiate(params expression.Variables) (expression.FunctionDefinition, error) {
-	fnExpr, err := fg.parse()
+	fnExpr, from, to, err := fg.parse()
 	if err != nil {
 		return expression.FunctionDefinition{}, err
 	}
 	fnExpr.Function.Substitute(params)
+
+	fromV, err := from.Evaluate(params)
+	if err != nil {
+		return expression.FunctionDefinition{}, err
+	}
+	toV, err := to.Evaluate(params)
+	if err != nil {
+		return expression.FunctionDefinition{}, err
+	}
+
 	return expression.FunctionDefinition{
 		FunctionExpr: fnExpr,
-		From:         fg.Range[0],
-		To:           fg.Range[1],
+		From:         fromV,
+		To:           toV,
 	}, nil
 }
 
 func (fg FunctionDefinition) validate(params expression.RandomParameters) error {
-	fnExpr, err := fg.parse()
+	fnExpr, from, to, err := fg.parse()
 	if err != nil {
 		return err
 	}
 
-	fn := expression.FunctionDefinition{
-		FunctionExpr: fnExpr,
-		From:         fg.Range[0],
-		To:           fg.Range[1],
+	// check that the function variable is not used
+	if params[fg.Variable] != nil {
+		return fmt.Errorf("La variable %s est déjà utilisée dans les paramètres aléatoires", fg.Variable)
 	}
 
-	if ok, freq := fn.IsValid(params, maxFunctionBound); !ok {
-		return fmt.Errorf("L'expression %s ne définit pas une fonction acceptable (%d %% des tests ont échoué)", fg.Function, 100-freq)
+	if err := fnExpr.IsValid(from, to, params, maxFunctionBound); err != nil {
+		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
+			return fmt.Errorf("L'expression %s ne définit pas une fonction acceptable (%d %% des tests ont échoué)", fg.Function, 100-freq.SuccessFrequency)
+		}
+		return err
 	}
 
 	return nil

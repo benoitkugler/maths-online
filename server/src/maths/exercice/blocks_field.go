@@ -313,7 +313,7 @@ type FunctionPointsFieldBlock struct {
 	Function string // valid expression.Expression
 	Label    string
 	Variable expression.Variable
-	XGrid    []int
+	XGrid    []string // valid expression.Expression
 }
 
 func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
@@ -322,6 +322,18 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID i
 		return nil, err
 	}
 	fn.Substitute(params)
+
+	xGrid := make([]int, len(fp.XGrid))
+	for i, x := range fp.XGrid {
+		v, err := evaluateExpr(x, params)
+		if err != nil {
+			return nil, err
+		}
+		xGrid[i] = int(v)
+	}
+
+	sort.Ints(xGrid)
+
 	return FunctionPointsFieldInstance{
 		Function: expression.FunctionExpr{
 			Function: fn,
@@ -329,35 +341,40 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID i
 		},
 		ID:    ID,
 		Label: fp.Label,
-		XGrid: fp.XGrid,
+		XGrid: xGrid,
 	}, nil
 }
 
-func (fp FunctionPointsFieldBlock) validate(params expression.RandomParameters) error {
-	if !sort.IntsAreSorted(fp.XGrid) {
-		return errors.New("Les valeurs x doivent être en ordre croissant.")
-	}
-
+func (fp FunctionPointsFieldBlock) validate(params expression.RandomParameters) (err error) {
 	if len(fp.XGrid) < 2 {
 		return errors.New("Au moins deux valeurs pour x doivent être précisées.")
+	}
+
+	xGrid := make([]*expression.Expression, len(fp.XGrid))
+	for i, x := range fp.XGrid {
+		xGrid[i], err = expression.Parse(x)
+		if err != nil {
+			return err
+		}
 	}
 
 	fn := FunctionDefinition{
 		Function: fp.Function,
 		Variable: fp.Variable,
-		Range: [2]float64{
-			float64(fp.XGrid[0]),
-			float64(fp.XGrid[len(fp.XGrid)-1]),
-		},
+		From:     fp.XGrid[0],
+		To:       fp.XGrid[len(fp.XGrid)-1],
 	}
 	if err := fn.validate(params); err != nil {
 		return err
 	}
 
 	// check that every point is an integer (otherwise is can't be selected on the client)
-	fnExpr, _ := fn.parse() // guarded by `validate`
-	if ok, freq := fnExpr.AreFxsIntegers(params, fp.XGrid); !ok {
-		return fmt.Errorf("Les valeurs de la fonction ne sont pas des nombres entiers (%d %% des tests ont échoué).", 100-freq)
+	fnExpr, _, _, _ := fn.parse() // guarded by `validate`
+	if err := fnExpr.AreXsFxsIntegers(params, xGrid); err != nil {
+		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
+			return fmt.Errorf("Les antécédents doivent être des entiers distincts, les images des entiers (%d %% des tests ont échoué).", 100-freq.SuccessFrequency)
+		}
+		return err
 	}
 
 	return nil

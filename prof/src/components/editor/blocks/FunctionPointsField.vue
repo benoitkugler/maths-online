@@ -1,5 +1,8 @@
 <template>
-  Les valeurs f(x) sont arrondies à l'unité avant d'être comparées.
+  <small>
+    Les valeurs f(x) doivent être entière pour pouvoir être placée sur la
+    grille.
+  </small>
   <v-row class="mt-2 fix-input-width">
     <v-col md="2" align-self="center">
       <v-text-field
@@ -33,13 +36,11 @@
   </v-row>
   <v-row class="fix-input-width">
     <v-col md="12">
-      <IntListField
+      <ExpressionListField
         :model-value="props.modelValue.XGrid || []"
-        @update:model-value="g => (props.modelValue.XGrid = g)"
+        @update:model-value="(g) => (props.modelValue.XGrid = g)"
         label="Valeurs de X"
-        :sorted="true"
-        disallow-repeat
-      ></IntListField>
+      ></ExpressionListField>
     </v-col>
   </v-row>
 </template>
@@ -47,8 +48,8 @@
 <script setup lang="ts">
 import { ExpressionColor } from "@/controller/editor";
 import type { FunctionPointsFieldBlock } from "@/controller/exercice_gen";
+import ExpressionListField from "../utils/ExpressionListField.vue";
 import VariableField from "../utils/VariableField.vue";
-import IntListField from "./IntListField.vue";
 
 interface Props {
   modelValue: FunctionPointsFieldBlock;

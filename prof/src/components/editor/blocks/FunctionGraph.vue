@@ -17,7 +17,7 @@
       </v-col>
     </v-row>
     <v-list>
-      <div v-for="(fn, index) in props.modelValue.Functions">
+      <div v-for="(fn, index) in props.modelValue.Functions" :key="index">
         <v-list-item>
           <v-row>
             <v-col cols="10">
@@ -45,16 +45,16 @@
                   ></v-text-field>
                 </v-col>
                 <v-col md="4" align-self="center">
-                  <NumberTextField
-                    v-model="fn.Range[0]"
+                  <ExpressionField
+                    v-model="fn.From"
                     label="Xmin"
-                  ></NumberTextField>
+                  ></ExpressionField>
                 </v-col>
                 <v-col md="4">
-                  <NumberTextField
-                    v-model="fn.Range[1]"
+                  <ExpressionField
+                    v-model="fn.To"
                     label="Xmax"
-                  ></NumberTextField>
+                  ></ExpressionField>
                 </v-col>
                 <v-col>
                   <BtnColorPicker
@@ -80,7 +80,7 @@
 <script setup lang="ts">
 import { ExpressionColor, variableToString, xRune } from "@/controller/editor";
 import type { FunctionGraphBlock } from "@/controller/exercice_gen";
-import NumberTextField from "../utils/NumberTextField.vue";
+import ExpressionField from "../utils/ExpressionField.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
@@ -99,10 +99,11 @@ function addFunction() {
     Function: "x^2",
     Decoration: {
       Label: "f",
-      Color: ""
+      Color: "",
     },
     Variable: { Name: xRune, Indice: "" },
-    Range: [-4, 4]
+    From: "-4",
+    To: "4",
   });
   emit("update:modelValue", props.modelValue);
 }

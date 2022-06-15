@@ -106,7 +106,7 @@ var blockList = [...]ex.Block{
 					Color: "#FF0000",
 				},
 				Variable: expression.NewVar('x'),
-				Range:    [2]float64{-3, 3},
+				From:     "-3", To: "3",
 			},
 			{
 				Function: "1/x",
@@ -115,7 +115,7 @@ var blockList = [...]ex.Block{
 					Color: "#FF00BB",
 				},
 				Variable: expression.NewVar('x'),
-				Range:    [2]float64{-3, -0.1},
+				From:     "-3", To: "-0.1",
 			},
 			{
 				Function: "1/x",
@@ -124,7 +124,7 @@ var blockList = [...]ex.Block{
 					Color: "#FF00BB",
 				},
 				Variable: expression.NewVar('x'),
-				Range:    [2]float64{0.1, 3},
+				From:     "0.1", To: "3",
 			},
 		},
 	},
@@ -132,7 +132,7 @@ var blockList = [...]ex.Block{
 		Function: "3x- 5",
 		Label:    "h",
 		Variable: expression.NewVar('x'),
-		XGrid:    []int{-3, -2, -1, 0, 1, 2, 3},
+		XGrid:    []string{"-3", "-2", "-1", "0", "1", "2", "3"},
 	},
 
 	ex.NumberFieldBlock{Expression: "1.2"},

@@ -285,20 +285,13 @@ func randexp_Variable() expression.Variable {
 	}
 }
 
-func randArray2float64() [2]float64 {
-	var out [2]float64
-	for i := range out {
-		out[i] = randfloat64()
-	}
-	return out
-}
-
 func randexe_FunctionDefinition() exercice.FunctionDefinition {
 	return exercice.FunctionDefinition{
 		Function:   randstring(),
 		Decoration: randfun_FunctionDecoration(),
 		Variable:   randexp_Variable(),
-		Range:      randArray2float64(),
+		From:       randstring(),
+		To:         randstring(),
 	}
 }
 
@@ -317,11 +310,11 @@ func randexe_FunctionGraphBlock() exercice.FunctionGraphBlock {
 	}
 }
 
-func randSliceint() []int {
+func randSlicestring() []string {
 	l := 40 + rand.Intn(10)
-	out := make([]int, l)
+	out := make([]string, l)
 	for i := range out {
-		out[i] = randint()
+		out[i] = randstring()
 	}
 	return out
 }
@@ -331,17 +324,8 @@ func randexe_FunctionPointsFieldBlock() exercice.FunctionPointsFieldBlock {
 		Function: randstring(),
 		Label:    randstring(),
 		Variable: randexp_Variable(),
-		XGrid:    randSliceint(),
+		XGrid:    randSlicestring(),
 	}
-}
-
-func randSlicestring() []string {
-	l := 40 + rand.Intn(10)
-	out := make([]string, l)
-	for i := range out {
-		out[i] = randstring()
-	}
-	return out
 }
 
 func randexe_FunctionVariationGraphBlock() exercice.FunctionVariationGraphBlock {

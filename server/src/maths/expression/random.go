@@ -394,43 +394,72 @@ func (expr *Expression) IsValidInteger(parameters RandomParameters) (bool, int) 
 	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
 }
 
-// AreFxsIntegers instantiates the expression using `parameters`, then evaluate the resulting
-// expression replacing `x` by the values from `grid` and checks if the values are integers.
+// AreXsFxsIntegers instantiates the function using `parameters`,
+// as well as the grid, checking it only contains integers values with no duplicates.
+// It then evaluates the resulting expression replacing `x` by the values from `grid` and checks if the values are integers.
 // It returns the frequency of successul tries, in % (between 0 and 100)
 // `parameters` must be a valid set of parameters
-func (fn FunctionExpr) AreFxsIntegers(parameters RandomParameters, grid []int) (bool, int) {
+func (fn FunctionExpr) AreXsFxsIntegers(parameters RandomParameters, grid []*Expression) error {
 	const nbTries = 1000
 	var nbSuccess int
+	seen := make(map[int]bool)
 	for i := 0; i < nbTries; i++ {
 		ps, _ := parameters.Instantiate()
 		fnExpr := fn.Function.copy()
 		fnExpr.Substitute(ps)
 
 		// checks that all grid values are integers
-		areIntegers := true
-		for _, xValue := range grid {
-			value, err := fnExpr.Evaluate(singleVarResolver{v: fn.Variable, value: float64(xValue)})
+		success := true
+		for _, xExpr := range grid {
+			xValue, err := xExpr.Evaluate(ps)
 			if err != nil {
-				areIntegers = false
+				return err
+			}
+
+			v, ok := isInt(xValue)
+			if !ok {
+				success = false
+				break
+			}
+			if seen[v] {
+				success = false
+				break
+			} else {
+				seen[v] = true
+			}
+
+			value, err := fnExpr.Evaluate(singleVarResolver{v: fn.Variable, value: xValue})
+			if err != nil {
+				success = false
 				break
 			}
 
-			_, ok := isInt(value)
-			areIntegers = areIntegers && ok
+			_, ok = isInt(value)
+			success = success && ok
 		}
 
-		if areIntegers {
+		if success {
 			nbSuccess++
 		}
+
+		// map clear idiom
+		for v := range seen {
+			delete(seen, v)
+		}
 	}
-	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+
+	if nbSuccess != nbTries {
+		return ErrRandomTests{nbSuccess * 100 / nbTries}
+	}
+
+	return nil
 }
 
 // IsValid instantiates the function expression using `parameters`, then checks
 // if the (estimated) extrema of |f| is less than `bound`.
 // It returns the frequency of successul tries, in % (between 0 and 100)
 // `parameters` must be a valid set of parameters.
-func (fn FunctionDefinition) IsValid(parameters RandomParameters, bound float64) (bool, int) {
+func (fn FunctionExpr) IsValid(from, to *Expression, parameters RandomParameters, bound float64) error {
 	const nbTries = 1000
 	var nbSuccess int
 	for i := 0; i < nbTries; i++ {
@@ -443,18 +472,35 @@ func (fn FunctionDefinition) IsValid(parameters RandomParameters, bound float64)
 		// to see if the expression is valid
 		_, err := fnExpr.Evaluate(singleVarResolver{v: fn.Variable, value: 0})
 		if err != nil {
-			continue
+			return err
 		}
 
-		def := fn
-		def.FunctionExpr.Function = fnExpr
+		fromV, err := from.Evaluate(ps)
+		if err != nil {
+			return err
+		}
+		toV, err := to.Evaluate(ps)
+		if err != nil {
+			return err
+		}
+
+		def := FunctionDefinition{
+			FunctionExpr: FunctionExpr{Function: fnExpr, Variable: fn.Variable},
+			From:         fromV,
+			To:           toV,
+		}
 		if ext := def.extrema(); ext == -1 || ext > bound {
 			continue
 		}
 
 		nbSuccess++
 	}
-	return nbSuccess == nbTries, nbSuccess * 100 / nbTries
+
+	if nbSuccess != nbTries {
+		return ErrRandomTests{nbSuccess * 100 / nbTries}
+	}
+
+	return nil
 }
 
 // AreExprsDistincsNames checks that, once instantiated, the given `dict` expressions have distincts

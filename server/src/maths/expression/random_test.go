@@ -331,18 +331,22 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 	tests := []struct {
 		expr       string
 		parameters RandomParameters
-		grid       []int
+		grid       []string
 		want       bool
 	}{
-		{"2x + 1", nil, []int{-2, -1, 0, 4}, true},
-		{"ax^2 - 2x + c", RandomParameters{NewVar('a'): mustParse(t, "randInt(2;4)"), NewVar('c'): mustParse(t, "7")}, []int{-2, -1, 0, 4}, true},
-		{"2x + 0.5", nil, []int{-2, -1, 0, 4}, false},
+		{"2x + 1", nil, []string{"-2", "-1", "0", "4"}, true},
+		{"ax^2 - 2x + c", RandomParameters{NewVar('a'): mustParse(t, "randInt(2;4)"), NewVar('c'): mustParse(t, "7")}, []string{"-2", "-1", "0", "4"}, true},
+		{"2x + 0.5", nil, []string{"-2", "-1", "0", "4"}, false},
+		{"x", nil, []string{"1", "1"}, false},
+		{"x", RandomParameters{NewVar('a'): mustParse(t, "randInt(2;4)")}, []string{"a", "2"}, false},
+		{"x", RandomParameters{NewVar('a'): mustParse(t, "randInt(2;4)")}, []string{"a", "5"}, true},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		got, freq := FunctionExpr{Function: expr, Variable: NewVar('x')}.AreFxsIntegers(tt.parameters, tt.grid)
-		if got != tt.want {
-			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
+		grid := mustParseMany(t, tt.grid)
+		err := FunctionExpr{Function: expr, Variable: NewVar('x')}.AreXsFxsIntegers(tt.parameters, grid)
+		if (err == nil) != tt.want {
+			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
 		}
 	}
 }
@@ -371,17 +375,13 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		fn := FunctionDefinition{
-			FunctionExpr: FunctionExpr{
-				Function: expr,
-				Variable: NewVar(tt.variable),
-			},
-			From: -10,
-			To:   10,
+		fn := FunctionExpr{
+			Function: expr,
+			Variable: NewVar(tt.variable),
 		}
-		got, freq := fn.IsValid(tt.parameters, tt.bound)
-		if got != tt.want {
-			t.Errorf("Expression.AreFxsIntegers() got = %v (%d), want %v", got, freq, tt.want)
+		err := fn.IsValid(mustParse(t, "-10"), mustParse(t, "10"), tt.parameters, tt.bound)
+		if (err == nil) != tt.want {
+			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
 		}
 	}
 }

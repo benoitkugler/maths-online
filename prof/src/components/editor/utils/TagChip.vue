@@ -13,7 +13,7 @@
 import { tagColor, tagString } from "@/controller/editor";
 interface Props {
   tag: string;
-  pointer: boolean;
+  pointer?: boolean;
 }
 const props = defineProps<Props>();
 </script>

@@ -1,71 +1,71 @@
 {
-  "id": 294,
-  "page": {
-    "title": "Construire la courbe représentative d'une fonction",
-    "enonce": [
-      {
-        "Data": {
-          "Parts": "Construire $C_&f&$ la courbe représentative de la fonction : $&f&(x)=&ax^2+bx+c&$",
-          "Bold": false,
-          "Italic": false,
-          "Smaller": false
-        },
-        "Kind": 16
-      },
-      {
-        "Data": {
-          "Function": "ax",
-          "Label": "C_f",
-          "Variable": {
-            "Indice": "",
-            "Name": 120
-          },
-          "XGrid": [
-            -2,
-            -1,
-            0,
-            1,
-            2
-          ]
-        },
-        "Kind": 8
-      }
-    ],
-    "parameters": {
-      "Variables": [
-        {
-          "expression": "randLetter(f;g;h;k)",
-          "variable": {
-            "Indice": "",
-            "Name": 102
-          }
-        },
-        {
-          "expression": "randChoice(-0,5;-0,25;0,25;0,5;1)",
-          "variable": {
-            "Indice": "",
-            "Name": 97
-          }
-        },
-        {
-          "expression": "randint(1;3)",
-          "variable": {
-            "Indice": "",
-            "Name": 98
-          }
-        },
-        {
-          "expression": "randint(1;2)",
-          "variable": {
-            "Indice": "",
-            "Name": 99
-          }
+    "id": 294,
+    "page": {
+        "title": "Construire la courbe représentative d'une fonction",
+        "enonce": [
+            {
+                "Data": {
+                    "Parts": "Construire $C_&f&$ la courbe représentative de la fonction : $&f&(x)=&ax^2+bx+c&$",
+                    "Bold": false,
+                    "Italic": false,
+                    "Smaller": false
+                },
+                "Kind": 16
+            },
+            {
+                "Data": {
+                    "Function": "ax",
+                    "Label": "C_f",
+                    "Variable": {
+                        "Indice": "",
+                        "Name": 120
+                    },
+                    "XGrid": [
+                        "-2",
+                        "-1",
+                        "0",
+                        "1",
+                        "2"
+                    ]
+                },
+                "Kind": 8
+            }
+        ],
+        "parameters": {
+            "Variables": [
+                {
+                    "expression": "randLetter(f;g;h;k)",
+                    "variable": {
+                        "Indice": "",
+                        "Name": 102
+                    }
+                },
+                {
+                    "expression": "randChoice(-0,5;-0,25;0,25;0,5;1)",
+                    "variable": {
+                        "Indice": "",
+                        "Name": 97
+                    }
+                },
+                {
+                    "expression": "randint(1;3)",
+                    "variable": {
+                        "Indice": "",
+                        "Name": 98
+                    }
+                },
+                {
+                    "expression": "randint(1;2)",
+                    "variable": {
+                        "Indice": "",
+                        "Name": 99
+                    }
+                }
+            ],
+            "Intrinsics": null
         }
-      ],
-      "Intrinsics": null
-    }
-  },
-  "public": true,
-  "id_teacher": 1,
-  "description": ""
+    },
+    "public": true,
+    "id_teacher": 1,
+    "description": ""
 }
