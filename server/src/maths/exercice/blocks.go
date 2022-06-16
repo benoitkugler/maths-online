@@ -29,31 +29,14 @@ var (
 // against random parameter values
 type Block interface {
 	// ID is only used by answer fields
-	instantiate(params expression.Variables, ID int) (instance, error)
+	instantiate(params expression.Vars, ID int) (instance, error)
 
-	// validate is called on teacher input
-	// it must validate expressions and enforce invariants used by
-	// `instantiate`
+	// setupValidator is called on teacher input
+	// it must :
+	//	- performs validation not depending on instantiated parameters
+	//  - delegates to `validator` for the other
 	// is is also meant to ensure that only valid content is persisted on DB
-	validate(expression.RandomParameters) error
-}
-
-func validateNumberExpression(s string, params expression.RandomParameters, checkPrecision, rejectInfinite bool) error {
-	expr, err := expression.Parse(s)
-	if err != nil {
-		return err
-	}
-
-	err = expr.IsValidNumber(params, checkPrecision, rejectInfinite)
-	if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
-		dec := ""
-		if checkPrecision {
-			dec = "decimal "
-		}
-		return fmt.Errorf("L'expression %s n'est pas un nombre %svalide (%d %% des tests ont échoué)", s, dec, 100-freq.SuccessFrequency)
-	}
-
-	return err
+	setupValidator(expression.RandomParameters) (validator, error)
 }
 
 type Parameters struct {
@@ -134,7 +117,7 @@ func (qu QuestionPage) instantiate() (QuestionInstance, error) {
 }
 
 // InstantiateWith uses the given values to instantiate the general question
-func (qu QuestionPage) InstantiateWith(params expression.Variables) (QuestionInstance, error) {
+func (qu QuestionPage) InstantiateWith(params expression.Vars) (QuestionInstance, error) {
 	enonce := make(EnonceInstance, len(qu.Enonce))
 	var currentID int
 	for j, bl := range qu.Enonce {
@@ -168,7 +151,7 @@ func NewPExpr(content string) TextPart {
 	return TextPart{Content: content, Kind: Expression}
 }
 
-func (tp TextPart) instantiate(params expression.Variables) (client.TextOrMath, error) {
+func (tp TextPart) instantiate(params expression.Vars) (client.TextOrMath, error) {
 	switch tp.Kind {
 	case Text:
 		return client.TextOrMath{Text: tp.Content}, nil
@@ -202,7 +185,7 @@ type TextParts []TextPart
 
 // instantiate merges adjacent math chunks so that latex expression are not split up
 // and may be successfully parsed by the client
-func (tp TextParts) instantiate(params expression.Variables) (client.TextLine, error) {
+func (tp TextParts) instantiate(params expression.Vars) (client.TextLine, error) {
 	var parts client.TextLine
 	for _, p := range tp {
 		sample, err := p.instantiate(params)
@@ -227,7 +210,7 @@ func (tp TextParts) instantiate(params expression.Variables) (client.TextLine, e
 }
 
 // assume all parts are either static math or expression.
-func (tp TextParts) instantiateAndMerge(params expression.Variables) (string, error) {
+func (tp TextParts) instantiateAndMerge(params expression.Vars) (string, error) {
 	parts, err := tp.instantiate(params)
 	if err != nil {
 		return "", err
@@ -258,7 +241,7 @@ type TextBlock struct {
 	Smaller bool
 }
 
-func (t TextBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (t TextBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	parts, err := t.Parts.instantiate(params)
 	if err != nil {
 		return nil, err
@@ -271,9 +254,9 @@ func (t TextBlock) instantiate(params expression.Variables, _ int) (instance, er
 	}, nil
 }
 
-func (t TextBlock) validate(expression.RandomParameters) error {
+func (t TextBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	_, err := t.Parts.Parse()
-	return err
+	return noOpValidator{}, err
 }
 
 // FormulaContent is a list of chunks, either
@@ -293,7 +276,7 @@ type FormulaPart struct {
 }
 
 // assume the expression is valid
-func (fp FormulaPart) instantiate(params expression.Variables) (StringOrExpression, error) {
+func (fp FormulaPart) instantiate(params expression.Vars) (StringOrExpression, error) {
 	if !fp.IsExpression { // nothing to do
 		return StringOrExpression{String: fp.Content}, nil
 	}
@@ -312,7 +295,7 @@ type FormulaBlock struct {
 	Parts Interpolated
 }
 
-func (f FormulaBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (f FormulaBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	parts, err := f.Parts.Parse()
 	if err != nil {
 		return nil, err
@@ -328,12 +311,12 @@ func (f FormulaBlock) instantiate(params expression.Variables, _ int) (instance,
 	return out, nil
 }
 
-func (f FormulaBlock) validate(expression.RandomParameters) error {
+func (f FormulaBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	_, err := f.Parts.Parse()
-	return err
+	return noOpValidator{}, err
 }
 
-func evaluateExpr(expr string, params expression.Variables) (float64, error) {
+func evaluateExpr(expr string, params expression.Vars) (float64, error) {
 	e, err := expression.Parse(expr)
 	if err != nil {
 		return 0, err
@@ -347,7 +330,7 @@ type VariationTableBlock struct {
 	Fxs   []string // expressions
 }
 
-func (vt VariationTableBlock) instantiateVT(params expression.Variables) (VariationTableInstance, error) {
+func (vt VariationTableBlock) instantiateVT(params expression.Vars) (VariationTableInstance, error) {
 	out := VariationTableInstance{
 		Xs:  make([]evaluatedExpression, len(vt.Xs)),
 		Fxs: make([]evaluatedExpression, len(vt.Fxs)),
@@ -378,45 +361,39 @@ func (vt VariationTableBlock) instantiateVT(params expression.Variables) (Variat
 	return out, nil
 }
 
-func (vt VariationTableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (vt VariationTableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	return vt.instantiateVT(params)
 }
 
-func (vt VariationTableBlock) validate(params expression.RandomParameters) error {
+func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	_, err := vt.Label.Parse()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(vt.Xs) < 2 {
-		return errors.New("Au moins deux colonnes sont attendues.")
+		return nil, errors.New("Au moins deux colonnes sont attendues.")
 	}
 
 	if len(vt.Xs) != len(vt.Fxs) {
-		return errors.New("internal error: expected same length for X and Fx")
+		return nil, errors.New("internal error: expected same length for X and Fx")
 	}
 
-	xExprs := make([]*expression.Expression, len(vt.Xs))
+	xExprs := make([]*expression.Expr, len(vt.Xs))
+	fxExprs := make([]*expression.Expr, len(vt.Fxs))
 	for i, c := range vt.Xs {
 		var err error
 		xExprs[i], err = expression.Parse(c)
 		if err != nil {
-			return err
+			return nil, err
 		}
-	}
-
-	if ok, freq := expression.AreSortedNumbers(xExprs, params); !ok {
-		return fmt.Errorf("Les expressions x ne sont pas en ordre croissant (%d %% des tests ont échoué)", 100-freq)
-	}
-
-	for _, c := range vt.Fxs {
-		err := validateNumberExpression(c, params, false, true)
+		fxExprs[i], err = expression.Parse(vt.Fxs[i])
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return variationTableValidator{xs: xExprs, fxs: fxExprs}, nil
 }
 
 type SignTableBlock struct {
@@ -426,7 +403,7 @@ type SignTableBlock struct {
 	Signs     []bool         // with length len(Xs) - 1
 }
 
-func (st SignTableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	out := SignTableInstance{
 		Label: st.Label,
 		Xs:    make([]string, len(st.Xs)),
@@ -446,23 +423,23 @@ func (st SignTableBlock) instantiate(params expression.Variables, _ int) (instan
 	return out, nil
 }
 
-func (st SignTableBlock) validate(expression.RandomParameters) error {
+func (st SignTableBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	if len(st.Xs) < 2 {
-		return errors.New("Au moins deux colonnes sont attendues.")
+		return nil, errors.New("Au moins deux colonnes sont attendues.")
 	}
 
 	if len(st.Xs) != len(st.FxSymbols) || len(st.Signs) != len(st.Xs)-1 {
-		return errors.New("internal error: unexpected length for X and Fx")
+		return nil, errors.New("internal error: unexpected length for X and Fx")
 	}
 
 	for _, c := range st.Xs {
 		_, err := c.Parse()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return noOpValidator{}, nil
 }
 
 type FigureBlock struct {
@@ -471,11 +448,11 @@ type FigureBlock struct {
 	ShowGrid bool
 }
 
-func (f FigureBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (f FigureBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	return f.instantiateF(params)
 }
 
-func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, error) {
+func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error) {
 	out := FigureInstance{
 		Figure: repere.Figure{
 			Drawings: repere.Drawings{
@@ -552,67 +529,57 @@ func (f FigureBlock) instantiateF(params expression.Variables) (FigureInstance, 
 	return out, nil
 }
 
-func (f FigureBlock) validate(params expression.RandomParameters) error {
-	pointMap := make(map[string]bool)
-	pointNames := make([]*expression.Expression, len(f.Drawings.Points))
+func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, error) {
+	var (
+		out figureValidator
+		err error
+	)
+
+	out.pointNames = make([]*expression.Expr, len(f.Drawings.Points))
+	out.points = make([]*expression.Expr, 0, 2*len(f.Drawings.Points))
 	for i, v := range f.Drawings.Points {
-		var err error
-		pointNames[i], err = expression.Parse(v.Name)
+		out.pointNames[i], err = expression.Parse(v.Name)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		pointMap[v.Name] = true
-
-		if err := validateNumberExpression(v.Point.Coord.X, params, false, true); err != nil {
-			return err
+		ptX, err := expression.Parse(v.Point.Coord.X)
+		if err != nil {
+			return nil, err
 		}
-
-		if err := validateNumberExpression(v.Point.Coord.Y, params, false, true); err != nil {
-			return err
+		ptY, err := expression.Parse(v.Point.Coord.Y)
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	// check for duplicates ...
-	if err := expression.AreExprsDistincsNames(pointNames, params); err != nil {
-		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
-			return fmt.Errorf("Les noms des points ne sont pas distincts (%d %% des tests ont échoué).", 100-freq.SuccessFrequency)
-		}
-		return err
+		out.points = append(out.points, ptX, ptY)
 	}
 
 	// ... and undefined points
-	references := make([]*expression.Expression, 0, 2*len(f.Drawings.Segments))
+	out.references = make([]*expression.Expr, 0, 2*len(f.Drawings.Segments))
 	for _, seg := range f.Drawings.Segments {
 		from, err := expression.Parse(seg.From)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		to, err := expression.Parse(seg.To)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		references = append(references, from, to)
+		out.references = append(out.references, from, to)
 	}
 
-	if err := expression.AreExprsValidRefs(pointNames, references, params); err != nil {
-		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
-			return fmt.Errorf("Certains points ne sont pas définis (%d %% des tests ont échoué).", 100-freq.SuccessFrequency)
+	out.lines = make([][2]*expression.Expr, len(f.Drawings.Lines))
+	for i, l := range f.Drawings.Lines {
+		out.lines[i][0], err = expression.Parse(l.A)
+		if err != nil {
+			return nil, err
 		}
-		return err
-	}
-
-	for _, l := range f.Drawings.Lines {
-		if err := validateNumberExpression(l.A, params, false, false); err != nil {
-			return err
-		}
-
-		if err := validateNumberExpression(l.B, params, false, true); err != nil {
-			return err
+		out.lines[i][1], err = expression.Parse(l.B)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return nil
+	return out, nil
 }
 
 type FunctionDefinition struct {
@@ -622,7 +589,7 @@ type FunctionDefinition struct {
 	From, To   string              // definition domain, expression.Expression
 }
 
-func (fg FunctionDefinition) parse() (fn expression.FunctionExpr, from, to *expression.Expression, err error) {
+func (fg FunctionDefinition) parse() (fn expression.FunctionExpr, from, to *expression.Expr, err error) {
 	expr, err := expression.Parse(fg.Function)
 	if err != nil {
 		return fn, from, to, err
@@ -642,7 +609,7 @@ func (fg FunctionDefinition) parse() (fn expression.FunctionExpr, from, to *expr
 	}, from, to, nil
 }
 
-func (fg FunctionDefinition) instantiate(params expression.Variables) (expression.FunctionDefinition, error) {
+func (fg FunctionDefinition) instantiate(params expression.Vars) (expression.FunctionDefinition, error) {
 	fnExpr, from, to, err := fg.parse()
 	if err != nil {
 		return expression.FunctionDefinition{}, err
@@ -665,32 +632,11 @@ func (fg FunctionDefinition) instantiate(params expression.Variables) (expressio
 	}, nil
 }
 
-func (fg FunctionDefinition) validate(params expression.RandomParameters) error {
-	fnExpr, from, to, err := fg.parse()
-	if err != nil {
-		return err
-	}
-
-	// check that the function variable is not used
-	if params[fg.Variable] != nil {
-		return fmt.Errorf("La variable %s est déjà utilisée dans les paramètres aléatoires", fg.Variable)
-	}
-
-	if err := fnExpr.IsValid(from, to, params, maxFunctionBound); err != nil {
-		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
-			return fmt.Errorf("L'expression %s ne définit pas une fonction acceptable (%d %% des tests ont échoué)", fg.Function, 100-freq.SuccessFrequency)
-		}
-		return err
-	}
-
-	return nil
-}
-
 type FunctionGraphBlock struct {
 	Functions []FunctionDefinition
 }
 
-func (fg FunctionGraphBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (fg FunctionGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	out := FunctionGraphInstance{
 		Functions:   make([]expression.FunctionDefinition, len(fg.Functions)),
 		Decorations: make([]functiongrapher.FunctionDecoration, len(fg.Functions)),
@@ -706,24 +652,27 @@ func (fg FunctionGraphBlock) instantiate(params expression.Variables, _ int) (in
 	return out, nil
 }
 
-func (fg FunctionGraphBlock) validate(params expression.RandomParameters) error {
-	for _, f := range fg.Functions {
-		if err := f.validate(params); err != nil {
-			return err
+func (fg FunctionGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	out := functionGraphValidator{functions: make([]function, len(fg.Functions))}
+	for i, f := range fg.Functions {
+		var err error
+		out.functions[i], err = newFunction(f, params)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return out, nil
 }
 
 type FunctionVariationGraphBlock VariationTableBlock
 
-func (f FunctionVariationGraphBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (f FunctionVariationGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	out, err := VariationTableBlock(f).instantiateVT(params)
 	return FunctionVariationGraphInstance(out), err
 }
 
-func (f FunctionVariationGraphBlock) validate(params expression.RandomParameters) error {
-	return VariationTableBlock(f).validate(params)
+func (f FunctionVariationGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return VariationTableBlock(f).setupValidator(params)
 }
 
 type TableBlock struct {
@@ -732,7 +681,7 @@ type TableBlock struct {
 	Values            [][]TextPart
 }
 
-func (t TableBlock) instantiate(params expression.Variables, _ int) (instance, error) {
+func (t TableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	out := TableInstance{
 		HorizontalHeaders: make([]client.TextOrMath, len(t.HorizontalHeaders)),
 		VerticalHeaders:   make([]client.TextOrMath, len(t.VerticalHeaders)),
@@ -765,24 +714,24 @@ func (t TableBlock) instantiate(params expression.Variables, _ int) (instance, e
 	return out, nil
 }
 
-func (t TableBlock) validate(params expression.RandomParameters) error {
+func (t TableBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	for _, cell := range t.HorizontalHeaders {
 		if err := cell.validate(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	for _, cell := range t.VerticalHeaders {
 		if err := cell.validate(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	for _, row := range t.Values {
 		for _, cell := range row {
 			if err := cell.validate(); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	return nil
+	return noOpValidator{}, nil
 }

@@ -112,7 +112,7 @@ func TestParenthesis(t *testing.T) {
 	}
 
 	expr = mustParse(t, "1 + 1 + a")
-	expr.Substitute(Variables{NewVar('a'): newNb(-2)})
+	expr.Substitute(Vars{NewVar('a'): newNb(-2)})
 	if s := expr.String(); strings.ContainsRune(s, '(') {
 		t.Fatal("unexpected parenthesis :", s)
 	}
@@ -158,7 +158,7 @@ func Test0And1(t *testing.T) {
 }
 
 func TestFloatPrecision(t *testing.T) {
-	v := Number(MustEvaluate("1908 * (1 - 68/100)", nil))
+	v := Number(mustEvaluate("1908 * (1 - 68/100)", nil))
 	if s := v.String(); s != "610,56" {
 		t.Fatal(s)
 	}
@@ -166,13 +166,13 @@ func TestFloatPrecision(t *testing.T) {
 
 func TestMinusMinus(t *testing.T) {
 	expr := mustParse(t, "(-a/b)")
-	expr.Substitute(Variables{NewVar('a'): newNb(-2), NewVar('b'): newNb(4)})
+	expr.Substitute(Vars{NewVar('a'): newNb(-2), NewVar('b'): newNb(4)})
 	if s := expr.String(); s != "2 / 4" {
 		t.Fatalf("%#v: %s", expr.right, s)
 	}
 
 	expr = mustParse(t, "2 - a")
-	expr.Substitute(Variables{NewVar('a'): newNb(-2)})
+	expr.Substitute(Vars{NewVar('a'): newNb(-2)})
 	if s := expr.String(); s != "2 + 2" {
 		t.Fatalf("%#v: %s", expr.right, s)
 	}

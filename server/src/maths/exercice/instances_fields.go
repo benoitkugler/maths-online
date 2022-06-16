@@ -101,7 +101,7 @@ type ExpressionFieldInstance struct {
 	// expression are added an equal symbol : <expression> =
 	Label StringOrExpression
 
-	Answer          *expression.Expression
+	Answer          *expression.Expr
 	ComparisonLevel expression.ComparisonLevel
 	ID              int
 }
@@ -628,9 +628,9 @@ func (f VariationTableFieldInstance) toClient() client.Block {
 	}
 }
 
-func parseVariationTableAnswer(answer client.VariationTableAnswer) (xs, fxs []*expression.Expression, err error) {
-	xs = make([]*expression.Expression, len(answer.Xs))
-	fxs = make([]*expression.Expression, len(answer.Fxs))
+func parseVariationTableAnswer(answer client.VariationTableAnswer) (xs, fxs []*expression.Expr, err error) {
+	xs = make([]*expression.Expr, len(answer.Xs))
+	fxs = make([]*expression.Expr, len(answer.Fxs))
 	for i, x := range answer.Xs {
 		xs[i], err = expression.Parse(x)
 		if err != nil {
@@ -678,7 +678,7 @@ func areNumbersEqual(s1, s2 []float64) bool {
 	return true
 }
 
-func areExpressionsEquals(got []*expression.Expression, exp []evaluatedExpression) bool {
+func areExpressionsEquals(got []*expression.Expr, exp []evaluatedExpression) bool {
 	if len(got) != len(exp) {
 		return false
 	}

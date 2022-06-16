@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
-	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -81,15 +80,9 @@ func testInsertSignTable(t *testing.T, db *sql.DB) {
 }
 
 func TestLoadQuestions(t *testing.T) {
-	creds := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "isyro_prod",
-	}
-	db, err := creds.ConnectPostgres()
+	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", creds, err)
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 
@@ -107,10 +100,34 @@ func TestValidation(t *testing.T) {
 		return
 	}
 
-	ti := time.Now()
-	err = ValidateAllQuestions(db)
+	qu, err := SelectAllQuestions(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("Validated in :", time.Since(ti))
+
+	ti := time.Now()
+	err = validateAllQuestions(qu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
+}
+
+func BenchmarkValidation(b *testing.B) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		b.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	qu, err := SelectAllQuestions(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		validateAllQuestions(qu)
+	}
 }

@@ -96,7 +96,7 @@ func TestLatexOutput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sample, err := parts.instantiate(expression.Variables{expression.NewVar('P'): expression.NewVarExpr(expression.NewVar('B'))})
+	sample, err := parts.instantiate(expression.Vars{expression.NewVar('P'): expression.NewVarExpr(expression.NewVar('B'))})
 	if err != nil {
 		t.Fatal(err)
 	}

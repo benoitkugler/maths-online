@@ -9,7 +9,7 @@ import (
 
 func TestEvalMissingVariable(t *testing.T) {
 	e := mustParse(t, "x + y")
-	_, err := e.Evaluate(Variables{NewVar('x'): NewNb(7)})
+	_, err := e.Evaluate(Vars{NewVar('x'): NewNb(7)})
 	if err == nil {
 		t.Fatal()
 	}
@@ -34,13 +34,13 @@ func TestRoundFloat(t *testing.T) {
 }
 
 func TestPrecision(t *testing.T) {
-	if !AreFloatEqual(MustEvaluate("3 * (1 - (0.25 + 0.1)) / 4", nil), 0.4875) {
+	if !AreFloatEqual(mustEvaluate("3 * (1 - (0.25 + 0.1)) / 4", nil), 0.4875) {
 		t.Fatal("precision error")
 	}
-	if !AreFloatEqual(MustEvaluate("1 - 7/100", nil), 0.93) {
+	if !AreFloatEqual(mustEvaluate("1 - 7/100", nil), 0.93) {
 		t.Fatal("precision error")
 	}
-	if !AreFloatEqual(MustEvaluate("1908 * (1 - 68/100)", nil), 610.56) {
+	if !AreFloatEqual(mustEvaluate("1908 * (1 - 68/100)", nil), 610.56) {
 		t.Fatal("precision error")
 	}
 
@@ -136,7 +136,7 @@ func Test_Expression_eval(t *testing.T) {
 			"1 + 1 * 3 ^ 3 * 2 - 1", nil, 54,
 		},
 		{
-			"x + 2", Variables{NewVar('x'): NewNb(4)}, 6,
+			"x + 2", Vars{NewVar('x'): NewNb(4)}, 6,
 		},
 		{
 			"2 + 0 * randInt(1;3)", nil, 2,
@@ -157,7 +157,7 @@ func Test_Expression_eval(t *testing.T) {
 			"2 * randPrime(8; 12)", nil, 22,
 		},
 		{
-			"2 * randInt(8; a)", Variables{NewVar('a'): NewNb(8)}, 16,
+			"2 * randInt(8; a)", Vars{NewVar('a'): NewNb(8)}, 16,
 		},
 		{
 			"2 * randChoice(8)", nil, 16,
@@ -202,17 +202,17 @@ func Test_Expression_eval(t *testing.T) {
 			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Variables{NewVar('a'): NewNb(2)}, 2,
+			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Vars{NewVar('a'): NewNb(2)}, 2,
 		},
 		{
-			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
+			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Vars{
 				NewVar('a'): NewNb(8),  // BC
 				NewVar('b'): NewNb(12), // AC
 				NewVar('c'): NewNb(4),  // AB
 			}, 0,
 		},
 		{
-			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Variables{
+			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Vars{
 				NewVar('a'): NewNb(3), // BC
 				NewVar('b'): NewNb(4), // AC
 				NewVar('c'): NewNb(5), // AB
@@ -243,7 +243,7 @@ func Test_Expression_eval(t *testing.T) {
 func TestExpression_Evaluate_err(t *testing.T) {
 	tests := []struct {
 		expr     string
-		bindings Variables
+		bindings Vars
 	}{
 		{
 			"randInt(1;b)", nil,
@@ -255,13 +255,13 @@ func TestExpression_Evaluate_err(t *testing.T) {
 			"randInt(a;b)", nil,
 		},
 		{
-			"randInt(a;3)", Variables{NewVar('a'): NewNb(6)},
+			"randInt(a;3)", Vars{NewVar('a'): NewNb(6)},
 		},
 		{
-			"randPrime(a;3)", Variables{NewVar('a'): NewNb(-6)},
+			"randPrime(a;3)", Vars{NewVar('a'): NewNb(-6)},
 		},
 		{
-			"randPrime(a;9)", Variables{NewVar('a'): NewNb(8)},
+			"randPrime(a;9)", Vars{NewVar('a'): NewNb(8)},
 		},
 	}
 	for _, tt := range tests {
@@ -326,7 +326,7 @@ func TestIsDecimal(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, is := isInt(n.eval() * maxDecDen); !is {
+		if _, is := IsInt(n.eval() * maxDecDen); !is {
 			t.Fatal(n)
 		}
 		if n.eval() <= 0 || n.eval() > thresholdDecDen {

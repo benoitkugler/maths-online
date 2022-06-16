@@ -42,7 +42,7 @@ func (vm varMap) Positions(subset RandomParameters) []int {
 }
 
 // Parse parses a mathematical expression. If invalid, an `ErrInvalidExpr` is returned.
-func Parse(s string) (*Expression, error) {
+func Parse(s string) (*Expr, error) {
 	expr, _, err := parseBytes([]byte(s))
 	if err != nil {
 		errV := err.(ErrInvalidExpr)
@@ -53,7 +53,7 @@ func Parse(s string) (*Expression, error) {
 }
 
 // MustParse is the same as Parse but panics on invalid expressions.
-func MustParse(s string) *Expression {
+func MustParse(s string) *Expr {
 	expr, err := Parse(s)
 	if err != nil {
 		panic(fmt.Sprintf("%s: %s", s, err))
@@ -62,7 +62,7 @@ func MustParse(s string) *Expression {
 }
 
 // parseBytes parses a mathematical expression. If invalid, an `InvalidExpr` is returned.
-func parseBytes(text []byte) (*Expression, varMap, error) {
+func parseBytes(text []byte) (*Expr, varMap, error) {
 	pr := newParser(text)
 	e, err := pr.parseExpression(false)
 	if err != nil {
@@ -86,7 +86,7 @@ type parser struct {
 
 	variablePos varMap // index of variable in input rune slice
 
-	stack []*Expression // waiting to be consumed by operators
+	stack []*Expr // waiting to be consumed by operators
 }
 
 func newParser(text []byte) *parser {
@@ -94,7 +94,7 @@ func newParser(text []byte) *parser {
 }
 
 // return nil if the stack is empty
-func (pr *parser) pop() *Expression {
+func (pr *parser) pop() *Expr {
 	if len(pr.stack) == 0 {
 		return nil
 	}
@@ -105,7 +105,7 @@ func (pr *parser) pop() *Expression {
 
 // if `acceptSemiColon` is true, a semi colon at the end
 // of the expression is interpreted as EOF (but not consumed)
-func (pr *parser) parseExpression(acceptSemiColon bool) (*Expression, error) {
+func (pr *parser) parseExpression(acceptSemiColon bool) (*Expr, error) {
 	for {
 		peeked := pr.tk.Peek().data
 		if peeked == nil || peeked == closePar || (acceptSemiColon && peeked == semicolon) {
@@ -132,7 +132,7 @@ func (pr *parser) parseExpression(acceptSemiColon bool) (*Expression, error) {
 
 // the next token has already been checked for emptyness,
 // and is assumed not to be a closing )
-func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expression, error) {
+func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 	tok := pr.tk.Next()
 	c := tok.data
 	switch data := c.(type) {
@@ -157,7 +157,7 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expression, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Expression{atom: rd}, nil
+		return &Expr{atom: rd}, nil
 	case roundFn:
 		return pr.parseRoundFunction(tok.pos)
 	case specialFunction:
@@ -165,29 +165,29 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expression, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Expression{atom: rd}, nil
+		return &Expr{atom: rd}, nil
 	case function:
 		return pr.parseFunction(data, tok.pos)
 	case constant:
-		return &Expression{atom: data}, nil
+		return &Expr{atom: data}, nil
 	case Variable:
 		// register the variable position
 		pr.variablePos[tok.pos] = data
 
-		return &Expression{atom: data}, nil
+		return &Expr{atom: data}, nil
 	case numberText:
 		nb, err := parseNumber(data, tok.pos)
 		if err != nil {
 			return nil, err
 		}
-		return &Expression{atom: nb}, nil
+		return &Expr{atom: nb}, nil
 	default:
 		panic(exhaustiveTokenSwitch)
 	}
 }
 
 // pr.src[pr.pos] must be an operator
-func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Expression, error) {
+func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Expr, error) {
 	var leftIsOptional bool
 	switch op {
 	case plus, minus: // an expression before the sign is optional
@@ -223,7 +223,7 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 		}
 	}
 
-	return &Expression{
+	return &Expr{
 		atom:  op,
 		left:  left,
 		right: right,
@@ -231,7 +231,7 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 }
 
 // parse while the operator have strictly higher precedence than `op`
-func (pr *parser) parseUntil(op operator, acceptSemiColon bool) (*Expression, error) {
+func (pr *parser) parseUntil(op operator, acceptSemiColon bool) (*Expr, error) {
 	for {
 		tok := pr.tk.Peek()
 		// if we reach EOF, return
@@ -259,7 +259,7 @@ func (pr *parser) parseUntil(op operator, acceptSemiColon bool) (*Expression, er
 }
 
 // assume that ( token has already been read
-func (pr *parser) parseParenthesisBlock(pos int) (*Expression, error) {
+func (pr *parser) parseParenthesisBlock(pos int) (*Expr, error) {
 	// parse the content, until the closing )
 
 	for {
@@ -287,7 +287,7 @@ func (pr *parser) parseParenthesisBlock(pos int) (*Expression, error) {
 	}
 }
 
-func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
+func (pr *parser) parseFunction(fn function, pos int) (*Expr, error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
 	par := pr.tk.Next()
@@ -312,7 +312,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expression, error) {
 		}
 	}
 
-	return &Expression{
+	return &Expr{
 		left:  nil,
 		right: arg,
 		atom:  fn,
@@ -348,7 +348,7 @@ func (pr *parser) parsePositiveInt() (int, error) {
 		return 0, err
 	}
 
-	nI, ok := isInt(float64(n))
+	nI, ok := IsInt(float64(n))
 	if !ok {
 		return 0, ErrInvalidExpr{
 			Reason: "nombre entier attendu",
@@ -359,7 +359,8 @@ func (pr *parser) parsePositiveInt() (int, error) {
 	return nI, nil
 }
 
-func isInt(v float64) (int, bool) {
+// IsInt returns `true` if `v` is a finite integer number.
+func IsInt(v float64) (int, bool) {
 	out := int(v)
 	if float64(out) == v {
 		return out, true
@@ -433,7 +434,7 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 
 // special case for the round function,
 // which accept one expression and number of digits
-func (pr *parser) parseRoundFunction(pos int) (expr *Expression, err error) {
+func (pr *parser) parseRoundFunction(pos int) (expr *Expr, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
 	par := pr.tk.Next()
@@ -471,7 +472,7 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expression, err error) {
 		}
 	}
 
-	return &Expression{atom: roundFn{nbDigits: nbDigitsI}, right: arg}, nil
+	return &Expr{atom: roundFn{nbDigits: nbDigitsI}, right: arg}, nil
 }
 
 // special case for special functions, which are of the form

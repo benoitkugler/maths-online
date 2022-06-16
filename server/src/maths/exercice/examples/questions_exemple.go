@@ -12,9 +12,9 @@ package examples
 
 // func mustEvaluate(s string, vars ...expression.Variables) float64 {
 // 	if len(vars) > 0 {
-// 		return expression.MustEvaluate(s, vars[0])
+// 		return expression.mustEvaluate(s, vars[0])
 // 	}
-// 	return expression.MustEvaluate(s, nil)
+// 	return expression.mustEvaluate(s, nil)
 // }
 
 // func text(s string) client.TextOrMath {

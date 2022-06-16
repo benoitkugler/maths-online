@@ -14,8 +14,12 @@ func ValidateAllQuestions(db DB) error {
 		return err
 	}
 
+	return validateAllQuestions(qu)
+}
+
+func validateAllQuestions(questions Questions) error {
 	var errs []string
-	for id, q := range qu {
+	for id, q := range questions {
 		err := q.Page.Validate()
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("%s (ID: %d) -> %s", q.Page.Title, id, err))
