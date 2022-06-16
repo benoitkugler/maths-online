@@ -42,26 +42,19 @@ type randomVarResolver struct {
 
 	seen    map[Variable]bool // variable that we are currently resolving
 	results map[Variable]rat  // resulting values
-
-	err error
 }
 
-func (rvv *randomVarResolver) resolve(v Variable) (*Expr, bool) {
-	if rvv.err != nil { // skip
-		return nil, false
-	}
-
+func (rvv *randomVarResolver) resolve(v Variable) (*Expr, error) {
 	// first, check if it has already been resolved by side effect
 	if nb, has := rvv.results[v]; has {
-		return nb.toExpr(), true
+		return nb.toExpr(), nil
 	}
 
 	if rvv.seen[v] {
-		rvv.err = ErrInvalidRandomParameters{
+		return nil, ErrInvalidRandomParameters{
 			Cause:  v,
 			Detail: fmt.Sprintf("%s est présente dans un cycle et ne peut donc pas être calculée", v),
 		}
-		return nil, false
 	}
 
 	// start the resolution : to detect invalid cycles,
@@ -70,34 +63,32 @@ func (rvv *randomVarResolver) resolve(v Variable) (*Expr, bool) {
 
 	expr, ok := rvv.defs[v]
 	if !ok {
-		rvv.err = ErrInvalidRandomParameters{
+		return nil, ErrInvalidRandomParameters{
 			Cause:  v,
 			Detail: fmt.Sprintf("%s n'est pas définie", v),
 		}
-		return nil, false
 	}
 
 	// recurse
 	value, err := expr.evalRat(rvv)
 	if err != nil {
-		rvv.err = ErrInvalidRandomParameters{
+		return nil, ErrInvalidRandomParameters{
 			Cause:  v,
 			Detail: err.Error(),
 		}
-		return nil, false
 	}
 
 	// register the result
 	rvv.results[v] = value
 
-	return value.toExpr(), true
+	return value.toExpr(), nil
 }
 
 // Validate calls `Instantiate` many to make sure the parameters are always
 // valid regardless of the random value chosen.
 // If not, it returns the first error encountered.
 func (rv RandomParameters) Validate() error {
-	const nbTries = 1000
+	const nbTries = 1_000
 	for i := 0; i < nbTries; i++ {
 		_, err := rv.Instantiate()
 		if err != nil {
@@ -128,10 +119,9 @@ func (rv RandomParameters) Instantiate() (Vars, error) {
 			continue
 		}
 
-		value, _ := resolver.resolve(v) // this triggers the evaluation of the expression
-
-		if resolver.err != nil {
-			return nil, resolver.err
+		value, err := resolver.resolve(v) // this triggers the evaluation of the expression
+		if err != nil {
+			return nil, err
 		}
 
 		out[v] = value

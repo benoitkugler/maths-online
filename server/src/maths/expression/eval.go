@@ -8,7 +8,7 @@ import (
 )
 
 type ValueResolver interface {
-	resolve(v Variable) (*Expr, bool)
+	resolve(v Variable) (*Expr, error)
 }
 
 var _ ValueResolver = Vars{}
@@ -16,9 +16,12 @@ var _ ValueResolver = Vars{}
 // Vars maps variables to a chosen value.
 type Vars map[Variable]*Expr
 
-func (vrs Vars) resolve(v Variable) (*Expr, bool) {
+func (vrs Vars) resolve(v Variable) (*Expr, error) {
 	value, ok := vrs[v]
-	return value, ok
+	if !ok {
+		return nil, ErrMissingVariable{v}
+	}
+	return value, nil
 }
 
 type ErrMissingVariable struct {
@@ -50,11 +53,11 @@ type singleVarResolver struct {
 	value float64
 }
 
-func (res singleVarResolver) resolve(v Variable) (*Expr, bool) {
+func (res singleVarResolver) resolve(v Variable) (*Expr, error) {
 	if res.v != v {
-		return nil, false
+		return nil, ErrMissingVariable{v}
 	}
-	return NewNb(res.value), true
+	return NewNb(res.value), nil
 }
 
 type FunctionExpr struct {
@@ -213,9 +216,9 @@ func (va Variable) eval(_, _ rat, b ValueResolver) (rat, error) {
 		return rat{}, ErrMissingVariable{Missing: va}
 	}
 
-	out, has := b.resolve(va)
-	if !has {
-		return rat{}, ErrMissingVariable{Missing: va}
+	out, err := b.resolve(va)
+	if err != nil {
+		return rat{}, err
 	}
 	return out.evalRat(b)
 }
