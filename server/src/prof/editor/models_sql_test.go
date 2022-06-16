@@ -100,10 +100,34 @@ func TestValidation(t *testing.T) {
 		return
 	}
 
-	ti := time.Now()
-	err = ValidateAllQuestions(db)
+	qu, err := SelectAllQuestions(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("Validated in :", time.Since(ti))
+
+	ti := time.Now()
+	err = validateAllQuestions(qu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
+}
+
+func BenchmarkValidation(b *testing.B) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		b.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	qu, err := SelectAllQuestions(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		validateAllQuestions(qu)
+	}
 }
