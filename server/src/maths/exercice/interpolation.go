@@ -33,7 +33,7 @@ func (s Interpolated) Parse() (TextParts, error) {
 	return out, nil
 }
 
-func (s Interpolated) instantiate(params expression.Variables) (client.TextLine, error) {
+func (s Interpolated) instantiate(params expression.Vars) (client.TextLine, error) {
 	parsed, err := s.Parse()
 	if err != nil {
 		return nil, err

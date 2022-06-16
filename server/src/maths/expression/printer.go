@@ -13,7 +13,7 @@ type LaTeXResolver = func(v Variable) string
 // for usual maths symbols.
 func DefaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
-func (expr *Expression) simplifyForPrint() {
+func (expr *Expr) simplifyForPrint() {
 	expr.contractPlusMinus()
 	expr.contractMinusMinus()
 	expr.simplify0And1()
@@ -21,7 +21,7 @@ func (expr *Expression) simplifyForPrint() {
 
 // AsLaTeX returns a valid LaTeX code displaying the expression.
 // `res` is an optional mapping from variables to latex symbols
-func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
+func (expr *Expr) AsLaTeX(res LaTeXResolver) string {
 	if expr == nil {
 		return ""
 	}
@@ -30,7 +30,7 @@ func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
 		res = DefaultLatexResolver
 	}
 
-	expr = expr.copy()
+	expr = expr.Copy()
 	expr.simplifyForPrint()
 
 	return expr.atom.asLaTeX(expr.left, expr.right, res)
@@ -41,8 +41,8 @@ func (expr *Expression) AsLaTeX(res LaTeXResolver) string {
 // returned expression may slightly differ, but is garanteed
 // to be mathematically equivalent.
 // See `AsLaTeX` for a better display format.
-func (expr *Expression) String() string {
-	expr = expr.copy()
+func (expr *Expr) String() string {
+	expr = expr.Copy()
 	expr.simplifyForPrint()
 	return expr.Serialize()
 }
@@ -55,7 +55,7 @@ func addParenthesisPlain(s string) string {
 	return `(` + s + `)`
 }
 
-func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
+func (op operator) asLaTeX(left, right *Expr, res LaTeXResolver) string {
 	leftCode, rightCode := left.AsLaTeX(res), right.AsLaTeX(res)
 	switch op {
 	case plus:
@@ -101,7 +101,7 @@ func (op operator) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	}
 }
 
-func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
+func (fn function) asLaTeX(left, right *Expr, res LaTeXResolver) string {
 	arg := right.AsLaTeX(res)
 	switch fn {
 	case logFn:
@@ -137,19 +137,19 @@ func (fn function) asLaTeX(left, right *Expression, res LaTeXResolver) string {
 	}
 }
 
-func (r roundFn) asLaTeX(_, right *Expression, res LaTeXResolver) string {
+func (r roundFn) asLaTeX(_, right *Expr, res LaTeXResolver) string {
 	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(res), r.nbDigits)
 }
 
-func (r specialFunctionA) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
+func (r specialFunctionA) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
-func (r randVariable) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
+func (r randVariable) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
-func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {
+func (v Variable) asLaTeX(_, _ *Expr, res LaTeXResolver) string {
 	name := res(v)
 	if v.Indice != "" {
 		name += "_{" + v.Indice + "}"
@@ -157,7 +157,7 @@ func (v Variable) asLaTeX(_, _ *Expression, res LaTeXResolver) string {
 	return name
 }
 
-func (c constant) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
+func (c constant) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
 	switch c {
 	case piConstant:
 		return "\\pi"
@@ -168,13 +168,13 @@ func (c constant) asLaTeX(_, _ *Expression, _ LaTeXResolver) string {
 	}
 }
 
-func (v Number) asLaTeX(_, _ *Expression, _ LaTeXResolver) string { return v.String() }
+func (v Number) asLaTeX(_, _ *Expr, _ LaTeXResolver) string { return v.String() }
 
 // returns `true` is the expression is compound and requires parenthesis
 // when used with `op`
 // if `isLeft` is true, this is :  expr op ...
 // else this is :                  ...  op expr
-func (op operator) needParenthesis(expr *Expression, isLeftArg bool) bool {
+func (op operator) needParenthesis(expr *Expr, isLeftArg bool) bool {
 	if expr == nil {
 		return false
 	}
@@ -204,7 +204,7 @@ func (op operator) needParenthesis(expr *Expression, isLeftArg bool) bool {
 
 // plain text, pretty output
 
-func (op operator) serialize(left, right *Expression) string {
+func (op operator) serialize(left, right *Expr) string {
 	leftCode, rightCode := left.Serialize(), right.Serialize()
 
 	if op.needParenthesis(left, true) {
@@ -248,7 +248,7 @@ func (op operator) serialize(left, right *Expression) string {
 // left and right are assumed not to be nil
 // we are conservative here : only omit * when we are
 // certain it results in valid ouput
-func shouldOmitTimes(rightHasParenthesis bool, right *Expression) bool {
+func shouldOmitTimes(rightHasParenthesis bool, right *Expr) bool {
 	// with parenthesis, it is always valid to omit times
 	if rightHasParenthesis {
 		return true

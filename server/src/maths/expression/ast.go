@@ -20,36 +20,36 @@ const (
 	exhaustiveIntrinsicSwitch = "intrinsic"
 )
 
-// Expression is a parsed mathematical expression
-type Expression struct {
-	left, right *Expression
+// Expr is a parsed mathematical expression
+type Expr struct {
+	left, right *Expr
 	atom        atom
 }
 
 // Serialize returns the expression as text.
 // It is meant to be used for internal exchange; see
 // String() and AsLaTex() for display.
-func (expr *Expression) Serialize() string {
+func (expr *Expr) Serialize() string {
 	if expr == nil {
 		return ""
 	}
 	return expr.atom.serialize(expr.left, expr.right)
 }
 
-// returns a deep copy
-func (expr *Expression) copy() *Expression {
+// Copy returns a deep copy of the expression.
+func (expr *Expr) Copy() *Expr {
 	if expr == nil {
 		return nil
 	}
 
 	out := *expr
-	out.left = expr.left.copy()
-	out.right = expr.right.copy()
+	out.left = expr.left.Copy()
+	out.right = expr.right.Copy()
 	return &out
 }
 
 // returns `true` if both expression are the same (structurally, not mathematicaly)
-func (expr *Expression) equals(other *Expression) bool {
+func (expr *Expr) equals(other *Expr) bool {
 	if expr == other {
 		return true
 	}
@@ -73,7 +73,7 @@ type atom interface {
 	// given the serialized form of the left and right terms,
 	// serialize returns plain text, prettified, valid form
 	// of the expression node
-	serialize(left, right *Expression) string
+	serialize(left, right *Expr) string
 
 	lexicographicOrder() int // smaller is first; unique among concrete types
 
@@ -81,7 +81,7 @@ type atom interface {
 	// it may be simplified by subsequent operations
 	eval(left, right rat, context ValueResolver) (rat, error)
 
-	asLaTeX(left, right *Expression, res LaTeXResolver) string
+	asLaTeX(left, right *Expr, res LaTeXResolver) string
 }
 
 func (operator) lexicographicOrder() int         { return 7 }
@@ -103,7 +103,7 @@ func (rd roundFn) String() string {
 	return rd.serialize(nil, nil)
 }
 
-func (rd roundFn) serialize(_, right *Expression) string {
+func (rd roundFn) serialize(_, right *Expr) string {
 	return fmt.Sprintf("round(%s ; %d)", right.Serialize(), rd.nbDigits)
 }
 
@@ -119,7 +119,7 @@ func (rv randVariable) String() string {
 	return fmt.Sprintf("randLetter(%s)", strings.Join(args, ";"))
 }
 
-func (rv randVariable) serialize(_, _ *Expression) string { return rv.String() }
+func (rv randVariable) serialize(_, _ *Expr) string { return rv.String() }
 
 type operator uint8
 
@@ -215,7 +215,7 @@ func (fn function) String() string {
 	}
 }
 
-func (fn function) serialize(_, right *Expression) string {
+func (fn function) serialize(_, right *Expr) string {
 	return fn.String() + "(" + right.Serialize() + ")"
 }
 
@@ -238,9 +238,9 @@ func NewVar(x rune) Variable { return Variable{Name: x} }
 // NewVarI is a convenience constructor supporting indices
 func NewVarI(x rune, indice string) Variable { return Variable{Name: x, Indice: indice} }
 
-func NewVarExpr(v Variable) *Expression { return &Expression{atom: v} }
+func NewVarExpr(v Variable) *Expr { return &Expr{atom: v} }
 
-func newVarExpr(r rune) *Expression { return NewVarExpr(NewVar(r)) }
+func newVarExpr(r rune) *Expr { return NewVarExpr(NewVar(r)) }
 
 func (v Variable) String() string {
 	// we have to output valid expression syntax
@@ -251,7 +251,7 @@ func (v Variable) String() string {
 	return out
 }
 
-func (v Variable) serialize(_, _ *Expression) string { return v.String() }
+func (v Variable) serialize(_, _ *Expr) string { return v.String() }
 
 type constant uint8
 
@@ -274,19 +274,19 @@ func (c constant) String() string {
 	}
 }
 
-func (c constant) serialize(_, _ *Expression) string { return c.String() }
+func (c constant) serialize(_, _ *Expr) string { return c.String() }
 
 type Number float64
 
-func newNb(v float64) *Expression { return &Expression{atom: Number(v)} }
+func newNb(v float64) *Expr { return &Expr{atom: Number(v)} }
 
 // NewNb returns the one element expression containing
 // the given number.
 // For consistency with the parser, negative numbers are actually
 // returned as -(...)
-func NewNb(v float64) *Expression {
+func NewNb(v float64) *Expr {
 	if v < 0 {
-		return &Expression{atom: minus, right: newNb(-v)}
+		return &Expr{atom: minus, right: newNb(-v)}
 	}
 	return newNb(v)
 }
@@ -297,11 +297,11 @@ func (v Number) String() string {
 	return strings.ReplaceAll(out, ".", decimalSeparator)
 }
 
-func (v Number) serialize(_, _ *Expression) string { return v.String() }
+func (v Number) serialize(_, _ *Expr) string { return v.String() }
 
 type specialFunctionA struct {
 	kind specialFunction
-	args []*Expression // the correct length of args is check during parsing
+	args []*Expr // the correct length of args is check during parsing
 }
 
 func (sf specialFunctionA) String() string {
@@ -331,4 +331,4 @@ func (sf specialFunctionA) String() string {
 	return name + "(" + strings.Join(args, " ; ") + ")"
 }
 
-func (sf specialFunctionA) serialize(_, _ *Expression) string { return sf.String() }
+func (sf specialFunctionA) serialize(_, _ *Expr) string { return sf.String() }

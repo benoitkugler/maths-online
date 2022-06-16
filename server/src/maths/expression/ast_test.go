@@ -27,9 +27,9 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
 	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
 
-	shouldPanic(t, func() { plus.needParenthesis(&Expression{}, false) })
+	shouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
 	shouldPanic(t, func() {
-		e := &Expression{atom: invalidOperator}
+		e := &Expr{atom: invalidOperator}
 		e.simplifyNumbers()
 	})
 
@@ -52,11 +52,11 @@ func TestPanics(t *testing.T) {
 	})
 
 	shouldPanic(t, func() {
-		MustEvaluate("x+2", nil)
+		mustEvaluate("x+2", nil)
 	})
 	shouldPanic(t, func() {
 		expr := MustParse("x+2")
-		expr.MustEvaluate(nil)
+		expr.mustEvaluate(nil)
 	})
 
 	shouldPanic(t, func() {

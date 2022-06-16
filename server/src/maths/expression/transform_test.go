@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func mustParse(t *testing.T, s string) *Expression {
+func mustParse(t *testing.T, s string) *Expr {
 	t.Helper()
 
 	want, err := Parse(s)
@@ -19,29 +19,29 @@ func Test_Expression_extractOperator(t *testing.T) {
 	tests := []struct {
 		expr string
 		op   operator
-		want []*Expression
+		want []*Expr
 	}{
-		{"1 +  2 + ( 3 + 4)", plus, []*Expression{
+		{"1 +  2 + ( 3 + 4)", plus, []*Expr{
 			NewNb(1),
 			NewNb(2),
 			NewNb(3),
 			NewNb(4),
 		}},
-		{"1 + (2 * x) + 3", plus, []*Expression{
+		{"1 + (2 * x) + 3", plus, []*Expr{
 			NewNb(1),
 			{atom: mult, left: NewNb(2), right: newVarExpr('x')},
 			NewNb(3),
 		}},
-		{"1 + 2 * (x + y) + 3", plus, []*Expression{
+		{"1 + 2 * (x + y) + 3", plus, []*Expr{
 			NewNb(1),
 			{
 				atom:  mult,
 				left:  NewNb(2),
-				right: &Expression{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')},
+				right: &Expr{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')},
 			},
 			NewNb(3),
 		}},
-		{"1 *  2 * ( 3 * 4)", mult, []*Expression{
+		{"1 *  2 * ( 3 * 4)", mult, []*Expr{
 			NewNb(1),
 			NewNb(2),
 			NewNb(3),
@@ -291,15 +291,15 @@ func TestExpression_extractNegativeInMults(t *testing.T) {
 func TestExpression_Substitute(t *testing.T) {
 	tests := []struct {
 		expr string
-		vars Variables
+		vars Vars
 		want string
 	}{
-		{"a + b", Variables{}, "a+b"},
-		{"a + b", Variables{NewVar('a'): NewNb(4)}, "4+b"},
-		{"a + b / 2*a", Variables{NewVar('a'): NewNb(4)}, "4+b/2*4"},
-		{"a + b", Variables{NewVar('a'): NewNb(4), NewVar('b'): NewNb(5)}, "4+5"},
+		{"a + b", Vars{}, "a+b"},
+		{"a + b", Vars{NewVar('a'): NewNb(4)}, "4+b"},
+		{"a + b / 2*a", Vars{NewVar('a'): NewNb(4)}, "4+b/2*4"},
+		{"a + b", Vars{NewVar('a'): NewNb(4), NewVar('b'): NewNb(5)}, "4+5"},
 		{
-			"P + 2 + x", Variables{
+			"P + 2 + x", Vars{
 				NewVar('P'): newVarExpr('A'),
 				NewVar('x'): NewNb(3),
 			}, "A+2+3",
@@ -336,7 +336,7 @@ func TestExpressionNegativeParams(t *testing.T) {
 	}
 
 	e = mustParse(t, "m*x + p")
-	vars = Variables{NewVar('m'): NewNb(1), NewVar('p'): NewNb(-0.4)}
+	vars = Vars{NewVar('m'): NewNb(1), NewVar('p'): NewNb(-0.4)}
 	e.Substitute(vars)
 
 	e2 = mustParse(t, "x - 0.4")
@@ -367,7 +367,7 @@ func TestBug51(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		expr2 := expr.copy()
+		expr2 := expr.Copy()
 		expr2.Substitute(vars)
 		_ = expr2.AsLaTeX(nil) // check for crashes
 	}

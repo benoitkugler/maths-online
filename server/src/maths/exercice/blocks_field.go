@@ -2,7 +2,6 @@ package exercice
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/exercice/client"
@@ -32,16 +31,17 @@ type NumberFieldBlock struct {
 	Expression string
 }
 
-func (n NumberFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (n NumberFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	answer, err := evaluateExpr(n.Expression, params)
 	return NumberFieldInstance{ID: ID, Answer: answer}, err
 }
 
-func (n NumberFieldBlock) validate(params expression.RandomParameters) error {
-	// note that we dont allow non decimal solutions, since it is confusing for the student.
-	// they should rather be handled with an expression field, or rounded using the
-	// builtin round() function
-	return validateNumberExpression(n.Expression, params, true, true)
+func (n NumberFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	expr, err := expression.Parse(n.Expression)
+	if err != nil {
+		return nil, err
+	}
+	return numberValidator{expr: expr}, nil
 }
 
 type ExpressionFieldBlock struct {
@@ -50,7 +50,7 @@ type ExpressionFieldBlock struct {
 	ComparisonLevel ComparisonLevel
 }
 
-func (f ExpressionFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	label := StringOrExpression{String: f.Label.Content}
 	if f.Label.Kind == Expression {
 		e, err := expression.Parse(f.Label.Content)
@@ -73,9 +73,9 @@ func (f ExpressionFieldBlock) instantiate(params expression.Variables, ID int) (
 	}, nil
 }
 
-func (f ExpressionFieldBlock) validate(params expression.RandomParameters) error {
+func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	_, err := expression.Parse(f.Expression)
-	return err
+	return noOpValidator{}, err
 }
 
 type RadioFieldBlock struct {
@@ -84,7 +84,7 @@ type RadioFieldBlock struct {
 	AsDropDown bool
 }
 
-func (rf RadioFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (rf RadioFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	ans, err := evaluateExpr(rf.Answer, params)
 	if err != nil {
 		return nil, err
@@ -108,23 +108,20 @@ func (rf RadioFieldBlock) instantiate(params expression.Variables, ID int) (inst
 	return out, nil
 }
 
-func (rf RadioFieldBlock) validate(params expression.RandomParameters) error {
+func (rf RadioFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	for _, p := range rf.Proposals {
 		_, err := p.Parse()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	expr, err := expression.Parse(rf.Answer)
 	if err != nil {
-		return err
-	}
-	if ok, freq := expr.IsValidIndex(params, len(rf.Proposals)); !ok {
-		return fmt.Errorf("L'expression %s ne définit pas un index valide dans la liste des propositions (%d %% des tests ont échoué)", rf.Answer, 100-freq)
+		return nil, err
 	}
 
-	return nil
+	return radioValidator{expr: expr, proposalsLength: len(rf.Proposals)}, nil
 }
 
 type OrderedListFieldBlock struct {
@@ -133,7 +130,7 @@ type OrderedListFieldBlock struct {
 	AdditionalProposals []Interpolated
 }
 
-func (ol OrderedListFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	out := OrderedListFieldInstance{
 		Label:               ol.Label,
 		Answer:              make([]client.TextLine, len(ol.Answer)),
@@ -159,20 +156,20 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Variables, ID int)
 	return out, nil
 }
 
-func (ol OrderedListFieldBlock) validate(params expression.RandomParameters) error {
+func (ol OrderedListFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	for _, a := range ol.Answer {
 		if _, err := a.Parse(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	for _, a := range ol.AdditionalProposals {
 		if _, err := a.Parse(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return noOpValidator{}, nil
 }
 
 // CoordExpression is a pair of valid expression.Expression
@@ -180,7 +177,7 @@ type CoordExpression struct {
 	X, Y string
 }
 
-func (c CoordExpression) instantiateToFloat(params expression.Variables) (repere.Coord, error) {
+func (c CoordExpression) instantiateToFloat(params expression.Vars) (repere.Coord, error) {
 	x, err := evaluateExpr(c.X, params)
 	if err != nil {
 		return repere.Coord{}, err
@@ -195,19 +192,21 @@ func (c CoordExpression) instantiateToFloat(params expression.Variables) (repere
 	}, nil
 }
 
-func (c CoordExpression) instantiate(params expression.Variables) (repere.IntCoord, error) {
+func (c CoordExpression) instantiate(params expression.Vars) (repere.IntCoord, error) {
 	out, err := c.instantiateToFloat(params)
 	return out.Round(), err
 }
 
-func (c CoordExpression) validate(params expression.RandomParameters, checkPrecision bool) error {
-	if err := validateNumberExpression(c.X, params, checkPrecision, true); err != nil {
-		return err
+func (c CoordExpression) parse() (out parsedCoord, err error) {
+	out.X, err = expression.Parse(c.X)
+	if err != nil {
+		return out, err
 	}
-	if err := validateNumberExpression(c.Y, params, checkPrecision, true); err != nil {
-		return err
+	out.Y, err = expression.Parse(c.Y)
+	if err != nil {
+		return out, err
 	}
-	return nil
+	return out, nil
 }
 
 type FigurePointFieldBlock struct {
@@ -215,7 +214,7 @@ type FigurePointFieldBlock struct {
 	Figure FigureBlock
 }
 
-func (fp FigurePointFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (fp FigurePointFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	fig, err := fp.Figure.instantiateF(params)
 	if err != nil {
 		return nil, err
@@ -231,14 +230,18 @@ func (fp FigurePointFieldBlock) instantiate(params expression.Variables, ID int)
 	}, nil
 }
 
-func (fp FigurePointFieldBlock) validate(params expression.RandomParameters) error {
-	if err := fp.Figure.validate(params); err != nil {
-		return err
+func (fp FigurePointFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	figure, err := fp.Figure.setupValidator(params)
+	if err != nil {
+		return nil, err
 	}
-	if err := fp.Answer.validate(params, false); err != nil {
-		return err
+
+	answer, err := fp.Answer.parse()
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	return figurePointValidator{figure: figure, answer: answer}, nil
 }
 
 type FigureVectorFieldBlock struct {
@@ -251,7 +254,7 @@ type FigureVectorFieldBlock struct {
 	MustHaveOrigin bool
 }
 
-func (fv FigureVectorFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (fv FigureVectorFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	fig, err := fv.Figure.instantiateF(params)
 	if err != nil {
 		return nil, err
@@ -277,27 +280,35 @@ func (fv FigureVectorFieldBlock) instantiate(params expression.Variables, ID int
 	return out, nil
 }
 
-func (fp FigureVectorFieldBlock) validate(params expression.RandomParameters) error {
-	if err := fp.Figure.validate(params); err != nil {
-		return err
-	}
-	if err := fp.Answer.validate(params, false); err != nil {
-		return err
-	}
-	if fp.MustHaveOrigin {
-		if err := fp.AnswerOrigin.validate(params, false); err != nil {
-			return err
-		}
+func (fp FigureVectorFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	figure, err := fp.Figure.setupValidator(params)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	answer, err := fp.Answer.parse()
+	if err != nil {
+		return nil, err
+	}
+
+	out := figureVectorValidator{figure: figure, answer: answer}
+
+	if fp.MustHaveOrigin {
+		origin, err := fp.AnswerOrigin.parse()
+		if err != nil {
+			return nil, err
+		}
+		out.answerOrigin = &origin
+	}
+
+	return out, nil
 }
 
 type VariationTableFieldBlock struct {
 	Answer VariationTableBlock
 }
 
-func (vt VariationTableFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (vt VariationTableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	ans, err := vt.Answer.instantiateVT(params)
 	return VariationTableFieldInstance{
 		ID:     ID,
@@ -305,8 +316,8 @@ func (vt VariationTableFieldBlock) instantiate(params expression.Variables, ID i
 	}, err
 }
 
-func (fp VariationTableFieldBlock) validate(params expression.RandomParameters) error {
-	return fp.Answer.validate(params)
+func (fp VariationTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return fp.Answer.setupValidator(params)
 }
 
 type FunctionPointsFieldBlock struct {
@@ -316,7 +327,7 @@ type FunctionPointsFieldBlock struct {
 	XGrid    []string // valid expression.Expression
 }
 
-func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	fn, err := expression.Parse(fp.Function)
 	if err != nil {
 		return nil, err
@@ -345,16 +356,21 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Variables, ID i
 	}, nil
 }
 
-func (fp FunctionPointsFieldBlock) validate(params expression.RandomParameters) (err error) {
+func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	if len(fp.XGrid) < 2 {
-		return errors.New("Au moins deux valeurs pour x doivent être précisées.")
+		return nil, errors.New("Au moins deux valeurs pour x doivent être précisées.")
 	}
 
-	xGrid := make([]*expression.Expression, len(fp.XGrid))
+	var (
+		out functionPointsValidator
+		err error
+	)
+
+	out.xGrid = make([]*expression.Expr, len(fp.XGrid))
 	for i, x := range fp.XGrid {
-		xGrid[i], err = expression.Parse(x)
+		out.xGrid[i], err = expression.Parse(x)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -364,20 +380,12 @@ func (fp FunctionPointsFieldBlock) validate(params expression.RandomParameters) 
 		From:     fp.XGrid[0],
 		To:       fp.XGrid[len(fp.XGrid)-1],
 	}
-	if err := fn.validate(params); err != nil {
-		return err
+	out.function, err = newFunction(fn, params)
+	if err != nil {
+		return nil, err
 	}
 
-	// check that every point is an integer (otherwise is can't be selected on the client)
-	fnExpr, _, _, _ := fn.parse() // guarded by `validate`
-	if err := fnExpr.AreXsFxsIntegers(params, xGrid); err != nil {
-		if freq, isRandTest := err.(expression.ErrRandomTests); isRandTest {
-			return fmt.Errorf("Les antécédents doivent être des entiers distincts, les images des entiers (%d %% des tests ont échoué).", 100-freq.SuccessFrequency)
-		}
-		return err
-	}
-
-	return nil
+	return out, nil
 }
 
 type FigureVectorPairFieldBlock struct {
@@ -385,7 +393,7 @@ type FigureVectorPairFieldBlock struct {
 	Criterion VectorPairCriterion
 }
 
-func (fv FigureVectorPairFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (fv FigureVectorPairFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	fig, err := fv.Figure.instantiateF(params)
 	return FigureVectorPairFieldInstance{
 		ID:        ID,
@@ -394,8 +402,8 @@ func (fv FigureVectorPairFieldBlock) instantiate(params expression.Variables, ID
 	}, err
 }
 
-func (fp FigureVectorPairFieldBlock) validate(params expression.RandomParameters) error {
-	return fp.Figure.validate(params)
+func (fp FigureVectorPairFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return fp.Figure.setupValidator(params)
 }
 
 type FigureAffineLineFieldBlock struct {
@@ -405,7 +413,7 @@ type FigureAffineLineFieldBlock struct {
 	Figure FigureBlock
 }
 
-func (fa FigureAffineLineFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (fa FigureAffineLineFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	fig, err := fa.Figure.instantiateF(params)
 	if err != nil {
 		return nil, err
@@ -427,22 +435,21 @@ func (fa FigureAffineLineFieldBlock) instantiate(params expression.Variables, ID
 	}, nil
 }
 
-func (fa FigureAffineLineFieldBlock) validate(params expression.RandomParameters) error {
-	if err := fa.Figure.validate(params); err != nil {
-		return err
-	}
-	if err := validateNumberExpression(fa.A, params, false, false); err != nil {
-		return err
-	}
-	if err := validateNumberExpression(fa.B, params, false, true); err != nil {
-		return err
+func (fa FigureAffineLineFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	figure, err := fa.Figure.setupValidator(params)
+	if err != nil {
+		return nil, err
 	}
 
-	bExpr := expression.MustParse(fa.B) // guarded by `validateNumberExpression`
-	if ok, freq := bExpr.IsValidInteger(params); !ok {
-		return fmt.Errorf("L'expression de B n'est pas un nombre entier (%d %% des tests ont échoué).", 100-freq)
+	a, err := expression.Parse(fa.A)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	b, err := expression.Parse(fa.B)
+	if err != nil {
+		return nil, err
+	}
+	return figureAffineLineValidator{figure: figure, a: a, b: b}, nil
 }
 
 type TreeNodeAnswer struct {
@@ -456,7 +463,7 @@ type TreeFieldBlock struct {
 	AnswerRoot      TreeNodeAnswer
 }
 
-func (tf TreeFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (tf TreeFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	out := TreeFieldInstance{
 		ID:              ID,
 		EventsProposals: make([]client.TextOrMath, len(tf.EventsProposals)),
@@ -493,31 +500,8 @@ func (tf TreeFieldBlock) instantiate(params expression.Variables, ID int) (insta
 	return out, err
 }
 
-func (tf TreeFieldBlock) validate(params expression.RandomParameters) error {
-	var checkTree func(node TreeNodeAnswer) error
-	checkTree = func(node TreeNodeAnswer) error {
-		if node.Value < 0 || node.Value >= len(tf.EventsProposals) {
-			return fmt.Errorf("L'index %d n'est pas compatible avec le nombre de propositions.", node.Value)
-		}
-
-		for _, c := range node.Probabilities {
-			expr, err := expression.Parse(c)
-			if err != nil {
-				return err
-			}
-
-			if ok, freq := expr.IsValidProba(params); !ok {
-				return fmt.Errorf("L'expression %s ne définit pas une probabilité valide. (%d %% des tests ont échoué)", c, 100-freq)
-			}
-		}
-		for _, c := range node.Children {
-			if err := checkTree(c); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-	return checkTree(tf.AnswerRoot)
+func (tf TreeFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return treeValidator{data: tf}, nil
 }
 
 type TableFieldBlock struct {
@@ -526,7 +510,7 @@ type TableFieldBlock struct {
 	Answer            [][]string // valid expression.Expression
 }
 
-func (tf TableFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (tf TableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	out := TableFieldInstance{
 		ID:                ID,
 		HorizontalHeaders: make([]client.TextOrMath, len(tf.HorizontalHeaders)),
@@ -560,26 +544,32 @@ func (tf TableFieldBlock) instantiate(params expression.Variables, ID int) (inst
 	return out, nil
 }
 
-func (tf TableFieldBlock) validate(params expression.RandomParameters) error {
+func (tf TableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	for _, cell := range tf.HorizontalHeaders {
 		if err := cell.validate(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	for _, cell := range tf.VerticalHeaders {
 		if err := cell.validate(); err != nil {
-			return err
-		}
-	}
-	for _, row := range tf.Answer {
-		for _, cell := range row {
-			if err := validateNumberExpression(cell, params, true, true); err != nil {
-				return err
-			}
+			return nil, err
 		}
 	}
 
-	return nil
+	out := tableValidator{answer: make([][]*expression.Expr, len(tf.Answer))}
+	var err error
+	for i, row := range tf.Answer {
+		rowExpr := make([]*expression.Expr, len(row))
+		for j, cell := range row {
+			rowExpr[j], err = expression.Parse(cell)
+			if err != nil {
+				return nil, err
+			}
+		}
+		out.answer[i] = rowExpr
+	}
+
+	return out, nil
 }
 
 // VectorFieldBlock is a two-number field, with
@@ -590,7 +580,7 @@ type VectorFieldBlock struct {
 	DisplayColumn  bool // if true, the field are displayed in column, instead of being on the same line
 }
 
-func (v VectorFieldBlock) instantiate(params expression.Variables, ID int) (instance, error) {
+func (v VectorFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	ans, err := v.Answer.instantiateToFloat(params)
 	if err != nil {
 		return nil, err
@@ -605,10 +595,11 @@ func (v VectorFieldBlock) instantiate(params expression.Variables, ID int) (inst
 	return out, nil
 }
 
-func (v VectorFieldBlock) validate(params expression.RandomParameters) error {
-	if err := v.Answer.validate(params, true); err != nil {
-		return err
+func (v VectorFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
+	answer, err := v.Answer.parse()
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return vectorValidator{answer: answer}, nil
 }

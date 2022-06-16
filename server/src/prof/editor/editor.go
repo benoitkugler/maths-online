@@ -597,7 +597,7 @@ func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer clien
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
 
-	paramsDict := make(expression.Variables)
+	paramsDict := make(expression.Vars)
 	for _, entry := range params {
 		paramsDict[entry.Variable], err = expression.Parse(entry.Resolved)
 		if err != nil {

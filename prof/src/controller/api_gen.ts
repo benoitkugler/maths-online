@@ -557,6 +557,7 @@ export interface ErrParameters {
 export interface errEnonce {
   Error: string;
   Block: number;
+  Vars: { [key: string]: string } | null;
 }
 // github.com/benoitkugler/maths-online/maths/exercice.ErrQuestionInvalid
 export interface ErrQuestionInvalid {

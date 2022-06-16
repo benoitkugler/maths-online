@@ -8,15 +8,15 @@ import (
 )
 
 type ValueResolver interface {
-	resolve(v Variable) (*Expression, bool)
+	resolve(v Variable) (*Expr, bool)
 }
 
-var _ ValueResolver = Variables{}
+var _ ValueResolver = Vars{}
 
-// Variables maps variables to a chosen value.
-type Variables map[Variable]*Expression
+// Vars maps variables to a chosen value.
+type Vars map[Variable]*Expr
 
-func (vrs Variables) resolve(v Variable) (*Expression, bool) {
+func (vrs Vars) resolve(v Variable) (*Expr, bool) {
 	value, ok := vrs[v]
 	return value, ok
 }
@@ -29,15 +29,15 @@ func (mv ErrMissingVariable) Error() string {
 	return fmt.Sprintf("La variable %s n'est pas définie.", mv.Missing)
 }
 
-// MustEvaluate panics if the expression is invalid or if
+// mustEvaluate panics if the expression is invalid or if
 // a variable is missing from `vars`.
-func MustEvaluate(expr string, vars Variables) float64 {
+func mustEvaluate(expr string, vars Vars) float64 {
 	e := MustParse(expr)
-	return e.MustEvaluate(vars)
+	return e.mustEvaluate(vars)
 }
 
-// MustEvaluate panics if a variable is missing.
-func (expr *Expression) MustEvaluate(bindings ValueResolver) float64 {
+// mustEvaluate panics if a variable is missing.
+func (expr *Expr) mustEvaluate(bindings ValueResolver) float64 {
 	out, err := expr.Evaluate(bindings)
 	if err != nil {
 		panic(fmt.Sprintf("%s: %s", expr.String(), err))
@@ -50,7 +50,7 @@ type singleVarResolver struct {
 	value float64
 }
 
-func (res singleVarResolver) resolve(v Variable) (*Expression, bool) {
+func (res singleVarResolver) resolve(v Variable) (*Expr, bool) {
 	if res.v != v {
 		return nil, false
 	}
@@ -58,28 +58,33 @@ func (res singleVarResolver) resolve(v Variable) (*Expression, bool) {
 }
 
 type FunctionExpr struct {
-	Function *Expression
+	Function *Expr
 	Variable Variable // usually x
 }
 
-// FunctionDefinition interprets an expression as mathematical function
+// FunctionDefinition interprets an expression as mathematical function,
+// where random parameters have been resolved
 type FunctionDefinition struct {
-	FunctionExpr
-	From, To float64 // definition domain
+	FunctionExpr         // instantiated version
+	From, To     float64 // definition domain
 }
 
 // Closure returns a function computing f(x), where f is defined by the expression.
-// The closure will panic if the expression depends on other variables
+// The closure will silently return NaN if the expression is invalid.
 func (f FunctionExpr) Closure() func(float64) float64 {
 	return func(xValue float64) float64 {
-		return f.Function.MustEvaluate(singleVarResolver{f.Variable, xValue})
+		out, err := f.Function.Evaluate(singleVarResolver{f.Variable, xValue})
+		if err != nil {
+			return math.NaN()
+		}
+		return out
 	}
 }
 
 // extrema returns an approximation of max |f(x)| on its definition domain.
 // The approximation is exact for monotonous functions.
-// `extrema` will panic if the expression if not a valid function.
-// It returns -1 if one of the values is not a finite number.
+// `extrema` returns -1 if one of the values is not a finite number, or
+// if the expression is invalid
 func (f FunctionDefinition) extrema() float64 {
 	const nbSteps = 100
 	fn := f.Closure()
@@ -128,12 +133,12 @@ func isFloatExceedingPrecision(v float64) bool {
 // If a variable is referenced in the expression but not in the bindings,
 // `ErrMissingVariable` is returned.
 // If the expression is not valid, like in randInt(2; -2), `ErrInvalidExpr` is returned
-func (expr *Expression) Evaluate(bindings ValueResolver) (float64, error) {
+func (expr *Expr) Evaluate(bindings ValueResolver) (float64, error) {
 	r, err := expr.evalRat(bindings)
 	return r.eval(), err
 }
 
-func (expr *Expression) evalRat(bindings ValueResolver) (rat, error) {
+func (expr *Expr) evalRat(bindings ValueResolver) (rat, error) {
 	var (
 		left, right = newRat(0), newRat(0) // 0 is a valid default value
 		err         error
@@ -170,15 +175,15 @@ func (op operator) evaluate(left, right rat) rat {
 	case div:
 		return divRat(left, right)
 	case mod:
-		leftInt, leftIsInt := isInt(left.eval())
-		rightInt, rightIsInt := isInt(right.eval())
+		leftInt, leftIsInt := IsInt(left.eval())
+		rightInt, rightIsInt := IsInt(right.eval())
 		if !(leftIsInt && rightIsInt) {
 			return newRat(0)
 		}
 		return newRat(float64(leftInt % rightInt))
 	case rem:
-		leftInt, leftIsInt := isInt(left.eval())
-		rightInt, rightIsInt := isInt(right.eval())
+		leftInt, leftIsInt := IsInt(left.eval())
+		rightInt, rightIsInt := IsInt(right.eval())
 		if !(leftIsInt && rightIsInt) {
 			return newRat(0)
 		}
@@ -266,7 +271,7 @@ func (fn function) eval(_, right rat, _ ValueResolver) (rat, error) {
 		}
 		return newRat(0), nil
 	case isPrimeFn:
-		argInt, isInt := isInt(arg)
+		argInt, isInt := IsInt(arg)
 		if !isInt {
 			return newRat(0), nil
 		}
@@ -311,7 +316,7 @@ func (r specialFunctionA) startEnd(res ValueResolver) (float64, float64, error) 
 	return start, end, nil
 }
 
-func minMax(args []*Expression, res ValueResolver) (float64, float64, error) {
+func minMax(args []*Expr, res ValueResolver) (float64, float64, error) {
 	if len(args) == 0 {
 		return 0, 0, ErrInvalidExpr{
 			Reason: "min et max requierent au moins un argument",
@@ -414,7 +419,7 @@ func (r rat) eval() float64 { return r.p / r.q }
 // 4 / 3 -> 4/3
 // 3/4 -> 0.75
 // 2.4 / 2 -> 1.2
-func (r rat) toExpr() *Expression {
+func (r rat) toExpr() *Expr {
 	r.reduce()
 
 	if r.q == 1 || r.p == 0 {
@@ -428,10 +433,10 @@ func (r rat) toExpr() *Expression {
 	}
 
 	// else for integers, return a fraction
-	_, ok1 := isInt(r.p)
-	_, ok2 := isInt(r.q)
+	_, ok1 := IsInt(r.p)
+	_, ok2 := IsInt(r.q)
 	if ok1 && ok2 {
-		return &Expression{atom: div, left: newNb(r.p), right: newNb(r.q)}
+		return &Expr{atom: div, left: newNb(r.p), right: newNb(r.q)}
 	}
 
 	// general case : evaluate
@@ -440,8 +445,8 @@ func (r rat) toExpr() *Expression {
 
 // for integers number, update `r` to be in irreductible form
 func (r *rat) reduce() {
-	num, ok1 := isInt(r.p)
-	den, ok2 := isInt(r.q)
+	num, ok1 := IsInt(r.p)
+	den, ok2 := IsInt(r.q)
 	if ok1 && ok2 {
 		// simplify integer denominators
 		// commonDen = den1 * den2 / gcd()
@@ -458,8 +463,8 @@ func (r *rat) reduce() {
 }
 
 func sumRat(r1, r2 rat) rat {
-	den1, ok1 := isInt(r1.q)
-	den2, ok2 := isInt(r2.q)
+	den1, ok1 := IsInt(r1.q)
+	den2, ok2 := IsInt(r2.q)
 	if ok1 && ok2 {
 		// simplify integer denominators
 		// commonDen = den1 * den2 / gcd()
@@ -496,7 +501,7 @@ func powRat(r rat, pow float64) rat {
 //  ln(1) -> 0
 // due to the binary representation, some expressions cannot be simplified, such as
 // (1 + x + 2)
-func (expr *Expression) simplifyNumbers() {
+func (expr *Expr) simplifyNumbers() {
 	if expr == nil {
 		return
 	}

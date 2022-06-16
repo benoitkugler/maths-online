@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/maths-online/maths/exercice"
-	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -80,15 +80,9 @@ func testInsertSignTable(t *testing.T, db *sql.DB) {
 }
 
 func TestLoadQuestions(t *testing.T) {
-	creds := pass.DB{
-		Host:     "localhost",
-		User:     "benoit",
-		Password: "dummy",
-		Name:     "isyro_prod",
-	}
-	db, err := creds.ConnectPostgres()
+	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", creds, err)
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 
@@ -97,4 +91,19 @@ func TestLoadQuestions(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println("Questions :", len(m))
+}
+
+func TestValidation(t *testing.T) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	ti := time.Now()
+	err = ValidateAllQuestions(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Validated in :", time.Since(ti))
 }

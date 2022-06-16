@@ -23,14 +23,14 @@ func TestPythagorianTriplet_mergeTo(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			a, b, c := vr[NewVar('a')].MustEvaluate(nil), vr[NewVar('b')].MustEvaluate(nil), vr[NewVar('c')].MustEvaluate(nil)
-			if _, ok := isInt(a); !ok {
+			a, b, c := vr[NewVar('a')].mustEvaluate(nil), vr[NewVar('b')].mustEvaluate(nil), vr[NewVar('c')].mustEvaluate(nil)
+			if _, ok := IsInt(a); !ok {
 				t.Fatal()
 			}
-			if _, ok := isInt(b); !ok {
+			if _, ok := IsInt(b); !ok {
 				t.Fatal()
 			}
-			if _, ok := isInt(c); !ok {
+			if _, ok := IsInt(c); !ok {
 				t.Fatal()
 			}
 			if a*a+b*b != c*c {
@@ -68,28 +68,28 @@ func TestQuadraticPolynomialCoeffs_MergeTo(t *testing.T) {
 			expr := mustParse(t, "4*((3/4)X^4 + bX^3 + cX^2 + dX)")
 			expr.Substitute(vs)
 
-			if v := expr.MustEvaluate(Variables{NewVar('X'): NewNb(0)}); v != 0 {
+			if v := expr.mustEvaluate(Vars{NewVar('X'): NewNb(0)}); v != 0 {
 				t.Fatal(v)
 			}
 
-			x1, x2, x3 := vs[NewVar('u')].MustEvaluate(nil), vs[NewVar('v')].MustEvaluate(nil), vs[NewVar('w')].MustEvaluate(nil)
+			x1, x2, x3 := vs[NewVar('u')].mustEvaluate(nil), vs[NewVar('v')].mustEvaluate(nil), vs[NewVar('w')].mustEvaluate(nil)
 
 			derivative := mustParse(t, "3X^3 + 3bX^2 + 2cX + d")
 			derivative.Substitute(vs)
 
-			if v := derivative.MustEvaluate(Variables{NewVar('X'): NewNb(x1)}); v != 0 {
+			if v := derivative.mustEvaluate(Vars{NewVar('X'): NewNb(x1)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x1, v)
 			}
-			if v := derivative.MustEvaluate(Variables{NewVar('X'): NewNb(x2)}); v != 0 {
+			if v := derivative.mustEvaluate(Vars{NewVar('X'): NewNb(x2)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x2, v)
 			}
-			if v := derivative.MustEvaluate(Variables{NewVar('X'): NewNb(x3)}); v != 0 {
+			if v := derivative.mustEvaluate(Vars{NewVar('X'): NewNb(x3)}); v != 0 {
 				t.Fatalf("expected df(%v) = 0, got %v", x3, v)
 			}
 
-			// fmt.Println(expr.MustEvaluate(Variables{NewVariable('X'): x1}))
-			// fmt.Println(expr.MustEvaluate(Variables{NewVariable('X'): x2}))
-			// fmt.Println(expr.MustEvaluate(Variables{NewVariable('X'): x3}))
+			// fmt.Println(expr.mustEvaluate(Variables{NewVariable('X'): x1}))
+			// fmt.Println(expr.mustEvaluate(Variables{NewVariable('X'): x2}))
+			// fmt.Println(expr.mustEvaluate(Variables{NewVariable('X'): x3}))
 
 			width := qp.RootsEnd - qp.RootsStart
 			minDist := float64(2*width)/9 - 1 // -1 to account for rouding error
@@ -141,7 +141,7 @@ func TestOrthogonalProjection_MergeTo(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v[op.Hx].MustEvaluate(nil) != tt.expectedX || v[op.Hy].MustEvaluate(nil) != tt.expectedY {
+		if v[op.Hx].mustEvaluate(nil) != tt.expectedX || v[op.Hy].mustEvaluate(nil) != tt.expectedY {
 			t.Fatal()
 		}
 	}

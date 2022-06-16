@@ -8,12 +8,12 @@ import (
 
 // return a slice of all the operands of the `op` operator at the level of `expr`,
 // or a one length slice
-func (expr *Expression) extractOperator(op operator) []*Expression {
+func (expr *Expr) extractOperator(op operator) []*Expr {
 	if expr == nil {
 		return nil
 	}
 
-	var out []*Expression
+	var out []*Expr
 	if expr.atom == op {
 		out = append(out, expr.left.extractOperator(op)...)
 		out = append(out, expr.right.extractOperator(op)...)
@@ -27,7 +27,7 @@ func (expr *Expression) extractOperator(op operator) []*Expression {
 // in the sense of a lexical ordering
 // examples :
 //	2 < 3 < e < pi < x < y < func < + < - < mult < div
-func compareNodes(n1, n2 *Expression) int {
+func compareNodes(n1, n2 *Expr) int {
 	a1, a2 := n1.atom, n2.atom
 	l1, l2 := a1.lexicographicOrder(), a2.lexicographicOrder()
 	if l1 < l2 {
@@ -118,17 +118,17 @@ func compareNodes(n1, n2 *Expression) int {
 }
 
 // will panic if nodes is empty
-func nodesAsTree(nodes []*Expression, op operator) Expression {
+func nodesAsTree(nodes []*Expr, op operator) Expr {
 	expr := nodes[0]
 	for _, n := range nodes[1:] {
-		expr = &Expression{atom: op, left: expr, right: n}
+		expr = &Expr{atom: op, left: expr, right: n}
 	}
 	return *expr
 }
 
 // use associativity and commutativity to reorder (in place) + and * operations
 // in a "cannonical" order
-func (expr *Expression) sortPlusAndMultOperands() {
+func (expr *Expr) sortPlusAndMultOperands() {
 	if expr == nil {
 		return
 	}
@@ -152,7 +152,7 @@ func (expr *Expression) sortPlusAndMultOperands() {
 }
 
 // expandMult distribute * over + (in place)
-func (expr *Expression) expandMult() {
+func (expr *Expr) expandMult() {
 	if expr == nil {
 		return
 	}
@@ -169,20 +169,20 @@ func (expr *Expression) expandMult() {
 		a, b := expr.left.left, expr.left.right
 		c := expr.right
 		expr.atom = plus
-		expr.left = &Expression{atom: mult, left: a, right: c}
-		expr.right = &Expression{atom: mult, left: b, right: c}
+		expr.left = &Expr{atom: mult, left: a, right: c}
+		expr.right = &Expr{atom: mult, left: b, right: c}
 	} else if expr.right.atom == plus { // c * (a+b) => c*a + c*b
 		a, b := expr.right.left, expr.right.right
 		c := expr.left
 		expr.atom = plus
-		expr.left = &Expression{atom: mult, left: c, right: a}
-		expr.right = &Expression{atom: mult, left: c, right: b}
+		expr.left = &Expr{atom: mult, left: c, right: a}
+		expr.right = &Expr{atom: mult, left: c, right: b}
 	} // double distributivity is handled by recursion
 }
 
 // replace integral power by product, so that
 // expandMult can trigger
-func (expr *Expression) expandPow() {
+func (expr *Expr) expandPow() {
 	if expr == nil {
 		return
 	}
@@ -197,9 +197,9 @@ func (expr *Expression) expandPow() {
 	if power, ok := expr.right.atom.(Number); ok {
 		asInt := int(power)
 		if float64(asInt) == float64(power) && asInt > 0 { // c^d = c * c * c * c ... * c
-			exprNew := expr.left.copy()
+			exprNew := expr.left.Copy()
 			for k := 1; k < asInt; k++ {
-				exprNew = &Expression{atom: mult, left: exprNew, right: expr.left.copy()}
+				exprNew = &Expr{atom: mult, left: exprNew, right: expr.left.Copy()}
 			}
 			*expr = *exprNew
 		}
@@ -208,7 +208,7 @@ func (expr *Expression) expandPow() {
 
 // replace a + a + a by 3*a
 // should be applied after sorting operands
-func (expr *Expression) groupAdditions() {
+func (expr *Expr) groupAdditions() {
 	if expr == nil {
 		return
 	}
@@ -227,7 +227,7 @@ func (expr *Expression) groupAdditions() {
 	}
 
 	var (
-		newNodes []*Expression
+		newNodes []*Expr
 		count    = 1
 		ref      = nodes[0]
 	)
@@ -236,7 +236,7 @@ func (expr *Expression) groupAdditions() {
 			count++
 		} else { // combine the nodes
 			if count > 1 {
-				newNodes = append(newNodes, &Expression{
+				newNodes = append(newNodes, &Expr{
 					atom:  mult,
 					left:  NewNb(float64(count)),
 					right: ref,
@@ -251,7 +251,7 @@ func (expr *Expression) groupAdditions() {
 	}
 	// add the last chunk
 	if count > 1 {
-		newNodes = append(newNodes, &Expression{
+		newNodes = append(newNodes, &Expr{
 			atom:  mult,
 			left:  NewNb(float64(count)),
 			right: ref,
@@ -266,7 +266,7 @@ func (expr *Expression) groupAdditions() {
 
 // replace a-c by a + (-c)
 // so that plus operation may trigger
-func (expr *Expression) expandMinus() {
+func (expr *Expr) expandMinus() {
 	if expr == nil {
 		return
 	}
@@ -282,16 +282,16 @@ func (expr *Expression) expandMinus() {
 	if expr.left != nil { // a - c => a + (-c)
 		expr.atom = plus
 		if number, isNumber := expr.right.atom.(Number); isNumber {
-			expr.right = &Expression{atom: Number(-number)}
+			expr.right = &Expr{atom: Number(-number)}
 		} else { // general case
-			expr.right = &Expression{atom: minus, right: expr.right}
+			expr.right = &Expr{atom: minus, right: expr.right}
 		}
 		return
 	}
 }
 
 // replace + (- 8) by -8 to have a better formatted output
-func (expr *Expression) contractPlusMinus() {
+func (expr *Expr) contractPlusMinus() {
 	if expr == nil {
 		return
 	}
@@ -313,7 +313,7 @@ func (expr *Expression) contractPlusMinus() {
 	// ... + (-9) => ... - 9
 	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
 		expr.atom = minus
-		expr.right = &Expression{atom: -number}
+		expr.right = &Expr{atom: -number}
 	}
 
 	// ... + (-9 * ...) => ... - (9 * ...)
@@ -321,14 +321,14 @@ func (expr *Expression) contractPlusMinus() {
 	if nextArg != nil {
 		if number, isNumber := nextArg.atom.(Number); isNumber && number < 0 {
 			expr.atom = minus
-			expr.right.left = &Expression{atom: -number}
+			expr.right.left = &Expr{atom: -number}
 			return
 		}
 	}
 }
 
 // replace - (- 8) by +8 to have a better formatted output
-func (expr *Expression) contractMinusMinus() {
+func (expr *Expr) contractMinusMinus() {
 	if expr == nil {
 		return
 	}
@@ -352,7 +352,7 @@ func (expr *Expression) contractMinusMinus() {
 	if nextArg != nil {
 		if number, isNumber := nextArg.atom.(Number); isNumber && number < 0 {
 			expr.atom = plus
-			expr.right.left = &Expression{atom: -number}
+			expr.right.left = &Expr{atom: -number}
 			return
 		}
 	}
@@ -360,7 +360,7 @@ func (expr *Expression) contractMinusMinus() {
 	// ... - (-9) => ... + 9
 	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
 		expr.atom = plus
-		expr.right = &Expression{atom: -number}
+		expr.right = &Expr{atom: -number}
 		return
 	}
 }
@@ -368,7 +368,7 @@ func (expr *Expression) contractMinusMinus() {
 // remove unnecessary 1 and 0 such as in
 // 	1 * x -> x
 //	 0x -> 0
-func (expr *Expression) simplify0And1() {
+func (expr *Expr) simplify0And1() {
 	if expr == nil {
 		return
 	}
@@ -411,10 +411,10 @@ func (expr *Expression) simplify0And1() {
 			*expr = *left
 			return
 		} else if left.atom == Number(0) { // 0 * x = 0
-			*expr = Expression{atom: Number(0)}
+			*expr = Expr{atom: Number(0)}
 			return
 		} else if right.atom == Number(0) {
-			*expr = Expression{atom: Number(0)}
+			*expr = Expr{atom: Number(0)}
 			return
 		}
 	case div:
@@ -422,7 +422,7 @@ func (expr *Expression) simplify0And1() {
 			*expr = *left
 			return
 		} else if left.atom == Number(0) && right.atom != Number(0) { // 0 / x = 0
-			*expr = Expression{atom: Number(0)}
+			*expr = Expr{atom: Number(0)}
 			return
 		}
 	case pow:
@@ -430,7 +430,7 @@ func (expr *Expression) simplify0And1() {
 			*expr = *left
 			return
 		} else if left.atom == Number(1) { // 1 ^ x = 1
-			*expr = Expression{atom: Number(1)}
+			*expr = Expr{atom: Number(1)}
 			return
 		}
 	case mod:
@@ -441,7 +441,7 @@ func (expr *Expression) simplify0And1() {
 }
 
 // replace (-a) * b by -(a * b)
-func (expr *Expression) extractNegativeInMults() {
+func (expr *Expr) extractNegativeInMults() {
 	if expr == nil {
 		return
 	}
@@ -457,16 +457,16 @@ func (expr *Expression) extractNegativeInMults() {
 	changeSign := false
 	newLeft := expr.left
 	if number, ok := expr.left.atom.(Number); ok && number < 0 {
-		newLeft = &Expression{atom: -number}
+		newLeft = &Expr{atom: -number}
 		changeSign = !changeSign
 	}
 	newRight := expr.right
 	if number, ok := expr.right.atom.(Number); ok && number < 0 {
-		newRight = &Expression{atom: -number}
+		newRight = &Expr{atom: -number}
 		changeSign = !changeSign
 	}
 
-	newExpr := &Expression{atom: expr.atom, left: newLeft, right: newRight}
+	newExpr := &Expr{atom: expr.atom, left: newLeft, right: newRight}
 	if changeSign { // wrap with minus
 		expr.atom = minus
 		expr.left = nil
@@ -478,8 +478,8 @@ func (expr *Expression) extractNegativeInMults() {
 
 const maxIterations = 10_000 // very very unlikely in pratice
 
-func (expr *Expression) basicSimplification() (nbPasses int) {
-	ref := expr.copy()
+func (expr *Expr) basicSimplification() (nbPasses int) {
+	ref := expr.Copy()
 
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
@@ -491,14 +491,14 @@ func (expr *Expression) basicSimplification() (nbPasses int) {
 		if expr.equals(ref) {
 			break
 		}
-		ref = expr.copy() // update the reference and start a new pass
+		ref = expr.Copy() // update the reference and start a new pass
 	}
 
 	return nbPasses
 }
 
-func (expr *Expression) fullSimplification() (nbPasses int) {
-	ref := expr.copy()
+func (expr *Expr) fullSimplification() (nbPasses int) {
+	ref := expr.Copy()
 
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
@@ -513,7 +513,7 @@ func (expr *Expression) fullSimplification() (nbPasses int) {
 		if expr.equals(ref) {
 			break
 		}
-		ref = expr.copy() // update the reference and start a new pass
+		ref = expr.Copy() // update the reference and start a new pass
 	}
 
 	// extractNegativeInMults interfers with other transforms, do it later
@@ -524,7 +524,7 @@ func (expr *Expression) fullSimplification() (nbPasses int) {
 		if expr.equals(ref) {
 			break
 		}
-		ref = expr.copy() // update the reference and start a new pass
+		ref = expr.Copy() // update the reference and start a new pass
 	}
 
 	return nbPasses
@@ -557,7 +557,7 @@ const (
 // mathematical knowledge, as hinted by `level`.
 // For instance, (a+b)^2 and (a^2 + 2ab + b^2) are equivalent
 // if level == ExpandedSubstitutions, but not with other levels.
-func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
+func AreExpressionsEquivalent(e1, e2 *Expr, level ComparisonLevel) bool {
 	if level == Strict {
 		return e1.equals(e2)
 	}
@@ -569,7 +569,7 @@ func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
 		return true
 	}
 
-	e1, e2 = e1.copy(), e2.copy() // make sur e1 and e2 are not mutated
+	e1, e2 = e1.Copy(), e2.Copy() // make sur e1 and e2 are not mutated
 	if level == SimpleSubstitutions {
 		e1.basicSimplification()
 		e2.basicSimplification()
@@ -583,8 +583,9 @@ func AreExpressionsEquivalent(e1, e2 *Expression, level ComparisonLevel) bool {
 
 // partial evaluation a.k.a substitution
 
-// Substitute replaces variables contained in `vars`.
-func (expr *Expression) Substitute(vars Variables) {
+// Substitute replaces variables contained in `vars`, returning
+// a copy.
+func (expr *Expr) Substitute(vars Vars) {
 	if expr == nil {
 		return
 	}
@@ -594,7 +595,7 @@ func (expr *Expression) Substitute(vars Variables) {
 	if v, isVariable := expr.atom.(Variable); isVariable {
 		value, has := vars[v]
 		if has {
-			*expr = *value.copy()
+			*expr = *value.Copy()
 		}
 	}
 }

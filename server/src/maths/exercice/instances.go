@@ -130,7 +130,7 @@ type EnonceInstance []instance
 // StringOrExpression is either an expression or a static string,
 // usually rendered as LaTeX, in text mode.
 type StringOrExpression struct {
-	Expression *expression.Expression
+	Expression *expression.Expr
 	String     string // LaTeX code, rendered in math mode
 }
 
@@ -163,12 +163,12 @@ func (fi FormulaDisplayInstance) toClient() client.Block {
 // result. It is meant to handle cases where we want
 // to display 1/3, but a numeric value is also needed.
 type evaluatedExpression struct {
-	Expr  *expression.Expression
+	Expr  *expression.Expr
 	Value float64
 }
 
 // subsitute variables
-func newEvaluatedExpression(s string, params expression.Variables) (evaluatedExpression, error) {
+func newEvaluatedExpression(s string, params expression.Vars) (evaluatedExpression, error) {
 	e, err := expression.Parse(s)
 	if err != nil {
 		return evaluatedExpression{}, err
