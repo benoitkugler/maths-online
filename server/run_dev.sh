@@ -6,4 +6,4 @@ cd src &&
 go build *.go && 
 mv main .. && 
 cd .. && 
-./main -dev
+./main -dev -s

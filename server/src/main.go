@@ -76,7 +76,11 @@ func getTeacherEncrypter(dev bool) (out pass.Encrypter, err error) {
 	return out, err
 }
 
-func sanityChecks(db *sql.DB) {
+func sanityChecks(db *sql.DB, skipValidation bool) {
+	if skipValidation {
+		fmt.Println("Validation skipped.")
+		return
+	}
 	if err := editor.ValidateAllQuestions(db); err != nil {
 		log.Fatal(err)
 	}
@@ -86,6 +90,7 @@ func sanityChecks(db *sql.DB) {
 func main() {
 	devPtr := flag.Bool("dev", false, "run in dev mode (localhost)")
 	dryPtr := flag.Bool("dry", false, "do not listen, but quit early")
+	skipValidation := flag.Bool("s", false, "skip question table validation")
 	flag.Parse()
 
 	adress := getAdress(*devPtr)
@@ -162,11 +167,11 @@ func main() {
 	setupRoutes(e, tvc, edit, tc)
 
 	if *dryPtr {
-		sanityChecks(db)
+		sanityChecks(db, *skipValidation)
 		fmt.Println("Setup done, leaving early.")
 		return
 	} else {
-		go sanityChecks(db)
+		go sanityChecks(db, *skipValidation)
 	}
 	fmt.Println("Setup done (pending sanityChecks)")
 
