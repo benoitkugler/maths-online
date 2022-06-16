@@ -34,18 +34,53 @@
         <v-row>
           <v-col>
             <div>
-              <i>{{ errorEnnonce.Error }}</i>
+              <i v-html="errorEnnonce.Error"></i>
             </div>
           </v-col>
         </v-row>
       </v-col>
-      <v-col cols="2" align-self="center" style="text-align: right">
-        <v-btn icon size="x-small" flat @click="errorEnnonce = null">
+      <v-col
+        v-if="errVars.length > 0"
+        cols="3"
+        align-self="center"
+        class="px-1"
+      >
+        <v-btn variant="outlined" @click="showErrVarsDetails = true">
+          Détails
+        </v-btn>
+      </v-col>
+      <v-col
+        cols="1"
+        align-self="center"
+        style="text-align: right"
+        class="px-1"
+      >
+        <v-btn icon size="x-small" @click="errorEnnonce = null">
           <v-icon icon="mdi-close" color="warning"></v-icon>
         </v-btn>
       </v-col>
     </v-row>
   </v-snackbar>
+
+  <v-dialog v-model="showErrVarsDetails">
+    <v-card subtitle="Valeurs des paramètres aléatoires">
+      <v-card-text>
+        L'erreur est rencontrée pour les valeurs suivantes :
+        <v-list>
+          <v-list-item v-for="(entry, index) in errVars" :key="index">
+            <v-row no-gutters>
+              <v-col>
+                {{ entry[0] }}
+              </v-col>
+              <v-col class="text-grey">
+                {{ entry[1] }}
+              </v-col>
+            </v-row>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 
   <v-dialog v-model="showEditDescription">
     <description-pannel
@@ -484,8 +519,14 @@ function onDragEnd(ev: DragEvent) {
   showDropZone = false;
 }
 
-const errorEnnonce = ref<errEnonce | null>(null);
-const showErrorEnnonce = computed(() => errorEnnonce.value != null);
+let errorEnnonce = $ref<errEnonce | null>(null);
+const showErrorEnnonce = computed(() => errorEnnonce != null);
+const errVars = computed(() => {
+  const out = Object.entries(errorEnnonce?.Vars || {});
+  out.sort((a, b) => a[0].localeCompare(b[0]));
+  return out;
+});
+let showErrVarsDetails = $ref(false);
 
 async function save() {
   question.page.enonce = rows.value.map((v) => v.Props);
@@ -498,15 +539,15 @@ async function save() {
   }
 
   if (res.IsValid) {
-    errorEnnonce.value = null;
-    errorParameters.value = null;
+    errorEnnonce = null;
+    errorParameters = null;
   } else {
     if (res.Error.ParametersInvalid) {
-      errorEnnonce.value = null;
-      errorParameters.value = res.Error.ErrParameters;
+      errorEnnonce = null;
+      errorParameters = res.Error.ErrParameters;
     } else {
-      errorEnnonce.value = res.Error.ErrEnonce;
-      errorParameters.value = null;
+      errorEnnonce = res.Error.ErrEnonce;
+      errorParameters = null;
 
       blockWidgets.value[res.Error.ErrEnonce.Block]?.scrollIntoView();
     }
@@ -534,8 +575,8 @@ function onDragoverJSON(ev: DragEvent) {
   }
 }
 
-const errorParameters = ref<ErrParameters | null>(null);
-const showErrorParameters = computed(() => errorParameters.value != null);
+let errorParameters = $ref<ErrParameters | null>(null);
+const showErrorParameters = computed(() => errorParameters != null);
 const availableParameters = ref<Variable[]>([]);
 let isCheckingParameters = $ref(false);
 
@@ -548,8 +589,10 @@ async function checkParameters() {
   isCheckingParameters = false;
   if (out === undefined) return;
 
-  errorParameters.value =
-    out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
+  // hide previous error
+  errorEnnonce = null;
+
+  errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
   availableParameters.value = out.Variables || [];
 }
 
