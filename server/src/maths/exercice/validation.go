@@ -256,7 +256,7 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 
 	// check that the function variable is not used
 	if params[fn.Variable] != nil {
-		return function{}, fmt.Errorf("La variable %s est déjà utilisée dans les paramètres aléatoires", fn.Variable)
+		return function{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 
 	return function{FunctionExpr: fnExpr, from: from, to: to}, nil
@@ -355,17 +355,17 @@ func (v functionPointsValidator) validate(vars expression.Vars) error {
 
 		val, ok := expression.IsInt(xValue)
 		if !ok {
-			return fmt.Errorf("L'expression %s ne définit par un antécédent entier (%f)", xExpr, xValue)
+			return fmt.Errorf("L'expression %s ne définit par un antécédent <b>entier</b> (%g).", xExpr, expression.RoundFloat(xValue))
 		}
 
 		if seen[val] {
-			return fmt.Errorf("Les antécédents ne sont pas uniques")
+			return fmt.Errorf("Les antécédents ne sont pas uniques.")
 		}
 		seen[val] = true
 
 		y := f(xValue)
 		if _, ok = expression.IsInt(y); !ok {
-			return fmt.Errorf("La fonction %s ne définit pas des images entières (%f)", fnExpr.Function, y)
+			return fmt.Errorf("La fonction %s ne définit pas des images <b>entières</b> (%g)", fnExpr.Function, expression.RoundFloat(y))
 		}
 	}
 
