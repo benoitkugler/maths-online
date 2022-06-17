@@ -20,6 +20,7 @@
         <v-list class="overflow-y-auto" style="max-height: 50vh">
           <v-list-item
             v-for="(param, index) in props.modelValue.Answer"
+            :key="index"
             class="pr-0"
             :ref="(el:any) => (answerPropsRefs[index] = el as Element)"
           >
@@ -62,6 +63,7 @@
         <v-list>
           <v-list-item
             v-for="(param, index) in props.modelValue.AdditionalProposals"
+            :key="index"
             class="pr-0"
           >
             <interpolated-text

@@ -125,20 +125,27 @@ func (rf RadioFieldBlock) setupValidator(params expression.RandomParameters) (va
 }
 
 type OrderedListFieldBlock struct {
-	Label               string         // optionnal, LaTeX code displayed in front of the anwser field
+	Label               Interpolated
 	Answer              []Interpolated // the order matters
 	AdditionalProposals []Interpolated
 }
 
 func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	out := OrderedListFieldInstance{
-		Label:               ol.Label,
 		Answer:              make([]client.TextLine, len(ol.Answer)),
 		AdditionalProposals: make([]client.TextLine, len(ol.AdditionalProposals)),
 		ID:                  ID,
 	}
 
-	var err error
+	t, err := ol.Label.Parse()
+	if err != nil {
+		return nil, err
+	}
+	out.Label, err = t.instantiateAndMerge(params)
+	if err != nil {
+		return nil, err
+	}
+
 	for i, a := range ol.Answer {
 		out.Answer[i], err = a.instantiate(params)
 		if err != nil {
@@ -156,7 +163,12 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (ins
 	return out, nil
 }
 
-func (ol OrderedListFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+func (ol OrderedListFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
+	_, err := ol.Label.Parse()
+	if err != nil {
+		return nil, err
+	}
+
 	for _, a := range ol.Answer {
 		if _, err := a.Parse(); err != nil {
 			return nil, err

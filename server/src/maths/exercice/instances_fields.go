@@ -266,7 +266,7 @@ func shufflingMap(shuffler *rand.Rand, n int) []int {
 // OrderedListFieldInstance asks the student to reorder part of the
 // given symbols
 type OrderedListFieldInstance struct {
-	Label               string
+	Label               string            // optionnal, LaTeX code displayed in front of the anwser field
 	Answer              []client.TextLine // LaTeX code
 	AdditionalProposals []client.TextLine // added to Answer when displaying the field
 	ID                  int
