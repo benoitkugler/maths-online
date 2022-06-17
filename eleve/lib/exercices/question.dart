@@ -33,13 +33,13 @@ class QuestionController {
   final bool blockOnSubmit;
 
   final Map<int, FieldController> _fields = {};
-  bool _hasAnswered = false;
+  bool _hasUserValidated = false;
 
-  bool get hasAnswered => _hasAnswered;
+  bool get hasAnswered => _hasUserValidated;
 
   void answer() {
-    _hasAnswered = true;
-    final enableFields = !blockOnSubmit || !_hasAnswered;
+    _hasUserValidated = true;
+    final enableFields = !blockOnSubmit || !_hasUserValidated;
     if (!enableFields) {
       for (var element in _fields.values) {
         element.disable();
@@ -50,7 +50,6 @@ class QuestionController {
   bool get enableValidate {
     final areAnswersValid =
         _fields.values.every((ct) => !ct.syntaxError && ct.hasValidData());
-    print(areAnswersValid);
     return (!blockOnSubmit || !hasAnswered) && areAnswersValid;
   }
 
@@ -64,8 +63,8 @@ class QuestionController {
     _fields.forEach((key, value) {
       _fields[key]!.setData(answers[key]!);
     });
-    // consider the user has answered, so that the validation is not blocked
-    _hasAnswered = true;
+    // reset the user tracker, so that the validation is not blocked
+    _hasUserValidated = false;
   }
 
   /// Walks throught the question content and creates the field controllers,
