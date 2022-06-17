@@ -84,9 +84,12 @@ class RepereMetrics {
   }
 
   Ticks buildXTicks({int logicalStep = 1}) {
-    final firstLogical = -figure.origin.x.ceil() ~/ logicalStep * logicalStep;
+    final xOrigin = figure.origin.x.ceil();
+    final firstLogical = -xOrigin ~/ logicalStep * logicalStep;
     final ticks = <Tick>[];
-    for (var i = 0; i <= figure.width; i += logicalStep) {
+    for (var i = 0;
+        firstLogical + i + xOrigin <= figure.width;
+        i += logicalStep) {
       final logical = IntCoord(firstLogical + i, 0);
       final offset = logicalIntToVisual(logical);
       ticks.add(Tick(firstLogical + i, offset.dx));
@@ -95,10 +98,13 @@ class RepereMetrics {
   }
 
   Ticks buildYTicks({int logicalStep = 1}) {
-    final firstLogical = -figure.origin.y.ceil() ~/ logicalStep * logicalStep;
+    final yOrigin = figure.origin.y.ceil();
+    final firstLogical = -yOrigin ~/ logicalStep * logicalStep;
     final ticks = <Tick>[];
 
-    for (var i = 0; i <= figure.height; i += logicalStep) {
+    for (var i = 0;
+        firstLogical + i + yOrigin <= figure.height;
+        i += logicalStep) {
       final logical = IntCoord(0, firstLogical + i);
       final offset = logicalIntToVisual(logical);
       ticks.add(Tick(firstLogical + i, offset.dy));
@@ -343,17 +349,18 @@ class _GridPainter extends CustomPainter {
     }
 
     // ticks
-    final tickLinePaint = Paint()
-      ..strokeWidth = 1
+    final majorGridPaint = Paint()
+      ..strokeWidth = 1.5
       ..color =
           isHighlighted ? Colors.deepOrange : Colors.grey.withOpacity(0.7);
-    final ticksPaint = Paint()..strokeWidth = 1;
+    final shortTickPaint = Paint()..strokeWidth = 1;
     final visualOrigin = metrics.logicalIntToVisual(const IntCoord(0, 0));
     for (var xTick in metrics.buildXTicks(logicalStep: 5)) {
       final x = xTick.visual;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), tickLinePaint);
+      canvas.drawLine(
+          Offset(x, 0), Offset(x, size.height), majorGridPaint); // major grid
       canvas.drawLine(Offset(x, visualOrigin.dy - 5),
-          Offset(x, visualOrigin.dy + 5), ticksPaint);
+          Offset(x, visualOrigin.dy + 5), shortTickPaint); // tick line
 
       // paint tick legend, expect for 0,0
       if (xTick.logical == 0) {
@@ -368,9 +375,10 @@ class _GridPainter extends CustomPainter {
     }
     for (var yTick in metrics.buildYTicks(logicalStep: 5)) {
       final y = yTick.visual;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), tickLinePaint);
+      canvas.drawLine(
+          Offset(0, y), Offset(size.width, y), majorGridPaint); // major grid
       canvas.drawLine(Offset(visualOrigin.dx - 5, y),
-          Offset(visualOrigin.dx + 5, y), ticksPaint);
+          Offset(visualOrigin.dx + 5, y), shortTickPaint); // ticks
 
       if (yTick.logical == 0) {
         continue;
