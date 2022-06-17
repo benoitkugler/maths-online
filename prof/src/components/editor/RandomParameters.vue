@@ -13,7 +13,7 @@
         particulier, les fonctions suivantes peuvent être utilisées.
 
         <v-list color="info" rounded>
-          <v-list-item v-for="content in helpContent">
+          <v-list-item v-for="(content, index) in helpContent" :key="index">
             <v-row>
               <v-col cols="6">
                 <v-list-item-title> {{ content[0] }} </v-list-item-title>
