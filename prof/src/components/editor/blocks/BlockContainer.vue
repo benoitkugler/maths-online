@@ -140,7 +140,24 @@ const commands = [
     description: "Infini",
     command: `\\infty`,
   },
+  {
+    description: "Inférieur ou égal (<=)",
+    command: `\\leq `,
+  },
+  {
+    description: "Supérieur ou égal (>=)",
+    command: `\\geq `,
+  },
+  {
+    description: "Union",
+    command: `\\cup `,
+  },
+  {
+    description: "Intersection",
+    command: `\\cap `,
+  },
 ];
+
 async function copyAndClose(command: string) {
   showDocumentation = false;
   await navigator.clipboard.writeText(command);
