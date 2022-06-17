@@ -284,7 +284,7 @@ export interface NumberFieldBlock {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
-  Label: string;
+  Label: Interpolated;
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
 }

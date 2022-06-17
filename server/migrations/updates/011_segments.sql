@@ -78,10 +78,10 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-BEGIN;
 -- First remove the constraint (should be added back after the migration)
 ALTER TABLE questions
-    DROP CONSTRAINT question_structgen_validate_json_exe_QuestionPage;
+    DROP CONSTRAINT question_structgen_validate_json_exe_questionpage;
+
 UPDATE
     questions
 SET
@@ -102,8 +102,4 @@ SET
                         value
                     END)
                 FROM jsonb_array_elements(page -> 'enonce')));
--- Put the CONSTRAINT back, after updating the definitions
-ALTER TABLE questions
-    ADD CONSTRAINT page_structgen_validate_json_exe_QuestionPage CHECK (structgen_validate_json_exe_QuestionPage (page));
-COMMIT;
 

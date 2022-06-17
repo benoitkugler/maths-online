@@ -353,7 +353,7 @@ func randSliceInterpolated() []exercice.Interpolated {
 
 func randexe_OrderedListFieldBlock() exercice.OrderedListFieldBlock {
 	return exercice.OrderedListFieldBlock{
-		Label:               randstring(),
+		Label:               randInterpolated(),
 		Answer:              randSliceInterpolated(),
 		AdditionalProposals: randSliceInterpolated(),
 	}
