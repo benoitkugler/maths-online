@@ -64,8 +64,8 @@ type Game struct {
 
 	dice diceThrow // last dice thrown
 
-	questionDurationLimit time.Duration
-	showDecrassage        bool
+	QuestionDurationLimit time.Duration
+	ShowDecrassage        bool
 
 	hasStarted bool
 }
@@ -88,9 +88,9 @@ func NewGame(questionTimeout time.Duration, showDecrassage bool, questions Quest
 		currentAnswers:        make(map[int]bool),
 		currentWantNextTurn:   make(map[int]bool),
 		QuestionTimeout:       timer,
-		questionDurationLimit: questionTimeout,
+		QuestionDurationLimit: questionTimeout,
 		QuestionPool:          questions,
-		showDecrassage:        showDecrassage,
+		ShowDecrassage:        showDecrassage,
 	}
 }
 
@@ -353,13 +353,13 @@ func (gs *Game) EmitQuestion() showQuestion {
 	}
 
 	out := showQuestion{
-		TimeoutSeconds: int(gs.questionDurationLimit.Seconds()),
+		TimeoutSeconds: int(gs.QuestionDurationLimit.Seconds()),
 		ID:             question.Id,
 		Categorie:      cat,
 		Question:       instance.ToClient(),
 	}
 
-	gs.QuestionTimeout.Reset(gs.questionDurationLimit)
+	gs.QuestionTimeout.Reset(gs.QuestionDurationLimit)
 
 	return out
 }
@@ -502,7 +502,7 @@ func (gs *Game) winners() (out []int) {
 
 // returns nil if !showDecrassage
 func (gs *Game) decrassage() (ids map[int][]int64) {
-	if !gs.showDecrassage {
+	if !gs.ShowDecrassage {
 		return nil
 	}
 
