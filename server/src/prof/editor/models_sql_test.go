@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -129,5 +130,48 @@ func BenchmarkValidation(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		validateAllQuestions(qu)
+	}
+}
+
+func TestCRUD(t *testing.T) {
+	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer testutils.RemoveDBDev()
+	defer db.Close()
+
+	user, err := teacher.Teacher{}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ex := randExercice()
+	ex.IdTeacher = user.Id
+	ex, err = ex.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	qu1, err := Question{IdTeacher: user.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qu2, err := Question{IdTeacher: user.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = InsertManyExerciceQuestions(tx,
+		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu1.Id, Bareme: 4},
+		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu2.Id, Bareme: 5},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
 	}
 }

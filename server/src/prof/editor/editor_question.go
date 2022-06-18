@@ -21,7 +21,7 @@ import (
 
 const sessionTimeout = 6 * time.Hour
 
-var accessForbidden = errors.New("question access fordidden")
+var accessForbidden = errors.New("access fordidden")
 
 // Controller is the global object responsible to
 // handle incoming requests regarding the editor.
@@ -173,7 +173,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 				IsInGroup:  len(ids) > 1,
 				Tags:       tagsMap[id].List(),
 				Origin: teacher.Origin{
-					AllowPublish: qu.IdTeacher == ct.admin.Id,
+					AllowPublish: userID == ct.admin.Id,
 					IsPublic:     qu.Public,
 					Visibility:   vis,
 				},

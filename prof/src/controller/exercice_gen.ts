@@ -12,6 +12,51 @@ export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
   [DifficultyTag.Diff3]: "3 étoiles",
 };
 
+// github.com/benoitkugler/maths-online/maths/expression.Variable
+export interface Variable {
+  Indice: string;
+  Name: number;
+}
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
+export interface RandomParameter {
+  expression: string;
+  variable: Variable;
+}
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
+export type RandomParameters = RandomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/questions.Parameters
+export interface Parameters {
+  Variables: RandomParameters;
+  Intrinsics: string[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.Flow
+export enum Flow {
+  Parallel = 0,
+  Sequencial = 1,
+}
+
+export const FlowLabels: { [key in Flow]: string } = {
+  [Flow.Parallel]: "Questions indépendantes",
+  [Flow.Sequencial]: "Questions liées",
+};
+
+// github.com/benoitkugler/maths-online/prof/editor.Exercice
+export interface Exercice {
+  Id: number;
+  Title: string;
+  Description: string;
+  Parameters: Parameters;
+  Flow: Flow;
+  id_teacher: number;
+  Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestion
+export interface ExerciceQuestion {
+  id_exercice: number;
+  id_question: number;
+  bareme: number;
+}
+
 export enum BlockKind {
   ExpressionFieldBlock = 0,
   FigureAffineLineFieldBlock = 1,
@@ -246,11 +291,6 @@ export interface FunctionDecoration {
   Label: string;
   Color: string;
 }
-// github.com/benoitkugler/maths-online/maths/expression.Variable
-export interface Variable {
-  Indice: string;
-  Name: number;
-}
 // github.com/benoitkugler/maths-online/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
   Function: string;
@@ -356,18 +396,6 @@ export interface VectorFieldBlock {
 }
 // github.com/benoitkugler/maths-online/maths/questions.Enonce
 export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
-export interface RandomParameter {
-  expression: string;
-  variable: Variable;
-}
-// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
-export type RandomParameters = RandomParameter[] | null;
-// github.com/benoitkugler/maths-online/maths/questions.Parameters
-export interface Parameters {
-  Variables: RandomParameters;
-  Intrinsics: string[] | null;
-}
 // github.com/benoitkugler/maths-online/maths/questions.QuestionPage
 export interface QuestionPage {
   title: string;

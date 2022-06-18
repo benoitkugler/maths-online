@@ -116,8 +116,8 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 			continue // do not expose
 		}
 		origin := teacher.Origin{
+			AllowPublish: userID == ct.admin.Id,
 			Visibility:   vis,
-			AllowPublish: config.IdTeacher == ct.admin.Id,
 			IsPublic:     config.Public,
 		}
 		item, err := config.withDetails(ct.db, origin, userID)
@@ -206,8 +206,8 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 	}
 
 	out, err := config.withDetails(ct.db, teacher.Origin{
+		AllowPublish: user.IsAdmin,
 		Visibility:   teacher.Personnal,
-		AllowPublish: user.Id == ct.admin.Id,
 		IsPublic:     config.Public,
 	}, user.Id)
 	if err != nil {
@@ -238,8 +238,8 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 	}
 
 	out, err := config.withDetails(ct.db, teacher.Origin{
+		AllowPublish: user.IsAdmin,
 		Visibility:   teacher.Personnal,
-		AllowPublish: user.Id == ct.admin.Id,
 		IsPublic:     config.Public,
 	}, user.Id)
 	if err != nil {

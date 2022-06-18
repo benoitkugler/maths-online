@@ -32,6 +32,88 @@ func randstring() string {
 	return string(b)
 }
 
+func randrune() rune {
+	return rune(rand.Intn(1000000))
+}
+
+func randexp_Variable() expression.Variable {
+	return expression.Variable{
+		Indice: randstring(),
+		Name:   randrune(),
+	}
+}
+
+func randque_RandomParameter() questions.RandomParameter {
+	return questions.RandomParameter{
+		Expression: randstring(),
+		Variable:   randexp_Variable(),
+	}
+}
+
+func randSliceque_RandomParameter() []questions.RandomParameter {
+	l := 40 + rand.Intn(10)
+	out := make([]questions.RandomParameter, l)
+	for i := range out {
+		out[i] = randque_RandomParameter()
+	}
+	return out
+}
+
+func randRandomParameters() questions.RandomParameters {
+	return questions.RandomParameters(randSliceque_RandomParameter())
+}
+
+func randSlicestring() []string {
+	l := 40 + rand.Intn(10)
+	out := make([]string, l)
+	for i := range out {
+		out[i] = randstring()
+	}
+	return out
+}
+
+func randque_Parameters() questions.Parameters {
+	return questions.Parameters{
+		Variables:  randRandomParameters(),
+		Intrinsics: randSlicestring(),
+	}
+}
+
+func randFlow() Flow {
+	choix := [...]Flow{Parallel, Sequencial}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
+}
+
+func randExercice() Exercice {
+	return Exercice{
+		Id:          randint64(),
+		Title:       randstring(),
+		Description: randstring(),
+		Parameters:  randque_Parameters(),
+		Flow:        randFlow(),
+		IdTeacher:   randint64(),
+		Public:      randbool(),
+	}
+}
+
+func randint() int {
+	return int(rand.Intn(1000000))
+}
+
+func randExerciceQuestion() ExerciceQuestion {
+	return ExerciceQuestion{
+		IdExercice: randint64(),
+		IdQuestion: randint64(),
+		Bareme:     randint(),
+	}
+}
+
 func randBlock() questions.Block {
 	choix := [...]questions.Block{
 		randque_ExpressionFieldBlock(),
@@ -176,10 +258,6 @@ func randrep_RandomDrawings() repere.RandomDrawings {
 	}
 }
 
-func randint() int {
-	return int(rand.Intn(1000000))
-}
-
 func randfloat64() float64 {
 	return rand.Float64() * float64(rand.Int31())
 }
@@ -197,11 +275,6 @@ func randrep_RepereBounds() repere.RepereBounds {
 		Height: randint(),
 		Origin: randrep_Coord(),
 	}
-}
-
-func randbool() bool {
-	i := rand.Int31n(2)
-	return i == 1
 }
 
 func randque_FigureBlock() questions.FigureBlock {
@@ -274,17 +347,6 @@ func randfun_FunctionDecoration() functiongrapher.FunctionDecoration {
 	}
 }
 
-func randrune() rune {
-	return rune(rand.Intn(1000000))
-}
-
-func randexp_Variable() expression.Variable {
-	return expression.Variable{
-		Indice: randstring(),
-		Name:   randrune(),
-	}
-}
-
 func randque_FunctionDefinition() questions.FunctionDefinition {
 	return questions.FunctionDefinition{
 		Function:   randstring(),
@@ -308,15 +370,6 @@ func randque_FunctionGraphBlock() questions.FunctionGraphBlock {
 	return questions.FunctionGraphBlock{
 		Functions: randSliceque_FunctionDefinition(),
 	}
-}
-
-func randSlicestring() []string {
-	l := 40 + rand.Intn(10)
-	out := make([]string, l)
-	for i := range out {
-		out[i] = randstring()
-	}
-	return out
 }
 
 func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
@@ -499,33 +552,6 @@ func randSliceBlock() []questions.Block {
 
 func randEnonce() questions.Enonce {
 	return questions.Enonce(randSliceBlock())
-}
-
-func randque_RandomParameter() questions.RandomParameter {
-	return questions.RandomParameter{
-		Expression: randstring(),
-		Variable:   randexp_Variable(),
-	}
-}
-
-func randSliceque_RandomParameter() []questions.RandomParameter {
-	l := 40 + rand.Intn(10)
-	out := make([]questions.RandomParameter, l)
-	for i := range out {
-		out[i] = randque_RandomParameter()
-	}
-	return out
-}
-
-func randRandomParameters() questions.RandomParameters {
-	return questions.RandomParameters(randSliceque_RandomParameter())
-}
-
-func randque_Parameters() questions.Parameters {
-	return questions.Parameters{
-		Variables:  randRandomParameters(),
-		Intrinsics: randSlicestring(),
-	}
 }
 
 func randque_QuestionPage() questions.QuestionPage {

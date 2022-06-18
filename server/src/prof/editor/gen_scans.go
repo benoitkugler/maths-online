@@ -105,6 +105,208 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
+func scanOneExercice(row scanner) (Exercice, error) {
+	var s Exercice
+	err := row.Scan(
+		&s.Id,
+		&s.Title,
+		&s.Description,
+		&s.Parameters,
+		&s.Flow,
+		&s.IdTeacher,
+		&s.Public,
+	)
+	return s, err
+}
+
+func ScanExercice(row *sql.Row) (Exercice, error) {
+	return scanOneExercice(row)
+}
+
+func SelectAllExercices(tx DB) (Exercices, error) {
+	rows, err := tx.Query("SELECT * FROM exercices")
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercices(rows)
+}
+
+// SelectExercice returns the entry matching id.
+func SelectExercice(tx DB, id int64) (Exercice, error) {
+	row := tx.QueryRow("SELECT * FROM exercices WHERE id = $1", id)
+	return ScanExercice(row)
+}
+
+// SelectExercices returns the entry matching the given ids.
+func SelectExercices(tx DB, ids ...int64) (Exercices, error) {
+	rows, err := tx.Query("SELECT * FROM exercices WHERE id = ANY($1)", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercices(rows)
+}
+
+type Exercices map[int64]Exercice
+
+func (m Exercices) IDs() IDs {
+	out := make(IDs, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanExercices(rs *sql.Rows) (Exercices, error) {
+	var (
+		s   Exercice
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Exercices, 16)
+	for rs.Next() {
+		s, err = scanOneExercice(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert Exercice in the database and returns the item with id filled.
+func (item Exercice) Insert(tx DB) (out Exercice, err error) {
+	row := tx.QueryRow(`INSERT INTO exercices (
+		Title,Description,Parameters,Flow,id_teacher,Public
+		) VALUES (
+		$1,$2,$3,$4,$5,$6
+		) RETURNING 
+		Id,Title,Description,Parameters,Flow,id_teacher,Public;
+		`, item.Title, item.Description, item.Parameters, item.Flow, item.IdTeacher, item.Public)
+	return ScanExercice(row)
+}
+
+// Update Exercice in the database and returns the new version.
+func (item Exercice) Update(tx DB) (out Exercice, err error) {
+	row := tx.QueryRow(`UPDATE exercices SET (
+		Title,Description,Parameters,Flow,id_teacher,Public
+		) = (
+		$2,$3,$4,$5,$6,$7
+		) WHERE id = $1 RETURNING 
+		Id,Title,Description,Parameters,Flow,id_teacher,Public;
+		`, item.Id, item.Title, item.Description, item.Parameters, item.Flow, item.IdTeacher, item.Public)
+	return ScanExercice(row)
+}
+
+// Deletes the Exercice and returns the item
+func DeleteExerciceById(tx DB, id int64) (Exercice, error) {
+	row := tx.QueryRow("DELETE FROM exercices WHERE id = $1 RETURNING *;", id)
+	return ScanExercice(row)
+}
+
+// Deletes the Exercice in the database and returns the ids.
+func DeleteExercicesByIDs(tx DB, ids ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM exercices WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}
+
+func scanOneExerciceQuestion(row scanner) (ExerciceQuestion, error) {
+	var s ExerciceQuestion
+	err := row.Scan(
+		&s.IdExercice,
+		&s.IdQuestion,
+		&s.Bareme,
+	)
+	return s, err
+}
+
+func ScanExerciceQuestion(row *sql.Row) (ExerciceQuestion, error) {
+	return scanOneExerciceQuestion(row)
+}
+
+func SelectAllExerciceQuestions(tx DB) (ExerciceQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM exercice_questions")
+	if err != nil {
+		return nil, err
+	}
+	return ScanExerciceQuestions(rows)
+}
+
+type ExerciceQuestions []ExerciceQuestion
+
+func ScanExerciceQuestions(rs *sql.Rows) (ExerciceQuestions, error) {
+	var (
+		s   ExerciceQuestion
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ExerciceQuestions, 0, 16)
+	for rs.Next() {
+		s, err = scanOneExerciceQuestion(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links ExerciceQuestion in the database.
+func InsertManyExerciceQuestions(tx *sql.Tx, items ...ExerciceQuestion) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("exercice_questions",
+		"id_exercice", "id_question", "bareme",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdExercice, item.IdQuestion, item.Bareme)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ExerciceQuestion in the database.
+// Only the 'IdExercice' 'IdQuestion' fields are used.
+func (item ExerciceQuestion) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM exercice_questions WHERE 
+	id_exercice = $1 AND id_question = $2;`, item.IdExercice, item.IdQuestion)
+	return err
+}
+
 func scanOneQuestion(row scanner) (Question, error) {
 	var s Question
 	err := row.Scan(
@@ -303,6 +505,94 @@ func (item QuestionTag) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM question_tags WHERE 
 	id_question = $1;`, item.IdQuestion)
 	return err
+}
+
+func SelectExercicesByIdTeachers(tx DB, idTeachers ...int64) (Exercices, error) {
+	rows, err := tx.Query("SELECT * FROM exercices WHERE id_teacher = ANY($1)", pq.Int64Array(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercices(rows)
+}
+
+func DeleteExercicesByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM exercices WHERE id_teacher = ANY($1) RETURNING id", pq.Int64Array(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}
+
+func SelectExerciceQuestionsByIdExercices(tx DB, idExercices ...int64) (ExerciceQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE id_exercice = ANY($1)", pq.Int64Array(idExercices))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExerciceQuestions(rows)
+}
+
+func DeleteExerciceQuestionsByIdExercices(tx DB, idExercices ...int64) (ExerciceQuestions, error) {
+	rows, err := tx.Query("DELETE FROM exercice_questions WHERE id_exercice = ANY($1) RETURNING *", pq.Int64Array(idExercices))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExerciceQuestions(rows)
+}
+
+func SelectExerciceQuestionsByIdQuestions(tx DB, idQuestions ...int64) (ExerciceQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE id_question = ANY($1)", pq.Int64Array(idQuestions))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExerciceQuestions(rows)
+}
+
+func DeleteExerciceQuestionsByIdQuestions(tx DB, idQuestions ...int64) (ExerciceQuestions, error) {
+	rows, err := tx.Query("DELETE FROM exercice_questions WHERE id_question = ANY($1) RETURNING *", pq.Int64Array(idQuestions))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExerciceQuestions(rows)
+}
+
+// ByIdExercice returns a map with 'IdExercice' as keys.
+func (items ExerciceQuestions) ByIdExercice() map[int64]ExerciceQuestions {
+	out := make(map[int64]ExerciceQuestions)
+	for _, target := range items {
+		out[target.IdExercice] = append(out[target.IdExercice], target)
+	}
+	return out
+}
+
+// IdExercices returns the list of ids of IdExercice
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items ExerciceQuestions) IdExercices() IDs {
+	out := make(IDs, len(items))
+	for index, target := range items {
+		out[index] = target.IdExercice
+	}
+	return out
+}
+
+// ByIdQuestion returns a map with 'IdQuestion' as keys.
+func (items ExerciceQuestions) ByIdQuestion() map[int64]ExerciceQuestions {
+	out := make(map[int64]ExerciceQuestions)
+	for _, target := range items {
+		out[target.IdQuestion] = append(out[target.IdQuestion], target)
+	}
+	return out
+}
+
+// IdQuestions returns the list of ids of IdQuestion
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items ExerciceQuestions) IdQuestions() IDs {
+	out := make(IDs, len(items))
+	for index, target := range items {
+		out[index] = target.IdQuestion
+	}
+	return out
 }
 
 func SelectQuestionsByIdTeachers(tx DB, idTeachers ...int64) (Questions, error) {

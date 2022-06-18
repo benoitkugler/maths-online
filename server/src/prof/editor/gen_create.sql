@@ -14,6 +14,149 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_number (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a number', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_exp_Variable (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Indice', 'Name'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Indice')
+        AND structgen_validate_json_number (data -> 'Name');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_RandomParameter (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('expression', 'variable'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'expression')
+        AND structgen_validate_json_exp_Variable (data -> 'variable');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_RandomParameter (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_que_RandomParameter (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_string (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_string (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_Parameters (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Variables', 'Intrinsics'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_array_que_RandomParameter (data -> 'Variables')
+        AND structgen_validate_json_array_string (data -> 'Intrinsics');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE TABLE exercices (
+    Id serial PRIMARY KEY,
+    Title varchar NOT NULL,
+    Description varchar NOT NULL,
+    Parameters jsonb NOT NULL CONSTRAINT Parameters_structgen_validate_json_que_Parameters CHECK (structgen_validate_json_que_Parameters (Parameters)),
+    Flow integer CHECK (Flow IN (0, 1)) NOT NULL,
+    id_teacher integer NOT NULL,
+    Public boolean NOT NULL
+);
+
+CREATE TABLE exercice_questions (
+    id_exercice integer NOT NULL,
+    id_question integer NOT NULL,
+    bareme integer NOT NULL
+);
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_TextKind (data jsonb)
     RETURNS boolean
     AS $$
@@ -332,21 +475,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_number (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number';
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a number', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION structgen_validate_json_rep_Coord (data jsonb)
     RETURNS boolean
     AS $$
@@ -603,28 +731,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exp_Variable (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Indice', 'Name'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_string (data -> 'Indice')
-        AND structgen_validate_json_number (data -> 'Name');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionDefinition (data jsonb)
     RETURNS boolean
     AS $$
@@ -689,29 +795,6 @@ BEGIN
             jsonb_each(data))
         AND structgen_validate_json_array_que_FunctionDefinition (data -> 'Functions');
     RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_string (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(structgen_validate_json_string (value))
-        FROM
-            jsonb_array_elements(data));
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -1271,73 +1354,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_que_RandomParameter (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('expression', 'variable'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_string (data -> 'expression')
-        AND structgen_validate_json_exp_Variable (data -> 'variable');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_RandomParameter (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(structgen_validate_json_que_RandomParameter (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_que_Parameters (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Variables', 'Intrinsics'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_array_que_RandomParameter (data -> 'Variables')
-        AND structgen_validate_json_array_string (data -> 'Intrinsics');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION structgen_validate_json_que_QuestionPage (data jsonb)
     RETURNS boolean
     AS $$
@@ -1374,6 +1390,15 @@ CREATE TABLE question_tags (
     tag varchar NOT NULL,
     id_question integer NOT NULL
 );
+
+ALTER TABLE exercices
+    ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
+
+ALTER TABLE exercice_questions
+    ADD FOREIGN KEY (id_exercice) REFERENCES exercices ON DELETE CASCADE;
+
+ALTER TABLE exercice_questions
+    ADD FOREIGN KEY (id_question) REFERENCES questions;
 
 ALTER TABLE questions
     ADD FOREIGN KEY (id_teacher) REFERENCES teachers;

@@ -160,6 +160,7 @@ export interface QuestionHeader {
   Difficulty: DifficultyTag;
   IsInGroup: boolean;
   Origin: Origin;
+  NeedExercice: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionGroup
 export interface QuestionGroup {
@@ -222,7 +223,7 @@ export interface Block {
     | VariationTableFieldBlock
     | VectorFieldBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TextKind
+// github.com/benoitkugler/maths-online/maths/questions.TextKind
 export enum TextKind {
   Expression = 2,
   StaticMath = 1,
@@ -235,7 +236,7 @@ export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Text]: "Text simple",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.TextPart
+// github.com/benoitkugler/maths-online/maths/questions.TextPart
 export interface TextPart {
   Content: string;
   Kind: TextKind;
@@ -253,7 +254,7 @@ export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
   [ComparisonLevel.Strict]: "Exacte",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
   Label: TextPart;
@@ -346,37 +347,37 @@ export interface RepereBounds {
   Height: number;
   Origin: Coord;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigureBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureBlock
 export interface FigureBlock {
   Drawings: RandomDrawings;
   Bounds: RepereBounds;
   ShowGrid: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigureAffineLineFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {
   Label: string;
   A: string;
   B: string;
   Figure: FigureBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.CoordExpression
+// github.com/benoitkugler/maths-online/maths/questions.CoordExpression
 export interface CoordExpression {
   X: string;
   Y: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigurePointFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigurePointFieldBlock
 export interface FigurePointFieldBlock {
   Answer: CoordExpression;
   Figure: FigureBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureVectorFieldBlock
 export interface FigureVectorFieldBlock {
   Answer: CoordExpression;
   AnswerOrigin: CoordExpression;
   Figure: FigureBlock;
   MustHaveOrigin: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VectorPairCriterion
+// github.com/benoitkugler/maths-online/maths/questions.VectorPairCriterion
 export enum VectorPairCriterion {
   VectorColinear = 1,
   VectorEquals = 0,
@@ -391,14 +392,14 @@ export const VectorPairCriterionLabels: {
   [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorPairFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureVectorPairFieldBlock
 export interface FigureVectorPairFieldBlock {
   Figure: FigureBlock;
   Criterion: VectorPairCriterion;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Interpolated
+// github.com/benoitkugler/maths-online/maths/questions.Interpolated
 export type Interpolated = string;
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaBlock
+// github.com/benoitkugler/maths-online/maths/questions.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
 }
@@ -412,7 +413,7 @@ export interface Variable {
   Indice: string;
   Name: number;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionDefinition
+// github.com/benoitkugler/maths-online/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
   Function: string;
   Decoration: FunctionDecoration;
@@ -420,42 +421,42 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
+// github.com/benoitkugler/maths-online/maths/questions.FunctionGraphBlock
 export interface FunctionGraphBlock {
   Functions: FunctionDefinition[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionPointsFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
   Function: string;
   Label: string;
   Variable: Variable;
   XGrid: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
+// github.com/benoitkugler/maths-online/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
   Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
+// github.com/benoitkugler/maths-online/maths/questions.FunctionVariationGraphBlock
 export type FunctionVariationGraphBlock = VariationTableBlock;
-// github.com/benoitkugler/maths-online/maths/exercice.NumberFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
-  Label: string;
+  Label: Interpolated;
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {
   Answer: string;
   Proposals: Interpolated[] | null;
   AsDropDown: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
+// github.com/benoitkugler/maths-online/maths/questions.SignSymbol
 export enum SignSymbol {
   ForbiddenValue = 2,
   Nothing = 0,
@@ -468,68 +469,68 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
   [SignSymbol.Zero]: "0",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
+// github.com/benoitkugler/maths-online/maths/questions.SignTableBlock
 export interface SignTableBlock {
   Label: string;
   FxSymbols: SignSymbol[] | null;
   Xs: Interpolated[] | null;
   Signs: boolean[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TableBlock
+// github.com/benoitkugler/maths-online/maths/questions.TableBlock
 export interface TableBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Values: (TextPart[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TableFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.TableFieldBlock
 export interface TableFieldBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TextBlock
+// github.com/benoitkugler/maths-online/maths/questions.TextBlock
 export interface TextBlock {
   Parts: Interpolated;
   Bold: boolean;
   Italic: boolean;
   Smaller: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TreeNodeAnswer
+// github.com/benoitkugler/maths-online/maths/questions.TreeNodeAnswer
 export interface TreeNodeAnswer {
   Children: TreeNodeAnswer[] | null;
   Probabilities: string[] | null;
   Value: number;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TreeFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.TreeFieldBlock
 export interface TreeFieldBlock {
   EventsProposals: string[] | null;
   AnswerRoot: TreeNodeAnswer;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VariationTableFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.VariationTableFieldBlock
 export interface VariationTableFieldBlock {
   Answer: VariationTableBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VectorFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.VectorFieldBlock
 export interface VectorFieldBlock {
   Answer: CoordExpression;
   AcceptColinear: boolean;
   DisplayColumn: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Enonce
+// github.com/benoitkugler/maths-online/maths/questions.Enonce
 export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.RandomParameter
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
 export interface RandomParameter {
   expression: string;
   variable: Variable;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.RandomParameters
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
 export type RandomParameters = RandomParameter[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.Parameters
+// github.com/benoitkugler/maths-online/maths/questions.Parameters
 export interface Parameters {
   Variables: RandomParameters;
   Intrinsics: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.QuestionPage
+// github.com/benoitkugler/maths-online/maths/questions.QuestionPage
 export interface QuestionPage {
   title: string;
   enonce: Enonce;
@@ -542,24 +543,25 @@ export interface Question {
   public: boolean;
   id_teacher: number;
   description: string;
+  need_exercice: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
 export interface SaveAndPreviewIn {
   SessionID: string;
   Question: Question;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.ErrParameters
+// github.com/benoitkugler/maths-online/maths/questions.ErrParameters
 export interface ErrParameters {
   Origin: string;
   Details: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.errEnonce
+// github.com/benoitkugler/maths-online/maths/questions.errEnonce
 export interface errEnonce {
   Error: string;
   Block: number;
   Vars: { [key: string]: string } | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.ErrQuestionInvalid
+// github.com/benoitkugler/maths-online/maths/questions.ErrQuestionInvalid
 export interface ErrQuestionInvalid {
   ErrParameters: ErrParameters;
   ErrEnonce: errEnonce;
@@ -598,6 +600,51 @@ export interface CheckParametersIn {
 export interface CheckParametersOut {
   ErrDefinition: ErrParameters;
   Variables: Variable[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.Flow
+export enum Flow {
+  Parallel = 0,
+  Sequencial = 1,
+}
+
+export const FlowLabels: { [key in Flow]: string } = {
+  [Flow.Parallel]: "Questions indépendantes",
+  [Flow.Sequencial]: "Questions liées",
+};
+
+// github.com/benoitkugler/maths-online/prof/editor.Exercice
+export interface Exercice {
+  Id: number;
+  Title: string;
+  Description: string;
+  Parameters: Parameters;
+  Flow: Flow;
+  id_teacher: number;
+  Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestion
+export interface ExerciceQuestion {
+  id_exercice: number;
+  id_question: number;
+  bareme: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
+export type ExerciceQuestions = ExerciceQuestion[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
+export interface ExerciceExt {
+  Exercice: Exercice;
+  Origin: Origin;
+  Questions: ExerciceQuestions;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceAddQuestionIn
+export interface ExerciceAddQuestionIn {
+  IdExercice: number;
+  IdQuestion: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceRemoveQuestionIn
+export interface ExerciceRemoveQuestionIn {
+  IdExercice: number;
+  IdQuestion: number;
 }
 
 /** AbstractAPI provides auto-generated API calls and should be used 
@@ -1440,5 +1487,154 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorCheckParameters(
     data: CheckParametersOut
+  ): void;
+
+  protected async rawExercicesGetList() {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercices";
+    const rep: AxiosResponse<ExerciceExt[] | null> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExercicesGetList wraps rawExercicesGetList and handles the error */
+  async ExercicesGetList() {
+    this.startRequest();
+    try {
+      const out = await this.rawExercicesGetList();
+      this.onSuccessExercicesGetList(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExercicesGetList(
+    data: ExerciceExt[] | null
+  ): void;
+
+  protected async rawExerciceCreate(params: any) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
+    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceCreate wraps rawExerciceCreate and handles the error */
+  async ExerciceCreate(params: any) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceCreate(params);
+      this.onSuccessExerciceCreate(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceCreate(data: ExerciceExt): void;
+
+  protected async rawExerciceDelete(params: {
+    id: number;
+    delete_questions: boolean;
+  }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: {
+        id: String(params["id"]),
+        delete_questions: params["delete_questions"] ? "ok" : "",
+      },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceDelete wraps rawExerciceDelete and handles the error */
+  async ExerciceDelete(params: { id: number; delete_questions: boolean }) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceDelete(params);
+      this.onSuccessExerciceDelete(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceDelete(data: any): void;
+
+  protected async rawExerciceUpdate(params: Exercice) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
+    const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceUpdate wraps rawExerciceUpdate and handles the error */
+  async ExerciceUpdate(params: Exercice) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceUpdate(params);
+      this.onSuccessExerciceUpdate(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceUpdate(data: Exercice): void;
+
+  protected async rawExerciceAddQuestion(params: ExerciceAddQuestionIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/questions";
+    const rep: AxiosResponse<ExerciceQuestions> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** ExerciceAddQuestion wraps rawExerciceAddQuestion and handles the error */
+  async ExerciceAddQuestion(params: ExerciceAddQuestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceAddQuestion(params);
+      this.onSuccessExerciceAddQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceAddQuestion(
+    data: ExerciceQuestions
+  ): void;
+
+  protected async rawExerciceRemoveQuestion(params: ExerciceRemoveQuestionIn) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/delete-question";
+    const rep: AxiosResponse<ExerciceQuestions> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** ExerciceRemoveQuestion wraps rawExerciceRemoveQuestion and handles the error */
+  async ExerciceRemoveQuestion(params: ExerciceRemoveQuestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceRemoveQuestion(params);
+      this.onSuccessExerciceRemoveQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceRemoveQuestion(
+    data: ExerciceQuestions
   ): void;
 }

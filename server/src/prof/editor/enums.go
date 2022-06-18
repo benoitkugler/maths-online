@@ -17,3 +17,10 @@ const (
 	Diff2 DifficultyTag = "\u2605\u2605"       // 2 étoiles
 	Diff3 DifficultyTag = "\u2605\u2605\u2605" // 3 étoiles
 )
+
+type Flow uint8
+
+const (
+	Parallel   Flow = iota // Questions indépendantes
+	Sequencial             // Questions liées
+)

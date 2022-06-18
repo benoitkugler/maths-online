@@ -24,3 +24,63 @@ func TestInstantiateQuestions(t *testing.T) {
 	s, _ := json.MarshalIndent(out, " ", " ")
 	fmt.Println(string(s))
 }
+
+func TestExerciceCRUD(t *testing.T) {
+	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer testutils.RemoveDBDev()
+	defer db.Close()
+
+	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ct := NewController(db, teacher.Teacher{Id: 1})
+
+	ex, err := ct.createExercice(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	l, err := ct.addQuestionToExercice(ExerciceAddQuestionIn{IdExercice: ex.Exercice.Id, IdQuestion: -1}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != 1 {
+		t.Fatal(err)
+	}
+
+	qu, err := Question{IdTeacher: 1}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	l, err = ct.addQuestionToExercice(ExerciceAddQuestionIn{IdExercice: ex.Exercice.Id, IdQuestion: qu.Id}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != 2 {
+		t.Fatal(err)
+	}
+
+	l, err = ct.removeQuestionFromExercice(ExerciceRemoveQuestionIn{IdExercice: ex.Exercice.Id, IdQuestion: qu.Id}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l) != 1 {
+		t.Fatal(err)
+	}
+
+	exe, err := ct.updateExercice(Exercice{Id: ex.Exercice.Id, Description: "test", Title: "test2", Flow: Sequencial}, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exe.Flow != Sequencial {
+		t.Fatal(exe)
+	}
+
+	err = ct.deleteExercice(ex.Exercice.Id, true, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

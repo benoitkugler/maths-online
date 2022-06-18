@@ -53,6 +53,12 @@ func QueryParamInt64(c echo.Context, name string) (int64, error) {
 	return id, nil
 }
 
+// QueryParamBool parse the query param `name` to a boolean
+func QueryParamBool(c echo.Context, name string) bool {
+	idS := c.QueryParam(name)
+	return idS != ""
+}
+
 // Sample choose an index between 0 and len(weights)-1 at random, with the given weights,
 // which must sum up to 1.
 func SampleIndex(weights []float64) int {
