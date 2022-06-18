@@ -1,4 +1,4 @@
-package exercice
+package questions
 
 import (
 	"database/sql/driver"
@@ -32,3 +32,7 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 // Scan implements the driver.Scanner interface using JSON
 func (s *QuestionPage) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s QuestionPage) Value() (driver.Value, error) { return dumpJSON(s) }
+
+// Scan implements the driver.Scanner interface using JSON
+func (s *Parameters) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Parameters) Value() (driver.Value, error) { return dumpJSON(s) }

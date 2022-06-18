@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 )
 
 func TestEventsJSON(t *testing.T) {
@@ -18,10 +18,10 @@ func TestEventsJSON(t *testing.T) {
 			PlayerTurn{"Haha", 2},
 			dice,
 			PossibleMoves{"", moves, 2},
-			move{Tile: moves[0]},
-			playerLeft{1},
-			showQuestion{ID: 1, Categorie: 0},
-			playerAnswerResults{
+			Move{Tile: moves[0]},
+			PlayerLeft{1},
+			ShowQuestion{ID: 1, Categorie: 0},
+			PlayerAnswerResults{
 				Results: map[int]playerAnswerResult{
 					0: {Success: true},
 					1: {Success: false},
@@ -29,10 +29,10 @@ func TestEventsJSON(t *testing.T) {
 				},
 			},
 			PlayerTurn{"", 0},
-			diceThrow{3},
-			move{Tile: 4},
-			showQuestion{ID: 2, Categorie: 1},
-			playerAnswerResults{
+			DiceThrow{3},
+			Move{Tile: 4},
+			ShowQuestion{ID: 2, Categorie: 1},
+			PlayerAnswerResults{
 				Results: map[int]playerAnswerResult{
 					0: {Success: true},
 					1: {Success: false},
@@ -97,14 +97,14 @@ func TestClientEventJSON(t *testing.T) {
 
 func TestMethodTag(t *testing.T) {
 	GameStart{}.isGameEvent()
-	playerLeft{}.isGameEvent()
+	PlayerLeft{}.isGameEvent()
 	PlayerTurn{}.isGameEvent()
-	diceThrow{}.isGameEvent()
-	move{}.isGameEvent()
+	DiceThrow{}.isGameEvent()
+	Move{}.isGameEvent()
 	PossibleMoves{}.isGameEvent()
-	showQuestion{}.isGameEvent()
-	playerAnswerResults{}.isGameEvent()
-	gameEnd{}.isGameEvent()
+	ShowQuestion{}.isGameEvent()
+	PlayerAnswerResults{}.isGameEvent()
+	GameEnd{}.isGameEvent()
 
 	ClientMove{}.isClientEvent()
 	Answer{}.isClientEvent()

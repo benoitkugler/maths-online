@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
-	"github.com/benoitkugler/maths-online/maths/exercice/examples"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/maths/questions/examples"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"

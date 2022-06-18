@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 )
@@ -96,12 +96,13 @@ type QuestionGroup struct {
 
 // QuestionHeader is a sumary of the meta data of a question
 type QuestionHeader struct {
-	Title      string
-	Tags       []string
-	Id         int64
-	Difficulty DifficultyTag // deduced from the tags
-	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
-	Origin     teacher.Origin
+	Title        string
+	Tags         []string
+	Id           int64
+	Difficulty   DifficultyTag // deduced from the tags
+	IsInGroup    bool          // true if the question is in an implicit group, ignoring the current filter
+	Origin       teacher.Origin
+	NeedExercice bool
 }
 
 func normalizeTitle(title string) string {
@@ -176,6 +177,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 					IsPublic:     qu.Public,
 					Visibility:   vis,
 				},
+				NeedExercice: qu.NeedExercice,
 			}
 			group.Questions = append(group.Questions, question)
 		}
@@ -464,7 +466,7 @@ func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (U
 func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
 	err := params.Parameters.Validate()
 	if err != nil {
-		return CheckParametersOut{ErrDefinition: err.(exercice.ErrParameters)}
+		return CheckParametersOut{ErrDefinition: err.(questions.ErrParameters)}
 	}
 
 	var out CheckParametersOut
@@ -516,7 +518,7 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (Sav
 	}
 
 	if err := params.Question.Page.Validate(); err != nil {
-		return SaveAndPreviewOut{Error: err.(exercice.ErrQuestionInvalid)}, nil
+		return SaveAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
 	// if the question is owned : save it, else only preview

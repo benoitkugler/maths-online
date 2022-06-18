@@ -5,25 +5,25 @@ package examples
 import (
 	"fmt"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/questions"
 )
 
 // Questions returns a version of the examples.
-func Questions() (out []exercice.QuestionInstance) {
-	for _, qu := range questions {
+func Questions() (out []questions.QuestionInstance) {
+	for _, qu := range questionsList {
 		out = append(out, qu.Instantiate())
 	}
 
 	for _, block := range blockList {
 		title := fmt.Sprintf("%T", block)
-		enonce := exercice.Enonce{
-			exercice.TextBlock{
-				Parts: exercice.Interpolated("Exemple du moule " + title),
+		enonce := questions.Enonce{
+			questions.TextBlock{
+				Parts: questions.Interpolated("Exemple du moule " + title),
 				Bold:  true,
 			},
 			block,
 		}
-		qu := exercice.QuestionPage{
+		qu := questions.QuestionPage{
 			Title:  title,
 			Enonce: enonce,
 		}

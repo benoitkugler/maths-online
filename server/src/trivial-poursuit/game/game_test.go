@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/prof/editor"
 )
 
@@ -265,7 +265,7 @@ func TestHandleClientEvent(t *testing.T) {
 	if g.PawnTile != int(expected) {
 		t.Fatalf("expected %d, got %d", expected, g.PawnTile)
 	}
-	if g.dice != (diceThrow{}) { // dice is reset on move
+	if g.dice != (DiceThrow{}) { // dice is reset on move
 		t.Fatal()
 	}
 

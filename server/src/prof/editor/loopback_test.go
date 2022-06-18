@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/gorilla/websocket"
 )
 
@@ -48,8 +48,8 @@ func TestLoopback(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loopback.setQuestion(exercice.QuestionInstance{Title: "Test", Enonce: exercice.EnonceInstance{
-		exercice.NumberFieldInstance{ID: 0},
+	loopback.setQuestion(questions.QuestionInstance{Title: "Test", Enonce: questions.EnonceInstance{
+		questions.NumberFieldInstance{ID: 0},
 	}})
 
 	loopback.unsetQuestion()

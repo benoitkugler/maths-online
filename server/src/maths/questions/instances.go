@@ -1,13 +1,13 @@
-package exercice
+package questions
 
 import (
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 )
 
 type instance interface {

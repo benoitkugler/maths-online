@@ -1,11 +1,11 @@
-package exercice
+package questions
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 )
 
 func TestQuestionInstance_CompareAnswer(t *testing.T) {

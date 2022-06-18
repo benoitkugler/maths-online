@@ -4,7 +4,7 @@ package examples
 // 	_ "embed"
 // 	"math"
 
-// 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+// 	"github.com/benoitkugler/maths-online/maths/questions/client"
 // 	"github.com/benoitkugler/maths-online/maths/expression"
 // 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 // 	"github.com/benoitkugler/maths-online/maths/repere"

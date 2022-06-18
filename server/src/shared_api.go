@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/labstack/echo/v4"
 )

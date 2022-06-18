@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	ex "github.com/benoitkugler/maths-online/maths/exercice"
+	ex "github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	ed "github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
@@ -201,7 +201,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if gotOut := tt.qc.filter(tt.args.ByIdQuestion()); !reflect.DeepEqual(gotOut, tt.wantOut) {
+		if gotOut := tt.qc.filter(tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
 			t.Errorf("QuestionCriterion.filter() = %v, want %v", gotOut, tt.wantOut)
 		}
 	}

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
@@ -31,7 +31,7 @@ type loopbackController struct {
 	client *previewClient // initialy empty
 
 	sessionID       string
-	currentQuestion exercice.QuestionInstance
+	currentQuestion questions.QuestionInstance
 }
 
 func newLoopbackController(sessionID string) *loopbackController {
@@ -43,7 +43,7 @@ func newLoopbackController(sessionID string) *loopbackController {
 	}
 }
 
-func (ct *loopbackController) setQuestion(question exercice.QuestionInstance) {
+func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 	ct.currentQuestion = question
 	ct.broadcast <- serverData{Kind: State, Data: LoopbackState{Question: question.ToClient()}}
 }

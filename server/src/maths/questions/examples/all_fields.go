@@ -1,21 +1,21 @@
 package examples
 
 import (
-	ex "github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
+	que "github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
-var questions = [...]ex.QuestionPage{
+var questionsList = [...]que.QuestionPage{
 	{
 		Title: "Remplir un tableau de variation",
-		Enonce: ex.Enonce{
-			ex.TextBlock{
+		Enonce: que.Enonce{
+			que.TextBlock{
 				Parts: "Réponse attendue : -2, 0, 2/3 \n 4/9, -2, 2/3",
 			},
-			ex.VariationTableFieldBlock{
-				Answer: ex.VariationTableBlock{
+			que.VariationTableFieldBlock{
+				Answer: que.VariationTableBlock{
 					Label: "y = h(x)",
 					Xs:    []string{"-2", "0", "2/3"},
 					Fxs:   []string{"4/9", "-2", "2/3"},
@@ -25,17 +25,17 @@ var questions = [...]ex.QuestionPage{
 	},
 }
 
-var blockList = [...]ex.Block{
-	ex.ExpressionFieldBlock{
+var blockList = [...]que.Block{
+	que.ExpressionFieldBlock{
 		Expression:      "x^2 + 2x + 1",
-		Label:           ex.NewPExpr("(x+1)^2"),
-		ComparisonLevel: ex.SimpleSubstitutions,
+		Label:           que.NewPExpr("(x+1)^2"),
+		ComparisonLevel: que.SimpleSubstitutions,
 	},
-	ex.FigureAffineLineFieldBlock{
+	que.FigureAffineLineFieldBlock{
 		Label: "f",
 		A:     "1",
 		B:     "3",
-		Figure: ex.FigureBlock{
+		Figure: que.FigureBlock{
 			Drawings: repere.RandomDrawings{},
 			Bounds: repere.RepereBounds{
 				Width:  10,
@@ -48,7 +48,7 @@ var blockList = [...]ex.Block{
 			ShowGrid: true,
 		},
 	},
-	ex.FigureBlock{
+	que.FigureBlock{
 		Drawings: repere.RandomDrawings{
 			Points: []repere.NamedRandomLabeledPoint{
 				{
@@ -83,22 +83,22 @@ var blockList = [...]ex.Block{
 		},
 		ShowGrid: true,
 	},
-	ex.FigurePointFieldBlock{
-		Answer: ex.CoordExpression{X: "2", Y: "-1"},
+	que.FigurePointFieldBlock{
+		Answer: que.CoordExpression{X: "2", Y: "-1"},
 	},
-	ex.FigureVectorFieldBlock{
-		Answer:         ex.CoordExpression{X: "2", Y: "-1"},
-		AnswerOrigin:   ex.CoordExpression{X: "2", Y: "-1"},
+	que.FigureVectorFieldBlock{
+		Answer:         que.CoordExpression{X: "2", Y: "-1"},
+		AnswerOrigin:   que.CoordExpression{X: "2", Y: "-1"},
 		MustHaveOrigin: true,
 	},
-	ex.FigureVectorPairFieldBlock{
-		Criterion: ex.VectorColinear,
+	que.FigureVectorPairFieldBlock{
+		Criterion: que.VectorColinear,
 	},
-	ex.FormulaBlock{
+	que.FormulaBlock{
 		Parts: "Soit $f(x) = &2x + 1&$. Quelle est la dérivée de f ?",
 	},
-	ex.FunctionGraphBlock{
-		Functions: []ex.FunctionDefinition{
+	que.FunctionGraphBlock{
+		Functions: []que.FunctionDefinition{
 			{
 				Function: "x^2 - 5",
 				Decoration: functiongrapher.FunctionDecoration{
@@ -128,24 +128,24 @@ var blockList = [...]ex.Block{
 			},
 		},
 	},
-	ex.FunctionPointsFieldBlock{
+	que.FunctionPointsFieldBlock{
 		Function: "3x- 5",
 		Label:    "h",
 		Variable: expression.NewVar('x'),
 		XGrid:    []string{"-3", "-2", "-1", "0", "1", "2", "3"},
 	},
 
-	ex.NumberFieldBlock{Expression: "1.2"},
-	ex.OrderedListFieldBlock{
+	que.NumberFieldBlock{Expression: "1.2"},
+	que.OrderedListFieldBlock{
 		Label: "x \\in",
-		Answer: []ex.Interpolated{
+		Answer: []que.Interpolated{
 			"[",
 			"-2",
 			";",
 			"$+\\infty$",
 			"[",
 		},
-		AdditionalProposals: []ex.Interpolated{
+		AdditionalProposals: []que.Interpolated{
 			"$\\{$",
 			"$\\}$",
 			"3",
@@ -154,8 +154,8 @@ var blockList = [...]ex.Block{
 			"Un long texte",
 		},
 	},
-	ex.RadioFieldBlock{
-		Proposals: []ex.Interpolated{
+	que.RadioFieldBlock{
+		Proposals: []que.Interpolated{
 			"Oui",
 			"Non",
 			"x = 4",
@@ -163,60 +163,60 @@ var blockList = [...]ex.Block{
 		Answer:     "3",
 		AsDropDown: false,
 	},
-	ex.SignTableBlock{
+	que.SignTableBlock{
 		Label: "g",
-		Xs: []ex.Interpolated{
+		Xs: []que.Interpolated{
 			"$-\\infty$",
 			"&1/3&",
 			"$3$",
 		},
-		FxSymbols: []ex.SignSymbol{
-			ex.Nothing,
-			ex.Zero,
-			ex.ForbiddenValue,
+		FxSymbols: []que.SignSymbol{
+			que.Nothing,
+			que.Zero,
+			que.ForbiddenValue,
 		},
 		Signs: []bool{true, false},
 	},
-	ex.TableBlock{
-		VerticalHeaders: []ex.TextPart{
-			ex.NewPText("Issues"),
-			ex.NewPText("Probabilités"),
+	que.TableBlock{
+		VerticalHeaders: []que.TextPart{
+			que.NewPText("Issues"),
+			que.NewPText("Probabilités"),
 		},
 		HorizontalHeaders: nil,
-		Values: [][]ex.TextPart{
+		Values: [][]que.TextPart{
 			{
-				ex.NewPText("Rouge"), ex.NewPExpr("Vert"), ex.NewPExpr("Bleu"),
+				que.NewPText("Rouge"), que.NewPExpr("Vert"), que.NewPExpr("Bleu"),
 			},
 			{
-				ex.NewPExpr("1/3"), ex.NewPExpr("1/3"), ex.NewPExpr("1/3"),
+				que.NewPExpr("1/3"), que.NewPExpr("1/3"), que.NewPExpr("1/3"),
 			},
 		},
 	},
-	ex.TableFieldBlock{
-		HorizontalHeaders: []ex.TextPart{
-			ex.NewPText("Homme"),
-			ex.NewPText("Femme"),
+	que.TableFieldBlock{
+		HorizontalHeaders: []que.TextPart{
+			que.NewPText("Homme"),
+			que.NewPText("Femme"),
 		},
-		VerticalHeaders: []ex.TextPart{
-			ex.NewPText("Salarié"),
-			ex.NewPText("Chomeur"),
+		VerticalHeaders: []que.TextPart{
+			que.NewPText("Salarié"),
+			que.NewPText("Chomeur"),
 		},
 		Answer: [][]string{
 			{"899", "253"},
 			{"520", "50"},
 		},
 	},
-	ex.TextBlock{
+	que.TextBlock{
 		Parts:   "Soit $f(x) = &2x + 1&$. Calculer $f'$.",
 		Bold:    true,
 		Italic:  true,
 		Smaller: true,
 	},
-	ex.TreeFieldBlock{
+	que.TreeFieldBlock{
 		EventsProposals: []string{"P", "F", "?"},
-		AnswerRoot: ex.TreeNodeAnswer{
+		AnswerRoot: que.TreeNodeAnswer{
 			Probabilities: []string{"1/3", "2/3"},
-			Children: []ex.TreeNodeAnswer{
+			Children: []que.TreeNodeAnswer{
 				{
 					Value: 0,
 				},
@@ -226,13 +226,13 @@ var blockList = [...]ex.Block{
 			},
 		},
 	},
-	ex.VariationTableBlock{
+	que.VariationTableBlock{
 		Label: "g(x)",
 		Xs:    []string{"-5", "0", "2/3"},
 		Fxs:   []string{"4.5", "2/9", "-12"},
 	},
-	ex.VariationTableFieldBlock{
-		Answer: ex.VariationTableBlock{
+	que.VariationTableFieldBlock{
+		Answer: que.VariationTableBlock{
 			Label: "g(x)",
 			Xs:    []string{"-5", "0", "2/3"},
 			Fxs:   []string{"4.5", "2/9", "-12"},

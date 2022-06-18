@@ -1,4 +1,4 @@
-package exercice
+package questions
 
 import (
 	"reflect"

@@ -5,7 +5,7 @@ package examples
 // 	"reflect"
 // 	"testing"
 
-// 	"github.com/benoitkugler/maths-online/maths/exercice/client"
+// 	"github.com/benoitkugler/maths-online/maths/questions/client"
 // )
 
 // func TestClientExerciceJSON(t *testing.T) {

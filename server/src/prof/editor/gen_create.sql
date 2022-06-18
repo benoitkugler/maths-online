@@ -30,7 +30,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TextPart (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_TextPart (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -68,7 +68,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_ExpressionFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ExpressionFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -83,7 +83,7 @@ BEGIN
         FROM
             jsonb_each(data))
         AND structgen_validate_json_string (data -> 'Expression')
-        AND structgen_validate_json_exe_TextPart (data -> 'Label')
+        AND structgen_validate_json_que_TextPart (data -> 'Label')
         AND structgen_validate_json_ComparisonLevel (data -> 'ComparisonLevel');
     RETURN is_valid;
 END;
@@ -407,7 +407,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FigureBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FigureBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -430,7 +430,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FigureAffineLineFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FigureAffineLineFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -447,14 +447,14 @@ BEGIN
         AND structgen_validate_json_string (data -> 'Label')
         AND structgen_validate_json_string (data -> 'A')
         AND structgen_validate_json_string (data -> 'B')
-        AND structgen_validate_json_exe_FigureBlock (data -> 'Figure');
+        AND structgen_validate_json_que_FigureBlock (data -> 'Figure');
     RETURN is_valid;
 END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_CoordExpression (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_CoordExpression (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -476,7 +476,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FigurePointFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FigurePointFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -490,15 +490,15 @@ BEGIN
             bool_and(key IN ('Answer', 'Figure'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_exe_CoordExpression (data -> 'Answer')
-        AND structgen_validate_json_exe_FigureBlock (data -> 'Figure');
+        AND structgen_validate_json_que_CoordExpression (data -> 'Answer')
+        AND structgen_validate_json_que_FigureBlock (data -> 'Figure');
     RETURN is_valid;
 END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FigureVectorFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FigureVectorFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -512,9 +512,9 @@ BEGIN
             bool_and(key IN ('Answer', 'AnswerOrigin', 'Figure', 'MustHaveOrigin'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_exe_CoordExpression (data -> 'Answer')
-        AND structgen_validate_json_exe_CoordExpression (data -> 'AnswerOrigin')
-        AND structgen_validate_json_exe_FigureBlock (data -> 'Figure')
+        AND structgen_validate_json_que_CoordExpression (data -> 'Answer')
+        AND structgen_validate_json_que_CoordExpression (data -> 'AnswerOrigin')
+        AND structgen_validate_json_que_FigureBlock (data -> 'Figure')
         AND structgen_validate_json_boolean (data -> 'MustHaveOrigin');
     RETURN is_valid;
 END;
@@ -538,7 +538,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FigureVectorPairFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FigureVectorPairFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -552,7 +552,7 @@ BEGIN
             bool_and(key IN ('Figure', 'Criterion'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_exe_FigureBlock (data -> 'Figure')
+        AND structgen_validate_json_que_FigureBlock (data -> 'Figure')
         AND structgen_validate_json_VectorPairCriterion (data -> 'Criterion');
     RETURN is_valid;
 END;
@@ -560,7 +560,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FormulaBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FormulaBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -625,7 +625,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FunctionDefinition (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionDefinition (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -650,7 +650,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_FunctionDefinition (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_FunctionDefinition (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -665,7 +665,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_exe_FunctionDefinition (value))
+            bool_and(structgen_validate_json_que_FunctionDefinition (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -673,7 +673,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FunctionGraphBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionGraphBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -687,7 +687,7 @@ BEGIN
             bool_and(key IN ('Functions'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_exe_FunctionDefinition (data -> 'Functions');
+        AND structgen_validate_json_array_que_FunctionDefinition (data -> 'Functions');
     RETURN is_valid;
 END;
 $$
@@ -717,7 +717,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FunctionPointsFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionPointsFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -741,7 +741,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_FunctionVariationGraphBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionVariationGraphBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -764,7 +764,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_NumberFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_NumberFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -785,7 +785,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_OrderedListFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_OrderedListFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -808,7 +808,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_RadioFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_RadioFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -893,7 +893,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_SignTableBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_SignTableBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -917,7 +917,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_TextPart (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_TextPart (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -932,7 +932,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_exe_TextPart (value))
+            bool_and(structgen_validate_json_que_TextPart (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -940,7 +940,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_array_exe_TextPart (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_array_que_TextPart (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -955,7 +955,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_array_exe_TextPart (value))
+            bool_and(structgen_validate_json_array_que_TextPart (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -963,7 +963,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TableBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_TableBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -977,9 +977,9 @@ BEGIN
             bool_and(key IN ('HorizontalHeaders', 'VerticalHeaders', 'Values'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_exe_TextPart (data -> 'HorizontalHeaders')
-        AND structgen_validate_json_array_exe_TextPart (data -> 'VerticalHeaders')
-        AND structgen_validate_json_array_array_exe_TextPart (data -> 'Values');
+        AND structgen_validate_json_array_que_TextPart (data -> 'HorizontalHeaders')
+        AND structgen_validate_json_array_que_TextPart (data -> 'VerticalHeaders')
+        AND structgen_validate_json_array_array_que_TextPart (data -> 'Values');
     RETURN is_valid;
 END;
 $$
@@ -1009,7 +1009,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TableFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_TableFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1023,8 +1023,8 @@ BEGIN
             bool_and(key IN ('HorizontalHeaders', 'VerticalHeaders', 'Answer'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_exe_TextPart (data -> 'HorizontalHeaders')
-        AND structgen_validate_json_array_exe_TextPart (data -> 'VerticalHeaders')
+        AND structgen_validate_json_array_que_TextPart (data -> 'HorizontalHeaders')
+        AND structgen_validate_json_array_que_TextPart (data -> 'VerticalHeaders')
         AND structgen_validate_json_array_array_string (data -> 'Answer');
     RETURN is_valid;
 END;
@@ -1032,7 +1032,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TextBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_TextBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1056,7 +1056,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_TreeNodeAnswer (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_TreeNodeAnswer (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1071,7 +1071,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_exe_TreeNodeAnswer (value))
+            bool_and(structgen_validate_json_que_TreeNodeAnswer (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1079,7 +1079,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TreeNodeAnswer (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_TreeNodeAnswer (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1093,7 +1093,7 @@ BEGIN
             bool_and(key IN ('Children', 'Probabilities', 'Value'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_exe_TreeNodeAnswer (data -> 'Children')
+        AND structgen_validate_json_array_que_TreeNodeAnswer (data -> 'Children')
         AND structgen_validate_json_array_string (data -> 'Probabilities')
         AND structgen_validate_json_number (data -> 'Value');
     RETURN is_valid;
@@ -1102,7 +1102,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_TreeFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_TreeFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1117,14 +1117,14 @@ BEGIN
         FROM
             jsonb_each(data))
         AND structgen_validate_json_array_string (data -> 'EventsProposals')
-        AND structgen_validate_json_exe_TreeNodeAnswer (data -> 'AnswerRoot');
+        AND structgen_validate_json_que_TreeNodeAnswer (data -> 'AnswerRoot');
     RETURN is_valid;
 END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_VariationTableBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_VariationTableBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1147,7 +1147,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_VariationTableFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_VariationTableFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1161,14 +1161,14 @@ BEGIN
             bool_and(key IN ('Answer'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_exe_VariationTableBlock (data -> 'Answer');
+        AND structgen_validate_json_que_VariationTableBlock (data -> 'Answer');
     RETURN is_valid;
 END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_VectorFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_VectorFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1182,7 +1182,7 @@ BEGIN
             bool_and(key IN ('Answer', 'AcceptColinear', 'DisplayColumn'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_exe_CoordExpression (data -> 'Answer')
+        AND structgen_validate_json_que_CoordExpression (data -> 'Answer')
         AND structgen_validate_json_boolean (data -> 'AcceptColinear')
         AND structgen_validate_json_boolean (data -> 'DisplayColumn');
     RETURN is_valid;
@@ -1191,7 +1191,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_Block (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_Block (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1199,47 +1199,47 @@ BEGIN
         RETURN FALSE;
     END IF;
     CASE WHEN (data -> 'Kind')::int = 0 THEN
-        RETURN structgen_validate_json_exe_ExpressionFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_ExpressionFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 1 THEN
-        RETURN structgen_validate_json_exe_FigureAffineLineFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FigureAffineLineFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 2 THEN
-        RETURN structgen_validate_json_exe_FigureBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FigureBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 3 THEN
-        RETURN structgen_validate_json_exe_FigurePointFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FigurePointFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 4 THEN
-        RETURN structgen_validate_json_exe_FigureVectorFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FigureVectorFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 5 THEN
-        RETURN structgen_validate_json_exe_FigureVectorPairFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FigureVectorPairFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 6 THEN
-        RETURN structgen_validate_json_exe_FormulaBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FormulaBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 7 THEN
-        RETURN structgen_validate_json_exe_FunctionGraphBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FunctionGraphBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 8 THEN
-        RETURN structgen_validate_json_exe_FunctionPointsFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FunctionPointsFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 9 THEN
-        RETURN structgen_validate_json_exe_FunctionVariationGraphBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_FunctionVariationGraphBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 10 THEN
-        RETURN structgen_validate_json_exe_NumberFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_NumberFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 11 THEN
-        RETURN structgen_validate_json_exe_OrderedListFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_OrderedListFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 12 THEN
-        RETURN structgen_validate_json_exe_RadioFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_RadioFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 13 THEN
-        RETURN structgen_validate_json_exe_SignTableBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_SignTableBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 14 THEN
-        RETURN structgen_validate_json_exe_TableBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_TableBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 15 THEN
-        RETURN structgen_validate_json_exe_TableFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_TableFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 16 THEN
-        RETURN structgen_validate_json_exe_TextBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_TextBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 17 THEN
-        RETURN structgen_validate_json_exe_TreeFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_TreeFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 18 THEN
-        RETURN structgen_validate_json_exe_VariationTableBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_VariationTableBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 19 THEN
-        RETURN structgen_validate_json_exe_VariationTableFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_VariationTableFieldBlock (data -> 'Data');
     WHEN (data -> 'Kind')::int = 20 THEN
-        RETURN structgen_validate_json_exe_VectorFieldBlock (data -> 'Data');
+        RETURN structgen_validate_json_que_VectorFieldBlock (data -> 'Data');
     ELSE
         RETURN FALSE;
     END CASE;
@@ -1248,7 +1248,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_Block (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_Block (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1263,7 +1263,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_exe_Block (value))
+            bool_and(structgen_validate_json_que_Block (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1271,7 +1271,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_RandomParameter (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_RandomParameter (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1293,7 +1293,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_exe_RandomParameter (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_RandomParameter (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1308,7 +1308,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_exe_RandomParameter (value))
+            bool_and(structgen_validate_json_que_RandomParameter (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1316,7 +1316,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_Parameters (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_Parameters (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1330,7 +1330,7 @@ BEGIN
             bool_and(key IN ('Variables', 'Intrinsics'))
         FROM
             jsonb_each(data))
-        AND structgen_validate_json_array_exe_RandomParameter (data -> 'Variables')
+        AND structgen_validate_json_array_que_RandomParameter (data -> 'Variables')
         AND structgen_validate_json_array_string (data -> 'Intrinsics');
     RETURN is_valid;
 END;
@@ -1338,7 +1338,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_exe_QuestionPage (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_QuestionPage (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1353,8 +1353,8 @@ BEGIN
         FROM
             jsonb_each(data))
         AND structgen_validate_json_string (data -> 'title')
-        AND structgen_validate_json_array_exe_Block (data -> 'enonce')
-        AND structgen_validate_json_exe_Parameters (data -> 'parameters');
+        AND structgen_validate_json_array_que_Block (data -> 'enonce')
+        AND structgen_validate_json_que_Parameters (data -> 'parameters');
     RETURN is_valid;
 END;
 $$
@@ -1363,10 +1363,11 @@ IMMUTABLE;
 
 CREATE TABLE questions (
     id serial PRIMARY KEY,
-    page jsonb NOT NULL CONSTRAINT page_structgen_validate_json_exe_QuestionPage CHECK (structgen_validate_json_exe_QuestionPage (page)),
+    page jsonb NOT NULL CONSTRAINT page_structgen_validate_json_que_QuestionPage CHECK (structgen_validate_json_que_QuestionPage (page)),
     public boolean NOT NULL,
     id_teacher integer NOT NULL,
-    description varchar NOT NULL
+    description varchar NOT NULL,
+    need_exercice boolean NOT NULL
 );
 
 CREATE TABLE question_tags (

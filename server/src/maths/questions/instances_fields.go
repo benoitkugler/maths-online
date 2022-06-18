@@ -1,4 +1,4 @@
-package exercice
+package questions
 
 import (
 	"fmt"
@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 

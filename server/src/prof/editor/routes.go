@@ -3,8 +3,8 @@ package editor
 import (
 	"fmt"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -177,11 +177,11 @@ func (ct *Controller) EditorGetQuestion(c echo.Context) error {
 
 type CheckParametersIn struct {
 	SessionID  string
-	Parameters exercice.Parameters
+	Parameters questions.Parameters
 }
 
 type CheckParametersOut struct {
-	ErrDefinition exercice.ErrParameters
+	ErrDefinition questions.ErrParameters
 	// Variables is the list of the variables defined
 	// in the parameteres (intrinsics included)
 	Variables []expression.Variable
@@ -242,7 +242,7 @@ type SaveAndPreviewIn struct {
 }
 
 type SaveAndPreviewOut struct {
-	Error   exercice.ErrQuestionInvalid
+	Error   questions.ErrQuestionInvalid
 	IsValid bool
 }
 

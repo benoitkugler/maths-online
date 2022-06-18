@@ -109,12 +109,6 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 		return nil, utils.SQLError(err)
 	}
 
-	tags, err := editor.SelectAllQuestionTags(ct.db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	tagsDict := tags.ByIdQuestion()
 	var out []TrivialConfigExt
 	for _, config := range configs {
 		vis, hasAcces := teacher.NewVisibility(config.IdTeacher, userID, ct.admin.Id, config.Public)
@@ -126,7 +120,11 @@ func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, err
 			AllowPublish: config.IdTeacher == ct.admin.Id,
 			IsPublic:     config.Public,
 		}
-		out = append(out, config.withDetails(tagsDict, origin))
+		item, err := config.withDetails(ct.db, origin, userID)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, item)
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Config.Id < out[j].Config.Id })
@@ -207,17 +205,14 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	tags, err := editor.SelectAllQuestionTags(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	out := config.withDetails(tags.ByIdQuestion(), teacher.Origin{
+	out, err := config.withDetails(ct.db, teacher.Origin{
 		Visibility:   teacher.Personnal,
 		AllowPublish: user.Id == ct.admin.Id,
 		IsPublic:     config.Public,
-	},
-	)
+	}, user.Id)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(200, out)
 }
@@ -242,16 +237,14 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	tags, err := editor.SelectAllQuestionTags(ct.db)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	out := config.withDetails(tags.ByIdQuestion(), teacher.Origin{
+	out, err := config.withDetails(ct.db, teacher.Origin{
 		Visibility:   teacher.Personnal,
 		AllowPublish: user.Id == ct.admin.Id,
 		IsPublic:     config.Public,
-	})
+	}, user.Id)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(200, out)
 }

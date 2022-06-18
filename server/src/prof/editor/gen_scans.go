@@ -113,6 +113,7 @@ func scanOneQuestion(row scanner) (Question, error) {
 		&s.Public,
 		&s.IdTeacher,
 		&s.Description,
+		&s.NeedExercice,
 	)
 	return s, err
 }
@@ -182,24 +183,24 @@ func ScanQuestions(rs *sql.Rows) (Questions, error) {
 // Insert Question in the database and returns the item with id filled.
 func (item Question) Insert(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`INSERT INTO questions (
-		page,public,id_teacher,description
+		page,public,id_teacher,description,need_exercice
 		) VALUES (
-		$1,$2,$3,$4
+		$1,$2,$3,$4,$5
 		) RETURNING 
-		id,page,public,id_teacher,description;
-		`, item.Page, item.Public, item.IdTeacher, item.Description)
+		id,page,public,id_teacher,description,need_exercice;
+		`, item.Page, item.Public, item.IdTeacher, item.Description, item.NeedExercice)
 	return ScanQuestion(row)
 }
 
 // Update Question in the database and returns the new version.
 func (item Question) Update(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`UPDATE questions SET (
-		page,public,id_teacher,description
+		page,public,id_teacher,description,need_exercice
 		) = (
-		$2,$3,$4,$5
+		$2,$3,$4,$5,$6
 		) WHERE id = $1 RETURNING 
-		id,page,public,id_teacher,description;
-		`, item.Id, item.Page, item.Public, item.IdTeacher, item.Description)
+		id,page,public,id_teacher,description,need_exercice;
+		`, item.Id, item.Page, item.Public, item.IdTeacher, item.Description, item.NeedExercice)
 	return ScanQuestion(row)
 }
 

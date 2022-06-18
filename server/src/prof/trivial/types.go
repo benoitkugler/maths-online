@@ -1,7 +1,6 @@
 package trivial
 
 import (
-	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
@@ -20,12 +19,16 @@ type TrivialConfigExt struct {
 	NbQuestionsByCategories [game.NbCategories]int
 }
 
-func (tc TrivialConfig) withDetails(dict map[int64]editor.QuestionTags, origin teacher.Origin) TrivialConfigExt {
+func (tc TrivialConfig) withDetails(db DB, origin teacher.Origin, userID int64) (TrivialConfigExt, error) {
 	out := TrivialConfigExt{Config: tc, Origin: origin}
 	for i, cat := range tc.Questions {
-		out.NbQuestionsByCategories[i] = len(cat.filter(dict))
+		questions, err := cat.selectQuestions(db, userID)
+		if err != nil {
+			return out, err
+		}
+		out.NbQuestionsByCategories[i] = len(questions)
 	}
-	return out
+	return out, nil
 }
 
 type LaunchSessionIn struct {

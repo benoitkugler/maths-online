@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -72,7 +72,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 
 func testInsertSignTable(t *testing.T, db *sql.DB) {
 	qu := randQuestion()
-	qu.Page.Enonce = exercice.Enonce{randexe_SignTableBlock()}
+	qu.Page.Enonce = questions.Enonce{randque_SignTableBlock()}
 	qu, err := qu.Insert(db)
 	if err != nil {
 		t.Fatal(err)
