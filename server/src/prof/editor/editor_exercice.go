@@ -65,6 +65,9 @@ func (ct *Controller) getExercices(userID int64) ([]ExerciceExt, error) {
 		sort.Slice(s, func(i, j int) bool { return s[i].index < s[j].index })
 	}
 
+	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Exercice.Title < out[j].Exercice.Title })
+
 	return out, nil
 }
 

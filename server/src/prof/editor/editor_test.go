@@ -84,3 +84,16 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDB(t *testing.T) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		t.Skip("DB not available")
+	}
+
+	ct := NewController(db, teacher.Teacher{Id: 1})
+	_, err = ct.getExercices(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
