@@ -18,6 +18,9 @@
       <v-list-item>
         <v-btn link :to="{ name: 'editor' }">Editeur de question</v-btn>
       </v-list-item>
+      <v-list-item>
+        <v-btn link :to="{ name: 'editor-ex' }">Editeur d'exercice</v-btn>
+      </v-list-item>
 
       <v-divider></v-divider>
       <v-list-item>

@@ -1,4 +1,5 @@
 import ClassroomsListVue from "@/views/ClassroomsList.vue";
+import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
@@ -30,6 +31,12 @@ const router = createRouter({
       name: "editor",
       component: QuestionEditor,
       meta: { Label: "Editeur de question" },
+    },
+    {
+      path: "/editor-ex",
+      name: "editor-ex",
+      component: ExerciceEditorVue,
+      meta: { Label: "Editeur d'exercices" },
     },
     // {
     //   path: '/about',

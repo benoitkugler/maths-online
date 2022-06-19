@@ -5,6 +5,9 @@ import type {
   CheckParametersOut,
   Classroom,
   ClassroomExt,
+  Exercice,
+  ExerciceExt,
+  ExerciceQuestions,
   GenerateClassroomCodeOut,
   LaunchSessionOut,
   ListQuestionsOut,
@@ -37,6 +40,40 @@ class Controller extends AbstractAPI {
 
   getToken() {
     return this.authToken;
+  }
+
+  protected onSuccessExercicesGetList(data: ExerciceExt[] | null): void {
+    this.inRequest = false;
+  }
+  protected onSuccessExerciceCreate(data: ExerciceExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice créé avec succès.");
+    }
+  }
+  protected onSuccessExerciceDelete(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice supprimé avec succès.");
+    }
+  }
+  protected onSuccessExerciceUpdate(data: Exercice): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice mis à jour avec succès.");
+    }
+  }
+  protected onSuccessExerciceAddQuestion(data: ExerciceQuestions): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question ajoutée avec succès.");
+    }
+  }
+  protected onSuccessExerciceRemoveQuestion(data: ExerciceQuestions): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question enlevée avec succès.");
+    }
   }
 
   protected onSuccessGetTrivialRunningSessions(

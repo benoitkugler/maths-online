@@ -20,6 +20,11 @@
                 </v-btn>
               </v-col>
               <v-col>
+                <v-btn link :to="{ name: 'editor-ex' }" color="primary">
+                  Editeur d'exercice
+                </v-btn>
+              </v-col>
+              <v-col>
                 <v-btn
                   link
                   href="https://education.alwaysdata.net/test-eleve"
@@ -42,6 +47,6 @@ import { defineComponent } from "vue";
 export default defineComponent({
   name: "HomeView",
 
-  components: {}
+  components: {},
 });
 </script>
