@@ -30,5 +30,5 @@ ALTER TABLE teachers
     ADD UNIQUE (mail);
 
 ALTER TABLE student_classrooms
-    ADD UNIQUE (is_student);
+    ADD UNIQUE (id_student);
 

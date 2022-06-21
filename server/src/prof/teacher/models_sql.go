@@ -20,7 +20,7 @@ type Classroom struct {
 }
 
 // We only allow zero or one classroom per student
-// sql: ADD UNIQUE(is_student)
+// sql: ADD UNIQUE(id_student)
 type StudentClassroom struct {
 	IdStudent   int64 `json:"id_student" sql_on_delete:"CASCADE"`
 	IdClassroom int64 `json:"id_classroom" sql_on_delete:"CASCADE"`
