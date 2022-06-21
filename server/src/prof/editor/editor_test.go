@@ -42,12 +42,12 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l, err := ct.addQuestionToExercice(ExerciceAddQuestionIn{IdExercice: ex.Exercice.Id, IdQuestion: -1}, 1)
+	l, err := ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Exercice.Id}, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(l) != 1 {
-		t.Fatal(err)
+		t.Fatal(l)
 	}
 
 	qu, err := Question{IdTeacher: 1}.Insert(db)
@@ -55,19 +55,31 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l, err = ct.addQuestionToExercice(ExerciceAddQuestionIn{IdExercice: ex.Exercice.Id, IdQuestion: qu.Id}, 1)
+	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
+		IdExercice: ex.Exercice.Id,
+		Questions: ExerciceQuestions{
+			l[0].Question,
+			ExerciceQuestion{IdQuestion: qu.Id},
+			ExerciceQuestion{IdQuestion: qu.Id},
+		},
+	}, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(l) != 2 {
-		t.Fatal(err)
+	if len(l) != 3 {
+		t.Fatal(l)
 	}
 
-	l, err = ct.removeQuestionFromExercice(ExerciceRemoveQuestionIn{IdExercice: ex.Exercice.Id, IdQuestion: qu.Id}, 1)
+	updated := l[1].Question
+	updated.Bareme = 5
+	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
+		IdExercice: ex.Exercice.Id,
+		Questions: ExerciceQuestions{
+			l[0].Question,
+			updated,
+		},
+	}, 1)
 	if err != nil {
-		t.Fatal(err)
-	}
-	if len(l) != 1 {
 		t.Fatal(err)
 	}
 

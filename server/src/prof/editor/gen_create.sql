@@ -154,7 +154,8 @@ CREATE TABLE exercices (
 CREATE TABLE exercice_questions (
     id_exercice integer NOT NULL,
     id_question integer NOT NULL,
-    bareme integer NOT NULL
+    bareme integer NOT NULL,
+    index integer NOT NULL
 );
 
 CREATE OR REPLACE FUNCTION structgen_validate_json_TextKind (data jsonb)
@@ -1408,4 +1409,7 @@ ALTER TABLE question_tags
 
 ALTER TABLE question_tags
     ADD UNIQUE (id_question, tag);
+
+ALTER TABLE exercice_questions
+    ADD UNIQUE (id_exercice, INDEX);
 

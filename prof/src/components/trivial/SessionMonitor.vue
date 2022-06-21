@@ -5,7 +5,7 @@
         <v-card-title>Suivre la session de Triv'Maths</v-card-title>
       </v-col>
       <v-col style="text-align: right">
-        <v-btn icon flat class="mx-2" @click="emit('close')">
+        <v-btn icon flat class="mx-2" @click="emit('closed')">
           <v-icon icon="mdi-close"></v-icon>
         </v-btn>
       </v-col>
@@ -42,7 +42,7 @@ import GameMonitor from "./GameMonitor.vue";
 // const props = defineProps<any>();
 
 const emit = defineEmits<{
-  (e: "close"): void;
+  (e: "closed"): void;
 }>();
 
 let summaries = $ref<gameSummary[]>([]);

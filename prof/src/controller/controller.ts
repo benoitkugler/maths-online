@@ -7,7 +7,7 @@ import type {
   ClassroomExt,
   Exercice,
   ExerciceExt,
-  ExerciceQuestions,
+  ExerciceQuestionExt,
   GenerateClassroomCodeOut,
   LaunchSessionOut,
   ListQuestionsOut,
@@ -42,6 +42,23 @@ class Controller extends AbstractAPI {
     return this.authToken;
   }
 
+  protected onSuccessExerciceCreateQuestion(
+    data: ExerciceQuestionExt[] | null
+  ): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question ajoutée avec succès.");
+    }
+  }
+  protected onSuccessExerciceUpdateQuestions(
+    data: ExerciceQuestionExt[] | null
+  ): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Questions modifiées avec succès.");
+    }
+  }
+
   protected onSuccessExercicesGetList(data: ExerciceExt[] | null): void {
     this.inRequest = false;
   }
@@ -61,18 +78,6 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Exercice mis à jour avec succès.");
-    }
-  }
-  protected onSuccessExerciceAddQuestion(data: ExerciceQuestions): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question ajoutée avec succès.");
-    }
-  }
-  protected onSuccessExerciceRemoveQuestion(data: ExerciceQuestions): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question enlevée avec succès.");
     }
   }
 

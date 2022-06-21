@@ -111,6 +111,7 @@ func randExerciceQuestion() ExerciceQuestion {
 		IdExercice: randint64(),
 		IdQuestion: randint64(),
 		Bareme:     randint(),
+		Index:      randint(),
 	}
 }
 

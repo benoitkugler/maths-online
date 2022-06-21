@@ -36,6 +36,11 @@
           }}
         </div>
       </v-col>
+      <v-col cols="4">
+        <v-chip>
+          {{ props.exercice.Questions?.length || 0 }} question(s)</v-chip
+        >
+      </v-col>
     </v-row>
   </v-list-item>
 </template>

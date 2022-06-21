@@ -73,7 +73,9 @@ const emit = defineEmits<{
 
 let exercices = $ref<ExerciceExt[]>([]);
 
-onMounted(() => fetchExercices());
+onMounted(() => {
+  fetchExercices();
+});
 
 async function fetchExercices() {
   const res = await controller.ExercicesGetList();

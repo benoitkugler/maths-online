@@ -628,23 +628,27 @@ export interface ExerciceQuestion {
   id_question: number;
   bareme: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
-export type ExerciceQuestions = ExerciceQuestion[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestionExt
+export interface ExerciceQuestionExt {
+  Title: string;
+  Question: ExerciceQuestion;
+}
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {
   Exercice: Exercice;
   Origin: Origin;
+  Questions: ExerciceQuestionExt[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn
+export interface ExerciceCreateQuestionIn {
+  IdExercice: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
+export type ExerciceQuestions = ExerciceQuestion[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateQuestionsIn
+export interface ExerciceUpdateQuestionsIn {
   Questions: ExerciceQuestions;
-}
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceAddQuestionIn
-export interface ExerciceAddQuestionIn {
   IdExercice: number;
-  IdQuestion: number;
-}
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceRemoveQuestionIn
-export interface ExerciceRemoveQuestionIn {
-  IdExercice: number;
-  IdQuestion: number;
 }
 
 /** AbstractAPI provides auto-generated API calls and should be used 
@@ -1586,9 +1590,9 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessExerciceUpdate(data: Exercice): void;
 
-  protected async rawExerciceAddQuestion(params: ExerciceAddQuestionIn) {
+  protected async rawExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice/questions";
-    const rep: AxiosResponse<ExerciceQuestions> = await Axios.put(
+    const rep: AxiosResponse<ExerciceQuestionExt[] | null> = await Axios.put(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -1596,25 +1600,27 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceAddQuestion wraps rawExerciceAddQuestion and handles the error */
-  async ExerciceAddQuestion(params: ExerciceAddQuestionIn) {
+  /** ExerciceCreateQuestion wraps rawExerciceCreateQuestion and handles the error */
+  async ExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceAddQuestion(params);
-      this.onSuccessExerciceAddQuestion(out);
+      const out = await this.rawExerciceCreateQuestion(params);
+      this.onSuccessExerciceCreateQuestion(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceAddQuestion(
-    data: ExerciceQuestions
+  protected abstract onSuccessExerciceCreateQuestion(
+    data: ExerciceQuestionExt[] | null
   ): void;
 
-  protected async rawExerciceRemoveQuestion(params: ExerciceRemoveQuestionIn) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/delete-question";
-    const rep: AxiosResponse<ExerciceQuestions> = await Axios.post(
+  protected async rawExerciceUpdateQuestions(
+    params: ExerciceUpdateQuestionsIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/questions";
+    const rep: AxiosResponse<ExerciceQuestionExt[] | null> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -1622,19 +1628,19 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceRemoveQuestion wraps rawExerciceRemoveQuestion and handles the error */
-  async ExerciceRemoveQuestion(params: ExerciceRemoveQuestionIn) {
+  /** ExerciceUpdateQuestions wraps rawExerciceUpdateQuestions and handles the error */
+  async ExerciceUpdateQuestions(params: ExerciceUpdateQuestionsIn) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceRemoveQuestion(params);
-      this.onSuccessExerciceRemoveQuestion(out);
+      const out = await this.rawExerciceUpdateQuestions(params);
+      this.onSuccessExerciceUpdateQuestions(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceRemoveQuestion(
-    data: ExerciceQuestions
+  protected abstract onSuccessExerciceUpdateQuestions(
+    data: ExerciceQuestionExt[] | null
   ): void;
 }

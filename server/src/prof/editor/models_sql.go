@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/utils"
 )
 
 //go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql -mode=rand:gen_randdata_test.go -mode=ts:../../../../prof/src/controller/exercice_gen.ts
@@ -63,14 +64,43 @@ type ExerciceQuestion struct {
 	IdExercice int64 `json:"id_exercice" sql_on_delete:"CASCADE"`
 	IdQuestion int64 `json:"id_question"`
 	Bareme     int   `json:"bareme"`
-	index      int   `json:"index"`
+	Index      int   `json:"-" sql:"index"`
 }
 
-// also update `l` in place with correct indices
-func insertExerciceQuestionList(tx *sql.Tx, l ExerciceQuestions) error {
-	// enforce index
+// updateExerciceQuestionList set the questions for the given exercice,
+// overidding `IdExercice` and `index` fields of the list items.
+func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestions) ([]ExerciceQuestionExt, error) {
+	// enforce fields
 	for i := range l {
-		l[i].index = i
+		l[i].Index = i
+		l[i].IdExercice = idExercice
 	}
-	return InsertManyExerciceQuestions(tx, l...)
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	_, err = DeleteExerciceQuestionsByIdExercices(db, idExercice)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, utils.SQLError(err)
+	}
+
+	err = InsertManyExerciceQuestions(tx, l...)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, utils.SQLError(err)
+	}
+
+	questions, err := SelectQuestions(tx, l.IdQuestions()...)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	return fillQuestions(l, questions), nil
 }

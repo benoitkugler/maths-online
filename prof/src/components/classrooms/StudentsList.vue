@@ -39,7 +39,7 @@
         >
       </v-col>
       <v-col style="text-align: right">
-        <v-btn icon flat class="mx-2" @click="emit('close')">
+        <v-btn icon flat class="mx-2" @click="emit('closed')">
           <v-icon icon="mdi-close"></v-icon>
         </v-btn>
       </v-col>
@@ -127,7 +127,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "close"): void;
+  (e: "closed"): void;
 }>();
 
 onMounted(() => fetchStudents());

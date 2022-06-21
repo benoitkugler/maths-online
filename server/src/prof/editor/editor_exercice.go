@@ -10,10 +10,29 @@ import (
 
 // CRUD
 
+func (l ExerciceQuestions) ensureIndex() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+type ExerciceQuestionExt struct {
+	Title    string
+	Question ExerciceQuestion
+}
+
+func fillQuestions(l ExerciceQuestions, dict Questions) []ExerciceQuestionExt {
+	l.ensureIndex()
+	out := make([]ExerciceQuestionExt, len(l))
+	for i, qu := range l {
+		out[i].Question = qu
+		out[i].Title = dict[qu.IdQuestion].Page.Title
+	}
+	return out
+}
+
 type ExerciceExt struct {
 	Exercice  Exercice
 	Origin    teacher.Origin
-	Questions ExerciceQuestions
+	Questions []ExerciceQuestionExt
 }
 
 func (ct *Controller) ExercicesGetList(c echo.Context) error {
@@ -59,10 +78,14 @@ func (ct *Controller) getExercices(userID int64) ([]ExerciceExt, error) {
 	}
 	dict := links.ByIdExercice()
 
+	qus, err := SelectQuestions(ct.db, links.IdQuestions()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
 	for i, ex := range out {
 		s := dict[ex.Exercice.Id]
-		out[i].Questions = s
-		sort.Slice(s, func(i, j int) bool { return s[i].index < s[j].index })
+		out[i].Questions = fillQuestions(s, qus)
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })
@@ -187,22 +210,21 @@ func (ct *Controller) deleteExercice(idExercice int64, deleteQuestions bool, use
 	return nil
 }
 
-type ExerciceAddQuestionIn struct {
+type ExerciceCreateQuestionIn struct {
 	IdExercice int64
-	IdQuestion int64 // < 0 means create a new question
 }
 
-// ExerciceAddQuestion creates or importd a question and appends it
+// ExerciceCreateQuestion creates a question and appends it
 // to the given exercice.
-func (ct *Controller) ExerciceAddQuestion(c echo.Context) error {
+func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	var args ExerciceAddQuestionIn
+	var args ExerciceCreateQuestionIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.addQuestionToExercice(args, user.Id)
+	out, err := ct.createQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -210,70 +232,46 @@ func (ct *Controller) ExerciceAddQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addQuestionToExercice(args ExerciceAddQuestionIn, userID int64) (ExerciceQuestions, error) {
+func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int64) ([]ExerciceQuestionExt, error) {
 	if err := ct.checkAcces(args.IdExercice, userID); err != nil {
 		return nil, err
 	}
 
-	// creates a question if needed
-	if args.IdQuestion < 0 {
-		question, err := Question{IdTeacher: userID, Public: false, NeedExercice: true}.Insert(ct.db)
-		if err != nil {
-			return nil, utils.SQLError(err)
-		}
-		args.IdQuestion = question.Id
-	}
-
-	// make sure the question is visible by the user
-	question, err := SelectQuestion(ct.db, args.IdQuestion)
+	// creates a question
+	question, err := Question{IdTeacher: userID, Public: false, NeedExercice: true}.Insert(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	if !question.IsVisibleBy(userID) {
-		return nil, accessForbidden
+	// append if to the current questions
+	existing, err := SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
+	if err != nil {
+		return nil, utils.SQLError(err)
 	}
+	existing = append(existing, ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: 1})
 
-	tx, err := ct.db.Begin()
+	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, existing)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	existing, err := DeleteExerciceQuestionsByIdExercices(tx, args.IdExercice)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, utils.SQLError(err)
-	}
-
-	existing = append(existing, ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: args.IdQuestion, Bareme: 1})
-	err = insertExerciceQuestionList(tx, existing)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, utils.SQLError(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	return existing, nil
+	return out, nil
 }
 
-type ExerciceRemoveQuestionIn struct {
+type ExerciceUpdateQuestionsIn struct {
+	Questions  ExerciceQuestions
 	IdExercice int64
-	IdQuestion int64
 }
 
-func (ct *Controller) ExerciceRemoveQuestion(c echo.Context) error {
+func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	var args ExerciceRemoveQuestionIn
+	var args ExerciceUpdateQuestionsIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.removeQuestionFromExercice(args, user.Id)
+	out, err := ct.updateQuestionsEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -281,39 +279,43 @@ func (ct *Controller) ExerciceRemoveQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) removeQuestionFromExercice(args ExerciceRemoveQuestionIn, userID int64) (ExerciceQuestions, error) {
+func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID int64) ([]ExerciceQuestionExt, error) {
 	if err := ct.checkAcces(args.IdExercice, userID); err != nil {
 		return nil, err
 	}
 
-	tx, err := ct.db.Begin()
+	// garbage collect the question only used by this exercice
+	links, err := SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	questions, err := SelectQuestions(ct.db, args.Questions.IdQuestions()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	current, err := DeleteExerciceQuestionsByIdExercices(tx, args.IdExercice)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, utils.SQLError(err)
-	}
-	newList := make(ExerciceQuestions, 0, len(current)-1)
-	for _, v := range current {
-		if v.IdQuestion != args.IdQuestion {
-			newList = append(newList, v)
+	var (
+		toDelete       IDs
+		newQuestionIDs = args.Questions.ByIdQuestion()
+	)
+	for _, link := range links {
+		_, willBeUsed := newQuestionIDs[link.IdQuestion]
+		if shouldDelete := questions[link.IdQuestion].NeedExercice && !willBeUsed; shouldDelete {
+			toDelete = append(toDelete, link.IdQuestion)
 		}
 	}
-	err = insertExerciceQuestionList(tx, newList)
+
+	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, args.Questions)
 	if err != nil {
-		_ = tx.Rollback()
+		return nil, err
+	}
+
+	_, err = DeleteQuestionsByIDs(ct.db, toDelete...)
+	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	return newList, nil
+	return out, nil
 }
 
 func (ct *Controller) ExerciceUpdate(c echo.Context) error {

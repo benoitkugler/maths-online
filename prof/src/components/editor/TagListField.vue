@@ -36,7 +36,8 @@
       style="text-align: center; font-style: italic; font-size: 10pt"
       class="pa-1"
     >
-      Ajouter une étiquette...
+      <template v-if="props.readonly">Aucune étiquette</template>
+      <template v-else> Ajouter une étiquette... </template>
     </div>
     <v-row no-gutters v-else justify="center">
       <v-col v-for="tag in props.modelValue" :key="tag" cols="auto">
