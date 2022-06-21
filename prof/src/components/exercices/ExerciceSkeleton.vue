@@ -106,7 +106,7 @@
               :readonly="isReadonly"
             ></tag-list-field
           ></v-col> -->
-          <v-col cols="auto">
+          <v-col cols="auto" align-self="center">
             <v-btn
               title="Créer et ajouter une question"
               size="small"
@@ -124,6 +124,20 @@
               <v-icon icon="mdi-plus" color="green"></v-icon>
               Importer une question
             </v-btn>
+          </v-col>
+          <v-col>
+            <v-select
+              density="compact"
+              variant="outlined"
+              :items="flowItems.map((v) => v.text)"
+              label="Déroulement"
+              hide-details
+              :model-value="
+                flowItems.find((v) => v.value == props.exercice.Exercice.Flow)
+                  ?.text
+              "
+              @update:model-value="v => props.exercice.Exercice.Flow = flowItems.find((item) => item.text == v)!.value"
+            ></v-select>
           </v-col>
         </v-row>
       </v-col>
@@ -211,12 +225,14 @@
 
 <script setup lang="ts">
 import {
+  FlowLabels,
   Visibility,
   type ExerciceExt,
   type ExerciceQuestion,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onDragListItemStart, swapItems } from "@/controller/editor";
+import type { Flow } from "@/controller/exercice_gen";
 import { copy } from "@/controller/utils";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
@@ -242,6 +258,11 @@ const isReadonly = computed(
 function backToList() {
   emit("back");
 }
+
+const flowItems = Object.entries(FlowLabels).map((k) => ({
+  value: Number(k[0]) as Flow,
+  text: k[1],
+}));
 
 let showEditDescription = $ref(false);
 
