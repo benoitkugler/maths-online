@@ -3,11 +3,12 @@
     :model-value="classroomToShow != null"
     @update:model-value="classroomToShow = null"
     fullscreen
+    :retain-focus="false"
   >
     <students-list
       v-if="classroomToShow"
       :classroom="classroomToShow"
-      @close="
+      @closed="
         fetchClassrooms();
         classroomToShow = null;
       "

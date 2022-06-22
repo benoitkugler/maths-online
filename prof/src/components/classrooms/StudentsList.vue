@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showUploadFile">
+  <v-dialog v-model="showUploadFile" :retain-focus="false">
     <v-card
       title="Importer une liste"
       subtitle="Les élèves seront ajoutés à la liste courante."
