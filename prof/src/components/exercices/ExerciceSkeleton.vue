@@ -6,6 +6,39 @@
     ></description-pannel>
   </v-dialog>
 
+  <v-dialog v-model="showFlowDocumentation">
+    <v-card title="Déroulement d'un exercice">
+      <v-card-text>
+        Un exercice peut se dérouler de deux manières différentes :
+        séquentiellement ou en parallèle.
+        <v-list>
+          <v-list-item>
+            <v-row>
+              <v-col cols="3"> <b>Déroulé séquentiel</b></v-col>
+              <v-col>
+                L'élève répond aux questions l'une après l'autre, et ne peux pas
+                accéder à la question suivante tant qu'il n'a pas réussi la
+                question courante.</v-col
+              >
+            </v-row>
+          </v-list-item>
+          <v-list-item>
+            <v-row>
+              <v-col cols="3">
+                <b>Déroulé parallèle</b>
+              </v-col>
+              <v-col>
+                L'élève répond à toutes les questions avant de valider, dans
+                l'ordre de son choix, puis peut reprendre les questions
+                fausses.</v-col
+              >
+            </v-row>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
   <v-dialog v-model="showImportQuestion" :retain-focus="false">
     <keep-alive>
       <question-selector
@@ -106,26 +139,7 @@
               :readonly="isReadonly"
             ></tag-list-field
           ></v-col> -->
-          <v-col cols="auto" align-self="center">
-            <v-btn
-              title="Créer et ajouter une question"
-              size="small"
-              @click="createQuestion()"
-            >
-              <v-icon icon="mdi-plus" color="green"></v-icon>
-              Ajouter une question
-            </v-btn>
-            <v-btn
-              title="Importer une question existante"
-              size="small"
-              class="mx-2"
-              @click="showImportQuestion = true"
-            >
-              <v-icon icon="mdi-plus" color="green"></v-icon>
-              Importer une question
-            </v-btn>
-          </v-col>
-          <v-col>
+          <v-col cols="auto">
             <v-select
               density="compact"
               variant="outlined"
@@ -137,7 +151,37 @@
                   ?.text
               "
               @update:model-value="v => props.exercice.Exercice.Flow = flowItems.find((item) => item.text == v)!.value"
-            ></v-select>
+            >
+              <template v-slot:append>
+                <v-btn
+                  icon
+                  size="x-small"
+                  @click="showFlowDocumentation = true"
+                >
+                  <v-icon icon="mdi-help" color="info" size="x-small"></v-icon>
+                </v-btn>
+              </template>
+            </v-select>
+          </v-col>
+          <v-spacer></v-spacer>
+          <v-col cols="auto" align-self="center" class="pl-2">
+            <v-btn
+              title="Créer et ajouter une question"
+              size="small"
+              @click="createQuestion()"
+            >
+              <v-icon icon="mdi-plus" color="green"></v-icon>
+              Créer une question
+            </v-btn>
+            <v-btn
+              title="Importer une question existante"
+              size="small"
+              class="mx-2"
+              @click="showImportQuestion = true"
+            >
+              <v-icon icon="mdi-plus" color="green"></v-icon>
+              Importer
+            </v-btn>
           </v-col>
         </v-row>
       </v-col>
@@ -161,7 +205,7 @@
                 size="x-small"
                 icon
                 @click.stop="removeQuestion(index)"
-                title="Supprimer"
+                title="Retirer la question"
               >
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
@@ -181,7 +225,7 @@
               </v-btn>
             </v-col>
             <v-col> {{ question.Title }}</v-col>
-            <v-col cols="3">
+            <v-col cols="auto">
               <v-menu
                 offset-y
                 close-on-content-click
@@ -193,6 +237,7 @@
               >
                 <template v-slot:activator="{ isActive, props }">
                   <v-chip
+                    elevation="3"
                     v-on="{ isActive }"
                     v-bind="props"
                     color="primary"
@@ -396,6 +441,14 @@ async function swapQuestions(origin: number, target: number) {
   }
   props.exercice.Questions = res;
 }
+
+let showFlowDocumentation = $ref(false);
 </script>
 
-<style></style>
+<style scoped>
+:deep(.v-input__append) {
+  padding-top: 0;
+  align-self: center;
+  margin-inline-start: 4px;
+}
+</style>
