@@ -12,9 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 )
@@ -549,76 +547,4 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (Sav
 
 	loopback.setQuestion(question)
 	return SaveAndPreviewOut{IsValid: true}, nil
-}
-
-// ------------------------------------------------------------------------------
-
-type VarEntry struct {
-	Variable expression.Variable
-	Resolved string
-}
-
-type InstantiatedQuestion struct {
-	Id       int64
-	Question client.Question `dart-extern:"exercices/types.gen.dart"`
-	Params   []VarEntry
-}
-
-type InstantiateQuestionsOut []InstantiatedQuestion
-
-// InstantiateQuestions loads and instantiates the given questions,
-// also returning the paramerters used to do so.
-func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut, error) {
-	questions, err := SelectQuestions(ct.db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	out := make(InstantiateQuestionsOut, len(ids))
-	for index, id := range ids {
-		qu := questions[id]
-		vars, err := qu.Page.Parameters.ToMap().Instantiate()
-		if err != nil {
-			return nil, err
-		}
-		varList := make([]VarEntry, 0, len(vars))
-		for k, v := range vars {
-			varList = append(varList, VarEntry{Variable: k, Resolved: v.Serialize()})
-		}
-		instance, err := qu.Page.InstantiateWith(vars)
-		if err != nil {
-			return nil, err
-		}
-		out[index] = InstantiatedQuestion{
-			Id:       id,
-			Question: instance.ToClient(),
-			Params:   varList,
-		}
-	}
-
-	return out, nil
-}
-
-// EvaluateQuestion instantiate the given question with the given parameters,
-// and evaluate the given answer.
-func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {
-	qu, err := SelectQuestion(ct.db, id)
-	if err != nil {
-		return client.QuestionAnswersOut{}, utils.SQLError(err)
-	}
-
-	paramsDict := make(expression.Vars)
-	for _, entry := range params {
-		paramsDict[entry.Variable], err = expression.Parse(entry.Resolved)
-		if err != nil {
-			return client.QuestionAnswersOut{}, err
-		}
-	}
-
-	instance, err := qu.Page.InstantiateWith(paramsDict)
-	if err != nil {
-		return client.QuestionAnswersOut{}, err
-	}
-
-	return instance.EvaluateAnswer(answer), nil
 }

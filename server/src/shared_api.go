@@ -63,3 +63,5 @@ func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
 
 	return c.JSON(200, out)
 }
+
+type InstantiatedExercice = editor.InstantiatedExercice

@@ -170,3 +170,166 @@ List<dynamic> listInstantiatedQuestionToJson(List<InstantiatedQuestion> item) {
 
 // github.com/benoitkugler/maths-online/prof/editor.InstantiateQuestionsOut
 typedef InstantiateQuestionsOut = List<InstantiatedQuestion>;
+
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
+class RandomParameter {
+  final String expression;
+  final Variable variable;
+
+  const RandomParameter(this.expression, this.variable);
+
+  @override
+  String toString() {
+    return "RandomParameter($expression, $variable)";
+  }
+}
+
+RandomParameter randomParameterFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return RandomParameter(
+      stringFromJson(json['expression']), variableFromJson(json['variable']));
+}
+
+JSON randomParameterToJson(RandomParameter item) {
+  return {
+    "expression": stringToJson(item.expression),
+    "variable": variableToJson(item.variable)
+  };
+}
+
+List<RandomParameter> listRandomParameterFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(randomParameterFromJson).toList();
+}
+
+List<dynamic> listRandomParameterToJson(List<RandomParameter> item) {
+  return item.map(randomParameterToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
+typedef RandomParameters = List<RandomParameter>;
+
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
+}
+
+List<dynamic> listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/questions.Parameters
+class Parameters {
+  final RandomParameters variables;
+  final List<String> intrinsics;
+
+  const Parameters(this.variables, this.intrinsics);
+
+  @override
+  String toString() {
+    return "Parameters($variables, $intrinsics)";
+  }
+}
+
+Parameters parametersFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Parameters(listRandomParameterFromJson(json['Variables']),
+      listStringFromJson(json['Intrinsics']));
+}
+
+JSON parametersToJson(Parameters item) {
+  return {
+    "Variables": listRandomParameterToJson(item.variables),
+    "Intrinsics": listStringToJson(item.intrinsics)
+  };
+}
+
+// github.com/benoitkugler/maths-online/prof/editor.Flow
+enum Flow { parallel, sequencial }
+
+extension _FlowExt on Flow {
+  static Flow fromValue(int i) {
+    return Flow.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+Flow flowFromJson(dynamic json) => _FlowExt.fromValue(json as int);
+
+dynamic flowToJson(Flow item) => item.toValue();
+
+// github.com/benoitkugler/maths-online/prof/editor.Exercice
+class Exercice {
+  final int id;
+  final String title;
+  final String description;
+  final Parameters parameters;
+  final Flow flow;
+  final int id_teacher;
+  final bool public;
+
+  const Exercice(this.id, this.title, this.description, this.parameters,
+      this.flow, this.id_teacher, this.public);
+
+  @override
+  String toString() {
+    return "Exercice($id, $title, $description, $parameters, $flow, $id_teacher, $public)";
+  }
+}
+
+Exercice exerciceFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Exercice(
+      intFromJson(json['Id']),
+      stringFromJson(json['Title']),
+      stringFromJson(json['Description']),
+      parametersFromJson(json['Parameters']),
+      flowFromJson(json['Flow']),
+      intFromJson(json['id_teacher']),
+      boolFromJson(json['Public']));
+}
+
+JSON exerciceToJson(Exercice item) {
+  return {
+    "Id": intToJson(item.id),
+    "Title": stringToJson(item.title),
+    "Description": stringToJson(item.description),
+    "Parameters": parametersToJson(item.parameters),
+    "Flow": flowToJson(item.flow),
+    "id_teacher": intToJson(item.id_teacher),
+    "Public": boolToJson(item.public)
+  };
+}
+
+// github.com/benoitkugler/maths-online/prof/editor.InstantiatedExercice
+class InstantiatedExercice {
+  final Exercice exercice;
+  final List<InstantiatedQuestion> questions;
+
+  const InstantiatedExercice(this.exercice, this.questions);
+
+  @override
+  String toString() {
+    return "InstantiatedExercice($exercice, $questions)";
+  }
+}
+
+InstantiatedExercice instantiatedExerciceFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return InstantiatedExercice(exerciceFromJson(json['Exercice']),
+      listInstantiatedQuestionFromJson(json['Questions']));
+}
+
+JSON instantiatedExerciceToJson(InstantiatedExercice item) {
+  return {
+    "Exercice": exerciceToJson(item.exercice),
+    "Questions": listInstantiatedQuestionToJson(item.questions)
+  };
+}

@@ -8,9 +8,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// CRUD
-
 func (l ExerciceQuestions) ensureIndex() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+func (l ProgressionQuestions) ensureIndex() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 

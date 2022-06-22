@@ -69,6 +69,21 @@ export const LevelTagLabels: { [key in LevelTag]: string } = {
   [LevelTag.Terminale]: "Terminale",
 };
 
+// github.com/benoitkugler/maths-online/prof/editor.Progression
+export interface Progression {
+  Id: number;
+  id_exercice: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestionHistory
+export type QuestionHistory = boolean[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ProgressionQuestion
+export interface ProgressionQuestion {
+  id_progression: number;
+  id_exercice: number;
+  index: number;
+  history: QuestionHistory;
+}
+
 export enum BlockKind {
   ExpressionFieldBlock = 0,
   FigureAffineLineFieldBlock = 1,

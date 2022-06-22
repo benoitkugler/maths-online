@@ -158,6 +158,18 @@ CREATE TABLE exercice_questions (
     index integer NOT NULL
 );
 
+CREATE TABLE progressions (
+    Id serial PRIMARY KEY,
+    id_exercice integer NOT NULL
+);
+
+CREATE TABLE progression_questions (
+    id_progression integer NOT NULL,
+    id_exercice integer NOT NULL,
+    index integer NOT NULL,
+    history boolean[]
+);
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_TextKind (data jsonb)
     RETURNS boolean
     AS $$
@@ -1401,6 +1413,15 @@ ALTER TABLE exercice_questions
 ALTER TABLE exercice_questions
     ADD FOREIGN KEY (id_question) REFERENCES questions;
 
+ALTER TABLE progressions
+    ADD FOREIGN KEY (id_exercice) REFERENCES exercices ON DELETE CASCADE;
+
+ALTER TABLE progression_questions
+    ADD FOREIGN KEY (id_progression) REFERENCES progressions ON DELETE CASCADE;
+
+ALTER TABLE progression_questions
+    ADD FOREIGN KEY (id_exercice) REFERENCES exercices ON DELETE CASCADE;
+
 ALTER TABLE questions
     ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
 
@@ -1411,5 +1432,14 @@ ALTER TABLE question_tags
     ADD UNIQUE (id_question, tag);
 
 ALTER TABLE exercice_questions
-    ADD UNIQUE (id_exercice, INDEX);
+    ADD PRIMARY KEY (id_exercice, INDEX);
+
+ALTER TABLE progressions
+    ADD UNIQUE (id, id_exercice);
+
+ALTER TABLE progression_questions
+    ADD FOREIGN KEY (id_exercice, INDEX) REFERENCES exercice_questions ON DELETE CASCADE;
+
+ALTER TABLE progression_questions
+    ADD FOREIGN KEY (id_progression, id_exercice) REFERENCES progressions (id, id_exercice) ON DELETE CASCADE;
 

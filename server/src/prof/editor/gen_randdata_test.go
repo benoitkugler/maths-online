@@ -121,6 +121,35 @@ func randLevelTag() LevelTag {
 	return choix[i]
 }
 
+func randProgression() Progression {
+	return Progression{
+		Id:         randint64(),
+		IdExercice: randint64(),
+	}
+}
+
+func randSlicebool() []bool {
+	l := 40 + rand.Intn(10)
+	out := make([]bool, l)
+	for i := range out {
+		out[i] = randbool()
+	}
+	return out
+}
+
+func randQuestionHistory() QuestionHistory {
+	return QuestionHistory(randSlicebool())
+}
+
+func randProgressionQuestion() ProgressionQuestion {
+	return ProgressionQuestion{
+		IdProgression: randint64(),
+		IdExercice:    randint64(),
+		Index:         randint(),
+		History:       randQuestionHistory(),
+	}
+}
+
 func randBlock() questions.Block {
 	choix := [...]questions.Block{
 		randque_ExpressionFieldBlock(),
@@ -438,15 +467,6 @@ func randSliceSignSymbol() []questions.SignSymbol {
 	out := make([]questions.SignSymbol, l)
 	for i := range out {
 		out[i] = randSignSymbol()
-	}
-	return out
-}
-
-func randSlicebool() []bool {
-	l := 40 + rand.Intn(10)
-	out := make([]bool, l)
-	for i := range out {
-		out[i] = randbool()
 	}
 	return out
 }
