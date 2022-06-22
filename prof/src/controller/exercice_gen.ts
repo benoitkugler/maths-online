@@ -56,6 +56,18 @@ export interface ExerciceQuestion {
   id_question: number;
   bareme: number;
 }
+// github.com/benoitkugler/maths-online/prof/editor.LevelTag
+export enum LevelTag {
+  Premiere = "1ERE",
+  Seconde = "2NDE",
+  Terminale = "TERM",
+}
+
+export const LevelTagLabels: { [key in LevelTag]: string } = {
+  [LevelTag.Premiere]: "Première",
+  [LevelTag.Seconde]: "Seconde",
+  [LevelTag.Terminale]: "Terminale",
+};
 
 export enum BlockKind {
   ExpressionFieldBlock = 0,

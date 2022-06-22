@@ -335,15 +335,21 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion, userID int64) 
 
 // do NOT commit or rollback
 func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion int64) error {
-	var nbDiff int
+	var nbDiff, nbLevel int
 	for _, tag := range tags {
-		switch DifficultyTag(tag.Tag) {
-		case Diff1, Diff2, Diff3:
+		switch tag.Tag {
+		case string(Diff1), string(Diff2), string(Diff3):
 			nbDiff++
+		case string(Seconde), string(Premiere), string(Terminale):
+			nbLevel++
 		}
 	}
 	if nbDiff > 1 {
 		return errors.New("Un seul niveau de difficulté est autorisé par question.")
+	}
+
+	if nbLevel > 1 {
+		return errors.New("Une seule classe est autorisée par question.")
 	}
 
 	_, err := DeleteQuestionTagsByIdQuestions(tx, idQuestion)
@@ -430,7 +436,9 @@ func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (U
 		return UpdateGroupTagsOut{}, utils.SQLError(err)
 	}
 	out := UpdateGroupTagsOut{Tags: make(map[int64][]string)}
-	for idQuestion, tags := range tagsByQuestion {
+	for _, idQuestion := range groupIDs {
+		tags := tagsByQuestion[idQuestion]
+
 		var newTags QuestionTags
 		// start with the "exclusive" tags
 		for _, tag := range tags {
@@ -450,7 +458,7 @@ func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (U
 		}
 
 		// finally udpate the tags on DB
-		err := updateTags(tx, newTags, idQuestion)
+		err = updateTags(tx, newTags, idQuestion)
 		if err != nil {
 			_ = tx.Rollback()
 			return out, err

@@ -115,6 +115,12 @@ func randExerciceQuestion() ExerciceQuestion {
 	}
 }
 
+func randLevelTag() LevelTag {
+	choix := [...]LevelTag{Premiere, Seconde, Terminale}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randBlock() questions.Block {
 	choix := [...]questions.Block{
 		randque_ExpressionFieldBlock(),

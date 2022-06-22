@@ -32,6 +32,10 @@ type QuestionTag struct {
 // It is used to select question among implicit groups
 type DifficultyTag string
 
+// LevelTag are special question tags used to indicate the
+// level (class) for the question.
+type LevelTag string
+
 // Exercice is the data structure for a full exercice, composed of a list of questions.
 // There are two kinds of exercice :
 //	- parallel : all the questions are independant

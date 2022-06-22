@@ -103,10 +103,10 @@ func TestSelectQuestions(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = ed.InsertManyQuestionTags(tx,
-		ed.QuestionTag{IdQuestion: 1, Tag: string(ed.Diff1)},
-		ed.QuestionTag{IdQuestion: 2, Tag: string(ed.Diff2)},
-		ed.QuestionTag{IdQuestion: 3, Tag: string(ed.Diff3)},
-		ed.QuestionTag{IdQuestion: 4, Tag: string(ed.Diff3)},
+		ed.QuestionTag{IdQuestion: 1, Tag: ed.Diff1},
+		ed.QuestionTag{IdQuestion: 2, Tag: ed.Diff2},
+		ed.QuestionTag{IdQuestion: 3, Tag: ed.Diff3},
+		ed.QuestionTag{IdQuestion: 4, Tag: ed.Diff3},
 		// categorie tags
 		ed.QuestionTag{IdQuestion: 1, Tag: "keep"},
 		ed.QuestionTag{IdQuestion: 2, Tag: "keep"},

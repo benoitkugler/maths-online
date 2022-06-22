@@ -37,7 +37,7 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	// add the special difficulty tags among the proposition,
+	// add the special difficulty and level tags among the proposition,
 	// in first choices
 	var (
 		filtred []string
@@ -51,8 +51,9 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 			continue
 		}
 
-		switch DifficultyTag(tag.Tag) {
-		case Diff1, Diff2, Diff3:
+		switch tag.Tag {
+		case string(Diff1), string(Diff2), string(Diff3): // added after
+		case string(Seconde), string(Premiere), string(Terminale): // added after
 		default:
 			filtred = append(filtred, tag.Tag)
 			seen[tag.Tag] = true
@@ -61,6 +62,7 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 
 	filtred = append([]string{
 		string(Diff1), string(Diff2), string(Diff3),
+		string(Seconde), string(Premiere), string(Terminale),
 	}, filtred...)
 
 	return c.JSON(200, filtred)

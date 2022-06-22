@@ -75,7 +75,7 @@ const isEditable = computed(
   () =>
     props.group.Questions?.every(
       (qu) => qu.Origin.Visibility == Visibility.Personnal
-    ) || true
+    ) || false
 );
 const state = ref<number | null>(null);
 </script>

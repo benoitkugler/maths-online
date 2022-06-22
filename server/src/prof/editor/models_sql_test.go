@@ -164,8 +164,8 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = InsertManyExerciceQuestions(tx,
-		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu1.Id, Bareme: 4},
-		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu2.Id, Bareme: 5},
+		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu1.Id, Bareme: 4, Index: 0},
+		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu2.Id, Bareme: 5, Index: 1},
 	)
 	if err != nil {
 		t.Fatal(err)
