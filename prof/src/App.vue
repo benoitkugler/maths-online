@@ -2,29 +2,46 @@
   <v-app>
     <v-navigation-drawer app v-model="showSideBar">
       <v-list-item>
-        <v-list-item-title class="title"> Pages </v-list-item-title>
+        <v-list-item-title class="title"> Contenu </v-list-item-title>
       </v-list-item>
       <v-divider></v-divider>
 
       <v-list-item>
-        <v-btn link :to="{ name: 'home' }">Accueil</v-btn>
+        <v-btn link :to="{ name: 'home' }" color="purple-lighten-4"
+          >Accueil</v-btn
+        >
       </v-list-item>
       <v-list-item>
-        <v-btn link :to="{ name: 'classrooms' }">Classes et élèves</v-btn>
+        <v-btn link :to="{ name: 'classrooms' }" color="purple-lighten-4"
+          >Classes et élèves</v-btn
+        >
+      </v-list-item>
+      <v-divider></v-divider>
+
+      <v-list-item>
+        <v-btn link :to="{ name: 'trivial' }" color="pink-lighten-3"
+          >Triv'Maths</v-btn
+        >
+      </v-list-item>
+      <v-divider></v-divider>
+
+      <v-list-item>
+        <v-btn link :to="{ name: 'editor' }" color="teal-lighten-4"
+          >Editeur de question</v-btn
+        >
       </v-list-item>
       <v-list-item>
-        <v-btn link :to="{ name: 'trivial' }">Triv'Maths</v-btn>
-      </v-list-item>
-      <v-list-item>
-        <v-btn link :to="{ name: 'editor' }">Editeur de question</v-btn>
-      </v-list-item>
-      <v-list-item>
-        <v-btn link :to="{ name: 'editor-ex' }">Editeur d'exercice</v-btn>
+        <v-btn link :to="{ name: 'editor-ex' }" color="teal-lighten-4"
+          >Editeur d'exercice</v-btn
+        >
       </v-list-item>
 
       <v-divider></v-divider>
       <v-list-item>
-        <v-btn @click="logout">Déconnexion</v-btn>
+        <v-btn @click="logout">
+          <v-icon icon="mdi-exit-to-app" class="mr-2"></v-icon>
+          Déconnexion</v-btn
+        >
       </v-list-item>
     </v-navigation-drawer>
 
