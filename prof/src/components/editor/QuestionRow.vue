@@ -30,12 +30,9 @@
           @click.stop="emit('duplicate', props.question)"
           title="Dupliquer en différenciant la difficulté"
         >
-          <v-icon
-            icon="mdi-content-copy"
-            color="info"
-            size="small"
-          ></v-icon> </v-btn
-      ></v-col>
+          <v-icon icon="mdi-content-copy" color="info" size="small"></v-icon>
+        </v-btn>
+      </v-col>
       <v-col align-self="center">
         <div class="ml-2">
           <i>

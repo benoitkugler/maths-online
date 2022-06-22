@@ -165,6 +165,20 @@
               >
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
+              <v-btn
+                v-if="!isReadonly"
+                class="mx-1"
+                size="x-small"
+                icon
+                @click.stop="duplicateQuestion(index)"
+                title="Dupliquer la question"
+              >
+                <v-icon
+                  icon="mdi-content-copy"
+                  color="info"
+                  size="small"
+                ></v-icon>
+              </v-btn>
             </v-col>
             <v-col> {{ question.Title }}</v-col>
             <v-col cols="3">
@@ -311,6 +325,19 @@ async function removeQuestion(index: number) {
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
+  });
+  if (res == undefined) {
+    return;
+  }
+  props.exercice.Questions = res;
+}
+
+async function duplicateQuestion(index: number) {
+  const l = (props.exercice.Questions || []).map((v) => v.Question);
+  const added = l.slice(0, index).concat(l[index]).concat(l.slice(index));
+  const res = await controller.ExerciceUpdateQuestions({
+    IdExercice: props.exercice.Exercice.Id,
+    Questions: added,
   });
   if (res == undefined) {
     return;
