@@ -108,7 +108,7 @@ func (ct *Controller) ExerciceCreate(c echo.Context) error {
 }
 
 func (ct *Controller) createExercice(userID int64) (ExerciceExt, error) {
-	ex, err := Exercice{IdTeacher: userID}.Insert(ct.db)
+	ex, err := Exercice{IdTeacher: userID, Flow: Parallel}.Insert(ct.db)
 	if err != nil {
 		return ExerciceExt{}, utils.SQLError(err)
 	}

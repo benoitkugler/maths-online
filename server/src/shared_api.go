@@ -56,7 +56,7 @@ func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.EvaluateQuestion(args.IdQuestion, args.Params, args.Answer)
+	out, err := ct.EvaluateQuestion(args.IdQuestion, editor.Answer{Params: args.Params, Answer: args.Answer})
 	if err != nil {
 		return err
 	}
@@ -64,4 +64,9 @@ func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type InstantiatedExercice = editor.InstantiatedExercice
+// import for dart code generation
+type (
+	InstantiatedExercice = editor.InstantiatedExercice
+	EvaluateExerciceIn   = editor.EvaluateExerciceIn
+	EvaluateExerciceOut  = editor.EvaluateExerciceOut
+)
