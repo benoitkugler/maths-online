@@ -49,6 +49,7 @@
       </router-view>
 
       <v-snackbar
+        style="z-index: 10000"
         app
         :model-value="message != ''"
         @update:model-value="message = ''"
@@ -56,6 +57,7 @@
         color="primary"
         top
         right
+        absolute
       >
         {{ message }}
       </v-snackbar>

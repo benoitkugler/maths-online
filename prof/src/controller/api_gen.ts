@@ -445,7 +445,7 @@ export interface NumberFieldBlock {
 }
 // github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
-  Label: string;
+  Label: Interpolated;
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
 }
@@ -707,19 +707,19 @@ export abstract class AbstractAPI {
     data: ClassroomExt[] | null
   ): void;
 
-  protected async rawTeacherCreateClassroom(params: any) {
+  protected async rawTeacherCreateClassroom() {
     const fullUrl = this.baseUrl + "/prof/classrooms/api";
-    const rep: AxiosResponse<any> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<any> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** TeacherCreateClassroom wraps rawTeacherCreateClassroom and handles the error */
-  async TeacherCreateClassroom(params: any) {
+  async TeacherCreateClassroom() {
     this.startRequest();
     try {
-      const out = await this.rawTeacherCreateClassroom(params);
+      const out = await this.rawTeacherCreateClassroom();
       this.onSuccessTeacherCreateClassroom(out);
       return out;
     } catch (error) {
@@ -800,6 +800,74 @@ export abstract class AbstractAPI {
   protected abstract onSuccessTeacherGetClassroomStudents(
     data: Student[] | null
   ): void;
+
+  protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<Student> = await Axios.put(fullUrl, null, {
+      params: { "id-classroom": String(params["id-classroom"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherAddStudent wraps rawTeacherAddStudent and handles the error */
+  async TeacherAddStudent(params: { "id-classroom": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherAddStudent(params);
+      this.onSuccessTeacherAddStudent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherAddStudent(data: Student): void;
+
+  protected async rawTeacherUpdateStudent(params: Student) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherUpdateStudent wraps rawTeacherUpdateStudent and handles the error */
+  async TeacherUpdateStudent(params: Student) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherUpdateStudent(params);
+      this.onSuccessTeacherUpdateStudent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherUpdateStudent(data: any): void;
+
+  protected async rawTeacherDeleteStudent(params: { "id-student": number }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: { "id-student": String(params["id-student"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherDeleteStudent wraps rawTeacherDeleteStudent and handles the error */
+  async TeacherDeleteStudent(params: { "id-student": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherDeleteStudent(params);
+      this.onSuccessTeacherDeleteStudent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherDeleteStudent(data: any): void;
 
   protected async rawTeacherImportStudents(
     params: { "id-classroom": string },
@@ -884,21 +952,21 @@ export abstract class AbstractAPI {
     data: TrivialConfigExt[] | null
   ): void;
 
-  protected async rawCreateTrivialPoursuit(params: any) {
+  protected async rawCreateTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
     const rep: AxiosResponse<TrivialConfigExt> = await Axios.put(
       fullUrl,
-      params,
+      null,
       { headers: this.getHeaders() }
     );
     return rep.data;
   }
 
   /** CreateTrivialPoursuit wraps rawCreateTrivialPoursuit and handles the error */
-  async CreateTrivialPoursuit(params: any) {
+  async CreateTrivialPoursuit() {
     this.startRequest();
     try {
-      const out = await this.rawCreateTrivialPoursuit(params);
+      const out = await this.rawCreateTrivialPoursuit();
       this.onSuccessCreateTrivialPoursuit(out);
       return out;
     } catch (error) {
@@ -1105,21 +1173,19 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessStopTrivialGame(data: any): void;
 
-  protected async rawEditorStartSession(params: any) {
+  protected async rawEditorStartSession() {
     const fullUrl = this.baseUrl + "/prof/editor/api/new";
-    const rep: AxiosResponse<StartSessionOut> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
+    const rep: AxiosResponse<StartSessionOut> = await Axios.put(fullUrl, null, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
   /** EditorStartSession wraps rawEditorStartSession and handles the error */
-  async EditorStartSession(params: any) {
+  async EditorStartSession() {
     this.startRequest();
     try {
-      const out = await this.rawEditorStartSession(params);
+      const out = await this.rawEditorStartSession();
       this.onSuccessEditorStartSession(out);
       return out;
     } catch (error) {
@@ -1227,19 +1293,19 @@ export abstract class AbstractAPI {
     data: any
   ): void;
 
-  protected async rawEditorCreateQuestion(params: any) {
+  protected async rawEditorCreateQuestion() {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
-    const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<Question> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** EditorCreateQuestion wraps rawEditorCreateQuestion and handles the error */
-  async EditorCreateQuestion(params: any) {
+  async EditorCreateQuestion() {
     this.startRequest();
     try {
-      const out = await this.rawEditorCreateQuestion(params);
+      const out = await this.rawEditorCreateQuestion();
       this.onSuccessEditorCreateQuestion(out);
       return out;
     } catch (error) {
