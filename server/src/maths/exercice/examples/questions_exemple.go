@@ -26,7 +26,7 @@ package examples
 // }
 
 // func expr(s string) client.TextOrMath {
-// 	return client.TextOrMath{Text: expression.MustParse(s).AsLaTeX(nil), IsMath: true}
+// 	return client.TextOrMath{Text: expression.MustParse(s).AsLaTeX(), IsMath: true}
 // }
 
 // var (
@@ -266,7 +266,7 @@ package examples
 // 		Title: "Calcul littéral", Enonce: EnonceInstance{
 // 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(nil),
+// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(),
 // 				`= \frac{a}{b}`,
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{
@@ -293,9 +293,9 @@ package examples
 // 				text(" sont des entiers les plus petits possibles :"),
 // 			}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("sqrt(50)").AsLaTeX(nil),
+// 				expression.MustParse("sqrt(50)").AsLaTeX(),
 // 				" = ",
-// 				expression.MustParse("a * sqrt(b)").AsLaTeX(nil),
+// 				expression.MustParse("a * sqrt(b)").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{
 // 				text("avec "),
@@ -434,9 +434,9 @@ package examples
 // 				text("l'équation :"),
 // 			}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("20*x - 7").AsLaTeX(nil),
+// 				expression.MustParse("20*x - 7").AsLaTeX(),
 // 				"=",
-// 				expression.MustParse("34").AsLaTeX(nil),
+// 				expression.MustParse("34").AsLaTeX(),
 // 			},
 // 			ExpressionFieldInstance{
 // 				ID:              0,
@@ -454,9 +454,9 @@ package examples
 // 				text("l'inéquation :"),
 // 			}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("-8*x +1").AsLaTeX(nil),
+// 				expression.MustParse("-8*x +1").AsLaTeX(),
 // 				"<",
-// 				expression.MustParse("2*x - 5").AsLaTeX(nil),
+// 				expression.MustParse("2*x - 5").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{
 // 				staticMath("x "),
@@ -481,9 +481,9 @@ package examples
 // 				text("l'équation :"),
 // 			}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(x-7)*(4*x - 9)").AsLaTeX(nil),
+// 				expression.MustParse("(x-7)*(4*x - 9)").AsLaTeX(),
 // 				"=",
-// 				expression.MustParse("0").AsLaTeX(nil),
+// 				expression.MustParse("0").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{
 // 				text("Solutions : "),
@@ -864,7 +864,7 @@ package examples
 // 			}},
 // 			FormulaDisplayInstance{
 // 				`y =`,
-// 				expression.MustParse("((-1)/3)x + 2").AsLaTeX(nil),
+// 				expression.MustParse("((-1)/3)x + 2").AsLaTeX(),
 // 			},
 // 			FigureAffineLineFieldInstance{
 // 				Figure: repere.Figure{
@@ -888,12 +888,12 @@ package examples
 // 			}},
 // 			FormulaDisplayInstance{
 // 				`(d) : `,
-// 				expression.MustParse("3x - 7y + 1").AsLaTeX(nil),
+// 				expression.MustParse("3x - 7y + 1").AsLaTeX(),
 // 				`= 0`,
 // 			},
 // 			FormulaDisplayInstance{
 // 				`(d') : `,
-// 				expression.MustParse("x + 2y - 7").AsLaTeX(nil),
+// 				expression.MustParse("x + 2y - 7").AsLaTeX(),
 // 				`= 0`,
 // 			},
 // 			RadioFieldInstance{
@@ -912,7 +912,7 @@ package examples
 // 			TextInstance{Parts: []client.TextOrMath{text("Quelle est l'équation réduite de :")}},
 // 			FormulaDisplayInstance{
 // 				`(d) : `,
-// 				expression.MustParse("3x - 7y + 1").AsLaTeX(nil),
+// 				expression.MustParse("3x - 7y + 1").AsLaTeX(),
 // 				`= 0`,
 // 			},
 // 			ExpressionFieldInstance{
@@ -1143,23 +1143,23 @@ package examples
 // 		Title: "Très longue question verticale", Enonce: EnonceInstance{
 // 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(nil),
+// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(nil),
+// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(nil),
+// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(nil),
+// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(),
 // 			},
 // 			TextInstance{Parts: []client.TextOrMath{text("Écrire sous une seule fraction : ")}},
 // 			FormulaDisplayInstance{
-// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(nil),
+// 				expression.MustParse("(1/3)+(2/5)").AsLaTeX(),
 // 			},
 // 		},
 // 	},

@@ -81,7 +81,7 @@ type atom interface {
 	// it may be simplified by subsequent operations
 	eval(left, right rat, context ValueResolver) (rat, error)
 
-	asLaTeX(left, right *Expr, res LaTeXResolver) string
+	asLaTeX(left, right *Expr) string
 }
 
 func (operator) lexicographicOrder() int         { return 7 }

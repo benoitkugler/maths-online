@@ -369,6 +369,6 @@ func TestBug51(t *testing.T) {
 		}
 		expr2 := expr.Copy()
 		expr2.Substitute(vars)
-		_ = expr2.AsLaTeX(nil) // check for crashes
+		_ = expr2.AsLaTeX() // check for crashes
 	}
 }

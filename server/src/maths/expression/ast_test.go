@@ -23,9 +23,9 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { _ = (invalidOperator).String() })
 	shouldPanic(t, func() { _ = (specialFunctionA{kind: invalidSpecialFunction}).String() })
 
-	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
+	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil) })
+	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil) })
+	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil) })
 
 	shouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
 	shouldPanic(t, func() {

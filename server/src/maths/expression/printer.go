@@ -6,12 +6,9 @@ import (
 
 //go:generate go run unicode-latex/gen.go
 
-// LaTeXResolver returns the latex code for the given variable `v`.
-type LaTeXResolver = func(v Variable) string
-
-// DefaultLatexResolver maps from unicode values to LaTeX commands
+// defaultLatexResolver maps from unicode values to LaTeX commands
 // for usual maths symbols.
-func DefaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
+func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
 func (expr *Expr) simplifyForPrint() {
 	expr.contractPlusMinus()
@@ -20,20 +17,15 @@ func (expr *Expr) simplifyForPrint() {
 }
 
 // AsLaTeX returns a valid LaTeX code displaying the expression.
-// `res` is an optional mapping from variables to latex symbols
-func (expr *Expr) AsLaTeX(res LaTeXResolver) string {
+func (expr *Expr) AsLaTeX() string {
 	if expr == nil {
 		return ""
-	}
-
-	if res == nil {
-		res = DefaultLatexResolver
 	}
 
 	expr = expr.Copy()
 	expr.simplifyForPrint()
 
-	return expr.atom.asLaTeX(expr.left, expr.right, res)
+	return expr.atom.asLaTeX(expr.left, expr.right)
 }
 
 // String returns a human readable form of the expression.
@@ -55,8 +47,8 @@ func addParenthesisPlain(s string) string {
 	return `(` + s + `)`
 }
 
-func (op operator) asLaTeX(left, right *Expr, res LaTeXResolver) string {
-	leftCode, rightCode := left.AsLaTeX(res), right.AsLaTeX(res)
+func (op operator) asLaTeX(left, right *Expr) string {
+	leftCode, rightCode := left.AsLaTeX(), right.AsLaTeX()
 	switch op {
 	case plus:
 		if leftCode == "" {
@@ -101,8 +93,8 @@ func (op operator) asLaTeX(left, right *Expr, res LaTeXResolver) string {
 	}
 }
 
-func (fn function) asLaTeX(left, right *Expr, res LaTeXResolver) string {
-	arg := right.AsLaTeX(res)
+func (fn function) asLaTeX(left, right *Expr) string {
+	arg := right.AsLaTeX()
 	switch fn {
 	case logFn:
 		return fmt.Sprintf(`\log\left(%s\right)`, arg)
@@ -137,27 +129,27 @@ func (fn function) asLaTeX(left, right *Expr, res LaTeXResolver) string {
 	}
 }
 
-func (r roundFn) asLaTeX(_, right *Expr, res LaTeXResolver) string {
-	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(res), r.nbDigits)
+func (r roundFn) asLaTeX(_, right *Expr) string {
+	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(), r.nbDigits)
 }
 
-func (r specialFunctionA) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
+func (r specialFunctionA) asLaTeX(_, _ *Expr) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
-func (r randVariable) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
+func (r randVariable) asLaTeX(_, _ *Expr) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
-func (v Variable) asLaTeX(_, _ *Expr, res LaTeXResolver) string {
-	name := res(v)
+func (v Variable) asLaTeX(_, _ *Expr) string {
+	name := defaultLatexResolver(v)
 	if v.Indice != "" {
 		name += "_{" + v.Indice + "}"
 	}
 	return name
 }
 
-func (c constant) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
+func (c constant) asLaTeX(_, _ *Expr) string {
 	switch c {
 	case piConstant:
 		return "\\pi"
@@ -168,7 +160,7 @@ func (c constant) asLaTeX(_, _ *Expr, _ LaTeXResolver) string {
 	}
 }
 
-func (v Number) asLaTeX(_, _ *Expr, _ LaTeXResolver) string { return v.String() }
+func (v Number) asLaTeX(_, _ *Expr) string { return v.String() }
 
 // returns `true` is the expression is compound and requires parenthesis
 // when used with `op`

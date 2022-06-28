@@ -59,16 +59,9 @@ func TestExpression_AsLaTeX(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_ = e.AsLaTeX(nil) // check for panic
+		_ = e.AsLaTeX() // check for panic
 
-		code := e.AsLaTeX(func(v Variable) string {
-			if v.Name == '\uE000' {
-				return "u_{n+1}"
-			} else if v.Name == '\uE001' {
-				return "v_{n+2}"
-			}
-			return DefaultLatexResolver(v)
-		})
+		code := e.AsLaTeX()
 		lines = append(lines, "$$"+code+"$$")
 	}
 
@@ -106,7 +99,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 
 func TestParenthesis(t *testing.T) {
 	expr := mustParse(t, "((-1)/3)x + 2")
-	latex := expr.AsLaTeX(nil)
+	latex := expr.AsLaTeX()
 	if strings.ContainsRune(latex, '(') {
 		t.Fatal("unexpected parenthesis")
 	}
@@ -115,26 +108,6 @@ func TestParenthesis(t *testing.T) {
 	expr.Substitute(Vars{NewVar('a'): newNb(-2)})
 	if s := expr.String(); strings.ContainsRune(s, '(') {
 		t.Fatal("unexpected parenthesis :", s)
-	}
-}
-
-func TestPlusMinus(t *testing.T) {
-	expr := mustParse(t, "x + (-5)")
-	latex := expr.AsLaTeX(nil)
-	if strings.ContainsRune(latex, '+') {
-		t.Fatal("unexpected +")
-	}
-
-	expr = mustParse(t, "x - (-5)")
-	latex = expr.AsLaTeX(nil)
-	if strings.ContainsRune(latex, '-') {
-		t.Fatal("unexpected -")
-	}
-
-	expr = mustParse(t, "y + (-x)")
-	latex = expr.AsLaTeX(nil)
-	if strings.ContainsRune(latex, '+') {
-		t.Fatal("unexpected +")
 	}
 }
 
@@ -150,7 +123,7 @@ func Test0And1(t *testing.T) {
 		{"+2", "2"},
 	} {
 		expr := mustParse(t, test.expr)
-		latex := expr.AsLaTeX(nil)
+		latex := expr.AsLaTeX()
 		if latex != test.latex {
 			t.Fatalf("expected %s, got %s", test.latex, latex)
 		}
@@ -161,6 +134,26 @@ func TestFloatPrecision(t *testing.T) {
 	v := Number(mustEvaluate("1908 * (1 - 68/100)", nil))
 	if s := v.String(); s != "610,56" {
 		t.Fatal(s)
+	}
+}
+
+func TestPlusMinus(t *testing.T) {
+	expr := mustParse(t, "x + (-5)")
+	latex := expr.AsLaTeX()
+	if strings.ContainsRune(latex, '+') {
+		t.Fatal("unexpected +")
+	}
+
+	expr = mustParse(t, "x - (-5)")
+	latex = expr.AsLaTeX()
+	if strings.ContainsRune(latex, '-') {
+		t.Fatal("unexpected -")
+	}
+
+	expr = mustParse(t, "y + (-x)")
+	latex = expr.AsLaTeX()
+	if strings.ContainsRune(latex, '+') {
+		t.Fatal("unexpected +")
 	}
 }
 
@@ -178,7 +171,7 @@ func TestMinusMinus(t *testing.T) {
 	}
 
 	expr = mustParse(t, "-(-2x)")
-	latex := expr.AsLaTeX(nil)
+	latex := expr.AsLaTeX()
 	if strings.ContainsRune(latex, '-') {
 		t.Fatal("unexpected +")
 	}

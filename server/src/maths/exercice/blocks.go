@@ -163,7 +163,7 @@ func (tp TextPart) instantiate(params expression.Vars) (client.TextOrMath, error
 			return client.TextOrMath{}, err
 		}
 		expr.Substitute(params)
-		return client.TextOrMath{Text: expr.AsLaTeX(nil), IsMath: true}, nil
+		return client.TextOrMath{Text: expr.AsLaTeX(), IsMath: true}, nil
 	default:
 		panic(ExhaustiveTextKind)
 	}
@@ -470,7 +470,7 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 			return out, err
 		}
 		nameExpr.Substitute(params)
-		name := nameExpr.AsLaTeX(nil)
+		name := nameExpr.AsLaTeX()
 
 		x, err := evaluateExpr(v.Point.Coord.X, params)
 		if err != nil {
@@ -498,14 +498,14 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 			return out, err
 		}
 		fromExpr.Substitute(params)
-		s.From = fromExpr.AsLaTeX(nil)
+		s.From = fromExpr.AsLaTeX()
 
 		toExpr, err := expression.Parse(s.To)
 		if err != nil {
 			return out, err
 		}
 		toExpr.Substitute(params)
-		s.To = toExpr.AsLaTeX(nil)
+		s.To = toExpr.AsLaTeX()
 
 		out.Figure.Drawings.Segments[i] = s
 	}

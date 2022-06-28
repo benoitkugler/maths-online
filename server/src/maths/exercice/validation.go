@@ -200,7 +200,7 @@ func (v figureValidator) pointStrings(vars expression.Vars) map[string]bool {
 	for _, expr := range v.pointNames {
 		expr = expr.Copy()
 		expr.Substitute(vars)
-		out[expr.AsLaTeX(nil)] = true
+		out[expr.AsLaTeX()] = true
 	}
 	return out
 }
@@ -223,7 +223,7 @@ func (v figureValidator) validate(vars expression.Vars) error {
 	for _, ref := range v.references {
 		ref = ref.Copy()
 		ref.Substitute(vars)
-		resolvedRef := ref.AsLaTeX(nil)
+		resolvedRef := ref.AsLaTeX()
 		if hasPoint := points[resolvedRef]; !hasPoint {
 			return fmt.Errorf("L'expression %s ne définit pas un point connu.", resolvedRef)
 		}
