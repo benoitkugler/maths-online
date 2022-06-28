@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"strings"
 )
 
 //go:generate go run unicode-latex/gen.go
@@ -11,11 +12,13 @@ import (
 func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
 func (expr *Expr) simplifyForPrint() {
-	expr.normalizeNegativeNumbers()
-	expr.extractNegativeInMults()
-	expr.contractPlusMinus()
-	expr.contractMinusMinus()
-	expr.simplify0And1()
+	for nbPasses := 0; nbPasses < 2; nbPasses++ {
+		expr.normalizeNegativeNumbers()
+		expr.extractNegativeInMults()
+		expr.contractPlusMinus()
+		expr.contractMinusMinus()
+		expr.simplify0And1()
+	}
 }
 
 // AsLaTeX returns a valid LaTeX code displaying the expression.
@@ -69,6 +72,11 @@ func (op operator) asLaTeX(left, right *Expr) string {
 	case plus:
 		if leftCode == "" {
 			return rightCode // plus is optional
+		}
+		// special case when rightCode starts with a - (without parenthesis),
+		// such as in x + (-a + 2)
+		if strings.HasPrefix(rightCode, "-") { // add the space back
+			return fmt.Sprintf("%s - %s", leftCode, rightCode[1:])
 		}
 		return fmt.Sprintf("%s + %s", leftCode, rightCode)
 	case minus:
@@ -214,6 +222,11 @@ func (op operator) serialize(left, right *Expr) string {
 	case plus:
 		if leftCode == "" {
 			return rightCode // plus is optional
+		}
+		// special case when rightCode starts with a - (without parenthesis),
+		// such as in x + (-a + 2)
+		if strings.HasPrefix(rightCode, "-") { // add the space back
+			return fmt.Sprintf("%s - %s", leftCode, rightCode[1:])
 		}
 		return fmt.Sprintf("%s + %s", leftCode, rightCode)
 	case minus:

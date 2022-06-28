@@ -393,6 +393,9 @@ func (expr *Expr) simplify0And1() {
 		if right.atom == Number(0) { // x - 0 = x
 			*expr = *left
 			return
+		} else if left.atom == Number(0) { // 0 - x = -x
+			expr.left = nil
+			return
 		}
 	case mult:
 		if left.atom == Number(1) { // 1 * x = x
