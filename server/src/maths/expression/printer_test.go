@@ -101,7 +101,7 @@ func TestParenthesis(t *testing.T) {
 	expr := mustParse(t, "((-1)/3)x + 2")
 	latex := expr.AsLaTeX()
 	if strings.ContainsRune(latex, '(') {
-		t.Fatal("unexpected parenthesis")
+		t.Fatal("unexpected parenthesis", latex)
 	}
 
 	expr = mustParse(t, "1 + 1 + a")
@@ -121,6 +121,10 @@ func Test0And1(t *testing.T) {
 		{"1x", "x"},
 		{"1+x", "1 + x"},
 		{"+2", "2"},
+		{"-1x", "-x"},
+		{"-1x^2", "-{x}^{2}"},
+		{"-1(4x + 3)", "-\\left(4x + 3\\right)"},
+		{"-1sqrt(100)", "-\\sqrt{100}"},
 	} {
 		expr := mustParse(t, test.expr)
 		latex := expr.AsLaTeX()
@@ -174,5 +178,10 @@ func TestMinusMinus(t *testing.T) {
 	latex := expr.AsLaTeX()
 	if strings.ContainsRune(latex, '-') {
 		t.Fatal("unexpected +")
+	}
+
+	expr = mustParse(t, "-(-2 + x)")
+	if s := expr.String(); s != "-(-2 + x)" {
+		t.Fatal(s)
 	}
 }

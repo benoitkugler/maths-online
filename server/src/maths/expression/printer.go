@@ -11,6 +11,8 @@ import (
 func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
 func (expr *Expr) simplifyForPrint() {
+	expr.normalizeNegativeNumbers()
+	expr.extractNegativeInMults()
 	expr.contractPlusMinus()
 	expr.contractMinusMinus()
 	expr.simplify0And1()
@@ -49,6 +51,20 @@ func addParenthesisPlain(s string) string {
 
 func (op operator) asLaTeX(left, right *Expr) string {
 	leftCode, rightCode := left.AsLaTeX(), right.AsLaTeX()
+
+	leftHasParenthesis := op.needParenthesis(left, true)
+	rightHasParenthesis := op.needParenthesis(right, false)
+
+	// the latex syntax allow to spare some redundant parenthesis
+	ignoreParenthesis := op == div || op == rem || op == mod
+
+	if leftHasParenthesis && !ignoreParenthesis {
+		leftCode = addParenthesisLatex(leftCode)
+	}
+	if rightHasParenthesis && !ignoreParenthesis {
+		rightCode = addParenthesisLatex(rightCode)
+	}
+
 	switch op {
 	case plus:
 		if leftCode == "" {
@@ -56,19 +72,11 @@ func (op operator) asLaTeX(left, right *Expr) string {
 		}
 		return fmt.Sprintf("%s + %s", leftCode, rightCode)
 	case minus:
-		if op.needParenthesis(right, false) {
-			rightCode = addParenthesisLatex(rightCode)
+		if leftCode == "" { // remove the space
+			return fmt.Sprintf("-%s", rightCode)
 		}
 		return fmt.Sprintf("%s - %s", leftCode, rightCode)
 	case mult:
-		if op.needParenthesis(left, true) {
-			leftCode = addParenthesisLatex(leftCode)
-		}
-		rightHasParenthesis := op.needParenthesis(right, false)
-		if rightHasParenthesis {
-			rightCode = addParenthesisLatex(rightCode)
-		}
-
 		// check for implicit multiplication
 		if shouldOmitTimes(rightHasParenthesis, right) {
 			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
@@ -81,12 +89,6 @@ func (op operator) asLaTeX(left, right *Expr) string {
 	case rem:
 		return fmt.Sprintf(`\text{rem}\left(%s; %s\right)`, leftCode, rightCode)
 	case pow:
-		if op.needParenthesis(left, true) {
-			leftCode = addParenthesisLatex(leftCode)
-		}
-		if op.needParenthesis(right, false) {
-			rightCode = addParenthesisLatex(rightCode)
-		}
 		return fmt.Sprintf(`{%s}^{%s}`, leftCode, rightCode)
 	default:
 		panic(exhaustiveOperatorSwitch)
@@ -172,7 +174,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg bool) bool {
 	}
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, Variable, roundFn, specialFunctionA:
+	case Number, constant, function, Variable, randVariable, roundFn, specialFunctionA:
 		return false
 	case operator:
 		switch op {
@@ -199,9 +201,10 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg bool) bool {
 func (op operator) serialize(left, right *Expr) string {
 	leftCode, rightCode := left.Serialize(), right.Serialize()
 
-	if op.needParenthesis(left, true) {
+	if leftHasParenthesis := op.needParenthesis(left, true); leftHasParenthesis {
 		leftCode = addParenthesisPlain(leftCode)
 	}
+
 	rightHasParenthesis := op.needParenthesis(right, false)
 	if rightHasParenthesis {
 		rightCode = addParenthesisPlain(rightCode)
