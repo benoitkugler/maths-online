@@ -7,7 +7,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
-//go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/exercices/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
+//go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/questions/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
 
 type Question struct {
 	Title  string

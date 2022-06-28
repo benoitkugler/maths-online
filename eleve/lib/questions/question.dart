@@ -19,6 +19,7 @@ import 'package:eleve/questions/variation_table.dart';
 import 'package:eleve/questions/variation_table_field.dart';
 import 'package:eleve/questions/vector.dart';
 import 'package:eleve/quotes.dart';
+import 'package:eleve/shared/title.dart';
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -643,35 +644,6 @@ class _QuestionWState extends State<QuestionW> {
             ),
           ]
         ],
-      ),
-    );
-  }
-}
-
-class ColoredTitle extends StatelessWidget {
-  final String title;
-  final Color color;
-  const ColoredTitle(this.title, this.color, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final shadows = [
-      Shadow(
-          color: color.withOpacity(0.9),
-          offset: const Offset(2, -2),
-          blurRadius: 1.3)
-    ];
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          title,
-          style: TextStyle(fontSize: 22, shadows: shadows),
-        ),
       ),
     );
   }

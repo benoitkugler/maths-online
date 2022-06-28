@@ -44,7 +44,7 @@ func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
 }
 
 type EvaluateQuestionIn struct {
-	Answer     client.QuestionAnswersIn `dart-extern:"client:exercices/types.gen.dart"`
+	Answer     client.QuestionAnswersIn `dart-extern:"client:questions/types.gen.dart"`
 	Params     []editor.VarEntry
 	IdQuestion int64
 }
@@ -66,7 +66,11 @@ func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
 
 // import for dart code generation
 type (
-	InstantiatedExercice = editor.InstantiatedExercice
-	EvaluateExerciceIn   = editor.EvaluateExerciceIn
-	EvaluateExerciceOut  = editor.EvaluateExerciceOut
+	EvaluateExerciceIn  = editor.EvaluateExerciceIn
+	EvaluateExerciceOut = editor.EvaluateExerciceOut
 )
+
+type Exercice struct {
+	Exercice    editor.InstantiatedExercice
+	Progression editor.ProgressionExt
+}

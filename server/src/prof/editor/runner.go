@@ -12,13 +12,13 @@ import (
 
 type InstantiatedQuestion struct {
 	Id       int64
-	Question client.Question `dart-extern:"client:exercices/types.gen.dart"`
+	Question client.Question `dart-extern:"client:questions/types.gen.dart"`
 	Params   []VarEntry
 }
 
 type Answer struct {
 	Params []VarEntry
-	Answer client.QuestionAnswersIn `dart-extern:"client:exercices/types.gen.dart"`
+	Answer client.QuestionAnswersIn `dart-extern:"client:questions/types.gen.dart"`
 }
 
 type InstantiateQuestionsOut []InstantiatedQuestion
@@ -152,25 +152,28 @@ func (ct *Controller) fetchProgression(id int64) (ProgressionExt, error) {
 }
 
 type InstantiatedExercice struct {
-	Exercice  Exercice
+	Id        int64
+	Title     string
+	Flow      Flow
 	Questions []InstantiatedQuestion
+	Baremes   []int
 }
 
-func (ct *Controller) loadExercice(id int64) (Exercice, []Question, error) {
+func (ct *Controller) loadExercice(id int64) (Exercice, ExerciceQuestions, []Question, error) {
 	ex, err := SelectExercice(ct.db, id)
 	if err != nil {
-		return Exercice{}, nil, utils.SQLError(err)
+		return Exercice{}, nil, nil, utils.SQLError(err)
 	}
 	links, err := SelectExerciceQuestionsByIdExercices(ct.db, id)
 	if err != nil {
-		return Exercice{}, nil, utils.SQLError(err)
+		return Exercice{}, nil, nil, utils.SQLError(err)
 	}
 	links.ensureIndex()
 
 	// load the question contents
 	qus, err := SelectQuestions(ct.db, links.IdQuestions()...)
 	if err != nil {
-		return Exercice{}, nil, utils.SQLError(err)
+		return Exercice{}, nil, nil, utils.SQLError(err)
 	}
 
 	out := make([]Question, len(links))
@@ -178,20 +181,23 @@ func (ct *Controller) loadExercice(id int64) (Exercice, []Question, error) {
 		out[i] = qus[link.IdQuestion]
 	}
 
-	return ex, out, nil
+	return ex, links, out, nil
 }
 
 // instantiateExercice loads the given exercice, the associated questions,
 // and instantiates them with the same random parameters
 func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error) {
-	ex, qus, err := ct.loadExercice(id)
+	ex, links, qus, err := ct.loadExercice(id)
 	if err != nil {
 		return InstantiatedExercice{}, err
 	}
 
 	out := InstantiatedExercice{
-		Exercice:  ex,
+		Id:        ex.Id,
+		Title:     ex.Title,
+		Flow:      ex.Flow,
 		Questions: make([]InstantiatedQuestion, len(qus)),
+		Baremes:   make([]int, len(qus)),
 	}
 
 	// instantiate the questions
@@ -221,6 +227,7 @@ func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error
 			Question: instance.ToClient(),
 			Params:   newVarList(vars),
 		}
+		out.Baremes[index] = links[index].Bareme
 	}
 
 	return out, nil
@@ -235,12 +242,12 @@ type EvaluateExerciceIn struct {
 }
 
 type EvaluateExerciceOut struct {
-	Results     map[int]client.QuestionAnswersOut `dart-extern:"client:exercices/types.gen.dart"`
+	Results     map[int]client.QuestionAnswersOut `dart-extern:"client:questions/types.gen.dart"`
 	Progression ProgressionExt                    // the update progression
 }
 
 func (ct *Controller) evaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
-	ex, qus, err := ct.loadExercice(args.IdExercice)
+	ex, _, qus, err := ct.loadExercice(args.IdExercice)
 	if err != nil {
 		return EvaluateExerciceOut{}, utils.SQLError(err)
 	}

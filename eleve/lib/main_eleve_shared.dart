@@ -1,11 +1,14 @@
 import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/question_gallery.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared_gen.dart';
 import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Flow;
 
 Future<Audio> loadAudioFromSettings() async {
   WidgetsFlutterBinding
@@ -101,7 +104,28 @@ class _EleveAppState extends State<EleveApp> {
               )
             ],
           ),
-          body: _HomePage(widget.audioPlayer, widget.buildMode, settings),
+          // body: _HomePage(widget.audioPlayer, widget.buildMode, settings),
+          body: ExerciceW(
+              widget.buildMode,
+              Exercice(
+                  InstantiatedExercice(
+                      0, "REcherche de primitives", Flow.parallel, [
+                    InstantiatedQuestion(0, Question("", []), []),
+                    InstantiatedQuestion(0, Question("", []), []),
+                    InstantiatedQuestion(0, Question("", []), []),
+                  ], [
+                    1,
+                    2,
+                    3
+                  ]),
+                  ProgressionExt(
+                      Progression(0, 0),
+                      [
+                        [true, true],
+                        [true, false],
+                        []
+                      ],
+                      1))),
         ));
   }
 }
