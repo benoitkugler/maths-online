@@ -4,10 +4,10 @@ import 'dart:js' as js;
 import 'dart:math';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/question.dart';
-import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/questions/question.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 

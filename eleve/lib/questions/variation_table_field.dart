@@ -1,8 +1,8 @@
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/expression.dart';
-import 'package:eleve/exercices/fields.dart';
-import 'package:eleve/exercices/types.gen.dart';
-import 'package:eleve/exercices/variation_table.dart';
+import 'package:eleve/questions/expression.dart';
+import 'package:eleve/questions/fields.dart';
+import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/questions/variation_table.dart';
 import 'package:flutter/material.dart';
 
 /// [_VTController] is the controller for one table (the length is known)

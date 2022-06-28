@@ -1,4 +1,4 @@
-import 'package:eleve/exercices/number.dart';
+import 'package:eleve/questions/number.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

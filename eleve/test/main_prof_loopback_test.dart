@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:eleve/exercices/question.dart';
-import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/loopback_types.gen.dart';
+import 'package:eleve/questions/question.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

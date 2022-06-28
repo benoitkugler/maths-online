@@ -1,5 +1,5 @@
-import 'package:eleve/exercices/fields.dart';
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/questions/fields.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
 
 class _IndexedProposal {

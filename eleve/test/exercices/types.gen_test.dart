@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:test/test.dart';
 
 void main() {

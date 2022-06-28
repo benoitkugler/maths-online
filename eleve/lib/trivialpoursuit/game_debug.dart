@@ -1,4 +1,4 @@
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 
 /// used to collect shader warmup

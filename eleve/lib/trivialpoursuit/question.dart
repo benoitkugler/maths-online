@@ -1,6 +1,6 @@
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/question.dart';
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/questions/question.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
 

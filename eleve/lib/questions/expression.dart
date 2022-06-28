@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/fields.dart';
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/questions/fields.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/types.gen.dart' as Types;
+import 'package:eleve/questions/types.gen.dart' as Types;
 import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;

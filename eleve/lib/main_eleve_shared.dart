@@ -1,7 +1,7 @@
 import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/question_gallery.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/questions/question_gallery.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';

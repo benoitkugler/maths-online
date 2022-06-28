@@ -1,5 +1,5 @@
-import 'package:eleve/exercices/fields.dart';
-import 'package:eleve/exercices/radio.dart';
+import 'package:eleve/questions/fields.dart';
+import 'package:eleve/questions/radio.dart';
 import 'package:flutter/material.dart';
 
 typedef DropDownController = RadioController;
