@@ -1583,19 +1583,19 @@ export abstract class AbstractAPI {
     data: ExerciceExt[] | null
   ): void;
 
-  protected async rawExerciceCreate(params: any) {
+  protected async rawExerciceCreate() {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** ExerciceCreate wraps rawExerciceCreate and handles the error */
-  async ExerciceCreate(params: any) {
+  async ExerciceCreate() {
     this.startRequest();
     try {
-      const out = await this.rawExerciceCreate(params);
+      const out = await this.rawExerciceCreate();
       this.onSuccessExerciceCreate(out);
       return out;
     } catch (error) {

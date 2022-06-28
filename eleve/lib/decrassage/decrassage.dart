@@ -4,7 +4,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/question.dart';
 import 'package:eleve/exercices/types.gen.dart';
 import 'package:eleve/quotes.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,7 +20,7 @@ class Decrassage extends StatefulWidget {
 }
 
 class _DecrassageState extends State<Decrassage> {
-  InstantiateQuestionsOut questions = [];
+  shared.InstantiateQuestionsOut questions = [];
   int? currentQuestionIndex;
   Map<int, Answer>? currentAnswer;
 
@@ -30,7 +30,7 @@ class _DecrassageState extends State<Decrassage> {
     super.initState();
   }
 
-  InstantiatedQuestion? get currentQuestion =>
+  shared.InstantiatedQuestion? get currentQuestion =>
       currentQuestionIndex == null ? null : questions[currentQuestionIndex!];
 
   void _loadQuestions() async {
@@ -42,7 +42,8 @@ class _DecrassageState extends State<Decrassage> {
         'Content-type': 'application/json',
       });
       setState(() {
-        questions = listInstantiatedQuestionFromJson(jsonDecode(resp.body));
+        questions =
+            shared.listInstantiatedQuestionFromJson(jsonDecode(resp.body));
         currentQuestionIndex = 0;
         currentAnswer = null;
       });
@@ -70,10 +71,10 @@ class _DecrassageState extends State<Decrassage> {
     try {
       final uri =
           Uri.parse(widget.buildMode.serverURL("/api/questions/evaluate"));
-      final args = EvaluateQuestionIn(
+      final args = shared.EvaluateQuestionIn(
           data.data, currentQuestion!.params, currentQuestion!.id);
       final resp = await http.post(uri,
-          body: jsonEncode(evaluateQuestionInToJson(args)),
+          body: jsonEncode(shared.evaluateQuestionInToJson(args)),
           headers: {
             'Content-type': 'application/json',
           });

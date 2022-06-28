@@ -12,13 +12,13 @@ import (
 
 type InstantiatedQuestion struct {
 	Id       int64
-	Question client.Question `dart-extern:"exercices/types.gen.dart"`
+	Question client.Question `dart-extern:"client:exercices/types.gen.dart"`
 	Params   []VarEntry
 }
 
 type Answer struct {
 	Params []VarEntry
-	Answer client.QuestionAnswersIn
+	Answer client.QuestionAnswersIn `dart-extern:"client:exercices/types.gen.dart"`
 }
 
 type InstantiateQuestionsOut []InstantiatedQuestion
@@ -235,8 +235,8 @@ type EvaluateExerciceIn struct {
 }
 
 type EvaluateExerciceOut struct {
-	Results     map[int]client.QuestionAnswersOut
-	Progression ProgressionExt // the update progression
+	Results     map[int]client.QuestionAnswersOut `dart-extern:"client:exercices/types.gen.dart"`
+	Progression ProgressionExt                    // the update progression
 }
 
 func (ct *Controller) evaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {

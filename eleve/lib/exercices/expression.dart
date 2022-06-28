@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercices/fields.dart';
 import 'package:eleve/exercices/types.gen.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -27,12 +27,12 @@ class ExpressionController extends FieldController {
     onChange();
   }
 
-  Future<CheckExpressionOut> _checkExpressionSyntax() async {
+  Future<shared.CheckExpressionOut> _checkExpressionSyntax() async {
     final uri = Uri.parse(buildMode.serverURL("/api/check-expression"))
         .replace(queryParameters: {"expression": getExpression()});
 
     final resp = await http.get(uri);
-    return checkExpressionOutFromJson(jsonDecode(resp.body));
+    return shared.checkExpressionOutFromJson(jsonDecode(resp.body));
   }
 
   @override

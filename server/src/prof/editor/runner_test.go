@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
@@ -8,6 +10,22 @@ import (
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
+
+func TestInstantiateQuestions(t *testing.T) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	ct := NewController(db, teacher.Teacher{})
+	out, err := ct.InstantiateQuestions([]int64{24, 29, 37})
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, _ := json.MarshalIndent(out, " ", " ")
+	fmt.Println(string(s)) // may be used as reference for client tests
+}
 
 func TestEvaluateExercice(t *testing.T) {
 	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")

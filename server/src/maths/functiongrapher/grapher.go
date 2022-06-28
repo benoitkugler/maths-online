@@ -10,7 +10,7 @@ import (
 )
 
 type BezierCurve struct {
-	P0, P1, P2 repere.Coord `dart-extern:"repere.gen.dart"`
+	P0, P1, P2 repere.Coord `dart-extern:"repere:repere.gen.dart"`
 }
 
 func (seg segment) toCurve() BezierCurve {
@@ -89,7 +89,7 @@ type FunctionDecoration struct {
 
 type FunctionsGraph struct {
 	Functions []FunctionGraph
-	Bounds    repere.RepereBounds `dart-extern:"repere.gen.dart"`
+	Bounds    repere.RepereBounds `dart-extern:"repere:repere.gen.dart"`
 }
 
 // nbStep is the number of segments used when converting
