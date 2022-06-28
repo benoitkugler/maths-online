@@ -141,7 +141,7 @@ func (se StringOrExpression) IsEmpty() bool {
 
 func (fi StringOrExpression) asLaTeX() string {
 	if fi.Expression != nil {
-		return fi.Expression.AsLaTeX(nil)
+		return fi.Expression.AsLaTeX()
 	}
 	return fi.String
 }
@@ -206,8 +206,8 @@ func (vt VariationTableInstance) toClient() client.Block {
 		numberIsUp := vt.inferNumberAlignment(i)
 		// add the number column
 		out.Columns = append(out.Columns, client.VariationColumnNumber{
-			X:    vt.Xs[i].Expr.AsLaTeX(nil),
-			Y:    vt.Fxs[i].Expr.AsLaTeX(nil),
+			X:    vt.Xs[i].Expr.AsLaTeX(),
+			Y:    vt.Fxs[i].Expr.AsLaTeX(),
 			IsUp: numberIsUp,
 		})
 

@@ -1,4 +1,56 @@
 <template>
+  <v-dialog
+    :model-value="studentToDelete != null"
+    @update:model-value="studentToDelete = null"
+    :retain-focus="false"
+  >
+    <v-card title="Confirmer la suppression" v-if="studentToDelete != null">
+      <v-card-text>
+        Confirmez-vous la suppression du profile élève
+        <i>{{ studentToDelete.Surname }} {{ studentToDelete.Name }}</i> ? <br />
+        Toute progression sera supprimée, et cette action est irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="studentToDelete = null">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn @click="deleteStudent" color="red">Supprimer le profile</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
+    :model-value="studentToUpdate != null"
+    @update:model-value="studentToUpdate = null"
+    :retain-focus="false"
+  >
+    <v-card title="Modifier le profil" v-if="studentToUpdate != null">
+      <v-card-text>
+        <v-text-field
+          variant="outlined"
+          density="compact"
+          label="Nom"
+          v-model="studentToUpdate.Name"
+        ></v-text-field>
+        <v-text-field
+          variant="outlined"
+          density="compact"
+          label="Prénom"
+          v-model="studentToUpdate.Surname"
+        ></v-text-field>
+        <date-field
+          v-model="studentToUpdate.Birthday"
+          label="Date de naissance"
+        >
+        </date-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="studentToUpdate = null">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn @click="updateStudent" color="success">Modifier</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-dialog v-model="showUploadFile" :retain-focus="false">
     <v-card
       title="Importer une liste"
@@ -45,7 +97,7 @@
       </v-col>
     </v-row>
     <v-card-text>
-      <v-card width="60%" class="mx-auto">
+      <v-card width="80%" class="mx-auto">
         <v-row>
           <v-col>
             <v-card-subtitle>Elèves</v-card-subtitle>
@@ -61,6 +113,10 @@
               Code de connection
             </v-btn>
             <v-divider vertical></v-divider>
+            <v-btn class="mx-2" @click="addStudent" title="Créer un profil">
+              <v-icon icon="mdi-plus" color="success"></v-icon>
+              Créer
+            </v-btn>
             <v-btn
               class="mx-2"
               @click="showUploadFile = true"
@@ -85,13 +141,35 @@
           <v-list>
             <v-list-item v-for="student in students" :key="student.Id">
               <v-row no-gutters>
-                <v-col> {{ student.Name }} {{ student.Surname }} </v-col>
-                <v-col>
+                <v-col align-self="center">
+                  <v-btn
+                    class="mx-2"
+                    size="x-small"
+                    icon
+                    @click="studentToDelete = student"
+                    title="Supprimer l'élève"
+                  >
+                    <v-icon icon="mdi-delete" color="red"></v-icon>
+                  </v-btn>
+                  <v-btn
+                    class="mx-2"
+                    size="x-small"
+                    icon
+                    @click="studentToUpdate = copy(student)"
+                    title="Modifier le profil"
+                  >
+                    <v-icon icon="mdi-pencil"></v-icon>
+                  </v-btn>
+                </v-col>
+                <v-col align-self="center">
+                  {{ student.Name }} {{ student.Surname }}
+                </v-col>
+                <v-col align-self="center">
                   <v-list-item-subtitle
                     >{{ formatDate(student.Birthday) }}
                   </v-list-item-subtitle>
                 </v-col>
-                <v-col>
+                <v-col align-self="center">
                   <v-tooltip
                     style="cursor: pointer"
                     v-if="student.IsClientAttached"
@@ -116,9 +194,10 @@
 <script setup lang="ts">
 import type { Classroom, Student } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { formatDate } from "@/controller/utils";
-import { onMounted } from "vue";
+import { copy, formatDate } from "@/controller/utils";
+import { computed, onMounted } from "vue";
 import { $ref } from "vue/macros";
+import DateField from "../DateField.vue";
 
 interface Props {
   classroom: Classroom;
@@ -132,7 +211,13 @@ const emit = defineEmits<{
 
 onMounted(() => fetchStudents());
 
-let students = $ref<Student[]>([]);
+let students = computed(() => {
+  const out = _students.map((v) => v);
+  out.sort((s1, s2) => s1.Name.localeCompare(s2.Name));
+  return out;
+});
+
+let _students = $ref<Student[]>([]);
 
 async function fetchStudents() {
   const res = await controller.TeacherGetClassroomStudents({
@@ -141,7 +226,41 @@ async function fetchStudents() {
   if (res == undefined) {
     return;
   }
-  students = res || [];
+  _students = res || [];
+}
+
+async function addStudent() {
+  const res = await controller.TeacherAddStudent({
+    "id-classroom": props.classroom.id,
+  });
+  if (res == undefined) {
+    return;
+  }
+  console.log(res);
+
+  _students.push(res);
+
+  studentToUpdate = copy(res);
+}
+
+let studentToDelete = $ref<Student | null>(null);
+async function deleteStudent() {
+  if (studentToDelete == null) {
+    return;
+  }
+  await controller.TeacherDeleteStudent({ "id-student": studentToDelete.Id });
+  studentToDelete = null;
+  await fetchStudents();
+}
+
+let studentToUpdate = $ref<Student | null>(null);
+async function updateStudent() {
+  if (studentToUpdate == null) {
+    return;
+  }
+  await controller.TeacherUpdateStudent(studentToUpdate);
+  studentToUpdate = null;
+  await fetchStudents();
 }
 
 let showUploadFile = $ref(false);

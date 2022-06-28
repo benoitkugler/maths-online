@@ -263,7 +263,6 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 	// student client classroom managment
 	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
 	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
-	e.DELETE("/api/classroom/attach", tc.DetachStudentFromClassroom)
 
 	// prof. back office
 	for _, route := range []string{

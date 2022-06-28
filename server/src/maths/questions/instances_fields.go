@@ -111,7 +111,7 @@ func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 func (f ExpressionFieldInstance) toClient() client.Block {
 	var label string
 	if f.Label.Expression != nil {
-		label = f.Label.Expression.AsLaTeX(nil) + " = "
+		label = f.Label.Expression.AsLaTeX() + " = "
 	} else {
 		label = f.Label.String
 	}

@@ -23,7 +23,8 @@
       <v-card-text
         >Etes-vous certain de vouloir supprimer la classe
         <i>{{ classroomToDelete?.name }}</i> ? <br />
-        Cette opération est irréversible.
+        Tous les élèves associés (et leur progression) seront supprimés.
+        <br />Cette opération est irréversible.
       </v-card-text>
       <v-card-actions>
         <v-btn @click="classroomToDelete = null">Retour</v-btn>
@@ -136,7 +137,7 @@ async function fetchClassrooms() {
 }
 
 async function createClassroom() {
-  await controller.TeacherCreateClassroom(null);
+  await controller.TeacherCreateClassroom();
   await fetchClassrooms();
 }
 

@@ -42,7 +42,7 @@
         </div>
       </v-col>
       <v-col style="text-align: right" align-self="center">
-        <TagChip :tag="tag" :key="tag" v-for="tag in question.Tags"></TagChip>
+        <TagChip :tag="tag" :key="tag" v-for="tag in displayedTags"></TagChip>
       </v-col>
     </v-row>
   </v-list-item>
@@ -57,6 +57,7 @@ import TagChip from "./utils/TagChip.vue";
 
 interface Props {
   question: QuestionHeader;
+  commonTags?: string[];
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -71,4 +72,9 @@ const colorClass = computed(
 );
 
 const isPersonnal = props.question.Origin.Visibility == Visibility.Personnal;
+
+const displayedTags = computed(() => {
+  const hideTags = new Set(props.commonTags || []);
+  return props.question.Tags?.filter((t) => !hideTags.has(t)) || [];
+});
 </script>

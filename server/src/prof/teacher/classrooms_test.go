@@ -3,6 +3,7 @@ package teacher
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/maths-online/prof/students"
 	"github.com/benoitkugler/maths-online/utils/testutils"
@@ -79,4 +80,40 @@ func Test_importPronoteFile(t *testing.T) {
 
 	links, _ := SelectStudentClassroomsByIdClassrooms(db, classroom.Id)
 	students.DeleteStudentsByIDs(db, links.IdStudents()...)
+}
+
+func TestStudentCRUD(t *testing.T) {
+	db := testutils.CreateDBDev(t, "../students/gen_create.sql", "gen_create.sql")
+	defer testutils.RemoveDBDev()
+	defer db.Close()
+
+	teacher, err := Teacher{Id: 1}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ct := Controller{db: db, admin: Teacher{Id: teacher.Id}}
+	classroom, err := Classroom{IdTeacher: teacher.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st, err := ct.addStudent(classroom.Id, teacher.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st.Name = "sdlsl"
+	st.Birthday = students.Date(time.Now())
+	if err = ct.updateStudent(st, teacher.Id); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = ct.updateStudent(st, teacher.Id+1); err == nil {
+		t.Fatal()
+	}
+
+	if err = ct.deleteStudent(st.Id, teacher.Id); err != nil {
+		t.Fatal(err)
+	}
 }

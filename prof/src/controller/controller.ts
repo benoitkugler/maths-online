@@ -93,6 +93,25 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
+  protected onSuccessTeacherAddStudent(data: Student): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Elève ajouté avec succès.");
+    }
+  }
+  protected onSuccessTeacherUpdateStudent(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Profil mis à jour avec succès.");
+    }
+  }
+  protected onSuccessTeacherDeleteStudent(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Profil supprimé avec succès.");
+    }
+  }
+
   protected onSuccessTeacherImportStudents(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
