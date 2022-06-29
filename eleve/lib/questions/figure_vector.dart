@@ -77,16 +77,23 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
     final from = widget.controller.from;
     final to = widget.controller.to;
     final zoomFactor = _zoomController.value.getMaxScaleOnAxis();
+    final color = widget.controller.fieldError ? Colors.red : null;
 
     final List<PositionnedText> texts = [];
     final CustomPainter linePainter;
     if (widget.controller.data.asLine) {
       linePainter = _AffineLinePainter(
-          metrics, from, to, widget.controller.data.lineLabel);
+        metrics,
+        from,
+        to,
+        widget.controller.data.lineLabel,
+        color: color,
+      );
       texts.add((linePainter as _AffineLinePainter).positionnedLabel);
     } else {
       linePainter = VectorPainter(
-          metrics.logicalIntToVisual(from), metrics.logicalIntToVisual(to));
+          metrics.logicalIntToVisual(from), metrics.logicalIntToVisual(to),
+          color: color);
     }
 
     final figurePainter = DrawingsPainter(metrics, figure.drawings);
@@ -103,35 +110,37 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
           return true;
         },
         child: BaseRepere<VectorPointID>(
-          metrics,
-          figure.showGrid,
-          [
-            // custom drawing
-            CustomPaint(
-              size: metrics.size,
-              painter: figurePainter,
-            ),
-            CustomPaint(
-              size: metrics.size,
-              painter: linePainter,
-            ),
-            DraggableGridPoint(
-              from,
-              metrics.logicalIntToVisual(from),
-              VectorPointID.from,
-              zoomFactor,
-              disabled: !widget.controller.enabled,
-            ),
-            DraggableGridPoint(
-              to,
-              metrics.logicalIntToVisual(to),
-              VectorPointID.to,
-              zoomFactor,
-              disabled: !widget.controller.enabled,
-            ),
-          ],
-          texts,
-        ),
+            metrics,
+            figure.showGrid,
+            [
+              // custom drawing
+              CustomPaint(
+                size: metrics.size,
+                painter: figurePainter,
+              ),
+              CustomPaint(
+                size: metrics.size,
+                painter: linePainter,
+              ),
+              DraggableGridPoint(
+                from,
+                metrics.logicalIntToVisual(from),
+                VectorPointID.from,
+                zoomFactor,
+                disabled: !widget.controller.enabled,
+                color: color,
+              ),
+              DraggableGridPoint(
+                to,
+                metrics.logicalIntToVisual(to),
+                VectorPointID.to,
+                zoomFactor,
+                disabled: !widget.controller.enabled,
+                color: color,
+              ),
+            ],
+            texts,
+            color: color),
       ),
     );
   }
@@ -148,19 +157,20 @@ class _AffineLinePainter extends CustomPainter {
   final IntCoord from;
   final IntCoord to;
   final String label;
+  final Color color;
 
-  _AffineLinePainter(this.metrics, this.from, this.to, this.label);
+  _AffineLinePainter(this.metrics, this.from, this.to, this.label,
+      {Color? color})
+      : color = color ?? Colors.teal;
 
   PositionnedText get positionnedLabel =>
-      DrawingsPainter.lineLabel(metrics, _line);
-
-  static const color = "#a832a2";
+      DrawingsPainter.lineLabel(metrics, _line, label);
 
   /// infer line from the points
-  Line get _line {
+  AffineLine get _line {
     final from = Coord(this.from.x.toDouble(), this.from.y.toDouble());
     final to = Coord(this.to.x.toDouble(), this.to.y.toDouble());
-    return DrawingsPainter.inferLine(from, to, label, color);
+    return DrawingsPainter.inferLine(from, to, color);
   }
 
   @override

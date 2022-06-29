@@ -157,6 +157,7 @@ class _TableFieldState extends State<TableField> {
   @override
   Widget build(BuildContext context) {
     final ct = widget.controller;
+    final color = ct.fieldError ? Colors.red : widget.color;
     return _Table(
         ct.data.horizontalHeaders,
         ct.data.verticalHeaders,
@@ -166,7 +167,7 @@ class _TableFieldState extends State<TableField> {
                         child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: NumberField(
-                        widget.color,
+                        color,
                         cell,
                         outlined: true,
                       ),

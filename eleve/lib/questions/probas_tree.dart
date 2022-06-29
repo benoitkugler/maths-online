@@ -203,7 +203,8 @@ class _TreeFieldState extends State<TreeField> {
               ),
             ),
           )
-        : _OneTree(false, widget.color, _showShapeSelection, ct.controllers!);
+        : _OneTree(false, ct.fieldError ? Colors.red : widget.color,
+            _showShapeSelection, ct.controllers!);
   }
 }
 

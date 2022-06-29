@@ -104,6 +104,7 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
     final from2 = widget.controller.from2;
     final to2 = widget.controller.to2;
     final zoomFactor = _zoomController.value.getMaxScaleOnAxis();
+    final hasError = widget.controller.fieldError;
     return InteractiveViewer(
       transformationController: _zoomController,
       maxScale: 5,
@@ -125,30 +126,35 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
             ),
             DraggableGridPoint(from1, metrics.logicalIntToVisual(from1),
                 VectorPairPointID.from1, zoomFactor,
-                color: Colors.orange, disabled: !widget.controller.enabled),
+                color: hasError ? Colors.red : Colors.yellow,
+                disabled: !widget.controller.enabled),
             DraggableGridPoint(to1, metrics.logicalIntToVisual(to1),
                 VectorPairPointID.to1, zoomFactor,
-                color: Colors.orange, disabled: !widget.controller.enabled),
+                color: hasError ? Colors.red : Colors.yellow,
+                disabled: !widget.controller.enabled),
             DraggableGridPoint(from2, metrics.logicalIntToVisual(from2),
                 VectorPairPointID.from2, zoomFactor,
-                color: Colors.deepOrange, disabled: !widget.controller.enabled),
+                color: hasError ? Colors.red : Colors.teal,
+                disabled: !widget.controller.enabled),
             DraggableGridPoint(to2, metrics.logicalIntToVisual(to2),
                 VectorPairPointID.to2, zoomFactor,
-                color: Colors.deepOrange, disabled: !widget.controller.enabled),
+                color: hasError ? Colors.red : Colors.teal,
+                disabled: !widget.controller.enabled),
             CustomPaint(
               size: metrics.size,
               painter: VectorPainter(metrics.logicalIntToVisual(from1),
                   metrics.logicalIntToVisual(to1),
-                  color: Colors.blue),
+                  color: hasError ? Colors.redAccent : Colors.yellowAccent),
             ),
             CustomPaint(
               size: metrics.size,
               painter: VectorPainter(metrics.logicalIntToVisual(from2),
                   metrics.logicalIntToVisual(to2),
-                  color: Colors.purple),
+                  color: hasError ? Colors.redAccent : Colors.tealAccent),
             ),
           ],
           texts,
+          color: widget.controller.fieldError ? Colors.red : null,
         ),
       ),
     );

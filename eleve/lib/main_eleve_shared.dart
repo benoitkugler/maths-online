@@ -3,6 +3,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/question_gallery.dart';
+import 'package:eleve/questions/repere.gen.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared_gen.dart';
@@ -115,10 +116,18 @@ class _EleveAppState extends State<EleveApp> {
                     InstantiatedQuestion(
                         0,
                         Question("", [
-                          NumberFieldBlock(0),
-                          DropDownFieldBlock([
-                            [TextOrMath("AAA", true)],
-                            [TextOrMath("BB", true)],
+                          FigureVectorFieldBlock(
+                              "test",
+                              Figure(Drawings({}, [], []),
+                                  RepereBounds(20, 20, Coord(5, 5)), true),
+                              0,
+                              true),
+                          TableFieldBlock([
+                            TextOrMath("sdsd", true),
+                            TextOrMath("sdsd", true),
+                          ], [
+                            TextOrMath("sdsd", true),
+                            TextOrMath("sdsd", true),
                           ], 1)
                         ]),
                         []),

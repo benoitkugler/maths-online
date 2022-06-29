@@ -88,6 +88,7 @@ class _FunctionPointsState extends State<FunctionPoints> {
     final painter = BezierCurvesPainter(metrics,
         [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)]);
     final texts = painter.extractTexts();
+    final color = widget.controller.fieldError ? Colors.red : null;
     return InteractiveViewer(
       transformationController: _zoomController,
       child: NotificationListener<PointMovedNotification<_PointID>>(
@@ -114,10 +115,12 @@ class _FunctionPointsState extends State<FunctionPoints> {
                 index,
                 _zoomController.value.getMaxScaleOnAxis(),
                 disabled: !widget.controller.enabled,
+                color: color,
               );
             }),
           ],
           texts,
+          color: color,
         ),
       ),
     );

@@ -122,7 +122,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
     return Column(
       children: [
         _AnswerRow(
-            widget._color,
+            ct.fieldError ? Colors.red : widget._color,
             ct.enabled,
             answers,
             ct.label,

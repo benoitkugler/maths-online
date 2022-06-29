@@ -16,7 +16,6 @@ class VectorController extends FieldController {
 
   @override
   bool hasValidData() {
-    print("hasValidData ${x.hasValidData()} && ${y.hasValidData()}");
     return x.hasValidData() && y.hasValidData();
   }
 
@@ -42,6 +41,7 @@ class VectorField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = controller.fieldError ? Colors.red : this.color;
     final x = NumberField(
       color,
       controller.x,

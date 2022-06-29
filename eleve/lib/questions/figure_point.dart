@@ -2,6 +2,7 @@ import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/repere.dart';
 import 'package:eleve/questions/repere.gen.dart';
 import 'package:eleve/questions/types.gen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class FigurePointController extends FieldController {
@@ -57,8 +58,6 @@ class _FigurePrivate extends StatefulWidget {
 }
 
 class _FigurePrivateState extends State<_FigurePrivate> {
-  // var showTooltip = false;
-
   void _setCurrentPoint(Offset visual, RepereMetrics metrics) {
     final logical = metrics.visualToLogical(visual);
     if (isInBounds(logical, metrics.figure)) {
@@ -88,11 +87,13 @@ class _FigurePrivateState extends State<_FigurePrivate> {
             painter: painter,
           ),
           if (point != null)
-            GridPoint(point, metrics.logicalIntToVisual(point)),
+            GridPoint(point, metrics.logicalIntToVisual(point),
+                color: widget.controller.fieldError ? Colors.red : null),
           // if (showTooltip && point != null)
           //   GridPointHighlight(point, metrics.logicalIntToVisual(point)),
         ],
         texts,
+        color: widget.controller.fieldError ? Colors.red : null,
       ),
     );
   }

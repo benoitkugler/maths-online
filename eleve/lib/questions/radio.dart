@@ -42,9 +42,10 @@ class RadioField extends StatefulWidget {
 class _RadioFieldState extends State<RadioField> {
   @override
   Widget build(BuildContext context) {
+    final color = widget._controller.fieldError ? Colors.red : widget._color;
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: widget._color),
+        border: Border.all(color: color),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Column(
@@ -52,7 +53,7 @@ class _RadioFieldState extends State<RadioField> {
               (index) {
         final prop = widget._controller.proposals[index];
         return RadioListTile<int>(
-          activeColor: widget._color,
+          activeColor: color,
           title: TextRow(buildText(prop, TextS(), 18), verticalPadding: 2),
           value: index,
           groupValue: widget._controller.index,

@@ -125,22 +125,25 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
   final RepereMetrics metrics;
 
   final bool showGrid;
+  final Color color;
 
   /// [layers] are added in the stack
   final List<Widget> layers;
   final List<PositionnedText> texts;
 
   const BaseRepere(this.metrics, this.showGrid, this.layers, this.texts,
-      {Key? key})
-      : super(key: key);
+      {Key? key, Color? color})
+      : color = color ?? Colors.transparent,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        // color: Colors.white.withOpacity(0.8),
-        boxShadow: [BoxShadow(color: Colors.white, blurRadius: 5)],
-      ),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+          // color: Colors.white,
+          boxShadow: const [BoxShadow(color: Colors.white, blurRadius: 5)],
+          border: Border.all(color: color, width: 2)),
       child: DragTarget<PointIDType>(
         builder: (context, candidateData, rejectedData) {
           final hasDropOver = candidateData.isNotEmpty;
@@ -241,7 +244,9 @@ class VectorPainter extends CustomPainter {
   final Offset from;
   final Offset to;
   final Color color;
-  VectorPainter(this.from, this.to, {this.color = Colors.blue});
+
+  VectorPainter(this.from, this.to, {Color? color})
+      : color = color ?? Colors.blue;
 
   static Path arrowPath(Offset from, Offset to) {
     final arrowHead = to;
@@ -455,6 +460,18 @@ extension _OffsetLabel on LabelPos {
   }
 }
 
+class AffineLine {
+  final double a;
+  final double b;
+  final Color color;
+
+  const AffineLine(this.a, this.b, this.color);
+
+  factory AffineLine.fromLine(Line line) {
+    return AffineLine(line.a, line.b, fromHex(line.color));
+  }
+}
+
 /// fromHex expected a #FFFFFF string
 Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   if (color.isEmpty) {
@@ -500,7 +517,7 @@ class DrawingsPainter extends CustomPainter {
     }
 
     for (final line in drawings.lines) {
-      out.add(lineLabel(metrics, line));
+      out.add(lineLabel(metrics, AffineLine.fromLine(line), line.label));
     }
 
     return out;
@@ -511,7 +528,8 @@ class DrawingsPainter extends CustomPainter {
     return false;
   }
 
-  static PositionnedText lineLabel(RepereMetrics metrics, Line line) {
+  static PositionnedText lineLabel(
+      RepereMetrics metrics, AffineLine line, String label) {
     final origin = metrics.figure.origin;
 
     // label position
@@ -540,14 +558,14 @@ class DrawingsPainter extends CustomPainter {
     }
 
     return PositionnedText(
-      line.label,
+      label,
       PosPoint(logical, pos),
-      color: fromHex(line.color),
+      color: line.color,
     );
   }
 
   /// infer line from the points
-  static Line inferLine(Coord from, Coord to, String label, String color) {
+  static AffineLine inferLine(Coord from, Coord to, Color color) {
     double a, b;
     if (to.x == from.x) {
       a = double.infinity;
@@ -556,11 +574,10 @@ class DrawingsPainter extends CustomPainter {
       a = (to.y - from.y) / (to.x - from.x);
       b = from.y - a * from.x;
     }
-    return Line(
-      label,
-      color,
+    return AffineLine(
       a,
       b,
+      color,
     );
   }
 
@@ -583,7 +600,7 @@ class DrawingsPainter extends CustomPainter {
     switch (line.kind) {
       case SegmentKind.sKLine: // use affine painter
         paintAffineLine(
-            metrics, canvas, inferLine(from, to, line.labelName, line.color),
+            metrics, canvas, inferLine(from, to, fromHex(line.color)),
             width: 1);
         break;
       case SegmentKind.sKSegment:
@@ -633,7 +650,8 @@ class DrawingsPainter extends CustomPainter {
   /// if line.a is infinite, then line.b is interpreted as the abscisse
   /// of a vertical line
   /// the line label is ignored; use [lineLabel] to get it
-  static void paintAffineLine(RepereMetrics metrics, Canvas canvas, Line line,
+  static void paintAffineLine(
+      RepereMetrics metrics, Canvas canvas, AffineLine line,
       {double width = 2}) {
     final origin = metrics.figure.origin;
 
@@ -653,7 +671,6 @@ class DrawingsPainter extends CustomPainter {
           line.a * (metrics.figure.width - origin.x) + line.b);
     }
 
-    final lineColor = fromHex(line.color);
     canvas.save();
     canvas
         .clipRect(Rect.fromLTWH(0, 0, metrics.size.width, metrics.size.height));
@@ -661,7 +678,7 @@ class DrawingsPainter extends CustomPainter {
         metrics.logicalToVisual(logicalStart),
         metrics.logicalToVisual(logicalEnd),
         Paint()
-          ..color = lineColor
+          ..color = line.color
           ..strokeWidth = width);
 
     canvas.restore();
@@ -674,7 +691,7 @@ class DrawingsPainter extends CustomPainter {
     }
 
     for (var line in drawings.lines) {
-      paintAffineLine(metrics, canvas, line);
+      paintAffineLine(metrics, canvas, AffineLine.fromLine(line));
     }
 
     drawings.points.forEach((key, value) {
@@ -692,8 +709,11 @@ class DrawingsPainter extends CustomPainter {
 class GridPoint extends StatelessWidget {
   final IntCoord logical;
   final Offset visual;
+  final Color color;
 
-  const GridPoint(this.logical, this.visual, {Key? key}) : super(key: key);
+  const GridPoint(this.logical, this.visual, {Color? color, Key? key})
+      : color = color ?? Colors.orangeAccent,
+        super(key: key);
 
   static const radius = 10.0;
 
@@ -705,8 +725,7 @@ class GridPoint extends StatelessWidget {
       child: Container(
         width: radius,
         height: radius,
-        decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.8), shape: BoxShape.circle),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }
@@ -723,8 +742,9 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
   final bool disabled;
 
   const DraggableGridPoint(this.logical, this.visual, this.id, this.zoomFactor,
-      {Key? key, this.color = Colors.orange, this.disabled = false})
-      : super(key: key);
+      {Key? key, Color? color, this.disabled = false})
+      : color = color ?? Colors.orange,
+        super(key: key);
 
   static const outerRadius = 20.0;
   static const radius = 8.0;
