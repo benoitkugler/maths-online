@@ -134,7 +134,7 @@ extension _Icon on _QuestionState {
             color: Colors.green);
       case _QuestionState.toDo:
         return const Icon(
-          IconData(0xf0573, fontFamily: 'MaterialIcons'),
+          IconData(0xe09f, fontFamily: 'MaterialIcons'),
           color: Colors.purpleAccent,
         );
     }

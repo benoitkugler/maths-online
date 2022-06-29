@@ -109,10 +109,21 @@ class _EleveAppState extends State<EleveApp> {
               widget.buildMode,
               Exercice(
                   InstantiatedExercice(
-                      0, "REcherche de primitives", Flow.parallel, [
-                    InstantiatedQuestion(0, Question("", []), []),
-                    InstantiatedQuestion(0, Question("", []), []),
-                    InstantiatedQuestion(0, Question("", []), []),
+                      0, "REcherche de primitives", Flow.sequencial, [
+                    InstantiatedQuestion(
+                        0, Question("", [NumberFieldBlock(0)]), []),
+                    InstantiatedQuestion(
+                        0,
+                        Question("", [
+                          NumberFieldBlock(0),
+                          DropDownFieldBlock([
+                            [TextOrMath("AAA", true)],
+                            [TextOrMath("BB", true)],
+                          ], 1)
+                        ]),
+                        []),
+                    InstantiatedQuestion(
+                        0, Question("", [NumberFieldBlock(0)]), []),
                   ], [
                     1,
                     2,
@@ -125,7 +136,41 @@ class _EleveAppState extends State<EleveApp> {
                         [true, false],
                         []
                       ],
-                      1))),
+                      1)),
+              (dataIn) async => EvaluateExerciceOut(
+                      dataIn.answers.map((index, qu) => MapEntry(
+                          index,
+                          QuestionAnswersOut(
+                              qu.answer.data
+                                  .map((key, value) => MapEntry(key, false)),
+                              {}))),
+                      ProgressionExt(Progression(0, 0), [], 1),
+                      [
+                        InstantiatedQuestion(
+                            0,
+                            Question("", [
+                              TextBlock([TextOrMath("text", true)], true, false,
+                                  true),
+                              NumberFieldBlock(0)
+                            ]),
+                            []),
+                        InstantiatedQuestion(
+                            0,
+                            Question("", [
+                              TextBlock([TextOrMath("text", true)], true, false,
+                                  true),
+                              NumberFieldBlock(0)
+                            ]),
+                            []),
+                        InstantiatedQuestion(
+                            0,
+                            Question("", [
+                              TextBlock([TextOrMath("text", true)], true, false,
+                                  true),
+                              NumberFieldBlock(0)
+                            ]),
+                            []),
+                      ])),
         ));
   }
 }

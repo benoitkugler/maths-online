@@ -260,29 +260,72 @@ Map<String, dynamic> dictIntQuestionAnswersOutToJson(
       (k, v) => MapEntry(intToJson(k).toString(), questionAnswersOutToJson(v)));
 }
 
+// github.com/benoitkugler/maths-online/prof/editor.InstantiatedQuestion
+class InstantiatedQuestion {
+  final int id;
+  final Question question;
+  final List<VarEntry> params;
+
+  const InstantiatedQuestion(this.id, this.question, this.params);
+
+  @override
+  String toString() {
+    return "InstantiatedQuestion($id, $question, $params)";
+  }
+}
+
+InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return InstantiatedQuestion(intFromJson(json['Id']),
+      questionFromJson(json['Question']), listVarEntryFromJson(json['Params']));
+}
+
+JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
+  return {
+    "Id": intToJson(item.id),
+    "Question": questionToJson(item.question),
+    "Params": listVarEntryToJson(item.params)
+  };
+}
+
+List<InstantiatedQuestion> listInstantiatedQuestionFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(instantiatedQuestionFromJson).toList();
+}
+
+List<dynamic> listInstantiatedQuestionToJson(List<InstantiatedQuestion> item) {
+  return item.map(instantiatedQuestionToJson).toList();
+}
+
 // github.com/benoitkugler/maths-online/prof/editor.EvaluateExerciceOut
 class EvaluateExerciceOut {
   final Map<int, QuestionAnswersOut> results;
   final ProgressionExt progression;
+  final List<InstantiatedQuestion> newQuestions;
 
-  const EvaluateExerciceOut(this.results, this.progression);
+  const EvaluateExerciceOut(this.results, this.progression, this.newQuestions);
 
   @override
   String toString() {
-    return "EvaluateExerciceOut($results, $progression)";
+    return "EvaluateExerciceOut($results, $progression, $newQuestions)";
   }
 }
 
 EvaluateExerciceOut evaluateExerciceOutFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return EvaluateExerciceOut(dictIntQuestionAnswersOutFromJson(json['Results']),
-      progressionExtFromJson(json['Progression']));
+  return EvaluateExerciceOut(
+      dictIntQuestionAnswersOutFromJson(json['Results']),
+      progressionExtFromJson(json['Progression']),
+      listInstantiatedQuestionFromJson(json['NewQuestions']));
 }
 
 JSON evaluateExerciceOutToJson(EvaluateExerciceOut item) {
   return {
     "Results": dictIntQuestionAnswersOutToJson(item.results),
-    "Progression": progressionExtToJson(item.progression)
+    "Progression": progressionExtToJson(item.progression),
+    "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions)
   };
 }
 
@@ -330,45 +373,6 @@ extension _FlowExt on Flow {
 Flow flowFromJson(dynamic json) => _FlowExt.fromValue(json as int);
 
 dynamic flowToJson(Flow item) => item.toValue();
-
-// github.com/benoitkugler/maths-online/prof/editor.InstantiatedQuestion
-class InstantiatedQuestion {
-  final int id;
-  final Question question;
-  final List<VarEntry> params;
-
-  const InstantiatedQuestion(this.id, this.question, this.params);
-
-  @override
-  String toString() {
-    return "InstantiatedQuestion($id, $question, $params)";
-  }
-}
-
-InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return InstantiatedQuestion(intFromJson(json['Id']),
-      questionFromJson(json['Question']), listVarEntryFromJson(json['Params']));
-}
-
-JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
-  return {
-    "Id": intToJson(item.id),
-    "Question": questionToJson(item.question),
-    "Params": listVarEntryToJson(item.params)
-  };
-}
-
-List<InstantiatedQuestion> listInstantiatedQuestionFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(instantiatedQuestionFromJson).toList();
-}
-
-List<dynamic> listInstantiatedQuestionToJson(List<InstantiatedQuestion> item) {
-  return item.map(instantiatedQuestionToJson).toList();
-}
 
 List<int> listIntFromJson(dynamic json) {
   if (json == null) {

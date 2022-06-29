@@ -58,18 +58,18 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     return questionSyntaxCheckOutFromJson(jsonDecode(resp.body));
   }
 
-  Future<QuestionAnswersOut> _validateCall(ValidQuestionNotification v) async {
+  Future<QuestionAnswersOut> _validateCall(QuestionAnswersIn v) async {
     final pageIndex = currentQuestionIndex!;
     final uri =
         Uri.parse(widget.buildMode.serverURL("/questions/answer/$pageIndex"));
     final resp = await http
-        .post(uri, body: jsonEncode(questionAnswersInToJson(v.data)), headers: {
+        .post(uri, body: jsonEncode(questionAnswersInToJson(v)), headers: {
       'Content-type': 'application/json',
     });
     return questionAnswersOutFromJson(jsonDecode(resp.body));
   }
 
-  void _validate(ValidQuestionNotification v, BuildContext context) async {
+  void _validate(QuestionAnswersIn v, BuildContext context) async {
     final rep = await _validateCall(v);
     final crible = rep.results;
     final isValid = crible.values.every((element) => element);

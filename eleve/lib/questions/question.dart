@@ -50,7 +50,7 @@ class QuestionController {
 
   bool get enableValidate {
     final areAnswersValid =
-        _fields.values.every((ct) => !ct.syntaxError && ct.hasValidData());
+        _fields.values.every((ct) => !ct.fieldError && ct.hasValidData());
     return (!blockOnSubmit || !hasAnswered) && areAnswersValid;
   }
 
@@ -62,7 +62,17 @@ class QuestionController {
 
   void setAnswers(Map<int, Answer> answers) {
     _fields.forEach((key, value) {
-      _fields[key]!.setData(answers[key]!);
+      value.setData(answers[key]!);
+    });
+    // reset the user tracker, so that the validation is not blocked
+    _hasUserValidated = false;
+  }
+
+  /// [setResults] marks the fields with a false value
+  /// as error
+  void setResults(Map<int, bool> results) {
+    _fields.forEach((key, value) {
+      value.fieldError = !(results[key] ?? false);
     });
     // reset the user tracker, so that the validation is not blocked
     _hasUserValidated = false;
@@ -524,7 +534,7 @@ class QuestionW extends StatefulWidget {
 
   final Question question;
   final Color color;
-  final void Function(ValidQuestionNotification) onValid;
+  final void Function(QuestionAnswersIn) onValid;
 
   /// [timeout] is the duration for the question
   /// It may be set to [null] to hide the timeout bar.
@@ -542,6 +552,10 @@ class QuestionW extends StatefulWidget {
   /// are filled using the answers given, and no input is required to valid.
   final Map<int, Answer>? answer;
 
+  /// If [results] is provided, errors indicators are displayed for incorrect (false)
+  /// fields, and the validation text button is replaced
+  final Map<int, bool>? results;
+
   final String title;
 
   const QuestionW(this.buildMode, this.question, this.color, this.onValid,
@@ -550,7 +564,8 @@ class QuestionW extends StatefulWidget {
       this.timeout = const Duration(seconds: 60),
       this.footerQuote = const QuoteData("", "", ""),
       this.blockOnSubmit = true,
-      this.answer})
+      this.answer,
+      this.results})
       : super(key: key);
 
   @override
@@ -583,6 +598,9 @@ class _QuestionWState extends State<QuestionW> {
     if (widget.answer != null) {
       controller.setAnswers(widget.answer!);
     }
+    if (widget.results != null) {
+      controller.setResults(widget.results!);
+    }
   }
 
   void _buildFields() {
@@ -596,7 +614,7 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   void _validate() {
-    final answers = ValidQuestionNotification(controller.answsers());
+    final answers = controller.answsers();
     controller.answer();
     _buildFields();
     setState(() {});

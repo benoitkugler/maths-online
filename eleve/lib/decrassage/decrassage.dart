@@ -67,12 +67,12 @@ class _DecrassageState extends State<Decrassage> {
     });
   }
 
-  void _evaluateQuestion(ValidQuestionNotification data) async {
+  void _evaluateQuestion(QuestionAnswersIn data) async {
     try {
       final uri =
           Uri.parse(widget.buildMode.serverURL("/api/questions/evaluate"));
       final args = shared.EvaluateQuestionIn(
-          data.data, currentQuestion!.params, currentQuestion!.id);
+          data, currentQuestion!.params, currentQuestion!.id);
       final resp = await http.post(uri,
           body: jsonEncode(shared.evaluateQuestionInToJson(args)),
           headers: {

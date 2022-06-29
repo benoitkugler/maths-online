@@ -142,11 +142,11 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     }
   }
 
-  void _validAnswer(ValidQuestionNotification notif) {
+  void _validAnswer(QuestionAnswersIn data) {
     channel.sink.add(jsonEncode({
       "Kind":
           loopbackClientDataKindToJson(LoopbackClientDataKind.validAnswerIn),
-      "Data": questionAnswersInToJson(notif.data)
+      "Data": questionAnswersInToJson(data)
     }));
   }
 

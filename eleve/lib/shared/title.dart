@@ -10,7 +10,7 @@ class ColoredTitle extends StatelessWidget {
     final shadows = [
       Shadow(
           color: color.withOpacity(0.9),
-          offset: const Offset(2, -2),
+          offset: const Offset(1, -2),
           blurRadius: 1.3)
     ];
     return DecoratedBox(

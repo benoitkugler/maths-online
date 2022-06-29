@@ -54,8 +54,21 @@ class NumberField extends StatelessWidget {
       this.onSubmitted})
       : super(key: key);
 
+  Color get color => _controller.fieldError ? Colors.red : _color;
+
   @override
   Widget build(BuildContext context) {
+    final border = outlined
+        ? OutlineInputBorder(
+            borderSide: BorderSide(
+              color: color,
+            ),
+          )
+        : UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: color,
+            ),
+          );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
@@ -70,28 +83,17 @@ class NumberField extends StatelessWidget {
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.only(top: 10, bottom: 2),
-              focusedBorder: outlined
-                  ? OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: _color,
-                      ),
-                    )
-                  : UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: _color,
-                      ),
-                    ),
-              border: outlined
-                  ? OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: _color,
-                      ),
-                    )
-                  : null,
+              disabledBorder: border,
+              focusedBorder: border,
+              enabledBorder: border,
+              border: border,
             ),
 
-            cursorColor: _color,
-            style: TextStyle(color: Colors.yellow.shade100),
+            cursorColor: color,
+            style: TextStyle(
+                color: _controller.fieldError
+                    ? Colors.red.shade200
+                    : Colors.white),
             textAlign: TextAlign.center,
             textAlignVertical: TextAlignVertical.center,
             keyboardType: const TextInputType.numberWithOptions(

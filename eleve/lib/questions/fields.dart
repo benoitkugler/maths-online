@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 abstract class FieldController {
-  /// [syntaxError] should be set to true to indicate
-  /// that the answers doest not follow the correct syntax
-  bool syntaxError = false;
+  /// [fieldError] may be set to true to indicate
+  /// that the answer doest not follow the correct syntax
+  /// or is incorrect
+  bool fieldError = false;
 
   bool _enabled = true;
   bool get enabled => _enabled;

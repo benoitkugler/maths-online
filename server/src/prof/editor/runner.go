@@ -242,8 +242,9 @@ type EvaluateExerciceIn struct {
 }
 
 type EvaluateExerciceOut struct {
-	Results     map[int]client.QuestionAnswersOut `dart-extern:"client:questions/types.gen.dart"`
-	Progression ProgressionExt                    // the update progression
+	Results      map[int]client.QuestionAnswersOut `dart-extern:"client:questions/types.gen.dart"`
+	Progression  ProgressionExt                    // the updated progression
+	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
 }
 
 func (ct *Controller) evaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
@@ -298,5 +299,10 @@ func (ct *Controller) evaluateExercice(args EvaluateExerciceIn) (EvaluateExercic
 
 	updatedProgression.inferNextQuestion() // update in case of success
 
-	return EvaluateExerciceOut{Results: results, Progression: updatedProgression}, nil
+	newVersion, err := ct.instantiateExercice(args.IdExercice)
+	if err != nil {
+		return EvaluateExerciceOut{}, err
+	}
+
+	return EvaluateExerciceOut{Results: results, Progression: updatedProgression, NewQuestions: newVersion.Questions}, nil
 }
