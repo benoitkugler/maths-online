@@ -54,7 +54,8 @@ class RepereMetrics {
   RepereMetrics(this.figure, BuildContext context)
       : _displayLength = MediaQuery.of(context).size.shortestSide * 0.95;
 
-  double get resolution => max(figure.width, figure.height).toDouble();
+  double get resolution => max(max(figure.width, figure.height).toDouble(),
+      1); // avoid crash on empty figure
 
   double get canvasWidth => _displayLength * figure.width / resolution;
   double get canvasHeight => _displayLength * figure.height / resolution;

@@ -20,6 +20,7 @@ import 'package:eleve/questions/variation_table_field.dart';
 import 'package:eleve/questions/vector.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/title.dart';
+import 'package:eleve/shared/zommables.dart';
 import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -147,7 +148,7 @@ class _ContentBuilder {
   final Map<int, FieldController> _controllers;
 
   final List<Widget> rows = []; // final output
-  final List<GlobalKey> zoomableWigets = [];
+  final List<GlobalKey<ZoomableState>> zoomableKeys = [];
 
   List<InlineSpan> _currentRow = []; // current row
   bool lastIsText = false; // used to insert new line between to text block
@@ -287,9 +288,11 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey();
-    zoomableWigets.add(key);
-    rows.add(Center(child: FigurePointField(element.figure, ct, key: key)));
+    final key = GlobalKey<ZoomableState>();
+    final zoom = TransformationController();
+    zoomableKeys.add(key);
+    rows.add(Center(
+        child: Zoomable(zoom, FigurePointField(element.figure, ct), key)));
   }
 
   void _handleFigureVectorFieldBlock(FigureVectorFieldBlock element) {
@@ -298,9 +301,10 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey();
-    zoomableWigets.add(key);
-    rows.add(Center(child: FigureVectorField(ct, key: key)));
+    final key = GlobalKey<ZoomableState>();
+    final zoom = TransformationController();
+    zoomableKeys.add(key);
+    rows.add(Center(child: Zoomable(zoom, FigureVectorField(ct, zoom), key)));
   }
 
   void _handleFigureVectorPairFieldBlock(FigureVectorPairFieldBlock element) {
@@ -309,9 +313,11 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey();
-    zoomableWigets.add(key);
-    rows.add(Center(child: FigureVectorPairField(ct, key: key)));
+    final key = GlobalKey<ZoomableState>();
+    final zoom = TransformationController();
+    zoomableKeys.add(key);
+    rows.add(
+        Center(child: Zoomable(zoom, FigureVectorPairField(ct, zoom), key)));
   }
 
   void _handleVariationTableFieldBlock(VariationTableFieldBlock element) {
@@ -329,9 +335,10 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey();
-    zoomableWigets.add(key);
-    rows.add(Center(child: FunctionPoints(ct, key: key)));
+    final key = GlobalKey<ZoomableState>();
+    final zoom = TransformationController();
+    zoomableKeys.add(key);
+    rows.add(Center(child: Zoomable(zoom, FunctionPoints(ct, zoom), key)));
   }
 
   void _handleTreeFieldBlock(TreeFieldBlock element) {
@@ -445,83 +452,24 @@ class ValidQuestionNotification extends Notification {
   }
 }
 
-class _OptionScrollList extends StatefulWidget {
+class _ListRows extends StatelessWidget {
   final _ContentBuilder content;
   final Widget button;
 
-  const _OptionScrollList(this.content, this.button, {Key? key})
-      : super(key: key);
-
-  @override
-  _OptionScrollListState createState() => _OptionScrollListState();
-}
-
-class _OptionScrollListState extends State<_OptionScrollList> {
-  bool _isPaningOverView = false;
-
-  /// returns true if [position] is in the widget identified
-  /// by [key]
-  bool _isInWidget(Offset position, GlobalKey key) {
-    // find your widget
-    final box = key.currentContext?.findRenderObject();
-    if (box is! RenderBox) {
-      return false;
-    }
-
-    //get offset
-    Offset boxOffset = box.localToGlobal(Offset.zero);
-
-    // check if your pointerdown event is inside the widget (you could do the same for the width, in this case I just used the height)
-    if (position.dy > boxOffset.dy &&
-        position.dy < boxOffset.dy + box.size.height) {
-      // check x dimension aswell
-      if (position.dx > boxOffset.dx &&
-          position.dx < boxOffset.dx + box.size.width) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  void _checkPan(Offset position) {
-    final hasZommable =
-        widget.content.zoomableWigets.any((key) => _isInWidget(position, key));
-    setState(() {
-      _isPaningOverView = hasZommable;
-    });
-  }
+  const _ListRows(this.content, this.button, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerUp: (ev) {
-        // restore the scroll posibility
-        setState(() {
-          _isPaningOverView = false;
-        });
-      },
-      onPointerDown: (ev) {
-        _checkPan(ev.position);
-      },
-      child: ListView(
-          // if dragging over your widget, disable scroll, otherwise allow scrolling
-          physics: _isPaningOverView
-              ? const NeverScrollableScrollPhysics()
-              : const ScrollPhysics(),
-          shrinkWrap: true,
-          children: [
-            ...widget.content.rows
-                .map(
-                  (e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                      child: e),
-                )
-                .toList(),
-            const SizedBox(height: 10.0),
-            widget.button
-          ]),
-    );
+    return ListWithZoomables([
+      ...content.rows
+          .map(
+            (e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0), child: e),
+          )
+          .toList(),
+      const SizedBox(height: 10.0),
+      button
+    ], content.zoomableKeys, shrinkWrap: true);
   }
 }
 
@@ -635,7 +583,7 @@ class _QuestionWState extends State<QuestionW> {
             child: ColoredTitle(widget.title, widget.color),
           ),
           Expanded(
-              child: _OptionScrollList(
+              child: _ListRows(
             builder,
             ElevatedButton(
               onPressed: controller.enableValidate ? _validate : null,

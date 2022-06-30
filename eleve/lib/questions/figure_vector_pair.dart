@@ -76,20 +76,30 @@ class FigureVectorPairController extends FieldController {
 
 class FigureVectorPairField extends StatefulWidget {
   final FigureVectorPairController controller;
+  final TransformationController zoom;
 
-  const FigureVectorPairField(this.controller, {Key? key}) : super(key: key);
+  const FigureVectorPairField(this.controller, this.zoom, {Key? key})
+      : super(key: key);
 
   @override
   State<FigureVectorPairField> createState() => _FigureVectorPairFieldState();
 }
 
 class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
-  final _zoomController = TransformationController();
-
   @override
   void initState() {
-    _zoomController.addListener(() => setState(() {}));
+    widget.zoom.addListener(onZoomUpdate);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.zoom.removeListener(onZoomUpdate);
+    super.dispose();
+  }
+
+  void onZoomUpdate() {
+    setState(() {});
   }
 
   @override
@@ -103,59 +113,55 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
     final to1 = widget.controller.to1;
     final from2 = widget.controller.from2;
     final to2 = widget.controller.to2;
-    final zoomFactor = _zoomController.value.getMaxScaleOnAxis();
+    final zoomFactor = widget.zoom.value.getMaxScaleOnAxis();
     final hasError = widget.controller.fieldError;
-    return InteractiveViewer(
-      transformationController: _zoomController,
-      maxScale: 5,
-      child: NotificationListener<PointMovedNotification<VectorPairPointID>>(
-        onNotification: (event) {
-          setState(() {
-            widget.controller.setPoint(event.logicalPos, event.id);
-          });
-          return true;
-        },
-        child: BaseRepere<VectorPairPointID>(
-          metrics,
-          figure.showGrid,
-          [
-            // static figure
-            CustomPaint(
-              size: metrics.size,
-              painter: painter,
-            ),
-            DraggableGridPoint(from1, metrics.logicalIntToVisual(from1),
-                VectorPairPointID.from1, zoomFactor,
-                color: hasError ? Colors.red : Colors.yellow,
-                disabled: !widget.controller.enabled),
-            DraggableGridPoint(to1, metrics.logicalIntToVisual(to1),
-                VectorPairPointID.to1, zoomFactor,
-                color: hasError ? Colors.red : Colors.yellow,
-                disabled: !widget.controller.enabled),
-            DraggableGridPoint(from2, metrics.logicalIntToVisual(from2),
-                VectorPairPointID.from2, zoomFactor,
-                color: hasError ? Colors.red : Colors.teal,
-                disabled: !widget.controller.enabled),
-            DraggableGridPoint(to2, metrics.logicalIntToVisual(to2),
-                VectorPairPointID.to2, zoomFactor,
-                color: hasError ? Colors.red : Colors.teal,
-                disabled: !widget.controller.enabled),
-            CustomPaint(
-              size: metrics.size,
-              painter: VectorPainter(metrics.logicalIntToVisual(from1),
-                  metrics.logicalIntToVisual(to1),
-                  color: hasError ? Colors.redAccent : Colors.yellowAccent),
-            ),
-            CustomPaint(
-              size: metrics.size,
-              painter: VectorPainter(metrics.logicalIntToVisual(from2),
-                  metrics.logicalIntToVisual(to2),
-                  color: hasError ? Colors.redAccent : Colors.tealAccent),
-            ),
-          ],
-          texts,
-          color: widget.controller.fieldError ? Colors.red : null,
-        ),
+    return NotificationListener<PointMovedNotification<VectorPairPointID>>(
+      onNotification: (event) {
+        setState(() {
+          widget.controller.setPoint(event.logicalPos, event.id);
+        });
+        return true;
+      },
+      child: BaseRepere<VectorPairPointID>(
+        metrics,
+        figure.showGrid,
+        [
+          // static figure
+          CustomPaint(
+            size: metrics.size,
+            painter: painter,
+          ),
+          DraggableGridPoint(from1, metrics.logicalIntToVisual(from1),
+              VectorPairPointID.from1, zoomFactor,
+              color: hasError ? Colors.red : Colors.yellow,
+              disabled: !widget.controller.enabled),
+          DraggableGridPoint(to1, metrics.logicalIntToVisual(to1),
+              VectorPairPointID.to1, zoomFactor,
+              color: hasError ? Colors.red : Colors.yellow,
+              disabled: !widget.controller.enabled),
+          DraggableGridPoint(from2, metrics.logicalIntToVisual(from2),
+              VectorPairPointID.from2, zoomFactor,
+              color: hasError ? Colors.red : Colors.teal,
+              disabled: !widget.controller.enabled),
+          DraggableGridPoint(to2, metrics.logicalIntToVisual(to2),
+              VectorPairPointID.to2, zoomFactor,
+              color: hasError ? Colors.red : Colors.teal,
+              disabled: !widget.controller.enabled),
+          CustomPaint(
+            size: metrics.size,
+            painter: VectorPainter(metrics.logicalIntToVisual(from1),
+                metrics.logicalIntToVisual(to1),
+                color: hasError ? Colors.redAccent : Colors.yellowAccent),
+          ),
+          CustomPaint(
+            size: metrics.size,
+            painter: VectorPainter(metrics.logicalIntToVisual(from2),
+                metrics.logicalIntToVisual(to2),
+                color: hasError ? Colors.redAccent : Colors.tealAccent),
+          ),
+        ],
+        texts,
+        color: widget.controller.fieldError ? Colors.red : null,
       ),
     );
   }

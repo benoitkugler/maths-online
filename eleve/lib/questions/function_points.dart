@@ -34,8 +34,10 @@ class FunctionPointsController extends FieldController {
 
 class FunctionPoints extends StatefulWidget {
   final FunctionPointsController controller;
+  final TransformationController zoom;
 
-  const FunctionPoints(this.controller, {Key? key}) : super(key: key);
+  const FunctionPoints(this.controller, this.zoom, {Key? key})
+      : super(key: key);
 
   @override
   State<FunctionPoints> createState() => _FunctionPointsState();
@@ -44,12 +46,20 @@ class FunctionPoints extends StatefulWidget {
 typedef _PointID = int;
 
 class _FunctionPointsState extends State<FunctionPoints> {
-  final _zoomController = TransformationController();
-
   @override
   void initState() {
-    _zoomController.addListener(() => setState(() {}));
+    widget.zoom.addListener(onZoomUpdate);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.zoom.removeListener(onZoomUpdate);
+    super.dispose();
+  }
+
+  void onZoomUpdate() {
+    setState(() {});
   }
 
   static Coord _controlFromDerivatives(
@@ -89,39 +99,36 @@ class _FunctionPointsState extends State<FunctionPoints> {
         [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)]);
     final texts = painter.extractTexts();
     final color = widget.controller.fieldError ? Colors.red : null;
-    return InteractiveViewer(
-      transformationController: _zoomController,
-      child: NotificationListener<PointMovedNotification<_PointID>>(
-        onNotification: (notification) {
-          setState(() {
-            ct.fxs[notification.id] = notification.logicalPos.y;
-            ct.onChange();
-          });
-          return true;
-        },
-        child: BaseRepere<_PointID>(
-          metrics,
-          true,
-          [
-            CustomPaint(
-              size: metrics.size,
-              painter: painter,
-            ),
-            ...List<Widget>.generate(ct.fxs.length, (index) {
-              final logical = IntCoord(ct.data.xs[index], ct.fxs[index] ?? 0);
-              return DraggableGridPoint<_PointID>(
-                logical,
-                metrics.logicalIntToVisual(logical),
-                index,
-                _zoomController.value.getMaxScaleOnAxis(),
-                disabled: !widget.controller.enabled,
-                color: color,
-              );
-            }),
-          ],
-          texts,
-          color: color,
-        ),
+    return NotificationListener<PointMovedNotification<_PointID>>(
+      onNotification: (notification) {
+        setState(() {
+          ct.fxs[notification.id] = notification.logicalPos.y;
+          ct.onChange();
+        });
+        return true;
+      },
+      child: BaseRepere<_PointID>(
+        metrics,
+        true,
+        [
+          CustomPaint(
+            size: metrics.size,
+            painter: painter,
+          ),
+          ...List<Widget>.generate(ct.fxs.length, (index) {
+            final logical = IntCoord(ct.data.xs[index], ct.fxs[index] ?? 0);
+            return DraggableGridPoint<_PointID>(
+              logical,
+              metrics.logicalIntToVisual(logical),
+              index,
+              widget.zoom.value.getMaxScaleOnAxis(),
+              disabled: !widget.controller.enabled,
+              color: color,
+            );
+          }),
+        ],
+        texts,
+        color: color,
       ),
     );
   }

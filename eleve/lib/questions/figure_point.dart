@@ -3,7 +3,6 @@ import 'package:eleve/questions/repere.dart';
 import 'package:eleve/questions/repere.gen.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class FigurePointController extends FieldController {
   IntCoord? point;
@@ -30,34 +29,34 @@ class FigurePointController extends FieldController {
   }
 }
 
-class FigurePointField extends StatelessWidget {
-  final Figure spec;
-  final FigurePointController controller;
-
-  const FigurePointField(this.spec, this.controller, {Key? key})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return InteractiveViewer(
-      child: _FigurePrivate(spec, controller),
-      maxScale: 5,
-    );
-  }
-}
-
-class _FigurePrivate extends StatefulWidget {
+class FigurePointField extends StatefulWidget {
   final Figure figure;
   final FigurePointController controller;
 
-  const _FigurePrivate(this.figure, this.controller, {Key? key})
+  const FigurePointField(this.figure, this.controller, {Key? key})
       : super(key: key);
 
   @override
-  _FigurePrivateState createState() => _FigurePrivateState();
+  _FigurePointFieldState createState() => _FigurePointFieldState();
 }
 
-class _FigurePrivateState extends State<_FigurePrivate> {
+class _FigurePointFieldState extends State<FigurePointField> {
+  //  @override
+  // void initState() {
+  //   widget.zoom.addListener(onZoomUpdate);
+  //   super.initState();
+  // }
+
+  // @override
+  // void dispose() {
+  //   widget.zoom.removeListener(onZoomUpdate);
+  //   super.dispose();
+  // }
+
+  // void onZoomUpdate() {
+  //   setState(() {});
+  // }
+
   void _setCurrentPoint(Offset visual, RepereMetrics metrics) {
     final logical = metrics.visualToLogical(visual);
     if (isInBounds(logical, metrics.figure)) {

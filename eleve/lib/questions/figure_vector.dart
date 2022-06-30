@@ -54,20 +54,30 @@ enum VectorPointID { from, to }
 
 class FigureVectorField extends StatefulWidget {
   final FigureVectorController controller;
+  final TransformationController zoom;
 
-  const FigureVectorField(this.controller, {Key? key}) : super(key: key);
+  const FigureVectorField(this.controller, this.zoom, {Key? key})
+      : super(key: key);
 
   @override
   State<FigureVectorField> createState() => _FigureVectorFieldState();
 }
 
 class _FigureVectorFieldState extends State<FigureVectorField> {
-  final _zoomController = TransformationController();
-
   @override
   void initState() {
-    _zoomController.addListener(() => setState(() {}));
+    widget.zoom.addListener(onZoomUpdate);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.zoom.removeListener(onZoomUpdate);
+    super.dispose();
+  }
+
+  void onZoomUpdate() {
+    setState(() {});
   }
 
   @override
@@ -76,7 +86,7 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
     final metrics = RepereMetrics(figure.bounds, context);
     final from = widget.controller.from;
     final to = widget.controller.to;
-    final zoomFactor = _zoomController.value.getMaxScaleOnAxis();
+    final zoomFactor = widget.zoom.value.getMaxScaleOnAxis();
     final color = widget.controller.fieldError ? Colors.red : null;
 
     final List<PositionnedText> texts = [];
@@ -99,49 +109,45 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
     final figurePainter = DrawingsPainter(metrics, figure.drawings);
     texts.addAll(figurePainter.extractTexts());
 
-    return InteractiveViewer(
-      transformationController: _zoomController,
-      maxScale: 5,
-      child: NotificationListener<PointMovedNotification<VectorPointID>>(
-        onNotification: (event) {
-          setState(() {
-            widget.controller.setPoint(event.logicalPos, event.id);
-          });
-          return true;
-        },
-        child: BaseRepere<VectorPointID>(
-            metrics,
-            figure.showGrid,
-            [
-              // custom drawing
-              CustomPaint(
-                size: metrics.size,
-                painter: figurePainter,
-              ),
-              CustomPaint(
-                size: metrics.size,
-                painter: linePainter,
-              ),
-              DraggableGridPoint(
-                from,
-                metrics.logicalIntToVisual(from),
-                VectorPointID.from,
-                zoomFactor,
-                disabled: !widget.controller.enabled,
-                color: color,
-              ),
-              DraggableGridPoint(
-                to,
-                metrics.logicalIntToVisual(to),
-                VectorPointID.to,
-                zoomFactor,
-                disabled: !widget.controller.enabled,
-                color: color,
-              ),
-            ],
-            texts,
-            color: color),
-      ),
+    return NotificationListener<PointMovedNotification<VectorPointID>>(
+      onNotification: (event) {
+        setState(() {
+          widget.controller.setPoint(event.logicalPos, event.id);
+        });
+        return true;
+      },
+      child: BaseRepere<VectorPointID>(
+          metrics,
+          figure.showGrid,
+          [
+            // custom drawing
+            CustomPaint(
+              size: metrics.size,
+              painter: figurePainter,
+            ),
+            CustomPaint(
+              size: metrics.size,
+              painter: linePainter,
+            ),
+            DraggableGridPoint(
+              from,
+              metrics.logicalIntToVisual(from),
+              VectorPointID.from,
+              zoomFactor,
+              disabled: !widget.controller.enabled,
+              color: color,
+            ),
+            DraggableGridPoint(
+              to,
+              metrics.logicalIntToVisual(to),
+              VectorPointID.to,
+              zoomFactor,
+              disabled: !widget.controller.enabled,
+              color: color,
+            ),
+          ],
+          texts,
+          color: color),
     );
   }
 }
