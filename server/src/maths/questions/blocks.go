@@ -535,6 +535,10 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 		err error
 	)
 
+	if f.Bounds.Height <= 0 || f.Bounds.Width <= 0 {
+		return nil, errors.New("Les dimensions de la figure sont invalides.")
+	}
+
 	out.pointNames = make([]*expression.Expr, len(f.Drawings.Points))
 	out.points = make([]*expression.Expr, 0, 2*len(f.Drawings.Points))
 	for i, v := range f.Drawings.Points {
