@@ -25,58 +25,75 @@ import 'package:eleve/trivialpoursuit/timeout_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
+enum InputState {
+  /// fields are enabled and validated button will trigger validate
+  working,
+
+  /// fields and validated button are disabled
+  waiting,
+
+  /// fields are disabled and validated button will trigger reset
+  displayingFeedback,
+}
+
 /// [QuestionController] is the controller for a whole
 /// question (internally, it is composed of multiple controllers, one for each field)
 /// It should be created when displaying a question, then manipulated inside the [setState]
 /// method of a [StatefulWidget].
 class QuestionController {
-  /// If [blockOnSubmit] is true, the validate button is disabled
-  /// after one validation
+  /// If [blockOnSubmit] is true, the validate button and the fields are disabled
+  /// after one validation.
   final bool blockOnSubmit;
 
   final Map<int, FieldController> _fields = {};
-  bool _hasUserValidated = false;
 
-  bool get hasAnswered => _hasUserValidated;
+  InputState state = InputState.working;
 
   void answer() {
-    _hasUserValidated = true;
-    final enableFields = !blockOnSubmit || !_hasUserValidated;
-    if (!enableFields) {
+    if (blockOnSubmit) {
+      state = InputState.waiting;
       for (var element in _fields.values) {
         element.disable();
       }
     }
   }
 
-  bool get enableValidate {
-    final areAnswersValid =
-        _fields.values.every((ct) => !ct.fieldError && ct.hasValidData());
-    return (!blockOnSubmit || !hasAnswered) && areAnswersValid;
+  bool get enableButtonClick {
+    switch (state) {
+      case InputState.working: // check if the fields are valid
+        final areAnswersValid =
+            _fields.values.every((ct) => !ct.fieldError && ct.hasValidData());
+        return areAnswersValid;
+      case InputState.waiting:
+        return false;
+      case InputState.displayingFeedback:
+        return true;
+    }
   }
 
-  QuestionAnswersIn answsers() {
+  QuestionAnswersIn answers() {
     return QuestionAnswersIn(
       _fields.map((key, ct) => MapEntry(key, ct.getData())),
     );
   }
 
+  /// [setAnswers] shows the given answers and switch the state
+  /// to working (activated)
   void setAnswers(Map<int, Answer> answers) {
+    state = InputState.working;
     _fields.forEach((key, value) {
       value.setData(answers[key]!);
     });
-    // reset the user tracker, so that the validation is not blocked
-    _hasUserValidated = false;
   }
 
-  /// [setResults] marks the fields with a false value
-  /// as error
-  void setResults(Map<int, bool> results) {
+  /// [setFeedback] marks the fields with a false value
+  /// as error, and switch the state to feedback mode.
+  void setFeedback(Map<int, bool> results) {
+    state = InputState.displayingFeedback;
     _fields.forEach((key, value) {
       value.fieldError = !(results[key] ?? false);
+      value.disable();
     });
-    // reset the user tracker, so that the validation is not blocked
-    _hasUserValidated = false;
   }
 
   /// Walks throught the question content and creates the field controllers,
@@ -482,7 +499,12 @@ class QuestionW extends StatefulWidget {
 
   final Question question;
   final Color color;
+
   final void Function(QuestionAnswersIn) onValid;
+
+  /// [onRetry] is called when the user clicks on the
+  /// main button, when displaying feedback.
+  final void Function()? onRetry;
 
   /// [timeout] is the duration for the question
   /// It may be set to [null] to hide the timeout bar.
@@ -500,21 +522,26 @@ class QuestionW extends StatefulWidget {
   /// are filled using the answers given, and no input is required to valid.
   final Map<int, Answer>? answer;
 
-  /// If [results] is provided, errors indicators are displayed for incorrect (false)
+  /// If [feedback] is provided, errors indicators are displayed for incorrect (false)
   /// fields, and the validation text button is replaced
-  final Map<int, bool>? results;
+  final Map<int, bool>? feedback;
 
   final String title;
 
-  const QuestionW(this.buildMode, this.question, this.color, this.onValid,
-      {Key? key,
-      this.title = "Question",
-      this.timeout = const Duration(seconds: 60),
-      this.footerQuote = const QuoteData("", "", ""),
-      this.blockOnSubmit = true,
-      this.answer,
-      this.results})
-      : super(key: key);
+  const QuestionW(
+    this.buildMode,
+    this.question,
+    this.color,
+    this.onValid, {
+    Key? key,
+    this.title = "Question",
+    this.timeout = const Duration(seconds: 60),
+    this.footerQuote = const QuoteData("", "", ""),
+    this.blockOnSubmit = true,
+    this.answer,
+    this.feedback,
+    this.onRetry,
+  }) : super(key: key);
 
   @override
   State<QuestionW> createState() => _QuestionWState();
@@ -546,8 +573,8 @@ class _QuestionWState extends State<QuestionW> {
     if (widget.answer != null) {
       controller.setAnswers(widget.answer!);
     }
-    if (widget.results != null) {
-      controller.setResults(widget.results!);
+    if (widget.feedback != null) {
+      controller.setFeedback(widget.feedback!);
     }
   }
 
@@ -561,18 +588,48 @@ class _QuestionWState extends State<QuestionW> {
     setState(() {});
   }
 
-  void _validate() {
-    final answers = controller.answsers();
+  void onValidate() {
+    final answers = controller.answers();
     controller.answer();
     _buildFields();
     setState(() {});
     widget.onValid(answers);
   }
 
+  void onReset() {
+    if (widget.onRetry != null) {
+      widget.onRetry!();
+    }
+  }
+
+  String get buttonLabel {
+    switch (controller.state) {
+      case InputState.working:
+        return "Valider";
+      case InputState.waiting:
+        return "En attente...";
+      case InputState.displayingFeedback:
+        return "Essayer à nouveau";
+    }
+  }
+
+  void onButtonClick() {
+    switch (controller.state) {
+      case InputState.working:
+      case InputState.waiting:
+        onValidate();
+        break;
+      case InputState.displayingFeedback:
+        onReset();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const spacing = SizedBox(height: 20.0);
     final timeout = widget.timeout;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: Column(
@@ -586,12 +643,10 @@ class _QuestionWState extends State<QuestionW> {
               child: _ListRows(
             builder,
             ElevatedButton(
-              onPressed: controller.enableValidate ? _validate : null,
+              onPressed: controller.enableButtonClick ? onButtonClick : null,
               style: ElevatedButton.styleFrom(primary: widget.color),
               child: Text(
-                controller.blockOnSubmit && controller.hasAnswered
-                    ? "En attente..."
-                    : "Valider",
+                buttonLabel,
                 style: const TextStyle(fontSize: 18),
               ),
             ),
@@ -603,8 +658,8 @@ class _QuestionWState extends State<QuestionW> {
               padding: const EdgeInsets.only(top: 6),
               child: AnimatedOpacity(
                   duration: const Duration(seconds: 2),
-                  opacity: controller.hasAnswered ? 1 : 0,
-                  child: Quote(controller.hasAnswered
+                  opacity: controller.state == InputState.waiting ? 1 : 0,
+                  child: Quote(controller.state == InputState.waiting
                       ? widget.footerQuote
                       : const QuoteData("", "", ""))),
             ),

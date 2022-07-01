@@ -61,7 +61,7 @@ class _QuestionList extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.all(20.0),
                       child: Text(
-                        "Historique",
+                        "Historique de tes tentatives",
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
