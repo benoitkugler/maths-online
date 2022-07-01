@@ -214,10 +214,8 @@ type DropDownFieldInstance RadioFieldInstance
 func (rf DropDownFieldInstance) fieldID() int { return rf.ID }
 
 func (rf DropDownFieldInstance) toClient() client.Block {
-	return client.DropDownFieldBlock{
-		ID:        rf.ID,
-		Proposals: rf.Proposals,
-	}
+	v := RadioFieldInstance(rf).toClient().(client.RadioFieldBlock)
+	return client.DropDownFieldBlock(v)
 }
 
 func (f DropDownFieldInstance) validateAnswerSyntax(answer client.Answer) error {
