@@ -165,7 +165,7 @@ class _ContentBuilder {
   final Map<int, FieldController> _controllers;
 
   final List<Widget> rows = []; // final output
-  final List<GlobalKey<ZoomableState>> zoomableKeys = [];
+  final List<GlobalKey> zoomableKeys = [];
 
   List<InlineSpan> _currentRow = []; // current row
   bool lastIsText = false; // used to insert new line between to text block
@@ -305,7 +305,7 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey<ZoomableState>();
+    final key = GlobalKey();
     final zoom = TransformationController();
     zoomableKeys.add(key);
     rows.add(Center(
@@ -318,7 +318,7 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey<ZoomableState>();
+    final key = GlobalKey();
     final zoom = TransformationController();
     zoomableKeys.add(key);
     rows.add(Center(child: Zoomable(zoom, FigureVectorField(ct, zoom), key)));
@@ -330,7 +330,7 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey<ZoomableState>();
+    final key = GlobalKey();
     final zoom = TransformationController();
     zoomableKeys.add(key);
     rows.add(
@@ -352,7 +352,7 @@ class _ContentBuilder {
     // start a new line
     _flushCurrentRow();
 
-    final key = GlobalKey<ZoomableState>();
+    final key = GlobalKey();
     final zoom = TransformationController();
     zoomableKeys.add(key);
     rows.add(Center(child: Zoomable(zoom, FunctionPoints(ct, zoom), key)));

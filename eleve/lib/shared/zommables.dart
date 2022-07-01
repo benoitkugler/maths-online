@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 /// [ListWithZoomables] is a work around a flutter limitation,
-/// to enable zoomables widget inside lists
+/// to enable zoomables widget inside lists.
 class ListWithZoomables extends StatefulWidget {
   final List<Widget> children;
-  final List<GlobalKey<ZoomableState>> zoomableKeys;
+  final List<GlobalKey> zoomableKeys;
   final bool shrinkWrap;
 
   const ListWithZoomables(this.children, this.zoomableKeys,
@@ -16,6 +16,9 @@ class ListWithZoomables extends StatefulWidget {
 }
 
 class _ListWithZoomablesState extends State<ListWithZoomables> {
+  /// this ensure that scrolling on the edge of the widget works
+  static const scrollArea = 50;
+
   bool enableScroll = true;
 
   /// returns true if [position] is in the widget identified
@@ -33,18 +36,14 @@ class _ListWithZoomablesState extends State<ListWithZoomables> {
     // check if your pointerdown event is inside the widget
     final isInY = position.dy > boxOffset.dy &&
         position.dy < boxOffset.dy + box.size.height;
-    final isInX = position.dx > boxOffset.dx &&
-        position.dx < boxOffset.dx + box.size.width;
+    final isInX = position.dx > boxOffset.dx + scrollArea &&
+        position.dx < boxOffset.dx + box.size.width - scrollArea;
     return isInY && isInX;
   }
 
   void _checkPan(Offset position) {
     final hasZommable = widget.zoomableKeys.any((key) {
-      if (_isInWidget(position, key)) {
-        // check if the zoomable widget is activated or not
-        return key.currentState?.activated ?? false;
-      }
-      return false;
+      return _isInWidget(position, key);
     });
     setState(() {
       enableScroll = !hasZommable;
@@ -75,60 +74,25 @@ class _ListWithZoomablesState extends State<ListWithZoomables> {
   }
 }
 
-/// [Zoomable] wraps a widget into an InteractiveViewer,
-/// which is activated with double tap
-class Zoomable extends StatefulWidget {
+/// [Zoomable] makes a widget zoomable,
+/// also adding horizontal margin to allow vertical scrolling.
+class Zoomable extends StatelessWidget {
   final TransformationController controller;
   final Widget child;
+  final GlobalKey innerKey;
 
-  const Zoomable(this.controller, this.child, GlobalKey<ZoomableState> key)
+  const Zoomable(this.controller, this.child, this.innerKey, {Key? key})
       : super(key: key);
 
   @override
-  State<Zoomable> createState() => ZoomableState();
-}
-
-class ZoomableState extends State<Zoomable> {
-  bool activated = false;
-
-  void _switch() {
-    setState(() {
-      if (activated) {
-        // also reset the zoom
-        widget.controller.value = Matrix4.identity();
-      }
-      activated = !activated;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _switch,
-      onDoubleTap: _switch,
-      child: AbsorbPointer(
-        absorbing: !activated,
-        child: Container(
-          decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
-              border: Border.all(
-                color: activated ? Colors.blueAccent : Colors.transparent,
-                width: 2,
-              )),
-          child: InteractiveViewer(
-            transformationController: widget.controller,
-            child: widget.child,
-            maxScale: 5,
-            onInteractionEnd: (_) {
-              if (widget.controller.value.getMaxScaleOnAxis() == 1) {
-                setState(() {
-                  activated = false;
-                });
-              }
-            },
-          ),
-        ),
-      ),
-    );
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: InteractiveViewer(
+          transformationController: controller,
+          child: child,
+          maxScale: 5,
+          key: innerKey,
+        ));
   }
 }
