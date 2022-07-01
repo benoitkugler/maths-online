@@ -116,6 +116,27 @@ func TestRadio(t *testing.T) {
 	}
 }
 
+func TestBug72(t *testing.T) {
+	field := DropDownFieldInstance{
+		Proposals: []client.TextLine{
+			{{Text: "GB", IsMath: true}},
+			{{Text: "FA", IsMath: true}},
+			{{Text: "FG", IsMath: true}},
+		},
+		Answer: 1,
+	}
+
+	ans := field.correctAnswer()
+	if ans.(client.RadioAnswer).Index != 2 { // 0 based
+		t.Fatal(ans)
+	}
+
+	props := field.toClient().(client.DropDownFieldBlock).Proposals
+	if textLineToString(props[2]) != "GB" {
+		t.Fatal(props)
+	}
+}
+
 func TestFigureAffineLineField(t *testing.T) {
 	field := FigureAffineLineFieldInstance{
 		Figure: repere.Figure{
