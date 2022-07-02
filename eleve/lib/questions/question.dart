@@ -520,7 +520,7 @@ class QuestionW extends StatefulWidget {
 
   /// If [answer] is provided, the question controllers and fields
   /// are filled using the answers given, and no input is required to valid.
-  final Map<int, Answer>? answer;
+  final Answers? answer;
 
   /// If [feedback] is provided, errors indicators are displayed for incorrect (false)
   /// fields, and the validation text button is replaced

@@ -8,12 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('main prof loopback ...', (tester) async {
     final notif1 = ValidQuestionNotification(const QuestionAnswersIn({}));
-    final json = jsonEncode({
-      "Kind":
-          loopbackClientDataKindToJson(LoopbackClientDataKind.validAnswerIn),
-      "Data": questionAnswersInToJson(notif1.data)
-    });
-
+    final json = jsonEncode(
+        loopbackClientEventToJson(LoopbackQuestionValidIn(notif1.data)));
     final roundrip = jsonDecode(json) as Map<String, dynamic>;
     expect(roundrip.length, equals(2));
   });

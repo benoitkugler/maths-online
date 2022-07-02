@@ -68,6 +68,7 @@ class _DecrassageState extends State<Decrassage> {
   }
 
   void _evaluateQuestion(QuestionAnswersIn data) async {
+    final QuestionAnswersOut answerResult;
     try {
       final uri =
           Uri.parse(widget.buildMode.serverURL("/api/questions/evaluate"));
@@ -78,38 +79,40 @@ class _DecrassageState extends State<Decrassage> {
           headers: {
             'Content-type': 'application/json',
           });
-      final answerResult = questionAnswersOutFromJson(jsonDecode(resp.body));
-      final isValid = answerResult.results.values.every((element) => element);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: isValid ? Colors.lightGreen : Colors.red.shade200,
-        duration: Duration(seconds: isValid ? 2 : 4),
-        content: Text(isValid ? "Bonne réponse" : "Réponse incorrecte"),
-        action: isValid
-            ? null
-            : SnackBarAction(
-                label: "Afficher la réponse",
-                onPressed: () => setState(() {
-                  currentAnswer = answerResult.expectedAnswers;
-                }),
-              ),
-      ));
-      if (isValid) {
-        if (currentQuestionIndex! < questions.length - 1) {
-          // go to the next question
-          setState(() {
-            currentQuestionIndex = currentQuestionIndex! + 1;
-            currentAnswer = null;
-          });
-        } else {
-          // assume the student has followed the order
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            backgroundColor: Colors.lightGreen,
-            content: Text("Décrassage terminé. Bon travail !"),
-          ));
-        }
-      }
+      answerResult = questionAnswersOutFromJson(jsonDecode(resp.body));
     } catch (e) {
       _showError(e);
+      return;
+    }
+
+    final isValid = answerResult.results.values.every((element) => element);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: isValid ? Colors.lightGreen : Colors.red.shade200,
+      duration: Duration(seconds: isValid ? 2 : 4),
+      content: Text(isValid ? "Bonne réponse" : "Réponse incorrecte"),
+      action: isValid
+          ? null
+          : SnackBarAction(
+              label: "Afficher la réponse",
+              onPressed: () => setState(() {
+                currentAnswer = answerResult.expectedAnswers;
+              }),
+            ),
+    ));
+    if (isValid) {
+      if (currentQuestionIndex! < questions.length - 1) {
+        // go to the next question
+        setState(() {
+          currentQuestionIndex = currentQuestionIndex! + 1;
+          currentAnswer = null;
+        });
+      } else {
+        // assume the student has followed the order
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          backgroundColor: Colors.lightGreen,
+          content: Text("Décrassage terminé. Bon travail !"),
+        ));
+      }
     }
   }
 

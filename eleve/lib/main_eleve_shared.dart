@@ -1,8 +1,12 @@
 import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/question_gallery.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared_gen.dart';
 import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -101,90 +105,29 @@ class _EleveAppState extends State<EleveApp> {
               )
             ],
           ),
-          body: _HomePage(widget.audioPlayer, widget.buildMode, settings),
-          // body: QuestionW(
-          //     widget.buildMode,
-          //     Question("", [
-          //       TextBlock([T("Ahaha")], false, false, false),
-          //       FigureBlock(emptyFigure),
-          //       FigurePointFieldBlock(emptyFigure, 0),
-          //     ]),
-          //     Colors.blue,
-          //     print),
-          // body: ExerciceW(
-          //     widget.buildMode,
-          //     Exercice(
-          //         InstantiatedExercice(
-          //             0, "REcherche de primitives", Flow.sequencial, [
-          //           InstantiatedQuestion(
-          //               0, Question("", [NumberFieldBlock(0)]), []),
-          //           InstantiatedQuestion(
-          //               0,
-          //               Question("", [
-          //                 FigureVectorFieldBlock(
-          //                     "test",
-          //                     Figure(Drawings({}, [], []),
-          //                         RepereBounds(20, 20, Coord(5, 5)), true),
-          //                     0,
-          //                     true),
-          //                 TableFieldBlock([
-          //                   TextOrMath("sdsd", true),
-          //                   TextOrMath("sdsd", true),
-          //                 ], [
-          //                   TextOrMath("sdsd", true),
-          //                   TextOrMath("sdsd", true),
-          //                 ], 1)
-          //               ]),
-          //               []),
-          //           InstantiatedQuestion(
-          //               0, Question("", [NumberFieldBlock(0)]), []),
-          //         ], [
-          //           1,
-          //           2,
-          //           3
-          //         ]),
-          //         ProgressionExt(
-          //             Progression(0, 0),
-          //             [
-          //               [true, true],
-          //               [true, false],
-          //               []
-          //             ],
-          //             1)),
-          //     (dataIn) async => EvaluateExerciceOut(
-          //             dataIn.answers.map((index, qu) => MapEntry(
-          //                 index,
-          //                 QuestionAnswersOut(
-          //                     qu.answer.data
-          //                         .map((key, value) => MapEntry(key, false)),
-          //                     {}))),
-          //             ProgressionExt(Progression(0, 0), [], 1),
-          //             [
-          //               InstantiatedQuestion(
-          //                   0,
-          //                   Question("", [
-          //                     TextBlock([TextOrMath("text", true)], true, false,
-          //                         true),
-          //                     NumberFieldBlock(0)
-          //                   ]),
-          //                   []),
-          //               InstantiatedQuestion(
-          //                   0,
-          //                   Question("", [
-          //                     TextBlock([TextOrMath("text", true)], true, false,
-          //                         true),
-          //                     NumberFieldBlock(0)
-          //                   ]),
-          //                   []),
-          //               InstantiatedQuestion(
-          //                   0,
-          //                   Question("", [
-          //                     TextBlock([TextOrMath("text", true)], true, false,
-          //                         true),
-          //                     NumberFieldBlock(0)
-          //                   ]),
-          //                   []),
-          //             ])),
+          // body: _HomePage(widget.audioPlayer, widget.buildMode, settings),
+          body: ExerciceW(
+              widget.buildMode,
+              Exercice(
+                  InstantiatedExercice(0, "REcherche de primitives",
+                      Flow.sequencial, questionList, [1, 2, 3]),
+                  ProgressionExt(
+                      Progression(0, 0),
+                      [
+                        [true, true],
+                        [true, false],
+                        []
+                      ],
+                      1)),
+              (dataIn) async => EvaluateExerciceOut(
+                  dataIn.answers.map((index, qu) => MapEntry(
+                      index,
+                      QuestionAnswersOut(
+                          qu.answer.data
+                              .map((key, value) => MapEntry(key, false)),
+                          {}))),
+                  ProgressionExt(Progression(0, 0), [[], [], []], 1),
+                  questionList)),
         ));
   }
 }

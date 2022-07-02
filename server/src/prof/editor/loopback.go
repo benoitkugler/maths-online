@@ -2,14 +2,13 @@ package editor
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
@@ -24,7 +23,7 @@ var upgrader = websocket.Upgrader{
 
 type loopbackController struct {
 	incomingClient chan *previewClient
-	broadcast      chan serverData
+	broadcast      chan LoopbackServerEvent
 
 	clientLeft chan bool
 
@@ -37,7 +36,7 @@ type loopbackController struct {
 func newLoopbackController(sessionID string) *loopbackController {
 	return &loopbackController{
 		incomingClient: make(chan *previewClient),
-		broadcast:      make(chan serverData),
+		broadcast:      make(chan LoopbackServerEvent),
 		clientLeft:     make(chan bool),
 		sessionID:      sessionID,
 	}
@@ -45,11 +44,11 @@ func newLoopbackController(sessionID string) *loopbackController {
 
 func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 	ct.currentQuestion = question
-	ct.broadcast <- serverData{Kind: State, Data: LoopbackState{Question: question.ToClient()}}
+	ct.broadcast <- loopbackQuestion{Question: question.ToClient()}
 }
 
 func (ct *loopbackController) unsetQuestion() {
-	ct.broadcast <- serverData{Kind: State, Data: LoopbackState{IsPaused: true}}
+	ct.broadcast <- loopbackPaused{}
 }
 
 func (ct *loopbackController) startLoop(ctx context.Context) {
@@ -66,46 +65,13 @@ func (ct *loopbackController) startLoop(ctx context.Context) {
 				utils.WebsocketError(ct.client.conn, errors.New("session timeout reached"))
 			}
 			return
-
 		case data := <-ct.broadcast:
 			if ct.client != nil {
-				LoopackLogger.Println("Sending data...")
+				LoopackLogger.Println("Broadcasting...")
 				ct.client.send(data)
 			}
 		}
 	}
-}
-
-type serverData struct {
-	Data interface{}
-	Kind loopbackServerDataKind
-}
-
-type clientData struct {
-	Data interface{}
-	Kind loopbackClientDataKind
-}
-
-func (cld *clientData) UnmarshalJSON(data []byte) error {
-	var wr struct {
-		Kind loopbackClientDataKind
-		Data json.RawMessage
-	}
-	if err := json.Unmarshal(data, &wr); err != nil {
-		return err
-	}
-	cld.Kind = wr.Kind
-	switch wr.Kind {
-	case Ping: // nothing to do
-	case ValidAnswerIn:
-		var content client.QuestionAnswersIn
-		err := json.Unmarshal(wr.Data, &content)
-		if err != nil {
-			return err
-		}
-		cld.Data = content
-	}
-	return nil
 }
 
 type previewClient struct {
@@ -113,8 +79,8 @@ type previewClient struct {
 	controller *loopbackController
 }
 
-func (cl *previewClient) send(data serverData) {
-	err := cl.conn.WriteJSON(data)
+func (cl *previewClient) send(data LoopbackServerEvent) {
+	err := cl.conn.WriteJSON(LoopbackServerEventWrapper{Data: data})
 	if err != nil {
 		LoopackLogger.Printf("Broadcasting to client (session %s) failed: %s", cl.controller.sessionID, err)
 	}
@@ -126,22 +92,25 @@ func (cl *previewClient) send(data serverData) {
 func (cl *previewClient) startLoop() {
 	for {
 		// read in a message
-		var data clientData
+		var data LoopbackClientEventWrapper
 		err := cl.conn.ReadJSON(&data)
 		if err != nil {
 			LoopackLogger.Printf("invalid client messsage: %s", err)
 			return
 		}
 
-		switch data.Kind {
-		case ValidAnswerIn:
-			out := cl.controller.currentQuestion.EvaluateAnswer(data.Data.(client.QuestionAnswersIn))
-			cl.controller.broadcast <- serverData{Kind: ValidAnswerOut, Data: out}
-		case ShowCorrectAnswerIn:
+		switch data := data.Data.(type) {
+		case loopbackPing:
+			LoopackLogger.Println("Ping (ignoring)")
+		case loopbackQuestionValidIn:
+			out := cl.controller.currentQuestion.EvaluateAnswer(data.Answers)
+			cl.controller.broadcast <- loopbackQuestionValidOut{out}
+		case loopbackQuestionCorrectAnswersIn:
 			out := cl.controller.currentQuestion.CorrectAnswer()
-			cl.controller.broadcast <- serverData{Kind: ShowCorrectAnswerOut, Data: out}
-		case Ping:
-			LoopackLogger.Println("Ping")
+			cl.controller.broadcast <- loopbackQuestionCorrectAnswersOut{out}
+		case loopbackExerciceValidIn:
+			// TODO:
+			fmt.Println(data)
 		}
 	}
 
