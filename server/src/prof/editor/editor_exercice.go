@@ -3,6 +3,7 @@ package editor
 import (
 	"sort"
 
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -351,4 +352,53 @@ func (ct *Controller) updateExercice(in Exercice, userID int64) (Exercice, error
 	ex.Title = in.Title
 	ex.Flow = in.Flow
 	return ex.Update(ct.db)
+}
+
+type SaveExerciceAndPreviewIn struct {
+	SessionID  string
+	IdExercice int64
+	Parameters questions.Parameters     // shared parameters
+	Questions  []questions.QuestionPage // questions content
+}
+
+type SaveExerciceAndPreviewOut struct {
+	Error   questions.ErrQuestionInvalid
+	IsValid bool
+}
+
+func (ct *Controller) saveExerciceAndPreview(params SaveQuestionAndPreviewIn, userID int64) (SaveQuestionAndPreviewOut, error) {
+	// TODO:
+	// qu, err := SelectQuestion(ct.db, params.Question.Id)
+	// if err != nil {
+	// 	return SaveQuestionAndPreviewOut{}, err
+	// }
+
+	// if !qu.IsVisibleBy(userID) {
+	// 	return SaveQuestionAndPreviewOut{}, accessForbidden
+	// }
+
+	// if err := params.Question.Page.Validate(); err != nil {
+	// 	return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
+	// }
+
+	// // if the question is owned : save it, else only preview
+	// if qu.IdTeacher == userID {
+	// 	_, err := params.Question.Update(ct.db)
+	// 	if err != nil {
+	// 		return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
+	// 	}
+	// }
+
+	// question := params.Question.Page.Instantiate()
+
+	// ct.lock.Lock()
+	// defer ct.lock.Unlock()
+
+	// loopback, ok := ct.sessions[params.SessionID]
+	// if !ok {
+	// 	return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+	// }
+
+	// loopback.setQuestion(question)
+	return SaveQuestionAndPreviewOut{IsValid: true}, nil
 }

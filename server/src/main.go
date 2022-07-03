@@ -242,6 +242,8 @@ func serveEleveApp(c echo.Context) error {
 
 func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller, tc *teacher.Controller) {
 	setupProfAPI(e, tvc, edit, tc)
+	setupQuestionSampleAPI(e)
+
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
@@ -285,15 +287,20 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 		return evaluateQuestion(edit, c)
 	})
 
-	// standalone question
+	// standalone question/exercice
 	e.POST("/api/questions/instantiate", func(c echo.Context) error {
 		return instantiateQuestions(edit, c)
 	})
 	e.POST("/api/questions/evaluate", func(c echo.Context) error {
 		return evaluateQuestion(edit, c)
 	})
+	e.POST("/api/exercices/evaluate", func(c echo.Context) error {
+		return evaluateExercice(edit, c)
+	})
+}
 
-	// temporary question quick access
+// routes for a (temporary) question quick access
+func setupQuestionSampleAPI(e *echo.Echo) {
 	sampleQuestions := examples.Questions()
 	e.GET("/questions", func(c echo.Context) error {
 		var out []client.Question

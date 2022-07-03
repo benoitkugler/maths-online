@@ -238,12 +238,12 @@ func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-type SaveAndPreviewIn struct {
+type SaveQuestionAndPreviewIn struct {
 	SessionID string
 	Question  Question
 }
 
-type SaveAndPreviewOut struct {
+type SaveQuestionAndPreviewOut struct {
 	Error   questions.ErrQuestionInvalid
 	IsValid bool
 }
@@ -252,12 +252,12 @@ type SaveAndPreviewOut struct {
 func (ct *Controller) EditorSaveAndPreview(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	var args SaveAndPreviewIn
+	var args SaveQuestionAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.saveAndPreview(args, user.Id)
+	out, err := ct.saveQuestionAndPreview(args, user.Id)
 	if err != nil {
 		return err
 	}

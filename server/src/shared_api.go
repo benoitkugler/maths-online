@@ -74,3 +74,19 @@ type Exercice struct {
 	Exercice    editor.InstantiatedExercice
 	Progression editor.ProgressionExt
 }
+
+// standalone endpoint to check if an exercice answer is correct
+// note that this API does not handle progression save
+func evaluateExercice(ct *editor.Controller, c echo.Context) error {
+	var args EvaluateExerciceIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.EvaluateExercice(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}

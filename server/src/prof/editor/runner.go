@@ -247,7 +247,9 @@ type EvaluateExerciceOut struct {
 	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
 }
 
-func (ct *Controller) evaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
+// EvaluateExercice checks the answer provided for the given exercice and
+// update the progression.
+func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
 	ex, _, qus, err := ct.loadExercice(args.IdExercice)
 	if err != nil {
 		return EvaluateExerciceOut{}, utils.SQLError(err)

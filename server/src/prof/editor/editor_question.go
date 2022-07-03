@@ -513,25 +513,25 @@ func (ct *Controller) endPreview(sessionID string) error {
 	return nil
 }
 
-func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (SaveAndPreviewOut, error) {
+func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID int64) (SaveQuestionAndPreviewOut, error) {
 	qu, err := SelectQuestion(ct.db, params.Question.Id)
 	if err != nil {
-		return SaveAndPreviewOut{}, err
+		return SaveQuestionAndPreviewOut{}, err
 	}
 
 	if !qu.IsVisibleBy(userID) {
-		return SaveAndPreviewOut{}, accessForbidden
+		return SaveQuestionAndPreviewOut{}, accessForbidden
 	}
 
 	if err := params.Question.Page.Validate(); err != nil {
-		return SaveAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
+		return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
 	// if the question is owned : save it, else only preview
 	if qu.IdTeacher == userID {
 		_, err := params.Question.Update(ct.db)
 		if err != nil {
-			return SaveAndPreviewOut{}, utils.SQLError(err)
+			return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
 		}
 	}
 
@@ -542,9 +542,9 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (Sav
 
 	loopback, ok := ct.sessions[params.SessionID]
 	if !ok {
-		return SaveAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+		return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
 	}
 
 	loopback.setQuestion(question)
-	return SaveAndPreviewOut{IsValid: true}, nil
+	return SaveQuestionAndPreviewOut{IsValid: true}, nil
 }

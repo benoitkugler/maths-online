@@ -82,12 +82,12 @@ func TestEvaluateExercice(t *testing.T) {
 	}
 
 	// no error since the exercice is parallel
-	_, err = ct.evaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{}})
+	_, err = ct.EvaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{}})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	out, err := ct.evaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{
+	out, err := ct.EvaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{
 		0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
 	}})
 	if err != nil {
@@ -97,7 +97,7 @@ func TestEvaluateExercice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err = ct.evaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{
+	out, err = ct.EvaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{
 		0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
 	}})
 	if err != nil {
