@@ -50,7 +50,7 @@
         </v-btn>
       </v-col>
       <v-col
-        cols="1"
+        cols="2"
         align-self="center"
         style="text-align: right"
         class="px-1"
@@ -195,7 +195,7 @@
         </v-row>
 
         <v-row no-gutters>
-          <v-col class="pr-2">
+          <v-col class="pr-2" align-self="center">
             <tag-list-field
               label="Catégories"
               v-model="tags"
@@ -208,13 +208,13 @@
             <v-menu offset-y close-on-content-click>
               <template v-slot:activator="{ isActive, props }">
                 <v-btn
-                  title="Ajouter un contenu"
+                  title="Ajouter un bloc de contenu (énoncé ou champ de réponse)"
                   v-on="{ isActive }"
                   v-bind="props"
                   size="small"
                 >
                   <v-icon icon="mdi-plus" color="green"></v-icon>
-                  Insérer
+                  Insérer du contenu
                 </v-btn>
               </template>
               <block-bar @add="addBlock"></block-bar>
@@ -249,7 +249,16 @@
         </div>
       </v-col>
       <v-col class="pr-1">
-        <div
+        <QuestionContent
+          :model-value="question.page.enonce || []"
+          @update:model-value="(v) => (question.page.enonce = v)"
+          @importQuestion="onImportQuestion"
+          :available-parameters="availableParameters"
+          :errorBlockIndex="errorEnnonce?.Block"
+          ref="questionContent"
+        >
+        </QuestionContent>
+        <!-- <div
           @drop="onDropJSON"
           @dragover="onDragoverJSON"
           class="d-flex ma-2"
@@ -299,7 +308,7 @@
               @drop="(origin) => swapBlocks(origin, index + 1)"
             ></drop-zone>
           </div>
-        </div>
+        </div> -->
       </v-col>
     </v-row>
   </v-card>
@@ -313,44 +322,20 @@ import {
   type Origin,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { newBlock, saveData, swapItems, xRune } from "@/controller/editor";
+import { saveData, swapItems, xRune } from "@/controller/editor";
 import type {
-  Block,
+  BlockKind,
   Question,
   RandomParameter,
   Variable,
 } from "@/controller/exercice_gen";
-import { BlockKind } from "@/controller/exercice_gen";
-import { markRaw, ref } from "@vue/reactivity";
-import type { Component } from "@vue/runtime-core";
-import { computed, nextTick, watch } from "@vue/runtime-core";
+import { ref } from "@vue/reactivity";
+import { computed, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
-import BlockContainer from "./blocks/BlockContainer.vue";
-import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
-import FigureBlockVue from "./blocks/FigureBlock.vue";
-import FigurePointFieldVue from "./blocks/FigurePointField.vue";
-import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
-import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
-import FormulaVue from "./blocks/Formula.vue";
-import FormulaFieldVue from "./blocks/FormulaField.vue";
-import FunctionGraphVue from "./blocks/FunctionGraph.vue";
-import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
-import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
-import NumberFieldVue from "./blocks/NumberField.vue";
-import OrderedListFieldVue from "./blocks/OrderedListField.vue";
-import RadioFieldVue from "./blocks/RadioField.vue";
-import SignTableVue from "./blocks/SignTable.vue";
-import TableVue from "./blocks/Table.vue";
-import TableFieldVue from "./blocks/TableField.vue";
-import TextVue from "./blocks/Text.vue";
-import TreeFieldVue from "./blocks/TreeField.vue";
-import VariationTableVue from "./blocks/VariationTable.vue";
-import VariationTableFieldVue from "./blocks/VariationTableField.vue";
-import VectorFieldVue from "./blocks/VectorField.vue";
 import DescriptionPannel from "./DescriptionPannel.vue";
-import DropZone from "./DropZone.vue";
 import Intrinsics from "./Intrinsics.vue";
+import QuestionContent from "./QuestionContent.vue";
 import RandomParameters from "./RandomParameters.vue";
 import TagListField from "./TagListField.vue";
 
@@ -381,89 +366,13 @@ const isReadonly = computed(
   () => props.origin.Visibility != Visibility.Personnal
 );
 
-const rows = computed(() => props.question.page.enonce?.map(dataToBlock) || []);
-
-interface block {
-  Props: Block;
-  Component: Component;
-}
-
-function dataToBlock(data: Block): block {
-  switch (data.Kind) {
-    case BlockKind.TextBlock:
-      return { Props: data, Component: markRaw(TextVue) };
-    case BlockKind.FormulaBlock:
-      return { Props: data, Component: markRaw(FormulaVue) };
-    case BlockKind.FigureBlock:
-      return { Props: data, Component: markRaw(FigureBlockVue) };
-    case BlockKind.FunctionGraphBlock:
-      return { Props: data, Component: markRaw(FunctionGraphVue) };
-    case BlockKind.FunctionVariationGraphBlock:
-      return { Props: data, Component: markRaw(FunctionVariationGraphVue) };
-    case BlockKind.VariationTableBlock:
-      return { Props: data, Component: markRaw(VariationTableVue) };
-    case BlockKind.SignTableBlock:
-      return { Props: data, Component: markRaw(SignTableVue) };
-    case BlockKind.TableBlock:
-      return { Props: data, Component: markRaw(TableVue) };
-    case BlockKind.NumberFieldBlock:
-      return { Props: data, Component: markRaw(NumberFieldVue) };
-    case BlockKind.ExpressionFieldBlock:
-      return { Props: data, Component: markRaw(FormulaFieldVue) };
-    case BlockKind.RadioFieldBlock:
-      return { Props: data, Component: markRaw(RadioFieldVue) };
-    case BlockKind.OrderedListFieldBlock:
-      return { Props: data, Component: markRaw(OrderedListFieldVue) };
-    case BlockKind.FigurePointFieldBlock:
-      return { Props: data, Component: markRaw(FigurePointFieldVue) };
-    case BlockKind.FigureVectorFieldBlock:
-      return { Props: data, Component: markRaw(FigureVectorFieldVue) };
-    case BlockKind.VariationTableFieldBlock:
-      return { Props: data, Component: markRaw(VariationTableFieldVue) };
-    case BlockKind.FunctionPointsFieldBlock:
-      return { Props: data, Component: markRaw(FunctionPointsFieldVue) };
-    case BlockKind.FigureVectorPairFieldBlock:
-      return { Props: data, Component: markRaw(FigureVectorPairFieldVue) };
-    case BlockKind.FigureAffineLineFieldBlock:
-      return { Props: data, Component: markRaw(FigureAffineLineFieldVue) };
-    case BlockKind.TreeFieldBlock:
-      return { Props: data, Component: markRaw(TreeFieldVue) };
-    case BlockKind.TableFieldBlock:
-      return { Props: data, Component: markRaw(TableFieldVue) };
-    case BlockKind.VectorFieldBlock:
-      return { Props: data, Component: markRaw(VectorFieldVue) };
-    default:
-      throw "Unexpected Kind";
-  }
-}
-
-const blockWidgets = ref<(Element | null)[]>([]);
+let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
 
 function addBlock(kind: BlockKind) {
-  question.page.enonce!.push(newBlock(kind));
-  nextTick(() => {
-    console.log(blockWidgets.value);
-
-    const L = blockWidgets.value?.length;
-    if (L) {
-      blockWidgets.value[L - 1]?.scrollIntoView();
-    }
-  });
-}
-
-function updateBlock(index: number, data: Block["Data"]) {
-  question.page.enonce![index].Data = data;
-}
-
-function removeBlock(index: number) {
-  question.page.enonce!.splice(index, 1);
-}
-
-/** take the block at the index `origin` and insert it right before
-the block at index `target` (which is between 0 and nbBlocks)
- */
-function swapBlocks(origin: number, target: number) {
-  question.page.enonce = swapItems(origin, target, question.page.enonce!);
+  if (questionContent == null) {
+    return;
+  }
+  questionContent.addBlock(kind);
 }
 
 function addRandomParameter() {
@@ -509,16 +418,6 @@ function deleteIntrinsic(index: number) {
   checkParameters();
 }
 
-let showDropZone = $ref(false);
-
-function onDragStart() {
-  setTimeout(() => (showDropZone = true), 100); // workaround bug
-}
-
-function onDragEnd(ev: DragEvent) {
-  showDropZone = false;
-}
-
 let errorEnnonce = $ref<errEnonce | null>(null);
 const showErrorEnnonce = computed(() => errorEnnonce != null);
 const errVars = computed(() => {
@@ -529,7 +428,6 @@ const errVars = computed(() => {
 let showErrVarsDetails = $ref(false);
 
 async function save() {
-  question.page.enonce = rows.value.map((v) => v.Props);
   const res = await controller.EditorSaveQuestionAndPreview({
     SessionID: props.session_id || "",
     Question: question,
@@ -548,8 +446,6 @@ async function save() {
     } else {
       errorEnnonce = res.Error.ErrEnonce;
       errorParameters = null;
-
-      blockWidgets.value[res.Error.ErrEnonce.Block]?.scrollIntoView();
     }
   }
 }
@@ -558,21 +454,10 @@ function download() {
   saveData(question, "question.isyro.json");
 }
 
-async function onDropJSON(ev: DragEvent) {
-  if (ev.dataTransfer?.files.length) {
-    ev.preventDefault();
-    const content = await ev.dataTransfer?.files[0].text();
-    // keep the current ID
-    const trueID = question.id;
-    question = JSON.parse(content!);
-    question.id = trueID;
-  }
-}
-
-function onDragoverJSON(ev: DragEvent) {
-  if (ev.dataTransfer?.files.length || ev.dataTransfer?.items.length) {
-    ev.preventDefault();
-  }
+async function onImportQuestion(imported: Question) {
+  // keep the current ID
+  imported.id = question.id;
+  question = imported;
 }
 
 let errorParameters = $ref<ErrParameters | null>(null);

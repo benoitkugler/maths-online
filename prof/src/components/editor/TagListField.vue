@@ -27,7 +27,11 @@
     variant="outlined"
     rounded
     border="secondary"
-    :style="{ 'border-width': '2px', cursor: props.readonly ? '' : 'pointer' }"
+    :style="{
+      'border-width': '2px',
+      cursor: props.readonly ? '' : 'pointer',
+      'text-align': 'center',
+    }"
     :class="props.yPadding ? 'py-1' : ''"
   >
     <v-btn
@@ -37,6 +41,7 @@
       size="x-small"
       class="py-0 px-2"
       :disabled="props.readonly"
+      block
     >
       {{ props.readonly ? "Aucune étiquette" : "Ajouter une étiquette..." }}
     </v-btn>
