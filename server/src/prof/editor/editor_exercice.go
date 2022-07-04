@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
@@ -354,51 +355,145 @@ func (ct *Controller) updateExercice(in Exercice, userID int64) (Exercice, error
 	return ex.Update(ct.db)
 }
 
+type CheckExerciceParametersIn struct {
+	IdExercice         int64
+	SharedParameters   questions.Parameters
+	QuestionParameters []questions.Parameters
+}
+
+type CheckExerciceParametersOut struct {
+	ErrDefinition questions.ErrParameters
+	QuestionIndex int // ignored if ErrDefinition is empty
+}
+
+// checks that the merging of SharedParameters and QuestionParameters is valid
+func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) (CheckExerciceParametersOut, error) {
+	// fetch the mode of each question
+	_, _, qus, err := ct.loadExercice(params.IdExercice)
+	if err != nil {
+		return CheckExerciceParametersOut{}, err
+	}
+
+	if L1, L2 := len(params.QuestionParameters), len(qus); L1 != L2 {
+		return CheckExerciceParametersOut{}, fmt.Errorf("internal error: mismatched question length (%d != %d)", L1, L2)
+	}
+
+	for index, question := range qus {
+		toCheck := params.QuestionParameters[index]
+		if question.NeedExercice { // add the shared parameters
+			toCheck = toCheck.Append(params.SharedParameters)
+		}
+
+		err := toCheck.Validate()
+		if err != nil {
+			return CheckExerciceParametersOut{
+				ErrDefinition: err.(questions.ErrParameters),
+				QuestionIndex: index,
+			}, nil
+		}
+	}
+
+	return CheckExerciceParametersOut{}, nil
+}
+
 type SaveExerciceAndPreviewIn struct {
 	SessionID  string
 	IdExercice int64
-	Parameters questions.Parameters     // shared parameters
-	Questions  []questions.QuestionPage // questions content
+	Parameters questions.Parameters // shared parameters
+	Questions  []Question           // questions content
 }
 
 type SaveExerciceAndPreviewOut struct {
-	Error   questions.ErrQuestionInvalid
-	IsValid bool
+	Error         questions.ErrQuestionInvalid
+	QuestionIndex int
+	IsValid       bool
 }
 
-func (ct *Controller) saveExerciceAndPreview(params SaveQuestionAndPreviewIn, userID int64) (SaveQuestionAndPreviewOut, error) {
-	// TODO:
-	// qu, err := SelectQuestion(ct.db, params.Question.Id)
-	// if err != nil {
-	// 	return SaveQuestionAndPreviewOut{}, err
-	// }
+func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID int64) (SaveExerciceAndPreviewOut, error) {
+	ex, _, qus, err := ct.loadExercice(params.IdExercice)
+	if err != nil {
+		return SaveExerciceAndPreviewOut{}, err
+	}
 
-	// if !qu.IsVisibleBy(userID) {
-	// 	return SaveQuestionAndPreviewOut{}, accessForbidden
-	// }
+	if !ex.IsVisibleBy(userID) {
+		return SaveExerciceAndPreviewOut{}, accessForbidden
+	}
 
-	// if err := params.Question.Page.Validate(); err != nil {
-	// 	return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
-	// }
+	if L1, L2 := len(params.Questions), len(qus); L1 != L2 {
+		return SaveExerciceAndPreviewOut{}, fmt.Errorf("internal error: mismatched question length (%d != %d)", L1, L2)
+	}
+	for index := range qus {
+		if id1, id2 := params.Questions[index].Id, qus[index].Id; id1 != id2 {
+			return SaveExerciceAndPreviewOut{}, fmt.Errorf("internal error: inconsistent question ID (%d != %d)", id1, id2)
+		}
+	}
 
-	// // if the question is owned : save it, else only preview
-	// if qu.IdTeacher == userID {
-	// 	_, err := params.Question.Update(ct.db)
-	// 	if err != nil {
-	// 		return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
-	// 	}
-	// }
+	// validate all the questions, using shared parameters if needed
+	for index, question := range qus {
+		toCheck := params.Questions[index].Page
+		if question.NeedExercice { // add the shared parameters
+			toCheck.Parameters = toCheck.Parameters.Append(params.Parameters)
+		}
 
-	// question := params.Question.Page.Instantiate()
+		err = toCheck.Validate()
+		if err != nil {
+			return SaveExerciceAndPreviewOut{
+				Error:         err.(questions.ErrQuestionInvalid),
+				QuestionIndex: index,
+			}, nil
+		}
+	}
 
-	// ct.lock.Lock()
-	// defer ct.lock.Unlock()
+	// if the exerice is owned : save it, else only preview
+	if ex.IdTeacher == userID {
+		tx, err := ct.db.Begin()
+		if err != nil {
+			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+		}
 
-	// loopback, ok := ct.sessions[params.SessionID]
-	// if !ok {
-	// 	return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
-	// }
+		// save the shared parameters
+		ex.Parameters = params.Parameters
+		_, err = ex.Update(tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+		}
 
-	// loopback.setQuestion(question)
-	return SaveQuestionAndPreviewOut{IsValid: true}, nil
+		// if owner, save the linked questions
+		for index, qu := range qus {
+			if qu.IdTeacher != userID {
+				continue
+			}
+			// update the content
+			qu.Page = params.Questions[index].Page
+			qu.Description = params.Questions[index].Description
+			_, err = qu.Update(tx)
+			if err != nil {
+				_ = tx.Rollback()
+				return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+			}
+		}
+
+		if err := tx.Commit(); err != nil {
+			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+		}
+	}
+
+	// eventually, instantiate the exercice and send preview data
+	instance, err := ct.instantiateExercice(ex.Id)
+	if err != nil {
+		return SaveExerciceAndPreviewOut{}, err
+	}
+
+	ct.lock.Lock()
+	defer ct.lock.Unlock()
+
+	loopback, ok := ct.sessions[params.SessionID]
+	if !ok {
+		return SaveExerciceAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+	}
+
+	loopback.setExercice(instance)
+
+	return SaveExerciceAndPreviewOut{IsValid: true}, nil
 }

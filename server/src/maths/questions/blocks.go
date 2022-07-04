@@ -58,6 +58,13 @@ func (pr Parameters) ToMap() expression.RandomParameters {
 	return out
 }
 
+// Append appends `other` slices to `pr` slices
+func (pr Parameters) Append(other Parameters) (out Parameters) {
+	out.Intrinsics = append(pr.Intrinsics, other.Intrinsics...)
+	out.Variables = append(pr.Variables, other.Variables...)
+	return out
+}
+
 // RandomParameters is a serialized form of expression.RandomParameters
 type RandomParameters []RandomParameter
 

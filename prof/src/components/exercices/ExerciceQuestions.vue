@@ -77,7 +77,7 @@ async function fetchExercices() {
 }
 
 async function createExercice() {
-  const newEx = await controller.ExerciceCreate(null);
+  const newEx = await controller.ExerciceCreate();
   if (newEx == undefined) {
     return;
   }

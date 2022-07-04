@@ -185,7 +185,7 @@ func (ct *Controller) loadExercice(id int64) (Exercice, ExerciceQuestions, []Que
 }
 
 // instantiateExercice loads the given exercice, the associated questions,
-// and instantiates them with the same random parameters
+// and instantiates them (using a fixed instance for the shared parameters)
 func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error) {
 	ex, links, qus, err := ct.loadExercice(id)
 	if err != nil {
@@ -201,12 +201,12 @@ func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error
 	}
 
 	// instantiate the questions
-	commonParams := ex.Parameters.ToMap()
+	sharedParams := ex.Parameters.ToMap()
 	for index, question := range qus {
 		ownParams := question.Page.Parameters.ToMap()
 
 		// merge the parameters, given higher precedence to question
-		for c, v := range commonParams {
+		for c, v := range sharedParams {
 			if _, has := ownParams[c]; !has {
 				ownParams[c] = v
 			}

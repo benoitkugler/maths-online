@@ -1,8 +1,9 @@
 import { devLogMeta } from "@/env";
 import type {
   AskInscriptionOut,
+  CheckExerciceParametersOut,
   CheckMissingQuestionsOut,
-  CheckParametersOut,
+  CheckQuestionParametersOut,
   Classroom,
   ClassroomExt,
   Exercice,
@@ -14,6 +15,8 @@ import type {
   LogginOut,
   Question,
   RunningSessionMetaOut,
+  SaveExerciceAndPreviewOut,
+  SaveQuestionAndPreviewOut,
   StartSessionOut,
   Student,
   TrivialConfigExt,
@@ -40,6 +43,88 @@ class Controller extends AbstractAPI {
 
   getToken() {
     return this.authToken;
+  }
+
+  inRequest = false;
+
+  getURL(endpoint: string) {
+    return this.baseUrl + endpoint;
+  }
+
+  handleError(error: any): void {
+    this.inRequest = false;
+
+    let kind: string,
+      messageHtml: string,
+      code = null;
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      kind = `Erreur côté serveur`;
+      code = error.response.status;
+
+      messageHtml = error.response.data.message;
+      if (messageHtml) {
+        messageHtml = "<i>" + messageHtml + "</i>";
+      } else {
+        try {
+          const json = arrayBufferToString(error.response.data);
+          messageHtml = JSON.parse(json).message;
+        } catch (error) {
+          messageHtml = `Le format d'erreur du serveur n'a pu être décodé.<br/>
+        Détails : <i>${error}</i>`;
+        }
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      kind = "Aucune réponse du serveur";
+      messageHtml =
+        "La requête a bien été envoyée, mais le serveur n'a donné aucune réponse...";
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      kind = "Erreur du client";
+      messageHtml = `La requête n'a pu être mise en place. <br/>
+                  Détails :  ${error.message} `;
+    }
+
+    if (this.onError) {
+      this.onError(kind, messageHtml);
+    }
+  }
+
+  startRequest(): void {
+    console.log("launching request");
+    this.inRequest = true;
+  }
+
+  protected onSuccessEditorCheckQuestionParameters(
+    data: CheckQuestionParametersOut
+  ): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorSaveQuestionAndPreview(
+    data: SaveQuestionAndPreviewOut
+  ): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessExerciceUpdateVisiblity(data: any): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
+  }
+  protected onSuccessEditorCheckExerciceParameters(
+    data: CheckExerciceParametersOut
+  ): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorSaveExerciceAndPreview(
+    data: SaveExerciceAndPreviewOut
+  ): void {
+    this.inRequest = false;
   }
 
   protected onSuccessExerciceCreateQuestion(
@@ -245,70 +330,8 @@ class Controller extends AbstractAPI {
     }
   }
 
-  inRequest = false;
-
-  getURL(endpoint: string) {
-    return this.baseUrl + endpoint;
-  }
-
-  handleError(error: any): void {
-    this.inRequest = false;
-
-    let kind: string,
-      messageHtml: string,
-      code = null;
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      kind = `Erreur côté serveur`;
-      code = error.response.status;
-
-      messageHtml = error.response.data.message;
-      if (messageHtml) {
-        messageHtml = "<i>" + messageHtml + "</i>";
-      } else {
-        try {
-          const json = arrayBufferToString(error.response.data);
-          messageHtml = JSON.parse(json).message;
-        } catch (error) {
-          messageHtml = `Le format d'erreur du serveur n'a pu être décodé.<br/>
-        Détails : <i>${error}</i>`;
-        }
-      }
-    } else if (error.request) {
-      // The request was made but no response was received
-      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-      // http.ClientRequest in node.js
-      kind = "Aucune réponse du serveur";
-      messageHtml =
-        "La requête a bien été envoyée, mais le serveur n'a donné aucune réponse...";
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      kind = "Erreur du client";
-      messageHtml = `La requête n'a pu être mise en place. <br/>
-                  Détails :  ${error.message} `;
-    }
-
-    if (this.onError) {
-      this.onError(kind, messageHtml);
-    }
-  }
-
-  startRequest(): void {
-    console.log("launching request");
-    this.inRequest = true;
-  }
-
   protected onSuccessEditorStartSession(data: StartSessionOut): void {
     console.log(data);
-    this.inRequest = false;
-  }
-
-  protected onSuccessEditorSaveAndPreview(data: any): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessEditorCheckParameters(data: CheckParametersOut): void {
     this.inRequest = false;
   }
 

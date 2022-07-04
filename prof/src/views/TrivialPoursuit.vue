@@ -204,7 +204,7 @@ function isPersonnal(config: TrivialConfigExt) {
 }
 
 async function createConfig() {
-  const res = await controller.CreateTrivialPoursuit(null);
+  const res = await controller.CreateTrivialPoursuit();
   if (res === undefined) {
     return;
   }

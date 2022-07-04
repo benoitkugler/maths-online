@@ -51,7 +51,7 @@ func TestLoopback(t *testing.T) {
 		questions.NumberFieldInstance{ID: 0},
 	}})
 
-	loopback.unsetQuestion()
+	loopback.pause()
 
 	_, json, err := cl.ReadMessage()
 	if err != nil {

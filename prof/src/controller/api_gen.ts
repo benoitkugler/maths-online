@@ -545,33 +545,6 @@ export interface Question {
   description: string;
   need_exercice: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
-export interface SaveAndPreviewIn {
-  SessionID: string;
-  Question: Question;
-}
-// github.com/benoitkugler/maths-online/maths/questions.ErrParameters
-export interface ErrParameters {
-  Origin: string;
-  Details: string;
-}
-// github.com/benoitkugler/maths-online/maths/questions.errEnonce
-export interface errEnonce {
-  Error: string;
-  Block: number;
-  Vars: { [key: string]: string } | null;
-}
-// github.com/benoitkugler/maths-online/maths/questions.ErrQuestionInvalid
-export interface ErrQuestionInvalid {
-  ErrParameters: ErrParameters;
-  ErrEnonce: errEnonce;
-  ParametersInvalid: boolean;
-}
-// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewOut
-export interface SaveAndPreviewOut {
-  Error: ErrQuestionInvalid;
-  IsValid: boolean;
-}
 // github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
 export interface UpdateTagsIn {
   Tags: string[] | null;
@@ -591,15 +564,42 @@ export interface QuestionUpdateVisiblityIn {
   QuestionID: number;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckParametersIn
-export interface CheckParametersIn {
+// github.com/benoitkugler/maths-online/prof/editor.CheckQuestionParametersIn
+export interface CheckQuestionParametersIn {
   SessionID: string;
   Parameters: Parameters;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckParametersOut
-export interface CheckParametersOut {
+// github.com/benoitkugler/maths-online/maths/questions.ErrParameters
+export interface ErrParameters {
+  Origin: string;
+  Details: string;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckQuestionParametersOut
+export interface CheckQuestionParametersOut {
   ErrDefinition: ErrParameters;
   Variables: Variable[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewIn
+export interface SaveQuestionAndPreviewIn {
+  SessionID: string;
+  Question: Question;
+}
+// github.com/benoitkugler/maths-online/maths/questions.errEnonce
+export interface errEnonce {
+  Error: string;
+  Block: number;
+  Vars: { [key: string]: string } | null;
+}
+// github.com/benoitkugler/maths-online/maths/questions.ErrQuestionInvalid
+export interface ErrQuestionInvalid {
+  ErrParameters: ErrParameters;
+  ErrEnonce: errEnonce;
+  ParametersInvalid: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewOut
+export interface SaveQuestionAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.Flow
 export enum Flow {
@@ -649,6 +649,35 @@ export type ExerciceQuestions = ExerciceQuestion[] | null;
 export interface ExerciceUpdateQuestionsIn {
   Questions: ExerciceQuestions;
   IdExercice: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateVisiblityIn
+export interface ExerciceUpdateVisiblityIn {
+  ExerciceID: number;
+  Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersIn
+export interface CheckExerciceParametersIn {
+  IdExercice: number;
+  SharedParameters: Parameters;
+  QuestionParameters: Parameters[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersOut
+export interface CheckExerciceParametersOut {
+  ErrDefinition: ErrParameters;
+  QuestionIndex: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewIn
+export interface SaveExerciceAndPreviewIn {
+  SessionID: string;
+  IdExercice: number;
+  Parameters: Parameters;
+  Questions: Question[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewOut
+export interface SaveExerciceAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  QuestionIndex: number;
+  IsValid: boolean;
 }
 
 /** AbstractAPI provides auto-generated API calls and should be used 
@@ -1246,6 +1275,29 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorStartSession(data: StartSessionOut): void;
 
+  protected async rawEditorPausePreview(params: { sessionID: string }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      params: { sessionID: params["sessionID"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
+  async EditorPausePreview(params: { sessionID: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorPausePreview(params);
+      this.onSuccessEditorPausePreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorPausePreview(data: any): void;
+
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/prof/editor/api/tags";
     const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
@@ -1412,55 +1464,6 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorDeleteQuestion(data: any): void;
 
-  protected async rawEditorSaveAndPreview(params: SaveAndPreviewIn) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/question";
-    const rep: AxiosResponse<SaveAndPreviewOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
-    return rep.data;
-  }
-
-  /** EditorSaveAndPreview wraps rawEditorSaveAndPreview and handles the error */
-  async EditorSaveAndPreview(params: SaveAndPreviewIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSaveAndPreview(params);
-      this.onSuccessEditorSaveAndPreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorSaveAndPreview(
-    data: SaveAndPreviewOut
-  ): void;
-
-  protected async rawEditorPausePreview(params: { sessionID: string }) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
-    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
-      params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
-  async EditorPausePreview(params: { sessionID: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorPausePreview(params);
-      this.onSuccessEditorPausePreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorPausePreview(data: any): void;
-
   protected async rawEditorUpdateTags(params: UpdateTagsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
     const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
@@ -1533,9 +1536,11 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessQuestionUpdateVisiblity(data: any): void;
 
-  protected async rawEditorCheckParameters(params: CheckParametersIn) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/check-params";
-    const rep: AxiosResponse<CheckParametersOut> = await Axios.post(
+  protected async rawEditorCheckQuestionParameters(
+    params: CheckQuestionParametersIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/check-params";
+    const rep: AxiosResponse<CheckQuestionParametersOut> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -1543,20 +1548,48 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** EditorCheckParameters wraps rawEditorCheckParameters and handles the error */
-  async EditorCheckParameters(params: CheckParametersIn) {
+  /** EditorCheckQuestionParameters wraps rawEditorCheckQuestionParameters and handles the error */
+  async EditorCheckQuestionParameters(params: CheckQuestionParametersIn) {
     this.startRequest();
     try {
-      const out = await this.rawEditorCheckParameters(params);
-      this.onSuccessEditorCheckParameters(out);
+      const out = await this.rawEditorCheckQuestionParameters(params);
+      this.onSuccessEditorCheckQuestionParameters(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorCheckParameters(
-    data: CheckParametersOut
+  protected abstract onSuccessEditorCheckQuestionParameters(
+    data: CheckQuestionParametersOut
+  ): void;
+
+  protected async rawEditorSaveQuestionAndPreview(
+    params: SaveQuestionAndPreviewIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/preview";
+    const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorSaveQuestionAndPreview wraps rawEditorSaveQuestionAndPreview and handles the error */
+  async EditorSaveQuestionAndPreview(params: SaveQuestionAndPreviewIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorSaveQuestionAndPreview(params);
+      this.onSuccessEditorSaveQuestionAndPreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorSaveQuestionAndPreview(
+    data: SaveQuestionAndPreviewOut
   ): void;
 
   protected async rawExercicesGetList() {
@@ -1708,5 +1741,85 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessExerciceUpdateQuestions(
     data: ExerciceQuestionExt[] | null
+  ): void;
+
+  protected async rawExerciceUpdateVisiblity(
+    params: ExerciceUpdateVisiblityIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/visibility";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceUpdateVisiblity wraps rawExerciceUpdateVisiblity and handles the error */
+  async ExerciceUpdateVisiblity(params: ExerciceUpdateVisiblityIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceUpdateVisiblity(params);
+      this.onSuccessExerciceUpdateVisiblity(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceUpdateVisiblity(data: any): void;
+
+  protected async rawEditorCheckExerciceParameters(
+    params: CheckExerciceParametersIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/check-params";
+    const rep: AxiosResponse<CheckExerciceParametersOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorCheckExerciceParameters wraps rawEditorCheckExerciceParameters and handles the error */
+  async EditorCheckExerciceParameters(params: CheckExerciceParametersIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorCheckExerciceParameters(params);
+      this.onSuccessEditorCheckExerciceParameters(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorCheckExerciceParameters(
+    data: CheckExerciceParametersOut
+  ): void;
+
+  protected async rawEditorSaveExerciceAndPreview(
+    params: SaveExerciceAndPreviewIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/preview";
+    const rep: AxiosResponse<SaveExerciceAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorSaveExerciceAndPreview wraps rawEditorSaveExerciceAndPreview and handles the error */
+  async EditorSaveExerciceAndPreview(params: SaveExerciceAndPreviewIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorSaveExerciceAndPreview(params);
+      this.onSuccessEditorSaveExerciceAndPreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorSaveExerciceAndPreview(
+    data: SaveExerciceAndPreviewOut
   ): void;
 }

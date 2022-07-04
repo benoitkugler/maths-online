@@ -469,13 +469,13 @@ func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (U
 	return out, err
 }
 
-func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
+func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) CheckQuestionParametersOut {
 	err := params.Parameters.Validate()
 	if err != nil {
-		return CheckParametersOut{ErrDefinition: err.(questions.ErrParameters)}
+		return CheckQuestionParametersOut{ErrDefinition: err.(questions.ErrParameters)}
 	}
 
-	var out CheckParametersOut
+	var out CheckQuestionParametersOut
 	for vr := range params.Parameters.ToMap() {
 		out.Variables = append(out.Variables, vr)
 	}
@@ -495,7 +495,7 @@ func (ct *Controller) pausePreview(sessionID string) error {
 		return fmt.Errorf("invalid session ID %s", sessionID)
 	}
 
-	loopback.unsetQuestion()
+	loopback.pause()
 	return nil
 }
 

@@ -31,6 +31,9 @@ type loopbackController struct {
 
 	sessionID       string
 	currentQuestion questions.QuestionInstance
+
+	currentExercice      InstantiatedExercice
+	currentQuestionIndex int // in the current exercice
 }
 
 func newLoopbackController(sessionID string) *loopbackController {
@@ -47,7 +50,16 @@ func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 	ct.broadcast <- loopbackQuestion{Question: question.ToClient()}
 }
 
-func (ct *loopbackController) unsetQuestion() {
+func (ct *loopbackController) setExercice(exercice InstantiatedExercice) {
+	ct.currentExercice = exercice
+	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: ProgressionExt{NextQuestion: ct.currentQuestionIndex}}
+}
+
+func (ct *loopbackController) pause() {
+	ct.currentQuestion = questions.QuestionInstance{}
+	ct.currentExercice = InstantiatedExercice{}
+	ct.currentQuestionIndex = 0
+
 	ct.broadcast <- loopbackPaused{}
 }
 

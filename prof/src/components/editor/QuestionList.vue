@@ -195,7 +195,7 @@ async function fetchQuestions() {
 }
 
 async function createQuestion() {
-  const out = await controller.EditorCreateQuestion({});
+  const out = await controller.EditorCreateQuestion();
   if (out == undefined) {
     return;
   }

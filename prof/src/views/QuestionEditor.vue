@@ -49,7 +49,7 @@ let currentTags: string[] = $ref([]);
 let currentOrigin: Origin = $ref(personnalOrigin());
 
 onMounted(async () => {
-  const session = await controller.EditorStartSession(null);
+  const session = await controller.EditorStartSession();
   if (session === undefined) {
     return;
   }

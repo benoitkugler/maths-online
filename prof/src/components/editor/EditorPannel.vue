@@ -530,7 +530,7 @@ let showErrVarsDetails = $ref(false);
 
 async function save() {
   question.page.enonce = rows.value.map((v) => v.Props);
-  const res = await controller.EditorSaveAndPreview({
+  const res = await controller.EditorSaveQuestionAndPreview({
     SessionID: props.session_id || "",
     Question: question,
   });
@@ -582,7 +582,7 @@ let isCheckingParameters = $ref(false);
 
 async function checkParameters() {
   isCheckingParameters = true;
-  const out = await controller.EditorCheckParameters({
+  const out = await controller.EditorCheckQuestionParameters({
     SessionID: props.session_id || "",
     Parameters: question.page.parameters,
   });

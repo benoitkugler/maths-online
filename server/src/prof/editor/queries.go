@@ -110,3 +110,9 @@ func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestion
 
 	return fillQuestions(l, questions), nil
 }
+
+// IsVisibleBy returns `true` if the question is public or
+// owned by `userID`
+func (qu Exercice) IsVisibleBy(userID int64) bool {
+	return qu.Public || qu.IdTeacher == userID
+}
