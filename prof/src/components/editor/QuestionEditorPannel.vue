@@ -259,57 +259,6 @@
           ref="questionContent"
         >
         </QuestionContent>
-        <!-- <div
-          @drop="onDropJSON"
-          @dragover="onDragoverJSON"
-          class="d-flex ma-2"
-          style="
-            border: 1px solid blue;
-            border-radius: 10px;
-            height: 96%;
-            justify-content: center;
-            align-items: center;
-          "
-          v-if="rows.length == 0"
-        >
-          Importer une question en faisant glisser un fichier (.isyro.json) ...
-        </div>
-
-        <div
-          v-else
-          style="height: 70vh; overflow-y: auto"
-          @dragstart="onDragStart"
-          @dragend="onDragEnd"
-        >
-          <drop-zone
-            v-if="showDropZone"
-            @drop="(origin) => swapBlocks(origin, 0)"
-          ></drop-zone>
-          <div
-            v-for="(row, index) in rows"
-            :key="index"
-            :ref="el => (blockWidgets[index] = el as Element)"
-          >
-            <BlockContainer
-              @delete="removeBlock(index)"
-              :index="index"
-              :kind="row.Props.Kind"
-              :hide-content="showDropZone"
-              :has-error="errorEnnonce?.Block == index"
-            >
-              <component
-                :model-value="row.Props.Data"
-                @update:model-value="(v: any) => updateBlock(index, v)"
-                :is="row.Component"
-                :available-parameters="availableParameters"
-              ></component>
-            </BlockContainer>
-            <drop-zone
-              v-if="showDropZone"
-              @drop="(origin) => swapBlocks(origin, index + 1)"
-            ></drop-zone>
-          </div>
-        </div> -->
       </v-col>
     </v-row>
   </v-card>

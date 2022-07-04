@@ -23,11 +23,12 @@
                 >
               </v-col>
               <v-col align-self="center">
-                <v-list-item-subtitle
-                  >Génère trois entiers <i>a</i>,<i>b</i>,<i>c</i> vérifiant a^2
-                  + b^2 = c^2. <i>bound</i> est un argument optionnel qui
-                  controle le maximum de <i>a</i> par <i>2 bound^2</i>
-                </v-list-item-subtitle>
+                <div class="text-grey">
+                  Génère trois entiers <i>a</i>,<i>b</i>,<i>c</i> vérifiant a^2
+                  + b^2 = c^2. <br />
+                  <i>bound</i> est un argument optionnel qui controle le maximum
+                  de <i>a</i> par <i>2 bound^2</i>
+                </div>
               </v-col>
             </v-row>
           </v-list-item>
@@ -37,10 +38,10 @@
                 <v-list-item-title>H = projection(A, B, C)</v-list-item-title>
               </v-col>
               <v-col align-self="center">
-                <v-list-item-subtitle>
+                <div class="text-grey">
                   Calcule le projeté orthogonal du point <i>A</i> sur
                   <i>(BC)</i>.
-                </v-list-item-subtitle>
+                </div>
               </v-col>
             </v-row>
           </v-list-item>

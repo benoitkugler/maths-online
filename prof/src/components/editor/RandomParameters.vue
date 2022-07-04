@@ -19,9 +19,9 @@
                 <v-list-item-title> {{ content[0] }} </v-list-item-title>
               </v-col>
               <v-col align-self="center">
-                <v-list-item-subtitle>
+                <div class="text-grey">
                   {{ content[1] }}
-                </v-list-item-subtitle>
+                </div>
               </v-col>
             </v-row>
           </v-list-item>
@@ -52,7 +52,7 @@
           @click="emit('add')"
           title="Ajouter un paramètre"
           size="x-small"
-          class="mx-1 my-2"
+          class="mr-2 my-2"
         >
           <v-icon icon="mdi-plus" color="green" small></v-icon>
         </v-btn>
@@ -61,7 +61,7 @@
           @click="showHelp = true"
           title="Aide"
           size="x-small"
-          class="mx-1 my-2"
+          class="mr-2 my-2"
         >
           <v-icon icon="mdi-help" color="info"></v-icon>
         </v-btn>
