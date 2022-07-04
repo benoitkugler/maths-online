@@ -33,12 +33,15 @@
   <v-card class="my-2" elevation="3">
     <v-row
       no-gutters
-      :class="'px-2 rounded ' + colorClass"
+      :class="'rounded ' + colorClass"
       @dragstart="onDragStart"
       draggable="true"
       style="cursor: grab"
     >
-      <v-col align-self="center" cols="8">
+      <v-col cols="auto" align-self="center">
+        <v-icon size="large" icon="mdi-drag-vertical"></v-icon>
+      </v-col>
+      <v-col align-self="center" cols="7">
         <v-card-subtitle>
           <b>{{ kindLabels[props.kind].label }}</b>
           <span v-if="isAnswer" class="ml-1">(Champ de réponse)</span>

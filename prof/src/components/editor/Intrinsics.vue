@@ -52,7 +52,7 @@
   <v-card>
     <v-row
       :style="{
-        'background-color': props.isValidated ? 'lightgreen' : 'lightgray'
+        'background-color': props.isValidated ? 'lightgreen' : 'lightgray',
       }"
       class="rounded"
       no-gutters
@@ -91,18 +91,21 @@
         <v-list v-if="props.parameters?.length" @dragend="showDropZone = false">
           <drop-zone
             v-if="showDropZone"
-            @drop="origin => emit('swap', origin, 0)"
+            @drop="(origin) => emit('swap', origin, 0)"
           ></drop-zone>
-          <div v-for="(param, index) in props.parameters">
+          <div v-for="(param, index) in props.parameters" :key="index">
             <v-list-item class="pr-0 pl-1">
               <v-row no-gutters>
-                <v-col cols="1">
-                  <div
-                    class="bg-green-lighten-3 rounded fill-height mr-1"
+                <v-col cols="1" align-self="center">
+                  <v-icon
+                    size="large"
+                    class="pr-2"
                     style="cursor: grab"
-                    @dragstart="e => onItemDragStart(e, index)"
+                    @dragstart="(e) => onItemDragStart(e, index)"
                     draggable="true"
-                  ></div>
+                    color="green-lighten-3"
+                    icon="mdi-drag-vertical"
+                  ></v-icon>
                 </v-col>
                 <v-col cols="9" class="pl-1">
                   <v-text-field
@@ -111,7 +114,7 @@
                     variant="underlined"
                     density="compact"
                     :model-value="param"
-                    @update:model-value="v => autocomplete(index, v)"
+                    @update:model-value="(v) => autocomplete(index, v)"
                     @blur="emit('done')"
                   ></v-text-field>
                 </v-col>
@@ -130,7 +133,7 @@
             </v-list-item>
             <drop-zone
               v-if="showDropZone"
-              @drop="origin => emit('swap', origin, index + 1)"
+              @drop="(origin) => emit('swap', origin, index + 1)"
             ></drop-zone>
           </div>
         </v-list>

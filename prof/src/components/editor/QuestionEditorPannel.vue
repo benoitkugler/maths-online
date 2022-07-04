@@ -244,6 +244,7 @@
             @add="addIntrinsic"
             @update="updateIntrinsic"
             @delete="deleteIntrinsic"
+            @swap="swapIntrinsics"
             @done="checkParameters"
           ></intrinsics>
         </div>
@@ -416,6 +417,14 @@ function deleteIntrinsic(index: number) {
   question.page.parameters.Intrinsics!.splice(index, 1);
 
   checkParameters();
+}
+
+function swapIntrinsics(origin: number, target: number) {
+  question.page.parameters.Intrinsics = swapItems(
+    origin,
+    target,
+    question.page.parameters.Intrinsics!
+  );
 }
 
 let errorEnnonce = $ref<errEnonce | null>(null);
