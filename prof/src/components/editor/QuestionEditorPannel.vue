@@ -227,26 +227,20 @@
     <v-row no-gutters>
       <v-col md="4">
         <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
-          <random-parameters
+          <RandomParametersQuestion
             :parameters="question.page.parameters.Variables"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
-            @add="addRandomParameter"
-            @update="updateRandomParameter"
-            @delete="deleteRandomParameter"
-            @swap="swapRandomParameters"
+            @update="updateRandomParameters"
             @done="checkParameters"
-          ></random-parameters>
-          <intrinsics
+          ></RandomParametersQuestion>
+          <IntrinsicsParametersQuestion
             :parameters="question.page.parameters.Intrinsics || []"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
-            @add="addIntrinsic"
-            @update="updateIntrinsic"
-            @delete="deleteIntrinsic"
-            @swap="swapIntrinsics"
+            @update="updateIntrinsics"
             @done="checkParameters"
-          ></intrinsics>
+          ></IntrinsicsParametersQuestion>
         </div>
       </v-col>
       <v-col class="pr-1">
@@ -272,7 +266,7 @@ import {
   type Origin,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { saveData, swapItems, xRune } from "@/controller/editor";
+import { saveData } from "@/controller/editor";
 import type {
   BlockKind,
   Question,
@@ -284,9 +278,9 @@ import { computed, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import DescriptionPannel from "./DescriptionPannel.vue";
-import Intrinsics from "./Intrinsics.vue";
+import IntrinsicsParametersQuestion from "./IntrinsicsParametersQuestion.vue";
 import QuestionContent from "./QuestionContent.vue";
-import RandomParameters from "./RandomParameters.vue";
+import RandomParametersQuestion from "./RandomParametersQuestion.vue";
 import TagListField from "./TagListField.vue";
 
 interface Props {
@@ -325,55 +319,18 @@ function addBlock(kind: BlockKind) {
   questionContent.addBlock(kind);
 }
 
-function addRandomParameter() {
-  const l = question.page.parameters.Variables || [];
-  l.push({
-    variable: { Name: xRune, Indice: "" },
-    expression: "randint(1;10)",
-  });
+function updateRandomParameters(l: RandomParameter[], shouldCheck: boolean) {
   question.page.parameters.Variables = l;
+  if (shouldCheck) {
+    checkParameters();
+  }
 }
 
-function updateRandomParameter(index: number, param: RandomParameter) {
-  question.page.parameters.Variables![index] = param;
-}
-
-function deleteRandomParameter(index: number) {
-  question.page.parameters.Variables!.splice(index, 1);
-
-  checkParameters();
-}
-
-function swapRandomParameters(origin: number, target: number) {
-  question.page.parameters.Variables = swapItems(
-    origin,
-    target,
-    question.page.parameters.Variables!
-  );
-}
-
-function addIntrinsic() {
-  const l = question.page.parameters.Intrinsics || [];
-  l.push("a,b,c = pythagorians()");
+function updateIntrinsics(l: string[], shouldCheck: boolean) {
   question.page.parameters.Intrinsics = l;
-}
-
-function updateIntrinsic(index: number, param: string) {
-  question.page.parameters.Intrinsics![index] = param;
-}
-
-function deleteIntrinsic(index: number) {
-  question.page.parameters.Intrinsics!.splice(index, 1);
-
-  checkParameters();
-}
-
-function swapIntrinsics(origin: number, target: number) {
-  question.page.parameters.Intrinsics = swapItems(
-    origin,
-    target,
-    question.page.parameters.Intrinsics!
-  );
+  if (shouldCheck) {
+    checkParameters();
+  }
 }
 
 let errorEnnonce = $ref<errEnonce | null>(null);

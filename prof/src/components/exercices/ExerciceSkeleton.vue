@@ -62,7 +62,7 @@
           size="small"
           icon
           title="Retour aux exercices"
-          @click="backToList"
+          @click="emit('back')"
         >
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
@@ -185,6 +185,17 @@
           </v-col>
         </v-row>
       </v-col>
+
+      <v-col cols="auto" align-self="center" class="pl-2">
+        <v-btn
+          size="small"
+          icon
+          title="Editer le contenu des questions"
+          @click="emit('next')"
+        >
+          <v-icon icon="mdi-arrow-right"></v-icon>
+        </v-btn>
+      </v-col>
     </v-row>
 
     <v-list @dragstart="onDragStart" @dragend="onDragEnd">
@@ -194,11 +205,17 @@
       ></drop-zone>
 
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
-        <v-list-item
-          draggable="true"
-          @dragstart="(e) => onItemDragStart(e, index)"
-        >
+        <v-list-item>
           <v-row>
+            <v-col cols="auto" align-self="center">
+              <v-icon
+                style="cursor: grab"
+                draggable="true"
+                @dragstart="(e) => onItemDragStart(e, index)"
+                size="large"
+                icon="mdi-drag-vertical"
+              ></v-icon>
+            </v-col>
             <v-col cols="auto" align-self="center">
               <v-btn
                 v-if="!isReadonly"
@@ -307,16 +324,13 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "next"): void;
   (e: "duplicate", exercice: ExerciceExt): void;
 }>();
 
 const isReadonly = computed(
   () => props.exercice.Origin.Visibility != Visibility.Personnal
 );
-
-function backToList() {
-  emit("back");
-}
 
 const flowItems = Object.entries(FlowLabels).map((k) => ({
   value: Number(k[0]) as Flow,
