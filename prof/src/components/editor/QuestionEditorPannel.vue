@@ -1,29 +1,9 @@
 <template>
-  <v-snackbar
-    :model-value="showErrorParameters"
-    @update:model-value="errorParameters = null"
-    color="warning"
+  <SnackErrorParameters
+    :error="errorParameters"
+    @close="errorParameters = null"
   >
-    <v-row v-if="errorParameters != null">
-      <v-col>
-        <v-row no-gutters>
-          <v-col>
-            Erreur dans la définition <b>{{ errorParameters.Origin }}</b> :
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <div>{{ errorParameters.Details }}</div>
-          </v-col>
-        </v-row>
-      </v-col>
-      <v-col cols="2" align-self="center" style="text-align: right">
-        <v-btn icon size="x-small" flat @click="errorParameters = null">
-          <v-icon icon="mdi-close" color="warning"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-snackbar>
+  </SnackErrorParameters>
 
   <v-snackbar :model-value="showErrorEnnonce" color="warning">
     <v-row v-if="errorEnnonce != null">
@@ -279,6 +259,7 @@ import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import DescriptionPannel from "./DescriptionPannel.vue";
 import IntrinsicsParametersQuestion from "./IntrinsicsParametersQuestion.vue";
+import SnackErrorParameters from "./parameters/SnackErrorParameters.vue";
 import QuestionContent from "./QuestionContent.vue";
 import RandomParametersQuestion from "./RandomParametersQuestion.vue";
 import TagListField from "./TagListField.vue";

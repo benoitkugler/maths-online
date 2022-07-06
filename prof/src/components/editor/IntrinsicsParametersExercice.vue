@@ -9,14 +9,14 @@
     @add="add"
     @show-help="showHelp = true"
   >
-    <v-list v-if="props.parameters?.length" @dragend="showDropZone = false">
+    <v-list v-if="parameters.length" @dragend="showDropZone = false">
       <drop-zone
         v-if="showDropZone"
-        @drop="(origin) => swapIntrinsics(origin, 0)"
+        @drop="(origin) => swap(origin, 0)"
       ></drop-zone>
-      <div v-for="(param, index) in props.parameters" :key="index">
+      <div v-for="(param, index) in parameters" :key="index">
         <v-list-item class="pr-0 pl-1">
-          <v-row no-gutters>
+          <v-row no-gutters :class="param.isShared ? 'text-primary' : ''">
             <v-col cols="1" align-self="center">
               <v-icon
                 size="large"
@@ -28,18 +28,32 @@
                 icon="mdi-drag-vertical"
               ></v-icon>
             </v-col>
-            <v-col cols="9" class="pl-1">
+            <v-col class="pl-1">
               <v-text-field
                 class="small-input"
                 hide-details
                 variant="underlined"
                 density="compact"
-                :model-value="param"
+                :model-value="param.parameter"
                 @update:model-value="(v) => autocomplete(index, v)"
                 @blur="emit('done')"
               ></v-text-field>
             </v-col>
-            <v-col cols="2" align-self="center" style="text-align: right">
+            <v-col cols="auto" align-self="center">
+              <v-btn
+                icon
+                size="x-small"
+                flat
+                @click="toogleShared(index)"
+                title="Partager les variables entre les questions"
+                class="pl-1"
+              >
+                <v-icon
+                  icon="mdi-format-list-numbered"
+                  :color="param.isShared ? 'primary' : 'black'"
+                  size="small"
+                ></v-icon>
+              </v-btn>
               <v-btn
                 icon
                 size="x-small"
@@ -54,7 +68,7 @@
         </v-list-item>
         <drop-zone
           v-if="showDropZone"
-          @drop="(origin) => swapIntrinsics(origin, index + 1)"
+          @drop="(origin) => swap(origin, index + 1)"
         ></drop-zone>
       </div>
     </v-list>
@@ -64,13 +78,14 @@
 <script setup lang="ts">
 import { onDragListItemStart, swapItems } from "@/controller/editor";
 import { ref } from "@vue/reactivity";
-import { $ref } from "vue/macros";
+import { $computed, $ref } from "vue/macros";
 import DropZone from "./DropZone.vue";
 import IntrinsicsParametersHelp from "./parameters/IntrinsicsParametersHelp.vue";
 import ParametersContainer from "./parameters/ParametersContainer.vue";
 
 interface Props {
-  parameters: string[];
+  sharedParameters: string[];
+  questionParameters: string[];
   isLoading: boolean;
   isValidated: boolean;
 }
@@ -78,11 +93,42 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "update", list: string[], shouldCheck: boolean): void;
+  (
+    e: "update",
+    sharedParameters: string[],
+    questionParameters: string[],
+    shouldCheck: boolean
+  ): void;
   (e: "done"): void;
 }>();
 
 const showHelp = ref(false);
+
+interface withShared {
+  parameter: string;
+  isShared: boolean;
+}
+
+let parameters = $computed(() =>
+  (props.sharedParameters || [])
+    .map((p) => ({ parameter: p, isShared: true }))
+    .concat(
+      (props.questionParameters || []).map((p) => ({
+        parameter: p,
+        isShared: false,
+      }))
+    )
+);
+
+function emitSeparateList(merged: withShared[], shouldCheck: boolean) {
+  const shared = merged
+    .filter((item) => item.isShared)
+    .map((item) => item.parameter);
+  const question = merged
+    .filter((item) => !item.isShared)
+    .map((item) => item.parameter);
+  emit("update", shared, question, shouldCheck);
+}
 
 let showDropZone = $ref(false);
 function onItemDragStart(payload: DragEvent, index: number) {
@@ -105,24 +151,36 @@ function autocomplete(index: number, text: string) {
 }
 
 function add() {
-  const l = props.parameters || [];
-  l.push("a,b,c = pythagorians()");
-  emit("update", l, false);
+  const l = parameters.map((v) => v);
+  l.push({
+    parameter: "a,b,c = pythagorians()",
+    isShared: true,
+  });
+  emitSeparateList(l, false);
 }
 
 function update(index: number, param: string) {
-  props.parameters![index] = param;
-  emit("update", props.parameters, false);
+  const l = parameters.map((v) => v);
+  l[index].parameter = param;
+  emitSeparateList(l, false);
 }
 
 function remove(index: number) {
-  props.parameters!.splice(index, 1);
-  emit("update", props.parameters, true);
+  const l = parameters.map((v) => v);
+  l.splice(index, 1);
+  emitSeparateList(l, true);
 }
 
-function swapIntrinsics(origin: number, target: number) {
-  const l = swapItems(origin, target, props.parameters!);
-  emit("update", l, false);
+function swap(origin: number, target: number) {
+  const l = swapItems(origin, target, parameters);
+  emitSeparateList(l, false);
+}
+
+function toogleShared(index: number) {
+  const l = parameters.map((v) => v);
+  const p = l[index];
+  p.isShared = !p.isShared;
+  emitSeparateList(l, true);
 }
 </script>
 

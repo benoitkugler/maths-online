@@ -628,10 +628,18 @@ export interface ExerciceQuestion {
   id_question: number;
   bareme: number;
 }
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
+export type ExerciceQuestions = ExerciceQuestion[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceHeader
+export interface ExerciceHeader {
+  Exercice: Exercice;
+  Origin: Origin;
+  Questions: ExerciceQuestions;
+}
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestionExt
 export interface ExerciceQuestionExt {
-  Title: string;
-  Question: ExerciceQuestion;
+  Link: ExerciceQuestion;
+  Question: Question;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {
@@ -643,8 +651,6 @@ export interface ExerciceExt {
 export interface ExerciceCreateQuestionIn {
   IdExercice: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
-export type ExerciceQuestions = ExerciceQuestion[] | null;
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateQuestionsIn
 export interface ExerciceUpdateQuestionsIn {
   Questions: ExerciceQuestions;
@@ -1594,9 +1600,10 @@ export abstract class AbstractAPI {
 
   protected async rawExercicesGetList() {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercices";
-    const rep: AxiosResponse<ExerciceExt[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<ExerciceHeader[] | null> = await Axios.get(
+      fullUrl,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -1613,12 +1620,35 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessExercicesGetList(
-    data: ExerciceExt[] | null
+    data: ExerciceHeader[] | null
   ): void;
+
+  protected async rawExerciceGetContent(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
+    const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceGetContent wraps rawExerciceGetContent and handles the error */
+  async ExerciceGetContent(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceGetContent(params);
+      this.onSuccessExerciceGetContent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceGetContent(data: ExerciceExt): void;
 
   protected async rawExerciceCreate() {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, null, {
+    const rep: AxiosResponse<ExerciceHeader> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
@@ -1636,7 +1666,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessExerciceCreate(data: ExerciceExt): void;
+  protected abstract onSuccessExerciceCreate(data: ExerciceHeader): void;
 
   protected async rawExerciceDelete(params: {
     id: number;

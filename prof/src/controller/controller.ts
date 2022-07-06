@@ -8,6 +8,7 @@ import type {
   ClassroomExt,
   Exercice,
   ExerciceExt,
+  ExerciceHeader,
   ExerciceQuestionExt,
   GenerateClassroomCodeOut,
   LaunchSessionOut,
@@ -99,6 +100,13 @@ class Controller extends AbstractAPI {
     this.inRequest = true;
   }
 
+  protected onSuccessExercicesGetList(data: ExerciceHeader[] | null): void {
+    this.inRequest = false;
+  }
+  protected onSuccessExerciceGetContent(data: ExerciceExt): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessEditorCheckQuestionParameters(
     data: CheckQuestionParametersOut
   ): void {
@@ -144,10 +152,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExercicesGetList(data: ExerciceExt[] | null): void {
-    this.inRequest = false;
-  }
-  protected onSuccessExerciceCreate(data: ExerciceExt): void {
+  protected onSuccessExerciceCreate(data: ExerciceHeader): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Exercice créé avec succès.");

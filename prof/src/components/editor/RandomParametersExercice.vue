@@ -17,7 +17,7 @@
       ></drop-zone>
       <div v-for="(param, index) in parameters" :key="index">
         <v-list-item class="pr-0 pl-1">
-          <v-row no-gutters :class="param.isShared ? 'text-pink' : ''">
+          <v-row no-gutters :class="param.isShared ? 'text-primary' : ''">
             <v-col cols="1" align-self="center">
               <v-icon
                 size="large"
@@ -37,7 +37,7 @@
               >
               </variable-field>
             </v-col>
-            <v-col cols="6">
+            <v-col>
               <v-text-field
                 class="ml-2 small-input"
                 variant="underlined"
@@ -49,9 +49,23 @@
                 :color="expressionColor"
               ></v-text-field>
             </v-col>
-            <v-col cols="2">
-              <v-btn icon size="small" flat @click="remove(index)">
-                <v-icon icon="mdi-delete" color="red"></v-icon>
+            <v-col cols="auto" style="text-align: right" align-self="center">
+              <v-btn
+                icon
+                size="x-small"
+                flat
+                @click="toogleShared(index)"
+                title="Partager le paramètre entre les questions"
+                class="pl-1"
+              >
+                <v-icon
+                  icon="mdi-format-list-numbered"
+                  :color="param.isShared ? 'primary' : 'black'"
+                  size="small"
+                ></v-icon>
+              </v-btn>
+              <v-btn icon size="x-small" flat @click="remove(index)">
+                <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
             </v-col>
           </v-row>
@@ -176,6 +190,13 @@ function remove(index: number) {
 function swap(origin: number, target: number) {
   const l = swapItems(origin, target, parameters);
   emitSeparateList(l, false);
+}
+
+function toogleShared(index: number) {
+  const l = parameters.map((v) => v);
+  const p = l[index];
+  p.isShared = !p.isShared;
+  emitSeparateList(l, true);
 }
 </script>
 

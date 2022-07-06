@@ -241,7 +241,7 @@
                 ></v-icon>
               </v-btn>
             </v-col>
-            <v-col> {{ question.Title }}</v-col>
+            <v-col> {{ question.Question.page.title }}</v-col>
             <v-col cols="auto">
               <v-menu
                 offset-y
@@ -259,11 +259,11 @@
                     v-bind="props"
                     color="primary"
                     @click="
-                      questionToEdit = copy(question.Question);
+                      questionToEdit = copy(question.Link);
                       questionIndexToEdit = index;
                     "
                     :disabled="isReadonly"
-                    >/ {{ question.Question.bareme }}
+                    >/ {{ question.Link.bareme }}
                   </v-chip>
                 </template>
                 <v-card subtitle="Modifier le barème">
@@ -362,7 +362,7 @@ async function createQuestion() {
 }
 
 async function addQuestion(idQuestion: number) {
-  const current = (props.exercice.Questions || []).map((v) => v.Question);
+  const current = (props.exercice.Questions || []).map((v) => v.Link);
   current.push({
     bareme: 1,
     id_question: idQuestion,
@@ -379,7 +379,7 @@ async function addQuestion(idQuestion: number) {
 }
 
 async function removeQuestion(index: number) {
-  const l = (props.exercice.Questions || []).map((v) => v.Question);
+  const l = (props.exercice.Questions || []).map((v) => v.Link);
   l.splice(index, 1);
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
@@ -392,7 +392,7 @@ async function removeQuestion(index: number) {
 }
 
 async function duplicateQuestion(index: number) {
-  const l = (props.exercice.Questions || []).map((v) => v.Question);
+  const l = (props.exercice.Questions || []).map((v) => v.Link);
   const added = l.slice(0, index).concat(l[index]).concat(l.slice(index));
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
@@ -410,7 +410,7 @@ async function saveEditedQuestion() {
   if (questionIndexToEdit == null || questionToEdit == null) {
     return;
   }
-  const current = (props.exercice.Questions || []).map((v) => v.Question);
+  const current = (props.exercice.Questions || []).map((v) => v.Link);
   current[questionIndexToEdit] = questionToEdit;
 
   questionToEdit = null;
@@ -444,7 +444,7 @@ the block at index `target` (which is between 0 and nbBlocks)
  */
 async function swapQuestions(origin: number, target: number) {
   const l = swapItems(origin, target, props.exercice.Questions!).map(
-    (v) => v.Question
+    (v) => v.Link
   );
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,

@@ -29,9 +29,10 @@ func (err ErrParameters) Error() string {
 func (pr Parameters) Validate() error {
 	params := make(expression.RandomParameters)
 	for _, def := range pr.Variables {
+		origin := fmt.Sprintf("%s : %s", def.Variable, def.Expression)
 		if _, has := params[def.Variable]; has {
 			return ErrParameters{
-				Origin:  def.Expression,
+				Origin:  origin,
 				Details: expression.ErrDuplicateParameter{Duplicate: def.Variable}.Error(),
 			}
 		}
@@ -39,7 +40,7 @@ func (pr Parameters) Validate() error {
 		expr, err := expression.Parse(def.Expression)
 		if err != nil {
 			return ErrParameters{
-				Origin:  def.Expression,
+				Origin:  origin,
 				Details: err.Error(),
 			}
 		}

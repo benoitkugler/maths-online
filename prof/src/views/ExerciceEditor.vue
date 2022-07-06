@@ -4,7 +4,7 @@
       <keep-alive>
         <exercice-list
           v-if="currentExercice == null"
-          @clicked="(ex) => (currentExercice = ex)"
+          @clicked="showExercice"
         ></exercice-list>
       </keep-alive>
       <keep-alive>
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ExerciceExt } from "@/controller/api_gen";
+import type { ExerciceExt, ExerciceHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
@@ -48,6 +48,14 @@ async function fetchTags() {
 }
 
 onMounted(() => fetchTags());
+
+async function showExercice(ex: ExerciceHeader) {
+  const res = await controller.ExerciceGetContent({ id: ex.Exercice.Id });
+  if (res == undefined) {
+    return;
+  }
+  currentExercice = res;
+}
 </script>
 
 <style></style>

@@ -18,25 +18,31 @@ func (l ProgressionQuestions) ensureIndex() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 
+type ExerciceExt struct {
+	Exercice  Exercice
+	Origin    teacher.Origin
+	Questions []ExerciceQuestionExt
+}
+
 type ExerciceQuestionExt struct {
-	Title    string
-	Question ExerciceQuestion
+	Link     ExerciceQuestion
+	Question Question
 }
 
 func fillQuestions(l ExerciceQuestions, dict Questions) []ExerciceQuestionExt {
 	l.ensureIndex()
 	out := make([]ExerciceQuestionExt, len(l))
 	for i, qu := range l {
-		out[i].Question = qu
-		out[i].Title = dict[qu.IdQuestion].Page.Title
+		out[i].Link = qu
+		out[i].Question = dict[qu.IdQuestion]
 	}
 	return out
 }
 
-type ExerciceExt struct {
+type ExerciceHeader struct {
 	Exercice  Exercice
 	Origin    teacher.Origin
-	Questions []ExerciceQuestionExt
+	Questions ExerciceQuestions
 }
 
 func (ct *Controller) ExercicesGetList(c echo.Context) error {
@@ -50,28 +56,36 @@ func (ct *Controller) ExercicesGetList(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getExercices(userID int64) ([]ExerciceExt, error) {
+func (ex Exercice) origin(userID, adminID int64) (teacher.Origin, bool) {
+	vis, ok := teacher.NewVisibility(ex.IdTeacher, userID, adminID, ex.Public)
+	if !ok {
+		return teacher.Origin{}, false
+	}
+	return teacher.Origin{
+		AllowPublish: userID == adminID,
+		IsPublic:     ex.Public,
+		Visibility:   vis,
+	}, true
+}
+
+func (ct *Controller) getExercices(userID int64) ([]ExerciceHeader, error) {
 	exs, err := SelectAllExercices(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
 	var (
-		out []ExerciceExt
+		out []ExerciceHeader
 		tmp IDs
 	)
 	for _, ex := range exs {
-		vis, ok := teacher.NewVisibility(ex.IdTeacher, userID, ct.admin.Id, ex.Public)
+		origin, ok := ex.origin(userID, ct.admin.Id)
 		if !ok {
 			continue
 		}
-		out = append(out, ExerciceExt{
+		out = append(out, ExerciceHeader{
 			Exercice: ex,
-			Origin: teacher.Origin{
-				AllowPublish: userID == ct.admin.Id,
-				IsPublic:     ex.Public,
-				Visibility:   vis,
-			},
+			Origin:   origin,
 		})
 		tmp = append(tmp, ex.Id)
 	}
@@ -82,20 +96,45 @@ func (ct *Controller) getExercices(userID int64) ([]ExerciceExt, error) {
 	}
 	dict := links.ByIdExercice()
 
-	qus, err := SelectQuestions(ct.db, links.IdQuestions()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
 	for i, ex := range out {
 		s := dict[ex.Exercice.Id]
-		out[i].Questions = fillQuestions(s, qus)
+		s.ensureIndex()
+		out[i].Questions = s
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Exercice.Title < out[j].Exercice.Title })
 
 	return out, nil
+}
+
+// ExerciceGetContent loads the questions associated with the given exercice
+func (ct *Controller) ExerciceGetContent(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	idExercice, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	data, err := ct.loadExercice(idExercice)
+	if err != nil {
+		return err
+	}
+	ex := data.exercice
+
+	origin, ok := ex.origin(user.Id, ct.admin.Id)
+	if !ok {
+		return accessForbidden
+	}
+
+	out := ExerciceExt{
+		Exercice:  ex,
+		Origin:    origin,
+		Questions: fillQuestions(data.links, data.dict),
+	}
+
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) ExerciceCreate(c echo.Context) error {
@@ -109,13 +148,13 @@ func (ct *Controller) ExerciceCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createExercice(userID int64) (ExerciceExt, error) {
+func (ct *Controller) createExercice(userID int64) (ExerciceHeader, error) {
 	ex, err := Exercice{IdTeacher: userID, Flow: Parallel}.Insert(ct.db)
 	if err != nil {
-		return ExerciceExt{}, utils.SQLError(err)
+		return ExerciceHeader{}, utils.SQLError(err)
 	}
 
-	out := ExerciceExt{
+	out := ExerciceHeader{
 		Exercice: ex,
 		Origin: teacher.Origin{
 			AllowPublish: userID == ct.admin.Id,
@@ -145,7 +184,7 @@ func (ct *Controller) ExerciceDelete(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) checkAcces(idExercice, userID int64) error {
+func (ct *Controller) checkExerciceOwner(idExercice, userID int64) error {
 	ex, err := SelectExercice(ct.db, idExercice)
 	if err != nil {
 		return utils.SQLError(err)
@@ -159,7 +198,7 @@ func (ct *Controller) checkAcces(idExercice, userID int64) error {
 }
 
 func (ct *Controller) deleteExercice(idExercice int64, deleteQuestions bool, userID int64) error {
-	if err := ct.checkAcces(idExercice, userID); err != nil {
+	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
 		return err
 	}
 
@@ -237,7 +276,7 @@ func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 }
 
 func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int64) ([]ExerciceQuestionExt, error) {
-	if err := ct.checkAcces(args.IdExercice, userID); err != nil {
+	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
 		return nil, err
 	}
 
@@ -284,7 +323,7 @@ func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 }
 
 func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID int64) ([]ExerciceQuestionExt, error) {
-	if err := ct.checkAcces(args.IdExercice, userID); err != nil {
+	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
 		return nil, err
 	}
 
@@ -339,7 +378,7 @@ func (ct *Controller) ExerciceUpdate(c echo.Context) error {
 }
 
 func (ct *Controller) updateExercice(in Exercice, userID int64) (Exercice, error) {
-	if err := ct.checkAcces(in.Id, userID); err != nil {
+	if err := ct.checkExerciceOwner(in.Id, userID); err != nil {
 		return Exercice{}, err
 	}
 
@@ -369,10 +408,11 @@ type CheckExerciceParametersOut struct {
 // checks that the merging of SharedParameters and QuestionParameters is valid
 func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) (CheckExerciceParametersOut, error) {
 	// fetch the mode of each question
-	_, _, qus, err := ct.loadExercice(params.IdExercice)
+	data, err := ct.loadExercice(params.IdExercice)
 	if err != nil {
 		return CheckExerciceParametersOut{}, err
 	}
+	qus := data.questions()
 
 	if L1, L2 := len(params.QuestionParameters), len(qus); L1 != L2 {
 		return CheckExerciceParametersOut{}, fmt.Errorf("internal error: mismatched question length (%d != %d)", L1, L2)
@@ -410,10 +450,11 @@ type SaveExerciceAndPreviewOut struct {
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID int64) (SaveExerciceAndPreviewOut, error) {
-	ex, _, qus, err := ct.loadExercice(params.IdExercice)
+	data, err := ct.loadExercice(params.IdExercice)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
+	ex, qus := data.exercice, data.questions()
 
 	if !ex.IsVisibleBy(userID) {
 		return SaveExerciceAndPreviewOut{}, accessForbidden

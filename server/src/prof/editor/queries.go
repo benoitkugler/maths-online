@@ -74,7 +74,7 @@ func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]Questi
 }
 
 // updateExerciceQuestionList set the questions for the given exercice,
-// overidding `IdExercice` and `index` fields of the list items.
+// overiding `IdExercice` and `index` fields of the list items.
 func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestions) ([]ExerciceQuestionExt, error) {
 	// enforce fields
 	for i := range l {

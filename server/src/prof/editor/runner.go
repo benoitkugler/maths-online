@@ -159,38 +159,49 @@ type InstantiatedExercice struct {
 	Baremes   []int
 }
 
-func (ct *Controller) loadExercice(id int64) (Exercice, ExerciceQuestions, []Question, error) {
+// helper to unify question loading
+type exerciceContent struct {
+	exercice Exercice
+	links    ExerciceQuestions
+	dict     Questions
+}
+
+func (ex exerciceContent) questions() []Question {
+	out := make([]Question, len(ex.links))
+	for i, link := range ex.links {
+		out[i] = ex.dict[link.IdQuestion]
+	}
+	return out
+}
+
+func (ct *Controller) loadExercice(id int64) (exerciceContent, error) {
 	ex, err := SelectExercice(ct.db, id)
 	if err != nil {
-		return Exercice{}, nil, nil, utils.SQLError(err)
+		return exerciceContent{}, utils.SQLError(err)
 	}
 	links, err := SelectExerciceQuestionsByIdExercices(ct.db, id)
 	if err != nil {
-		return Exercice{}, nil, nil, utils.SQLError(err)
+		return exerciceContent{}, utils.SQLError(err)
 	}
 	links.ensureIndex()
 
 	// load the question contents
-	qus, err := SelectQuestions(ct.db, links.IdQuestions()...)
+	dict, err := SelectQuestions(ct.db, links.IdQuestions()...)
 	if err != nil {
-		return Exercice{}, nil, nil, utils.SQLError(err)
+		return exerciceContent{}, utils.SQLError(err)
 	}
 
-	out := make([]Question, len(links))
-	for i, link := range links {
-		out[i] = qus[link.IdQuestion]
-	}
-
-	return ex, links, out, nil
+	return exerciceContent{exercice: ex, links: links, dict: dict}, nil
 }
 
 // instantiateExercice loads the given exercice, the associated questions,
 // and instantiates them (using a fixed instance for the shared parameters)
 func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error) {
-	ex, links, qus, err := ct.loadExercice(id)
+	data, err := ct.loadExercice(id)
 	if err != nil {
 		return InstantiatedExercice{}, err
 	}
+	ex, links, qus := data.exercice, data.links, data.questions()
 
 	out := InstantiatedExercice{
 		Id:        ex.Id,
@@ -250,10 +261,11 @@ type EvaluateExerciceOut struct {
 // EvaluateExercice checks the answer provided for the given exercice and
 // update the progression.
 func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
-	ex, _, qus, err := ct.loadExercice(args.IdExercice)
+	data, err := ct.loadExercice(args.IdExercice)
 	if err != nil {
 		return EvaluateExerciceOut{}, utils.SQLError(err)
 	}
+	ex, qus := data.exercice, data.questions()
 
 	if L1, L2 := len(qus), len(args.Progression.Questions); L1 != L2 {
 		return EvaluateExerciceOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)

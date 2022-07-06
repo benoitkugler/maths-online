@@ -61,17 +61,17 @@
 </template>
 
 <script setup lang="ts">
-import type { Exercice, ExerciceExt } from "@/controller/api_gen";
+import type { ExerciceHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ExerciceRow from "./ExerciceRow.vue";
 
 const emit = defineEmits<{
-  (e: "clicked", exercice: ExerciceExt): void;
+  (e: "clicked", exercice: ExerciceHeader): void;
 }>();
 
-let exercices = $ref<ExerciceExt[]>([]);
+let exercices = $ref<ExerciceHeader[]>([]);
 
 onMounted(() => {
   fetchExercices();
@@ -91,7 +91,7 @@ async function createExercice() {
   await fetchExercices();
 }
 
-let exerciceToDelete = $ref<ExerciceExt | null>(null);
+let exerciceToDelete = $ref<ExerciceHeader | null>(null);
 async function deleteExercice(deleteQuestions: boolean) {
   if (exerciceToDelete == null) {
     return;
@@ -103,23 +103,6 @@ async function deleteExercice(deleteQuestions: boolean) {
   exerciceToDelete = null;
   await fetchExercices();
 }
-
-let exerciceToUpdate = $ref<Exercice | null>(null);
-async function updateExercice() {
-  if (exerciceToUpdate == null) {
-    return;
-  }
-  const res = await controller.ExerciceUpdate(exerciceToUpdate);
-  exerciceToUpdate = null;
-  if (res == undefined) {
-    return;
-  }
-
-  const index = exercices.findIndex((cl) => cl.Exercice.Id == res.Id);
-  exercices[index].Exercice = res;
-}
-
-// let exerciceToShow = $ref<ExerciceExt | null>(null);
 
 async function updatePublic(questionID: number, isPublic: boolean) {
   // TODO:

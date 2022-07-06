@@ -8,8 +8,6 @@ import (
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
-
-
 func TestExerciceCRUD(t *testing.T) {
 	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
 	defer testutils.RemoveDBDev()
@@ -43,7 +41,7 @@ func TestExerciceCRUD(t *testing.T) {
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
 		Questions: ExerciceQuestions{
-			l[0].Question,
+			l[0].Link,
 			ExerciceQuestion{IdQuestion: qu.Id},
 			ExerciceQuestion{IdQuestion: qu.Id},
 		},
@@ -55,12 +53,12 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(l)
 	}
 
-	updated := l[1].Question
+	updated := l[1].Link
 	updated.Bareme = 5
 	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
 		Questions: ExerciceQuestions{
-			l[0].Question,
+			l[0].Link,
 			updated,
 		},
 	}, 1)

@@ -49,9 +49,9 @@
                 :color="expressionColor"
               ></v-text-field>
             </v-col>
-            <v-col cols="2">
-              <v-btn icon size="small" flat @click="remove(index)">
-                <v-icon icon="mdi-delete" color="red"></v-icon>
+            <v-col cols="2" align-self="center" style="text-align: right">
+              <v-btn icon size="x-small" flat @click="remove(index)">
+                <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
             </v-col>
           </v-row>

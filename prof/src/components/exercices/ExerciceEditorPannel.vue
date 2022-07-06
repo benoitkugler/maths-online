@@ -1,31 +1,11 @@
 <template>
-  <!-- <v-snackbar
-    :model-value="showErrorParameters"
-    @update:model-value="errorParameters = null"
-    color="warning"
+  <SnackErrorParameters
+    :error="errorParameters"
+    @close="errorParameters = null"
   >
-    <v-row v-if="errorParameters != null">
-      <v-col>
-        <v-row no-gutters>
-          <v-col>
-            Erreur dans la définition <b>{{ errorParameters.Origin }}</b> :
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <div>{{ errorParameters.Details }}</div>
-          </v-col>
-        </v-row>
-      </v-col>
-      <v-col cols="2" align-self="center" style="text-align: right">
-        <v-btn icon size="x-small" flat @click="errorParameters = null">
-          <v-icon icon="mdi-close" color="warning"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-snackbar>
+  </SnackErrorParameters>
 
-  <v-snackbar :model-value="showErrorEnnonce" color="warning">
+  <!-- <v-snackbar :model-value="showErrorEnnonce" color="warning">
     <v-row v-if="errorEnnonce != null">
       <v-col>
         <v-row no-gutters>
@@ -60,9 +40,9 @@
         </v-btn>
       </v-col>
     </v-row>
-  </v-snackbar>
+  </v-snackbar> -->
 
-  <v-dialog v-model="showErrVarsDetails">
+  <!-- <v-dialog v-model="showErrVarsDetails">
     <v-card subtitle="Valeurs des paramètres aléatoires">
       <v-card-text>
         L'erreur est rencontrée pour les valeurs suivantes :
@@ -80,30 +60,30 @@
         </v-list>
       </v-card-text>
     </v-card>
-  </v-dialog>
+  </v-dialog> -->
 
-  <v-dialog v-model="showEditDescription">
+  <!-- <v-dialog v-model="showEditDescription">
     <description-pannel
       v-model="question.description"
       :readonly="isReadonly"
     ></description-pannel>
   </v-dialog> -->
 
-  <!-- <v-card class="mt-3 px-2">
+  <v-card class="mt-3 px-2">
     <v-row no-gutters class="mb-2">
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
           icon
-          title="Retour aux questions"
-          @click="backToList"
+          title="Retour à la liste des questions"
+          @click="emit('back')"
         >
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
       </v-col>
 
       <v-col>
-        <v-row no-gutters>
+        <!-- <v-row no-gutters>
           <v-col>
             <v-text-field
               class="my-2 input-small"
@@ -177,9 +157,9 @@
               </v-list>
             </v-menu>
           </v-col>
-        </v-row>
+        </v-row> -->
 
-        <v-row no-gutters>
+        <!-- <v-row no-gutters>
           <v-col class="pr-2" align-self="center"> ></v-col>
           <v-col cols="auto">
             <v-menu offset-y close-on-content-click>
@@ -197,32 +177,61 @@
               <block-bar @add="addBlock"></block-bar>
             </v-menu>
           </v-col>
-        </v-row>
+        </v-row> -->
       </v-col>
-    </v-row> -->
 
-  <v-row no-gutters>
-    <v-col md="4">
-      <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
-        <RandomParametersExercice
-          :shared-parameters="props.exercice.Exercice.Parameters.Variables"
-          :question-parameters="[]"
-          :is-loading="isCheckingParameters"
-          :is-validated="!showErrorParameters"
-          @update="updateRandomParameters"
-          @done="checkParameters"
-        ></RandomParametersExercice>
-        <!-- <IntrinsicsParametersQuestion
-            :parameters="question.page.parameters.Intrinsics || []"
+      <v-col cols="auto">
+        <v-btn
+          size="small"
+          icon
+          title="Aller à la question précédente"
+          @click="questionIndex = questionIndex - 1"
+          :disabled="questionIndex <= 0"
+        >
+          <v-icon icon="mdi-arrow-left" size="small"></v-icon>
+        </v-btn>
+        {{ questionIndex + 1 }} / {{ (props.exercice.Questions || []).length }}
+        <v-btn
+          size="small"
+          icon
+          title="Aller à la question suivante"
+          @click="questionIndex = questionIndex + 1"
+          :disabled="
+            questionIndex >= (props.exercice.Questions || []).length - 1
+          "
+        >
+          <v-icon icon="mdi-arrow-right" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <v-row no-gutters>
+      <v-col md="5">
+        <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
+          <RandomParametersExercice
+            :shared-parameters="props.exercice.Exercice.Parameters.Variables"
+            :question-parameters="question.Question.page.parameters.Variables"
+            :is-loading="isCheckingParameters"
+            :is-validated="!showErrorParameters"
+            @update="updateRandomParameters"
+            @done="checkParameters"
+          ></RandomParametersExercice>
+          <IntrinsicsParametersExercice
+            :shared-parameters="
+              props.exercice.Exercice.Parameters.Intrinsics || []
+            "
+            :question-parameters="
+              question.Question.page.parameters.Intrinsics || []
+            "
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
             @update="updateIntrinsics"
             @done="checkParameters"
-          ></IntrinsicsParametersQuestion> -->
-      </div>
-    </v-col>
-    <v-col class="pr-1">
-      <!-- <QuestionContent
+          ></IntrinsicsParametersExercice>
+        </div>
+      </v-col>
+      <v-col class="pr-1">
+        <!-- <QuestionContent
           :model-value="question.page.enonce || []"
           @update:model-value="(v) => (question.page.enonce = v)"
           @importQuestion="onImportQuestion"
@@ -231,17 +240,23 @@
           ref="questionContent"
         >
         </QuestionContent> -->
-    </v-col>
-  </v-row>
-  <!-- </v-card> -->
+      </v-col>
+    </v-row>
+  </v-card>
 </template>
 
 <script setup lang="ts">
-import type { ErrParameters, ExerciceExt } from "@/controller/api_gen";
+import type {
+  errEnonce,
+  ErrParameters,
+  ExerciceExt,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { RandomParameter } from "@/controller/exercice_gen";
 import { computed } from "vue";
-import { $ref } from "vue/macros";
+import { $computed, $ref } from "vue/macros";
+import IntrinsicsParametersExercice from "../editor/IntrinsicsParametersExercice.vue";
+import SnackErrorParameters from "../editor/parameters/SnackErrorParameters.vue";
 import RandomParametersExercice from "../editor/RandomParametersExercice.vue";
 
 interface Props {
@@ -257,9 +272,7 @@ const emit = defineEmits<{
 
 let questionIndex = $ref(0);
 
-const question = computed(
-  () => (props.exercice.Questions || [])[questionIndex]
-);
+let question = $computed(() => (props.exercice.Questions || [])[questionIndex]);
 
 function updateRandomParameters(
   sharedP: RandomParameter[],
@@ -267,7 +280,19 @@ function updateRandomParameters(
   shouldCheck: boolean
 ) {
   props.exercice.Exercice.Parameters.Variables = sharedP;
-  //   question.value.page.parameters.Variables = l; // TODO:
+  question.Question.page.parameters.Variables = questionP;
+  if (shouldCheck) {
+    checkParameters();
+  }
+}
+
+function updateIntrinsics(
+  sharedP: string[],
+  questionP: string[],
+  shouldCheck: boolean
+) {
+  props.exercice.Exercice.Parameters.Intrinsics = sharedP;
+  question.Question.page.parameters.Intrinsics = questionP;
   if (shouldCheck) {
     checkParameters();
   }
@@ -276,20 +301,29 @@ function updateRandomParameters(
 let isCheckingParameters = $ref(false);
 let errorParameters = $ref<ErrParameters | null>(null);
 const showErrorParameters = computed(() => errorParameters != null);
+
+let errorEnnonce = $ref<errEnonce | null>(null);
+const showErrorEnnonce = computed(() => errorEnnonce != null);
+
 async function checkParameters() {
-  isCheckingParameters = true; // TODO
+  isCheckingParameters = true;
   const out = await controller.EditorCheckExerciceParameters({
     IdExercice: props.exercice.Exercice.Id,
     SharedParameters: props.exercice.Exercice.Parameters,
-    QuestionParameters: [], // TODO:
+    QuestionParameters:
+      props.exercice.Questions?.map((q) => q.Question.page.parameters) || [],
   });
   isCheckingParameters = false;
   if (out === undefined) return;
 
-  //   // hide previous error // TODO:
-  //   errorEnnonce = null;
+  // hide previous error
+  errorEnnonce = null;
 
-  //   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
+  errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
+  if (errorParameters != null) {
+    // go to faulty question
+    questionIndex = out.QuestionIndex;
+  }
   //   availableParameters.value = out.Variables || [];
 }
 </script>
