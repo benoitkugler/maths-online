@@ -1,6 +1,6 @@
 <template>
   <v-snackbar
-    :model-value="showErrorParameters"
+    :model-value="showError"
     @update:model-value="emit('close')"
     color="warning"
   >
@@ -40,7 +40,7 @@ const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
-const showErrorParameters = computed(() => props.error != null);
+const showError = computed(() => props.error != null);
 </script>
 
 <style scoped></style>

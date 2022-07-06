@@ -2,7 +2,7 @@
   <div
     @drop="onDropJSON"
     @dragover="onDragoverJSON"
-    class="d-flex ma-2"
+    class="d-flex ma-2 px-2"
     style="
       border: 1px solid blue;
       border-radius: 10px;
@@ -85,7 +85,7 @@ import DropZone from "./DropZone.vue";
 
 interface Props {
   modelValue: Block[];
-  errorBlockIndex: number | undefined;
+  errorBlockIndex?: number;
   availableParameters: Variable[];
 }
 

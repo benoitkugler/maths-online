@@ -325,6 +325,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "back"): void;
   (e: "next"): void;
+  (e: "update", exercice: ExerciceExt): void;
   (e: "duplicate", exercice: ExerciceExt): void;
 }>();
 
@@ -359,6 +360,7 @@ async function createQuestion() {
     return;
   }
   props.exercice.Questions = l;
+  emit("update", props.exercice);
 }
 
 async function addQuestion(idQuestion: number) {
@@ -376,6 +378,7 @@ async function addQuestion(idQuestion: number) {
     return;
   }
   props.exercice.Questions = l;
+  emit("update", props.exercice);
 }
 
 async function removeQuestion(index: number) {
@@ -389,6 +392,7 @@ async function removeQuestion(index: number) {
     return;
   }
   props.exercice.Questions = res;
+  emit("update", props.exercice);
 }
 
 async function duplicateQuestion(index: number) {
@@ -402,6 +406,7 @@ async function duplicateQuestion(index: number) {
     return;
   }
   props.exercice.Questions = res;
+  emit("update", props.exercice);
 }
 
 let questionToEdit = $ref<ExerciceQuestion | null>(null);
@@ -423,6 +428,7 @@ async function saveEditedQuestion() {
     return;
   }
   props.exercice.Questions = res;
+  emit("update", props.exercice);
 }
 
 let showDropZone = $ref(false);
@@ -454,6 +460,7 @@ async function swapQuestions(origin: number, target: number) {
     return;
   }
   props.exercice.Questions = res;
+  emit("update", props.exercice);
 }
 
 let showFlowDocumentation = $ref(false);

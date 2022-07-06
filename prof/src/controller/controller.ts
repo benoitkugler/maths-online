@@ -37,6 +37,8 @@ class Controller extends AbstractAPI {
   public onError?: (kind: string, htmlError: string) => void;
   public showMessage?: (message: string) => void;
 
+  public editorSessionID = "";
+
   logout() {
     this.isLoggedIn = false;
     this.authToken = "";
@@ -336,7 +338,7 @@ class Controller extends AbstractAPI {
   }
 
   protected onSuccessEditorStartSession(data: StartSessionOut): void {
-    console.log(data);
+    this.editorSessionID = data.ID;
     this.inRequest = false;
   }
 

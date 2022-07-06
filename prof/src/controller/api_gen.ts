@@ -640,6 +640,7 @@ export interface ExerciceHeader {
 export interface ExerciceQuestionExt {
   Link: ExerciceQuestion;
   Question: Question;
+  Origin: Origin;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {

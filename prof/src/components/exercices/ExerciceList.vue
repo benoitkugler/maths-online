@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import type { ExerciceHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onMounted } from "vue";
+import { onActivated, onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ExerciceRow from "./ExerciceRow.vue";
 
@@ -74,6 +74,10 @@ const emit = defineEmits<{
 let exercices = $ref<ExerciceHeader[]>([]);
 
 onMounted(() => {
+  fetchExercices();
+});
+
+onActivated(() => {
   fetchExercices();
 });
 

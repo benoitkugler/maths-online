@@ -107,6 +107,18 @@ func normalizeTitle(title string) string {
 	return removeAccents(strings.TrimSpace(strings.ToLower(title)))
 }
 
+func (qu Question) origin(userID, adminID int64) (teacher.Origin, bool) {
+	vis, ok := teacher.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
+	if !ok {
+		return teacher.Origin{}, false
+	}
+	return teacher.Origin{
+		AllowPublish: userID == adminID,
+		IsPublic:     qu.Public,
+		Visibility:   vis,
+	}, true
+}
+
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
 	const pagination = 100
 
@@ -162,19 +174,14 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 			}
 
 			qu := questions[id]
-			vis, _ := teacher.NewVisibility(qu.IdTeacher, userID, ct.admin.Id, qu.Public)
-
+			origin, _ := qu.origin(userID, ct.admin.Id)
 			question := QuestionHeader{
-				Id:         id,
-				Title:      title,
-				Difficulty: crible.Difficulty(),
-				IsInGroup:  len(ids) > 1,
-				Tags:       tagsMap[id].List(),
-				Origin: teacher.Origin{
-					AllowPublish: userID == ct.admin.Id,
-					IsPublic:     qu.Public,
-					Visibility:   vis,
-				},
+				Id:           id,
+				Title:        title,
+				Difficulty:   crible.Difficulty(),
+				IsInGroup:    len(ids) > 1,
+				Tags:         tagsMap[id].List(),
+				Origin:       origin,
 				NeedExercice: qu.NeedExercice,
 			}
 			group.Questions = append(group.Questions, question)

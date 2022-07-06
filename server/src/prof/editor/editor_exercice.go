@@ -27,14 +27,18 @@ type ExerciceExt struct {
 type ExerciceQuestionExt struct {
 	Link     ExerciceQuestion
 	Question Question
+	Origin   teacher.Origin
 }
 
-func fillQuestions(l ExerciceQuestions, dict Questions) []ExerciceQuestionExt {
+func fillQuestions(l ExerciceQuestions, dict Questions, userID, adminID int64) []ExerciceQuestionExt {
 	l.ensureIndex()
 	out := make([]ExerciceQuestionExt, len(l))
 	for i, qu := range l {
+		question := dict[qu.IdQuestion]
 		out[i].Link = qu
-		out[i].Question = dict[qu.IdQuestion]
+		out[i].Question = question
+		origin, _ := question.origin(userID, adminID)
+		out[i].Origin = origin
 	}
 	return out
 }
@@ -131,7 +135,7 @@ func (ct *Controller) ExerciceGetContent(c echo.Context) error {
 	out := ExerciceExt{
 		Exercice:  ex,
 		Origin:    origin,
-		Questions: fillQuestions(data.links, data.dict),
+		Questions: fillQuestions(data.links, data.dict, user.Id, ct.admin.Id),
 	}
 
 	return c.JSON(200, out)
@@ -293,7 +297,7 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int
 	}
 	existing = append(existing, ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: 1})
 
-	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, existing)
+	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, existing, userID, ct.admin.Id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -348,7 +352,7 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID i
 		}
 	}
 
-	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, args.Questions)
+	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, args.Questions, userID, ct.admin.Id)
 	if err != nil {
 		return nil, err
 	}

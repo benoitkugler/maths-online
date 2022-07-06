@@ -22,7 +22,7 @@
       </v-col>
       <v-col cols="auto">
         <keep-alive>
-          <Preview :session_id="sessionID"></Preview>
+          <ClientPreview :session_id="sessionID"></ClientPreview>
         </keep-alive>
       </v-col>
     </v-row>
@@ -36,7 +36,7 @@ import { personnalOrigin } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
-import Preview from "../components/editor/Preview.vue";
+import ClientPreview from "../components/editor/ClientPreview.vue";
 import QuestionEditorPannel from "../components/editor/QuestionEditorPannel.vue";
 import QuestionList from "../components/editor/QuestionList.vue";
 
@@ -49,11 +49,10 @@ let currentTags: string[] = $ref([]);
 let currentOrigin: Origin = $ref(personnalOrigin());
 
 onMounted(async () => {
-  const session = await controller.EditorStartSession();
-  if (session === undefined) {
-    return;
+  if (!controller.editorSessionID.length) {
+    await controller.EditorStartSession();
   }
-  sessionID = session.ID;
+  sessionID = controller.editorSessionID;
 
   fetchTags();
 });

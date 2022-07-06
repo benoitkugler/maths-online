@@ -5,69 +5,18 @@
   >
   </SnackErrorParameters>
 
-  <!-- <v-snackbar :model-value="showErrorEnnonce" color="warning">
-    <v-row v-if="errorEnnonce != null">
-      <v-col>
-        <v-row no-gutters>
-          <v-col> <b>Erreur dans la contenu de la question</b> </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <div>
-              <i v-html="errorEnnonce.Error"></i>
-            </div>
-          </v-col>
-        </v-row>
-      </v-col>
-      <v-col
-        v-if="errVars.length > 0"
-        cols="3"
-        align-self="center"
-        class="px-1"
-      >
-        <v-btn variant="outlined" @click="showErrVarsDetails = true">
-          Détails
-        </v-btn>
-      </v-col>
-      <v-col
-        cols="2"
-        align-self="center"
-        style="text-align: right"
-        class="px-1"
-      >
-        <v-btn icon size="x-small" @click="errorEnnonce = null">
-          <v-icon icon="mdi-close" color="warning"></v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-snackbar> -->
+  <SnackErrorEnonce
+    :error="errorEnnonce"
+    @close="errorEnnonce = null"
+  ></SnackErrorEnonce>
 
-  <!-- <v-dialog v-model="showErrVarsDetails">
-    <v-card subtitle="Valeurs des paramètres aléatoires">
-      <v-card-text>
-        L'erreur est rencontrée pour les valeurs suivantes :
-        <v-list>
-          <v-list-item v-for="(entry, index) in errVars" :key="index">
-            <v-row no-gutters>
-              <v-col>
-                {{ entry[0] }}
-              </v-col>
-              <v-col class="text-grey">
-                {{ entry[1] }}
-              </v-col>
-            </v-row>
-          </v-list-item>
-        </v-list>
-      </v-card-text>
-    </v-card>
-  </v-dialog> -->
-
-  <!-- <v-dialog v-model="showEditDescription">
-    <description-pannel
-      v-model="question.description"
+  <v-dialog v-model="showEditDescription">
+    <DescriptionPannel
+      v-model="question.Question.description"
       :readonly="isReadonly"
-    ></description-pannel>
-  </v-dialog> -->
+    >
+    </DescriptionPannel>
+  </v-dialog>
 
   <v-card class="mt-3 px-2">
     <v-row no-gutters class="mb-2">
@@ -82,20 +31,21 @@
         </v-btn>
       </v-col>
 
-      <v-col>
-        <!-- <v-row no-gutters>
-          <v-col>
-            <v-text-field
-              class="my-2 input-small"
-              variant="outlined"
-              density="compact"
-              label="Nom de la question"
-              v-model="question.page.title"
-              :readonly="isReadonly"
-              hide-details
-            ></v-text-field
-          ></v-col>
-          <v-col cols="auto" align-self="center">
+      <v-col align-self="center">
+        <v-text-field
+          class="my-2 input-small"
+          variant="outlined"
+          density="compact"
+          label="Nom de la question"
+          v-model="question.Question.page.title"
+          :readonly="isReadonly"
+          hide-details
+        ></v-text-field
+      ></v-col>
+
+      <v-col cols="3" align-self="center" class="px-1">
+        <v-row no-gutters justify="center">
+          <v-col cols="auto" align-self="center" class="py-1">
             <v-btn
               class="mx-2"
               icon
@@ -143,7 +93,7 @@
                   <v-btn
                     size="small"
                     @click="download"
-                    :disabled="!session_id"
+                    :disabled="!question.Question.page.enonce?.length"
                     title="Télécharger la question au format .json"
                   >
                     <v-icon
@@ -157,10 +107,9 @@
               </v-list>
             </v-menu>
           </v-col>
-        </v-row> -->
+        </v-row>
 
-        <!-- <v-row no-gutters>
-          <v-col class="pr-2" align-self="center"> ></v-col>
+        <v-row no-gutters>
           <v-col cols="auto">
             <v-menu offset-y close-on-content-click>
               <template v-slot:activator="{ isActive, props }">
@@ -174,13 +123,13 @@
                   Insérer du contenu
                 </v-btn>
               </template>
-              <block-bar @add="addBlock"></block-bar>
+              <BlockBar @add="addBlock"></BlockBar>
             </v-menu>
           </v-col>
-        </v-row> -->
+        </v-row>
       </v-col>
 
-      <v-col cols="auto">
+      <v-col cols="auto" align-self="center">
         <v-btn
           size="small"
           icon
@@ -231,33 +180,41 @@
         </div>
       </v-col>
       <v-col class="pr-1">
-        <!-- <QuestionContent
-          :model-value="question.page.enonce || []"
-          @update:model-value="(v) => (question.page.enonce = v)"
+        <QuestionContent
+          :model-value="question.Question.page.enonce || []"
+          @update:model-value="(v) => (question.Question.page.enonce = v)"
           @importQuestion="onImportQuestion"
-          :available-parameters="availableParameters"
+          :available-parameters="[]"
           :errorBlockIndex="errorEnnonce?.Block"
           ref="questionContent"
         >
-        </QuestionContent> -->
+        </QuestionContent>
       </v-col>
     </v-row>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type {
-  errEnonce,
-  ErrParameters,
-  ExerciceExt,
+import {
+  BlockKind,
+  Visibility,
+  type errEnonce,
+  type ErrParameters,
+  type ExerciceExt,
+  type Question,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { saveData } from "@/controller/editor";
 import type { RandomParameter } from "@/controller/exercice_gen";
 import { computed } from "vue";
 import { $computed, $ref } from "vue/macros";
+import BlockBar from "../editor/BlockBar.vue";
+import DescriptionPannel from "../editor/DescriptionPannel.vue";
 import IntrinsicsParametersExercice from "../editor/IntrinsicsParametersExercice.vue";
 import SnackErrorParameters from "../editor/parameters/SnackErrorParameters.vue";
+import QuestionContent from "../editor/QuestionContent.vue";
 import RandomParametersExercice from "../editor/RandomParametersExercice.vue";
+import SnackErrorEnonce from "../editor/SnackErrorEnonce.vue";
 
 interface Props {
   session_id: string;
@@ -268,11 +225,16 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "update", ex: ExerciceExt): void;
 }>();
 
 let questionIndex = $ref(0);
 
 let question = $computed(() => (props.exercice.Questions || [])[questionIndex]);
+
+const isReadonly = computed(
+  () => question.Origin.Visibility != Visibility.Personnal
+);
 
 function updateRandomParameters(
   sharedP: RandomParameter[],
@@ -298,12 +260,21 @@ function updateIntrinsics(
   }
 }
 
+let showEditDescription = $ref(false);
+
+let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
+function addBlock(kind: BlockKind) {
+  if (questionContent == null) {
+    return;
+  }
+  questionContent.addBlock(kind);
+}
+
 let isCheckingParameters = $ref(false);
 let errorParameters = $ref<ErrParameters | null>(null);
 const showErrorParameters = computed(() => errorParameters != null);
 
 let errorEnnonce = $ref<errEnonce | null>(null);
-const showErrorEnnonce = computed(() => errorEnnonce != null);
 
 async function checkParameters() {
   isCheckingParameters = true;
@@ -325,6 +296,49 @@ async function checkParameters() {
     questionIndex = out.QuestionIndex;
   }
   //   availableParameters.value = out.Variables || [];
+}
+
+async function save() {
+  const res = await controller.EditorSaveExerciceAndPreview({
+    SessionID: props.session_id || "",
+    IdExercice: props.exercice.Exercice.Id,
+    Parameters: props.exercice.Exercice.Parameters,
+    Questions: (props.exercice.Questions || []).map((qu) => qu.Question),
+  });
+  if (res == undefined) {
+    return;
+  }
+
+  if (res.IsValid) {
+    errorEnnonce = null;
+    errorParameters = null;
+
+    emit("update", props.exercice);
+  } else {
+    if (res.Error.ParametersInvalid) {
+      errorEnnonce = null;
+      errorParameters = res.Error.ErrParameters;
+    } else {
+      errorEnnonce = res.Error.ErrEnonce;
+      errorParameters = null;
+    }
+    // go to the faulty question
+    questionIndex = res.QuestionIndex;
+  }
+}
+
+function download() {
+  saveData<Question>(
+    question.Question,
+    `question${questionIndex + 1}.isyro.json`
+  );
+}
+
+async function onImportQuestion(imported: Question) {
+  // keep the current ID
+  imported.id = question.Question.id;
+  question.Question = imported;
+  emit("update", props.exercice);
 }
 </script>
 
