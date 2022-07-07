@@ -53,6 +53,13 @@ class _ExerciceWState extends State<ExerciceW> {
     super.initState();
   }
 
+  @override
+  void didUpdateWidget(covariant ExerciceW oldWidget) {
+    questions = widget.data.exercice.questions;
+    progression = widget.data.progression;
+    super.didUpdateWidget(oldWidget);
+  }
+
   void onDone() async {
     setState(() {
       questionIndex = null;
