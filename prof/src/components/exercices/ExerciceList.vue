@@ -31,7 +31,7 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="80%">
+  <v-card class="mt-5 mx-auto">
     <v-row>
       <v-col md="9" sm="6">
         <v-card-title>Liste des exercices</v-card-title>
@@ -46,7 +46,7 @@
     </v-row>
 
     <v-card-text>
-      <v-list style="height: 62vh">
+      <v-list style="height: 68vh">
         <exercice-row
           v-for="(exercice, index) in exercices"
           :exercice="exercice"
@@ -108,21 +108,17 @@ async function deleteExercice(deleteQuestions: boolean) {
   await fetchExercices();
 }
 
-async function updatePublic(questionID: number, isPublic: boolean) {
-  // TODO:
-  //   const res = await controller.QuestionUpdateVisiblity({
-  //     QuestionID: questionID,
-  //     Public: isPublic,
-  //   });
-  //   if (res === undefined) {
-  //     return;
-  //   }
-  //   questions.forEach((group) => {
-  //     const index = group.Questions?.findIndex((qu) => qu.Id == questionID);
-  //     if (index !== undefined) {
-  //       group.Questions![index].Origin.IsPublic = isPublic;
-  //     }
-  //   });
+async function updatePublic(exerciceID: number, isPublic: boolean) {
+  const res = await controller.ExerciceUpdateVisiblity({
+    ExerciceID: exerciceID,
+    Public: isPublic,
+  });
+  if (res === undefined) {
+    return;
+  }
+
+  const index = exercices.findIndex((ex) => ex.Exercice.Id == exerciceID);
+  exercices[index].Origin.IsPublic = isPublic;
 }
 </script>
 

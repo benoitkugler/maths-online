@@ -163,7 +163,6 @@ export interface QuestionHeader {
 	Difficulty: DifficultyTag,
 	IsInGroup: boolean,
 	Origin: Origin,
-	NeedExercice: boolean,
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionGroup
 export interface QuestionGroup {
@@ -174,7 +173,8 @@ export interface QuestionGroup {
 // github.com/benoitkugler/maths-online/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
 	Questions: (QuestionGroup[] | null),
-	Size: number,
+	NbGroups: number,
+	NbQuestions: number,
 }
 
 	export enum BlockKind {
@@ -642,6 +642,7 @@ export interface ExerciceUpdateIn {
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
+	SessionID: string,
 	IdExercice: number,
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateQuestionsIn

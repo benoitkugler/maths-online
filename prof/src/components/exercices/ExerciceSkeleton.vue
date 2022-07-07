@@ -198,7 +198,7 @@
       </v-col>
     </v-row>
 
-    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 58vh">
+    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 66vh">
       <drop-zone
         v-if="showDropZone"
         @drop="(origin) => swapQuestions(origin, 0)"
@@ -345,6 +345,12 @@ const flowItems = Object.entries(FlowLabels).map((k) => ({
 let showEditDescription = $ref(false);
 
 function getQuestion(questionID: number) {
+  console.log(
+    questionID,
+    props.exercice.QuestionsSource,
+    props.exercice.QuestionsSource![questionID]
+  );
+
   return props.exercice.QuestionsSource![questionID];
 }
 
@@ -366,6 +372,7 @@ let showImportQuestion = $ref(false);
 async function createQuestion() {
   const res = await controller.ExerciceCreateQuestion({
     IdExercice: props.exercice.Exercice.Id,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
@@ -374,7 +381,7 @@ async function createQuestion() {
 }
 
 async function addQuestion(idQuestion: number) {
-  const current = props.exercice.Questions || [];
+  const current = copy(props.exercice.Questions || []);
   current.push({
     bareme: 1,
     id_question: idQuestion,
@@ -392,7 +399,7 @@ async function addQuestion(idQuestion: number) {
 }
 
 async function removeQuestion(index: number) {
-  const l = props.exercice.Questions || [];
+  const l = copy(props.exercice.Questions || []);
   l.splice(index, 1);
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
@@ -406,7 +413,7 @@ async function removeQuestion(index: number) {
 }
 
 async function duplicateQuestion(index: number) {
-  const l = props.exercice.Questions || [];
+  const l = copy(props.exercice.Questions || []);
   const added = l.slice(0, index).concat(l[index]).concat(l.slice(index));
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
@@ -425,7 +432,7 @@ async function saveEditedQuestion() {
   if (questionIndexToEdit == null || questionToEdit == null) {
     return;
   }
-  const current = props.exercice.Questions || [];
+  const current = copy(props.exercice.Questions || []);
   current[questionIndexToEdit] = questionToEdit;
 
   questionToEdit = null;

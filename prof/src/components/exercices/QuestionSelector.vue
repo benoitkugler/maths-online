@@ -55,7 +55,8 @@
         </v-list-item>
       </v-list>
       <div class="my-2">
-        {{ questions.length }} / {{ size }} questions affichées.
+        {{ questions.length }} / {{ serverNbQuestions }} variantes de questions
+        affichées
       </div>
     </v-card-text>
     <v-card-actions>
@@ -90,9 +91,8 @@ const emit = defineEmits<{
 }>();
 
 let questions = $ref<QuestionHeader[]>([]);
-let size = $ref(0);
-// let querySearch = $ref("");
-// let queryTags = $ref<string[]>([]);
+let serverNbQuestions = $ref(0);
+
 let timerId = 0;
 
 onMounted(() => {
@@ -125,14 +125,9 @@ async function fetchQuestions() {
     return;
   }
   const qus: QuestionHeader[] = [];
-  // we do not display question only used in exercices
-  (result.Questions || []).forEach((gr) =>
-    qus.push(...(gr.Questions || []).filter((qu) => !qu.NeedExercice))
-  );
-  // paginate
-  const pagination = 30;
-  questions = qus.slice(0, pagination);
-  size = qus.length;
+  (result.Questions || []).forEach((gr) => qus.push(...(gr.Questions || [])));
+  questions = qus;
+  serverNbQuestions = result.NbQuestions;
 }
 </script>
 

@@ -255,6 +255,7 @@ func (ct *Controller) deleteExercice(idExercice int64, deleteQuestions bool, use
 }
 
 type ExerciceCreateQuestionIn struct {
+	SessionID  string
 	IdExercice int64
 }
 
@@ -273,6 +274,16 @@ func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
+	data, err := ct.loadExercice(args.IdExercice)
+	if err != nil {
+		return err
+	}
+
+	err = ct.updateExercicePreview(data, args.SessionID)
+	if err != nil {
+		return err
+	}
+
 	return c.JSON(200, out)
 }
 
@@ -287,7 +298,7 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int
 		return ExerciceExt{}, utils.SQLError(err)
 	}
 
-	// append if to the current questions
+	// append it to the current questions
 	existing, err := SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
 	if err != nil {
 		return ExerciceExt{}, utils.SQLError(err)

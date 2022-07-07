@@ -79,8 +79,9 @@ func (ct *Controller) startSession() StartSessionOut {
 }
 
 type ListQuestionsOut struct {
-	Questions []QuestionGroup // limited by `pagination`
-	Size      int             // total number of groups
+	Questions   []QuestionGroup // limited by `pagination`
+	NbGroups    int             // total number of groups (passing the given filter)
+	NbQuestions int             // total number of questions (passing the given filter)
 }
 
 // QuestionGroup groups the question forming an implicit
@@ -94,13 +95,12 @@ type QuestionGroup struct {
 
 // QuestionHeader is a sumary of the meta data of a question
 type QuestionHeader struct {
-	Title        string
-	Tags         []string
-	Id           int64
-	Difficulty   DifficultyTag // deduced from the tags
-	IsInGroup    bool          // true if the question is in an implicit group, ignoring the current filter
-	Origin       teacher.Origin
-	NeedExercice bool
+	Title      string
+	Tags       []string
+	Id         int64
+	Difficulty DifficultyTag // deduced from the tags
+	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
+	Origin     teacher.Origin
 }
 
 func normalizeTitle(title string) string {
@@ -120,7 +120,7 @@ func (qu Question) origin(userID, adminID int64) (teacher.Origin, bool) {
 }
 
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
-	const pagination = 100
+	const pagination = 30 // number of groups
 
 	// to find implicit groups, we need all the questions
 	questions, err := SelectAllQuestions(ct.db)
@@ -128,6 +128,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 		return out, utils.SQLError(err)
 	}
 	questions.RestrictVisible(userID)
+	questions.RestrictNeedExercice()
 
 	// the group are not modified by the title query though
 
@@ -165,6 +166,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 			Title: title,
 			Size:  len(ids),
 		}
+
 		// select the questions
 		for _, id := range ids {
 			crible := tagsMap[id].Crible()
@@ -176,13 +178,12 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 			qu := questions[id]
 			origin, _ := qu.origin(userID, ct.admin.Id)
 			question := QuestionHeader{
-				Id:           id,
-				Title:        title,
-				Difficulty:   crible.Difficulty(),
-				IsInGroup:    len(ids) > 1,
-				Tags:         tagsMap[id].List(),
-				Origin:       origin,
-				NeedExercice: qu.NeedExercice,
+				Id:         id,
+				Title:      title,
+				Difficulty: crible.Difficulty(),
+				IsInGroup:  len(ids) > 1,
+				Tags:       tagsMap[id].List(),
+				Origin:     origin,
 			}
 			group.Questions = append(group.Questions, question)
 		}
@@ -195,12 +196,14 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 		if len(group.Questions) != 0 {
 			out.Questions = append(out.Questions, group)
 		}
+
+		out.NbQuestions += len(group.Questions)
 	}
 
 	// sort before pagination
 	sort.Slice(out.Questions, func(i, j int) bool { return out.Questions[i].Title < out.Questions[j].Title })
 
-	out.Size = len(out.Questions)
+	out.NbGroups = len(out.Questions)
 	if len(out.Questions) > pagination {
 		out.Questions = out.Questions[:pagination]
 	}

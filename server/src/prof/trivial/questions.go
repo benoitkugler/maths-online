@@ -83,13 +83,10 @@ func (qc QuestionCriterion) selectQuestions(db DB, userID int64) (editor.Questio
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
+
 	questionsDict.RestrictVisible(userID)
 
-	for id, question := range questionsDict {
-		if question.NeedExercice {
-			delete(questionsDict, id)
-		}
-	}
+	questionsDict.RestrictNeedExercice()
 
 	return questionsDict, nil
 }
