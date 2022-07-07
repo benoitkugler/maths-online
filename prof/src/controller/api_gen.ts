@@ -1542,14 +1542,14 @@ const rep:AxiosResponse<any> = await Axios.post(fullUrl, formData, { headers: th
 	protected abstract onSuccessExerciceCreate(data: ExerciceHeader): void 
 	
 
-	protected async rawExerciceDelete(params: {"id": number, "delete_questions": boolean}) {
+	protected async rawExerciceDelete(params: {"id": number}) {
 		const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
-		const rep:AxiosResponse<any> = await Axios.delete(fullUrl, { params: { "id": String(params["id"]), "delete_questions": params["delete_questions"] ? 'ok' : '' }, headers : this.getHeaders() });
+		const rep:AxiosResponse<any> = await Axios.delete(fullUrl, { params: { "id": String(params["id"]) }, headers : this.getHeaders() });
 		return rep.data;
 	}
 	
 	/** ExerciceDelete wraps rawExerciceDelete and handles the error */
-	async ExerciceDelete(params: {"id": number, "delete_questions": boolean}) {
+	async ExerciceDelete(params: {"id": number}) {
 		this.startRequest();
 		try {
 			const out = await this.rawExerciceDelete(params);

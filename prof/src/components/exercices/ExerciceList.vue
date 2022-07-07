@@ -12,19 +12,7 @@
       <v-card-actions>
         <v-btn @click="exerciceToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn
-          color="red"
-          @click="deleteExercice(true)"
-          variant="contained"
-          v-if="exerciceToDelete?.Questions?.length"
-        >
-          Supprimer aussi les questions
-        </v-btn>
-        <v-btn
-          color="orange"
-          @click="deleteExercice(false)"
-          variant="contained"
-        >
+        <v-btn color="orange" @click="deleteExercice" variant="contained">
           Supprimer
         </v-btn>
       </v-card-actions>
@@ -96,13 +84,12 @@ async function createExercice() {
 }
 
 let exerciceToDelete = $ref<ExerciceHeader | null>(null);
-async function deleteExercice(deleteQuestions: boolean) {
+async function deleteExercice() {
   if (exerciceToDelete == null) {
     return;
   }
   await controller.ExerciceDelete({
     id: exerciceToDelete.Exercice.Id,
-    delete_questions: deleteQuestions,
   });
   exerciceToDelete = null;
   await fetchExercices();

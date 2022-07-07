@@ -175,9 +175,7 @@ func (ct *Controller) ExerciceDelete(c echo.Context) error {
 		return err
 	}
 
-	deleteQuestions := utils.QueryParamBool(c, "delete_questions")
-
-	err = ct.deleteExercice(idExercice, deleteQuestions, user.Id)
+	err = ct.deleteExercice(idExercice, user.Id)
 	if err != nil {
 		return err
 	}
@@ -198,7 +196,7 @@ func (ct *Controller) checkExerciceOwner(idExercice, userID int64) error {
 	return nil
 }
 
-func (ct *Controller) deleteExercice(idExercice int64, deleteQuestions bool, userID int64) error {
+func (ct *Controller) deleteExercice(idExercice int64, userID int64) error {
 	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
 		return err
 	}
@@ -212,10 +210,10 @@ func (ct *Controller) deleteExercice(idExercice int64, deleteQuestions bool, use
 		return utils.SQLError(err)
 	}
 
-	// we always delete not standalone questions linked to the exercice
+	// delete not standalone questions linked to the exercice
 	var toDelete IDs
 	for _, question := range qus {
-		if question.NeedExercice || deleteQuestions {
+		if question.NeedExercice {
 			toDelete = append(toDelete, question.Id)
 		}
 	}

@@ -74,7 +74,7 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(exe)
 	}
 
-	err = ct.deleteExercice(ex.Exercice.Id, true, 1)
+	err = ct.deleteExercice(ex.Exercice.Id, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
