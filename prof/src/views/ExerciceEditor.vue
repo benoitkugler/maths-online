@@ -11,7 +11,7 @@
         <keep-alive>
           <exercice-skeleton
             v-if="currentExercice != null && editMode == 'skeleton'"
-            @back="currentExercice = null"
+            @back="backToList"
             @next="editMode = 'questions'"
             :exercice="currentExercice"
             @update="(v) => (currentExercice = v)"
@@ -72,6 +72,11 @@ async function showExercice(ex: ExerciceHeader) {
     return;
   }
   currentExercice = res;
+}
+
+async function backToList() {
+  currentExercice = null;
+  controller.EditorPausePreview({ sessionID: sessionID });
 }
 </script>
 
