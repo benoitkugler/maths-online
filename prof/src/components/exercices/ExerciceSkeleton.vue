@@ -198,7 +198,7 @@
       </v-col>
     </v-row>
 
-    <v-list @dragstart="onDragStart" @dragend="onDragEnd">
+    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 58vh">
       <drop-zone
         v-if="showDropZone"
         @drop="(origin) => swapQuestions(origin, 0)"
@@ -241,7 +241,10 @@
                 ></v-icon>
               </v-btn>
             </v-col>
-            <v-col> {{ question.Question.page.title }}</v-col>
+            <v-col align-self="center">
+              <small>({{ question.id_question }})</small>
+              {{ getQuestion(question.id_question).Question.page.title }}</v-col
+            >
             <v-col cols="auto">
               <v-menu
                 offset-y
@@ -259,11 +262,11 @@
                     v-bind="props"
                     color="primary"
                     @click="
-                      questionToEdit = copy(question.Link);
+                      questionToEdit = copy(question);
                       questionIndexToEdit = index;
                     "
                     :disabled="isReadonly"
-                    >/ {{ question.Link.bareme }}
+                    >/ {{ question.bareme }}
                   </v-chip>
                 </template>
                 <v-card subtitle="Modifier le barème">
@@ -318,6 +321,7 @@ import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {
   exercice: ExerciceExt;
+  session_id: string;
   allTags: string[];
 }
 
@@ -340,10 +344,17 @@ const flowItems = Object.entries(FlowLabels).map((k) => ({
 
 let showEditDescription = $ref(false);
 
+function getQuestion(questionID: number) {
+  return props.exercice.QuestionsSource![questionID];
+}
+
 let query = $ref<Query>({ search: "", tags: [] });
 
 async function save() {
-  const res = await controller.ExerciceUpdate(props.exercice.Exercice);
+  const res = await controller.ExerciceUpdate({
+    Exercice: props.exercice.Exercice,
+    SessionID: props.session_id,
+  });
   if (res == undefined) {
     return;
   }
@@ -353,60 +364,59 @@ async function save() {
 let showImportQuestion = $ref(false);
 
 async function createQuestion() {
-  const l = await controller.ExerciceCreateQuestion({
+  const res = await controller.ExerciceCreateQuestion({
     IdExercice: props.exercice.Exercice.Id,
   });
-  if (l == undefined) {
+  if (res == undefined) {
     return;
   }
-  props.exercice.Questions = l;
-  emit("update", props.exercice);
+  emit("update", res);
 }
 
 async function addQuestion(idQuestion: number) {
-  const current = (props.exercice.Questions || []).map((v) => v.Link);
+  const current = props.exercice.Questions || [];
   current.push({
     bareme: 1,
     id_question: idQuestion,
     id_exercice: -1,
   });
-  const l = await controller.ExerciceUpdateQuestions({
+  const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: current,
+    SessionID: props.session_id,
   });
-  if (l == undefined) {
+  if (res == undefined) {
     return;
   }
-  props.exercice.Questions = l;
-  emit("update", props.exercice);
+  emit("update", res);
 }
 
 async function removeQuestion(index: number) {
-  const l = (props.exercice.Questions || []).map((v) => v.Link);
+  const l = props.exercice.Questions || [];
   l.splice(index, 1);
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
-  emit("update", props.exercice);
+  emit("update", res);
 }
 
 async function duplicateQuestion(index: number) {
-  const l = (props.exercice.Questions || []).map((v) => v.Link);
+  const l = props.exercice.Questions || [];
   const added = l.slice(0, index).concat(l[index]).concat(l.slice(index));
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: added,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
-  emit("update", props.exercice);
+  emit("update", res);
 }
 
 let questionToEdit = $ref<ExerciceQuestion | null>(null);
@@ -415,7 +425,7 @@ async function saveEditedQuestion() {
   if (questionIndexToEdit == null || questionToEdit == null) {
     return;
   }
-  const current = (props.exercice.Questions || []).map((v) => v.Link);
+  const current = props.exercice.Questions || [];
   current[questionIndexToEdit] = questionToEdit;
 
   questionToEdit = null;
@@ -423,12 +433,12 @@ async function saveEditedQuestion() {
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: current,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
-  emit("update", props.exercice);
+  emit("update", res);
 }
 
 let showDropZone = $ref(false);
@@ -449,18 +459,16 @@ function onItemDragStart(paylod: DragEvent, index: number) {
 the block at index `target` (which is between 0 and nbBlocks)
  */
 async function swapQuestions(origin: number, target: number) {
-  const l = swapItems(origin, target, props.exercice.Questions!).map(
-    (v) => v.Link
-  );
+  const l = swapItems(origin, target, props.exercice.Questions!);
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
-  emit("update", props.exercice);
+  emit("update", res);
 }
 
 let showFlowDocumentation = $ref(false);

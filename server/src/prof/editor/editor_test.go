@@ -29,7 +29,7 @@ func TestExerciceCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(l) != 1 {
+	if len(l.Questions) != 1 {
 		t.Fatal(l)
 	}
 
@@ -41,7 +41,7 @@ func TestExerciceCRUD(t *testing.T) {
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
 		Questions: ExerciceQuestions{
-			l[0].Link,
+			l.Questions[0],
 			ExerciceQuestion{IdQuestion: qu.Id},
 			ExerciceQuestion{IdQuestion: qu.Id},
 		},
@@ -49,16 +49,16 @@ func TestExerciceCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(l) != 3 {
+	if len(l.Questions) != 3 {
 		t.Fatal(l)
 	}
 
-	updated := l[1].Link
+	updated := l.Questions[1]
 	updated.Bareme = 5
 	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
 		Questions: ExerciceQuestions{
-			l[0].Link,
+			l.Questions[0],
 			updated,
 		},
 	}, 1)

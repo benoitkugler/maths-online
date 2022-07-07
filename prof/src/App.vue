@@ -26,12 +26,12 @@
       <v-divider></v-divider>
 
       <v-list-item>
-        <v-btn link :to="{ name: 'editor' }" color="teal-lighten-4"
+        <v-btn link :to="{ name: 'editor-question' }" color="teal-lighten-4"
           >Editeur de question</v-btn
         >
       </v-list-item>
       <v-list-item>
-        <v-btn link :to="{ name: 'editor-ex' }" color="teal-lighten-4"
+        <v-btn link :to="{ name: 'editor-exercice' }" color="teal-lighten-4"
           >Editeur d'exercice</v-btn
         >
       </v-list-item>

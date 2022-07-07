@@ -174,33 +174,18 @@ func (ex exerciceContent) questions() []Question {
 	return out
 }
 
-func (ct *Controller) loadExercice(id int64) (exerciceContent, error) {
-	ex, err := SelectExercice(ct.db, id)
-	if err != nil {
-		return exerciceContent{}, utils.SQLError(err)
+func (ex exerciceContent) questionsSource(userID, adminID int64) map[int64]QuestionOrigin {
+	out := make(map[int64]QuestionOrigin, len(ex.dict))
+	for i, qu := range ex.dict {
+		origin, _ := qu.origin(userID, adminID)
+		out[i] = QuestionOrigin{Question: qu, Origin: origin}
 	}
-	links, err := SelectExerciceQuestionsByIdExercices(ct.db, id)
-	if err != nil {
-		return exerciceContent{}, utils.SQLError(err)
-	}
-	links.ensureIndex()
-
-	// load the question contents
-	dict, err := SelectQuestions(ct.db, links.IdQuestions()...)
-	if err != nil {
-		return exerciceContent{}, utils.SQLError(err)
-	}
-
-	return exerciceContent{exercice: ex, links: links, dict: dict}, nil
+	return out
 }
 
-// instantiateExercice loads the given exercice, the associated questions,
-// and instantiates them (using a fixed instance for the shared parameters)
-func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error) {
-	data, err := ct.loadExercice(id)
-	if err != nil {
-		return InstantiatedExercice{}, err
-	}
+// instantiates the questions, using a fixed shared instance of the exercice parameters
+// for each question
+func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
 	ex, links, qus := data.exercice, data.links, data.questions()
 
 	out := InstantiatedExercice{
@@ -242,6 +227,26 @@ func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error
 	}
 
 	return out, nil
+}
+
+// loadExercice loads the given exercice and the associated questions
+func (ct *Controller) loadExercice(exerciceID int64) (exerciceContent, error) {
+	ex, err := SelectExercice(ct.db, exerciceID)
+	if err != nil {
+		return exerciceContent{}, utils.SQLError(err)
+	}
+	links, err := SelectExerciceQuestionsByIdExercices(ct.db, exerciceID)
+	if err != nil {
+		return exerciceContent{}, utils.SQLError(err)
+	}
+	links.ensureIndex()
+
+	// load the question contents
+	dict, err := SelectQuestions(ct.db, links.IdQuestions()...)
+	if err != nil {
+		return exerciceContent{}, utils.SQLError(err)
+	}
+	return exerciceContent{exercice: ex, links: links, dict: dict}, nil
 }
 
 type EvaluateExerciceIn struct {
@@ -313,7 +318,7 @@ func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExercic
 
 	updatedProgression.inferNextQuestion() // update in case of success
 
-	newVersion, err := ct.instantiateExercice(args.IdExercice)
+	newVersion, err := data.instantiate()
 	if err != nil {
 		return EvaluateExerciceOut{}, err
 	}

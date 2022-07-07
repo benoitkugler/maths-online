@@ -156,7 +156,7 @@
 
     <v-row no-gutters>
       <v-col md="5">
-        <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
+        <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
           <RandomParametersExercice
             :shared-parameters="props.exercice.Exercice.Parameters.Variables"
             :question-parameters="question.Question.page.parameters.Variables"
@@ -230,7 +230,15 @@ const emit = defineEmits<{
 
 let questionIndex = $ref(0);
 
-let question = $computed(() => (props.exercice.Questions || [])[questionIndex]);
+let question = $computed(() => {
+  const questionID = (props.exercice.Questions || [])[questionIndex]
+    .id_question;
+  return getQuestion(questionID);
+});
+
+function getQuestion(questionID: number) {
+  return props.exercice.QuestionsSource![questionID];
+}
 
 const isReadonly = computed(
   () => question.Origin.Visibility != Visibility.Personnal
@@ -282,7 +290,9 @@ async function checkParameters() {
     IdExercice: props.exercice.Exercice.Id,
     SharedParameters: props.exercice.Exercice.Parameters,
     QuestionParameters:
-      props.exercice.Questions?.map((q) => q.Question.page.parameters) || [],
+      props.exercice.Questions?.map(
+        (q) => getQuestion(q.id_question).Question.page.parameters
+      ) || [],
   });
   isCheckingParameters = false;
   if (out === undefined) return;
@@ -303,7 +313,12 @@ async function save() {
     SessionID: props.session_id || "",
     IdExercice: props.exercice.Exercice.Id,
     Parameters: props.exercice.Exercice.Parameters,
-    Questions: (props.exercice.Questions || []).map((qu) => qu.Question),
+    Questions: Object.fromEntries(
+      Object.entries(props.exercice.QuestionsSource || {}).map((k) => [
+        k[0],
+        k[1].Question,
+      ])
+    ),
   });
   if (res == undefined) {
     return;

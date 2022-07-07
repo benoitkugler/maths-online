@@ -1,36 +1,39 @@
 <template>
-  <v-row class="ma-2">
-    <v-col cols="8">
-      <keep-alive>
-        <exercice-list
-          v-if="currentExercice == null"
-          @clicked="showExercice"
-        ></exercice-list>
-      </keep-alive>
-      <keep-alive>
-        <exercice-skeleton
-          v-if="currentExercice != null && editMode == 'skeleton'"
-          @back="currentExercice = null"
-          @next="editMode = 'questions'"
-          :exercice="currentExercice"
-          @update="(v) => (currentExercice = v)"
-          :all-tags="allTags"
-        ></exercice-skeleton>
-        <exercice-editor-pannel
-          v-else-if="currentExercice != null && editMode == 'questions'"
-          :session_id="sessionID"
-          :exercice="currentExercice"
-          @update="(v) => (currentExercice = v)"
-          @back="editMode = 'skeleton'"
-        ></exercice-editor-pannel>
-      </keep-alive>
-    </v-col>
-    <v-col cols="auto">
-      <keep-alive>
-        <client-preview :session_id="sessionID"></client-preview>
-      </keep-alive>
-    </v-col>
-  </v-row>
+  <div class="ma-2">
+    <v-row>
+      <v-col cols="8">
+        <keep-alive>
+          <exercice-list
+            v-if="currentExercice == null"
+            @clicked="showExercice"
+          ></exercice-list>
+        </keep-alive>
+        <keep-alive>
+          <exercice-skeleton
+            v-if="currentExercice != null && editMode == 'skeleton'"
+            @back="currentExercice = null"
+            @next="editMode = 'questions'"
+            :exercice="currentExercice"
+            @update="(v) => (currentExercice = v)"
+            :all-tags="allTags"
+            :session_id="sessionID"
+          ></exercice-skeleton>
+          <exercice-editor-pannel
+            v-else-if="currentExercice != null && editMode == 'questions'"
+            :session_id="sessionID"
+            :exercice="currentExercice"
+            @update="(v) => (currentExercice = v)"
+            @back="editMode = 'skeleton'"
+          ></exercice-editor-pannel>
+        </keep-alive>
+      </v-col>
+      <v-col cols="auto">
+        <keep-alive>
+          <client-preview :session_id="sessionID"></client-preview>
+        </keep-alive>
+      </v-col>
+    </v-row>
+  </div>
 </template>
 
 <script setup lang="ts">

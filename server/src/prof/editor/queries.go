@@ -75,7 +75,7 @@ func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]Questi
 
 // updateExerciceQuestionList set the questions for the given exercice,
 // overiding `IdExercice` and `index` fields of the list items.
-func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestions, userID, adminID int64) ([]ExerciceQuestionExt, error) {
+func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestions) error {
 	// enforce fields
 	for i := range l {
 		l[i].Index = i
@@ -83,32 +83,26 @@ func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestion
 	}
 	tx, err := db.Begin()
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return utils.SQLError(err)
 	}
 	_, err = DeleteExerciceQuestionsByIdExercices(db, idExercice)
 	if err != nil {
 		_ = tx.Rollback()
-		return nil, utils.SQLError(err)
+		return utils.SQLError(err)
 	}
 
 	err = InsertManyExerciceQuestions(tx, l...)
 	if err != nil {
 		_ = tx.Rollback()
-		return nil, utils.SQLError(err)
-	}
-
-	questions, err := SelectQuestions(tx, l.IdQuestions()...)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, utils.SQLError(err)
+		return utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return utils.SQLError(err)
 	}
 
-	return fillQuestions(l, questions, userID, adminID), nil
+	return nil
 }
 
 // IsVisibleBy returns `true` if the question is public or

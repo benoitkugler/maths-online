@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var LoopackLogger = log.New(os.Stdout, "editor-loopback", log.LstdFlags)
+var LoopackLogger = log.New(os.Stdout, "editor-loopback:", log.LstdFlags)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -52,7 +52,11 @@ func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 
 func (ct *loopbackController) setExercice(exercice InstantiatedExercice) {
 	ct.currentExercice = exercice
-	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: ProgressionExt{NextQuestion: ct.currentQuestionIndex}}
+	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: ProgressionExt{
+		Progression:  Progression{}, // ignored by the client
+		NextQuestion: ct.currentQuestionIndex,
+		Questions:    make([]QuestionHistory, len(exercice.Questions)),
+	}}
 }
 
 func (ct *loopbackController) pause() {

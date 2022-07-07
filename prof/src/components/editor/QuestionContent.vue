@@ -16,7 +16,7 @@
   </div>
   <div
     v-else
-    style="height: 70vh; overflow-y: auto"
+    style="height: 68vh; overflow-y: auto"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
   >

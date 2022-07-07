@@ -154,7 +154,7 @@
 
     <v-row no-gutters>
       <v-col md="4">
-        <div style="height: 70vh; overflow-y: auto" class="py-2 px-2">
+        <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
           <RandomParametersQuestion
             :parameters="question.page.parameters.Variables"
             :is-loading="isCheckingParameters"

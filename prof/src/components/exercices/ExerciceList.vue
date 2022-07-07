@@ -46,7 +46,7 @@
     </v-row>
 
     <v-card-text>
-      <v-list>
+      <v-list style="height: 62vh">
         <exercice-row
           v-for="(exercice, index) in exercices"
           :exercice="exercice"

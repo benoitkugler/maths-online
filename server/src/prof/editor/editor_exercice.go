@@ -18,29 +18,16 @@ func (l ProgressionQuestions) ensureIndex() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 
-type ExerciceExt struct {
-	Exercice  Exercice
-	Origin    teacher.Origin
-	Questions []ExerciceQuestionExt
-}
-
-type ExerciceQuestionExt struct {
-	Link     ExerciceQuestion
+type QuestionOrigin struct {
 	Question Question
 	Origin   teacher.Origin
 }
 
-func fillQuestions(l ExerciceQuestions, dict Questions, userID, adminID int64) []ExerciceQuestionExt {
-	l.ensureIndex()
-	out := make([]ExerciceQuestionExt, len(l))
-	for i, qu := range l {
-		question := dict[qu.IdQuestion]
-		out[i].Link = qu
-		out[i].Question = question
-		origin, _ := question.origin(userID, adminID)
-		out[i].Origin = origin
-	}
-	return out
+type ExerciceExt struct {
+	Exercice        Exercice
+	Origin          teacher.Origin
+	Questions       ExerciceQuestions
+	QuestionsSource map[int64]QuestionOrigin
 }
 
 type ExerciceHeader struct {
@@ -121,24 +108,34 @@ func (ct *Controller) ExerciceGetContent(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(idExercice)
+	out, err := ct.getExercice(idExercice, user.Id)
 	if err != nil {
 		return err
 	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getExercice(exerciceID, userID int64) (ExerciceExt, error) {
+	data, err := ct.loadExercice(exerciceID)
+	if err != nil {
+		return ExerciceExt{}, err
+	}
 	ex := data.exercice
 
-	origin, ok := ex.origin(user.Id, ct.admin.Id)
+	origin, ok := ex.origin(userID, ct.admin.Id)
 	if !ok {
-		return accessForbidden
+		return ExerciceExt{}, accessForbidden
 	}
 
 	out := ExerciceExt{
-		Exercice:  ex,
-		Origin:    origin,
-		Questions: fillQuestions(data.links, data.dict, user.Id, ct.admin.Id),
+		Exercice:        ex,
+		Origin:          origin,
+		Questions:       data.links,
+		QuestionsSource: data.questionsSource(userID, ct.admin.Id),
 	}
 
-	return c.JSON(200, out)
+	return out, nil
 }
 
 func (ct *Controller) ExerciceCreate(c echo.Context) error {
@@ -279,37 +276,40 @@ func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int64) ([]ExerciceQuestionExt, error) {
+func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int64) (ExerciceExt, error) {
 	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
-		return nil, err
+		return ExerciceExt{}, err
 	}
 
 	// creates a question
 	question, err := Question{IdTeacher: userID, Public: false, NeedExercice: true}.Insert(ct.db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 
 	// append if to the current questions
 	existing, err := SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 	existing = append(existing, ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: 1})
 
-	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, existing, userID, ct.admin.Id)
+	err = updateExerciceQuestionList(ct.db, args.IdExercice, existing)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 
-	return out, nil
+	return ct.getExercice(args.IdExercice, userID)
 }
 
 type ExerciceUpdateQuestionsIn struct {
 	Questions  ExerciceQuestions
 	IdExercice int64
+	SessionID  string
 }
 
+// ExerciceUpdateQuestions updates the question links and
+// the preview
 func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
@@ -323,22 +323,32 @@ func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
+	data, err := ct.loadExercice(args.IdExercice)
+	if err != nil {
+		return err
+	}
+
+	err = ct.updateExercicePreview(data, args.SessionID)
+	if err != nil {
+		return err
+	}
+
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID int64) ([]ExerciceQuestionExt, error) {
+func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID int64) (ExerciceExt, error) {
 	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
-		return nil, err
+		return ExerciceExt{}, err
 	}
 
 	// garbage collect the question only used by this exercice
 	links, err := SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 	questions, err := SelectQuestions(ct.db, args.Questions.IdQuestions()...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 
 	var (
@@ -352,28 +362,45 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID i
 		}
 	}
 
-	out, err := updateExerciceQuestionList(ct.db, args.IdExercice, args.Questions, userID, ct.admin.Id)
+	err = updateExerciceQuestionList(ct.db, args.IdExercice, args.Questions)
 	if err != nil {
-		return nil, err
+		return ExerciceExt{}, err
 	}
 
 	_, err = DeleteQuestionsByIDs(ct.db, toDelete...)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 
-	return out, nil
+	return ct.getExercice(args.IdExercice, userID)
 }
 
+type ExerciceUpdateIn struct {
+	Exercice  Exercice
+	SessionID string
+}
+
+// ExerciceUpdate update the exercice metadata and
+// update the preview
 func (ct *Controller) ExerciceUpdate(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	var args Exercice
+	var args ExerciceUpdateIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.updateExercice(args, user.Id)
+	out, err := ct.updateExercice(args.Exercice, user.Id)
+	if err != nil {
+		return err
+	}
+
+	data, err := ct.loadExercice(args.Exercice.Id)
+	if err != nil {
+		return err
+	}
+
+	err = ct.updateExercicePreview(data, args.SessionID)
 	if err != nil {
 		return err
 	}
@@ -395,7 +422,12 @@ func (ct *Controller) updateExercice(in Exercice, userID int64) (Exercice, error
 	ex.Description = in.Description
 	ex.Title = in.Title
 	ex.Flow = in.Flow
-	return ex.Update(ct.db)
+	ex, err = ex.Update(ct.db)
+	if err != nil {
+		return Exercice{}, utils.SQLError(err)
+	}
+
+	return ex, nil
 }
 
 type CheckExerciceParametersIn struct {
@@ -444,7 +476,7 @@ type SaveExerciceAndPreviewIn struct {
 	SessionID  string
 	IdExercice int64
 	Parameters questions.Parameters // shared parameters
-	Questions  []Question           // questions content
+	Questions  Questions            // questions content
 }
 
 type SaveExerciceAndPreviewOut struct {
@@ -458,24 +490,15 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
-	ex, qus := data.exercice, data.questions()
+	ex := &data.exercice
 
 	if !ex.IsVisibleBy(userID) {
 		return SaveExerciceAndPreviewOut{}, accessForbidden
 	}
 
-	if L1, L2 := len(params.Questions), len(qus); L1 != L2 {
-		return SaveExerciceAndPreviewOut{}, fmt.Errorf("internal error: mismatched question length (%d != %d)", L1, L2)
-	}
-	for index := range qus {
-		if id1, id2 := params.Questions[index].Id, qus[index].Id; id1 != id2 {
-			return SaveExerciceAndPreviewOut{}, fmt.Errorf("internal error: inconsistent question ID (%d != %d)", id1, id2)
-		}
-	}
-
 	// validate all the questions, using shared parameters if needed
-	for index, question := range qus {
-		toCheck := params.Questions[index].Page
+	for index, question := range data.questions() {
+		toCheck := params.Questions[question.Id].Page
 		if question.NeedExercice { // add the shared parameters
 			toCheck.Parameters = toCheck.Parameters.Append(params.Parameters)
 		}
@@ -489,29 +512,34 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	// if the exerice is owned : save it, else only preview
+	// always apply change in memory, so that preview is correctly updated
+	ex.Parameters = params.Parameters // save the shared parameters
+	for _, incomming := range params.Questions {
+		qu := data.dict[incomming.Id]
+		// update the content
+		qu.Page = incomming.Page
+		qu.Description = incomming.Description
+		data.dict[incomming.Id] = qu
+	}
+
+	// if the exercice is owned : save it, else only preview
 	if ex.IdTeacher == userID {
 		tx, err := ct.db.Begin()
 		if err != nil {
 			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
 		}
 
-		// save the shared parameters
-		ex.Parameters = params.Parameters
 		_, err = ex.Update(tx)
 		if err != nil {
 			_ = tx.Rollback()
 			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
 		}
 
-		// if owner, save the linked questions
-		for index, qu := range qus {
+		// update the linked questions owned
+		for _, qu := range data.dict {
 			if qu.IdTeacher != userID {
 				continue
 			}
-			// update the content
-			qu.Page = params.Questions[index].Page
-			qu.Description = params.Questions[index].Description
 			_, err = qu.Update(tx)
 			if err != nil {
 				_ = tx.Rollback()
@@ -524,21 +552,29 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	// eventually, instantiate the exercice and send preview data
-	instance, err := ct.instantiateExercice(ex.Id)
+	err = ct.updateExercicePreview(data, params.SessionID)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
+	}
+
+	return SaveExerciceAndPreviewOut{IsValid: true}, nil
+}
+
+// updateExercicePreview instantiates the exercice and send preview data
+func (ct *Controller) updateExercicePreview(content exerciceContent, sessionID string) error {
+	instance, err := content.instantiate()
+	if err != nil {
+		return err
 	}
 
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
 
-	loopback, ok := ct.sessions[params.SessionID]
+	loopback, ok := ct.sessions[sessionID]
 	if !ok {
-		return SaveExerciceAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+		return fmt.Errorf("invalid session ID %s", sessionID)
 	}
 
 	loopback.setExercice(instance)
-
-	return SaveExerciceAndPreviewOut{IsValid: true}, nil
+	return nil
 }
