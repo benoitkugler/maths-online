@@ -14,7 +14,8 @@ import (
 // Connection abstracts away the network technology used to
 // communicate back to the client
 // `WriteJSON` will be called from the event goroutine started
-// by `Room.Listen`, so that implementations should support one concurrent write
+// by `Room.Listen`, so that implementations should support one concurrent write,
+// as it is the case for gorilla/websocket.Connection
 type Connection interface {
 	WriteJSON(v interface{}) error
 }
@@ -33,9 +34,46 @@ type Options struct {
 	ShowDecrassage  bool
 }
 
+// PlayerID is a unique identifier of each player,
+// usually generated at the first connection.
+// It is used to handle reconnection and external monitoring
+// of the players
+type PlayerID = string
+
+// Player represents one player.
+type Player struct {
+	ID PlayerID
+
+	// Pseudo is the display name of each player,
+	// which may change during a game (upon deconnection/reconnection)
+	Pseudo string
+
+	// serial is the number of the player during the game,
+	// used by the client and to handle rotation on new turns
+	serial game.PlayerSerial
+}
+
+// playerConn stores a player meta and the underlying connection,
+// which is nil for inactive (disconnected) ones
+type playerConn struct {
+	pl   Player
+	conn Connection
+}
+
+// Phase identifies the current phase of the game
+type Phase uint8
+
+const (
+	PWaiting  Phase = iota // not started yet
+	PThrowing              // start of turn, waiting for dice throw
+	PMoving                // dice was thrown, waiting for player move
+	PQuestion              // question is being answered
+	PResult                // players are consulting answer results
+)
+
 // Room is the game host, and the main entry point
 // of a game.
-// All methods are safe for concurrent use; events are
+// All exported methods are safe for concurrent use; events are
 // send on the exposed channel fields.
 type Room struct {
 	// ID is the readonly ID for this game.
@@ -48,10 +86,10 @@ type Room struct {
 	Terminate chan bool
 
 	// Leave is used when the player leave the game
-	// (either on purpose or when its connection brakes)
+	// (either on purpose or when its connection breaks)
 	// For started games, the player is only set inactive,
 	// whereas for waiting (in lobby) games, the player is totaly removed.
-	Leave chan Player
+	Leave chan PlayerID
 
 	// Event is used when a client send an event
 	Event chan game.ClientEvent
@@ -63,6 +101,10 @@ type Room struct {
 	// by the channels and `lock`
 	game game.Game
 
+	// used for instance to trigger the correct event
+	// when a player disconnect
+	phase Phase
+
 	// required number for the game, used to trigger a game start
 	expectedPlayers int
 
@@ -70,18 +112,18 @@ type Room struct {
 	// including the inactive (disconnected) ones, for which
 	// `Connection` is nil.
 	// we always have len(currentPlayers) <= expectedPlayers
-	currentPlayers map[Player]Connection
+	currentPlayers map[string]playerConn
 }
 
 func NewRoom(ID RoomID, options Options) *Room {
 	return &Room{
 		ID:              ID,
 		Terminate:       make(chan bool),
-		Leave:           make(chan Player),
+		Leave:           make(chan PlayerID),
 		Event:           make(chan game.ClientEvent),
 		game:            game.NewGame(options.QuestionTimeout, options.ShowDecrassage, options.Questions),
 		expectedPlayers: options.PlayersNumber,
-		currentPlayers:  make(map[Player]Connection),
+		currentPlayers:  make(map[PlayerID]playerConn),
 	}
 }
 
@@ -94,23 +136,6 @@ func (r *Room) Options() Options {
 		QuestionTimeout: r.game.QuestionDurationLimit,
 		ShowDecrassage:  r.game.ShowDecrassage,
 	}
-}
-
-// Player represents one player.
-type Player struct {
-	// Pseudo is the display name of each player,
-	// which may change during a game (upon deconnection/reconnection)
-	Pseudo string
-
-	// ID is the unique identifier of each player,
-	// usually generated at the first connection.
-	// It is used to handle reconnection and external monitoring
-	// of the players
-	ID string
-
-	// serial is the number of the player during the game,
-	// used by the client and to handle rotation on new turns
-	serial game.PlayerID
 }
 
 // Replay exposes some information to be persisted
@@ -149,13 +174,13 @@ type Summary struct {
 }
 
 // does not include inactive players
-func (r *Room) reversePlayers() map[game.PlayerID]Player {
-	players := make(map[game.PlayerID]Player)
-	for player, conn := range r.currentPlayers {
-		if conn == nil {
+func (r *Room) reversePlayers() map[game.PlayerSerial]Player {
+	players := make(map[game.PlayerSerial]Player)
+	for _, pc := range r.currentPlayers {
+		if pc.conn == nil {
 			continue
 		}
-		players[player.serial] = player
+		players[pc.pl.serial] = pc.pl
 	}
 	return players
 }

@@ -34,7 +34,7 @@ type GameID string
 // AddClient uses the given connection to start a web socket, registred
 // with given `player`.
 // Errors are send to the websocket, and the function blocks until the game ends
-func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, player Player, playerID game.PlayerID) *Client {
+func (ct *GameController) AddClient(w http.ResponseWriter, r *http.Request, player Player, playerID game.PlayerSerial) *Client {
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -73,7 +73,7 @@ type Client struct {
 	isAccepted chan bool // valid the access to the game
 
 	player   Player
-	PlayerID game.PlayerID // used to handle reconnection
+	PlayerID game.PlayerSerial // used to handle reconnection
 }
 
 func (cl *Client) sendEvent(er game.StateUpdate) error { return cl.WS.WriteJSON(er) }
@@ -140,7 +140,7 @@ type GameController struct {
 	join, leave chan *Client
 
 	incomingEvents chan game.ClientEvent
-	clients        map[*Client]game.PlayerID // current clients in the game
+	clients        map[*Client]game.PlayerSerial // current clients in the game
 
 	Game     game.Game // game logic
 	gameLock sync.Mutex
@@ -158,14 +158,14 @@ func NewGameController(id GameID, questions game.QuestionPool, options GameOptio
 		join:           make(chan *Client, 1),
 		leave:          make(chan *Client),
 		incomingEvents: make(chan game.ClientEvent),
-		clients:        map[*Client]game.PlayerID{},
+		clients:        map[*Client]game.PlayerSerial{},
 		Game:           game.NewGame(options.QuestionTimeout, options.ShowDecrassage, questions),
 		Options:        options,
 	}
 }
 
-func (gc *GameController) playerIDsToClients() map[game.PlayerID]*Client {
-	players := make(map[game.PlayerID]*Client)
+func (gc *GameController) playerIDsToClients() map[game.PlayerSerial]*Client {
+	players := make(map[game.PlayerSerial]*Client)
 	for k, v := range gc.clients {
 		players[v] = k
 	}

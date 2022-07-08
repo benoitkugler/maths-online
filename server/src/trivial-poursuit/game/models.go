@@ -15,9 +15,9 @@ import (
 
 // GameState represents an on-going game.
 type GameState struct {
-	Players  map[PlayerID]*PlayerStatus // per-player advance
-	PawnTile int                        // position of the pawn
-	Player   PlayerID                   // the player currently playing (choosing where to move)
+	Players  map[PlayerSerial]*PlayerStatus // per-player advance
+	PawnTile int                            // position of the pawn
+	Player   PlayerSerial                   // the player currently playing (choosing where to move)
 }
 
 type QR struct {
@@ -56,7 +56,7 @@ func (su StateUpdate) String() string {
 	for _, ev := range su.Events {
 		events = append(events, fmt.Sprintf("\t%T: %v", ev, ev))
 	}
-	return fmt.Sprintf("Events:\n %s\n--> New state: %v", strings.Join(events, "\n"), su.State)
+	return fmt.Sprintf("Events:\n %s\n--> New state: %v\n", strings.Join(events, "\n"), su.State)
 }
 
 type Events []GameEvent
@@ -84,32 +84,32 @@ func (GameTerminated) isGameEvent()      {}
 // PlayerJoin is only emitted to the actual player
 // who join the game
 type PlayerJoin struct {
-	Player PlayerID
+	Player PlayerSerial
 }
 
 type PlayerReconnected struct {
-	PlayerID   PlayerID
+	PlayerID   PlayerSerial
 	PlayerName string
 }
 
 type LobbyUpdate struct {
-	Names      map[PlayerID]string // the new players in the lobby
+	Names      map[PlayerSerial]string // the new players in the lobby
 	PlayerName string
-	Player     PlayerID // the player who joined or left
-	IsJoining  bool     // false for leaving
+	Player     PlayerSerial // the player who joined or left
+	IsJoining  bool         // false for leaving
 }
 
 type GameStart struct{}
 
 type PlayerLeft struct {
-	Player PlayerID
+	Player PlayerSerial
 }
 
 // PlayerTurn is emitted at the start of
 // a player
 type PlayerTurn struct {
 	PlayerName string
-	Player     PlayerID
+	Player     PlayerSerial
 }
 
 // DiceThrow represents the result obtained
@@ -135,8 +135,8 @@ type Move struct {
 // PossibleMoves is emitted after a diceThrow
 type PossibleMoves struct {
 	PlayerName string
-	Tiles      []int    // the tile indices where the current player may move
-	Player     PlayerID // the player allowed to play
+	Tiles      []int        // the tile indices where the current player may move
+	Player     PlayerSerial // the player allowed to play
 }
 
 // ShowQuestion is emitted when a player
@@ -153,7 +153,7 @@ type ShowQuestion struct {
 // current question
 type PlayerAnswerResults struct {
 	Categorie categorie
-	Results   map[PlayerID]playerAnswerResult
+	Results   map[PlayerSerial]playerAnswerResult
 }
 
 type playerAnswerResult struct {
@@ -210,7 +210,7 @@ type Ping struct {
 
 type ClientEvent struct {
 	Event  clientEventData
-	Player PlayerID
+	Player PlayerSerial
 }
 
 func (ev ClientEvent) MarshalJSON() ([]byte, error) {

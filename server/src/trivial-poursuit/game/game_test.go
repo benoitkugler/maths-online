@@ -45,12 +45,12 @@ func Test_gameState_winners(t *testing.T) {
 
 func TestGameState_nextPlayer(t *testing.T) {
 	type fields struct {
-		Successes map[PlayerID]*PlayerStatus
+		Successes map[PlayerSerial]*PlayerStatus
 		Player    int
 	}
 	tests := []struct {
 		fields fields
-		want   PlayerID
+		want   PlayerSerial
 	}{
 		{
 			fields{

@@ -18,8 +18,8 @@ const defautQuestionTimeout = time.Minute / 10
 // NbCategories is the number of categories of question
 const NbCategories = int(nbCategories)
 
-// PlayerID identifies a player in the game
-type PlayerID = int
+// PlayerSerial identifies a player in the game
+type PlayerSerial = int
 
 type WeigthedQuestions struct {
 	Questions []editor.Question
@@ -56,11 +56,11 @@ type Game struct {
 	QuestionTimeout *time.Timer // may be nil
 
 	// refreshed for each question
-	currentAnswers map[PlayerID]bool
+	currentAnswers map[PlayerSerial]bool
 	question       currentQuestion // the question to answer, or empty
 
 	// refreshed for each new turn
-	currentWantNextTurn map[PlayerID]bool
+	currentWantNextTurn map[PlayerSerial]bool
 
 	dice DiceThrow // last dice thrown
 
@@ -125,25 +125,25 @@ func (g *Game) inQuestion() bool { return g.question.ID != 0 }
 // AddPlayer add a player to the game and returns
 // its id.
 // If name is empty, a name is generated.
-func (g *Game) AddPlayer(name string) (PlayerID, LobbyUpdate) {
+func (g *Game) AddPlayer(name string) (PlayerSerial, LobbyUpdate) {
 	max := -1
 	for id := range g.Players {
 		if id > max {
 			max = id
 		}
 	}
-	playerID := max + 1
+	playerSerial := max + 1
 
 	if name == "" {
-		name = generatePlayerName(playerID)
+		name = generatePlayerName(playerSerial)
 	}
 
-	g.Players[playerID] = &PlayerStatus{
+	g.Players[playerSerial] = &PlayerStatus{
 		Name: name,
 	}
 
-	return playerID, LobbyUpdate{
-		Player:     playerID,
+	return playerSerial, LobbyUpdate{
+		Player:     playerSerial,
 		Names:      g.playerNames(),
 		PlayerName: name,
 		IsJoining:  true,
@@ -151,7 +151,7 @@ func (g *Game) AddPlayer(name string) (PlayerID, LobbyUpdate) {
 }
 
 // ReconnectPlayer marks `player` has active again, updating its name.
-func (g *Game) ReconnectPlayer(player PlayerID, pseudo string) PlayerReconnected {
+func (g *Game) ReconnectPlayer(player PlayerSerial, pseudo string) PlayerReconnected {
 	g.Players[player].Name = pseudo
 	g.Players[player].IsInactive = false
 	return PlayerReconnected{
@@ -168,7 +168,7 @@ func (g *Game) ReconnectPlayer(player PlayerID, pseudo string) PlayerReconnected
 // the turn is reset to the next player.
 // If a question is being answered and the `player` was the
 // last answering, the question is concluded.
-func (g *Game) RemovePlayer(player PlayerID) StateUpdate {
+func (g *Game) RemovePlayer(player PlayerSerial) StateUpdate {
 	playerName := g.playerName(player)
 
 	if g.HasStarted() {
@@ -215,7 +215,7 @@ func (g *Game) RemovePlayer(player PlayerID) StateUpdate {
 }
 
 // panic if no active players are present
-func (g *Game) nextPlayer() PlayerID {
+func (g *Game) nextPlayer() PlayerSerial {
 	var sortedIds []int
 	for player := range g.Players {
 		if g.Players[player].IsInactive { // ignore inactive players
@@ -248,7 +248,7 @@ func (g *Game) startTurn() StateUpdate {
 
 // handleDiceClicked launches the dice, and compute the possible moves
 // returns an error if the player is not allowed to click
-func (g *Game) handleDiceClicked(player PlayerID) (StateUpdate, error) {
+func (g *Game) handleDiceClicked(player PlayerSerial) (StateUpdate, error) {
 	// check if the player is allowed to throw the dice
 	if g.Player != player {
 		return StateUpdate{}, fmt.Errorf("player %d is not allowed to throw the dice during turn of player %d", player, g.Player)
@@ -305,7 +305,7 @@ func (g *Game) HandleClientEvent(event ClientEvent) (updates MaybeUpdate, isGame
 	return nil, false, fmt.Errorf("invalid client event %T", event.Event)
 }
 
-func (g *Game) handleMove(m ClientMove, player PlayerID) (Events, error) {
+func (g *Game) handleMove(m ClientMove, player PlayerSerial) (Events, error) {
 	// check if the player is allowed to move
 	if g.Player != player {
 		return nil, fmt.Errorf("player %d is not allowed to move during turn of player %d", player, g.Player)
@@ -328,7 +328,7 @@ func (g *Game) handleMove(m ClientMove, player PlayerID) (Events, error) {
 	}, nil
 }
 
-func (g *Game) handleAnswer(a Answer, player PlayerID) MaybeUpdate {
+func (g *Game) handleAnswer(a Answer, player PlayerSerial) MaybeUpdate {
 	isValid := g.isAnswerValid(a)
 
 	// we defer the state update to the end of the question
@@ -353,7 +353,7 @@ func (gs *Game) EmitQuestion() ShowQuestion {
 	}
 
 	out := ShowQuestion{
-		TimeoutSeconds: int(gs.questionDurationLimit.Seconds()),
+		TimeoutSeconds: int(gs.QuestionDurationLimit.Seconds()),
 		ID:             question.Id,
 		Categorie:      cat,
 		Question:       instance.ToClient(),
@@ -426,7 +426,7 @@ func (gs *Game) tryEndTurn() (updates MaybeUpdate) {
 	return updates
 }
 
-func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerID) (updates MaybeUpdate) {
+func (gs *Game) handleWantNextTurn(event WantNextTurn, player PlayerSerial) (updates MaybeUpdate) {
 	gs.currentWantNextTurn[player] = true
 
 	pReview := &gs.Players[player].Review
@@ -524,15 +524,15 @@ func (gs *Game) decrassage() (ids map[int][]int64) {
 	return ids
 }
 
-func generatePlayerName(player PlayerID) string {
+func generatePlayerName(player PlayerSerial) string {
 	return fmt.Sprintf("Joueur %d", player+1)
 }
 
-func (g *Game) playerName(player PlayerID) string {
+func (g *Game) playerName(player PlayerSerial) string {
 	return g.Players[player].Name
 }
 
-func (g *Game) playerNames() map[PlayerID]string {
+func (g *Game) playerNames() map[PlayerSerial]string {
 	out := make(map[int]string, len(g.Players))
 	for player := range g.Players {
 		out[player] = g.playerName(player)
@@ -540,7 +540,7 @@ func (g *Game) playerNames() map[PlayerID]string {
 	return out
 }
 
-func (gs *Game) idToNames(players []PlayerID) []string {
+func (gs *Game) idToNames(players []PlayerSerial) []string {
 	out := make([]string, len(players))
 	for i, id := range players {
 		out[i] = gs.playerName(id)

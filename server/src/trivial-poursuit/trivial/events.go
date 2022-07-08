@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"errors"
 	"log"
 	"os"
 
@@ -8,21 +9,26 @@ import (
 )
 
 var (
-	WarningLogger  = log.New(os.Stdout, "tv-game:ERROR:", 0)
-	ProgressLogger = log.New(os.Stdout, "tv-game:INFO :", 0)
+	WarningLogger  = log.New(os.Stdout, "tv-game:ERROR: ", 0)
+	ProgressLogger = log.New(os.Stdout, "tv-game:INFO : ", 0)
 )
 
+func (pc playerConn) send(events game.StateUpdate) {
+	err := pc.conn.WriteJSON(events)
+	if err != nil {
+		WarningLogger.Printf("Sending to client %s failed: %s", pc.pl.ID, err)
+	}
+}
+
+// TODO: probably use r.game.State
 func (r *Room) broadcastEvents(events game.StateUpdate) {
 	ProgressLogger.Printf("Game %s : broadcasting...", r.ID)
 
-	for client, conn := range r.currentPlayers {
-		if conn == nil { // ignore disconnected players
+	for _, pc := range r.currentPlayers {
+		if pc.conn == nil { // ignore disconnected players
 			continue
 		}
-		err := conn.WriteJSON(events)
-		if err != nil {
-			WarningLogger.Printf("Broadcasting to client %d failed: %s", client.ID, err)
-		}
+		pc.send(events)
 	}
 }
 
@@ -45,6 +51,8 @@ func (r *Room) Listen() (replay Replay, naturalEnding bool) {
 		case message := <-r.Event:
 			isGameOver := r.onEvent(message)
 			if isGameOver {
+				ProgressLogger.Printf("Game %s is over: exiting game loop.", r.ID)
+
 				return r.review(), true
 			}
 		}
@@ -55,117 +63,102 @@ func (r *Room) onTerminate() {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	ProgressLogger.Println("Terminating game", r.ID)
+	ProgressLogger.Printf("Game %s : terminating game...", r.ID)
 
-	// for client, clientID := range r.currentPlayers {
-	// 	err := client.sendEvent(game.StateUpdate{
-	// 		Events: game.Events{
-	// 			game.GameTerminated{},
-	// 		},
-	// 		State: r.Game.GameState,
-	// 	})
-	// 	if err != nil {
-	// 		WarningLogger.Printf("Broadcasting to client %d failed: %s", clientID, err)
-	// 	}
-	// }
+	r.broadcastEvents(game.StateUpdate{
+		Events: game.Events{
+			game.GameTerminated{},
+		},
+		State: r.game.GameState,
+	})
 }
 
-// Join should used on a new connection, on one the of the following cases:
+// ErrGameStarted is returned from `Join` when the game
+// has already started
+var ErrGameStarted = errors.New("game started")
+
+// Join should be used on a new connection, on one the of the following cases:
 //	- totally fresh connection
 //	- reconnection in an already started game
-//	- reconnection in a waiting game
 // It is safe for concurrent uses.
 // It returns an error for instance if the game has already started.
 func (r *Room) Join(player Player, connection Connection) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	// Here are the following cases :
-	//	- totally fresh connection
-	//	- reconnection in an already started game
-	//	- reconnection (as detected at the request level) in a waiting game :
-	//		for simplicity we considered this a new connection
+	// check if it is a reconnection
+	_, isKnownPlayer := r.currentPlayers[player.ID]
+	if !isKnownPlayer {
+		// fresh connection : only allow it on waiting games
+		if r.game.HasStarted() {
+			return ErrGameStarted
+		}
 
-	// r.gameLock.Lock()
-	// reconnection := client.PlayerID != -1 && r.Game.Players[client.PlayerID] != nil && r.Game.HasStarted()
-	// r.gameLock.Unlock()
+		ProgressLogger.Printf("Game %s : adding new player %s...", r.ID, player.ID)
 
-	// if !reconnection { // fresh connection
-	// 	if r.Game.HasStarted() {
-	// 		// we do not allow fresh connection into an already started game
-	// 		client.isAccepted <- false
-	// 		continue
-	// 	}
-	// 	ProgressLogger.Printf("Game %s : adding player...", r.ID)
+		// TODO: merge AddPlayer and StartGame
+		serial, event := r.game.AddPlayer(player.Pseudo)
+		// register the serial for futur uses ...
+		player.serial = serial
+		// ... and register the player
+		pc := playerConn{pl: player, conn: connection}
+		r.currentPlayers[player.ID] = pc
 
-	// 	playerID, event := r.Game.AddPlayer(client.player.Pseudo)
-	// 	// register the playerID so that it can be send back
-	// 	client.PlayerID = playerID
-	// 	r.currentPlayers[client] = playerID
+		// only notifie the player who joined ...
+		pc.send(game.StateUpdate{
+			Events: game.Events{game.PlayerJoin{Player: serial}},
+			State:  r.game.GameState,
+		})
 
-	// 	client.isAccepted <- true
+		// ... and check if the new player triggers a game start
+		var events game.StateUpdate
+		if r.game.NumberPlayers(true) >= r.Options().PlayersNumber {
+			ProgressLogger.Printf("Game %s : starting...", r.ID)
+			// TODO: refactor StartGame
+			events = r.game.StartGame()
+		} else { // update the lobby
+			events = game.StateUpdate{
+				Events: game.Events{event},
+				State:  r.game.GameState,
+			}
+		}
+		r.broadcastEvents(events)
+	} else { // reconnection
+		ProgressLogger.Printf("Game %s : reconnecting player %s...", r.ID, player.ID)
 
-	// 	// only notifie the player who joined ...
-	// 	client.sendEvent(game.StateUpdate{
-	// 		Events: game.Events{game.PlayerJoin{Player: playerID}},
-	// 		State:  r.Game.GameState,
-	// 	})
+		pc := r.currentPlayers[player.ID]
+		pc.conn = connection
+		pc.pl.Pseudo = player.Pseudo
+		r.currentPlayers[player.ID] = pc // register the new client connection
 
-	// 	// ... check if the new player triggers a game start
-	// 	if r.Game.NumberPlayers(true) >= r.Options.PlayersNumber {
-	// 		ProgressLogger.Printf("Game %s : starting", r.ID)
+		// TODO: refactor ReconnectPlayer
+		event := r.game.ReconnectPlayer(pc.pl.serial, pc.pl.Pseudo)
 
-	// 		events := r.Game.StartGame()
-	// 		r.broadcastEvents(events)
-	// 	} else { // update the lobby
-	// 		r.broadcastEvents(game.StateUpdate{
-	// 			Events: game.Events{event},
-	// 			State:  r.Game.GameState,
-	// 		})
-	// 	}
-	// } else { // reconnection
-	// 	ProgressLogger.Printf("Game %s : reconnecting player %d...", r.ID, client.PlayerID)
+		r.broadcastEvents(game.StateUpdate{
+			Events: game.Events{event},
+			State:  r.game.GameState,
+		})
+	}
 
-	// 	r.currentPlayers[client] = client.PlayerID // register the new client connection
-	// 	client.isAccepted <- true
-	// 	r.gameLock.Lock()
-	// 	event := r.Game.ReconnectPlayer(client.PlayerID, client.player.Pseudo)
-	// 	r.gameLock.Unlock()
-
-	// 	r.broadcastEvents(game.StateUpdate{
-	// 		Events: game.Events{event},
-	// 		State:  r.Game.GameState,
-	// 	})
-	// }
+	return nil
 }
 
-func (r *Room) onLeave(player Player) {
+func (r *Room) onLeave(playerID PlayerID) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	// if _, in := r.currentPlayers[client]; !in { // client who never joined may still end up here
-	// 	continue
-	// }
-	// ProgressLogger.Printf("Game %s : removing player %d...", r.ID, r.currentPlayers[client])
+	pc, in := r.currentPlayers[playerID]
+	// defensive check
+	if !in {
+		return
+	}
 
-	// playerID := r.currentPlayers[client]
+	ProgressLogger.Printf("Game %s : removing player %d (ID: %s)...", r.ID, pc.pl.serial, pc.pl.ID)
 
-	// // check if the player is not already removed
-	// if r.Game.Players[playerID] == nil {
-	// 	continue
-	// }
-
-	// r.gameLock.Lock()
-	// update := r.Game.RemovePlayer(playerID)
-	// r.gameLock.Unlock()
-
-	// delete(r.currentPlayers, client)
-
-	// if r.monitor != nil { // notify the monitor
-	// 	r.monitor <- r.Summary()
-	// }
-
-	// r.broadcastEvents(update)
+	// TODO: refactor RemovePlayer
+	update := r.game.RemovePlayer(pc.pl.serial)
+	delete(r.currentPlayers, playerID)
+	r.broadcastEvents(update)
 }
 
 func (r *Room) onEvent(event game.ClientEvent) (isGameOver bool) {
@@ -174,29 +167,27 @@ func (r *Room) onEvent(event game.ClientEvent) (isGameOver bool) {
 
 	ProgressLogger.Printf("Game %s : handleClientEvent...", r.ID)
 
-	// events, isGameOver, err := r.Game.HandleClientEvent(message)
-	// if err != nil { // malicious client: ignore the query
-	// 	WarningLogger.Println(err)
-	// 	continue
-	// }
+	events, isGameOver, err := r.game.HandleClientEvent(event)
+	if err != nil { // malicious client: ignore the query
+		WarningLogger.Println(err)
+		return false
+	}
 
-	// if events != nil {
-	// 	r.broadcastEvents(*events)
-	// }
+	if events != nil {
+		r.broadcastEvents(*events)
+	}
 
-	// if isGameOver {
-	// 	ProgressLogger.Printf("Game %s is over: exitting game loop.", r.ID)
-	// 	return r.review(), true
-	// }
+	return isGameOver
 }
 
 func (r *Room) onQuestionTimeout() {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	// ProgressLogger.Printf("Game %s : questionTimeoutAction...", r.ID)
 
-	// 		events := r.Game.QuestionTimeoutAction()
-	// 		if events != nil {
-	// 			r.broadcastEvents(*events)
-	// }
+	ProgressLogger.Printf("Game %s : questionTimeoutAction...", r.ID)
+
+	events := r.game.QuestionTimeoutAction()
+	if events != nil {
+		r.broadcastEvents(*events)
+	}
 }

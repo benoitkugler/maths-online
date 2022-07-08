@@ -31,7 +31,7 @@ type PlayerID string
 
 type gamePosition struct {
 	Game   tv.GameID
-	Player game.PlayerID
+	Player game.PlayerSerial
 }
 
 // // GameID is an in-memory identifier for a game room,
