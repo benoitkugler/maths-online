@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/types.gen.dart' as Types;
+import 'package:eleve/questions/types.gen.dart' as Types;
 import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
@@ -336,8 +336,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
         event,
         (a) {
           // do not close the page now, it is handled when receiving result
-          lastQuestion = _LastQuestion(event, a.data.data);
-          _sendEvent(Answer(a.data));
+          lastQuestion = _LastQuestion(event, a.data);
+          _sendEvent(Answer(a));
         },
       ),
     ));

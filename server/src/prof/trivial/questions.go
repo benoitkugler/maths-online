@@ -48,16 +48,8 @@ func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	return out
 }
 
-func (qc QuestionCriterion) filter(dict map[int64]editor.QuestionTags) (out IDs) {
-	qc = qc.normalize()
-
-	// an empty criterion is interpreted as an invalid criterion,
-	// since it is never something you want in practice (at least the class level should be specified)
-	if len(qc) == 0 {
-		return nil
-	}
-
-	for idQuestion, questions := range dict {
+func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out IDs) {
+	for idQuestion, questions := range tags.ByIdQuestion() {
 		questionTags := questions.Crible()
 		for _, union := range qc { // at least one union must match
 			if questionTags.HasAll(union) {
@@ -66,10 +58,37 @@ func (qc QuestionCriterion) filter(dict map[int64]editor.QuestionTags) (out IDs)
 			}
 		}
 	}
-
-	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] }) // deterministic order
-
 	return out
+}
+
+// selectQuestions selects the questions matching the criterion, available
+// to the user, and not needing an exercice context.
+func (qc QuestionCriterion) selectQuestions(db DB, userID int64) (editor.Questions, error) {
+	qc = qc.normalize()
+
+	// an empty criterion is interpreted as an invalid criterion,
+	// since it is never something you want in practice (at least the class level should be specified)
+	if len(qc) == 0 {
+		return nil, nil
+	}
+
+	tags, err := editor.SelectAllQuestionTags(db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	tmp := qc.filter(tags)
+
+	// restrict to user visible and standalone
+	questionsDict, err := editor.SelectQuestions(db, tmp...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	questionsDict.RestrictVisible(userID)
+
+	questionsDict.RestrictNeedExercice()
+
+	return questionsDict, nil
 }
 
 func (cats *CategoriesQuestions) normalize() {
@@ -80,20 +99,11 @@ func (cats *CategoriesQuestions) normalize() {
 
 func (cats CategoriesQuestions) selectQuestions(db DB, userID int64) (out tv.QuestionPool, err error) {
 	// select the questions...
-	tags, err := editor.SelectAllQuestionTags(db)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	tagsDict := tags.ByIdQuestion()
 	for i, cat := range cats {
-		idQuestions := cat.filter(tagsDict)
-
-		questionsDict, err := editor.SelectQuestions(db, idQuestions...)
+		questionsDict, err := cat.selectQuestions(db, userID)
 		if err != nil {
-			return out, utils.SQLError(err)
+			return out, err
 		}
-		questionsDict.RestrictVisible(userID)
 
 		// this should be avoided by the client side validation
 		if len(questionsDict) == 0 {
@@ -101,7 +111,7 @@ func (cats CategoriesQuestions) selectQuestions(db DB, userID int64) (out tv.Que
 		}
 
 		// select the tags, required for difficulty groups
-		tags, err := editor.SelectQuestionTagsByIdQuestions(db, idQuestions...)
+		tags, err := editor.SelectQuestionTagsByIdQuestions(db, questionsDict.IDs()...)
 		if err != nil {
 			return out, utils.SQLError(err)
 		}
@@ -182,27 +192,13 @@ func (cats CategoriesQuestions) commonTags() []string {
 func (cats CategoriesQuestions) selectQuestionIds(db DB, userID int64) (Set, error) {
 	crible := NewSet()
 
-	tags, err := editor.SelectAllQuestionTags(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	tagsDict := tags.ByIdQuestion()
 	for _, cat := range cats {
-		idQuestions := cat.filter(tagsDict)
-		for _, id := range idQuestions {
-			crible.Add(id)
+		questions, err := cat.selectQuestions(db, userID)
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	// restrict to available questions
-	questions, err := editor.SelectQuestions(db, crible.Keys()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	for _, qu := range questions {
-		if !qu.IsVisibleBy(userID) {
-			delete(crible, qu.Id)
+		for id := range questions {
+			crible.Add(id)
 		}
 	}
 

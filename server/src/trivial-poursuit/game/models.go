@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
 )
 
 // interaction with the client
@@ -71,14 +71,14 @@ func (PlayerJoin) isGameEvent()          {}
 func (PlayerReconnected) isGameEvent()   {}
 func (LobbyUpdate) isGameEvent()         {}
 func (GameStart) isGameEvent()           {}
-func (playerLeft) isGameEvent()          {}
+func (PlayerLeft) isGameEvent()          {}
 func (PlayerTurn) isGameEvent()          {}
-func (diceThrow) isGameEvent()           {}
-func (move) isGameEvent()                {}
+func (DiceThrow) isGameEvent()           {}
+func (Move) isGameEvent()                {}
 func (PossibleMoves) isGameEvent()       {}
-func (showQuestion) isGameEvent()        {}
-func (playerAnswerResults) isGameEvent() {}
-func (gameEnd) isGameEvent()             {}
+func (ShowQuestion) isGameEvent()        {}
+func (PlayerAnswerResults) isGameEvent() {}
+func (GameEnd) isGameEvent()             {}
 func (GameTerminated) isGameEvent()      {}
 
 // PlayerJoin is only emitted to the actual player
@@ -101,7 +101,7 @@ type LobbyUpdate struct {
 
 type GameStart struct{}
 
-type playerLeft struct {
+type PlayerLeft struct {
 	Player PlayerID
 }
 
@@ -112,20 +112,20 @@ type PlayerTurn struct {
 	Player     PlayerID
 }
 
-// diceThrow represents the result obtained
+// DiceThrow represents the result obtained
 // when throwing a dice
-type diceThrow struct {
+type DiceThrow struct {
 	Face uint8
 }
 
-func newDiceThrow() diceThrow {
+func newDiceThrow() DiceThrow {
 	const maxFaceNumber = 3
-	return diceThrow{uint8(rand.Int31n(maxFaceNumber) + 1)}
+	return DiceThrow{uint8(rand.Int31n(maxFaceNumber) + 1)}
 }
 
-// move is emitted when a player choose to move the
+// Move is emitted when a player choose to Move the
 // pawn
-type move struct {
+type Move struct {
 	// the tiles to go through to animate the move
 	// (only valid when send by the server)
 	Path []int
@@ -139,19 +139,19 @@ type PossibleMoves struct {
 	Player     PlayerID // the player allowed to play
 }
 
-// showQuestion is emitted when a player
+// ShowQuestion is emitted when a player
 // should answer a question
-type showQuestion struct {
+type ShowQuestion struct {
 	TimeoutSeconds int
 	Categorie      categorie
 	ID             int64           // to facilitate the tracking of the question results
-	Question       client.Question `dart-extern:"../exercices/types.gen.dart"` // the actual question
+	Question       client.Question `dart-extern:"client:../questions/types.gen.dart"` // the actual question
 }
 
-// playerAnswerResults indicates
+// PlayerAnswerResults indicates
 // if the players have answered correctly to the
 // current question
-type playerAnswerResults struct {
+type PlayerAnswerResults struct {
 	Categorie categorie
 	Results   map[PlayerID]playerAnswerResult
 }
@@ -161,8 +161,8 @@ type playerAnswerResult struct {
 	AskForMask bool // true if Success is false and if the player has not already marked 3
 }
 
-// gameEnd is emitted when at least one player has won
-type gameEnd struct {
+// GameEnd is emitted when at least one player has won
+type GameEnd struct {
 	QuestionDecrassageIds map[int][]int64 // player->questions
 	Winners               []int
 	WinnerNames           []string
@@ -183,11 +183,11 @@ func (DiceClicked) isClientEvent()  {}
 func (WantNextTurn) isClientEvent() {}
 func (Ping) isClientEvent()         {}
 
-type ClientMove move
+type ClientMove Move
 
 // the proposition of a client to a question
 type Answer struct {
-	Answer client.QuestionAnswersIn `dart-extern:"../exercices/types.gen.dart"`
+	Answer client.QuestionAnswersIn `dart-extern:"client:../questions/types.gen.dart"`
 }
 
 // DiceClicked is emitted when the current player

@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"database/sql"
+
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -22,10 +24,20 @@ func (qu Question) IsVisibleBy(userID int64) bool {
 	return qu.Public || qu.IdTeacher == userID
 }
 
-// RestrictVisible remove the question not visible by `userID`
+// RestrictVisible remove the questions not visible by `userID`
 func (qus Questions) RestrictVisible(userID int64) {
 	for id, qu := range qus {
 		if !qu.IsVisibleBy(userID) {
+			delete(qus, id)
+		}
+	}
+}
+
+// RestrictNeedExercice remove the questions marked as requiring an
+// exercice
+func (qus Questions) RestrictNeedExercice() {
+	for id, question := range qus {
+		if question.NeedExercice {
 			delete(qus, id)
 		}
 	}
@@ -69,4 +81,42 @@ func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]Questi
 	}
 
 	return dict, nil
+}
+
+// updateExerciceQuestionList set the questions for the given exercice,
+// overiding `IdExercice` and `index` fields of the list items.
+func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestions) error {
+	// enforce fields
+	for i := range l {
+		l[i].Index = i
+		l[i].IdExercice = idExercice
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	_, err = DeleteExerciceQuestionsByIdExercices(db, idExercice)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	err = InsertManyExerciceQuestions(tx, l...)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
+// IsVisibleBy returns `true` if the question is public or
+// owned by `userID`
+func (qu Exercice) IsVisibleBy(userID int64) bool {
+	return qu.Public || qu.IdTeacher == userID
 }

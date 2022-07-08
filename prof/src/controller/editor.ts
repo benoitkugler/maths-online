@@ -1,39 +1,38 @@
 import type { Origin, QuestionHeader } from "./api_gen";
 import { Visibility } from "./api_gen";
-import type {
-  Block,
-  CoordExpression,
-  ExpressionFieldBlock,
-  FigureAffineLineFieldBlock,
-  FigureBlock,
-  FigurePointFieldBlock,
-  FigureVectorFieldBlock,
-  FigureVectorPairFieldBlock,
-  FormulaBlock,
-  FunctionGraphBlock,
-  FunctionPointsFieldBlock,
-  FunctionVariationGraphBlock,
-  NumberFieldBlock,
-  OrderedListFieldBlock,
-  RadioFieldBlock,
-  SignTableBlock,
-  TableBlock,
-  TableFieldBlock,
-  TextBlock,
-  TextPart,
-  TreeFieldBlock,
-  Variable,
-  VariationTableBlock,
-  VariationTableFieldBlock,
-  VectorFieldBlock,
-} from "./exercice_gen";
 import {
   BlockKind,
   ComparisonLevel,
   DifficultyTag,
+  LevelTag,
   SignSymbol,
   TextKind,
   VectorPairCriterion,
+  type Block,
+  type CoordExpression,
+  type ExpressionFieldBlock,
+  type FigureAffineLineFieldBlock,
+  type FigureBlock,
+  type FigurePointFieldBlock,
+  type FigureVectorFieldBlock,
+  type FigureVectorPairFieldBlock,
+  type FormulaBlock,
+  type FunctionGraphBlock,
+  type FunctionPointsFieldBlock,
+  type FunctionVariationGraphBlock,
+  type NumberFieldBlock,
+  type OrderedListFieldBlock,
+  type RadioFieldBlock,
+  type SignTableBlock,
+  type TableBlock,
+  type TableFieldBlock,
+  type TextBlock,
+  type TextPart,
+  type TreeFieldBlock,
+  type Variable,
+  type VariationTableBlock,
+  type VariationTableFieldBlock,
+  type VectorFieldBlock,
 } from "./exercice_gen";
 
 export const ExpressionColor = "orange";
@@ -654,6 +653,13 @@ export function tagColor(tag: string) {
     tag == DifficultyTag.Diff3
   ) {
     return "secondary";
+  }
+  if (
+    tag == LevelTag.Seconde ||
+    tag == LevelTag.Premiere ||
+    tag == LevelTag.Terminale
+  ) {
+    return "pink";
   }
   return "primary";
 }

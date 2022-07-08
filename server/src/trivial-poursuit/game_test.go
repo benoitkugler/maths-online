@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
-	exClient "github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions"
+	exClient "github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
@@ -18,9 +18,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var page = exercice.QuestionPage{
-	Enonce: exercice.Enonce{
-		exercice.NumberFieldBlock{Expression: "1"},
+var page = questions.QuestionPage{
+	Enonce: questions.Enonce{
+		questions.NumberFieldBlock{Expression: "1"},
 	},
 }
 
@@ -29,7 +29,7 @@ var exQu = game.WeigthedQuestions{
 	Weights:   []float64{1. / 3, 2. / 3},
 }
 
-var questions = game.QuestionPool{exQu, exQu, exQu, exQu, exQu}
+var questionsList = game.QuestionPool{exQu, exQu, exQu, exQu, exQu}
 
 func websocketURLWithClientID(t *testing.T, urlS, clientID string) string {
 	return testutils.WebsocketURL(urlS) + "?client_id=" + clientID
@@ -47,7 +47,7 @@ func (ct *GameController) setupWebSocket(w http.ResponseWriter, r *http.Request)
 func TestConcurrentEvents(t *testing.T) {
 	// ProgressLogger.SetOutput(os.Stdout)
 
-	ct := NewGameController("testGame", questions, GameOptions{4, 0, true}, nil) // do not start a game
+	ct := NewGameController("testGame", questionsList, GameOptions{4, 0, true}, nil) // do not start a game
 	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -85,7 +85,7 @@ func TestConcurrentEvents(t *testing.T) {
 }
 
 func TestEvents(t *testing.T) {
-	ct := NewGameController("testGame", questions, GameOptions{4, time.Millisecond * 50, true}, nil)
+	ct := NewGameController("testGame", questionsList, GameOptions{4, time.Millisecond * 50, true}, nil)
 	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -112,7 +112,7 @@ func TestClientInvalidMessage(t *testing.T) {
 	WarningLogger.SetOutput(os.Stdout)
 	ProgressLogger.SetOutput(os.Stdout)
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
+	ct := NewGameController("testGame", questionsList, GameOptions{2, 0, true}, nil)
 	go ct.StartLoop()
 
 	server := httptest.NewServer(http.HandlerFunc(ct.setupWebSocket))
@@ -150,7 +150,7 @@ func TestClientInvalidMessage(t *testing.T) {
 func TestStartGame(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
+	ct := NewGameController("testGame", questionsList, GameOptions{2, 0, true}, nil)
 
 	go ct.StartLoop()
 
@@ -197,7 +197,7 @@ func TestStartGame(t *testing.T) {
 func TestInvalidJoin(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{1, 0, true}, nil)
+	ct := NewGameController("testGame", questionsList, GameOptions{1, 0, true}, nil)
 
 	go ct.StartLoop()
 
@@ -234,7 +234,7 @@ func TestSummary(t *testing.T) {
 		}
 	}()
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, notif)
+	ct := NewGameController("testGame", questionsList, GameOptions{2, 0, true}, notif)
 
 	go ct.StartLoop()
 
@@ -277,7 +277,7 @@ func TestSummary(t *testing.T) {
 func TestReview(t *testing.T) {
 	WarningLogger.SetOutput(io.Discard)
 
-	ct := NewGameController("testGame", questions, GameOptions{2, 0, true}, nil)
+	ct := NewGameController("testGame", questionsList, GameOptions{2, 0, true}, nil)
 
 	go ct.StartLoop()
 

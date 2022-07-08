@@ -23,9 +23,9 @@ func TestPanics(t *testing.T) {
 	shouldPanic(t, func() { _ = (invalidOperator).String() })
 	shouldPanic(t, func() { _ = (specialFunctionA{kind: invalidSpecialFunction}).String() })
 
-	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
+	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil) })
+	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil) })
+	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil) })
 
 	shouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
 	shouldPanic(t, func() {
@@ -92,6 +92,7 @@ func TestExpression_String(t *testing.T) {
 		{"min(2) + max(3)", "min(2) + max(3)"},
 		{"-(-a)", "a"},
 		{"floor(4)", "floor(4)"},
+		{"x + (-4 + y)", "x - 4 + y"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

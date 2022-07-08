@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
-	"github.com/benoitkugler/maths-online/maths/exercice/examples"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/maths/questions/examples"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
@@ -28,8 +28,7 @@ func connectDB(dev bool) (*sql.DB, error) {
 			Host:     "localhost",
 			User:     "benoit",
 			Password: "dummy",
-			// Name:     "maths_dev",
-			Name: "isyro_prod",
+			Name:     "isyro_prod",
 		}
 	} else { // in production, read from env
 		var err error
@@ -243,6 +242,8 @@ func serveEleveApp(c echo.Context) error {
 
 func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller, tc *teacher.Controller) {
 	setupProfAPI(e, tvc, edit, tc)
+	setupQuestionSampleAPI(e)
+
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
@@ -264,7 +265,6 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 	// student client classroom managment
 	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
 	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
-	e.DELETE("/api/classroom/attach", tc.DetachStudentFromClassroom)
 
 	// prof. back office
 	for _, route := range []string{
@@ -287,15 +287,20 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 		return evaluateQuestion(edit, c)
 	})
 
-	// standalone question
+	// standalone question/exercice
 	e.POST("/api/questions/instantiate", func(c echo.Context) error {
 		return instantiateQuestions(edit, c)
 	})
 	e.POST("/api/questions/evaluate", func(c echo.Context) error {
 		return evaluateQuestion(edit, c)
 	})
+	e.POST("/api/exercices/evaluate", func(c echo.Context) error {
+		return evaluateExercice(edit, c)
+	})
+}
 
-	// temporary question quick access
+// routes for a (temporary) question quick access
+func setupQuestionSampleAPI(e *echo.Echo) {
 	sampleQuestions := examples.Questions()
 	e.GET("/questions", func(c echo.Context) error {
 		var out []client.Question

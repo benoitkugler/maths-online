@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/utils"
 )
@@ -34,9 +34,9 @@ func (wq WeigthedQuestions) sample() editor.Question {
 type QuestionPool [NbCategories]WeigthedQuestions
 
 type currentQuestion struct {
-	Question  exercice.QuestionInstance // the instantiated version
-	categorie categorie                 // the origin
-	ID        int64                     // the origin
+	Question  questions.QuestionInstance // the instantiated version
+	categorie categorie                  // the origin
+	ID        int64                      // the origin
 }
 
 // MaybeUpdate is an optional update
@@ -62,7 +62,7 @@ type Game struct {
 	// refreshed for each new turn
 	currentWantNextTurn map[PlayerID]bool
 
-	dice diceThrow // last dice thrown
+	dice DiceThrow // last dice thrown
 
 	QuestionDurationLimit time.Duration
 	ShowDecrassage        bool
@@ -317,10 +317,10 @@ func (g *Game) handleMove(m ClientMove, player PlayerID) (Events, error) {
 	}
 
 	g.PawnTile = m.Tile
-	g.dice = diceThrow{}
+	g.dice = DiceThrow{}
 	question := g.EmitQuestion()
 	return Events{
-		move{
+		Move{
 			Tile: m.Tile, // now valid
 			Path: choices[m.Tile],
 		},
@@ -338,7 +338,7 @@ func (g *Game) handleAnswer(a Answer, player PlayerID) MaybeUpdate {
 }
 
 // EmitQuestion generate a question with the right categorie
-func (gs *Game) EmitQuestion() showQuestion {
+func (gs *Game) EmitQuestion() ShowQuestion {
 	// select the category
 	cat := categories[gs.PawnTile]
 	// select the question among the pool...
@@ -352,8 +352,8 @@ func (gs *Game) EmitQuestion() showQuestion {
 		Question:  instance,
 	}
 
-	out := showQuestion{
-		TimeoutSeconds: int(gs.QuestionDurationLimit.Seconds()),
+	out := ShowQuestion{
+		TimeoutSeconds: int(gs.questionDurationLimit.Seconds()),
 		ID:             question.Id,
 		Categorie:      cat,
 		Question:       instance.ToClient(),
@@ -411,7 +411,7 @@ func (gs *Game) tryEndTurn() (updates MaybeUpdate) {
 	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
 		updates = &StateUpdate{
-			Events: Events{gameEnd{
+			Events: Events{GameEnd{
 				Winners:               winners,
 				WinnerNames:           gs.idToNames(winners),
 				QuestionDecrassageIds: gs.decrassage(),
@@ -451,7 +451,7 @@ func (gs *Game) endQuestion(force bool) Events {
 		return nil
 	}
 
-	out := playerAnswerResults{
+	out := PlayerAnswerResults{
 		Categorie: gs.question.categorie,
 		Results:   make(map[int]playerAnswerResult),
 	}

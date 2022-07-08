@@ -81,17 +81,17 @@ type atom interface {
 	// it may be simplified by subsequent operations
 	eval(left, right rat, context ValueResolver) (rat, error)
 
-	asLaTeX(left, right *Expr, res LaTeXResolver) string
+	asLaTeX(left, right *Expr) string
 }
 
-func (operator) lexicographicOrder() int         { return 7 }
-func (randVariable) lexicographicOrder() int     { return 6 }
-func (roundFn) lexicographicOrder() int          { return 5 }
-func (specialFunctionA) lexicographicOrder() int { return 4 }
-func (function) lexicographicOrder() int         { return 3 }
-func (Variable) lexicographicOrder() int         { return 2 }
 func (constant) lexicographicOrder() int         { return 1 }
 func (Number) lexicographicOrder() int           { return 0 }
+func (operator) lexicographicOrder() int         { return 2 }
+func (Variable) lexicographicOrder() int         { return 3 }
+func (function) lexicographicOrder() int         { return 4 }
+func (specialFunctionA) lexicographicOrder() int { return 5 }
+func (roundFn) lexicographicOrder() int          { return 6 }
+func (randVariable) lexicographicOrder() int     { return 7 }
 
 // roundFn act as a function, but takes an integer parameter
 // in addition to its regular parameter

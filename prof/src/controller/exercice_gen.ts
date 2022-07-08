@@ -12,6 +12,78 @@ export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
   [DifficultyTag.Diff3]: "3 étoiles",
 };
 
+// github.com/benoitkugler/maths-online/maths/expression.Variable
+export interface Variable {
+  Indice: string;
+  Name: number;
+}
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
+export interface RandomParameter {
+  expression: string;
+  variable: Variable;
+}
+// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
+export type RandomParameters = RandomParameter[] | null;
+// github.com/benoitkugler/maths-online/maths/questions.Parameters
+export interface Parameters {
+  Variables: RandomParameters;
+  Intrinsics: string[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.Flow
+export enum Flow {
+  Parallel = 0,
+  Sequencial = 1,
+}
+
+export const FlowLabels: { [key in Flow]: string } = {
+  [Flow.Parallel]: "Questions indépendantes",
+  [Flow.Sequencial]: "Questions liées",
+};
+
+// github.com/benoitkugler/maths-online/prof/editor.Exercice
+export interface Exercice {
+  Id: number;
+  Title: string;
+  Description: string;
+  Parameters: Parameters;
+  Flow: Flow;
+  id_teacher: number;
+  Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestion
+export interface ExerciceQuestion {
+  id_exercice: number;
+  id_question: number;
+  bareme: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.LevelTag
+export enum LevelTag {
+  Premiere = "1ERE",
+  Seconde = "2NDE",
+  Terminale = "TERM",
+}
+
+export const LevelTagLabels: { [key in LevelTag]: string } = {
+  [LevelTag.Premiere]: "Première",
+  [LevelTag.Seconde]: "Seconde",
+  [LevelTag.Terminale]: "Terminale",
+};
+
+// github.com/benoitkugler/maths-online/prof/editor.Progression
+export interface Progression {
+  Id: number;
+  id_exercice: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestionHistory
+export type QuestionHistory = boolean[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ProgressionQuestion
+export interface ProgressionQuestion {
+  id_progression: number;
+  id_exercice: number;
+  index: number;
+  history: QuestionHistory;
+}
+
 export enum BlockKind {
   ExpressionFieldBlock = 0,
   FigureAffineLineFieldBlock = 1,
@@ -61,7 +133,7 @@ export interface Block {
     | VariationTableFieldBlock
     | VectorFieldBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TextKind
+// github.com/benoitkugler/maths-online/maths/questions.TextKind
 export enum TextKind {
   Expression = 2,
   StaticMath = 1,
@@ -74,7 +146,7 @@ export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Text]: "Text simple",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.TextPart
+// github.com/benoitkugler/maths-online/maths/questions.TextPart
 export interface TextPart {
   Content: string;
   Kind: TextKind;
@@ -92,7 +164,7 @@ export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
   [ComparisonLevel.Strict]: "Exacte",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.ExpressionFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
   Label: TextPart;
@@ -185,37 +257,37 @@ export interface RepereBounds {
   Height: number;
   Origin: Coord;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigureBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureBlock
 export interface FigureBlock {
   Drawings: RandomDrawings;
   Bounds: RepereBounds;
   ShowGrid: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigureAffineLineFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {
   Label: string;
   A: string;
   B: string;
   Figure: FigureBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.CoordExpression
+// github.com/benoitkugler/maths-online/maths/questions.CoordExpression
 export interface CoordExpression {
   X: string;
   Y: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigurePointFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigurePointFieldBlock
 export interface FigurePointFieldBlock {
   Answer: CoordExpression;
   Figure: FigureBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureVectorFieldBlock
 export interface FigureVectorFieldBlock {
   Answer: CoordExpression;
   AnswerOrigin: CoordExpression;
   Figure: FigureBlock;
   MustHaveOrigin: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VectorPairCriterion
+// github.com/benoitkugler/maths-online/maths/questions.VectorPairCriterion
 export enum VectorPairCriterion {
   VectorColinear = 1,
   VectorEquals = 0,
@@ -230,14 +302,14 @@ export const VectorPairCriterionLabels: {
   [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.FigureVectorPairFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FigureVectorPairFieldBlock
 export interface FigureVectorPairFieldBlock {
   Figure: FigureBlock;
   Criterion: VectorPairCriterion;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Interpolated
+// github.com/benoitkugler/maths-online/maths/questions.Interpolated
 export type Interpolated = string;
-// github.com/benoitkugler/maths-online/maths/exercice.FormulaBlock
+// github.com/benoitkugler/maths-online/maths/questions.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
 }
@@ -246,12 +318,7 @@ export interface FunctionDecoration {
   Label: string;
   Color: string;
 }
-// github.com/benoitkugler/maths-online/maths/expression.Variable
-export interface Variable {
-  Indice: string;
-  Name: number;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionDefinition
+// github.com/benoitkugler/maths-online/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
   Function: string;
   Decoration: FunctionDecoration;
@@ -259,42 +326,42 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionGraphBlock
+// github.com/benoitkugler/maths-online/maths/questions.FunctionGraphBlock
 export interface FunctionGraphBlock {
   Functions: FunctionDefinition[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionPointsFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
   Function: string;
   Label: string;
   Variable: Variable;
   XGrid: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VariationTableBlock
+// github.com/benoitkugler/maths-online/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
   Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.FunctionVariationGraphBlock
+// github.com/benoitkugler/maths-online/maths/questions.FunctionVariationGraphBlock
 export type FunctionVariationGraphBlock = VariationTableBlock;
-// github.com/benoitkugler/maths-online/maths/exercice.NumberFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.OrderedListFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
   Label: Interpolated;
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.RadioFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {
   Answer: string;
   Proposals: Interpolated[] | null;
   AsDropDown: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.SignSymbol
+// github.com/benoitkugler/maths-online/maths/questions.SignSymbol
 export enum SignSymbol {
   ForbiddenValue = 2,
   Nothing = 0,
@@ -307,68 +374,56 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
   [SignSymbol.Zero]: "0",
 };
 
-// github.com/benoitkugler/maths-online/maths/exercice.SignTableBlock
+// github.com/benoitkugler/maths-online/maths/questions.SignTableBlock
 export interface SignTableBlock {
   Label: string;
   FxSymbols: SignSymbol[] | null;
   Xs: Interpolated[] | null;
   Signs: boolean[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TableBlock
+// github.com/benoitkugler/maths-online/maths/questions.TableBlock
 export interface TableBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Values: (TextPart[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TableFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.TableFieldBlock
 export interface TableFieldBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TextBlock
+// github.com/benoitkugler/maths-online/maths/questions.TextBlock
 export interface TextBlock {
   Parts: Interpolated;
   Bold: boolean;
   Italic: boolean;
   Smaller: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TreeNodeAnswer
+// github.com/benoitkugler/maths-online/maths/questions.TreeNodeAnswer
 export interface TreeNodeAnswer {
   Children: TreeNodeAnswer[] | null;
   Probabilities: string[] | null;
   Value: number;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.TreeFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.TreeFieldBlock
 export interface TreeFieldBlock {
   EventsProposals: string[] | null;
   AnswerRoot: TreeNodeAnswer;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VariationTableFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.VariationTableFieldBlock
 export interface VariationTableFieldBlock {
   Answer: VariationTableBlock;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.VectorFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions.VectorFieldBlock
 export interface VectorFieldBlock {
   Answer: CoordExpression;
   AcceptColinear: boolean;
   DisplayColumn: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/exercice.Enonce
+// github.com/benoitkugler/maths-online/maths/questions.Enonce
 export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.RandomParameter
-export interface RandomParameter {
-  expression: string;
-  variable: Variable;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.RandomParameters
-export type RandomParameters = RandomParameter[] | null;
-// github.com/benoitkugler/maths-online/maths/exercice.Parameters
-export interface Parameters {
-  Variables: RandomParameters;
-  Intrinsics: string[] | null;
-}
-// github.com/benoitkugler/maths-online/maths/exercice.QuestionPage
+// github.com/benoitkugler/maths-online/maths/questions.QuestionPage
 export interface QuestionPage {
   title: string;
   enonce: Enonce;
@@ -381,6 +436,7 @@ export interface Question {
   public: boolean;
   id_teacher: number;
   description: string;
+  need_exercice: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionTag
 export interface QuestionTag {

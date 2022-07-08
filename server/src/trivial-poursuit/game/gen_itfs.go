@@ -72,11 +72,11 @@ func (item clientEventDataWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	AnswerKind = iota
-	ClientMoveKind
-	DiceClickedKind
-	PingKind
-	WantNextTurnKind
+	AnswerclKind = iota
+	ClientMoveclKind
+	DiceClickedclKind
+	PingclKind
+	WantNextTurnclKind
 )
 
 // GameEventWrapper may be used as replacements for GameEvent
@@ -96,55 +96,55 @@ func (out *GameEventWrapper) UnmarshalJSON(src []byte) error {
 	}
 	switch wr.Kind {
 	case 0:
-		var data GameTerminated
+		var data DiceThrow
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 1:
-		var data LobbyUpdate
+		var data GameEnd
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 2:
-		var data PlayerJoin
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 3:
-		var data PlayerReconnected
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 4:
-		var data PlayerTurn
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 5:
-		var data PossibleMoves
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 6:
-		var data diceThrow
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 7:
-		var data gameEnd
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 8:
 		var data GameStart
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case 3:
+		var data GameTerminated
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 4:
+		var data LobbyUpdate
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 5:
+		var data Move
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 6:
+		var data PlayerAnswerResults
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 7:
+		var data PlayerJoin
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case 8:
+		var data PlayerLeft
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case 9:
-		var data move
+		var data PlayerReconnected
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 10:
-		var data playerAnswerResults
+		var data PlayerTurn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 11:
-		var data playerLeft
+		var data PossibleMoves
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 12:
-		var data showQuestion
+		var data ShowQuestion
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 
@@ -161,31 +161,31 @@ func (item GameEventWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case GameTerminated:
+	case DiceThrow:
 		wr = wrapper{Kind: 0, Data: data}
-	case LobbyUpdate:
+	case GameEnd:
 		wr = wrapper{Kind: 1, Data: data}
-	case PlayerJoin:
-		wr = wrapper{Kind: 2, Data: data}
-	case PlayerReconnected:
-		wr = wrapper{Kind: 3, Data: data}
-	case PlayerTurn:
-		wr = wrapper{Kind: 4, Data: data}
-	case PossibleMoves:
-		wr = wrapper{Kind: 5, Data: data}
-	case diceThrow:
-		wr = wrapper{Kind: 6, Data: data}
-	case gameEnd:
-		wr = wrapper{Kind: 7, Data: data}
 	case GameStart:
+		wr = wrapper{Kind: 2, Data: data}
+	case GameTerminated:
+		wr = wrapper{Kind: 3, Data: data}
+	case LobbyUpdate:
+		wr = wrapper{Kind: 4, Data: data}
+	case Move:
+		wr = wrapper{Kind: 5, Data: data}
+	case PlayerAnswerResults:
+		wr = wrapper{Kind: 6, Data: data}
+	case PlayerJoin:
+		wr = wrapper{Kind: 7, Data: data}
+	case PlayerLeft:
 		wr = wrapper{Kind: 8, Data: data}
-	case move:
+	case PlayerReconnected:
 		wr = wrapper{Kind: 9, Data: data}
-	case playerAnswerResults:
+	case PlayerTurn:
 		wr = wrapper{Kind: 10, Data: data}
-	case playerLeft:
+	case PossibleMoves:
 		wr = wrapper{Kind: 11, Data: data}
-	case showQuestion:
+	case ShowQuestion:
 		wr = wrapper{Kind: 12, Data: data}
 
 	default:
@@ -195,19 +195,19 @@ func (item GameEventWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	GameTerminatedKind = iota
-	LobbyUpdateKind
-	PlayerJoinKind
-	PlayerReconnectedKind
-	PlayerTurnKind
-	PossibleMovesKind
-	diceThrowKind
-	gameEndKind
-	gameStartKind
-	moveKind
-	playerAnswerResultsKind
-	playerLeftKind
-	showQuestionKind
+	DiceThrowGaKind = iota
+	GameEndGaKind
+	GameStartGaKind
+	GameTerminatedGaKind
+	LobbyUpdateGaKind
+	MoveGaKind
+	PlayerAnswerResultsGaKind
+	PlayerJoinGaKind
+	PlayerLeftGaKind
+	PlayerReconnectedGaKind
+	PlayerTurnGaKind
+	PossibleMovesGaKind
+	ShowQuestionGaKind
 )
 
 func (ct Events) MarshalJSON() ([]byte, error) {

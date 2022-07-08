@@ -25,20 +25,28 @@
 
   <v-sheet
     variant="outlined"
-    @click.stop="startEdit"
     rounded
     border="secondary"
-    :style="{ 'border-width': '2px', cursor: props.readonly ? '' : 'pointer' }"
+    :style="{
+      'border-width': '2px',
+      cursor: props.readonly ? '' : 'pointer',
+      'text-align': 'center',
+    }"
     :class="props.yPadding ? 'py-1' : ''"
   >
-    <div
+    <v-btn
       v-if="props.modelValue.length == 0"
-      style="text-align: center; font-style: italic; font-size: 10pt"
-      class="pa-1"
+      @click.stop="startEdit"
+      flat
+      size="x-small"
+      class="py-0 px-2"
+      :disabled="props.readonly"
+      block
     >
-      Ajouter une étiquette...
-    </div>
-    <v-row no-gutters v-else justify="center">
+      {{ props.readonly ? "Aucune étiquette" : "Ajouter une étiquette..." }}
+    </v-btn>
+
+    <v-row no-gutters v-else justify="center" @click.stop="startEdit">
       <v-col v-for="tag in props.modelValue" :key="tag" cols="auto">
         <tag-chip :tag="tag" :pointer="!props.readonly"> </tag-chip>
       </v-col>

@@ -125,7 +125,9 @@
             </div>
           </v-list>
           <div class="my-2">
-            {{ questions.length }} / {{ size }} questions affichées.
+            {{ questions.length }} / {{ serverNbGroups }} questions affichées.
+            ({{ displayedNbQuestions }} / {{ serverNbQuestions }}
+            variantes)
           </div>
         </v-col>
       </v-row>
@@ -142,7 +144,7 @@ import type {
 import { controller, IsDev } from "@/controller/controller";
 import { personnalOrigin } from "@/controller/editor";
 import type { Question } from "@/controller/exercice_gen";
-import { onMounted } from "@vue/runtime-core";
+import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import QuestionGroupRow from "./QuestionGroupRow.vue";
 import QuestionRow from "./QuestionRow.vue";
@@ -157,7 +159,15 @@ const emit = defineEmits<{
 }>();
 
 let questions = $ref<QuestionGroup[]>([]);
-let size = $ref(0);
+let serverNbGroups = $ref(0);
+let serverNbQuestions = $ref(0);
+const displayedNbQuestions = computed(() => {
+  let nb = 0;
+  questions.forEach((group) => {
+    nb += group.Questions?.length || 0;
+  });
+  return nb;
+});
 
 let querySearch = $ref("");
 
@@ -191,11 +201,12 @@ async function fetchQuestions() {
     return;
   }
   questions = result.Questions || [];
-  size = result.Size;
+  serverNbGroups = result.NbGroups;
+  serverNbQuestions = result.NbQuestions;
 }
 
 async function createQuestion() {
-  const out = await controller.EditorCreateQuestion({});
+  const out = await controller.EditorCreateQuestion();
   if (out == undefined) {
     return;
   }

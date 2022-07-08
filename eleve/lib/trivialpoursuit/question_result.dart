@@ -1,4 +1,4 @@
-import 'package:eleve/exercices/question.dart';
+import 'package:eleve/shared/title.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
 

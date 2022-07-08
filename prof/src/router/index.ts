@@ -1,4 +1,5 @@
 import ClassroomsListVue from "@/views/ClassroomsList.vue";
+import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
@@ -26,10 +27,16 @@ const router = createRouter({
       meta: { Label: "Configuration du TrivialPoursuit" },
     },
     {
-      path: "/editor",
-      name: "editor",
+      path: "/editor-question",
+      name: "editor-question",
       component: QuestionEditor,
       meta: { Label: "Editeur de question" },
+    },
+    {
+      path: "/editor-exercice",
+      name: "editor-exercice",
+      component: ExerciceEditorVue,
+      meta: { Label: "Editeur d'exercices" },
     },
     // {
     //   path: '/about',
@@ -38,7 +45,11 @@ const router = createRouter({
     //   // this generates a separate chunk (About.[hash].js) for this route
     //   // which is lazy-loaded when the route is visited.
     //   component: () => import('../views/AboutView.vue')
-    // }
+    // },
+    {
+      path: "/:catchAll(.*)",
+      redirect: { name: "home" },
+    },
   ],
 });
 

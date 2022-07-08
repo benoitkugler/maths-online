@@ -430,6 +430,16 @@ func DeleteClassroomsByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
+// SelectStudentClassroomByIdStudent return zero or one item, thanks to a UNIQUE constraint
+func SelectStudentClassroomByIdStudent(tx DB, idStudent int64) (item StudentClassroom, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM student_classrooms WHERE id_student = $1", idStudent)
+	item, err = ScanStudentClassroom(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func SelectStudentClassroomsByIdStudents(tx DB, idStudents ...int64) (StudentClassrooms, error) {
 	rows, err := tx.Query("SELECT * FROM student_classrooms WHERE id_student = ANY($1)", pq.Int64Array(idStudents))
 	if err != nil {
@@ -463,10 +473,10 @@ func DeleteStudentClassroomsByIdClassrooms(tx DB, idClassrooms ...int64) (Studen
 }
 
 // ByIdStudent returns a map with 'IdStudent' as keys.
-func (items StudentClassrooms) ByIdStudent() map[int64]StudentClassrooms {
-	out := make(map[int64]StudentClassrooms)
+func (items StudentClassrooms) ByIdStudent() map[int64]StudentClassroom {
+	out := make(map[int64]StudentClassroom, len(items))
 	for _, target := range items {
-		out[target.IdStudent] = append(out[target.IdStudent], target)
+		out[target.IdStudent] = target
 	}
 	return out
 }

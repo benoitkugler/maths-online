@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
+	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -72,7 +73,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 
 func testInsertSignTable(t *testing.T, db *sql.DB) {
 	qu := randQuestion()
-	qu.Page.Enonce = exercice.Enonce{randexe_SignTableBlock()}
+	qu.Page.Enonce = questions.Enonce{randque_SignTableBlock()}
 	qu, err := qu.Insert(db)
 	if err != nil {
 		t.Fatal(err)
@@ -129,5 +130,62 @@ func BenchmarkValidation(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		validateAllQuestions(qu)
+	}
+}
+
+func TestCRUDExercice(t *testing.T) {
+	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer testutils.RemoveDBDev()
+	defer db.Close()
+
+	user, err := teacher.Teacher{}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ex := randExercice()
+	ex.IdTeacher = user.Id
+	ex, err = ex.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	qu1, err := Question{IdTeacher: user.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qu2, err := Question{IdTeacher: user.Id}.Insert(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = InsertManyExerciceQuestions(tx,
+		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu1.Id, Bareme: 4, Index: 0},
+		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu2.Id, Bareme: 5, Index: 1},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// progression
+	prog, err := Progression{IdExercice: ex.Id}.Insert(tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = InsertManyProgressionQuestions(tx,
+		ProgressionQuestion{IdProgression: prog.Id, IdExercice: prog.IdExercice, Index: 0, History: randQuestionHistory()},
+		ProgressionQuestion{IdProgression: prog.Id, IdExercice: prog.IdExercice, Index: 1, History: randQuestionHistory()},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
 	}
 }

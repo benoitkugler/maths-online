@@ -4,11 +4,14 @@ import 'dart:js' as js;
 import 'dart:math';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/question.dart';
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/questions/question.dart';
+import 'package:eleve/questions/types.gen.dart' hide Answer;
+import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
@@ -23,7 +26,7 @@ void main() {
   runApp(LoopbackApp(id, bm));
 }
 
-/// [LoopbackApp] show the content of a question instance
+/// [LoopbackApp] show the content of a question or an exercice instance
 /// being edited, as it will be displayed to the student
 /// It is meant to be embedded in a Web page, not used as a mobile app.
 class LoopbackApp extends StatelessWidget {
@@ -41,28 +44,45 @@ class LoopbackApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       localizationsDelegates: localizations,
       supportedLocales: locales,
-      home: _QuestionLoopback(sessionID, buildMode),
+      home: _EditorLoopback(sessionID, buildMode),
     );
   }
 }
 
-class _QuestionLoopback extends StatefulWidget {
+enum _Mode { paused, question, exercice }
+
+class _QuestionData {
+  final Question question;
+  final Answers? serverAnswer;
+
+  const _QuestionData(this.question, this.serverAnswer);
+}
+
+class _ExerciceData {
+  final Exercice exercice;
+  const _ExerciceData(this.exercice);
+}
+
+/// owns the websocket connection and switch between question
+/// or exercice mode
+class _EditorLoopback extends StatefulWidget {
   final String sessionID;
   final BuildMode buildMode;
 
-  const _QuestionLoopback(this.sessionID, this.buildMode, {Key? key})
+  const _EditorLoopback(this.sessionID, this.buildMode, {Key? key})
       : super(key: key);
 
   @override
-  State<_QuestionLoopback> createState() => _QuestionLoopbackState();
+  State<_EditorLoopback> createState() => _EditorLoopbackState();
 }
 
-class _QuestionLoopbackState extends State<_QuestionLoopback> {
+class _EditorLoopbackState extends State<_EditorLoopback> {
   late WebSocketChannel channel;
   late Timer _keepAliveTimmer;
 
-  LoopbackState? question;
-  QuestionAnswersIn? serverAnswer;
+  _Mode mode = _Mode.paused;
+  _QuestionData? questionData;
+  _ExerciceData? exerciceData;
 
   @override
   void initState() {
@@ -75,9 +95,8 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
 
     // websocket is closed in case of inactivity
     // prevent it by sending pings
-    _keepAliveTimmer = Timer.periodic(const Duration(seconds: 50), (timer) {
-      channel.sink.add(jsonEncode(
-          {"Kind": loopbackClientDataKindToJson(LoopbackClientDataKind.ping)}));
+    _keepAliveTimmer = Timer.periodic(const Duration(seconds: 50), (_) {
+      _send(const LoopbackPing());
     });
 
     super.initState();
@@ -90,19 +109,16 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     super.dispose();
   }
 
+  void _send(LoopbackClientEvent event) {
+    channel.sink.add(jsonEncode(loopbackClientEventToJson(event)));
+  }
+
   void showError(dynamic error) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 5),
       backgroundColor: Theme.of(context).colorScheme.error,
       content: Text("Une erreur est survenue : $error"),
     ));
-  }
-
-  void _onServerState(LoopbackState state) {
-    setState(() {
-      question = state;
-      serverAnswer = null;
-    });
   }
 
   void _onServerValidAnswer(QuestionAnswersOut rep) {
@@ -118,79 +134,150 @@ class _QuestionLoopbackState extends State<_QuestionLoopback> {
     ));
   }
 
-  void _onServerShowCorrectAnswer(QuestionAnswersIn answer) {
-    setState(() {
-      serverAnswer = answer;
-    });
-  }
-
-  void listen(dynamic event) {
+  void listen(dynamic data) {
+    final LoopbackServerEvent event;
     try {
-      final data = jsonDecode(event as String) as Map<String, dynamic>;
-      final kind = loopbackServerDataKindFromJson(data["Kind"]);
-      switch (kind) {
-        case LoopbackServerDataKind.state:
-          return _onServerState(loopbackStateFromJson(data["Data"]));
-        case LoopbackServerDataKind.validAnswerOut:
-          return _onServerValidAnswer(questionAnswersOutFromJson(data["Data"]));
-        case LoopbackServerDataKind.showCorrectAnswerOut:
-          return _onServerShowCorrectAnswer(
-              questionAnswersInFromJson(data["Data"]));
-      }
+      event = loopbackServerEventFromJson(jsonDecode(data as String));
     } catch (e) {
       showError(e);
+      return;
+    }
+
+    if (event is LoopbackPaused) {
+      setState(() {
+        mode = _Mode.paused;
+      });
+    } else if (event is LoopbackQuestion) {
+      final qu = event.question;
+      setState(() {
+        mode = _Mode.question;
+        questionData = _QuestionData(qu, null);
+      });
+    } else if (event is LoopbackQuestionValidOut) {
+      _onServerValidAnswer(event.answers);
+    } else if (event is LoopbackQuestionCorrectAnswersOut) {
+      final ans = event.answers;
+      setState(() {
+        questionData = _QuestionData(questionData!.question, ans.data);
+      });
+    } else if (event is LoopbackShowExercice) {
+      final ex = Exercice(event.exercice, event.progression);
+      setState(() {
+        mode = _Mode.exercice;
+        exerciceData = _ExerciceData(ex);
+      });
     }
   }
 
-  void _validAnswer(ValidQuestionNotification notif) {
-    channel.sink.add(jsonEncode({
-      "Kind":
-          loopbackClientDataKindToJson(LoopbackClientDataKind.validAnswerIn),
-      "Data": questionAnswersInToJson(notif.data)
-    }));
+  void evaluateQuestionAnswer(QuestionAnswersIn data) {
+    _send(LoopbackQuestionValidIn(data));
   }
 
   void _showCorrectAnswer() {
-    channel.sink.add(jsonEncode({
-      "Kind": loopbackClientDataKindToJson(
-          LoopbackClientDataKind.showCorrectAnswerIn),
-      "Data": null,
-    }));
+    if (mode == _Mode.question) {
+      _send(const LoopbackQuestionCorrectAnswersIn());
+    } else if (mode == _Mode.exercice) {
+      // TODO:
+    }
+  }
+
+  Future<EvaluateExerciceOut> evaluateExerciceAnswer(
+      EvaluateExerciceIn params) async {
+    final EvaluateExerciceOut result;
+    try {
+      final uri =
+          Uri.parse(widget.buildMode.serverURL("/api/exercices/evaluate"));
+      final resp = await http.post(uri,
+          body: jsonEncode(evaluateExerciceInToJson(params)),
+          headers: {
+            'Content-type': 'application/json',
+          });
+      result = evaluateExerciceOutFromJson(jsonDecode(resp.body));
+    } catch (e) {
+      showError(e);
+      rethrow;
+    }
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(actions: [
-        TextButton(
-            onPressed: _showCorrectAnswer,
-            child: const Text("Afficher la réponse."))
-      ]),
-      body: question == null || question!.isPaused
-          ? Center(
+    switch (mode) {
+      case _Mode.paused:
+        return Scaffold(
+          body: Center(
               child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                CircularProgressIndicator(),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text("En attente de prévisualisation..."),
-                ),
-              ],
-            ))
-          : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: QuestionW(
-                widget.buildMode,
-                question!.question,
-                Color.fromARGB(255, 150 + Random().nextInt(100),
-                    150 + Random().nextInt(100), Random().nextInt(256)),
-                _validAnswer,
-                timeout: null,
-                blockOnSubmit: false,
-                answer: serverAnswer?.data,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Text("En attente de prévisualisation..."),
               ),
-            ),
+            ],
+          )),
+        );
+      case _Mode.question:
+        return Scaffold(
+          appBar: AppBar(actions: [
+            TextButton(
+                onPressed: _showCorrectAnswer,
+                child: const Text("Afficher la réponse."))
+          ]),
+          body: _QuestionLoopback(
+            widget.buildMode,
+            questionData!.question,
+            questionData!.serverAnswer,
+            evaluateQuestionAnswer,
+          ),
+        );
+      case _Mode.exercice:
+        return _ExerciceLoopback(
+            widget.buildMode, exerciceData!.exercice, evaluateExerciceAnswer);
+    }
+  }
+}
+
+class _QuestionLoopback extends StatelessWidget {
+  final BuildMode buildMode;
+  final Question question;
+  final Answers? answers;
+  final void Function(QuestionAnswersIn) onValid;
+
+  const _QuestionLoopback(
+      this.buildMode, this.question, this.answers, this.onValid,
+      {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: QuestionW(
+        buildMode,
+        question,
+        Color.fromARGB(255, 150 + Random().nextInt(100),
+            150 + Random().nextInt(100), Random().nextInt(256)),
+        onValid,
+        timeout: null,
+        blockOnSubmit: false,
+        answer: answers,
+      ),
     );
+  }
+}
+
+class _ExerciceLoopback extends StatelessWidget {
+  final BuildMode buildMode;
+  final Exercice exercice;
+  final Future<EvaluateExerciceOut> Function(EvaluateExerciceIn) onEvaluate;
+
+  const _ExerciceLoopback(this.buildMode, this.exercice, this.onEvaluate,
+      {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ExerciceW(buildMode, exercice, onEvaluate);
   }
 }

@@ -3,9 +3,9 @@ package editor
 import (
 	"math/rand"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -32,42 +32,160 @@ func randstring() string {
 	return string(b)
 }
 
-func randBlock() exercice.Block {
-	choix := [...]exercice.Block{
-		randexe_ExpressionFieldBlock(),
-		randexe_FigureAffineLineFieldBlock(),
-		randexe_FigureBlock(),
-		randexe_FigurePointFieldBlock(),
-		randexe_FigureVectorFieldBlock(),
-		randexe_FigureVectorPairFieldBlock(),
-		randexe_FormulaBlock(),
-		randexe_FunctionGraphBlock(),
-		randexe_FunctionPointsFieldBlock(),
-		randexe_FunctionVariationGraphBlock(),
-		randexe_NumberFieldBlock(),
-		randexe_OrderedListFieldBlock(),
-		randexe_RadioFieldBlock(),
-		randexe_SignTableBlock(),
-		randexe_TableBlock(),
-		randexe_TableFieldBlock(),
-		randexe_TextBlock(),
-		randexe_TreeFieldBlock(),
-		randexe_VariationTableBlock(),
-		randexe_VariationTableFieldBlock(),
-		randexe_VectorFieldBlock(),
+func randrune() rune {
+	return rune(rand.Intn(1000000))
+}
+
+func randexp_Variable() expression.Variable {
+	return expression.Variable{
+		Indice: randstring(),
+		Name:   randrune(),
+	}
+}
+
+func randque_RandomParameter() questions.RandomParameter {
+	return questions.RandomParameter{
+		Expression: randstring(),
+		Variable:   randexp_Variable(),
+	}
+}
+
+func randSliceque_RandomParameter() []questions.RandomParameter {
+	l := 40 + rand.Intn(10)
+	out := make([]questions.RandomParameter, l)
+	for i := range out {
+		out[i] = randque_RandomParameter()
+	}
+	return out
+}
+
+func randRandomParameters() questions.RandomParameters {
+	return questions.RandomParameters(randSliceque_RandomParameter())
+}
+
+func randSlicestring() []string {
+	l := 40 + rand.Intn(10)
+	out := make([]string, l)
+	for i := range out {
+		out[i] = randstring()
+	}
+	return out
+}
+
+func randque_Parameters() questions.Parameters {
+	return questions.Parameters{
+		Variables:  randRandomParameters(),
+		Intrinsics: randSlicestring(),
+	}
+}
+
+func randFlow() Flow {
+	choix := [...]Flow{Parallel, Sequencial}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
+}
+
+func randExercice() Exercice {
+	return Exercice{
+		Id:          randint64(),
+		Title:       randstring(),
+		Description: randstring(),
+		Parameters:  randque_Parameters(),
+		Flow:        randFlow(),
+		IdTeacher:   randint64(),
+		Public:      randbool(),
+	}
+}
+
+func randint() int {
+	return int(rand.Intn(1000000))
+}
+
+func randExerciceQuestion() ExerciceQuestion {
+	return ExerciceQuestion{
+		IdExercice: randint64(),
+		IdQuestion: randint64(),
+		Bareme:     randint(),
+		Index:      randint(),
+	}
+}
+
+func randLevelTag() LevelTag {
+	choix := [...]LevelTag{Premiere, Seconde, Terminale}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randProgression() Progression {
+	return Progression{
+		Id:         randint64(),
+		IdExercice: randint64(),
+	}
+}
+
+func randSlicebool() []bool {
+	l := 40 + rand.Intn(10)
+	out := make([]bool, l)
+	for i := range out {
+		out[i] = randbool()
+	}
+	return out
+}
+
+func randQuestionHistory() QuestionHistory {
+	return QuestionHistory(randSlicebool())
+}
+
+func randProgressionQuestion() ProgressionQuestion {
+	return ProgressionQuestion{
+		IdProgression: randint64(),
+		IdExercice:    randint64(),
+		Index:         randint(),
+		History:       randQuestionHistory(),
+	}
+}
+
+func randBlock() questions.Block {
+	choix := [...]questions.Block{
+		randque_ExpressionFieldBlock(),
+		randque_FigureAffineLineFieldBlock(),
+		randque_FigureBlock(),
+		randque_FigurePointFieldBlock(),
+		randque_FigureVectorFieldBlock(),
+		randque_FigureVectorPairFieldBlock(),
+		randque_FormulaBlock(),
+		randque_FunctionGraphBlock(),
+		randque_FunctionPointsFieldBlock(),
+		randque_FunctionVariationGraphBlock(),
+		randque_NumberFieldBlock(),
+		randque_OrderedListFieldBlock(),
+		randque_RadioFieldBlock(),
+		randque_SignTableBlock(),
+		randque_TableBlock(),
+		randque_TableFieldBlock(),
+		randque_TextBlock(),
+		randque_TreeFieldBlock(),
+		randque_VariationTableBlock(),
+		randque_VariationTableFieldBlock(),
+		randque_VectorFieldBlock(),
 	}
 	i := rand.Intn(21)
 	return choix[i]
 }
 
-func randTextKind() exercice.TextKind {
-	choix := [...]exercice.TextKind{exercice.Expression, exercice.StaticMath, exercice.Text}
+func randTextKind() questions.TextKind {
+	choix := [...]questions.TextKind{questions.Expression, questions.StaticMath, questions.Text}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
-func randexe_TextPart() exercice.TextPart {
-	return exercice.TextPart{
+func randque_TextPart() questions.TextPart {
+	return questions.TextPart{
 		Content: randstring(),
 		Kind:    randTextKind(),
 	}
@@ -79,10 +197,10 @@ func randComparisonLevel() expression.ComparisonLevel {
 	return choix[i]
 }
 
-func randexe_ExpressionFieldBlock() exercice.ExpressionFieldBlock {
-	return exercice.ExpressionFieldBlock{
+func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
+	return questions.ExpressionFieldBlock{
 		Expression:      randstring(),
-		Label:           randexe_TextPart(),
+		Label:           randque_TextPart(),
 		ComparisonLevel: randComparisonLevel(),
 	}
 }
@@ -176,10 +294,6 @@ func randrep_RandomDrawings() repere.RandomDrawings {
 	}
 }
 
-func randint() int {
-	return int(rand.Intn(1000000))
-}
-
 func randfloat64() float64 {
 	return rand.Float64() * float64(rand.Int31())
 }
@@ -199,70 +313,65 @@ func randrep_RepereBounds() repere.RepereBounds {
 	}
 }
 
-func randbool() bool {
-	i := rand.Int31n(2)
-	return i == 1
-}
-
-func randexe_FigureBlock() exercice.FigureBlock {
-	return exercice.FigureBlock{
+func randque_FigureBlock() questions.FigureBlock {
+	return questions.FigureBlock{
 		Drawings: randrep_RandomDrawings(),
 		Bounds:   randrep_RepereBounds(),
 		ShowGrid: randbool(),
 	}
 }
 
-func randexe_FigureAffineLineFieldBlock() exercice.FigureAffineLineFieldBlock {
-	return exercice.FigureAffineLineFieldBlock{
+func randque_FigureAffineLineFieldBlock() questions.FigureAffineLineFieldBlock {
+	return questions.FigureAffineLineFieldBlock{
 		Label:  randstring(),
 		A:      randstring(),
 		B:      randstring(),
-		Figure: randexe_FigureBlock(),
+		Figure: randque_FigureBlock(),
 	}
 }
 
-func randexe_CoordExpression() exercice.CoordExpression {
-	return exercice.CoordExpression{
+func randque_CoordExpression() questions.CoordExpression {
+	return questions.CoordExpression{
 		X: randstring(),
 		Y: randstring(),
 	}
 }
 
-func randexe_FigurePointFieldBlock() exercice.FigurePointFieldBlock {
-	return exercice.FigurePointFieldBlock{
-		Answer: randexe_CoordExpression(),
-		Figure: randexe_FigureBlock(),
+func randque_FigurePointFieldBlock() questions.FigurePointFieldBlock {
+	return questions.FigurePointFieldBlock{
+		Answer: randque_CoordExpression(),
+		Figure: randque_FigureBlock(),
 	}
 }
 
-func randexe_FigureVectorFieldBlock() exercice.FigureVectorFieldBlock {
-	return exercice.FigureVectorFieldBlock{
-		Answer:         randexe_CoordExpression(),
-		AnswerOrigin:   randexe_CoordExpression(),
-		Figure:         randexe_FigureBlock(),
+func randque_FigureVectorFieldBlock() questions.FigureVectorFieldBlock {
+	return questions.FigureVectorFieldBlock{
+		Answer:         randque_CoordExpression(),
+		AnswerOrigin:   randque_CoordExpression(),
+		Figure:         randque_FigureBlock(),
 		MustHaveOrigin: randbool(),
 	}
 }
 
-func randVectorPairCriterion() exercice.VectorPairCriterion {
-	choix := [...]exercice.VectorPairCriterion{exercice.VectorColinear, exercice.VectorEquals, exercice.VectorOrthogonal}
+func randVectorPairCriterion() questions.VectorPairCriterion {
+	choix := [...]questions.VectorPairCriterion{questions.VectorColinear, questions.VectorEquals, questions.VectorOrthogonal}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
-func randexe_FigureVectorPairFieldBlock() exercice.FigureVectorPairFieldBlock {
-	return exercice.FigureVectorPairFieldBlock{
-		Figure:    randexe_FigureBlock(),
+func randque_FigureVectorPairFieldBlock() questions.FigureVectorPairFieldBlock {
+	return questions.FigureVectorPairFieldBlock{
+		Figure:    randque_FigureBlock(),
 		Criterion: randVectorPairCriterion(),
 	}
 }
 
-func randInterpolated() exercice.Interpolated {
-	return exercice.Interpolated(randstring())
+func randInterpolated() questions.Interpolated {
+	return questions.Interpolated(randstring())
 }
 
-func randexe_FormulaBlock() exercice.FormulaBlock {
-	return exercice.FormulaBlock{
+func randque_FormulaBlock() questions.FormulaBlock {
+	return questions.FormulaBlock{
 		Parts: randInterpolated(),
 	}
 }
@@ -274,19 +383,8 @@ func randfun_FunctionDecoration() functiongrapher.FunctionDecoration {
 	}
 }
 
-func randrune() rune {
-	return rune(rand.Intn(1000000))
-}
-
-func randexp_Variable() expression.Variable {
-	return expression.Variable{
-		Indice: randstring(),
-		Name:   randrune(),
-	}
-}
-
-func randexe_FunctionDefinition() exercice.FunctionDefinition {
-	return exercice.FunctionDefinition{
+func randque_FunctionDefinition() questions.FunctionDefinition {
+	return questions.FunctionDefinition{
 		Function:   randstring(),
 		Decoration: randfun_FunctionDecoration(),
 		Variable:   randexp_Variable(),
@@ -295,32 +393,23 @@ func randexe_FunctionDefinition() exercice.FunctionDefinition {
 	}
 }
 
-func randSliceexe_FunctionDefinition() []exercice.FunctionDefinition {
+func randSliceque_FunctionDefinition() []questions.FunctionDefinition {
 	l := 40 + rand.Intn(10)
-	out := make([]exercice.FunctionDefinition, l)
+	out := make([]questions.FunctionDefinition, l)
 	for i := range out {
-		out[i] = randexe_FunctionDefinition()
+		out[i] = randque_FunctionDefinition()
 	}
 	return out
 }
 
-func randexe_FunctionGraphBlock() exercice.FunctionGraphBlock {
-	return exercice.FunctionGraphBlock{
-		Functions: randSliceexe_FunctionDefinition(),
+func randque_FunctionGraphBlock() questions.FunctionGraphBlock {
+	return questions.FunctionGraphBlock{
+		Functions: randSliceque_FunctionDefinition(),
 	}
 }
 
-func randSlicestring() []string {
-	l := 40 + rand.Intn(10)
-	out := make([]string, l)
-	for i := range out {
-		out[i] = randstring()
-	}
-	return out
-}
-
-func randexe_FunctionPointsFieldBlock() exercice.FunctionPointsFieldBlock {
-	return exercice.FunctionPointsFieldBlock{
+func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
+	return questions.FunctionPointsFieldBlock{
 		Function: randstring(),
 		Label:    randstring(),
 		Variable: randexp_Variable(),
@@ -328,71 +417,62 @@ func randexe_FunctionPointsFieldBlock() exercice.FunctionPointsFieldBlock {
 	}
 }
 
-func randexe_FunctionVariationGraphBlock() exercice.FunctionVariationGraphBlock {
-	return exercice.FunctionVariationGraphBlock{
+func randque_FunctionVariationGraphBlock() questions.FunctionVariationGraphBlock {
+	return questions.FunctionVariationGraphBlock{
 		Label: randInterpolated(),
 		Xs:    randSlicestring(),
 		Fxs:   randSlicestring(),
 	}
 }
 
-func randexe_NumberFieldBlock() exercice.NumberFieldBlock {
-	return exercice.NumberFieldBlock{
+func randque_NumberFieldBlock() questions.NumberFieldBlock {
+	return questions.NumberFieldBlock{
 		Expression: randstring(),
 	}
 }
 
-func randSliceInterpolated() []exercice.Interpolated {
+func randSliceInterpolated() []questions.Interpolated {
 	l := 40 + rand.Intn(10)
-	out := make([]exercice.Interpolated, l)
+	out := make([]questions.Interpolated, l)
 	for i := range out {
 		out[i] = randInterpolated()
 	}
 	return out
 }
 
-func randexe_OrderedListFieldBlock() exercice.OrderedListFieldBlock {
-	return exercice.OrderedListFieldBlock{
+func randque_OrderedListFieldBlock() questions.OrderedListFieldBlock {
+	return questions.OrderedListFieldBlock{
 		Label:               randInterpolated(),
 		Answer:              randSliceInterpolated(),
 		AdditionalProposals: randSliceInterpolated(),
 	}
 }
 
-func randexe_RadioFieldBlock() exercice.RadioFieldBlock {
-	return exercice.RadioFieldBlock{
+func randque_RadioFieldBlock() questions.RadioFieldBlock {
+	return questions.RadioFieldBlock{
 		Answer:     randstring(),
 		Proposals:  randSliceInterpolated(),
 		AsDropDown: randbool(),
 	}
 }
 
-func randSignSymbol() exercice.SignSymbol {
-	choix := [...]exercice.SignSymbol{exercice.ForbiddenValue, exercice.Nothing, exercice.Zero}
+func randSignSymbol() questions.SignSymbol {
+	choix := [...]questions.SignSymbol{questions.ForbiddenValue, questions.Nothing, questions.Zero}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
 
-func randSliceSignSymbol() []exercice.SignSymbol {
+func randSliceSignSymbol() []questions.SignSymbol {
 	l := 40 + rand.Intn(10)
-	out := make([]exercice.SignSymbol, l)
+	out := make([]questions.SignSymbol, l)
 	for i := range out {
 		out[i] = randSignSymbol()
 	}
 	return out
 }
 
-func randSlicebool() []bool {
-	l := 40 + rand.Intn(10)
-	out := make([]bool, l)
-	for i := range out {
-		out[i] = randbool()
-	}
-	return out
-}
-
-func randexe_SignTableBlock() exercice.SignTableBlock {
-	return exercice.SignTableBlock{
+func randque_SignTableBlock() questions.SignTableBlock {
+	return questions.SignTableBlock{
 		Label:     randstring(),
 		FxSymbols: randSliceSignSymbol(),
 		Xs:        randSliceInterpolated(),
@@ -400,29 +480,29 @@ func randexe_SignTableBlock() exercice.SignTableBlock {
 	}
 }
 
-func randSliceexe_TextPart() []exercice.TextPart {
+func randSliceque_TextPart() []questions.TextPart {
 	l := 40 + rand.Intn(10)
-	out := make([]exercice.TextPart, l)
+	out := make([]questions.TextPart, l)
 	for i := range out {
-		out[i] = randexe_TextPart()
+		out[i] = randque_TextPart()
 	}
 	return out
 }
 
-func randSliceSliceexe_TextPart() [][]exercice.TextPart {
+func randSliceSliceque_TextPart() [][]questions.TextPart {
 	l := 40 + rand.Intn(10)
-	out := make([][]exercice.TextPart, l)
+	out := make([][]questions.TextPart, l)
 	for i := range out {
-		out[i] = randSliceexe_TextPart()
+		out[i] = randSliceque_TextPart()
 	}
 	return out
 }
 
-func randexe_TableBlock() exercice.TableBlock {
-	return exercice.TableBlock{
-		HorizontalHeaders: randSliceexe_TextPart(),
-		VerticalHeaders:   randSliceexe_TextPart(),
-		Values:            randSliceSliceexe_TextPart(),
+func randque_TableBlock() questions.TableBlock {
+	return questions.TableBlock{
+		HorizontalHeaders: randSliceque_TextPart(),
+		VerticalHeaders:   randSliceque_TextPart(),
+		Values:            randSliceSliceque_TextPart(),
 	}
 }
 
@@ -435,16 +515,16 @@ func randSliceSlicestring() [][]string {
 	return out
 }
 
-func randexe_TableFieldBlock() exercice.TableFieldBlock {
-	return exercice.TableFieldBlock{
-		HorizontalHeaders: randSliceexe_TextPart(),
-		VerticalHeaders:   randSliceexe_TextPart(),
+func randque_TableFieldBlock() questions.TableFieldBlock {
+	return questions.TableFieldBlock{
+		HorizontalHeaders: randSliceque_TextPart(),
+		VerticalHeaders:   randSliceque_TextPart(),
 		Answer:            randSliceSlicestring(),
 	}
 }
 
-func randexe_TextBlock() exercice.TextBlock {
-	return exercice.TextBlock{
+func randque_TextBlock() questions.TextBlock {
+	return questions.TextBlock{
 		Parts:   randInterpolated(),
 		Bold:    randbool(),
 		Italic:  randbool(),
@@ -452,97 +532,71 @@ func randexe_TextBlock() exercice.TextBlock {
 	}
 }
 
-func randexe_TreeNodeAnswer() exercice.TreeNodeAnswer {
-	return exercice.TreeNodeAnswer{
+func randque_TreeNodeAnswer() questions.TreeNodeAnswer {
+	return questions.TreeNodeAnswer{
 		Probabilities: randSlicestring(),
 		Value:         randint(),
 	}
 }
 
-func randexe_TreeFieldBlock() exercice.TreeFieldBlock {
-	return exercice.TreeFieldBlock{
+func randque_TreeFieldBlock() questions.TreeFieldBlock {
+	return questions.TreeFieldBlock{
 		EventsProposals: randSlicestring(),
-		AnswerRoot:      randexe_TreeNodeAnswer(),
+		AnswerRoot:      randque_TreeNodeAnswer(),
 	}
 }
 
-func randexe_VariationTableBlock() exercice.VariationTableBlock {
-	return exercice.VariationTableBlock{
+func randque_VariationTableBlock() questions.VariationTableBlock {
+	return questions.VariationTableBlock{
 		Label: randInterpolated(),
 		Xs:    randSlicestring(),
 		Fxs:   randSlicestring(),
 	}
 }
 
-func randexe_VariationTableFieldBlock() exercice.VariationTableFieldBlock {
-	return exercice.VariationTableFieldBlock{
-		Answer: randexe_VariationTableBlock(),
+func randque_VariationTableFieldBlock() questions.VariationTableFieldBlock {
+	return questions.VariationTableFieldBlock{
+		Answer: randque_VariationTableBlock(),
 	}
 }
 
-func randexe_VectorFieldBlock() exercice.VectorFieldBlock {
-	return exercice.VectorFieldBlock{
-		Answer:         randexe_CoordExpression(),
+func randque_VectorFieldBlock() questions.VectorFieldBlock {
+	return questions.VectorFieldBlock{
+		Answer:         randque_CoordExpression(),
 		AcceptColinear: randbool(),
 		DisplayColumn:  randbool(),
 	}
 }
 
-func randSliceBlock() []exercice.Block {
+func randSliceBlock() []questions.Block {
 	l := 40 + rand.Intn(10)
-	out := make([]exercice.Block, l)
+	out := make([]questions.Block, l)
 	for i := range out {
 		out[i] = randBlock()
 	}
 	return out
 }
 
-func randEnonce() exercice.Enonce {
-	return exercice.Enonce(randSliceBlock())
+func randEnonce() questions.Enonce {
+	return questions.Enonce(randSliceBlock())
 }
 
-func randexe_RandomParameter() exercice.RandomParameter {
-	return exercice.RandomParameter{
-		Expression: randstring(),
-		Variable:   randexp_Variable(),
-	}
-}
-
-func randSliceexe_RandomParameter() []exercice.RandomParameter {
-	l := 40 + rand.Intn(10)
-	out := make([]exercice.RandomParameter, l)
-	for i := range out {
-		out[i] = randexe_RandomParameter()
-	}
-	return out
-}
-
-func randRandomParameters() exercice.RandomParameters {
-	return exercice.RandomParameters(randSliceexe_RandomParameter())
-}
-
-func randexe_Parameters() exercice.Parameters {
-	return exercice.Parameters{
-		Variables:  randRandomParameters(),
-		Intrinsics: randSlicestring(),
-	}
-}
-
-func randexe_QuestionPage() exercice.QuestionPage {
-	return exercice.QuestionPage{
+func randque_QuestionPage() questions.QuestionPage {
+	return questions.QuestionPage{
 		Title:      randstring(),
 		Enonce:     randEnonce(),
-		Parameters: randexe_Parameters(),
+		Parameters: randque_Parameters(),
 	}
 }
 
 func randQuestion() Question {
 	return Question{
-		Id:          randint64(),
-		Page:        randexe_QuestionPage(),
-		Public:      randbool(),
-		IdTeacher:   randint64(),
-		Description: randstring(),
+		Id:           randint64(),
+		Page:         randque_QuestionPage(),
+		Public:       randbool(),
+		IdTeacher:    randint64(),
+		Description:  randstring(),
+		NeedExercice: randbool(),
 	}
 }
 

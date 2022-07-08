@@ -25,6 +25,9 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.DELETE("/prof/classrooms/api", tc.TeacherDeleteClassroom)
 
 	gr.GET("/prof/classrooms/api/students", tc.TeacherGetClassroomStudents)
+	gr.PUT("/prof/classrooms/api/students", tc.TeacherAddStudent)
+	gr.POST("/prof/classrooms/api/students", tc.TeacherUpdateStudent)
+	gr.DELETE("/prof/classrooms/api/students", tc.TeacherDeleteStudent)
 	gr.POST("/prof/classrooms/api/students/import", tc.TeacherImportStudents)
 	gr.GET("/prof/classrooms/api/students/connect", tc.TeacherGenerateClassroomCode)
 
@@ -42,18 +45,32 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.PUT("/trivial/sessions", tvc.LaunchSessionTrivialPoursuit)
 	gr.POST("/trivial/sessions/stop", tvc.StopTrivialGame)
 
+	// question editor
 	gr.PUT("/prof/editor/api/new", edit.EditorStartSession)
+	gr.GET("/prof/editor/api/pause-preview", edit.EditorPausePreview)
 	gr.GET("/prof/editor/api/tags", edit.EditorGetTags)
+
 	gr.POST("/prof/editor/api/questions", edit.EditorSearchQuestions)
 	gr.GET("/prof/editor/api/question-duplicate-one", edit.EditorDuplicateQuestion)
 	gr.GET("/prof/editor/api/question-duplicate", edit.EditorDuplicateQuestionWithDifficulty)
 	gr.PUT("/prof/editor/api/question", edit.EditorCreateQuestion)
 	gr.GET("/prof/editor/api/question", edit.EditorGetQuestion)
 	gr.DELETE("/prof/editor/api/question", edit.EditorDeleteQuestion)
-	gr.POST("/prof/editor/api/question", edit.EditorSaveAndPreview)
-	gr.GET("/prof/editor/api/pause-preview", edit.EditorPausePreview)
 	gr.POST("/prof/editor/api/question/tags", edit.EditorUpdateTags)
 	gr.POST("/prof/editor/api/question/group-tags", edit.EditorUpdateGroupTags)
 	gr.POST("/prof/editor/api/question/visibility", edit.QuestionUpdateVisiblity)
-	gr.POST("/prof/editor/api/check-params", edit.EditorCheckParameters)
+	gr.POST("/prof/editor/api/question/check-params", edit.EditorCheckQuestionParameters)
+	gr.POST("/prof/editor/api/question/preview", edit.EditorSaveQuestionAndPreview)
+
+	// exercice editor
+	gr.GET("/prof/editor/api/exercices", edit.ExercicesGetList)
+	gr.GET("/prof/editor/api/exercice", edit.ExerciceGetContent)
+	gr.PUT("/prof/editor/api/exercice", edit.ExerciceCreate)
+	gr.DELETE("/prof/editor/api/exercice", edit.ExerciceDelete)
+	gr.POST("/prof/editor/api/exercice", edit.ExerciceUpdate)
+	gr.PUT("/prof/editor/api/exercice/questions", edit.ExerciceCreateQuestion)
+	gr.POST("/prof/editor/api/exercice/questions", edit.ExerciceUpdateQuestions)
+	gr.POST("/prof/editor/api/exercice/visibility", edit.ExerciceUpdateVisiblity)
+	gr.POST("/prof/editor/api/exercice/check-params", edit.EditorCheckExerciceParameters)
+	gr.POST("/prof/editor/api/exercice/preview", edit.EditorSaveExerciceAndPreview)
 }

@@ -8,8 +8,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/exercice"
-	"github.com/benoitkugler/maths-online/maths/exercice/client"
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/gorilla/websocket"
 )
 
@@ -43,16 +42,16 @@ func TestLoopback(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = cl.WriteJSON(clientData{Kind: Ping})
+	err = cl.WriteJSON(LoopbackClientEventWrapper{loopbackPing{}})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	loopback.setQuestion(exercice.QuestionInstance{Title: "Test", Enonce: exercice.EnonceInstance{
-		exercice.NumberFieldInstance{ID: 0},
+	loopback.setQuestion(questions.QuestionInstance{Title: "Test", Enonce: questions.EnonceInstance{
+		questions.NumberFieldInstance{ID: 0},
 	}})
 
-	loopback.unsetQuestion()
+	loopback.pause()
 
 	_, json, err := cl.ReadMessage()
 	if err != nil {
@@ -66,7 +65,7 @@ func TestLoopback(t *testing.T) {
 	}
 	fmt.Println(string(json))
 
-	err = cl.WriteJSON(clientData{Kind: ValidAnswerIn, Data: client.QuestionAnswersIn{}})
+	err = cl.WriteJSON(LoopbackClientEventWrapper{loopbackQuestionValidIn{}})
 	if err != nil {
 		t.Fatal(err)
 	}

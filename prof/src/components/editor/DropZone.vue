@@ -2,7 +2,7 @@
   <v-sheet
     :class="
       (isActive ? 'bg-blue-lighten-2' : 'bg-blue-lighten-4') +
-      '  rounded-lg pt-0 mx-1'
+      '  rounded pt-0 mx-1'
     "
     :style="{ height: isActive ? '20px' : '20px' }"
     @dragover="onDragOver"
