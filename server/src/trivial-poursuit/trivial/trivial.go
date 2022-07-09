@@ -95,17 +95,17 @@ type Room struct {
 	// including the inactive (disconnected) ones, for which
 	// `Connection` is nil.
 	// we always have len(currentPlayers) <= expectedPlayers
-	currentPlayers map[string]*playerConn
+	players map[string]*playerConn
 }
 
 func NewRoom(ID RoomID, options Options) *Room {
 	return &Room{
-		ID:             ID,
-		Terminate:      make(chan bool),
-		Leave:          make(chan PlayerID),
-		Event:          make(chan ClientEvent),
-		game:           newGame(options),
-		currentPlayers: make(map[PlayerID]*playerConn),
+		ID:        ID,
+		Terminate: make(chan bool),
+		Leave:     make(chan PlayerID),
+		Event:     make(chan ClientEvent),
+		game:      newGame(options),
+		players:   make(map[PlayerID]*playerConn),
 	}
 }
 
@@ -120,14 +120,14 @@ type Replay struct {
 	ID              RoomID
 }
 
-// return the current game review, without locking
-func (r *Room) review() Replay {
+// return the current game replay, without locking
+func (r *Room) replay() Replay {
 	out := Replay{
 		ID:              r.ID,
 		QuestionHistory: make(map[Player]QuestionReview),
 	}
 
-	for _, pl := range r.currentPlayers {
+	for _, pl := range r.players {
 		if pl.conn == nil { // player not connected anymore
 			continue
 		}
@@ -152,7 +152,7 @@ func (r *Room) Summary() Summary {
 	defer r.lock.Unlock()
 
 	successes := make(map[Player]Success)
-	for _, v := range r.currentPlayers {
+	for _, v := range r.players {
 		successes[v.pl] = v.advance.success
 	}
 	out := Summary{
@@ -162,7 +162,7 @@ func (r *Room) Summary() Summary {
 	}
 
 	if se := r.game.playerTurn; se != "" {
-		if pl, has := r.currentPlayers[se]; has {
+		if pl, has := r.players[se]; has {
 			out.PlayerTurn = &pl.pl
 		}
 	}

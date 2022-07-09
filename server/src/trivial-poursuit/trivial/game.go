@@ -78,12 +78,9 @@ func newGame(options Options) game {
 
 func (g *game) hasStarted() bool { return g.phase != PWaiting }
 
-// return true when the game is at a question or question result panel
-func (g *game) inQuestion() bool { return g.phase == PQuestion || g.phase == PResult }
-
 func (r *Room) nbActivePlayers() int {
 	var out int
-	for _, pl := range r.currentPlayers {
+	for _, pl := range r.players {
 		if pl.conn != nil {
 			out++
 		}
@@ -92,8 +89,8 @@ func (r *Room) nbActivePlayers() int {
 }
 
 func (r *Room) playerPseudos() map[serial]string {
-	out := make(map[serial]string, len(r.currentPlayers))
-	for _, player := range r.currentPlayers {
+	out := make(map[serial]string, len(r.players))
+	for _, player := range r.players {
 		out[player.pl.ID] = player.pl.Pseudo
 	}
 	return out
@@ -108,12 +105,12 @@ func (r *Room) serialsToPseudos(players []serial) []string {
 	return out
 }
 
-func (r *Room) serialToPseudo(se serial) string { return r.currentPlayers[se].pl.Pseudo }
+func (r *Room) serialToPseudo(se serial) string { return r.players[se].pl.Pseudo }
 
 func (r *Room) tryStartGame() Events {
 	// before starting, all players are active since deconnecting
 	// exlude them from the lobby (see `removePlayer`)
-	if len(r.currentPlayers) >= r.game.options.PlayersNumber {
+	if len(r.players) >= r.game.options.PlayersNumber {
 		ProgressLogger.Printf("Game %s : starting...", r.ID)
 
 		// also starts the first turn.
@@ -136,9 +133,9 @@ func (r *Room) removePlayer(player Player) Events {
 	playerName := player.Pseudo
 
 	if r.game.hasStarted() {
-		r.currentPlayers[player.ID].conn = nil
+		r.players[player.ID].conn = nil
 	} else {
-		delete(r.currentPlayers, player.ID)
+		delete(r.players, player.ID)
 	}
 
 	out := Events{LobbyUpdate{
@@ -179,7 +176,7 @@ func (g *game) isAnswerValid(a Answer) bool {
 // if `force` is false, it only does so if every player have answered
 func (r *Room) tryEndQuestion(force bool) Events {
 	hasAllAnswered := true
-	for _, pl := range r.currentPlayers {
+	for _, pl := range r.players {
 		if _, has := r.game.currentAnswers[pl.pl.ID]; !has && pl.conn != nil {
 			hasAllAnswered = false
 			break
@@ -196,7 +193,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 
 	// return the answers event, defaulting to
 	// false for no answer
-	for _, player := range r.currentPlayers {
+	for _, player := range r.players {
 		// we still mark invalid answsers for inactive player,
 		// to avoid cheating by leaving before right before the question
 
@@ -229,7 +226,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 }
 
 func (r *Room) arePlayersReadyForNextTurn() bool {
-	for _, pl := range r.currentPlayers {
+	for _, pl := range r.players {
 		if pl.conn == nil {
 			continue
 		}
@@ -272,7 +269,7 @@ func (r *Room) tryEndTurn() Events {
 // winners returns the players who win, or an empty slice
 // use it to check if the game is over
 func (r *Room) winners() (out []serial) {
-	for _, player := range r.currentPlayers {
+	for _, player := range r.players {
 		if player.advance.success.isDone() {
 			out = append(out, player.pl.ID)
 		}
@@ -289,7 +286,7 @@ func (r *Room) decrassage() (ids map[serial][]int64) {
 
 	const nbMax = 3
 	ids = make(map[serial][]int64)
-	for _, player := range r.currentPlayers {
+	for _, player := range r.players {
 		questions := player.advance.review.MarkedQuestions
 		// add from the failed questions
 		for _, question := range player.advance.review.QuestionHistory {
@@ -308,7 +305,7 @@ func (r *Room) decrassage() (ids map[serial][]int64) {
 // panic if no active players are present
 func (r *Room) nextPlayer() serial {
 	var sortedIds []serial
-	for _, player := range r.currentPlayers {
+	for _, player := range r.players {
 		if player.conn == nil { // ignore inactive players
 			continue
 		}
@@ -450,7 +447,7 @@ func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) Events {
 	g := &r.game
 	g.currentWantNextTurn[player.ID] = true
 
-	pReview := &r.currentPlayers[player.ID].advance.review
+	pReview := &r.players[player.ID].advance.review
 	if event.MarkQuestion {
 		pReview.MarkedQuestions = append(pReview.MarkedQuestions, g.question.ID)
 	}
@@ -469,7 +466,7 @@ func (r *Room) state() GameState {
 		PawnTile:   r.game.pawnTile,
 		PlayerTurn: r.game.playerTurn,
 	}
-	for _, pl := range r.currentPlayers {
+	for _, pl := range r.players {
 		out.Players[pl.pl.ID] = PlayerStatus{
 			Name:       pl.pl.Pseudo,
 			Review:     pl.advance.review,

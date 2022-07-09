@@ -12,6 +12,8 @@ var (
 	ProgressLogger = log.New(os.Stdout, "tv-game:INFO : ", 0)
 )
 
+var gameStartDelay = time.Second // reduced in tests to avoid latency
+
 func (pc playerConn) send(events StateUpdate) {
 	err := pc.conn.WriteJSON(events)
 	if err != nil {
@@ -23,7 +25,7 @@ func (r *Room) broadcastEvents(events Events) {
 	ProgressLogger.Printf("Game %s : broadcasting...", r.ID)
 
 	state := r.state()
-	for _, pc := range r.currentPlayers {
+	for _, pc := range r.players {
 		if pc.conn == nil { // ignore disconnected players
 			continue
 		}
@@ -52,7 +54,7 @@ func (r *Room) Listen() (replay Replay, naturalEnding bool) {
 			if isGameOver {
 				ProgressLogger.Printf("Game %s is over: exiting game loop.", r.ID)
 
-				return r.review(), true
+				return r.replay(), true
 			}
 		}
 	}
@@ -72,7 +74,7 @@ func (r *Room) onTerminate() {
 
 // ErrGameStarted is returned from `Join` when the game
 // has already started
-var ErrGameStarted = errors.New("game started")
+var ErrGameStarted = errors.New("game already started")
 
 // Join should be used on a new connection, on one the of the following cases:
 //	- totally fresh connection
@@ -84,7 +86,7 @@ func (r *Room) Join(player Player, connection Connection) error {
 	defer r.lock.Unlock()
 
 	// check if it is a reconnection
-	_, isKnownPlayer := r.currentPlayers[player.ID]
+	_, isKnownPlayer := r.players[player.ID]
 	if !isKnownPlayer {
 		// fresh connection : only allow it on waiting games
 		if r.game.hasStarted() {
@@ -95,7 +97,7 @@ func (r *Room) Join(player Player, connection Connection) error {
 
 		// register the player
 		pc := playerConn{pl: player, conn: connection, advance: playerAdvance{} /* zero value is enough */}
-		r.currentPlayers[player.ID] = &pc
+		r.players[player.ID] = &pc
 
 		// notify the player who joined to show the lobby ...
 		pc.send(StateUpdate{Events: Events{PlayerJoin{Player: player.ID}}, State: r.state()})
@@ -110,13 +112,13 @@ func (r *Room) Join(player Player, connection Connection) error {
 
 		// ... and check if the new player triggers a game start, after a brief pause
 		if events := r.tryStartGame(); len(events) != 0 {
-			time.Sleep(time.Second)
+			time.Sleep(gameStartDelay)
 			r.broadcastEvents(events)
 		}
 	} else { // reconnection
 		ProgressLogger.Printf("Game %s : reconnecting player %s...", r.ID, player.ID)
 
-		pc := r.currentPlayers[player.ID]
+		pc := r.players[player.ID]
 		pc.conn = connection // use the new client connection
 		pc.pl.Pseudo = player.Pseudo
 
@@ -134,7 +136,7 @@ func (r *Room) onLeave(playerID PlayerID) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	pc, in := r.currentPlayers[playerID]
+	pc, in := r.players[playerID]
 	if !in { // defensive check
 		return
 	}
@@ -158,7 +160,7 @@ func (r *Room) onEvent(event ClientEvent) (isGameOver bool) {
 
 	ProgressLogger.Printf("Game %s : handling client event (%T)...", r.ID, event.Event)
 
-	player, ok := r.currentPlayers[event.Player]
+	player, ok := r.players[event.Player]
 	if !ok { // defensive check
 		return
 	}

@@ -4,22 +4,31 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 	"testing"
 	"time"
 )
 
 type clientOut struct {
-	events []interface{}
+	updates []StateUpdate
 }
 
 func (c *clientOut) WriteJSON(v interface{}) error {
 	err := json.NewEncoder(io.Discard).Encode(v)
-	c.events = append(c.events, v)
+	c.updates = append(c.updates, v.(StateUpdate))
 	return err
 }
 
-func (c *clientOut) reset() {
-	c.events = c.events[:0]
+func (c *clientOut) reset(lock *sync.Mutex) {
+	lock.Lock()
+	defer lock.Unlock()
+	c.updates = c.updates[:0]
+}
+
+func (c *clientOut) lastU(lock *sync.Mutex) StateUpdate {
+	lock.Lock()
+	defer lock.Unlock()
+	return c.updates[len(c.updates)-1]
 }
 
 // tests that the room may concurrently receive events,
@@ -78,8 +87,7 @@ func TestTerminate(t *testing.T) {
 		t.Fatal("expected forced end")
 	}
 
-	L := len(c.events)
-	last := c.events[L-1].(StateUpdate)
+	last := c.lastU(&r.lock)
 	if len(last.Events) != 1 {
 		t.Fatal(last.Events)
 	}
