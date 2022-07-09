@@ -17,24 +17,24 @@ func TestEventsJSON(t *testing.T) {
 		Events: []ServerEvent{
 			PlayerJoin{},
 			PlayerReconnected{},
-			LobbyUpdate{Names: map[int]string{0: "Paul"}},
+			LobbyUpdate{PlayerPseudos: map[serial]string{"0": "Paul"}},
 			GameStart{},
-			PlayerLeft{1},
-			PlayerTurn{"Haha", 2},
+			PlayerLeft{"1"},
+			PlayerTurn{"Haha", "2"},
 			DiceThrow{3},
 			Move{Tile: moves[0], Path: []int{0}},
-			PossibleMoves{"", moves, 2},
+			PossibleMoves{"", moves, "2"},
 			ShowQuestion{ID: 1, Categorie: 0, Question: question},
 			PlayerAnswerResults{
-				Results: map[int]playerAnswerResult{
-					0: {Success: true},
-					1: {Success: false},
-					2: {Success: true},
+				Results: map[serial]playerAnswerResult{
+					"0": {Success: true},
+					"1": {Success: false},
+					"2": {Success: true},
 				},
 			},
 			GameEnd{
-				QuestionDecrassageIds: map[int][]int64{0: {1}},
-				Winners:               []int{2},
+				QuestionDecrassageIds: map[serial][]int64{"0": {1}},
+				Winners:               []serial{"2"},
 				WinnerNames:           []string{"Paul"},
 			},
 			GameTerminated{},
@@ -62,9 +62,9 @@ func TestEventsJSON(t *testing.T) {
 
 func TestGameStateJSON(t *testing.T) {
 	payload := GameState{
-		Players: map[int]PlayerStatus{
-			0: {Success: Success{true, false}},
-			1: {Success: Success{false, true, true}},
+		Players: map[serial]PlayerStatus{
+			"0": {Success: Success{true, false}},
+			"1": {Success: Success{false, true, true}},
 		},
 		PawnTile: 2,
 	}

@@ -93,27 +93,24 @@ func (r *Room) Join(player Player, connection Connection) error {
 
 		ProgressLogger.Printf("Game %s : adding new player %s...", r.ID, player.ID)
 
-		serial := r.newSerial()
-		// register the serial for futur uses ...
-		player.serial = serial
-		// ... and register the player
+		// register the player
 		pc := playerConn{pl: player, conn: connection, advance: playerAdvance{} /* zero value is enough */}
 		r.currentPlayers[player.ID] = &pc
 
 		// notify the player who joined to show the lobby ...
-		pc.send(StateUpdate{Events: Events{PlayerJoin{Player: serial}}, State: r.state()})
+		pc.send(StateUpdate{Events: Events{PlayerJoin{Player: player.ID}}, State: r.state()})
 
 		// ... also notify the other players ...
 		r.broadcastEvents(Events{LobbyUpdate{
-			Player:     serial,
-			PlayerName: player.Pseudo,
-			IsJoining:  true,
-			Names:      r.playerPseudos(),
+			ID:            player.ID,
+			Pseudo:        player.Pseudo,
+			IsJoining:     true,
+			PlayerPseudos: r.playerPseudos(),
 		}})
 
 		// ... and check if the new player triggers a game start, after a brief pause
-		time.Sleep(time.Second)
 		if events := r.tryStartGame(); len(events) != 0 {
+			time.Sleep(time.Second)
 			r.broadcastEvents(events)
 		}
 	} else { // reconnection
@@ -124,8 +121,8 @@ func (r *Room) Join(player Player, connection Connection) error {
 		pc.pl.Pseudo = player.Pseudo
 
 		event := PlayerReconnected{
-			PlayerID:   pc.pl.serial,
-			PlayerName: player.Pseudo,
+			ID:     pc.pl.ID,
+			Pseudo: player.Pseudo,
 		}
 		r.broadcastEvents(Events{event})
 	}
@@ -142,7 +139,7 @@ func (r *Room) onLeave(playerID PlayerID) {
 		return
 	}
 
-	ProgressLogger.Printf("Game %s : removing player %d (ID: %s)...", r.ID, pc.pl.serial, pc.pl.ID)
+	ProgressLogger.Printf("Game %s : removing player %s...", r.ID, pc.pl.ID)
 
 	update := r.removePlayer(pc.pl)
 	r.broadcastEvents(update)

@@ -69,9 +69,9 @@ func newGame(options Options) game {
 	timer.Stop()
 	return game{
 		options:             options,
-		playerTurn:          -1,
-		currentAnswers:      make(map[int]bool),
-		currentWantNextTurn: make(map[int]bool),
+		playerTurn:          "",
+		currentAnswers:      make(map[serial]bool),
+		currentWantNextTurn: make(map[serial]bool),
 		questionTimer:       timer,
 	}
 }
@@ -94,7 +94,7 @@ func (r *Room) nbActivePlayers() int {
 func (r *Room) playerPseudos() map[serial]string {
 	out := make(map[serial]string, len(r.currentPlayers))
 	for _, player := range r.currentPlayers {
-		out[player.pl.serial] = player.pl.Pseudo
+		out[player.pl.ID] = player.pl.Pseudo
 	}
 	return out
 }
@@ -108,18 +108,7 @@ func (r *Room) serialsToPseudos(players []serial) []string {
 	return out
 }
 
-func (r *Room) serialToPseudo(se serial) string { return r.serialsToPseudos([]serial{se})[0] }
-
-// newSerial returns an unused serial
-func (r *Room) newSerial() serial {
-	max := -1
-	for _, pl := range r.currentPlayers {
-		if serial := pl.pl.serial; serial > max {
-			max = serial
-		}
-	}
-	return max + 1
-}
+func (r *Room) serialToPseudo(se serial) string { return r.currentPlayers[se].pl.Pseudo }
 
 func (r *Room) tryStartGame() Events {
 	// before starting, all players are active since deconnecting
@@ -153,17 +142,17 @@ func (r *Room) removePlayer(player Player) Events {
 	}
 
 	out := Events{LobbyUpdate{
-		Player:     player.serial,
-		PlayerName: playerName,
-		IsJoining:  false,
-		Names:      r.playerPseudos(),
+		ID:            player.ID,
+		Pseudo:        playerName,
+		IsJoining:     false,
+		PlayerPseudos: r.playerPseudos(),
 	}}
 
 	switch r.game.phase {
 	case PWaiting, POver:
 		// nothing more to be done
 	case PThrowing, PMoving: // if it is the current player, reset the turn
-		if r.game.playerTurn == player.serial && r.nbActivePlayers() > 0 {
+		if r.game.playerTurn == player.ID && r.nbActivePlayers() > 0 {
 			resetTurn := r.startTurn()
 			out = append(out, resetTurn)
 		}
@@ -191,7 +180,7 @@ func (g *game) isAnswerValid(a Answer) bool {
 func (r *Room) tryEndQuestion(force bool) Events {
 	hasAllAnswered := true
 	for _, pl := range r.currentPlayers {
-		if _, has := r.game.currentAnswers[pl.pl.serial]; !has && pl.conn != nil {
+		if _, has := r.game.currentAnswers[pl.pl.ID]; !has && pl.conn != nil {
 			hasAllAnswered = false
 			break
 		}
@@ -202,7 +191,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 
 	out := PlayerAnswerResults{
 		Categorie: r.game.question.categorie,
-		Results:   make(map[int]playerAnswerResult),
+		Results:   make(map[serial]playerAnswerResult),
 	}
 
 	// return the answers event, defaulting to
@@ -211,7 +200,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 		// we still mark invalid answsers for inactive player,
 		// to avoid cheating by leaving before right before the question
 
-		isValid, _ := r.game.currentAnswers[player.pl.serial]
+		isValid, _ := r.game.currentAnswers[player.pl.ID]
 		// update the success
 		player.advance.success[r.game.question.categorie] = isValid // false if not answered
 		player.advance.review.QuestionHistory = append(player.advance.review.QuestionHistory, QR{
@@ -220,7 +209,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 		})
 		askForMark := !isValid && len(player.advance.review.MarkedQuestions) < 3
 
-		out.Results[player.pl.serial] = playerAnswerResult{Success: isValid, AskForMask: askForMark}
+		out.Results[player.pl.ID] = playerAnswerResult{Success: isValid, AskForMask: askForMark}
 	}
 
 	// cleanup
@@ -244,7 +233,7 @@ func (r *Room) arePlayersReadyForNextTurn() bool {
 		if pl.conn == nil {
 			continue
 		}
-		if ok := r.game.currentWantNextTurn[pl.pl.serial]; !ok {
+		if ok := r.game.currentWantNextTurn[pl.pl.ID]; !ok {
 			return false
 		}
 	}
@@ -282,24 +271,24 @@ func (r *Room) tryEndTurn() Events {
 
 // winners returns the players who win, or an empty slice
 // use it to check if the game is over
-func (r *Room) winners() (out []int) {
+func (r *Room) winners() (out []serial) {
 	for _, player := range r.currentPlayers {
 		if player.advance.success.isDone() {
-			out = append(out, player.pl.serial)
+			out = append(out, player.pl.ID)
 		}
 	}
-	sort.Ints(out)
+	sort.Strings(out)
 	return out
 }
 
 // returns nil if `ShowDecrassage` is false
-func (r *Room) decrassage() (ids map[int][]int64) {
+func (r *Room) decrassage() (ids map[serial][]int64) {
 	if !r.game.options.ShowDecrassage {
 		return nil
 	}
 
 	const nbMax = 3
-	ids = make(map[int][]int64)
+	ids = make(map[serial][]int64)
 	for _, player := range r.currentPlayers {
 		questions := player.advance.review.MarkedQuestions
 		// add from the failed questions
@@ -311,7 +300,7 @@ func (r *Room) decrassage() (ids map[int][]int64) {
 				questions = append(questions, question.IdQuestion)
 			}
 		}
-		ids[player.pl.serial] = questions
+		ids[player.pl.ID] = questions
 	}
 	return ids
 }
@@ -323,9 +312,9 @@ func (r *Room) nextPlayer() serial {
 		if player.conn == nil { // ignore inactive players
 			continue
 		}
-		sortedIds = append(sortedIds, player.pl.serial)
+		sortedIds = append(sortedIds, player.pl.ID)
 	}
-	sort.Ints(sortedIds)
+	sort.Strings(sortedIds)
 
 	for _, player := range sortedIds {
 		if player > r.game.playerTurn {
@@ -358,13 +347,13 @@ func (r *Room) startTurn() PlayerTurn {
 func (r *Room) handleClientEvent(event ClientEventITF, player Player) (events Events, isGameOver bool, err error) {
 	switch eventData := event.(type) {
 	case DiceClicked:
-		events, err := r.handleDiceClicked(player.serial)
+		events, err := r.handleDiceClicked(player.ID)
 		return events, false, err
 	case ClientMove:
-		events, err := r.handleMove(eventData, player.serial)
+		events, err := r.handleMove(eventData, player.ID)
 		return events, false, err
 	case Answer:
-		events := r.handleAnswer(eventData, player.serial)
+		events := r.handleAnswer(eventData, player.ID)
 		return events, false, nil
 	case WantNextTurn:
 		events := r.handleWantNextTurn(eventData, player)
@@ -383,7 +372,7 @@ func (r *Room) handleDiceClicked(player serial) (Events, error) {
 	g := &r.game
 	// check if the player is allowed to throw the dice
 	if g.playerTurn != player {
-		return nil, fmt.Errorf("player %d is not allowed to throw the dice during turn of player %d", player, g.playerTurn)
+		return nil, fmt.Errorf("player %s is not allowed to throw the dice during turn of player %s", player, g.playerTurn)
 	}
 
 	g.dice = newDiceThrow()
@@ -399,7 +388,7 @@ func (r *Room) handleMove(m ClientMove, player serial) (Events, error) {
 	g := &r.game
 	// check if the player is allowed to move
 	if g.playerTurn != player {
-		return nil, fmt.Errorf("player %d is not allowed to move during turn of player %d", player, g.playerTurn)
+		return nil, fmt.Errorf("player %s is not allowed to move during turn of player %s", player, g.playerTurn)
 	}
 	// check if the tile is actually reachable
 	choices := Board.choices(g.pawnTile, int(g.dice.Face))
@@ -459,7 +448,7 @@ func (r *Room) handleAnswer(a Answer, player serial) Events {
 
 func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) Events {
 	g := &r.game
-	g.currentWantNextTurn[player.serial] = true
+	g.currentWantNextTurn[player.ID] = true
 
 	pReview := &r.currentPlayers[player.ID].advance.review
 	if event.MarkQuestion {
@@ -476,12 +465,12 @@ type playerAdvance struct {
 
 func (r *Room) state() GameState {
 	out := GameState{
-		Players:    make(map[int]PlayerStatus),
+		Players:    make(map[serial]PlayerStatus),
 		PawnTile:   r.game.pawnTile,
 		PlayerTurn: r.game.playerTurn,
 	}
 	for _, pl := range r.currentPlayers {
-		out.Players[pl.pl.serial] = PlayerStatus{
+		out.Players[pl.pl.ID] = PlayerStatus{
 			Name:       pl.pl.Pseudo,
 			Review:     pl.advance.review,
 			Success:    pl.advance.success,

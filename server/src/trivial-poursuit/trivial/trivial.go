@@ -51,12 +51,6 @@ type Player struct {
 	// Pseudo is the display name of each player,
 	// which may change during a game (upon deconnection/reconnection)
 	Pseudo string
-
-	// TODO: remove the field
-
-	// serial is the number of the player during the game,
-	// used by the client and to handle rotation on new turns
-	serial serial
 }
 
 // playerConn stores a player profile and the underlying connection,
@@ -90,10 +84,10 @@ type Room struct {
 	// Event is used when a client send an event
 	Event chan ClientEvent
 
-	// protect external access to the game state
+	// protect external access to the game state and players
 	lock sync.Mutex
 
-	// actual game logic, whose accesses are protected
+	// game state, whose accesses are protected
 	// by the channels and `lock`
 	game game
 
@@ -152,18 +146,6 @@ type Summary struct {
 	RoomSize  int // Number of player expected
 }
 
-// does not include inactive players
-func (r *Room) playersBySerial() map[serial]Player {
-	players := make(map[serial]Player)
-	for _, pc := range r.currentPlayers {
-		if pc.conn == nil {
-			continue
-		}
-		players[pc.pl.serial] = pc.pl
-	}
-	return players
-}
-
 // Summary locks and returns the current game summary.
 func (r *Room) Summary() Summary {
 	r.lock.Lock()
@@ -179,10 +161,9 @@ func (r *Room) Summary() Summary {
 		RoomSize:  r.game.options.PlayersNumber,
 	}
 
-	players := r.playersBySerial()
-	if serial := r.game.playerTurn; serial != -1 {
-		if pl, has := players[serial]; has {
-			out.PlayerTurn = &pl
+	if se := r.game.playerTurn; se != "" {
+		if pl, has := r.currentPlayers[se]; has {
+			out.PlayerTurn = &pl.pl
 		}
 	}
 

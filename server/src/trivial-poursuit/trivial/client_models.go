@@ -16,7 +16,7 @@ import (
 const NbCategories = int(nbCategories)
 
 // serial identifies a player in the game
-type serial = int
+type serial = PlayerID
 
 // GameState represents an on-going game.
 type GameState struct {
@@ -104,15 +104,15 @@ type PlayerJoin struct {
 }
 
 type PlayerReconnected struct {
-	PlayerID   serial
-	PlayerName string
+	ID     serial
+	Pseudo string
 }
 
 type LobbyUpdate struct {
-	Names      map[serial]string // the new players in the lobby
-	PlayerName string
-	Player     serial // the player who joined or left
-	IsJoining  bool   // false for leaving
+	PlayerPseudos map[serial]string // the new players in the lobby
+	Pseudo        string
+	ID            serial // the player who joined or left
+	IsJoining     bool   // false for leaving
 }
 
 type GameStart struct{}
@@ -179,8 +179,8 @@ type playerAnswerResult struct {
 
 // GameEnd is emitted when at least one player has won
 type GameEnd struct {
-	QuestionDecrassageIds map[int][]int64 // player->questions
-	Winners               []int
+	QuestionDecrassageIds map[serial][]int64 // player->questions
+	Winners               []serial
 	WinnerNames           []string
 }
 
