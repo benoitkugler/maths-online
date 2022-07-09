@@ -7,8 +7,6 @@ package trivial
 import (
 	"sync"
 	"time"
-
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
 )
 
 // Connection abstracts away the network technology used to
@@ -26,12 +24,18 @@ type Connection interface {
 // to every room object, and will be used by consuming packages.
 type RoomID string
 
-// Options is the configuration of one game
+// Options is the configuration of one game.
+// All fields are required.
 type Options struct {
-	Questions       game.QuestionPool
-	PlayersNumber   int
+	// QuestionPool is the list of the question
+	// being asked, for each category
+	Questions QuestionPool
+	// PlayersNumber iss the required number for the game, used to trigger a game start
+	PlayersNumber int
+	// QuestionTimeout is the time limit for one question
 	QuestionTimeout time.Duration
-	ShowDecrassage  bool
+
+	ShowDecrassage bool
 }
 
 // PlayerID is a unique identifier of each player,
@@ -48,28 +52,20 @@ type Player struct {
 	// which may change during a game (upon deconnection/reconnection)
 	Pseudo string
 
+	// TODO: remove the field
+
 	// serial is the number of the player during the game,
 	// used by the client and to handle rotation on new turns
-	serial game.PlayerSerial
+	serial serial
 }
 
-// playerConn stores a player meta and the underlying connection,
+// playerConn stores a player profile and the underlying connection,
 // which is nil for inactive (disconnected) ones
 type playerConn struct {
-	pl   Player
-	conn Connection
+	pl      Player
+	conn    Connection
+	advance playerAdvance
 }
-
-// Phase identifies the current phase of the game
-type Phase uint8
-
-const (
-	PWaiting  Phase = iota // not started yet
-	PThrowing              // start of turn, waiting for dice throw
-	PMoving                // dice was thrown, waiting for player move
-	PQuestion              // question is being answered
-	PResult                // players are consulting answer results
-)
 
 // Room is the game host, and the main entry point
 // of a game.
@@ -92,56 +88,41 @@ type Room struct {
 	Leave chan PlayerID
 
 	// Event is used when a client send an event
-	Event chan game.ClientEvent
+	Event chan ClientEvent
 
 	// protect external access to the game state
 	lock sync.Mutex
 
 	// actual game logic, whose accesses are protected
 	// by the channels and `lock`
-	game game.Game
-
-	// used for instance to trigger the correct event
-	// when a player disconnect
-	phase Phase
-
-	// required number for the game, used to trigger a game start
-	expectedPlayers int
+	game game
 
 	// currentPlayers stores the actual players in the game,
 	// including the inactive (disconnected) ones, for which
 	// `Connection` is nil.
 	// we always have len(currentPlayers) <= expectedPlayers
-	currentPlayers map[string]playerConn
+	currentPlayers map[string]*playerConn
 }
 
 func NewRoom(ID RoomID, options Options) *Room {
 	return &Room{
-		ID:              ID,
-		Terminate:       make(chan bool),
-		Leave:           make(chan PlayerID),
-		Event:           make(chan game.ClientEvent),
-		game:            game.NewGame(options.QuestionTimeout, options.ShowDecrassage, options.Questions),
-		expectedPlayers: options.PlayersNumber,
-		currentPlayers:  make(map[PlayerID]playerConn),
+		ID:             ID,
+		Terminate:      make(chan bool),
+		Leave:          make(chan PlayerID),
+		Event:          make(chan ClientEvent),
+		game:           newGame(options),
+		currentPlayers: make(map[PlayerID]*playerConn),
 	}
 }
 
 // Options returns the (readonly) configuration used by
 // the game.
-func (r *Room) Options() Options {
-	return Options{
-		Questions:       r.game.QuestionPool,
-		PlayersNumber:   r.expectedPlayers,
-		QuestionTimeout: r.game.QuestionDurationLimit,
-		ShowDecrassage:  r.game.ShowDecrassage,
-	}
-}
+func (r *Room) Options() Options { return r.game.options }
 
 // Replay exposes some information to be persisted
 // after the game end, such as the successes of the players
 type Replay struct {
-	QuestionHistory map[Player]game.QuestionReview
+	QuestionHistory map[Player]QuestionReview
 	ID              RoomID
 }
 
@@ -149,16 +130,14 @@ type Replay struct {
 func (r *Room) review() Replay {
 	out := Replay{
 		ID:              r.ID,
-		QuestionHistory: make(map[Player]game.QuestionReview),
+		QuestionHistory: make(map[Player]QuestionReview),
 	}
 
-	players := r.reversePlayers()
-	for k, v := range r.game.Players {
-		p, has := players[k]
-		if !has { // player not connected anymore
+	for _, pl := range r.currentPlayers {
+		if pl.conn == nil { // player not connected anymore
 			continue
 		}
-		out.QuestionHistory[p] = v.Review
+		out.QuestionHistory[pl.pl] = pl.advance.review
 	}
 	return out
 }
@@ -168,14 +147,14 @@ func (r *Room) review() Replay {
 type Summary struct {
 	PlayerTurn *Player // nil before game start
 	// Successes does not contains disconnected players
-	Successes map[Player]game.Success
+	Successes map[Player]Success
 	ID        RoomID
 	RoomSize  int // Number of player expected
 }
 
 // does not include inactive players
-func (r *Room) reversePlayers() map[game.PlayerSerial]Player {
-	players := make(map[game.PlayerSerial]Player)
+func (r *Room) playersBySerial() map[serial]Player {
+	players := make(map[serial]Player)
 	for _, pc := range r.currentPlayers {
 		if pc.conn == nil {
 			continue
@@ -190,21 +169,19 @@ func (r *Room) Summary() Summary {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	state := r.game.GameState
-	players := r.reversePlayers()
-
-	successes := make(map[Player]game.Success)
-	for k, v := range state.Players {
-		client := players[k]
-		successes[client] = v.Success
+	successes := make(map[Player]Success)
+	for _, v := range r.currentPlayers {
+		successes[v.pl] = v.advance.success
 	}
 	out := Summary{
 		ID:        r.ID,
 		Successes: successes,
-		RoomSize:  r.expectedPlayers,
+		RoomSize:  r.game.options.PlayersNumber,
 	}
-	if id := state.Player; id != -1 {
-		if pl, has := players[id]; has {
+
+	players := r.playersBySerial()
+	if serial := r.game.playerTurn; serial != -1 {
+		if pl, has := players[serial]; has {
 			out.PlayerTurn = &pl
 		}
 	}

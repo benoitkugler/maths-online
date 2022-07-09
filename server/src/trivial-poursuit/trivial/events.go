@@ -4,8 +4,7 @@ import (
 	"errors"
 	"log"
 	"os"
-
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	"time"
 )
 
 var (
@@ -13,22 +12,22 @@ var (
 	ProgressLogger = log.New(os.Stdout, "tv-game:INFO : ", 0)
 )
 
-func (pc playerConn) send(events game.StateUpdate) {
+func (pc playerConn) send(events StateUpdate) {
 	err := pc.conn.WriteJSON(events)
 	if err != nil {
 		WarningLogger.Printf("Sending to client %s failed: %s", pc.pl.ID, err)
 	}
 }
 
-// TODO: probably use r.game.State
-func (r *Room) broadcastEvents(events game.StateUpdate) {
+func (r *Room) broadcastEvents(events Events) {
 	ProgressLogger.Printf("Game %s : broadcasting...", r.ID)
 
+	state := r.state()
 	for _, pc := range r.currentPlayers {
 		if pc.conn == nil { // ignore disconnected players
 			continue
 		}
-		pc.send(events)
+		pc.send(StateUpdate{Events: events, State: state})
 	}
 }
 
@@ -46,7 +45,7 @@ func (r *Room) Listen() (replay Replay, naturalEnding bool) {
 			return Replay{}, false
 		case client := <-r.Leave:
 			r.onLeave(client)
-		case <-r.game.QuestionTimeout.C:
+		case <-r.game.questionTimer.C:
 			r.onQuestionTimeout()
 		case message := <-r.Event:
 			isGameOver := r.onEvent(message)
@@ -65,12 +64,10 @@ func (r *Room) onTerminate() {
 
 	ProgressLogger.Printf("Game %s : terminating game...", r.ID)
 
-	r.broadcastEvents(game.StateUpdate{
-		Events: game.Events{
-			game.GameTerminated{},
-		},
-		State: r.game.GameState,
-	})
+	r.broadcastEvents(Events{
+		GameTerminated{},
+	},
+	)
 }
 
 // ErrGameStarted is returned from `Join` when the game
@@ -90,54 +87,47 @@ func (r *Room) Join(player Player, connection Connection) error {
 	_, isKnownPlayer := r.currentPlayers[player.ID]
 	if !isKnownPlayer {
 		// fresh connection : only allow it on waiting games
-		if r.game.HasStarted() {
+		if r.game.hasStarted() {
 			return ErrGameStarted
 		}
 
 		ProgressLogger.Printf("Game %s : adding new player %s...", r.ID, player.ID)
 
-		// TODO: merge AddPlayer and StartGame
-		serial, event := r.game.AddPlayer(player.Pseudo)
+		serial := r.newSerial()
 		// register the serial for futur uses ...
 		player.serial = serial
 		// ... and register the player
-		pc := playerConn{pl: player, conn: connection}
-		r.currentPlayers[player.ID] = pc
+		pc := playerConn{pl: player, conn: connection, advance: playerAdvance{} /* zero value is enough */}
+		r.currentPlayers[player.ID] = &pc
 
-		// only notifie the player who joined ...
-		pc.send(game.StateUpdate{
-			Events: game.Events{game.PlayerJoin{Player: serial}},
-			State:  r.game.GameState,
-		})
+		// notify the player who joined to show the lobby ...
+		pc.send(StateUpdate{Events: Events{PlayerJoin{Player: serial}}, State: r.state()})
 
-		// ... and check if the new player triggers a game start
-		var events game.StateUpdate
-		if r.game.NumberPlayers(true) >= r.Options().PlayersNumber {
-			ProgressLogger.Printf("Game %s : starting...", r.ID)
-			// TODO: refactor StartGame
-			events = r.game.StartGame()
-		} else { // update the lobby
-			events = game.StateUpdate{
-				Events: game.Events{event},
-				State:  r.game.GameState,
-			}
+		// ... also notify the other players ...
+		r.broadcastEvents(Events{LobbyUpdate{
+			Player:     serial,
+			PlayerName: player.Pseudo,
+			IsJoining:  true,
+			Names:      r.playerPseudos(),
+		}})
+
+		// ... and check if the new player triggers a game start, after a brief pause
+		time.Sleep(time.Second)
+		if events := r.tryStartGame(); len(events) != 0 {
+			r.broadcastEvents(events)
 		}
-		r.broadcastEvents(events)
 	} else { // reconnection
 		ProgressLogger.Printf("Game %s : reconnecting player %s...", r.ID, player.ID)
 
 		pc := r.currentPlayers[player.ID]
-		pc.conn = connection
+		pc.conn = connection // use the new client connection
 		pc.pl.Pseudo = player.Pseudo
-		r.currentPlayers[player.ID] = pc // register the new client connection
 
-		// TODO: refactor ReconnectPlayer
-		event := r.game.ReconnectPlayer(pc.pl.serial, pc.pl.Pseudo)
-
-		r.broadcastEvents(game.StateUpdate{
-			Events: game.Events{event},
-			State:  r.game.GameState,
-		})
+		event := PlayerReconnected{
+			PlayerID:   pc.pl.serial,
+			PlayerName: player.Pseudo,
+		}
+		r.broadcastEvents(Events{event})
 	}
 
 	return nil
@@ -148,33 +138,42 @@ func (r *Room) onLeave(playerID PlayerID) {
 	defer r.lock.Unlock()
 
 	pc, in := r.currentPlayers[playerID]
-	// defensive check
-	if !in {
+	if !in { // defensive check
 		return
 	}
 
 	ProgressLogger.Printf("Game %s : removing player %d (ID: %s)...", r.ID, pc.pl.serial, pc.pl.ID)
 
-	// TODO: refactor RemovePlayer
-	update := r.game.RemovePlayer(pc.pl.serial)
-	delete(r.currentPlayers, playerID)
+	update := r.removePlayer(pc.pl)
 	r.broadcastEvents(update)
 }
 
-func (r *Room) onEvent(event game.ClientEvent) (isGameOver bool) {
+// ClientEvent is a game event send by a
+// known player
+type ClientEvent struct {
+	Event  ClientEventITF // as send by the client
+	Player PlayerID       // filled by the server
+}
+
+func (r *Room) onEvent(event ClientEvent) (isGameOver bool) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	ProgressLogger.Printf("Game %s : handleClientEvent...", r.ID)
+	ProgressLogger.Printf("Game %s : handling client event (%T)...", r.ID, event.Event)
 
-	events, isGameOver, err := r.game.HandleClientEvent(event)
+	player, ok := r.currentPlayers[event.Player]
+	if !ok { // defensive check
+		return
+	}
+
+	events, isGameOver, err := r.handleClientEvent(event.Event, player.pl)
 	if err != nil { // malicious client: ignore the query
 		WarningLogger.Println(err)
 		return false
 	}
 
-	if events != nil {
-		r.broadcastEvents(*events)
+	if len(events) != 0 { // do not update the state for nothing
+		r.broadcastEvents(events)
 	}
 
 	return isGameOver
@@ -186,8 +185,6 @@ func (r *Room) onQuestionTimeout() {
 
 	ProgressLogger.Printf("Game %s : questionTimeoutAction...", r.ID)
 
-	events := r.game.QuestionTimeoutAction()
-	if events != nil {
-		r.broadcastEvents(*events)
-	}
+	events := r.tryEndQuestion(true)
+	r.broadcastEvents(events)
 }
