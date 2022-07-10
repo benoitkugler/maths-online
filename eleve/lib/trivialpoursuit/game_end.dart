@@ -8,14 +8,14 @@ import 'package:flutter/material.dart';
 class GameEndPannel extends StatelessWidget {
   final BuildMode buildMode;
   final GameEnd data;
-  final Map<int, PlayerStatus> players;
-  final int ownID;
+  final Map<PlayerID, PlayerStatus> players;
+  final PlayerID ownID;
 
   const GameEndPannel(this.buildMode, this.data, this.players, this.ownID,
       {Key? key})
       : super(key: key);
 
-  List<int> get winners => data.winners;
+  List<PlayerID> get winners => data.winners;
   bool get hasWon => winners.contains(ownID);
   Success get ownSuccess => players[ownID]!.success;
 

@@ -2,14 +2,14 @@ import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:eleve/trivialpoursuit/pie.dart';
 import 'package:flutter/material.dart';
 
-List<int> sortedPlayers(Map<int, PlayerStatus> successes) {
+List<PlayerID> sortedPlayers(Map<PlayerID, PlayerStatus> successes) {
   final list = successes.keys.toList();
   list.sort();
   return list;
 }
 
 class SuccessRecapScaffold extends StatelessWidget {
-  final Map<int, PlayerStatus> successes;
+  final Map<PlayerID, PlayerStatus> successes;
 
   const SuccessRecapScaffold(this.successes, {Key? key}) : super(key: key);
 
@@ -32,7 +32,7 @@ class SuccessRecapScaffold extends StatelessWidget {
 }
 
 class _PlayerTile extends StatelessWidget {
-  final int playerID;
+  final PlayerID playerID;
   final PlayerStatus status;
 
   const _PlayerTile(this.playerID, this.status, {Key? key}) : super(key: key);
@@ -51,8 +51,8 @@ class _PlayerTile extends StatelessWidget {
 }
 
 class SuccessRecapRow extends StatelessWidget {
-  final int ownPlayer;
-  final Map<int, PlayerStatus> successes;
+  final PlayerID ownPlayer;
+  final Map<PlayerID, PlayerStatus> successes;
 
   const SuccessRecapRow(this.ownPlayer, this.successes, {Key? key})
       : super(key: key);
