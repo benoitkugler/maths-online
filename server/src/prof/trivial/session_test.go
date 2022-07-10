@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
+	tv "github.com/benoitkugler/maths-online/trivial"
 )
 
 func TestGameID(t *testing.T) {
@@ -27,8 +27,8 @@ func TestSession(t *testing.T) {
 	defer cancel()
 	go session.mainLoop(ctx)
 
-	session.createGameEvents <- createGame{ID: "g1", Questions: dummyQuestions, Options: trivialpoursuit.GameOptions{PlayersNumber: 2}}
-	session.createGameEvents <- createGame{ID: "g2", Questions: dummyQuestions, Options: trivialpoursuit.GameOptions{PlayersNumber: 2}}
+	session.createGameEvents <- createGame{ID: "g1", Options: tv.Options{PlayersNumber: 2, Questions: dummyQuestions}}
+	session.createGameEvents <- createGame{ID: "g2", Options: tv.Options{PlayersNumber: 2, Questions: dummyQuestions}}
 
 	time.Sleep(time.Millisecond * 10)
 

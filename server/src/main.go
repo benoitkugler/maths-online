@@ -16,7 +16,7 @@ import (
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
-	tvGame "github.com/benoitkugler/maths-online/trivial-poursuit"
+	tvGame "github.com/benoitkugler/maths-online/trivial"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

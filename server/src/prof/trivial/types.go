@@ -2,7 +2,7 @@ package trivial
 
 import (
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	"github.com/benoitkugler/maths-online/trivial"
 )
 
 // QuestionCriterion is an union of intersection of tags.
@@ -10,13 +10,13 @@ type QuestionCriterion [][]string
 
 // CategoriesQuestions defines a union of intersection of tags,
 // for every category.
-type CategoriesQuestions [game.NbCategories]QuestionCriterion
+type CategoriesQuestions [trivial.NbCategories]QuestionCriterion
 
 type TrivialConfigExt struct {
 	Config TrivialConfig
 	Origin teacher.Origin
 
-	NbQuestionsByCategories [game.NbCategories]int
+	NbQuestionsByCategories [trivial.NbCategories]int
 }
 
 func (tc TrivialConfig) withDetails(db DB, origin teacher.Origin, userID int64) (TrivialConfigExt, error) {

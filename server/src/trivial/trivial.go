@@ -42,7 +42,7 @@ type Options struct {
 // usually generated at the first connection.
 // It is used to handle reconnection and external monitoring
 // of the players
-type PlayerID = string
+type PlayerID string
 
 // Player represents one player.
 type Player struct {
@@ -95,7 +95,7 @@ type Room struct {
 	// including the inactive (disconnected) ones, for which
 	// `Connection` is nil.
 	// we always have len(currentPlayers) <= expectedPlayers
-	players map[string]*playerConn
+	players map[PlayerID]*playerConn
 }
 
 func NewRoom(ID RoomID, options Options) *Room {
@@ -111,7 +111,12 @@ func NewRoom(ID RoomID, options Options) *Room {
 
 // Options returns the (readonly) configuration used by
 // the game.
-func (r *Room) Options() Options { return r.game.options }
+func (r *Room) Options() Options {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	return r.game.options
+}
 
 // Replay exposes some information to be persisted
 // after the game end, such as the successes of the players

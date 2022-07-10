@@ -25,7 +25,7 @@ var (
 func playersFromSuccess(scs ...Success) map[serial]*playerConn {
 	out := make(map[serial]*playerConn)
 	for i, s := range scs {
-		id := fmt.Sprintf("%d", i)
+		id := serial(fmt.Sprintf("%d", i))
 		out[id] = &playerConn{pl: Player{ID: id}, advance: playerAdvance{success: s}}
 	}
 	return out
@@ -53,7 +53,7 @@ func Test_gameState_winners(t *testing.T) {
 func playersFromIds(scs ...string) map[serial]*playerConn {
 	out := make(map[serial]*playerConn)
 	for _, id := range scs {
-		out[id] = &playerConn{pl: Player{ID: id}, conn: &clientOut{}}
+		out[serial(id)] = &playerConn{pl: Player{ID: serial(id)}, conn: &clientOut{}}
 	}
 	return out
 }
@@ -462,7 +462,7 @@ func TestGameEnd(t *testing.T) {
 		t.Fatal(events[0])
 	}
 
-	if !reflect.DeepEqual(gameEnd.Winners, []string{"p1"}) {
+	if !reflect.DeepEqual(gameEnd.Winners, []serial{"p1"}) {
 		t.Fatal(gameEnd.Winners)
 	}
 

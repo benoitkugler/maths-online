@@ -6,20 +6,18 @@ import (
 	"sync"
 	"time"
 
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
 type stopGame struct {
-	ID      tv.GameID
+	ID      tv.RoomID
 	Restart bool // if false, definitively close the game
 }
 
 type createGame struct {
-	ID        tv.GameID
-	Questions game.QuestionPool
-	Options   tv.GameOptions
+	ID      tv.RoomID
+	Options tv.Options
 }
 
 // gameSession is the list of the current active games
@@ -33,19 +31,16 @@ type gameSession struct {
 	lock sync.Mutex
 
 	// active games
-	games map[tv.GameID]*tv.GameController
+	games map[tv.RoomID]*tv.Room
 
-	// registred players
-	playerIDs map[PlayerID]gamePosition
+	// map registred players to their game room
+	playerIDs map[tv.PlayerID]tv.RoomID
 
 	// stopGameEvents and createGameEvents are used by the teacher to control
 	// the current session
 	createGameEvents   chan createGame // calls createGame()
 	stopGameEvents     chan stopGame   // calls stopGame()
-	afterGameEndEvents chan tv.GameID  // calls afterGameEnd()
-
-	// channel receiving game progress
-	monitorSummary chan tv.GameSummary
+	afterGameEndEvents chan tv.RoomID  // calls afterGameEnd()
 
 	// clients to which send the content of `monitor`
 	teacherClients map[*teacherClient]bool
@@ -55,19 +50,18 @@ func newGameSession(id SessionID, idTeacher int64) *gameSession {
 	return &gameSession{
 		id:                 id,
 		idTeacher:          idTeacher,
-		games:              make(map[tv.GameID]*tv.GameController),
-		playerIDs:          make(map[PlayerID]gamePosition),
+		games:              make(map[tv.RoomID]*tv.Room),
+		playerIDs:          make(map[tv.PlayerID]tv.RoomID),
 		createGameEvents:   make(chan createGame),
 		stopGameEvents:     make(chan stopGame),
-		afterGameEndEvents: make(chan tv.GameID),
-		monitorSummary:     make(chan tv.GameSummary),
+		afterGameEndEvents: make(chan tv.RoomID),
 		teacherClients:     make(map[*teacherClient]bool),
 	}
 }
 
 // make sure game id are properly sorted when
 // created from groups
-func (gs *gameSession) newGameID() tv.GameID {
+func (gs *gameSession) newGameID() tv.RoomID {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
@@ -82,13 +76,13 @@ func (gs *gameSession) newGameID() tv.GameID {
 
 // make sure game id are properly sorted when
 // created from groups
-func gameIDFromSerial(sessionID string, serial int) tv.GameID {
-	return tv.GameID(sessionID + fmt.Sprintf("%02d", serial+1))
+func gameIDFromSerial(sessionID string, serial int) tv.RoomID {
+	return tv.RoomID(sessionID + fmt.Sprintf("%02d", serial+1))
 }
 
 // createGame registers and start a new game
 func (gs *gameSession) createGame(params createGame) {
-	game := tv.NewGameController(params.ID, params.Questions, params.Options, gs.monitorSummary)
+	game := tv.NewRoom(params.ID, params.Options)
 
 	// register the controller...
 	gs.lock.Lock()
@@ -97,15 +91,15 @@ func (gs *gameSession) createGame(params createGame) {
 
 	// ...and starts it
 	go func() {
-		review, ok := game.StartLoop()
-		if ok { // exploit the review
-			gs.exploitReview(review)
+		replay, naturalEnding := game.Listen()
+		if naturalEnding { // exploit the review
+			gs.exploitReplay(replay)
 		}
 		ProgressLogger.Printf("Game %s is done, cleaning up...", params.ID)
 
 		// if the game was terminated explicitely (by stopGame),
 		// do not perform the cleanup to avoid interfering with restart
-		if ok {
+		if naturalEnding {
 			gs.afterGameEndEvents <- params.ID
 		}
 	}()
@@ -114,11 +108,11 @@ func (gs *gameSession) createGame(params createGame) {
 }
 
 // TODO:
-func (gs *gameSession) exploitReview(review tv.Review) {
-	ProgressLogger.Printf("GAME REVIEW: %v", review)
+func (gs *gameSession) exploitReplay(review tv.Replay) {
+	ProgressLogger.Printf("GAME REPLAY: %v", review)
 }
 
-func (gs *gameSession) afterGameEnd(gameID tv.GameID) {
+func (gs *gameSession) afterGameEnd(gameID tv.RoomID) {
 	fmt.Println("afterGameEnd")
 	gs.lock.Lock()
 	delete(gs.games, gameID)
@@ -135,9 +129,8 @@ func (gs *gameSession) stopGame(params stopGame) {
 
 	// copy the current configuration
 	create := createGame{
-		ID:        game.ID,
-		Questions: game.Game.QuestionPool,
-		Options:   game.Options,
+		ID:      game.ID,
+		Options: game.Options(),
 	}
 
 	game.Terminate <- true
@@ -153,6 +146,9 @@ func (gs *gameSession) stopGame(params stopGame) {
 
 // mainLoop blocks until all games are terminated or `ctx` is Done
 func (gs *gameSession) mainLoop(ctx context.Context) {
+	monitorTicker := time.NewTicker(2 * time.Second)
+	defer monitorTicker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -170,18 +166,20 @@ func (gs *gameSession) mainLoop(ctx context.Context) {
 			}
 		case gameID := <-gs.afterGameEndEvents:
 			gs.afterGameEnd(gameID)
-		case summary := <-gs.monitorSummary:
+		case <-monitorTicker.C:
+			sum := gs.collectSummaries()
 			for client := range gs.teacherClients {
-				client.sendSummary(summary)
+				client.sendSummary(sum)
 			}
 		}
 	}
 }
 
-func (gs *gameSession) monitorRemoveGame(gameID tv.GameID) {
+func (gs *gameSession) monitorRemoveGame(gameID tv.RoomID) {
 	// notify the monitors
+	sum := gs.collectSummaries()
 	for client := range gs.teacherClients {
-		client.removeGame(gameID)
+		client.sendSummary(sum)
 	}
 }
 
@@ -230,16 +228,17 @@ func (ct *Controller) getOrCreateSession(userID int64) *gameSession {
 	return ct.createSession(sessionID, userID)
 }
 
-// locks and add a new player entry with a sentinel PlayerID
-func (gs *gameSession) registerPlayer(gameID tv.GameID) PlayerID {
+// locks and add a new player in the map player -> games
+func (gs *gameSession) registerPlayer(gameID tv.RoomID) tv.PlayerID {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	playerID := PlayerID(utils.RandomID(false, 20, func(s string) bool {
-		_, has := gs.playerIDs[PlayerID(s)]
+	playerID := tv.PlayerID(utils.RandomID(false, 20, func(s string) bool {
+		_, has := gs.playerIDs[tv.PlayerID(s)]
 		return has
 	}))
-	gs.playerIDs[playerID] = gamePosition{Player: -1, Game: gameID} // register with an initial sentinel value
+	gs.playerIDs[playerID] = gameID
+
 	return playerID
 }
 

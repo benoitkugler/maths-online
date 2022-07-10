@@ -10,7 +10,7 @@ import (
 
 // interaction with the client
 
-//go:generate ../../../../../structgen/structgen -source=client_models.go -mode=dart:../../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen_itfs.go
+//go:generate ../../../../structgen/structgen -source=client_models.go -mode=dart:../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen_itfs.go
 
 // NbCategories is the number of categories of question
 const NbCategories = int(nbCategories)

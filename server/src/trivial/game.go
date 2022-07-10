@@ -274,7 +274,7 @@ func (r *Room) winners() (out []serial) {
 			out = append(out, player.pl.ID)
 		}
 	}
-	sort.Strings(out)
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
 	return out
 }
 
@@ -307,21 +307,21 @@ func (r *Room) decrassage() (ids map[serial][]int64) {
 
 // panic if no active players are present
 func (r *Room) nextPlayer() serial {
-	var sortedIds []serial
+	var sortedIds []string
 	for _, player := range r.players {
 		if player.conn == nil { // ignore inactive players
 			continue
 		}
-		sortedIds = append(sortedIds, player.pl.ID)
+		sortedIds = append(sortedIds, string(player.pl.ID))
 	}
 	sort.Strings(sortedIds)
 
 	for _, player := range sortedIds {
-		if player > r.game.playerTurn {
-			return player
+		if serial(player) > r.game.playerTurn {
+			return serial(player)
 		}
 	}
-	return sortedIds[0]
+	return serial(sortedIds[0])
 }
 
 // startTurn starts a new turn, updating the state
