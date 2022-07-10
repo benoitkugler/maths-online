@@ -95,3 +95,40 @@ func TestTerminate(t *testing.T) {
 		t.Fatalf("expected GameTerminated, got %v (%T)", last.Events[0], last.Events[0])
 	}
 }
+
+func (r *Room) decoReco(player PlayerID, errC chan<- error) {
+	time.Sleep(20 * time.Millisecond)
+	r.Leave <- player
+
+	time.Sleep(time.Millisecond)
+
+	err := r.Join(Player{ID: player}, &clientOut{})
+	errC <- err
+}
+
+func TestReconnection(t *testing.T) {
+	r := NewRoom("<test>", Options{PlayersNumber: 3})
+	go r.Listen()
+
+	r.mustJoin(t, "p1")
+	r.mustJoin(t, "p2")
+	r.mustJoin(t, "p3")
+
+	// simulate a deconection
+	errC1 := make(chan error)
+	errC2 := make(chan error)
+
+	go r.decoReco("p1", errC1)
+	go r.decoReco("p2", errC2)
+
+	if err := <-errC1; err != nil {
+		t.Fatal(err)
+	}
+	if err := <-errC2; err != nil {
+		t.Fatal(err)
+	}
+
+	if pl := r.lp(); len(pl) != 3 {
+		t.Fatal()
+	}
+}

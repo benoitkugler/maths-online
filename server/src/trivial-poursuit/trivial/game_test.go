@@ -16,8 +16,8 @@ func init() {
 
 var (
 	exQu = WeigthedQuestions{
-		Questions: []editor.Question{{Id: 1}, {Id: 2}},
-		Weights:   []float64{1. / 2, 1. / 2},
+		Questions: []editor.Question{{Id: 1}, {Id: 2}, {Id: 3}, {Id: 4}},
+		Weights:   []float64{1. / 4, 1. / 4, 1. / 4, 1. / 4},
 	}
 	exPool = QuestionPool{exQu, exQu, exQu, exQu, exQu}
 )
@@ -410,5 +410,74 @@ func TestHandleClientEvent(t *testing.T) {
 
 	if r.game.phase != POver {
 		t.Fatal("game should be over")
+	}
+}
+
+func TestGameEnd(t *testing.T) {
+	r := NewRoom("<test>", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true})
+
+	var c1 clientOut
+
+	r.mustJoinConn(t, "p1", &c1)
+	r.mustJoin(t, "p2")
+	r.mustJoin(t, "p3")
+
+	r.players["p1"].advance = playerAdvance{
+		success: Success{true, true, true, true, true},
+		review: QuestionReview{
+			MarkedQuestions: []int64{1, 1, 1, 2, 3, 4},
+		},
+	}
+
+	r.players["p2"].advance.success = Success{true, true, true, true, true}
+
+	r.game.dice = DiceThrow{1}
+
+	rep := make(chan Replay)
+	go func() {
+		replay, _ := r.Listen()
+		rep <- replay
+	}()
+
+	r.Leave <- "p3"
+
+	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+
+	questionID := r.lg().question.ID
+
+	r.Event <- ClientEvent{Event: Answer{client.QuestionAnswersIn{}}, Player: "p1"} // correct
+	// p2 is incorrect due to timeout
+
+	time.Sleep(50 * time.Millisecond)
+
+	r.Event <- ClientEvent{Event: WantNextTurn{}, Player: "p1"}
+	r.Event <- ClientEvent{Event: WantNextTurn{true}, Player: "p2"}
+
+	events := c1.lastU(&r.lock).Events
+	if len(events) != 1 {
+		t.Fatal(events)
+	}
+	gameEnd, ok := events[0].(GameEnd)
+	if !ok {
+		t.Fatal(events[0])
+	}
+
+	if !reflect.DeepEqual(gameEnd.Winners, []string{"p1"}) {
+		t.Fatal(gameEnd.Winners)
+	}
+
+	decrP1 := editor.NewSetFromSlice(gameEnd.QuestionDecrassageIds["p1"])
+	decrP2 := editor.NewSetFromSlice(gameEnd.QuestionDecrassageIds["p2"])
+
+	if !decrP2.Has(questionID) {
+		t.Fatal(decrP2)
+	}
+	if len(decrP1) != 3 {
+		t.Fatal(decrP1)
+	}
+
+	replay := <-rep
+	if len(replay.QuestionHistory) != 3 {
+		t.Fatal()
 	}
 }

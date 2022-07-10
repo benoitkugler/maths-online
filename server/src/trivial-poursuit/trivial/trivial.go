@@ -128,9 +128,6 @@ func (r *Room) replay() Replay {
 	}
 
 	for _, pl := range r.players {
-		if pl.conn == nil { // player not connected anymore
-			continue
-		}
 		out.QuestionHistory[pl.pl] = pl.advance.review
 	}
 	return out
