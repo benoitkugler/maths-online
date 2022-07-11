@@ -3,6 +3,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/question_gallery.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -124,8 +125,15 @@ class _HomePageState extends State<_HomePage> {
   Map<String, String> trivialMetaCache = {};
 
   void _launchTrivialPoursuit() async {
+    final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
+        builder: (context) =>
+            ActivityStart(() => Navigator.of(context).pop(true))));
+    if (onDone == null) {
+      return;
+    }
+
     widget.audioPlayer.run();
-    final onPop = Navigator.of(context).push<void>(MaterialPageRoute<void>(
+    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
             body: TrivialPoursuitLoggin(
                 widget.buildMode, trivialMetaCache, widget.settings))));
