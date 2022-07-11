@@ -126,6 +126,7 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
   final RepereMetrics metrics;
 
   final bool showGrid;
+  final bool showOrigin;
   final Color color;
 
   /// [layers] are added in the stack
@@ -133,7 +134,7 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
   final List<PositionnedText> texts;
 
   const BaseRepere(this.metrics, this.showGrid, this.layers, this.texts,
-      {Key? key, Color? color})
+      {Key? key, Color? color, this.showOrigin = true})
       : color = color ?? Colors.transparent,
         super(key: key);
 
@@ -151,7 +152,7 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              _OriginPainter.asCustomPaint(metrics),
+              if (showOrigin) _OriginPainter.asCustomPaint(metrics),
               // grid
               if (showGrid) ...[
                 _GridPainter.asCustomPaint(metrics, hasDropOver),
