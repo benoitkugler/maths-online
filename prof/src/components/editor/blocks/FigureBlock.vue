@@ -313,7 +313,7 @@
 </template>
 
 <script setup lang="ts">
-import { colorByKind, extractPoints } from "@/controller/editor";
+import { colorByKind, extractPoints, lastColorUsed } from "@/controller/editor";
 import {
   LabelPos,
   SegmentKind,
@@ -350,7 +350,7 @@ function addPoint() {
     Point: {
       Coord: { X: "", Y: "" },
       Pos: LabelPos.TopRight,
-      Color: "#0011FF",
+      Color: lastColorUsed.color,
     },
   });
   props.modelValue.Drawings.Points = points;
@@ -382,14 +382,14 @@ function addSegment() {
     Kind: SegmentKind.SKSegment,
     LabelName: "",
     LabelPos: LabelPos.Top,
-    Color: "#0022FF",
+    Color: lastColorUsed.color,
   });
   props.modelValue.Drawings.Segments = segments;
 }
 
 function addLine() {
   const lines = props.modelValue.Drawings.Lines || [];
-  lines.push({ Label: "(d)", A: "1", B: "0", Color: "#5500FF" });
+  lines.push({ Label: "(d)", A: "1", B: "0", Color: lastColorUsed.color });
   props.modelValue.Drawings.Lines = lines;
 }
 

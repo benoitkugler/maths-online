@@ -750,3 +750,6 @@ export function personnalOrigin(): Origin {
     Visibility: Visibility.Personnal,
   };
 }
+
+/** lastColorUsed is a shared global parameter used by color pickers */
+export const lastColorUsed = { color: "#FF0000" };

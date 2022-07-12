@@ -78,7 +78,12 @@
 </template>
 
 <script setup lang="ts">
-import { ExpressionColor, variableToString, xRune } from "@/controller/editor";
+import {
+  ExpressionColor,
+  lastColorUsed,
+  variableToString,
+  xRune,
+} from "@/controller/editor";
 import type { FunctionGraphBlock } from "@/controller/exercice_gen";
 import ExpressionField from "../utils/ExpressionField.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
@@ -92,14 +97,12 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionGraphBlock): void;
 }>();
 
-// TODO: add color field
-
 function addFunction() {
   props.modelValue.Functions?.push({
     Function: "x^2",
     Decoration: {
       Label: "f",
-      Color: "",
+      Color: lastColorUsed.color,
     },
     Variable: { Name: xRune, Indice: "" },
     From: "-4",
