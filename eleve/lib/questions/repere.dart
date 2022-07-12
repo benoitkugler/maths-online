@@ -474,13 +474,18 @@ class AffineLine {
   }
 }
 
-/// fromHex expected a #FFFFFF string
+/// fromHex expects a #FFFFFF or #AAFFFFFF string
 Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   if (color.isEmpty) {
     return onEmpty;
   }
-  color = "FF" + color.replaceAll("#", "");
-  return Color(int.parse(color, radix: 16));
+  color = color.replaceAll("#", ""); // remove (optional) starting #
+  if (color.length == 6) {
+    // accept ARGB strings
+    color = "FF" + color;
+  }
+  final c = int.tryParse(color, radix: 16);
+  return c == null ? onEmpty : Color(c);
 }
 
 class DrawingsPainter extends CustomPainter {
