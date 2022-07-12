@@ -125,6 +125,7 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
       child: BaseRepere<VectorPairPointID>(
         metrics,
         figure.showGrid,
+        figure.showOrigin,
         [
           // static figure
           CustomPaint(

@@ -559,12 +559,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Drawings', 'Bounds', 'ShowGrid'))
+            bool_and(key IN ('Drawings', 'Bounds', 'ShowGrid', 'ShowOrigin'))
         FROM
             jsonb_each(data))
         AND structgen_validate_json_rep_RandomDrawings (data -> 'Drawings')
         AND structgen_validate_json_rep_RepereBounds (data -> 'Bounds')
-        AND structgen_validate_json_boolean (data -> 'ShowGrid');
+        AND structgen_validate_json_boolean (data -> 'ShowGrid')
+        AND structgen_validate_json_boolean (data -> 'ShowOrigin');
     RETURN is_valid;
 END;
 $$

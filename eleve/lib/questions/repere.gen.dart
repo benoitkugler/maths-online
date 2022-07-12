@@ -300,25 +300,30 @@ class Figure {
   final Drawings drawings;
   final RepereBounds bounds;
   final bool showGrid;
+  final bool showOrigin;
 
-  const Figure(this.drawings, this.bounds, this.showGrid);
+  const Figure(this.drawings, this.bounds, this.showGrid, this.showOrigin);
 
   @override
   String toString() {
-    return "Figure($drawings, $bounds, $showGrid)";
+    return "Figure($drawings, $bounds, $showGrid, $showOrigin)";
   }
 }
 
 Figure figureFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Figure(drawingsFromJson(json['Drawings']),
-      repereBoundsFromJson(json['Bounds']), boolFromJson(json['ShowGrid']));
+  return Figure(
+      drawingsFromJson(json['Drawings']),
+      repereBoundsFromJson(json['Bounds']),
+      boolFromJson(json['ShowGrid']),
+      boolFromJson(json['ShowOrigin']));
 }
 
 JSON figureToJson(Figure item) {
   return {
     "Drawings": drawingsToJson(item.drawings),
     "Bounds": repereBoundsToJson(item.bounds),
-    "ShowGrid": boolToJson(item.showGrid)
+    "ShowGrid": boolToJson(item.showGrid),
+    "ShowOrigin": boolToJson(item.showOrigin)
   };
 }

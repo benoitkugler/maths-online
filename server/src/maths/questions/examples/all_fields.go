@@ -45,7 +45,8 @@ var blockList = [...]que.Block{
 					Y: 3,
 				},
 			},
-			ShowGrid: true,
+			ShowGrid:   true,
+			ShowOrigin: true,
 		},
 	},
 	que.FigureBlock{
@@ -81,7 +82,8 @@ var blockList = [...]que.Block{
 			Height: 20,
 			Origin: repere.Coord{X: 5, Y: 5},
 		},
-		ShowGrid: true,
+		ShowGrid:   true,
+		ShowOrigin: true,
 	},
 	que.FigurePointFieldBlock{
 		Figure: que.FigureBlock{

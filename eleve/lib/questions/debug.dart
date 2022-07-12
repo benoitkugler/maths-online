@@ -10,15 +10,15 @@ TextOrMath T(String s) {
 
 const bounds = RepereBounds(20, 20, Coord(4, 4));
 
-const emptyFigure = Figure(Drawings({}, [], []), bounds, true);
+const emptyFigure = Figure(Drawings({}, [], []), bounds, true, true);
 
 final questionList = [
-  InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
+  const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
   InstantiatedQuestion(
       0,
       Question("", [
-        FigureVectorFieldBlock("test", emptyFigure, 0, true),
-        FigureVectorFieldBlock("test", emptyFigure, 0, true),
+        const FigureVectorFieldBlock("test", emptyFigure, 0, true),
+        const FigureVectorFieldBlock("test", emptyFigure, 0, true),
         TableFieldBlock([
           T("sdsd"),
           T("sdsd"),
@@ -28,5 +28,5 @@ final questionList = [
         ], 1)
       ]),
       []),
-  InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
+  const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
 ];

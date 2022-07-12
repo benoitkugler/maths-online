@@ -450,9 +450,10 @@ func (st SignTableBlock) setupValidator(expression.RandomParameters) (validator,
 }
 
 type FigureBlock struct {
-	Drawings repere.RandomDrawings
-	Bounds   repere.RepereBounds
-	ShowGrid bool
+	Drawings   repere.RandomDrawings
+	Bounds     repere.RepereBounds
+	ShowGrid   bool
+	ShowOrigin bool
 }
 
 func (f FigureBlock) instantiate(params expression.Vars, _ int) (instance, error) {
@@ -467,8 +468,9 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 				Points:   make(map[string]repere.LabeledPoint),
 				Lines:    make([]repere.Line, len(f.Drawings.Lines)),
 			},
-			Bounds:   f.Bounds,
-			ShowGrid: f.ShowGrid,
+			Bounds:     f.Bounds,
+			ShowGrid:   f.ShowGrid,
+			ShowOrigin: f.ShowOrigin,
 		},
 	}
 	for _, v := range f.Drawings.Points {

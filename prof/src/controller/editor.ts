@@ -290,6 +290,7 @@ export function newBlock(kind: BlockKind): Block {
         Kind: kind,
         Data: {
           ShowGrid: true,
+          ShowOrigin: true,
           Bounds: {
             Width: 10,
             Height: 10,
@@ -437,6 +438,7 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
@@ -462,6 +464,7 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
@@ -514,6 +517,7 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
@@ -532,6 +536,7 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,

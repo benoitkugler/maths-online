@@ -262,6 +262,7 @@ export interface FigureBlock {
   Drawings: RandomDrawings;
   Bounds: RepereBounds;
   ShowGrid: boolean;
+  ShowOrigin: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {

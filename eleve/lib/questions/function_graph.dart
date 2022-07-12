@@ -16,6 +16,7 @@ class FunctionGraphW extends StatelessWidget {
     return BaseRepere(
       metrics,
       true,
+      true,
       [
         CustomPaint(
           size: metrics.size,

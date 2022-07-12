@@ -79,6 +79,7 @@ class _FigurePointFieldState extends State<FigurePointField> {
       child: BaseRepere(
         metrics,
         widget.figure.showGrid,
+        widget.figure.showOrigin,
         [
           // custom drawing
           CustomPaint(

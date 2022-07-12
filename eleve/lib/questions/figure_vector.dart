@@ -119,6 +119,7 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
       child: BaseRepere<VectorPointID>(
           metrics,
           figure.showGrid,
+          figure.showOrigin,
           [
             // custom drawing
             CustomPaint(

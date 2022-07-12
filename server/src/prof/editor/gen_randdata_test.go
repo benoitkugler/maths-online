@@ -315,9 +315,10 @@ func randrep_RepereBounds() repere.RepereBounds {
 
 func randque_FigureBlock() questions.FigureBlock {
 	return questions.FigureBlock{
-		Drawings: randrep_RandomDrawings(),
-		Bounds:   randrep_RepereBounds(),
-		ShowGrid: randbool(),
+		Drawings:   randrep_RandomDrawings(),
+		Bounds:     randrep_RepereBounds(),
+		ShowGrid:   randbool(),
+		ShowOrigin: randbool(),
 	}
 }
 

@@ -17,6 +17,7 @@ class StaticRepere extends StatelessWidget {
     return BaseRepere(
       metrics,
       figure.showGrid,
+      figure.showOrigin,
       [
         // custom drawing
         CustomPaint(
@@ -133,9 +134,15 @@ class BaseRepere<PointIDType extends Object> extends StatelessWidget {
   final List<Widget> layers;
   final List<PositionnedText> texts;
 
-  const BaseRepere(this.metrics, this.showGrid, this.layers, this.texts,
-      {Key? key, Color? color, this.showOrigin = true})
-      : color = color ?? Colors.transparent,
+  const BaseRepere(
+    this.metrics,
+    this.showGrid,
+    this.showOrigin,
+    this.layers,
+    this.texts, {
+    Key? key,
+    Color? color,
+  })  : color = color ?? Colors.transparent,
         super(key: key);
 
   @override

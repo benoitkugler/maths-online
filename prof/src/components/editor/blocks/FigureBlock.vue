@@ -55,6 +55,14 @@
             hide-details
           ></v-checkbox>
         </v-col>
+        <v-col md="6">
+          <v-checkbox
+            density="compact"
+            label="Afficher l'origine"
+            v-model="props.modelValue.ShowOrigin"
+            hide-details
+          ></v-checkbox>
+        </v-col>
       </v-row>
     </v-card-text>
   </v-card>

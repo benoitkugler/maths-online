@@ -110,6 +110,7 @@ class _FunctionPointsState extends State<FunctionPoints> {
       child: BaseRepere<_PointID>(
         metrics,
         true,
+        true,
         [
           CustomPaint(
             size: metrics.size,
