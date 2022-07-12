@@ -724,16 +724,18 @@ func (f VariationTableFieldInstance) correctAnswer() client.Answer {
 }
 
 type FunctionPointsFieldInstance struct {
-	Function expression.FunctionExpr
-	Label    string
-	XGrid    []int
-	ID       int
+	Function     expression.FunctionExpr
+	Label        string
+	XGrid        []int
+	ID           int
+	offsetHeight int // added to the natural repere height
 }
 
 func (f FunctionPointsFieldInstance) fieldID() int { return f.ID }
 
 func (f FunctionPointsFieldInstance) toClient() client.Block {
 	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	bounds.Height += f.offsetHeight
 	return client.FunctionPointsFieldBlock{
 		Label: f.Label,
 		Xs:    f.XGrid, ID: f.ID,

@@ -2,6 +2,7 @@ package questions
 
 import (
 	"errors"
+	"math/rand"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -354,7 +355,6 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 		}
 		xGrid[i] = int(v)
 	}
-
 	sort.Ints(xGrid)
 
 	return FunctionPointsFieldInstance{
@@ -362,9 +362,10 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 			Function: fn,
 			Variable: fp.Variable,
 		},
-		ID:    ID,
-		Label: fp.Label,
-		XGrid: xGrid,
+		ID:           ID,
+		Label:        fp.Label,
+		XGrid:        xGrid,
+		offsetHeight: rand.Intn(3),
 	}, nil
 }
 
