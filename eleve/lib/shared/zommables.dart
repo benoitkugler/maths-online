@@ -17,7 +17,7 @@ class ListWithZoomables extends StatefulWidget {
 
 class _ListWithZoomablesState extends State<ListWithZoomables> {
   /// this ensure that scrolling on the edge of the widget works
-  static const scrollArea = 50;
+  static const scrollArea = 30;
 
   bool enableScroll = true;
 

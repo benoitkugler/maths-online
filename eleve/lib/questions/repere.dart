@@ -53,7 +53,7 @@ class RepereMetrics {
   final RepereBounds figure;
 
   RepereMetrics(this.figure, BuildContext context)
-      : _displayLength = MediaQuery.of(context).size.shortestSide * 0.95;
+      : _displayLength = MediaQuery.of(context).size.shortestSide * 0.86;
 
   double get resolution => max(max(figure.width, figure.height).toDouble(),
       1); // avoid crash on empty figure
