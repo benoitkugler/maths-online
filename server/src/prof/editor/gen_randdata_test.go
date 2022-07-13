@@ -248,8 +248,8 @@ func randSegmentKind() repere.SegmentKind {
 	return choix[i]
 }
 
-func randrep_Segment() repere.Segment {
-	return repere.Segment{
+func randrep_RandomSegment() repere.RandomSegment {
+	return repere.RandomSegment{
 		LabelName: randstring(),
 		From:      randstring(),
 		To:        randstring(),
@@ -259,11 +259,11 @@ func randrep_Segment() repere.Segment {
 	}
 }
 
-func randSlicerep_Segment() []repere.Segment {
+func randSlicerep_RandomSegment() []repere.RandomSegment {
 	l := 40 + rand.Intn(10)
-	out := make([]repere.Segment, l)
+	out := make([]repere.RandomSegment, l)
 	for i := range out {
-		out[i] = randrep_Segment()
+		out[i] = randrep_RandomSegment()
 	}
 	return out
 }
@@ -286,11 +286,28 @@ func randSlicerep_RandomLine() []repere.RandomLine {
 	return out
 }
 
+func randrep_RandomArea() repere.RandomArea {
+	return repere.RandomArea{
+		Color:  randstring(),
+		Points: randSlicestring(),
+	}
+}
+
+func randSlicerep_RandomArea() []repere.RandomArea {
+	l := 40 + rand.Intn(10)
+	out := make([]repere.RandomArea, l)
+	for i := range out {
+		out[i] = randrep_RandomArea()
+	}
+	return out
+}
+
 func randrep_RandomDrawings() repere.RandomDrawings {
 	return repere.RandomDrawings{
 		Points:   randSlicerep_NamedRandomLabeledPoint(),
-		Segments: randSlicerep_Segment(),
+		Segments: randSlicerep_RandomSegment(),
 		Lines:    randSlicerep_RandomLine(),
+		Areas:    randSlicerep_RandomArea(),
 	}
 }
 

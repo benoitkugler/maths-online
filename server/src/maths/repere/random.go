@@ -10,10 +10,23 @@ type RandomLabeledPoint struct {
 	Pos   LabelPos
 }
 
+type RandomSegment struct {
+	LabelName string // optional
+	From, To  string // expression.Expression resolving to point name
+	Color     Color
+	LabelPos  LabelPos    // used only if LabelName is not zero
+	Kind      SegmentKind // what to actually draw
+}
+
 type RandomLine struct {
 	Label string
 	A, B  string // must be a valid expression.Expression
 	Color string // #FFFFFF format
+}
+
+type RandomArea struct {
+	Color  Color
+	Points []string // expression.Expression for polyline point names
 }
 
 type NamedRandomLabeledPoint struct {
@@ -23,6 +36,7 @@ type NamedRandomLabeledPoint struct {
 
 type RandomDrawings struct {
 	Points   []NamedRandomLabeledPoint
-	Segments []Segment
+	Segments []RandomSegment
 	Lines    []RandomLine
+	Areas    []RandomArea
 }

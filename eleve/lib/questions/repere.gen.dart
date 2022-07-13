@@ -2,6 +2,47 @@
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
 
+String stringFromJson(dynamic json) => json == null ? "" : json as String;
+
+String stringToJson(String item) => item;
+
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
+}
+
+List<dynamic> listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/repere.Area
+class Area {
+  final String color;
+  final List<String> points;
+
+  const Area(this.color, this.points);
+
+  @override
+  String toString() {
+    return "Area($color, $points)";
+  }
+}
+
+Area areaFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Area(
+      stringFromJson(json['Color']), listStringFromJson(json['Points']));
+}
+
+JSON areaToJson(Area item) {
+  return {
+    "Color": stringToJson(item.color),
+    "Points": listStringToJson(item.points)
+  };
+}
+
 double doubleFromJson(dynamic json) => (json as num).toDouble();
 
 double doubleToJson(double item) => item;
@@ -27,10 +68,6 @@ Coord coordFromJson(dynamic json_) {
 JSON coordToJson(Coord item) {
   return {"X": doubleToJson(item.x), "Y": doubleToJson(item.y)};
 }
-
-String stringFromJson(dynamic json) => json == null ? "" : json as String;
-
-String stringToJson(String item) => item;
 
 // github.com/benoitkugler/maths-online/maths/repere.LabelPos
 enum LabelPos {
@@ -231,31 +268,47 @@ List<dynamic> listLineToJson(List<Line> item) {
   return item.map(lineToJson).toList();
 }
 
+List<Area> listAreaFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(areaFromJson).toList();
+}
+
+List<dynamic> listAreaToJson(List<Area> item) {
+  return item.map(areaToJson).toList();
+}
+
 // github.com/benoitkugler/maths-online/maths/repere.Drawings
 class Drawings {
   final Map<String, LabeledPoint> points;
   final List<Segment> segments;
   final List<Line> lines;
+  final List<Area> areas;
 
-  const Drawings(this.points, this.segments, this.lines);
+  const Drawings(this.points, this.segments, this.lines, this.areas);
 
   @override
   String toString() {
-    return "Drawings($points, $segments, $lines)";
+    return "Drawings($points, $segments, $lines, $areas)";
   }
 }
 
 Drawings drawingsFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Drawings(dictStringLabeledPointFromJson(json['Points']),
-      listSegmentFromJson(json['Segments']), listLineFromJson(json['Lines']));
+  return Drawings(
+      dictStringLabeledPointFromJson(json['Points']),
+      listSegmentFromJson(json['Segments']),
+      listLineFromJson(json['Lines']),
+      listAreaFromJson(json['Areas']));
 }
 
 JSON drawingsToJson(Drawings item) {
   return {
     "Points": dictStringLabeledPointToJson(item.points),
     "Segments": listSegmentToJson(item.segments),
-    "Lines": listLineToJson(item.lines)
+    "Lines": listLineToJson(item.lines),
+    "Areas": listAreaToJson(item.areas)
   };
 }
 

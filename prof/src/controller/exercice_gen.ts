@@ -224,8 +224,8 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKVector]: "Vecteur",
 };
 
-// github.com/benoitkugler/maths-online/maths/repere.Segment
-export interface Segment {
+// github.com/benoitkugler/maths-online/maths/repere.RandomSegment
+export interface RandomSegment {
   LabelName: string;
   From: string;
   To: string;
@@ -240,11 +240,17 @@ export interface RandomLine {
   B: string;
   Color: string;
 }
+// github.com/benoitkugler/maths-online/maths/repere.RandomArea
+export interface RandomArea {
+  Color: string;
+  Points: string[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/repere.RandomDrawings
 export interface RandomDrawings {
   Points: NamedRandomLabeledPoint[] | null;
-  Segments: Segment[] | null;
+  Segments: RandomSegment[] | null;
   Lines: RandomLine[] | null;
+  Areas: RandomArea[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/repere.Coord
 export interface Coord {

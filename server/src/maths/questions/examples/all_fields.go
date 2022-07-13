@@ -68,7 +68,7 @@ var blockList = [...]que.Block{
 					},
 				},
 			},
-			Segments: []repere.Segment{
+			Segments: []repere.RandomSegment{
 				{From: "A", To: "B"},
 				{From: "B", To: "C"},
 				{From: "C", To: "A"},

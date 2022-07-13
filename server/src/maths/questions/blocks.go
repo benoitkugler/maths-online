@@ -331,6 +331,16 @@ func evaluateExpr(expr string, params expression.Vars) (float64, error) {
 	return e.Evaluate(params)
 }
 
+// parse, substitute and return LaTeX format
+func instantiateLaTeXExpr(expr string, params expression.Vars) (string, error) {
+	e, err := expression.Parse(expr)
+	if err != nil {
+		return "", err
+	}
+	e.Substitute(params)
+	return e.AsLaTeX(), nil
+}
+
 type VariationTableBlock struct {
 	Label Interpolated
 	Xs    []string // expressions
@@ -467,6 +477,7 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 				Segments: make([]repere.Segment, len(f.Drawings.Segments)),
 				Points:   make(map[string]repere.LabeledPoint),
 				Lines:    make([]repere.Line, len(f.Drawings.Lines)),
+				Areas:    make([]repere.Area, len(f.Drawings.Areas)),
 			},
 			Bounds:     f.Bounds,
 			ShowGrid:   f.ShowGrid,
@@ -474,12 +485,10 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 		},
 	}
 	for _, v := range f.Drawings.Points {
-		nameExpr, err := expression.Parse(v.Name)
+		name, err := instantiateLaTeXExpr(v.Name, params)
 		if err != nil {
 			return out, err
 		}
-		nameExpr.Substitute(params)
-		name := nameExpr.AsLaTeX()
 
 		x, err := evaluateExpr(v.Point.Coord.X, params)
 		if err != nil {
@@ -501,22 +510,20 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 		}
 	}
 
+	var err error
 	for i, s := range f.Drawings.Segments {
-		fromExpr, err := expression.Parse(s.From)
+		instance := repere.Segment(s)
+
+		instance.From, err = instantiateLaTeXExpr(s.From, params)
 		if err != nil {
 			return out, err
 		}
-		fromExpr.Substitute(params)
-		s.From = fromExpr.AsLaTeX()
-
-		toExpr, err := expression.Parse(s.To)
+		instance.To, err = instantiateLaTeXExpr(s.To, params)
 		if err != nil {
 			return out, err
 		}
-		toExpr.Substitute(params)
-		s.To = toExpr.AsLaTeX()
 
-		out.Figure.Drawings.Segments[i] = s
+		out.Figure.Drawings.Segments[i] = instance
 	}
 
 	for i, l := range f.Drawings.Lines {
@@ -535,6 +542,21 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 			Color: l.Color,
 		}
 	}
+
+	for i, area := range f.Drawings.Areas {
+		instance := repere.Area{
+			Color:  area.Color,
+			Points: make([]repere.PointName, len(area.Points)),
+		}
+		for j, p := range area.Points {
+			instance.Points[j], err = instantiateLaTeXExpr(p, params)
+			if err != nil {
+				return out, err
+			}
+		}
+		out.Figure.Drawings.Areas[i] = instance
+	}
+
 	return out, nil
 }
 
@@ -578,6 +600,19 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 			return nil, err
 		}
 		out.references = append(out.references, from, to)
+	}
+	for _, area := range f.Drawings.Areas {
+		if len(area.Points) < 3 {
+			return nil, errors.New("Une surface requiert au moins 3 points.")
+		}
+
+		for _, point := range area.Points {
+			e, err := expression.Parse(point)
+			if err != nil {
+				return nil, err
+			}
+			out.references = append(out.references, e)
+		}
 	}
 
 	out.lines = make([][2]*expression.Expr, len(f.Drawings.Lines))

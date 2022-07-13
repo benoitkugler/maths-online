@@ -369,7 +369,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_rep_Segment (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_rep_RandomSegment (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -395,7 +395,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_array_rep_Segment (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_rep_RandomSegment (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -410,7 +410,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(structgen_validate_json_rep_Segment (value))
+            bool_and(structgen_validate_json_rep_RandomSegment (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -465,6 +465,51 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_rep_RandomArea (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Color', 'Points'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Color')
+        AND structgen_validate_json_array_string (data -> 'Points');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_rep_RandomArea (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_rep_RandomArea (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_rep_RandomDrawings (data jsonb)
     RETURNS boolean
     AS $$
@@ -476,12 +521,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Points', 'Segments', 'Lines'))
+            bool_and(key IN ('Points', 'Segments', 'Lines', 'Areas'))
         FROM
             jsonb_each(data))
         AND structgen_validate_json_array_rep_NamedRandomLabeledPoint (data -> 'Points')
-        AND structgen_validate_json_array_rep_Segment (data -> 'Segments')
-        AND structgen_validate_json_array_rep_RandomLine (data -> 'Lines');
+        AND structgen_validate_json_array_rep_RandomSegment (data -> 'Segments')
+        AND structgen_validate_json_array_rep_RandomLine (data -> 'Lines')
+        AND structgen_validate_json_array_rep_RandomArea (data -> 'Areas');
     RETURN is_valid;
 END;
 $$
