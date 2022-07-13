@@ -46,8 +46,8 @@
 </template>
 
 <script setup lang="ts">
+import type { FunctionPointsFieldBlock } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
-import type { FunctionPointsFieldBlock } from "@/controller/exercice_gen";
 import ExpressionListField from "../utils/ExpressionListField.vue";
 import VariableField from "../utils/VariableField.vue";
 

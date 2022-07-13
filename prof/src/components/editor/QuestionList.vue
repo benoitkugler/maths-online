@@ -137,13 +137,11 @@
 
 <script setup lang="ts">
 import type {
-  Origin,
-  QuestionGroup,
-  QuestionHeader,
+Origin, Question, QuestionGroup,
+QuestionHeader
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { personnalOrigin } from "@/controller/editor";
-import type { Question } from "@/controller/exercice_gen";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import QuestionGroupRow from "./QuestionGroupRow.vue";

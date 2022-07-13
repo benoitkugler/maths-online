@@ -14,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
+import type { TextPart } from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import type { TextPart } from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
 interface Props {

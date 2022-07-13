@@ -303,6 +303,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Flow } from "@/controller/api_gen";
 import {
   FlowLabels,
   Visibility,
@@ -311,7 +312,6 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onDragListItemStart, swapItems } from "@/controller/editor";
-import type { Flow } from "@/controller/exercice_gen";
 import { copy } from "@/controller/utils";
 import { computed } from "vue";
 import { $ref } from "vue/macros";

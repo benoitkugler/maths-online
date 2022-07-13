@@ -198,9 +198,9 @@ import type {
   QuestionCriterion,
   TrivialConfig,
 } from "@/controller/api_gen";
+import { DifficultyTag } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { removeDuplicates } from "@/controller/editor";
-import { DifficultyTag } from "@/controller/exercice_gen";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
 import type { CategoriesQuestions } from "@/controller/trivial_config_gen";
 import { onMounted } from "@vue/runtime-core";

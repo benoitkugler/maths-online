@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TextBlock } from "@/controller/exercice_gen";
+import type { TextBlock } from "@/controller/api_gen";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {

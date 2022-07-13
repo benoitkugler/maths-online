@@ -78,13 +78,13 @@
 </template>
 
 <script setup lang="ts">
+import type { FunctionGraphBlock } from "@/controller/api_gen";
 import {
-  ExpressionColor,
-  lastColorUsed,
-  variableToString,
-  xRune,
+ExpressionColor,
+lastColorUsed,
+variableToString,
+xRune
 } from "@/controller/editor";
-import type { FunctionGraphBlock } from "@/controller/exercice_gen";
 import ExpressionField from "../utils/ExpressionField.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
 

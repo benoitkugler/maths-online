@@ -66,16 +66,16 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ExpressionColor,
-  onDragListItemStart,
-  swapItems,
-  xRune,
-} from "@/controller/editor";
 import type {
-  RandomParameter,
-  RandomParameters,
-} from "@/controller/exercice_gen";
+RandomParameter,
+RandomParameters
+} from "@/controller/api_gen";
+import {
+ExpressionColor,
+onDragListItemStart,
+swapItems,
+xRune
+} from "@/controller/editor";
 import { $ref } from "vue/macros";
 import DropZone from "./DropZone.vue";
 import ParametersContainer from "./parameters/ParametersContainer.vue";

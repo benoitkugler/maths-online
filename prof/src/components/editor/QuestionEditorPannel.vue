@@ -187,6 +187,12 @@
 </template>
 
 <script setup lang="ts">
+import type {
+  BlockKind,
+  Question,
+  RandomParameter,
+  Variable,
+} from "@/controller/api_gen";
 import {
   Visibility,
   type errEnonce,
@@ -195,12 +201,6 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
-import type {
-  BlockKind,
-  Question,
-  RandomParameter,
-  Variable,
-} from "@/controller/exercice_gen";
 import { ref } from "@vue/reactivity";
 import { computed, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";

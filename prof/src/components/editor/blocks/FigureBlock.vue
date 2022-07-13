@@ -165,7 +165,7 @@
           title="Ajouter un segment ou un vecteur défini par deux points"
           size="x-small"
           class="mr-2 my-2"
-          :disabled="segmentsPointSuggestions.length < 2"
+          :disabled="pointsNamesHints.length < 2"
         >
           <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
         </v-btn>
@@ -187,7 +187,7 @@
                     hide-details
                     hide-no-data
                     label="Origine"
-                    :items="segmentsPointSuggestions"
+                    :items="pointsNamesHints"
                     v-model="segment.From"
                     :color="expressionColor"
                   ></v-combobox>
@@ -199,7 +199,7 @@
                     hide-details
                     hide-no-data
                     label="Extrémité"
-                    :items="segmentsPointSuggestions"
+                    :items="pointsNamesHints"
                     v-model="segment.To"
                     :color="expressionColor"
                   ></v-combobox>
@@ -318,18 +318,67 @@
       </div>
     </v-list>
   </v-card>
+
+  <v-card color="secondary" class="my-1">
+    <v-row no-gutters>
+      <v-col align-self="center" md="9">
+        <v-card-subtitle> Surfaces </v-card-subtitle>
+      </v-col>
+      <v-col md="3" style="text-align: right">
+        <v-btn
+          icon
+          @click="addArea"
+          title="Ajouter une surface colorée délimitée par des points"
+          size="x-small"
+          class="mr-2 my-2"
+          :disabled="pointsNamesHints.length < 3"
+        >
+          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-list>
+      <div
+        v-for="(area, index) in props.modelValue.Drawings.Areas"
+        :key="index"
+      >
+        <v-list-item>
+          <v-row>
+            <v-col cols="2">
+              <btn-color-picker v-model="area.Color"></btn-color-picker>
+            </v-col>
+            <v-col cols="8">
+              <expression-list-field
+                label="Extrémités"
+                :model-value="area.Points || []"
+                @update:model-value="(v) => (area.Points = v)"
+              ></expression-list-field>
+            </v-col>
+            <v-col md="2" align-self="center">
+              <v-btn icon size="x-small" @click="deleteArea(index)">
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-list-item>
+        <v-divider></v-divider>
+      </div>
+    </v-list>
+  </v-card>
 </template>
 
 <script setup lang="ts">
-import { colorByKind, extractPoints, lastColorUsed } from "@/controller/editor";
 import {
   LabelPos,
   SegmentKind,
   TextKind,
   type FigureBlock,
   type Variable,
-} from "@/controller/exercice_gen";
+} from "@/controller/api_gen";
+import { colorByKind, extractPoints, lastColorUsed } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
+import { $computed } from "vue/macros";
+import ExpressionListField from "../utils/ExpressionListField.vue";
 import LabelPosField from "../utils/LabelPosField.vue";
 import SegmentKindField from "../utils/SegmentKindField.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
@@ -347,7 +396,7 @@ const emit = defineEmits<{
 
 const expressionColor = colorByKind[TextKind.Expression];
 
-const segmentsPointSuggestions = computed(() =>
+const pointsNamesHints = $computed(() =>
   (props.modelValue.Drawings.Points || []).map((p) => p.Name)
 );
 
@@ -364,29 +413,13 @@ function addPoint() {
   props.modelValue.Drawings.Points = points;
 }
 
-function deletePoint(index: number) {
-  props.modelValue.Drawings.Points!.splice(index, 1);
-}
-
-function deleteSegment(index: number) {
-  props.modelValue.Drawings.Segments!.splice(index, 1);
-}
-
-function deleteLine(index: number) {
-  props.modelValue.Drawings.Lines!.splice(index, 1);
-}
-
 function addSegment() {
-  const points = props.modelValue.Drawings.Points || [];
-  if (points.length < 2) {
-    return;
-  }
-  const from = points[0];
-  const to = points[1];
+  const from = pointsNamesHints[0];
+  const to = pointsNamesHints[1];
   const segments = props.modelValue.Drawings.Segments || [];
   segments.push({
-    From: from.Name,
-    To: to.Name,
+    From: from,
+    To: to,
     Kind: SegmentKind.SKSegment,
     LabelName: "",
     LabelPos: LabelPos.Top,
@@ -399,6 +432,31 @@ function addLine() {
   const lines = props.modelValue.Drawings.Lines || [];
   lines.push({ Label: "(d)", A: "1", B: "0", Color: lastColorUsed.color });
   props.modelValue.Drawings.Lines = lines;
+}
+
+function addArea() {
+  const areas = props.modelValue.Drawings.Areas || [];
+  areas.push({
+    Points: pointsNamesHints.slice(0, 3),
+    Color: lastColorUsed.color,
+  });
+  props.modelValue.Drawings.Areas = areas;
+}
+
+function deletePoint(index: number) {
+  props.modelValue.Drawings.Points!.splice(index, 1);
+}
+
+function deleteSegment(index: number) {
+  props.modelValue.Drawings.Segments!.splice(index, 1);
+}
+
+function deleteLine(index: number) {
+  props.modelValue.Drawings.Lines!.splice(index, 1);
+}
+
+function deleteArea(index: number) {
+  props.modelValue.Drawings.Areas!.splice(index, 1);
 }
 
 const availablePoints = computed(() =>

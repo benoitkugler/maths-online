@@ -1,13 +1,12 @@
 import type { Origin, QuestionHeader } from "./api_gen";
-import { Visibility } from "./api_gen";
 import {
   BlockKind,
   ComparisonLevel,
   DifficultyTag,
-  LevelTag,
   SignSymbol,
   TextKind,
   VectorPairCriterion,
+  Visibility,
   type Block,
   type CoordExpression,
   type ExpressionFieldBlock,
@@ -33,7 +32,8 @@ import {
   type VariationTableBlock,
   type VariationTableFieldBlock,
   type VectorFieldBlock,
-} from "./exercice_gen";
+} from "./api_gen";
+import { LevelTag } from "./exercice_gen";
 
 export const ExpressionColor = "orange";
 
@@ -300,6 +300,7 @@ export function newBlock(kind: BlockKind): Block {
             Lines: [],
             Points: [],
             Segments: [],
+            Areas: [],
           },
         },
       };
@@ -448,6 +449,7 @@ export function newBlock(kind: BlockKind): Block {
               Lines: [],
               Points: [],
               Segments: [],
+              Areas: [],
             },
           },
           Answer: {
@@ -474,6 +476,7 @@ export function newBlock(kind: BlockKind): Block {
               Lines: [],
               Points: [],
               Segments: [],
+              Areas: [],
             },
           },
           Answer: {
@@ -523,7 +526,7 @@ export function newBlock(kind: BlockKind): Block {
               Height: 10,
               Origin: { X: 3, Y: 3 },
             },
-            Drawings: { Points: [], Lines: [], Segments: [] },
+            Drawings: { Points: [], Lines: [], Segments: [], Areas: [] },
           },
           Criterion: VectorPairCriterion.VectorColinear,
         },
@@ -542,7 +545,7 @@ export function newBlock(kind: BlockKind): Block {
               Height: 10,
               Origin: { X: 3, Y: 3 },
             },
-            Drawings: { Points: [], Lines: [], Segments: [] },
+            Drawings: { Points: [], Lines: [], Segments: [], Areas: [] },
           },
           Label: "f",
           A: "1",

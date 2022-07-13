@@ -74,12 +74,12 @@
 </template>
 
 <script setup lang="ts">
-import { colorByKind, completePoint } from "@/controller/editor";
 import type {
-  FigureVectorFieldBlock,
-  Variable,
-} from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
+FigureVectorFieldBlock,
+Variable
+} from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
+import { colorByKind, completePoint } from "@/controller/editor";
 import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {

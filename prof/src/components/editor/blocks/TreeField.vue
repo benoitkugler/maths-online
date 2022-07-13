@@ -132,8 +132,8 @@
 // TODO: for now, we only support regular trees
 // custom trees require v-treeview component, not available yet
 
+import type { TreeFieldBlock, TreeNodeAnswer } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
-import type { TreeFieldBlock, TreeNodeAnswer } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
 interface Props {

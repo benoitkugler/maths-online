@@ -13,8 +13,8 @@
 </template>
 
 <script setup lang="ts">
+import { TextKind } from "@/controller/api_gen";
 import { colorByKind, itemize } from "@/controller/editor";
-import { TextKind } from "@/controller/exercice_gen";
 import { onMounted, watch } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
 import { QuillEditor } from "@vueup/vue-quill";

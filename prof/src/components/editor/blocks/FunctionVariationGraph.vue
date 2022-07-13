@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FunctionVariationGraphBlock } from "@/controller/exercice_gen";
+import type { FunctionVariationGraphBlock } from "@/controller/api_gen";
 import BaseVariationTable from "./BaseVariationTable.vue";
 
 interface Props {

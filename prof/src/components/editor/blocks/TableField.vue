@@ -108,9 +108,9 @@
 </template>
 
 <script setup lang="ts">
+import type { TableFieldBlock } from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
-import type { TableFieldBlock } from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import TextPartField from "./TextPartField.vue";
 

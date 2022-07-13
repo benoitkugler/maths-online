@@ -195,6 +195,7 @@
 </template>
 
 <script setup lang="ts">
+import type { RandomParameter } from "@/controller/api_gen";
 import {
   BlockKind,
   Visibility,
@@ -205,7 +206,6 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
-import type { RandomParameter } from "@/controller/exercice_gen";
 import { computed } from "vue";
 import { $computed, $ref } from "vue/macros";
 import BlockBar from "../editor/BlockBar.vue";

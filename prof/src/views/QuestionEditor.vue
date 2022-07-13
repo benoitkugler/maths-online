@@ -30,10 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Origin } from "@/controller/api_gen";
+import type { Origin, Question } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { personnalOrigin } from "@/controller/editor";
-import type { Question } from "@/controller/exercice_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";

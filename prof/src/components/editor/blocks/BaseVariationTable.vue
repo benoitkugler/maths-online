@@ -74,11 +74,11 @@
 </template>
 
 <script setup lang="ts">
-import { colorByKind } from "@/controller/editor";
 import {
-  TextKind,
-  type FunctionVariationGraphBlock,
-} from "@/controller/exercice_gen";
+TextKind,
+type FunctionVariationGraphBlock
+} from "@/controller/api_gen";
+import { colorByKind } from "@/controller/editor";
 import ExpressionField from "../utils/ExpressionField.vue";
 
 interface Props {

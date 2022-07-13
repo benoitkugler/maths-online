@@ -52,10 +52,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Variable } from "@/controller/api_gen";
+import type { Block, Question, Variable } from "@/controller/api_gen";
+import { BlockKind } from "@/controller/api_gen";
 import { newBlock, swapItems } from "@/controller/editor";
-import type { Block, Question } from "@/controller/exercice_gen";
-import { BlockKind } from "@/controller/exercice_gen";
 import { markRaw, ref } from "@vue/reactivity";
 import { computed, nextTick, watch, type Component } from "@vue/runtime-core";
 import { $ref } from "vue/macros";

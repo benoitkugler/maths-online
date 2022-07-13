@@ -16,9 +16,9 @@
 </template>
 
 <script setup lang="ts">
+import type { NumberFieldBlock } from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import type { NumberFieldBlock } from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
 
 interface Props {
   modelValue: NumberFieldBlock;

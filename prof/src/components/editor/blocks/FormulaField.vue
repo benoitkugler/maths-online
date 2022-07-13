@@ -33,9 +33,9 @@
 </template>
 
 <script setup lang="ts">
+import type { ExpressionFieldBlock } from "@/controller/api_gen";
+import { ComparisonLevel, TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import type { ExpressionFieldBlock } from "@/controller/exercice_gen";
-import { ComparisonLevel, TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
 import TextPartField from "./TextPartField.vue";

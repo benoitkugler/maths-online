@@ -72,8 +72,8 @@
 </template>
 
 <script setup lang="ts">
+import { BlockKind } from "@/controller/api_gen";
 import { BlockKindLabels, onDragListItemStart } from "@/controller/editor";
-import { BlockKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 

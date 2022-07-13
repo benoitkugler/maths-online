@@ -80,16 +80,13 @@
 </template>
 
 <script setup lang="ts">
+import type { RandomParameter, RandomParameters } from "@/controller/api_gen";
 import {
   ExpressionColor,
   onDragListItemStart,
   swapItems,
   xRune,
 } from "@/controller/editor";
-import type {
-  RandomParameter,
-  RandomParameters,
-} from "@/controller/exercice_gen";
 import { $computed, $ref } from "vue/macros";
 import DropZone from "./DropZone.vue";
 import ParametersContainer from "./parameters/ParametersContainer.vue";
