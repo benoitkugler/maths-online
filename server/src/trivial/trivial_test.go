@@ -3,7 +3,18 @@ package trivial
 import (
 	"testing"
 	"time"
+
+	"github.com/benoitkugler/maths-online/utils/testutils"
 )
+
+func TestPanics(t *testing.T) {
+	testutils.ShouldPanic(t, func() { _ = (pGameOver + 1).String() })
+
+	testutils.ShouldPanic(t, func() {
+		r := Room{game: game{phase: pGameOver + 1}, players: map[PlayerID]*playerConn{"": {}}}
+		r.removePlayer(Player{})
+	})
+}
 
 func TestSummary(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: time.Minute})
@@ -29,7 +40,6 @@ func TestSummary(t *testing.T) {
 
 func TestReview(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
-	r.game.dice = DiceThrow{1}
 
 	naturalEnding := make(chan bool)
 	go func() {
@@ -40,7 +50,7 @@ func TestReview(t *testing.T) {
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
 
-	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+	r.throwAndMove("p1")
 
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p2"}

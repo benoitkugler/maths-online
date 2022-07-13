@@ -97,6 +97,8 @@ func TestGameState_nextPlayer(t *testing.T) {
 }
 
 func (r *Room) mustJoin(t *testing.T, id PlayerID) {
+	t.Helper()
+
 	r.mustJoinConn(t, id, &clientOut{})
 }
 
@@ -106,6 +108,11 @@ func (r *Room) mustJoinConn(t *testing.T, id PlayerID, client Connection) {
 	if err := r.Join(Player{ID: id}, client); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func (r *Room) throwAndMove(player PlayerID) {
+	r.Event <- ClientEvent{Event: DiceClicked{}, Player: player}
+	r.Event <- ClientEvent{Event: ClientMove{Tile: int(r.lg().dice.Face)}, Player: player}
 }
 
 func (r *Room) lg() game {
@@ -129,7 +136,7 @@ func TestStart(t *testing.T) {
 	r.mustJoin(t, "0")
 	r.mustJoin(t, "1")
 
-	if g := r.lg(); g.phase != PWaiting {
+	if g := r.lg(); g.phase != pGameLobby {
 		t.Fatalf("unexpected game phase %v", r.game.phase)
 	}
 
@@ -152,7 +159,7 @@ func TestStart(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if g := r.lg(); g.phase != PThrowing {
+	if g := r.lg(); g.phase != pTurnStarted {
 		t.Fatalf("unexpected game phase %v", r.game.phase)
 	}
 
@@ -163,7 +170,6 @@ func TestStart(t *testing.T) {
 
 func TestEmitQuestion(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 1, Questions: exPool, QuestionTimeout: time.Minute})
-	r.game.dice = DiceThrow{Face: 1}
 	go r.Listen()
 
 	r.mustJoin(t, "p1")
@@ -172,15 +178,15 @@ func TestEmitQuestion(t *testing.T) {
 		t.Fatal("timer should not being running")
 	}
 
-	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+	r.throwAndMove("p1")
 
-	if g := r.lg(); g.phase != PQuestion {
+	if g := r.lg(); g.phase != pDoingQuestion {
 		t.Fatalf("unexpected phase %v", g.phase)
 	}
 
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
 
-	if g := r.lg(); g.phase != PResult {
+	if g := r.lg(); g.phase != pQuestionResult {
 		t.Fatalf("unexpected phase %v", g.phase)
 	}
 	if g := r.lg(); g.questionTimer.Stop() {
@@ -190,22 +196,22 @@ func TestEmitQuestion(t *testing.T) {
 
 func TestQuestionTimeout(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 1, Questions: exPool, QuestionTimeout: 5 * time.Millisecond})
-	r.game.dice = DiceThrow{Face: 1}
+
 	r.mustJoin(t, "p1")
 	r.players["p1"].advance.success = Success{true, true, true, true, true}
 
 	go r.Listen()
 
-	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+	r.throwAndMove("p1")
 
 	qu := r.lg().question
-	if g := r.lg(); g.phase != PQuestion {
+	if g := r.lg(); g.phase != pDoingQuestion {
 		t.Fatalf("unexpected phase %v", g.phase)
 	}
 
 	time.Sleep(10 * time.Millisecond) // trigger question timeout
 
-	if g := r.lg(); g.phase != PResult {
+	if g := r.lg(); g.phase != pQuestionResult {
 		t.Fatalf("unexpected phase %v", g.phase)
 	}
 
@@ -241,14 +247,13 @@ func TestDisconnectStartTurn(t *testing.T) {
 
 func TestDisconnectInQuestion(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
-	r.game.dice = DiceThrow{Face: 1}
 
 	go r.Listen()
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
 
-	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+	r.throwAndMove("p1")
 
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
 
@@ -260,14 +265,13 @@ func TestDisconnectInQuestion(t *testing.T) {
 	if g := r.lg(); g.questionTimer.Stop() {
 		t.Fatal("question should have been closed")
 	}
-	if g := r.lg(); g.phase != PResult {
+	if g := r.lg(); g.phase != pQuestionResult {
 		t.Fatalf("unexpected phase %v", g.phase)
 	}
 }
 
 func TestDisconnectInBeforeNextTurn(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: time.Minute})
-	r.game.dice = DiceThrow{Face: 1}
 
 	go r.Listen()
 
@@ -275,7 +279,7 @@ func TestDisconnectInBeforeNextTurn(t *testing.T) {
 	r.mustJoin(t, "p2")
 	r.mustJoin(t, "p3")
 
-	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+	r.throwAndMove("p1")
 
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p2"}
@@ -293,13 +297,15 @@ func TestDisconnectInBeforeNextTurn(t *testing.T) {
 
 	r.Leave <- "p2"
 
-	if g := r.lg(); g.playerTurn != "p3" || g.phase != PThrowing {
+	if g := r.lg(); g.playerTurn != "p3" || g.phase != pTurnStarted {
 		t.Fatal(g)
 	}
 }
 
 func TestHandleClientEvent(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+
+	fmt.Println("Phase :", r.game.phase)
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
@@ -312,25 +318,36 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal("Ping should be ignored")
 	}
 
+	fmt.Println("Phase :", r.game.phase)
+
 	_, _, err = r.handleClientEvent(nil, Player{ID: "p1"})
 	if err == nil {
 		t.Fatal("expected error for invalid client event type")
 	}
-
 	_, _, err = r.handleClientEvent(DiceClicked{}, Player{ID: "p2"})
 	if err == nil {
-		t.Fatal("expected error for invalid click")
+		t.Fatal("expected error for incorrect player")
+	}
+	_, _, err = r.handleClientEvent(ClientMove{}, Player{ID: "p1"})
+	if err == nil {
+		t.Fatal("expected error for inconsitent phase")
 	}
 
 	_, _, _ = r.handleClientEvent(DiceClicked{}, Player{ID: "p1"}) // trigger a move
+
+	fmt.Println("Phase :", r.game.phase)
+
 	_, _, err = r.handleClientEvent(ClientMove{}, Player{ID: "p2"})
 	if err == nil {
 		t.Fatal("expected error for invalid move")
 	}
-
 	_, _, err = r.handleClientEvent(ClientMove{Tile: 89}, Player{ID: "p1"})
 	if err == nil {
 		t.Fatal("expected error for invalid tile")
+	}
+	_, _, err = r.handleClientEvent(Answer{}, Player{ID: "p1"})
+	if err == nil {
+		t.Fatal("expected error for inconsitent phase")
 	}
 
 	expected := r.game.dice.Face // since we start at tile 0
@@ -345,6 +362,12 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal(r.game.dice)
 	}
 
+	fmt.Println("Phase :", r.game.phase)
+
+	_, _, err = r.handleClientEvent(WantNextTurn{}, Player{ID: "p1"})
+	if err == nil {
+		t.Fatal("expected error for inconsitent phase")
+	}
 	_, _, err = r.handleClientEvent(Answer{client.QuestionAnswersIn{}}, Player{ID: "p1"})
 	if err != nil {
 		t.Fatal(err)
@@ -352,6 +375,13 @@ func TestHandleClientEvent(t *testing.T) {
 	_, _, err = r.handleClientEvent(Answer{client.QuestionAnswersIn{}}, Player{ID: "p2"})
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	fmt.Println("Phase :", r.game.phase)
+
+	_, _, err = r.handleClientEvent(DiceClicked{}, Player{ID: "p1"})
+	if err == nil {
+		t.Fatal("expected error for inconsitent phase")
 	}
 
 	// check if nextTurn is properly reset
@@ -367,6 +397,8 @@ func TestHandleClientEvent(t *testing.T) {
 	if len(r.game.currentWantNextTurn) != 0 {
 		t.Fatal("currentWantNextTurn should be reset")
 	}
+
+	fmt.Println("Phase :", r.game.phase)
 
 	r.game.pawnTile = 0
 	_, _, err = r.handleClientEvent(DiceClicked{}, Player{ID: "p2"})
@@ -395,7 +427,7 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal()
 	}
 
-	if r.game.phase == POver {
+	if r.game.phase == pGameOver {
 		t.Fatal("game should still be active")
 	}
 
@@ -408,9 +440,11 @@ func TestHandleClientEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if r.game.phase != POver {
+	if r.game.phase != pGameOver {
 		t.Fatal("game should be over")
 	}
+
+	fmt.Println("Phase :", r.game.phase)
 }
 
 func TestGameEnd(t *testing.T) {
@@ -431,8 +465,6 @@ func TestGameEnd(t *testing.T) {
 
 	r.players["p2"].advance.success = Success{true, true, true, true, true}
 
-	r.game.dice = DiceThrow{1}
-
 	rep := make(chan Replay)
 	go func() {
 		replay, _ := r.Listen()
@@ -441,7 +473,7 @@ func TestGameEnd(t *testing.T) {
 
 	r.Leave <- "p3"
 
-	r.Event <- ClientEvent{Event: ClientMove{Tile: 1}, Player: "p1"}
+	r.throwAndMove("p1")
 
 	questionID := r.lg().question.ID
 

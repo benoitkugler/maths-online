@@ -28,21 +28,40 @@ type currentQuestion struct {
 	ID        int64                      // the origin
 }
 
-// Phase identifies the current phase of the game
-type Phase uint8
+// phase identifies the current phase of the game
+type phase uint8
 
 const (
-	PWaiting  Phase = iota // not started yet
-	PThrowing              // start of turn, waiting for dice throw
-	PMoving                // dice was thrown, waiting for player move
-	PQuestion              // question is being answered
-	PResult                // players are consulting answer results
-	POver                  // game has finished
+	pGameLobby      phase = iota // not started yet
+	pTurnStarted                 // start of turn, waiting for dice throw
+	pChoosingTile                // dice was thrown, waiting for player move
+	pDoingQuestion               // question is being answered
+	pQuestionResult              // players are consulting answer results
+	pGameOver                    // game has finished
 )
+
+func (p phase) String() string {
+	switch p {
+	case pGameLobby:
+		return "GameLobby"
+	case pTurnStarted:
+		return "TurnStarted"
+	case pChoosingTile:
+		return "ChoosingTile"
+	case pDoingQuestion:
+		return "DoingQuestion"
+	case pQuestionResult:
+		return "QuestionResult"
+	case pGameOver:
+		return "GameOver"
+	default:
+		panic("invalid phase")
+	}
+}
 
 // game is the internal state of the game
 type game struct {
-	phase      Phase  // phase of the game
+	phase      phase  // phase of the game
 	pawnTile   int    // position of the pawn on the board
 	playerTurn serial // the player currently playing (for instance, choosing where to move)
 
@@ -76,7 +95,7 @@ func newGame(options Options) game {
 	}
 }
 
-func (g *game) hasStarted() bool { return g.phase != PWaiting }
+func (g *game) hasStarted() bool { return g.phase != pGameLobby }
 
 func (r *Room) nbActivePlayers() int {
 	var out int
@@ -146,17 +165,17 @@ func (r *Room) removePlayer(player Player) Events {
 	}}
 
 	switch r.game.phase {
-	case PWaiting, POver:
+	case pGameLobby, pGameOver:
 		// nothing more to be done
-	case PThrowing, PMoving: // if it is the current player, reset the turn
+	case pTurnStarted, pChoosingTile: // if it is the current player, reset the turn
 		if r.game.playerTurn == player.ID && r.nbActivePlayers() > 0 {
 			resetTurn := r.startTurn()
 			out = append(out, resetTurn)
 		}
-	case PQuestion:
+	case pDoingQuestion:
 		endQuestion := r.tryEndQuestion(false)
 		out = append(out, endQuestion...)
-	case PResult:
+	case pQuestionResult:
 		endTurn := r.tryEndTurn()
 		out = append(out, endTurn...)
 	default:
@@ -220,7 +239,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 		delete(r.game.currentAnswers, k)
 	}
 
-	r.game.phase = PResult
+	r.game.phase = pQuestionResult
 
 	return Events{out}
 }
@@ -251,7 +270,7 @@ func (r *Room) tryEndTurn() Events {
 	winners := r.winners()
 	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
-		r.game.phase = POver
+		r.game.phase = pGameOver
 		return Events{
 			GameEnd{
 				Winners:               winners,
@@ -331,7 +350,7 @@ func (r *Room) startTurn() PlayerTurn {
 		delete(r.game.currentWantNextTurn, k)
 	}
 
-	r.game.phase = PThrowing
+	r.game.phase = pTurnStarted
 	r.game.playerTurn = r.nextPlayer()
 	return PlayerTurn{
 		Player:     r.game.playerTurn,
@@ -353,11 +372,11 @@ func (r *Room) handleClientEvent(event ClientEventITF, player Player) (events Ev
 		events, err := r.handleMove(eventData, player.ID)
 		return events, false, err
 	case Answer:
-		events := r.handleAnswer(eventData, player.ID)
-		return events, false, nil
+		events, err := r.handleAnswer(eventData, player.ID)
+		return events, false, err
 	case WantNextTurn:
-		events := r.handleWantNextTurn(eventData, player)
-		return events, r.game.phase == POver, nil
+		events, err := r.handleWantNextTurn(eventData, player)
+		return events, r.game.phase == pGameOver, err
 	case Ping:
 		// safely ignore the event
 		return nil, false, nil
@@ -370,6 +389,10 @@ func (r *Room) handleClientEvent(event ClientEventITF, player Player) (events Ev
 // returns an error if the player is not allowed to click
 func (r *Room) handleDiceClicked(player serial) (Events, error) {
 	g := &r.game
+	if g.phase != pTurnStarted {
+		return nil, fmt.Errorf("throwing dice is not allowed in phase %v", g.phase)
+	}
+
 	// check if the player is allowed to throw the dice
 	if g.playerTurn != player {
 		return nil, fmt.Errorf("player %s is not allowed to throw the dice during turn of player %s", player, g.playerTurn)
@@ -377,7 +400,7 @@ func (r *Room) handleDiceClicked(player serial) (Events, error) {
 
 	g.dice = newDiceThrow()
 	choices := Board.choices(g.pawnTile, int(g.dice.Face)).list()
-	g.phase = PMoving
+	g.phase = pChoosingTile
 	return Events{
 		g.dice,
 		PossibleMoves{PlayerName: r.serialToPseudo(player), Player: player, Tiles: choices},
@@ -386,6 +409,9 @@ func (r *Room) handleDiceClicked(player serial) (Events, error) {
 
 func (r *Room) handleMove(m ClientMove, player serial) (Events, error) {
 	g := &r.game
+	if g.phase != pChoosingTile {
+		return nil, fmt.Errorf("moving pawn is not allowed in phase %v", g.phase)
+	}
 	// check if the player is allowed to move
 	if g.playerTurn != player {
 		return nil, fmt.Errorf("player %s is not allowed to move during turn of player %s", player, g.playerTurn)
@@ -408,9 +434,10 @@ func (r *Room) handleMove(m ClientMove, player serial) (Events, error) {
 	}, nil
 }
 
-// emitQuestion generate a question with the right categorie
+// emitQuestion generate a question with the right categorie,
+// and update the phase
 func (gs *game) emitQuestion() ShowQuestion {
-	gs.phase = PQuestion
+	gs.phase = pDoingQuestion
 
 	// select the category
 	cat := categories[gs.pawnTile]
@@ -437,17 +464,25 @@ func (gs *game) emitQuestion() ShowQuestion {
 	return out
 }
 
-func (r *Room) handleAnswer(a Answer, player serial) Events {
+func (r *Room) handleAnswer(a Answer, player serial) (Events, error) {
+	if r.game.phase != pDoingQuestion {
+		return nil, fmt.Errorf("answering question is not allowed in phase %v", r.game.phase)
+	}
+
 	isValid := r.game.isAnswerValid(a)
 
 	// we defer the state update to the end of the question
 	r.game.currentAnswers[player] = isValid
 
-	return r.tryEndQuestion(false) // wait for other players if needed
+	return r.tryEndQuestion(false), nil // wait for other players if needed
 }
 
-func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) Events {
+func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) (Events, error) {
 	g := &r.game
+	if g.phase != pQuestionResult {
+		return nil, fmt.Errorf("going to next turn is not allowed in phase %v", r.game.phase)
+	}
+
 	g.currentWantNextTurn[player.ID] = true
 
 	pReview := &r.players[player.ID].advance.review
@@ -455,7 +490,7 @@ func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) Events {
 		pReview.MarkedQuestions = append(pReview.MarkedQuestions, g.question.ID)
 	}
 
-	return r.tryEndTurn()
+	return r.tryEndTurn(), nil
 }
 
 type playerAdvance struct {
