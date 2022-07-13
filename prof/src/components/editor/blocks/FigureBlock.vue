@@ -344,17 +344,18 @@
       >
         <v-list-item>
           <v-row>
-            <v-col cols="2">
+            <v-col cols="2" align-self="center">
               <btn-color-picker v-model="area.Color"></btn-color-picker>
             </v-col>
-            <v-col cols="8">
+            <v-col cols="9" align-self="center">
               <expression-list-field
                 label="Extrémités"
+                hint="Défini la surface à colorier (l'ordre compte)"
                 :model-value="area.Points || []"
                 @update:model-value="(v) => (area.Points = v)"
               ></expression-list-field>
             </v-col>
-            <v-col md="2" align-self="center">
+            <v-col md="1" align-self="center" class="pl-1 pr-0">
               <v-btn icon size="x-small" @click="deleteArea(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
