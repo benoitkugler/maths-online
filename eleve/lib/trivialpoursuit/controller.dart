@@ -30,6 +30,8 @@ class GameAcces {
   const GameAcces(this.id, this.pseudo, this.gameMeta);
 }
 
+const _infiniteDuration = Duration(days: 1000);
+
 /// [GameTerminatedNotification] is emitted when a game is definitively
 /// closed by the server.
 class GameTerminatedNotification extends Notification {}
@@ -240,7 +242,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 8),
+        duration: _infiniteDuration, // hide in _onDiceThrow
         backgroundColor: Theme.of(context).colorScheme.secondary,
         content: isOwnTurn
             ? const Text("C'est à toi de lancer le dé !")
