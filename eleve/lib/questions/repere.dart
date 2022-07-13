@@ -634,6 +634,25 @@ class DrawingsPainter extends CustomPainter {
     }
   }
 
+  void _paintArea(Canvas canvas, Area area) {
+    if (area.points.isEmpty) {
+      return;
+    }
+
+    final color = fromHex(area.color);
+    final polygon = area.points
+        .map((point) =>
+            metrics.logicalToVisual(drawings.points[point]!.point.point))
+        .toList();
+    final path = Path();
+    path.addPolygon(polygon, true);
+    canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = color);
+  }
+
   // helper method for regular text, not supporting LaTeX
   static void _paintText(
       RepereMetrics metrics, Canvas canvas, PosPoint point, String text,
@@ -700,6 +719,11 @@ class DrawingsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // first so it is in the background
+    for (var area in drawings.areas) {
+      _paintArea(canvas, area);
+    }
+
     for (var segment in drawings.segments) {
       _paintSegment(canvas, segment);
     }

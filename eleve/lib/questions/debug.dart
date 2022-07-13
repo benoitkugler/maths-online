@@ -10,7 +10,7 @@ TextOrMath T(String s) {
 
 const bounds = RepereBounds(20, 20, Coord(4, 4));
 
-const emptyFigure = Figure(Drawings({}, [], []), bounds, true, true);
+const emptyFigure = Figure(Drawings({}, [], [], []), bounds, true, true);
 
 final questionList = [
   const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
