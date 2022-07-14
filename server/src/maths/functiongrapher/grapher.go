@@ -188,12 +188,16 @@ func HorizontalAxis(from, to, y float64) []BezierCurve {
 	}
 }
 
+func copy(l []BezierCurve) []BezierCurve {
+	return append([]BezierCurve(nil), l...)
+}
+
 // NewAreaBetween returns a closed path delimiting an area between two curves
 // `top` and `bottom` restricted in [`left`, `right`], which must be included in
 // the two curves.
 func NewAreaBetween(top, bottom []BezierCurve, left, right float64) []BezierCurve {
-	top = restrictRight(restrictLeft(top, left), right)
-	bottom = restrictRight(restrictLeft(bottom, left), right)
+	top = restrictRight(restrictLeft(copy(top), left), right)
+	bottom = restrictRight(restrictLeft(copy(bottom), left), right)
 	// merge the two curves to construct a path top -> topToBottom -> bottom -> bottomToTop
 
 	lastTop, lastBottom := top[len(top)-1], bottom[len(bottom)-1]
