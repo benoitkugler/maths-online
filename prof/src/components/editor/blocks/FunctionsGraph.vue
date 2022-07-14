@@ -41,7 +41,7 @@
                     v-model="fn.Function"
                     label="Expression de la fonction"
                     hide-details
-                    :color="color"
+                    :color="expressionColor"
                   ></v-text-field>
                 </v-col>
                 <v-col md="4" align-self="center">
@@ -125,6 +125,92 @@
       </div>
     </v-list>
   </v-card>
+
+  <v-card color="secondary" class="my-1">
+    <v-row no-gutters>
+      <v-col align-self="center" md="9">
+        <v-card-subtitle> Surfaces colorées </v-card-subtitle>
+      </v-col>
+      <v-col md="3" style="text-align: right">
+        <v-btn
+          icon
+          @click="addArea"
+          title="Ajouter une surface colorée entre deux courbes."
+          size="x-small"
+          class="mr-2 my-2"
+          :disabled="functionsNamesItems.length < 2"
+        >
+          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-list>
+      <div v-for="(area, index) in props.modelValue.Areas" :key="index">
+        <v-list-item>
+          <v-row>
+            <v-col cols="2" align-self="center">
+              <btn-color-picker v-model="area.Color"></btn-color-picker>
+            </v-col>
+            <v-col cols="9" align-self="center">
+              <v-row>
+                <v-col cols="7">
+                  <v-combobox
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    hide-no-data
+                    label="Fonction 1"
+                    :items="functionsNamesItems"
+                    item
+                    :model-value="nameToSelection(area.Top)"
+                    @update:model-value="
+                      (s) => (area.Top = nameFromSelection(s))
+                    "
+                    :color="expressionColor"
+                  ></v-combobox>
+                </v-col>
+                <v-col cols="5">
+                  <ExpressionField
+                    label="Xmin"
+                    v-model="area.Left"
+                  ></ExpressionField>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="7">
+                  <v-combobox
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    hide-no-data
+                    label="Fonction 2"
+                    :items="functionsNamesItems"
+                    :model-value="nameToSelection(area.Bottom)"
+                    @update:model-value="
+                      (s) => (area.Bottom = nameFromSelection(s))
+                    "
+                    :color="expressionColor"
+                  ></v-combobox>
+                </v-col>
+                <v-col cols="5">
+                  <ExpressionField
+                    label="Xmax"
+                    v-model="area.Right"
+                  ></ExpressionField>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col md="1" align-self="center" class="pl-1 pr-0">
+              <v-btn icon size="x-small" @click="deleteArea(index)">
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-list-item>
+        <v-divider></v-divider>
+      </div>
+    </v-list>
+  </v-card>
 </template>
 
 <script setup lang="ts">
@@ -135,6 +221,7 @@ import {
   variableToString,
   xRune,
 } from "@/controller/editor";
+import { $computed } from "vue/macros";
 import ExpressionField from "../utils/ExpressionField.vue";
 import BaseVariationTable from "./BaseVariationTable.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
@@ -181,7 +268,44 @@ function deleteFunctionVar(index: number) {
   emit("update:modelValue", props.modelValue);
 }
 
-const color = ExpressionColor;
+const functionsNamesItems = $computed(() => {
+  const set: { [key: string]: boolean } = {};
+  props.modelValue.FunctionExprs?.forEach(
+    (fn) => (set[fn.Decoration.Label] = true)
+  );
+  props.modelValue.FunctionVariations?.forEach((fn) => (set[fn.Label] = true));
+  set[abscisseAxis] = true; // add empty string as horizontal axis
+  const out = Object.keys(set);
+  out.sort((a, b) => a.localeCompare(b));
+  return out;
+});
+
+const abscisseAxis = "<Axe des abscisses>";
+
+function nameFromSelection(s: string) {
+  return s == abscisseAxis ? "" : s;
+}
+function nameToSelection(s: string) {
+  return s == "" ? abscisseAxis : s;
+}
+
+function addArea() {
+  props.modelValue.Areas?.push({
+    Color: lastColorUsed.color,
+    Top: nameFromSelection(functionsNamesItems[1]),
+    Bottom: nameFromSelection(functionsNamesItems[0]),
+    Left: "0",
+    Right: "2",
+  });
+  emit("update:modelValue", props.modelValue);
+}
+
+function deleteArea(index: number) {
+  props.modelValue.Areas?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
+}
+
+const expressionColor = ExpressionColor;
 </script>
 
 <style scoped>

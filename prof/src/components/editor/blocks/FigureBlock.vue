@@ -322,7 +322,7 @@
   <v-card color="secondary" class="my-1">
     <v-row no-gutters>
       <v-col align-self="center" md="9">
-        <v-card-subtitle> Surfaces </v-card-subtitle>
+        <v-card-subtitle> Surfaces colorées </v-card-subtitle>
       </v-col>
       <v-col md="3" style="text-align: right">
         <v-btn
