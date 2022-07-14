@@ -93,8 +93,15 @@ type FigureBlock struct {
 	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
 }
 
+type FunctionArea struct {
+	Color repere.Color `dart-extern:"repere:repere.gen.dart"`
+	Path  []functiongrapher.BezierCurve
+}
+
 type FunctionsGraphBlock struct {
-	Graph functiongrapher.FunctionsGraph
+	Functions []functiongrapher.FunctionGraph
+	Areas     []FunctionArea
+	Bounds    repere.RepereBounds `dart-extern:"repere:repere.gen.dart"`
 }
 
 type TableBlock struct {

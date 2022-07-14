@@ -104,8 +104,10 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 		v := functionPointsValidator{
 			function: function{
 				FunctionExpr: ex.FunctionExpr{Function: expr, Variable: ex.NewVar('x')},
-				from:         ex.MustParse("-10"),
-				to:           ex.MustParse("-10"),
+				domain: ex.Domain{
+					From: ex.MustParse("-10"),
+					To:   ex.MustParse("-10"),
+				},
 			},
 			xGrid: mustParseMany(tt.grid),
 		}

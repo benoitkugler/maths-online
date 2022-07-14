@@ -5,6 +5,7 @@ package functiongrapher
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"reflect"
 	"testing"
 
@@ -174,5 +175,53 @@ func TestBoundsFromExpression(t *testing.T) {
 			t.Errorf("BoundsFromExpression() gotFxs = %v, want %v", gotFxs, tt.wantFxs)
 		}
 		assertSliceApprox(t, gotDfxs, tt.wantDfxs)
+	}
+}
+
+func TestBezierCurve_toPolynomial(t *testing.T) {
+	tests := []struct {
+		P0 repere.Coord
+		P1 repere.Coord
+		P2 repere.Coord
+	}{
+		{repere.Coord{X: 0, Y: 0}, repere.Coord{X: 2, Y: 2}, repere.Coord{X: 4, Y: 1}},
+		{repere.Coord{X: 0, Y: 1}, repere.Coord{X: 2, Y: 2}, repere.Coord{X: 4, Y: 1}},
+		{repere.Coord{X: 0, Y: 1}, repere.Coord{X: 2, Y: 2}, repere.Coord{X: 4, Y: 0}},
+		{repere.Coord{X: 0, Y: 0}, repere.Coord{X: 2, Y: 2}, repere.Coord{X: 4, Y: 0}},
+		{repere.Coord{X: 0, Y: 0}, repere.Coord{X: 2, Y: 4.5}, repere.Coord{X: 5, Y: 0}},
+		{repere.Coord{X: 0, Y: 0}, repere.Coord{X: 4, Y: 4.5}, repere.Coord{X: 5, Y: 0}},
+	}
+	for _, tt := range tests {
+		bc := BezierCurve{
+			P0: tt.P0,
+			P1: tt.P1,
+			P2: tt.P2,
+		}
+		for range [100]int{} {
+			alpha := rand.Float64()
+			x, _ := bc.evaluateCurve(alpha)
+			assertApprox(t, bc.invertX(x), alpha)
+		}
+	}
+}
+
+func TestNewAreaBetween(t *testing.T) {
+	tests := []struct {
+		xsTop    []float64
+		ysTop    []float64
+		xsBottom []float64
+		ysBottom []float64
+	}{
+		{
+			[]float64{-1, 3, 4, 8, 20}, []float64{10, 15, 20, 25, 30}, []float64{-1, 3, 4, 8, 20}, []float64{1, 2, 3, 4, 5},
+		},
+		{
+			[]float64{-1, 20}, []float64{10, 15}, []float64{-1, 3, 4, 8, 20}, []float64{1, 2, 3, 4, 5},
+		},
+	}
+	for _, tt := range tests {
+		top := NewFunctionGraphFromVariations(tt.xsTop, tt.ysTop)
+		bottom := NewFunctionGraphFromVariations(tt.xsBottom, tt.ysBottom)
+		_ = NewAreaBetween(top, bottom, 2.3, 14.7)
 	}
 }

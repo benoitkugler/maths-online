@@ -683,38 +683,6 @@ func (fg FunctionDefinition) instantiate(params expression.Vars) (expression.Fun
 	}, nil
 }
 
-// type FunctionGraphBlock struct {
-// 	Functions []FunctionDefinition
-// }
-
-// func (fg FunctionGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
-// 	out := FunctionGraphInstance{
-// 		Functions:   make([]expression.FunctionDefinition, len(fg.Functions)),
-// 		Decorations: make([]functiongrapher.FunctionDecoration, len(fg.Functions)),
-// 	}
-// 	for i, f := range fg.Functions {
-// 		var err error
-// 		out.Functions[i], err = f.instantiate(params)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		out.Decorations[i] = f.Decoration
-// 	}
-// 	return out, nil
-// }
-
-// func (fg FunctionGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-// 	out := functionGraphValidator{functions: make([]function, len(fg.Functions))}
-// 	for i, f := range fg.Functions {
-// 		var err error
-// 		out.functions[i], err = newFunction(f, params)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-// 	return out, nil
-// }
-
 type FunctionArea struct {
 	// reference to function names, with empty meaning
 	// horizontal line
@@ -743,8 +711,24 @@ func extractValues(vt VariationTableInstance) (xs, fxs []float64) {
 	return
 }
 
+type domainCurves struct {
+	curves []functiongrapher.BezierCurve
+	domain [2]float64
+}
+
+func selectByDomain(candidates []domainCurves, left, right float64) (domainCurves, error) {
+	for _, c := range candidates {
+		if c.domain[0] <= left && right <= c.domain[1] {
+			return c, nil
+		}
+	}
+	return domainCurves{}, fmt.Errorf("aucun domaine ne contient [%f, %f]", left, right)
+}
+
 func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
 	out := FunctionsGraphInstance{}
+
+	byNames := make(map[string][]domainCurves)
 
 	// instantiate expression
 	for _, f := range fg.FunctionExprs {
@@ -752,9 +736,14 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 		if err != nil {
 			return nil, err
 		}
-		out.Functions = append(out.Functions, functiongrapher.FunctionGraph{
+		fg := functiongrapher.FunctionGraph{
 			Segments:   functiongrapher.NewFunctionGraph(fd),
 			Decoration: f.Decoration,
+		}
+		out.Functions = append(out.Functions, fg)
+		byNames[fg.Decoration.Label] = append(byNames[fg.Decoration.Label], domainCurves{
+			curves: fg.Segments,
+			domain: [2]float64{fd.From, fd.To},
 		})
 	}
 
@@ -765,11 +754,62 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 			return nil, err
 		}
 		xs, fxs := extractValues(vt)
-		out.Functions = append(out.Functions, functiongrapher.FunctionGraph{
+		fg := functiongrapher.FunctionGraph{
 			Segments:   functiongrapher.NewFunctionGraphFromVariations(xs, fxs),
 			Decoration: functiongrapher.FunctionDecoration{Label: vt.Label},
+		}
+		out.Functions = append(out.Functions, fg)
+		byNames[fg.Decoration.Label] = append(byNames[fg.Decoration.Label], domainCurves{
+			curves: fg.Segments,
+			domain: [2]float64{vt.Xs[0].Value, vt.Xs[len(vt.Xs)-1].Value},
 		})
 	}
+
+	// instantiate areas
+	for _, area := range fg.Areas {
+		topLabel, err := area.Top.instantiateAndMerge(params)
+		if err != nil {
+			return nil, err
+		}
+		bottomLabel, err := area.Bottom.instantiateAndMerge(params)
+		if err != nil {
+			return nil, err
+		}
+
+		left, err := evaluateExpr(area.Left, params)
+		if err != nil {
+			return nil, err
+		}
+		right, err := evaluateExpr(area.Right, params)
+		if err != nil {
+			return nil, err
+		}
+
+		// select the curve containing [left, right] (protected by the validation)
+		topCandidates := byNames[topLabel]
+		if topLabel == "" { // use the abscisse axis
+			topCandidates = []domainCurves{{curves: functiongrapher.HorizontalAxis(left, right, 0), domain: [2]float64{left, right}}}
+		}
+		top, err := selectByDomain(topCandidates, left, right)
+		if err != nil {
+			return nil, err
+		}
+		bottomCandidates := byNames[bottomLabel]
+		if bottomLabel == "" { // use the abscisse axis
+			bottomCandidates = []domainCurves{{curves: functiongrapher.HorizontalAxis(left, right, 0), domain: [2]float64{left, right}}}
+		}
+		bottom, err := selectByDomain(bottomCandidates, left, right)
+		if err != nil {
+			return nil, err
+		}
+
+		path := functiongrapher.NewAreaBetween(top.curves, bottom.curves, left, right)
+		out.Areas = append(out.Areas, client.FunctionArea{
+			Path:  path,
+			Color: area.Color,
+		})
+	}
+
 	return out, nil
 }
 
@@ -777,6 +817,7 @@ func (fg FunctionsGraphBlock) setupValidator(params expression.RandomParameters)
 	out := functionsGraphValidator{
 		functions:          make([]function, len(fg.FunctionExprs)),
 		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
+		areas:              make([]areaValidator, len(fg.Areas)),
 	}
 	for i, f := range fg.FunctionExprs {
 		var err error
@@ -788,6 +829,25 @@ func (fg FunctionsGraphBlock) setupValidator(params expression.RandomParameters)
 	for i, vt := range fg.FunctionVariations {
 		var err error
 		out.variationValidator[i], err = vt.setupValidatorVT()
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, area := range fg.Areas {
+		var err error
+		out.areas[i].function1, err = area.Top.parse()
+		if err != nil {
+			return nil, err
+		}
+		out.areas[i].function2, err = area.Bottom.parse()
+		if err != nil {
+			return nil, err
+		}
+		out.areas[i].domain.From, err = expression.Parse(area.Left)
+		if err != nil {
+			return nil, err
+		}
+		out.areas[i].domain.To, err = expression.Parse(area.Right)
 		if err != nil {
 			return nil, err
 		}

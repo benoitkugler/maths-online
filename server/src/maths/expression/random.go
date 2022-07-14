@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"sort"
+	"strings"
 )
 
 // ErrInvalidRandomParameters is returned when instantiating
@@ -345,21 +346,17 @@ func (expr *Expr) IsValidIndex(vars Vars, length int) error {
 
 // IsValid evaluates the function expression using `vars`, and checks
 // if the (estimated) extrema of |f| is less than `bound`, returning an error if not.
-func (fn FunctionExpr) IsValid(from, to *Expr, vars Vars, bound float64) error {
+func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
 	fnExpr := fn.Function.Copy()
 	fnExpr.Substitute(vars)
 
-	fromV, err := from.Evaluate(vars)
-	if err != nil {
-		return err
-	}
-	toV, err := to.Evaluate(vars)
+	fromV, toV, err := domain.eval(vars)
 	if err != nil {
 		return err
 	}
 
 	if fromV >= toV {
-		return fmt.Errorf("Les expressions %s et %s ne définissent pas un intervalle valide (%f, %f).", from, to, fromV, toV)
+		return fmt.Errorf("Les expressions %s ne définissent pas un intervalle valide (%f, %f).", domain, fromV, toV)
 	}
 
 	def := FunctionDefinition{
@@ -377,16 +374,72 @@ func (fn FunctionExpr) IsValid(from, to *Expr, vars Vars, bound float64) error {
 	return nil
 }
 
-// AreDisjointsDomains returns an error if the given intervals [from, to] are not disjoints.
-// Domains must be valid, as defined by `FunctionExpr.IsValid`.
-func AreDisjointsDomains(domains [][2]*Expr, vars Vars) error {
-	intervals := make([][2]float64, len(domains))
-	for i, ds := range domains {
-		fromV, err := ds[0].Evaluate(vars)
+type Domain struct {
+	From, To *Expr
+}
+
+func (d Domain) String() string {
+	from := "-Inf"
+	if d.From != nil {
+		from = d.From.String()
+	}
+	to := "+Inf"
+	if d.To != nil {
+		to = d.To.String()
+	}
+	return fmt.Sprintf("[%s;%s]", from, to)
+}
+
+func (d Domain) eval(vars Vars) (from, to float64, err error) {
+	if d.From == nil {
+		from = math.Inf(-1)
+	} else {
+		from, err = d.From.Evaluate(vars)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	if d.To == nil {
+		to = math.Inf(+1)
+	} else {
+		to, err = d.To.Evaluate(vars)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+	return from, to, nil
+}
+
+// IsIncludedIntoOne returns an error if `d` is not included in any `other` domains
+// If one of the expression bound is nil, it is interpreted as Infinity (no constraint)
+func (d Domain) IsIncludedIntoOne(others []Domain, vars Vars) error {
+	dFrom, dTo, err := d.eval(vars)
+	if err != nil {
+		return err
+	}
+
+	var ds []string
+	for _, other := range others {
+		otherFrom, otherTo, err := other.eval(vars)
 		if err != nil {
 			return err
 		}
-		toV, err := ds[1].Evaluate(vars)
+		if dFrom >= otherFrom && dTo <= otherTo { // found it
+			return nil
+		}
+		ds = append(ds, other.String())
+	}
+
+	return fmt.Errorf("L'intervalle %s n'est inclut dans aucun des domaines %s.", d, strings.Join(ds, ", "))
+}
+
+// AreDisjointsDomains returns an error if the given intervals [from, to] are not disjoints.
+// Domains must be valid, as defined by `FunctionExpr.IsValid`.
+func AreDisjointsDomains(domains []Domain, vars Vars) error {
+	intervals := make([][2]float64, len(domains))
+	for i, ds := range domains {
+		fromV, toV, err := ds.eval(vars)
 		if err != nil {
 			return err
 		}
@@ -395,7 +448,7 @@ func AreDisjointsDomains(domains [][2]*Expr, vars Vars) error {
 
 	if err := checkIntervalsDisjoints(intervals); err != nil {
 		i1, i2 := domains[err.index1], domains[err.index2]
-		return fmt.Errorf("les expressions [%s, %s] et [%s, %s] ne définissent pas des domains disjoints", i1[0], i1[1], i2[0], i2[1])
+		return fmt.Errorf("les expressions %s et %s ne définissent pas des domains disjoints", i1, i2)
 	}
 
 	return nil

@@ -69,7 +69,7 @@ type FunctionExpr struct {
 // where random parameters have been resolved
 type FunctionDefinition struct {
 	FunctionExpr         // instantiated version
-	From, To     float64 // definition domain
+	From, To     float64 // definition domain, with From <= To
 }
 
 // Closure returns a function computing f(x), where f is defined by the expression.

@@ -246,8 +246,8 @@ func (v figureValidator) validate(vars expression.Vars) error {
 }
 
 type function struct {
-	label    string
-	from, to *expression.Expr
+	label  string
+	domain expression.Domain
 	expression.FunctionExpr
 }
 
@@ -262,50 +262,23 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 		return function{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 
-	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, from: from, to: to}, nil
+	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
 }
 
-type functionGraphValidator struct {
-	functions []function
-}
-
-func (v functionGraphValidator) validate(vars expression.Vars) error {
-	for _, f := range v.functions {
-		if err := f.FunctionExpr.IsValid(f.from, f.to, vars, maxFunctionBound); err != nil {
-			return err
-		}
-	}
-
-	// checks that function with same label are defined on non overlapping intervals,
-	// so that area references can't be ambiguous
-	byNames := make(map[string][]function)
-	for _, fn := range v.functions {
-		byNames[fn.label] = append(byNames[fn.label], fn)
-	}
-
-	for _, fns := range byNames {
-		domains := make([][2]*expression.Expr, len(fns))
-		for i, fn := range fns {
-			domains[i] = [2]*expression.Expr{fn.from, fn.to}
-		}
-		if err := expression.AreDisjointsDomains(domains, vars); err != nil {
-			return err
-		}
-	}
-
-	// checks that areas are referencing known functions
-	// TODO:
-	return nil
+type areaValidator struct {
+	function1, function2 TextParts
+	domain               expression.Domain
 }
 
 type functionsGraphValidator struct {
 	functions          []function
 	variationValidator []variationTableValidator
+	areas              []areaValidator
 }
 
 func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	for _, f := range v.functions {
-		if err := f.FunctionExpr.IsValid(f.from, f.to, vars, maxFunctionBound); err != nil {
+		if err := f.FunctionExpr.IsValid(f.domain, vars, maxFunctionBound); err != nil {
 			return err
 		}
 	}
@@ -317,17 +290,17 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 
 	// checks that function with same label are defined on non overlapping intervals,
 	// so that area references can't be ambiguous
-	byNames := make(map[string][][2]*expression.Expr)
+	byNames := make(map[string][]expression.Domain)
 	for _, fn := range v.functions {
-		byNames[fn.label] = append(byNames[fn.label], [2]*expression.Expr{fn.from, fn.to})
+		byNames[fn.label] = append(byNames[fn.label], fn.domain)
 	}
 	for _, vt := range v.variationValidator {
 		label, err := vt.label.instantiateAndMerge(vars)
 		if err != nil {
 			return err
 		}
-		byNames[label] = append(byNames[label], [2]*expression.Expr{
-			vt.xs[0], vt.xs[len(vt.xs)-1], // vt.validate checks that these calls are safe
+		byNames[label] = append(byNames[label], expression.Domain{
+			From: vt.xs[0], To: vt.xs[len(vt.xs)-1], // vt.validate checks that these calls are safe
 		})
 	}
 
@@ -338,7 +311,39 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	}
 
 	// checks that areas are referencing known functions
-	// TODO:
+	// and that the domains are valid
+	for _, area := range v.areas {
+		f1, err := area.function1.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		f2, err := area.function1.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		domains1 := byNames[f1]
+		if f1 == "" {
+			domains1 = []expression.Domain{{}} // no constraints
+		}
+		if len(domains1) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", f1)
+		}
+		domains2 := byNames[f2]
+		if f2 == "" {
+			domains2 = []expression.Domain{{}} // no constraints
+		}
+		if len(domains2) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", f2)
+		}
+
+		// check that the domain in included in one of the domain for f1 and f2
+		if err := area.domain.IsIncludedIntoOne(domains1, vars); err != nil {
+			return err
+		}
+		if err := area.domain.IsIncludedIntoOne(domains2, vars); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

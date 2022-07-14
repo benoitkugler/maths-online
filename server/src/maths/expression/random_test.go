@@ -333,7 +333,7 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 			Function: expr,
 			Variable: NewVar(tt.variable),
 		}
-		err := fn.IsValid(mustParse(t, tt.from), mustParse(t, tt.to), tt.vars, tt.bound)
+		err := fn.IsValid(Domain{mustParse(t, tt.from), mustParse(t, tt.to)}, tt.vars, tt.bound)
 		if (err == nil) != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
 		}
@@ -360,9 +360,9 @@ func TestAreDisjointsDomains(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		domains := make([][2]*Expr, len(tt.domains))
+		domains := make([]Domain, len(tt.domains))
 		for i, d := range tt.domains {
-			domains[i] = [2]*Expr{mustParse(t, d[0]), mustParse(t, d[1])}
+			domains[i] = Domain{mustParse(t, d[0]), mustParse(t, d[1])}
 		}
 		if err := AreDisjointsDomains(domains, tt.vars); (err != nil) != tt.wantErr {
 			t.Errorf("AreDisjointsDomains() error = %v, wantErr %v", err, tt.wantErr)
