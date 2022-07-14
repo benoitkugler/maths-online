@@ -92,9 +92,9 @@ func (cu BezierCurve) boundingBox() (minX, maxX, minY, maxY float64) {
 	return
 }
 
-// always add the origin
-// also add some padding
-func boundingBox(curves []BezierCurve) repere.RepereBounds {
+// BoundingBox compute the bounds enclosing the given segments,
+// always adding the origin and some padding.
+func BoundingBox(curves []BezierCurve) repere.RepereBounds {
 	minX, maxX, minY, maxY := -1., 1., -1., 1.
 	for _, curve := range curves {
 		minX2, maxX2, minY2, maxY2 := curve.boundingBox()

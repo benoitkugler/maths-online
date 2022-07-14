@@ -769,6 +769,30 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionPointsFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Function', 'Label', 'Variable', 'XGrid'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Function')
+        AND structgen_validate_json_string (data -> 'Label')
+        AND structgen_validate_json_exp_Variable (data -> 'Variable')
+        AND structgen_validate_json_array_string (data -> 'XGrid');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_fun_FunctionDecoration (data jsonb)
     RETURNS boolean
     AS $$
@@ -839,52 +863,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionGraphBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Functions'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_array_que_FunctionDefinition (data -> 'Functions');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionPointsFieldBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Function', 'Label', 'Variable', 'XGrid'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_string (data -> 'Function')
-        AND structgen_validate_json_string (data -> 'Label')
-        AND structgen_validate_json_exp_Variable (data -> 'Variable')
-        AND structgen_validate_json_array_string (data -> 'XGrid');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionVariationGraphBlock (data jsonb)
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_VariationTableBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -901,6 +880,100 @@ BEGIN
         AND structgen_validate_json_string (data -> 'Label')
         AND structgen_validate_json_array_string (data -> 'Xs')
         AND structgen_validate_json_array_string (data -> 'Fxs');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_VariationTableBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_que_VariationTableBlock (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionArea (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Bottom', 'Top', 'Left', 'Right', 'Color'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Bottom')
+        AND structgen_validate_json_string (data -> 'Top')
+        AND structgen_validate_json_string (data -> 'Left')
+        AND structgen_validate_json_string (data -> 'Right')
+        AND structgen_validate_json_string (data -> 'Color');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_FunctionArea (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_que_FunctionArea (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_FunctionsGraphBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('FunctionExprs', 'FunctionVariations', 'Areas'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_array_que_FunctionDefinition (data -> 'FunctionExprs')
+        AND structgen_validate_json_array_que_VariationTableBlock (data -> 'FunctionVariations')
+        AND structgen_validate_json_array_que_FunctionArea (data -> 'Areas');
     RETURN is_valid;
 END;
 $$
@@ -1267,29 +1340,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION structgen_validate_json_que_VariationTableBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Label', 'Xs', 'Fxs'))
-        FROM
-            jsonb_each(data))
-        AND structgen_validate_json_string (data -> 'Label')
-        AND structgen_validate_json_array_string (data -> 'Xs')
-        AND structgen_validate_json_array_string (data -> 'Fxs');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION structgen_validate_json_que_VariationTableFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -1338,50 +1388,48 @@ CREATE OR REPLACE FUNCTION structgen_validate_json_que_Block (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
-    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'number' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
         RETURN FALSE;
     END IF;
-    CASE WHEN (data -> 'Kind')::int = 0 THEN
+    CASE WHEN data ->> 'Kind' = 'ExpressionFieldBlock' THEN
         RETURN structgen_validate_json_que_ExpressionFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 1 THEN
+    WHEN data ->> 'Kind' = 'FigureAffineLineFieldBlock' THEN
         RETURN structgen_validate_json_que_FigureAffineLineFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 2 THEN
+    WHEN data ->> 'Kind' = 'FigureBlock' THEN
         RETURN structgen_validate_json_que_FigureBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 3 THEN
+    WHEN data ->> 'Kind' = 'FigurePointFieldBlock' THEN
         RETURN structgen_validate_json_que_FigurePointFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 4 THEN
+    WHEN data ->> 'Kind' = 'FigureVectorFieldBlock' THEN
         RETURN structgen_validate_json_que_FigureVectorFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 5 THEN
+    WHEN data ->> 'Kind' = 'FigureVectorPairFieldBlock' THEN
         RETURN structgen_validate_json_que_FigureVectorPairFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 6 THEN
+    WHEN data ->> 'Kind' = 'FormulaBlock' THEN
         RETURN structgen_validate_json_que_FormulaBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 7 THEN
-        RETURN structgen_validate_json_que_FunctionGraphBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 8 THEN
+    WHEN data ->> 'Kind' = 'FunctionPointsFieldBlock' THEN
         RETURN structgen_validate_json_que_FunctionPointsFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 9 THEN
-        RETURN structgen_validate_json_que_FunctionVariationGraphBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 10 THEN
+    WHEN data ->> 'Kind' = 'FunctionsGraphBlock' THEN
+        RETURN structgen_validate_json_que_FunctionsGraphBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'NumberFieldBlock' THEN
         RETURN structgen_validate_json_que_NumberFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 11 THEN
+    WHEN data ->> 'Kind' = 'OrderedListFieldBlock' THEN
         RETURN structgen_validate_json_que_OrderedListFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 12 THEN
+    WHEN data ->> 'Kind' = 'RadioFieldBlock' THEN
         RETURN structgen_validate_json_que_RadioFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 13 THEN
+    WHEN data ->> 'Kind' = 'SignTableBlock' THEN
         RETURN structgen_validate_json_que_SignTableBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 14 THEN
+    WHEN data ->> 'Kind' = 'TableBlock' THEN
         RETURN structgen_validate_json_que_TableBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 15 THEN
+    WHEN data ->> 'Kind' = 'TableFieldBlock' THEN
         RETURN structgen_validate_json_que_TableFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 16 THEN
+    WHEN data ->> 'Kind' = 'TextBlock' THEN
         RETURN structgen_validate_json_que_TextBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 17 THEN
+    WHEN data ->> 'Kind' = 'TreeFieldBlock' THEN
         RETURN structgen_validate_json_que_TreeFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 18 THEN
+    WHEN data ->> 'Kind' = 'VariationTableBlock' THEN
         RETURN structgen_validate_json_que_VariationTableBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 19 THEN
+    WHEN data ->> 'Kind' = 'VariationTableFieldBlock' THEN
         RETURN structgen_validate_json_que_VariationTableFieldBlock (data -> 'Data');
-    WHEN (data -> 'Kind')::int = 20 THEN
+    WHEN data ->> 'Kind' = 'VectorFieldBlock' THEN
         RETURN structgen_validate_json_que_VectorFieldBlock (data -> 'Data');
     ELSE
         RETURN FALSE;

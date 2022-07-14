@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions"
@@ -59,6 +60,9 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 			seen[tag.Tag] = true
 		}
 	}
+
+	// sort by name but make sure special tags come first
+	sort.Strings(filtred)
 
 	filtred = append([]string{
 		string(Diff1), string(Diff2), string(Diff3),

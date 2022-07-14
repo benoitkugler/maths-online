@@ -19,8 +19,9 @@ var (
 	_ Block = VariationTableBlock{}
 	_ Block = SignTableBlock{}
 	_ Block = FigureBlock{}
-	_ Block = FunctionGraphBlock{}
-	_ Block = FunctionVariationGraphBlock{}
+	// _ Block = FunctionGraphBlock{}
+	// _ Block = FunctionVariationGraphBlock{}
+	_ Block = FunctionsGraphBlock{}
 	_ Block = TableBlock{}
 )
 
@@ -262,7 +263,7 @@ func (t TextBlock) instantiate(params expression.Vars, _ int) (instance, error) 
 }
 
 func (t TextBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	_, err := t.Parts.Parse()
+	_, err := t.Parts.parse()
 	return noOpValidator{}, err
 }
 
@@ -303,7 +304,7 @@ type FormulaBlock struct {
 }
 
 func (f FormulaBlock) instantiate(params expression.Vars, _ int) (instance, error) {
-	parts, err := f.Parts.Parse()
+	parts, err := f.Parts.parse()
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +320,7 @@ func (f FormulaBlock) instantiate(params expression.Vars, _ int) (instance, erro
 }
 
 func (f FormulaBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	_, err := f.Parts.Parse()
+	_, err := f.Parts.parse()
 	return noOpValidator{}, err
 }
 
@@ -353,11 +354,8 @@ func (vt VariationTableBlock) instantiateVT(params expression.Vars) (VariationTa
 		Fxs: make([]evaluatedExpression, len(vt.Fxs)),
 	}
 
-	parts, err := vt.Label.Parse()
-	if err != nil {
-		return out, err
-	}
-	out.Label, err = parts.instantiateAndMerge(params)
+	var err error
+	out.Label, err = vt.Label.instantiateAndMerge(params)
 	if err != nil {
 		return out, err
 	}
@@ -382,18 +380,18 @@ func (vt VariationTableBlock) instantiate(params expression.Vars, _ int) (instan
 	return vt.instantiateVT(params)
 }
 
-func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	_, err := vt.Label.Parse()
+func (vt VariationTableBlock) setupValidatorVT() (variationTableValidator, error) {
+	label, err := vt.Label.parse()
 	if err != nil {
-		return nil, err
+		return variationTableValidator{}, err
 	}
 
 	if len(vt.Xs) < 2 {
-		return nil, errors.New("Au moins deux colonnes sont attendues.")
+		return variationTableValidator{}, errors.New("Au moins deux colonnes sont attendues.")
 	}
 
 	if len(vt.Xs) != len(vt.Fxs) {
-		return nil, errors.New("internal error: expected same length for X and Fx")
+		return variationTableValidator{}, errors.New("internal error: expected same length for X and Fx")
 	}
 
 	xExprs := make([]*expression.Expr, len(vt.Xs))
@@ -402,15 +400,23 @@ func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (valid
 		var err error
 		xExprs[i], err = expression.Parse(c)
 		if err != nil {
-			return nil, err
+			return variationTableValidator{}, err
 		}
 		fxExprs[i], err = expression.Parse(vt.Fxs[i])
 		if err != nil {
-			return nil, err
+			return variationTableValidator{}, err
 		}
 	}
 
-	return variationTableValidator{xs: xExprs, fxs: fxExprs}, nil
+	return variationTableValidator{label: label, xs: xExprs, fxs: fxExprs}, nil
+}
+
+func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (validator, error) {
+	out, err := vt.setupValidatorVT()
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 type SignTableBlock struct {
@@ -425,12 +431,9 @@ func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, e
 		Label: st.Label,
 		Xs:    make([]string, len(st.Xs)),
 	}
+	var err error
 	for i, c := range st.Xs {
-		parts, err := c.Parse()
-		if err != nil {
-			return nil, err
-		}
-		out.Xs[i], err = parts.instantiateAndMerge(params)
+		out.Xs[i], err = c.instantiateAndMerge(params)
 		if err != nil {
 			return nil, err
 		}
@@ -450,7 +453,7 @@ func (st SignTableBlock) setupValidator(expression.RandomParameters) (validator,
 	}
 
 	for _, c := range st.Xs {
-		_, err := c.Parse()
+		_, err := c.parse()
 		if err != nil {
 			return nil, err
 		}
@@ -680,48 +683,128 @@ func (fg FunctionDefinition) instantiate(params expression.Vars) (expression.Fun
 	}, nil
 }
 
-type FunctionGraphBlock struct {
-	Functions []FunctionDefinition
+// type FunctionGraphBlock struct {
+// 	Functions []FunctionDefinition
+// }
+
+// func (fg FunctionGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
+// 	out := FunctionGraphInstance{
+// 		Functions:   make([]expression.FunctionDefinition, len(fg.Functions)),
+// 		Decorations: make([]functiongrapher.FunctionDecoration, len(fg.Functions)),
+// 	}
+// 	for i, f := range fg.Functions {
+// 		var err error
+// 		out.Functions[i], err = f.instantiate(params)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		out.Decorations[i] = f.Decoration
+// 	}
+// 	return out, nil
+// }
+
+// func (fg FunctionGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+// 	out := functionGraphValidator{functions: make([]function, len(fg.Functions))}
+// 	for i, f := range fg.Functions {
+// 		var err error
+// 		out.functions[i], err = newFunction(f, params)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	return out, nil
+// }
+
+type FunctionArea struct {
+	// reference to function names, with empty meaning
+	// horizontal line
+	Bottom, Top Interpolated
+	Left, Right string // expression.Expression
+	Color       repere.Color
 }
 
-func (fg FunctionGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
-	out := FunctionGraphInstance{
-		Functions:   make([]expression.FunctionDefinition, len(fg.Functions)),
-		Decorations: make([]functiongrapher.FunctionDecoration, len(fg.Functions)),
+// FunctionsGraphBlock draws a figure with functions
+// curves and colored areas
+type FunctionsGraphBlock struct {
+	FunctionExprs      []FunctionDefinition
+	FunctionVariations []VariationTableBlock
+	Areas              []FunctionArea
+}
+
+func extractValues(vt VariationTableInstance) (xs, fxs []float64) {
+	xs = make([]float64, len(vt.Xs))
+	fxs = make([]float64, len(vt.Fxs))
+	for i, v := range vt.Xs {
+		xs[i] = v.Value
 	}
-	for i, f := range fg.Functions {
-		var err error
-		out.Functions[i], err = f.instantiate(params)
+	for i, v := range vt.Fxs {
+		fxs[i] = v.Value
+	}
+	return
+}
+
+func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
+	out := FunctionsGraphInstance{}
+
+	// instantiate expression
+	for _, f := range fg.FunctionExprs {
+		fd, err := f.instantiate(params)
 		if err != nil {
 			return nil, err
 		}
-		out.Decorations[i] = f.Decoration
+		out.Functions = append(out.Functions, functiongrapher.FunctionGraph{
+			Segments:   functiongrapher.NewFunctionGraph(fd),
+			Decoration: f.Decoration,
+		})
+	}
+
+	// instantiate variations
+	for _, f := range fg.FunctionVariations {
+		vt, err := f.instantiateVT(params)
+		if err != nil {
+			return nil, err
+		}
+		xs, fxs := extractValues(vt)
+		out.Functions = append(out.Functions, functiongrapher.FunctionGraph{
+			Segments:   functiongrapher.NewFunctionGraphFromVariations(xs, fxs),
+			Decoration: functiongrapher.FunctionDecoration{Label: vt.Label},
+		})
 	}
 	return out, nil
 }
 
-func (fg FunctionGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	out := functionGraphValidator{functions: make([]function, len(fg.Functions))}
-	for i, f := range fg.Functions {
+func (fg FunctionsGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	out := functionsGraphValidator{
+		functions:          make([]function, len(fg.FunctionExprs)),
+		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
+	}
+	for i, f := range fg.FunctionExprs {
 		var err error
 		out.functions[i], err = newFunction(f, params)
 		if err != nil {
 			return nil, err
 		}
 	}
+	for i, vt := range fg.FunctionVariations {
+		var err error
+		out.variationValidator[i], err = vt.setupValidatorVT()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return out, nil
 }
 
-type FunctionVariationGraphBlock VariationTableBlock
+// type FunctionVariationGraphBlock VariationTableBlock
 
-func (f FunctionVariationGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
-	out, err := VariationTableBlock(f).instantiateVT(params)
-	return FunctionVariationGraphInstance(out), err
-}
+// func (f FunctionVariationGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
+// 	out, err := VariationTableBlock(f).instantiateVT(params)
+// 	return FunctionVariationGraphInstance(out), err
+// }
 
-func (f FunctionVariationGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	return VariationTableBlock(f).setupValidator(params)
-}
+// func (f FunctionVariationGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+// 	return VariationTableBlock(f).setupValidator(params)
+// }
 
 type TableBlock struct {
 	HorizontalHeaders []TextPart

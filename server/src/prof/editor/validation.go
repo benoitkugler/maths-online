@@ -14,6 +14,8 @@ func ValidateAllQuestions(db DB) error {
 		return err
 	}
 
+	qu.RestrictNeedExercice() // TODO: also validate questions in exercices
+
 	return validateAllQuestions(qu)
 }
 

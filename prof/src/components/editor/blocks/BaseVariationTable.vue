@@ -74,21 +74,18 @@
 </template>
 
 <script setup lang="ts">
-import {
-TextKind,
-type FunctionVariationGraphBlock
-} from "@/controller/api_gen";
+import { TextKind, type VariationTableBlock } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 import ExpressionField from "../utils/ExpressionField.vue";
 
 interface Props {
-  modelValue: FunctionVariationGraphBlock;
+  modelValue: VariationTableBlock;
   description: string;
 }
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: FunctionVariationGraphBlock): void;
+  (event: "update:modelValue", value: VariationTableBlock): void;
 }>();
 
 const latexColor = colorByKind[TextKind.StaticMath];

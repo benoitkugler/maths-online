@@ -23,6 +23,3 @@ SET
                     END)
                 FROM jsonb_array_elements(page -> 'enonce')), '[]'));
 
-ALTER TABLE questions
-    ADD CONSTRAINT page_structgen_validate_json_que_QuestionPage CHECK (structgen_validate_json_que_QuestionPage (page));
-

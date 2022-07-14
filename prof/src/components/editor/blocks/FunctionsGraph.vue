@@ -2,12 +2,12 @@
   <v-card color="secondary" class="my-1">
     <v-row no-gutters>
       <v-col align-self="center" md="9">
-        <v-card-subtitle> Fonctions </v-card-subtitle>
+        <v-card-subtitle> Avec une expression </v-card-subtitle>
       </v-col>
       <v-col md="3" style="text-align: right">
         <v-btn
           icon
-          @click="addFunction"
+          @click="addFunctionExpr"
           title="Ajouter une fonction"
           size="x-small"
           class="mr-2 my-2"
@@ -17,7 +17,7 @@
       </v-col>
     </v-row>
     <v-list>
-      <div v-for="(fn, index) in props.modelValue.Functions" :key="index">
+      <div v-for="(fn, index) in props.modelValue.FunctionExprs" :key="index">
         <v-list-item>
           <v-row>
             <v-col cols="10">
@@ -65,7 +65,57 @@
             </v-col>
 
             <v-col cols="2" align-self="center">
-              <v-btn icon size="x-small" flat @click="deleteFunction(index)">
+              <v-btn
+                icon
+                size="x-small"
+                flat
+                @click="deleteFunctionExpr(index)"
+              >
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-list-item>
+        <v-divider></v-divider>
+      </div>
+    </v-list>
+  </v-card>
+
+  <v-card color="secondary" class="my-1">
+    <v-row no-gutters>
+      <v-col align-self="center" md="9">
+        <v-card-subtitle> Avec des variations </v-card-subtitle>
+      </v-col>
+      <v-col md="3" style="text-align: right">
+        <v-btn
+          icon
+          @click="addFunctionVar"
+          title="Ajouter une fonction"
+          size="x-small"
+          class="mr-2 my-2"
+        >
+          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-list>
+      <div
+        v-for="(fn, index) in props.modelValue.FunctionVariations"
+        :key="index"
+      >
+        <v-list-item>
+          <v-row>
+            <v-col cols="10">
+              <BaseVariationTable
+                :model-value="fn"
+                @update:model-value="
+              (v) => (props.modelValue.FunctionVariations![index] = v)
+            "
+                description="Fonction définie par ses variations"
+              ></BaseVariationTable>
+            </v-col>
+            <v-col cols="2" align-self="center" class="pr-0 pl-1">
+              <v-btn icon size="x-small" flat @click="deleteFunctionVar(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -78,27 +128,28 @@
 </template>
 
 <script setup lang="ts">
-import type { FunctionGraphBlock } from "@/controller/api_gen";
+import type { FunctionsGraphBlock } from "@/controller/api_gen";
 import {
-ExpressionColor,
-lastColorUsed,
-variableToString,
-xRune
+  ExpressionColor,
+  lastColorUsed,
+  variableToString,
+  xRune,
 } from "@/controller/editor";
 import ExpressionField from "../utils/ExpressionField.vue";
+import BaseVariationTable from "./BaseVariationTable.vue";
 import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
-  modelValue: FunctionGraphBlock;
+  modelValue: FunctionsGraphBlock;
 }
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: FunctionGraphBlock): void;
+  (event: "update:modelValue", value: FunctionsGraphBlock): void;
 }>();
 
-function addFunction() {
-  props.modelValue.Functions?.push({
+function addFunctionExpr() {
+  props.modelValue.FunctionExprs?.push({
     Function: "x^2",
     Decoration: {
       Label: "f",
@@ -111,8 +162,22 @@ function addFunction() {
   emit("update:modelValue", props.modelValue);
 }
 
-function deleteFunction(index: number) {
-  props.modelValue.Functions?.splice(index, 1);
+function deleteFunctionExpr(index: number) {
+  props.modelValue.FunctionExprs?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
+}
+
+function addFunctionVar() {
+  props.modelValue.FunctionVariations?.push({
+    Label: "C_f",
+    Xs: ["-5", "0", "5"],
+    Fxs: ["-3", "2", "-1"],
+  });
+  emit("update:modelValue", props.modelValue);
+}
+
+function deleteFunctionVar(index: number) {
+  props.modelValue.FunctionVariations?.splice(index, 1);
   emit("update:modelValue", props.modelValue);
 }
 

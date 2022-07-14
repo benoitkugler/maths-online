@@ -25,7 +25,7 @@ func (FormulaBlock) isBlock()        {}
 func (VariationTableBlock) isBlock() {}
 func (SignTableBlock) isBlock()      {}
 func (FigureBlock) isBlock()         {}
-func (FunctionGraphBlock) isBlock()  {}
+func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
 
 func (NumberFieldBlock) isBlock()           {}
@@ -93,7 +93,7 @@ type FigureBlock struct {
 	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
 }
 
-type FunctionGraphBlock struct {
+type FunctionsGraphBlock struct {
 	Graph functiongrapher.FunctionsGraph
 }
 

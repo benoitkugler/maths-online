@@ -66,9 +66,8 @@ import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
 import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
 import FormulaVue from "./blocks/Formula.vue";
 import FormulaFieldVue from "./blocks/FormulaField.vue";
-import FunctionGraphVue from "./blocks/FunctionGraph.vue";
 import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
-import FunctionVariationGraphVue from "./blocks/FunctionVariationGraph.vue";
+import FunctionsGraphVue from "./blocks/FunctionsGraph.vue";
 import NumberFieldVue from "./blocks/NumberField.vue";
 import OrderedListFieldVue from "./blocks/OrderedListField.vue";
 import RadioFieldVue from "./blocks/RadioField.vue";
@@ -110,10 +109,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(FormulaVue) };
     case BlockKind.FigureBlock:
       return { Props: data, Component: markRaw(FigureBlockVue) };
-    case BlockKind.FunctionGraphBlock:
-      return { Props: data, Component: markRaw(FunctionGraphVue) };
-    case BlockKind.FunctionVariationGraphBlock:
-      return { Props: data, Component: markRaw(FunctionVariationGraphVue) };
+    case BlockKind.FunctionsGraphBlock:
+      return { Props: data, Component: markRaw(FunctionsGraphVue) };
     case BlockKind.VariationTableBlock:
       return { Props: data, Component: markRaw(VariationTableVue) };
     case BlockKind.SignTableBlock:

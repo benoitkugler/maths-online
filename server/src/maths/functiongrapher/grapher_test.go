@@ -122,12 +122,12 @@ func TestGraph(t *testing.T) {
 	for _, tt := range tests {
 		expr, _ := expression.Parse(tt.expr)
 
-		got := newFunctionGraph(expression.FunctionDefinition{FunctionExpr: expression.FunctionExpr{Function: expr, Variable: tt.vari}, From: tt.from, To: tt.to})
+		got := NewFunctionGraph(expression.FunctionDefinition{FunctionExpr: expression.FunctionExpr{Function: expr, Variable: tt.vari}, From: tt.from, To: tt.to})
 		if len(got) != nbStep {
 			t.Fatal()
 		}
 
-		bounds := boundingBox(got)
+		bounds := BoundingBox(got)
 		if bounds.Origin.X < 0 || bounds.Origin.Y < 0 {
 			t.Fatal(bounds.Origin)
 		}
@@ -144,7 +144,7 @@ func TestGraph(t *testing.T) {
 func TestGraphArtifact(t *testing.T) {
 	expr, _ := expression.Parse("cos(4x)")
 	fn := expression.FunctionDefinition{FunctionExpr: expression.FunctionExpr{Function: expr, Variable: expression.NewVar('x')}, From: -5, To: 5}
-	got := newFunctionGraph(fn)
+	got := NewFunctionGraph(fn)
 	for _, seg := range got {
 		fmt.Printf("%.2f %.2f %.3f %.3f \n", seg.P0.X, seg.P2.X, seg.P1.X, seg.P1.Y)
 	}

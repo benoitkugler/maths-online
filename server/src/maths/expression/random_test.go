@@ -308,22 +308,24 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 		expr     string
 		variable rune
 		vars     Vars
-		bound    float64 // extrema on [-10;10]
+		from, to string
+		bound    float64 // expected extrema
 		want     bool
 	}{
-		{"2x + 1", 'x', nil, 25, true},
-		{"2x + 1", 'x', nil, 10, false},
-		{"2x + a", 'x', nil, 10, false},
-		{"1/x", 'x', nil, 100, false},
-		{"exp(x)", 'x', nil, 100, false},
+		{"2x + 1", 'x', nil, "-10", "10", 25, true},
+		{"2x + 1", 'x', nil, "-10", "10", 10, false},
+		{"2x + 1", 'x', nil, "2", "2", 10, false},
+		{"2x + a", 'x', nil, "-10", "10", 10, false},
+		{"1/x", 'x', nil, "-10", "10", 100, false},
+		{"exp(x)", 'x', nil, "-10", "10", 100, false},
 		{"ax + b", 'x', Vars{
 			NewVar('a'): mustParse(t, "3"),
 			NewVar('b'): mustParse(t, "7"),
-		}, 100, true},
+		}, "-10", "10", 100, true},
 		{"ax + b", 'x', Vars{
 			NewVar('a'): mustParse(t, "90"),
 			NewVar('b'): mustParse(t, "7"),
-		}, 100, false},
+		}, "-10", "10", 100, false},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -331,9 +333,39 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 			Function: expr,
 			Variable: NewVar(tt.variable),
 		}
-		err := fn.IsValid(mustParse(t, "-10"), mustParse(t, "10"), tt.vars, tt.bound)
+		err := fn.IsValid(mustParse(t, tt.from), mustParse(t, tt.to), tt.vars, tt.bound)
 		if (err == nil) != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
+		}
+	}
+}
+
+func TestAreDisjointsDomains(t *testing.T) {
+	tests := []struct {
+		domains [][2]string
+		vars    Vars
+		wantErr bool
+	}{
+		{
+			[][2]string{{"0", "1"}}, nil, false,
+		},
+		{
+			[][2]string{{"0", "1"}, {"1", "2"}}, nil, false,
+		},
+		{
+			[][2]string{{"0", "1"}, {"0", "2"}}, nil, true,
+		},
+		{
+			[][2]string{{"0", "1"}, {"x", "0.5"}}, Vars{NewVar('x'): newNb(0)}, true,
+		},
+	}
+	for _, tt := range tests {
+		domains := make([][2]*Expr, len(tt.domains))
+		for i, d := range tt.domains {
+			domains[i] = [2]*Expr{mustParse(t, d[0]), mustParse(t, d[1])}
+		}
+		if err := AreDisjointsDomains(domains, tt.vars); (err != nil) != tt.wantErr {
+			t.Errorf("AreDisjointsDomains() error = %v, wantErr %v", err, tt.wantErr)
 		}
 	}
 }

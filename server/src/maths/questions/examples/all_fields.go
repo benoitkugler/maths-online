@@ -129,8 +129,8 @@ var blockList = [...]que.Block{
 	que.FormulaBlock{
 		Parts: "Soit $f(x) = &2x + 1&$. Quelle est la dérivée de f ?",
 	},
-	que.FunctionGraphBlock{
-		Functions: []que.FunctionDefinition{
+	que.FunctionsGraphBlock{
+		FunctionExprs: []que.FunctionDefinition{
 			{
 				Function: "x^2 - 5",
 				Decoration: functiongrapher.FunctionDecoration{

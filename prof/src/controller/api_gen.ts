@@ -175,27 +175,26 @@ export interface ListQuestionsOut {
 }
 
 export enum BlockKind {
-  ExpressionFieldBlock = 0,
-  FigureAffineLineFieldBlock = 1,
-  FigureBlock = 2,
-  FigurePointFieldBlock = 3,
-  FigureVectorFieldBlock = 4,
-  FigureVectorPairFieldBlock = 5,
-  FormulaBlock = 6,
-  FunctionGraphBlock = 7,
-  FunctionPointsFieldBlock = 8,
-  FunctionVariationGraphBlock = 9,
-  NumberFieldBlock = 10,
-  OrderedListFieldBlock = 11,
-  RadioFieldBlock = 12,
-  SignTableBlock = 13,
-  TableBlock = 14,
-  TableFieldBlock = 15,
-  TextBlock = 16,
-  TreeFieldBlock = 17,
-  VariationTableBlock = 18,
-  VariationTableFieldBlock = 19,
-  VectorFieldBlock = 20,
+  ExpressionFieldBlock = "ExpressionFieldBlock",
+  FigureAffineLineFieldBlock = "FigureAffineLineFieldBlock",
+  FigureBlock = "FigureBlock",
+  FigurePointFieldBlock = "FigurePointFieldBlock",
+  FigureVectorFieldBlock = "FigureVectorFieldBlock",
+  FigureVectorPairFieldBlock = "FigureVectorPairFieldBlock",
+  FormulaBlock = "FormulaBlock",
+  FunctionPointsFieldBlock = "FunctionPointsFieldBlock",
+  FunctionsGraphBlock = "FunctionsGraphBlock",
+  NumberFieldBlock = "NumberFieldBlock",
+  OrderedListFieldBlock = "OrderedListFieldBlock",
+  RadioFieldBlock = "RadioFieldBlock",
+  SignTableBlock = "SignTableBlock",
+  TableBlock = "TableBlock",
+  TableFieldBlock = "TableFieldBlock",
+  TextBlock = "TextBlock",
+  TreeFieldBlock = "TreeFieldBlock",
+  VariationTableBlock = "VariationTableBlock",
+  VariationTableFieldBlock = "VariationTableFieldBlock",
+  VectorFieldBlock = "VectorFieldBlock",
 }
 
 export interface Block {
@@ -208,9 +207,8 @@ export interface Block {
     | FigureVectorFieldBlock
     | FigureVectorPairFieldBlock
     | FormulaBlock
-    | FunctionGraphBlock
     | FunctionPointsFieldBlock
-    | FunctionVariationGraphBlock
+    | FunctionsGraphBlock
     | NumberFieldBlock
     | OrderedListFieldBlock
     | RadioFieldBlock
@@ -410,15 +408,22 @@ export type Interpolated = string;
 export interface FormulaBlock {
   Parts: Interpolated;
 }
-// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
-export interface FunctionDecoration {
-  Label: string;
-  Color: string;
-}
 // github.com/benoitkugler/maths-online/maths/expression.Variable
 export interface Variable {
   Indice: string;
   Name: number;
+}
+// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
+export interface FunctionPointsFieldBlock {
+  Function: string;
+  Label: string;
+  Variable: Variable;
+  XGrid: string[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
+export interface FunctionDecoration {
+  Label: string;
+  Color: string;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
@@ -428,25 +433,26 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionGraphBlock
-export interface FunctionGraphBlock {
-  Functions: FunctionDefinition[] | null;
-}
-// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
-export interface FunctionPointsFieldBlock {
-  Function: string;
-  Label: string;
-  Variable: Variable;
-  XGrid: string[] | null;
-}
 // github.com/benoitkugler/maths-online/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
   Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionVariationGraphBlock
-export type FunctionVariationGraphBlock = VariationTableBlock;
+// github.com/benoitkugler/maths-online/maths/questions.FunctionArea
+export interface FunctionArea {
+  Bottom: Interpolated;
+  Top: Interpolated;
+  Left: string;
+  Right: string;
+  Color: string;
+}
+// github.com/benoitkugler/maths-online/maths/questions.FunctionsGraphBlock
+export interface FunctionsGraphBlock {
+  FunctionExprs: FunctionDefinition[] | null;
+  FunctionVariations: VariationTableBlock[] | null;
+  Areas: FunctionArea[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/questions.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;

@@ -173,7 +173,7 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 7:
-		var data FunctionGraphBlock
+		var data FunctionsGraphBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case 8:
@@ -252,7 +252,7 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: 5, Data: data}
 	case FormulaBlock:
 		wr = wrapper{Kind: 6, Data: data}
-	case FunctionGraphBlock:
+	case FunctionsGraphBlock:
 		wr = wrapper{Kind: 7, Data: data}
 	case FunctionPointsFieldBlock:
 		wr = wrapper{Kind: 8, Data: data}

@@ -71,7 +71,7 @@ type FunctionGraph struct {
 	Segments   []BezierCurve
 }
 
-func newFunctionGraph(fn expression.FunctionDefinition) []BezierCurve {
+func NewFunctionGraph(fn expression.FunctionDefinition) []BezierCurve {
 	step := (fn.To - fn.From) / nbStep
 	curves := make([]BezierCurve, nbStep)
 	for i := range curves {
@@ -99,19 +99,19 @@ const nbStep = 100
 // Graph splits the curve of each function on the definition domain in small chunks on which it is approximated
 // by Bezier curves.
 // It will panic if the expression are not valid or evaluable given their input variable.
-func NewFunctionGraph(functions []expression.FunctionDefinition, decorations []FunctionDecoration) FunctionsGraph {
+func NewFunctionsGraph(functions []expression.FunctionDefinition, decorations []FunctionDecoration) FunctionsGraph {
 	var allCurves []BezierCurve
 
 	out := FunctionsGraph{
 		Functions: make([]FunctionGraph, len(functions)),
 	}
 	for i, fn := range functions {
-		out.Functions[i].Segments = newFunctionGraph(fn)
+		out.Functions[i].Segments = NewFunctionGraph(fn)
 		out.Functions[i].Decoration = decorations[i]
 		allCurves = append(allCurves, out.Functions[i].Segments...)
 	}
 
-	out.Bounds = boundingBox(allCurves)
+	out.Bounds = BoundingBox(allCurves)
 
 	return out
 }
@@ -132,6 +132,34 @@ func controlFromPoints(from, to repere.Coord, firstHalf bool) repere.Coord {
 		}
 	}
 	return controlFromDerivatives(from, to, dFrom, dTo)
+}
+
+// NewFunctionGraphFromVariations builds one possible representation for the given variations
+func NewFunctionGraphFromVariations(xs []float64, ys []float64) []BezierCurve {
+	// each segment is drawn with two quadratic curves
+	var curves []BezierCurve
+	for i := range xs {
+		if i >= len(xs)-1 {
+			break
+		}
+		x1, x2 := xs[i], xs[i+1]
+		y1, y2 := ys[i], ys[i+1]
+		xMiddle, yMiddle := (x1+x2)/2, (y1+y2)/2
+
+		// first half
+		p0 := repere.Coord{X: x1, Y: y1}
+		p2 := repere.Coord{X: xMiddle, Y: yMiddle}
+		p1 := controlFromPoints(p0, p2, true)
+		curves = append(curves, BezierCurve{p0, p1, p2})
+
+		// second half
+		p0 = repere.Coord{X: xMiddle, Y: yMiddle}
+		p2 = repere.Coord{X: x2, Y: y2}
+		p1 = controlFromPoints(p0, p2, false)
+		curves = append(curves, BezierCurve{p0, p1, p2})
+	}
+
+	return curves
 }
 
 // GraphFromVariations builds one possible representation for the given variations
@@ -161,7 +189,7 @@ func GraphFromVariations(dec FunctionDecoration, xs []float64, ys []float64) Fun
 
 	return FunctionsGraph{
 		Functions: []FunctionGraph{{Decoration: dec, Segments: curves}},
-		Bounds:    boundingBox(curves),
+		Bounds:    BoundingBox(curves),
 	}
 }
 

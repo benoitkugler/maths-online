@@ -6,8 +6,6 @@ import (
 
 //go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql -mode=rand:gen_randdata_test.go
 
-// -mode=ts:../../../../prof/src/controller/exercice_gen.ts
-
 // Question is a standalone question, used for instance in games.
 type Question struct {
 	Id          int64                  `json:"id"`

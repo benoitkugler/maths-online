@@ -1,4 +1,4 @@
-import type { Origin, QuestionHeader } from "./api_gen";
+import type { FunctionsGraphBlock, Origin, QuestionHeader } from "./api_gen";
 import {
   BlockKind,
   ComparisonLevel,
@@ -16,9 +16,7 @@ import {
   type FigureVectorFieldBlock,
   type FigureVectorPairFieldBlock,
   type FormulaBlock,
-  type FunctionGraphBlock,
   type FunctionPointsFieldBlock,
-  type FunctionVariationGraphBlock,
   type NumberFieldBlock,
   type OrderedListFieldBlock,
   type RadioFieldBlock,
@@ -97,16 +95,9 @@ export const sortedBlockKindLabels = [
   [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
   [BlockKind.FigureBlock, { label: "Figure", isAnswerField: false }],
   [
-    BlockKind.FunctionGraphBlock,
+    BlockKind.FunctionsGraphBlock,
     {
-      label: "Graphe (expression)",
-      isAnswerField: false,
-    },
-  ],
-  [
-    BlockKind.FunctionVariationGraphBlock,
-    {
-      label: "Graphe (variations)",
+      label: "Graphes de fonctions",
       isAnswerField: false,
     },
   ],
@@ -200,8 +191,7 @@ interface BlockKindTypes {
   [BlockKind.FigureBlock]: FigureBlock;
   [BlockKind.FormulaBlock]: FormulaBlock;
   [BlockKind.ExpressionFieldBlock]: ExpressionFieldBlock;
-  [BlockKind.FunctionGraphBlock]: FunctionGraphBlock;
-  [BlockKind.FunctionVariationGraphBlock]: FunctionVariationGraphBlock;
+  [BlockKind.FunctionsGraphBlock]: FunctionsGraphBlock;
   [BlockKind.NumberFieldBlock]: NumberFieldBlock;
   [BlockKind.RadioFieldBlock]: RadioFieldBlock;
   [BlockKind.SignTableBlock]: SignTableBlock;
@@ -306,11 +296,11 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
-    case BlockKind.FunctionGraphBlock: {
+    case BlockKind.FunctionsGraphBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Functions: [
+          FunctionExprs: [
             {
               Function: "abs(x) + sin(x)",
               Decoration: {
@@ -322,17 +312,8 @@ export function newBlock(kind: BlockKind): Block {
               To: "5",
             },
           ],
-        },
-      };
-      return out;
-    }
-    case BlockKind.FunctionVariationGraphBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Label: "C_f",
-          Xs: ["-5", "0", "5"],
-          Fxs: ["-3", "2", "-1"],
+          FunctionVariations: [],
+          Areas: [],
         },
       };
       return out;

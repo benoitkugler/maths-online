@@ -358,6 +358,10 @@ func (fn FunctionExpr) IsValid(from, to *Expr, vars Vars, bound float64) error {
 		return err
 	}
 
+	if fromV >= toV {
+		return fmt.Errorf("Les expressions %s et %s ne définissent pas un intervalle valide (%f, %f).", from, to, fromV, toV)
+	}
+
 	def := FunctionDefinition{
 		FunctionExpr: FunctionExpr{Function: fnExpr, Variable: fn.Variable},
 		From:         fromV,
@@ -368,6 +372,67 @@ func (fn FunctionExpr) IsValid(from, to *Expr, vars Vars, bound float64) error {
 		return fmt.Errorf("L'expression %s ne définit pas une fonction valide.", fnExpr)
 	} else if ext > bound {
 		return fmt.Errorf("L'expression %s prend des valeurs trop importantes (%f)", fnExpr, ext)
+	}
+
+	return nil
+}
+
+// AreDisjointsDomains returns an error if the given intervals [from, to] are not disjoints.
+// Domains must be valid, as defined by `FunctionExpr.IsValid`.
+func AreDisjointsDomains(domains [][2]*Expr, vars Vars) error {
+	intervals := make([][2]float64, len(domains))
+	for i, ds := range domains {
+		fromV, err := ds[0].Evaluate(vars)
+		if err != nil {
+			return err
+		}
+		toV, err := ds[1].Evaluate(vars)
+		if err != nil {
+			return err
+		}
+		intervals[i] = [2]float64{fromV, toV}
+	}
+
+	if err := checkIntervalsDisjoints(intervals); err != nil {
+		i1, i2 := domains[err.index1], domains[err.index2]
+		return fmt.Errorf("les expressions [%s, %s] et [%s, %s] ne définissent pas des domains disjoints", i1[0], i1[1], i2[0], i2[1])
+	}
+
+	return nil
+}
+
+type jointIntervals struct {
+	index1, index2 int
+}
+
+// returns a non nil value if the given intervals are not disjoints
+func checkIntervalsDisjoints(intervals [][2]float64) *jointIntervals {
+	// keep track of the original indices
+	type indexedInterval struct {
+		from, to float64
+		index    int
+	}
+
+	tmp := make([]indexedInterval, len(intervals))
+	for i, v := range intervals {
+		tmp[i] = indexedInterval{from: v[0], to: v[1], index: i}
+	}
+
+	// sort by interval start
+	sort.Slice(tmp, func(i, j int) bool {
+		return tmp[i].from < tmp[j].from
+	})
+
+	// now check that the end of one interval is less than the start of the next
+	for i := range tmp {
+		if i == len(tmp)-1 {
+			break
+		}
+
+		i1, i2 := tmp[i], tmp[i+1]
+		if i1.to > i2.from {
+			return &jointIntervals{index1: i1.index, index2: i2.index}
+		}
 	}
 
 	return nil

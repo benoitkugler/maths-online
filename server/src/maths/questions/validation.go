@@ -173,8 +173,9 @@ func (c parsedCoord) validate(vars expression.Vars, checkPrecision bool) error {
 }
 
 type variationTableValidator struct {
-	xs  []*expression.Expr
-	fxs []*expression.Expr
+	label TextParts
+	xs    []*expression.Expr
+	fxs   []*expression.Expr
 }
 
 func (v variationTableValidator) validate(vars expression.Vars) error {
@@ -245,6 +246,7 @@ func (v figureValidator) validate(vars expression.Vars) error {
 }
 
 type function struct {
+	label    string
 	from, to *expression.Expr
 	expression.FunctionExpr
 }
@@ -260,7 +262,7 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 		return function{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 
-	return function{FunctionExpr: fnExpr, from: from, to: to}, nil
+	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, from: from, to: to}, nil
 }
 
 type functionGraphValidator struct {
@@ -273,6 +275,70 @@ func (v functionGraphValidator) validate(vars expression.Vars) error {
 			return err
 		}
 	}
+
+	// checks that function with same label are defined on non overlapping intervals,
+	// so that area references can't be ambiguous
+	byNames := make(map[string][]function)
+	for _, fn := range v.functions {
+		byNames[fn.label] = append(byNames[fn.label], fn)
+	}
+
+	for _, fns := range byNames {
+		domains := make([][2]*expression.Expr, len(fns))
+		for i, fn := range fns {
+			domains[i] = [2]*expression.Expr{fn.from, fn.to}
+		}
+		if err := expression.AreDisjointsDomains(domains, vars); err != nil {
+			return err
+		}
+	}
+
+	// checks that areas are referencing known functions
+	// TODO:
+	return nil
+}
+
+type functionsGraphValidator struct {
+	functions          []function
+	variationValidator []variationTableValidator
+}
+
+func (v functionsGraphValidator) validate(vars expression.Vars) error {
+	for _, f := range v.functions {
+		if err := f.FunctionExpr.IsValid(f.from, f.to, vars, maxFunctionBound); err != nil {
+			return err
+		}
+	}
+	for _, varTable := range v.variationValidator {
+		if err := varTable.validate(vars); err != nil {
+			return err
+		}
+	}
+
+	// checks that function with same label are defined on non overlapping intervals,
+	// so that area references can't be ambiguous
+	byNames := make(map[string][][2]*expression.Expr)
+	for _, fn := range v.functions {
+		byNames[fn.label] = append(byNames[fn.label], [2]*expression.Expr{fn.from, fn.to})
+	}
+	for _, vt := range v.variationValidator {
+		label, err := vt.label.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		byNames[label] = append(byNames[label], [2]*expression.Expr{
+			vt.xs[0], vt.xs[len(vt.xs)-1], // vt.validate checks that these calls are safe
+		})
+	}
+
+	for name, domains := range byNames {
+		if err := expression.AreDisjointsDomains(domains, vars); err != nil {
+			return fmt.Errorf("Pour la fonction %s, %s.", name, err)
+		}
+	}
+
+	// checks that areas are referencing known functions
+	// TODO:
 	return nil
 }
 
