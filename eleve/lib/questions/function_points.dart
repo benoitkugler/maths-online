@@ -96,7 +96,7 @@ class _FunctionPointsState extends State<FunctionPoints> {
     final ct = widget.controller;
     final metrics = RepereMetrics(ct.data.bounds, context);
     final painter = BezierCurvesPainter(metrics,
-        [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)]);
+        [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)], []);
     final texts = painter.extractTexts();
     final color = widget.controller.fieldError ? Colors.red : null;
     return NotificationListener<PointMovedNotification<_PointID>>(

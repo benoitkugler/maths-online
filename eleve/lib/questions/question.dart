@@ -223,11 +223,11 @@ class _ContentBuilder {
     rows.add(Center(child: StaticRepere(element.figure)));
   }
 
-  void _handleFunctionGraphBlock(FunctionGraphBlock element) {
+  void _handleFunctionsGraphBlock(FunctionsGraphBlock element) {
     // start a new row
     _flushCurrentRow();
 
-    rows.add(Center(child: FunctionGraphW(element)));
+    rows.add(Center(child: FunctionsGraphW(element)));
   }
 
   void _handleTableBlock(TableBlock element) {
@@ -400,8 +400,8 @@ class _ContentBuilder {
         _handleSignTableBlock(element);
       } else if (element is FigureBlock) {
         _handleFigureBlock(element);
-      } else if (element is FunctionGraphBlock) {
-        _handleFunctionGraphBlock(element);
+      } else if (element is FunctionsGraphBlock) {
+        _handleFunctionsGraphBlock(element);
       } else if (element is TableBlock) {
         _handleTableBlock(element);
 

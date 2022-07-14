@@ -30,7 +30,7 @@ JSON intCoordToJson(IntCoord item) {
   return {"X": intToJson(item.x), "Y": intToJson(item.y)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.DoublePointAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.DoublePointAnswer
 class DoublePointAnswer implements Answer {
   final IntCoord from;
   final IntCoord to;
@@ -53,7 +53,7 @@ JSON doublePointAnswerToJson(DoublePointAnswer item) {
   return {"From": intCoordToJson(item.from), "To": intCoordToJson(item.to)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.DoublePointPairAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.DoublePointPairAnswer
 class DoublePointPairAnswer implements Answer {
   final IntCoord from1;
   final IntCoord to1;
@@ -90,7 +90,7 @@ String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.ExpressionAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.ExpressionAnswer
 class ExpressionAnswer implements Answer {
   final String expression;
 
@@ -122,7 +122,7 @@ List<dynamic> listIntToJson(List<int> item) {
   return item.map(intToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FunctionPointsAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.FunctionPointsAnswer
 class FunctionPointsAnswer implements Answer {
   final List<int> fxs;
 
@@ -147,7 +147,7 @@ double doubleFromJson(dynamic json) => (json as num).toDouble();
 
 double doubleToJson(double item) => item;
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.NumberAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.NumberAnswer
 class NumberAnswer implements Answer {
   final double value;
 
@@ -168,7 +168,7 @@ JSON numberAnswerToJson(NumberAnswer item) {
   return {"Value": doubleToJson(item.value)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.OrderedListAnswer
 class OrderedListAnswer implements Answer {
   final List<int> indices;
 
@@ -189,7 +189,7 @@ JSON orderedListAnswerToJson(OrderedListAnswer item) {
   return {"Indices": listIntToJson(item.indices)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.PointAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.PointAnswer
 class PointAnswer implements Answer {
   final IntCoord point;
 
@@ -210,7 +210,7 @@ JSON pointAnswerToJson(PointAnswer item) {
   return {"Point": intCoordToJson(item.point)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.RadioAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.RadioAnswer
 class RadioAnswer implements Answer {
   final int index;
 
@@ -253,7 +253,7 @@ List<dynamic> listListDoubleToJson(List<List<double>> item) {
   return item.map(listDoubleToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TableAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.TableAnswer
 class TableAnswer implements Answer {
   final List<List<double>> rows;
 
@@ -285,7 +285,7 @@ List<dynamic> listTreeNodeAnswerToJson(List<TreeNodeAnswer> item) {
   return item.map(treeNodeAnswerToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TreeNodeAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.TreeNodeAnswer
 class TreeNodeAnswer {
   final List<TreeNodeAnswer> children;
   final List<double> probabilities;
@@ -313,7 +313,7 @@ JSON treeNodeAnswerToJson(TreeNodeAnswer item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TreeAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.TreeAnswer
 class TreeAnswer implements Answer {
   final TreeNodeAnswer root;
 
@@ -360,7 +360,7 @@ List<dynamic> listBoolToJson(List<bool> item) {
   return item.map(boolToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.VariationTableAnswer
 class VariationTableAnswer implements Answer {
   final List<String> xs;
   final List<String> fxs;
@@ -388,7 +388,7 @@ JSON variationTableAnswerToJson(VariationTableAnswer item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VectorNumberAnswer
+// github.com/benoitkugler/maths-online/maths/questions/client.VectorNumberAnswer
 class VectorNumberAnswer implements Answer {
   final double x;
   final double y;
@@ -415,32 +415,32 @@ abstract class Answer {}
 
 Answer answerFromJson(dynamic json_) {
   final json = json_ as JSON;
-  final kind = json['Kind'] as int;
+  final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
-    case 0:
+    case "DoublePointAnswer":
       return doublePointAnswerFromJson(data);
-    case 1:
+    case "DoublePointPairAnswer":
       return doublePointPairAnswerFromJson(data);
-    case 2:
+    case "ExpressionAnswer":
       return expressionAnswerFromJson(data);
-    case 3:
+    case "FunctionPointsAnswer":
       return functionPointsAnswerFromJson(data);
-    case 4:
+    case "NumberAnswer":
       return numberAnswerFromJson(data);
-    case 5:
+    case "OrderedListAnswer":
       return orderedListAnswerFromJson(data);
-    case 6:
+    case "PointAnswer":
       return pointAnswerFromJson(data);
-    case 7:
+    case "RadioAnswer":
       return radioAnswerFromJson(data);
-    case 8:
+    case "TableAnswer":
       return tableAnswerFromJson(data);
-    case 9:
+    case "TreeAnswer":
       return treeAnswerFromJson(data);
-    case 10:
+    case "VariationTableAnswer":
       return variationTableAnswerFromJson(data);
-    case 11:
+    case "VectorNumberAnswer":
       return vectorNumberAnswerFromJson(data);
     default:
       throw ("unexpected type");
@@ -449,29 +449,41 @@ Answer answerFromJson(dynamic json_) {
 
 JSON answerToJson(Answer item) {
   if (item is DoublePointAnswer) {
-    return {'Kind': 0, 'Data': doublePointAnswerToJson(item)};
+    return {'Kind': "DoublePointAnswer", 'Data': doublePointAnswerToJson(item)};
   } else if (item is DoublePointPairAnswer) {
-    return {'Kind': 1, 'Data': doublePointPairAnswerToJson(item)};
+    return {
+      'Kind': "DoublePointPairAnswer",
+      'Data': doublePointPairAnswerToJson(item)
+    };
   } else if (item is ExpressionAnswer) {
-    return {'Kind': 2, 'Data': expressionAnswerToJson(item)};
+    return {'Kind': "ExpressionAnswer", 'Data': expressionAnswerToJson(item)};
   } else if (item is FunctionPointsAnswer) {
-    return {'Kind': 3, 'Data': functionPointsAnswerToJson(item)};
+    return {
+      'Kind': "FunctionPointsAnswer",
+      'Data': functionPointsAnswerToJson(item)
+    };
   } else if (item is NumberAnswer) {
-    return {'Kind': 4, 'Data': numberAnswerToJson(item)};
+    return {'Kind': "NumberAnswer", 'Data': numberAnswerToJson(item)};
   } else if (item is OrderedListAnswer) {
-    return {'Kind': 5, 'Data': orderedListAnswerToJson(item)};
+    return {'Kind': "OrderedListAnswer", 'Data': orderedListAnswerToJson(item)};
   } else if (item is PointAnswer) {
-    return {'Kind': 6, 'Data': pointAnswerToJson(item)};
+    return {'Kind': "PointAnswer", 'Data': pointAnswerToJson(item)};
   } else if (item is RadioAnswer) {
-    return {'Kind': 7, 'Data': radioAnswerToJson(item)};
+    return {'Kind': "RadioAnswer", 'Data': radioAnswerToJson(item)};
   } else if (item is TableAnswer) {
-    return {'Kind': 8, 'Data': tableAnswerToJson(item)};
+    return {'Kind': "TableAnswer", 'Data': tableAnswerToJson(item)};
   } else if (item is TreeAnswer) {
-    return {'Kind': 9, 'Data': treeAnswerToJson(item)};
+    return {'Kind': "TreeAnswer", 'Data': treeAnswerToJson(item)};
   } else if (item is VariationTableAnswer) {
-    return {'Kind': 10, 'Data': variationTableAnswerToJson(item)};
+    return {
+      'Kind': "VariationTableAnswer",
+      'Data': variationTableAnswerToJson(item)
+    };
   } else if (item is VectorNumberAnswer) {
-    return {'Kind': 11, 'Data': vectorNumberAnswerToJson(item)};
+    return {
+      'Kind': "VectorNumberAnswer",
+      'Data': vectorNumberAnswerToJson(item)
+    };
   } else {
     throw ("unexpected type");
   }
@@ -489,10 +501,10 @@ Map<String, dynamic> dictIntAnswerToJson(Map<int, Answer> item) {
   return item.map((k, v) => MapEntry(intToJson(k).toString(), answerToJson(v)));
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.Answers
+// github.com/benoitkugler/maths-online/maths/questions/client.Answers
 typedef Answers = Map<int, Answer>;
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TextOrMath
+// github.com/benoitkugler/maths-online/maths/questions/client.TextOrMath
 class TextOrMath {
   final String text;
   final bool isMath;
@@ -525,7 +537,7 @@ List<dynamic> listTextOrMathToJson(List<TextOrMath> item) {
   return item.map(textOrMathToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TextLine
+// github.com/benoitkugler/maths-online/maths/questions/client.TextLine
 typedef TextLine = List<TextOrMath>;
 
 List<TextLine> listListTextOrMathFromJson(dynamic json) {
@@ -539,7 +551,7 @@ List<dynamic> listListTextOrMathToJson(List<TextLine> item) {
   return item.map(listTextOrMathToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.DropDownFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.DropDownFieldBlock
 class DropDownFieldBlock implements Block {
   final List<TextLine> proposals;
   final int iD;
@@ -565,7 +577,7 @@ JSON dropDownFieldBlockToJson(DropDownFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.ExpressionFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.ExpressionFieldBlock
 class ExpressionFieldBlock implements Block {
   final String label;
   final int sizeHint;
@@ -593,7 +605,7 @@ JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FigureBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.FigureBlock
 class FigureBlock implements Block {
   final Figure figure;
 
@@ -614,7 +626,7 @@ JSON figureBlockToJson(FigureBlock item) {
   return {"Figure": figureToJson(item.figure)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FigurePointFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.FigurePointFieldBlock
 class FigurePointFieldBlock implements Block {
   final Figure figure;
   final int iD;
@@ -637,7 +649,7 @@ JSON figurePointFieldBlockToJson(FigurePointFieldBlock item) {
   return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FigureVectorFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.FigureVectorFieldBlock
 class FigureVectorFieldBlock implements Block {
   final String lineLabel;
   final Figure figure;
@@ -671,7 +683,7 @@ JSON figureVectorFieldBlockToJson(FigureVectorFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FigureVectorPairFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.FigureVectorPairFieldBlock
 class FigureVectorPairFieldBlock implements Block {
   final Figure figure;
   final int iD;
@@ -694,7 +706,7 @@ JSON figureVectorPairFieldBlockToJson(FigureVectorPairFieldBlock item) {
   return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FormulaBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.FormulaBlock
 class FormulaBlock implements Block {
   final String formula;
 
@@ -713,6 +725,43 @@ FormulaBlock formulaBlockFromJson(dynamic json_) {
 
 JSON formulaBlockToJson(FormulaBlock item) {
   return {"Formula": stringToJson(item.formula)};
+}
+
+// github.com/benoitkugler/maths-online/maths/questions/client.FunctionPointsFieldBlock
+class FunctionPointsFieldBlock implements Block {
+  final String label;
+  final List<int> xs;
+  final List<double> dfxs;
+  final RepereBounds bounds;
+  final int iD;
+
+  const FunctionPointsFieldBlock(
+      this.label, this.xs, this.dfxs, this.bounds, this.iD);
+
+  @override
+  String toString() {
+    return "FunctionPointsFieldBlock($label, $xs, $dfxs, $bounds, $iD)";
+  }
+}
+
+FunctionPointsFieldBlock functionPointsFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionPointsFieldBlock(
+      stringFromJson(json['Label']),
+      listIntFromJson(json['Xs']),
+      listDoubleFromJson(json['Dfxs']),
+      repereBoundsFromJson(json['Bounds']),
+      intFromJson(json['ID']));
+}
+
+JSON functionPointsFieldBlockToJson(FunctionPointsFieldBlock item) {
+  return {
+    "Label": stringToJson(item.label),
+    "Xs": listIntToJson(item.xs),
+    "Dfxs": listDoubleToJson(item.dfxs),
+    "Bounds": repereBoundsToJson(item.bounds),
+    "ID": intToJson(item.iD)
+  };
 }
 
 // github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
@@ -814,91 +863,74 @@ List<dynamic> listFunctionGraphToJson(List<FunctionGraph> item) {
   return item.map(functionGraphToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionsGraph
-class FunctionsGraph {
-  final List<FunctionGraph> functions;
-  final RepereBounds bounds;
+// github.com/benoitkugler/maths-online/maths/questions/client.FunctionArea
+class FunctionArea {
+  final String color;
+  final List<BezierCurve> path;
 
-  const FunctionsGraph(this.functions, this.bounds);
+  const FunctionArea(this.color, this.path);
 
   @override
   String toString() {
-    return "FunctionsGraph($functions, $bounds)";
+    return "FunctionArea($color, $path)";
   }
 }
 
-FunctionsGraph functionsGraphFromJson(dynamic json_) {
+FunctionArea functionAreaFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return FunctionsGraph(listFunctionGraphFromJson(json['Functions']),
+  return FunctionArea(
+      stringFromJson(json['Color']), listBezierCurveFromJson(json['Path']));
+}
+
+JSON functionAreaToJson(FunctionArea item) {
+  return {
+    "Color": stringToJson(item.color),
+    "Path": listBezierCurveToJson(item.path)
+  };
+}
+
+List<FunctionArea> listFunctionAreaFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(functionAreaFromJson).toList();
+}
+
+List<dynamic> listFunctionAreaToJson(List<FunctionArea> item) {
+  return item.map(functionAreaToJson).toList();
+}
+
+// github.com/benoitkugler/maths-online/maths/questions/client.FunctionsGraphBlock
+class FunctionsGraphBlock implements Block {
+  final List<FunctionGraph> functions;
+  final List<FunctionArea> areas;
+  final RepereBounds bounds;
+
+  const FunctionsGraphBlock(this.functions, this.areas, this.bounds);
+
+  @override
+  String toString() {
+    return "FunctionsGraphBlock($functions, $areas, $bounds)";
+  }
+}
+
+FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionsGraphBlock(
+      listFunctionGraphFromJson(json['Functions']),
+      listFunctionAreaFromJson(json['Areas']),
       repereBoundsFromJson(json['Bounds']));
 }
 
-JSON functionsGraphToJson(FunctionsGraph item) {
+JSON functionsGraphBlockToJson(FunctionsGraphBlock item) {
   return {
     "Functions": listFunctionGraphToJson(item.functions),
+    "Areas": listFunctionAreaToJson(item.areas),
     "Bounds": repereBoundsToJson(item.bounds)
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.FunctionGraphBlock
-class FunctionGraphBlock implements Block {
-  final FunctionsGraph graph;
-
-  const FunctionGraphBlock(this.graph);
-
-  @override
-  String toString() {
-    return "FunctionGraphBlock($graph)";
-  }
-}
-
-FunctionGraphBlock functionGraphBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return FunctionGraphBlock(functionsGraphFromJson(json['Graph']));
-}
-
-JSON functionGraphBlockToJson(FunctionGraphBlock item) {
-  return {"Graph": functionsGraphToJson(item.graph)};
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.FunctionPointsFieldBlock
-class FunctionPointsFieldBlock implements Block {
-  final String label;
-  final List<int> xs;
-  final List<double> dfxs;
-  final RepereBounds bounds;
-  final int iD;
-
-  const FunctionPointsFieldBlock(
-      this.label, this.xs, this.dfxs, this.bounds, this.iD);
-
-  @override
-  String toString() {
-    return "FunctionPointsFieldBlock($label, $xs, $dfxs, $bounds, $iD)";
-  }
-}
-
-FunctionPointsFieldBlock functionPointsFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return FunctionPointsFieldBlock(
-      stringFromJson(json['Label']),
-      listIntFromJson(json['Xs']),
-      listDoubleFromJson(json['Dfxs']),
-      repereBoundsFromJson(json['Bounds']),
-      intFromJson(json['ID']));
-}
-
-JSON functionPointsFieldBlockToJson(FunctionPointsFieldBlock item) {
-  return {
-    "Label": stringToJson(item.label),
-    "Xs": listIntToJson(item.xs),
-    "Dfxs": listDoubleToJson(item.dfxs),
-    "Bounds": repereBoundsToJson(item.bounds),
-    "ID": intToJson(item.iD)
-  };
-}
-
-// github.com/benoitkugler/maths-online/maths/exercice/client.NumberFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.NumberFieldBlock
 class NumberFieldBlock implements Block {
   final int iD;
 
@@ -919,7 +951,7 @@ JSON numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.OrderedListFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.OrderedListFieldBlock
 class OrderedListFieldBlock implements Block {
   final String label;
   final List<TextLine> proposals;
@@ -953,7 +985,7 @@ JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.RadioFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.RadioFieldBlock
 class RadioFieldBlock implements Block {
   final List<TextLine> proposals;
   final int iD;
@@ -979,7 +1011,7 @@ JSON radioFieldBlockToJson(RadioFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.SignColumn
+// github.com/benoitkugler/maths-online/maths/questions/client.SignColumn
 class SignColumn {
   final String x;
   final bool isYForbiddenValue;
@@ -1024,7 +1056,7 @@ List<dynamic> listSignColumnToJson(List<SignColumn> item) {
   return item.map(signColumnToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.SignTableBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.SignTableBlock
 class SignTableBlock implements Block {
   final String label;
   final List<SignColumn> columns;
@@ -1050,7 +1082,7 @@ JSON signTableBlockToJson(SignTableBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TableBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.TableBlock
 class TableBlock implements Block {
   final List<TextOrMath> horizontalHeaders;
   final List<TextOrMath> verticalHeaders;
@@ -1080,7 +1112,7 @@ JSON tableBlockToJson(TableBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TableFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.TableFieldBlock
 class TableFieldBlock implements Block {
   final List<TextOrMath> horizontalHeaders;
   final List<TextOrMath> verticalHeaders;
@@ -1108,7 +1140,7 @@ JSON tableFieldBlockToJson(TableFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TextBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.TextBlock
 class TextBlock implements Block {
   final TextLine parts;
   final bool bold;
@@ -1141,7 +1173,7 @@ JSON textBlockToJson(TextBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TreeShape
+// github.com/benoitkugler/maths-online/maths/questions/client.TreeShape
 typedef TreeShape = List<int>;
 
 List<TreeShape> listListIntFromJson(dynamic json) {
@@ -1155,7 +1187,7 @@ List<dynamic> listListIntToJson(List<TreeShape> item) {
   return item.map(listIntToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.TreeFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.TreeFieldBlock
 class TreeFieldBlock implements Block {
   final List<TreeShape> shapeProposals;
   final List<TextOrMath> eventsProposals;
@@ -1183,7 +1215,7 @@ JSON treeFieldBlockToJson(TreeFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VariationColumnNumber
+// github.com/benoitkugler/maths-online/maths/questions/client.VariationColumnNumber
 class VariationColumnNumber {
   final String x;
   final String y;
@@ -1223,7 +1255,7 @@ List<dynamic> listVariationColumnNumberToJson(
   return item.map(variationColumnNumberToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.VariationTableBlock
 class VariationTableBlock implements Block {
   final String label;
   final List<VariationColumnNumber> columns;
@@ -1253,7 +1285,7 @@ JSON variationTableBlockToJson(VariationTableBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VariationTableFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.VariationTableFieldBlock
 class VariationTableFieldBlock implements Block {
   final String label;
   final List<int> lengthProposals;
@@ -1281,7 +1313,7 @@ JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.VectorFieldBlock
+// github.com/benoitkugler/maths-online/maths/questions/client.VectorFieldBlock
 class VectorFieldBlock implements Block {
   final int iD;
   final bool displayColumn;
@@ -1311,48 +1343,48 @@ abstract class Block {}
 
 Block blockFromJson(dynamic json_) {
   final json = json_ as JSON;
-  final kind = json['Kind'] as int;
+  final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
-    case 0:
+    case "DropDownFieldBlock":
       return dropDownFieldBlockFromJson(data);
-    case 1:
+    case "ExpressionFieldBlock":
       return expressionFieldBlockFromJson(data);
-    case 2:
+    case "FigureBlock":
       return figureBlockFromJson(data);
-    case 3:
+    case "FigurePointFieldBlock":
       return figurePointFieldBlockFromJson(data);
-    case 4:
+    case "FigureVectorFieldBlock":
       return figureVectorFieldBlockFromJson(data);
-    case 5:
+    case "FigureVectorPairFieldBlock":
       return figureVectorPairFieldBlockFromJson(data);
-    case 6:
+    case "FormulaBlock":
       return formulaBlockFromJson(data);
-    case 7:
-      return functionGraphBlockFromJson(data);
-    case 8:
+    case "FunctionPointsFieldBlock":
       return functionPointsFieldBlockFromJson(data);
-    case 9:
+    case "FunctionsGraphBlock":
+      return functionsGraphBlockFromJson(data);
+    case "NumberFieldBlock":
       return numberFieldBlockFromJson(data);
-    case 10:
+    case "OrderedListFieldBlock":
       return orderedListFieldBlockFromJson(data);
-    case 11:
+    case "RadioFieldBlock":
       return radioFieldBlockFromJson(data);
-    case 12:
+    case "SignTableBlock":
       return signTableBlockFromJson(data);
-    case 13:
+    case "TableBlock":
       return tableBlockFromJson(data);
-    case 14:
+    case "TableFieldBlock":
       return tableFieldBlockFromJson(data);
-    case 15:
+    case "TextBlock":
       return textBlockFromJson(data);
-    case 16:
+    case "TreeFieldBlock":
       return treeFieldBlockFromJson(data);
-    case 17:
+    case "VariationTableBlock":
       return variationTableBlockFromJson(data);
-    case 18:
+    case "VariationTableFieldBlock":
       return variationTableFieldBlockFromJson(data);
-    case 19:
+    case "VectorFieldBlock":
       return vectorFieldBlockFromJson(data);
     default:
       throw ("unexpected type");
@@ -1361,45 +1393,75 @@ Block blockFromJson(dynamic json_) {
 
 JSON blockToJson(Block item) {
   if (item is DropDownFieldBlock) {
-    return {'Kind': 0, 'Data': dropDownFieldBlockToJson(item)};
+    return {
+      'Kind': "DropDownFieldBlock",
+      'Data': dropDownFieldBlockToJson(item)
+    };
   } else if (item is ExpressionFieldBlock) {
-    return {'Kind': 1, 'Data': expressionFieldBlockToJson(item)};
+    return {
+      'Kind': "ExpressionFieldBlock",
+      'Data': expressionFieldBlockToJson(item)
+    };
   } else if (item is FigureBlock) {
-    return {'Kind': 2, 'Data': figureBlockToJson(item)};
+    return {'Kind': "FigureBlock", 'Data': figureBlockToJson(item)};
   } else if (item is FigurePointFieldBlock) {
-    return {'Kind': 3, 'Data': figurePointFieldBlockToJson(item)};
+    return {
+      'Kind': "FigurePointFieldBlock",
+      'Data': figurePointFieldBlockToJson(item)
+    };
   } else if (item is FigureVectorFieldBlock) {
-    return {'Kind': 4, 'Data': figureVectorFieldBlockToJson(item)};
+    return {
+      'Kind': "FigureVectorFieldBlock",
+      'Data': figureVectorFieldBlockToJson(item)
+    };
   } else if (item is FigureVectorPairFieldBlock) {
-    return {'Kind': 5, 'Data': figureVectorPairFieldBlockToJson(item)};
+    return {
+      'Kind': "FigureVectorPairFieldBlock",
+      'Data': figureVectorPairFieldBlockToJson(item)
+    };
   } else if (item is FormulaBlock) {
-    return {'Kind': 6, 'Data': formulaBlockToJson(item)};
-  } else if (item is FunctionGraphBlock) {
-    return {'Kind': 7, 'Data': functionGraphBlockToJson(item)};
+    return {'Kind': "FormulaBlock", 'Data': formulaBlockToJson(item)};
   } else if (item is FunctionPointsFieldBlock) {
-    return {'Kind': 8, 'Data': functionPointsFieldBlockToJson(item)};
+    return {
+      'Kind': "FunctionPointsFieldBlock",
+      'Data': functionPointsFieldBlockToJson(item)
+    };
+  } else if (item is FunctionsGraphBlock) {
+    return {
+      'Kind': "FunctionsGraphBlock",
+      'Data': functionsGraphBlockToJson(item)
+    };
   } else if (item is NumberFieldBlock) {
-    return {'Kind': 9, 'Data': numberFieldBlockToJson(item)};
+    return {'Kind': "NumberFieldBlock", 'Data': numberFieldBlockToJson(item)};
   } else if (item is OrderedListFieldBlock) {
-    return {'Kind': 10, 'Data': orderedListFieldBlockToJson(item)};
+    return {
+      'Kind': "OrderedListFieldBlock",
+      'Data': orderedListFieldBlockToJson(item)
+    };
   } else if (item is RadioFieldBlock) {
-    return {'Kind': 11, 'Data': radioFieldBlockToJson(item)};
+    return {'Kind': "RadioFieldBlock", 'Data': radioFieldBlockToJson(item)};
   } else if (item is SignTableBlock) {
-    return {'Kind': 12, 'Data': signTableBlockToJson(item)};
+    return {'Kind': "SignTableBlock", 'Data': signTableBlockToJson(item)};
   } else if (item is TableBlock) {
-    return {'Kind': 13, 'Data': tableBlockToJson(item)};
+    return {'Kind': "TableBlock", 'Data': tableBlockToJson(item)};
   } else if (item is TableFieldBlock) {
-    return {'Kind': 14, 'Data': tableFieldBlockToJson(item)};
+    return {'Kind': "TableFieldBlock", 'Data': tableFieldBlockToJson(item)};
   } else if (item is TextBlock) {
-    return {'Kind': 15, 'Data': textBlockToJson(item)};
+    return {'Kind': "TextBlock", 'Data': textBlockToJson(item)};
   } else if (item is TreeFieldBlock) {
-    return {'Kind': 16, 'Data': treeFieldBlockToJson(item)};
+    return {'Kind': "TreeFieldBlock", 'Data': treeFieldBlockToJson(item)};
   } else if (item is VariationTableBlock) {
-    return {'Kind': 17, 'Data': variationTableBlockToJson(item)};
+    return {
+      'Kind': "VariationTableBlock",
+      'Data': variationTableBlockToJson(item)
+    };
   } else if (item is VariationTableFieldBlock) {
-    return {'Kind': 18, 'Data': variationTableFieldBlockToJson(item)};
+    return {
+      'Kind': "VariationTableFieldBlock",
+      'Data': variationTableFieldBlockToJson(item)
+    };
   } else if (item is VectorFieldBlock) {
-    return {'Kind': 19, 'Data': vectorFieldBlockToJson(item)};
+    return {'Kind': "VectorFieldBlock", 'Data': vectorFieldBlockToJson(item)};
   } else {
     throw ("unexpected type");
   }
@@ -1416,10 +1478,10 @@ List<dynamic> listBlockToJson(List<Block> item) {
   return item.map(blockToJson).toList();
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.Enonce
+// github.com/benoitkugler/maths-online/maths/questions/client.Enonce
 typedef Enonce = List<Block>;
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.Question
+// github.com/benoitkugler/maths-online/maths/questions/client.Question
 class Question {
   final String title;
   final Enonce enonce;
@@ -1445,7 +1507,7 @@ JSON questionToJson(Question item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersIn
+// github.com/benoitkugler/maths-online/maths/questions/client.QuestionAnswersIn
 class QuestionAnswersIn {
   final Answers data;
 
@@ -1477,7 +1539,7 @@ Map<String, dynamic> dictIntBoolToJson(Map<int, bool> item) {
   return item.map((k, v) => MapEntry(intToJson(k).toString(), boolToJson(v)));
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionAnswersOut
+// github.com/benoitkugler/maths-online/maths/questions/client.QuestionAnswersOut
 class QuestionAnswersOut {
   final Map<int, bool> results;
   final Answers expectedAnswers;
@@ -1503,7 +1565,7 @@ JSON questionAnswersOutToJson(QuestionAnswersOut item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionSyntaxCheckIn
+// github.com/benoitkugler/maths-online/maths/questions/client.QuestionSyntaxCheckIn
 class QuestionSyntaxCheckIn {
   final Answer answer;
   final int iD;
@@ -1526,7 +1588,7 @@ JSON questionSyntaxCheckInToJson(QuestionSyntaxCheckIn item) {
   return {"Answer": answerToJson(item.answer), "ID": intToJson(item.iD)};
 }
 
-// github.com/benoitkugler/maths-online/maths/exercice/client.QuestionSyntaxCheckOut
+// github.com/benoitkugler/maths-online/maths/questions/client.QuestionSyntaxCheckOut
 class QuestionSyntaxCheckOut {
   final String reason;
   final int iD;
