@@ -181,7 +181,7 @@ func Test_Expression_eval(t *testing.T) {
 			"2 * isPrime(11.4)", nil, 0,
 		},
 		{
-			"randLetter(A;B)", nil, 0, // 0 by convention
+			"randSymbol(A;B)", nil, 0, // 0 by convention
 		},
 		{
 			"8 % 3", nil, 2,

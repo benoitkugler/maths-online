@@ -223,7 +223,7 @@ func (va Variable) eval(_, _ rat, b ValueResolver) (rat, error) {
 	return out.evalRat(b)
 }
 
-func (rv randVariable) eval(_, _ rat, _ ValueResolver) (rat, error) {
+func (randVariable) eval(_, _ rat, _ ValueResolver) (rat, error) {
 	return newRat(0), nil
 }
 

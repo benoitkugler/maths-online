@@ -37,8 +37,28 @@ func TestRandomVariables_instantiate(t *testing.T) {
 			map[Variable]string{NewVar('a'): "randInt(1;1)", NewVar('b'): "2*a"}, Vars{NewVar('a'): NewNb(1), NewVar('b'): NewNb(2)}, false,
 		},
 		{
-			map[Variable]string{NewVar('a'): "randLetter(A)", NewVar('b'): "randInt(1;1)"},
+			map[Variable]string{NewVar('a'): "randSymbol(A)", NewVar('b'): "randInt(1;1)"},
 			Vars{NewVar('a'): newVarExpr('A'), NewVar('b'): NewNb(1)},
+			false,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A); 2.1)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A); 2)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A); b)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A; B); b)", NewVar('b'): "1+1"},
+			Vars{NewVar('a'): newVarExpr('B'), NewVar('b'): newNb(2)},
 			false,
 		},
 		{
@@ -80,9 +100,9 @@ func TestRandomVariables_instantiate(t *testing.T) {
 	}
 }
 
-func TestRandLetter(t *testing.T) {
+func TestrandSymbol(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{NewVar('P'): mustParse(t, "randLetter(A;B;C)")}
+		rv := RandomParameters{NewVar('P'): mustParse(t, "randSymbol(A;B;C)")}
 		vars, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)

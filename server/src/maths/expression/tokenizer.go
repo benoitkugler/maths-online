@@ -112,7 +112,13 @@ func (tk *tokenizer) readTokenImplicitMult() (current, next token) {
 	return
 }
 
-func isIdentifier(r rune) bool {
+// returns false if `r` should stop variable indices read
+func isVariableChar(r rune) bool {
+	// TODO: more robust
+	switch r {
+	case '\\', '{', '}': // accept LaTeX commands
+		return true
+	}
 	return 'A' <= r && r <= 'z' || '0' <= r && r <= '9'
 }
 
@@ -186,7 +192,7 @@ func (tk *tokenizer) readToken() (tok token) {
 	case isOp:
 		out.data = op
 		tk.pos++
-	case unicode.IsLetter(c): // either a function, a variable, Inf/inf a constant
+	case unicode.IsLetter(c): // either a function, a variable, Inf/inf or a constant
 		if tk.tryReadRandVariable() {
 			out.data = randVariable{}
 		} else if isInf := tk.tryReadInf(); isInf {
@@ -269,8 +275,8 @@ func (tk *tokenizer) tryReadInf() bool {
 }
 
 func (tk *tokenizer) tryReadRandVariable() bool {
-	if s := string(tk.peekLetters()); s == "randLetter" || s == "randletter" {
-		tk.pos += len("randLetter")
+	if s := strings.ToLower(string(tk.peekLetters())); s == "randsymbol" || s == "choicesymbol" {
+		tk.pos += len(s)
 		return true
 	}
 	return false
@@ -381,7 +387,7 @@ func (tk *tokenizer) readVariable() Variable {
 		tk.pos++
 		start := tk.pos
 		for ; tk.pos < len(tk.src); tk.pos++ {
-			if !isIdentifier(tk.src[tk.pos]) {
+			if !isVariableChar(tk.src[tk.pos]) {
 				break
 			}
 		}

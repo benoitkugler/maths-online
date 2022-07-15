@@ -34,7 +34,7 @@
         "parameters": {
             "Variables": [
                 {
-                    "expression": "randLetter(f;g;h;k)",
+                    "expression": "randSymbol(f;g;h;k)",
                     "variable": {
                         "Indice": "",
                         "Name": 102

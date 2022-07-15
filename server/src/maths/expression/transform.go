@@ -84,6 +84,15 @@ func compareNodes(n1, n2 *Expr) int {
 			} else {
 				return strings.Compare(fmt.Sprint(a1.args), fmt.Sprint(a2.args))
 			}
+		case randVariable:
+			a2 := a2.(randVariable)
+			if len(a1.choices) < len(a2.choices) {
+				return -1
+			} else if len(a1.choices) > len(a2.choices) {
+				return 1
+			} else {
+				return 0
+			}
 		case Variable:
 			a2 := a2.(Variable)
 			if a1.Name < a2.Name {

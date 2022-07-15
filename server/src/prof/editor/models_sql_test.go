@@ -105,6 +105,7 @@ func TestValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	qu.RestrictNeedExercice()
 
 	ti := time.Now()
 	err = validateAllQuestions(qu)

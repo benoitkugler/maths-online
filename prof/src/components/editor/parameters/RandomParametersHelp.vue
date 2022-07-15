@@ -53,8 +53,13 @@ const helpContent = [
     "Renvoie un nombre aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
   ],
   [
-    "randLetter(A, B, C)",
-    "Renvoie une variable dont le nom sera choisi parmi ceux proposés, ici {A, B, C}.",
+    "choiceSymbol( (A; B; C; D); k)",
+    "Renvoie le symbol à l'index k parmi ceux proposés (ici, k est entre 1 et 4).",
+  ],
+  [
+    "randSymbol(A; B; C)",
+    "Renvoie un symbol choisi uniformément parmi ceux proposés, ici {A, B, C}. \n" +
+      "randSymbol est en fait un raccourci pour choiceSymbol( ... ; randInt(1; ...)).",
   ],
   ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [

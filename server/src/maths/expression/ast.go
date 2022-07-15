@@ -84,8 +84,8 @@ type atom interface {
 	asLaTeX(left, right *Expr) string
 }
 
-func (constant) lexicographicOrder() int         { return 1 }
 func (Number) lexicographicOrder() int           { return 0 }
+func (constant) lexicographicOrder() int         { return 1 }
 func (operator) lexicographicOrder() int         { return 2 }
 func (Variable) lexicographicOrder() int         { return 3 }
 func (function) lexicographicOrder() int         { return 4 }
@@ -109,14 +109,28 @@ func (rd roundFn) serialize(_, right *Expr) string {
 
 // randVariable is a special atom, randomly choosing a variable
 // among the propositions
-type randVariable []Variable
+// it is only useful when used in random parameters definition,
+// and is treated as zero elsewhere
+type randVariable struct {
+	choices []Variable
+	// nil means choose uniformly in `choices`
+	// if not nil, is is expected to return an indice into [1, len(choices)]
+	selector *Expr
+}
 
+// String returns one of the two forms
+// 			randSymbol(A;B;C)
+//			choiceSymbol((A;B;C); randInt(1;4))
 func (rv randVariable) String() string {
 	var args []string
-	for _, v := range rv {
+	for _, v := range rv.choices {
 		args = append(args, v.String())
 	}
-	return fmt.Sprintf("randLetter(%s)", strings.Join(args, ";"))
+	argS := strings.Join(args, ";")
+	if rv.selector == nil { // shortcut form
+		return fmt.Sprintf("randSymbol(%s)", argS)
+	}
+	return fmt.Sprintf("choiceSymbol((%s); %s)", argS, rv.selector.String())
 }
 
 func (rv randVariable) serialize(_, _ *Expr) string { return rv.String() }
@@ -232,12 +246,13 @@ type Variable struct {
 
 const firstPrivateVariable rune = '\uE001'
 
-// NewVar is a convenience constructor for a simple variable
+// NewVar is a convenience constructor for a simple variable.
 func NewVar(x rune) Variable { return Variable{Name: x} }
 
-// NewVarI is a convenience constructor supporting indices
+// NewVarI is a convenience constructor supporting indices.
 func NewVarI(x rune, indice string) Variable { return Variable{Name: x, Indice: indice} }
 
+// NewVarExpr is a convenience constructor converting a `Variable` to an expression.
 func NewVarExpr(v Variable) *Expr { return &Expr{atom: v} }
 
 func newVarExpr(r rune) *Expr { return NewVarExpr(NewVar(r)) }

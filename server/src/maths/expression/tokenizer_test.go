@@ -52,7 +52,7 @@ func TestTokens(t *testing.T) {
 		{"7randPrime(1;10)", []tokenData{numberText("7"), mult, randPrime, openPar, numberText("1"), semicolon, numberText("10"), closePar}},
 		{"randChoice(1;2)", []tokenData{randChoice, openPar, numberText("1"), semicolon, numberText("2"), closePar}},
 		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
-		{"randLetter()", []tokenData{randVariable{}, openPar, closePar}},
+		{"randSymbol()", []tokenData{randVariable{}, openPar, closePar}},
 		{"min(1)", []tokenData{minFn, openPar, numberText("1"), closePar}},
 		{"max(1)", []tokenData{maxFn, openPar, numberText("1"), closePar}},
 		{"floor(1)", []tokenData{floorFn, openPar, numberText("1"), closePar}},

@@ -381,14 +381,30 @@ var expressions = [...]struct {
 	{"randInt(15; 12)", nil, true},
 	{"randChoice( )", nil, true},
 	{"randChoice(2;", nil, true},
-	{"randLetter(A; x_A; b;  B; B)", &Expr{atom: randVariable{
-		NewVar('A'), Variable{Name: 'x', Indice: "A"}, NewVar('b'), NewVar('B'), NewVar('B'),
+	// randSymbol
+	{"randSymbol(A; x_A; b;  B; B)", &Expr{atom: randVariable{
+		choices: []Variable{
+			NewVar('A'), {Name: 'x', Indice: "A"}, NewVar('b'), NewVar('B'), NewVar('B'),
+		},
 	}}, false},
-	{"randLetter( )", nil, true},
-	{"randLetter)", nil, true},
-	{"randLetter(0.2 )", nil, true},
-	{"randLetter(x;", nil, true},
-	{"randLetter(x,y)", nil, true},
+	{"randSymbol( )", nil, true},
+	{"randSymbol)", nil, true},
+	{"randSymbol(0.2 )", nil, true},
+	{"randSymbol(x;", nil, true},
+	{"randSymbol(x,y)", nil, true},
+	// choiceSymbol
+	{"choiceSymbol((A; x_A; b;  B; B); sin(3))", &Expr{atom: randVariable{
+		choices: []Variable{
+			NewVar('A'), {Name: 'x', Indice: "A"}, NewVar('b'), NewVar('B'), NewVar('B'),
+		},
+		selector: &Expr{atom: sinFn, right: newNb(3)},
+	}}, false},
+	{"choiceSymbol(())", nil, true},
+	{"choiceSymbol((", nil, true},
+	{"choiceSymbol((0.2 )", nil, true},
+	{"choiceSymbol((x;", nil, true},
+	{"choiceSymbol((x,y))", nil, true},
+	{"choiceSymbol((x;y); )", nil, true},
 	{
 		"2 + 3 * randInt(2; 12)", &Expr{
 			atom:  plus,
@@ -443,8 +459,8 @@ var expressions = [...]struct {
 	{"min()", nil, true},
 }
 
-func Test_invalidRandLetter(t *testing.T) {
-	expr := "randLetter(U;V"
+func Test_invalidrandSymbol(t *testing.T) {
+	expr := "randSymbol(U;V"
 	_, err := Parse(expr)
 	if !strings.Contains(err.Error(), "parenthèse fermante manquante") {
 		t.Fatal(err)

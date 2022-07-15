@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -105,7 +106,7 @@ func (rv RandomParameters) Validate() error {
 // or a = b + 1; b = a.
 // See `Validate` to statistically check for errors.
 func (rv RandomParameters) Instantiate() (Vars, error) {
-	resolver := randomVarResolver{
+	resolver := &randomVarResolver{
 		defs:    rv,
 		seen:    make(map[Variable]bool),
 		results: make(map[Variable]rat),
@@ -116,7 +117,14 @@ func (rv RandomParameters) Instantiate() (Vars, error) {
 		// special case for randVariable
 		if randV, isRandVariable := expr.atom.(randVariable); isRandVariable {
 			resolver.seen[v] = true
-			out[v] = &Expr{atom: randV.choice()}
+			resolved, err := randV.choice(resolver)
+			if err != nil {
+				return nil, ErrInvalidRandomParameters{
+					Cause:  v,
+					Detail: err.Error(),
+				}
+			}
+			out[v] = NewVarExpr(resolved)
 			continue
 		}
 
@@ -131,9 +139,28 @@ func (rv RandomParameters) Instantiate() (Vars, error) {
 	return out, nil
 }
 
-func (rv randVariable) choice() Variable {
-	index := rand.Intn(len(rv))
-	return rv[index]
+// evaluate the potential selector and returns a choice
+func (rv randVariable) choice(res ValueResolver) (Variable, error) {
+	var index int
+	// note that the parsing step checks that len(choices) > 0
+	if rv.selector == nil {
+		index = rand.Intn(len(rv.choices))
+	} else {
+		v, err := rv.selector.Evaluate(res)
+		if err != nil {
+			return Variable{}, err
+		}
+		var ok bool
+		index, ok = IsInt(v)
+		if !ok {
+			return Variable{}, errors.New("L'argument de la fonction choice doit être un entier.")
+		}
+		if index < 1 || index > len(rv.choices) {
+			return Variable{}, fmt.Errorf("L'argument de la fonction choice doit être un compris entre 1 et %d.", len(rv.choices))
+		}
+		index -= 1 // using "human" convention
+	}
+	return rv.choices[index], nil
 }
 
 // return list of primes between min and max (inclusive)
@@ -249,17 +276,6 @@ func (rd specialFunctionA) validate(pos int) error {
 	}
 
 	return nil
-}
-
-// ErrRandomTests is returned when a valid expression does not always
-// pass a given criteria
-type ErrRandomTests struct {
-	// frequency of successul tries, between 0 and 100
-	SuccessFrequency int
-}
-
-func (e ErrRandomTests) Error() string {
-	return fmt.Sprintf("success rate: %d", e.SuccessFrequency)
 }
 
 // IsValidNumber evaluates the expression using `vars`,
