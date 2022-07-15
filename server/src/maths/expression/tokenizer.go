@@ -192,7 +192,7 @@ func (tk *tokenizer) readToken() (tok token) {
 	case isOp:
 		out.data = op
 		tk.pos++
-	case unicode.IsLetter(c): // either a function, a variable, Inf/inf or a constant
+	case unicode.IsLetter(c) || c == '@': // either a function, a variable, Inf/inf or a constant
 		if tk.tryReadRandVariable() {
 			out.data = randVariable{}
 		} else if isInf := tk.tryReadInf(); isInf {

@@ -31,6 +31,13 @@
             </v-row>
           </v-list-item>
         </v-list>
+
+        <v-alert color="info">
+          Les variables peuvent être indicées en ajoutant _ , comme dans x_A.
+          Pour insérer un symbol complexe, on peut utiliser la variable spéciale
+          @, comme dans @_\ge, qui affichera le code LaTeX \ge, au lieu de
+          placer \ge en indice.
+        </v-alert>
       </v-card-text>
     </v-card>
   </v-dialog>

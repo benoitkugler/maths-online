@@ -58,6 +58,7 @@ func TestTokens(t *testing.T) {
 		{"floor(1)", []tokenData{floorFn, openPar, numberText("1"), closePar}},
 		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
 		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
+		{"@_myVar", []tokenData{Variable{Name: '@', Indice: "myVar"}}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

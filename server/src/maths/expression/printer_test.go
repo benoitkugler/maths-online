@@ -53,6 +53,9 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"24x^2 - 27x + 18",
 		"round(x; 4)",
 		"floor(x)",
+		"@_acompletetext",
+		"@_\\ge",
+		"a_\\ge",
 	} {
 		e, err := Parse(expr)
 		if err != nil {

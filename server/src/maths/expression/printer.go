@@ -44,6 +44,15 @@ func (expr *Expr) String() string {
 	return expr.Serialize()
 }
 
+func (v Variable) String() string {
+	// we have to output valid expression syntax
+	out := string(v.Name)
+	if v.Indice != "" {
+		return out + "_" + v.Indice + " " // notice the white space to avoid x_Ay_A
+	}
+	return out
+}
+
 func addParenthesisLatex(s string) string {
 	return `\left(` + s + `\right)`
 }
@@ -152,6 +161,11 @@ func (r randVariable) asLaTeX(_, _ *Expr) string {
 }
 
 func (v Variable) asLaTeX(_, _ *Expr) string {
+	// special case for @_variable to allow custom symbols
+	if v.Name == '@' {
+		return v.Indice
+	}
+
 	name := defaultLatexResolver(v)
 	if v.Indice != "" {
 		name += "_{" + v.Indice + "}"

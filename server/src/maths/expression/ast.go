@@ -257,15 +257,6 @@ func NewVarExpr(v Variable) *Expr { return &Expr{atom: v} }
 
 func newVarExpr(r rune) *Expr { return NewVarExpr(NewVar(r)) }
 
-func (v Variable) String() string {
-	// we have to output valid expression syntax
-	out := string(v.Name)
-	if v.Indice != "" {
-		return out + "_" + v.Indice + " " // notice the white space to avoid x_Ay_A
-	}
-	return out
-}
-
 func (v Variable) serialize(_, _ *Expr) string { return v.String() }
 
 type constant uint8
