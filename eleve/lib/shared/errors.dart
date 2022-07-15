@@ -12,18 +12,29 @@ dynamic checkServerError(String source) {
   return json;
 }
 
+class ErrorBar extends StatelessWidget {
+  final String topic;
+  final dynamic error;
+
+  const ErrorBar(this.topic, this.error, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+        text: TextSpan(children: [
+      TextSpan(
+          text: topic + "\n",
+          style: const TextStyle(fontWeight: FontWeight.bold)),
+      const TextSpan(text: "Détails : "),
+      TextSpan(
+          text: "$error", style: const TextStyle(fontStyle: FontStyle.italic)),
+    ]));
+  }
+}
+
 void showError(String kind, dynamic error, BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 6),
       backgroundColor: Theme.of(context).colorScheme.error,
-      content: RichText(
-          text: TextSpan(children: [
-        TextSpan(
-            text: kind + "\n",
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        const TextSpan(text: "Détails : "),
-        TextSpan(
-            text: "$error",
-            style: const TextStyle(fontStyle: FontStyle.italic)),
-      ]))));
+      content: ErrorBar(kind, error)));
 }

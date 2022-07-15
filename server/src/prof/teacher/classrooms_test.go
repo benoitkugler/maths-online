@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/prof/students"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -78,12 +77,11 @@ func Test_importPronoteFile(t *testing.T) {
 		t.Fatal(len(out))
 	}
 
-	links, _ := SelectStudentClassroomsByIdClassrooms(db, classroom.Id)
-	students.DeleteStudentsByIDs(db, links.IdStudents()...)
+	DeleteStudentsByIdClassrooms(db, classroom.Id)
 }
 
 func TestStudentCRUD(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../students/gen_create.sql", "gen_create.sql")
+	db := testutils.CreateDBDev(t, "gen_create.sql")
 	defer testutils.RemoveDBDev()
 	defer db.Close()
 
@@ -104,7 +102,7 @@ func TestStudentCRUD(t *testing.T) {
 	}
 
 	st.Name = "sdlsl"
-	st.Birthday = students.Date(time.Now())
+	st.Birthday = Date(time.Now())
 	if err = ct.updateStudent(st, teacher.Id); err != nil {
 		t.Fatal(err)
 	}

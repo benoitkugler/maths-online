@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/students"
+	"github.com/benoitkugler/maths-online/prof/teacher"
 	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
@@ -310,7 +310,7 @@ func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, stu
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
 
-		student, err := students.SelectStudent(ct.db, studentID)
+		student, err := teacher.SelectStudent(ct.db, studentID)
 		if err != nil {
 			return utils.SQLError(err)
 		}

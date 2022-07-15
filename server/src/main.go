@@ -263,6 +263,7 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
 
 	// student client classroom managment
+	e.GET("/api/classroom/login", tc.CheckStudentClassroom)
 	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
 	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
 

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/classroom/join_classroom.dart';
+import 'package:eleve/classroom/recap.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -54,7 +55,6 @@ class Settings extends StatefulWidget {
 class _SettingsState extends State<Settings> {
   UserSettings settings = UserSettings();
   String version = "";
-  var pseudoController = TextEditingController();
 
   @override
   void initState() {
@@ -65,9 +65,7 @@ class _SettingsState extends State<Settings> {
 
   void _loadUserSettings() async {
     settings = await loadUserSettings();
-    setState(() {
-      pseudoController.text = settings.studentPseudo;
-    });
+    setState(() {});
   }
 
   void _loadVersion() async {
@@ -77,8 +75,10 @@ class _SettingsState extends State<Settings> {
     });
   }
 
-  void _saveUserSettings() async {
-    settings.studentPseudo = pseudoController.text;
+  void _savePseudo(String pseudo) async {
+    setState(() {
+      settings.studentPseudo = pseudo;
+    });
     await saveUserSettings(settings);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -105,20 +105,12 @@ class _SettingsState extends State<Settings> {
     ));
   }
 
-  void _showLeaveClassroom() async {
-    final successLeaving = await confirmLeaveClassroom(
-        widget.buildMode, settings.studentID, context);
-    if (!successLeaving) {
-      return;
-    }
+  void _onInvalidStudentID() async {
+    // clear the studentID
     setState(() {
       settings.studentID = "";
     });
     await saveUserSettings(settings);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      content: const Text("Classe quittée avec succès."),
-    ));
   }
 
   @override
@@ -143,40 +135,12 @@ class _SettingsState extends State<Settings> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: settings.studentID.isEmpty
                       ? [
-                          OutlinedButton(
-                              onPressed: _showJoinClassroom,
-                              child: const Text("Rejoindre une classe")),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Text(
-                                  "Nom de joueur :",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ),
-                              SizedBox(
-                                  width: 200,
-                                  child: TextField(
-                                    textAlign: TextAlign.center,
-                                    controller: pseudoController,
-                                    decoration: const InputDecoration(
-                                        hintText: "Pseudo"),
-                                  ))
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                          Center(
-                              child: ElevatedButton(
-                            child: const Text("Enregistrer"),
-                            onPressed: _saveUserSettings,
-                          )),
+                          _NotRegistred(settings.studentPseudo, _savePseudo,
+                              _showJoinClassroom)
                         ]
                       : [
-                          OutlinedButton(
-                              onPressed: _showLeaveClassroom,
-                              child: const Text("Quitter ma classe"))
+                          ClassroomCard(widget.buildMode, settings.studentID,
+                              _onInvalidStudentID)
                         ],
                 ),
               ),
@@ -221,4 +185,75 @@ Future<void> saveUserSettings(UserSettings settings) async {
     Logger.root.info("saving settings: $e");
   }
   return;
+}
+
+class _NotRegistred extends StatefulWidget {
+  final String pseudo;
+  final void Function(String) onSavePseudo;
+  final void Function() onJoinClassroom;
+
+  const _NotRegistred(this.pseudo, this.onSavePseudo, this.onJoinClassroom,
+      {Key? key})
+      : super(key: key);
+
+  @override
+  State<_NotRegistred> createState() => _NotRegistredState();
+}
+
+class _NotRegistredState extends State<_NotRegistred> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    _controller.text = widget.pseudo;
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _NotRegistred oldWidget) {
+    _controller.text = widget.pseudo;
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      decoration: BoxDecoration(
+          border: Border.all(width: 2, color: Colors.lightBlue),
+          borderRadius: const BorderRadius.all(Radius.circular(6))),
+      child: Column(children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Nom de joueur :",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(
+                width: 180,
+                child: TextField(
+                  textAlign: TextAlign.center,
+                  controller: _controller,
+                  decoration: const InputDecoration(hintText: "Pseudo"),
+                ))
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            OutlinedButton(
+                onPressed: widget.onJoinClassroom,
+                child: const Text("Rejoindre une classe")),
+            Center(
+                child: ElevatedButton(
+              child: const Text("Enregistrer"),
+              onPressed: () => widget.onSavePseudo(_controller.text),
+            )),
+          ],
+        )
+      ]),
+    );
+  }
 }

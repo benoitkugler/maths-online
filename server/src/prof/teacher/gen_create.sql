@@ -5,8 +5,13 @@ CREATE TABLE classrooms (
     name varchar NOT NULL
 );
 
-CREATE TABLE student_classrooms (
-    id_student integer NOT NULL,
+CREATE TABLE students (
+    Id serial PRIMARY KEY,
+    Name varchar NOT NULL,
+    Surname varchar NOT NULL,
+    Birthday date NOT NULL,
+    TrivialSuccess integer NOT NULL,
+    IsClientAttached boolean NOT NULL,
     id_classroom integer NOT NULL
 );
 
@@ -20,15 +25,9 @@ CREATE TABLE teachers (
 ALTER TABLE classrooms
     ADD FOREIGN KEY (id_teacher) REFERENCES teachers ON DELETE CASCADE;
 
-ALTER TABLE student_classrooms
-    ADD FOREIGN KEY (id_student) REFERENCES students ON DELETE CASCADE;
-
-ALTER TABLE student_classrooms
+ALTER TABLE students
     ADD FOREIGN KEY (id_classroom) REFERENCES classrooms ON DELETE CASCADE;
 
 ALTER TABLE teachers
     ADD UNIQUE (mail);
-
-ALTER TABLE student_classrooms
-    ADD UNIQUE (id_student);
 
