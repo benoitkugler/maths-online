@@ -20,6 +20,7 @@ func TestPanics(t *testing.T) {
 	testutils.ShouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil) })
 	testutils.ShouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil) })
 	testutils.ShouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil) })
+	testutils.ShouldPanic(t, func() { _ = (invalidOperator).serialize(nil, nil) })
 
 	testutils.ShouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
 	testutils.ShouldPanic(t, func() {
@@ -87,6 +88,8 @@ func TestExpression_String(t *testing.T) {
 		{"-(-a)", "a"},
 		{"floor(4)", "floor(4)"},
 		{"x + (-4 + y)", "x - 4 + y"},
+		{"(1<2)+(3>4)+(5<=6)+(7>=8)", "(1 < 2) + (3 > 4) + (5 <= 6) + (7 >= 8)"},
+		{"1 + 2<3", "1 + 2 < 3"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

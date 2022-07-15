@@ -357,7 +357,7 @@ func TestBug51(t *testing.T) {
 		NewVar(98):        mustParse(t, "randint(1;50)*randChoice(-1;1)"),
 		NewVarI(120, "0"): mustParse(t, "-p/m"),
 		NewVarI(120, "1"): mustParse(t, "-b/a_0"),
-		NewVar(116):       mustParse(t, "isZero(x_1-x_0)+1"),
+		NewVar(116):       mustParse(t, "(x_1==x_0)+1"),
 		NewVar(97):        mustParse(t, "t*a_0"),
 		NewVarI(120, "2"): mustParse(t, "-b/a"),
 	}

@@ -32,11 +32,16 @@
           </v-list-item>
         </v-list>
 
-        <v-alert color="info">
+        <v-alert color="info" class="my-1">
           Les variables peuvent être indicées en ajoutant _ , comme dans x_A.
           Pour insérer un symbol complexe, on peut utiliser la variable spéciale
           @, comme dans @_\ge, qui affichera le code LaTeX \ge, au lieu de
           placer \ge en indice.
+        </v-alert>
+
+        <v-alert color="info" class="my-1">
+          En plus des opérateurs usuels, les comparaisons ==, &lt;, >, &lt;=, >=
+          sont possibles, renvoyant 1 pour un succès, 0 sinon.
         </v-alert>
       </v-card-text>
     </v-card>
@@ -77,7 +82,6 @@ const helpContent = [
   ["floor(x)", "Renvoie la partie entière de x"],
   ["isPrime(n)", "Renvoie 1 is n est un nombre premier, 0 sinon"],
   ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0"],
-  ["isZero(x)", "Renvoie 1 si x vaut 0, 0 sinon"],
   ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs"],
   ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs"],
   ["exp(x)", "Fonction exponentielle"],

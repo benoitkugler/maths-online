@@ -131,29 +131,43 @@ func isWhiteSpace(r rune) bool {
 	}
 }
 
-func isRemainder(src []rune) bool {
-	return len(src) >= 2 && (string(src[0:2]) == "//")
-}
-
-func isOperator(r rune) (operator, bool) {
-	var op operator
-	switch r {
-	case '+', '\ufe62':
-		op = plus
-	case '-', '\u2212':
-		op = minus
-	case '/', '\u00F7':
-		op = div
-	case '*', '\u00D7':
-		op = mult
-	case '%':
-		op = mod
-	case '^':
-		op = pow
-	default:
-		return 0, false
+// check for 1 or 2 runes operators, returning the number
+// of them, with zero meaning it is not an operator
+func isOperator(src []rune) (op operator, n int) {
+	// starts with two runes ops
+	if len(src) >= 2 {
+		s := string(src[0:2])
+		switch s {
+		case "==":
+			return equals, 2
+		case ">=":
+			return greater, 2
+		case "<=":
+			return lesser, 2
+		case "//":
+			return rem, 2
+		}
 	}
-	return op, true
+	switch src[0] {
+	case '>':
+		return strictlyGreater, 1
+	case '<':
+		return strictlyLesser, 1
+	case '+', '\ufe62':
+		return plus, 1
+	case '-', '\u2212':
+		return minus, 1
+	case '/', '\u00F7':
+		return div, 1
+	case '*', '\u00D7':
+		return mult, 1
+	case '%':
+		return mod, 1
+	case '^':
+		return pow, 1
+	}
+	_ = exhaustiveOperatorSwitch
+	return op, 0
 }
 
 // advance pos to the next non whitespace char
@@ -174,8 +188,7 @@ func (tk *tokenizer) readToken() (tok token) {
 	out := token{pos: tk.pos}
 	c := tk.src[tk.pos]
 
-	isRem := isRemainder(tk.src[tk.pos:])
-	op, isOp := isOperator(c)
+	op, isOpRunes := isOperator(tk.src[tk.pos:])
 	switch {
 	case c == '(':
 		out.data = openPar
@@ -186,12 +199,9 @@ func (tk *tokenizer) readToken() (tok token) {
 	case c == ';':
 		out.data = semicolon
 		tk.pos++
-	case isRem:
-		out.data = rem
-		tk.pos += 2
-	case isOp:
+	case isOpRunes != 0:
 		out.data = op
-		tk.pos++
+		tk.pos += isOpRunes
 	case unicode.IsLetter(c) || c == '@': // either a function, a variable, Inf/inf or a constant
 		if tk.tryReadRandVariable() {
 			out.data = randVariable{}
@@ -349,8 +359,6 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = sqrtFn
 	case "sgn":
 		fn = sgnFn
-	case "isZero":
-		fn = isZeroFn
 	case "isPrime":
 		fn = isPrimeFn
 	default: // no  matching function name

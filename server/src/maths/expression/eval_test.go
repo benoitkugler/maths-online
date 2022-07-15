@@ -202,31 +202,26 @@ func Test_Expression_eval(t *testing.T) {
 			"sqrt(sqrt(98)^2 - 7^2)", nil, 7,
 		},
 		{
-			"1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Vars{NewVar('a'): NewNb(2)}, 2,
+			"1 * (a==1) + 2 * (a==2) + 3*(a==3)", Vars{NewVar('a'): NewNb(2)}, 2,
 		},
 		{
-			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Vars{
+			"1 * (a^2 - b^2 - c^2 == 0) + 2*(b^2 - a^2 - c^2 == 0) + 3*(c^2 - a^2 - b^2 == 0)", Vars{
 				NewVar('a'): NewNb(8),  // BC
 				NewVar('b'): NewNb(12), // AC
 				NewVar('c'): NewNb(4),  // AB
 			}, 0,
 		},
 		{
-			"1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Vars{
+			"1 * (a^2 - b^2 - c^2 == 0) + 2*(b^2 - a^2 - c^2 == 0) + 3*(c^2 - a^2 - b^2 == 0)", Vars{
 				NewVar('a'): NewNb(3), // BC
 				NewVar('b'): NewNb(4), // AC
 				NewVar('c'): NewNb(5), // AB
 			}, 3,
 		},
-		{
-			"round(2.235; 2)", nil, 2.24,
-		},
-		{
-			"min(2.235; 2)", nil, 2,
-		},
-		{
-			"max(-2; 1.4; 5)", nil, 5,
-		},
+		{"round(2.235; 2)", nil, 2.24},
+		{"min(2.235; 2)", nil, 2},
+		{"max(-2; 1.4; 5)", nil, 5},
+		{"(1<2) + (3>3) + (2<=1) + (4.4>=4)", nil, 2},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

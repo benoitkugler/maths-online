@@ -165,10 +165,28 @@ func (op operator) eval(left, right rat, _ ValueResolver) (rat, error) {
 	return op.evaluate(left, right), nil
 }
 
+// returns 1 if b is true
+func evalBool(b bool) rat {
+	if b {
+		return newRat(1)
+	}
+	return newRat(0)
+}
+
 func (op operator) evaluate(left, right rat) rat {
 	// 0 is fine as default value for + and -
 	// the other have mandatory left operands
 	switch op {
+	case equals:
+		return evalBool(AreFloatEqual(left.eval(), right.eval()))
+	case greater:
+		return evalBool(left.eval() >= right.eval())
+	case strictlyGreater:
+		return evalBool(left.eval() > right.eval())
+	case lesser:
+		return evalBool(left.eval() <= right.eval())
+	case strictlyLesser:
+		return evalBool(left.eval() < right.eval())
 	case plus:
 		return sumRat(left, right)
 	case minus:
@@ -266,11 +284,6 @@ func (fn function) eval(_, right rat, _ ValueResolver) (rat, error) {
 			return newRat(1), nil
 		} else if arg < 0 {
 			return newRat(-1), nil
-		}
-		return newRat(0), nil
-	case isZeroFn:
-		if arg == 0 {
-			return newRat(1), nil
 		}
 		return newRat(0), nil
 	case isPrimeFn:

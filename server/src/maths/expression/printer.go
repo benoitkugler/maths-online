@@ -78,6 +78,16 @@ func (op operator) asLaTeX(left, right *Expr) string {
 	}
 
 	switch op {
+	case equals:
+		return fmt.Sprintf("%s = %s", leftCode, rightCode)
+	case greater:
+		return fmt.Sprintf("%s \\ge %s", leftCode, rightCode)
+	case strictlyGreater:
+		return fmt.Sprintf("%s > %s", leftCode, rightCode)
+	case lesser:
+		return fmt.Sprintf("%s \\le %s", leftCode, rightCode)
+	case strictlyLesser:
+		return fmt.Sprintf("%s < %s", leftCode, rightCode)
 	case plus:
 		if leftCode == "" {
 			return rightCode // plus is optional
@@ -139,8 +149,6 @@ func (fn function) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf(`\sqrt{%s}`, arg)
 	case sgnFn:
 		return fmt.Sprintf(`\text{sgn}\left(%s\right)`, arg)
-	case isZeroFn:
-		return fmt.Sprintf(`\text{isZero}\left(%s\right)`, arg)
 	case isPrimeFn:
 		return fmt.Sprintf(`\text{isPrime}\left(%s\right)`, arg)
 	default:
@@ -254,14 +262,9 @@ func (op operator) serialize(left, right *Expr) string {
 			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
 		}
 		return fmt.Sprintf(`%s * %s`, leftCode, rightCode)
-	case div:
-		return fmt.Sprintf(`%s / %s`, leftCode, rightCode)
-	case mod:
-		return fmt.Sprintf(`%s %% %s`, leftCode, rightCode)
-	case rem:
-		return fmt.Sprintf(`%s // %s`, leftCode, rightCode)
-	case pow:
-		return fmt.Sprintf(`%s ^ %s`, leftCode, rightCode)
+	case equals, greater, strictlyGreater, lesser, strictlyLesser,
+		div, mod, rem, pow:
+		return fmt.Sprintf(`%s %s %s`, leftCode, op.String(), rightCode)
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}

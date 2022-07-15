@@ -436,8 +436,8 @@ func (expr *Expr) simplify0And1() {
 			*expr = Expr{atom: Number(1)}
 			return
 		}
-	case mod:
-	case rem:
+	case mod, rem, equals, lesser, strictlyLesser, greater, strictlyGreater:
+		// nothing to do
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}

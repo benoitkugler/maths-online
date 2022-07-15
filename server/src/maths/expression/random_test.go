@@ -295,19 +295,19 @@ func TestExpression_IsValidIndex(t *testing.T) {
 		want   bool
 	}{
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "2")}, 4, true,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 3*(a==3)", Vars{NewVar('a'): mustParse(t, "2")}, 4, true,
 		},
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, true,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 3*(a==3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, true,
 		},
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 2.5*(a==3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
 		},
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 4*(a==3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
 		},
 		{
-			"+1 + 1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Vars{
+			"+1 + 1 * (a^2 - b^2 - c^2 == 0) + 2*(b^2 - a^2 - c^2 == 0) + 3*(c^2 - a^2 - b^2 == 0)", Vars{
 				NewVar('a'): mustParse(t, "4"), // BC
 				NewVar('b'): mustParse(t, "5"), // AC
 				NewVar('c'): mustParse(t, "6"), // AB

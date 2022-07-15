@@ -46,7 +46,6 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"randPrime(3;14) + 2",
 		"randSymbol(A;B) + 2",
 		"sgn(-8)",
-		"isZero(-8)",
 		"isPrime(-8)",
 		"8 % 3",
 		"9 // 2",
@@ -56,6 +55,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"@_acompletetext",
 		"@_\\ge",
 		"a_\\ge",
+		"(1<2)+(3>4)+(5<=6)+(7>=8)+ (4==7)",
 	} {
 		e, err := Parse(expr)
 		if err != nil {

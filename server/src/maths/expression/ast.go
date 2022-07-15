@@ -140,7 +140,12 @@ type operator uint8
 const (
 	// the order is the precedence of operators
 	// used during parsing
-	plus operator = iota
+	equals operator = iota
+	greater
+	strictlyGreater
+	lesser
+	strictlyLesser
+	plus
 	minus
 	mult
 	div
@@ -153,6 +158,16 @@ const (
 
 func (op operator) String() string {
 	switch op {
+	case equals:
+		return "=="
+	case greater:
+		return ">="
+	case strictlyGreater:
+		return ">"
+	case lesser:
+		return "<="
+	case strictlyLesser:
+		return "<"
 	case plus:
 		return "+"
 	case minus:
@@ -187,7 +202,6 @@ const (
 	floorFn // floor (partie entière)
 	sqrtFn
 	sgnFn     // returns -1 0 or 1
-	isZeroFn  // returns 1 is its argument is 0, 0 otherwise
 	isPrimeFn // returns 0 or 1
 	round     // round(<expr>; <digits>) : round(1.1256, 2) = 1.123
 
@@ -220,8 +234,6 @@ func (fn function) String() string {
 		return "sqrt"
 	case sgnFn:
 		return "sgn"
-	case isZeroFn:
-		return "isZero"
 	case isPrimeFn:
 		return "isPrime"
 	default:

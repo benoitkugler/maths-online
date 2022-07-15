@@ -59,6 +59,11 @@ func TestTokens(t *testing.T) {
 		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
 		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
 		{"@_myVar", []tokenData{Variable{Name: '@', Indice: "myVar"}}},
+		{"2 > 4", []tokenData{numberText("2"), strictlyGreater, numberText("4")}},
+		{"2 < 4", []tokenData{numberText("2"), strictlyLesser, numberText("4")}},
+		{"2 <= 4", []tokenData{numberText("2"), lesser, numberText("4")}},
+		{"2 >= 4", []tokenData{numberText("2"), greater, numberText("4")}},
+		{"2 == 4", []tokenData{numberText("2"), equals, numberText("4")}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

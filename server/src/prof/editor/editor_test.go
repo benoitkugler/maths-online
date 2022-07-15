@@ -1,12 +1,54 @@
 package editor
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
+
+func TestValidation(t *testing.T) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	qu, err := SelectAllQuestions(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qu.RestrictNeedExercice()
+
+	ti := time.Now()
+	err = validateAllQuestions(qu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
+}
+
+func BenchmarkValidation(b *testing.B) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		b.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	qu, err := SelectAllQuestions(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		validateAllQuestions(qu)
+	}
+}
 
 func TestExerciceCRUD(t *testing.T) {
 	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")

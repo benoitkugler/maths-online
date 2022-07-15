@@ -355,7 +355,6 @@ var expressions = [...]struct {
 	{"sgn( )", nil, true},
 	{"sgn(-8)", &Expr{atom: sgnFn, right: &Expr{atom: minus, right: NewNb(8)}}, false},
 	{"isZero( )", nil, true},
-	{"isZero(-8)", &Expr{atom: isZeroFn, right: &Expr{atom: minus, right: NewNb(8)}}, false},
 	{"%", nil, true},
 	{"8 % 2", &Expr{atom: mod, left: NewNb(8), right: NewNb(2)}, false},
 	{"//", nil, true},
@@ -457,6 +456,28 @@ var expressions = [...]struct {
 	},
 	{"max()", nil, true},
 	{"min()", nil, true},
+	// comparison
+	{"1 <", nil, true},
+	{">= 4", nil, true},
+	{" 2 = 4 ", nil, true},
+	{
+		" 2 == 4 ",
+		&Expr{
+			atom:  equals,
+			left:  newNb(2),
+			right: newNb(4),
+		},
+		false,
+	},
+	{
+		"(1<2) + (3>4)",
+		&Expr{
+			atom:  plus,
+			left:  &Expr{atom: strictlyLesser, left: newNb(1), right: newNb(2)},
+			right: &Expr{atom: strictlyGreater, left: newNb(3), right: newNb(4)},
+		},
+		false,
+	},
 }
 
 func Test_invalidrandSymbol(t *testing.T) {
