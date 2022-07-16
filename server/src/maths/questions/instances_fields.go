@@ -2,7 +2,6 @@ package questions
 
 import (
 	"fmt"
-	"hash/fnv"
 	"math"
 	"math/rand"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/utils"
 )
 
 // InvalidFieldAnswer is returned for syntactically incorrect answers
@@ -169,7 +169,7 @@ func (rf RadioFieldInstance) shuffler() *rand.Rand {
 	for _, a := range rf.Proposals {
 		hash = append(hash, []byte(textLineToString(a))...)
 	}
-	return deterministicRand(hash)
+	return utils.NewDeterministicRand(hash)
 }
 
 // returns the shuffled proposals
@@ -228,13 +228,6 @@ func (f DropDownFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect b
 
 func (f DropDownFieldInstance) correctAnswer() client.Answer {
 	return RadioFieldInstance(f).correctAnswer()
-}
-
-func deterministicRand(hash []byte) *rand.Rand {
-	s := fnv.New32()
-	s.Write(hash)
-	seed := int64(s.Sum32())
-	return rand.New(rand.NewSource(seed))
 }
 
 // shufflingMap returns the mapping from originalIndex -> shuffledIndex
@@ -361,7 +354,7 @@ func (olf OrderedListFieldInstance) shuffler() *rand.Rand {
 	for _, a := range olf.Answer {
 		hash = append(hash, []byte(textLineToString(a))...)
 	}
-	return deterministicRand(hash)
+	return utils.NewDeterministicRand(hash)
 }
 
 func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
@@ -600,7 +593,7 @@ func (vtf VariationTableFieldInstance) lengthProposals() []int {
 	L := len(vtf.Answer.Xs) - 1
 	var out []int
 
-	rd := deterministicRand([]byte{byte(L)})
+	rd := utils.NewDeterministicRand([]byte{byte(L)})
 	if L <= 1 {
 		out = []int{L, L + 1}
 	} else {
@@ -808,7 +801,7 @@ func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
 		alternative2,
 	}
 
-	rd := deterministicRand([]byte(textLineToString(f.EventsProposals)))
+	rd := utils.NewDeterministicRand([]byte(textLineToString(f.EventsProposals)))
 	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
 	return out
 }

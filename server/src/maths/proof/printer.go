@@ -3,9 +3,9 @@ package proof
 import "strings"
 
 // String returns a multi-line, indented text version of the proof.
-func (pr ProofPart) String() string {
+func (pr Sequence) String() string {
 	var chunks []string
-	for _, part := range pr {
+	for _, part := range pr.Parts {
 		chunks = append(chunks, part.String())
 	}
 	return strings.Join(chunks, "\n  donc\n")
@@ -19,8 +19,8 @@ func indentBlock(s string) string {
 	return strings.Join(lines, "\n")
 }
 
-func (s Statement) String() string { return string(s) }
-func (s Equality) String() string  { return strings.Join(s, " = ") }
+func (s Statement) String() string { return s.Content }
+func (s Equality) String() string  { return strings.Join(s.Terms, " = ") }
 func (s Node) String() string {
 	left := s.Left.String()
 	right := s.Right.String()

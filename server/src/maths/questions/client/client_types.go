@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/maths/proof"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -41,6 +42,7 @@ func (FunctionPointsFieldBlock) isBlock()   {}
 func (TreeFieldBlock) isBlock()             {}
 func (TableFieldBlock) isBlock()            {}
 func (VectorFieldBlock) isBlock()           {}
+func (ProofFieldBlock) isBlock()            {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -218,6 +220,12 @@ type VectorFieldBlock struct {
 	DisplayColumn bool
 }
 
+type ProofFieldBlock struct {
+	Shape         proof.Proof `dart-extern:"proof:proof.gen.dart"`
+	TermProposals []string
+	ID            int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -236,6 +244,7 @@ func (FunctionPointsAnswer) isAnswer()  {}
 func (TreeAnswer) isAnswer()            {}
 func (TableAnswer) isAnswer()           {}
 func (VectorNumberAnswer) isAnswer()    {}
+func (ProofAnswer) isAnswer()           {}
 
 // NumberAnswer is compared with float equality, with a fixed
 // precision of 8 digits
@@ -301,6 +310,10 @@ type TableAnswer struct {
 
 type VectorNumberAnswer struct {
 	X, Y float64
+}
+
+type ProofAnswer struct {
+	Proof proof.Proof `dart-extern:"proof:proof.gen.dart"`
 }
 
 // QuestionAnswersIn map the field ids to their answer

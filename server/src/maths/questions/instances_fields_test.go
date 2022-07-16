@@ -10,6 +10,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/utils"
 )
 
 func TestFieldInstance_validateAnswerSyntax(t *testing.T) {
@@ -174,13 +175,13 @@ func Test_shufflingMap(t *testing.T) {
 		{5}, {6}, {7},
 	}
 	for _, tt := range tests {
-		shuffler := deterministicRand([]byte{'a', 'b', 'c'})
+		shuffler := utils.NewDeterministicRand([]byte{'a', 'b', 'c'})
 		got := shufflingMap(shuffler, tt.n)
 		indices := make([]int, tt.n)
 		for i := range indices {
 			indices[i] = i
 		}
-		shuffler = deterministicRand([]byte{'a', 'b', 'c'})
+		shuffler = utils.NewDeterministicRand([]byte{'a', 'b', 'c'})
 		shuffler.Shuffle(len(indices), reflect.Swapper(indices))
 
 		new4 := got[4]
