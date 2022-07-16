@@ -1,16 +1,18 @@
 package trivial
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/students"
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	"github.com/benoitkugler/maths-online/prof/teacher"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,34 +23,21 @@ import (
 // (or an error)
 // the client then connect on an websocket with this payload.
 
-// SessionID is a 4 digit identifier used
-// by students to access one activity
+// SessionID is a 4 digit identifier internaly used
+// to access one activity
+// It is usually contained in a larger tv.RoomID
 type SessionID = string
-
-// PlayerID is an identifier for student, used to handle reconnection.
-// It is attributed at the first connection on a session.
-type PlayerID string
-
-type gamePosition struct {
-	Game   tv.GameID
-	Player game.PlayerID
-}
-
-// // GameID is an in-memory identifier for a game room,
-// // with length 2 (meaning only 100 games per session are allowed)
-// // It is meant to be associated with a session ID.
-// type GameID = string
 
 // gameConnection stores the information needed to access
 // the proper game room and to reconnect in an already started game.
 type gameConnection struct {
 	SessionID SessionID
-	GameID    tv.GameID
+	GameID    tv.RoomID
 
 	// PlayerID is a generated UID used to
 	// link incomming connections to internal game players,
 	// used for reconnection.
-	PlayerID PlayerID
+	PlayerID tv.PlayerID
 
 	// StudentID is the (crypted) ID of the student client.
 	// It default to -1 for anonymous connections.
@@ -115,15 +104,12 @@ func (ct *Controller) checkGameConnection(meta gameConnection) bool {
 		return false
 	}
 
-	pos, has := session.playerIDs[meta.PlayerID]
+	gameID, has := session.playerIDs[meta.PlayerID]
 	if !has {
 		return false
 	}
 	// check that it is the correct game
-	if pos.Game != meta.GameID {
-		return false
-	}
-	if pos.Player == -1 {
+	if gameID != meta.GameID {
 		return false
 	}
 
@@ -153,7 +139,7 @@ func (ct *Controller) setupStudentClient(clientGameCode, clientID, gameMetaStrin
 		return gameConnection{}, fmt.Errorf("Code %s invalide", clientGameCode)
 	}
 	sessionID := clientGameCode[:4]
-	gameID := tv.GameID(clientGameCode)
+	gameID := tv.RoomID(clientGameCode)
 
 	ct.lock.Lock()
 	session, ok := ct.sessions[sessionID]
@@ -186,28 +172,28 @@ func (ct *Controller) setupStudentDemo(room string, nbPlayers int) (gameConnecti
 			return gameConnection{}, err
 		}
 
-		options := tv.GameOptions{
+		options := tv.Options{
 			PlayersNumber:   nbPlayers,
 			QuestionTimeout: time.Second * 120,
 			ShowDecrassage:  true,
+			Questions:       questionPool,
 		}
 
 		// we only build one game per session, so use the sessionID
 		// as gameID for simplicity
 		session.createGame(createGame{
-			ID:        tv.GameID(sessionID),
-			Questions: questionPool,
-			Options:   options,
+			ID:      tv.RoomID(sessionID),
+			Options: options,
 		})
 	}
 
 	ProgressLogger.Printf("Setting up student at (demo) %s", sessionID)
 
-	return session.setupStudent("", tv.GameID(sessionID), ct.key)
+	return session.setupStudent("", tv.RoomID(sessionID), ct.key)
 }
 
 // setupStudent returns the game room meta data.
-func (gs *gameSession) setupStudent(studentID pass.EncryptedID, requestedGameID tv.GameID, key pass.Encrypter) (gameConnection, error) {
+func (gs *gameSession) setupStudent(studentID pass.EncryptedID, requestedGameID tv.RoomID, key pass.Encrypter) (gameConnection, error) {
 	gs.lock.Lock()
 	game := gs.games[requestedGameID]
 	gs.lock.Unlock()
@@ -266,8 +252,51 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 	return err
 }
 
+type studentClient struct {
+	// WS should be close when StartLoop ends
+	WS   *websocket.Conn
+	game *tv.Room // to accept user events
+
+	playerID tv.PlayerID // used to handle reconnection and identifie client events
+}
+
+// listen listens for new messages being sent to our WebSocket
+// endpoint, only returning on error.
+// the connection is not closed yet
+func (cl *studentClient) listen() {
+	defer func() {
+		cl.game.Leave <- cl.playerID
+	}()
+
+	for {
+		// read in a message
+		_, r, err := cl.WS.NextReader()
+		if err, isClose := err.(*websocket.CloseError); isClose {
+			ProgressLogger.Printf("Client left (%v)", err)
+			return
+		}
+		if err != nil {
+			WarningLogger.Printf("unexpected client error: %s", err)
+			return
+		}
+
+		var event tv.ClientEventITFWrapper
+		err = json.NewDecoder(r).Decode(&event)
+		if err != nil {
+			WarningLogger.Printf("invalid event format: %s", err)
+
+			// return an error to the client and close
+			utils.WebsocketError(cl.WS, err)
+			return
+		}
+
+		// process the event
+		cl.game.Event <- tv.ClientEvent{Event: event.Data, Player: cl.playerID}
+	}
+}
+
 func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, student gameConnection, pseudo string) error {
-	player := tv.Player{ID: student.StudentID}
+	player := tv.Player{ID: student.PlayerID}
 	var studentID int64 = -1
 	if student.StudentID == "" { // anonymous connection
 		player.Pseudo = pseudo
@@ -281,7 +310,7 @@ func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, stu
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
 
-		student, err := students.SelectStudent(ct.db, studentID)
+		student, err := teacher.SelectStudent(ct.db, studentID)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -292,28 +321,38 @@ func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, stu
 	// then add the player
 	session.lock.Lock()
 	game := session.games[student.GameID]
-	pos, has := session.playerIDs[student.PlayerID]
-	if !has { // first connection on this game
-		pos = gamePosition{Game: student.GameID, Player: -1}
-	}
 	session.lock.Unlock()
 
 	if game == nil {
 		return fmt.Errorf("invalid game ID %s", student.StudentID)
 	}
 
-	// connect to the websocket handler, which handle errors
-	client := game.AddClient(c.Response().Writer, c.Request(), player, pos.Player)
-	if client != nil {
-		// register the playerID
-		session.lock.Lock()
-		pos.Player = client.PlayerID
-		session.playerIDs[student.PlayerID] = pos
-		session.lock.Unlock()
-
-		client.StartLoop()
-		client.WS.Close()
+	// upgrade this connection to a WebSocket connection
+	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
+	if err != nil {
+		WarningLogger.Println("Failed to init websocket: ", err)
+		return nil
 	}
+
+	err = game.Join(player, ws) // check the access
+	if err != nil {
+		ProgressLogger.Printf("Rejecting connection to game %s", game.ID)
+		// the game at this end point is not usable: close the connection with an error
+		utils.WebsocketError(ws, errors.New("game is closed"))
+		ws.Close()
+
+		return err
+	}
+
+	client := &studentClient{
+		game:     game,
+		playerID: player.ID,
+		WS:       ws,
+	}
+
+	client.listen() // block until client leaves
+
+	client.WS.Close()
 
 	return nil
 }

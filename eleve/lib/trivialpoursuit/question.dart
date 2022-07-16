@@ -1,6 +1,6 @@
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/question.dart';
-import 'package:eleve/exercices/types.gen.dart';
+import 'package:eleve/questions/question.dart';
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +10,7 @@ import 'events.gen.dart';
 class QuestionRoute extends StatelessWidget {
   final BuildMode buildMode;
   final ShowQuestion question;
-  final void Function(ValidQuestionNotification) onValid;
+  final void Function(QuestionAnswersIn) onValid;
 
   /// if [readonly] is true, do no block when leaving the question,
   /// and do not display the timer
@@ -52,7 +52,7 @@ class QuestionRoute extends StatelessWidget {
         final cancel = await _confirmCancel(context);
         if (cancel) {
           // send an empty response
-          onValid(ValidQuestionNotification(const QuestionAnswersIn({})));
+          onValid(const QuestionAnswersIn({}));
         }
         return cancel;
       },

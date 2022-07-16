@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('decrassage ...', (tester) async {
     const input = """
-    [
+[
   {
    "Id": 24,
    "Question": {
@@ -20,7 +20,7 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "2 €",
+         "Text": "16 €",
          "IsMath": true
         },
         {
@@ -28,7 +28,7 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "79",
+         "Text": "66",
          "IsMath": true
         },
         {
@@ -54,7 +54,7 @@ void main() {
       "Data": {
        "Parts": [
         {
-         "Text": "Quel est le pourcentage de la hausse ?\\n+",
+         "Text": "Quel est le pourcentage de la hausse ?+",
          "IsMath": false
         }
        ],
@@ -103,45 +103,24 @@ void main() {
    "Params": [
     {
      "Variable": {
-      "Indice": "i",
-      "Name": 86
-     },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 2,
-      "IsVariable": false
-     }
-    },
-    {
-     "Variable": {
       "Indice": "f",
       "Name": 86
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 79,
-      "IsVariable": false
-     }
+     "Resolved": "66"
     },
     {
      "Variable": {
       "Indice": "",
       "Name": 116
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 38.5,
-      "IsVariable": false
-     }
+     "Resolved": "3,125"
+    },
+    {
+     "Variable": {
+      "Indice": "i",
+      "Name": 86
+     },
+     "Resolved": "16"
     }
    ]
   },
@@ -158,11 +137,11 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "-66",
+         "Text": "-68",
          "IsMath": true
         },
         {
-         "Text": "% ?\\n\\n",
+         "Text": "% ?",
          "IsMath": false
         },
         {
@@ -190,14 +169,7 @@ void main() {
       "Indice": "",
       "Name": 116
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 66,
-      "IsVariable": false
-     }
+     "Resolved": "68"
     }
    ]
   },
@@ -214,7 +186,7 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "115 €",
+         "Text": "99 €",
          "IsMath": true
         },
         {
@@ -222,15 +194,15 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "2021",
+         "Text": "2018",
          "IsMath": true
         },
         {
-         "Text": ".\\nLe 31 décembre de la même année, il possède désormais ",
+         "Text": ".Le 31 décembre de la même année, il possède désormais ",
          "IsMath": false
         },
         {
-         "Text": "97",
+         "Text": "71",
          "IsMath": true
         },
         {
@@ -313,73 +285,38 @@ void main() {
    "Params": [
     {
      "Variable": {
-      "Indice": "i",
-      "Name": 86
-     },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 115,
-      "IsVariable": false
-     }
-    },
-    {
-     "Variable": {
       "Indice": "f",
       "Name": 86
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 97,
-      "IsVariable": false
-     }
+     "Resolved": "71"
     },
     {
      "Variable": {
       "Indice": "",
       "Name": 116
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": -0.1565217391304348,
-      "IsVariable": false
-     }
+     "Resolved": "-28 / 99"
     },
     {
      "Variable": {
       "Indice": "",
       "Name": 114
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": -0.1565,
-      "IsVariable": false
-     }
+     "Resolved": "-0,2828"
     },
     {
      "Variable": {
       "Indice": "",
       "Name": 97
      },
-     "Resolved": {
-      "V": {
-       "Indice": "",
-       "Name": 0
-      },
-      "N": 2021,
-      "IsVariable": false
-     }
+     "Resolved": "2018"
+    },
+    {
+     "Variable": {
+      "Indice": "i",
+      "Name": 86
+     },
+     "Resolved": "99"
     }
    ]
   }

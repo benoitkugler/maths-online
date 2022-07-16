@@ -74,12 +74,12 @@
 </template>
 
 <script setup lang="ts">
-import { colorByKind } from "@/controller/editor";
 import type {
-  FigureAffineLineFieldBlock,
-  Variable,
-} from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
+FigureAffineLineFieldBlock,
+Variable
+} from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
+import { colorByKind } from "@/controller/editor";
 import { $ref } from "vue/macros";
 import FigureBlockVue from "./FigureBlock.vue";
 

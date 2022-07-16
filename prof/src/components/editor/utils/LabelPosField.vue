@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { LabelPosLabels, type LabelPos } from "@/controller/exercice_gen";
+import { LabelPosLabels, type LabelPos } from "@/controller/api_gen";
 
 interface Props {
   modelValue: LabelPos;

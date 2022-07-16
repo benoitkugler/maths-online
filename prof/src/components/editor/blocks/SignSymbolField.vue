@@ -5,8 +5,8 @@
 </template>
 
 <script setup lang="ts">
-import type { SignSymbol } from "@/controller/exercice_gen";
-import { SignSymbolLabels } from "@/controller/exercice_gen";
+import type { SignSymbol } from "@/controller/api_gen";
+import { SignSymbolLabels } from "@/controller/api_gen";
 
 interface Props {
   modelValue: SignSymbol;

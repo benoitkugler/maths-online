@@ -79,8 +79,9 @@ func (ct *Controller) startSession() StartSessionOut {
 }
 
 type ListQuestionsOut struct {
-	Questions []QuestionGroup // limited by `pagination`
-	Size      int             // total number of groups
+	Questions   []QuestionGroup // limited by `pagination`
+	NbGroups    int             // total number of groups (passing the given filter)
+	NbQuestions int             // total number of questions (passing the given filter)
 }
 
 // QuestionGroup groups the question forming an implicit
@@ -94,21 +95,32 @@ type QuestionGroup struct {
 
 // QuestionHeader is a sumary of the meta data of a question
 type QuestionHeader struct {
-	Title        string
-	Tags         []string
-	Id           int64
-	Difficulty   DifficultyTag // deduced from the tags
-	IsInGroup    bool          // true if the question is in an implicit group, ignoring the current filter
-	Origin       teacher.Origin
-	NeedExercice bool
+	Title      string
+	Tags       []string
+	Id         int64
+	Difficulty DifficultyTag // deduced from the tags
+	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
+	Origin     teacher.Origin
 }
 
 func normalizeTitle(title string) string {
 	return removeAccents(strings.TrimSpace(strings.ToLower(title)))
 }
 
+func (qu Question) origin(userID, adminID int64) (teacher.Origin, bool) {
+	vis, ok := teacher.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
+	if !ok {
+		return teacher.Origin{}, false
+	}
+	return teacher.Origin{
+		AllowPublish: userID == adminID,
+		IsPublic:     qu.Public,
+		Visibility:   vis,
+	}, true
+}
+
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
-	const pagination = 100
+	const pagination = 30 // number of groups
 
 	// to find implicit groups, we need all the questions
 	questions, err := SelectAllQuestions(ct.db)
@@ -116,6 +128,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 		return out, utils.SQLError(err)
 	}
 	questions.RestrictVisible(userID)
+	questions.RestrictNeedExercice()
 
 	// the group are not modified by the title query though
 
@@ -153,6 +166,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 			Title: title,
 			Size:  len(ids),
 		}
+
 		// select the questions
 		for _, id := range ids {
 			crible := tagsMap[id].Crible()
@@ -162,20 +176,14 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 			}
 
 			qu := questions[id]
-			vis, _ := teacher.NewVisibility(qu.IdTeacher, userID, ct.admin.Id, qu.Public)
-
+			origin, _ := qu.origin(userID, ct.admin.Id)
 			question := QuestionHeader{
 				Id:         id,
 				Title:      title,
 				Difficulty: crible.Difficulty(),
 				IsInGroup:  len(ids) > 1,
 				Tags:       tagsMap[id].List(),
-				Origin: teacher.Origin{
-					AllowPublish: userID == ct.admin.Id,
-					IsPublic:     qu.Public,
-					Visibility:   vis,
-				},
-				NeedExercice: qu.NeedExercice,
+				Origin:     origin,
 			}
 			group.Questions = append(group.Questions, question)
 		}
@@ -188,12 +196,14 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 		if len(group.Questions) != 0 {
 			out.Questions = append(out.Questions, group)
 		}
+
+		out.NbQuestions += len(group.Questions)
 	}
 
 	// sort before pagination
 	sort.Slice(out.Questions, func(i, j int) bool { return out.Questions[i].Title < out.Questions[j].Title })
 
-	out.Size = len(out.Questions)
+	out.NbGroups = len(out.Questions)
 	if len(out.Questions) > pagination {
 		out.Questions = out.Questions[:pagination]
 	}
@@ -469,13 +479,13 @@ func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (U
 	return out, err
 }
 
-func (ct *Controller) checkParameters(params CheckParametersIn) CheckParametersOut {
+func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) CheckQuestionParametersOut {
 	err := params.Parameters.Validate()
 	if err != nil {
-		return CheckParametersOut{ErrDefinition: err.(questions.ErrParameters)}
+		return CheckQuestionParametersOut{ErrDefinition: err.(questions.ErrParameters)}
 	}
 
-	var out CheckParametersOut
+	var out CheckQuestionParametersOut
 	for vr := range params.Parameters.ToMap() {
 		out.Variables = append(out.Variables, vr)
 	}
@@ -495,7 +505,7 @@ func (ct *Controller) pausePreview(sessionID string) error {
 		return fmt.Errorf("invalid session ID %s", sessionID)
 	}
 
-	loopback.unsetQuestion()
+	loopback.pause()
 	return nil
 }
 
@@ -513,25 +523,25 @@ func (ct *Controller) endPreview(sessionID string) error {
 	return nil
 }
 
-func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (SaveAndPreviewOut, error) {
+func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID int64) (SaveQuestionAndPreviewOut, error) {
 	qu, err := SelectQuestion(ct.db, params.Question.Id)
 	if err != nil {
-		return SaveAndPreviewOut{}, err
+		return SaveQuestionAndPreviewOut{}, err
 	}
 
 	if !qu.IsVisibleBy(userID) {
-		return SaveAndPreviewOut{}, accessForbidden
+		return SaveQuestionAndPreviewOut{}, accessForbidden
 	}
 
 	if err := params.Question.Page.Validate(); err != nil {
-		return SaveAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
+		return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
 	// if the question is owned : save it, else only preview
 	if qu.IdTeacher == userID {
 		_, err := params.Question.Update(ct.db)
 		if err != nil {
-			return SaveAndPreviewOut{}, utils.SQLError(err)
+			return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
 		}
 	}
 
@@ -542,9 +552,9 @@ func (ct *Controller) saveAndPreview(params SaveAndPreviewIn, userID int64) (Sav
 
 	loopback, ok := ct.sessions[params.SessionID]
 	if !ok {
-		return SaveAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+		return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
 	}
 
 	loopback.setQuestion(question)
-	return SaveAndPreviewOut{IsValid: true}, nil
+	return SaveQuestionAndPreviewOut{IsValid: true}, nil
 }

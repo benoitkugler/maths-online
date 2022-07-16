@@ -21,8 +21,13 @@
     <launch-options @launch="launchSession"></launch-options>
   </v-dialog>
 
-  <v-dialog fullscreen v-model="showMonitor" :retain-focus="false">
-    <session-monitor @close="closeMonitor"></session-monitor>
+  <v-dialog
+    fullscreen
+    :model-value="showMonitor"
+    @update:model-value="showMonitorChanged"
+    :retain-focus="false"
+  >
+    <session-monitor @closed="closeMonitor"></session-monitor>
   </v-dialog>
 
   <v-card class="my-5 mx-auto" width="80%">
@@ -204,7 +209,7 @@ function isPersonnal(config: TrivialConfigExt) {
 }
 
 async function createConfig() {
-  const res = await controller.CreateTrivialPoursuit(null);
+  const res = await controller.CreateTrivialPoursuit();
   if (res === undefined) {
     return;
   }
@@ -296,6 +301,13 @@ async function fetchSessionMeta() {
 }
 
 let showMonitor = $ref(false);
+function showMonitorChanged(show: boolean) {
+  showMonitor = show;
+  if (!show) {
+    closeMonitor();
+  }
+}
+
 function closeMonitor() {
   showMonitor = false;
   fetchSessionMeta();

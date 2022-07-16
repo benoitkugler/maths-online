@@ -92,9 +92,9 @@ func (cu BezierCurve) boundingBox() (minX, maxX, minY, maxY float64) {
 	return
 }
 
-// always add the origin
-// also add some padding
-func boundingBox(curves []BezierCurve) repere.RepereBounds {
+// BoundingBox compute the bounds enclosing the given segments,
+// always adding the origin and some padding.
+func BoundingBox(curves []BezierCurve) repere.RepereBounds {
 	minX, maxX, minY, maxY := -1., 1., -1., 1.
 	for _, curve := range curves {
 		minX2, maxX2, minY2, maxY2 := curve.boundingBox()
@@ -107,13 +107,17 @@ func boundingBox(curves []BezierCurve) repere.RepereBounds {
 	return boundsFromBoudingBox(minX, minY, maxX, maxY)
 }
 
+// the client display exactly the width and height asked for:
+// add a bit of padding
 func boundsFromBoudingBox(minX, minY, maxX, maxY float64) repere.RepereBounds {
+	const paddingX = 1
+	const paddingY = 1
 	return repere.RepereBounds{
-		Width:  int(math.Ceil(maxX-minX)) + 2,
-		Height: int(math.Ceil(maxY-minY)) + 2,
+		Width:  int(math.Ceil(maxX-minX)) + 2*paddingX,
+		Height: int(math.Ceil(maxY-minY)) + 2*paddingY,
 		Origin: repere.Coord{
-			X: -minX + 1,
-			Y: -minY + 1,
+			X: -minX + paddingX,
+			Y: -minY + paddingY,
 		},
 	}
 }

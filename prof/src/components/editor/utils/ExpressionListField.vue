@@ -1,6 +1,6 @@
 <template>
-  <v-row>
-    <v-col cols="8">
+  <v-row no-gutters>
+    <v-col cols="8" align-self="center">
       <v-autocomplete
         variant="outlined"
         density="compact"
@@ -14,6 +14,9 @@
         readonly
         clearable
         append-inner-icon=""
+        :hint="props.hint"
+        :persistent-hint="!!props.hint"
+        :hide-details="!props.hint"
       >
       </v-autocomplete>
     </v-col>
@@ -47,6 +50,7 @@ import { $ref } from "vue/macros";
 interface Props {
   modelValue: string[];
   label?: string;
+  hint?: string;
 }
 
 const props = defineProps<Props>();

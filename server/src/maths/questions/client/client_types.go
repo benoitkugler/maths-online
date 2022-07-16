@@ -7,7 +7,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
-//go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/exercices/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
+//go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/questions/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
 
 type Question struct {
 	Title  string
@@ -25,7 +25,7 @@ func (FormulaBlock) isBlock()        {}
 func (VariationTableBlock) isBlock() {}
 func (SignTableBlock) isBlock()      {}
 func (FigureBlock) isBlock()         {}
-func (FunctionGraphBlock) isBlock()  {}
+func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
 
 func (NumberFieldBlock) isBlock()           {}
@@ -90,11 +90,18 @@ type SignTableBlock struct {
 }
 
 type FigureBlock struct {
-	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
 }
 
-type FunctionGraphBlock struct {
-	Graph functiongrapher.FunctionsGraph
+type FunctionArea struct {
+	Color repere.Color `dart-extern:"repere:repere.gen.dart"`
+	Path  []functiongrapher.BezierCurve
+}
+
+type FunctionsGraphBlock struct {
+	Functions []functiongrapher.FunctionGraph
+	Areas     []FunctionArea
+	Bounds    repere.RepereBounds `dart-extern:"repere:repere.gen.dart"`
 }
 
 type TableBlock struct {
@@ -144,7 +151,7 @@ type OrderedListFieldBlock struct {
 
 // FigurePointFieldBlock asks for one 2D point
 type FigurePointFieldBlock struct {
-	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
 	ID     int
 }
 
@@ -154,7 +161,7 @@ type FigurePointFieldBlock struct {
 
 type FigureVectorFieldBlock struct {
 	LineLabel string        // ignored if AsLine is false
-	Figure    repere.Figure `dart-extern:"repere.gen.dart"`
+	Figure    repere.Figure `dart-extern:"repere:repere.gen.dart"`
 	ID        int
 	AsLine    bool
 }
@@ -166,7 +173,7 @@ type FigureVectorFieldBlock struct {
 // is not allowed
 
 type FigureVectorPairFieldBlock struct {
-	Figure repere.Figure `dart-extern:"repere.gen.dart"`
+	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
 	ID     int
 }
 
@@ -184,7 +191,7 @@ type FunctionPointsFieldBlock struct {
 	Label  string              // name of the function
 	Xs     []int               // the grid
 	Dfxs   []float64           // the derivatives of the function, to plot a nice curve
-	Bounds repere.RepereBounds `dart-extern:"repere.gen.dart"`
+	Bounds repere.RepereBounds `dart-extern:"repere:repere.gen.dart"`
 	ID     int
 }
 

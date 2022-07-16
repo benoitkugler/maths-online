@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { SegmentKindLabels, type SegmentKind } from "@/controller/exercice_gen";
+import { SegmentKindLabels, type SegmentKind } from "@/controller/api_gen";
 
 interface Props {
   modelValue: SegmentKind;

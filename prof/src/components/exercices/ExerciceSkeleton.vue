@@ -62,7 +62,7 @@
           size="small"
           icon
           title="Retour aux exercices"
-          @click="backToList"
+          @click="emit('back')"
         >
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
@@ -185,20 +185,37 @@
           </v-col>
         </v-row>
       </v-col>
+
+      <v-col cols="auto" align-self="center" class="pl-2">
+        <v-btn
+          size="small"
+          icon
+          title="Editer le contenu des questions"
+          @click="emit('next')"
+        >
+          <v-icon icon="mdi-arrow-right"></v-icon>
+        </v-btn>
+      </v-col>
     </v-row>
 
-    <v-list @dragstart="onDragStart" @dragend="onDragEnd">
+    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 66vh">
       <drop-zone
         v-if="showDropZone"
         @drop="(origin) => swapQuestions(origin, 0)"
       ></drop-zone>
 
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
-        <v-list-item
-          draggable="true"
-          @dragstart="(e) => onItemDragStart(e, index)"
-        >
+        <v-list-item>
           <v-row>
+            <v-col cols="auto" align-self="center">
+              <v-icon
+                style="cursor: grab"
+                draggable="true"
+                @dragstart="(e) => onItemDragStart(e, index)"
+                size="large"
+                icon="mdi-drag-vertical"
+              ></v-icon>
+            </v-col>
             <v-col cols="auto" align-self="center">
               <v-btn
                 v-if="!isReadonly"
@@ -224,7 +241,10 @@
                 ></v-icon>
               </v-btn>
             </v-col>
-            <v-col> {{ question.Title }}</v-col>
+            <v-col align-self="center">
+              <small>({{ question.id_question }})</small>
+              {{ getQuestion(question.id_question).Question.page.title }}</v-col
+            >
             <v-col cols="auto">
               <v-menu
                 offset-y
@@ -242,11 +262,11 @@
                     v-bind="props"
                     color="primary"
                     @click="
-                      questionToEdit = copy(question.Question);
+                      questionToEdit = copy(question);
                       questionIndexToEdit = index;
                     "
                     :disabled="isReadonly"
-                    >/ {{ question.Question.bareme }}
+                    >/ {{ question.bareme }}
                   </v-chip>
                 </template>
                 <v-card subtitle="Modifier le barème">
@@ -283,6 +303,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Flow } from "@/controller/api_gen";
 import {
   FlowLabels,
   Visibility,
@@ -291,7 +312,6 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onDragListItemStart, swapItems } from "@/controller/editor";
-import type { Flow } from "@/controller/exercice_gen";
 import { copy } from "@/controller/utils";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
@@ -301,22 +321,21 @@ import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {
   exercice: ExerciceExt;
+  session_id: string;
   allTags: string[];
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "next"): void;
+  (e: "update", exercice: ExerciceExt): void;
   (e: "duplicate", exercice: ExerciceExt): void;
 }>();
 
 const isReadonly = computed(
   () => props.exercice.Origin.Visibility != Visibility.Personnal
 );
-
-function backToList() {
-  emit("back");
-}
 
 const flowItems = Object.entries(FlowLabels).map((k) => ({
   value: Number(k[0]) as Flow,
@@ -325,10 +344,23 @@ const flowItems = Object.entries(FlowLabels).map((k) => ({
 
 let showEditDescription = $ref(false);
 
+function getQuestion(questionID: number) {
+  console.log(
+    questionID,
+    props.exercice.QuestionsSource,
+    props.exercice.QuestionsSource![questionID]
+  );
+
+  return props.exercice.QuestionsSource![questionID];
+}
+
 let query = $ref<Query>({ search: "", tags: [] });
 
 async function save() {
-  const res = await controller.ExerciceUpdate(props.exercice.Exercice);
+  const res = await controller.ExerciceUpdate({
+    Exercice: props.exercice.Exercice,
+    SessionID: props.session_id,
+  });
   if (res == undefined) {
     return;
   }
@@ -338,56 +370,60 @@ async function save() {
 let showImportQuestion = $ref(false);
 
 async function createQuestion() {
-  const l = await controller.ExerciceCreateQuestion({
+  const res = await controller.ExerciceCreateQuestion({
     IdExercice: props.exercice.Exercice.Id,
+    SessionID: props.session_id,
   });
-  if (l == undefined) {
+  if (res == undefined) {
     return;
   }
-  props.exercice.Questions = l;
+  emit("update", res);
 }
 
 async function addQuestion(idQuestion: number) {
-  const current = (props.exercice.Questions || []).map((v) => v.Question);
+  const current = copy(props.exercice.Questions || []);
   current.push({
     bareme: 1,
     id_question: idQuestion,
     id_exercice: -1,
   });
-  const l = await controller.ExerciceUpdateQuestions({
+  const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: current,
+    SessionID: props.session_id,
   });
-  if (l == undefined) {
+  if (res == undefined) {
     return;
   }
-  props.exercice.Questions = l;
+  emit("update", res);
 }
 
 async function removeQuestion(index: number) {
-  const l = (props.exercice.Questions || []).map((v) => v.Question);
+  const l = copy(props.exercice.Questions || []);
   l.splice(index, 1);
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
+  emit("update", res);
 }
 
 async function duplicateQuestion(index: number) {
-  const l = (props.exercice.Questions || []).map((v) => v.Question);
+  const l = copy(props.exercice.Questions || []);
   const added = l.slice(0, index).concat(l[index]).concat(l.slice(index));
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: added,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
+  emit("update", res);
 }
 
 let questionToEdit = $ref<ExerciceQuestion | null>(null);
@@ -396,7 +432,7 @@ async function saveEditedQuestion() {
   if (questionIndexToEdit == null || questionToEdit == null) {
     return;
   }
-  const current = (props.exercice.Questions || []).map((v) => v.Question);
+  const current = copy(props.exercice.Questions || []);
   current[questionIndexToEdit] = questionToEdit;
 
   questionToEdit = null;
@@ -404,11 +440,12 @@ async function saveEditedQuestion() {
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: current,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
+  emit("update", res);
 }
 
 let showDropZone = $ref(false);
@@ -429,17 +466,16 @@ function onItemDragStart(paylod: DragEvent, index: number) {
 the block at index `target` (which is between 0 and nbBlocks)
  */
 async function swapQuestions(origin: number, target: number) {
-  const l = swapItems(origin, target, props.exercice.Questions!).map(
-    (v) => v.Question
-  );
+  const l = swapItems(origin, target, props.exercice.Questions!);
   const res = await controller.ExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
+    SessionID: props.session_id,
   });
   if (res == undefined) {
     return;
   }
-  props.exercice.Questions = res;
+  emit("update", res);
 }
 
 let showFlowDocumentation = $ref(false);

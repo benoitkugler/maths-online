@@ -123,11 +123,11 @@ export interface LaunchSessionIn {
 export interface LaunchSessionOut {
   GameIDs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/trivial-poursuit.GameID
-export type GameID = string;
+// github.com/benoitkugler/maths-online/trivial.RoomID
+export type RoomID = string;
 // github.com/benoitkugler/maths-online/prof/trivial.stopGame
 export interface stopGame {
-  ID: GameID;
+  ID: RoomID;
   Restart: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
@@ -160,7 +160,6 @@ export interface QuestionHeader {
   Difficulty: DifficultyTag;
   IsInGroup: boolean;
   Origin: Origin;
-  NeedExercice: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionGroup
 export interface QuestionGroup {
@@ -171,31 +170,31 @@ export interface QuestionGroup {
 // github.com/benoitkugler/maths-online/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
   Questions: QuestionGroup[] | null;
-  Size: number;
+  NbGroups: number;
+  NbQuestions: number;
 }
 
 export enum BlockKind {
-  ExpressionFieldBlock = 0,
-  FigureAffineLineFieldBlock = 1,
-  FigureBlock = 2,
-  FigurePointFieldBlock = 3,
-  FigureVectorFieldBlock = 4,
-  FigureVectorPairFieldBlock = 5,
-  FormulaBlock = 6,
-  FunctionGraphBlock = 7,
-  FunctionPointsFieldBlock = 8,
-  FunctionVariationGraphBlock = 9,
-  NumberFieldBlock = 10,
-  OrderedListFieldBlock = 11,
-  RadioFieldBlock = 12,
-  SignTableBlock = 13,
-  TableBlock = 14,
-  TableFieldBlock = 15,
-  TextBlock = 16,
-  TreeFieldBlock = 17,
-  VariationTableBlock = 18,
-  VariationTableFieldBlock = 19,
-  VectorFieldBlock = 20,
+  ExpressionFieldBlock = "ExpressionFieldBlock",
+  FigureAffineLineFieldBlock = "FigureAffineLineFieldBlock",
+  FigureBlock = "FigureBlock",
+  FigurePointFieldBlock = "FigurePointFieldBlock",
+  FigureVectorFieldBlock = "FigureVectorFieldBlock",
+  FigureVectorPairFieldBlock = "FigureVectorPairFieldBlock",
+  FormulaBlock = "FormulaBlock",
+  FunctionPointsFieldBlock = "FunctionPointsFieldBlock",
+  FunctionsGraphBlock = "FunctionsGraphBlock",
+  NumberFieldBlock = "NumberFieldBlock",
+  OrderedListFieldBlock = "OrderedListFieldBlock",
+  RadioFieldBlock = "RadioFieldBlock",
+  SignTableBlock = "SignTableBlock",
+  TableBlock = "TableBlock",
+  TableFieldBlock = "TableFieldBlock",
+  TextBlock = "TextBlock",
+  TreeFieldBlock = "TreeFieldBlock",
+  VariationTableBlock = "VariationTableBlock",
+  VariationTableFieldBlock = "VariationTableFieldBlock",
+  VectorFieldBlock = "VectorFieldBlock",
 }
 
 export interface Block {
@@ -208,9 +207,8 @@ export interface Block {
     | FigureVectorFieldBlock
     | FigureVectorPairFieldBlock
     | FormulaBlock
-    | FunctionGraphBlock
     | FunctionPointsFieldBlock
-    | FunctionVariationGraphBlock
+    | FunctionsGraphBlock
     | NumberFieldBlock
     | OrderedListFieldBlock
     | RadioFieldBlock
@@ -314,8 +312,8 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKVector]: "Vecteur",
 };
 
-// github.com/benoitkugler/maths-online/maths/repere.Segment
-export interface Segment {
+// github.com/benoitkugler/maths-online/maths/repere.RandomSegment
+export interface RandomSegment {
   LabelName: string;
   From: string;
   To: string;
@@ -330,11 +328,17 @@ export interface RandomLine {
   B: string;
   Color: string;
 }
+// github.com/benoitkugler/maths-online/maths/repere.RandomArea
+export interface RandomArea {
+  Color: string;
+  Points: string[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/repere.RandomDrawings
 export interface RandomDrawings {
   Points: NamedRandomLabeledPoint[] | null;
-  Segments: Segment[] | null;
+  Segments: RandomSegment[] | null;
   Lines: RandomLine[] | null;
+  Areas: RandomArea[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/repere.Coord
 export interface Coord {
@@ -352,6 +356,7 @@ export interface FigureBlock {
   Drawings: RandomDrawings;
   Bounds: RepereBounds;
   ShowGrid: boolean;
+  ShowOrigin: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {
@@ -403,15 +408,22 @@ export type Interpolated = string;
 export interface FormulaBlock {
   Parts: Interpolated;
 }
-// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
-export interface FunctionDecoration {
-  Label: string;
-  Color: string;
-}
 // github.com/benoitkugler/maths-online/maths/expression.Variable
 export interface Variable {
   Indice: string;
   Name: number;
+}
+// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
+export interface FunctionPointsFieldBlock {
+  Function: string;
+  Label: string;
+  Variable: Variable;
+  XGrid: string[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
+export interface FunctionDecoration {
+  Label: string;
+  Color: string;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
@@ -421,25 +433,26 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionGraphBlock
-export interface FunctionGraphBlock {
-  Functions: FunctionDefinition[] | null;
-}
-// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
-export interface FunctionPointsFieldBlock {
-  Function: string;
-  Label: string;
-  Variable: Variable;
-  XGrid: string[] | null;
-}
 // github.com/benoitkugler/maths-online/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
   Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionVariationGraphBlock
-export type FunctionVariationGraphBlock = VariationTableBlock;
+// github.com/benoitkugler/maths-online/maths/questions.FunctionArea
+export interface FunctionArea {
+  Bottom: Interpolated;
+  Top: Interpolated;
+  Left: string;
+  Right: string;
+  Color: string;
+}
+// github.com/benoitkugler/maths-online/maths/questions.FunctionsGraphBlock
+export interface FunctionsGraphBlock {
+  FunctionExprs: FunctionDefinition[] | null;
+  FunctionVariations: VariationTableBlock[] | null;
+  Areas: FunctionArea[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/questions.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;
@@ -545,33 +558,6 @@ export interface Question {
   description: string;
   need_exercice: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewIn
-export interface SaveAndPreviewIn {
-  SessionID: string;
-  Question: Question;
-}
-// github.com/benoitkugler/maths-online/maths/questions.ErrParameters
-export interface ErrParameters {
-  Origin: string;
-  Details: string;
-}
-// github.com/benoitkugler/maths-online/maths/questions.errEnonce
-export interface errEnonce {
-  Error: string;
-  Block: number;
-  Vars: { [key: string]: string } | null;
-}
-// github.com/benoitkugler/maths-online/maths/questions.ErrQuestionInvalid
-export interface ErrQuestionInvalid {
-  ErrParameters: ErrParameters;
-  ErrEnonce: errEnonce;
-  ParametersInvalid: boolean;
-}
-// github.com/benoitkugler/maths-online/prof/editor.SaveAndPreviewOut
-export interface SaveAndPreviewOut {
-  Error: ErrQuestionInvalid;
-  IsValid: boolean;
-}
 // github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
 export interface UpdateTagsIn {
   Tags: string[] | null;
@@ -591,15 +577,42 @@ export interface QuestionUpdateVisiblityIn {
   QuestionID: number;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckParametersIn
-export interface CheckParametersIn {
+// github.com/benoitkugler/maths-online/prof/editor.CheckQuestionParametersIn
+export interface CheckQuestionParametersIn {
   SessionID: string;
   Parameters: Parameters;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckParametersOut
-export interface CheckParametersOut {
+// github.com/benoitkugler/maths-online/maths/questions.ErrParameters
+export interface ErrParameters {
+  Origin: string;
+  Details: string;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckQuestionParametersOut
+export interface CheckQuestionParametersOut {
   ErrDefinition: ErrParameters;
   Variables: Variable[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewIn
+export interface SaveQuestionAndPreviewIn {
+  SessionID: string;
+  Question: Question;
+}
+// github.com/benoitkugler/maths-online/maths/questions.errEnonce
+export interface errEnonce {
+  Error: string;
+  Block: number;
+  Vars: { [key: string]: string } | null;
+}
+// github.com/benoitkugler/maths-online/maths/questions.ErrQuestionInvalid
+export interface ErrQuestionInvalid {
+  ErrParameters: ErrParameters;
+  ErrEnonce: errEnonce;
+  ParametersInvalid: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewOut
+export interface SaveQuestionAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.Flow
 export enum Flow {
@@ -628,27 +641,72 @@ export interface ExerciceQuestion {
   id_question: number;
   bareme: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestionExt
-export interface ExerciceQuestionExt {
-  Title: string;
-  Question: ExerciceQuestion;
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
+export type ExerciceQuestions = ExerciceQuestion[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceHeader
+export interface ExerciceHeader {
+  Exercice: Exercice;
+  Origin: Origin;
+  Questions: ExerciceQuestions;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestionOrigin
+export interface QuestionOrigin {
+  Question: Question;
+  Origin: Origin;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {
   Exercice: Exercice;
   Origin: Origin;
-  Questions: ExerciceQuestionExt[] | null;
+  Questions: ExerciceQuestions;
+  QuestionsSource: { [key: number]: QuestionOrigin } | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateIn
+export interface ExerciceUpdateIn {
+  Exercice: Exercice;
+  SessionID: string;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
+  SessionID: string;
   IdExercice: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
-export type ExerciceQuestions = ExerciceQuestion[] | null;
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateQuestionsIn
 export interface ExerciceUpdateQuestionsIn {
   Questions: ExerciceQuestions;
   IdExercice: number;
+  SessionID: string;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateVisiblityIn
+export interface ExerciceUpdateVisiblityIn {
+  ExerciceID: number;
+  Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersIn
+export interface CheckExerciceParametersIn {
+  IdExercice: number;
+  SharedParameters: Parameters;
+  QuestionParameters: Parameters[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersOut
+export interface CheckExerciceParametersOut {
+  ErrDefinition: ErrParameters;
+  QuestionIndex: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.Questions
+export type Questions = { [key: number]: Question } | null;
+// github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewIn
+export interface SaveExerciceAndPreviewIn {
+  SessionID: string;
+  IdExercice: number;
+  Parameters: Parameters;
+  Questions: Questions;
+}
+// github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewOut
+export interface SaveExerciceAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  QuestionIndex: number;
+  IsValid: boolean;
 }
 
 /** AbstractAPI provides auto-generated API calls and should be used 
@@ -758,19 +816,19 @@ export abstract class AbstractAPI {
     data: ClassroomExt[] | null
   ): void;
 
-  protected async rawTeacherCreateClassroom(params: any) {
+  protected async rawTeacherCreateClassroom() {
     const fullUrl = this.baseUrl + "/prof/classrooms/api";
-    const rep: AxiosResponse<any> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<any> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** TeacherCreateClassroom wraps rawTeacherCreateClassroom and handles the error */
-  async TeacherCreateClassroom(params: any) {
+  async TeacherCreateClassroom() {
     this.startRequest();
     try {
-      const out = await this.rawTeacherCreateClassroom(params);
+      const out = await this.rawTeacherCreateClassroom();
       this.onSuccessTeacherCreateClassroom(out);
       return out;
     } catch (error) {
@@ -851,6 +909,74 @@ export abstract class AbstractAPI {
   protected abstract onSuccessTeacherGetClassroomStudents(
     data: Student[] | null
   ): void;
+
+  protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<Student> = await Axios.put(fullUrl, null, {
+      params: { "id-classroom": String(params["id-classroom"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherAddStudent wraps rawTeacherAddStudent and handles the error */
+  async TeacherAddStudent(params: { "id-classroom": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherAddStudent(params);
+      this.onSuccessTeacherAddStudent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherAddStudent(data: Student): void;
+
+  protected async rawTeacherUpdateStudent(params: Student) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherUpdateStudent wraps rawTeacherUpdateStudent and handles the error */
+  async TeacherUpdateStudent(params: Student) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherUpdateStudent(params);
+      this.onSuccessTeacherUpdateStudent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherUpdateStudent(data: any): void;
+
+  protected async rawTeacherDeleteStudent(params: { "id-student": number }) {
+    const fullUrl = this.baseUrl + "/prof/classrooms/api/students";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: { "id-student": String(params["id-student"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherDeleteStudent wraps rawTeacherDeleteStudent and handles the error */
+  async TeacherDeleteStudent(params: { "id-student": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherDeleteStudent(params);
+      this.onSuccessTeacherDeleteStudent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherDeleteStudent(data: any): void;
 
   protected async rawTeacherImportStudents(
     params: { "id-classroom": string },
@@ -935,21 +1061,21 @@ export abstract class AbstractAPI {
     data: TrivialConfigExt[] | null
   ): void;
 
-  protected async rawCreateTrivialPoursuit(params: any) {
+  protected async rawCreateTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/prof/trivial/config";
     const rep: AxiosResponse<TrivialConfigExt> = await Axios.put(
       fullUrl,
-      params,
+      null,
       { headers: this.getHeaders() }
     );
     return rep.data;
   }
 
   /** CreateTrivialPoursuit wraps rawCreateTrivialPoursuit and handles the error */
-  async CreateTrivialPoursuit(params: any) {
+  async CreateTrivialPoursuit() {
     this.startRequest();
     try {
-      const out = await this.rawCreateTrivialPoursuit(params);
+      const out = await this.rawCreateTrivialPoursuit();
       this.onSuccessCreateTrivialPoursuit(out);
       return out;
     } catch (error) {
@@ -1156,21 +1282,19 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessStopTrivialGame(data: any): void;
 
-  protected async rawEditorStartSession(params: any) {
+  protected async rawEditorStartSession() {
     const fullUrl = this.baseUrl + "/prof/editor/api/new";
-    const rep: AxiosResponse<StartSessionOut> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
+    const rep: AxiosResponse<StartSessionOut> = await Axios.put(fullUrl, null, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
   /** EditorStartSession wraps rawEditorStartSession and handles the error */
-  async EditorStartSession(params: any) {
+  async EditorStartSession() {
     this.startRequest();
     try {
-      const out = await this.rawEditorStartSession(params);
+      const out = await this.rawEditorStartSession();
       this.onSuccessEditorStartSession(out);
       return out;
     } catch (error) {
@@ -1179,6 +1303,29 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorStartSession(data: StartSessionOut): void;
+
+  protected async rawEditorPausePreview(params: { sessionID: string }) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
+    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
+      params: { sessionID: params["sessionID"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
+  async EditorPausePreview(params: { sessionID: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorPausePreview(params);
+      this.onSuccessEditorPausePreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorPausePreview(data: any): void;
 
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/prof/editor/api/tags";
@@ -1278,19 +1425,19 @@ export abstract class AbstractAPI {
     data: any
   ): void;
 
-  protected async rawEditorCreateQuestion(params: any) {
+  protected async rawEditorCreateQuestion() {
     const fullUrl = this.baseUrl + "/prof/editor/api/question";
-    const rep: AxiosResponse<Question> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<Question> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** EditorCreateQuestion wraps rawEditorCreateQuestion and handles the error */
-  async EditorCreateQuestion(params: any) {
+  async EditorCreateQuestion() {
     this.startRequest();
     try {
-      const out = await this.rawEditorCreateQuestion(params);
+      const out = await this.rawEditorCreateQuestion();
       this.onSuccessEditorCreateQuestion(out);
       return out;
     } catch (error) {
@@ -1345,55 +1492,6 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorDeleteQuestion(data: any): void;
-
-  protected async rawEditorSaveAndPreview(params: SaveAndPreviewIn) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/question";
-    const rep: AxiosResponse<SaveAndPreviewOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
-    return rep.data;
-  }
-
-  /** EditorSaveAndPreview wraps rawEditorSaveAndPreview and handles the error */
-  async EditorSaveAndPreview(params: SaveAndPreviewIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorSaveAndPreview(params);
-      this.onSuccessEditorSaveAndPreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorSaveAndPreview(
-    data: SaveAndPreviewOut
-  ): void;
-
-  protected async rawEditorPausePreview(params: { sessionID: string }) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/pause-preview";
-    const rep: AxiosResponse<any> = await Axios.get(fullUrl, {
-      params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
-  async EditorPausePreview(params: { sessionID: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorPausePreview(params);
-      this.onSuccessEditorPausePreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorPausePreview(data: any): void;
 
   protected async rawEditorUpdateTags(params: UpdateTagsIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/question/tags";
@@ -1467,9 +1565,11 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessQuestionUpdateVisiblity(data: any): void;
 
-  protected async rawEditorCheckParameters(params: CheckParametersIn) {
-    const fullUrl = this.baseUrl + "/prof/editor/api/check-params";
-    const rep: AxiosResponse<CheckParametersOut> = await Axios.post(
+  protected async rawEditorCheckQuestionParameters(
+    params: CheckQuestionParametersIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/check-params";
+    const rep: AxiosResponse<CheckQuestionParametersOut> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() }
@@ -1477,27 +1577,56 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** EditorCheckParameters wraps rawEditorCheckParameters and handles the error */
-  async EditorCheckParameters(params: CheckParametersIn) {
+  /** EditorCheckQuestionParameters wraps rawEditorCheckQuestionParameters and handles the error */
+  async EditorCheckQuestionParameters(params: CheckQuestionParametersIn) {
     this.startRequest();
     try {
-      const out = await this.rawEditorCheckParameters(params);
-      this.onSuccessEditorCheckParameters(out);
+      const out = await this.rawEditorCheckQuestionParameters(params);
+      this.onSuccessEditorCheckQuestionParameters(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorCheckParameters(
-    data: CheckParametersOut
+  protected abstract onSuccessEditorCheckQuestionParameters(
+    data: CheckQuestionParametersOut
+  ): void;
+
+  protected async rawEditorSaveQuestionAndPreview(
+    params: SaveQuestionAndPreviewIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/question/preview";
+    const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorSaveQuestionAndPreview wraps rawEditorSaveQuestionAndPreview and handles the error */
+  async EditorSaveQuestionAndPreview(params: SaveQuestionAndPreviewIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorSaveQuestionAndPreview(params);
+      this.onSuccessEditorSaveQuestionAndPreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorSaveQuestionAndPreview(
+    data: SaveQuestionAndPreviewOut
   ): void;
 
   protected async rawExercicesGetList() {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercices";
-    const rep: AxiosResponse<ExerciceExt[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<ExerciceHeader[] | null> = await Axios.get(
+      fullUrl,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -1514,22 +1643,45 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessExercicesGetList(
-    data: ExerciceExt[] | null
+    data: ExerciceHeader[] | null
   ): void;
 
-  protected async rawExerciceCreate(params: any) {
+  protected async rawExerciceGetContent(params: { id: number }) {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceGetContent wraps rawExerciceGetContent and handles the error */
+  async ExerciceGetContent(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceGetContent(params);
+      this.onSuccessExerciceGetContent(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceGetContent(data: ExerciceExt): void;
+
+  protected async rawExerciceCreate() {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
+    const rep: AxiosResponse<ExerciceHeader> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** ExerciceCreate wraps rawExerciceCreate and handles the error */
-  async ExerciceCreate(params: any) {
+  async ExerciceCreate() {
     this.startRequest();
     try {
-      const out = await this.rawExerciceCreate(params);
+      const out = await this.rawExerciceCreate();
       this.onSuccessExerciceCreate(out);
       return out;
     } catch (error) {
@@ -1537,25 +1689,19 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessExerciceCreate(data: ExerciceExt): void;
+  protected abstract onSuccessExerciceCreate(data: ExerciceHeader): void;
 
-  protected async rawExerciceDelete(params: {
-    id: number;
-    delete_questions: boolean;
-  }) {
+  protected async rawExerciceDelete(params: { id: number }) {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
-      params: {
-        id: String(params["id"]),
-        delete_questions: params["delete_questions"] ? "ok" : "",
-      },
+      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** ExerciceDelete wraps rawExerciceDelete and handles the error */
-  async ExerciceDelete(params: { id: number; delete_questions: boolean }) {
+  async ExerciceDelete(params: { id: number }) {
     this.startRequest();
     try {
       const out = await this.rawExerciceDelete(params);
@@ -1568,7 +1714,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessExerciceDelete(data: any): void;
 
-  protected async rawExerciceUpdate(params: Exercice) {
+  protected async rawExerciceUpdate(params: ExerciceUpdateIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice";
     const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
@@ -1577,7 +1723,7 @@ export abstract class AbstractAPI {
   }
 
   /** ExerciceUpdate wraps rawExerciceUpdate and handles the error */
-  async ExerciceUpdate(params: Exercice) {
+  async ExerciceUpdate(params: ExerciceUpdateIn) {
     this.startRequest();
     try {
       const out = await this.rawExerciceUpdate(params);
@@ -1592,11 +1738,9 @@ export abstract class AbstractAPI {
 
   protected async rawExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice/questions";
-    const rep: AxiosResponse<ExerciceQuestionExt[] | null> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
+    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
@@ -1612,19 +1756,15 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessExerciceCreateQuestion(
-    data: ExerciceQuestionExt[] | null
-  ): void;
+  protected abstract onSuccessExerciceCreateQuestion(data: ExerciceExt): void;
 
   protected async rawExerciceUpdateQuestions(
     params: ExerciceUpdateQuestionsIn
   ) {
     const fullUrl = this.baseUrl + "/prof/editor/api/exercice/questions";
-    const rep: AxiosResponse<ExerciceQuestionExt[] | null> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
+    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
@@ -1640,7 +1780,85 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessExerciceUpdateQuestions(
-    data: ExerciceQuestionExt[] | null
+  protected abstract onSuccessExerciceUpdateQuestions(data: ExerciceExt): void;
+
+  protected async rawExerciceUpdateVisiblity(
+    params: ExerciceUpdateVisiblityIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/visibility";
+    const rep: AxiosResponse<any> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ExerciceUpdateVisiblity wraps rawExerciceUpdateVisiblity and handles the error */
+  async ExerciceUpdateVisiblity(params: ExerciceUpdateVisiblityIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawExerciceUpdateVisiblity(params);
+      this.onSuccessExerciceUpdateVisiblity(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessExerciceUpdateVisiblity(data: any): void;
+
+  protected async rawEditorCheckExerciceParameters(
+    params: CheckExerciceParametersIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/check-params";
+    const rep: AxiosResponse<CheckExerciceParametersOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorCheckExerciceParameters wraps rawEditorCheckExerciceParameters and handles the error */
+  async EditorCheckExerciceParameters(params: CheckExerciceParametersIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorCheckExerciceParameters(params);
+      this.onSuccessEditorCheckExerciceParameters(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorCheckExerciceParameters(
+    data: CheckExerciceParametersOut
+  ): void;
+
+  protected async rawEditorSaveExerciceAndPreview(
+    params: SaveExerciceAndPreviewIn
+  ) {
+    const fullUrl = this.baseUrl + "/prof/editor/api/exercice/preview";
+    const rep: AxiosResponse<SaveExerciceAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorSaveExerciceAndPreview wraps rawEditorSaveExerciceAndPreview and handles the error */
+  async EditorSaveExerciceAndPreview(params: SaveExerciceAndPreviewIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorSaveExerciceAndPreview(params);
+      this.onSuccessEditorSaveExerciceAndPreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorSaveExerciceAndPreview(
+    data: SaveExerciceAndPreviewOut
   ): void;
 }

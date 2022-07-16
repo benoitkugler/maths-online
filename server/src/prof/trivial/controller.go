@@ -14,7 +14,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -377,17 +377,17 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID int64) (Launch
 
 	var out LaunchSessionOut
 	for _, nbPlayers := range params.Groups {
-		options := tv.GameOptions{
+		options := tv.Options{
 			PlayersNumber:   nbPlayers,
 			QuestionTimeout: time.Second * time.Duration(config.QuestionTimeout),
 			ShowDecrassage:  config.ShowDecrassage,
+			Questions:       questionPool,
 		}
 
 		gameID := session.newGameID()
 		session.createGame(createGame{
-			ID:        gameID,
-			Questions: questionPool,
-			Options:   options,
+			ID:      gameID,
+			Options: options,
 		})
 		out.GameIDs = append(out.GameIDs, string(gameID))
 	}

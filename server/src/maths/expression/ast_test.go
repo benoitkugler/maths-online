@@ -2,64 +2,59 @@ package expression
 
 import (
 	"testing"
+
+	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
-func shouldPanic(t *testing.T, f func()) {
-	t.Helper()
-
-	defer func() { recover() }()
-	f()
-	t.Errorf("should have panicked")
-}
-
 func TestPanics(t *testing.T) {
-	shouldPanic(t, func() { (invalidFn).eval(rat{}, rat{}, nil) })
-	shouldPanic(t, func() { (invalidConstant).eval(rat{}, rat{}, nil) })
-	shouldPanic(t, func() { (invalidOperator).eval(rat{}, rat{}, nil) })
-	shouldPanic(t, func() { (specialFunctionA{kind: invalidSpecialFunction}).eval(rat{}, rat{}, nil) })
+	testutils.ShouldPanic(t, func() { (invalidFn).eval(rat{}, rat{}, nil) })
+	testutils.ShouldPanic(t, func() { (invalidConstant).eval(rat{}, rat{}, nil) })
+	testutils.ShouldPanic(t, func() { (invalidOperator).eval(rat{}, rat{}, nil) })
+	testutils.ShouldPanic(t, func() { (specialFunctionA{kind: invalidSpecialFunction}).eval(rat{}, rat{}, nil) })
 
-	shouldPanic(t, func() { _ = (invalidFn).String() })
-	shouldPanic(t, func() { _ = (invalidConstant).String() })
-	shouldPanic(t, func() { _ = (invalidOperator).String() })
-	shouldPanic(t, func() { _ = (specialFunctionA{kind: invalidSpecialFunction}).String() })
+	testutils.ShouldPanic(t, func() { _ = (invalidFn).String() })
+	testutils.ShouldPanic(t, func() { _ = (invalidConstant).String() })
+	testutils.ShouldPanic(t, func() { _ = (invalidOperator).String() })
+	testutils.ShouldPanic(t, func() { _ = (specialFunctionA{kind: invalidSpecialFunction}).String() })
 
-	shouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil, nil) })
-	shouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil, nil) })
+	testutils.ShouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil) })
+	testutils.ShouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil) })
+	testutils.ShouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil) })
+	testutils.ShouldPanic(t, func() { _ = (invalidOperator).serialize(nil, nil) })
 
-	shouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
+	testutils.ShouldPanic(t, func() {
 		e := &Expr{atom: invalidOperator}
 		e.simplifyNumbers()
 	})
 
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() {
 		tk := tokenizer{currentToken: token{data: symbol(invalidSymbol)}}
 		pr := parser{tk: &tk}
 		pr.parseOneNode(true)
 	})
 
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() {
 		tk := tokenizer{}
 		pr := parser{tk: &tk}
 		pr.parseOneNode(true)
 	})
 
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() {
 		tk := newTokenizer([]byte{')'})
 		pr := parser{tk: tk}
 		pr.parseOneNode(true)
 	})
 
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() {
 		mustEvaluate("x+2", nil)
 	})
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() {
 		expr := MustParse("x+2")
 		expr.mustEvaluate(nil)
 	})
 
-	shouldPanic(t, func() {
+	testutils.ShouldPanic(t, func() {
 		MustParse("x + ")
 	})
 }
@@ -92,6 +87,9 @@ func TestExpression_String(t *testing.T) {
 		{"min(2) + max(3)", "min(2) + max(3)"},
 		{"-(-a)", "a"},
 		{"floor(4)", "floor(4)"},
+		{"x + (-4 + y)", "x - 4 + y"},
+		{"(1<2)+(3>4)+(5<=6)+(7>=8)", "(1 < 2) + (3 > 4) + (5 <= 6) + (7 >= 8)"},
+		{"1 + 2<3", "1 + 2 < 3"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

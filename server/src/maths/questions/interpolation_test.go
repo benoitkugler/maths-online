@@ -39,7 +39,7 @@ func TestParseInterpolatedString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got, err := tt.args.Parse()
+		got, err := tt.args.parse()
 		if (err != nil) != tt.wantErr {
 			t.Errorf("Interpolated.Parse() error = %v, wantErr %v", err, tt.wantErr)
 			return
@@ -92,7 +92,7 @@ func Test_splitByExpression(t *testing.T) {
 
 func TestLatexOutput(t *testing.T) {
 	s := Interpolated(`$\overset{\rightarrow}{ &P& &P& }$`)
-	parts, err := s.Parse()
+	parts, err := s.parse()
 	if err != nil {
 		t.Fatal(err)
 	}

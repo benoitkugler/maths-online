@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/prof/editor"
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -58,6 +58,7 @@ func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out IDs) {
 			}
 		}
 	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
 	return out
 }
 
@@ -83,13 +84,10 @@ func (qc QuestionCriterion) selectQuestions(db DB, userID int64) (editor.Questio
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
+
 	questionsDict.RestrictVisible(userID)
 
-	for id, question := range questionsDict {
-		if question.NeedExercice {
-			delete(questionsDict, id)
-		}
-	}
+	questionsDict.RestrictNeedExercice()
 
 	return questionsDict, nil
 }

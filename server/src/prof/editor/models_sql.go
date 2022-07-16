@@ -4,7 +4,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 )
 
-//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql -mode=rand:gen_randdata_test.go -mode=ts:../../../../prof/src/controller/exercice_gen.ts
+//go:generate ../../../../../structgen/structgen -source=models_sql.go -mode=sql:gen_scans.go -mode=sql_gen:gen_create.sql -mode=rand:gen_randdata_test.go
 
 // Question is a standalone question, used for instance in games.
 type Question struct {
@@ -28,10 +28,6 @@ type QuestionTag struct {
 // difficulty of one question.
 // It is used to select question among implicit groups
 type DifficultyTag string
-
-// LevelTag are special question tags used to indicate the
-// level (class) for the question.
-type LevelTag string
 
 // Exercice is the data structure for a full exercice, composed of a list of questions.
 // There are two kinds of exercice :

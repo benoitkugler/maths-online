@@ -69,7 +69,7 @@ type FunctionExpr struct {
 // where random parameters have been resolved
 type FunctionDefinition struct {
 	FunctionExpr         // instantiated version
-	From, To     float64 // definition domain
+	From, To     float64 // definition domain, with From <= To
 }
 
 // Closure returns a function computing f(x), where f is defined by the expression.
@@ -165,10 +165,28 @@ func (op operator) eval(left, right rat, _ ValueResolver) (rat, error) {
 	return op.evaluate(left, right), nil
 }
 
+// returns 1 if b is true
+func evalBool(b bool) rat {
+	if b {
+		return newRat(1)
+	}
+	return newRat(0)
+}
+
 func (op operator) evaluate(left, right rat) rat {
 	// 0 is fine as default value for + and -
 	// the other have mandatory left operands
 	switch op {
+	case equals:
+		return evalBool(AreFloatEqual(left.eval(), right.eval()))
+	case greater:
+		return evalBool(left.eval() >= right.eval())
+	case strictlyGreater:
+		return evalBool(left.eval() > right.eval())
+	case lesser:
+		return evalBool(left.eval() <= right.eval())
+	case strictlyLesser:
+		return evalBool(left.eval() < right.eval())
 	case plus:
 		return sumRat(left, right)
 	case minus:
@@ -223,7 +241,7 @@ func (va Variable) eval(_, _ rat, b ValueResolver) (rat, error) {
 	return out.evalRat(b)
 }
 
-func (rv randVariable) eval(_, _ rat, _ ValueResolver) (rat, error) {
+func (randVariable) eval(_, _ rat, _ ValueResolver) (rat, error) {
 	return newRat(0), nil
 }
 
@@ -266,11 +284,6 @@ func (fn function) eval(_, right rat, _ ValueResolver) (rat, error) {
 			return newRat(1), nil
 		} else if arg < 0 {
 			return newRat(-1), nil
-		}
-		return newRat(0), nil
-	case isZeroFn:
-		if arg == 0 {
-			return newRat(1), nil
 		}
 		return newRat(0), nil
 	case isPrimeFn:

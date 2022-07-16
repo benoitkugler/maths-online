@@ -15,8 +15,8 @@
 </template>
 
 <script setup lang="ts">
+import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import { TextKind } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
 interface Props {

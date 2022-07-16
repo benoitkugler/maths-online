@@ -1,4 +1,4 @@
-import 'package:eleve/exercices/question.dart';
+import 'package:eleve/shared/title.dart';
 import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
 
@@ -11,9 +11,9 @@ class WantNextTurnNotification extends Notification {
 
 /// [QuestionResult] shows the result of the last question
 class QuestionResult extends StatefulWidget {
-  final int playerID;
+  final PlayerID playerID;
   final PlayerAnswerResults event;
-  final Map<int, PlayerStatus> players;
+  final Map<PlayerID, PlayerStatus> players;
   final void Function() showLastQuestion;
 
   const QuestionResult(

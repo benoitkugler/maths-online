@@ -2,15 +2,17 @@
 // 2D mathematical figure drawing
 package repere
 
-import "math"
-
-//go:generate ../../../../../structgen/structgen -source=repere.go -mode=dart:../../../../eleve/lib/exercices/repere.gen.dart
+//go:generate ../../../../../structgen/structgen -source=repere.go -mode=dart:../../../../eleve/lib/questions/repere.gen.dart
 
 // Coord is a coordinate pair, in the usual mathematical plan,
 // where X and Y must be between 0 and the dimension of the figure
 type Coord struct {
 	X, Y float64
 }
+
+// Color is an hex or ahex color string, with
+// #FFFFFF or #AAFFFFFF format
+type Color = string
 
 type PointName = string
 
@@ -27,10 +29,15 @@ type RepereBounds struct {
 	Origin Coord
 }
 
+type Area struct {
+	Color  Color
+	Points []PointName // polyline
+}
 type Drawings struct {
 	Points   map[PointName]LabeledPoint
 	Segments []Segment
 	Lines    []Line
+	Areas    []Area
 }
 
 type Figure struct {
@@ -38,7 +45,8 @@ type Figure struct {
 
 	Bounds RepereBounds
 
-	ShowGrid bool
+	ShowGrid   bool
+	ShowOrigin bool
 }
 
 type PosPoint struct {
@@ -47,7 +55,7 @@ type PosPoint struct {
 }
 
 type LabeledPoint struct {
-	Color string // #FFFFFF format
+	Color Color
 	Point PosPoint
 }
 
@@ -55,7 +63,7 @@ type LabeledPoint struct {
 type Segment struct {
 	LabelName string // optional
 	From, To  PointName
-	Color     string      // #FFFFFF format
+	Color     Color
 	LabelPos  LabelPos    // used only if LabelName is not zero
 	Kind      SegmentKind // what to actually draw
 }
@@ -63,24 +71,6 @@ type Segment struct {
 // Line is an infinite line, defined by an equation y = ax + b
 type Line struct {
 	Label string
-	Color string // #FFFFFF format
+	Color Color
 	A, B  float64
-}
-
-// OrthogonalProjection compute the coordinates of the orthogonal
-// projection of B on (AC).
-func OrthogonalProjection(B, A, C Coord) Coord {
-	u := C.X - A.X // AC
-	v := C.Y - A.Y // AC
-	// det(AB, AC)
-	abX := B.X - A.X
-	abY := B.Y - A.Y
-	d := abX*v - abY*u
-	// solve for BH = (x, y)
-	// xu + yv = 0
-	// xv - yu = -d
-	norm := u*u + v*v
-	x := math.Round(-d * v / norm)
-	y := math.Round(d * u / norm)
-	return Coord{X: x + B.X, Y: y + B.Y}
 }

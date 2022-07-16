@@ -122,8 +122,8 @@
 </template>
 
 <script setup lang="ts">
-import type { TableBlock } from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
+import type { TableBlock } from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
 import { computed } from "@vue/runtime-core";
 import TextPartField from "./TextPartField.vue";
 

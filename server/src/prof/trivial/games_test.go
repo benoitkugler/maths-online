@@ -12,8 +12,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	trivialpoursuit "github.com/benoitkugler/maths-online/trivial-poursuit"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/websocket"
@@ -80,7 +79,7 @@ func (st *student) connectRequest(deconnect bool) {
 
 	// pump server messages
 	for {
-		var v game.StateUpdate
+		var v tv.StateUpdate
 		err := st.conn.ReadJSON(&v)
 		check(err)
 
@@ -159,7 +158,7 @@ func (s server) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestSessionPlay(t *testing.T) {
-	trivialpoursuit.ProgressLogger.SetOutput(os.Stdout)
+	tv.ProgressLogger.SetOutput(os.Stdout)
 
 	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {

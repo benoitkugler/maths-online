@@ -5,9 +5,10 @@
         title="Modifier la couleur"
         v-on="{ isActive }"
         v-bind="slotProps"
-        :color="props.modelValue"
+        :color="btnParams.color"
+        block
       >
-        Couleur
+        {{ btnParams.text }}
       </v-btn>
     </template>
     <v-color-picker
@@ -15,13 +16,17 @@
       mode="hex"
       :swatches="swatches"
       show-swatches
+      swatches-max-height="200"
       :model-value="props.modelValue"
-      @update:model-value="s => emit('update:model-value', s)"
+      @update:model-value="onPick"
     ></v-color-picker>
   </v-menu>
 </template>
 
 <script setup lang="ts">
+import { lastColorUsed } from "@/controller/editor";
+import { computed } from "vue";
+
 interface Props {
   modelValue: string;
 }
@@ -33,12 +38,25 @@ const emit = defineEmits<{
 }>();
 
 const swatches = [
-  ["#FF0000", "#AA0000", "#550000"],
-  ["#FFFF00", "#AAAA00", "#555500"],
-  ["#00FF00", "#00AA00", "#005500"],
-  ["#00FFFF", "#00AAAA", "#005555"],
-  ["#0000FF", "#0000AA", "#000055"]
+  ["#00000000", "#FF0000", "#AA0000", "#550000"],
+  ["#000000", "#FFFF00", "#AAAA00", "#555500"],
+  ["#fc03df", "#00FF00", "#00AA00", "#005500"],
+  ["#852179", "#00FFFF", "#00AAAA", "#005555"],
+  ["#fcba03", "#0000FF", "#0000AA", "#000055"],
 ];
+
+const btnParams = computed(() => {
+  if (props.modelValue == "#00000000") {
+    return { text: "Aucune", color: "#FFFFFF" };
+  } else {
+    return { text: "", color: props.modelValue };
+  }
+});
+
+function onPick(color: string) {
+  lastColorUsed.color = color;
+  emit("update:model-value", color);
+}
 </script>
 
 <style scoped>

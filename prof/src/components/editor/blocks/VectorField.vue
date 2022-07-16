@@ -56,9 +56,9 @@
 </template>
 
 <script setup lang="ts">
+import type { Variable, VectorFieldBlock } from "@/controller/api_gen";
+import { TextKind } from "@/controller/api_gen";
 import { colorByKind, completePoint } from "@/controller/editor";
-import type { Variable, VectorFieldBlock } from "@/controller/exercice_gen";
-import { TextKind } from "@/controller/exercice_gen";
 
 interface Props {
   modelValue: VectorFieldBlock;

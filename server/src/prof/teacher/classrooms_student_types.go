@@ -20,3 +20,14 @@ type AttachStudentToClassroom2Out struct {
 	ErrAlreadyAttached bool
 	IdCrypted          string
 }
+
+type CheckStudentClassroomOut struct {
+	IsOK bool // if not, ignore `meta`
+	Meta StudentClassroomHeader
+}
+
+type StudentClassroomHeader struct {
+	Student       Student
+	ClassroomName string
+	TeacherMail   string
+}

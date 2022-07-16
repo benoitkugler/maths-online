@@ -29,9 +29,10 @@ func (err ErrParameters) Error() string {
 func (pr Parameters) Validate() error {
 	params := make(expression.RandomParameters)
 	for _, def := range pr.Variables {
+		origin := fmt.Sprintf("%s : %s", def.Variable, def.Expression)
 		if _, has := params[def.Variable]; has {
 			return ErrParameters{
-				Origin:  def.Expression,
+				Origin:  origin,
 				Details: expression.ErrDuplicateParameter{Duplicate: def.Variable}.Error(),
 			}
 		}
@@ -39,7 +40,7 @@ func (pr Parameters) Validate() error {
 		expr, err := expression.Parse(def.Expression)
 		if err != nil {
 			return ErrParameters{
-				Origin:  def.Expression,
+				Origin:  origin,
 				Details: err.Error(),
 			}
 		}
@@ -172,8 +173,9 @@ func (c parsedCoord) validate(vars expression.Vars, checkPrecision bool) error {
 }
 
 type variationTableValidator struct {
-	xs  []*expression.Expr
-	fxs []*expression.Expr
+	label TextParts
+	xs    []*expression.Expr
+	fxs   []*expression.Expr
 }
 
 func (v variationTableValidator) validate(vars expression.Vars) error {
@@ -200,7 +202,7 @@ func (v figureValidator) pointStrings(vars expression.Vars) map[string]bool {
 	for _, expr := range v.pointNames {
 		expr = expr.Copy()
 		expr.Substitute(vars)
-		out[expr.AsLaTeX(nil)] = true
+		out[expr.AsLaTeX()] = true
 	}
 	return out
 }
@@ -223,7 +225,7 @@ func (v figureValidator) validate(vars expression.Vars) error {
 	for _, ref := range v.references {
 		ref = ref.Copy()
 		ref.Substitute(vars)
-		resolvedRef := ref.AsLaTeX(nil)
+		resolvedRef := ref.AsLaTeX()
 		if hasPoint := points[resolvedRef]; !hasPoint {
 			return fmt.Errorf("L'expression %s ne définit pas un point connu.", resolvedRef)
 		}
@@ -244,7 +246,8 @@ func (v figureValidator) validate(vars expression.Vars) error {
 }
 
 type function struct {
-	from, to *expression.Expr
+	label  string
+	domain expression.Domain
 	expression.FunctionExpr
 }
 
@@ -259,16 +262,85 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 		return function{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 
-	return function{FunctionExpr: fnExpr, from: from, to: to}, nil
+	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
 }
 
-type functionGraphValidator struct {
-	functions []function
+type areaValidator struct {
+	function1, function2 TextParts
+	domain               expression.Domain
 }
 
-func (v functionGraphValidator) validate(vars expression.Vars) error {
+type functionsGraphValidator struct {
+	functions          []function
+	variationValidator []variationTableValidator
+	areas              []areaValidator
+}
+
+func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	for _, f := range v.functions {
-		if err := f.FunctionExpr.IsValid(f.from, f.to, vars, maxFunctionBound); err != nil {
+		if err := f.FunctionExpr.IsValid(f.domain, vars, maxFunctionBound); err != nil {
+			return err
+		}
+	}
+	for _, varTable := range v.variationValidator {
+		if err := varTable.validate(vars); err != nil {
+			return err
+		}
+	}
+
+	// checks that function with same label are defined on non overlapping intervals,
+	// so that area references can't be ambiguous
+	byNames := make(map[string][]expression.Domain)
+	for _, fn := range v.functions {
+		byNames[fn.label] = append(byNames[fn.label], fn.domain)
+	}
+	for _, vt := range v.variationValidator {
+		label, err := vt.label.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		byNames[label] = append(byNames[label], expression.Domain{
+			From: vt.xs[0], To: vt.xs[len(vt.xs)-1], // vt.validate checks that these calls are safe
+		})
+	}
+
+	for name, domains := range byNames {
+		if err := expression.AreDisjointsDomains(domains, vars); err != nil {
+			return fmt.Errorf("Pour la fonction %s, %s.", name, err)
+		}
+	}
+
+	// checks that areas are referencing known functions
+	// and that the domains are valid
+	for _, area := range v.areas {
+		f1, err := area.function1.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		f2, err := area.function1.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		domains1 := byNames[f1]
+		if f1 == "" {
+			domains1 = []expression.Domain{{}} // no constraints
+		}
+		if len(domains1) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", f1)
+		}
+		domains2 := byNames[f2]
+		if f2 == "" {
+			domains2 = []expression.Domain{{}} // no constraints
+		}
+		if len(domains2) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", f2)
+		}
+
+		// check that the domain in included in one of the domain for f1 and f2
+		if err := area.domain.IsIncludedIntoOne(domains1, vars); err != nil {
+			return err
+		}
+		if err := area.domain.IsIncludedIntoOne(domains2, vars); err != nil {
 			return err
 		}
 	}

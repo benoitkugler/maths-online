@@ -13,8 +13,8 @@
 </template>
 
 <script setup lang="ts">
+import type { Variable } from "@/controller/api_gen";
 import { variableToString } from "@/controller/editor";
-import type { Variable } from "@/controller/exercice_gen";
 import { computed } from "@vue/runtime-core";
 
 interface Props {

@@ -1,19 +1,18 @@
 package trivial
 
 import (
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	tv "github.com/benoitkugler/maths-online/trivial"
 )
 
 //go:generate ../../../../../structgen/structgen -source=monitor_types.go -mode=ts:../../../../prof/src/controller/trivial_config_socket_gen.ts
 
 type gamePlayers struct {
 	Player    string
-	Successes game.Success
+	Successes tv.Success
 }
 
 type gameSummary struct {
-	GameID        tv.GameID
+	GameID        tv.RoomID
 	CurrentPlayer string // empty when no one is playing
 	Players       []gamePlayers
 	RoomSize      int

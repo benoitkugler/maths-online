@@ -115,12 +115,6 @@ func randExerciceQuestion() ExerciceQuestion {
 	}
 }
 
-func randLevelTag() LevelTag {
-	choix := [...]LevelTag{Premiere, Seconde, Terminale}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randProgression() Progression {
 	return Progression{
 		Id:         randint64(),
@@ -159,9 +153,8 @@ func randBlock() questions.Block {
 		randque_FigureVectorFieldBlock(),
 		randque_FigureVectorPairFieldBlock(),
 		randque_FormulaBlock(),
-		randque_FunctionGraphBlock(),
 		randque_FunctionPointsFieldBlock(),
-		randque_FunctionVariationGraphBlock(),
+		randque_FunctionsGraphBlock(),
 		randque_NumberFieldBlock(),
 		randque_OrderedListFieldBlock(),
 		randque_RadioFieldBlock(),
@@ -174,7 +167,7 @@ func randBlock() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(21)
+	i := rand.Intn(20)
 	return choix[i]
 }
 
@@ -248,8 +241,8 @@ func randSegmentKind() repere.SegmentKind {
 	return choix[i]
 }
 
-func randrep_Segment() repere.Segment {
-	return repere.Segment{
+func randrep_RandomSegment() repere.RandomSegment {
+	return repere.RandomSegment{
 		LabelName: randstring(),
 		From:      randstring(),
 		To:        randstring(),
@@ -259,11 +252,11 @@ func randrep_Segment() repere.Segment {
 	}
 }
 
-func randSlicerep_Segment() []repere.Segment {
+func randSlicerep_RandomSegment() []repere.RandomSegment {
 	l := 40 + rand.Intn(10)
-	out := make([]repere.Segment, l)
+	out := make([]repere.RandomSegment, l)
 	for i := range out {
-		out[i] = randrep_Segment()
+		out[i] = randrep_RandomSegment()
 	}
 	return out
 }
@@ -286,11 +279,28 @@ func randSlicerep_RandomLine() []repere.RandomLine {
 	return out
 }
 
+func randrep_RandomArea() repere.RandomArea {
+	return repere.RandomArea{
+		Color:  randstring(),
+		Points: randSlicestring(),
+	}
+}
+
+func randSlicerep_RandomArea() []repere.RandomArea {
+	l := 40 + rand.Intn(10)
+	out := make([]repere.RandomArea, l)
+	for i := range out {
+		out[i] = randrep_RandomArea()
+	}
+	return out
+}
+
 func randrep_RandomDrawings() repere.RandomDrawings {
 	return repere.RandomDrawings{
 		Points:   randSlicerep_NamedRandomLabeledPoint(),
-		Segments: randSlicerep_Segment(),
+		Segments: randSlicerep_RandomSegment(),
 		Lines:    randSlicerep_RandomLine(),
+		Areas:    randSlicerep_RandomArea(),
 	}
 }
 
@@ -315,9 +325,10 @@ func randrep_RepereBounds() repere.RepereBounds {
 
 func randque_FigureBlock() questions.FigureBlock {
 	return questions.FigureBlock{
-		Drawings: randrep_RandomDrawings(),
-		Bounds:   randrep_RepereBounds(),
-		ShowGrid: randbool(),
+		Drawings:   randrep_RandomDrawings(),
+		Bounds:     randrep_RepereBounds(),
+		ShowGrid:   randbool(),
+		ShowOrigin: randbool(),
 	}
 }
 
@@ -376,6 +387,15 @@ func randque_FormulaBlock() questions.FormulaBlock {
 	}
 }
 
+func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
+	return questions.FunctionPointsFieldBlock{
+		Function: randstring(),
+		Label:    randstring(),
+		Variable: randexp_Variable(),
+		XGrid:    randSlicestring(),
+	}
+}
+
 func randfun_FunctionDecoration() functiongrapher.FunctionDecoration {
 	return functiongrapher.FunctionDecoration{
 		Label: randstring(),
@@ -402,26 +422,47 @@ func randSliceque_FunctionDefinition() []questions.FunctionDefinition {
 	return out
 }
 
-func randque_FunctionGraphBlock() questions.FunctionGraphBlock {
-	return questions.FunctionGraphBlock{
-		Functions: randSliceque_FunctionDefinition(),
-	}
-}
-
-func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
-	return questions.FunctionPointsFieldBlock{
-		Function: randstring(),
-		Label:    randstring(),
-		Variable: randexp_Variable(),
-		XGrid:    randSlicestring(),
-	}
-}
-
-func randque_FunctionVariationGraphBlock() questions.FunctionVariationGraphBlock {
-	return questions.FunctionVariationGraphBlock{
+func randque_VariationTableBlock() questions.VariationTableBlock {
+	return questions.VariationTableBlock{
 		Label: randInterpolated(),
 		Xs:    randSlicestring(),
 		Fxs:   randSlicestring(),
+	}
+}
+
+func randSliceque_VariationTableBlock() []questions.VariationTableBlock {
+	l := 40 + rand.Intn(10)
+	out := make([]questions.VariationTableBlock, l)
+	for i := range out {
+		out[i] = randque_VariationTableBlock()
+	}
+	return out
+}
+
+func randque_FunctionArea() questions.FunctionArea {
+	return questions.FunctionArea{
+		Bottom: randInterpolated(),
+		Top:    randInterpolated(),
+		Left:   randstring(),
+		Right:  randstring(),
+		Color:  randstring(),
+	}
+}
+
+func randSliceque_FunctionArea() []questions.FunctionArea {
+	l := 40 + rand.Intn(10)
+	out := make([]questions.FunctionArea, l)
+	for i := range out {
+		out[i] = randque_FunctionArea()
+	}
+	return out
+}
+
+func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
+	return questions.FunctionsGraphBlock{
+		FunctionExprs:      randSliceque_FunctionDefinition(),
+		FunctionVariations: randSliceque_VariationTableBlock(),
+		Areas:              randSliceque_FunctionArea(),
 	}
 }
 
@@ -543,14 +584,6 @@ func randque_TreeFieldBlock() questions.TreeFieldBlock {
 	return questions.TreeFieldBlock{
 		EventsProposals: randSlicestring(),
 		AnswerRoot:      randque_TreeNodeAnswer(),
-	}
-}
-
-func randque_VariationTableBlock() questions.VariationTableBlock {
-	return questions.VariationTableBlock{
-		Label: randInterpolated(),
-		Xs:    randSlicestring(),
-		Fxs:   randSlicestring(),
 	}
 }
 

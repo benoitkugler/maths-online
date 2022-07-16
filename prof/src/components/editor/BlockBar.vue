@@ -29,8 +29,8 @@
 </template>
 
 <script setup lang="ts">
+import type { BlockKind } from "@/controller/api_gen";
 import { BlockKindLabels, sortedBlockKindLabels } from "@/controller/editor";
-import type { BlockKind } from "@/controller/exercice_gen";
 
 const emit = defineEmits<{
   (e: "add", kind: BlockKind): void;

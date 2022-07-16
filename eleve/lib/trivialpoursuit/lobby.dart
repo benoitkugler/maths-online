@@ -1,9 +1,10 @@
 import 'package:eleve/quotes.dart';
+import 'package:eleve/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
 
 class GameLobby extends StatelessWidget {
-  final Map<int, String> players;
-  final int player;
+  final Map<PlayerID, String> players;
+  final PlayerID player;
 
   const GameLobby(this.players, this.player, {Key? key}) : super(key: key);
 

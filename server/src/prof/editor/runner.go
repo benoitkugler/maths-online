@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"fmt"
+
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions/client"
 	"github.com/benoitkugler/maths-online/utils"
@@ -10,16 +12,16 @@ import (
 
 type InstantiatedQuestion struct {
 	Id       int64
-	Question client.Question `dart-extern:"exercices/types.gen.dart"`
+	Question client.Question `dart-extern:"client:questions/types.gen.dart"`
 	Params   []VarEntry
 }
 
-type InstantiateQuestionsOut []InstantiatedQuestion
-
-type InstantiatedExercice struct {
-	Exercice  Exercice
-	Questions []InstantiatedQuestion
+type Answer struct {
+	Params []VarEntry
+	Answer client.QuestionAnswersIn `dart-extern:"client:questions/types.gen.dart"`
 }
+
+type InstantiateQuestionsOut []InstantiatedQuestion
 
 type VarEntry struct {
 	Variable expression.Variable
@@ -65,14 +67,18 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 
 // EvaluateQuestion instantiate the given question with the given parameters,
 // and evaluate the given answer.
-func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer client.QuestionAnswersIn) (client.QuestionAnswersOut, error) {
+func (ct *Controller) EvaluateQuestion(id int64, answer Answer) (client.QuestionAnswersOut, error) {
 	qu, err := SelectQuestion(ct.db, id)
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
+	return qu.evaluate(answer)
+}
 
+func (qu Question) evaluate(answer Answer) (client.QuestionAnswersOut, error) {
+	var err error
 	paramsDict := make(expression.Vars)
-	for _, entry := range params {
+	for _, entry := range answer.Params {
 		paramsDict[entry.Variable], err = expression.Parse(entry.Resolved)
 		if err != nil {
 			return client.QuestionAnswersOut{}, err
@@ -84,7 +90,7 @@ func (ct *Controller) EvaluateQuestion(id int64, params []VarEntry, answer clien
 		return client.QuestionAnswersOut{}, err
 	}
 
-	return instance.EvaluateAnswer(answer), nil
+	return instance.EvaluateAnswer(answer.Answer), nil
 }
 
 // QuestionHistory stores the successes for one question,
@@ -145,38 +151,58 @@ func (ct *Controller) fetchProgression(id int64) (ProgressionExt, error) {
 	return out, nil
 }
 
-// instantiateExercice loads the given exercice, the associated questions,
-// and instantiates them with the same random parameters
-func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error) {
-	ex, err := SelectExercice(ct.db, id)
-	if err != nil {
-		return InstantiatedExercice{}, utils.SQLError(err)
-	}
-	links, err := SelectExerciceQuestionsByIdExercices(ct.db, id)
-	if err != nil {
-		return InstantiatedExercice{}, utils.SQLError(err)
-	}
-	links.ensureIndex()
+type InstantiatedExercice struct {
+	Id        int64
+	Title     string
+	Flow      Flow
+	Questions []InstantiatedQuestion
+	Baremes   []int
+}
 
-	// load the question contents
-	qus, err := SelectQuestions(ct.db, links.IdQuestions()...)
-	if err != nil {
-		return InstantiatedExercice{}, utils.SQLError(err)
+// helper to unify question loading
+type exerciceContent struct {
+	exercice Exercice
+	links    ExerciceQuestions
+	dict     Questions
+}
+
+func (ex exerciceContent) questions() []Question {
+	out := make([]Question, len(ex.links))
+	for i, link := range ex.links {
+		out[i] = ex.dict[link.IdQuestion]
 	}
+	return out
+}
+
+func (ex exerciceContent) questionsSource(userID, adminID int64) map[int64]QuestionOrigin {
+	out := make(map[int64]QuestionOrigin, len(ex.dict))
+	for i, qu := range ex.dict {
+		origin, _ := qu.origin(userID, adminID)
+		out[i] = QuestionOrigin{Question: qu, Origin: origin}
+	}
+	return out
+}
+
+// instantiates the questions, using a fixed shared instance of the exercice parameters
+// for each question
+func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
+	ex, links, qus := data.exercice, data.links, data.questions()
 
 	out := InstantiatedExercice{
-		Exercice:  ex,
-		Questions: make([]InstantiatedQuestion, len(links)),
+		Id:        ex.Id,
+		Title:     ex.Title,
+		Flow:      ex.Flow,
+		Questions: make([]InstantiatedQuestion, len(qus)),
+		Baremes:   make([]int, len(qus)),
 	}
 
 	// instantiate the questions
-	commonParams := ex.Parameters.ToMap()
-	for index, link := range links {
-		question := qus[link.IdQuestion]
+	sharedParams := ex.Parameters.ToMap()
+	for index, question := range qus {
 		ownParams := question.Page.Parameters.ToMap()
 
 		// merge the parameters, given higher precedence to question
-		for c, v := range commonParams {
+		for c, v := range sharedParams {
 			if _, has := ownParams[c]; !has {
 				ownParams[c] = v
 			}
@@ -193,11 +219,109 @@ func (ct *Controller) instantiateExercice(id int64) (InstantiatedExercice, error
 		}
 
 		out.Questions[index] = InstantiatedQuestion{
-			Id:       link.IdQuestion,
+			Id:       question.Id,
 			Question: instance.ToClient(),
 			Params:   newVarList(vars),
 		}
+		out.Baremes[index] = links[index].Bareme
 	}
 
 	return out, nil
+}
+
+// loadExercice loads the given exercice and the associated questions
+func (ct *Controller) loadExercice(exerciceID int64) (exerciceContent, error) {
+	ex, err := SelectExercice(ct.db, exerciceID)
+	if err != nil {
+		return exerciceContent{}, utils.SQLError(err)
+	}
+	links, err := SelectExerciceQuestionsByIdExercices(ct.db, exerciceID)
+	if err != nil {
+		return exerciceContent{}, utils.SQLError(err)
+	}
+	links.ensureIndex()
+
+	// load the question contents
+	dict, err := SelectQuestions(ct.db, links.IdQuestions()...)
+	if err != nil {
+		return exerciceContent{}, utils.SQLError(err)
+	}
+	return exerciceContent{exercice: ex, links: links, dict: dict}, nil
+}
+
+type EvaluateExerciceIn struct {
+	IdExercice int64
+	Answers    map[int]Answer // by question index (not ID)
+	// the current progression, as send by the server,
+	// to update with the given answers
+	Progression ProgressionExt
+}
+
+type EvaluateExerciceOut struct {
+	Results      map[int]client.QuestionAnswersOut `dart-extern:"client:questions/types.gen.dart"`
+	Progression  ProgressionExt                    // the updated progression
+	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
+}
+
+// EvaluateExercice checks the answer provided for the given exercice and
+// update the progression.
+func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
+	data, err := ct.loadExercice(args.IdExercice)
+	if err != nil {
+		return EvaluateExerciceOut{}, utils.SQLError(err)
+	}
+	ex, qus := data.exercice, data.questions()
+
+	if L1, L2 := len(qus), len(args.Progression.Questions); L1 != L2 {
+		return EvaluateExerciceOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
+	}
+
+	updatedProgression := args.Progression // shallow copy is enough
+	results := make(map[int]client.QuestionAnswersOut)
+
+	// depending on the flow, we either evaluate only one question,
+	// or all the ones given
+	switch ex.Flow {
+	case Parallel: // all questions
+		for questionIndex, question := range qus {
+			if answer, hasAnswer := args.Answers[questionIndex]; hasAnswer {
+				resp, err := question.evaluate(answer)
+				if err != nil {
+					return EvaluateExerciceOut{}, err
+				}
+
+				results[questionIndex] = resp
+				l := &updatedProgression.Questions[questionIndex]
+				*l = append(*l, resp.IsCorrect())
+			}
+		}
+	case Sequencial: // only the current question
+		questionIndex := args.Progression.NextQuestion
+		if questionIndex < 0 || questionIndex >= len(qus) {
+			return EvaluateExerciceOut{}, fmt.Errorf("internal error: invalid question index %d", questionIndex)
+		}
+
+		answer, has := args.Answers[questionIndex]
+		if !has {
+			return EvaluateExerciceOut{}, fmt.Errorf("internal error: missing answer for %d", questionIndex)
+		}
+
+		resp, err := qus[questionIndex].evaluate(answer)
+		if err != nil {
+			return EvaluateExerciceOut{}, err
+		}
+
+		results[questionIndex] = resp
+		l := &updatedProgression.Questions[questionIndex]
+		*l = append(*l, resp.IsCorrect())
+	}
+
+	updatedProgression.inferNextQuestion() // update in case of success
+
+	newVersion, err := data.instantiate()
+	if err != nil {
+		return EvaluateExerciceOut{}, err
+	}
+
+	return EvaluateExerciceOut{Results: results, Progression: updatedProgression, NewQuestions: newVersion.Questions}, nil
 }

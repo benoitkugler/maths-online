@@ -19,9 +19,14 @@ type Classroom struct {
 	Name      string `json:"name"`
 }
 
-// We only allow zero or one classroom per student
-// sql: ADD UNIQUE(id_student)
-type StudentClassroom struct {
-	IdStudent   int64 `json:"id_student" sql_on_delete:"CASCADE"`
+// Student is a student profile, always attached to a classroom.
+type Student struct {
+	Id               int64
+	Name             string
+	Surname          string
+	Birthday         Date
+	TrivialSuccess   int
+	IsClientAttached bool // true if at least one student appli has claimed this profile
+
 	IdClassroom int64 `json:"id_classroom" sql_on_delete:"CASCADE"`
 }

@@ -24,12 +24,16 @@
                 </v-btn>
               </v-col>
               <v-col>
-                <v-btn link color="teal-lighten-4" :to="{ name: 'editor' }">
+                <v-btn
+                  link
+                  color="teal-lighten-4"
+                  :to="{ name: 'editor-question' }"
+                >
                   Editeur de question
                 </v-btn>
               </v-col>
               <v-col>
-                <v-btn link color="teal-lighten-4" :to="{ name: 'editor-ex' }">
+                <v-btn link color="teal-lighten-4" :to="{ name: 'editor-exercice' }">
                   Editeur d'exercice
                 </v-btn>
               </v-col>

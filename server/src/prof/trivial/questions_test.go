@@ -7,7 +7,7 @@ import (
 	ex "github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	ed "github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/trivial-poursuit/game"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -19,12 +19,12 @@ func quD(title, diff string) questionDiff {
 	return questionDiff{question: qu(title), diff: ed.DifficultyTag(diff)}
 }
 
-var dummyQuestions = game.QuestionPool{
-	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	game.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+var dummyQuestions = tv.QuestionPool{
+	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
 }
 
 func Test_weightQuestions(t *testing.T) {

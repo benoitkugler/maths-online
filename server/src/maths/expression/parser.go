@@ -374,10 +374,17 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 	par := pr.tk.Next()
 
 	if par.data != openPar {
-		return nil, ErrInvalidExpr{
-			Reason: "parenthèse ouvrante manquante après randLetter",
+		return rv, ErrInvalidExpr{
+			Reason: "parenthèse ouvrante manquante après randSymbol",
 			Pos:    pos,
 		}
+	}
+
+	var isComplex bool
+	// distinguish between the two forms by cheking for additional parenthesis
+	if t := pr.tk.Peek(); t.data == openPar { // complex form
+		isComplex = true
+		_ = pr.tk.Next() // consume the parenthesis
 	}
 
 	for {
@@ -387,10 +394,10 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 
 		arg := pr.tk.Next()
 		if v, isVariable := arg.data.(Variable); isVariable {
-			rv = append(rv, v)
+			rv.choices = append(rv.choices, v)
 		} else {
-			return nil, ErrInvalidExpr{
-				Reason: "randLetter n'accepte que des variables comme arguments",
+			return rv, ErrInvalidExpr{
+				Reason: "randSymbol n'accepte que des variables comme arguments",
 				Pos:    pos,
 			}
 		}
@@ -408,23 +415,48 @@ func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
 		case nil: // EOF, error reported after the loop
 			break
 		default: // invalid separator
-			return nil, ErrInvalidExpr{
-				Reason: "randLetter utilise ';' comme séparateur",
+			return rv, ErrInvalidExpr{
+				Reason: "randSymbol utilise ';' comme séparateur",
 				Pos:    pos,
 			}
 		}
 	}
 
+	// for complex form, expect an additional closing ) and a selector
+	if isComplex {
+		tok := pr.tk.Next()
+		if tok.data != closePar {
+			return rv, ErrInvalidExpr{
+				Reason: "parenthèse fermante manquante après les choix de randSymbol",
+				Pos:    tok.pos,
+			}
+		}
+
+		tok = pr.tk.Next()
+		if tok.data != semicolon {
+			return rv, ErrInvalidExpr{
+				Reason: "randSymbol utilise ; pour séparer les choix du sélecteur",
+				Pos:    tok.pos,
+			}
+		}
+
+		// accept a complete expression
+		rv.selector, err = pr.parseExpression(false)
+		if err != nil {
+			return rv, err
+		}
+	}
+
 	if tok := pr.tk.Next(); tok.data != closePar {
-		return nil, ErrInvalidExpr{
-			Reason: "parenthèse fermante manquante après randLetter",
+		return rv, ErrInvalidExpr{
+			Reason: "parenthèse fermante manquante après randSymbol",
 			Pos:    tok.pos,
 		}
 	}
 
-	if len(rv) == 0 {
-		return nil, ErrInvalidExpr{
-			Reason: "randLetter attend au moins un argument",
+	if len(rv.choices) == 0 {
+		return rv, ErrInvalidExpr{
+			Reason: "randSymbol attend au moins un argument",
 			Pos:    pos,
 		}
 	}

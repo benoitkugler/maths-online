@@ -1,29 +1,53 @@
 package editor
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
-func TestInstantiateQuestions(t *testing.T) {
+func TestValidation(t *testing.T) {
 	db, err := testutils.DB.ConnectPostgres()
 	if err != nil {
 		t.Skipf("DB %v not available : %s", testutils.DB, err)
 		return
 	}
 
-	ct := NewController(db, teacher.Teacher{})
-	out, err := ct.InstantiateQuestions([]int64{24, 29, 37})
+	qu, err := SelectAllQuestions(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, _ := json.MarshalIndent(out, " ", " ")
-	fmt.Println(string(s))
+	qu.RestrictNeedExercice()
+
+	ti := time.Now()
+	err = validateAllQuestions(qu)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
+}
+
+func BenchmarkValidation(b *testing.B) {
+	db, err := testutils.DB.ConnectPostgres()
+	if err != nil {
+		b.Skipf("DB %v not available : %s", testutils.DB, err)
+		return
+	}
+
+	qu, err := SelectAllQuestions(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		validateAllQuestions(qu)
+	}
 }
 
 func TestExerciceCRUD(t *testing.T) {
@@ -47,7 +71,7 @@ func TestExerciceCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(l) != 1 {
+	if len(l.Questions) != 1 {
 		t.Fatal(l)
 	}
 
@@ -59,7 +83,7 @@ func TestExerciceCRUD(t *testing.T) {
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
 		Questions: ExerciceQuestions{
-			l[0].Question,
+			l.Questions[0],
 			ExerciceQuestion{IdQuestion: qu.Id},
 			ExerciceQuestion{IdQuestion: qu.Id},
 		},
@@ -67,16 +91,16 @@ func TestExerciceCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(l) != 3 {
+	if len(l.Questions) != 3 {
 		t.Fatal(l)
 	}
 
-	updated := l[1].Question
+	updated := l.Questions[1]
 	updated.Bareme = 5
 	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
 		Questions: ExerciceQuestions{
-			l[0].Question,
+			l.Questions[0],
 			updated,
 		},
 	}, 1)
@@ -92,7 +116,7 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(exe)
 	}
 
-	err = ct.deleteExercice(ex.Exercice.Id, true, 1)
+	err = ct.deleteExercice(ex.Exercice.Id, 1)
 	if err != nil {
 		t.Fatal(err)
 	}

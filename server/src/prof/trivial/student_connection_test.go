@@ -7,7 +7,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -31,7 +31,7 @@ func TestController_setupStudentClientDemo(t *testing.T) {
 	if len(session.games) != 1 {
 		t.Fatal()
 	}
-	if session.playerIDs[out.PlayerID].Player != -1 {
+	if session.playerIDs[out.PlayerID] != "1234.12.2" {
 		t.Fatal()
 	}
 }
@@ -57,17 +57,17 @@ func TestController_setupStudentClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := tv.GameOptions{
+	options := tv.Options{
 		PlayersNumber:   2,
 		QuestionTimeout: time.Second * 120,
 		ShowDecrassage:  true,
+		Questions:       questionPool,
 	}
 
 	gameID := gs.newGameID()
 	gs.createGameEvents <- createGame{
-		ID:        gameID,
-		Questions: questionPool,
-		Options:   options,
+		ID:      gameID,
+		Options: options,
 	}
 
 	time.Sleep(time.Millisecond)
@@ -81,7 +81,7 @@ func TestController_setupStudentClient(t *testing.T) {
 	if len(session.games) != 1 {
 		t.Fatal()
 	}
-	if session.playerIDs[out.PlayerID].Player != -1 {
+	if session.playerIDs[out.PlayerID] != gameID {
 		t.Fatal()
 	}
 }

@@ -20,9 +20,8 @@ var (
 	_ instance = VariationTableInstance{}
 	_ instance = SignTableInstance{}
 	_ instance = FigureInstance{}
-	_ instance = FunctionVariationGraphInstance{}
 	_ instance = TableInstance{}
-	_ instance = FunctionGraphInstance{}
+	_ instance = FunctionsGraphInstance{}
 )
 
 // ExerciceInstance is an in memory version of an Exercice,
@@ -141,7 +140,7 @@ func (se StringOrExpression) IsEmpty() bool {
 
 func (fi StringOrExpression) asLaTeX() string {
 	if fi.Expression != nil {
-		return fi.Expression.AsLaTeX(nil)
+		return fi.Expression.AsLaTeX()
 	}
 	return fi.String
 }
@@ -206,8 +205,8 @@ func (vt VariationTableInstance) toClient() client.Block {
 		numberIsUp := vt.inferNumberAlignment(i)
 		// add the number column
 		out.Columns = append(out.Columns, client.VariationColumnNumber{
-			X:    vt.Xs[i].Expr.AsLaTeX(nil),
-			Y:    vt.Fxs[i].Expr.AsLaTeX(nil),
+			X:    vt.Xs[i].Expr.AsLaTeX(),
+			Y:    vt.Fxs[i].Expr.AsLaTeX(),
 			IsUp: numberIsUp,
 		})
 
@@ -259,37 +258,21 @@ type FigureInstance client.FigureBlock
 
 func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 
-type FunctionGraphInstance struct {
-	Functions   []expression.FunctionDefinition
-	Decorations []functiongrapher.FunctionDecoration
+type FunctionsGraphInstance struct {
+	Functions []functiongrapher.FunctionGraph
+	Areas     []client.FunctionArea
 }
 
-func (fg FunctionGraphInstance) toClient() client.Block {
-	return client.FunctionGraphBlock{
-		Graph: functiongrapher.NewFunctionGraph(fg.Functions, fg.Decorations),
+func (fg FunctionsGraphInstance) toClient() client.Block {
+	var allSegments []functiongrapher.BezierCurve
+	for _, fn := range fg.Functions {
+		allSegments = append(allSegments, fn.Segments...)
 	}
-}
 
-// FunctionVariationGraphInstance is the same as VariationTableInstance,
-// but displays its content as a graph
-type FunctionVariationGraphInstance VariationTableInstance
-
-func (fg FunctionVariationGraphInstance) values() (xs, fxs []float64) {
-	xs = make([]float64, len(fg.Xs))
-	fxs = make([]float64, len(fg.Fxs))
-	for i, v := range fg.Xs {
-		xs[i] = v.Value
-	}
-	for i, v := range fg.Fxs {
-		fxs[i] = v.Value
-	}
-	return
-}
-
-func (fg FunctionVariationGraphInstance) toClient() client.Block {
-	xs, fxs := fg.values()
-	return client.FunctionGraphBlock{
-		Graph: functiongrapher.GraphFromVariations(functiongrapher.FunctionDecoration{Label: fg.Label}, xs, fxs),
+	return client.FunctionsGraphBlock{
+		Functions: fg.Functions,
+		Areas:     fg.Areas,
+		Bounds:    functiongrapher.BoundingBox(allSegments),
 	}
 }
 

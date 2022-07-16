@@ -12,59 +12,59 @@ type AnswerWrapper struct {
 
 func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 	var wr struct {
+		Kind string
 		Data json.RawMessage
-		Kind int
 	}
 	err := json.Unmarshal(src, &wr)
 	if err != nil {
 		return err
 	}
 	switch wr.Kind {
-	case 0:
+	case "DoublePointAnswer":
 		var data DoublePointAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 1:
+	case "DoublePointPairAnswer":
 		var data DoublePointPairAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 2:
+	case "ExpressionAnswer":
 		var data ExpressionAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 3:
+	case "FunctionPointsAnswer":
 		var data FunctionPointsAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 4:
+	case "NumberAnswer":
 		var data NumberAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 5:
+	case "OrderedListAnswer":
 		var data OrderedListAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 6:
+	case "PointAnswer":
 		var data PointAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 7:
+	case "RadioAnswer":
 		var data RadioAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 8:
+	case "TableAnswer":
 		var data TableAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 9:
+	case "TreeAnswer":
 		var data TreeAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 10:
+	case "VariationTableAnswer":
 		var data VariationTableAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 11:
+	case "VectorNumberAnswer":
 		var data VectorNumberAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -78,34 +78,34 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
 		Data interface{}
-		Kind int
+		Kind string
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
 	case DoublePointAnswer:
-		wr = wrapper{Kind: 0, Data: data}
+		wr = wrapper{Kind: "DoublePointAnswer", Data: data}
 	case DoublePointPairAnswer:
-		wr = wrapper{Kind: 1, Data: data}
+		wr = wrapper{Kind: "DoublePointPairAnswer", Data: data}
 	case ExpressionAnswer:
-		wr = wrapper{Kind: 2, Data: data}
+		wr = wrapper{Kind: "ExpressionAnswer", Data: data}
 	case FunctionPointsAnswer:
-		wr = wrapper{Kind: 3, Data: data}
+		wr = wrapper{Kind: "FunctionPointsAnswer", Data: data}
 	case NumberAnswer:
-		wr = wrapper{Kind: 4, Data: data}
+		wr = wrapper{Kind: "NumberAnswer", Data: data}
 	case OrderedListAnswer:
-		wr = wrapper{Kind: 5, Data: data}
+		wr = wrapper{Kind: "OrderedListAnswer", Data: data}
 	case PointAnswer:
-		wr = wrapper{Kind: 6, Data: data}
+		wr = wrapper{Kind: "PointAnswer", Data: data}
 	case RadioAnswer:
-		wr = wrapper{Kind: 7, Data: data}
+		wr = wrapper{Kind: "RadioAnswer", Data: data}
 	case TableAnswer:
-		wr = wrapper{Kind: 8, Data: data}
+		wr = wrapper{Kind: "TableAnswer", Data: data}
 	case TreeAnswer:
-		wr = wrapper{Kind: 9, Data: data}
+		wr = wrapper{Kind: "TreeAnswer", Data: data}
 	case VariationTableAnswer:
-		wr = wrapper{Kind: 10, Data: data}
+		wr = wrapper{Kind: "VariationTableAnswer", Data: data}
 	case VectorNumberAnswer:
-		wr = wrapper{Kind: 11, Data: data}
+		wr = wrapper{Kind: "VectorNumberAnswer", Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -114,18 +114,18 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	DoublePointAnswerAnKind = iota
-	DoublePointPairAnswerAnKind
-	ExpressionAnswerAnKind
-	FunctionPointsAnswerAnKind
-	NumberAnswerAnKind
-	OrderedListAnswerAnKind
-	PointAnswerAnKind
-	RadioAnswerAnKind
-	TableAnswerAnKind
-	TreeAnswerAnKind
-	VariationTableAnswerAnKind
-	VectorNumberAnswerAnKind
+	DoublePointAnswerAnKind     = "DoublePointAnswer"
+	DoublePointPairAnswerAnKind = "DoublePointPairAnswer"
+	ExpressionAnswerAnKind      = "ExpressionAnswer"
+	FunctionPointsAnswerAnKind  = "FunctionPointsAnswer"
+	NumberAnswerAnKind          = "NumberAnswer"
+	OrderedListAnswerAnKind     = "OrderedListAnswer"
+	PointAnswerAnKind           = "PointAnswer"
+	RadioAnswerAnKind           = "RadioAnswer"
+	TableAnswerAnKind           = "TableAnswer"
+	TreeAnswerAnKind            = "TreeAnswer"
+	VariationTableAnswerAnKind  = "VariationTableAnswer"
+	VectorNumberAnswerAnKind    = "VectorNumberAnswer"
 )
 
 // BlockWrapper may be used as replacements for Block
@@ -136,91 +136,91 @@ type BlockWrapper struct {
 
 func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 	var wr struct {
+		Kind string
 		Data json.RawMessage
-		Kind int
 	}
 	err := json.Unmarshal(src, &wr)
 	if err != nil {
 		return err
 	}
 	switch wr.Kind {
-	case 0:
+	case "DropDownFieldBlock":
 		var data DropDownFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 1:
+	case "ExpressionFieldBlock":
 		var data ExpressionFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 2:
+	case "FigureBlock":
 		var data FigureBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 3:
+	case "FigurePointFieldBlock":
 		var data FigurePointFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 4:
+	case "FigureVectorFieldBlock":
 		var data FigureVectorFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 5:
+	case "FigureVectorPairFieldBlock":
 		var data FigureVectorPairFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 6:
+	case "FormulaBlock":
 		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 7:
-		var data FunctionGraphBlock
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case 8:
+	case "FunctionPointsFieldBlock":
 		var data FunctionPointsFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 9:
+	case "FunctionsGraphBlock":
+		var data FunctionsGraphBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "NumberFieldBlock":
 		var data NumberFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 10:
+	case "OrderedListFieldBlock":
 		var data OrderedListFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 11:
+	case "RadioFieldBlock":
 		var data RadioFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 12:
+	case "SignTableBlock":
 		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 13:
+	case "TableBlock":
 		var data TableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 14:
+	case "TableFieldBlock":
 		var data TableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 15:
+	case "TextBlock":
 		var data TextBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 16:
+	case "TreeFieldBlock":
 		var data TreeFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 17:
+	case "VariationTableBlock":
 		var data VariationTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 18:
+	case "VariationTableFieldBlock":
 		var data VariationTableFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case 19:
+	case "VectorFieldBlock":
 		var data VectorFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
@@ -234,50 +234,50 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 	type wrapper struct {
 		Data interface{}
-		Kind int
+		Kind string
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
 	case DropDownFieldBlock:
-		wr = wrapper{Kind: 0, Data: data}
+		wr = wrapper{Kind: "DropDownFieldBlock", Data: data}
 	case ExpressionFieldBlock:
-		wr = wrapper{Kind: 1, Data: data}
+		wr = wrapper{Kind: "ExpressionFieldBlock", Data: data}
 	case FigureBlock:
-		wr = wrapper{Kind: 2, Data: data}
+		wr = wrapper{Kind: "FigureBlock", Data: data}
 	case FigurePointFieldBlock:
-		wr = wrapper{Kind: 3, Data: data}
+		wr = wrapper{Kind: "FigurePointFieldBlock", Data: data}
 	case FigureVectorFieldBlock:
-		wr = wrapper{Kind: 4, Data: data}
+		wr = wrapper{Kind: "FigureVectorFieldBlock", Data: data}
 	case FigureVectorPairFieldBlock:
-		wr = wrapper{Kind: 5, Data: data}
+		wr = wrapper{Kind: "FigureVectorPairFieldBlock", Data: data}
 	case FormulaBlock:
-		wr = wrapper{Kind: 6, Data: data}
-	case FunctionGraphBlock:
-		wr = wrapper{Kind: 7, Data: data}
+		wr = wrapper{Kind: "FormulaBlock", Data: data}
 	case FunctionPointsFieldBlock:
-		wr = wrapper{Kind: 8, Data: data}
+		wr = wrapper{Kind: "FunctionPointsFieldBlock", Data: data}
+	case FunctionsGraphBlock:
+		wr = wrapper{Kind: "FunctionsGraphBlock", Data: data}
 	case NumberFieldBlock:
-		wr = wrapper{Kind: 9, Data: data}
+		wr = wrapper{Kind: "NumberFieldBlock", Data: data}
 	case OrderedListFieldBlock:
-		wr = wrapper{Kind: 10, Data: data}
+		wr = wrapper{Kind: "OrderedListFieldBlock", Data: data}
 	case RadioFieldBlock:
-		wr = wrapper{Kind: 11, Data: data}
+		wr = wrapper{Kind: "RadioFieldBlock", Data: data}
 	case SignTableBlock:
-		wr = wrapper{Kind: 12, Data: data}
+		wr = wrapper{Kind: "SignTableBlock", Data: data}
 	case TableBlock:
-		wr = wrapper{Kind: 13, Data: data}
+		wr = wrapper{Kind: "TableBlock", Data: data}
 	case TableFieldBlock:
-		wr = wrapper{Kind: 14, Data: data}
+		wr = wrapper{Kind: "TableFieldBlock", Data: data}
 	case TextBlock:
-		wr = wrapper{Kind: 15, Data: data}
+		wr = wrapper{Kind: "TextBlock", Data: data}
 	case TreeFieldBlock:
-		wr = wrapper{Kind: 16, Data: data}
+		wr = wrapper{Kind: "TreeFieldBlock", Data: data}
 	case VariationTableBlock:
-		wr = wrapper{Kind: 17, Data: data}
+		wr = wrapper{Kind: "VariationTableBlock", Data: data}
 	case VariationTableFieldBlock:
-		wr = wrapper{Kind: 18, Data: data}
+		wr = wrapper{Kind: "VariationTableFieldBlock", Data: data}
 	case VectorFieldBlock:
-		wr = wrapper{Kind: 19, Data: data}
+		wr = wrapper{Kind: "VectorFieldBlock", Data: data}
 
 	default:
 		panic("exhaustive switch")
@@ -286,26 +286,26 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	DropDownFieldBlockBlKind = iota
-	ExpressionFieldBlockBlKind
-	FigureBlockBlKind
-	FigurePointFieldBlockBlKind
-	FigureVectorFieldBlockBlKind
-	FigureVectorPairFieldBlockBlKind
-	FormulaBlockBlKind
-	FunctionGraphBlockBlKind
-	FunctionPointsFieldBlockBlKind
-	NumberFieldBlockBlKind
-	OrderedListFieldBlockBlKind
-	RadioFieldBlockBlKind
-	SignTableBlockBlKind
-	TableBlockBlKind
-	TableFieldBlockBlKind
-	TextBlockBlKind
-	TreeFieldBlockBlKind
-	VariationTableBlockBlKind
-	VariationTableFieldBlockBlKind
-	VectorFieldBlockBlKind
+	DropDownFieldBlockBlKind         = "DropDownFieldBlock"
+	ExpressionFieldBlockBlKind       = "ExpressionFieldBlock"
+	FigureBlockBlKind                = "FigureBlock"
+	FigurePointFieldBlockBlKind      = "FigurePointFieldBlock"
+	FigureVectorFieldBlockBlKind     = "FigureVectorFieldBlock"
+	FigureVectorPairFieldBlockBlKind = "FigureVectorPairFieldBlock"
+	FormulaBlockBlKind               = "FormulaBlock"
+	FunctionPointsFieldBlockBlKind   = "FunctionPointsFieldBlock"
+	FunctionsGraphBlockBlKind        = "FunctionsGraphBlock"
+	NumberFieldBlockBlKind           = "NumberFieldBlock"
+	OrderedListFieldBlockBlKind      = "OrderedListFieldBlock"
+	RadioFieldBlockBlKind            = "RadioFieldBlock"
+	SignTableBlockBlKind             = "SignTableBlock"
+	TableBlockBlKind                 = "TableBlock"
+	TableFieldBlockBlKind            = "TableFieldBlock"
+	TextBlockBlKind                  = "TextBlock"
+	TreeFieldBlockBlKind             = "TreeFieldBlock"
+	VariationTableBlockBlKind        = "VariationTableBlock"
+	VariationTableFieldBlockBlKind   = "VariationTableFieldBlock"
+	VectorFieldBlockBlKind           = "VectorFieldBlock"
 )
 
 func (ct Enonce) MarshalJSON() ([]byte, error) {

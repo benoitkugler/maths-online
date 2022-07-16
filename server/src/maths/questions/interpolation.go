@@ -12,10 +12,10 @@ import (
 // #{} are allowed in $$.
 type Interpolated string
 
-// Parse extracts each parts of the interpolated string,
+// parse extracts each parts of the interpolated string,
 // as well as parsing expressions found.
 // It returns an error for invalid expressions
-func (s Interpolated) Parse() (TextParts, error) {
+func (s Interpolated) parse() (TextParts, error) {
 	latex := splitByLaTeX(string(s))
 	var out TextParts
 	for _, c := range latex {
@@ -34,11 +34,19 @@ func (s Interpolated) Parse() (TextParts, error) {
 }
 
 func (s Interpolated) instantiate(params expression.Vars) (client.TextLine, error) {
-	parsed, err := s.Parse()
+	parsed, err := s.parse()
 	if err != nil {
 		return nil, err
 	}
 	return parsed.instantiate(params)
+}
+
+func (s Interpolated) instantiateAndMerge(params expression.Vars) (string, error) {
+	parsed, err := s.parse()
+	if err != nil {
+		return "", err
+	}
+	return parsed.instantiateAndMerge(params)
 }
 
 var (

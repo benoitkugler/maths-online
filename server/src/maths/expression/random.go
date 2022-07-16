@@ -1,10 +1,12 @@
 package expression
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
 	"sort"
+	"strings"
 )
 
 // ErrInvalidRandomParameters is returned when instantiating
@@ -104,7 +106,7 @@ func (rv RandomParameters) Validate() error {
 // or a = b + 1; b = a.
 // See `Validate` to statistically check for errors.
 func (rv RandomParameters) Instantiate() (Vars, error) {
-	resolver := randomVarResolver{
+	resolver := &randomVarResolver{
 		defs:    rv,
 		seen:    make(map[Variable]bool),
 		results: make(map[Variable]rat),
@@ -115,7 +117,14 @@ func (rv RandomParameters) Instantiate() (Vars, error) {
 		// special case for randVariable
 		if randV, isRandVariable := expr.atom.(randVariable); isRandVariable {
 			resolver.seen[v] = true
-			out[v] = &Expr{atom: randV.choice()}
+			resolved, err := randV.choice(resolver)
+			if err != nil {
+				return nil, ErrInvalidRandomParameters{
+					Cause:  v,
+					Detail: err.Error(),
+				}
+			}
+			out[v] = NewVarExpr(resolved)
 			continue
 		}
 
@@ -130,9 +139,28 @@ func (rv RandomParameters) Instantiate() (Vars, error) {
 	return out, nil
 }
 
-func (rv randVariable) choice() Variable {
-	index := rand.Intn(len(rv))
-	return rv[index]
+// evaluate the potential selector and returns a choice
+func (rv randVariable) choice(res ValueResolver) (Variable, error) {
+	var index int
+	// note that the parsing step checks that len(choices) > 0
+	if rv.selector == nil {
+		index = rand.Intn(len(rv.choices))
+	} else {
+		v, err := rv.selector.Evaluate(res)
+		if err != nil {
+			return Variable{}, err
+		}
+		var ok bool
+		index, ok = IsInt(v)
+		if !ok {
+			return Variable{}, errors.New("L'argument de la fonction choice doit être un entier.")
+		}
+		if index < 1 || index > len(rv.choices) {
+			return Variable{}, fmt.Errorf("L'argument de la fonction choice doit être un compris entre 1 et %d.", len(rv.choices))
+		}
+		index -= 1 // using "human" convention
+	}
+	return rv.choices[index], nil
 }
 
 // return list of primes between min and max (inclusive)
@@ -250,17 +278,6 @@ func (rd specialFunctionA) validate(pos int) error {
 	return nil
 }
 
-// ErrRandomTests is returned when a valid expression does not always
-// pass a given criteria
-type ErrRandomTests struct {
-	// frequency of successul tries, between 0 and 100
-	SuccessFrequency int
-}
-
-func (e ErrRandomTests) Error() string {
-	return fmt.Sprintf("success rate: %d", e.SuccessFrequency)
-}
-
 // IsValidNumber evaluates the expression using `vars`,
 // checking if it is a valid number.
 // If `checkPrecision` is true, it also checks that the number is not exceeding the
@@ -345,17 +362,17 @@ func (expr *Expr) IsValidIndex(vars Vars, length int) error {
 
 // IsValid evaluates the function expression using `vars`, and checks
 // if the (estimated) extrema of |f| is less than `bound`, returning an error if not.
-func (fn FunctionExpr) IsValid(from, to *Expr, vars Vars, bound float64) error {
+func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
 	fnExpr := fn.Function.Copy()
 	fnExpr.Substitute(vars)
 
-	fromV, err := from.Evaluate(vars)
+	fromV, toV, err := domain.eval(vars)
 	if err != nil {
 		return err
 	}
-	toV, err := to.Evaluate(vars)
-	if err != nil {
-		return err
+
+	if fromV >= toV {
+		return fmt.Errorf("Les expressions %s ne définissent pas un intervalle valide (%f, %f).", domain, fromV, toV)
 	}
 
 	def := FunctionDefinition{
@@ -368,6 +385,123 @@ func (fn FunctionExpr) IsValid(from, to *Expr, vars Vars, bound float64) error {
 		return fmt.Errorf("L'expression %s ne définit pas une fonction valide.", fnExpr)
 	} else if ext > bound {
 		return fmt.Errorf("L'expression %s prend des valeurs trop importantes (%f)", fnExpr, ext)
+	}
+
+	return nil
+}
+
+type Domain struct {
+	From, To *Expr
+}
+
+func (d Domain) String() string {
+	from := "-Inf"
+	if d.From != nil {
+		from = d.From.String()
+	}
+	to := "+Inf"
+	if d.To != nil {
+		to = d.To.String()
+	}
+	return fmt.Sprintf("[%s;%s]", from, to)
+}
+
+func (d Domain) eval(vars Vars) (from, to float64, err error) {
+	if d.From == nil {
+		from = math.Inf(-1)
+	} else {
+		from, err = d.From.Evaluate(vars)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	if d.To == nil {
+		to = math.Inf(+1)
+	} else {
+		to, err = d.To.Evaluate(vars)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+	return from, to, nil
+}
+
+// IsIncludedIntoOne returns an error if `d` is not included in any `other` domains
+// If one of the expression bound is nil, it is interpreted as Infinity (no constraint)
+func (d Domain) IsIncludedIntoOne(others []Domain, vars Vars) error {
+	dFrom, dTo, err := d.eval(vars)
+	if err != nil {
+		return err
+	}
+
+	var ds []string
+	for _, other := range others {
+		otherFrom, otherTo, err := other.eval(vars)
+		if err != nil {
+			return err
+		}
+		if dFrom >= otherFrom && dTo <= otherTo { // found it
+			return nil
+		}
+		ds = append(ds, other.String())
+	}
+
+	return fmt.Errorf("L'intervalle %s n'est inclut dans aucun des domaines %s.", d, strings.Join(ds, ", "))
+}
+
+// AreDisjointsDomains returns an error if the given intervals [from, to] are not disjoints.
+// Domains must be valid, as defined by `FunctionExpr.IsValid`.
+func AreDisjointsDomains(domains []Domain, vars Vars) error {
+	intervals := make([][2]float64, len(domains))
+	for i, ds := range domains {
+		fromV, toV, err := ds.eval(vars)
+		if err != nil {
+			return err
+		}
+		intervals[i] = [2]float64{fromV, toV}
+	}
+
+	if err := checkIntervalsDisjoints(intervals); err != nil {
+		i1, i2 := domains[err.index1], domains[err.index2]
+		return fmt.Errorf("les expressions %s et %s ne définissent pas des domains disjoints", i1, i2)
+	}
+
+	return nil
+}
+
+type jointIntervals struct {
+	index1, index2 int
+}
+
+// returns a non nil value if the given intervals are not disjoints
+func checkIntervalsDisjoints(intervals [][2]float64) *jointIntervals {
+	// keep track of the original indices
+	type indexedInterval struct {
+		from, to float64
+		index    int
+	}
+
+	tmp := make([]indexedInterval, len(intervals))
+	for i, v := range intervals {
+		tmp[i] = indexedInterval{from: v[0], to: v[1], index: i}
+	}
+
+	// sort by interval start
+	sort.Slice(tmp, func(i, j int) bool {
+		return tmp[i].from < tmp[j].from
+	})
+
+	// now check that the end of one interval is less than the start of the next
+	for i := range tmp {
+		if i == len(tmp)-1 {
+			break
+		}
+
+		i1, i2 := tmp[i], tmp[i+1]
+		if i1.to > i2.from {
+			return &jointIntervals{index1: i1.index, index2: i2.index}
+		}
 	}
 
 	return nil

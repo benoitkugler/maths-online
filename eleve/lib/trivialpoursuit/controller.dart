@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/exercices/types.gen.dart' as Types;
+import 'package:eleve/questions/types.gen.dart' as Types;
 import 'package:eleve/settings.dart';
 import 'package:eleve/trivialpoursuit/board.dart';
 import 'package:eleve/trivialpoursuit/dice.dart' as dice;
@@ -29,6 +29,8 @@ class GameAcces {
   final String gameMeta;
   const GameAcces(this.id, this.pseudo, this.gameMeta);
 }
+
+const _infiniteDuration = Duration(days: 1000);
 
 /// [GameTerminatedNotification] is emitted when a game is definitively
 /// closed by the server.
@@ -57,15 +59,12 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   late Timer _keepAliveTimmer;
   final eventQueue = StreamController<StateUpdate>();
 
-  int playerID = -1;
+  PlayerID playerID = "";
   bool hasGameStarted = false;
 
-  Map<int, String> lobby = {};
+  Map<PlayerID, String> lobby = {};
 
-  GameState state = const GameState({
-    0: PlayerStatus(
-        "", QuestionReview([], []), [false, false, false, false, false], false)
-  }, 0, 0);
+  GameState state = const GameState({}, 0, "");
   Set<int> highligthedTiles = {};
 
   /// null when no animation is displayed
@@ -169,10 +168,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     GameTerminatedNotification().dispatch(context);
   }
 
-  void _sendEvent(ClientEventData event) {
+  void _sendEvent(ClientEventITF event) {
     if (widget.apiURL != "") {
-      channel.sink
-          .add(jsonEncode(clientEventToJson(ClientEvent(event, playerID))));
+      channel.sink.add(jsonEncode(clientEventITFToJson(event)));
     }
   }
 
@@ -191,10 +189,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   void _onLobbyUpdate(LobbyUpdate event) {
     setState(() {
-      lobby = event.names;
+      lobby = event.playerPseudos;
     });
 
-    if (event.player == playerID) {
+    if (event.iD == playerID) {
       // do not notify our own connection
       return;
     }
@@ -203,8 +201,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       duration: const Duration(seconds: 2),
       backgroundColor: Theme.of(context).colorScheme.primary,
       content: event.isJoining
-          ? Text("${event.playerName} a rejoint la partie !")
-          : Text("${event.playerName} a quitté la partie."),
+          ? Text("${event.pseudo} a rejoint la partie !")
+          : Text("${event.pseudo} a quitté la partie."),
     ));
   }
 
@@ -218,7 +216,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     // send the move request to the server,
     // ignore event if it not our turn to play
     // or if the tile is not selected
-    if (state.player != playerID) {
+    if (state.playerTurn != playerID) {
       return;
     }
     if (!highligthedTiles.contains(tile)) {
@@ -229,7 +227,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   void onTapDice() {
-    if (state.player != playerID) {
+    if (state.playerTurn != playerID) {
       // ignore if this it not our turn
       return;
     }
@@ -244,7 +242,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 8),
+        duration: _infiniteDuration, // hide in _onDiceThrow
         backgroundColor: Theme.of(context).colorScheme.secondary,
         content: isOwnTurn
             ? const Text("C'est à toi de lancer le dé !")
@@ -319,7 +317,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
     for (var tile in event.path) {
       setState(() {
-        state = GameState(state.players, tile, state.player);
+        state = GameState(state.players, tile, state.playerTurn);
       });
 
       await Future<void>.delayed(const Duration(milliseconds: 800));
@@ -336,8 +334,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
         event,
         (a) {
           // do not close the page now, it is handled when receiving result
-          lastQuestion = _LastQuestion(event, a.data.data);
-          _sendEvent(Answer(a.data));
+          lastQuestion = _LastQuestion(event, a.data);
+          _sendEvent(Answer(a));
         },
       ),
     ));
@@ -392,12 +390,12 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: const Duration(seconds: 2),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        content: Text("${event.playerName} s'est reconnecté(e) !")));
+        content: Text("${event.pseudo} s'est reconnecté(e) !")));
 
-    // our own playerID is -1 only if we are reconnecting
-    if (playerID == -1) {
+    // our own playerID is empty only if we are reconnecting
+    if (playerID == "") {
       setState(() {
-        playerID = event.playerID;
+        playerID = event.iD;
       });
       _onGameStart();
     }
@@ -441,7 +439,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   // process the given event
-  Future<void> _processEvent(GameEvent event) async {
+  Future<void> _processEvent(ServerEvent event) async {
     if (event is PlayerJoin) {
       _onPlayerJoin(event);
     } else if (event is LobbyUpdate) {

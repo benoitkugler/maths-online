@@ -7,7 +7,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/teacher"
-	tv "github.com/benoitkugler/maths-online/trivial-poursuit"
+	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 

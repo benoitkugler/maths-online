@@ -46,19 +46,19 @@
 </template>
 
 <script setup lang="ts">
-import { Visibility, type ExerciceExt } from "@/controller/api_gen";
+import { Visibility, type ExerciceHeader } from "@/controller/api_gen";
 import { visiblityColors } from "@/controller/editor";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
 
 interface Props {
-  exercice: ExerciceExt;
+  exercice: ExerciceHeader;
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  (e: "delete", question: ExerciceExt): void;
-  (e: "clicked", question: ExerciceExt): void;
-  (e: "duplicate", question: ExerciceExt): void;
+  (e: "delete", question: ExerciceHeader): void;
+  (e: "clicked", question: ExerciceHeader): void;
+  (e: "duplicate", question: ExerciceHeader): void;
   (e: "updatePublic", exerciceID: number, isPublic: boolean): void;
 }>();
 

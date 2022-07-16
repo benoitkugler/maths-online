@@ -66,14 +66,14 @@ func Test_figureValidator_validate(t *testing.T) {
 		wantErr    bool
 	}{
 		{[]string{"A", "B"}, nil, nil, false},
-		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randLetter(U;V)")}, false},
-		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randLetter(U;A)")}, true},
-		{[]string{"A_1", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randLetter(U;A_1)")}, true},
-		{[]string{"A_c2", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randLetter(U;A_c2)")}, true},
+		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;V)")}, false},
+		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;A)")}, true},
+		{[]string{"A_1", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;A_1)")}, true},
+		{[]string{"A_c2", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;A_c2)")}, true},
 		{[]string{"A", "B"}, []string{"A", "A"}, nil, false},
 		{[]string{"A", "B"}, []string{"A", "C"}, nil, true},
-		{[]string{"A", "R"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randLetter(U;V)")}, false},
-		{[]string{"A", "B", "C"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randLetter(A;B;C)")}, false},
+		{[]string{"A", "R"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;V)")}, false},
+		{[]string{"A", "B", "C"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(A;B;C)")}, false},
 	}
 	for _, tt := range tests {
 		v := figureValidator{
@@ -104,8 +104,10 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 		v := functionPointsValidator{
 			function: function{
 				FunctionExpr: ex.FunctionExpr{Function: expr, Variable: ex.NewVar('x')},
-				from:         ex.MustParse("-10"),
-				to:           ex.MustParse("-10"),
+				domain: ex.Domain{
+					From: ex.MustParse("-10"),
+					To:   ex.MustParse("-10"),
+				},
 			},
 			xGrid: mustParseMany(tt.grid),
 		}

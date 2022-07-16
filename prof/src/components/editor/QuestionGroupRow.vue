@@ -1,9 +1,9 @@
 <template>
-  <v-expansion-panels class="my-1" v-model="state">
+  <v-expansion-panels class="my-2" v-model="state">
     <v-expansion-panel>
-      <v-expansion-panel-title class="py-0 bg-lime-lighten-5 rounded pr-1 pl-2">
+      <v-expansion-panel-title class="py-1 bg-lime-lighten-5 rounded pr-1 pl-2">
         <v-row no-gutters justify="space-between">
-          <v-col cols="auto" style="text-align: left" align-self="center">
+          <v-col cols="6" style="text-align: left" align-self="center">
             <v-row no-gutters>
               <v-col cols="12">
                 {{ props.group.Title }}
@@ -18,10 +18,10 @@
               </v-col>
             </v-row>
           </v-col>
-          <v-col cols="auto" align-self="center">
+          <v-col cols="6" align-self="center">
             <TagListField
               :readonly="!isEditable"
-              :model-value="tags"
+              :model-value="commonTags"
               @update:model-value="(l) => emit('updateTags', l)"
               :all-tags="props.allTags"
               y-padding
@@ -33,6 +33,7 @@
       <v-expansion-panel-text class="px-0">
         <QuestionRow
           :question="question"
+          :common-tags="commonTags"
           v-for="question in props.group.Questions"
           :key="question.Id"
           @clicked="emit('clicked', question)"
@@ -69,7 +70,7 @@ const emit = defineEmits<{
   (e: "updateTags", tags: string[]): void;
 }>();
 
-const tags = computed(() => commonGroupTags(props.group.Questions || []));
+const commonTags = computed(() => commonGroupTags(props.group.Questions || []));
 
 const isEditable = computed(
   () =>

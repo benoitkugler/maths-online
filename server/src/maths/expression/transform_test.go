@@ -69,10 +69,10 @@ func Test_Expression_sortPlusAndMultOperands(t *testing.T) {
 		{"(2-4)  * (-1)", "(-1) * (2-4)"},
 		{"(-4)  * (-1)", "(-1) * (-4)"},
 		{"1 + x + 4 + a", "1+4+a+x"},
-		{"1 + x + (2 * y) + (2 - y)", "1+x + (2 - y) + (2*y)"},
-		{"1 + x + (3 * y) + (2 * y)", "1+x + (2 * y) + (3*y)"},
+		{"1 + x + (2 * y) + (2 - y)", "1 + (2 - y) + (2*y) + x"},
+		{"1 + x + (3 * y) + (2 * y)", "1 + (2 * y) + (3*y) + x"},
+		{"1 + 2 * (x+1) + y", "1+2*(1+x)+y"},
 		{"exp(5) + 1 + log(10) + x + sin(2) + sin(1)", "1+x+log(10)+exp(5)+sin(1)+sin(2)"},
-		{"1 + 2 * (x+1) + y", "1+y+2*(1+x)"},
 		{"1 + e + \u03C0", "1+\u03C0+e"},
 		{"1 + \u03C0 + e + e ", "1+\u03C0+e+e"},
 		{"1 + (2*x) + (2/x)", "1 + (2*x) + (2/x)"},
@@ -184,7 +184,7 @@ func Test_Expression_fullSimplification(t *testing.T) {
 		{"2*(2 + x)", "4 + 2*x"},
 		{"(2+z)*(2 + x)", "4 + 2*x + 2*z + x*z"},
 		{"(2+x)*(2 + z)", "4 + 2*x + 2*z + x*z"},
-		{"(a+b)^2", "a*a + b*b + 2*a*b"},
+		{"(a+b)^2", "2*a*b + a*a + b*b"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -279,6 +279,7 @@ func TestExpression_extractNegativeInMults(t *testing.T) {
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
 		expr.simplifyNumbers()
+		expr.normalizeNegativeNumbers()
 		expr.extractNegativeInMults()
 
 		want := mustParse(t, tt.want)
@@ -356,7 +357,7 @@ func TestBug51(t *testing.T) {
 		NewVar(98):        mustParse(t, "randint(1;50)*randChoice(-1;1)"),
 		NewVarI(120, "0"): mustParse(t, "-p/m"),
 		NewVarI(120, "1"): mustParse(t, "-b/a_0"),
-		NewVar(116):       mustParse(t, "isZero(x_1-x_0)+1"),
+		NewVar(116):       mustParse(t, "(x_1==x_0)+1"),
 		NewVar(97):        mustParse(t, "t*a_0"),
 		NewVarI(120, "2"): mustParse(t, "-b/a"),
 	}
@@ -369,6 +370,6 @@ func TestBug51(t *testing.T) {
 		}
 		expr2 := expr.Copy()
 		expr2.Substitute(vars)
-		_ = expr2.AsLaTeX(nil) // check for crashes
+		_ = expr2.AsLaTeX() // check for crashes
 	}
 }

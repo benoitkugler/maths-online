@@ -1,13 +1,12 @@
-import type { Origin, QuestionHeader } from "./api_gen";
-import { Visibility } from "./api_gen";
+import type { FunctionsGraphBlock, Origin, QuestionHeader } from "./api_gen";
 import {
   BlockKind,
   ComparisonLevel,
   DifficultyTag,
-  LevelTag,
   SignSymbol,
   TextKind,
   VectorPairCriterion,
+  Visibility,
   type Block,
   type CoordExpression,
   type ExpressionFieldBlock,
@@ -17,9 +16,7 @@ import {
   type FigureVectorFieldBlock,
   type FigureVectorPairFieldBlock,
   type FormulaBlock,
-  type FunctionGraphBlock,
   type FunctionPointsFieldBlock,
-  type FunctionVariationGraphBlock,
   type NumberFieldBlock,
   type OrderedListFieldBlock,
   type RadioFieldBlock,
@@ -33,7 +30,8 @@ import {
   type VariationTableBlock,
   type VariationTableFieldBlock,
   type VectorFieldBlock,
-} from "./exercice_gen";
+} from "./api_gen";
+import { LevelTag } from "./exercice_gen";
 
 export const ExpressionColor = "orange";
 
@@ -97,16 +95,9 @@ export const sortedBlockKindLabels = [
   [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
   [BlockKind.FigureBlock, { label: "Figure", isAnswerField: false }],
   [
-    BlockKind.FunctionGraphBlock,
+    BlockKind.FunctionsGraphBlock,
     {
-      label: "Graphe (expression)",
-      isAnswerField: false,
-    },
-  ],
-  [
-    BlockKind.FunctionVariationGraphBlock,
-    {
-      label: "Graphe (variations)",
+      label: "Graphes de fonctions",
       isAnswerField: false,
     },
   ],
@@ -200,8 +191,7 @@ interface BlockKindTypes {
   [BlockKind.FigureBlock]: FigureBlock;
   [BlockKind.FormulaBlock]: FormulaBlock;
   [BlockKind.ExpressionFieldBlock]: ExpressionFieldBlock;
-  [BlockKind.FunctionGraphBlock]: FunctionGraphBlock;
-  [BlockKind.FunctionVariationGraphBlock]: FunctionVariationGraphBlock;
+  [BlockKind.FunctionsGraphBlock]: FunctionsGraphBlock;
   [BlockKind.NumberFieldBlock]: NumberFieldBlock;
   [BlockKind.RadioFieldBlock]: RadioFieldBlock;
   [BlockKind.SignTableBlock]: SignTableBlock;
@@ -290,6 +280,7 @@ export function newBlock(kind: BlockKind): Block {
         Kind: kind,
         Data: {
           ShowGrid: true,
+          ShowOrigin: true,
           Bounds: {
             Width: 10,
             Height: 10,
@@ -299,16 +290,17 @@ export function newBlock(kind: BlockKind): Block {
             Lines: [],
             Points: [],
             Segments: [],
+            Areas: [],
           },
         },
       };
       return out;
     }
-    case BlockKind.FunctionGraphBlock: {
+    case BlockKind.FunctionsGraphBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Functions: [
+          FunctionExprs: [
             {
               Function: "abs(x) + sin(x)",
               Decoration: {
@@ -320,17 +312,8 @@ export function newBlock(kind: BlockKind): Block {
               To: "5",
             },
           ],
-        },
-      };
-      return out;
-    }
-    case BlockKind.FunctionVariationGraphBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Label: "C_f",
-          Xs: ["-5", "0", "5"],
-          Fxs: ["-3", "2", "-1"],
+          FunctionVariations: [],
+          Areas: [],
         },
       };
       return out;
@@ -437,6 +420,7 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
@@ -446,6 +430,7 @@ export function newBlock(kind: BlockKind): Block {
               Lines: [],
               Points: [],
               Segments: [],
+              Areas: [],
             },
           },
           Answer: {
@@ -462,6 +447,7 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
@@ -471,6 +457,7 @@ export function newBlock(kind: BlockKind): Block {
               Lines: [],
               Points: [],
               Segments: [],
+              Areas: [],
             },
           },
           Answer: {
@@ -514,12 +501,13 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
               Origin: { X: 3, Y: 3 },
             },
-            Drawings: { Points: [], Lines: [], Segments: [] },
+            Drawings: { Points: [], Lines: [], Segments: [], Areas: [] },
           },
           Criterion: VectorPairCriterion.VectorColinear,
         },
@@ -532,12 +520,13 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Figure: {
             ShowGrid: true,
+            ShowOrigin: true,
             Bounds: {
               Width: 10,
               Height: 10,
               Origin: { X: 3, Y: 3 },
             },
-            Drawings: { Points: [], Lines: [], Segments: [] },
+            Drawings: { Points: [], Lines: [], Segments: [], Areas: [] },
           },
           Label: "f",
           A: "1",
@@ -750,3 +739,6 @@ export function personnalOrigin(): Origin {
     Visibility: Visibility.Personnal,
   };
 }
+
+/** lastColorUsed is a shared global parameter used by color pickers */
+export const lastColorUsed = { color: "#FF0000" };

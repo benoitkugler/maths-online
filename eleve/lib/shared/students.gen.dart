@@ -107,3 +107,107 @@ JSON attachStudentToClassroom2OutToJson(AttachStudentToClassroom2Out item) {
     "IdCrypted": stringToJson(item.idCrypted)
   };
 }
+
+DateTime dateTimeFromJson(dynamic json) => DateTime.parse(json as String);
+
+dynamic dateTimeToJson(DateTime dt) => dt.toString();
+
+// github.com/benoitkugler/maths-online/prof/teacher.Student
+class Student {
+  final int id;
+  final String name;
+  final String surname;
+  final DateTime birthday;
+  final int trivialSuccess;
+  final bool isClientAttached;
+  final int id_classroom;
+
+  const Student(this.id, this.name, this.surname, this.birthday,
+      this.trivialSuccess, this.isClientAttached, this.id_classroom);
+
+  @override
+  String toString() {
+    return "Student($id, $name, $surname, $birthday, $trivialSuccess, $isClientAttached, $id_classroom)";
+  }
+}
+
+Student studentFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Student(
+      intFromJson(json['Id']),
+      stringFromJson(json['Name']),
+      stringFromJson(json['Surname']),
+      dateTimeFromJson(json['Birthday']),
+      intFromJson(json['TrivialSuccess']),
+      boolFromJson(json['IsClientAttached']),
+      intFromJson(json['id_classroom']));
+}
+
+JSON studentToJson(Student item) {
+  return {
+    "Id": intToJson(item.id),
+    "Name": stringToJson(item.name),
+    "Surname": stringToJson(item.surname),
+    "Birthday": dateTimeToJson(item.birthday),
+    "TrivialSuccess": intToJson(item.trivialSuccess),
+    "IsClientAttached": boolToJson(item.isClientAttached),
+    "id_classroom": intToJson(item.id_classroom)
+  };
+}
+
+// github.com/benoitkugler/maths-online/prof/teacher.StudentClassroomHeader
+class StudentClassroomHeader {
+  final Student student;
+  final String classroomName;
+  final String teacherMail;
+
+  const StudentClassroomHeader(
+      this.student, this.classroomName, this.teacherMail);
+
+  @override
+  String toString() {
+    return "StudentClassroomHeader($student, $classroomName, $teacherMail)";
+  }
+}
+
+StudentClassroomHeader studentClassroomHeaderFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return StudentClassroomHeader(
+      studentFromJson(json['Student']),
+      stringFromJson(json['ClassroomName']),
+      stringFromJson(json['TeacherMail']));
+}
+
+JSON studentClassroomHeaderToJson(StudentClassroomHeader item) {
+  return {
+    "Student": studentToJson(item.student),
+    "ClassroomName": stringToJson(item.classroomName),
+    "TeacherMail": stringToJson(item.teacherMail)
+  };
+}
+
+// github.com/benoitkugler/maths-online/prof/teacher.CheckStudentClassroomOut
+class CheckStudentClassroomOut {
+  final bool isOK;
+  final StudentClassroomHeader meta;
+
+  const CheckStudentClassroomOut(this.isOK, this.meta);
+
+  @override
+  String toString() {
+    return "CheckStudentClassroomOut($isOK, $meta)";
+  }
+}
+
+CheckStudentClassroomOut checkStudentClassroomOutFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return CheckStudentClassroomOut(
+      boolFromJson(json['IsOK']), studentClassroomHeaderFromJson(json['Meta']));
+}
+
+JSON checkStudentClassroomOutToJson(CheckStudentClassroomOut item) {
+  return {
+    "IsOK": boolToJson(item.isOK),
+    "Meta": studentClassroomHeaderToJson(item.meta)
+  };
+}

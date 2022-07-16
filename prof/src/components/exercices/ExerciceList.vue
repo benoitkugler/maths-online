@@ -12,26 +12,14 @@
       <v-card-actions>
         <v-btn @click="exerciceToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn
-          color="red"
-          @click="deleteExercice(true)"
-          variant="contained"
-          v-if="exerciceToDelete?.Questions?.length"
-        >
-          Supprimer aussi les questions
-        </v-btn>
-        <v-btn
-          color="orange"
-          @click="deleteExercice(false)"
-          variant="contained"
-        >
+        <v-btn color="orange" @click="deleteExercice" variant="contained">
           Supprimer
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="80%">
+  <v-card class="mt-5 mx-auto">
     <v-row>
       <v-col md="9" sm="6">
         <v-card-title>Liste des exercices</v-card-title>
@@ -46,7 +34,7 @@
     </v-row>
 
     <v-card-text>
-      <v-list>
+      <v-list style="height: 68vh">
         <exercice-row
           v-for="(exercice, index) in exercices"
           :exercice="exercice"
@@ -61,19 +49,23 @@
 </template>
 
 <script setup lang="ts">
-import type { Exercice, ExerciceExt } from "@/controller/api_gen";
+import type { ExerciceHeader } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onMounted } from "vue";
+import { onActivated, onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ExerciceRow from "./ExerciceRow.vue";
 
 const emit = defineEmits<{
-  (e: "clicked", exercice: ExerciceExt): void;
+  (e: "clicked", exercice: ExerciceHeader): void;
 }>();
 
-let exercices = $ref<ExerciceExt[]>([]);
+let exercices = $ref<ExerciceHeader[]>([]);
 
 onMounted(() => {
+  fetchExercices();
+});
+
+onActivated(() => {
   fetchExercices();
 });
 
@@ -83,7 +75,7 @@ async function fetchExercices() {
 }
 
 async function createExercice() {
-  const newEx = await controller.ExerciceCreate(null);
+  const newEx = await controller.ExerciceCreate();
   if (newEx == undefined) {
     return;
   }
@@ -91,51 +83,29 @@ async function createExercice() {
   await fetchExercices();
 }
 
-let exerciceToDelete = $ref<ExerciceExt | null>(null);
-async function deleteExercice(deleteQuestions: boolean) {
+let exerciceToDelete = $ref<ExerciceHeader | null>(null);
+async function deleteExercice() {
   if (exerciceToDelete == null) {
     return;
   }
   await controller.ExerciceDelete({
     id: exerciceToDelete.Exercice.Id,
-    delete_questions: deleteQuestions,
   });
   exerciceToDelete = null;
   await fetchExercices();
 }
 
-let exerciceToUpdate = $ref<Exercice | null>(null);
-async function updateExercice() {
-  if (exerciceToUpdate == null) {
+async function updatePublic(exerciceID: number, isPublic: boolean) {
+  const res = await controller.ExerciceUpdateVisiblity({
+    ExerciceID: exerciceID,
+    Public: isPublic,
+  });
+  if (res === undefined) {
     return;
   }
-  const res = await controller.ExerciceUpdate(exerciceToUpdate);
-  exerciceToUpdate = null;
-  if (res == undefined) {
-    return;
-  }
 
-  const index = exercices.findIndex((cl) => cl.Exercice.Id == res.Id);
-  exercices[index].Exercice = res;
-}
-
-// let exerciceToShow = $ref<ExerciceExt | null>(null);
-
-async function updatePublic(questionID: number, isPublic: boolean) {
-  // TODO:
-  //   const res = await controller.QuestionUpdateVisiblity({
-  //     QuestionID: questionID,
-  //     Public: isPublic,
-  //   });
-  //   if (res === undefined) {
-  //     return;
-  //   }
-  //   questions.forEach((group) => {
-  //     const index = group.Questions?.findIndex((qu) => qu.Id == questionID);
-  //     if (index !== undefined) {
-  //       group.Questions![index].Origin.IsPublic = isPublic;
-  //     }
-  //   });
+  const index = exercices.findIndex((ex) => ex.Exercice.Id == exerciceID);
+  exercices[index].Origin.IsPublic = isPublic;
 }
 </script>
 

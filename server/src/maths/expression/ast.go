@@ -81,17 +81,17 @@ type atom interface {
 	// it may be simplified by subsequent operations
 	eval(left, right rat, context ValueResolver) (rat, error)
 
-	asLaTeX(left, right *Expr, res LaTeXResolver) string
+	asLaTeX(left, right *Expr) string
 }
 
-func (operator) lexicographicOrder() int         { return 7 }
-func (randVariable) lexicographicOrder() int     { return 6 }
-func (roundFn) lexicographicOrder() int          { return 5 }
-func (specialFunctionA) lexicographicOrder() int { return 4 }
-func (function) lexicographicOrder() int         { return 3 }
-func (Variable) lexicographicOrder() int         { return 2 }
-func (constant) lexicographicOrder() int         { return 1 }
 func (Number) lexicographicOrder() int           { return 0 }
+func (constant) lexicographicOrder() int         { return 1 }
+func (operator) lexicographicOrder() int         { return 2 }
+func (Variable) lexicographicOrder() int         { return 3 }
+func (function) lexicographicOrder() int         { return 4 }
+func (specialFunctionA) lexicographicOrder() int { return 5 }
+func (roundFn) lexicographicOrder() int          { return 6 }
+func (randVariable) lexicographicOrder() int     { return 7 }
 
 // roundFn act as a function, but takes an integer parameter
 // in addition to its regular parameter
@@ -109,14 +109,28 @@ func (rd roundFn) serialize(_, right *Expr) string {
 
 // randVariable is a special atom, randomly choosing a variable
 // among the propositions
-type randVariable []Variable
+// it is only useful when used in random parameters definition,
+// and is treated as zero elsewhere
+type randVariable struct {
+	choices []Variable
+	// nil means choose uniformly in `choices`
+	// if not nil, is is expected to return an indice into [1, len(choices)]
+	selector *Expr
+}
 
+// String returns one of the two forms
+// 			randSymbol(A;B;C)
+//			choiceSymbol((A;B;C); randInt(1;4))
 func (rv randVariable) String() string {
 	var args []string
-	for _, v := range rv {
+	for _, v := range rv.choices {
 		args = append(args, v.String())
 	}
-	return fmt.Sprintf("randLetter(%s)", strings.Join(args, ";"))
+	argS := strings.Join(args, ";")
+	if rv.selector == nil { // shortcut form
+		return fmt.Sprintf("randSymbol(%s)", argS)
+	}
+	return fmt.Sprintf("choiceSymbol((%s); %s)", argS, rv.selector.String())
 }
 
 func (rv randVariable) serialize(_, _ *Expr) string { return rv.String() }
@@ -126,7 +140,12 @@ type operator uint8
 const (
 	// the order is the precedence of operators
 	// used during parsing
-	plus operator = iota
+	equals operator = iota
+	greater
+	strictlyGreater
+	lesser
+	strictlyLesser
+	plus
 	minus
 	mult
 	div
@@ -139,6 +158,16 @@ const (
 
 func (op operator) String() string {
 	switch op {
+	case equals:
+		return "=="
+	case greater:
+		return ">="
+	case strictlyGreater:
+		return ">"
+	case lesser:
+		return "<="
+	case strictlyLesser:
+		return "<"
 	case plus:
 		return "+"
 	case minus:
@@ -173,7 +202,6 @@ const (
 	floorFn // floor (partie entière)
 	sqrtFn
 	sgnFn     // returns -1 0 or 1
-	isZeroFn  // returns 1 is its argument is 0, 0 otherwise
 	isPrimeFn // returns 0 or 1
 	round     // round(<expr>; <digits>) : round(1.1256, 2) = 1.123
 
@@ -206,8 +234,6 @@ func (fn function) String() string {
 		return "sqrt"
 	case sgnFn:
 		return "sgn"
-	case isZeroFn:
-		return "isZero"
 	case isPrimeFn:
 		return "isPrime"
 	default:
@@ -232,24 +258,16 @@ type Variable struct {
 
 const firstPrivateVariable rune = '\uE001'
 
-// NewVar is a convenience constructor for a simple variable
+// NewVar is a convenience constructor for a simple variable.
 func NewVar(x rune) Variable { return Variable{Name: x} }
 
-// NewVarI is a convenience constructor supporting indices
+// NewVarI is a convenience constructor supporting indices.
 func NewVarI(x rune, indice string) Variable { return Variable{Name: x, Indice: indice} }
 
+// NewVarExpr is a convenience constructor converting a `Variable` to an expression.
 func NewVarExpr(v Variable) *Expr { return &Expr{atom: v} }
 
 func newVarExpr(r rune) *Expr { return NewVarExpr(NewVar(r)) }
-
-func (v Variable) String() string {
-	// we have to output valid expression syntax
-	out := string(v.Name)
-	if v.Indice != "" {
-		return out + "_" + v.Indice + " " // notice the white space to avoid x_Ay_A
-	}
-	return out
-}
 
 func (v Variable) serialize(_, _ *Expr) string { return v.String() }
 

@@ -1,4 +1,4 @@
--- v0.5.1
+-- v0.6.0
 BEGIN;
 --
 -- rename the package exercice to questions, requires editor/gen_create.sql

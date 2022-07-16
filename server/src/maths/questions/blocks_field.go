@@ -2,6 +2,7 @@ package questions
 
 import (
 	"errors"
+	"math/rand"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -110,7 +111,7 @@ func (rf RadioFieldBlock) instantiate(params expression.Vars, ID int) (instance,
 
 func (rf RadioFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	for _, p := range rf.Proposals {
-		_, err := p.Parse()
+		_, err := p.parse()
 		if err != nil {
 			return nil, err
 		}
@@ -137,11 +138,8 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (ins
 		ID:                  ID,
 	}
 
-	t, err := ol.Label.Parse()
-	if err != nil {
-		return nil, err
-	}
-	out.Label, err = t.instantiateAndMerge(params)
+	var err error
+	out.Label, err = ol.Label.instantiateAndMerge(params)
 	if err != nil {
 		return nil, err
 	}
@@ -164,19 +162,19 @@ func (ol OrderedListFieldBlock) instantiate(params expression.Vars, ID int) (ins
 }
 
 func (ol OrderedListFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	_, err := ol.Label.Parse()
+	_, err := ol.Label.parse()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, a := range ol.Answer {
-		if _, err := a.Parse(); err != nil {
+		if _, err := a.parse(); err != nil {
 			return nil, err
 		}
 	}
 
 	for _, a := range ol.AdditionalProposals {
-		if _, err := a.Parse(); err != nil {
+		if _, err := a.parse(); err != nil {
 			return nil, err
 		}
 	}
@@ -354,7 +352,6 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 		}
 		xGrid[i] = int(v)
 	}
-
 	sort.Ints(xGrid)
 
 	return FunctionPointsFieldInstance{
@@ -362,9 +359,10 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 			Function: fn,
 			Variable: fp.Variable,
 		},
-		ID:    ID,
-		Label: fp.Label,
-		XGrid: xGrid,
+		ID:           ID,
+		Label:        fp.Label,
+		XGrid:        xGrid,
+		offsetHeight: rand.Intn(3),
 	}, nil
 }
 

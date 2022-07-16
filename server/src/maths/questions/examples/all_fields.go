@@ -45,7 +45,8 @@ var blockList = [...]que.Block{
 					Y: 3,
 				},
 			},
-			ShowGrid: true,
+			ShowGrid:   true,
+			ShowOrigin: true,
 		},
 	},
 	que.FigureBlock{
@@ -67,7 +68,7 @@ var blockList = [...]que.Block{
 					},
 				},
 			},
-			Segments: []repere.Segment{
+			Segments: []repere.RandomSegment{
 				{From: "A", To: "B"},
 				{From: "B", To: "C"},
 				{From: "C", To: "A"},
@@ -81,24 +82,55 @@ var blockList = [...]que.Block{
 			Height: 20,
 			Origin: repere.Coord{X: 5, Y: 5},
 		},
-		ShowGrid: true,
+		ShowGrid:   true,
+		ShowOrigin: true,
 	},
 	que.FigurePointFieldBlock{
+		Figure: que.FigureBlock{
+			Bounds: repere.RepereBounds{
+				Width:  10,
+				Height: 10,
+				Origin: repere.Coord{
+					X: 3,
+					Y: 3,
+				},
+			},
+		},
 		Answer: que.CoordExpression{X: "2", Y: "-1"},
 	},
 	que.FigureVectorFieldBlock{
+		Figure: que.FigureBlock{
+			Bounds: repere.RepereBounds{
+				Width:  10,
+				Height: 10,
+				Origin: repere.Coord{
+					X: 3,
+					Y: 3,
+				},
+			},
+		},
 		Answer:         que.CoordExpression{X: "2", Y: "-1"},
 		AnswerOrigin:   que.CoordExpression{X: "2", Y: "-1"},
 		MustHaveOrigin: true,
 	},
 	que.FigureVectorPairFieldBlock{
+		Figure: que.FigureBlock{
+			Bounds: repere.RepereBounds{
+				Width:  10,
+				Height: 10,
+				Origin: repere.Coord{
+					X: 3,
+					Y: 3,
+				},
+			},
+		},
 		Criterion: que.VectorColinear,
 	},
 	que.FormulaBlock{
 		Parts: "Soit $f(x) = &2x + 1&$. Quelle est la dérivée de f ?",
 	},
-	que.FunctionGraphBlock{
-		Functions: []que.FunctionDefinition{
+	que.FunctionsGraphBlock{
+		FunctionExprs: []que.FunctionDefinition{
 			{
 				Function: "x^2 - 5",
 				Decoration: functiongrapher.FunctionDecoration{
@@ -134,7 +166,6 @@ var blockList = [...]que.Block{
 		Variable: expression.NewVar('x'),
 		XGrid:    []string{"-3", "-2", "-1", "0", "1", "2", "3"},
 	},
-
 	que.NumberFieldBlock{Expression: "1.2"},
 	que.OrderedListFieldBlock{
 		Label: "x \\in",
@@ -237,5 +268,12 @@ var blockList = [...]que.Block{
 			Xs:    []string{"-5", "0", "2/3"},
 			Fxs:   []string{"4.5", "2/9", "-12"},
 		},
+	},
+	que.VectorFieldBlock{
+		Answer: que.CoordExpression{
+			X: "-2", Y: "3",
+		},
+		AcceptColinear: true,
+		DisplayColumn:  true,
 	},
 }

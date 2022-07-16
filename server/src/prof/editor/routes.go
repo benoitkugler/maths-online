@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions"
@@ -59,6 +60,9 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 			seen[tag.Tag] = true
 		}
 	}
+
+	// sort by name but make sure special tags come first
+	sort.Strings(filtred)
 
 	filtred = append([]string{
 		string(Diff1), string(Diff2), string(Diff3),
@@ -177,25 +181,25 @@ func (ct *Controller) EditorGetQuestion(c echo.Context) error {
 	return c.JSON(200, question)
 }
 
-type CheckParametersIn struct {
+type CheckQuestionParametersIn struct {
 	SessionID  string
 	Parameters questions.Parameters
 }
 
-type CheckParametersOut struct {
+type CheckQuestionParametersOut struct {
 	ErrDefinition questions.ErrParameters
 	// Variables is the list of the variables defined
 	// in the parameteres (intrinsics included)
 	Variables []expression.Variable
 }
 
-func (ct *Controller) EditorCheckParameters(c echo.Context) error {
-	var args CheckParametersIn
+func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
+	var args CheckQuestionParametersIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out := ct.checkParameters(args)
+	out := ct.checkQuestionParameters(args)
 
 	return c.JSON(200, out)
 }
@@ -238,26 +242,26 @@ func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-type SaveAndPreviewIn struct {
+type SaveQuestionAndPreviewIn struct {
 	SessionID string
 	Question  Question
 }
 
-type SaveAndPreviewOut struct {
+type SaveQuestionAndPreviewOut struct {
 	Error   questions.ErrQuestionInvalid
 	IsValid bool
 }
 
 // For non personnal questions, only preview.
-func (ct *Controller) EditorSaveAndPreview(c echo.Context) error {
+func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	var args SaveAndPreviewIn
+	var args SaveQuestionAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.saveAndPreview(args, user.Id)
+	out, err := ct.saveQuestionAndPreview(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -324,6 +328,75 @@ func (ct *Controller) EditorUpdateGroupTags(c echo.Context) error {
 	}
 
 	out, err := ct.updateGroupTags(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
+	var args CheckExerciceParametersIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.checkExerciceParameters(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type ExerciceUpdateVisiblityIn struct {
+	ExerciceID int64
+	Public     bool
+}
+
+func (ct *Controller) ExerciceUpdateVisiblity(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	// we only accept public question from admin account
+	if user.Id != ct.admin.Id {
+		return accessForbidden
+	}
+
+	var args ExerciceUpdateVisiblityIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	ex, err := SelectExercice(ct.db, args.ExerciceID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if ex.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	if !args.Public {
+		// TODO: check that it is not harmful to hide the question again
+	}
+	ex.Public = args.Public
+	ex, err = ex.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+// For non personnal questions, only preview.
+func (ct *Controller) EditorSaveExerciceAndPreview(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args SaveExerciceAndPreviewIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.saveExerciceAndPreview(args, user.Id)
 	if err != nil {
 		return err
 	}

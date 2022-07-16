@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FormulaBlock } from "@/controller/exercice_gen";
+import type { FormulaBlock } from "@/controller/api_gen";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {

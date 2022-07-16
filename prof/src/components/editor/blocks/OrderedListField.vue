@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import type { OrderedListFieldBlock } from "@/controller/exercice_gen";
+import type { OrderedListFieldBlock } from "@/controller/api_gen";
 import { ref } from "@vue/reactivity";
 import { nextTick } from "@vue/runtime-core";
 import InterpolatedText from "../utils/InterpolatedText.vue";

@@ -33,16 +33,16 @@
 </template>
 
 <script setup lang="ts">
-import { colorByKind } from "@/controller/editor";
 import type {
-  FigureVectorPairFieldBlock,
-  Variable,
-} from "@/controller/exercice_gen";
+FigureVectorPairFieldBlock,
+Variable
+} from "@/controller/api_gen";
 import {
-  TextKind,
-  VectorPairCriterion,
-  VectorPairCriterionLabels,
-} from "@/controller/exercice_gen";
+TextKind,
+VectorPairCriterion,
+VectorPairCriterionLabels
+} from "@/controller/api_gen";
+import { colorByKind } from "@/controller/editor";
 import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {

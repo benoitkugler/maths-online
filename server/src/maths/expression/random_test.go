@@ -37,8 +37,28 @@ func TestRandomVariables_instantiate(t *testing.T) {
 			map[Variable]string{NewVar('a'): "randInt(1;1)", NewVar('b'): "2*a"}, Vars{NewVar('a'): NewNb(1), NewVar('b'): NewNb(2)}, false,
 		},
 		{
-			map[Variable]string{NewVar('a'): "randLetter(A)", NewVar('b'): "randInt(1;1)"},
+			map[Variable]string{NewVar('a'): "randSymbol(A)", NewVar('b'): "randInt(1;1)"},
 			Vars{NewVar('a'): newVarExpr('A'), NewVar('b'): NewNb(1)},
+			false,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A); 2.1)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A); 2)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A); b)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('a'): "choiceSymbol((A; B); b)", NewVar('b'): "1+1"},
+			Vars{NewVar('a'): newVarExpr('B'), NewVar('b'): newNb(2)},
 			false,
 		},
 		{
@@ -80,9 +100,9 @@ func TestRandomVariables_instantiate(t *testing.T) {
 	}
 }
 
-func TestRandLetter(t *testing.T) {
+func TestrandSymbol(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{NewVar('P'): mustParse(t, "randLetter(A;B;C)")}
+		rv := RandomParameters{NewVar('P'): mustParse(t, "randSymbol(A;B;C)")}
 		vars, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -275,19 +295,19 @@ func TestExpression_IsValidIndex(t *testing.T) {
 		want   bool
 	}{
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "2")}, 4, true,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 3*(a==3)", Vars{NewVar('a'): mustParse(t, "2")}, 4, true,
 		},
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 3*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, true,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 3*(a==3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, true,
 		},
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 2.5*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 2.5*(a==3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
 		},
 		{
-			"+1 + 1 * isZero(a-1) + 2 * isZero(a-2) + 4*isZero(a-3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
+			"+1 + 1 * (a==1) + 2 * (a==2) + 4*(a==3)", Vars{NewVar('a'): mustParse(t, "3")}, 4, false,
 		},
 		{
-			"+1 + 1 * isZero(a^2 - b^2 - c^2) + 2*isZero(b^2 - a^2 - c^2) + 3*isZero(c^2 - a^2 - b^2)", Vars{
+			"+1 + 1 * (a^2 - b^2 - c^2 == 0) + 2*(b^2 - a^2 - c^2 == 0) + 3*(c^2 - a^2 - b^2 == 0)", Vars{
 				NewVar('a'): mustParse(t, "4"), // BC
 				NewVar('b'): mustParse(t, "5"), // AC
 				NewVar('c'): mustParse(t, "6"), // AB
@@ -308,22 +328,24 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 		expr     string
 		variable rune
 		vars     Vars
-		bound    float64 // extrema on [-10;10]
+		from, to string
+		bound    float64 // expected extrema
 		want     bool
 	}{
-		{"2x + 1", 'x', nil, 25, true},
-		{"2x + 1", 'x', nil, 10, false},
-		{"2x + a", 'x', nil, 10, false},
-		{"1/x", 'x', nil, 100, false},
-		{"exp(x)", 'x', nil, 100, false},
+		{"2x + 1", 'x', nil, "-10", "10", 25, true},
+		{"2x + 1", 'x', nil, "-10", "10", 10, false},
+		{"2x + 1", 'x', nil, "2", "2", 10, false},
+		{"2x + a", 'x', nil, "-10", "10", 10, false},
+		{"1/x", 'x', nil, "-10", "10", 100, false},
+		{"exp(x)", 'x', nil, "-10", "10", 100, false},
 		{"ax + b", 'x', Vars{
 			NewVar('a'): mustParse(t, "3"),
 			NewVar('b'): mustParse(t, "7"),
-		}, 100, true},
+		}, "-10", "10", 100, true},
 		{"ax + b", 'x', Vars{
 			NewVar('a'): mustParse(t, "90"),
 			NewVar('b'): mustParse(t, "7"),
-		}, 100, false},
+		}, "-10", "10", 100, false},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -331,9 +353,39 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 			Function: expr,
 			Variable: NewVar(tt.variable),
 		}
-		err := fn.IsValid(mustParse(t, "-10"), mustParse(t, "10"), tt.vars, tt.bound)
+		err := fn.IsValid(Domain{mustParse(t, tt.from), mustParse(t, tt.to)}, tt.vars, tt.bound)
 		if (err == nil) != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
+		}
+	}
+}
+
+func TestAreDisjointsDomains(t *testing.T) {
+	tests := []struct {
+		domains [][2]string
+		vars    Vars
+		wantErr bool
+	}{
+		{
+			[][2]string{{"0", "1"}}, nil, false,
+		},
+		{
+			[][2]string{{"0", "1"}, {"1", "2"}}, nil, false,
+		},
+		{
+			[][2]string{{"0", "1"}, {"0", "2"}}, nil, true,
+		},
+		{
+			[][2]string{{"0", "1"}, {"x", "0.5"}}, Vars{NewVar('x'): newNb(0)}, true,
+		},
+	}
+	for _, tt := range tests {
+		domains := make([]Domain, len(tt.domains))
+		for i, d := range tt.domains {
+			domains[i] = Domain{mustParse(t, d[0]), mustParse(t, d[1])}
+		}
+		if err := AreDisjointsDomains(domains, tt.vars); (err != nil) != tt.wantErr {
+			t.Errorf("AreDisjointsDomains() error = %v, wantErr %v", err, tt.wantErr)
 		}
 	}
 }

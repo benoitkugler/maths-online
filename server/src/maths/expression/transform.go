@@ -84,6 +84,15 @@ func compareNodes(n1, n2 *Expr) int {
 			} else {
 				return strings.Compare(fmt.Sprint(a1.args), fmt.Sprint(a2.args))
 			}
+		case randVariable:
+			a2 := a2.(randVariable)
+			if len(a1.choices) < len(a2.choices) {
+				return -1
+			} else if len(a1.choices) > len(a2.choices) {
+				return 1
+			} else {
+				return 0
+			}
 		case Variable:
 			a2 := a2.(Variable)
 			if a1.Name < a2.Name {
@@ -304,27 +313,34 @@ func (expr *Expr) contractPlusMinus() {
 	}
 
 	// ... + (-...) => ... - ...
-	if expr.right.atom == minus && expr.right.left == nil {
+	if isNegative, opposite := expr.right.isNegativeExpr(); isNegative {
 		expr.atom = minus
-		expr.right = expr.right.right
+		expr.right = opposite
+		return
+	}
+}
+
+// replace negative numbers -3 by -(3) to simplify further processing
+func (expr *Expr) normalizeNegativeNumbers() {
+	if expr == nil {
 		return
 	}
 
-	// ... + (-9) => ... - 9
-	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
+	expr.left.normalizeNegativeNumbers()
+	expr.right.normalizeNegativeNumbers()
+
+	if number, isNumber := expr.atom.(Number); isNumber && number < 0 {
 		expr.atom = minus
 		expr.right = &Expr{atom: -number}
 	}
+}
 
-	// ... + (-9 * ...) => ... - (9 * ...)
-	nextArg := expr.right.left
-	if nextArg != nil {
-		if number, isNumber := nextArg.atom.(Number); isNumber && number < 0 {
-			expr.atom = minus
-			expr.right.left = &Expr{atom: -number}
-			return
-		}
+// returns true and the right term for expression of the form - (...)
+func (expr *Expr) isNegativeExpr() (bool, *Expr) {
+	if expr.atom == minus && expr.left == nil {
+		return true, expr.right
 	}
+	return false, nil
 }
 
 // replace - (- 8) by +8 to have a better formatted output
@@ -341,26 +357,9 @@ func (expr *Expr) contractMinusMinus() {
 	}
 
 	// ... - (-...) => ... + ...
-	if expr.right.atom == minus && expr.right.left == nil {
+	if isNegative, opposite := expr.right.isNegativeExpr(); isNegative {
 		expr.atom = plus
-		expr.right = expr.right.right
-		return
-	}
-
-	// -(-8 / 2) => 8 / 2
-	nextArg := expr.right.left
-	if nextArg != nil {
-		if number, isNumber := nextArg.atom.(Number); isNumber && number < 0 {
-			expr.atom = plus
-			expr.right.left = &Expr{atom: -number}
-			return
-		}
-	}
-
-	// ... - (-9) => ... + 9
-	if number, isNumber := expr.right.atom.(Number); isNumber && number < 0 {
-		expr.atom = plus
-		expr.right = &Expr{atom: -number}
+		expr.right = opposite
 		return
 	}
 }
@@ -368,6 +367,7 @@ func (expr *Expr) contractMinusMinus() {
 // remove unnecessary 1 and 0 such as in
 // 	1 * x -> x
 //	 0x -> 0
+// -1 * x -> -x
 func (expr *Expr) simplify0And1() {
 	if expr == nil {
 		return
@@ -402,6 +402,9 @@ func (expr *Expr) simplify0And1() {
 		if right.atom == Number(0) { // x - 0 = x
 			*expr = *left
 			return
+		} else if left.atom == Number(0) { // 0 - x = -x
+			expr.left = nil
+			return
 		}
 	case mult:
 		if left.atom == Number(1) { // 1 * x = x
@@ -433,14 +436,15 @@ func (expr *Expr) simplify0And1() {
 			*expr = Expr{atom: Number(1)}
 			return
 		}
-	case mod:
-	case rem:
+	case mod, rem, equals, lesser, strictlyLesser, greater, strictlyGreater:
+		// nothing to do
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
 }
 
-// replace (-a) * b by -(a * b)
+// replace (-a) * b by -(a * b) (same with division)
+// requiring normalizeNegativeNumbers() to have been called
 func (expr *Expr) extractNegativeInMults() {
 	if expr == nil {
 		return
@@ -456,13 +460,13 @@ func (expr *Expr) extractNegativeInMults() {
 	// replace (-a) * b by -(a * b)
 	changeSign := false
 	newLeft := expr.left
-	if number, ok := expr.left.atom.(Number); ok && number < 0 {
-		newLeft = &Expr{atom: -number}
+	if isNegative, opposite := expr.left.isNegativeExpr(); isNegative {
+		newLeft = opposite
 		changeSign = !changeSign
 	}
 	newRight := expr.right
-	if number, ok := expr.right.atom.(Number); ok && number < 0 {
-		newRight = &Expr{atom: -number}
+	if isNegative, opposite := expr.right.isNegativeExpr(); isNegative {
+		newRight = opposite
 		changeSign = !changeSign
 	}
 
@@ -483,6 +487,8 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
+		expr.normalizeNegativeNumbers()
+
 		expr.expandMinus()
 		expr.sortPlusAndMultOperands()
 		expr.simplifyForPrint()
@@ -503,6 +509,8 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
 		expr.simplifyNumbers()
+		expr.normalizeNegativeNumbers()
+
 		expr.expandPow()
 		expr.expandMinus()
 		expr.expandMult()
@@ -518,6 +526,7 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 
 	// extractNegativeInMults interfers with other transforms, do it later
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
+		expr.normalizeNegativeNumbers()
 		expr.extractNegativeInMults()
 		expr.simplifyNumbers()
 

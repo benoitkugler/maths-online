@@ -111,7 +111,7 @@ func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 func (f ExpressionFieldInstance) toClient() client.Block {
 	var label string
 	if f.Label.Expression != nil {
-		label = f.Label.Expression.AsLaTeX(nil) + " = "
+		label = f.Label.Expression.AsLaTeX() + " = "
 	} else {
 		label = f.Label.String
 	}
@@ -214,10 +214,8 @@ type DropDownFieldInstance RadioFieldInstance
 func (rf DropDownFieldInstance) fieldID() int { return rf.ID }
 
 func (rf DropDownFieldInstance) toClient() client.Block {
-	return client.DropDownFieldBlock{
-		ID:        rf.ID,
-		Proposals: rf.Proposals,
-	}
+	v := RadioFieldInstance(rf).toClient().(client.RadioFieldBlock)
+	return client.DropDownFieldBlock(v)
 }
 
 func (f DropDownFieldInstance) validateAnswerSyntax(answer client.Answer) error {
@@ -726,16 +724,18 @@ func (f VariationTableFieldInstance) correctAnswer() client.Answer {
 }
 
 type FunctionPointsFieldInstance struct {
-	Function expression.FunctionExpr
-	Label    string
-	XGrid    []int
-	ID       int
+	Function     expression.FunctionExpr
+	Label        string
+	XGrid        []int
+	ID           int
+	offsetHeight int // added to the natural repere height
 }
 
 func (f FunctionPointsFieldInstance) fieldID() int { return f.ID }
 
 func (f FunctionPointsFieldInstance) toClient() client.Block {
 	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	bounds.Height += f.offsetHeight
 	return client.FunctionPointsFieldBlock{
 		Label: f.Label,
 		Xs:    f.XGrid, ID: f.ID,

@@ -16,7 +16,7 @@ import (
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
-	tvGame "github.com/benoitkugler/maths-online/trivial-poursuit"
+	tvGame "github.com/benoitkugler/maths-online/trivial"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -242,6 +242,8 @@ func serveEleveApp(c echo.Context) error {
 
 func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller, tc *teacher.Controller) {
 	setupProfAPI(e, tvc, edit, tc)
+	setupQuestionSampleAPI(e)
+
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
@@ -261,9 +263,9 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
 
 	// student client classroom managment
+	e.GET("/api/classroom/login", tc.CheckStudentClassroom)
 	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
 	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
-	e.DELETE("/api/classroom/attach", tc.DetachStudentFromClassroom)
 
 	// prof. back office
 	for _, route := range []string{
@@ -286,15 +288,20 @@ func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller,
 		return evaluateQuestion(edit, c)
 	})
 
-	// standalone question
+	// standalone question/exercice
 	e.POST("/api/questions/instantiate", func(c echo.Context) error {
 		return instantiateQuestions(edit, c)
 	})
 	e.POST("/api/questions/evaluate", func(c echo.Context) error {
 		return evaluateQuestion(edit, c)
 	})
+	e.POST("/api/exercices/evaluate", func(c echo.Context) error {
+		return evaluateExercice(edit, c)
+	})
+}
 
-	// temporary question quick access
+// routes for a (temporary) question quick access
+func setupQuestionSampleAPI(e *echo.Echo) {
 	sampleQuestions := examples.Questions()
 	e.GET("/questions", func(c echo.Context) error {
 		var out []client.Question

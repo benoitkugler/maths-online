@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -216,32 +217,60 @@ func DeleteClassroomsByIDs(tx DB, ids ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
-func scanOneStudentClassroom(row scanner) (StudentClassroom, error) {
-	var s StudentClassroom
+func scanOneStudent(row scanner) (Student, error) {
+	var s Student
 	err := row.Scan(
-		&s.IdStudent,
+		&s.Id,
+		&s.Name,
+		&s.Surname,
+		&s.Birthday,
+		&s.TrivialSuccess,
+		&s.IsClientAttached,
 		&s.IdClassroom,
 	)
 	return s, err
 }
 
-func ScanStudentClassroom(row *sql.Row) (StudentClassroom, error) {
-	return scanOneStudentClassroom(row)
+func ScanStudent(row *sql.Row) (Student, error) {
+	return scanOneStudent(row)
 }
 
-func SelectAllStudentClassrooms(tx DB) (StudentClassrooms, error) {
-	rows, err := tx.Query("SELECT * FROM student_classrooms")
+func SelectAllStudents(tx DB) (Students, error) {
+	rows, err := tx.Query("SELECT * FROM students")
 	if err != nil {
 		return nil, err
 	}
-	return ScanStudentClassrooms(rows)
+	return ScanStudents(rows)
 }
 
-type StudentClassrooms []StudentClassroom
+// SelectStudent returns the entry matching id.
+func SelectStudent(tx DB, id int64) (Student, error) {
+	row := tx.QueryRow("SELECT * FROM students WHERE id = $1", id)
+	return ScanStudent(row)
+}
 
-func ScanStudentClassrooms(rs *sql.Rows) (StudentClassrooms, error) {
+// SelectStudents returns the entry matching the given ids.
+func SelectStudents(tx DB, ids ...int64) (Students, error) {
+	rows, err := tx.Query("SELECT * FROM students WHERE id = ANY($1)", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanStudents(rows)
+}
+
+type Students map[int64]Student
+
+func (m Students) IDs() IDs {
+	out := make(IDs, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanStudents(rs *sql.Rows) (Students, error) {
 	var (
-		s   StudentClassroom
+		s   Student
 		err error
 	)
 	defer func() {
@@ -250,13 +279,13 @@ func ScanStudentClassrooms(rs *sql.Rows) (StudentClassrooms, error) {
 			err = errClose
 		}
 	}()
-	structs := make(StudentClassrooms, 0, 16)
+	structs := make(Students, 16)
 	for rs.Next() {
-		s, err = scanOneStudentClassroom(rs)
+		s, err = scanOneStudent(rs)
 		if err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -264,42 +293,57 @@ func ScanStudentClassrooms(rs *sql.Rows) (StudentClassrooms, error) {
 	return structs, nil
 }
 
-// Insert the links StudentClassroom in the database.
-func InsertManyStudentClassrooms(tx *sql.Tx, items ...StudentClassroom) error {
-	if len(items) == 0 {
-		return nil
-	}
+// Insert Student in the database and returns the item with id filled.
+func (item Student) Insert(tx DB) (out Student, err error) {
+	row := tx.QueryRow(`INSERT INTO students (
+		Name,Surname,Birthday,TrivialSuccess,IsClientAttached,id_classroom
+		) VALUES (
+		$1,$2,$3,$4,$5,$6
+		) RETURNING 
+		Id,Name,Surname,Birthday,TrivialSuccess,IsClientAttached,id_classroom;
+		`, item.Name, item.Surname, item.Birthday, item.TrivialSuccess, item.IsClientAttached, item.IdClassroom)
+	return ScanStudent(row)
+}
 
-	stmt, err := tx.Prepare(pq.CopyIn("student_classrooms",
-		"id_student", "id_classroom",
-	))
+// Update Student in the database and returns the new version.
+func (item Student) Update(tx DB) (out Student, err error) {
+	row := tx.QueryRow(`UPDATE students SET (
+		Name,Surname,Birthday,TrivialSuccess,IsClientAttached,id_classroom
+		) = (
+		$2,$3,$4,$5,$6,$7
+		) WHERE id = $1 RETURNING 
+		Id,Name,Surname,Birthday,TrivialSuccess,IsClientAttached,id_classroom;
+		`, item.Id, item.Name, item.Surname, item.Birthday, item.TrivialSuccess, item.IsClientAttached, item.IdClassroom)
+	return ScanStudent(row)
+}
+
+// Deletes the Student and returns the item
+func DeleteStudentById(tx DB, id int64) (Student, error) {
+	row := tx.QueryRow("DELETE FROM students WHERE id = $1 RETURNING *;", id)
+	return ScanStudent(row)
+}
+
+// Deletes the Student in the database and returns the ids.
+func DeleteStudentsByIDs(tx DB, ids ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM students WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}
+
+func (s *Date) Scan(src interface{}) error {
+	var tmp pq.NullTime
+	err := tmp.Scan(src)
 	if err != nil {
 		return err
 	}
-
-	for _, item := range items {
-		_, err = stmt.Exec(item.IdStudent, item.IdClassroom)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return err
-	}
-
-	if err = stmt.Close(); err != nil {
-		return err
-	}
+	*s = Date(tmp.Time)
 	return nil
 }
 
-// Delete the link StudentClassroom in the database.
-// Only the 'IdStudent' 'IdClassroom' fields are used.
-func (item StudentClassroom) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM student_classrooms WHERE 
-	id_student = $1 AND id_classroom = $2;`, item.IdStudent, item.IdClassroom)
-	return err
+func (s Date) Value() (driver.Value, error) {
+	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
 }
 
 func scanOneTeacher(row scanner) (Teacher, error) {
@@ -430,84 +474,18 @@ func DeleteClassroomsByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
-// SelectStudentClassroomByIdStudent return zero or one item, thanks to a UNIQUE constraint
-func SelectStudentClassroomByIdStudent(tx DB, idStudent int64) (item StudentClassroom, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM student_classrooms WHERE id_student = $1", idStudent)
-	item, err = ScanStudentClassroom(row)
-	if err == sql.ErrNoRows {
-		return item, false, nil
-	}
-	return item, true, err
-}
-
-func SelectStudentClassroomsByIdStudents(tx DB, idStudents ...int64) (StudentClassrooms, error) {
-	rows, err := tx.Query("SELECT * FROM student_classrooms WHERE id_student = ANY($1)", pq.Int64Array(idStudents))
+func SelectStudentsByIdClassrooms(tx DB, idClassrooms ...int64) (Students, error) {
+	rows, err := tx.Query("SELECT * FROM students WHERE id_classroom = ANY($1)", pq.Int64Array(idClassrooms))
 	if err != nil {
 		return nil, err
 	}
-	return ScanStudentClassrooms(rows)
+	return ScanStudents(rows)
 }
 
-func DeleteStudentClassroomsByIdStudents(tx DB, idStudents ...int64) (StudentClassrooms, error) {
-	rows, err := tx.Query("DELETE FROM student_classrooms WHERE id_student = ANY($1) RETURNING *", pq.Int64Array(idStudents))
+func DeleteStudentsByIdClassrooms(tx DB, idClassrooms ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM students WHERE id_classroom = ANY($1) RETURNING id", pq.Int64Array(idClassrooms))
 	if err != nil {
 		return nil, err
 	}
-	return ScanStudentClassrooms(rows)
-}
-
-func SelectStudentClassroomsByIdClassrooms(tx DB, idClassrooms ...int64) (StudentClassrooms, error) {
-	rows, err := tx.Query("SELECT * FROM student_classrooms WHERE id_classroom = ANY($1)", pq.Int64Array(idClassrooms))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentClassrooms(rows)
-}
-
-func DeleteStudentClassroomsByIdClassrooms(tx DB, idClassrooms ...int64) (StudentClassrooms, error) {
-	rows, err := tx.Query("DELETE FROM student_classrooms WHERE id_classroom = ANY($1) RETURNING *", pq.Int64Array(idClassrooms))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentClassrooms(rows)
-}
-
-// ByIdStudent returns a map with 'IdStudent' as keys.
-func (items StudentClassrooms) ByIdStudent() map[int64]StudentClassroom {
-	out := make(map[int64]StudentClassroom, len(items))
-	for _, target := range items {
-		out[target.IdStudent] = target
-	}
-	return out
-}
-
-// IdStudents returns the list of ids of IdStudent
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items StudentClassrooms) IdStudents() IDs {
-	out := make(IDs, len(items))
-	for index, target := range items {
-		out[index] = target.IdStudent
-	}
-	return out
-}
-
-// ByIdClassroom returns a map with 'IdClassroom' as keys.
-func (items StudentClassrooms) ByIdClassroom() map[int64]StudentClassrooms {
-	out := make(map[int64]StudentClassrooms)
-	for _, target := range items {
-		out[target.IdClassroom] = append(out[target.IdClassroom], target)
-	}
-	return out
-}
-
-// IdClassrooms returns the list of ids of IdClassroom
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items StudentClassrooms) IdClassrooms() IDs {
-	out := make(IDs, len(items))
-	for index, target := range items {
-		out[index] = target.IdClassroom
-	}
-	return out
+	return ScanIDs(rows)
 }

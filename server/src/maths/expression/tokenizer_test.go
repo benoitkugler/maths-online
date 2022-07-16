@@ -52,12 +52,18 @@ func TestTokens(t *testing.T) {
 		{"7randPrime(1;10)", []tokenData{numberText("7"), mult, randPrime, openPar, numberText("1"), semicolon, numberText("10"), closePar}},
 		{"randChoice(1;2)", []tokenData{randChoice, openPar, numberText("1"), semicolon, numberText("2"), closePar}},
 		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
-		{"randLetter()", []tokenData{randVariable{}, openPar, closePar}},
+		{"randSymbol()", []tokenData{randVariable{}, openPar, closePar}},
 		{"min(1)", []tokenData{minFn, openPar, numberText("1"), closePar}},
 		{"max(1)", []tokenData{maxFn, openPar, numberText("1"), closePar}},
 		{"floor(1)", []tokenData{floorFn, openPar, numberText("1"), closePar}},
 		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
 		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
+		{"@_myVar", []tokenData{Variable{Name: '@', Indice: "myVar"}}},
+		{"2 > 4", []tokenData{numberText("2"), strictlyGreater, numberText("4")}},
+		{"2 < 4", []tokenData{numberText("2"), strictlyLesser, numberText("4")}},
+		{"2 <= 4", []tokenData{numberText("2"), lesser, numberText("4")}},
+		{"2 >= 4", []tokenData{numberText("2"), greater, numberText("4")}},
+		{"2 == 4", []tokenData{numberText("2"), equals, numberText("4")}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)
