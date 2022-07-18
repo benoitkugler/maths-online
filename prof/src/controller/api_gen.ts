@@ -469,6 +469,7 @@ export interface OrderedListFieldBlock {
 
 export enum ProofAssertionKind {
   ProofEquality = "ProofEquality",
+  ProofInvalid = "ProofInvalid",
   ProofNode = "ProofNode",
   ProofSequence = "ProofSequence",
   ProofStatement = "ProofStatement",
@@ -476,12 +477,19 @@ export enum ProofAssertionKind {
 
 export interface ProofAssertion {
   Kind: ProofAssertionKind;
-  Data: ProofEquality | ProofNode | ProofSequence | ProofStatement;
+  Data:
+    | ProofEquality
+    | ProofInvalid
+    | ProofNode
+    | ProofSequence
+    | ProofStatement;
 }
 // github.com/benoitkugler/maths-online/maths/questions.ProofEquality
 export interface ProofEquality {
   Terms: string;
 }
+// github.com/benoitkugler/maths-online/maths/questions.ProofInvalid
+export type ProofInvalid = Record<string, never>;
 // github.com/benoitkugler/maths-online/maths/questions/client.Binary
 export enum Binary {
   And = 1,

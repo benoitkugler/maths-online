@@ -1,11 +1,14 @@
 package questions
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions/client"
 )
+
+//go:generate ../../../../../structgen/structgen -source=blocks_field_proof.go -mode=itfs-json:gen_itfs_proof.go
 
 type ProofFieldBlock struct {
 	Answer ProofSequence
@@ -28,6 +31,9 @@ func (pr ProofFieldBlock) setupValidator(expression.RandomParameters) (validator
 	return noOpValidator{}, err
 }
 
+// Placeholder used when editing the proof
+type ProofInvalid struct{}
+
 type ProofStatement struct {
 	Content Interpolated
 }
@@ -41,13 +47,23 @@ type ProofNode struct {
 	Op          client.Binary
 }
 
+type ProofAssertions []ProofAssertion
+
 type ProofSequence struct {
-	Parts []ProofAssertion `structgen-data:"ignore"`
+	Parts ProofAssertions `structgen-data:"ignore"`
 }
 
 type ProofAssertion interface {
 	instantiate(params expression.Vars) (proofAssertionIns, error)
 	validate() error
+}
+
+func (ProofInvalid) instantiate(params expression.Vars) (proofAssertionIns, error) {
+	return nil, errors.New("internal error: unexpected placeholder")
+}
+
+func (ProofInvalid) validate() error {
+	return errors.New("internal error: unexpected placeholder")
 }
 
 func (v ProofStatement) instantiate(params expression.Vars) (proofAssertionIns, error) {

@@ -34,6 +34,9 @@ class ProofController extends FieldController {
   @override
   void setData(Answer answer) {
     controller.setData((answer as ProofAnswer).proof.root);
+    // by construction, the answer uses all the proposals,
+    // so we don't bother with diffing 
+    currentProposals.clear(); 
   }
 
   @override

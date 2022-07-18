@@ -19,8 +19,6 @@ var (
 	_ Block = VariationTableBlock{}
 	_ Block = SignTableBlock{}
 	_ Block = FigureBlock{}
-	// _ Block = FunctionGraphBlock{}
-	// _ Block = FunctionVariationGraphBlock{}
 	_ Block = FunctionsGraphBlock{}
 	_ Block = TableBlock{}
 )

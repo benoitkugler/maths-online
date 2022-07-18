@@ -70,11 +70,12 @@ import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
 import FunctionsGraphVue from "./blocks/FunctionsGraph.vue";
 import NumberFieldVue from "./blocks/NumberField.vue";
 import OrderedListFieldVue from "./blocks/OrderedListField.vue";
+import ProofFieldVue from "./blocks/ProofField.vue";
 import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
 import TableVue from "./blocks/Table.vue";
 import TableFieldVue from "./blocks/TableField.vue";
-import TextVue from "./blocks/Text.vue";
+import TextVue from "./blocks/TextB.vue";
 import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
@@ -143,8 +144,10 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(TableFieldVue) };
     case BlockKind.VectorFieldBlock:
       return { Props: data, Component: markRaw(VectorFieldVue) };
+    case BlockKind.ProofFieldBlock:
+      return { Props: data, Component: markRaw(ProofFieldVue) };
     default:
-      throw "Unexpected Kind";
+      throw "dataToBlock: unexpected Kind";
   }
 }
 

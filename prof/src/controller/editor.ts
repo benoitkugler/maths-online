@@ -1,8 +1,9 @@
-import type { FunctionsGraphBlock, Origin, QuestionHeader } from "./api_gen";
 import {
+  Binary,
   BlockKind,
   ComparisonLevel,
   DifficultyTag,
+  ProofAssertionKind,
   SignSymbol,
   TextKind,
   VectorPairCriterion,
@@ -17,8 +18,13 @@ import {
   type FigureVectorPairFieldBlock,
   type FormulaBlock,
   type FunctionPointsFieldBlock,
+  type FunctionsGraphBlock,
   type NumberFieldBlock,
   type OrderedListFieldBlock,
+  type Origin,
+  type ProofAssertion,
+  type ProofFieldBlock,
+  type QuestionHeader,
   type RadioFieldBlock,
   type SignTableBlock,
   type TableBlock,
@@ -179,6 +185,10 @@ export const sortedBlockKindLabels = [
       isAnswerField: true,
     },
   ],
+  [
+    BlockKind.ProofFieldBlock,
+    { label: "Preuve (à compléter)", isAnswerField: true },
+  ],
   [BlockKind.TableFieldBlock, { label: "Tableau", isAnswerField: true }],
   [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }],
 ] as const;
@@ -208,6 +218,7 @@ interface BlockKindTypes {
   [BlockKind.TreeFieldBlock]: TreeFieldBlock;
   [BlockKind.TableFieldBlock]: TableFieldBlock;
   [BlockKind.VectorFieldBlock]: VectorFieldBlock;
+  [BlockKind.ProofFieldBlock]: ProofFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -600,6 +611,36 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
+    case BlockKind.ProofFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: {
+            Parts: [
+              {
+                Kind: ProofAssertionKind.ProofNode,
+                Data: {
+                  Op: Binary.And,
+                  Left: {
+                    Kind: ProofAssertionKind.ProofStatement,
+                    Data: { Content: "$n$ est pair" },
+                  },
+                  Right: {
+                    Kind: ProofAssertionKind.ProofStatement,
+                    Data: { Content: "$m$ est impair" },
+                  },
+                },
+              },
+              {
+                Kind: ProofAssertionKind.ProofStatement,
+                Data: { Content: "$n+m$ est pair" },
+              },
+            ],
+          },
+        },
+      };
+      return out;
+    }
     default:
       throw "Unexpected Kind";
   }
@@ -742,3 +783,10 @@ export function personnalOrigin(): Origin {
 
 /** lastColorUsed is a shared global parameter used by color pickers */
 export const lastColorUsed = { color: "#FF0000" };
+
+export function emptyAssertion(): ProofAssertion {
+  return {
+    Kind: ProofAssertionKind.ProofInvalid,
+    Data: {},
+  };
+}

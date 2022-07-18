@@ -41,7 +41,7 @@ watch(props, () => {
   colorize({ source: "user" });
 });
 
-onMounted(() => colorize({ source: "user" }));
+onMounted(() => setTimeout(() => colorize({ source: "user" }), 100));
 
 function onTextChange(text: string) {
   emit("update:modelValue", text.trimRight());
@@ -55,10 +55,10 @@ function colorize(arg: { source: Sources }) {
   const qu = quill?.getQuill() as Quill;
   const parts = itemize(text);
   let cursor = 0;
-  parts.forEach(p => {
+  parts.forEach((p) => {
     qu.formatText(cursor, p.Content.length, {
       color: colorByKind[p.Kind],
-      bold: p.Kind == TextKind.Expression
+      bold: p.Kind == TextKind.Expression,
     });
     cursor += p.Content.length;
   });
@@ -68,12 +68,21 @@ function colorize(arg: { source: Sources }) {
 <style>
 .text-field {
   width: 100%;
-  border: 1px solid grey;
+  border: 2px solid lightgray;
   border-radius: 4px;
-  background-color: #d4d4d477;
+  background-color: white;
+  padding: 4px;
+}
+
+.text-field:hover {
+  border: 2px solid gray;
+}
+
+.text-field:focus-within {
+  border: 2px solid black;
 }
 
 .ql-editor {
-  padding: 4px 2px;
+  padding: 4px 4px;
 }
 </style>
