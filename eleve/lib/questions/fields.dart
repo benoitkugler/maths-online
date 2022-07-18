@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 abstract class FieldController {
-  /// [fieldError] may be set to true to indicate
-  /// that the answer doest not follow the correct syntax
-  /// or is incorrect
-  bool fieldError = false;
+  /// [hasError] may be set to true to indicate
+  /// that the answer does not follow the correct syntax
+  /// or is incorrect.
+  bool get hasError => _hasError;
+
+  bool _hasError = false;
+  void setError(bool hasError) {
+    _hasError = hasError;
+  }
 
   bool _enabled = true;
   bool get enabled => _enabled;

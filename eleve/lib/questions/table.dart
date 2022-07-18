@@ -157,7 +157,7 @@ class _TableFieldState extends State<TableField> {
   @override
   Widget build(BuildContext context) {
     final ct = widget.controller;
-    final color = ct.fieldError ? Colors.red : widget.color;
+    final color = ct.hasError ? Colors.red : widget.color;
     return _Table(
         ct.data.horizontalHeaders,
         ct.data.verticalHeaders,

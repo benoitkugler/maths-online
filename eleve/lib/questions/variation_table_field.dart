@@ -203,7 +203,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
               borderRadius: BorderRadius.circular(5),
             ),
           )
-        : _OneTable(ct.fieldError ? Colors.red : widget.color, ct.ct!,
+        : _OneTable(ct.hasError ? Colors.red : widget.color, ct.ct!,
             ct.data.label, ct.enabled ? _resetArrowLength : null);
   }
 }

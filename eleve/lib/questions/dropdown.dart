@@ -23,10 +23,10 @@ class _DropDownFieldState extends State<DropDownField> {
     final ct = widget.controller;
     return DropdownButton<int>(
       isDense: true,
-      style: widget.controller.fieldError
+      style: widget.controller.hasError
           ? TextStyle(color: Colors.red.shade200)
           : null,
-      underline: widget.controller.fieldError
+      underline: widget.controller.hasError
           ? Container(height: 1.0, color: Colors.red
               // color: Colors.red,
               )

@@ -10,6 +10,7 @@ import 'package:eleve/questions/function_points.dart';
 import 'package:eleve/questions/number.dart';
 import 'package:eleve/questions/ordered_list.dart';
 import 'package:eleve/questions/probas_tree.dart';
+import 'package:eleve/questions/proof.dart';
 import 'package:eleve/questions/radio.dart';
 import 'package:eleve/questions/repere.dart';
 import 'package:eleve/questions/sign_table.dart';
@@ -62,7 +63,7 @@ class QuestionController {
     switch (state) {
       case InputState.working: // check if the fields are valid
         final areAnswersValid =
-            _fields.values.every((ct) => !ct.fieldError && ct.hasValidData());
+            _fields.values.every((ct) => !ct.hasError && ct.hasValidData());
         return areAnswersValid;
       case InputState.waiting:
         return false;
@@ -91,7 +92,7 @@ class QuestionController {
   void setFeedback(Map<int, bool> results) {
     state = InputState.displayingFeedback;
     _fields.forEach((key, value) {
-      value.fieldError = !(results[key] ?? false);
+      value.setError(!(results[key] ?? false));
       value.disable();
     });
   }
@@ -139,6 +140,8 @@ class QuestionController {
         _fields[block.iD] = TableController(block, () => onEditDone(block.iD));
       } else if (block is VectorFieldBlock) {
         _fields[block.iD] = VectorController(block, () => onEditDone(block.iD));
+      } else if (block is ProofFieldBlock) {
+        _fields[block.iD] = ProofController(block, () => onEditDone(block.iD));
       }
     }
   }
@@ -385,6 +388,15 @@ class _ContentBuilder {
             : PlaceholderAlignment.bottom));
   }
 
+  void _handleProofFieldBlock(ProofFieldBlock element) {
+    final ct = _controllers[element.iD] as ProofController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(ProofField(_color, ct));
+  }
+
   /// populate [rows]
   void build() {
     for (var element in _content) {
@@ -433,6 +445,8 @@ class _ContentBuilder {
         _handleTableFieldBlock(element);
       } else if (element is VectorFieldBlock) {
         _handleVectorFieldBlock(element);
+      } else if (element is ProofFieldBlock) {
+        _handleProofFieldBlock(element);
       }
 
       lastIsText = element is TextBlock;

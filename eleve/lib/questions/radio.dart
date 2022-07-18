@@ -42,7 +42,7 @@ class RadioField extends StatefulWidget {
 class _RadioFieldState extends State<RadioField> {
   @override
   Widget build(BuildContext context) {
-    final color = widget._controller.fieldError ? Colors.red : widget._color;
+    final color = widget._controller.hasError ? Colors.red : widget._color;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: color),

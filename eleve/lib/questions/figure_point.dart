@@ -88,12 +88,12 @@ class _FigurePointFieldState extends State<FigurePointField> {
           ),
           if (point != null)
             GridPoint(point, metrics.logicalIntToVisual(point),
-                color: widget.controller.fieldError ? Colors.red : null),
+                color: widget.controller.hasError ? Colors.red : null),
           // if (showTooltip && point != null)
           //   GridPointHighlight(point, metrics.logicalIntToVisual(point)),
         ],
         texts,
-        color: widget.controller.fieldError ? Colors.red : null,
+        color: widget.controller.hasError ? Colors.red : null,
       ),
     );
   }

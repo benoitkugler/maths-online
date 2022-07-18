@@ -114,7 +114,7 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
     final from2 = widget.controller.from2;
     final to2 = widget.controller.to2;
     final zoomFactor = widget.zoom.value.getMaxScaleOnAxis();
-    final hasError = widget.controller.fieldError;
+    final hasError = widget.controller.hasError;
     return NotificationListener<PointMovedNotification<VectorPairPointID>>(
       onNotification: (event) {
         setState(() {
@@ -162,7 +162,7 @@ class _FigureVectorPairFieldState extends State<FigureVectorPairField> {
           ),
         ],
         texts,
-        color: widget.controller.fieldError ? Colors.red : null,
+        color: widget.controller.hasError ? Colors.red : null,
       ),
     );
   }

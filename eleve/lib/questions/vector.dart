@@ -41,7 +41,7 @@ class VectorField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = controller.fieldError ? Colors.red : this.color;
+    final color = controller.hasError ? Colors.red : this.color;
     final x = NumberField(
       color,
       controller.x,

@@ -128,7 +128,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
     }
     final rep = await widget._controller._checkExpressionSyntax();
     setState(() {
-      widget._controller.fieldError = !rep.isValid;
+      widget._controller.setError(!rep.isValid);
     });
 
     if (!rep.isValid) {
@@ -148,9 +148,9 @@ class _ExpressionFieldState extends State<ExpressionField> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget._controller.fieldError ? Colors.red : widget.color;
+    final color = widget._controller.hasError ? Colors.red : widget.color;
     final textColor =
-        widget._controller.fieldError ? Colors.red : Colors.yellow.shade100;
+        widget._controller.hasError ? Colors.red : Colors.yellow.shade100;
 
     final width = MediaQuery.of(context).size.width *
         widget.maxWidthFactor *

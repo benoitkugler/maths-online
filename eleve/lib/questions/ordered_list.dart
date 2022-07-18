@@ -1,3 +1,4 @@
+import 'package:eleve/questions/drag_text.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
@@ -122,7 +123,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
     return Column(
       children: [
         _AnswerRow(
-            ct.fieldError ? Colors.red : widget._color,
+            ct.hasError ? Colors.red : widget._color,
             ct.enabled,
             answers,
             ct.label,
@@ -160,37 +161,8 @@ class _Symbol extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: 6,
-        horizontal: isAnswer ? 8 : 12,
-      ),
-      child: TextRow(
-        buildText(symbol.item.text, TextS(), fontSize, baselineMiddle: true),
-        lineHeight: 1,
-        verticalPadding: 2,
-      ),
-    );
-    return Draggable<_PositionnedItem>(
-      maxSimultaneousDrags: enabled ? null : 0,
-      data: symbol,
-      feedback: Material(
-        elevation: 8,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: TextRow(buildText(symbol.item.text, TextS(), fontSize),
-              lineHeight: 1),
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: isAnswer ? 0 : 6),
-        child: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(isAnswer ? 1 : 10),
-            child: text),
-      ),
-    );
+    return DragText(symbol, symbol.item.text,
+        enabled: enabled, dense: isAnswer);
   }
 }
 

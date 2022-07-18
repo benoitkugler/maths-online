@@ -87,7 +87,7 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
     final from = widget.controller.from;
     final to = widget.controller.to;
     final zoomFactor = widget.zoom.value.getMaxScaleOnAxis();
-    final color = widget.controller.fieldError ? Colors.red : null;
+    final color = widget.controller.hasError ? Colors.red : null;
 
     final List<PositionnedText> texts = [];
     final CustomPainter linePainter;

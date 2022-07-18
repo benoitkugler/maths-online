@@ -1,30 +1,44 @@
+import 'package:eleve/questions/drag_text.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/proof.gen.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
 
 class ProofController extends FieldController {
   final ProofFieldBlock enonce;
 
-  Proof currentProof;
+  _SequenceController controller; // root controller
+  List<TextLine> currentProposals;
 
   ProofController(this.enonce, void Function() onChange)
-      : currentProof = enonce.shape,
+      : controller = _SequenceController(enonce.shape.root, onChange),
+        currentProposals = enonce.termProposals.toList(),
         super(onChange);
 
   @override
+  void disable() {
+    controller.disable();
+    super.disable();
+  }
+
+  @override
+  void setError(bool hasError) {
+    controller.setError(hasError);
+    super.setError(hasError);
+  }
+
+  @override
   Answer getData() {
-    return ProofAnswer(currentProof);
+    return ProofAnswer(Proof(controller.getData() as Sequence));
   }
 
   @override
   void setData(Answer answer) {
-    currentProof = (answer as ProofAnswer).proof;
+    controller.setData((answer as ProofAnswer).proof.root);
   }
 
   @override
   bool hasValidData() {
-    return _hasValidData(currentProof.root);
+    return _hasValidData(controller.getData());
   }
 }
 
@@ -44,91 +58,409 @@ bool _hasValidData(Assertion a) {
   }
 }
 
-class ProofField extends StatelessWidget {
+// state object responsible for one node
+abstract class _AssertionController {
+  _AssertionController();
+
+  bool _hasError = false;
+  bool get hasError => _hasError;
+  void setError(bool hasError) {
+    _hasError = hasError;
+  }
+
+  bool _isEnabled = true;
+  bool get isEnabled => _isEnabled;
+  void disable() {
+    _isEnabled = false;
+  }
+
+  Assertion getData();
+  void setData(Assertion data);
+
+  factory _AssertionController.fromData(
+      Assertion data, void Function() onChange) {
+    if (data is Statement) {
+      return _StatementController(data, onChange);
+    } else if (data is Equality) {
+      return _EqualityController(data, onChange);
+    } else if (data is Node) {
+      return _NodeController(data, onChange);
+    } else if (data is Sequence) {
+      return _SequenceController(data, onChange);
+    } else {
+      throw ("exhaustive type switch");
+    }
+  }
+}
+
+class _StatementController extends _AssertionController {
+  Statement data;
+  final void Function() onChange;
+
+  _StatementController(this.data, this.onChange);
+
+  @override
+  Assertion getData() {
+    return data;
+  }
+
+  @override
+  void setData(Assertion data) {
+    this.data = (data as Statement);
+  }
+
+  void setStatement(TextLine statement) {
+    data = Statement(statement);
+    onChange();
+  }
+}
+
+class _EqualityController extends _AssertionController {
+  Equality data;
+  final void Function() onChange;
+  _EqualityController(this.data, this.onChange);
+
+  @override
+  Assertion getData() {
+    return data;
+  }
+
+  @override
+  void setData(Assertion data) {
+    this.data = (data as Equality);
+  }
+
+  void setTerm(TextLine term, int index) {
+    data.terms[index] = term;
+    onChange();
+  }
+}
+
+class _NodeController extends _AssertionController {
+  Binary _op;
+  _AssertionController left;
+  _AssertionController right;
+  final void Function() onChange;
+  _NodeController(
+    Node data,
+    this.onChange,
+  )   : _op = data.op,
+        left = _AssertionController.fromData(data.left, onChange),
+        right = _AssertionController.fromData(data.right, onChange);
+
+  @override
+  void setError(bool hasError) {
+    left.setError(hasError);
+    right.setError(hasError);
+    super.setError(hasError);
+  }
+
+  @override
+  void disable() {
+    left.disable();
+    right.disable();
+    super.disable();
+  }
+
+  @override
+  Assertion getData() {
+    return Node(left.getData(), right.getData(), _op);
+  }
+
+  @override
+  void setData(Assertion data) {
+    final node = (data as Node);
+    _op = node.op;
+    left.setData(node.left);
+    right.setData(node.right);
+  }
+
+  void setOp(Binary op) {
+    _op = op;
+    onChange();
+  }
+}
+
+class _SequenceController extends _AssertionController {
+  List<_AssertionController> parts;
+
+  _SequenceController(Sequence data, void Function() onChange)
+      : parts = data.parts
+            .map((e) => _AssertionController.fromData(e, onChange))
+            .toList();
+
+  @override
+  void setError(bool hasError) {
+    for (var element in parts) {
+      element.setError(hasError);
+    }
+    super.setError(hasError);
+  }
+
+  @override
+  void disable() {
+    for (var element in parts) {
+      element.disable();
+    }
+    super.disable();
+  }
+
+  @override
+  Assertion getData() {
+    return Sequence(parts.map((ct) => ct.getData()).toList());
+  }
+
+  @override
+  void setData(Assertion data) {
+    // we assume the shape does not change
+    final seq = (data as Sequence).parts;
+    for (var i = 0; i < parts.length; i++) {
+      parts[i].setData(seq[i]);
+    }
+  }
+}
+
+class ProofField extends StatefulWidget {
   final Color color;
   final ProofController controller;
 
   const ProofField(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
+  State<ProofField> createState() => _ProofFieldState();
+}
+
+class _ProofFieldState extends State<ProofField> {
+  void _removeProposal(_TermUsed term) {
+    // if the old value is empty, do not replace it
+    setState(() {
+      if (term.replaced.isEmpty) {
+        widget.controller.currentProposals.removeAt(term.choosen.index);
+      } else {
+        widget.controller.currentProposals[term.choosen.index] = term.replaced;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _AssertionW(
-      controller.currentProof.root,
-      _AssertionParams(color, controller.fieldError, controller.enabled),
-      isRoot: true,
+    // two parts : top for the proof skeleton, bottom for a list
+    // of proposals
+    return Column(
+      children: [
+        NotificationListener<_TermUsed>(
+          onNotification: (n) {
+            _removeProposal(n);
+            return true;
+          },
+          child: _AssertionW(
+            widget.color,
+            widget.controller.controller,
+            isRoot: true,
+          ),
+        ),
+        const SizedBox(height: 5),
+        _Proposals(
+            widget.controller.enabled, widget.controller.currentProposals)
+      ],
     );
   }
 }
 
-class _AssertionParams {
-  final Color color;
-  final bool hasError;
-  final bool isEnabled;
-  const _AssertionParams(
-    this.color,
-    this.hasError,
-    this.isEnabled,
-  );
+class _Proposals extends StatelessWidget {
+  final bool enabled;
+  final List<TextLine> proposals;
+
+  const _Proposals(this.enabled, this.proposals, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final children = List<Widget>.generate(
+        proposals.length,
+        (i) => DragText(_TermFromProposals(proposals[i], i), proposals[i],
+            enabled: enabled));
+    return Wrap(
+      children: children,
+      runSpacing: 6,
+    );
+  }
+}
+
+abstract class _DragData {}
+
+class _TermFromProposals implements _DragData {
+  final TextLine term;
+  final int index;
+  _TermFromProposals(this.term, this.index);
+}
+
+class _TermFromProof implements _DragData {
+  final TextLine term;
+  final void Function(TextLine otherTerm) onSwap;
+
+  _TermFromProof(this.term, this.onSwap);
 }
 
 // widget for one assertion node in a proof
 class _AssertionW extends StatelessWidget {
-  final Assertion data;
-  final _AssertionParams params;
+  final Color color;
   final bool isRoot;
-  const _AssertionW(this.data, this.params, {Key? key, this.isRoot = false})
+  final _AssertionController controller;
+
+  const _AssertionW(this.color, this.controller,
+      {Key? key, this.isRoot = false})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final Widget child;
-    final s = data;
-    if (s is Statement) {
-      child = _StatementW(s, params);
-    } else if (s is Equality) {
-      child = _EqualityW(s, params);
-    } else if (s is Node) {
-      child = _NodeW(s, params);
-    } else if (s is Sequence) {
-      child = _SequenceW(s, params);
+    final ct = controller;
+    if (ct is _StatementController) {
+      child = _StatementW(color, ct);
+    } else if (ct is _EqualityController) {
+      child = _EqualityW(color, ct);
+    } else if (ct is _NodeController) {
+      child = _NodeW(color, ct);
+    } else if (ct is _SequenceController) {
+      child = _SequenceW(color, ct);
     } else {
       throw ("exhaustive switch");
     }
     return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: isRoot
-          ? null
-          : BoxDecoration(
-              border: Border.all(width: 1.5, color: Colors.lightBlueAccent),
-              borderRadius: const BorderRadius.all(Radius.circular(4))),
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 1),
       child: child,
     );
   }
 }
 
-class _StatementW extends StatelessWidget {
-  final Statement data;
-  final _AssertionParams params;
+class _TermUsed extends Notification {
+  final _TermFromProposals choosen;
+  final TextLine replaced;
+  const _TermUsed(this.choosen, this.replaced);
+}
 
-  const _StatementW(this.data, this.params, {Key? key}) : super(key: key);
+class _TextDrop extends StatelessWidget {
+  final bool enabled;
+  final TextLine text;
+
+  // called when receiving a drop
+  final void Function(_DragData origin) onDrop;
+  // called when the drag started from this is accepted
+  final void Function(TextLine otherTerm) onSwap;
+
+  const _TextDrop(this.enabled, this.text, this.onDrop, this.onSwap, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Text(data.content);
+    return DragTarget<_DragData>(
+        builder: (context, candidateData, rejectedData) {
+          return Container(
+            padding: EdgeInsets.symmetric(
+                vertical: text.isEmpty ? 6 : 2, horizontal: 2),
+            decoration: BoxDecoration(
+              color: candidateData.isNotEmpty ? Colors.blue : null,
+              border:
+                  text.isEmpty ? Border.all(color: Colors.blueAccent) : null,
+              borderRadius: const BorderRadius.all(Radius.circular(4)),
+            ),
+            constraints: const BoxConstraints(minWidth: 40),
+            child: text.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6.0),
+                    child: Text(
+                      "Glisser...",
+                      style: TextStyle(fontStyle: FontStyle.italic),
+                    ),
+                  )
+                : DragText(
+                    _TermFromProof(text, onSwap),
+                    text,
+                    enabled: enabled,
+                    dense: true,
+                  ),
+          );
+        },
+        onAccept: (term) => onDrop(term));
   }
 }
 
-class _EqualityW extends StatelessWidget {
-  final Equality data;
-  final _AssertionParams params;
+class _StatementW extends StatefulWidget {
+  final Color color;
+  final _StatementController controller;
 
-  const _EqualityW(this.data, this.params, {Key? key}) : super(key: key);
+  const _StatementW(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
+  State<_StatementW> createState() => _StatementWState();
+}
+
+class _StatementWState extends State<_StatementW> {
+  @override
   Widget build(BuildContext context) {
+    final text = widget.controller.data.content;
+    final content = _TextDrop(widget.controller.isEnabled, text, (origin) {
+      if (origin is _TermFromProposals) {
+        setState(() {
+          widget.controller.setStatement(origin.term);
+        });
+        _TermUsed(origin, text).dispatch(context);
+      } else if (origin is _TermFromProof) {
+        setState(() {
+          widget.controller.setStatement(origin.term);
+        });
+        origin.onSwap(text);
+      }
+    }, (otherTerm) {
+      setState(() {
+        widget.controller.data = Statement(otherTerm);
+      });
+    });
+    return text.isEmpty
+        ? content // fill the width
+        : Align(
+            alignment: Alignment.centerLeft,
+            child: content,
+          );
+  }
+}
+
+class _EqualityW extends StatefulWidget {
+  final Color color;
+  final _EqualityController controller;
+
+  const _EqualityW(this.color, this.controller, {Key? key}) : super(key: key);
+
+  @override
+  State<_EqualityW> createState() => _EqualityWState();
+}
+
+class _EqualityWState extends State<_EqualityW> {
+  @override
+  Widget build(BuildContext context) {
+    final terms = widget.controller.data.terms;
     final List<Widget> children = [];
-    for (var term in data.terms) {
-      children.add(Text(term));
+
+    for (var i = 0; i < terms.length; i++) {
+      children.add(_TextDrop(widget.controller.isEnabled, terms[i], (notif) {
+        final currentText = terms[i];
+        if (notif is _TermFromProposals) {
+          setState(() {
+            widget.controller.setTerm(notif.term, i);
+          });
+          _TermUsed(notif, currentText).dispatch(context);
+        } else if (notif is _TermFromProof) {
+          setState(() {
+            widget.controller.setTerm(notif.term, i);
+          });
+          notif.onSwap(currentText);
+        }
+      }, (otherTerm) {
+        setState(() {
+          widget.controller.data.terms[i] = otherTerm;
+        });
+      }));
+
       children.add(const Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0),
         child: Text("="),
@@ -138,58 +470,90 @@ class _EqualityW extends StatelessWidget {
     return Wrap(
       children: children,
       alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
     );
   }
 }
 
-class _NodeW extends StatelessWidget {
-  final Node data;
-  final _AssertionParams params;
+class _WithBorder extends StatelessWidget {
+  final Widget child;
+  final Color color;
 
-  const _NodeW(this.data, this.params, {Key? key}) : super(key: key);
+  const _WithBorder({required this.child, required this.color, Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final left = _AssertionW(data.left, params);
-    final right = _AssertionW(data.right, params);
-    final op = _BinaryField(params.color, data.op, params.hasError,
-        params.isEnabled ? print : null); // TODO:
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        left,
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Center(
-            widthFactor: 4,
-            child: SizedBox(
-              child: op,
-              width: 100,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+      decoration: BoxDecoration(
+          border: Border.all(width: 1, color: color),
+          borderRadius: const BorderRadius.all(Radius.circular(4))),
+      child: child,
+    );
+  }
+}
+
+class _NodeW extends StatefulWidget {
+  final Color color;
+  final _NodeController controller;
+
+  const _NodeW(this.color, this.controller, {Key? key}) : super(key: key);
+
+  @override
+  State<_NodeW> createState() => _NodeWState();
+}
+
+class _NodeWState extends State<_NodeW> {
+  void _onOpChanged(Binary op) {
+    setState(() {
+      widget.controller.setOp(op);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = widget.controller;
+    return _WithBorder(
+      color: widget.color,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _AssertionW(widget.color, ct.left),
+          Row(children: [
+            Expanded(child: Container(height: 1, color: widget.color)),
+            _WithBorder(
+              color: widget.color,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: _BinaryField(widget.color, ct._op, ct.hasError,
+                    ct.isEnabled ? _onOpChanged : null),
+              ),
             ),
-          ),
-        ),
-        right
-      ],
+            Expanded(child: Container(height: 1, color: widget.color)),
+          ]),
+          _AssertionW(widget.color, ct.right),
+        ],
+      ),
     );
   }
 }
 
 class _SequenceW extends StatelessWidget {
-  final Sequence data;
-  final _AssertionParams params;
+  final Color color;
+  final _SequenceController controller;
 
-  const _SequenceW(this.data, this.params, {Key? key}) : super(key: key);
+  const _SequenceW(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> children = [];
-    for (var part in data.parts) {
-      children.add(_AssertionW(part, params));
-      children.add(const Center(
-          child: Padding(
-        padding: EdgeInsets.all(8.0),
+    for (var part in controller.parts) {
+      children.add(_AssertionW(color, part));
+      children.add(const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 2),
         child: Text("donc"),
-      )));
+      ));
     }
     children.removeLast();
     return Column(
@@ -207,7 +571,7 @@ extension _BinaryLabels on Binary {
       case Binary.and:
         return "et";
       case Binary.or:
-        return "or";
+        return "ou";
     }
   }
 }
@@ -234,8 +598,8 @@ class _BinaryField extends StatelessWidget {
           : null,
       focusColor: color,
       dropdownColor: color,
-      hint: const Text("   "),
-      value: value,
+      hint: const Text("Choisir..."),
+      value: value != Binary.invalid ? value : null,
       iconSize: 0,
       alignment: Alignment.center,
       // we use selectedItemBuilder since Math.tex do not handle

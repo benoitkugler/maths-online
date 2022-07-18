@@ -54,7 +54,7 @@ class NumberField extends StatelessWidget {
       this.onSubmitted})
       : super(key: key);
 
-  Color get color => _controller.fieldError ? Colors.red : _color;
+  Color get color => _controller.hasError ? Colors.red : _color;
 
   @override
   Widget build(BuildContext context) {
@@ -91,9 +91,8 @@ class NumberField extends StatelessWidget {
 
             cursorColor: color,
             style: TextStyle(
-                color: _controller.fieldError
-                    ? Colors.red.shade200
-                    : Colors.white),
+                color:
+                    _controller.hasError ? Colors.red.shade200 : Colors.white),
             textAlign: TextAlign.center,
             textAlignVertical: TextAlignVertical.center,
             keyboardType: const TextInputType.numberWithOptions(
