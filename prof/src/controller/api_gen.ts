@@ -50,7 +50,7 @@ export type Date_ = string & DateTag;
 // ISO date-time string
 export type Time = string & TimeTag;
 
-// github.com/benoitkugler/maths-online/prof/students.Student
+// github.com/benoitkugler/maths-online/prof/teacher.Student
 export interface Student {
   Id: number;
   Name: string;
@@ -58,6 +58,7 @@ export interface Student {
   Birthday: Date_;
   TrivialSuccess: number;
   IsClientAttached: boolean;
+  id_classroom: number;
 }
 // github.com/benoitkugler/maths-online/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
@@ -186,6 +187,7 @@ export enum BlockKind {
   FunctionsGraphBlock = "FunctionsGraphBlock",
   NumberFieldBlock = "NumberFieldBlock",
   OrderedListFieldBlock = "OrderedListFieldBlock",
+  ProofFieldBlock = "ProofFieldBlock",
   RadioFieldBlock = "RadioFieldBlock",
   SignTableBlock = "SignTableBlock",
   TableBlock = "TableBlock",
@@ -211,6 +213,7 @@ export interface Block {
     | FunctionsGraphBlock
     | NumberFieldBlock
     | OrderedListFieldBlock
+    | ProofFieldBlock
     | RadioFieldBlock
     | SignTableBlock
     | TableBlock
@@ -462,6 +465,53 @@ export interface OrderedListFieldBlock {
   Label: Interpolated;
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
+}
+
+export enum ProofAssertionKind {
+  ProofEquality = "ProofEquality",
+  ProofNode = "ProofNode",
+  ProofSequence = "ProofSequence",
+  ProofStatement = "ProofStatement",
+}
+
+export interface ProofAssertion {
+  Kind: ProofAssertionKind;
+  Data: ProofEquality | ProofNode | ProofSequence | ProofStatement;
+}
+// github.com/benoitkugler/maths-online/maths/questions.ProofEquality
+export interface ProofEquality {
+  Terms: string;
+}
+// github.com/benoitkugler/maths-online/maths/questions/client.Binary
+export enum Binary {
+  And = 1,
+  Invalid = 0,
+  Or = 2,
+}
+
+export const BinaryLabels: { [key in Binary]: string } = {
+  [Binary.And]: "Et",
+  [Binary.Invalid]: "Invalide",
+  [Binary.Or]: "Ou",
+};
+
+// github.com/benoitkugler/maths-online/maths/questions.ProofNode
+export interface ProofNode {
+  Left: ProofAssertion;
+  Right: ProofAssertion;
+  Op: Binary;
+}
+// github.com/benoitkugler/maths-online/maths/questions.ProofStatement
+export interface ProofStatement {
+  Content: Interpolated;
+}
+// github.com/benoitkugler/maths-online/maths/questions.ProofSequence
+export interface ProofSequence {
+  Parts: ProofAssertion[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/questions.ProofFieldBlock
+export interface ProofFieldBlock {
+  Answer: ProofSequence;
 }
 // github.com/benoitkugler/maths-online/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {

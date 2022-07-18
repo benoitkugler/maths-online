@@ -91,16 +91,16 @@ abstract class LoopbackClientEvent {}
 
 LoopbackClientEvent loopbackClientEventFromJson(dynamic json_) {
   final json = json_ as JSON;
-  final kind = json['Kind'] as int;
+  final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
-    case 0:
+    case "loopbackExerciceValidIn":
       return loopbackExerciceValidInFromJson(data);
-    case 1:
+    case "loopbackPing":
       return loopbackPingFromJson(data);
-    case 2:
+    case "loopbackQuestionCorrectAnswersIn":
       return loopbackQuestionCorrectAnswersInFromJson(data);
-    case 3:
+    case "loopbackQuestionValidIn":
       return loopbackQuestionValidInFromJson(data);
     default:
       throw ("unexpected type");
@@ -109,13 +109,22 @@ LoopbackClientEvent loopbackClientEventFromJson(dynamic json_) {
 
 JSON loopbackClientEventToJson(LoopbackClientEvent item) {
   if (item is LoopbackExerciceValidIn) {
-    return {'Kind': 0, 'Data': loopbackExerciceValidInToJson(item)};
+    return {
+      'Kind': "loopbackExerciceValidIn",
+      'Data': loopbackExerciceValidInToJson(item)
+    };
   } else if (item is LoopbackPing) {
-    return {'Kind': 1, 'Data': loopbackPingToJson(item)};
+    return {'Kind': "loopbackPing", 'Data': loopbackPingToJson(item)};
   } else if (item is LoopbackQuestionCorrectAnswersIn) {
-    return {'Kind': 2, 'Data': loopbackQuestionCorrectAnswersInToJson(item)};
+    return {
+      'Kind': "loopbackQuestionCorrectAnswersIn",
+      'Data': loopbackQuestionCorrectAnswersInToJson(item)
+    };
   } else if (item is LoopbackQuestionValidIn) {
-    return {'Kind': 3, 'Data': loopbackQuestionValidInToJson(item)};
+    return {
+      'Kind': "loopbackQuestionValidIn",
+      'Data': loopbackQuestionValidInToJson(item)
+    };
   } else {
     throw ("unexpected type");
   }
@@ -236,18 +245,18 @@ abstract class LoopbackServerEvent {}
 
 LoopbackServerEvent loopbackServerEventFromJson(dynamic json_) {
   final json = json_ as JSON;
-  final kind = json['Kind'] as int;
+  final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
-    case 0:
+    case "loopbackPaused":
       return loopbackPausedFromJson(data);
-    case 1:
+    case "loopbackQuestion":
       return loopbackQuestionFromJson(data);
-    case 2:
+    case "loopbackQuestionCorrectAnswersOut":
       return loopbackQuestionCorrectAnswersOutFromJson(data);
-    case 3:
+    case "loopbackQuestionValidOut":
       return loopbackQuestionValidOutFromJson(data);
-    case 4:
+    case "loopbackShowExercice":
       return loopbackShowExerciceFromJson(data);
     default:
       throw ("unexpected type");
@@ -256,15 +265,24 @@ LoopbackServerEvent loopbackServerEventFromJson(dynamic json_) {
 
 JSON loopbackServerEventToJson(LoopbackServerEvent item) {
   if (item is LoopbackPaused) {
-    return {'Kind': 0, 'Data': loopbackPausedToJson(item)};
+    return {'Kind': "loopbackPaused", 'Data': loopbackPausedToJson(item)};
   } else if (item is LoopbackQuestion) {
-    return {'Kind': 1, 'Data': loopbackQuestionToJson(item)};
+    return {'Kind': "loopbackQuestion", 'Data': loopbackQuestionToJson(item)};
   } else if (item is LoopbackQuestionCorrectAnswersOut) {
-    return {'Kind': 2, 'Data': loopbackQuestionCorrectAnswersOutToJson(item)};
+    return {
+      'Kind': "loopbackQuestionCorrectAnswersOut",
+      'Data': loopbackQuestionCorrectAnswersOutToJson(item)
+    };
   } else if (item is LoopbackQuestionValidOut) {
-    return {'Kind': 3, 'Data': loopbackQuestionValidOutToJson(item)};
+    return {
+      'Kind': "loopbackQuestionValidOut",
+      'Data': loopbackQuestionValidOutToJson(item)
+    };
   } else if (item is LoopbackShowExercice) {
-    return {'Kind': 4, 'Data': loopbackShowExerciceToJson(item)};
+    return {
+      'Kind': "loopbackShowExercice",
+      'Data': loopbackShowExerciceToJson(item)
+    };
   } else {
     throw ("unexpected type");
   }

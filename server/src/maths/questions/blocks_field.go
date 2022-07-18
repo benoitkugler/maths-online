@@ -24,6 +24,7 @@ var (
 	_ Block = TreeFieldBlock{}
 	_ Block = TableFieldBlock{}
 	_ Block = VectorFieldBlock{}
+	_ Block = ProofFieldBlock{}
 )
 
 type NumberFieldBlock struct {

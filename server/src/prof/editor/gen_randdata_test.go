@@ -157,6 +157,7 @@ func randBlock() questions.Block {
 		randque_FunctionsGraphBlock(),
 		randque_NumberFieldBlock(),
 		randque_OrderedListFieldBlock(),
+		randque_ProofFieldBlock(),
 		randque_RadioFieldBlock(),
 		randque_SignTableBlock(),
 		randque_TableBlock(),
@@ -167,7 +168,7 @@ func randBlock() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(20)
+	i := rand.Intn(21)
 	return choix[i]
 }
 
@@ -486,6 +487,16 @@ func randque_OrderedListFieldBlock() questions.OrderedListFieldBlock {
 		Label:               randInterpolated(),
 		Answer:              randSliceInterpolated(),
 		AdditionalProposals: randSliceInterpolated(),
+	}
+}
+
+func randque_ProofSequence() questions.ProofSequence {
+	return questions.ProofSequence{}
+}
+
+func randque_ProofFieldBlock() questions.ProofFieldBlock {
+	return questions.ProofFieldBlock{
+		Answer: randque_ProofSequence(),
 	}
 }
 

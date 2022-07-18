@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
-	"github.com/benoitkugler/maths-online/maths/proof"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
@@ -220,9 +219,33 @@ type VectorFieldBlock struct {
 	DisplayColumn bool
 }
 
+// Statement is a basic statement
+type Statement struct {
+	Content TextLine
+}
+
+// Equality is an equality of the form A1 = A2 = A3
+type Equality struct {
+	Terms []TextLine
+}
+
+// Node is an higher level assertion, such as
+// (m is even) AND (n is odd)
+type Node struct {
+	Left, Right Assertion
+	Op          Binary
+}
+
+// Sequence is a list of elementary steps needed
+// to write a mathematical proof, where each step are
+// implicitely connected by a "So" (Donc) connector.
+type Sequence struct {
+	Parts Assertions
+}
+
 type ProofFieldBlock struct {
-	Shape         proof.Proof `dart-extern:"proof:proof.gen.dart"`
-	TermProposals []string
+	Shape         Proof
+	TermProposals []TextLine
 	ID            int
 }
 
@@ -313,7 +336,7 @@ type VectorNumberAnswer struct {
 }
 
 type ProofAnswer struct {
-	Proof proof.Proof `dart-extern:"proof:proof.gen.dart"`
+	Proof Proof
 }
 
 // QuestionAnswersIn map the field ids to their answer
@@ -364,29 +387,6 @@ func (qu QuestionAnswersOut) IsCorrect() bool {
 type QuestionSyntaxCheckIn struct {
 	Answer Answer
 	ID     int
-}
-
-func (out *QuestionSyntaxCheckIn) UnmarshalJSON(src []byte) error {
-	var wr struct {
-		Answer AnswerWrapper
-		ID     int
-	}
-	err := json.Unmarshal(src, &wr)
-	out.Answer = wr.Answer.Data
-	out.ID = wr.ID
-
-	return err
-}
-
-func (out QuestionSyntaxCheckIn) MarshalJSON() ([]byte, error) {
-	wr := struct {
-		Answer AnswerWrapper
-		ID     int
-	}{
-		Answer: AnswerWrapper{out.Answer},
-		ID:     out.ID,
-	}
-	return json.Marshal(wr)
 }
 
 type QuestionSyntaxCheckOut struct {

@@ -59,7 +59,8 @@ var (
 	_ fieldInstance = FigureVectorPairFieldInstance{}
 	_ fieldInstance = FigureAffineLineFieldInstance{}
 	_ fieldInstance = TreeFieldInstance{}
-	_ fieldInstance = TableFieldInstance{}
+	_ fieldInstance = TreeFieldInstance{}
+	_ fieldInstance = ProofFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only

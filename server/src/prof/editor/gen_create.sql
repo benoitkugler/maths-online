@@ -1024,6 +1024,175 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofEquality (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Terms'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Terms');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofStatement (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Content'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_string (data -> 'Content');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofAssertion (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+        RETURN FALSE;
+    END IF;
+    CASE WHEN data ->> 'Kind' = 'ProofEquality' THEN
+        RETURN structgen_validate_json_que_ProofEquality (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ProofNode' THEN
+        RETURN structgen_validate_json_que_ProofNode (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ProofSequence' THEN
+        RETURN structgen_validate_json_que_ProofSequence (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ProofStatement' THEN
+        RETURN structgen_validate_json_que_ProofStatement (data -> 'Data');
+    ELSE
+        RETURN FALSE;
+    END CASE;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_Binary (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (1, 0, 2);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a Binary', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofNode (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Left', 'Right', 'Op'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_que_ProofAssertion (data -> 'Left')
+        AND structgen_validate_json_que_ProofAssertion (data -> 'Right')
+        AND structgen_validate_json_Binary (data -> 'Op');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_array_que_ProofAssertion (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(structgen_validate_json_que_ProofAssertion (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofSequence (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Parts'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_array_que_ProofAssertion (data -> 'Parts');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer'))
+        FROM
+            jsonb_each(data))
+        AND structgen_validate_json_que_ProofSequence (data -> 'Answer');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_que_RadioFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -1413,6 +1582,8 @@ BEGIN
         RETURN structgen_validate_json_que_NumberFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'OrderedListFieldBlock' THEN
         RETURN structgen_validate_json_que_OrderedListFieldBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ProofFieldBlock' THEN
+        RETURN structgen_validate_json_que_ProofFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'RadioFieldBlock' THEN
         RETURN structgen_validate_json_que_RadioFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'SignTableBlock' THEN

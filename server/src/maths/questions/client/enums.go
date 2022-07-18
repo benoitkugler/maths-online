@@ -1,4 +1,4 @@
-package proof
+package client
 
 const (
 	Invalid Binary = iota // Invalide

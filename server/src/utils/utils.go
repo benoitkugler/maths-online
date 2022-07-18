@@ -104,15 +104,3 @@ func NewDeterministicRand(hash []byte) *rand.Rand {
 	seed := int64(s.Sum32())
 	return rand.New(rand.NewSource(seed))
 }
-
-func StringSlicesEqual(s1, s2 []string) bool {
-	if len(s1) != len(s2) {
-		return false
-	}
-	for i, s := range s1 {
-		if s != s2[i] {
-			return false
-		}
-	}
-	return true
-}
