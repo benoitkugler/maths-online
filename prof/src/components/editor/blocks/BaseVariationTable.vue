@@ -28,7 +28,7 @@
           <td v-for="(x, index) in props.modelValue.Xs" :key="index">
             <expression-field
               :model-value="x"
-              @update:model-value="s => props.modelValue.Xs![index] = s"
+              @update:model-value="(s) => updateXs(index, s)"
               center
               width="50px"
             >
@@ -40,7 +40,8 @@
             <v-text-field
               variant="outlined"
               density="compact"
-              v-model="props.modelValue.Label"
+              :model-value="props.modelValue.Label"
+              @update:model-value="updateLabel"
               label="Légende"
               hide-details
               class="label-input"
@@ -50,7 +51,7 @@
           <td v-for="(fx, index) in props.modelValue.Fxs" :key="index">
             <expression-field
               :model-value="fx"
-              @update:model-value="s => props.modelValue.Fxs![index] = s"
+              @update:model-value="(s) => updateFXs(index, s)"
               center
               width="50px"
             >
@@ -93,11 +94,26 @@ const latexColor = colorByKind[TextKind.StaticMath];
 function addColumn() {
   props.modelValue.Xs?.push("5");
   props.modelValue.Fxs?.push("5");
+  emit("update:modelValue", props.modelValue);
 }
 
 function removeColumn(index: number) {
   props.modelValue.Xs?.splice(index, 1);
   props.modelValue.Fxs?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
+}
+
+function updateXs(index: number, s: string) {
+  props.modelValue.Xs![index] = s;
+  emit("update:modelValue", props.modelValue);
+}
+function updateFXs(index: number, s: string) {
+  props.modelValue.Fxs![index] = s;
+  emit("update:modelValue", props.modelValue);
+}
+function updateLabel(label: string) {
+  props.modelValue.Label = label;
+  emit("update:modelValue", props.modelValue);
 }
 </script>
 

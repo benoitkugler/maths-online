@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import IntListField from "../editor/blocks/IntListField.vue";
+import IntListField from "../editor/utils/IntListField.vue";
 
 interface Props {
   modelValue: number[];

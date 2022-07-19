@@ -69,15 +69,13 @@
   </v-card>
   <figure-block-vue
     v-model="props.modelValue.Figure"
+    @update:model-value="emit('update:modelValue', props.modelValue)"
     :available-parameters="props.availableParameters"
   ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
-import type {
-FigureVectorFieldBlock,
-Variable
-} from "@/controller/api_gen";
+import type { FigureVectorFieldBlock, Variable } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind, completePoint } from "@/controller/editor";
 import FigureBlockVue from "./FigureBlock.vue";

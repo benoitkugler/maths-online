@@ -10,7 +10,11 @@
           <tr>
             <td></td>
             <th v-if="props.modelValue.VerticalHeaders != null"></th>
-            <td v-for="index in rowLength" style="text-align: center">
+            <td
+              v-for="index in rowLength"
+              style="text-align: center"
+              :key="index"
+            >
               <v-btn
                 icon
                 size="x-small"
@@ -27,6 +31,7 @@
             <th v-if="props.modelValue.VerticalHeaders != null"></th>
             <th
               v-for="(_, index) in props.modelValue.HorizontalHeaders"
+              :key="index"
               style="text-align: center; width: 40px"
             >
               <text-part-field
@@ -38,7 +43,10 @@
               </text-part-field>
             </th>
           </tr>
-          <tr v-for="(row, index) in props.modelValue.Values || []">
+          <tr
+            v-for="(row, index) in props.modelValue.Values || []"
+            :key="index"
+          >
             <td style="text-align: center; width: 20px">
               <v-btn
                 icon
@@ -64,6 +72,7 @@
             </th>
             <td
               v-for="(x, j) in row"
+              :key="j"
               style="text-align: center; min-width: 80px"
             >
               <text-part-field
@@ -140,15 +149,17 @@ function addColumn() {
   if (props.modelValue.HorizontalHeaders != null) {
     props.modelValue.HorizontalHeaders.push({
       Kind: TextKind.Text,
-      Content: ""
+      Content: "",
     });
   }
-  props.modelValue.Values?.forEach(row =>
+  props.modelValue.Values?.forEach((row) =>
     row!.push({
       Kind: TextKind.Text,
-      Content: ""
+      Content: "",
     })
   );
+
+  emit("update:modelValue", props.modelValue);
 }
 
 const rowLength = computed(() => {
@@ -168,16 +179,18 @@ function addRow() {
   if (props.modelValue.VerticalHeaders != null) {
     props.modelValue.VerticalHeaders.push({
       Kind: TextKind.Text,
-      Content: ""
+      Content: "",
     });
   }
 
   props.modelValue.Values?.push(
     Array.from(new Array(rowLength.value), () => ({
       Kind: TextKind.Text,
-      Content: ""
+      Content: "",
     }))
   );
+
+  emit("update:modelValue", props.modelValue);
 }
 
 function removeColumn(index: number) {
@@ -186,7 +199,9 @@ function removeColumn(index: number) {
   if (props.modelValue.HorizontalHeaders != null) {
     props.modelValue.HorizontalHeaders.splice(index, 1);
   }
-  props.modelValue.Values?.forEach(row => row!.splice(index, 1));
+  props.modelValue.Values?.forEach((row) => row!.splice(index, 1));
+
+  emit("update:modelValue", props.modelValue);
 }
 
 function removeRow(index: number) {
@@ -194,6 +209,8 @@ function removeRow(index: number) {
     props.modelValue.VerticalHeaders.splice(index, 1);
   }
   props.modelValue.Values?.splice(index, 1);
+
+  emit("update:modelValue", props.modelValue);
 }
 
 function toogleHorizontal(b: boolean) {
@@ -202,12 +219,14 @@ function toogleHorizontal(b: boolean) {
       new Array(rowLength.value),
       () => ({
         Kind: TextKind.Text,
-        Content: ""
+        Content: "",
       })
     );
   } else {
     props.modelValue.HorizontalHeaders = null;
   }
+
+  emit("update:modelValue", props.modelValue);
 }
 
 function toogleVertical(b: boolean) {
@@ -216,12 +235,14 @@ function toogleVertical(b: boolean) {
       new Array(props.modelValue.Values?.length || 0),
       () => ({
         Kind: TextKind.Text,
-        Content: ""
+        Content: "",
       })
     );
   } else {
     props.modelValue.VerticalHeaders = null;
   }
+
+  emit("update:modelValue", props.modelValue);
 }
 </script>
 

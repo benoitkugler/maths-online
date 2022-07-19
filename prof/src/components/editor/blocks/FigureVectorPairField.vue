@@ -14,12 +14,7 @@
             density="compact"
             :items="selectItems.map((e) => e.text)"
             :model-value="selectItems.find(e => e.value == props.modelValue.Criterion)!.text"
-            @update:model-value="
-              s =>
-                (props.modelValue.Criterion = selectItems.find(
-                  e => e.text == s
-                )!.value)
-            "
+            @update:model-value="onCriterionUpdate"
           >
           </v-select>
         </v-col>
@@ -28,21 +23,20 @@
   </v-card>
   <figure-block-vue
     v-model="props.modelValue.Figure"
+    @update:model-value="emit('update:modelValue', props.modelValue)"
     :available-parameters="props.availableParameters"
   ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
 import type {
-FigureVectorPairFieldBlock,
-Variable
+  FigureVectorPairFieldBlock,
+  Variable,
 } from "@/controller/api_gen";
 import {
-TextKind,
-VectorPairCriterion,
-VectorPairCriterionLabels
+  VectorPairCriterion,
+  VectorPairCriterionLabels,
 } from "@/controller/api_gen";
-import { colorByKind } from "@/controller/editor";
 import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
@@ -61,7 +55,10 @@ const selectItems = Object.entries(VectorPairCriterionLabels).map((e) => ({
   value: Number(e[0]) as VectorPairCriterion,
 }));
 
-const expressionColor = colorByKind[TextKind.Expression];
+function onCriterionUpdate(s: string) {
+  props.modelValue.Criterion = selectItems.find((e) => e.text == s)!.value;
+  emit("update:modelValue", props.modelValue);
+}
 </script>
 
 <style scoped></style>

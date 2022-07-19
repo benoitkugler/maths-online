@@ -108,9 +108,7 @@
             <v-col cols="10">
               <BaseVariationTable
                 :model-value="fn"
-                @update:model-value="
-              (v) => (props.modelValue.FunctionVariations![index] = v)
-            "
+                @update:model-value="(v) => updateVar(index, v)"
                 description="Fonction définie par ses variations"
               ></BaseVariationTable>
             </v-col>
@@ -214,7 +212,10 @@
 </template>
 
 <script setup lang="ts">
-import type { FunctionsGraphBlock } from "@/controller/api_gen";
+import type {
+  FunctionsGraphBlock,
+  VariationTableBlock,
+} from "@/controller/api_gen";
 import {
   ExpressionColor,
   lastColorUsed,
@@ -222,9 +223,9 @@ import {
   xRune,
 } from "@/controller/editor";
 import { $computed } from "vue/macros";
+import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionField from "../utils/ExpressionField.vue";
 import BaseVariationTable from "./BaseVariationTable.vue";
-import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
   modelValue: FunctionsGraphBlock;
@@ -265,6 +266,11 @@ function addFunctionVar() {
 
 function deleteFunctionVar(index: number) {
   props.modelValue.FunctionVariations?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
+}
+
+function updateVar(index: number, v: VariationTableBlock) {
+  props.modelValue.FunctionVariations![index] = v;
   emit("update:modelValue", props.modelValue);
 }
 

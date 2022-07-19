@@ -38,7 +38,7 @@
     <v-col md="12">
       <ExpressionListField
         :model-value="props.modelValue.XGrid || []"
-        @update:model-value="(g) => (props.modelValue.XGrid = g)"
+        @update:model-value="updateXGrid"
         label="Valeurs de X"
       ></ExpressionListField>
     </v-col>
@@ -59,6 +59,11 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FunctionPointsFieldBlock): void;
 }>();
+
+function updateXGrid(g: string[]) {
+  props.modelValue.XGrid = g;
+  emit("update:modelValue", props.modelValue);
+}
 
 const color = ExpressionColor;
 </script>

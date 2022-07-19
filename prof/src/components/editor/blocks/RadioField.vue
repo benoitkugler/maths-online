@@ -22,6 +22,7 @@
       <v-list>
         <v-list-item
           v-for="(param, index) in props.modelValue.Proposals"
+          :key="index"
           class="pr-0"
         >
           <v-list-item-title style="width: 120px">
@@ -68,8 +69,6 @@
 
 <script setup lang="ts">
 import type { RadioFieldBlock } from "@/controller/api_gen";
-import { TextKind } from "@/controller/api_gen";
-import { colorByKind } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import ExpressionField from "../utils/ExpressionField.vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
@@ -78,7 +77,6 @@ interface Props {
   modelValue: RadioFieldBlock;
 }
 const props = defineProps<Props>();
-const color = colorByKind[TextKind.Expression];
 
 const emit = defineEmits<{
   (event: "update:modelValue", value: RadioFieldBlock): void;
@@ -93,10 +91,12 @@ const hint = computed(
 
 function addProposal() {
   props.modelValue.Proposals?.push("");
+  emit("update:modelValue", props.modelValue);
 }
 
 function removeProposal(index: number) {
   props.modelValue.Proposals?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
 }
 </script>
 

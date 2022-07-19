@@ -110,6 +110,7 @@
                 <v-col cols="12" align-self="center">
                   <btn-color-picker
                     v-model="point.Point.Color"
+                    @update:model-value="emitUpdate"
                   ></btn-color-picker> </v-col
               ></v-row>
             </v-col>
@@ -379,10 +380,10 @@ import {
 import { colorByKind, extractPoints, lastColorUsed } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
+import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionListField from "../utils/ExpressionListField.vue";
 import LabelPosField from "../utils/LabelPosField.vue";
 import SegmentKindField from "../utils/SegmentKindField.vue";
-import BtnColorPicker from "./BtnColorPicker.vue";
 
 interface Props {
   modelValue: FigureBlock;
@@ -394,6 +395,10 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FigureBlock): void;
 }>();
+
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
 
 const expressionColor = colorByKind[TextKind.Expression];
 
@@ -412,6 +417,7 @@ function addPoint() {
     },
   });
   props.modelValue.Drawings.Points = points;
+  emitUpdate();
 }
 
 function addSegment() {
@@ -427,12 +433,14 @@ function addSegment() {
     Color: lastColorUsed.color,
   });
   props.modelValue.Drawings.Segments = segments;
+  emitUpdate();
 }
 
 function addLine() {
   const lines = props.modelValue.Drawings.Lines || [];
   lines.push({ Label: "(d)", A: "1", B: "0", Color: lastColorUsed.color });
   props.modelValue.Drawings.Lines = lines;
+  emitUpdate();
 }
 
 function addArea() {
@@ -442,22 +450,27 @@ function addArea() {
     Color: lastColorUsed.color,
   });
   props.modelValue.Drawings.Areas = areas;
+  emitUpdate();
 }
 
 function deletePoint(index: number) {
   props.modelValue.Drawings.Points!.splice(index, 1);
+  emitUpdate();
 }
 
 function deleteSegment(index: number) {
   props.modelValue.Drawings.Segments!.splice(index, 1);
+  emitUpdate();
 }
 
 function deleteLine(index: number) {
   props.modelValue.Drawings.Lines!.splice(index, 1);
+  emitUpdate();
 }
 
 function deleteArea(index: number) {
   props.modelValue.Drawings.Areas!.splice(index, 1);
+  emitUpdate();
 }
 
 const availablePoints = computed(() =>

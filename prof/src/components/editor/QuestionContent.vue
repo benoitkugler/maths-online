@@ -64,7 +64,7 @@ import FigureBlockVue from "./blocks/FigureBlock.vue";
 import FigurePointFieldVue from "./blocks/FigurePointField.vue";
 import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
 import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
-import FormulaVue from "./blocks/Formula.vue";
+import FormulaBVue from "./blocks/FormulaB.vue";
 import FormulaFieldVue from "./blocks/FormulaField.vue";
 import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
 import FunctionsGraphVue from "./blocks/FunctionsGraph.vue";
@@ -73,7 +73,7 @@ import OrderedListFieldVue from "./blocks/OrderedListField.vue";
 import ProofFieldVue from "./blocks/ProofField.vue";
 import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
-import TableVue from "./blocks/Table.vue";
+import TableVue from "./blocks/TableB.vue";
 import TableFieldVue from "./blocks/TableField.vue";
 import TextVue from "./blocks/TextB.vue";
 import TreeFieldVue from "./blocks/TreeField.vue";
@@ -107,7 +107,7 @@ function dataToBlock(data: Block): block {
     case BlockKind.TextBlock:
       return { Props: data, Component: markRaw(TextVue) };
     case BlockKind.FormulaBlock:
-      return { Props: data, Component: markRaw(FormulaVue) };
+      return { Props: data, Component: markRaw(FormulaBVue) };
     case BlockKind.FigureBlock:
       return { Props: data, Component: markRaw(FigureBlockVue) };
     case BlockKind.FunctionsGraphBlock:

@@ -7,7 +7,7 @@
       <v-table style="overflow-x: auto; max-width: 70vh">
         <tr>
           <th style="width: 60px"></th>
-          <template v-for="(x, index) in props.modelValue.Xs">
+          <template v-for="(x, index) in props.modelValue.Xs" :key="index">
             <td v-if="index"></td>
             <td style="text-align: center; width: 40px">
               <v-btn
@@ -24,7 +24,7 @@
         </tr>
         <tr>
           <th style="width: 60px">x</th>
-          <template v-for="(x, index) in props.modelValue.Xs">
+          <template v-for="(x, index) in props.modelValue.Xs" :key="index">
             <td v-if="index"></td>
             <td style="text-align: center; width: 80px">
               <interpolated-text
@@ -46,7 +46,10 @@
               class="fix-input-width"
             ></v-text-field>
           </td>
-          <template v-for="(fx, index) in props.modelValue.FxSymbols">
+          <template
+            v-for="(fx, index) in props.modelValue.FxSymbols"
+            :key="index"
+          >
             <td v-if="index">
               <v-btn
                 size="small"
@@ -100,12 +103,14 @@ function addColumn() {
   props.modelValue.Xs?.push("5");
   props.modelValue.FxSymbols?.push(SignSymbol.Zero);
   props.modelValue.Signs?.push(true);
+  emit("update:modelValue", props.modelValue);
 }
 
 function removeColumn(index: number) {
   props.modelValue.Xs?.splice(index, 1);
   props.modelValue.FxSymbols?.splice(index, 1);
   props.modelValue.Signs?.splice(index == 0 ? 0 : index - 1, 1);
+  emit("update:modelValue", props.modelValue);
 }
 </script>
 

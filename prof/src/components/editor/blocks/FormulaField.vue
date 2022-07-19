@@ -50,6 +50,10 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: ExpressionFieldBlock): void;
 }>();
 
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
 let isComparaisonStrict = $computed(
   () =>
     props.modelValue.ComparisonLevel != ComparisonLevel.ExpandedSubstitutions
@@ -65,6 +69,7 @@ function changeComparaison(b: boolean) {
   props.modelValue.ComparisonLevel = b
     ? ComparisonLevel.SimpleSubstitutions
     : ComparisonLevel.ExpandedSubstitutions;
+  emitUpdate();
 }
 </script>
 

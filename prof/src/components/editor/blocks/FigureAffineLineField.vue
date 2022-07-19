@@ -37,6 +37,7 @@
             variant="outlined"
             label="Légende"
             v-model="props.modelValue.Label"
+            @update:model-value="emitUpdate"
             hide-details
           ></v-text-field>
         </v-col>
@@ -47,6 +48,7 @@
             label="A"
             hint="Coefficient directeur, Inf pour une droite verticale."
             v-model="props.modelValue.A"
+            @update:model-value="emitUpdate"
             :color="expressionColor"
             persistent-hint
             class="no-hint-padding"
@@ -58,6 +60,7 @@
             variant="outlined"
             label="B"
             v-model="props.modelValue.B"
+            @update:model-value="emitUpdate"
             hint="Ordonnée à l'origine ou abscisse pour une droite verticale."
             persistent-hint
             :color="expressionColor"
@@ -69,14 +72,15 @@
   </v-card>
   <figure-block-vue
     v-model="props.modelValue.Figure"
+    @update:model-value="emitUpdate"
     :available-parameters="props.availableParameters"
   ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
 import type {
-FigureAffineLineFieldBlock,
-Variable
+  FigureAffineLineFieldBlock,
+  Variable,
 } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
@@ -93,6 +97,10 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: FigureAffineLineFieldBlock): void;
 }>();
+
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
 
 const expressionColor = colorByKind[TextKind.Expression];
 
