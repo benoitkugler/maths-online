@@ -2,15 +2,14 @@
   <InterpolatedText
     :model-value="props.modelValue.Terms"
     @update:model-value="(s) => emit('update:modelValue', { Terms: s })"
-    :color="color"
+    force-latex
     center
     :transform="textTransform"
   ></InterpolatedText>
 </template>
 
 <script setup lang="ts">
-import { TextKind, type ProofEquality } from "@/controller/api_gen";
-import { colorByKind } from "@/controller/editor";
+import type { ProofEquality } from "@/controller/api_gen";
 import type Quill from "quill";
 import InterpolatedText from "../../utils/InterpolatedText.vue";
 
@@ -22,8 +21,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (event: "update:modelValue", value: ProofEquality): void;
 }>();
-
-const color = colorByKind[TextKind.StaticMath];
 
 function textTransform(quill: Quill) {
   const text = quill.getText();

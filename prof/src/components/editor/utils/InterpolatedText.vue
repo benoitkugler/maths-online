@@ -1,8 +1,9 @@
 <template>
+  <small v-if="props.label" class="text-grey">{{ props.label }} </small>
   <QuillEditor
     theme=""
     toolbar=""
-    class="text-field elevation-2"
+    class="__quill-text-field elevation-2"
     content-type="text"
     @update:content="onTextChange"
     @text-change="updateVisual"
@@ -10,12 +11,13 @@
     :options="{ formats: ['color', 'bold', 'align'] }"
     ref="quill"
   />
+  <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
 </template>
 
 <script setup lang="ts">
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind, itemize } from "@/controller/editor";
-import { onMounted, watch } from "@vue/runtime-core";
+import { computed, onMounted, watch } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
@@ -24,7 +26,9 @@ import { $ref } from "vue/macros";
 
 type Props = {
   modelValue: string;
-  color?: string;
+  label?: string;
+  hint?: string;
+  forceLatex?: boolean;
   transform?: (quill: Quill) => void;
   center?: boolean;
 };
@@ -80,10 +84,13 @@ function defaultTransform(quill: Quill) {
     quill.formatLine(0, lineNb, { align: "center" });
   }
 }
+
+const laTeXColor = colorByKind[TextKind.StaticMath];
+const activeColor = computed(() => (props.forceLatex ? laTeXColor : "black"));
 </script>
 
 <style>
-.text-field {
+.__quill-text-field {
   width: 100%;
   border: 2px solid lightgray;
   border-radius: 4px;
@@ -91,14 +98,17 @@ function defaultTransform(quill: Quill) {
   padding: 4px;
 }
 
-.text-field:hover {
+.__quill-text-field:hover {
   border: 2px solid gray;
 }
 
-.text-field:focus-within {
-  border: 2px solid v-bind("props.color || 'black'");
+.__quill-text-field:focus-within {
+  border: 2px solid v-bind("activeColor");
 }
 
+.ql-container {
+  height: unset;
+}
 .ql-editor {
   padding: 4px 4px;
 }

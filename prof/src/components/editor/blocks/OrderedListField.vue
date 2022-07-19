@@ -88,15 +88,12 @@
 
   <v-row class="my-2">
     <v-col>
-      <v-text-field
+      <interpolated-text
+        force-latex
+        v-model="props.modelValue.Label"
         label="Préfixe"
         hint="Code LaTeX ajouté devant le champ de réponse. (Optionnel)."
-        v-model="props.modelValue.Label"
-        variant="outlined"
-        density="compact"
-        color="green"
-      >
-      </v-text-field>
+      ></interpolated-text>
     </v-col>
   </v-row>
 </template>
