@@ -1,6 +1,4 @@
 import 'package:eleve/main_shared.dart';
-import 'package:eleve/questions/proof.dart';
-import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -19,9 +17,7 @@ class _App extends StatelessWidget {
       localizationsDelegates: localizations,
       supportedLocales: locales,
       home: Scaffold(
-        body: ListView(children: [
-           ,
-        ]),
+        body: ListView(children: []),
       ),
     );
   }
