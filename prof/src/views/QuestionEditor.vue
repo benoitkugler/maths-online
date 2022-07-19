@@ -5,12 +5,13 @@
         <QuestionEditorPannel
           v-if="viewKind == 'editor'"
           :session_id="sessionID"
-          @back="backToQuestions"
-          @duplicated="onDuplicated"
           :question="currentQuestion!"
           :origin="currentOrigin"
           :tags="currentTags"
           :all-tags="allKnownTags"
+          @back="backToQuestions"
+          @duplicated="onDuplicated"
+          @update-tags="(tags) => (currentTags = tags)"
         ></QuestionEditorPannel>
         <keep-alive>
           <QuestionList

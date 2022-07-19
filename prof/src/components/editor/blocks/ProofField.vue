@@ -1,5 +1,6 @@
 <template>
   <proof-sequence
+    is-root
     :model-value="props.modelValue.Answer"
     @update:model-value="(v) => emit('update:modelValue', { Answer: v })"
   ></proof-sequence>

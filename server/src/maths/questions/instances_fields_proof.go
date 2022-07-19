@@ -12,7 +12,7 @@ import (
 
 type proofStatementIns cl.TextLine
 
-type proofEqualityIns []cl.TextLine
+type proofEqualityIns cl.Equality
 
 type proofNodeIns struct {
 	Op          cl.Binary
@@ -40,7 +40,8 @@ type proofAssertionIns interface {
 }
 
 func (v proofStatementIns) toClient() cl.Assertion { return cl.Statement{Content: cl.TextLine(v)} }
-func (v proofEqualityIns) toClient() cl.Assertion  { return cl.Equality{Terms: v} }
+func (v proofEqualityIns) toClient() cl.Assertion  { return cl.Equality(v) }
+
 func (v proofNodeIns) toClient() cl.Assertion {
 	return cl.Node{Op: v.Op, Left: v.Left.toClient(), Right: v.Right.toClient()}
 }
@@ -57,7 +58,7 @@ func (v proofSequenceIns) toClient() cl.Assertion { return v.toClientS() }
 func (st proofStatementIns) shape() proofAssertionIns { return proofStatementIns{} }
 
 func (eq proofEqualityIns) shape() proofAssertionIns {
-	return proofEqualityIns(make([]cl.TextLine, len(eq)))
+	return proofEqualityIns{Terms: make([]cl.TextLine, len(eq.Terms)), WithDef: eq.WithDef}
 }
 
 func (nd proofNodeIns) shape() proofAssertionIns {
@@ -74,7 +75,13 @@ func (pp proofSequenceIns) shape() proofAssertionIns {
 
 func (st proofStatementIns) terms() []cl.TextLine { return []cl.TextLine{cl.TextLine(st)} }
 
-func (eq proofEqualityIns) terms() []cl.TextLine { return eq }
+func (eq proofEqualityIns) terms() []cl.TextLine {
+	out := eq.Terms
+	if len(eq.Def) != 0 {
+		out = append(out, eq.Def)
+	}
+	return out
+}
 
 func (nd proofNodeIns) terms() []cl.TextLine {
 	return append(nd.Left.terms(), nd.Right.terms()...)
@@ -93,7 +100,7 @@ func (st proofStatementIns) isEquivalent(other cl.Assertion) bool {
 	return ok && areLineEquals(cl.TextLine(st), otherSt.Content)
 }
 
-func areTextLinesEquals(s1, s2 []cl.TextLine) bool {
+func areManyLinesEquals(s1, s2 []cl.TextLine) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
@@ -107,7 +114,7 @@ func areTextLinesEquals(s1, s2 []cl.TextLine) bool {
 
 func (eq proofEqualityIns) isEquivalent(other cl.Assertion) bool {
 	otherEq, ok := other.(cl.Equality)
-	return ok && areTextLinesEquals(eq, otherEq.Terms)
+	return ok && areManyLinesEquals(eq.Terms, otherEq.Terms) && areLineEquals(eq.Def, otherEq.Def)
 }
 
 func (nd proofNodeIns) isEquivalent(other cl.Assertion) bool {

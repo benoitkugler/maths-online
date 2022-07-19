@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-sheet class="rounded pa-1" style="border: 1px solid grey">
     <v-row>
       <v-col cols="11">
         <ProofAssertionVue
@@ -9,19 +9,19 @@
       ></v-col>
       <v-col md="1" align-self="center" class="px-0">
         <v-btn icon size="x-small" @click="deleteLeft()">
-          <v-icon icon="mdi-arrow-left" color="red"></v-icon>
+          <v-icon icon="mdi-close" color="red"></v-icon>
         </v-btn>
       </v-col>
     </v-row>
 
-    <v-row>
+    <v-row no-gutters>
       <v-spacer></v-spacer>
       <v-col>
         <v-select
           class="mt-3 mb-2"
           density="compact"
           variant="outlined"
-          label="Connecteur"
+          label="Connecteur logique"
           hide-details
           :model-value="BinaryLabels[props.modelValue.Op]"
           @update:model-value="onChangeBinary"
@@ -40,11 +40,11 @@
       ></v-col>
       <v-col md="1" align-self="center" class="px-0">
         <v-btn icon size="x-small" @click="deleteRight()">
-          <v-icon icon="mdi-arrow-left" color="red"></v-icon>
+          <v-icon icon="mdi-close" color="red"></v-icon>
         </v-btn>
       </v-col>
     </v-row>
-  </div>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">

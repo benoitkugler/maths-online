@@ -126,8 +126,8 @@
           <v-col class="pr-2" align-self="center">
             <tag-list-field
               label="Catégories"
-              v-model="tags"
               :all-tags="props.allTags"
+              :model-value="props.tags"
               @update:model-value="saveTags"
               :readonly="isReadonly"
             ></tag-list-field
@@ -225,15 +225,14 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "updateTags", tags: string[]): void;
   (e: "duplicated", question: Question): void;
 }>();
 
 let question = $ref(props.question);
-let tags = $ref(props.tags);
 
 watch(props, () => {
   question = props.question;
-  tags = props.tags;
 });
 
 const isReadonly = computed(
@@ -318,8 +317,9 @@ async function checkParameters() {
   availableParameters.value = out.Variables || [];
 }
 
-async function saveTags() {
-  await controller.EditorUpdateTags({ IdQuestion: question.id, Tags: tags });
+async function saveTags(newTags: string[]) {
+  await controller.EditorUpdateTags({ IdQuestion: question.id, Tags: newTags });
+  emit("updateTags", newTags);
 }
 
 async function duplicate() {

@@ -35,8 +35,8 @@ class ProofController extends FieldController {
   void setData(Answer answer) {
     controller.setData((answer as ProofAnswer).proof.root);
     // by construction, the answer uses all the proposals,
-    // so we don't bother with diffing 
-    currentProposals.clear(); 
+    // so we don't bother with diffing
+    currentProposals.clear();
   }
 
   @override
@@ -135,6 +135,11 @@ class _EqualityController extends _AssertionController {
 
   void setTerm(TextLine term, int index) {
     data.terms[index] = term;
+    onChange();
+  }
+
+  void setAvecDef(TextLine def) {
+    data = Equality(data.terms, def, data.withDef);
     onChange();
   }
 }
@@ -416,7 +421,7 @@ class _StatementWState extends State<_StatementW> {
       }
     }, (otherTerm) {
       setState(() {
-        widget.controller.data = Statement(otherTerm);
+        widget.controller.setStatement(otherTerm);
       });
     });
     return text.isEmpty
@@ -442,6 +447,7 @@ class _EqualityWState extends State<_EqualityW> {
   @override
   Widget build(BuildContext context) {
     final terms = widget.controller.data.terms;
+
     final List<Widget> children = [];
 
     for (var i = 0; i < terms.length; i++) {
@@ -460,7 +466,7 @@ class _EqualityWState extends State<_EqualityW> {
         }
       }, (otherTerm) {
         setState(() {
-          widget.controller.data.terms[i] = otherTerm;
+          widget.controller.setTerm(otherTerm, i);
         });
       }));
 
@@ -470,10 +476,38 @@ class _EqualityWState extends State<_EqualityW> {
       ));
     }
     children.removeLast();
+
+    final data = widget.controller.data;
+    if (data.withDef) {
+      children.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.0),
+        child: Text(" avec"),
+      ));
+      children.add(_TextDrop(widget.controller.isEnabled, data.def, (notif) {
+        final currentText = data.def;
+        if (notif is _TermFromProposals) {
+          setState(() {
+            widget.controller.setAvecDef(notif.term);
+          });
+          _TermUsed(notif, currentText).dispatch(context);
+        } else if (notif is _TermFromProof) {
+          setState(() {
+            widget.controller.setAvecDef(notif.term);
+          });
+          notif.onSwap(currentText);
+        }
+      }, (otherTerm) {
+        setState(() {
+          widget.controller.setAvecDef(otherTerm);
+        });
+      }));
+    }
+
     return Wrap(
       children: children,
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
+      runSpacing: 4,
     );
   }
 }

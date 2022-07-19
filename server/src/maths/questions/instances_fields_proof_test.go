@@ -29,8 +29,8 @@ func TestParityProof(t *testing.T) {
 
 	proof := ProofFieldInstance{Answer: proofSequenceIns{
 		n,
-		proofEqualityIns{ml("m+n"), ml("2k+2k'"), ml("2(k+k')")},
-		proofEqualityIns{ml("m+n"), ml("2k''")},
+		proofEqualityIns{Terms: []cl.TextLine{ml("m+n"), ml("2k+2k'"), ml("2(k+k')")}},
+		proofEqualityIns{Terms: []cl.TextLine{ml("m+n"), ml("2k''")}, Def: ml("k'' = k+k'")},
 		proofStatementIns(tl("m+n est pair")),
 	}}
 
@@ -67,7 +67,7 @@ func TestProof_IsEquivalent(t *testing.T) {
 			proofSequenceIns{proofNodeIns{Left: s1, Right: s2, Op: cl.Or}}, proofSequenceIns{proofNodeIns{Left: s1, Right: s2, Op: cl.And}}, false,
 		},
 		{
-			proofSequenceIns{proofEqualityIns{tl("a"), tl("b")}}, proofSequenceIns{proofEqualityIns{tl("b"), tl("a")}}, false,
+			proofSequenceIns{proofEqualityIns{Terms: []cl.TextLine{tl("a"), tl("b")}}}, proofSequenceIns{proofEqualityIns{Terms: []cl.TextLine{tl("b"), tl("a")}}}, false,
 		},
 	}
 	for _, tt := range tests {

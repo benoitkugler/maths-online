@@ -137,12 +137,14 @@
 
 <script setup lang="ts">
 import type {
-Origin, Question, QuestionGroup,
-QuestionHeader
+  Origin,
+  Question,
+  QuestionGroup,
+  QuestionHeader,
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { personnalOrigin } from "@/controller/editor";
-import { computed, onMounted } from "@vue/runtime-core";
+import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import QuestionGroupRow from "./QuestionGroupRow.vue";
 import QuestionRow from "./QuestionRow.vue";
@@ -174,6 +176,7 @@ let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
 let timerId = 0;
 
 onMounted(fetchQuestions);
+onActivated(fetchQuestions);
 
 function updateQuerySearch() {
   const debounceDelay = 200;

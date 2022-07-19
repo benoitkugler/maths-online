@@ -264,22 +264,29 @@ List<dynamic> listListTextOrMathToJson(List<TextLine> item) {
 // github.com/benoitkugler/maths-online/maths/questions/client.Equality
 class Equality implements Assertion {
   final List<TextLine> terms;
+  final TextLine def;
+  final bool withDef;
 
-  const Equality(this.terms);
+  const Equality(this.terms, this.def, this.withDef);
 
   @override
   String toString() {
-    return "Equality($terms)";
+    return "Equality($terms, $def, $withDef)";
   }
 }
 
 Equality equalityFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Equality(listListTextOrMathFromJson(json['Terms']));
+  return Equality(listListTextOrMathFromJson(json['Terms']),
+      listTextOrMathFromJson(json['Def']), boolFromJson(json['WithDef']));
 }
 
 JSON equalityToJson(Equality item) {
-  return {"Terms": listListTextOrMathToJson(item.terms)};
+  return {
+    "Terms": listListTextOrMathToJson(item.terms),
+    "Def": listTextOrMathToJson(item.def),
+    "WithDef": boolToJson(item.withDef)
+  };
 }
 
 // github.com/benoitkugler/maths-online/maths/questions/client.Statement

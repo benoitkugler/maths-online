@@ -226,7 +226,9 @@ type Statement struct {
 
 // Equality is an equality of the form A1 = A2 = A3
 type Equality struct {
-	Terms []TextLine
+	Terms   []TextLine
+	Def     TextLine // Optional avec x = 2k term
+	WithDef bool
 }
 
 // Node is an higher level assertion, such as
