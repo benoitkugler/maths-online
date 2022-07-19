@@ -7,6 +7,7 @@ import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart' hide Flow;
+import 'package:upgrader/upgrader.dart';
 
 Future<Audio> loadAudioFromSettings() async {
   WidgetsFlutterBinding
@@ -21,8 +22,10 @@ Future<Audio> loadAudioFromSettings() async {
 class EleveApp extends StatefulWidget {
   final Audio audioPlayer;
   final BuildMode buildMode;
+  final Upgrader? checkUprades;
 
-  const EleveApp(this.audioPlayer, this.buildMode, {Key? key})
+  const EleveApp(this.audioPlayer, this.buildMode,
+      {Key? key, this.checkUprades})
       : super(key: key);
 
   @override
@@ -74,6 +77,7 @@ class _EleveAppState extends State<EleveApp> {
 
   @override
   Widget build(BuildContext context) {
+    final body = _AppBody(widget.audioPlayer, widget.buildMode, settings);
     return MaterialApp(
         title: 'Isyro',
         theme: theme,
@@ -102,24 +106,29 @@ class _EleveAppState extends State<EleveApp> {
               )
             ],
           ),
-          body: _HomePage(widget.audioPlayer, widget.buildMode, settings),
+          body: widget.checkUprades == null
+              ? body
+              : UpgradeAlert(
+                  upgrader: widget.checkUprades,
+                  child: body,
+                ),
         ));
   }
 }
 
-class _HomePage extends StatefulWidget {
+class _AppBody extends StatefulWidget {
   final Audio audioPlayer;
   final BuildMode buildMode;
   final UserSettings settings;
 
-  const _HomePage(this.audioPlayer, this.buildMode, this.settings, {Key? key})
+  const _AppBody(this.audioPlayer, this.buildMode, this.settings, {Key? key})
       : super(key: key);
 
   @override
-  State<_HomePage> createState() => _HomePageState();
+  State<_AppBody> createState() => _AppBodyState();
 }
 
-class _HomePageState extends State<_HomePage> {
+class _AppBodyState extends State<_AppBody> {
   /// [trivialMetaCache] stores the credentials needed
   /// to reconnect in game.
   Map<String, String> trivialMetaCache = {};
