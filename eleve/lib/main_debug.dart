@@ -1,6 +1,5 @@
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/proof.dart';
-import 'package:eleve/questions/proof.gen.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
 
@@ -21,29 +20,7 @@ class _App extends StatelessWidget {
       supportedLocales: locales,
       home: Scaffold(
         body: ListView(children: [
-          ProofField(
-              Colors.purple,
-              ProofController(
-                  const ProofFieldBlock(
-                      Proof(Sequence([
-                        Statement(""),
-                        Equality(["", "", "", "", ""]),
-                        Node(
-                            Statement(""),
-                            Sequence([
-                              Statement(""),
-                              Equality(["", "", "", "", ""]),
-                            ]),
-                            Binary.invalid),
-                        Sequence([
-                          Statement(""),
-                          Statement(""),
-                          Statement(""),
-                        ])
-                      ])),
-                      ["test", "a", "b"],
-                      0),
-                  () => print("ok"))),
+           ,
         ]),
       ),
     );
