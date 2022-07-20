@@ -12,9 +12,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
+	"github.com/labstack/echo/v4"
 )
 
 const sessionTimeout = 6 * time.Hour
@@ -76,6 +78,236 @@ func (ct *Controller) startSession() StartSessionOut {
 	}()
 
 	return StartSessionOut{ID: newID}
+}
+
+type ListQuestionsIn struct {
+	TitleQuery string // empty means all
+	Tags       []string
+}
+
+func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args ListQuestionsIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.searchQuestions(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	question := Question{IdTeacher: user.Id, Public: false}
+	question, err := question.Insert(ct.db)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, question)
+}
+
+func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.duplicateQuestion(id, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.duplicateQuestionWithDifficulty(id, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	qu, err := SelectQuestion(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if qu.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	links, err := SelectExerciceQuestionsByIdQuestions(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if len(links) != 0 {
+		ex, err := SelectExercice(ct.db, links[0].IdExercice)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
+		return fmt.Errorf("La question est utilisée dans l'exercice %s : %d.", ex.Title, ex.Id)
+	}
+
+	_, err = DeleteQuestionById(ct.db, id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) EditorGetQuestion(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	question, err := SelectQuestion(ct.db, id)
+	if err != nil {
+		return err
+	}
+
+	if !question.IsVisibleBy(user.Id) {
+		return accessForbidden
+	}
+
+	return c.JSON(200, question)
+}
+
+type CheckQuestionParametersIn struct {
+	SessionID  string
+	Parameters questions.Parameters
+}
+
+type CheckQuestionParametersOut struct {
+	ErrDefinition questions.ErrParameters
+	// Variables is the list of the variables defined
+	// in the parameteres (intrinsics included)
+	Variables []expression.Variable
+}
+
+func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
+	var args CheckQuestionParametersIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out := ct.checkQuestionParameters(args)
+
+	return c.JSON(200, out)
+}
+
+type QuestionUpdateVisiblityIn struct {
+	QuestionID int64
+	Public     bool
+}
+
+func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	// we only accept public question from admin account
+	if user.Id != ct.admin.Id {
+		return accessForbidden
+	}
+
+	var args QuestionUpdateVisiblityIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	qu, err := SelectQuestion(ct.db, args.QuestionID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if qu.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	if !args.Public {
+		// check that it is not harmful to hide the question again,
+		// that is exercices using this question are owned by the admin
+		links, err := SelectExerciceQuestionsByIdQuestions(ct.db, qu.Id)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		exercices, err := SelectExercices(ct.db, links.IdExercices()...)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		usedExercices := make(Exercices)
+		for _, link := range links {
+			ex := exercices[link.IdExercice]
+			if ex.IdTeacher != user.Id {
+				usedExercices[ex.Id] = ex
+			}
+		}
+		if L := len(usedExercices); L != 0 {
+			return fmt.Errorf("La question est utilisée dans %d exercice(s).", L)
+		}
+	}
+	qu.Public = args.Public
+	qu, err = qu.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+type SaveQuestionAndPreviewIn struct {
+	SessionID string
+	Question  Question
+}
+
+type SaveQuestionAndPreviewOut struct {
+	Error   questions.ErrQuestionInvalid
+	IsValid bool
+}
+
+// For non personnal questions, only preview.
+func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args SaveQuestionAndPreviewIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.saveQuestionAndPreview(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
 }
 
 type ListQuestionsOut struct {
