@@ -12,7 +12,7 @@ void main() async {
   runApp(EleveApp(audio, bm,
       checkUprades: Upgrader(
           messages: _UpgraderMessages(),
-          debugDisplayAlways: true,
+          // debugDisplayAlways: true,
           canDismissDialog: false,
           showIgnore: false,
           showLater: false,
