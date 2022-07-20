@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"database/sql"
+
 	"github.com/benoitkugler/maths-online/maths/questions"
 )
 
@@ -13,9 +15,9 @@ type Question struct {
 	Public      bool                   `json:"public"` // in practice only true for admins
 	IdTeacher   int64                  `json:"id_teacher"`
 	Description string                 `json:"description"`
-	// NeedExercice is `true` is the question cannot be instantiated (or edited)
+	// NeedExercice is not null if the question cannot be instantiated (or edited)
 	// on its own
-	NeedExercice bool `json:"need_exercice"`
+	NeedExercice sql.NullInt64 `json:"need_exercice" sql_foreign_key:"exercice"`
 }
 
 // sql: ADD UNIQUE(id_question, tag)

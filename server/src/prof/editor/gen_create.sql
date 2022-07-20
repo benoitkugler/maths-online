@@ -1045,6 +1045,26 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofInvalid (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(TRUE)
+        FROM
+            jsonb_each(data));
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION structgen_validate_json_que_ProofStatement (data jsonb)
     RETURNS boolean
     AS $$
@@ -1075,6 +1095,8 @@ BEGIN
     END IF;
     CASE WHEN data ->> 'Kind' = 'ProofEquality' THEN
         RETURN structgen_validate_json_que_ProofEquality (data -> 'Data');
+    WHEN data ->> 'Kind' = 'ProofInvalid' THEN
+        RETURN structgen_validate_json_que_ProofInvalid (data -> 'Data');
     WHEN data ->> 'Kind' = 'ProofNode' THEN
         RETURN structgen_validate_json_que_ProofNode (data -> 'Data');
     WHEN data ->> 'Kind' = 'ProofSequence' THEN
@@ -1662,7 +1684,7 @@ CREATE TABLE questions (
     public boolean NOT NULL,
     id_teacher integer NOT NULL,
     description varchar NOT NULL,
-    need_exercice boolean NOT NULL
+    need_exercice integer
 );
 
 CREATE TABLE question_tags (
@@ -1690,6 +1712,9 @@ ALTER TABLE progression_questions
 
 ALTER TABLE questions
     ADD FOREIGN KEY (id_teacher) REFERENCES teachers;
+
+ALTER TABLE questions
+    ADD FOREIGN KEY (need_exercice) REFERENCES exercices;
 
 ALTER TABLE question_tags
     ADD FOREIGN KEY (id_question) REFERENCES questions ON DELETE CASCADE;

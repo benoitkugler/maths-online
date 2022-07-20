@@ -901,6 +901,22 @@ func DeleteQuestionsByIdTeachers(tx DB, idTeachers ...int64) (IDs, error) {
 	return ScanIDs(rows)
 }
 
+func SelectQuestionsByNeedExercices(tx DB, needExercices ...int64) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions WHERE need_exercice = ANY($1)", pq.Int64Array(needExercices))
+	if err != nil {
+		return nil, err
+	}
+	return ScanQuestions(rows)
+}
+
+func DeleteQuestionsByNeedExercices(tx DB, needExercices ...int64) (IDs, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE need_exercice = ANY($1) RETURNING id", pq.Int64Array(needExercices))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIDs(rows)
+}
+
 func SelectQuestionTagsByIdQuestions(tx DB, idQuestions ...int64) (QuestionTags, error) {
 	rows, err := tx.Query("SELECT * FROM question_tags WHERE id_question = ANY($1)", pq.Int64Array(idQuestions))
 	if err != nil {

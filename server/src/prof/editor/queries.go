@@ -6,6 +6,8 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 )
 
+func newID(ID int64) sql.NullInt64 { return sql.NullInt64{Valid: true, Int64: ID} }
+
 // selectQuestionByTag returns the question matching the given tag
 func selectQuestionByTag(db DB, tag string) (Questions, error) {
 	rs, err := db.Query(`SELECT questions.*
@@ -37,7 +39,7 @@ func (qus Questions) RestrictVisible(userID int64) {
 // exercice
 func (qus Questions) RestrictNeedExercice() {
 	for id, question := range qus {
-		if question.NeedExercice {
+		if question.NeedExercice.Valid {
 			delete(qus, id)
 		}
 	}

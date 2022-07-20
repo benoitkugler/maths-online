@@ -73,6 +73,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 func testInsertSignTable(t *testing.T, db *sql.DB) {
 	qu := randQuestion()
 	qu.Page.Enonce = questions.Enonce{randque_SignTableBlock()}
+	qu.NeedExercice = sql.NullInt64{}
 	qu, err := qu.Insert(db)
 	if err != nil {
 		t.Fatal(err)

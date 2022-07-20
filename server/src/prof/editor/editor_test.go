@@ -24,7 +24,7 @@ func TestValidation(t *testing.T) {
 	qu.RestrictNeedExercice()
 
 	ti := time.Now()
-	err = validateAllQuestions(qu)
+	err = validateAllQuestions(qu, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,11 +42,12 @@ func BenchmarkValidation(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	qu.RestrictNeedExercice()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		validateAllQuestions(qu)
+		validateAllQuestions(qu, nil)
 	}
 }
 

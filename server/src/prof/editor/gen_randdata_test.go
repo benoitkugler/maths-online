@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"database/sql"
 	"math/rand"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -633,6 +634,13 @@ func randque_QuestionPage() questions.QuestionPage {
 	}
 }
 
+func randsql_NullInt64() sql.NullInt64 {
+	return sql.NullInt64{
+		Int64: randint64(),
+		Valid: randbool(),
+	}
+}
+
 func randQuestion() Question {
 	return Question{
 		Id:           randint64(),
@@ -640,7 +648,7 @@ func randQuestion() Question {
 		Public:       randbool(),
 		IdTeacher:    randint64(),
 		Description:  randstring(),
-		NeedExercice: randbool(),
+		NeedExercice: randsql_NullInt64(),
 	}
 }
 

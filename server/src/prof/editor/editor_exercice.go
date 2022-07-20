@@ -213,7 +213,7 @@ func (ct *Controller) deleteExercice(idExercice int64, userID int64) error {
 	// delete not standalone questions linked to the exercice
 	var toDelete IDs
 	for _, question := range qus {
-		if question.NeedExercice {
+		if question.NeedExercice.Valid {
 			toDelete = append(toDelete, question.Id)
 		}
 	}
@@ -291,7 +291,7 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int
 	}
 
 	// creates a question
-	question, err := Question{IdTeacher: userID, Public: false, NeedExercice: true}.Insert(ct.db)
+	question, err := Question{IdTeacher: userID, Public: false, NeedExercice: newID(args.IdExercice)}.Insert(ct.db)
 	if err != nil {
 		return ExerciceExt{}, utils.SQLError(err)
 	}
@@ -366,7 +366,7 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID i
 	)
 	for _, link := range links {
 		_, willBeUsed := newQuestionIDs[link.IdQuestion]
-		if shouldDelete := questions[link.IdQuestion].NeedExercice && !willBeUsed; shouldDelete {
+		if shouldDelete := questions[link.IdQuestion].NeedExercice.Valid && !willBeUsed; shouldDelete {
 			toDelete = append(toDelete, link.IdQuestion)
 		}
 	}
@@ -465,7 +465,7 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 
 	for index, question := range qus {
 		toCheck := params.QuestionParameters[index]
-		if question.NeedExercice { // add the shared parameters
+		if question.NeedExercice.Valid { // add the shared parameters
 			toCheck = toCheck.Append(params.SharedParameters)
 		}
 
@@ -508,7 +508,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	// validate all the questions, using shared parameters if needed
 	for index, question := range data.questions() {
 		toCheck := params.Questions[question.Id].Page
-		if question.NeedExercice { // add the shared parameters
+		if question.NeedExercice.Valid { // add the shared parameters
 			toCheck.Parameters = toCheck.Parameters.Append(params.Parameters)
 		}
 
