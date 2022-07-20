@@ -34,7 +34,7 @@ class Controller extends AbstractAPI {
   private isLoggedIn = false;
 
   public onError?: (kind: string, htmlError: string) => void;
-  public showMessage?: (message: string) => void;
+  public showMessage?: (message: string, color?: string) => void;
 
   public editorSessionID = "";
 
@@ -117,6 +117,9 @@ class Controller extends AbstractAPI {
     data: SaveQuestionAndPreviewOut
   ): void {
     this.inRequest = false;
+    if (this.showMessage && data.IsValid) {
+      this.showMessage(`Question générée avec succès.`);
+    }
   }
 
   protected onSuccessExerciceUpdateVisiblity(data: any): void {
@@ -345,6 +348,9 @@ class Controller extends AbstractAPI {
   }
   protected onSuccessEditorUpdateTags(data: any): void {
     this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage(`Etiquettes modifiées avec succès.`);
+    }
   }
   protected onSuccessEditorGetTags(data: any): void {
     this.inRequest = false;
@@ -354,6 +360,9 @@ class Controller extends AbstractAPI {
   }
   protected onSuccessEditorDeleteQuestion(data: any): void {
     this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question supprimée avec succès.");
+    }
   }
   protected onSuccessEditorPausePreview(data: any): void {
     this.inRequest = false;

@@ -127,7 +127,7 @@
             <tag-list-field
               label="Catégories"
               :all-tags="props.allTags"
-              :model-value="props.tags"
+              :model-value="tags"
               @update:model-value="saveTags"
               :readonly="isReadonly"
             ></tag-list-field
@@ -174,7 +174,7 @@
       <v-col class="pr-1">
         <QuestionContent
           :model-value="question.page.enonce || []"
-          @update:model-value="(v) => (question.page.enonce = v)"
+          @update:model-value="onUpdateEnonce"
           @importQuestion="onImportQuestion"
           :available-parameters="availableParameters"
           :errorBlockIndex="errorEnnonce?.Block"
@@ -188,6 +188,7 @@
 
 <script setup lang="ts">
 import type {
+  Block,
   BlockKind,
   Question,
   RandomParameter,
@@ -201,8 +202,10 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
+import { History } from "@/controller/editor_history";
+import { copy } from "@/controller/utils";
 import { ref } from "@vue/reactivity";
-import { computed, watch } from "@vue/runtime-core";
+import { computed, onMounted, onUnmounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "./BlockBar.vue";
 import DescriptionPannel from "./DescriptionPannel.vue";
@@ -216,28 +219,53 @@ import TagListField from "./TagListField.vue";
 interface Props {
   session_id: string;
   question: Question;
-  origin: Origin;
   tags: string[];
+  origin: Origin;
   allTags: string[]; // to provide auto completion
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "back"): void;
-  (e: "updateTags", tags: string[]): void;
+  (e: "back", tags: string[]): void;
   (e: "duplicated", question: Question): void;
 }>();
 
-let question = $ref(props.question);
+let question = $ref(copy(props.question));
+let tags = $ref(copy(props.tags));
 
-watch(props, () => {
-  question = props.question;
+onMounted(() => {
+  history.addListener();
+});
+
+onUnmounted(() => {
+  history.clearListener();
 });
 
 const isReadonly = computed(
   () => props.origin.Visibility != Visibility.Personnal
 );
+
+interface historyEntry {
+  question: Question;
+  tags: string[];
+}
+
+let history = new History(
+  { question, tags }, // start with initial question in history
+  controller.showMessage!,
+  restoreHistory
+);
+
+function restoreHistory(snapshot: historyEntry) {
+  // do we need to save the tags ?
+  const tagsEqual = JSON.stringify(tags) == JSON.stringify(snapshot.tags);
+  question = snapshot.question;
+  tags = snapshot.tags;
+  if (!tagsEqual) {
+    controller.EditorUpdateTags({ IdQuestion: question.id, Tags: tags });
+  }
+}
 
 let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
 function addBlock(kind: BlockKind) {
@@ -247,11 +275,18 @@ function addBlock(kind: BlockKind) {
   questionContent.addBlock(kind);
 }
 
+function onUpdateEnonce(v: Block[]) {
+  question.page.enonce = v;
+  history.add({ question, tags });
+}
+
 function updateRandomParameters(l: RandomParameter[], shouldCheck: boolean) {
   question.page.parameters.Variables = l;
   if (shouldCheck) {
     checkParameters();
   }
+
+  history.add({ question, tags });
 }
 
 function updateIntrinsics(l: string[], shouldCheck: boolean) {
@@ -259,6 +294,8 @@ function updateIntrinsics(l: string[], shouldCheck: boolean) {
   if (shouldCheck) {
     checkParameters();
   }
+
+  history.add({ question, tags });
 }
 
 let errorEnnonce = $ref<errEnonce | null>(null);
@@ -294,6 +331,8 @@ async function onImportQuestion(imported: Question) {
   // keep the current ID
   imported.id = question.id;
   question = imported;
+
+  history.add({ question, tags });
 }
 
 let errorParameters = $ref<ErrParameters | null>(null);
@@ -319,7 +358,8 @@ async function checkParameters() {
 
 async function saveTags(newTags: string[]) {
   await controller.EditorUpdateTags({ IdQuestion: question.id, Tags: newTags });
-  emit("updateTags", newTags);
+  tags = newTags;
+  history.add({ question, tags });
 }
 
 async function duplicate() {
@@ -333,7 +373,7 @@ async function duplicate() {
 }
 
 function backToList() {
-  emit("back");
+  emit("back", tags);
 }
 
 let showEditDescription = $ref(false);

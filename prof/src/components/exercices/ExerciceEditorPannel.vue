@@ -182,7 +182,7 @@
       <v-col class="pr-1">
         <QuestionContent
           :model-value="question.Question.page.enonce || []"
-          @update:model-value="(v) => (question.Question.page.enonce = v)"
+          @update:model-value="updateQuestion"
           @importQuestion="onImportQuestion"
           :available-parameters="[]"
           :errorBlockIndex="errorEnnonce?.Block"
@@ -195,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import type { RandomParameter } from "@/controller/api_gen";
+import type { Block, RandomParameter } from "@/controller/api_gen";
 import {
   BlockKind,
   Visibility,
@@ -206,7 +206,8 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
-import { computed } from "vue";
+import { History } from "@/controller/editor_history";
+import { computed, onMounted, onUnmounted } from "vue";
 import { $computed, $ref } from "vue/macros";
 import BlockBar from "../editor/BlockBar.vue";
 import DescriptionPannel from "../editor/DescriptionPannel.vue";
@@ -236,6 +237,23 @@ let question = $computed(() => {
   return getQuestion(questionID);
 });
 
+let history = new History(
+  props.exercice,
+  controller.showMessage!,
+  restoreHistory
+);
+
+onMounted(() => {
+  history.addListener();
+});
+onUnmounted(() => {
+  history.clearListener();
+});
+
+function restoreHistory(snapshot: ExerciceExt) {
+  emit("update", snapshot);
+}
+
 function getQuestion(questionID: number) {
   return props.exercice.QuestionsSource![questionID];
 }
@@ -243,6 +261,11 @@ function getQuestion(questionID: number) {
 const isReadonly = computed(
   () => question.Origin.Visibility != Visibility.Personnal
 );
+
+function updateQuestion(qu: Block[]) {
+  question.Question.page.enonce = qu;
+  history.add(props.exercice);
+}
 
 function updateRandomParameters(
   sharedP: RandomParameter[],
@@ -254,6 +277,7 @@ function updateRandomParameters(
   if (shouldCheck) {
     checkParameters();
   }
+  history.add(props.exercice);
 }
 
 function updateIntrinsics(
@@ -266,6 +290,7 @@ function updateIntrinsics(
   if (shouldCheck) {
     checkParameters();
   }
+  history.add(props.exercice);
 }
 
 let showEditDescription = $ref(false);
@@ -353,6 +378,9 @@ async function onImportQuestion(imported: Question) {
   // keep the current ID
   imported.id = question.Question.id;
   question.Question = imported;
+
+  history.add(props.exercice);
+
   emit("update", props.exercice);
 }
 </script>

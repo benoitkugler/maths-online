@@ -11,7 +11,6 @@
           :all-tags="allKnownTags"
           @back="backToQuestions"
           @duplicated="onDuplicated"
-          @update-tags="(tags) => (currentTags = tags)"
         ></QuestionEditorPannel>
         <keep-alive>
           <QuestionList
@@ -62,7 +61,8 @@ async function fetchTags() {
   allKnownTags = tags || [];
 }
 
-function backToQuestions() {
+function backToQuestions(tags: string[]) {
+  currentTags = tags;
   fetchTags();
   controller.EditorPausePreview({ sessionID: sessionID });
   viewKind = "questions";

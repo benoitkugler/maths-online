@@ -192,6 +192,7 @@
           icon
           title="Editer le contenu des questions"
           @click="emit('next')"
+          :disabled="!props.exercice.Questions?.length"
         >
           <v-icon icon="mdi-arrow-right"></v-icon>
         </v-btn>

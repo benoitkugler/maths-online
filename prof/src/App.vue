@@ -74,7 +74,7 @@
         :model-value="message != ''"
         @update:model-value="message = ''"
         :timeout="4000"
-        color="primary"
+        :color="messageColor"
         top
         right
         absolute
@@ -104,6 +104,7 @@ let showSideBar = $ref(false);
 const version = process.env.VERSION;
 
 let message = $ref("");
+let messageColor = $ref("secondary");
 
 let errorKind = $ref("");
 let errorHtml = $ref("");
@@ -113,8 +114,9 @@ controller.onError = (s, m) => {
   errorHtml = m;
 };
 
-controller.showMessage = (s) => {
+controller.showMessage = (s, color) => {
   message = s;
+  messageColor = color || "success";
 };
 
 let isLoggedIn = $ref(IsDev);
