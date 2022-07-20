@@ -2,7 +2,12 @@
   <v-app>
     <v-navigation-drawer app v-model="showSideBar" temporary>
       <v-list-item>
-        <v-list-item-title class="title"> Contenu </v-list-item-title>
+        <v-list-item-avatar>
+          <v-img :src="logoSrc"></v-img>
+        </v-list-item-avatar>
+        <v-list-item-title class="mx-2 title">
+          Accéder à la page...
+        </v-list-item-title>
       </v-list-item>
       <v-divider></v-divider>
 
@@ -96,6 +101,7 @@
 </template>
 
 <script setup lang="ts">
+import logoSrc from "@/assets/logo.png";
 import { $ref } from "vue/macros";
 import { controller, IsDev } from "./controller/controller";
 import LogginScreen from "./views/LogginScreen.vue";
