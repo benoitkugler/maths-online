@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer app v-model="showSideBar">
+    <v-navigation-drawer app v-model="showSideBar" temporary>
       <v-list-item>
         <v-list-item-title class="title"> Contenu </v-list-item-title>
       </v-list-item>
