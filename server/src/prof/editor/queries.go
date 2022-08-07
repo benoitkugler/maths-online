@@ -6,13 +6,13 @@ import (
 	"github.com/benoitkugler/maths-online/utils"
 )
 
-func newID(ID int64) sql.NullInt64 { return sql.NullInt64{Valid: true, Int64: ID} }
+func asNullable(ID IdExercice) sql.NullInt64 { return sql.NullInt64{Valid: true, Int64: int64(ID)} }
 
 // selectQuestionByTag returns the question matching the given tag
 func selectQuestionByTag(db DB, tag string) (Questions, error) {
 	rs, err := db.Query(`SELECT questions.*
 	FROM questions
-	JOIN question_tags ON questions.id = question_tags.id_question
+	JOIN question_tags ON questions.id = question_tags.IdQuestion
    	WHERE question_tags.tag = $1`, tag)
 	if err != nil {
 		return nil, err
@@ -22,12 +22,12 @@ func selectQuestionByTag(db DB, tag string) (Questions, error) {
 
 // IsVisibleBy returns `true` if the question is public or
 // owned by `userID`
-func (qu Question) IsVisibleBy(userID int64) bool {
+func (qu Question) IsVisibleBy(userID uID) bool {
 	return qu.Public || qu.IdTeacher == userID
 }
 
 // RestrictVisible remove the questions not visible by `userID`
-func (qus Questions) RestrictVisible(userID int64) {
+func (qus Questions) RestrictVisible(userID uID) {
 	for id, qu := range qus {
 		if !qu.IsVisibleBy(userID) {
 			delete(qus, id)
@@ -48,7 +48,7 @@ func (qus Questions) RestrictNeedExercice() {
 // SelectQuestionByTags returns the question matching ALL the tags given,
 // and available to `userID`, returning a map IdQuestion -> Tags
 // It panics if tags is empty.
-func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]QuestionTags, error) {
+func SelectQuestionByTags(db DB, userID uID, tags ...string) (map[IdQuestion]QuestionTags, error) {
 	firstSelection, err := selectQuestionByTag(db, tags[0])
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]Questi
 	}
 
 	dict := quTags.ByIdQuestion()
-	var selectedIDs IDs
+	var selectedIDs []IdQuestion
 	// remove questions not matching all the tags
 	for idQuestion, cr := range dict {
 		hasAll := cr.Crible().HasAll(tags)
@@ -87,7 +87,7 @@ func SelectQuestionByTags(db DB, userID int64, tags ...string) (map[int64]Questi
 
 // updateExerciceQuestionList set the questions for the given exercice,
 // overiding `IdExercice` and `index` fields of the list items.
-func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestions) error {
+func updateExerciceQuestionList(db *sql.DB, idExercice IdExercice, l ExerciceQuestions) error {
 	// enforce fields
 	for i := range l {
 		l[i].Index = i
@@ -119,6 +119,6 @@ func updateExerciceQuestionList(db *sql.DB, idExercice int64, l ExerciceQuestion
 
 // IsVisibleBy returns `true` if the question is public or
 // owned by `userID`
-func (qu Exercice) IsVisibleBy(userID int64) bool {
+func (qu Exercice) IsVisibleBy(userID uID) bool {
 	return qu.Public || qu.IdTeacher == userID
 }

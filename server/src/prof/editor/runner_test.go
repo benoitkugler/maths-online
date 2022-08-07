@@ -19,7 +19,7 @@ func TestInstantiateQuestions(t *testing.T) {
 	}
 
 	ct := NewController(db, teacher.Teacher{})
-	out, err := ct.InstantiateQuestions([]int64{24, 29, 37})
+	out, err := ct.InstantiateQuestions([]IdQuestion{24, 29, 37})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,16 +28,15 @@ func TestInstantiateQuestions(t *testing.T) {
 }
 
 func TestEvaluateExercice(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, teacher.Teacher{Id: 1})
+	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	qu := Question{IdTeacher: 1, Page: questions.QuestionPage{Enonce: questions.Enonce{questions.NumberFieldBlock{Expression: "1"}}}}
 	qu, err = qu.Insert(db)

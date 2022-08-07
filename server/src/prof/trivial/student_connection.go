@@ -310,7 +310,7 @@ func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, stu
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
 
-		student, err := teacher.SelectStudent(ct.db, studentID)
+		student, err := teacher.SelectStudent(ct.db, teacher.IdStudent(studentID))
 		if err != nil {
 			return utils.SQLError(err)
 		}

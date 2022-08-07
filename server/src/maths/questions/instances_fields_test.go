@@ -1,9 +1,7 @@
 package questions
 
 import (
-	"encoding/json"
 	"math"
-	"os"
 	"reflect"
 	"testing"
 
@@ -192,25 +190,58 @@ func Test_shufflingMap(t *testing.T) {
 }
 
 func TestInstantiate01(t *testing.T) {
-	by, err := os.ReadFile("examples/bug01.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var fullQuestion struct {
-		Page QuestionPage `json:"page"`
-	}
-	if err = json.Unmarshal(by, &fullQuestion); err != nil {
-		t.Fatal(err)
+	bug01 := QuestionPage{
+		Title: "Construire la courbe représentative d'une fonction",
+		Enonce: []Block{
+			TextBlock{
+				Parts:   "Construire $C_&f&$ la courbe représentative de la fonction : $&f&(x)=&ax^2+bx+c&$",
+				Bold:    false,
+				Italic:  false,
+				Smaller: false,
+			},
+			FunctionPointsFieldBlock{
+				Function: "ax",
+				Label:    "C_f",
+				Variable: expression.NewVar('x'),
+				XGrid: []string{
+					"-2",
+					"-1",
+					"0",
+					"1",
+					"2",
+				},
+			},
+		},
+		Parameters: Parameters{
+			Variables: []RandomParameter{
+				{
+					Expression: "randSymbol(f;g;h;k)",
+					Variable:   expression.NewVar('f'),
+				},
+				{
+					Expression: "randChoice(-0,5;-0,25;0,25;0,5;1)",
+					Variable:   expression.NewVar('a'),
+				},
+				{
+					Expression: "randint(1;3)",
+					Variable:   expression.NewVar('b'),
+				},
+				{
+					Expression: "randint(1;2)",
+					Variable:   expression.NewVar('c'),
+				},
+			},
+		},
 	}
 
-	qu, err := fullQuestion.Page.instantiate()
+	qu, err := bug01.instantiate()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	qu.ToClient() // test there is no crash
 
-	if err = fullQuestion.Page.Validate(); err == nil {
+	if err = bug01.Validate(); err == nil {
 		t.Fatal("expected error because of non integer values")
 	}
 }

@@ -1,0 +1,118 @@
+{
+    "maths/questions/blocks_field_proof.go": [
+        {
+            "Mode": "go/unions",
+            "Output": "maths/questions/gen_itfs_proof.go"
+        }
+    ],
+    "maths/questions/models.go": [
+        {
+            "Mode": "go/unions",
+            "Output": "maths/questions/gen_itfs.go"
+        }
+    ],
+    "maths/questions/client/client_types.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/questions/types.gen.dart"
+        },
+        {
+            "Mode": "go/unions",
+            "Output": "maths/questions/client/gen_itfs_client.go"
+        }
+    ],
+    "maths/repere/repere.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/questions/repere.gen.dart"
+        }
+    ],
+    "prof/editor/loopback_types.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/loopback_types.gen.dart"
+        },
+        {
+            "Mode": "go/unions",
+            "Output": "prof/editor/gen_itfs.go"
+        }
+    ],
+    "prof/teacher/models_sql.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "prof/teacher/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "prof/teacher/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "prof/teacher/gen_randdata_test.go"
+        }
+    ],
+    "prof/teacher/classrooms_student_types.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/shared/students.gen.dart"
+        }
+    ],
+    "prof/editor/models_sql.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "prof/editor/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "prof/editor/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "prof/editor/gen_randdata_test.go"
+        }
+    ],
+    "prof/trivial/models_sql.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "prof/trivial/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "prof/trivial/gen_create.sql"
+        }
+    ],
+    "prof/editor/models_ts.go": [
+        {
+            "Mode": "typescript/types",
+            "Output": "../../prof/src/controller/exercice_gen.ts"
+        }
+    ],
+    "trivial/client_models.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/trivialpoursuit/events.gen.dart"
+        },
+        {
+            "Mode": "go/unions",
+            "Output": "trivial/gen_itfs.go"
+        }
+    ],
+    "prof/trivial/monitor_types.go": [
+        {
+            "Mode": "typescript/types",
+            "Output": "../../prof/src/controller/trivial_config_socket_gen.ts"
+        }
+    ],
+    "prof_api.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../../prof/src/controller/api_gen.ts"
+        }
+    ],
+    "shared_api.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/shared_gen.dart"
+        }
+    ]
+}

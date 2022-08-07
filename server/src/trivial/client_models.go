@@ -6,11 +6,10 @@ import (
 	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/prof/editor"
 )
 
 // interaction with the client
-
-//go:generate ../../../../structgen/structgen -source=client_models.go -mode=dart:../../../eleve/lib/trivialpoursuit/events.gen.dart -mode=itfs-json:gen_itfs.go
 
 // NbCategories is the number of categories of question
 const NbCategories = int(nbCategories)
@@ -26,7 +25,7 @@ type GameState struct {
 }
 
 type QR struct {
-	IdQuestion int64
+	IdQuestion editor.IdQuestion
 	Success    bool
 }
 
@@ -35,7 +34,7 @@ type QR struct {
 type QuestionReview struct {
 	QuestionHistory []QR
 	// Ids of question the player wants to mark for further work
-	MarkedQuestions []int64
+	MarkedQuestions []editor.IdQuestion
 }
 
 // Success are the categories completed by a player
@@ -160,8 +159,8 @@ type PossibleMoves struct {
 type ShowQuestion struct {
 	TimeoutSeconds int
 	Categorie      categorie
-	ID             int64           // to facilitate the tracking of the question results
-	Question       client.Question `dart-extern:"client:../questions/types.gen.dart"` // the actual question
+	ID             editor.IdQuestion // to facilitate the tracking of the question results
+	Question       client.Question   `dart-extern:"client:../questions/types.gen.dart"` // the actual question
 }
 
 // PlayerAnswerResults indicates
@@ -179,7 +178,7 @@ type playerAnswerResult struct {
 
 // GameEnd is emitted when at least one player has won
 type GameEnd struct {
-	QuestionDecrassageIds map[serial][]int64 // player->questions
+	QuestionDecrassageIds map[serial][]editor.IdQuestion // player->questions
 	Winners               []serial
 	WinnerNames           []string
 }

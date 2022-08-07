@@ -1,13 +1,9 @@
 package client
 
 import (
-	"encoding/json"
-
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
-
-//go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/questions/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
 
 type Question struct {
 	Title  string
@@ -347,26 +343,6 @@ type QuestionAnswersIn struct {
 }
 
 type Answers map[int]Answer
-
-func (out *Answers) UnmarshalJSON(src []byte) error {
-	var wr map[int]AnswerWrapper
-
-	err := json.Unmarshal(src, &wr)
-	*out = make(map[int]Answer)
-	for i, v := range wr {
-		(*out)[i] = v.Data
-	}
-
-	return err
-}
-
-func (out Answers) MarshalJSON() ([]byte, error) {
-	tmp := make(map[int]AnswerWrapper)
-	for k, v := range out {
-		tmp[k] = AnswerWrapper{v}
-	}
-	return json.Marshal(tmp)
-}
 
 type QuestionAnswersOut struct {
 	Results         map[int]bool

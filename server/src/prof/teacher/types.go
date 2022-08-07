@@ -18,8 +18,8 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 
 const DateLayout = "2006-01-02"
 
-func (st Students) ByIdClassroom() map[int64]Students {
-	out := make(map[int64]Students)
+func (st Students) ByIdClassroom() map[IdClassroom]Students {
+	out := make(map[IdClassroom]Students)
 	for idStudent, student := range st {
 		d := out[student.IdClassroom]
 		if d == nil {

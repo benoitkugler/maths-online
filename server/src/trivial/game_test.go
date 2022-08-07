@@ -459,7 +459,7 @@ func TestGameEnd(t *testing.T) {
 	r.players["p1"].advance = playerAdvance{
 		success: Success{true, true, true, true, true},
 		review: QuestionReview{
-			MarkedQuestions: []int64{1, 1, 1, 2, 3, 4},
+			MarkedQuestions: []editor.IdQuestion{1, 1, 1, 2, 3, 4},
 		},
 	}
 
@@ -498,8 +498,8 @@ func TestGameEnd(t *testing.T) {
 		t.Fatal(gameEnd.Winners)
 	}
 
-	decrP1 := editor.NewSetFromSlice(gameEnd.QuestionDecrassageIds["p1"])
-	decrP2 := editor.NewSetFromSlice(gameEnd.QuestionDecrassageIds["p2"])
+	decrP1 := editor.NewIdQuestionSetFrom(gameEnd.QuestionDecrassageIds["p1"])
+	decrP2 := editor.NewIdQuestionSetFrom(gameEnd.QuestionDecrassageIds["p2"])
 
 	if !decrP2.Has(questionID) {
 		t.Fatal(decrP2)

@@ -48,7 +48,7 @@ func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	return out
 }
 
-func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out IDs) {
+func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out []editor.IdQuestion) {
 	for idQuestion, questions := range tags.ByIdQuestion() {
 		questionTags := questions.Crible()
 		for _, union := range qc { // at least one union must match
@@ -64,7 +64,7 @@ func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out IDs) {
 
 // selectQuestions selects the questions matching the criterion, available
 // to the user, and not needing an exercice context.
-func (qc QuestionCriterion) selectQuestions(db DB, userID int64) (editor.Questions, error) {
+func (qc QuestionCriterion) selectQuestions(db DB, userID uID) (editor.Questions, error) {
 	qc = qc.normalize()
 
 	// an empty criterion is interpreted as an invalid criterion,
@@ -98,7 +98,7 @@ func (cats *CategoriesQuestions) normalize() {
 	}
 }
 
-func (cats CategoriesQuestions) selectQuestions(db DB, userID int64) (out tv.QuestionPool, err error) {
+func (cats CategoriesQuestions) selectQuestions(db DB, userID uID) (out tv.QuestionPool, err error) {
 	// select the questions...
 	for i, cat := range cats {
 		questionsDict, err := cat.selectQuestions(db, userID)
@@ -190,8 +190,8 @@ func (cats CategoriesQuestions) commonTags() []string {
 
 // returns the questions available to `userID` and matching one of the
 // categorie criteria
-func (cats CategoriesQuestions) selectQuestionIds(db DB, userID int64) (Set, error) {
-	crible := NewSet()
+func (cats CategoriesQuestions) selectQuestionIds(db DB, userID uID) (editor.IdQuestionSet, error) {
+	crible := make(editor.IdQuestionSet)
 
 	for _, cat := range cats {
 		questions, err := cat.selectQuestions(db, userID)

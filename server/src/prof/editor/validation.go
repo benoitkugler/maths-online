@@ -16,10 +16,10 @@ func ValidateAllQuestions(db DB) error {
 		return utils.SQLError(err)
 	}
 
-	exs := NewSet()
+	exs := make(IdExerciceSet)
 	for _, question := range qus {
 		if question.NeedExercice.Valid {
-			exs.Add(question.NeedExercice.Int64)
+			exs.Add(IdExercice(question.NeedExercice.Int64))
 		}
 	}
 
@@ -35,7 +35,7 @@ func validateAllQuestions(questions Questions, exercices Exercices) error {
 	var errs []string
 	for id, q := range questions {
 		if q.NeedExercice.Valid {
-			ex := exercices[q.NeedExercice.Int64]
+			ex := exercices[IdExercice(q.NeedExercice.Int64)]
 			q.Page.Parameters = q.Page.Parameters.Append(ex.Parameters)
 		}
 

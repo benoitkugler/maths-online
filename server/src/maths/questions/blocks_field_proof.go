@@ -8,8 +8,6 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions/client"
 )
 
-//go:generate ../../../../../structgen/structgen -source=blocks_field_proof.go -mode=itfs-json:gen_itfs_proof.go
-
 type ProofFieldBlock struct {
 	Answer ProofSequence
 }
@@ -43,14 +41,14 @@ type ProofEquality struct {
 }
 
 type ProofNode struct {
-	Left, Right ProofAssertion `structgen-data:"ignore"`
+	Left, Right ProofAssertion `gomacro-data:"ignore"`
 	Op          client.Binary
 }
 
 type ProofAssertions []ProofAssertion
 
 type ProofSequence struct {
-	Parts ProofAssertions `structgen-data:"ignore"`
+	Parts ProofAssertions `gomacro-data:"ignore"`
 }
 
 type ProofAssertion interface {

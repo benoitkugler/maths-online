@@ -81,12 +81,13 @@ func main() {
 
 	code := generateCode(m)
 
-	err = os.WriteFile("latex_unicode.go", []byte(code), os.ModePerm)
+	out := "printer_latex_unicode.go"
+	err = os.WriteFile(out, []byte(code), os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = exec.Command("goimports", "-w", "latex_unicode.go").Run()
+	err = exec.Command("goimports", "-w", out).Run()
 	if err != nil {
 		log.Fatal(err)
 	}

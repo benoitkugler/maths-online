@@ -18,7 +18,7 @@ func TestCreateConfig(t *testing.T) {
 		return
 	}
 
-	out, err := TrivialConfig{
+	out, err := Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
 		IdTeacher:       1,
@@ -27,15 +27,14 @@ func TestCreateConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := DeleteTrivialConfigById(db, out.Id); err != nil {
+	if _, err := DeleteTrivialById(db, out.Id); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGetConfig(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	user1, err := teacher.Teacher{Mail: "1"}.Insert(db)
 	if err != nil {
@@ -46,17 +45,17 @@ func TestGetConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c1, err := TrivialConfig{IdTeacher: user1.Id}.Insert(db)
+	c1, err := Trivial{IdTeacher: user1.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = TrivialConfig{IdTeacher: user2.Id}.Insert(db)
+	_, err = Trivial{IdTeacher: user2.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, pass.Encrypter{}, "", user1)
+	ct := NewController(db.DB, pass.Encrypter{}, "", user1)
 	l, err := ct.getTrivialPoursuits(user1.Id)
 	if err != nil {
 		t.Fatal(err)

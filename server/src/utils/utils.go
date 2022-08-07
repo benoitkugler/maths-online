@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func randomID(numberOnly bool, length int) string {
+func RandomString(numberOnly bool, length int) string {
 	choices := "abcdefghijklmnnopqrst0123456789"
 	if numberOnly {
 		choices = "0123456789"
@@ -27,9 +27,9 @@ func randomID(numberOnly bool, length int) string {
 
 // RandomID generates a random ID, for which `isTaken` is false.
 func RandomID(numberOnly bool, length int, isTaken func(string) bool) string {
-	newID := randomID(numberOnly, length)
+	newID := RandomString(numberOnly, length)
 	// avoid (unlikely) collisions
-	for taken := isTaken(newID); taken; newID = randomID(numberOnly, length) {
+	for taken := isTaken(newID); taken; newID = RandomString(numberOnly, length) {
 	}
 	return newID
 }

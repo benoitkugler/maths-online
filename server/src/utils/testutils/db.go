@@ -3,6 +3,7 @@ package testutils
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/utils"
 )
 
 func getUserName() string {
@@ -23,24 +25,37 @@ func getUserName() string {
 	return buf.String()
 }
 
-// CreateDBDev creates a new database and add all the tables
+func runCmd(cmd *exec.Cmd) {
+	var stdOut, stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(stdOut.String())
+		fmt.Println(stdErr.String())
+		panic(err)
+	}
+}
+
+type TestDB struct {
+	*sql.DB
+	name string // unique randomly generated
+}
+
+// NewTestDB creates a new database and add all the tables
 // as defined in the `generateSQLFile` files.
-func CreateDBDev(t *testing.T, generateSQLFile ...string) *sql.DB {
+func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 	const userPassword = "dummy"
 
-	// cleanup if needed
-	err := exec.Command("dropdb", "--if-exists", "tmp_dev_test").Run()
-	if err != nil {
-		panic(err)
-	}
+	name := "tmp_dev_" + utils.RandomString(true, 10)
 
-	err = exec.Command("createdb", "tmp_dev_test").Run()
-	if err != nil {
-		panic(err)
-	}
+	// cleanup if needed
+	runCmd(exec.Command("dropdb", "--if-exists", name))
+
+	runCmd(exec.Command("createdb", name))
 
 	for _, file := range generateSQLFile {
-		file, err = filepath.Abs(file)
+		file, err := filepath.Abs(file)
 		if err != nil {
 			panic(err)
 		}
@@ -48,14 +63,11 @@ func CreateDBDev(t *testing.T, generateSQLFile ...string) *sql.DB {
 		if err != nil {
 			panic(err)
 		}
-		err = exec.Command("bash", "-c", "psql tmp_dev_test < "+file).Run()
-		if err != nil {
-			panic(err)
-		}
+		runCmd(exec.Command("bash", "-c", fmt.Sprintf("psql %s < %s", name, file)))
 	}
 
 	logs := pass.DB{
-		Name:     "tmp_dev_test",
+		Name:     name,
 		Host:     "localhost",
 		User:     getUserName(),
 		Password: userPassword,
@@ -70,14 +82,14 @@ func CreateDBDev(t *testing.T, generateSQLFile ...string) *sql.DB {
 
 	t.Log("Successfully created dev DB")
 
-	return db
+	return TestDB{DB: db, name: name}
 }
 
-func RemoveDBDev() {
-	err := exec.Command("dropdb", "--if-exists", "tmp_dev_test").Run()
-	if err != nil {
-		panic(err)
-	}
+// Remove closes the connection and remove the DB.
+func (db TestDB) Remove() {
+	db.Close()
+
+	runCmd(exec.Command("dropdb", "--if-exists", db.name))
 }
 
 // DB is a test DB, usually build from importing the current production DB.

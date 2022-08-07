@@ -25,7 +25,7 @@ type QuestionPool [NbCategories]WeigthedQuestions
 type currentQuestion struct {
 	Question  questions.QuestionInstance // the instantiated version
 	categorie categorie                  // the origin
-	ID        int64                      // the origin
+	ID        editor.IdQuestion          // the origin
 }
 
 // phase identifies the current phase of the game
@@ -298,15 +298,15 @@ func (r *Room) winners() (out []serial) {
 }
 
 // returns nil if `ShowDecrassage` is false
-func (r *Room) decrassage() (ids map[serial][]int64) {
+func (r *Room) decrassage() (ids map[serial][]editor.IdQuestion) {
 	if !r.game.options.ShowDecrassage {
 		return nil
 	}
 
 	const nbMax = 3
-	ids = make(map[serial][]int64)
+	ids = make(map[serial][]editor.IdQuestion)
 	for _, player := range r.players {
-		quIds := editor.NewSetFromSlice(player.advance.review.MarkedQuestions)
+		quIds := editor.NewIdQuestionSetFrom(player.advance.review.MarkedQuestions)
 
 		// add from the failed questions
 		for _, question := range player.advance.review.QuestionHistory {

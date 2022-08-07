@@ -37,7 +37,7 @@ func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encry
 		studentKey: studentKey,
 		smtp:       smtp,
 		host:       host,
-		classCodes: &classroomsCode{codes: make(map[string]int64)},
+		classCodes: &classroomsCode{codes: make(map[string]IdClassroom)},
 	}
 }
 

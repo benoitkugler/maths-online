@@ -2,8 +2,6 @@ package editor
 
 import "github.com/benoitkugler/maths-online/maths/questions/client"
 
-//go:generate ../../../../../structgen/structgen -source=loopback_types.go -mode=itfs-json:gen_itfs.go -mode=dart:../../../../eleve/lib/loopback_types.gen.dart
-
 type LoopbackServerEvent interface {
 	isLoopbackServerEvent()
 }

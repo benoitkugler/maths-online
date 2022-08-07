@@ -11,7 +11,7 @@ import (
 // implementation of the server instatiation/validation of question/exercices
 
 type InstantiatedQuestion struct {
-	Id       int64
+	Id       IdQuestion
 	Question client.Question `dart-extern:"client:questions/types.gen.dart"`
 	Params   []VarEntry
 }
@@ -38,7 +38,7 @@ func newVarList(vars expression.Vars) []VarEntry {
 
 // InstantiateQuestions loads and instantiates the given questions,
 // also returning the paramerters used to do so.
-func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut, error) {
+func (ct *Controller) InstantiateQuestions(ids []IdQuestion) (InstantiateQuestionsOut, error) {
 	questions, err := SelectQuestions(ct.db, ids...)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -67,7 +67,7 @@ func (ct *Controller) InstantiateQuestions(ids []int64) (InstantiateQuestionsOut
 
 // EvaluateQuestion instantiate the given question with the given parameters,
 // and evaluate the given answer.
-func (ct *Controller) EvaluateQuestion(id int64, answer Answer) (client.QuestionAnswersOut, error) {
+func (ct *Controller) EvaluateQuestion(id IdQuestion, answer Answer) (client.QuestionAnswersOut, error) {
 	qu, err := SelectQuestion(ct.db, id)
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
@@ -123,7 +123,7 @@ func (qh *ProgressionExt) inferNextQuestion() {
 }
 
 // load the whole progression
-func (ct *Controller) fetchProgression(id int64) (ProgressionExt, error) {
+func (ct *Controller) fetchProgression(id IdProgression) (ProgressionExt, error) {
 	pr, err := SelectProgression(ct.db, id)
 	if err != nil {
 		return ProgressionExt{}, utils.SQLError(err)
@@ -152,7 +152,7 @@ func (ct *Controller) fetchProgression(id int64) (ProgressionExt, error) {
 }
 
 type InstantiatedExercice struct {
-	Id        int64
+	Id        IdExercice
 	Title     string
 	Flow      Flow
 	Questions []InstantiatedQuestion
@@ -174,8 +174,8 @@ func (ex exerciceContent) questions() []Question {
 	return out
 }
 
-func (ex exerciceContent) questionsSource(userID, adminID int64) map[int64]QuestionOrigin {
-	out := make(map[int64]QuestionOrigin, len(ex.dict))
+func (ex exerciceContent) questionsSource(userID, adminID uID) map[IdQuestion]QuestionOrigin {
+	out := make(map[IdQuestion]QuestionOrigin, len(ex.dict))
 	for i, qu := range ex.dict {
 		origin, _ := qu.origin(userID, adminID)
 		out[i] = QuestionOrigin{Question: qu, Origin: origin}
@@ -230,7 +230,7 @@ func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
 }
 
 // loadExercice loads the given exercice and the associated questions
-func (ct *Controller) loadExercice(exerciceID int64) (exerciceContent, error) {
+func (ct *Controller) loadExercice(exerciceID IdExercice) (exerciceContent, error) {
 	ex, err := SelectExercice(ct.db, exerciceID)
 	if err != nil {
 		return exerciceContent{}, utils.SQLError(err)
@@ -250,7 +250,7 @@ func (ct *Controller) loadExercice(exerciceID int64) (exerciceContent, error) {
 }
 
 type EvaluateExerciceIn struct {
-	IdExercice int64
+	IdExercice IdExercice
 	Answers    map[int]Answer // by question index (not ID)
 	// the current progression, as send by the server,
 	// to update with the given answers

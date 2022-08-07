@@ -13,13 +13,12 @@ import (
 
 func TestRoot(t *testing.T) {
 	// create a DB shared by all tests
-	db := testutils.CreateDBDev(t, "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "gen_create.sql")
+	defer db.Remove()
 
 	// t.Run("CRUD for Exercice", func(t *testing.T) { testExercice(t, db) })
-	t.Run("CRUD for Question", func(t *testing.T) { testQuestion(t, db) })
-	t.Run("Insert SignTable", func(t *testing.T) { testInsertSignTable(t, db) })
+	t.Run("CRUD for Question", func(t *testing.T) { testQuestion(t, db.DB) })
+	t.Run("Insert SignTable", func(t *testing.T) { testInsertSignTable(t, db.DB) })
 }
 
 func testQuestion(t *testing.T, db *sql.DB) {
@@ -30,6 +29,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 	L := len(questions)
 
 	qu := randQuestion()
+	qu.NeedExercice = sql.NullInt64{}
 	qu, err = qu.Insert(db)
 	if err != nil {
 		t.Fatal(err)
@@ -95,9 +95,8 @@ func TestLoadQuestions(t *testing.T) {
 }
 
 func TestCRUDExercice(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	user, err := teacher.Teacher{}.Insert(db)
 	if err != nil {

@@ -4,8 +4,6 @@ import (
 	tv "github.com/benoitkugler/maths-online/trivial"
 )
 
-//go:generate ../../../../../structgen/structgen -source=monitor_types.go -mode=ts:../../../../prof/src/controller/trivial_config_socket_gen.ts
-
 type gamePlayers struct {
 	Player    string
 	Successes tv.Success

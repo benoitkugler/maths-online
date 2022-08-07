@@ -52,16 +52,15 @@ func BenchmarkValidation(b *testing.B) {
 }
 
 func TestExerciceCRUD(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, teacher.Teacher{Id: 1})
+	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	ex, err := ct.createExercice(1)
 	if err != nil {
@@ -137,16 +136,15 @@ func TestDB(t *testing.T) {
 }
 
 func TestGroupTagsEmpty(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, teacher.Teacher{Id: 1})
+	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	// create an implicit groups with no tags
 	_, err = Question{IdTeacher: 1, Page: questions.QuestionPage{Title: "test"}}.Insert(db)
@@ -168,16 +166,15 @@ func TestGroupTagsEmpty(t *testing.T) {
 }
 
 func TestProgression(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, teacher.Teacher{Id: 1})
+	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	ex, err := ct.createExercice(1)
 	if err != nil {

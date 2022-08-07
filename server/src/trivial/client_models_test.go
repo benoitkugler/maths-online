@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/prof/editor"
 )
 
 func TestEventsJSON(t *testing.T) {
@@ -33,7 +34,7 @@ func TestEventsJSON(t *testing.T) {
 				},
 			},
 			GameEnd{
-				QuestionDecrassageIds: map[serial][]int64{"0": {1}},
+				QuestionDecrassageIds: map[serial][]editor.IdQuestion{"0": {1}},
 				Winners:               []serial{"2"},
 				WinnerNames:           []string{"Paul"},
 			},

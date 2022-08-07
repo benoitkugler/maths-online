@@ -1,5 +1,5 @@
+import { CategoriesQuestions } from "./api_gen";
 import { controller } from "./controller";
-import type { CategoriesQuestions } from "./trivial_config_gen";
 import type { teacherSocketData } from "./trivial_config_socket_gen";
 
 export const colorsPerCategorie = [

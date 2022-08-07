@@ -7,8 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:generate ../../../structgen/apigen -source=prof_api.go -out=../../prof/src/controller/api_gen.ts
-
 func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	edit *editor.Controller, tc *teacher.Controller,
 ) {
