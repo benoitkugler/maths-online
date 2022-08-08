@@ -12,13 +12,13 @@ import (
 
 type InstantiatedQuestion struct {
 	Id       IdQuestion
-	Question client.Question `dart-extern:"client:questions/types.gen.dart"`
+	Question client.Question `gomacro-extern:"client:dart:questions/types.gen.dart"`
 	Params   []VarEntry
 }
 
 type Answer struct {
 	Params []VarEntry
-	Answer client.QuestionAnswersIn `dart-extern:"client:questions/types.gen.dart"`
+	Answer client.QuestionAnswersIn `gomacro-extern:"client:dart:questions/types.gen.dart"`
 }
 
 type InstantiateQuestionsOut []InstantiatedQuestion
@@ -258,7 +258,7 @@ type EvaluateExerciceIn struct {
 }
 
 type EvaluateExerciceOut struct {
-	Results      map[int]client.QuestionAnswersOut `dart-extern:"client:questions/types.gen.dart"`
+	Results      map[int]client.QuestionAnswersOut `gomacro-extern:"client:dart:questions/types.gen.dart"`
 	Progression  ProgressionExt                    // the updated progression
 	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
 }

@@ -42,7 +42,7 @@ func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
 }
 
 type EvaluateQuestionIn struct {
-	Answer     client.QuestionAnswersIn `dart-extern:"client:questions/types.gen.dart"`
+	Answer     client.QuestionAnswersIn `gomacro-extern:"client:dart:questions/types.gen.dart"`
 	Params     []editor.VarEntry
 	IdQuestion editor.IdQuestion
 }

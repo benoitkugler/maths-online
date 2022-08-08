@@ -223,7 +223,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       return;
     }
 
-    _sendEvent(Move([], tile));
+    _sendEvent(ClientMove([], tile));
   }
 
   void onTapDice() {

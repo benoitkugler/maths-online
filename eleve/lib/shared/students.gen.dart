@@ -208,3 +208,14 @@ bool boolToJson(bool item) => item;
 int intFromJson(dynamic json) => json as int;
 
 int intToJson(int item) => item;
+
+List<StudentHeader> listStudentHeaderFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(studentHeaderFromJson).toList();
+}
+
+List<dynamic> listStudentHeaderToJson(List<StudentHeader> item) {
+  return item.map(studentHeaderToJson).toList();
+}

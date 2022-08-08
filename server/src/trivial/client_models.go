@@ -160,7 +160,7 @@ type ShowQuestion struct {
 	TimeoutSeconds int
 	Categorie      categorie
 	ID             editor.IdQuestion // to facilitate the tracking of the question results
-	Question       client.Question   `dart-extern:"client:../questions/types.gen.dart"` // the actual question
+	Question       client.Question   `gomacro-extern:"client:dart:../questions/types.gen.dart"` // the actual question
 }
 
 // PlayerAnswerResults indicates
@@ -203,7 +203,7 @@ type ClientMove Move
 
 // the proposition of a client to a question
 type Answer struct {
-	Answer client.QuestionAnswersIn `dart-extern:"client:../questions/types.gen.dart"`
+	Answer client.QuestionAnswersIn `gomacro-extern:"client:dart:../questions/types.gen.dart"`
 }
 
 // DiceClicked is emitted when the current player

@@ -8,7 +8,7 @@ type (
 )
 
 // Teacher stores the data associated to one teacher account
-// sql:ADD UNIQUE(mail)
+// gomacro:SQL ADD UNIQUE(mail)
 type Teacher struct {
 	Id              IdTeacher `json:"id"`
 	Mail            string    `json:"mail"`

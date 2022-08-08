@@ -37,7 +37,7 @@ CREATE TABLE exercices (
     Id serial PRIMARY KEY,
     Title text NOT NULL,
     Description text NOT NULL,
-    Parameters jsonb NOT NULL CONSTRAINT Parameters_gomacro_validate_json_ques_Parameters CHECK (gomacro_validate_json_ques_Parameters (Parameters)),
+    Parameters jsonb NOT NULL,
     Flow integer CHECK (Flow IN (0, 1)) NOT NULL,
     IdTeacher integer NOT NULL,
     Public boolean NOT NULL
@@ -64,7 +64,7 @@ CREATE TABLE progression_questions (
 
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
-    Page jsonb NOT NULL CONSTRAINT Page_gomacro_validate_json_ques_QuestionPage CHECK (gomacro_validate_json_ques_QuestionPage (Page)),
+    Page jsonb NOT NULL,
     Public boolean NOT NULL,
     IdTeacher integer NOT NULL,
     Description text NOT NULL,
@@ -87,13 +87,13 @@ ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
 
 ALTER TABLE exercice_questions
-    ADD PRIMARY KEY (Idexercices, INDEX);
+    ADD PRIMARY KEY (IdExercice, INDEX);
 
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdExercice) REFERENCES exercices ON DELETE CASCADE;
 
 ALTER TABLE progressions
-    ADD UNIQUE (Id, Idexercices);
+    ADD UNIQUE (Id, IdExercice);
 
 ALTER TABLE progression_questions
     ADD FOREIGN KEY (IdProgression) REFERENCES progressions ON DELETE CASCADE;
@@ -102,10 +102,10 @@ ALTER TABLE progression_questions
     ADD FOREIGN KEY (IdExercice) REFERENCES exercices ON DELETE CASCADE;
 
 ALTER TABLE progression_questions
-    ADD FOREIGN KEY (Idexercices, INDEX) REFERENCES exercicesquestions ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdExercice, INDEX) REFERENCES exercice_questions ON DELETE CASCADE;
 
 ALTER TABLE progression_questions
-    ADD FOREIGN KEY (Idprogressions, Idexercices) REFERENCES progressions (Id, Idexercices) ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdProgression, IdExercice) REFERENCES progressions (Id, IdExercice) ON DELETE CASCADE;
 
 ALTER TABLE questions
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
@@ -117,7 +117,7 @@ ALTER TABLE question_tags
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions ON DELETE CASCADE;
 
 ALTER TABLE question_tags
-    ADD UNIQUE (Idquestions, Tag);
+    ADD UNIQUE (IdQuestion, Tag);
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_ques_TextPart (data jsonb)
     RETURNS boolean
@@ -250,29 +250,6 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_ques_FunctionDefinition (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_Interpolated (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_ques_Interpolated (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -871,7 +848,7 @@ BEGIN
             bool_and(key IN ('Parts'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Parts');
+        AND gomacro_validate_json_string (data -> 'Parts');
     RETURN is_valid;
 END;
 $$
@@ -892,8 +869,8 @@ BEGIN
             bool_and(key IN ('Bottom', 'Top', 'Left', 'Right', 'Color'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Bottom')
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Top')
+        AND gomacro_validate_json_string (data -> 'Bottom')
+        AND gomacro_validate_json_string (data -> 'Top')
         AND gomacro_validate_json_string (data -> 'Left')
         AND gomacro_validate_json_string (data -> 'Right')
         AND gomacro_validate_json_string (data -> 'Color');
@@ -1010,9 +987,9 @@ BEGIN
             bool_and(key IN ('Label', 'Answer', 'AdditionalProposals'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Label')
-        AND gomacro_validate_json_array_ques_Interpolated (data -> 'Answer')
-        AND gomacro_validate_json_array_ques_Interpolated (data -> 'AdditionalProposals');
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_array_string (data -> 'Answer')
+        AND gomacro_validate_json_array_string (data -> 'AdditionalProposals');
     RETURN is_valid;
 END;
 $$
@@ -1033,7 +1010,7 @@ BEGIN
             bool_and(key IN ('Variables', 'Intrinsics'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_RandomParameters (data -> 'Variables')
+        AND gomacro_validate_json_array_ques_RandomParameter (data -> 'Variables')
         AND gomacro_validate_json_array_string (data -> 'Intrinsics');
     RETURN is_valid;
 END;
@@ -1165,7 +1142,7 @@ BEGIN
             bool_and(key IN ('Parts'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_ProofAssertions (data -> 'Parts');
+        AND gomacro_validate_json_array_ques_ProofAssertion (data -> 'Parts');
     RETURN is_valid;
 END;
 $$
@@ -1186,7 +1163,7 @@ BEGIN
             bool_and(key IN ('Content'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Content');
+        AND gomacro_validate_json_string (data -> 'Content');
     RETURN is_valid;
 END;
 $$
@@ -1208,7 +1185,7 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'title')
-        AND gomacro_validate_json_ques_Enonce (data -> 'enonce')
+        AND gomacro_validate_json_array_ques_Block (data -> 'enonce')
         AND gomacro_validate_json_ques_Parameters (data -> 'parameters');
     RETURN is_valid;
 END;
@@ -1231,7 +1208,7 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Answer')
-        AND gomacro_validate_json_array_ques_Interpolated (data -> 'Proposals')
+        AND gomacro_validate_json_array_string (data -> 'Proposals')
         AND gomacro_validate_json_boolean (data -> 'AsDropDown');
     RETURN is_valid;
 END;
@@ -1293,7 +1270,7 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
-        AND gomacro_validate_json_array_ques_Interpolated (data -> 'Xs')
+        AND gomacro_validate_json_array_string (data -> 'Xs')
         AND gomacro_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
 END;
@@ -1361,7 +1338,7 @@ BEGIN
             bool_and(key IN ('Parts', 'Bold', 'Italic', 'Smaller'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Parts')
+        AND gomacro_validate_json_string (data -> 'Parts')
         AND gomacro_validate_json_boolean (data -> 'Bold')
         AND gomacro_validate_json_boolean (data -> 'Italic')
         AND gomacro_validate_json_boolean (data -> 'Smaller');
@@ -1468,7 +1445,7 @@ BEGIN
             bool_and(key IN ('Label', 'Xs', 'Fxs'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_ques_Interpolated (data -> 'Label')
+        AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_array_string (data -> 'Xs')
         AND gomacro_validate_json_array_string (data -> 'Fxs');
     RETURN is_valid;
@@ -1792,11 +1769,17 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+ALTER TABLE exercices
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_ques_Parameters (Parameters));
+
+ALTER TABLE questions
+    ADD CONSTRAINT Page_gomacro CHECK (gomacro_validate_json_ques_QuestionPage (Page));
+
 -- prof/trivial/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE trivials (
     Id serial PRIMARY KEY,
-    Questions jsonb NOT NULL CONSTRAINT Questions_gomacro_validate_json_array_5_triv_QuestionCriterion CHECK (gomacro_validate_json_array_5_triv_QuestionCriterion (Questions)),
+    Questions jsonb NOT NULL,
     QuestionTimeout integer NOT NULL,
     ShowDecrassage boolean NOT NULL,
     Public boolean NOT NULL,
@@ -1808,7 +1791,7 @@ CREATE TABLE trivials (
 ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_triv_QuestionCriterion (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_string (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1817,7 +1800,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_triv_QuestionCriterion (value))
+            bool_and(gomacro_validate_json_array_array_string (value))
         FROM
             jsonb_array_elements(data))
         AND jsonb_array_length(data) = 5;
@@ -1886,4 +1869,7 @@ END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
+
+ALTER TABLE trivials
+    ADD CONSTRAINT Questions_gomacro CHECK (gomacro_validate_json_array_5_array_array_string (Questions));
 
