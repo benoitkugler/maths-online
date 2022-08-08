@@ -45,7 +45,7 @@ func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encry
 // By convention, only one account has admin rights. It is manually created at
 // DB setup, and never added (neiter removed) at run time.
 func (ct *Controller) LoadAdminTeacher() (Teacher, error) {
-	rows, err := ct.db.Query("SELECT * FROM teachers WHERE is_admin = true")
+	rows, err := ct.db.Query("SELECT * FROM teachers WHERE IsAdmin = true")
 	if err != nil {
 		return Teacher{}, utils.SQLError(err)
 	}
