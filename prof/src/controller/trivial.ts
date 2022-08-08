@@ -1,4 +1,4 @@
-import { CategoriesQuestions } from "./api_gen";
+import type { CategoriesQuestions } from "./api_gen";
 import { controller } from "./controller";
 import type { teacherSocketData } from "./trivial_config_socket_gen";
 

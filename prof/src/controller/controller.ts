@@ -19,7 +19,7 @@ import type {
   SaveQuestionAndPreviewOut,
   StartSessionOut,
   Student,
-  TrivialConfigExt,
+  TrivialExt,
   UpdateGroupTagsOut,
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
@@ -281,7 +281,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessDuplicateTrivialPoursuit(data: TrivialConfigExt): void {
+  protected onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Session dupliquée.");
@@ -307,13 +307,13 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessGetTrivialPoursuit(data: TrivialConfigExt[] | null): void {
+  protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {
     this.inRequest = false;
   }
-  protected onSuccessCreateTrivialPoursuit(data: TrivialConfigExt): void {
+  protected onSuccessCreateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
   }
-  protected onSuccessUpdateTrivialPoursuit(data: TrivialConfigExt): void {
+  protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Configuration mise à jour.");

@@ -161,8 +161,8 @@
 import {
   Visibility,
   type RunningSessionMetaOut,
-  type TrivialConfig,
-  type TrivialConfigExt,
+  type Trivial,
+  type TrivialExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { commonTags } from "@/controller/editor";
@@ -176,9 +176,9 @@ import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 
 let allKnownTags = $ref<string[]>([]);
 
-let editedConfig = $ref<TrivialConfig | null>(null);
+let editedConfig = $ref<Trivial | null>(null);
 
-let _configs = $ref<TrivialConfigExt[]>([]);
+let _configs = $ref<TrivialExt[]>([]);
 
 const configs = computed(() => {
   const a = _configs.map((v) => v);
@@ -204,7 +204,7 @@ onMounted(async () => {
   allKnownTags = tags || [];
 });
 
-function isPersonnal(config: TrivialConfigExt) {
+function isPersonnal(config: TrivialExt) {
   return config.Origin.Visibility == Visibility.Personnal;
 }
 
@@ -216,7 +216,7 @@ async function createConfig() {
   _configs.push(res);
 }
 
-async function updateConfig(config: TrivialConfig) {
+async function updateConfig(config: Trivial) {
   // remove empty categories
   config.Questions = config.Questions.map((q) =>
     (q || []).filter((v) => v && v.length != 0)
@@ -230,7 +230,7 @@ async function updateConfig(config: TrivialConfig) {
   editedConfig = null;
 }
 
-async function updatePublic(config: TrivialConfig, isPublic: boolean) {
+async function updatePublic(config: Trivial, isPublic: boolean) {
   const res = await controller.UpdateTrivialVisiblity({
     ConfigID: config.Id,
     Public: isPublic,
@@ -242,7 +242,7 @@ async function updatePublic(config: TrivialConfig, isPublic: boolean) {
   _configs[index].Origin.IsPublic = isPublic;
 }
 
-async function duplicateConfig(config: TrivialConfig) {
+async function duplicateConfig(config: Trivial) {
   const res = await controller.DuplicateTrivialPoursuit({ id: config.Id });
   if (res === undefined) {
     return;
@@ -252,12 +252,12 @@ async function duplicateConfig(config: TrivialConfig) {
   _configs.push(res);
 }
 
-async function deleteConfig(config: TrivialConfig) {
+async function deleteConfig(config: Trivial) {
   await controller.DeleteTrivialPoursuit({ id: config.Id });
   _configs = _configs.filter((c) => c.Config.Id != config.Id);
 }
 
-let launchingConfig = $ref<TrivialConfig | null>(null);
+let launchingConfig = $ref<Trivial | null>(null);
 async function launchSession(groups: number[]) {
   if (launchingConfig == null) {
     return;
@@ -279,7 +279,7 @@ async function launchSession(groups: number[]) {
   showMonitor = true;
 }
 
-function categorie(config: TrivialConfig) {
+function categorie(config: Trivial) {
   const allUnions: string[][] = [];
   config.Questions.forEach((cat) =>
     allUnions.push(...(cat || []).map((s) => s || []))
