@@ -133,7 +133,7 @@ func (ct *Controller) fetchProgression(id IdProgression) (ProgressionExt, error)
 	if err != nil {
 		return ProgressionExt{}, utils.SQLError(err)
 	}
-	questions.ensureIndex()
+	questions.ensureOrder()
 
 	links, err := SelectProgressionQuestionsByIdProgressions(ct.db, id)
 	if err != nil {
@@ -239,7 +239,7 @@ func (ct *Controller) loadExercice(exerciceID IdExercice) (exerciceContent, erro
 	if err != nil {
 		return exerciceContent{}, utils.SQLError(err)
 	}
-	links.ensureIndex()
+	links.ensureOrder()
 
 	// load the question contents
 	dict, err := SelectQuestions(ct.db, links.IdQuestions()...)

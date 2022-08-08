@@ -14,6 +14,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions/examples"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
+	"github.com/benoitkugler/maths-online/prof/homework"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
 	tvGame "github.com/benoitkugler/maths-online/trivial"
@@ -133,6 +134,8 @@ func main() {
 	fmt.Println("Admin teacher loaded.")
 
 	tvc := trivial.NewController(db, studentKey, demoPinTrivial, admin)
+	hwc := homework.NewController(db, admin)
+	edit := editor.NewController(db, admin)
 
 	if *devPtr {
 		dev, err := tc.GetDevToken()
@@ -145,8 +148,6 @@ func main() {
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
 	tvGame.WarningLogger.SetOutput(os.Stdout)
-
-	edit := editor.NewController(db, admin)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -165,7 +166,7 @@ func main() {
 		fmt.Println("CORS activé.")
 	}
 
-	setupRoutes(e, tvc, edit, tc)
+	setupRoutes(e, tvc, edit, tc, hwc)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -242,8 +243,11 @@ func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
 
-func setupRoutes(e *echo.Echo, tvc *trivial.Controller, edit *editor.Controller, tc *teacher.Controller) {
-	setupProfAPI(e, tvc, edit, tc)
+func setupRoutes(e *echo.Echo,
+	tvc *trivial.Controller, edit *editor.Controller,
+	tc *teacher.Controller, home *homework.Controller,
+) {
+	setupProfAPI(e, tvc, edit, tc, home)
 	setupQuestionSampleAPI(e)
 
 	// to sync with the client navigator.sendBeacon

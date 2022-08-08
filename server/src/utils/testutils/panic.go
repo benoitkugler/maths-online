@@ -9,3 +9,10 @@ func ShouldPanic(t *testing.T, f func()) {
 	f()
 	t.Errorf("should have panicked")
 }
+
+func Assert(t *testing.T, b bool) {
+	t.Helper()
+	if !b {
+		t.Fatalf("assertion error")
+	}
+}

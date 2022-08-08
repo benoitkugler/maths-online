@@ -12,11 +12,11 @@ import (
 
 type uID = teacher.IdTeacher
 
-func (l ExerciceQuestions) ensureIndex() {
+func (l ExerciceQuestions) ensureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 
-func (l ProgressionQuestions) ensureIndex() {
+func (l ProgressionQuestions) ensureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 
@@ -91,7 +91,7 @@ func (ct *Controller) getExercices(userID uID) ([]ExerciceHeader, error) {
 
 	for i, ex := range out {
 		s := dict[ex.Exercice.Id]
-		s.ensureIndex()
+		s.ensureOrder()
 		out[i].Questions = s
 	}
 

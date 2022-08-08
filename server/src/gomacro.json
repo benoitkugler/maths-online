@@ -103,6 +103,20 @@
             "Output": "../../prof/src/controller/trivial_config_socket_gen.ts"
         }
     ],
+    "prof/homework/models_sql.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "prof/homework/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "prof/homework/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "prof/homework/gen_randdata_test.go"
+        }
+    ],
     "prof_api.go": [
         {
             "Mode": "typescript/api",
