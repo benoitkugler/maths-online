@@ -42,7 +42,7 @@
             <v-col cols="auto" align-self="center">
               <v-btn
                 icon
-                size="x-small"
+                size="small"
                 flat
                 @click="toogleShared(index)"
                 title="Partager les variables entre les questions"
@@ -56,7 +56,7 @@
               </v-btn>
               <v-btn
                 icon
-                size="x-small"
+                size="small"
                 flat
                 @click="remove(index)"
                 title="Supprimer cette fonction spéciale"

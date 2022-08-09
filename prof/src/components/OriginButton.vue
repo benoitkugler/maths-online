@@ -5,7 +5,7 @@
         v-on="{ isActive }"
         v-bind="props"
         class="mx-1"
-        size="x-small"
+        size="small"
         icon
         title="Options de partage"
         @click.stop

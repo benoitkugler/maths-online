@@ -7,7 +7,7 @@
       class="rounded"
       no-gutters
     >
-      <v-col md="5" align-self="center">
+      <v-col md="7" align-self="center">
         <v-card-subtitle class="py-2">{{ props.title }}</v-card-subtitle>
       </v-col>
       <v-col align-self="center" style="text-align: right">

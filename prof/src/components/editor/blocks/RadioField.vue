@@ -25,21 +25,28 @@
           :key="index"
           class="pr-0"
         >
-          <v-list-item-title style="width: 120px">
-            Choix {{ index + 1 }} :
-          </v-list-item-title>
-          <interpolated-text v-model="props.modelValue.Proposals![index]">
-          </interpolated-text>
-
-          <v-btn
-            icon
-            size="small"
-            flat
-            @click="removeProposal(index)"
-            title="Supprimer ce choix"
-          >
-            <v-icon icon="mdi-delete" color="red"></v-icon>
-          </v-btn>
+          <v-row no-gutters>
+            <v-col cols="3" align-self="center">
+              <v-list-item-title>
+                Choix {{ index + 1 }} :
+              </v-list-item-title></v-col
+            >
+            <v-col>
+              <interpolated-text v-model="props.modelValue.Proposals![index]">
+              </interpolated-text>
+            </v-col>
+            <v-col cols="auto">
+              <v-btn
+                icon
+                size="small"
+                flat
+                @click="removeProposal(index)"
+                title="Supprimer ce choix"
+              >
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
         </v-list-item>
       </v-list>
     </v-col>

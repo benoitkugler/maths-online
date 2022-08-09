@@ -6,10 +6,10 @@
     @click="emit('clicked', props.exercice)"
   >
     <v-row no-gutters>
-      <v-col cols="auto" align-self="center">
+      <v-col cols="auto" align-self="center" class="my-1">
         <v-btn
           v-if="isPersonnal"
-          size="x-small"
+          size="small"
           icon
           @click.stop="emit('delete', props.exercice)"
           title="Supprimer"
@@ -36,7 +36,7 @@
           }}
         </div>
       </v-col>
-      <v-col cols="4">
+      <v-col cols="4" align-self="center">
         <v-chip>
           {{ props.exercice.Questions?.length || 0 }} question(s)</v-chip
         >

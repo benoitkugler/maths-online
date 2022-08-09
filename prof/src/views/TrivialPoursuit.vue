@@ -76,8 +76,8 @@
               @update-public="(b) => updatePublic(config.Config, b)"
             ></origin-button>
             <v-btn
-              class="mx-2"
-              size="x-small"
+              class="mx-2 my-1"
+              size="small"
               icon
               @click="duplicateConfig(config.Config)"
               title="Dupliquer cette session"
@@ -87,7 +87,7 @@
 
             <v-btn
               icon
-              size="x-small"
+              size="small"
               title="Editer"
               class="mx-2"
               @click="editedConfig = config.Config"
@@ -99,7 +99,7 @@
             <v-btn
               v-if="isPersonnal(config)"
               icon
-              size="x-small"
+              size="small"
               title="Lancer"
               class="mx-2"
               @click="launchingConfig = config.Config"
@@ -114,7 +114,7 @@
             <v-btn
               v-if="isPersonnal(config)"
               class="mx-2"
-              size="x-small"
+              size="small"
               icon
               @click="deleteConfig(config.Config)"
               title="Supprimer cette session"
@@ -122,7 +122,7 @@
               <v-icon icon="mdi-delete" color="red"></v-icon>
             </v-btn>
           </v-col>
-          <v-col cols="3">
+          <v-col cols="3" align-self="center">
             {{ config.Config.Name }}
             <small class="text-grey">
               {{ categorie(config.Config) }}
@@ -139,6 +139,7 @@
                 <i>Aucune question configurée.</i>
               </v-col>
               <v-col
+                class="my-1"
                 cols="2"
                 align-self="center"
                 v-for="(categorie, index) in config.Config.Questions || []"

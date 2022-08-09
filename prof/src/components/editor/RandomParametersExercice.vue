@@ -52,7 +52,7 @@
             <v-col cols="auto" style="text-align: right" align-self="center">
               <v-btn
                 icon
-                size="x-small"
+                size="small"
                 flat
                 @click="toogleShared(index)"
                 title="Partager le paramètre entre les questions"
@@ -64,7 +64,7 @@
                   size="small"
                 ></v-icon>
               </v-btn>
-              <v-btn icon size="x-small" flat @click="remove(index)">
+              <v-btn icon size="small" flat @click="remove(index)">
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
             </v-col>

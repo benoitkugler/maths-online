@@ -42,7 +42,7 @@
             <v-col cols="2" align-self="center" style="text-align: right">
               <v-btn
                 icon
-                size="x-small"
+                size="small"
                 flat
                 @click="remove(index)"
                 title="Supprimer cette fonction spéciale"

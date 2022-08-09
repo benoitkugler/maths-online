@@ -50,7 +50,7 @@
               ></v-text-field>
             </v-col>
             <v-col cols="2" align-self="center" style="text-align: right">
-              <v-btn icon size="x-small" flat @click="remove(index)">
+              <v-btn icon size="small" flat @click="remove(index)">
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
             </v-col>
@@ -66,15 +66,12 @@
 </template>
 
 <script setup lang="ts">
-import type {
-RandomParameter,
-RandomParameters
-} from "@/controller/api_gen";
+import type { RandomParameter, RandomParameters } from "@/controller/api_gen";
 import {
-ExpressionColor,
-onDragListItemStart,
-swapItems,
-xRune
+  ExpressionColor,
+  onDragListItemStart,
+  swapItems,
+  xRune,
 } from "@/controller/editor";
 import { $ref } from "vue/macros";
 import DropZone from "./DropZone.vue";

@@ -152,12 +152,20 @@
           }"
           class="my-2"
         >
-          <v-list-item-subtitle>Catégorie {{ index + 1 }}</v-list-item-subtitle>
-          <tags-selector
-            :all-tags="allKnownTags"
-            :model-value="categorie || []"
-            @update:model-value="(v) => updateCategorie(index, v)"
-          ></tags-selector>
+          <v-row>
+            <v-col align-self="center" cols="2">
+              <v-list-item-subtitle>
+                Catégorie {{ index + 1 }}
+              </v-list-item-subtitle>
+            </v-col>
+            <v-col class="my-1">
+              <tags-selector
+                :all-tags="allKnownTags"
+                :model-value="categorie || []"
+                @update:model-value="(v) => updateCategorie(index, v)"
+              ></tags-selector>
+            </v-col>
+          </v-row>
         </v-list-item>
       </v-list>
 

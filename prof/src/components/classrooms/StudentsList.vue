@@ -74,7 +74,7 @@
         <v-btn
           color="success"
           @click="importStudents"
-          variant="contained"
+          variant="text"
           :disabled="!uploadedFile.length"
         >
           Importer
@@ -98,7 +98,7 @@
     </v-row>
     <v-card-text>
       <v-card width="80%" class="mx-auto">
-        <v-row>
+        <v-row class="mt-1">
           <v-col>
             <v-card-subtitle>Elèves</v-card-subtitle>
           </v-col>
@@ -143,7 +143,7 @@
               <v-row no-gutters>
                 <v-col align-self="center">
                   <v-btn
-                    class="mx-2"
+                    class="mx-2 my-1"
                     size="x-small"
                     icon
                     @click="studentToDelete = student"
