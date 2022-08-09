@@ -187,7 +187,7 @@ export interface Exercice {
   Description: string;
   Parameters: Parameters;
   Flow: Flow;
-  id_teacher: IdTeacher;
+  IdTeacher: IdTeacher;
   Public: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn

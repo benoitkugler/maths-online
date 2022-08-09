@@ -39,6 +39,16 @@ func randSheetExercice() SheetExercice {
 	}
 }
 
+func randStudentProgression() StudentProgression {
+	return StudentProgression{
+		IdStudent:     randtea_IdStudent(),
+		IdSheet:       randIdSheet(),
+		Index:         randint(),
+		IdExercice:    randedi_IdExercice(),
+		IdProgression: randedi_IdProgression(),
+	}
+}
+
 func randTime() Time {
 	return Time(randtTime())
 }
@@ -50,6 +60,10 @@ func randbool() bool {
 
 func randedi_IdExercice() editor.IdExercice {
 	return editor.IdExercice(randint64())
+}
+
+func randedi_IdProgression() editor.IdProgression {
+	return editor.IdProgression(randint64())
 }
 
 func randint() int {
@@ -77,4 +91,8 @@ func randtTime() time.Time {
 
 func randtea_IdClassroom() teacher.IdClassroom {
 	return teacher.IdClassroom(randint64())
+}
+
+func randtea_IdStudent() teacher.IdStudent {
+	return teacher.IdStudent(randint64())
 }

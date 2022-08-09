@@ -37,8 +37,26 @@ type Sheet struct {
 	Deadline Time
 }
 
+// gomacro:SQL ADD PRIMARY KEY (IdSheet, Index)
+
 type SheetExercice struct {
 	IdSheet    IdSheet `gomacro-sql-on-delete:"CASCADE"`
 	IdExercice editor.IdExercice
 	Index      int `json:"-"` // order in the list
+}
+
+// StudentProgression is a link table attributing one
+// progression on a sheet exercice to a student.
+// gomacro:SQL ADD FOREIGN KEY (IdProgression, IdExercice) REFERENCES Progression (Id, IdExercice) ON DELETE CASCADE
+// gomacro:SQL ADD FOREIGN KEY (IdSheet, IdExercice, Index) REFERENCES SheetExercice ON DELETE CASCADE
+// gomacro:SQL ADD UNIQUE(IdProgression)
+// gomacro:SQL ADD UNIQUE(IdStudent, IdSheet, Index)
+type StudentProgression struct {
+	IdStudent teacher.IdStudent
+
+	IdSheet    IdSheet
+	Index      int               // in the sheet
+	IdExercice editor.IdExercice // to ensure consistency
+
+	IdProgression editor.IdProgression
 }

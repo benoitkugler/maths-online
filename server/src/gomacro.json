@@ -117,6 +117,12 @@
             "Output": "prof/homework/gen_randdata_test.go"
         }
     ],
+    "prof/homework/student_types.go": [
+        {
+            "Mode": "dart",
+            "Output": "../../eleve/lib/homework/types.gen.dart"
+        }
+    ],
     "prof_api.go": [
         {
             "Mode": "typescript/api",

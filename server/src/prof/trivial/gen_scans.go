@@ -12,30 +12,29 @@ import (
 	"github.com/lib/pq"
 )
 
-	type scanner interface {
-		Scan(...interface{}) error
-	}
-	
-	// DB groups transaction like objects, and 
-	// is implemented by *sql.DB and *sql.Tx
-	type DB interface {
-		Exec(query string, args ...interface{}) (sql.Result, error)
-		Query(query string, args ...interface{}) (*sql.Rows, error)
-		QueryRow(query string, args ...interface{}) *sql.Row 
-		Prepare(query string) (*sql.Stmt, error)
-	}
-	
+type scanner interface {
+	Scan(...interface{}) error
+}
+
+// DB groups transaction like objects, and
+// is implemented by *sql.DB and *sql.Tx
+type DB interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Prepare(query string) (*sql.Stmt, error)
+}
 
 func scanOneTrivial(row scanner) (Trivial, error) {
 	var item Trivial
 	err := row.Scan(
 		&item.Id,
-&item.Questions,
-&item.QuestionTimeout,
-&item.ShowDecrassage,
-&item.Public,
-&item.IdTeacher,
-&item.Name,
+		&item.Questions,
+		&item.QuestionTimeout,
+		&item.ShowDecrassage,
+		&item.Public,
+		&item.IdTeacher,
+		&item.Name,
 	)
 	return item, err
 }
@@ -78,7 +77,7 @@ func (m Trivials) IDs() []IdTrivial {
 
 func ScanTrivials(rs *sql.Rows) (Trivials, error) {
 	var (
-		s Trivial
+		s   Trivial
 		err error
 	)
 	defer func() {
@@ -87,7 +86,7 @@ func ScanTrivials(rs *sql.Rows) (Trivials, error) {
 			err = errClose
 		}
 	}()
-	structs := make(Trivials,  16)
+	structs := make(Trivials, 16)
 	for rs.Next() {
 		s, err = scanOneTrivial(rs)
 		if err != nil {
@@ -108,7 +107,7 @@ func (item Trivial) Insert(tx DB) (out Trivial, err error) {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`,item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name)
+		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name)
 	return ScanTrivial(row)
 }
 
@@ -119,7 +118,7 @@ func (item Trivial) Update(tx DB) (out Trivial, err error) {
 		) = (
 		$1, $2, $3, $4, $5, $6
 		) WHERE id = $7 RETURNING *;
-		`,item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name, item.Id)
+		`, item.Questions, item.QuestionTimeout, item.ShowDecrassage, item.Public, item.IdTeacher, item.Name, item.Id)
 	return ScanTrivial(row)
 }
 
@@ -136,95 +135,91 @@ func DeleteTrivialsByIDs(tx DB, ids ...IdTrivial) ([]IdTrivial, error) {
 		return nil, err
 	}
 	return ScanIdTrivialArray(rows)
-}	
+}
 
-		func SelectTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Trivials, error) {
-			rows, err := tx.Query("SELECT * FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
-			if err != nil {
-				return nil, err
-			}
-			return ScanTrivials(rows)
-		}	
-
-		func DeleteTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdTrivial, error) {
-			rows, err := tx.Query("DELETE FROM trivials WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
-			if err != nil {
-				return nil, err
-			}
-			return ScanIdTrivialArray(rows)
-		}	
-		
-
-	func loadJSON(out interface{}, src interface{}) error {
-		if src == nil {
-			return nil //zero value out
-		}
-		bs, ok := src.([]byte)
-		if !ok {
-			return errors.New("not a []byte")
-		}
-		return json.Unmarshal(bs, out)
+func SelectTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Trivials, error) {
+	rows, err := tx.Query("SELECT * FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+	if err != nil {
+		return nil, err
 	}
-	
-	func dumpJSON(s interface{}) (driver.Value, error) {
-		b, err := json.Marshal(s)
-		if err != nil {
+	return ScanTrivials(rows)
+}
+
+func DeleteTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdTrivial, error) {
+	rows, err := tx.Query("DELETE FROM trivials WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdTrivialArray(rows)
+}
+
+func loadJSON(out interface{}, src interface{}) error {
+	if src == nil {
+		return nil //zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, out)
+}
+
+func dumpJSON(s interface{}) (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
+}
+
+func IdTrivialArrayToPQ(ids []IdTrivial) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdTrivialArray scans the result of a query returning a
+// list of ID's.
+func ScanIdTrivialArray(rs *sql.Rows) ([]IdTrivial, error) {
+	defer rs.Close()
+	ints := make([]IdTrivial, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdTrivial
+		if err = rs.Scan(&s); err != nil {
 			return nil, err
 		}
-		return driver.Value(string(b)), nil
+		ints = append(ints, s)
 	}
-	
-
-		func IdTrivialArrayToPQ(ids []IdTrivial) pq.Int64Array {
-			out := make(pq.Int64Array, len(ids))
-			for i, v := range ids {
-				out[i] = int64(v)
-			}
-			return out
-		}
-		
-	// ScanIdTrivialArray scans the result of a query returning a
-	// list of ID's.
-	func ScanIdTrivialArray(rs *sql.Rows) ([]IdTrivial, error) {
-		defer rs.Close()
-		ints := make([]IdTrivial, 0, 16)
-		var err error
-		for rs.Next() {
-			var s IdTrivial
-			if err = rs.Scan(&s); err != nil {
-				return nil, err
-			}
-			ints = append(ints, s)
-		}
-		if err = rs.Err(); err != nil {
-			return nil, err
-		}
-		return ints, nil
+	if err = rs.Err(); err != nil {
+		return nil, err
 	}
-	
-	type IdTrivialSet map[IdTrivial]bool 
+	return ints, nil
+}
 
-	func NewIdTrivialSetFrom(ids []IdTrivial) IdTrivialSet { 
-		out := make(IdTrivialSet, len(ids))
-		for _, key := range ids {
-			out[key] = true
-		}
-		return out
+type IdTrivialSet map[IdTrivial]bool
+
+func NewIdTrivialSetFrom(ids []IdTrivial) IdTrivialSet {
+	out := make(IdTrivialSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
 	}
+	return out
+}
 
-	func (s IdTrivialSet) Add(id IdTrivial) { s[id] = true }
+func (s IdTrivialSet) Add(id IdTrivial) { s[id] = true }
 
-	func (s IdTrivialSet) Has(id IdTrivial) bool { return s[id] }
+func (s IdTrivialSet) Has(id IdTrivial) bool { return s[id] }
 
-	func (s IdTrivialSet) Keys() []IdTrivial {
-		out := make([]IdTrivial, 0, len(s))
-		for k := range s {
-			out = append(out, k)
-		}
-		return out
+func (s IdTrivialSet) Keys() []IdTrivial {
+	out := make([]IdTrivial, 0, len(s))
+	for k := range s {
+		out = append(out, k)
 	}
-	
+	return out
+}
 
-						func (s *CategoriesQuestions) Scan(src interface{}) error { return loadJSON(s, src) }
-						func (s CategoriesQuestions) Value() (driver.Value, error) { return dumpJSON(s) }
-						
+func (s *CategoriesQuestions) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s CategoriesQuestions) Value() (driver.Value, error) { return dumpJSON(s) }

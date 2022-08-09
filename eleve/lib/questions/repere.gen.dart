@@ -66,7 +66,7 @@ class Drawings {
 Drawings drawingsFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return Drawings(
-      dictString_LabeledPointFromJson(json['Points']),
+      dictStringToLabeledPointFromJson(json['Points']),
       listSegmentFromJson(json['Segments']),
       listLineFromJson(json['Lines']),
       listAreaFromJson(json['Areas']));
@@ -74,7 +74,7 @@ Drawings drawingsFromJson(dynamic json_) {
 
 JSON drawingsToJson(Drawings item) {
   return {
-    "Points": dictString_LabeledPointToJson(item.points),
+    "Points": dictStringToLabeledPointToJson(item.points),
     "Segments": listSegmentToJson(item.segments),
     "Lines": listLineToJson(item.lines),
     "Areas": listAreaToJson(item.areas)
@@ -314,7 +314,7 @@ bool boolFromJson(dynamic json) => json as bool;
 
 bool boolToJson(bool item) => item;
 
-Map<String, LabeledPoint> dictString_LabeledPointFromJson(dynamic json) {
+Map<String, LabeledPoint> dictStringToLabeledPointFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
@@ -322,7 +322,7 @@ Map<String, LabeledPoint> dictString_LabeledPointFromJson(dynamic json) {
       .map((k, v) => MapEntry(k as String, labeledPointFromJson(v)));
 }
 
-Map<String, dynamic> dictString_LabeledPointToJson(
+Map<String, dynamic> dictStringToLabeledPointToJson(
     Map<String, LabeledPoint> item) {
   return item.map(
       (k, v) => MapEntry(stringToJson(k).toString(), labeledPointToJson(v)));

@@ -216,11 +216,11 @@ func TestProgression(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err := ct.fetchProgression(prog.Id)
+	out, err := LoadProgressions(ct.db, IdProgressionSet{prog.Id: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out.NextQuestion != 1 {
+	if out[prog.Id].NextQuestion != 1 {
 		t.Fatal(out)
 	}
 }

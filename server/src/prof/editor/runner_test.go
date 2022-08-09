@@ -75,10 +75,11 @@ func TestEvaluateExercice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	progExt, err := ct.fetchProgression(prog.Id)
+	progExts, err := LoadProgressions(ct.db, IdProgressionSet{prog.Id: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+	progExt := progExts[prog.Id]
 
 	// no error since the exercice is parallel
 	_, err = ct.EvaluateExercice(EvaluateExerciceIn{IdExercice: ex.Exercice.Id, Progression: progExt, Answers: map[int]Answer{}})

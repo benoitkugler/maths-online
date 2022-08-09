@@ -122,32 +122,50 @@ func (qh *ProgressionExt) inferNextQuestion() {
 	qh.NextQuestion = -1
 }
 
-// load the whole progression
-func (ct *Controller) fetchProgression(id IdProgression) (ProgressionExt, error) {
-	pr, err := SelectProgression(ct.db, id)
+// LoadProgressions loads the whole progressions
+func LoadProgressions(db DB, ids IdProgressionSet) (map[IdProgression]ProgressionExt, error) {
+	prs, err := SelectProgressions(db, ids.Keys()...)
 	if err != nil {
-		return ProgressionExt{}, utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 
-	questions, err := SelectExerciceQuestionsByIdExercices(ct.db, pr.IdExercice)
-	if err != nil {
-		return ProgressionExt{}, utils.SQLError(err)
+	// select the associated exercices
+	exercices := make(IdExerciceSet)
+	for _, pr := range prs {
+		exercices.Add(pr.IdExercice)
 	}
-	questions.ensureOrder()
 
-	links, err := SelectProgressionQuestionsByIdProgressions(ct.db, id)
+	links1, err := SelectExerciceQuestionsByIdExercices(db, exercices.Keys()...)
 	if err != nil {
-		return ProgressionExt{}, utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
-	// beware that some questions may not have a link item yet
-	out := ProgressionExt{
-		Progression: pr,
-		Questions:   make([]QuestionHistory, len(questions)),
+	questionsExesMap := links1.ByIdExercice() // reference from the exercice
+
+	links2, err := SelectProgressionQuestionsByIdProgressions(db, ids.Keys()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
 	}
-	for _, link := range links {
-		out.Questions[link.Index] = link.History
+	questionsProgMap := links2.ByIdProgression() // (incomplete) progression of the student
+
+	out := make(map[IdProgression]ProgressionExt, len(prs))
+	for _, pr := range prs {
+		questions := questionsExesMap[pr.IdExercice]
+		questions.ensureOrder()
+
+		// beware that some questions may not have a link item yet
+		progExt := ProgressionExt{
+			Progression: pr,
+			Questions:   make([]QuestionHistory, len(questions)),
+		}
+		prog := questionsProgMap[pr.Id]
+		for _, link := range prog {
+			progExt.Questions[link.Index] = link.History
+		}
+		progExt.inferNextQuestion()
+
+		out[pr.Id] = progExt
 	}
-	out.inferNextQuestion()
+
 	return out, nil
 }
 

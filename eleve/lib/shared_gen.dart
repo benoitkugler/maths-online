@@ -72,14 +72,14 @@ EvaluateExerciceIn evaluateExerciceInFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return EvaluateExerciceIn(
       intFromJson(json['IdExercice']),
-      dictInt_AnswerFromJson(json['Answers']),
+      dictIntToAnswerFromJson(json['Answers']),
       progressionExtFromJson(json['Progression']));
 }
 
 JSON evaluateExerciceInToJson(EvaluateExerciceIn item) {
   return {
     "IdExercice": intToJson(item.idExercice),
-    "Answers": dictInt_AnswerToJson(item.answers),
+    "Answers": dictIntToAnswerToJson(item.answers),
     "Progression": progressionExtToJson(item.progression)
   };
 }
@@ -101,14 +101,14 @@ class EvaluateExerciceOut {
 EvaluateExerciceOut evaluateExerciceOutFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return EvaluateExerciceOut(
-      dictInt_QuestionAnswersOutFromJson(json['Results']),
+      dictIntToQuestionAnswersOutFromJson(json['Results']),
       progressionExtFromJson(json['Progression']),
       listInstantiatedQuestionFromJson(json['NewQuestions']));
 }
 
 JSON evaluateExerciceOutToJson(EvaluateExerciceOut item) {
   return {
-    "Results": dictInt_QuestionAnswersOutToJson(item.results),
+    "Results": dictIntToQuestionAnswersOutToJson(item.results),
     "Progression": progressionExtToJson(item.progression),
     "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions)
   };
@@ -265,23 +265,23 @@ JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
 // github.com/benoitkugler/maths-online/prof/editor.Progression
 class Progression {
   final IdProgression id;
-  final IdExercice id_exercice;
+  final IdExercice idExercice;
 
-  const Progression(this.id, this.id_exercice);
+  const Progression(this.id, this.idExercice);
 
   @override
   String toString() {
-    return "Progression($id, $id_exercice)";
+    return "Progression($id, $idExercice)";
   }
 }
 
 Progression progressionFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Progression(intFromJson(json['Id']), intFromJson(json['id_exercice']));
+  return Progression(intFromJson(json['Id']), intFromJson(json['IdExercice']));
 }
 
 JSON progressionToJson(Progression item) {
-  return {"Id": intToJson(item.id), "id_exercice": intToJson(item.id_exercice)};
+  return {"Id": intToJson(item.id), "IdExercice": intToJson(item.idExercice)};
 }
 
 // github.com/benoitkugler/maths-online/prof/editor.ProgressionExt
@@ -374,7 +374,7 @@ bool boolFromJson(dynamic json) => json as bool;
 
 bool boolToJson(bool item) => item;
 
-Map<int, Answer> dictInt_AnswerFromJson(dynamic json) {
+Map<int, Answer> dictIntToAnswerFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
@@ -382,11 +382,11 @@ Map<int, Answer> dictInt_AnswerFromJson(dynamic json) {
       .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
 }
 
-Map<String, dynamic> dictInt_AnswerToJson(Map<int, Answer> item) {
+Map<String, dynamic> dictIntToAnswerToJson(Map<int, Answer> item) {
   return item.map((k, v) => MapEntry(intToJson(k).toString(), answerToJson(v)));
 }
 
-Map<int, QuestionAnswersOut> dictInt_QuestionAnswersOutFromJson(dynamic json) {
+Map<int, QuestionAnswersOut> dictIntToQuestionAnswersOutFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
@@ -394,7 +394,7 @@ Map<int, QuestionAnswersOut> dictInt_QuestionAnswersOutFromJson(dynamic json) {
       .map((k, v) => MapEntry(int.parse(k), questionAnswersOutFromJson(v)));
 }
 
-Map<String, dynamic> dictInt_QuestionAnswersOutToJson(
+Map<String, dynamic> dictIntToQuestionAnswersOutToJson(
     Map<int, QuestionAnswersOut> item) {
   return item.map(
       (k, v) => MapEntry(intToJson(k).toString(), questionAnswersOutToJson(v)));

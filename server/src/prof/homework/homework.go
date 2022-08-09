@@ -73,3 +73,33 @@ func updateSheetExercices(tx *sql.Tx, idSheet IdSheet, l []ed.IdExercice) error 
 
 	return nil
 }
+
+// Student API
+
+type ExerciceProgressionHeader struct {
+	Exercice       ed.Exercice
+	HasProgression bool
+	Progression    ed.ProgressionExt // empty if HasProgression is false
+}
+
+// SheetProgression is the summary of the progression
+// of one student for one sheet
+type SheetProgression struct {
+	Sheet     Sheet
+	Exercices []ExerciceProgressionHeader
+}
+
+// sheetAndIndex is a key identidying an exercice in a sheet
+type sheetAndIndex struct {
+	IdSheet IdSheet
+	Index   int
+}
+
+// assume links only concerne one student and use the unicity of (IdStudent, IdSheet, Index)
+func bySheetAndIndex(links StudentProgressions) (out map[sheetAndIndex]ed.IdProgression) {
+	out = make(map[sheetAndIndex]ed.IdProgression)
+	for _, link := range links {
+		out[sheetAndIndex{IdSheet: link.IdSheet, Index: link.Index}] = link.IdProgression
+	}
+	return out
+}

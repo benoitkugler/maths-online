@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
@@ -19,12 +20,15 @@ var accessForbidden = errors.New("resource access forbidden")
 type Controller struct {
 	db    *sql.DB
 	admin teacher.Teacher
+
+	studentKey pass.Encrypter
 }
 
-func NewController(db *sql.DB, admin teacher.Teacher) *Controller {
+func NewController(db *sql.DB, admin teacher.Teacher, studentKey pass.Encrypter) *Controller {
 	return &Controller{
-		db:    db,
-		admin: admin,
+		db:         db,
+		admin:      admin,
+		studentKey: studentKey,
 	}
 }
 
@@ -303,6 +307,89 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 
 	exerciceMap := editor.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
 	out := newSheetExt(newSheet, links, exerciceMap)
+
+	return out, nil
+}
+
+// Student API
+
+// StudentGetSheets returns the sheet for the given student
+func (ct *Controller) StudentGetSheets(c echo.Context) error {
+	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
+
+	idStudent, err := ct.studentKey.DecryptID(idCrypted)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out StudentSheets, err error) {
+	student, err := teacher.SelectStudent(ct.db, idStudent)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	sheets, err := SelectSheetsByIdClassrooms(ct.db, student.IdClassroom)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	links1, err := SelectSheetExercicesByIdSheets(ct.db, sheets.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	sheetToExercices := links1.ByIdSheet()
+
+	studentProgs, err := SelectStudentProgressionsByIdStudents(ct.db, teacher.IdStudent(idStudent))
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	// since we only load data for one student, we map by IdSheet and Index
+	sheetExToProg := bySheetAndIndex(studentProgs)
+
+	// collect the student progressions
+	idProgressions := editor.NewIdProgressionSetFrom(studentProgs.IdProgressions())
+	progMap, err := editor.LoadProgressions(ct.db, idProgressions)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	exercices, err := editor.SelectExercices(ct.db, studentProgs.IdExercices()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	for _, sheet := range sheets {
+		if !sheet.Activated { // ignore hidden sheets
+			continue
+		}
+
+		exerciceForSheet := sheetToExercices[sheet.Id] // defined exercices
+		exWithProg := make([]ExerciceProgressionHeader, len(exerciceForSheet))
+		for i, ex := range exerciceForSheet {
+			// select the right progression, which may be empty
+			// before the student starts the exercice
+			prog, hasProg := sheetExToProg[sheetAndIndex{IdSheet: sheet.Id, Index: ex.Index}]
+			exWithProg[i] = ExerciceProgressionHeader{
+				Exercice:       exercices[ex.IdExercice],
+				HasProgression: hasProg,
+				Progression:    progMap[prog],
+			}
+		}
+		out = append(out, SheetProgression{
+			Sheet:     sheet,
+			Exercices: exWithProg,
+		})
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Sheet.Id < out[j].Sheet.Id })
 
 	return out, nil
 }

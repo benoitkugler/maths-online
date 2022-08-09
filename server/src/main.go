@@ -134,7 +134,7 @@ func main() {
 	fmt.Println("Admin teacher loaded.")
 
 	tvc := trivial.NewController(db, studentKey, demoPinTrivial, admin)
-	hwc := homework.NewController(db, admin)
+	hwc := homework.NewController(db, admin, studentKey)
 	edit := editor.NewController(db, admin)
 
 	if *devPtr {
@@ -272,6 +272,9 @@ func setupRoutes(e *echo.Echo,
 	e.GET("/api/classroom/login", tc.CheckStudentClassroom)
 	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
 	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
+
+	// student homework API
+	e.GET("/api/student/homework/sheets", home.StudentGetSheets)
 
 	// prof. back office
 	for _, route := range []string{

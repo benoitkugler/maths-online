@@ -50,7 +50,7 @@ type Exercice struct {
 	Parameters questions.Parameters
 	Flow       Flow
 	// IdTeacher is the owner of the exercice
-	IdTeacher teacher.IdTeacher `json:"id_teacher"`
+	IdTeacher teacher.IdTeacher
 	Public    bool
 }
 
@@ -72,7 +72,7 @@ type ExerciceQuestion struct {
 // gomacro:SQL ADD UNIQUE(Id, IdExercice)
 type Progression struct {
 	Id         IdProgression
-	IdExercice IdExercice `json:"id_exercice" gomacro-sql-on-delete:"CASCADE"`
+	IdExercice IdExercice `gomacro-sql-on-delete:"CASCADE"`
 }
 
 // We enforce consistency with the additional `IdExercice` field

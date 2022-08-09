@@ -1031,11 +1031,11 @@ class QuestionAnswersIn {
 
 QuestionAnswersIn questionAnswersInFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return QuestionAnswersIn(dictInt_AnswerFromJson(json['Data']));
+  return QuestionAnswersIn(dictIntToAnswerFromJson(json['Data']));
 }
 
 JSON questionAnswersInToJson(QuestionAnswersIn item) {
-  return {"Data": dictInt_AnswerToJson(item.data)};
+  return {"Data": dictIntToAnswerToJson(item.data)};
 }
 
 // github.com/benoitkugler/maths-online/maths/questions/client.QuestionAnswersOut
@@ -1053,14 +1053,14 @@ class QuestionAnswersOut {
 
 QuestionAnswersOut questionAnswersOutFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return QuestionAnswersOut(dictInt_BoolFromJson(json['Results']),
-      dictInt_AnswerFromJson(json['ExpectedAnswers']));
+  return QuestionAnswersOut(dictIntToBoolFromJson(json['Results']),
+      dictIntToAnswerFromJson(json['ExpectedAnswers']));
 }
 
 JSON questionAnswersOutToJson(QuestionAnswersOut item) {
   return {
-    "Results": dictInt_BoolToJson(item.results),
-    "ExpectedAnswers": dictInt_AnswerToJson(item.expectedAnswers)
+    "Results": dictIntToBoolToJson(item.results),
+    "ExpectedAnswers": dictIntToAnswerToJson(item.expectedAnswers)
   };
 }
 
@@ -1653,7 +1653,7 @@ bool boolFromJson(dynamic json) => json as bool;
 
 bool boolToJson(bool item) => item;
 
-Map<int, Answer> dictInt_AnswerFromJson(dynamic json) {
+Map<int, Answer> dictIntToAnswerFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
@@ -1661,18 +1661,18 @@ Map<int, Answer> dictInt_AnswerFromJson(dynamic json) {
       .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
 }
 
-Map<String, dynamic> dictInt_AnswerToJson(Map<int, Answer> item) {
+Map<String, dynamic> dictIntToAnswerToJson(Map<int, Answer> item) {
   return item.map((k, v) => MapEntry(intToJson(k).toString(), answerToJson(v)));
 }
 
-Map<int, bool> dictInt_BoolFromJson(dynamic json) {
+Map<int, bool> dictIntToBoolFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
   return (json as JSON).map((k, v) => MapEntry(int.parse(k), boolFromJson(v)));
 }
 
-Map<String, dynamic> dictInt_BoolToJson(Map<int, bool> item) {
+Map<String, dynamic> dictIntToBoolToJson(Map<int, bool> item) {
   return item.map((k, v) => MapEntry(intToJson(k).toString(), boolToJson(v)));
 }
 
