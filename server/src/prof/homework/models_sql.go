@@ -21,6 +21,9 @@ const (
 // Time is an instant in a day.
 type Time time.Time
 
+func (d Time) MarshalJSON() ([]byte, error)     { return time.Time(d).MarshalJSON() }
+func (d *Time) UnmarshalJSON(data []byte) error { return (*time.Time)(d).UnmarshalJSON(data) }
+
 // Sheet is a list of exercices with
 // a due date
 type Sheet struct {

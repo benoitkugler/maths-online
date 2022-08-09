@@ -61,38 +61,45 @@ func (ex Exercice) origin(userID, adminID uID) (teacher.Origin, bool) {
 	}, true
 }
 
+// BuildExerciceHeaders aggregates the content of the tables Exercice and ExerciceQuestion,
+// selecting only the exercices visible by `userID`
+func BuildExerciceHeaders(userID, adminID teacher.IdTeacher, exes Exercices, links ExerciceQuestions) map[IdExercice]ExerciceHeader {
+	out := make(map[IdExercice]ExerciceHeader, len(exes))
+	questionDict := links.ByIdExercice()
+
+	for _, ex := range exes {
+		origin, ok := ex.origin(userID, adminID)
+		if !ok {
+			continue
+		}
+
+		questions := questionDict[ex.Id]
+		questions.ensureOrder()
+		out[ex.Id] = ExerciceHeader{
+			Exercice:  ex,
+			Origin:    origin,
+			Questions: questions,
+		}
+	}
+
+	return out
+}
+
 func (ct *Controller) getExercices(userID uID) ([]ExerciceHeader, error) {
 	exs, err := SelectAllExercices(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	var (
-		out []ExerciceHeader
-		tmp []IdExercice
-	)
-	for _, ex := range exs {
-		origin, ok := ex.origin(userID, ct.admin.Id)
-		if !ok {
-			continue
-		}
-		out = append(out, ExerciceHeader{
-			Exercice: ex,
-			Origin:   origin,
-		})
-		tmp = append(tmp, ex.Id)
-	}
-
-	links, err := SelectExerciceQuestionsByIdExercices(ct.db, tmp...)
+	links, err := SelectExerciceQuestionsByIdExercices(ct.db, exs.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	dict := links.ByIdExercice()
 
-	for i, ex := range out {
-		s := dict[ex.Exercice.Id]
-		s.ensureOrder()
-		out[i].Questions = s
+	tmp := BuildExerciceHeaders(userID, ct.admin.Id, exs, links)
+	out := make([]ExerciceHeader, 0, len(tmp))
+	for _, ex := range tmp {
+		out = append(out, ex)
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })

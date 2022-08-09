@@ -25,16 +25,6 @@
                 <v-btn
                   link
                   block
-                  :to="{ name: 'trivial' }"
-                  color="pink-lighten-3"
-                >
-                  Lancer une partie de Triv'Maths
-                </v-btn>
-              </v-col>
-              <v-col>
-                <v-btn
-                  link
-                  block
                   color="teal-lighten-4"
                   :to="{ name: 'editor-question' }"
                 >
@@ -49,6 +39,26 @@
                   :to="{ name: 'editor-exercice' }"
                 >
                   Créer ou modifier un exercice
+                </v-btn>
+              </v-col>
+              <v-col>
+                <v-btn
+                  link
+                  block
+                  :to="{ name: 'trivial' }"
+                  color="pink-lighten-3"
+                >
+                  Lancer une partie de Triv'Maths
+                </v-btn>
+              </v-col>
+              <v-col>
+                <v-btn
+                  link
+                  block
+                  :to="{ name: 'homework' }"
+                  color="pink-lighten-3"
+                >
+                  Lancer un travail à la maison
                 </v-btn>
               </v-col>
               <v-col>

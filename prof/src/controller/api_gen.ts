@@ -143,6 +143,11 @@ export interface CoordExpression {
   X: string;
   Y: string;
 }
+// github.com/benoitkugler/maths-online/prof/homework.CopySheetIn
+export interface CopySheetIn {
+  IdSheet: IdSheet;
+  IdClassroom: IdClassroom;
+}
 // github.com/benoitkugler/maths-online/prof/homework.CreateSheetIn
 export interface CreateSheetIn {
   IdClassroom: IdClassroom;
@@ -633,7 +638,7 @@ export interface Sheet {
 // github.com/benoitkugler/maths-online/prof/homework.SheetExt
 export interface SheetExt {
   Sheet: Sheet;
-  Exercices: Exercice[] | null;
+  Exercices: ExerciceHeader[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/questions.SignSymbol
 export enum SignSymbol {
@@ -706,8 +711,6 @@ export interface TextPart {
   Content: string;
   Kind: TextKind;
 }
-// github.com/benoitkugler/maths-online/prof/homework.Time
-export type Time = Time;
 // github.com/benoitkugler/maths-online/maths/questions.TreeFieldBlock
 export interface TreeFieldBlock {
   EventsProposals: string[] | null;
@@ -2042,6 +2045,28 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkUpdateSheet(data: never): void;
+
+  protected async rawHomeworkCopySheet(params: CopySheetIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/copy-sheet";
+    const rep: AxiosResponse<SheetExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkCopySheet wraps rawHomeworkCopySheet and handles the error */
+  async HomeworkCopySheet(params: CopySheetIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkCopySheet(params);
+      this.onSuccessHomeworkCopySheet(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkCopySheet(data: SheetExt): void;
 
   protected async rawHomeworkDeleteSheet(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";

@@ -6,6 +6,7 @@ import type {
   CheckQuestionParametersOut,
   Classroom,
   ClassroomExt,
+  ClassroomSheets,
   Exercice,
   ExerciceExt,
   ExerciceHeader,
@@ -17,6 +18,7 @@ import type {
   RunningSessionMetaOut,
   SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
+  SheetExt,
   StartSessionOut,
   Student,
   TrivialExt,
@@ -99,6 +101,34 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  protected onSuccessHomeworkGetSheets(data: ClassroomSheets[] | null): void {
+    this.inRequest = false;
+  }
+  protected onSuccessHomeworkCreateSheet(data: SheetExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche ajoutée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkCopySheet(data: SheetExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche dupliquée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkUpdateSheet(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche modifiée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkDeleteSheet(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche supprimée avec succès.");
+    }
   }
 
   protected onSuccessExercicesGetList(data: ExerciceHeader[] | null): void {

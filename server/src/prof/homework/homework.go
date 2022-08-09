@@ -7,7 +7,7 @@ import (
 	"database/sql"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/prof/editor"
+	ed "github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 )
@@ -30,20 +30,23 @@ func newClassroomSheets(cl teacher.Classroom, sheepMap map[IdSheet]SheetExt) Cla
 
 type SheetExt struct {
 	Sheet     Sheet
-	Exercices []editor.Exercice
+	Exercices []ed.ExerciceHeader
 }
 
-func buildSheetExts(sheets Sheets, links SheetExercices, exes editor.Exercices) map[IdSheet]SheetExt {
+func newSheetExt(sheet Sheet, links SheetExercices, exes map[ed.IdExercice]ed.ExerciceHeader) SheetExt {
+	out := SheetExt{Sheet: sheet}
+	links.ensureOrder()
+	for _, link := range links {
+		out.Exercices = append(out.Exercices, exes[link.IdExercice])
+	}
+	return out
+}
+
+func buildSheetExts(sheets Sheets, links SheetExercices, exes map[ed.IdExercice]ed.ExerciceHeader) map[IdSheet]SheetExt {
 	out := make(map[IdSheet]SheetExt, len(sheets))
 	m := links.ByIdSheet()
 	for idSheet, v := range sheets {
-		ext := SheetExt{Sheet: v}
-		links := m[idSheet]
-		links.ensureOrder()
-		for _, link := range links {
-			ext.Exercices = append(ext.Exercices, exes[link.IdExercice])
-		}
-		out[idSheet] = ext
+		out[idSheet] = newSheetExt(v, m[idSheet], exes)
 	}
 	return out
 }
@@ -52,7 +55,7 @@ func (l SheetExercices) ensureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 
-func updateSheetExercices(tx *sql.Tx, idSheet IdSheet, l []editor.IdExercice) error {
+func updateSheetExercices(tx *sql.Tx, idSheet IdSheet, l []ed.IdExercice) error {
 	links := make(SheetExercices, len(l))
 	for i, idExe := range l {
 		links[i] = SheetExercice{IdExercice: idExe, IdSheet: idSheet, Index: i}

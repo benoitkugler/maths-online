@@ -47,6 +47,10 @@ func TestCRUDSheet(t *testing.T) {
 	tu.Assert(t, len(l) == 1)
 	tu.Assert(t, len(l[0].Sheets) == 1)
 
+	out, err := ct.copySheetTo(CopySheetIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, out.Sheet.Id != sh.Id)
+
 	err = ct.deleteSheet(sh.Id, userID)
 	tu.Assert(t, err == nil)
 }

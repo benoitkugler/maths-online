@@ -52,7 +52,7 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 		return nil, utils.SQLError(err)
 	}
 
-	// load all the exercices required
+	// load all the exercices required...
 	links, err := SelectSheetExercicesByIdSheets(ct.db, sheetsDict.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -63,8 +63,16 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 		return nil, utils.SQLError(err)
 	}
 
+	// ... and their questions
+	questions, err := editor.SelectExerciceQuestionsByIdExercices(ct.db, exes.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	exerciceMap := editor.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
+
 	// finally agregate the results
-	sheets := buildSheetExts(sheetsDict, links, exes)
+	sheets := buildSheetExts(sheetsDict, links, exerciceMap)
 	for _, class := range classrooms {
 		out = append(out, newClassroomSheets(class, sheets))
 	}
@@ -108,7 +116,7 @@ func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (
 		Title:       "Feuille d'exercices",
 		Notation:    SuccessNotation,
 		Activated:   false,
-		Deadline:    Time(time.Now().Add(time.Hour * 24 * 24)),
+		Deadline:    Time(time.Now().Add(time.Hour * 24 * 14).Round(time.Hour)), // two weeks
 	}.Insert(ct.db)
 	if err != nil {
 		return Sheet{}, utils.SQLError(err)
@@ -212,4 +220,89 @@ func (ct *Controller) deleteSheet(idSheet IdSheet, userID uID) error {
 	}
 
 	return nil
+}
+
+type CopySheetIn struct {
+	IdSheet     IdSheet
+	IdClassroom teacher.IdClassroom
+}
+
+func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
+	user := teacher.JWTTeacher(c)
+
+	var args CopySheetIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.copySheetTo(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error) {
+	cl, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	if cl.IdTeacher != userID {
+		return SheetExt{}, accessForbidden
+	}
+
+	sheet, err := SelectSheet(ct.db, args.IdSheet)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	links, err := SelectSheetExercicesByIdSheets(ct.db, sheet.Id)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	exes, err := editor.SelectExercices(ct.db, links.IdExercices()...)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	questions, err := editor.SelectExerciceQuestionsByIdExercices(ct.db, exes.IDs()...)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	// shallow copy of the item ...
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	sheet.IdClassroom = args.IdClassroom
+	newSheet, err := sheet.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	// and copy of the links
+	for i := range links {
+		links[i].IdSheet = newSheet.Id
+	}
+	err = InsertManySheetExercices(tx, links...)
+	if err != nil {
+		_ = tx.Rollback()
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	exerciceMap := editor.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
+	out := newSheetExt(newSheet, links, exerciceMap)
+
+	return out, nil
 }
