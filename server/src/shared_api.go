@@ -68,7 +68,7 @@ type (
 	EvaluateExerciceOut = editor.EvaluateExerciceOut
 )
 
-type Exercice struct {
+type StudentExerciceInst struct {
 	Exercice    editor.InstantiatedExercice
 	Progression editor.ProgressionExt
 }

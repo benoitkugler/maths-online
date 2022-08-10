@@ -161,7 +161,8 @@ class _AppBodyState extends State<_AppBody> {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-            body: Homework(widget.buildMode, widget.settings.studentID))));
+            body: Homework(ServerHomeworkAPI(
+                widget.buildMode, widget.settings.studentID)))));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 

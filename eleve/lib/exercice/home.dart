@@ -2,10 +2,27 @@ import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
 
+extension ProgressionExtension on ProgressionExt {
+  bool _isQuestionCompleted(List<bool> history) {
+    return history.isNotEmpty && history.last;
+  }
+
+  /// returns `true` if the question at [index] is completed
+  bool isQuestionCompleted(int index) {
+    final history = questions[index];
+    return _isQuestionCompleted(history);
+  }
+
+  /// returns `true` if all the questions of the exercice are completed
+  bool isCompleted() {
+    return questions.every(_isQuestionCompleted);
+  }
+}
+
 /// ExerciceHome shows a welcome screen when opening an exercice,
 /// with its questions and bareme
 class ExerciceHome extends StatelessWidget {
-  final Exercice data;
+  final StudentExerciceInst data;
   final void Function(int index) onSelectQuestion;
 
   const ExerciceHome(this.data, this.onSelectQuestion, {Key? key})
@@ -18,7 +35,7 @@ class ExerciceHome extends StatelessWidget {
       child: Column(children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 20),
-          child: ColoredTitle(data.exercice.title, Colors.purple),
+          child: ColoredTitle(data.exercice.exercice.title, Colors.purple),
         ),
         Expanded(child: _QuestionList(data, onSelectQuestion))
       ]),
@@ -44,7 +61,7 @@ class _SuccessSquare extends StatelessWidget {
 }
 
 class _QuestionList extends StatelessWidget {
-  final Exercice data;
+  final StudentExerciceInst data;
   final void Function(int index) onSelectQuestion;
 
   const _QuestionList(this.data, this.onSelectQuestion, {Key? key})
@@ -80,7 +97,7 @@ class _QuestionList extends StatelessWidget {
   }
 
   bool allowDoQuestion(int questionIndex) {
-    switch (data.exercice.flow) {
+    switch (data.exercice.exercice.flow) {
       case Flow.sequencial:
         return data.progression.nextQuestion == questionIndex;
       case Flow.parallel:
@@ -89,12 +106,11 @@ class _QuestionList extends StatelessWidget {
   }
 
   _QuestionState state(int questionIndex) {
-    final history = data.progression.questions[questionIndex];
-    if (history.isNotEmpty && history.last) {
+    if (data.progression.isQuestionCompleted(questionIndex)) {
       return _QuestionState.checked;
     }
 
-    if (data.exercice.flow == Flow.sequencial &&
+    if (data.exercice.exercice.flow == Flow.sequencial &&
         data.progression.nextQuestion < questionIndex) {
       return _QuestionState.locked;
     }

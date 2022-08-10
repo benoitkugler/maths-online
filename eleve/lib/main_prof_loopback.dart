@@ -59,7 +59,7 @@ class _QuestionData {
 }
 
 class _ExerciceData {
-  final Exercice exercice;
+  final StudentExerciceInst exercice;
   const _ExerciceData(this.exercice);
 }
 
@@ -161,7 +161,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
         questionData = _QuestionData(questionData!.question, ans.data);
       });
     } else if (event is LoopbackShowExercice) {
-      final ex = Exercice(event.exercice, event.progression);
+      final ex = StudentExerciceInst(event.exercice, event.progression);
       setState(() {
         mode = _Mode.exercice;
         exerciceData = _ExerciceData(ex);
@@ -269,7 +269,7 @@ class _QuestionLoopback extends StatelessWidget {
 
 class _ExerciceLoopback extends StatelessWidget {
   final BuildMode buildMode;
-  final Exercice exercice;
+  final StudentExerciceInst exercice;
   final Future<EvaluateExerciceOut> Function(EvaluateExerciceIn) onEvaluate;
 
   const _ExerciceLoopback(this.buildMode, this.exercice, this.onEvaluate,

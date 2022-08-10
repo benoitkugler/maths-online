@@ -170,9 +170,7 @@ func LoadProgressions(db DB, ids IdProgressionSet) (map[IdProgression]Progressio
 }
 
 type InstantiatedExercice struct {
-	Id        IdExercice
-	Title     string
-	Flow      Flow
+	Exercice  Exercice
 	Questions []InstantiatedQuestion
 	Baremes   []int
 }
@@ -207,9 +205,7 @@ func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
 	ex, links, qus := data.exercice, data.links, data.questions()
 
 	out := InstantiatedExercice{
-		Id:        ex.Id,
-		Title:     ex.Title,
-		Flow:      ex.Flow,
+		Exercice:  ex,
 		Questions: make([]InstantiatedQuestion, len(qus)),
 		Baremes:   make([]int, len(qus)),
 	}

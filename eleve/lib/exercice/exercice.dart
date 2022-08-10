@@ -23,7 +23,7 @@ class ExerciceW extends StatefulWidget {
 
   /// [data] stores the server instantiated exercice with
   /// the initial progression state.
-  final Exercice data;
+  final StudentExerciceInst data;
 
   final Future<EvaluateExerciceOut> Function(EvaluateExerciceIn) onEvaluate;
 
@@ -85,7 +85,7 @@ class _ExerciceWState extends State<ExerciceW> {
 
     // validate the given answer
     final resp = await widget.onEvaluate(EvaluateExerciceIn(
-        widget.data.exercice.id,
+        widget.data.exercice.exercice.id,
         {index: Answer(questions[index].params, currentAnswers[index]!)},
         progression));
 
@@ -150,8 +150,8 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     // all good, lets send the results
-    final resp = await widget.onEvaluate(
-        EvaluateExerciceIn(widget.data.exercice.id, toSend, progression));
+    final resp = await widget.onEvaluate(EvaluateExerciceIn(
+        widget.data.exercice.exercice.id, toSend, progression));
 
     progression = resp.progression; // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
@@ -193,7 +193,7 @@ class _ExerciceWState extends State<ExerciceW> {
 
   void onValideQuestion(QuestionAnswersIn answer) async {
     currentAnswers[questionIndex!] = answer;
-    switch (widget.data.exercice.flow) {
+    switch (widget.data.exercice.exercice.flow) {
       case Flow.sequencial:
         return onValidQuestionSequential();
       case Flow.parallel:
@@ -204,7 +204,7 @@ class _ExerciceWState extends State<ExerciceW> {
   bool get goToPreviousEnabled => questionIndex != null;
 
   bool get goToNextEnabled {
-    switch (widget.data.exercice.flow) {
+    switch (widget.data.exercice.exercice.flow) {
       case Flow.sequencial: // do not show locked questions
         return questionIndex == null ||
             questionIndex! < progression.nextQuestion;
@@ -246,9 +246,12 @@ class _ExerciceWState extends State<ExerciceW> {
         ),
         body: questionIndex == null
             ? ExerciceHome(
-                Exercice(
+                StudentExerciceInst(
                     InstantiatedExercice(
-                        ex.id, ex.title, ex.flow, questions, ex.baremes),
+                        ex.exercice,
+                        // replace the questions
+                        questions,
+                        ex.baremes),
                     progression),
                 (index) => setState(() {
                       questionIndex = index;

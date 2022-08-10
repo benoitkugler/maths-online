@@ -77,9 +77,10 @@ func updateSheetExercices(tx *sql.Tx, idSheet IdSheet, l []ed.IdExercice) error 
 // Student API
 
 type ExerciceProgressionHeader struct {
-	Exercice       ed.Exercice
+	Exercice       ed.Exercice `gomacro-extern:"editor:dart:../shared_gen.dart"`
 	HasProgression bool
-	Progression    ed.ProgressionExt // empty if HasProgression is false
+	// empty if HasProgression is false
+	Progression ed.ProgressionExt `gomacro-extern:"editor:dart:../shared_gen.dart"`
 }
 
 // SheetProgression is the summary of the progression
