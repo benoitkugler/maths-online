@@ -53,7 +53,6 @@ func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 func (ct *loopbackController) setExercice(exercice InstantiatedExercice) {
 	ct.currentExercice = exercice
 	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: ProgressionExt{
-		Progression:  Progression{}, // ignored by the client
 		NextQuestion: ct.currentQuestionIndex,
 		Questions:    make([]QuestionHistory, len(exercice.Questions)),
 	}}

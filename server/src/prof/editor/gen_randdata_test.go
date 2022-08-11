@@ -58,22 +58,6 @@ func randIdQuestion() IdQuestion {
 	return IdQuestion(randint64())
 }
 
-func randProgression() Progression {
-	return Progression{
-		Id:         randIdProgression(),
-		IdExercice: randIdExercice(),
-	}
-}
-
-func randProgressionQuestion() ProgressionQuestion {
-	return ProgressionQuestion{
-		IdProgression: randIdProgression(),
-		IdExercice:    randIdExercice(),
-		Index:         randint(),
-		History:       randQuestionHistory(),
-	}
-}
-
 func randQuestion() Question {
 	return Question{
 		Id:           randIdQuestion(),
@@ -83,10 +67,6 @@ func randQuestion() Question {
 		Description:  randstring(),
 		NeedExercice: randsql_NullInt64(),
 	}
-}
-
-func randQuestionHistory() QuestionHistory {
-	return QuestionHistory(randSlicebool())
 }
 
 func randQuestionTag() QuestionTag {

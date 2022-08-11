@@ -131,20 +131,6 @@ func TestCRUDExercice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// progression
-	prog, err := Progression{IdExercice: ex.Id}.Insert(tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = InsertManyProgressionQuestions(tx,
-		ProgressionQuestion{IdProgression: prog.Id, IdExercice: prog.IdExercice, Index: 0, History: randQuestionHistory()},
-		ProgressionQuestion{IdProgression: prog.Id, IdExercice: prog.IdExercice, Index: 1, History: randQuestionHistory()},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	if err = tx.Commit(); err != nil {
 		t.Fatal(err)
 	}

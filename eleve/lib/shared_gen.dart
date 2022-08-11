@@ -205,9 +205,6 @@ dynamic flowToJson(Flow item) => item.toValue();
 // github.com/benoitkugler/maths-online/prof/editor.IdExercice
 typedef IdExercice = int;
 
-// github.com/benoitkugler/maths-online/prof/editor.IdProgression
-typedef IdProgression = int;
-
 // github.com/benoitkugler/maths-online/prof/editor.IdQuestion
 typedef IdQuestion = int;
 
@@ -301,53 +298,27 @@ JSON parametersToJson(Parameters item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.Progression
-class Progression {
-  final IdProgression id;
-  final IdExercice idExercice;
-
-  const Progression(this.id, this.idExercice);
-
-  @override
-  String toString() {
-    return "Progression($id, $idExercice)";
-  }
-}
-
-Progression progressionFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return Progression(intFromJson(json['Id']), intFromJson(json['IdExercice']));
-}
-
-JSON progressionToJson(Progression item) {
-  return {"Id": intToJson(item.id), "IdExercice": intToJson(item.idExercice)};
-}
-
 // github.com/benoitkugler/maths-online/prof/editor.ProgressionExt
 class ProgressionExt {
-  final Progression progression;
   final List<QuestionHistory> questions;
   final int nextQuestion;
 
-  const ProgressionExt(this.progression, this.questions, this.nextQuestion);
+  const ProgressionExt(this.questions, this.nextQuestion);
 
   @override
   String toString() {
-    return "ProgressionExt($progression, $questions, $nextQuestion)";
+    return "ProgressionExt($questions, $nextQuestion)";
   }
 }
 
 ProgressionExt progressionExtFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ProgressionExt(
-      progressionFromJson(json['Progression']),
-      listListBoolFromJson(json['Questions']),
+  return ProgressionExt(listListBoolFromJson(json['Questions']),
       intFromJson(json['NextQuestion']));
 }
 
 JSON progressionExtToJson(ProgressionExt item) {
   return {
-    "Progression": progressionToJson(item.progression),
     "Questions": listListBoolToJson(item.questions),
     "NextQuestion": intToJson(item.nextQuestion)
   };

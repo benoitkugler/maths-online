@@ -103,6 +103,16 @@
             "Output": "../../prof/src/controller/trivial_config_socket_gen.ts"
         }
     ],
+    "tasks/models_sql.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "tasks/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "tasks/gen_create.sql"
+        }
+    ],
     "prof/homework/models_sql.go": [
         {
             "Mode": "go/sqlcrud",

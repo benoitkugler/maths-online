@@ -5,48 +5,17 @@ import '../shared_gen.dart';
 // github.com/benoitkugler/maths-online/pass.EncryptedID
 typedef EncryptedID = String;
 
-// github.com/benoitkugler/maths-online/prof/homework.ExerciceProgressionHeader
-class ExerciceProgressionHeader {
-  final Exercice exercice;
-  final bool hasProgression;
-  final ProgressionExt progression;
-  final int mark;
-  final int bareme;
-
-  const ExerciceProgressionHeader(this.exercice, this.hasProgression,
-      this.progression, this.mark, this.bareme);
-
-  @override
-  String toString() {
-    return "ExerciceProgressionHeader($exercice, $hasProgression, $progression, $mark, $bareme)";
-  }
-}
-
-ExerciceProgressionHeader exerciceProgressionHeaderFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return ExerciceProgressionHeader(
-      exerciceFromJson(json['Exercice']),
-      boolFromJson(json['HasProgression']),
-      progressionExtFromJson(json['Progression']),
-      intFromJson(json['Mark']),
-      intFromJson(json['Bareme']));
-}
-
-JSON exerciceProgressionHeaderToJson(ExerciceProgressionHeader item) {
-  return {
-    "Exercice": exerciceToJson(item.exercice),
-    "HasProgression": boolToJson(item.hasProgression),
-    "Progression": progressionExtToJson(item.progression),
-    "Mark": intToJson(item.mark),
-    "Bareme": intToJson(item.bareme)
-  };
-}
-
 // github.com/benoitkugler/maths-online/prof/teacher.IdClassroom
 typedef IdClassroom = int;
 
+// github.com/benoitkugler/maths-online/prof/editor.IdExercice
+typedef IdExercice = int;
+
 // github.com/benoitkugler/maths-online/prof/homework.IdSheet
 typedef IdSheet = int;
+
+// github.com/benoitkugler/maths-online/tasks.IdTask
+typedef IdTask = int;
 
 // github.com/benoitkugler/maths-online/prof/homework.Notation
 enum Notation { noNotation, successNotation }
@@ -108,26 +77,26 @@ JSON sheetToJson(Sheet item) {
 // github.com/benoitkugler/maths-online/prof/homework.SheetProgression
 class SheetProgression {
   final Sheet sheet;
-  final List<ExerciceProgressionHeader> exercices;
+  final List<TaskProgressionHeader> tasks;
 
-  const SheetProgression(this.sheet, this.exercices);
+  const SheetProgression(this.sheet, this.tasks);
 
   @override
   String toString() {
-    return "SheetProgression($sheet, $exercices)";
+    return "SheetProgression($sheet, $tasks)";
   }
 }
 
 SheetProgression sheetProgressionFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return SheetProgression(sheetFromJson(json['Sheet']),
-      listExerciceProgressionHeaderFromJson(json['Exercices']));
+      listTaskProgressionHeaderFromJson(json['Tasks']));
 }
 
 JSON sheetProgressionToJson(SheetProgression item) {
   return {
     "Sheet": sheetToJson(item.sheet),
-    "Exercices": listExerciceProgressionHeaderToJson(item.exercices)
+    "Tasks": listTaskProgressionHeaderToJson(item.tasks)
   };
 }
 
@@ -138,33 +107,27 @@ String stringToJson(String item) => item;
 // github.com/benoitkugler/maths-online/prof/homework.StudentEvaluateExerciceIn
 class StudentEvaluateExerciceIn {
   final EncryptedID studentID;
-  final IdSheet idSheet;
-  final int index;
+  final IdTask idTask;
   final EvaluateExerciceIn ex;
 
-  const StudentEvaluateExerciceIn(
-      this.studentID, this.idSheet, this.index, this.ex);
+  const StudentEvaluateExerciceIn(this.studentID, this.idTask, this.ex);
 
   @override
   String toString() {
-    return "StudentEvaluateExerciceIn($studentID, $idSheet, $index, $ex)";
+    return "StudentEvaluateExerciceIn($studentID, $idTask, $ex)";
   }
 }
 
 StudentEvaluateExerciceIn studentEvaluateExerciceInFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return StudentEvaluateExerciceIn(
-      stringFromJson(json['StudentID']),
-      intFromJson(json['IdSheet']),
-      intFromJson(json['Index']),
-      evaluateExerciceInFromJson(json['Ex']));
+  return StudentEvaluateExerciceIn(stringFromJson(json['StudentID']),
+      intFromJson(json['IdTask']), evaluateExerciceInFromJson(json['Ex']));
 }
 
 JSON studentEvaluateExerciceInToJson(StudentEvaluateExerciceIn item) {
   return {
     "StudentID": stringToJson(item.studentID),
-    "IdSheet": intToJson(item.idSheet),
-    "Index": intToJson(item.index),
+    "IdTask": intToJson(item.idTask),
     "Ex": evaluateExerciceInToJson(item.ex)
   };
 }
@@ -195,6 +158,46 @@ JSON studentEvaluateExerciceOutToJson(StudentEvaluateExerciceOut item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/tasks.TaskProgressionHeader
+class TaskProgressionHeader {
+  final IdExercice idExercice;
+  final String titleExercice;
+  final bool hasProgression;
+  final ProgressionExt progression;
+  final int mark;
+  final int bareme;
+
+  const TaskProgressionHeader(this.idExercice, this.titleExercice,
+      this.hasProgression, this.progression, this.mark, this.bareme);
+
+  @override
+  String toString() {
+    return "TaskProgressionHeader($idExercice, $titleExercice, $hasProgression, $progression, $mark, $bareme)";
+  }
+}
+
+TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return TaskProgressionHeader(
+      intFromJson(json['IdExercice']),
+      stringFromJson(json['TitleExercice']),
+      boolFromJson(json['HasProgression']),
+      progressionExtFromJson(json['Progression']),
+      intFromJson(json['Mark']),
+      intFromJson(json['Bareme']));
+}
+
+JSON taskProgressionHeaderToJson(TaskProgressionHeader item) {
+  return {
+    "IdExercice": intToJson(item.idExercice),
+    "TitleExercice": stringToJson(item.titleExercice),
+    "HasProgression": boolToJson(item.hasProgression),
+    "Progression": progressionExtToJson(item.progression),
+    "Mark": intToJson(item.mark),
+    "Bareme": intToJson(item.bareme)
+  };
+}
+
 // github.com/benoitkugler/maths-online/prof/homework.Time
 typedef Time = DateTime;
 
@@ -211,21 +214,6 @@ int intFromJson(dynamic json) => json as int;
 
 int intToJson(int item) => item;
 
-List<ExerciceProgressionHeader> listExerciceProgressionHeaderFromJson(
-    dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>)
-      .map(exerciceProgressionHeaderFromJson)
-      .toList();
-}
-
-List<dynamic> listExerciceProgressionHeaderToJson(
-    List<ExerciceProgressionHeader> item) {
-  return item.map(exerciceProgressionHeaderToJson).toList();
-}
-
 List<SheetProgression> listSheetProgressionFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -235,4 +223,16 @@ List<SheetProgression> listSheetProgressionFromJson(dynamic json) {
 
 List<dynamic> listSheetProgressionToJson(List<SheetProgression> item) {
   return item.map(sheetProgressionToJson).toList();
+}
+
+List<TaskProgressionHeader> listTaskProgressionHeaderFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(taskProgressionHeaderFromJson).toList();
+}
+
+List<dynamic> listTaskProgressionHeaderToJson(
+    List<TaskProgressionHeader> item) {
+  return item.map(taskProgressionHeaderToJson).toList();
 }

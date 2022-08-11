@@ -7,8 +7,8 @@ import (
 	"database/sql/driver"
 	"time"
 
-	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/tasks"
 	"github.com/lib/pq"
 )
 
@@ -136,6 +136,31 @@ func DeleteSheetsByIDs(tx DB, ids ...IdSheet) ([]IdSheet, error) {
 	return ScanIdSheetArray(rows)
 }
 
+// ByIdClassroom returns a map with 'IdClassroom' as keys.
+func (items Sheets) ByIdClassroom() map[teacher.IdClassroom]Sheets {
+	out := make(map[teacher.IdClassroom]Sheets)
+	for _, target := range items {
+		dict := out[target.IdClassroom]
+		if dict == nil {
+			dict = make(Sheets)
+		}
+		dict[target.Id] = target
+		out[target.IdClassroom] = dict
+	}
+	return out
+}
+
+// IdClassrooms returns the list of ids of IdClassroom
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Sheets) IdClassrooms() []teacher.IdClassroom {
+	out := make([]teacher.IdClassroom, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdClassroom)
+	}
+	return out
+}
+
 func SelectSheetsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (Sheets, error) {
 	rows, err := tx.Query("SELECT * FROM sheets WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms))
 	if err != nil {
@@ -152,32 +177,32 @@ func DeleteSheetsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) ([]I
 	return ScanIdSheetArray(rows)
 }
 
-func scanOneSheetExercice(row scanner) (SheetExercice, error) {
-	var item SheetExercice
+func scanOneSheetTask(row scanner) (SheetTask, error) {
+	var item SheetTask
 	err := row.Scan(
 		&item.IdSheet,
-		&item.IdExercice,
 		&item.Index,
+		&item.IdTask,
 	)
 	return item, err
 }
 
-func ScanSheetExercice(row *sql.Row) (SheetExercice, error) { return scanOneSheetExercice(row) }
+func ScanSheetTask(row *sql.Row) (SheetTask, error) { return scanOneSheetTask(row) }
 
-// SelectAll returns all the items in the sheet_exercices table.
-func SelectAllSheetExercices(db DB) (SheetExercices, error) {
-	rows, err := db.Query("SELECT * FROM sheet_exercices")
+// SelectAll returns all the items in the sheet_tasks table.
+func SelectAllSheetTasks(db DB) (SheetTasks, error) {
+	rows, err := db.Query("SELECT * FROM sheet_tasks")
 	if err != nil {
 		return nil, err
 	}
-	return ScanSheetExercices(rows)
+	return ScanSheetTasks(rows)
 }
 
-type SheetExercices []SheetExercice
+type SheetTasks []SheetTask
 
-func ScanSheetExercices(rs *sql.Rows) (SheetExercices, error) {
+func ScanSheetTasks(rs *sql.Rows) (SheetTasks, error) {
 	var (
-		item SheetExercice
+		item SheetTask
 		err  error
 	)
 	defer func() {
@@ -186,9 +211,9 @@ func ScanSheetExercices(rs *sql.Rows) (SheetExercices, error) {
 			err = errClose
 		}
 	}()
-	structs := make(SheetExercices, 0, 16)
+	structs := make(SheetTasks, 0, 16)
 	for rs.Next() {
-		item, err = scanOneSheetExercice(rs)
+		item, err = scanOneSheetTask(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -200,24 +225,24 @@ func ScanSheetExercices(rs *sql.Rows) (SheetExercices, error) {
 	return structs, nil
 }
 
-// Insert the links SheetExercice in the database.
+// Insert the links SheetTask in the database.
 // It is a no-op if 'items' is empty.
-func InsertManySheetExercices(tx *sql.Tx, items ...SheetExercice) error {
+func InsertManySheetTasks(tx *sql.Tx, items ...SheetTask) error {
 	if len(items) == 0 {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("sheet_exercices",
+	stmt, err := tx.Prepare(pq.CopyIn("sheet_tasks",
 		"idsheet",
-		"idexercice",
 		"index",
+		"idtask",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdSheet, item.IdExercice, item.Index)
+		_, err = stmt.Exec(item.IdSheet, item.Index, item.IdTask)
 		if err != nil {
 			return err
 		}
@@ -233,16 +258,16 @@ func InsertManySheetExercices(tx *sql.Tx, items ...SheetExercice) error {
 	return nil
 }
 
-// Delete the link SheetExercice from the database.
-// Only the foreign keys IdSheet, IdExercice fields are used in 'item'.
-func (item SheetExercice) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM sheet_exercices WHERE IdSheet = $1 AND IdExercice = $2;`, item.IdSheet, item.IdExercice)
+// Delete the link SheetTask from the database.
+// Only the foreign keys IdSheet, IdTask fields are used in 'item'.
+func (item SheetTask) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM sheet_tasks WHERE IdSheet = $1 AND IdTask = $2;`, item.IdSheet, item.IdTask)
 	return err
 }
 
 // ByIdSheet returns a map with 'IdSheet' as keys.
-func (items SheetExercices) ByIdSheet() map[IdSheet]SheetExercices {
-	out := make(map[IdSheet]SheetExercices)
+func (items SheetTasks) ByIdSheet() map[IdSheet]SheetTasks {
+	out := make(map[IdSheet]SheetTasks)
 	for _, target := range items {
 		out[target.IdSheet] = append(out[target.IdSheet], target)
 	}
@@ -252,7 +277,7 @@ func (items SheetExercices) ByIdSheet() map[IdSheet]SheetExercices {
 // IdSheets returns the list of ids of IdSheet
 // contained in this link table.
 // They are not garanteed to be distinct.
-func (items SheetExercices) IdSheets() []IdSheet {
+func (items SheetTasks) IdSheets() []IdSheet {
 	out := make([]IdSheet, len(items))
 	for index, target := range items {
 		out[index] = target.IdSheet
@@ -260,304 +285,76 @@ func (items SheetExercices) IdSheets() []IdSheet {
 	return out
 }
 
-func SelectSheetExercicesByIdSheets(tx DB, idSheets ...IdSheet) (SheetExercices, error) {
-	rows, err := tx.Query("SELECT * FROM sheet_exercices WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets))
+func SelectSheetTasksByIdSheets(tx DB, idSheets ...IdSheet) (SheetTasks, error) {
+	rows, err := tx.Query("SELECT * FROM sheet_tasks WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets))
 	if err != nil {
 		return nil, err
 	}
-	return ScanSheetExercices(rows)
+	return ScanSheetTasks(rows)
 }
 
-func DeleteSheetExercicesByIdSheets(tx DB, idSheets ...IdSheet) (SheetExercices, error) {
-	rows, err := tx.Query("DELETE FROM sheet_exercices WHERE idsheet = ANY($1) RETURNING *", IdSheetArrayToPQ(idSheets))
+func DeleteSheetTasksByIdSheets(tx DB, idSheets ...IdSheet) (SheetTasks, error) {
+	rows, err := tx.Query("DELETE FROM sheet_tasks WHERE idsheet = ANY($1) RETURNING *", IdSheetArrayToPQ(idSheets))
 	if err != nil {
 		return nil, err
 	}
-	return ScanSheetExercices(rows)
+	return ScanSheetTasks(rows)
 }
 
-// ByIdExercice returns a map with 'IdExercice' as keys.
-func (items SheetExercices) ByIdExercice() map[editor.IdExercice]SheetExercices {
-	out := make(map[editor.IdExercice]SheetExercices)
+// ByIdTask returns a map with 'IdTask' as keys.
+func (items SheetTasks) ByIdTask() map[tasks.IdTask]SheetTask {
+	out := make(map[tasks.IdTask]SheetTask, len(items))
 	for _, target := range items {
-		out[target.IdExercice] = append(out[target.IdExercice], target)
+		out[target.IdTask] = target
 	}
 	return out
 }
 
-// IdExercices returns the list of ids of IdExercice
+// IdTasks returns the list of ids of IdTask
 // contained in this link table.
 // They are not garanteed to be distinct.
-func (items SheetExercices) IdExercices() []editor.IdExercice {
-	out := make([]editor.IdExercice, len(items))
+func (items SheetTasks) IdTasks() []tasks.IdTask {
+	out := make([]tasks.IdTask, len(items))
 	for index, target := range items {
-		out[index] = target.IdExercice
+		out[index] = target.IdTask
 	}
 	return out
 }
 
-func SelectSheetExercicesByIdExercices(tx DB, idExercices ...editor.IdExercice) (SheetExercices, error) {
-	rows, err := tx.Query("SELECT * FROM sheet_exercices WHERE idexercice = ANY($1)", editor.IdExerciceArrayToPQ(idExercices))
-	if err != nil {
-		return nil, err
-	}
-	return ScanSheetExercices(rows)
-}
-
-func DeleteSheetExercicesByIdExercices(tx DB, idExercices ...editor.IdExercice) (SheetExercices, error) {
-	rows, err := tx.Query("DELETE FROM sheet_exercices WHERE idexercice = ANY($1) RETURNING *", editor.IdExerciceArrayToPQ(idExercices))
-	if err != nil {
-		return nil, err
-	}
-	return ScanSheetExercices(rows)
-}
-
-func scanOneStudentProgression(row scanner) (StudentProgression, error) {
-	var item StudentProgression
-	err := row.Scan(
-		&item.IdStudent,
-		&item.IdSheet,
-		&item.Index,
-		&item.IdExercice,
-		&item.IdProgression,
-	)
-	return item, err
-}
-
-func ScanStudentProgression(row *sql.Row) (StudentProgression, error) {
-	return scanOneStudentProgression(row)
-}
-
-// SelectAll returns all the items in the student_progressions table.
-func SelectAllStudentProgressions(db DB) (StudentProgressions, error) {
-	rows, err := db.Query("SELECT * FROM student_progressions")
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-type StudentProgressions []StudentProgression
-
-func ScanStudentProgressions(rs *sql.Rows) (StudentProgressions, error) {
-	var (
-		item StudentProgression
-		err  error
-	)
-	defer func() {
-		errClose := rs.Close()
-		if err == nil {
-			err = errClose
-		}
-	}()
-	structs := make(StudentProgressions, 0, 16)
-	for rs.Next() {
-		item, err = scanOneStudentProgression(rs)
-		if err != nil {
-			return nil, err
-		}
-		structs = append(structs, item)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return structs, nil
-}
-
-// Insert the links StudentProgression in the database.
-// It is a no-op if 'items' is empty.
-func InsertManyStudentProgressions(tx *sql.Tx, items ...StudentProgression) error {
-	if len(items) == 0 {
-		return nil
-	}
-
-	stmt, err := tx.Prepare(pq.CopyIn("student_progressions",
-		"idstudent",
-		"idsheet",
-		"index",
-		"idexercice",
-		"idprogression",
-	))
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		_, err = stmt.Exec(item.IdStudent, item.IdSheet, item.Index, item.IdExercice, item.IdProgression)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return err
-	}
-
-	if err = stmt.Close(); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Delete the link StudentProgression from the database.
-// Only the foreign keys IdStudent, IdSheet, IdExercice, IdProgression fields are used in 'item'.
-func (item StudentProgression) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM student_progressions WHERE IdStudent = $1 AND IdSheet = $2 AND IdExercice = $3 AND IdProgression = $4;`, item.IdStudent, item.IdSheet, item.IdExercice, item.IdProgression)
-	return err
-}
-
-// ByIdStudent returns a map with 'IdStudent' as keys.
-func (items StudentProgressions) ByIdStudent() map[teacher.IdStudent]StudentProgressions {
-	out := make(map[teacher.IdStudent]StudentProgressions)
-	for _, target := range items {
-		out[target.IdStudent] = append(out[target.IdStudent], target)
-	}
-	return out
-}
-
-// IdStudents returns the list of ids of IdStudent
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items StudentProgressions) IdStudents() []teacher.IdStudent {
-	out := make([]teacher.IdStudent, len(items))
-	for index, target := range items {
-		out[index] = target.IdStudent
-	}
-	return out
-}
-
-func SelectStudentProgressionsByIdStudents(tx DB, idStudents ...teacher.IdStudent) (StudentProgressions, error) {
-	rows, err := tx.Query("SELECT * FROM student_progressions WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-func DeleteStudentProgressionsByIdStudents(tx DB, idStudents ...teacher.IdStudent) (StudentProgressions, error) {
-	rows, err := tx.Query("DELETE FROM student_progressions WHERE idstudent = ANY($1) RETURNING *", teacher.IdStudentArrayToPQ(idStudents))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-// ByIdSheet returns a map with 'IdSheet' as keys.
-func (items StudentProgressions) ByIdSheet() map[IdSheet]StudentProgressions {
-	out := make(map[IdSheet]StudentProgressions)
-	for _, target := range items {
-		out[target.IdSheet] = append(out[target.IdSheet], target)
-	}
-	return out
-}
-
-// IdSheets returns the list of ids of IdSheet
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items StudentProgressions) IdSheets() []IdSheet {
-	out := make([]IdSheet, len(items))
-	for index, target := range items {
-		out[index] = target.IdSheet
-	}
-	return out
-}
-
-func SelectStudentProgressionsByIdSheets(tx DB, idSheets ...IdSheet) (StudentProgressions, error) {
-	rows, err := tx.Query("SELECT * FROM student_progressions WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-func DeleteStudentProgressionsByIdSheets(tx DB, idSheets ...IdSheet) (StudentProgressions, error) {
-	rows, err := tx.Query("DELETE FROM student_progressions WHERE idsheet = ANY($1) RETURNING *", IdSheetArrayToPQ(idSheets))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-// ByIdExercice returns a map with 'IdExercice' as keys.
-func (items StudentProgressions) ByIdExercice() map[editor.IdExercice]StudentProgressions {
-	out := make(map[editor.IdExercice]StudentProgressions)
-	for _, target := range items {
-		out[target.IdExercice] = append(out[target.IdExercice], target)
-	}
-	return out
-}
-
-// IdExercices returns the list of ids of IdExercice
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items StudentProgressions) IdExercices() []editor.IdExercice {
-	out := make([]editor.IdExercice, len(items))
-	for index, target := range items {
-		out[index] = target.IdExercice
-	}
-	return out
-}
-
-func SelectStudentProgressionsByIdExercices(tx DB, idExercices ...editor.IdExercice) (StudentProgressions, error) {
-	rows, err := tx.Query("SELECT * FROM student_progressions WHERE idexercice = ANY($1)", editor.IdExerciceArrayToPQ(idExercices))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-func DeleteStudentProgressionsByIdExercices(tx DB, idExercices ...editor.IdExercice) (StudentProgressions, error) {
-	rows, err := tx.Query("DELETE FROM student_progressions WHERE idexercice = ANY($1) RETURNING *", editor.IdExerciceArrayToPQ(idExercices))
-	if err != nil {
-		return nil, err
-	}
-	return ScanStudentProgressions(rows)
-}
-
-// ByIdProgression returns a map with 'IdProgression' as keys.
-func (items StudentProgressions) ByIdProgression() map[editor.IdProgression]StudentProgression {
-	out := make(map[editor.IdProgression]StudentProgression, len(items))
-	for _, target := range items {
-		out[target.IdProgression] = target
-	}
-	return out
-}
-
-// IdProgressions returns the list of ids of IdProgression
-// contained in this link table.
-// They are not garanteed to be distinct.
-func (items StudentProgressions) IdProgressions() []editor.IdProgression {
-	out := make([]editor.IdProgression, len(items))
-	for index, target := range items {
-		out[index] = target.IdProgression
-	}
-	return out
-}
-
-// SelectStudentProgressionByIdProgression return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectStudentProgressionByIdProgression(tx DB, idProgression editor.IdProgression) (item StudentProgression, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM student_progressions WHERE idprogression = $1", idProgression)
-	item, err = ScanStudentProgression(row)
+// SelectSheetTaskByIdTask return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectSheetTaskByIdTask(tx DB, idTask tasks.IdTask) (item SheetTask, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM sheet_tasks WHERE idtask = $1", idTask)
+	item, err = ScanSheetTask(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
 	return item, true, err
 }
 
-func SelectStudentProgressionsByIdProgressions(tx DB, idProgressions ...editor.IdProgression) (StudentProgressions, error) {
-	rows, err := tx.Query("SELECT * FROM student_progressions WHERE idprogression = ANY($1)", editor.IdProgressionArrayToPQ(idProgressions))
+func SelectSheetTasksByIdTasks(tx DB, idTasks ...tasks.IdTask) (SheetTasks, error) {
+	rows, err := tx.Query("SELECT * FROM sheet_tasks WHERE idtask = ANY($1)", tasks.IdTaskArrayToPQ(idTasks))
 	if err != nil {
 		return nil, err
 	}
-	return ScanStudentProgressions(rows)
+	return ScanSheetTasks(rows)
 }
 
-func DeleteStudentProgressionsByIdProgressions(tx DB, idProgressions ...editor.IdProgression) (StudentProgressions, error) {
-	rows, err := tx.Query("DELETE FROM student_progressions WHERE idprogression = ANY($1) RETURNING *", editor.IdProgressionArrayToPQ(idProgressions))
+func DeleteSheetTasksByIdTasks(tx DB, idTasks ...tasks.IdTask) (SheetTasks, error) {
+	rows, err := tx.Query("DELETE FROM sheet_tasks WHERE idtask = ANY($1) RETURNING *", tasks.IdTaskArrayToPQ(idTasks))
 	if err != nil {
 		return nil, err
 	}
-	return ScanStudentProgressions(rows)
+	return ScanSheetTasks(rows)
+}
+
+// SelectSheetTaskByIdSheetAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectSheetTaskByIdSheetAndIndex(tx DB, idSheet IdSheet, index int) (item SheetTask, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM sheet_tasks WHERE IdSheet = $1 AND Index = $2", idSheet, index)
+	item, err = ScanSheetTask(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func (s *Time) Scan(src interface{}) error {
@@ -617,49 +414,6 @@ func (s IdSheetSet) Has(id IdSheet) bool { return s[id] }
 
 func (s IdSheetSet) Keys() []IdSheet {
 	out := make([]IdSheet, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
-}
-
-func int64ArrayToPQ(ids []int64) pq.Int64Array { return ids }
-
-// Scanint64Array scans the result of a query returning a
-// list of ID's.
-func Scanint64Array(rs *sql.Rows) ([]int64, error) {
-	defer rs.Close()
-	ints := make([]int64, 0, 16)
-	var err error
-	for rs.Next() {
-		var s int64
-		if err = rs.Scan(&s); err != nil {
-			return nil, err
-		}
-		ints = append(ints, s)
-	}
-	if err = rs.Err(); err != nil {
-		return nil, err
-	}
-	return ints, nil
-}
-
-type int64Set map[int64]bool
-
-func Newint64SetFrom(ids []int64) int64Set {
-	out := make(int64Set, len(ids))
-	for _, key := range ids {
-		out[key] = true
-	}
-	return out
-}
-
-func (s int64Set) Add(id int64) { s[id] = true }
-
-func (s int64Set) Has(id int64) bool { return s[id] }
-
-func (s int64Set) Keys() []int64 {
-	out := make([]int64, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}

@@ -3,8 +3,8 @@ package homework
 import (
 	"time"
 
-	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/tasks"
 )
 
 type IdSheet int64
@@ -38,25 +38,10 @@ type Sheet struct {
 }
 
 // gomacro:SQL ADD PRIMARY KEY (IdSheet, Index)
-
-type SheetExercice struct {
-	IdSheet    IdSheet `gomacro-sql-on-delete:"CASCADE"`
-	IdExercice editor.IdExercice
-	Index      int `json:"-"` // order in the list
-}
-
-// StudentProgression is a link table attributing one
-// progression on a sheet exercice to a student.
-// gomacro:SQL ADD FOREIGN KEY (IdProgression, IdExercice) REFERENCES Progression (Id, IdExercice) ON DELETE CASCADE
-// gomacro:SQL ADD FOREIGN KEY (IdSheet, IdExercice, Index) REFERENCES SheetExercice ON DELETE CASCADE
-// gomacro:SQL ADD UNIQUE(IdProgression)
-// gomacro:SQL ADD UNIQUE(IdStudent, IdSheet, Index)
-type StudentProgression struct {
-	IdStudent teacher.IdStudent
-
-	IdSheet    IdSheet
-	Index      int               // in the sheet
-	IdExercice editor.IdExercice // to ensure consistency
-
-	IdProgression editor.IdProgression
+// A task may only appear in one sheet
+// gomacro:SQL ADD UNIQUE (IdTask)
+type SheetTask struct {
+	IdSheet IdSheet `gomacro-sql-on-delete:"CASCADE"`
+	Index   int     `json:"-"` // order in the list
+	IdTask  tasks.IdTask
 }

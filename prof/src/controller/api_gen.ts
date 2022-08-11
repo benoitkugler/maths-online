@@ -332,6 +332,8 @@ export type IdQuestion = number;
 export type IdSheet = number;
 // github.com/benoitkugler/maths-online/prof/teacher.IdStudent
 export type IdStudent = number;
+// github.com/benoitkugler/maths-online/tasks.IdTask
+export type IdTask = number;
 // github.com/benoitkugler/maths-online/prof/teacher.IdTeacher
 export type IdTeacher = number;
 // github.com/benoitkugler/maths-online/prof/trivial.IdTrivial
@@ -638,7 +640,7 @@ export interface Sheet {
 // github.com/benoitkugler/maths-online/prof/homework.SheetExt
 export interface SheetExt {
   Sheet: Sheet;
-  Exercices: ExerciceHeader[] | null;
+  Tasks: TaskExt[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/questions.SignSymbol
 export enum SignSymbol {
@@ -685,6 +687,12 @@ export interface TableFieldBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/homework.TaskExt
+export interface TaskExt {
+  Id: IdTask;
+  Exercice: ExerciceHeader;
+  NbProgressions: number;
 }
 // github.com/benoitkugler/maths-online/maths/questions.TextBlock
 export interface TextBlock {
@@ -746,11 +754,6 @@ export interface UpdateGroupTagsIn {
 // github.com/benoitkugler/maths-online/prof/editor.UpdateGroupTagsOut
 export interface UpdateGroupTagsOut {
   Tags: { [key: IdQuestion]: string[] | null } | null;
-}
-// github.com/benoitkugler/maths-online/prof/homework.UpdateSheetIn
-export interface UpdateSheetIn {
-  Sheet: Sheet;
-  Exercices: IdExercice[] | null;
 }
 // github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
 export interface UpdateTagsIn {
@@ -2024,7 +2027,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkCreateSheet(data: SheetExt): void;
 
-  protected async rawHomeworkUpdateSheet(params: UpdateSheetIn) {
+  protected async rawHomeworkUpdateSheet(params: Sheet) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
@@ -2033,7 +2036,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkUpdateSheet wraps rawHomeworkUpdateSheet and handles the error */
-  async HomeworkUpdateSheet(params: UpdateSheetIn) {
+  async HomeworkUpdateSheet(params: Sheet) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkUpdateSheet(params);

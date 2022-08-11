@@ -64,23 +64,3 @@ type ExerciceQuestion struct {
 	Bareme     int        `json:"bareme"`
 	Index      int        `json:"-"`
 }
-
-// Progression is the table storing the student progression
-// for one exercice.
-// Note that this data structure may also be used in memory,
-// for instance for the editor loopback.
-// gomacro:SQL ADD UNIQUE(Id, IdExercice)
-type Progression struct {
-	Id         IdProgression
-	IdExercice IdExercice `gomacro-sql-on-delete:"CASCADE"`
-}
-
-// We enforce consistency with the additional `IdExercice` field
-// gomacro:SQL ADD FOREIGN KEY (IdExercice, Index) REFERENCES ExerciceQuestion ON DELETE CASCADE
-// gomacro:SQL ADD FOREIGN KEY (IdProgression, IdExercice) REFERENCES Progression (Id, IdExercice) ON DELETE CASCADE
-type ProgressionQuestion struct {
-	IdProgression IdProgression   `json:"id_progression" gomacro-sql-on-delete:"CASCADE"`
-	IdExercice    IdExercice      `json:"id_exercice" gomacro-sql-on-delete:"CASCADE"`
-	Index         int             `json:"index"` // in the question list
-	History       QuestionHistory `json:"history"`
-}

@@ -131,6 +131,31 @@ func DeleteClassroomsByIDs(tx DB, ids ...IdClassroom) ([]IdClassroom, error) {
 	return ScanIdClassroomArray(rows)
 }
 
+// ByIdTeacher returns a map with 'IdTeacher' as keys.
+func (items Classrooms) ByIdTeacher() map[IdTeacher]Classrooms {
+	out := make(map[IdTeacher]Classrooms)
+	for _, target := range items {
+		dict := out[target.IdTeacher]
+		if dict == nil {
+			dict = make(Classrooms)
+		}
+		dict[target.Id] = target
+		out[target.IdTeacher] = dict
+	}
+	return out
+}
+
+// IdTeachers returns the list of ids of IdTeacher
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Classrooms) IdTeachers() []IdTeacher {
+	out := make([]IdTeacher, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTeacher)
+	}
+	return out
+}
+
 func SelectClassroomsByIdTeachers(tx DB, idTeachers ...IdTeacher) (Classrooms, error) {
 	rows, err := tx.Query("SELECT * FROM classrooms WHERE idteacher = ANY($1)", IdTeacherArrayToPQ(idTeachers))
 	if err != nil {
@@ -259,6 +284,31 @@ func DeleteStudentsByIDs(tx DB, ids ...IdStudent) ([]IdStudent, error) {
 	return ScanIdStudentArray(rows)
 }
 
+// ByIdClassroom returns a map with 'IdClassroom' as keys.
+func (items Students) ByIdClassroom() map[IdClassroom]Students {
+	out := make(map[IdClassroom]Students)
+	for _, target := range items {
+		dict := out[target.IdClassroom]
+		if dict == nil {
+			dict = make(Students)
+		}
+		dict[target.Id] = target
+		out[target.IdClassroom] = dict
+	}
+	return out
+}
+
+// IdClassrooms returns the list of ids of IdClassroom
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Students) IdClassrooms() []IdClassroom {
+	out := make([]IdClassroom, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdClassroom)
+	}
+	return out
+}
+
 func SelectStudentsByIdClassrooms(tx DB, idClassrooms ...IdClassroom) (Students, error) {
 	rows, err := tx.Query("SELECT * FROM students WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms))
 	if err != nil {
@@ -382,6 +432,16 @@ func DeleteTeachersByIDs(tx DB, ids ...IdTeacher) ([]IdTeacher, error) {
 		return nil, err
 	}
 	return ScanIdTeacherArray(rows)
+}
+
+// SelectTeacherByMail return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectTeacherByMail(tx DB, mail string) (item Teacher, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM teachers WHERE Mail = $1", mail)
+	item, err = ScanTeacher(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func (s *Date) Scan(src interface{}) error {

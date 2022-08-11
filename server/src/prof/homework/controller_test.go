@@ -16,7 +16,7 @@ type sample struct {
 }
 
 func setupDB(t *testing.T) (db tu.TestDB, out sample) {
-	db = tu.NewTestDB(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "gen_create.sql")
+	db = tu.NewTestDB(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "../../tasks/gen_create.sql", "gen_create.sql")
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	tu.Assert(t, err == nil)
@@ -50,10 +50,14 @@ func TestCRUDSheet(t *testing.T) {
 	updated := randSheet()
 	updated.Id = sh.Id
 	updated.IdClassroom = class.Id
-	err = ct.updateSheet(UpdateSheetIn{
-		Sheet:     updated,
-		Exercices: []editor.IdExercice{exe1.Id, exe2.Id, exe1.Id},
-	}, userID)
+	err = ct.updateSheet(updated, userID)
+	tu.Assert(t, err == nil)
+
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
+	tu.Assert(t, err == nil)
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh.Id, IdExercice: exe2.Id}, userID)
+	tu.Assert(t, err == nil)
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
 
 	l, err = ct.getSheets(userID)
@@ -90,23 +94,25 @@ func TestStudentSheets(t *testing.T) {
 	_, err = ct.createSheet(class.Id, userID)
 	tu.Assert(t, err == nil)
 
-	// open sheet 1 and 2
+	// open sheet 1 and 2 ...
 	sh1.Activated, sh2.Activated = true, true
-	err = ct.updateSheet(UpdateSheetIn{Sheet: sh1, Exercices: []editor.IdExercice{exe1.Id, exe1.Id, exe2.Id}}, userID)
+	err = ct.updateSheet(sh1, userID)
 	tu.Assert(t, err == nil)
-	err = ct.updateSheet(UpdateSheetIn{Sheet: sh2, Exercices: []editor.IdExercice{exe1.Id}}, userID)
+	err = ct.updateSheet(sh2, userID)
+	tu.Assert(t, err == nil)
+	// ... and add exercices
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	tu.Assert(t, err == nil)
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	tu.Assert(t, err == nil)
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe2.Id}, userID)
+	tu.Assert(t, err == nil)
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh2.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
 
 	sheets, err = ct.getStudentSheets(student.Id)
 	tu.Assert(t, err == nil)
 	tu.Assert(t, len(sheets) == 2)
-	tu.Assert(t, len(sheets[0].Exercices) == 3)
-	tu.Assert(t, len(sheets[1].Exercices) == 1)
-
-	// and add progression
-	_, err = ct.loadOrCreateProgressionFor(sh1.Id, 0, student.Id)
-	tu.Assert(t, err == nil)
-
-	_, err = ct.loadOrCreateProgressionFor(sh1.Id, 0, student.Id)
-	tu.Assert(t, err == nil)
+	tu.Assert(t, len(sheets[0].Tasks) == 3)
+	tu.Assert(t, len(sheets[1].Tasks) == 1)
 }

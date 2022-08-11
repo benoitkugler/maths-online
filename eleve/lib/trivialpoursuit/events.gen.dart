@@ -817,14 +817,14 @@ List<dynamic> listBoolToJson(List<bool> item) {
   return item.map(boolToJson).toList();
 }
 
-List<IdQuestion> listIntFromJson(dynamic json) {
+List<int> listIntFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(intFromJson).toList();
 }
 
-List<dynamic> listIntToJson(List<IdQuestion> item) {
+List<dynamic> listIntToJson(List<int> item) {
   return item.map(intToJson).toList();
 }
 
@@ -850,13 +850,13 @@ List<dynamic> listServerEventToJson(List<ServerEvent> item) {
   return item.map(serverEventToJson).toList();
 }
 
-List<String> listStringFromJson(dynamic json) {
+List<PlayerID> listStringFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(stringFromJson).toList();
 }
 
-List<dynamic> listStringToJson(List<String> item) {
+List<dynamic> listStringToJson(List<PlayerID> item) {
   return item.map(stringToJson).toList();
 }

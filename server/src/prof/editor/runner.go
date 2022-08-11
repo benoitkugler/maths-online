@@ -1,7 +1,6 @@
 package editor
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -99,7 +98,7 @@ func (qu Question) evaluate(answer Answer) (client.QuestionAnswersOut, error) {
 // For instance, [true, false, true] means : first try: correct, second: wrong answer,third: correct
 type QuestionHistory []bool
 
-// Success return true if at least one try is sucesseful
+// Success return true if at least one try is sucessful
 func (qh QuestionHistory) Success() bool {
 	for _, try := range qh {
 		if try {
@@ -110,15 +109,14 @@ func (qh QuestionHistory) Success() bool {
 }
 
 type ProgressionExt struct {
-	Progression  Progression
 	Questions    []QuestionHistory
 	NextQuestion int
 }
 
-// inferNextQuestion stores the first question not passed by the student
-// note that only the last try is taken in account
-// if all the questions are successul, it set it to -1
-func (qh *ProgressionExt) inferNextQuestion() {
+// InferNextQuestion stores into `NextQuestion` the first question not passed by the student,
+// according to `QuestionHistory.Success`.
+// If all the questions are successul, it sets it to -1
+func (qh *ProgressionExt) InferNextQuestion() {
 	for i, question := range qh.Questions {
 		if !question.Success() {
 			qh.NextQuestion = i
@@ -126,53 +124,6 @@ func (qh *ProgressionExt) inferNextQuestion() {
 		}
 	}
 	qh.NextQuestion = -1
-}
-
-// LoadProgressions loads the whole progressions
-func LoadProgressions(db DB, ids IdProgressionSet) (map[IdProgression]ProgressionExt, error) {
-	prs, err := SelectProgressions(db, ids.Keys()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// select the associated exercices
-	exercices := make(IdExerciceSet)
-	for _, pr := range prs {
-		exercices.Add(pr.IdExercice)
-	}
-
-	links1, err := SelectExerciceQuestionsByIdExercices(db, exercices.Keys()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	questionsExesMap := links1.ByIdExercice() // reference from the exercice
-
-	links2, err := SelectProgressionQuestionsByIdProgressions(db, ids.Keys()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	questionsProgMap := links2.ByIdProgression() // (incomplete) progression of the student
-
-	out := make(map[IdProgression]ProgressionExt, len(prs))
-	for _, pr := range prs {
-		questions := questionsExesMap[pr.IdExercice]
-		questions.EnsureOrder()
-
-		// beware that some questions may not have a link item yet
-		progExt := ProgressionExt{
-			Progression: pr,
-			Questions:   make([]QuestionHistory, len(questions)),
-		}
-		prog := questionsProgMap[pr.Id]
-		for _, link := range prog {
-			progExt.Questions[link.Index] = link.History
-		}
-		progExt.inferNextQuestion()
-
-		out[pr.Id] = progExt
-	}
-
-	return out, nil
 }
 
 type InstantiatedExercice struct {
@@ -349,7 +300,7 @@ func EvaluateExercice(db DB, args EvaluateExerciceIn) (EvaluateExerciceOut, erro
 		*l = append(*l, resp.IsCorrect())
 	}
 
-	updatedProgression.inferNextQuestion() // update in case of success
+	updatedProgression.InferNextQuestion() // update in case of success
 
 	newVersion, err := data.instantiate()
 	if err != nil {
@@ -357,38 +308,4 @@ func EvaluateExercice(db DB, args EvaluateExerciceIn) (EvaluateExerciceOut, erro
 	}
 
 	return EvaluateExerciceOut{Results: results, Progression: updatedProgression, NewQuestions: newVersion.Questions}, nil
-}
-
-// UpdateProgression write the question results for the given progression.
-func UpdateProgression(db *sql.DB, prog Progression, questions []QuestionHistory) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	_, err = DeleteProgressionQuestionsByIdProgressions(tx, prog.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	links := make(ProgressionQuestions, len(questions))
-	for i, qu := range questions {
-		links[i] = ProgressionQuestion{
-			IdProgression: prog.Id,
-			IdExercice:    prog.IdExercice,
-			Index:         i,
-			History:       qu,
-		}
-	}
-	err = InsertManyProgressionQuestions(tx, links...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	return nil
 }

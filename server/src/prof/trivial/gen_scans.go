@@ -137,6 +137,31 @@ func DeleteTrivialsByIDs(tx DB, ids ...IdTrivial) ([]IdTrivial, error) {
 	return ScanIdTrivialArray(rows)
 }
 
+// ByIdTeacher returns a map with 'IdTeacher' as keys.
+func (items Trivials) ByIdTeacher() map[teacher.IdTeacher]Trivials {
+	out := make(map[teacher.IdTeacher]Trivials)
+	for _, target := range items {
+		dict := out[target.IdTeacher]
+		if dict == nil {
+			dict = make(Trivials)
+		}
+		dict[target.Id] = target
+		out[target.IdTeacher] = dict
+	}
+	return out
+}
+
+// IdTeachers returns the list of ids of IdTeacher
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Trivials) IdTeachers() []teacher.IdTeacher {
+	out := make([]teacher.IdTeacher, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdTeacher)
+	}
+	return out
+}
+
 func SelectTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Trivials, error) {
 	rows, err := tx.Query("SELECT * FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
 	if err != nil {

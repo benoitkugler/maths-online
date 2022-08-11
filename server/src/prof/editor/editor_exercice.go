@@ -29,10 +29,6 @@ func (l ExerciceQuestions) Bareme() int {
 	return out
 }
 
-func (l ProgressionQuestions) ensureOrder() {
-	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
-}
-
 type QuestionOrigin struct {
 	Question Question
 	Origin   teacher.Origin
