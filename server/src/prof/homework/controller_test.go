@@ -104,5 +104,9 @@ func TestStudentSheets(t *testing.T) {
 	tu.Assert(t, len(sheets[1].Exercices) == 1)
 
 	// and add progression
-	// TODO:
+	_, err = ct.loadOrCreateProgressionFor(sh1.Id, 0, student.Id)
+	tu.Assert(t, err == nil)
+
+	_, err = ct.loadOrCreateProgressionFor(sh1.Id, 0, student.Id)
+	tu.Assert(t, err == nil)
 }

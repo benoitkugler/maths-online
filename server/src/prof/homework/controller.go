@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/editor"
+	ed "github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -62,18 +62,18 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 		return nil, utils.SQLError(err)
 	}
 
-	exes, err := editor.SelectExercices(ct.db, links.IdExercices()...)
+	exes, err := ed.SelectExercices(ct.db, links.IdExercices()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
 	// ... and their questions
-	questions, err := editor.SelectExerciceQuestionsByIdExercices(ct.db, exes.IDs()...)
+	questions, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, exes.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	exerciceMap := editor.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
+	exerciceMap := ed.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
 
 	// finally agregate the results
 	sheets := buildSheetExts(sheetsDict, links, exerciceMap)
@@ -131,7 +131,7 @@ func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (
 
 type UpdateSheetIn struct {
 	Sheet     Sheet
-	Exercices []editor.IdExercice
+	Exercices []ed.IdExercice
 }
 
 func (ct *Controller) HomeworkUpdateSheet(c echo.Context) error {
@@ -267,12 +267,12 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	exes, err := editor.SelectExercices(ct.db, links.IdExercices()...)
+	exes, err := ed.SelectExercices(ct.db, links.IdExercices()...)
 	if err != nil {
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	questions, err := editor.SelectExerciceQuestionsByIdExercices(ct.db, exes.IDs()...)
+	questions, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, exes.IDs()...)
 	if err != nil {
 		return SheetExt{}, utils.SQLError(err)
 	}
@@ -305,7 +305,7 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	exerciceMap := editor.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
+	exerciceMap := ed.BuildExerciceHeaders(userID, ct.admin.Id, exes, questions)
 	out := newSheetExt(newSheet, links, exerciceMap)
 
 	return out, nil
@@ -352,19 +352,25 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 		return nil, utils.SQLError(err)
 	}
 	// since we only load data for one student, we map by IdSheet and Index
-	sheetExToProg := bySheetAndIndex(studentProgs)
+	sheetExToProg := studentProgs.bySheetAndIndex()
 
 	// collect the student progressions
-	idProgressions := editor.NewIdProgressionSetFrom(studentProgs.IdProgressions())
-	progMap, err := editor.LoadProgressions(ct.db, idProgressions)
+	idProgressions := ed.NewIdProgressionSetFrom(studentProgs.IdProgressions())
+	progMap, err := ed.LoadProgressions(ct.db, idProgressions)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	exercices, err := editor.SelectExercices(ct.db, studentProgs.IdExercices()...)
+	exercices, err := ed.SelectExercices(ct.db, studentProgs.IdExercices()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
+
+	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, exercices.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	questionsMap := links.ByIdExercice()
 
 	for _, sheet := range sheets {
 		if !sheet.Activated { // ignore hidden sheets
@@ -373,14 +379,21 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 
 		exerciceForSheet := sheetToExercices[sheet.Id] // defined exercices
 		exWithProg := make([]ExerciceProgressionHeader, len(exerciceForSheet))
-		for i, ex := range exerciceForSheet {
+		for i, exLink := range exerciceForSheet {
 			// select the right progression, which may be empty
 			// before the student starts the exercice
-			prog, hasProg := sheetExToProg[sheetAndIndex{IdSheet: sheet.Id, Index: ex.Index}]
+			idProg, hasProg := sheetExToProg[sheetAndIndex{IdSheet: sheet.Id, Index: exLink.Index}]
+
+			exercice := exercices[exLink.IdExercice]
+			questions := questionsMap[exLink.IdExercice]
+			progression := progMap[idProg]
+
 			exWithProg[i] = ExerciceProgressionHeader{
-				Exercice:       exercices[ex.IdExercice],
+				Exercice:       exercice,
 				HasProgression: hasProg,
-				Progression:    progMap[prog],
+				Progression:    progression,
+				Bareme:         questions.Bareme(),
+				Mark:           mark(questions, progression),
 			}
 		}
 		out = append(out, SheetProgression{
@@ -392,4 +405,126 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 	sort.Slice(out, func(i, j int) bool { return out[i].Sheet.Id < out[j].Sheet.Id })
 
 	return out, nil
+}
+
+func (ct *Controller) StudentInstantiateExercice(c echo.Context) error {
+	idE, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	out, err := ed.InstantiateExercice(ct.db, ed.IdExercice(idE))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+// StudentEvaluateExercice calls ed.EvaluteExercice and registers
+// the student progression, returning the update mark.
+func (ct *Controller) StudentEvaluateExercice(c echo.Context) error {
+	var args StudentEvaluateExerciceIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	idStudent, err := ct.studentKey.DecryptID(args.StudentID)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.evaluateExercice(args.IdSheet, args.Index, teacher.IdStudent(idStudent), args.Ex)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) evaluateExercice(idSheet IdSheet, index int, idStudent teacher.IdStudent, ex ed.EvaluateExerciceIn) (StudentEvaluateExerciceOut, error) {
+	out, err := ed.EvaluateExercice(ct.db, ex)
+	if err != nil {
+		return StudentEvaluateExerciceOut{}, err
+	}
+
+	// persists the progression on DB ...
+	prog, err := ct.loadOrCreateProgressionFor(idSheet, index, idStudent)
+	if err != nil {
+		return StudentEvaluateExerciceOut{}, err
+	}
+
+	// ... update the progression questions
+	err = ed.UpdateProgression(ct.db, prog, out.Progression.Questions)
+	if err != nil {
+		return StudentEvaluateExerciceOut{}, err
+	}
+
+	// compute the new mark
+	questions, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, ex.IdExercice)
+	if err != nil {
+		return StudentEvaluateExerciceOut{}, utils.SQLError(err)
+	}
+	m := mark(questions, out.Progression)
+
+	return StudentEvaluateExerciceOut{Ex: out, Mark: m}, nil
+}
+
+// in the first try, the progression does not exists : create it
+func (ct *Controller) loadOrCreateProgressionFor(idSheet IdSheet, index int, idStudent teacher.IdStudent) (ed.Progression, error) {
+	links, err := SelectStudentProgressionsByIdStudents(ct.db, idStudent)
+	if err != nil {
+		return ed.Progression{}, utils.SQLError(err)
+	}
+	forThisSheet := links.ByIdSheet()[idSheet].bySheetAndIndex()
+	idProg, hasProg := forThisSheet[sheetAndIndex{idSheet, index}]
+	if !hasProg { // create an entry
+		return ct.createProgressionFor(idSheet, index, idStudent)
+	}
+
+	// load the existing one
+	prog, err := ed.SelectProgression(ct.db, idProg)
+	if err != nil {
+		return ed.Progression{}, utils.SQLError(err)
+	}
+
+	return prog, nil
+}
+
+func (ct *Controller) createProgressionFor(idSheet IdSheet, index int, idStudent teacher.IdStudent) (ed.Progression, error) {
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ed.Progression{}, utils.SQLError(err)
+	}
+	links, err := SelectSheetExercicesByIdSheets(tx, idSheet)
+	if err != nil {
+		_ = tx.Rollback()
+		return ed.Progression{}, utils.SQLError(err)
+	}
+	idExercice := links.bySheetAndIndex()[sheetAndIndex{idSheet, index}]
+
+	prog, err := ed.Progression{IdExercice: idExercice}.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ed.Progression{}, utils.SQLError(err)
+	}
+
+	err = InsertManyStudentProgressions(tx, StudentProgression{
+		IdStudent:     idStudent,
+		IdSheet:       idSheet,
+		Index:         index,
+		IdExercice:    idExercice,
+		IdProgression: prog.Id,
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return ed.Progression{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ed.Progression{}, utils.SQLError(err)
+	}
+
+	return prog, nil
 }

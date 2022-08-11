@@ -16,12 +16,12 @@ typedef Sheets = List<SheetProgression>;
 
 abstract class HomeworkAPI {
   Future<Sheets> loadSheets();
-  Future<StudentExerciceInst> loadExercice(Exercice ex);
+  Future<InstantiatedExercice> loadExercice(int idExercice);
+  Future<StudentEvaluateExerciceOut> evaluateExercice(
+      int idSheet, int index, EvaluateExerciceIn ex);
 }
 
 class ServerHomeworkAPI implements HomeworkAPI {
-  static const serverEndpoint = "/api/student/homework/sheets";
-
   final BuildMode buildMode;
   final String studentID;
 
@@ -29,6 +29,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
 
   @override
   Future<Sheets> loadSheets() async {
+    const serverEndpoint = "/api/student/homework/sheets";
     final uri = Uri.parse(
         buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID}));
     final resp = await http.get(uri);
@@ -36,9 +37,26 @@ class ServerHomeworkAPI implements HomeworkAPI {
   }
 
   @override
-  Future<StudentExerciceInst> loadExercice(Exercice ex) {
-    // TODO: implement loadExercice
-    throw UnimplementedError();
+  Future<InstantiatedExercice> loadExercice(int idExercice) async {
+    const serverEndpoint = "/api/student/homework/exercice/instantiate";
+    final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
+        query: {studentIDKey: studentID, "id": idExercice}));
+    final resp = await http.get(uri);
+    return instantiatedExerciceFromJson(resp);
+  }
+
+  @override
+  Future<StudentEvaluateExerciceOut> evaluateExercice(
+      int idSheet, int index, EvaluateExerciceIn ex) async {
+    const serverEndpoint = "/api/student/homework/exercice/evaluate";
+    final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
+    final resp = await http.post(uri,
+        body: jsonEncode(studentEvaluateExerciceInToJson(
+            StudentEvaluateExerciceIn(studentID, idSheet, index, ex))),
+        headers: {
+          'Content-type': 'application/json',
+        });
+    return studentEvaluateExerciceOutFromJson(jsonDecode(resp.body));
   }
 }
 

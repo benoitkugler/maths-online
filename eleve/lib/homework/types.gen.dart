@@ -2,18 +2,23 @@
 
 import '../shared_gen.dart';
 
+// github.com/benoitkugler/maths-online/pass.EncryptedID
+typedef EncryptedID = String;
+
 // github.com/benoitkugler/maths-online/prof/homework.ExerciceProgressionHeader
 class ExerciceProgressionHeader {
   final Exercice exercice;
   final bool hasProgression;
   final ProgressionExt progression;
+  final int mark;
+  final int bareme;
 
-  const ExerciceProgressionHeader(
-      this.exercice, this.hasProgression, this.progression);
+  const ExerciceProgressionHeader(this.exercice, this.hasProgression,
+      this.progression, this.mark, this.bareme);
 
   @override
   String toString() {
-    return "ExerciceProgressionHeader($exercice, $hasProgression, $progression)";
+    return "ExerciceProgressionHeader($exercice, $hasProgression, $progression, $mark, $bareme)";
   }
 }
 
@@ -22,14 +27,18 @@ ExerciceProgressionHeader exerciceProgressionHeaderFromJson(dynamic json_) {
   return ExerciceProgressionHeader(
       exerciceFromJson(json['Exercice']),
       boolFromJson(json['HasProgression']),
-      progressionExtFromJson(json['Progression']));
+      progressionExtFromJson(json['Progression']),
+      intFromJson(json['Mark']),
+      intFromJson(json['Bareme']));
 }
 
 JSON exerciceProgressionHeaderToJson(ExerciceProgressionHeader item) {
   return {
     "Exercice": exerciceToJson(item.exercice),
     "HasProgression": boolToJson(item.hasProgression),
-    "Progression": progressionExtToJson(item.progression)
+    "Progression": progressionExtToJson(item.progression),
+    "Mark": intToJson(item.mark),
+    "Bareme": intToJson(item.bareme)
   };
 }
 
@@ -125,6 +134,66 @@ JSON sheetProgressionToJson(SheetProgression item) {
 String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
+
+// github.com/benoitkugler/maths-online/prof/homework.StudentEvaluateExerciceIn
+class StudentEvaluateExerciceIn {
+  final EncryptedID studentID;
+  final IdSheet idSheet;
+  final int index;
+  final EvaluateExerciceIn ex;
+
+  const StudentEvaluateExerciceIn(
+      this.studentID, this.idSheet, this.index, this.ex);
+
+  @override
+  String toString() {
+    return "StudentEvaluateExerciceIn($studentID, $idSheet, $index, $ex)";
+  }
+}
+
+StudentEvaluateExerciceIn studentEvaluateExerciceInFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return StudentEvaluateExerciceIn(
+      stringFromJson(json['StudentID']),
+      intFromJson(json['IdSheet']),
+      intFromJson(json['Index']),
+      evaluateExerciceInFromJson(json['Ex']));
+}
+
+JSON studentEvaluateExerciceInToJson(StudentEvaluateExerciceIn item) {
+  return {
+    "StudentID": stringToJson(item.studentID),
+    "IdSheet": intToJson(item.idSheet),
+    "Index": intToJson(item.index),
+    "Ex": evaluateExerciceInToJson(item.ex)
+  };
+}
+
+// github.com/benoitkugler/maths-online/prof/homework.StudentEvaluateExerciceOut
+class StudentEvaluateExerciceOut {
+  final EvaluateExerciceOut ex;
+  final int mark;
+
+  const StudentEvaluateExerciceOut(this.ex, this.mark);
+
+  @override
+  String toString() {
+    return "StudentEvaluateExerciceOut($ex, $mark)";
+  }
+}
+
+StudentEvaluateExerciceOut studentEvaluateExerciceOutFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return StudentEvaluateExerciceOut(
+      evaluateExerciceOutFromJson(json['Ex']), intFromJson(json['Mark']));
+}
+
+JSON studentEvaluateExerciceOutToJson(StudentEvaluateExerciceOut item) {
+  return {
+    "Ex": evaluateExerciceOutToJson(item.ex),
+    "Mark": intToJson(item.mark)
+  };
+}
 
 // github.com/benoitkugler/maths-online/prof/homework.Time
 typedef Time = DateTime;

@@ -7,8 +7,10 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart' hide Answer;
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -91,7 +93,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
 
     // API connection
     channel = WebSocketChannel.connect(Uri.parse(url));
-    channel.stream.listen(listen, onError: showError);
+    channel.stream.listen(listen, onError: _showError);
 
     // websocket is closed in case of inactivity
     // prevent it by sending pings
@@ -113,12 +115,8 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     channel.sink.add(jsonEncode(loopbackClientEventToJson(event)));
   }
 
-  void showError(dynamic error) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 5),
-      backgroundColor: Theme.of(context).colorScheme.error,
-      content: Text("Une erreur est survenue : $error"),
-    ));
+  void _showError(dynamic error) {
+    showError("Une erreur est survenue ", error, context);
   }
 
   void _onServerValidAnswer(QuestionAnswersOut rep) {
@@ -139,7 +137,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     try {
       event = loopbackServerEventFromJson(jsonDecode(data as String));
     } catch (e) {
-      showError(e);
+      _showError(e);
       return;
     }
 
@@ -181,25 +179,6 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     }
   }
 
-  Future<EvaluateExerciceOut> evaluateExerciceAnswer(
-      EvaluateExerciceIn params) async {
-    final EvaluateExerciceOut result;
-    try {
-      final uri =
-          Uri.parse(widget.buildMode.serverURL("/api/exercices/evaluate"));
-      final resp = await http.post(uri,
-          body: jsonEncode(evaluateExerciceInToJson(params)),
-          headers: {
-            'Content-type': 'application/json',
-          });
-      result = evaluateExerciceOutFromJson(jsonDecode(resp.body));
-    } catch (e) {
-      showError(e);
-      rethrow;
-    }
-    return result;
-  }
-
   @override
   Widget build(BuildContext context) {
     switch (mode) {
@@ -233,7 +212,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
         );
       case _Mode.exercice:
         return _ExerciceLoopback(
-            widget.buildMode, exerciceData!.exercice, evaluateExerciceAnswer);
+            _LoopbackServerAPI(widget.buildMode), exerciceData!.exercice);
     }
   }
 }
@@ -254,7 +233,7 @@ class _QuestionLoopback extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: QuestionW(
-        buildMode,
+        ServerFieldAPI(buildMode),
         question,
         Color.fromARGB(255, 150 + Random().nextInt(100),
             150 + Random().nextInt(100), Random().nextInt(256)),
@@ -267,17 +246,36 @@ class _QuestionLoopback extends StatelessWidget {
   }
 }
 
-class _ExerciceLoopback extends StatelessWidget {
+class _LoopbackServerAPI implements ExerciceAPI {
   final BuildMode buildMode;
-  final StudentExerciceInst exercice;
-  final Future<EvaluateExerciceOut> Function(EvaluateExerciceIn) onEvaluate;
+  const _LoopbackServerAPI(this.buildMode);
 
-  const _ExerciceLoopback(this.buildMode, this.exercice, this.onEvaluate,
-      {Key? key})
+  @override
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression) {
+    return ServerFieldAPI(buildMode).checkExpressionSyntax(expression);
+  }
+
+  @override
+  Future<EvaluateExerciceOut> evaluate(EvaluateExerciceIn params) async {
+    final uri = Uri.parse(buildMode.serverURL("/api/exercices/evaluate"));
+    final resp = await http.post(uri,
+        body: jsonEncode(evaluateExerciceInToJson(params)),
+        headers: {
+          'Content-type': 'application/json',
+        });
+    return evaluateExerciceOutFromJson(jsonDecode(resp.body));
+  }
+}
+
+class _ExerciceLoopback extends StatelessWidget {
+  final _LoopbackServerAPI api;
+  final StudentExerciceInst exercice;
+
+  const _ExerciceLoopback(this.api, this.exercice, {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(buildMode, exercice, onEvaluate);
+    return ExerciceW(api, exercice);
   }
 }

@@ -1,4 +1,3 @@
-import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/dropdown.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
@@ -101,16 +100,16 @@ class QuestionController {
   /// later used when building widgets.
   /// [onEditDone] is called when one field is updated by the user
   /// It should in return trigger a setState on the widget using the controller.
-  /// [buildMode] is used to select the correct server endpoint
-  /// when validating expression syntax
-  QuestionController(List<Block> enonce, BuildMode buildMode,
-      this.blockOnSubmit, void Function(int fieldID) onEditDone) {
+  ///
+  /// [api] is used to validate expression syntax
+  QuestionController(List<Block> enonce, FieldAPI api, this.blockOnSubmit,
+      void Function(int fieldID) onEditDone) {
     for (var block in enonce) {
       if (block is NumberFieldBlock) {
         _fields[block.iD] = NumberController(() => onEditDone(block.iD));
       } else if (block is ExpressionFieldBlock) {
         _fields[block.iD] =
-            ExpressionController(buildMode, () => onEditDone(block.iD));
+            ExpressionController(api, () => onEditDone(block.iD));
       } else if (block is RadioFieldBlock) {
         _fields[block.iD] =
             RadioController(() => onEditDone(block.iD), block.proposals);
@@ -129,8 +128,8 @@ class QuestionController {
         _fields[block.iD] = FigureVectorPairController(
             block.figure, () => onEditDone(block.iD));
       } else if (block is VariationTableFieldBlock) {
-        _fields[block.iD] = VariationTableController(
-            buildMode, block, () => onEditDone(block.iD));
+        _fields[block.iD] =
+            VariationTableController(api, block, () => onEditDone(block.iD));
       } else if (block is FunctionPointsFieldBlock) {
         _fields[block.iD] =
             FunctionPointsController(block, () => onEditDone(block.iD));
@@ -509,7 +508,7 @@ class _ListRows extends StatelessWidget {
 /// hooks [onCheckSyntax] and [onValid] provided as external API,
 /// as well as the [syntaxFeedback] parameter
 class QuestionW extends StatefulWidget {
-  final BuildMode buildMode;
+  final FieldAPI api;
 
   final Question question;
   final Color color;
@@ -543,7 +542,7 @@ class QuestionW extends StatefulWidget {
   final String title;
 
   const QuestionW(
-    this.buildMode,
+    this.api,
     this.question,
     this.color,
     this.onValid, {
@@ -582,8 +581,8 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   void _initController() {
-    controller = QuestionController(widget.question.enonce, widget.buildMode,
-        widget.blockOnSubmit, _onEditDone);
+    controller = QuestionController(
+        widget.question.enonce, widget.api, widget.blockOnSubmit, _onEditDone);
     if (widget.answer != null) {
       controller.setAnswers(widget.answer!);
     }

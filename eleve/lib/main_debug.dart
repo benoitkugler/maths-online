@@ -11,7 +11,7 @@ void main() async {
 const ex = Exercice(
     1, "Pythagore", "Facile !", Parameters([], []), Flow.sequencial, 1, false);
 const exNotStarted = ExerciceProgressionHeader(
-    ex, false, ProgressionExt(Progression(0, 0), [[], []], -1));
+    ex, false, ProgressionExt(Progression(0, 0), [[], []], -1), 2, 10);
 const exStarted = ExerciceProgressionHeader(
     ex,
     true,
@@ -20,7 +20,9 @@ const exStarted = ExerciceProgressionHeader(
         [
           [false]
         ],
-        -1));
+        -1),
+    0,
+    10);
 const exCompleted = ExerciceProgressionHeader(
     ex,
     true,
@@ -29,7 +31,9 @@ const exCompleted = ExerciceProgressionHeader(
         [
           [false, true]
         ],
-        -1));
+        -1),
+    8,
+    10);
 
 var sheets = [
   SheetProgression(
@@ -55,11 +59,19 @@ class _TestHomeworkAPI implements HomeworkAPI {
   }
 
   @override
-  Future<StudentExerciceInst> loadExercice(Exercice ex) async {
+  Future<InstantiatedExercice> loadExercice(int idExercice) async {
     await Future<void>.delayed(const Duration(seconds: 2));
 
-    return StudentExerciceInst(InstantiatedExercice(ex, [], []),
-        ProgressionExt(Progression(1, 1), [], -1));
+    return InstantiatedExercice(ex, [], []);
+  }
+
+  @override
+  Future<StudentEvaluateExerciceOut> evaluateExercice(
+      int idSheet, int index, EvaluateExerciceIn ex) async {
+    await Future<void>.delayed(const Duration(seconds: 2));
+    return StudentEvaluateExerciceOut(
+        EvaluateExerciceOut({}, ProgressionExt(Progression(0, 0), [], -1), []),
+        8);
   }
 }
 

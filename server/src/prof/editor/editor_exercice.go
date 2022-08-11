@@ -12,8 +12,21 @@ import (
 
 type uID = teacher.IdTeacher
 
-func (l ExerciceQuestions) ensureOrder() {
+// EnsureOrder must be call on the questions of one exercice,
+// to make sure the order in the slice is consistent with the one
+// indicated by `Index`
+func (l ExerciceQuestions) EnsureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+// Bareme returns the bareme for one exercice, that is the sum
+// of each question bareme
+func (l ExerciceQuestions) Bareme() int {
+	var out int
+	for _, qu := range l {
+		out += qu.Bareme
+	}
+	return out
 }
 
 func (l ProgressionQuestions) ensureOrder() {
@@ -74,7 +87,7 @@ func BuildExerciceHeaders(userID, adminID teacher.IdTeacher, exes Exercices, lin
 		}
 
 		questions := questionDict[ex.Id]
-		questions.ensureOrder()
+		questions.EnsureOrder()
 		out[ex.Id] = ExerciceHeader{
 			Exercice:  ex,
 			Origin:    origin,
@@ -126,7 +139,7 @@ func (ct *Controller) ExerciceGetContent(c echo.Context) error {
 }
 
 func (ct *Controller) getExercice(exerciceID IdExercice, userID uID) (ExerciceExt, error) {
-	data, err := ct.loadExercice(exerciceID)
+	data, err := loadExercice(ct.db, exerciceID)
 	if err != nil {
 		return ExerciceExt{}, err
 	}
@@ -281,7 +294,7 @@ func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(args.IdExercice)
+	data, err := loadExercice(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -341,7 +354,7 @@ func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(args.IdExercice)
+	data, err := loadExercice(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -413,7 +426,7 @@ func (ct *Controller) ExerciceUpdate(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(args.Exercice.Id)
+	data, err := loadExercice(ct.db, args.Exercice.Id)
 	if err != nil {
 		return err
 	}
@@ -462,7 +475,7 @@ type CheckExerciceParametersOut struct {
 // checks that the merging of SharedParameters and QuestionParameters is valid
 func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) (CheckExerciceParametersOut, error) {
 	// fetch the mode of each question
-	data, err := ct.loadExercice(params.IdExercice)
+	data, err := loadExercice(ct.db, params.IdExercice)
 	if err != nil {
 		return CheckExerciceParametersOut{}, err
 	}
@@ -504,7 +517,7 @@ type SaveExerciceAndPreviewOut struct {
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
-	data, err := ct.loadExercice(params.IdExercice)
+	data, err := loadExercice(ct.db, params.IdExercice)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}

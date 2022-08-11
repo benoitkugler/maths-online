@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
@@ -156,7 +157,7 @@ class _DecrassageState extends State<Decrassage> {
                   ),
                 )
               : QuestionW(
-                  widget.buildMode,
+                  ServerFieldAPI(widget.buildMode),
                   currentQuestion!.question,
                   Colors.pink,
                   _evaluateQuestion,

@@ -273,9 +273,6 @@ func setupRoutes(e *echo.Echo,
 	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
 	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
 
-	// student homework API
-	e.GET("/api/student/homework/sheets", home.StudentGetSheets)
-
 	// prof. back office
 	for _, route := range []string{
 		"/prof",
@@ -307,6 +304,11 @@ func setupRoutes(e *echo.Echo,
 	e.POST("/api/exercices/evaluate", func(c echo.Context) error {
 		return evaluateExercice(edit, c)
 	})
+
+	// student homework API
+	e.GET("/api/student/homework/sheets", home.StudentGetSheets)
+	e.GET("/api/student/homework/exercice/instantiate", home.StudentInstantiateExercice)
+	e.POST("/api/student/homework/exercice/evaluate", home.StudentEvaluateExercice)
 }
 
 // routes for a (temporary) question quick access

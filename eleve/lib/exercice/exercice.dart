@@ -1,8 +1,9 @@
-import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/congratulations.dart';
 import 'package:eleve/exercice/home.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart' hide Answer;
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
 
@@ -14,21 +15,22 @@ extension IsCorrect on QuestionAnswersOut {
   }
 }
 
+abstract class ExerciceAPI extends FieldAPI {
+  Future<EvaluateExerciceOut> evaluate(EvaluateExerciceIn params);
+}
+
 /// ExerciceW is the widget providing one exercice to
 /// the student.
 /// It is used in the editor loopback, and as the base for
 /// at home training activity
 class ExerciceW extends StatefulWidget {
-  final BuildMode buildMode;
+  final ExerciceAPI api;
 
   /// [data] stores the server instantiated exercice with
   /// the initial progression state.
   final StudentExerciceInst data;
 
-  final Future<EvaluateExerciceOut> Function(EvaluateExerciceIn) onEvaluate;
-
-  const ExerciceW(this.buildMode, this.data, this.onEvaluate, {Key? key})
-      : super(key: key);
+  const ExerciceW(this.api, this.data, {Key? key}) : super(key: key);
 
   @override
   State<ExerciceW> createState() => _ExerciceWState();
@@ -60,6 +62,16 @@ class _ExerciceWState extends State<ExerciceW> {
     super.didUpdateWidget(oldWidget);
   }
 
+  // handle the errors
+  Future<EvaluateExerciceOut?> _evaluate(EvaluateExerciceIn params) async {
+    try {
+      return widget.api.evaluate(params);
+    } catch (error) {
+      showError("Impossible d'évaluer l'exercice", error, context);
+      return null;
+    }
+  }
+
   void onDone() async {
     setState(() {
       questionIndex = null;
@@ -84,10 +96,13 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     // validate the given answer
-    final resp = await widget.onEvaluate(EvaluateExerciceIn(
+    final resp = await _evaluate(EvaluateExerciceIn(
         widget.data.exercice.exercice.id,
         {index: Answer(questions[index].params, currentAnswers[index]!)},
         progression));
+    if (resp == null) {
+      return;
+    }
 
     progression = resp.progression; // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
@@ -150,8 +165,11 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     // all good, lets send the results
-    final resp = await widget.onEvaluate(EvaluateExerciceIn(
+    final resp = await _evaluate(EvaluateExerciceIn(
         widget.data.exercice.exercice.id, toSend, progression));
+    if (resp == null) {
+      return;
+    }
 
     progression = resp.progression; // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
@@ -257,7 +275,7 @@ class _ExerciceWState extends State<ExerciceW> {
                       questionIndex = index;
                     }))
             : QuestionW(
-                widget.buildMode,
+                widget.api,
                 questions[questionIndex!].question,
                 Colors.purpleAccent,
                 onValideQuestion,

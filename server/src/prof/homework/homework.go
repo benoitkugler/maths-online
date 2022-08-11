@@ -80,7 +80,22 @@ type ExerciceProgressionHeader struct {
 	Exercice       ed.Exercice `gomacro-extern:"editor:dart:../shared_gen.dart"`
 	HasProgression bool
 	// empty if HasProgression is false
-	Progression ed.ProgressionExt `gomacro-extern:"editor:dart:../shared_gen.dart"`
+	Progression  ed.ProgressionExt `gomacro-extern:"editor:dart:../shared_gen.dart"`
+	Mark, Bareme int               // student mark / exercice total
+}
+
+// compute the student mark
+func mark(questions ed.ExerciceQuestions, progression ed.ProgressionExt) int {
+	questions.EnsureOrder()
+
+	var out int
+	for index, qu := range questions {
+		results := progression.Questions[index]
+		if results.Success() {
+			out += qu.Bareme
+		}
+	}
+	return out
 }
 
 // SheetProgression is the summary of the progression
@@ -97,10 +112,18 @@ type sheetAndIndex struct {
 }
 
 // assume links only concerne one student and use the unicity of (IdStudent, IdSheet, Index)
-func bySheetAndIndex(links StudentProgressions) (out map[sheetAndIndex]ed.IdProgression) {
+func (links StudentProgressions) bySheetAndIndex() (out map[sheetAndIndex]ed.IdProgression) {
 	out = make(map[sheetAndIndex]ed.IdProgression)
 	for _, link := range links {
 		out[sheetAndIndex{IdSheet: link.IdSheet, Index: link.Index}] = link.IdProgression
+	}
+	return out
+}
+
+func (links SheetExercices) bySheetAndIndex() (out map[sheetAndIndex]ed.IdExercice) {
+	out = make(map[sheetAndIndex]ed.IdExercice)
+	for _, link := range links {
+		out[sheetAndIndex{IdSheet: link.IdSheet, Index: link.Index}] = link.IdExercice
 	}
 	return out
 }

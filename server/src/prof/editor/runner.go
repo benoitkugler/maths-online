@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -98,9 +99,14 @@ func (qu Question) evaluate(answer Answer) (client.QuestionAnswersOut, error) {
 // For instance, [true, false, true] means : first try: correct, second: wrong answer,third: correct
 type QuestionHistory []bool
 
-// success return true if the last try is sucesseful
-func (qh QuestionHistory) success() bool {
-	return len(qh) > 0 && qh[len(qh)-1]
+// Success return true if at least one try is sucesseful
+func (qh QuestionHistory) Success() bool {
+	for _, try := range qh {
+		if try {
+			return true
+		}
+	}
+	return false
 }
 
 type ProgressionExt struct {
@@ -114,7 +120,7 @@ type ProgressionExt struct {
 // if all the questions are successul, it set it to -1
 func (qh *ProgressionExt) inferNextQuestion() {
 	for i, question := range qh.Questions {
-		if !question.success() {
+		if !question.Success() {
 			qh.NextQuestion = i
 			return
 		}
@@ -150,7 +156,7 @@ func LoadProgressions(db DB, ids IdProgressionSet) (map[IdProgression]Progressio
 	out := make(map[IdProgression]ProgressionExt, len(prs))
 	for _, pr := range prs {
 		questions := questionsExesMap[pr.IdExercice]
-		questions.ensureOrder()
+		questions.EnsureOrder()
 
 		// beware that some questions may not have a link item yet
 		progExt := ProgressionExt{
@@ -173,6 +179,15 @@ type InstantiatedExercice struct {
 	Exercice  Exercice
 	Questions []InstantiatedQuestion
 	Baremes   []int
+}
+
+// InstantiateExercice load an exercice and its questions.
+func InstantiateExercice(db DB, id IdExercice) (InstantiatedExercice, error) {
+	content, err := loadExercice(db, id)
+	if err != nil {
+		return InstantiatedExercice{}, err
+	}
+	return content.instantiate()
 }
 
 // helper to unify question loading
@@ -244,19 +259,19 @@ func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
 }
 
 // loadExercice loads the given exercice and the associated questions
-func (ct *Controller) loadExercice(exerciceID IdExercice) (exerciceContent, error) {
-	ex, err := SelectExercice(ct.db, exerciceID)
+func loadExercice(db DB, exerciceID IdExercice) (exerciceContent, error) {
+	ex, err := SelectExercice(db, exerciceID)
 	if err != nil {
 		return exerciceContent{}, utils.SQLError(err)
 	}
-	links, err := SelectExerciceQuestionsByIdExercices(ct.db, exerciceID)
+	links, err := SelectExerciceQuestionsByIdExercices(db, exerciceID)
 	if err != nil {
 		return exerciceContent{}, utils.SQLError(err)
 	}
-	links.ensureOrder()
+	links.EnsureOrder()
 
 	// load the question contents
-	dict, err := SelectQuestions(ct.db, links.IdQuestions()...)
+	dict, err := SelectQuestions(db, links.IdQuestions()...)
 	if err != nil {
 		return exerciceContent{}, utils.SQLError(err)
 	}
@@ -277,10 +292,14 @@ type EvaluateExerciceOut struct {
 	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
 }
 
-// EvaluateExercice checks the answer provided for the given exercice and
-// update the progression.
 func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
-	data, err := ct.loadExercice(args.IdExercice)
+	return EvaluateExercice(ct.db, args)
+}
+
+// EvaluateExercice checks the answer provided for the given exercice and
+// update the in-memory progression.
+func EvaluateExercice(db DB, args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
+	data, err := loadExercice(db, args.IdExercice)
 	if err != nil {
 		return EvaluateExerciceOut{}, utils.SQLError(err)
 	}
@@ -338,4 +357,38 @@ func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExercic
 	}
 
 	return EvaluateExerciceOut{Results: results, Progression: updatedProgression, NewQuestions: newVersion.Questions}, nil
+}
+
+// UpdateProgression write the question results for the given progression.
+func UpdateProgression(db *sql.DB, prog Progression, questions []QuestionHistory) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	_, err = DeleteProgressionQuestionsByIdProgressions(tx, prog.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	links := make(ProgressionQuestions, len(questions))
+	for i, qu := range questions {
+		links[i] = ProgressionQuestion{
+			IdProgression: prog.Id,
+			IdExercice:    prog.IdExercice,
+			Index:         i,
+			History:       qu,
+		}
+	}
+	err = InsertManyProgressionQuestions(tx, links...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
 }

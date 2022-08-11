@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
@@ -43,19 +44,6 @@ class _QuestionGalleryState extends State<QuestionGallery> {
     } catch (e) {
       print("ERROR: $e");
     }
-  }
-
-  Future<QuestionSyntaxCheckOut> _checkSyntaxCall(
-      CheckQuestionSyntaxeNotification v) async {
-    final pageIndex = currentQuestionIndex!;
-    final uri =
-        Uri.parse(widget.buildMode.serverURL("/questions/syntaxe/$pageIndex"));
-    final resp = await http.post(uri,
-        body: jsonEncode(questionSyntaxCheckInToJson(v.data)),
-        headers: {
-          'Content-type': 'application/json',
-        });
-    return questionSyntaxCheckOutFromJson(jsonDecode(resp.body));
   }
 
   Future<QuestionAnswersOut> _validateCall(QuestionAnswersIn v) async {
@@ -120,7 +108,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
         padding: const EdgeInsets.all(8.0),
         child: currentQuestionIndex != null
             ? QuestionW(
-                widget.buildMode,
+                ServerFieldAPI(widget.buildMode),
                 questions[currentQuestionIndex!],
                 questionColor!,
                 (v) => _validate(v, context),

@@ -1,8 +1,10 @@
+import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/homework/homework.dart';
 import 'package:eleve/homework/types.gen.dart';
 import 'package:eleve/homework/utils.dart';
 import 'package:eleve/shared/title.dart';
+import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
 
 extension _ext on SheetProgression {
@@ -38,12 +40,13 @@ class SheetW extends StatelessWidget {
                 ),
               ),
             ));
-    final instantiatedExercice = await api.loadExercice(ex.exercice);
+    final instantiatedExercice = await api.loadExercice(ex.exercice.id);
     Navigator.of(context).pop(); // remove the dialog
-    print(instantiatedExercice); // TODO: show the actual exercice route
 
-    // Navigator.of(context).push(MaterialPageRoute<void>(
-    //     builder: (context) => ExerciceW(buildMode, ex)));
+    final studentEx = StudentExerciceInst(instantiatedExercice, ex.progression);
+    print(studentEx); // TODO: show the actual exercice route
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => ExerciceW(buildMode, ex)));
   }
 
   @override
