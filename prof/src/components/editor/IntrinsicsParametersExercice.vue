@@ -18,15 +18,10 @@
         <v-list-item class="pr-0 pl-1">
           <v-row no-gutters :class="param.isShared ? 'text-primary' : ''">
             <v-col cols="1" align-self="center">
-              <v-icon
-                size="large"
-                class="pr-2"
-                style="cursor: grab"
-                @dragstart="(e) => onItemDragStart(e, index)"
-                draggable="true"
+              <drag-icon
                 color="green-lighten-3"
-                icon="mdi-drag-vertical"
-              ></v-icon>
+                @start="(e) => onItemDragStart(e, index)"
+              ></drag-icon>
             </v-col>
             <v-col class="pl-1">
               <v-text-field
@@ -76,10 +71,11 @@
 </template>
 
 <script setup lang="ts">
-import { onDragListItemStart, swapItems } from "@/controller/editor";
+import DropZone from "@/components/DropZone.vue";
+import { onDragListItemStart, swapItems } from "@/controller/utils";
 import { ref } from "@vue/reactivity";
 import { $computed, $ref } from "vue/macros";
-import DropZone from "./DropZone.vue";
+import DragIcon from "../DragIcon.vue";
 import IntrinsicsParametersHelp from "./parameters/IntrinsicsParametersHelp.vue";
 import ParametersContainer from "./parameters/ParametersContainer.vue";
 

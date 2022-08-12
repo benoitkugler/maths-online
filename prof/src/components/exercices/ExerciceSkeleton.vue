@@ -210,13 +210,10 @@
         <v-list-item>
           <v-row>
             <v-col cols="auto" align-self="center">
-              <v-icon
-                style="cursor: grab"
-                draggable="true"
-                @dragstart="(e) => onItemDragStart(e, index)"
-                size="large"
-                icon="mdi-drag-vertical"
-              ></v-icon>
+              <drag-icon
+                color="black"
+                @start="(e) => onItemDragStart(e, index)"
+              ></drag-icon>
             </v-col>
             <v-col cols="auto" align-self="center" class="my-1">
               <v-btn
@@ -305,6 +302,7 @@
 </template>
 
 <script setup lang="ts">
+import DropZone from "@/components/DropZone.vue";
 import type { Flow } from "@/controller/api_gen";
 import {
   FlowLabels,
@@ -313,12 +311,11 @@ import {
   type ExerciceQuestion,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onDragListItemStart, swapItems } from "@/controller/editor";
-import { copy } from "@/controller/utils";
+import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
+import DragIcon from "../DragIcon.vue";
 import DescriptionPannel from "../editor/DescriptionPannel.vue";
-import DropZone from "../editor/DropZone.vue";
 import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {

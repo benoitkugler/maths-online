@@ -48,39 +48,62 @@
       </v-col>
     </v-row>
     <v-card-text>
-      <v-list class="overflow-y-auto" style="max-height: 50vh">
+      <v-list
+        class="overflow-y-auto"
+        style="max-height: 50vh"
+        @dragend="onDragend"
+      >
         <v-list-item v-if="!sheet.Tasks?.length" style="text-align: center">
           <i>Aucun exercice.</i>
         </v-list-item>
-        <v-list-item v-for="(task, index) in sheet.Tasks" :key="index">
-          <v-row>
-            <v-col cols="3" align-self="center">
-              <v-btn
-                icon
-                size="small"
-                variant="flat"
-                @click="removeExercice(index)"
-                title="Retirer l'exercice"
-              >
-                <v-icon color="red" icon="mdi-close"></v-icon>
-              </v-btn>
-            </v-col>
-            <v-col align-self="center">
-              {{ task.Exercice.Exercice.Title }}
-            </v-col>
-            <v-col align-self="center">
-              <span v-if="!task.NbProgressions" class="text-grey"
-                >Non démarré</span
-              >
-              <v-chip v-else color="secondary"
-                >Démarré par {{ task.NbProgressions }}</v-chip
-              >
-            </v-col>
-            <v-col align-self="center" style="text-align: right">
-              / {{ exerciceBareme(task.Exercice) }}
-            </v-col>
-          </v-row>
-        </v-list-item>
+
+        <drop-zone
+          v-if="showDropZone"
+          @drop="(origin) => swap(origin, 0)"
+        ></drop-zone>
+
+        <div v-for="(task, index) in sheet.Tasks" :key="index">
+          <v-list-item>
+            <v-row>
+              <v-col cols="1" align-self="center">
+                <drag-icon
+                  color="black"
+                  @start="(e) => onItemDragStart(e, index)"
+                ></drag-icon>
+              </v-col>
+              <v-col cols="3" align-self="center">
+                <v-btn
+                  icon
+                  size="small"
+                  variant="flat"
+                  @click="removeExercice(index)"
+                  title="Retirer l'exercice"
+                >
+                  <v-icon color="red" icon="mdi-close"></v-icon>
+                </v-btn>
+              </v-col>
+              <v-col align-self="center">
+                {{ task.Exercice.Exercice.Title }}
+              </v-col>
+              <v-col align-self="center">
+                <span v-if="!task.NbProgressions" class="text-grey"
+                  >Non démarré</span
+                >
+                <v-chip v-else color="secondary"
+                  >Démarré par {{ task.NbProgressions }}</v-chip
+                >
+              </v-col>
+              <v-col align-self="center" style="text-align: right">
+                / {{ exerciceBareme(task.Exercice) }}
+              </v-col>
+            </v-row>
+          </v-list-item>
+          <drop-zone
+            v-if="showDropZone"
+            @drop="(origin) => swap(origin, index + 1)"
+          ></drop-zone>
+        </div>
+
         <v-list-item v-if="sheet.Tasks?.length">
           <v-row>
             <v-col align-self="center">Total</v-col>
@@ -98,9 +121,16 @@
 <script setup lang="ts">
 import type { ExerciceHeader, SheetExt, TaskExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { exerciceBareme, sheetBareme } from "@/controller/utils";
+import {
+  exerciceBareme,
+  onDragListItemStart,
+  sheetBareme,
+  swapItems,
+} from "@/controller/utils";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
+import DragIcon from "../DragIcon.vue";
+import DropZone from "../DropZone.vue";
 import ExerciceSelector from "./ExerciceSelector.vue";
 
 interface Props {
@@ -143,5 +173,19 @@ function removeExercice(index: number) {
   }
 }
 
-// TODO: implement reorder
+let showDropZone = $ref(false);
+function onItemDragStart(payload: DragEvent, index: number) {
+  onDragListItemStart(payload, index);
+  setTimeout(() => (showDropZone = true), 100); // workaround bug
+}
+
+function onDragend() {
+  showDropZone = false;
+}
+
+function swap(origin: number, target: number) {
+  showDropZone = false;
+  const l = swapItems(origin, target, props.sheet.Tasks!);
+  emit("reorder", l);
+}
 </script>

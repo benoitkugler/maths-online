@@ -19,15 +19,10 @@
         <v-list-item class="pr-0 pl-1">
           <v-row no-gutters>
             <v-col cols="1" align-self="center">
-              <v-icon
-                size="large"
-                class="pr-2"
-                style="cursor: grab"
-                @dragstart="(e) => onItemDragStart(e, index)"
-                draggable="true"
+              <drag-icon
                 color="green-lighten-3"
-                icon="mdi-drag-vertical"
-              ></v-icon>
+                @start="(e) => onItemDragStart(e, index)"
+              ></drag-icon>
             </v-col>
             <v-col cols="3">
               <variable-field
@@ -66,15 +61,12 @@
 </template>
 
 <script setup lang="ts">
+import DropZone from "@/components/DropZone.vue";
 import type { RandomParameter, RandomParameters } from "@/controller/api_gen";
-import {
-  ExpressionColor,
-  onDragListItemStart,
-  swapItems,
-  xRune,
-} from "@/controller/editor";
+import { ExpressionColor, xRune } from "@/controller/editor";
+import { onDragListItemStart, swapItems } from "@/controller/utils";
 import { $ref } from "vue/macros";
-import DropZone from "./DropZone.vue";
+import DragIcon from "../DragIcon.vue";
 import ParametersContainer from "./parameters/ParametersContainer.vue";
 import RandomParametersHelp from "./parameters/RandomParametersHelp.vue";
 import VariableField from "./utils/VariableField.vue";
