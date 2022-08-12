@@ -69,7 +69,7 @@ class _ExerciceWState extends State<ExerciceW> {
     }
   }
 
-  void onDone() async {
+  void onExerciceOver() async {
     setState(() {
       questionIndex = null;
     });
@@ -114,7 +114,7 @@ class _ExerciceWState extends State<ExerciceW> {
     ));
 
     if (progression.nextQuestion == -1) {
-      onDone();
+      onExerciceOver();
       return;
     }
 
@@ -172,7 +172,7 @@ class _ExerciceWState extends State<ExerciceW> {
     nextQuestions = resp.newQuestions; // buffer until retry
 
     if (progression.nextQuestion == -1) {
-      onDone();
+      onExerciceOver();
       return;
     }
 

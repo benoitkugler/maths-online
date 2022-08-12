@@ -168,32 +168,35 @@ func (ex exerciceContent) questionsSource(userID, adminID uID) map[IdQuestion]Qu
 // instantiates the questions, using a fixed shared instance of the exercice parameters
 // for each question
 func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
-	ex, links, qus := data.exercice, data.links, data.questions()
+	ex, links, questions := data.exercice, data.links, data.questions()
 
 	out := InstantiatedExercice{
 		Exercice:  ex,
-		Questions: make([]InstantiatedQuestion, len(qus)),
-		Baremes:   make([]int, len(qus)),
+		Questions: make([]InstantiatedQuestion, len(questions)),
+		Baremes:   make([]int, len(questions)),
 	}
 
-	// instantiate the questions
-	sharedParams := ex.Parameters.ToMap()
-	for index, question := range qus {
-		ownParams := question.Page.Parameters.ToMap()
+	// instantiate the questions :
+	// start with the shared paremeters, which must be instantiated only once
+	sharedVars, err := ex.Parameters.ToMap().Instantiate()
+	if err != nil {
+		return InstantiatedExercice{}, err
+	}
 
-		// merge the parameters, given higher precedence to question
-		for c, v := range sharedParams {
-			if _, has := ownParams[c]; !has {
-				ownParams[c] = v
-			}
-		}
-
-		vars, err := ownParams.Instantiate()
+	for index, question := range questions {
+		ownVars, err := question.Page.Parameters.ToMap().Instantiate()
 		if err != nil {
 			return InstantiatedExercice{}, err
 		}
 
-		instance, err := question.Page.InstantiateWith(vars)
+		// merge the parameters, given higher precedence to question
+		for c, v := range sharedVars {
+			if _, has := ownVars[c]; !has {
+				ownVars[c] = v
+			}
+		}
+
+		instance, err := question.Page.InstantiateWith(ownVars)
 		if err != nil {
 			return InstantiatedExercice{}, err
 		}
@@ -201,7 +204,7 @@ func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
 		out.Questions[index] = InstantiatedQuestion{
 			Id:       question.Id,
 			Question: instance.ToClient(),
-			Params:   newVarList(vars),
+			Params:   newVarList(ownVars),
 		}
 		out.Baremes[index] = links[index].Bareme
 	}
