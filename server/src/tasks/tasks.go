@@ -226,7 +226,12 @@ func EvaluateTaskExercice(db *sql.DB, idTask IdTask, idStudent teacher.IdStudent
 }
 
 // compute the student mark
+// an empty progression is supported and returns 0
 func computeMark(questions ed.ExerciceQuestions, progression []ed.QuestionHistory) int {
+	if len(progression) == 0 {
+		return 0
+	}
+
 	questions.EnsureOrder()
 
 	var out int

@@ -46,9 +46,9 @@ class ServerHomeworkAPI implements HomeworkAPI {
   Future<InstantiatedExercice> loadExercice(int idExercice) async {
     const serverEndpoint = "/api/student/homework/exercice/instantiate";
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
-        query: {studentIDKey: studentID, "id": idExercice}));
+        query: {studentIDKey: studentID, "id": idExercice.toString()}));
     final resp = await http.get(uri);
-    return instantiatedExerciceFromJson(resp);
+    return instantiatedExerciceFromJson(jsonDecode(resp.body));
   }
 
   @override
@@ -62,7 +62,8 @@ class ServerHomeworkAPI implements HomeworkAPI {
         headers: {
           'Content-type': 'application/json',
         });
-    return studentEvaluateExerciceOutFromJson(jsonDecode(resp.body));
+    print(resp.body);
+    return studentEvaluateExerciceOutFromJson(checkServerError(resp.body));
   }
 }
 
@@ -123,7 +124,8 @@ class _Loading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(children: const [
+      child:
+          Column(mainAxisAlignment: MainAxisAlignment.center, children: const [
         CircularProgressIndicator(value: null),
         SizedBox(height: 20),
         Text("Chargement des fiches de travail..."),
@@ -209,8 +211,9 @@ class _SheetSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasNotation = sheet.sheet.notation != Notation.noNotation;
     final started = sheet.tasks.where((ex) => ex.hasProgression).length;
-    final completed =
-        sheet.tasks.where((ex) => ex.progression.isCompleted()).length;
+    final completed = sheet.tasks
+        .where((ex) => ex.hasProgression && ex.progression.isCompleted())
+        .length;
     return Card(
       color: emphasize ? Colors.blueAccent : null,
       child: Padding(

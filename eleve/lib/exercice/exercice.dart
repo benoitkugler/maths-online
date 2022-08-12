@@ -65,7 +65,8 @@ class _ExerciceWState extends State<ExerciceW> {
   // handle the errors
   Future<EvaluateExerciceOut?> _evaluate(EvaluateExerciceIn params) async {
     try {
-      return widget.api.evaluate(params);
+      final res = await widget.api.evaluate(params);
+      return res;
     } catch (error) {
       showError("Impossible d'évaluer l'exercice", error, context);
       return null;
@@ -141,7 +142,7 @@ class _ExerciceWState extends State<ExerciceW> {
     final toSend = <int, Answer>{};
     int? goToQuestion;
     for (var index = 0; index < questions.length; index++) {
-      final history = progression.questions[index];
+      final history = progression.getQuestion(index);
       if (history.isEmpty || !history.last) {
         // the question must be answered
         if (!currentAnswers.containsKey(index)) {

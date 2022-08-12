@@ -249,12 +249,19 @@ func (ct *Controller) EvaluateExercice(args EvaluateExerciceIn) (EvaluateExercic
 
 // EvaluateExercice checks the answer provided for the given exercice and
 // update the in-memory progression.
+// The given progression must either be empty or having same length
+// as the exercice.
 func EvaluateExercice(db DB, args EvaluateExerciceIn) (EvaluateExerciceOut, error) {
 	data, err := loadExercice(db, args.IdExercice)
 	if err != nil {
 		return EvaluateExerciceOut{}, utils.SQLError(err)
 	}
 	ex, qus := data.exercice, data.questions()
+
+	// handle initial empty progressions
+	if len(args.Progression.Questions) == 0 {
+		args.Progression.Questions = make([]QuestionHistory, len(qus))
+	}
 
 	if L1, L2 := len(qus), len(args.Progression.Questions); L1 != L2 {
 		return EvaluateExerciceOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)

@@ -88,7 +88,7 @@ class _SheetWState extends State<SheetW> {
         builder: (context) => Dialog(
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
+                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [

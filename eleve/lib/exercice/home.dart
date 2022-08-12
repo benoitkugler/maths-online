@@ -3,14 +3,21 @@ import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
 
 extension ProgressionExtension on ProgressionExt {
+  /// [getQuestion] returns an empty list if progression is empty
+  QuestionHistory getQuestion(int index) {
+    if (questions.length <= index) {
+      return [];
+    }
+    return questions[index];
+  }
+
   bool _isQuestionCompleted(List<bool> history) {
     return history.isNotEmpty && history.last;
   }
 
   /// returns `true` if the question at [index] is completed
   bool isQuestionCompleted(int index) {
-    final history = questions[index];
-    return _isQuestionCompleted(history);
+    return _isQuestionCompleted(getQuestion(index));
   }
 
   /// returns `true` if all the questions of the exercice are completed
@@ -85,7 +92,8 @@ class _QuestionList extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Wrap(
-                        children: data.progression.questions[index]
+                        children: data.progression
+                            .getQuestion(index)
                             .map((e) => _SuccessSquare(e))
                             .toList(),
                       ),
