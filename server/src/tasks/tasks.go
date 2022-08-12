@@ -21,6 +21,7 @@ func (l ProgressionQuestions) ensureOrder() {
 // Student API
 
 type TaskProgressionHeader struct {
+	Id            IdTask
 	IdExercice    ed.IdExercice
 	TitleExercice string
 
@@ -79,6 +80,7 @@ func LoadTasksProgression(db DB, idStudent teacher.IdStudent, idTasks []IdTask) 
 		progression := extendedProgressions[idProg]
 
 		out[task.Id] = TaskProgressionHeader{
+			Id:            task.Id,
 			IdExercice:    exercice.Id,
 			TitleExercice: exercice.Title,
 

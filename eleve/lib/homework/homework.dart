@@ -6,6 +6,7 @@ import 'package:eleve/homework/progression.dart';
 import 'package:eleve/homework/sheet.dart';
 import 'package:eleve/homework/types.gen.dart';
 import 'package:eleve/homework/utils.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared_gen.dart';
@@ -14,11 +15,11 @@ import 'package:http/http.dart' as http;
 
 typedef Sheets = List<SheetProgression>;
 
-abstract class HomeworkAPI {
+abstract class HomeworkAPI extends FieldAPI {
   Future<Sheets> loadSheets();
   Future<InstantiatedExercice> loadExercice(int idExercice);
   Future<StudentEvaluateExerciceOut> evaluateExercice(
-      int idSheet, int index, EvaluateExerciceIn ex);
+      IdTask idTask, EvaluateExerciceIn ex);
 }
 
 class ServerHomeworkAPI implements HomeworkAPI {
@@ -26,6 +27,11 @@ class ServerHomeworkAPI implements HomeworkAPI {
   final String studentID;
 
   const ServerHomeworkAPI(this.buildMode, this.studentID);
+
+  @override
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression) {
+    return ServerFieldAPI(buildMode).checkExpressionSyntax(expression);
+  }
 
   @override
   Future<Sheets> loadSheets() async {
@@ -47,12 +53,12 @@ class ServerHomeworkAPI implements HomeworkAPI {
 
   @override
   Future<StudentEvaluateExerciceOut> evaluateExercice(
-      int idSheet, int index, EvaluateExerciceIn ex) async {
+      IdTask idTask, EvaluateExerciceIn ex) async {
     const serverEndpoint = "/api/student/homework/exercice/evaluate";
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
     final resp = await http.post(uri,
         body: jsonEncode(studentEvaluateExerciceInToJson(
-            StudentEvaluateExerciceIn(studentID, idSheet, index, ex))),
+            StudentEvaluateExerciceIn(studentID, idTask, ex))),
         headers: {
           'Content-type': 'application/json',
         });
@@ -87,12 +93,6 @@ class _HomeworkState extends State<Homework> {
     super.didUpdateWidget(oldWidget);
   }
 
-  void onSelectSheet(SheetProgression sheet) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) {
-      return SheetW(widget.api, sheet);
-    }));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,7 +107,7 @@ class _HomeworkState extends State<Homework> {
                 child: ErrorBar(
                     "Impossible de charger les données.", snapshot.error!));
           } else if (snapshot.hasData) {
-            return _SheetList(snapshot.data!, onSelectSheet);
+            return _SheetList(widget.api, snapshot.data!);
           } else {
             return const _Loading();
           }
@@ -132,12 +132,41 @@ class _Loading extends StatelessWidget {
   }
 }
 
-// shows the most interesting sheet, or nothing
+class _SheetList extends StatefulWidget {
+  final HomeworkAPI api;
+  final Sheets initialSheets;
+  const _SheetList(this.api, this.initialSheets, {Key? key}) : super(key: key);
 
-class _SheetList extends StatelessWidget {
-  final Sheets sheets;
-  final void Function(SheetProgression) onSelect;
-  const _SheetList(this.sheets, this.onSelect, {Key? key}) : super(key: key);
+  @override
+  State<_SheetList> createState() => _SheetListState();
+}
+
+class _SheetListState extends State<_SheetList> {
+  late final Sheets sheets;
+
+  @override
+  void initState() {
+    sheets = widget.initialSheets;
+    super.initState();
+  }
+
+  bool updateMark(SheetMarkNotification notif) {
+    final index =
+        sheets.indexWhere((element) => element.sheet.id == notif.idSheet);
+    final actual = sheets[index];
+    notif.updateTasks(actual.tasks);
+    setState(() {
+      sheets[index] = SheetProgression(actual.sheet, actual.tasks);
+    });
+    return true;
+  }
+
+  void onSelectSheet(SheetProgression sheet) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) {
+      return NotificationListener<SheetMarkNotification>(
+          child: SheetW(widget.api, sheet), onNotification: updateMark);
+    }));
+  }
 
   // assume a one at a time sheet to do and emphasize it
   int selectMainSheetID() {
@@ -159,7 +188,7 @@ class _SheetList extends StatelessWidget {
       child: ListView(
         children: sheets
             .map((e) => InkWell(
-                onTap: () => onSelect(e),
+                onTap: () => onSelectSheet(e),
                 child: _SheetSummary(
                   e,
                   emphasize: e.sheet.id == bestSheet,
@@ -179,9 +208,9 @@ class _SheetSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasNotation = sheet.sheet.notation != Notation.noNotation;
-    final started = sheet.exercices.where((ex) => ex.hasProgression).length;
+    final started = sheet.tasks.where((ex) => ex.hasProgression).length;
     final completed =
-        sheet.exercices.where((ex) => ex.progression.isCompleted()).length;
+        sheet.tasks.where((ex) => ex.progression.isCompleted()).length;
     return Card(
       color: emphasize ? Colors.blueAccent : null,
       child: Padding(
@@ -204,11 +233,11 @@ class _SheetSummary extends StatelessWidget {
                 ],
               ),
             ),
-            if (sheet.exercices.isNotEmpty)
+            if (sheet.tasks.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ProgressionBar(
-                    total: sheet.exercices.length,
+                    total: sheet.tasks.length,
                     completed: completed,
                     started: started),
               )

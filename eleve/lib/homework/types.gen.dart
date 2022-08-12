@@ -160,6 +160,7 @@ JSON studentEvaluateExerciceOutToJson(StudentEvaluateExerciceOut item) {
 
 // github.com/benoitkugler/maths-online/tasks.TaskProgressionHeader
 class TaskProgressionHeader {
+  final IdTask id;
   final IdExercice idExercice;
   final String titleExercice;
   final bool hasProgression;
@@ -167,18 +168,19 @@ class TaskProgressionHeader {
   final int mark;
   final int bareme;
 
-  const TaskProgressionHeader(this.idExercice, this.titleExercice,
+  const TaskProgressionHeader(this.id, this.idExercice, this.titleExercice,
       this.hasProgression, this.progression, this.mark, this.bareme);
 
   @override
   String toString() {
-    return "TaskProgressionHeader($idExercice, $titleExercice, $hasProgression, $progression, $mark, $bareme)";
+    return "TaskProgressionHeader($id, $idExercice, $titleExercice, $hasProgression, $progression, $mark, $bareme)";
   }
 }
 
 TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return TaskProgressionHeader(
+      intFromJson(json['Id']),
       intFromJson(json['IdExercice']),
       stringFromJson(json['TitleExercice']),
       boolFromJson(json['HasProgression']),
@@ -189,6 +191,7 @@ TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
 
 JSON taskProgressionHeaderToJson(TaskProgressionHeader item) {
   return {
+    "Id": intToJson(item.id),
     "IdExercice": intToJson(item.idExercice),
     "TitleExercice": stringToJson(item.titleExercice),
     "HasProgression": boolToJson(item.hasProgression),
