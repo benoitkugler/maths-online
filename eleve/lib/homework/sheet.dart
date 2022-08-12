@@ -7,12 +7,6 @@ import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
 
-class MarkBareme {
-  final int mark;
-  final int bareme;
-  MarkBareme(this.mark, this.bareme);
-}
-
 MarkBareme taskMark(List<TaskProgressionHeader> tasks) {
   int mark = 0;
   int bareme = 0;
@@ -210,16 +204,14 @@ extension IconE on ExerciceCompletion {
   Icon get icon {
     switch (this) {
       case ExerciceCompletion.notStarted:
-        return const Icon(IconData(0xf587,
-            fontFamily: 'MaterialIcons', matchTextDirection: true));
+        return const Icon(assignementIcon);
       case ExerciceCompletion.started:
         return const Icon(
             IconData(0xf587,
                 fontFamily: 'MaterialIcons', matchTextDirection: true),
             color: Colors.orange);
       case ExerciceCompletion.completed:
-        return const Icon(IconData(0xe156, fontFamily: 'MaterialIcons'),
-            color: Colors.green);
+        return const Icon(completedIcon, color: Colors.green);
     }
   }
 }

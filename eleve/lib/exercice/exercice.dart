@@ -40,9 +40,11 @@ class _ExerciceWState extends State<ExerciceW> {
   late List<InstantiatedQuestion> questions; // will change upon wrong answer
   late ProgressionExt progression; // will change on validate
 
-// the questions to display when trying again
+  // the questions to display when trying again
   List<InstantiatedQuestion> nextQuestions = [];
 
+  // the currrent answsers of the student, filled
+  // when validating a question
   Map<int, QuestionAnswersIn> currentAnswers = {};
   Map<int, Map<int, bool>> results = {};
 
@@ -266,12 +268,14 @@ class _ExerciceWState extends State<ExerciceW> {
         body: questionIndex == null
             ? ExerciceHome(
                 StudentExerciceInst(
-                    InstantiatedExercice(
-                        ex.exercice,
-                        // replace the questions
-                        questions,
-                        ex.baremes),
-                    progression),
+                  InstantiatedExercice(
+                      ex.exercice,
+                      // replace the questions
+                      questions,
+                      ex.baremes),
+                  progression,
+                ),
+                currentAnswers.keys.toSet(),
                 (index) => setState(() {
                       questionIndex = index;
                     }))

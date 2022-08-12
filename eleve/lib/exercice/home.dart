@@ -2,6 +2,10 @@ import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
 
+const assignementIcon =
+    IconData(0xf587, fontFamily: 'MaterialIcons', matchTextDirection: true);
+const completedIcon = IconData(0xe156, fontFamily: 'MaterialIcons');
+
 extension ProgressionExtension on ProgressionExt {
   /// [getQuestion] returns an empty list if progression is empty
   QuestionHistory getQuestion(int index) {
@@ -30,9 +34,11 @@ extension ProgressionExtension on ProgressionExt {
 /// with its questions and bareme
 class ExerciceHome extends StatelessWidget {
   final StudentExerciceInst data;
+  final Set<int> validatedQuestions;
   final void Function(int index) onSelectQuestion;
 
-  const ExerciceHome(this.data, this.onSelectQuestion, {Key? key})
+  const ExerciceHome(this.data, this.validatedQuestions, this.onSelectQuestion,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -44,7 +50,8 @@ class ExerciceHome extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 20),
           child: ColoredTitle(data.exercice.exercice.title, Colors.purple),
         ),
-        Expanded(child: _QuestionList(data, onSelectQuestion))
+        Expanded(
+            child: _QuestionList(data, validatedQuestions, onSelectQuestion))
       ]),
     ));
   }
@@ -67,12 +74,32 @@ class _SuccessSquare extends StatelessWidget {
   }
 }
 
+class MarkBareme {
+  final int mark;
+  final int bareme;
+  MarkBareme(this.mark, this.bareme);
+}
+
 class _QuestionList extends StatelessWidget {
   final StudentExerciceInst data;
+  final Set<int> validatedQuestions;
   final void Function(int index) onSelectQuestion;
 
-  const _QuestionList(this.data, this.onSelectQuestion, {Key? key})
+  const _QuestionList(this.data, this.validatedQuestions, this.onSelectQuestion,
+      {Key? key})
       : super(key: key);
+
+  MarkBareme get mark {
+    int mark = 0;
+    int bareme = 0;
+    for (var i = 0; i < data.exercice.baremes.length; i++) {
+      bareme += data.exercice.baremes[i];
+      if (data.progression.isQuestionCompleted(i)) {
+        mark += data.exercice.baremes[i];
+      }
+    }
+    return MarkBareme(mark, bareme);
+  }
 
   void _showProgressionDetails(BuildContext context, int index) {
     showDialog<void>(
@@ -122,28 +149,41 @@ class _QuestionList extends StatelessWidget {
         data.progression.nextQuestion < questionIndex) {
       return _QuestionState.locked;
     }
+
+    if (validatedQuestions.contains(questionIndex)) {
+      return _QuestionState.waitingCorrection;
+    }
     return _QuestionState.toDo;
   }
 
   @override
   Widget build(BuildContext context) {
+    final mb = mark;
     return ListView(
-      children: List<_QuestionRow>.generate(
-        data.exercice.questions.length,
-        (index) => _QuestionRow(
-          state(index),
-          "Question ${index + 1}",
-          data.exercice.baremes[index],
-          showDetails: () => _showProgressionDetails(context, index),
-          onClick:
-              allowDoQuestion(index) ? () => onSelectQuestion(index) : null,
+      children: [
+        ...List<Widget>.generate(
+          data.exercice.questions.length,
+          (index) => _QuestionRow(
+            state(index),
+            "Question ${index + 1}",
+            data.exercice.baremes[index],
+            showDetails: () => _showProgressionDetails(context, index),
+            onClick:
+                allowDoQuestion(index) ? () => onSelectQuestion(index) : null,
+          ),
         ),
-      ),
+        if (data.progression.questions.isNotEmpty)
+          ListTile(
+            title: const Text("Total"),
+            trailing: Text("${mb.mark} / ${mb.bareme}",
+                style: TextStyle(fontSize: 14)),
+          )
+      ],
     );
   }
 }
 
-enum _QuestionState { locked, checked, toDo }
+enum _QuestionState { locked, checked, toDo, waitingCorrection }
 
 extension _Icon on _QuestionState {
   Icon get icon {
@@ -158,9 +198,12 @@ extension _Icon on _QuestionState {
             color: Colors.green);
       case _QuestionState.toDo:
         return const Icon(
-          IconData(0xe09f, fontFamily: 'MaterialIcons'),
+          assignementIcon,
           color: Colors.purpleAccent,
         );
+      case _QuestionState.waitingCorrection:
+        return const Icon(IconData(0xf51a, fontFamily: 'MaterialIcons'),
+            color: Colors.orange);
     }
   }
 }
@@ -178,11 +221,19 @@ class _QuestionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title),
-      leading: OutlinedButton(onPressed: showDetails, child: state.icon),
-      trailing: Text("/ $bareme"),
-      onTap: onClick,
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: ListTile(
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(4))),
+        tileColor: state == _QuestionState.toDo
+            ? Colors.purple.withOpacity(0.5)
+            : null,
+        leading: OutlinedButton(onPressed: showDetails, child: state.icon),
+        title: Text(title),
+        trailing: Text("/ $bareme"),
+        onTap: onClick,
+      ),
     );
   }
 }
