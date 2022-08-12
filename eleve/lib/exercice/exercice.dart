@@ -9,12 +9,6 @@ import 'package:flutter/material.dart' hide Flow;
 
 class NotificationExerciceDone extends Notification {}
 
-extension IsCorrect on QuestionAnswersOut {
-  bool get isCorrect {
-    return results.values.every((success) => success);
-  }
-}
-
 abstract class ExerciceAPI extends FieldAPI {
   Future<EvaluateExerciceOut> evaluate(EvaluateExerciceIn params);
 }
@@ -46,7 +40,7 @@ class _ExerciceWState extends State<ExerciceW> {
   // the currrent answsers of the student, filled
   // when validating a question
   Map<int, QuestionAnswersIn> currentAnswers = {};
-  Map<int, Map<int, bool>> results = {};
+  Map<int, QuestionAnswersOut> results = {};
 
   int? questionIndex; // null means summary
 
@@ -133,7 +127,7 @@ class _ExerciceWState extends State<ExerciceW> {
     } else {
       // show errors and ask for retry
       setState(() {
-        results = {index: resp.results[index]!.results};
+        results = {index: resp.results[index]!};
       });
     }
   }
@@ -196,11 +190,10 @@ class _ExerciceWState extends State<ExerciceW> {
       content: Text(text),
     ));
 
-    // display the errors and go to the first wrong question
+    // display the errors and go to the menu
     setState(() {
-      results =
-          resp.results.map((index, value) => MapEntry(index, value.results));
-      questionIndex = progression.nextQuestion;
+      results = resp.results;
+      questionIndex = null;
     });
   }
 
@@ -276,6 +269,9 @@ class _ExerciceWState extends State<ExerciceW> {
                   progression,
                 ),
                 currentAnswers.keys.toSet(),
+                results.keys
+                    .where((index) => !results[index]!.isCorrect)
+                    .toSet(),
                 (index) => setState(() {
                       questionIndex = index;
                     }))
@@ -287,7 +283,7 @@ class _ExerciceWState extends State<ExerciceW> {
                 title: "Question ${questionIndex! + 1}",
                 timeout: null,
                 blockOnSubmit: true,
-                feedback: results[questionIndex!],
+                feedback: results[questionIndex!]?.results,
                 answer: currentAnswers[questionIndex!]?.data,
                 onRetry: onRetryQuestion,
               ));

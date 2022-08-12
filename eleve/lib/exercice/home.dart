@@ -1,6 +1,14 @@
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
+
+extension IsCorrect on QuestionAnswersOut {
+  /// isCorrect is true if every fields are correct
+  bool get isCorrect {
+    return results.values.every((success) => success);
+  }
+}
 
 const assignementIcon =
     IconData(0xf587, fontFamily: 'MaterialIcons', matchTextDirection: true);
@@ -35,14 +43,18 @@ extension ProgressionExtension on ProgressionExt {
 class ExerciceHome extends StatelessWidget {
   final StudentExerciceInst data;
   final Set<int> validatedQuestions;
+  final Set<int> incorrectQuestions;
   final void Function(int index) onSelectQuestion;
 
-  const ExerciceHome(this.data, this.validatedQuestions, this.onSelectQuestion,
+  const ExerciceHome(this.data, this.validatedQuestions,
+      this.incorrectQuestions, this.onSelectQuestion,
       {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    print(incorrectQuestions);
+    print(validatedQuestions);
     return Scaffold(
         body: Center(
       child: Column(children: [
@@ -51,7 +63,8 @@ class ExerciceHome extends StatelessWidget {
           child: ColoredTitle(data.exercice.exercice.title, Colors.purple),
         ),
         Expanded(
-            child: _QuestionList(data, validatedQuestions, onSelectQuestion))
+            child: _QuestionList(
+                data, validatedQuestions, incorrectQuestions, onSelectQuestion))
       ]),
     ));
   }
@@ -83,9 +96,11 @@ class MarkBareme {
 class _QuestionList extends StatelessWidget {
   final StudentExerciceInst data;
   final Set<int> validatedQuestions;
+  final Set<int> incorrectQuestions; // temporary indication
   final void Function(int index) onSelectQuestion;
 
-  const _QuestionList(this.data, this.validatedQuestions, this.onSelectQuestion,
+  const _QuestionList(this.data, this.validatedQuestions,
+      this.incorrectQuestions, this.onSelectQuestion,
       {Key? key})
       : super(key: key);
 
@@ -150,7 +165,11 @@ class _QuestionList extends StatelessWidget {
       return _QuestionState.locked;
     }
 
-    if (validatedQuestions.contains(questionIndex)) {
+    // after validating, both validatedQuestions and incorrectQuestions
+    // may contain the same index : give the priority to incorrectQuestions
+    if (incorrectQuestions.contains(questionIndex)) {
+      return _QuestionState.incorrect;
+    } else if (validatedQuestions.contains(questionIndex)) {
       return _QuestionState.waitingCorrection;
     }
     return _QuestionState.toDo;
@@ -183,7 +202,7 @@ class _QuestionList extends StatelessWidget {
   }
 }
 
-enum _QuestionState { locked, checked, toDo, waitingCorrection }
+enum _QuestionState { locked, checked, toDo, waitingCorrection, incorrect }
 
 extension _Icon on _QuestionState {
   Icon get icon {
@@ -204,6 +223,9 @@ extension _Icon on _QuestionState {
       case _QuestionState.waitingCorrection:
         return const Icon(IconData(0xf51a, fontFamily: 'MaterialIcons'),
             color: Colors.orange);
+      case _QuestionState.incorrect:
+        return const Icon(IconData(0xf647, fontFamily: 'MaterialIcons'),
+            color: Colors.red);
     }
   }
 }
