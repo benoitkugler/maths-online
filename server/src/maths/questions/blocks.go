@@ -833,11 +833,11 @@ func (fg FunctionsGraphBlock) setupValidator(params expression.RandomParameters)
 	}
 	for i, area := range fg.Areas {
 		var err error
-		out.areas[i].function1, err = area.Top.parse()
+		out.areas[i].top, err = area.Top.parse()
 		if err != nil {
 			return nil, err
 		}
-		out.areas[i].function2, err = area.Bottom.parse()
+		out.areas[i].bottom, err = area.Bottom.parse()
 		if err != nil {
 			return nil, err
 		}

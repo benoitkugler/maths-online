@@ -427,8 +427,8 @@ func (d Domain) eval(vars Vars) (from, to float64, err error) {
 	return from, to, nil
 }
 
-// IsIncludedIntoOne returns an error if `d` is not included in any `other` domains
-// If one of the expression bound is nil, it is interpreted as Infinity (no constraint)
+// IsIncludedIntoOne returns an error if `d` is not included in any `other` domains.
+// If one of the expression bound is nil, it is interpreted as Infinity (no constraint).
 func (d Domain) IsIncludedIntoOne(others []Domain, vars Vars) error {
 	dFrom, dTo, err := d.eval(vars)
 	if err != nil {
