@@ -3,7 +3,6 @@ package questions
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"strings"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -165,18 +164,18 @@ func (rf RadioFieldInstance) fieldID() int {
 	return rf.ID
 }
 
-func (rf RadioFieldInstance) shuffler() *rand.Rand {
+func (rf RadioFieldInstance) shuffler() utils.Shuffler {
 	var hash []byte
 	for _, a := range rf.Proposals {
 		hash = append(hash, []byte(textLineToString(a))...)
 	}
-	return utils.NewDeterministicRand(hash)
+	return utils.NewDeterministicShuffler(hash, len(rf.Proposals))
 }
 
 // returns the shuffled proposals
 func (rf RadioFieldInstance) proposals() []client.TextLine {
-	out := append([]client.TextLine(nil), rf.Proposals...) // copy
-	rf.shuffler().Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	out := make([]client.TextLine, len(rf.Proposals))
+	rf.shuffler().Shuffle(func(dst, src int) { out[dst] = rf.Proposals[src] })
 	return out
 }
 
@@ -199,13 +198,13 @@ func (f RadioFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 }
 
 func (f RadioFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	ma := shufflingMap(f.shuffler(), len(f.Proposals))
+	ma := f.shuffler().OriginalToShuffled()
 	expected := ma[f.Answer-1]
 	return expected == answer.(client.RadioAnswer).Index
 }
 
 func (f RadioFieldInstance) correctAnswer() client.Answer {
-	ma := shufflingMap(f.shuffler(), len(f.Proposals))
+	ma := f.shuffler().OriginalToShuffled()
 	expected := ma[f.Answer-1]
 	return client.RadioAnswer{Index: expected}
 }
@@ -231,30 +230,6 @@ func (f DropDownFieldInstance) correctAnswer() client.Answer {
 	return RadioFieldInstance(f).correctAnswer()
 }
 
-// shufflingMap returns the mapping from originalIndex -> shuffledIndex
-// for the list [0, 1, ..., n-1]
-func shufflingMap(shuffler *rand.Rand, n int) []int {
-	indices := make([]int, n)
-	for i := range indices {
-		indices[i] = i
-	}
-	shuffler.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
-	// build the reverse map (quadratic complexity)
-	answer := make([]int, n)
-	for i := range answer {
-		// find the new index of i into indices
-		rep := -1
-		for r, val := range indices {
-			if val == i {
-				rep = r
-				break
-			}
-		}
-		answer[i] = rep
-	}
-	return answer
-}
-
 // OrderedListFieldInstance asks the student to reorder part of the
 // given symbols
 type OrderedListFieldInstance struct {
@@ -269,10 +244,11 @@ func (olf OrderedListFieldInstance) fieldID() int { return olf.ID }
 // proposals groups Answer and AdditionalProposals and shuffle the list
 // in a random way, which only depends on the field content though
 func (olf OrderedListFieldInstance) proposals() (out []client.TextLine) {
-	out = append(append(out, olf.Answer...), olf.AdditionalProposals...)
+	input := append(append(out, olf.Answer...), olf.AdditionalProposals...)
+	out = make([]client.TextLine, len(input))
 	// shuffle in a deterministic way
 	rd := olf.shuffler()
-	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	rd.Shuffle(func(dst, src int) { out[dst] = input[src] })
 	return out
 }
 
@@ -350,18 +326,18 @@ func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorr
 	return true
 }
 
-func (olf OrderedListFieldInstance) shuffler() *rand.Rand {
+func (olf OrderedListFieldInstance) shuffler() utils.Shuffler {
 	var hash []byte
 	for _, a := range olf.Answer {
 		hash = append(hash, []byte(textLineToString(a))...)
 	}
-	return utils.NewDeterministicRand(hash)
+	return utils.NewDeterministicShuffler(hash, len(olf.Answer)+len(olf.AdditionalProposals))
 }
 
 func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
 	rd := olf.shuffler()
 
-	answer := shufflingMap(rd, len(olf.Answer)+len(olf.AdditionalProposals))
+	answer := rd.OriginalToShuffled()
 	answer = answer[0:len(olf.Answer)] // restrict to answer
 
 	return client.OrderedListAnswer{Indices: answer}
@@ -592,24 +568,26 @@ func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 // depending on the answer and randomized
 func (vtf VariationTableFieldInstance) lengthProposals() []int {
 	L := len(vtf.Answer.Xs) - 1
-	var out []int
+	var tmp []int
 
 	rd := utils.NewDeterministicRand([]byte{byte(L)})
 	if L <= 1 {
-		out = []int{L, L + 1}
+		tmp = []int{L, L + 1}
 	} else {
-		out = []int{L - 1, L, L + 1}
+		tmp = []int{L - 1, L, L + 1}
 		// add some random noise to prevent the
 		// right solution (L) to be in the middle of the proposals
 		// note that we need to ensure L - 1 + r >= 1
 		r := rd.Intn(1)
-		for i := range out {
-			out[i] += r
+		for i := range tmp {
+			tmp[i] += r
 		}
 	}
 
-	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
-	return out
+	suffler := utils.NewDeterministicShuffler([]byte{byte(L)}, len(tmp))
+	out := make([]int, len(tmp))
+	suffler.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
+	return tmp
 }
 
 func (f VariationTableFieldInstance) toClient() client.Block {
@@ -795,16 +773,17 @@ func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
 	alternative1[0] += 1
 	alternative2 := append(client.TreeShape(nil), realShape...)
 	alternative2[len(alternative2)-1] += 1
-	out := []client.TreeShape{
+	tmp := []client.TreeShape{
 		realShape,
 		append(realShape, realShape[0]),
 		alternative1,
 		alternative2,
 	}
 
-	rd := utils.NewDeterministicRand([]byte(textLineToString(f.EventsProposals)))
-	rd.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
-	return out
+	rd := utils.NewDeterministicShuffler([]byte(textLineToString(f.EventsProposals)), len(tmp))
+	out := make([]client.TreeShape, len(tmp))
+	rd.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
+	return tmp
 }
 
 func (f TreeFieldInstance) fieldID() int { return f.ID }

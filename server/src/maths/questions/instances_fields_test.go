@@ -125,14 +125,13 @@ func TestBug72(t *testing.T) {
 		Answer: 1,
 	}
 
-	ans := field.correctAnswer()
-	if ans.(client.RadioAnswer).Index != 2 { // 0 based
-		t.Fatal(ans)
-	}
-
 	props := field.toClient().(client.DropDownFieldBlock).Proposals
-	if textLineToString(props[2]) != "GB" {
+	if textLineToString(props[0]) != "GB" {
 		t.Fatal(props)
+	}
+	ans := field.correctAnswer()
+	if ans.(client.RadioAnswer).Index != 0 { // 0 based
+		t.Fatal(ans)
 	}
 }
 
@@ -173,17 +172,20 @@ func Test_shufflingMap(t *testing.T) {
 		{5}, {6}, {7},
 	}
 	for _, tt := range tests {
-		shuffler := utils.NewDeterministicRand([]byte{'a', 'b', 'c'})
-		got := shufflingMap(shuffler, tt.n)
+		shuffler := utils.NewDeterministicShuffler([]byte{'a', 'b', 'c'}, tt.n)
+		got := shuffler.OriginalToShuffled()
+
 		indices := make([]int, tt.n)
 		for i := range indices {
 			indices[i] = i
 		}
-		shuffler = utils.NewDeterministicRand([]byte{'a', 'b', 'c'})
-		shuffler.Shuffle(len(indices), reflect.Swapper(indices))
+		out := make([]int, len(indices))
+
+		shuffler = utils.NewDeterministicShuffler([]byte{'a', 'b', 'c'}, tt.n)
+		shuffler.Shuffle(func(dst, src int) { out[dst] = indices[src] })
 
 		new4 := got[4]
-		if indices[new4] != 4 {
+		if out[new4] != 4 {
 			t.Errorf("shufflingMap() = %v", got)
 		}
 	}

@@ -96,11 +96,61 @@ func BuildUrl(host, path string, query map[string]string) string {
 	return u.String()
 }
 
-// NewDeterministicRand returns a random generator seeded
-// with a value computed from `hash`.
-func NewDeterministicRand(hash []byte) *rand.Rand {
+// Shuffler is a permutation used to shuffle a slice,
+// storing the shuffled to original indices map.
+type Shuffler []int
+
+// Shuffle shuffles a slice using `moveTo`, which should be, in pseudo code :
+// destination[dst] = source[src]
+func (sh Shuffler) Shuffle(moveTo func(dst, src int)) {
+	for i, mappedIndex := range sh {
+		moveTo(i, mappedIndex)
+	}
+}
+
+// OriginalToShuffled reverse the permutation, returning
+// the original index -> shuffled index map.
+func (sh Shuffler) OriginalToShuffled() []int {
+	// build the reversed permutation
+	out := make([]int, len(sh))
+	for shuffled, original := range sh {
+		out[original] = shuffled
+	}
+	return out
+}
+
+func newSeed(hash []byte) int64 {
 	s := fnv.New32()
 	s.Write(hash)
-	seed := int64(s.Sum32())
-	return rand.New(rand.NewSource(seed))
+	return int64(s.Sum32())
+}
+
+func NewDeterministicRand(hash []byte) *rand.Rand {
+	return rand.New(rand.NewSource(newSeed(hash)))
+}
+
+// NewDeterministicShuffler returns a random permutation of length `n`, seeded
+// with a value computed from `hash`.
+// The seed is adjusted to make sure the permuation is not the identity (unless n <= 1).
+func NewDeterministicShuffler(hash []byte, n int) Shuffler {
+	startSeed := newSeed(hash)
+	out := rand.New(rand.NewSource(startSeed)).Perm(n)
+	if n <= 1 { // nothing to check
+		return out
+	}
+
+	isIdentity := func(perm []int) bool {
+		for i, v := range perm {
+			if i != v {
+				return false
+			}
+		}
+		return true
+	}
+
+	for ; isIdentity(out); startSeed++ {
+		out = rand.New(rand.NewSource(startSeed)).Perm(n)
+	}
+
+	return out
 }

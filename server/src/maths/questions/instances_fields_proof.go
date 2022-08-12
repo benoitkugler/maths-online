@@ -161,14 +161,15 @@ type ProofFieldInstance struct {
 // termProposals returns all the constituent of the various parts
 // of the answer, in randomized order.
 func (pr ProofFieldInstance) termProposals() []cl.TextLine {
-	out := pr.Answer.terms()
-	contents := make([]string, len(out))
-	for i, t := range out {
+	tmp := pr.Answer.terms()
+	contents := make([]string, len(tmp))
+	for i, t := range tmp {
 		contents[i] = textLineToString(t)
 	}
-	shuffler := utils.NewDeterministicRand([]byte(strings.Join(contents, "")))
-	shuffler.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
-	return out
+	shuffler := utils.NewDeterministicShuffler([]byte(strings.Join(contents, "")), len(tmp))
+	out := make([]cl.TextLine, len(tmp))
+	shuffler.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
+	return tmp
 }
 
 func (pr ProofFieldInstance) shape() cl.Proof {
