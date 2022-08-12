@@ -310,7 +310,7 @@ func NewNb(v float64) *Expr {
 }
 
 func (v Number) String() string {
-	const decimalSeparator = ","
+	const decimalSeparator = "," // prefer french notation
 	out := strconv.FormatFloat(RoundFloat(float64(v)), 'f', -1, 64)
 	return strings.ReplaceAll(out, ".", decimalSeparator)
 }

@@ -12,7 +12,7 @@ class NumberController extends FieldController {
     textController.addListener(onChange);
   }
 
-  String get text => textController.text.trim().replaceAll(RegExp(r","), ".");
+  String get text => textController.text.trim().replaceAll(",", ".");
 
   @override
   bool hasValidData() {
@@ -31,7 +31,8 @@ class NumberController extends FieldController {
 
   void setNumber(double n) {
     final s = n.truncateToDouble() == n ? n.toInt().toString() : n.toString();
-    textController.text = s;
+    // use french delimiter
+    textController.text = s.replaceAll(".", ",");
   }
 
   @override
