@@ -189,10 +189,12 @@ func (data exerciceContent) instantiate() (InstantiatedExercice, error) {
 			return InstantiatedExercice{}, err
 		}
 
-		// merge the parameters, given higher precedence to question
-		for c, v := range sharedVars {
-			if _, has := ownVars[c]; !has {
-				ownVars[c] = v
+		if question.NeedExercice.Valid {
+			// merge the parameters, given higher precedence to question
+			for c, v := range sharedVars {
+				if _, has := ownVars[c]; !has {
+					ownVars[c] = v
+				}
 			}
 		}
 
