@@ -69,10 +69,12 @@
 
         <!-- exercice list -->
         <v-col cols="6">
-          <SheetExercices
+          <SheetTasks
             :sheet="props.sheet"
-            @update="updateExercices"
-          ></SheetExercices>
+            @add="(v) => emit('addTask', props.sheet.Sheet, v)"
+            @remove="(v) => emit('removeTask', props.sheet.Sheet, v)"
+            @reorder="(v) => emit('reorderTasks', props.sheet.Sheet, v)"
+          ></SheetTasks>
         </v-col>
       </v-row>
     </v-card-text>
@@ -84,10 +86,15 @@
 </template>
 
 <script setup lang="ts">
-import type { ExerciceHeader, SheetExt } from "@/controller/api_gen";
+import type {
+  ExerciceHeader,
+  Sheet,
+  SheetExt,
+  TaskExt,
+} from "@/controller/api_gen";
 import { computed } from "vue";
 import NotationField from "./NotationField.vue";
-import SheetExercices from "./SheetExercices.vue";
+import SheetTasks from "./SheetTasks.vue";
 import TimeField from "./TimeField.vue";
 
 interface Props {
@@ -98,7 +105,10 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "update", sheet: SheetExt): void;
+  (e: "update", sheet: Sheet): void;
+  (e: "addTask", sheet: Sheet, ex: ExerciceHeader): void;
+  (e: "removeTask", sheet: Sheet, task: TaskExt): void;
+  (e: "reorderTasks", sheet: Sheet, tasks: TaskExt[]): void;
 }>();
 
 const color = computed(() =>
@@ -106,11 +116,6 @@ const color = computed(() =>
 );
 
 function update() {
-  emit("update", props.sheet);
-}
-
-function updateExercices(exes: ExerciceHeader[]) {
-  props.sheet.Exercices = exes;
-  update();
+  emit("update", props.sheet.Sheet);
 }
 </script>

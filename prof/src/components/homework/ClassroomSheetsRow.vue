@@ -1,6 +1,6 @@
 <template>
   <v-card class="mx-2 bg-grey-lighten-4">
-    <v-row class="mt-1">
+    <v-row no-gutters>
       <v-col>
         <v-card-title>{{ classroom.Classroom.name }}</v-card-title>
       </v-col>

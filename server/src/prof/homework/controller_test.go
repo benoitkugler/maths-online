@@ -101,7 +101,7 @@ func TestStudentSheets(t *testing.T) {
 	err = ct.updateSheet(sh2, userID)
 	tu.Assert(t, err == nil)
 	// ... and add exercices
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	task1, err := ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
 	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
@@ -115,4 +115,10 @@ func TestStudentSheets(t *testing.T) {
 	tu.Assert(t, len(sheets) == 2)
 	tu.Assert(t, len(sheets[0].Tasks) == 3)
 	tu.Assert(t, len(sheets[1].Tasks) == 1)
+
+	err = ct.removeTask(task1.Id, userID)
+	tu.Assert(t, err == nil)
+
+	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	tu.Assert(t, err == nil)
 }

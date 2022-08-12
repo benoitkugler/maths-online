@@ -21,6 +21,7 @@ import type {
   SheetExt,
   StartSessionOut,
   Student,
+  Task,
   TrivialExt,
   UpdateGroupTagsOut,
 } from "./api_gen";
@@ -101,6 +102,25 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  protected onSuccessHomeworkRemoveTask(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice retiré avec succès.");
+    }
+  }
+  protected onSuccessHomeworkAddTask(data: Task): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice ajouté avec succès.");
+    }
+  }
+  protected onSuccessHomeworkReorderSheetTasks(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Liste modifiée avec succès.");
+    }
   }
 
   protected onSuccessHomeworkGetSheets(data: ClassroomSheets[] | null): void {

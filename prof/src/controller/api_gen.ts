@@ -3,6 +3,11 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+// github.com/benoitkugler/maths-online/prof/homework.AddTaskIn
+export interface AddTaskIn {
+  IdSheet: IdSheet;
+  IdExercice: IdExercice;
+}
 // github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
   Mail: string;
@@ -580,6 +585,11 @@ export interface RandomSegment {
   LabelPos: LabelPos;
   Kind: SegmentKind;
 }
+// github.com/benoitkugler/maths-online/prof/homework.ReorderSheetTasksIn
+export interface ReorderSheetTasksIn {
+  IdSheet: IdSheet;
+  Tasks: IdTask[] | null;
+}
 // github.com/benoitkugler/maths-online/maths/repere.RepereBounds
 export interface RepereBounds {
   Width: number;
@@ -687,6 +697,11 @@ export interface TableFieldBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
+}
+// github.com/benoitkugler/maths-online/tasks.Task
+export interface Task {
+  Id: IdTask;
+  IdExercice: IdExercice;
 }
 // github.com/benoitkugler/maths-online/prof/homework.TaskExt
 export interface TaskExt {
@@ -813,14 +828,14 @@ export const VisibilityLabels: { [key in Visibility]: string } = {
 };
 
 class DateTag {
-  private _: "D" = "D";
+  private _ = "D" as const;
 }
 
 // AAAA-MM-YY date format
 export type Date_ = string & DateTag;
 
 class TimeTag {
-  private _: "T" = "T";
+  private _ = "T" as const;
 }
 
 // ISO date-time string
@@ -2049,28 +2064,6 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkUpdateSheet(data: never): void;
 
-  protected async rawHomeworkCopySheet(params: CopySheetIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/copy-sheet";
-    const rep: AxiosResponse<SheetExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** HomeworkCopySheet wraps rawHomeworkCopySheet and handles the error */
-  async HomeworkCopySheet(params: CopySheetIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawHomeworkCopySheet(params);
-      this.onSuccessHomeworkCopySheet(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessHomeworkCopySheet(data: SheetExt): void;
-
   protected async rawHomeworkDeleteSheet(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     const rep: AxiosResponse<never> = await Axios.delete(fullUrl, {
@@ -2093,4 +2086,93 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkDeleteSheet(data: never): void;
+
+  protected async rawHomeworkCopySheet(params: CopySheetIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/copy-sheet";
+    const rep: AxiosResponse<SheetExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkCopySheet wraps rawHomeworkCopySheet and handles the error */
+  async HomeworkCopySheet(params: CopySheetIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkCopySheet(params);
+      this.onSuccessHomeworkCopySheet(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkCopySheet(data: SheetExt): void;
+
+  protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
+    const rep: AxiosResponse<never> = await Axios.delete(fullUrl, {
+      params: { "id-task": String(params["id-task"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkRemoveTask wraps rawHomeworkRemoveTask and handles the error */
+  async HomeworkRemoveTask(params: { "id-task": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkRemoveTask(params);
+      this.onSuccessHomeworkRemoveTask(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkRemoveTask(data: never): void;
+
+  protected async rawHomeworkAddTask(params: AddTaskIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
+    const rep: AxiosResponse<Task> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkAddTask wraps rawHomeworkAddTask and handles the error */
+  async HomeworkAddTask(params: AddTaskIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkAddTask(params);
+      this.onSuccessHomeworkAddTask(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkAddTask(data: Task): void;
+
+  protected async rawHomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
+    const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkReorderSheetTasks wraps rawHomeworkReorderSheetTasks and handles the error */
+  async HomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkReorderSheetTasks(params);
+      this.onSuccessHomeworkReorderSheetTasks(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkReorderSheetTasks(data: never): void;
 }

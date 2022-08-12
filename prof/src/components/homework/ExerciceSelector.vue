@@ -13,6 +13,9 @@
     </v-row>
     <v-card-text>
       <v-list>
+        <v-list-item v-if="!exercices.length" style="text-align: center">
+          <i>Aucun exercice.</i>
+        </v-list-item>
         <v-list-item
           v-for="exercice in exercices"
           :key="exercice.Exercice.Id"

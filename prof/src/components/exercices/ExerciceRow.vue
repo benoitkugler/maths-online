@@ -6,7 +6,7 @@
     @click="emit('clicked', props.exercice)"
   >
     <v-row no-gutters>
-      <v-col cols="auto" align-self="center" class="my-1">
+      <v-col cols="auto" align-self="center" class="my-1 ml-1">
         <v-btn
           v-if="isPersonnal"
           size="small"
@@ -26,13 +26,11 @@
       </v-col>
       <v-col align-self="center">
         <div class="ml-2">
-          <i>
-            <small> ({{ props.exercice.Exercice.Id }}) </small>
-          </i>
+          ({{ props.exercice.Exercice.Id }})
           {{
             props.exercice.Exercice.Title
               ? props.exercice.Exercice.Title
-              : "..."
+              : "Aucun titre"
           }}
         </div>
       </v-col>

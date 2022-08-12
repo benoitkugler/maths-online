@@ -262,13 +262,28 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 		return err
 	}
 
-	// start by removing the link
-	_, err = DeleteSheetTasksByIdTasks(tx, idTask)
+	currentLinks, err := SelectSheetTasksByIdSheets(tx, link.IdSheet)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	currentLinks.ensureOrder()
+
+	var filtered []tasks.IdTask
+	for _, link := range currentLinks {
+		if link.IdTask != idTask {
+			filtered = append(filtered, link.IdTask)
+		}
+	}
+
+	// start by updating the links
+	err = updateSheetTasksOrder(tx, link.IdSheet, filtered)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
 	}
 
+	// and then cleanup the unused task
 	_, err = tasks.DeleteTaskById(tx, idTask)
 	if err != nil {
 		_ = tx.Rollback()

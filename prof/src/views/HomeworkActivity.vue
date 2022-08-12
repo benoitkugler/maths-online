@@ -8,6 +8,9 @@
       v-if="sheetToUpdate != null"
       :sheet="sheetToUpdate"
       @update="updateSheet"
+      @addTask="addTaskToSheet"
+      @removeTask="removeTaskFromSheet"
+      @reorderTasks="reorderSheetTasks"
       @close="sheetToUpdate = null"
     >
     </sheet-details>
@@ -34,15 +37,6 @@
     </v-card>
   </v-dialog>
 
-  <!-- <v-dialog
-    fullscreen
-    :model-value="showMonitor"
-    @update:model-value="showMonitorChanged"
-    :retain-focus="false"
-  >
-    <session-monitor @closed="closeMonitor"></session-monitor>
-  </v-dialog> -->
-
   <v-card class="my-5 mx-auto" width="80%">
     <v-row>
       <v-col>
@@ -61,17 +55,28 @@
           @add="createSheet(classroom.Classroom.id)"
           @delete="(sheet) => (sheetToDelete = sheet)"
           @copy="copySheet"
-          @update="(s) => (sheetToUpdate = copy(s))"
+          @update="(s) => (sheetToUpdate = s)"
         ></classroom-sheets-row>
+      </v-col>
+    </v-row>
+
+    <v-row v-if="!classrooms.length" justify="center">
+      <v-col style="text-align: center" class="my-3">
+        <i>Aucune classe n'est enregistrée.</i>
       </v-col>
     </v-row>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type { ClassroomSheets, SheetExt } from "@/controller/api_gen";
+import type {
+  ClassroomSheets,
+  ExerciceHeader,
+  Sheet,
+  SheetExt,
+  TaskExt,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { copy } from "@/controller/utils";
 import { computed, onActivated, onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ClassroomSheetsRow from "../components/homework/ClassroomSheetsRow.vue";
@@ -98,6 +103,14 @@ async function fetchClassrooms() {
   classrooms = res;
 }
 
+function indexes(idSheet: number, idClassroom: number) {
+  const clIndex = classrooms.findIndex((cl) => cl.Classroom.id == idClassroom)!;
+  const sheetIndex = (classrooms[clIndex].Sheets || []).findIndex(
+    (s) => s.Sheet.Id == idSheet
+  );
+  return { clIndex, sheetIndex };
+}
+
 async function createSheet(idClassroom: number) {
   const res = await controller.HomeworkCreateSheet({
     IdClassroom: idClassroom,
@@ -105,7 +118,11 @@ async function createSheet(idClassroom: number) {
   if (res == undefined) {
     return;
   }
-  const cl = classrooms.find((cl) => cl.Classroom.id == idClassroom)!;
+
+  const { clIndex } = indexes(-1, idClassroom);
+  const cl = classrooms[clIndex];
+  console.log(clIndex, cl);
+
   cl.Sheets = (cl.Sheets || []).concat(res);
 }
 
@@ -120,9 +137,9 @@ async function deleteSheet() {
   if (res == undefined) {
     return;
   }
-  const cl = classrooms.find(
-    (cl) => cl.Classroom.id == sheetToDelete?.Sheet.IdClassroom
-  )!;
+
+  const { clIndex } = indexes(-1, sheetToDelete?.Sheet.IdClassroom);
+  const cl = classrooms[clIndex];
   cl.Sheets = (cl.Sheets || []).filter((sh) => sh.Sheet.Id != id);
   sheetToDelete = null;
 }
@@ -135,21 +152,57 @@ async function copySheet(idSheet: number, idClassroom: number) {
   if (res == undefined) {
     return;
   }
-  const cl = classrooms.find((cl) => cl.Classroom.id == idClassroom)!;
+
+  const { clIndex } = indexes(idSheet, idClassroom);
+  const cl = classrooms[clIndex];
   cl.Sheets = (cl.Sheets || []).concat(res);
 }
 
-async function updateSheet(sheet: SheetExt) {
-  await controller.HomeworkUpdateSheet({
-    Sheet: sheet.Sheet,
-    Exercices: (sheet.Exercices || []).map((ex) => ex.Exercice.Id),
+async function updateSheet(sheet: Sheet) {
+  await controller.HomeworkUpdateSheet(sheet);
+
+  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
+  const cl = classrooms[clIndex];
+  cl.Sheets![sheetIndex].Sheet = sheet;
+}
+
+async function addTaskToSheet(sheet: Sheet, exercice: ExerciceHeader) {
+  const newTask = await controller.HomeworkAddTask({
+    IdExercice: exercice.Exercice.Id,
+    IdSheet: sheet.Id,
+  });
+  if (newTask == undefined) {
+    return;
+  }
+
+  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
+  const cl = classrooms[clIndex];
+  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).concat({
+    Id: newTask.Id,
+    Exercice: exercice,
+    NbProgressions: 0,
+  });
+}
+
+async function removeTaskFromSheet(sheet: Sheet, task: TaskExt) {
+  await controller.HomeworkRemoveTask({ "id-task": task.Id });
+
+  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
+  const cl = classrooms[clIndex];
+  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).filter(
+    (ta) => ta.Id != task.Id
+  );
+}
+
+async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
+  await controller.HomeworkReorderSheetTasks({
+    IdSheet: sheet.Id,
+    Tasks: tasks.map((t) => t.Id),
   });
 
-  const cl = classrooms.find(
-    (cl) => cl.Classroom.id == sheet.Sheet.IdClassroom
-  )!;
-  const index = cl.Sheets!.findIndex((s) => s.Sheet.Id == sheet.Sheet.Id);
-  cl.Sheets![index] = sheet;
+  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
+  const cl = classrooms[clIndex];
+  cl.Sheets![sheetIndex].Tasks = tasks;
 }
 </script>
 

@@ -27,5 +27,7 @@ export function exerciceBareme(ex: ExerciceHeader) {
 }
 
 export function sheetBareme(sheet: SheetExt) {
-  return sheet.Exercices?.reduce((v, ex) => v + exerciceBareme(ex), 0) || 0;
+  return (
+    sheet.Tasks?.reduce((v, task) => v + exerciceBareme(task.Exercice), 0) || 0
+  );
 }

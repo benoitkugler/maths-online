@@ -245,8 +245,8 @@
             </v-col>
             <v-col align-self="center">
               <small>({{ question.id_question }})</small>
-              {{ getQuestion(question.id_question).Question.page.title }}</v-col
-            >
+              {{ getQuestion(question.id_question).Question.page.title }}
+            </v-col>
             <v-col cols="2" align-self="center">
               <v-menu
                 offset-y
