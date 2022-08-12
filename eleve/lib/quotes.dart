@@ -118,6 +118,71 @@ const _quotes = [
   QuoteData(
       "Ta valeur n'est pas définie par ce que tu réussis ou non !", "", ""),
   QuoteData("Ne te fies pas à tout ce que tu penses ou ressens.", "", ""),
+  QuoteData(
+      "Ne compte pas les choses que tu fais mais fais les choses qui comptent.",
+      "",
+      ""),
+  QuoteData(
+      "On ne voit bien qu'avec le coeur. L'essentiel est invisible pour les yeux.",
+      "",
+      "Le petit prince"),
+  QuoteData("Il faut toute la vie pour apprendre à vivre.", "", " Sénèque"),
+  QuoteData(
+      "La vie n'est pas d'attendre que les orages passent, c'est d'apprendre à danser sous la pluie.",
+      "",
+      "Sénèque"),
+  QuoteData(
+      "Je refuse que la peur de l'échec m'empêche de faire ce qui importe vraiment.",
+      "",
+      ""),
+  QuoteData("Ne comptez pas les jours, faites que chaque jour compte.", "",
+      "Muhammed Ali"),
+  QuoteData(
+      "Les décisions les plus difficiles à prendre sont celles qui vous présentent des chemins au bout desquels vous ne serez plus la même personne.",
+      "",
+      " Nelson Mandela"),
+  QuoteData("Vis comme si tu n'avais besoin de rien de plus", "", ""),
+  QuoteData("Le manque de temps n'est rien d'autre que le manque de priorité.",
+      "", "Timothy Ferriss"),
+  QuoteData(
+      "La seule limite à notre épanouissement de demain sera nos doutes d'aujourd'hui.",
+      "",
+      "Franklin D.Roosevelt"),
+  QuoteData("Le changement est une porte qui ne s'ouvre que de l'intérieur.",
+      "", "Tom Peters"),
+  QuoteData("Le bonheur le plus doux est celui que l'on partage.", "",
+      "Jacques Delille"),
+  QuoteData("Un enseignant, un livre, un stylo, peuvent changer le monde.", "",
+      "Malala Yousafzai"),
+  QuoteData(
+      "Le monde déteste le changement. C'est pourtant la première chose qui lui a permis de progresser.",
+      "",
+      "Charles F.Kettering"),
+  QuoteData(
+      "L'art de vivre consiste en un subtil mélange entre lâcher prise et tenir bon.",
+      "",
+      "Henri Lewis"),
+  QuoteData("Il est grand temps de rallumer les étoiles.", "",
+      "Guillaume Apollinaire"),
+  QuoteData("Changer, c'est d'abord changer de point de vue.", "",
+      "Jean Bertrand Pontalis"),
+  QuoteData(
+      "Celui qui déplace une montagne commence par déplacer de petites pierres.",
+      "",
+      "Confucius"),
+  QuoteData(
+      "Attendre d'en savoir assez pour agir en toute lumière, c'est se condamner à l'inaction.",
+      "",
+      "Jean Rostand"),
+  QuoteData(
+      "L'expérience ce n'est pas ce qui nous arrive, c'est ce que nous faisons avec ce qui nous arrive.",
+      "",
+      "Aldous Huxley"),
+  QuoteData(
+      "Le bonheur n'est pas une destination à atteindre, c'est une manière de voyager.",
+      "",
+      "Margaret Lee Runbeck"),
+  QuoteData("Les mots sont plus forts que les armes.", "", "Laurent Jacqua"),
 ];
 
 QuoteData pickQuote() {
