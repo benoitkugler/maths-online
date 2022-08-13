@@ -196,10 +196,10 @@ var blockList = [...]que.Block{
 	},
 	que.SignTableBlock{
 		Label: "g",
-		Xs: []que.Interpolated{
-			"$-\\infty$",
-			"&1/3&",
-			"$3$",
+		Xs: []string{
+			"-inf",
+			"1/3",
+			"3",
 		},
 		FxSymbols: []que.SignSymbol{
 			que.Nothing,

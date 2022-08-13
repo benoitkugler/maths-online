@@ -420,20 +420,24 @@ func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (valid
 type SignTableBlock struct {
 	Label     string
 	FxSymbols []SignSymbol
-	Xs        []Interpolated // always math content
-	Signs     []bool         // with length len(Xs) - 1
+	Xs        []string // valid expression
+	Signs     []bool   // is positive, with length len(Xs) - 1
 }
 
 func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
+	return st.instantiateST(params)
+}
+
+func (st SignTableBlock) instantiateST(params expression.Vars) (SignTableInstance, error) {
 	out := SignTableInstance{
 		Label: st.Label,
-		Xs:    make([]string, len(st.Xs)),
+		Xs:    make([]*expression.Expr, len(st.Xs)),
 	}
 	var err error
 	for i, c := range st.Xs {
-		out.Xs[i], err = c.instantiateAndMerge(params)
+		out.Xs[i], err = expression.Parse(c)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 	}
 	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
@@ -451,7 +455,7 @@ func (st SignTableBlock) setupValidator(expression.RandomParameters) (validator,
 	}
 
 	for _, c := range st.Xs {
-		_, err := c.parse()
+		_, err := expression.Parse(c)
 		if err != nil {
 			return nil, err
 		}

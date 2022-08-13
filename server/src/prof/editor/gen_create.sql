@@ -610,6 +610,8 @@ BEGIN
         RETURN gomacro_validate_json_ques_RadioFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'SignTableBlock' THEN
         RETURN gomacro_validate_json_ques_SignTableBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'SignTableFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_SignTableFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'TableBlock' THEN
         RETURN gomacro_validate_json_ques_TableBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'TableFieldBlock' THEN
@@ -1231,6 +1233,27 @@ BEGIN
         AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
         AND gomacro_validate_json_array_string (data -> 'Xs')
         AND gomacro_validate_json_array_boolean (data -> 'Signs');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_SignTableFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_SignTableBlock (data -> 'Answer');
     RETURN is_valid;
 END;
 $$

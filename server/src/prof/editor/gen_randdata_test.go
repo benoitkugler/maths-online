@@ -282,6 +282,7 @@ func randque_Block() questions.Block {
 		randque_ProofFieldBlock(),
 		randque_RadioFieldBlock(),
 		randque_SignTableBlock(),
+		randque_SignTableFieldBlock(),
 		randque_TableBlock(),
 		randque_TableFieldBlock(),
 		randque_TextBlock(),
@@ -290,7 +291,7 @@ func randque_Block() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(21)
+	i := rand.Intn(22)
 	return choix[i]
 }
 
@@ -469,8 +470,14 @@ func randque_SignTableBlock() questions.SignTableBlock {
 	return questions.SignTableBlock{
 		Label:     randstring(),
 		FxSymbols: randSliceque_SignSymbol(),
-		Xs:        randSliceque_Interpolated(),
+		Xs:        randSlicestring(),
 		Signs:     randSlicebool(),
+	}
+}
+
+func randque_SignTableFieldBlock() questions.SignTableFieldBlock {
+	return questions.SignTableFieldBlock{
+		Answer: randque_SignTableBlock(),
 	}
 }
 

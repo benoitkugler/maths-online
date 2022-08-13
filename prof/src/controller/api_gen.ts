@@ -46,6 +46,7 @@ export enum BlockKind {
   ProofFieldBlock = "ProofFieldBlock",
   RadioFieldBlock = "RadioFieldBlock",
   SignTableBlock = "SignTableBlock",
+  SignTableFieldBlock = "SignTableFieldBlock",
   TableBlock = "TableBlock",
   TableFieldBlock = "TableFieldBlock",
   TextBlock = "TextBlock",
@@ -73,6 +74,7 @@ export interface Block {
     | ProofFieldBlock
     | RadioFieldBlock
     | SignTableBlock
+    | SignTableFieldBlock
     | TableBlock
     | TableFieldBlock
     | TextBlock
@@ -678,8 +680,12 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
 export interface SignTableBlock {
   Label: string;
   FxSymbols: SignSymbol[] | null;
-  Xs: Interpolated[] | null;
+  Xs: string[] | null;
   Signs: boolean[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/questions.SignTableFieldBlock
+export interface SignTableFieldBlock {
+  Answer: SignTableBlock;
 }
 // github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
 export interface StartSessionOut {

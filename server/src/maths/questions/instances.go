@@ -220,7 +220,7 @@ func (vt VariationTableInstance) toClient() client.Block {
 
 type SignTableInstance struct {
 	Label     string
-	Xs        []string
+	Xs        []*expression.Expr
 	FxSymbols []SignSymbol
 	Signs     []bool // with length len(Xs) - 1
 }
@@ -229,7 +229,7 @@ func (st SignTableInstance) toClient() client.Block {
 	var columns []client.SignColumn
 	for i, x := range st.Xs {
 		col := client.SignColumn{
-			X:      x,
+			X:      x.AsLaTeX(),
 			IsSign: false,
 		}
 		switch st.FxSymbols[i] {

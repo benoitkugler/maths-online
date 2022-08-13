@@ -56,6 +56,9 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"@_\\ge",
 		"a_\\ge",
 		"(1<2)+(3>4)+(5<=6)+(7>=8)+ (4==7)",
+		"-inf",
+		"inf",
+		"+inf",
 	} {
 		e, err := Parse(expr)
 		if err != nil {

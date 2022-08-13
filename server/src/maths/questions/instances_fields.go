@@ -54,6 +54,7 @@ var (
 	_ fieldInstance = FigurePointFieldInstance{}
 	_ fieldInstance = FigureVectorFieldInstance{}
 	_ fieldInstance = VariationTableFieldInstance{}
+	_ fieldInstance = SignTableFieldInstance{}
 	_ fieldInstance = FunctionPointsFieldInstance{}
 	_ fieldInstance = FigureVectorPairFieldInstance{}
 	_ fieldInstance = FigureAffineLineFieldInstance{}
@@ -563,10 +564,8 @@ type VariationTableFieldInstance struct {
 
 func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 
-// lengthProposals returns proposals for the number of arrows to fill,
-// depending on the answer and randomized
-func (vtf VariationTableFieldInstance) lengthProposals() []int {
-	L := len(vtf.Answer.Xs) - 1
+// lengthProposals returns randomized proposals around the correct value `L`
+func lengthProposals(L int) []int {
 	var tmp []int
 
 	rd := utils.NewDeterministicRand([]byte{byte(L)})
@@ -577,7 +576,7 @@ func (vtf VariationTableFieldInstance) lengthProposals() []int {
 		// add some random noise to prevent the
 		// right solution (L) to be in the middle of the proposals
 		// note that we need to ensure L - 1 + r >= 1
-		r := rd.Intn(1)
+		r := rd.Intn(2)
 		for i := range tmp {
 			tmp[i] += r
 		}
@@ -587,6 +586,13 @@ func (vtf VariationTableFieldInstance) lengthProposals() []int {
 	out := make([]int, len(tmp))
 	suffler.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
 	return tmp
+}
+
+// lengthProposals returns proposals for the number of arrows to fill,
+// depending on the answer and randomized
+func (vtf VariationTableFieldInstance) lengthProposals() []int {
+	L := len(vtf.Answer.Xs) - 1
+	return lengthProposals(L)
 }
 
 func (f VariationTableFieldInstance) toClient() client.Block {
@@ -647,22 +653,30 @@ func areNumbersEqual(s1, s2 []float64) bool {
 	return true
 }
 
-func areExpressionsEquals(got []*expression.Expr, exp []evaluatedExpression) bool {
+func areExpressionsEquals(got, exp []*expression.Expr) bool {
 	if len(got) != len(exp) {
 		return false
 	}
 	for i, v := range got {
-		if !expression.AreExpressionsEquivalent(v, exp[i].Expr, expression.SimpleSubstitutions) {
+		if !expression.AreExpressionsEquivalent(v, exp[i], expression.SimpleSubstitutions) {
 			return false
 		}
 	}
 	return true
 }
 
+func areEvExpressionsEquals(got []*expression.Expr, exp []evaluatedExpression) bool {
+	tmp := make([]*expression.Expr, len(exp))
+	for i, e := range exp {
+		tmp[i] = e.Expr
+	}
+	return areExpressionsEquals(got, tmp)
+}
+
 func (f VariationTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.VariationTableAnswer)
 	xs, fxs, _ := parseVariationTableAnswer(ans)
-	if !(areExpressionsEquals(xs, f.Answer.Xs) && areExpressionsEquals(fxs, f.Answer.Fxs)) {
+	if !(areEvExpressionsEquals(xs, f.Answer.Xs) && areEvExpressionsEquals(fxs, f.Answer.Fxs)) {
 		return false
 	}
 
@@ -691,6 +705,96 @@ func (f VariationTableFieldInstance) correctAnswer() client.Answer {
 	for i := range out.Arrows {
 		out.Arrows[i] = !f.Answer.inferNumberAlignment(i)
 	}
+	return out
+}
+
+type SignTableFieldInstance struct {
+	Answer SignTableInstance
+	ID     int
+}
+
+func (f SignTableFieldInstance) fieldID() int { return f.ID }
+
+// lengthProposals returns proposals for the number of signs to fill
+func (vtf SignTableFieldInstance) lengthProposals() []int {
+	L := len(vtf.Answer.Signs)
+	return lengthProposals(L)
+}
+
+func (f SignTableFieldInstance) toClient() client.Block {
+	return client.SignTableFieldBlock{
+		Label:           f.Answer.Label,
+		LengthProposals: f.lengthProposals(),
+		ID:              f.ID,
+	}
+}
+
+func parseSignTableAnswer(answer client.SignTableAnswer) (xs []*expression.Expr, err error) {
+	xs = make([]*expression.Expr, len(answer.Xs))
+	for i, x := range answer.Xs {
+		xs[i], err = expression.Parse(x)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return xs, nil
+}
+
+func (f SignTableFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	ans, ok := answer.(client.SignTableAnswer)
+	if !ok {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
+		}
+	}
+
+	if L := len(ans.Xs); len(ans.FxSymbols) != L || len(ans.Signs) != L-1 {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: fmt.Sprintf("invalid lengths Xs: %d Fxs: %d Arrows: %d", len(ans.Xs), len(ans.FxSymbols), len(ans.Signs)),
+		}
+	}
+
+	_, err := parseSignTableAnswer(ans)
+	return err
+}
+
+func (f SignTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.SignTableAnswer)
+	xs, _ := parseSignTableAnswer(ans)
+	if !areExpressionsEquals(xs, f.Answer.Xs) {
+		return false
+	}
+
+	// here we know the length are corrects
+	for i, symbol := range ans.FxSymbols {
+		if SignSymbol(symbol) != f.Answer.FxSymbols[i] {
+			return false
+		}
+	}
+	for i, sign := range ans.Signs {
+		if sign != f.Answer.Signs[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (f SignTableFieldInstance) correctAnswer() client.Answer {
+	out := client.SignTableAnswer{
+		Xs:        make([]string, len(f.Answer.Xs)),
+		FxSymbols: make([]client.SignSymbol, len(f.Answer.FxSymbols)),
+		Signs:     f.Answer.Signs,
+	}
+	for i, x := range f.Answer.Xs {
+		out.Xs[i] = x.String()
+	}
+	for i, x := range f.Answer.FxSymbols {
+		out.FxSymbols[i] = client.SignSymbol(x)
+	}
+
 	return out
 }
 

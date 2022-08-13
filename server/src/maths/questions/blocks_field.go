@@ -18,6 +18,7 @@ var (
 	_ Block = FigurePointFieldBlock{}
 	_ Block = FigureVectorFieldBlock{}
 	_ Block = VariationTableFieldBlock{}
+	_ Block = SignTableFieldBlock{}
 	_ Block = FunctionPointsFieldBlock{}
 	_ Block = FigureVectorPairFieldBlock{}
 	_ Block = FigureAffineLineFieldBlock{}
@@ -332,6 +333,22 @@ func (vt VariationTableFieldBlock) instantiate(params expression.Vars, ID int) (
 }
 
 func (fp VariationTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return fp.Answer.setupValidator(params)
+}
+
+type SignTableFieldBlock struct {
+	Answer SignTableBlock
+}
+
+func (vt SignTableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+	ans, err := vt.Answer.instantiateST(params)
+	return SignTableFieldInstance{
+		ID:     ID,
+		Answer: ans,
+	}, err
+}
+
+func (fp SignTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	return fp.Answer.setupValidator(params)
 }
 

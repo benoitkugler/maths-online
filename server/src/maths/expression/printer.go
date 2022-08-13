@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -99,6 +100,10 @@ func (op operator) asLaTeX(left, right *Expr) string {
 		}
 		return fmt.Sprintf("%s + %s", leftCode, rightCode)
 	case minus:
+		// special case to handle -inf ; avoid -+inf
+		if strings.HasPrefix(rightCode, latexPlusInf) { // remove the plus
+			rightCode = rightCode[1:]
+		}
 		if leftCode == "" { // remove the space
 			return fmt.Sprintf("-%s", rightCode)
 		}
@@ -192,7 +197,16 @@ func (c constant) asLaTeX(_, _ *Expr) string {
 	}
 }
 
-func (v Number) asLaTeX(_, _ *Expr) string { return v.String() }
+const latexPlusInf = "+\\infty"
+
+func (v Number) asLaTeX(_, _ *Expr) string {
+	if math.IsInf(float64(v), 1) {
+		return latexPlusInf
+	} else if math.IsInf(float64(v), -1) {
+		return "-\\infty"
+	}
+	return v.String()
+}
 
 // returns `true` is the expression is compound and requires parenthesis
 // when used with `op`

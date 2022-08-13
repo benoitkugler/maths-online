@@ -243,7 +243,8 @@ class __OneTableState extends State<_OneTable> {
             icon: const Icon(IconData(0xe092,
                 fontFamily: 'MaterialIcons', matchTextDirection: true)))
       ]),
-      BaseFunctionTable(widget.functionLabel, xRow, fxRow)
+      BaseFunctionTable(widget.functionLabel, xRow, fxRow,
+          headerColor: Colors.red.shade200)
     ]);
   }
 }
