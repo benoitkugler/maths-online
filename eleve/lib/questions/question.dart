@@ -246,6 +246,7 @@ class _ContentBuilder {
       _color,
       ct,
       sizeHint: element.sizeHint,
+      autofocus: true,
     )));
   }
 

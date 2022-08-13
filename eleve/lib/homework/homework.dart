@@ -62,7 +62,6 @@ class ServerHomeworkAPI implements HomeworkAPI {
         headers: {
           'Content-type': 'application/json',
         });
-    print(resp.body);
     return studentEvaluateExerciceOutFromJson(checkServerError(resp.body));
   }
 }
@@ -105,8 +104,11 @@ class _HomeworkState extends State<Homework> {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
-                child: ErrorBar(
-                    "Impossible de charger les données.", snapshot.error!));
+                child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ErrorBar(
+                  "Impossible de charger le travail à faire.", snapshot.error!),
+            ));
           } else if (snapshot.hasData) {
             return _SheetList(widget.api, snapshot.data!);
           } else {
