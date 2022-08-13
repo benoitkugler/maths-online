@@ -1,6 +1,7 @@
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
+import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -30,11 +31,11 @@ class _API implements ExerciceAPI {
 
 final qu1 = Question("", [
   TextBlock([T("Test 1")], false, false, false),
-  NumberFieldBlock(0)
+  NumberFieldBlock(0, 10)
 ]);
 final qu2 = Question("", [
   TextBlock([T("Test 2")], false, false, false),
-  NumberFieldBlock(0)
+  NumberFieldBlock(0, 10)
 ]);
 
 final quI1 = InstantiatedQuestion(0, qu1, []);
@@ -46,24 +47,22 @@ class _App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Isyro',
-      theme: theme,
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: localizations,
-      supportedLocales: locales,
-      home: ExerciceW(
-          _API(),
-          StudentExerciceInst(
-              InstantiatedExercice(
-                  Exercice(1, "Ex", "", Parameters([], []), Flow.sequencial, 1,
-                      true),
-                  [quI1, quI1, quI1],
-                  [1, 2, 3]),
-              ProgressionExt([
-                [],
-                [],
-                [],
-              ], 0))),
-    );
+        title: 'Isyro',
+        theme: theme,
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: localizations,
+        supportedLocales: locales,
+        home: Scaffold(
+          body: QuestionW(
+            _API(),
+            Question("", [
+              TextBlock([T("Un long text et suffisant")], true, false, false),
+              NumberFieldBlock(0, 1),
+              NumberFieldBlock(0, 10),
+            ]),
+            Colors.green,
+            (_) {},
+          ),
+        ));
   }
 }
