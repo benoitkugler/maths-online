@@ -900,7 +900,14 @@ type VectorFieldInstance struct {
 func (v VectorFieldInstance) fieldID() int { return v.ID }
 
 func (v VectorFieldInstance) toClient() client.Block {
-	return client.VectorFieldBlock{DisplayColumn: v.DisplayColumn, ID: v.ID}
+	sX := expression.Number(v.Answer.X).String()
+	sY := expression.Number(v.Answer.Y).String()
+	return client.VectorFieldBlock{
+		ID:            v.ID,
+		DisplayColumn: v.DisplayColumn,
+		SizeHintX:     len([]rune(sX)),
+		SizeHintY:     len([]rune(sY)),
+	}
 }
 
 func (v VectorFieldInstance) validateAnswerSyntax(answer client.Answer) error {

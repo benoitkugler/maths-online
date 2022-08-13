@@ -217,6 +217,8 @@ type TableFieldBlock struct {
 type VectorFieldBlock struct {
 	ID            int
 	DisplayColumn bool
+	// Typical values range from 1 to 15
+	SizeHintX, SizeHintY SizeHint
 }
 
 // Statement is a basic statement

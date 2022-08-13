@@ -1605,25 +1605,33 @@ JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
 class VectorFieldBlock implements Block {
   final int iD;
   final bool displayColumn;
+  final int sizeHintX;
+  final int sizeHintY;
 
-  const VectorFieldBlock(this.iD, this.displayColumn);
+  const VectorFieldBlock(
+      this.iD, this.displayColumn, this.sizeHintX, this.sizeHintY);
 
   @override
   String toString() {
-    return "VectorFieldBlock($iD, $displayColumn)";
+    return "VectorFieldBlock($iD, $displayColumn, $sizeHintX, $sizeHintY)";
   }
 }
 
 VectorFieldBlock vectorFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
   return VectorFieldBlock(
-      intFromJson(json['ID']), boolFromJson(json['DisplayColumn']));
+      intFromJson(json['ID']),
+      boolFromJson(json['DisplayColumn']),
+      intFromJson(json['SizeHintX']),
+      intFromJson(json['SizeHintY']));
 }
 
 JSON vectorFieldBlockToJson(VectorFieldBlock item) {
   return {
     "ID": intToJson(item.iD),
-    "DisplayColumn": boolToJson(item.displayColumn)
+    "DisplayColumn": boolToJson(item.displayColumn),
+    "SizeHintX": intToJson(item.sizeHintX),
+    "SizeHintY": intToJson(item.sizeHintY)
   };
 }
 
@@ -1796,14 +1804,14 @@ List<dynamic> listListIntToJson(List<TreeShape> item) {
   return item.map(listIntToJson).toList();
 }
 
-List<TextLine> listListTextOrMathFromJson(dynamic json) {
+List<List<TextOrMath>> listListTextOrMathFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(listTextOrMathFromJson).toList();
 }
 
-List<dynamic> listListTextOrMathToJson(List<TextLine> item) {
+List<dynamic> listListTextOrMathToJson(List<List<TextOrMath>> item) {
   return item.map(listTextOrMathToJson).toList();
 }
 

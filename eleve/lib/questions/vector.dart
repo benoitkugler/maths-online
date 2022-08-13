@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/number.dart';
 import 'package:eleve/questions/types.gen.dart';
@@ -42,25 +44,33 @@ class VectorField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = controller.hasError ? Colors.red : this.color;
+    // use the largest size hint
+    final sizeHint = max(controller.data.sizeHintX, controller.data.sizeHintY);
     final x = NumberField(
       color,
       controller.x,
       onSubmitted: controller.onChange,
+      sizeHint: sizeHint,
     );
     final y = NumberField(
       color,
       controller.y,
       onSubmitted: controller.onChange,
+      sizeHint: sizeHint,
     );
 
+    final textColor = Theme.of(context).textTheme.bodyText1?.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
       child: controller.data.displayColumn
           ? RichText(
               text: TextSpan(children: [
-              const TextSpan(
+              TextSpan(
                   text: "(",
-                  style: TextStyle(fontSize: 60, fontWeight: FontWeight.w300)),
+                  style: TextStyle(
+                      fontSize: 60,
+                      fontWeight: FontWeight.w300,
+                      color: textColor)),
               WidgetSpan(
                   alignment: PlaceholderAlignment.bottom,
                   baseline: TextBaseline.alphabetic,
@@ -70,9 +80,12 @@ class VectorField extends StatelessWidget {
                       children: [x, const SizedBox(height: 5), y],
                     ),
                   )),
-              const TextSpan(
+              TextSpan(
                   text: ")",
-                  style: TextStyle(fontSize: 60, fontWeight: FontWeight.w300)),
+                  style: TextStyle(
+                      fontSize: 60,
+                      fontWeight: FontWeight.w300,
+                      color: textColor)),
             ]))
           : Row(
               mainAxisSize: MainAxisSize.min,
