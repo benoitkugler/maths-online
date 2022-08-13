@@ -1,6 +1,6 @@
 {
     "name": "prof",
-    "version": "0.6.2",
+    "version": "0.6.4",
     "scripts": {
         "serve": "vite preview",
         "build": "vite build",
