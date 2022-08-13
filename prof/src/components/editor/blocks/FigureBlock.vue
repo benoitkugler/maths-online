@@ -91,7 +91,7 @@
       >
         <v-list-item>
           <v-row class="fix-input-width">
-            <v-col md="3" align-self="center">
+            <v-col md="3" align-self="center" class="mt-2">
               <v-row no-gutters>
                 <v-col cols="12">
                   <v-text-field
@@ -114,7 +114,7 @@
                   ></btn-color-picker> </v-col
               ></v-row>
             </v-col>
-            <v-col md="7">
+            <v-col md="7" class="mt-2">
               <v-row no-gutters>
                 <v-col md="6">
                   <v-text-field
@@ -179,7 +179,7 @@
       >
         <v-list-item>
           <v-row class="fix-input-width">
-            <v-col align-self="center" md="4">
+            <v-col align-self="center" md="4" class="mt-2">
               <v-row>
                 <v-col md="12">
                   <v-combobox
@@ -210,23 +210,21 @@
                 </v-col>
               </v-row>
             </v-col>
-            <v-col md="7">
-              <v-row class="px-0">
+            <v-col md="7" class="mt-2">
+              <v-row no-gutters class="px-0">
                 <v-col md="12">
                   <segment-kind-field
                     v-model="segment.Kind"
                   ></segment-kind-field>
                 </v-col>
                 <v-col md="12">
-                  <v-text-field
-                    density="compact"
-                    variant="outlined"
+                  <interpolated-text
                     label="Légende (Optionnelle)"
-                    hide-details
                     v-model="segment.LabelName"
-                  ></v-text-field>
+                  >
+                  </interpolated-text>
                 </v-col>
-                <v-col md="12">
+                <v-col md="12" class="pt-4">
                   <label-pos-field v-model="segment.LabelPos"></label-pos-field>
                 </v-col>
               </v-row>
@@ -266,7 +264,7 @@
         :key="index"
       >
         <v-list-item>
-          <v-row class="fix-input-width">
+          <v-row class="fix-input-width mt-1">
             <v-col cols="10">
               <v-row>
                 <v-col align-self="center">
@@ -323,6 +321,102 @@
   <v-card color="secondary" class="my-1">
     <v-row no-gutters>
       <v-col align-self="center" md="9">
+        <v-card-subtitle> Cercles </v-card-subtitle>
+      </v-col>
+      <v-col md="3" style="text-align: right">
+        <v-btn
+          icon
+          @click="addCircle"
+          title="Ajouter un cercle"
+          size="x-small"
+          class="mr-2 my-2"
+        >
+          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-list>
+      <div
+        v-for="(circle, index) in props.modelValue.Drawings.Circles"
+        :key="index"
+      >
+        <v-list-item>
+          <v-row class="fix-input-width mt-1">
+            <v-col cols="3" align-self="center">
+              <interpolated-text
+                label="Légende (optionnelle)"
+                v-model="circle.Legend"
+              >
+              </interpolated-text>
+            </v-col>
+            <v-col>
+              <v-row>
+                <v-col align-self="center">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="Centre: X"
+                    hint="Expression"
+                    v-model="circle.Center.X"
+                    :color="expressionColor"
+                    class="no-hint-padding"
+                  ></v-text-field>
+                </v-col>
+                <v-col align-self="center">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="Centre: Y"
+                    v-model="circle.Center.Y"
+                    hint="Expression"
+                    :color="expressionColor"
+                    class="no-hint-padding"
+                  ></v-text-field>
+                </v-col>
+                <v-col align-self="center">
+                  <v-text-field
+                    density="compact"
+                    variant="outlined"
+                    label="Rayon"
+                    v-model="circle.Radius"
+                    hint="Expression"
+                    :color="expressionColor"
+                    class="no-hint-padding"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+
+              <v-row class="mb-2">
+                <v-col>
+                  <div class="text-grey mb-1">Couleur de ligne :</div>
+                  <btn-color-picker
+                    v-model="circle.LineColor"
+                  ></btn-color-picker>
+                </v-col>
+                <v-col>
+                  <div class="text-grey mb-1">Couleur de remplissage :</div>
+                  <btn-color-picker
+                    v-model="circle.FillColor"
+                  ></btn-color-picker>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <v-col cols="auto" align-self="center">
+              <v-btn icon size="x-small" @click="deleteLine(index)">
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-list-item>
+        <v-divider></v-divider>
+      </div>
+    </v-list>
+  </v-card>
+
+  <v-card color="secondary" class="my-1">
+    <v-row no-gutters>
+      <v-col align-self="center" md="9">
         <v-card-subtitle> Surfaces colorées </v-card-subtitle>
       </v-col>
       <v-col md="3" style="text-align: right">
@@ -344,7 +438,7 @@
         :key="index"
       >
         <v-list-item>
-          <v-row>
+          <v-row class="mt-1">
             <v-col cols="2" align-self="center">
               <btn-color-picker v-model="area.Color"></btn-color-picker>
             </v-col>
@@ -382,6 +476,7 @@ import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
 import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionListField from "../utils/ExpressionListField.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 import LabelPosField from "../utils/LabelPosField.vue";
 import SegmentKindField from "../utils/SegmentKindField.vue";
 
@@ -420,6 +515,11 @@ function addPoint() {
   emitUpdate();
 }
 
+function deletePoint(index: number) {
+  props.modelValue.Drawings.Points!.splice(index, 1);
+  emitUpdate();
+}
+
 function addSegment() {
   const from = pointsNamesHints[0];
   const to = pointsNamesHints[1];
@@ -436,10 +536,38 @@ function addSegment() {
   emitUpdate();
 }
 
+function deleteSegment(index: number) {
+  props.modelValue.Drawings.Segments!.splice(index, 1);
+  emitUpdate();
+}
+
 function addLine() {
   const lines = props.modelValue.Drawings.Lines || [];
   lines.push({ Label: "(d)", A: "1", B: "0", Color: lastColorUsed.color });
   props.modelValue.Drawings.Lines = lines;
+  emitUpdate();
+}
+
+function deleteLine(index: number) {
+  props.modelValue.Drawings.Lines!.splice(index, 1);
+  emitUpdate();
+}
+
+function addCircle() {
+  const circles = props.modelValue.Drawings.Circles || [];
+  circles.push({
+    Center: { X: "1", Y: "2" },
+    Radius: "5",
+    LineColor: lastColorUsed.color,
+    FillColor: "",
+    Legend: "$C_1$",
+  });
+  props.modelValue.Drawings.Circles = circles;
+  emitUpdate();
+}
+
+function deleteCircle(index: number) {
+  props.modelValue.Drawings.Circles!.splice(index, 1);
   emitUpdate();
 }
 
@@ -450,21 +578,6 @@ function addArea() {
     Color: lastColorUsed.color,
   });
   props.modelValue.Drawings.Areas = areas;
-  emitUpdate();
-}
-
-function deletePoint(index: number) {
-  props.modelValue.Drawings.Points!.splice(index, 1);
-  emitUpdate();
-}
-
-function deleteSegment(index: number) {
-  props.modelValue.Drawings.Segments!.splice(index, 1);
-  emitUpdate();
-}
-
-function deleteLine(index: number) {
-  props.modelValue.Drawings.Lines!.splice(index, 1);
   emitUpdate();
 }
 

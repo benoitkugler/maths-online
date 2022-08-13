@@ -16,7 +16,6 @@
         append-inner-icon=""
         :hint="props.hint"
         :persistent-hint="!!props.hint"
-        :hide-details="!props.hint"
       >
       </v-autocomplete>
     </v-col>
@@ -32,7 +31,7 @@
         hint="Ajouter une expression"
         @keyup="onEnter"
       >
-        <template v-slot:appendInner>
+        <template v-slot:append-inner>
           <v-btn icon size="x-small" :disabled="!isEntryValid" @click="add">
             <v-icon icon="mdi-plus" color="green"></v-icon>
           </v-btn>

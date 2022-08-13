@@ -13,6 +13,7 @@ import 'package:eleve/questions/proof.dart';
 import 'package:eleve/questions/radio.dart';
 import 'package:eleve/questions/repere.dart';
 import 'package:eleve/questions/sign_table.dart';
+import 'package:eleve/questions/sign_table_field.dart';
 import 'package:eleve/questions/table.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/questions/variation_table.dart';
@@ -130,6 +131,9 @@ class QuestionController {
       } else if (block is VariationTableFieldBlock) {
         _fields[block.iD] =
             VariationTableController(api, block, () => onEditDone(block.iD));
+      } else if (block is SignTableFieldBlock) {
+        _fields[block.iD] =
+            SignTableController(api, block, () => onEditDone(block.iD));
       } else if (block is FunctionPointsFieldBlock) {
         _fields[block.iD] =
             FunctionPointsController(block, () => onEditDone(block.iD));
@@ -354,6 +358,15 @@ class _ContentBuilder {
     rows.add(Center(child: VariationTableField(_color, ct)));
   }
 
+  void _handleSignTableFieldBlock(SignTableFieldBlock element) {
+    final ct = _controllers[element.iD] as SignTableController;
+
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(Center(child: SignTableField(_color, ct)));
+  }
+
   void _handleFunctionPointsFieldBlock(FunctionPointsFieldBlock element) {
     final ct = _controllers[element.iD] as FunctionPointsController;
 
@@ -442,6 +455,8 @@ class _ContentBuilder {
         _handleFigureVectorPairFieldBlock(element);
       } else if (element is VariationTableFieldBlock) {
         _handleVariationTableFieldBlock(element);
+      } else if (element is SignTableFieldBlock) {
+        _handleSignTableFieldBlock(element);
       } else if (element is FunctionPointsFieldBlock) {
         _handleFunctionPointsFieldBlock(element);
       } else if (element is TreeFieldBlock) {

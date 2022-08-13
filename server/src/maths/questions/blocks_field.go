@@ -18,6 +18,7 @@ var (
 	_ Block = FigurePointFieldBlock{}
 	_ Block = FigureVectorFieldBlock{}
 	_ Block = VariationTableFieldBlock{}
+	_ Block = SignTableFieldBlock{}
 	_ Block = FunctionPointsFieldBlock{}
 	_ Block = FigureVectorPairFieldBlock{}
 	_ Block = FigureAffineLineFieldBlock{}
@@ -47,28 +48,25 @@ func (n NumberFieldBlock) setupValidator(params expression.RandomParameters) (va
 }
 
 type ExpressionFieldBlock struct {
-	Expression      string   // a valid expression, in the format used by expression.Expression
-	Label           TextPart // optional
+	Expression      string       // a valid expression, in the format used by expression.Expression
+	Label           Interpolated // optional
 	ComparisonLevel ComparisonLevel
 }
 
 func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	label := StringOrExpression{String: f.Label.Content}
-	if f.Label.Kind == Expression {
-		e, err := expression.Parse(f.Label.Content)
-		if err != nil {
-			return nil, err
-		}
-		label = StringOrExpression{Expression: e}
-		label.Expression.Substitute(params)
-	}
 	answer, err := expression.Parse(f.Expression)
 	if err != nil {
 		return nil, err
 	}
 	answer.Substitute(params)
+
+	label, err := f.Label.instantiateAndMerge(params)
+	if err != nil {
+		return nil, err
+	}
+
 	return ExpressionFieldInstance{
-		Label:           label,
+		LabelLaTeX:      label,
 		Answer:          answer,
 		ComparisonLevel: f.ComparisonLevel,
 		ID:              ID,
@@ -77,6 +75,13 @@ func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (insta
 
 func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
 	_, err := expression.Parse(f.Expression)
+	if err != nil {
+		return nil, err
+	}
+	_, err = f.Label.parse()
+	if err != nil {
+		return nil, err
+	}
 	return noOpValidator{}, err
 }
 
@@ -328,6 +333,22 @@ func (vt VariationTableFieldBlock) instantiate(params expression.Vars, ID int) (
 }
 
 func (fp VariationTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return fp.Answer.setupValidator(params)
+}
+
+type SignTableFieldBlock struct {
+	Answer SignTableBlock
+}
+
+func (vt SignTableFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+	ans, err := vt.Answer.instantiateST(params)
+	return SignTableFieldInstance{
+		ID:     ID,
+		Answer: ans,
+	}, err
+}
+
+func (fp SignTableFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
 	return fp.Answer.setupValidator(params)
 }
 

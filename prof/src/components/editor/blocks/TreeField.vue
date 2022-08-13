@@ -22,25 +22,31 @@
     <v-list>
       <v-list-item
         v-for="(param, index) in props.modelValue.EventsProposals"
+        :key="index"
         class="pr-0"
       >
-        <v-text-field
-          variant="outlined"
-          density="compact"
-          v-model="props.modelValue.EventsProposals![index]"
-          hide-details
-        >
-        </v-text-field>
-
-        <v-btn
-          icon
-          size="small"
-          flat
-          @click="removeEventsProposals(index)"
-          title="Supprimer cet évènement"
-        >
-          <v-icon icon="mdi-delete" color="red"></v-icon>
-        </v-btn>
+        <v-row no-gutters>
+          <v-col>
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="props.modelValue.EventsProposals![index]"
+              hide-details
+            >
+            </v-text-field>
+          </v-col>
+          <v-col cols="auto">
+            <v-btn
+              icon
+              size="small"
+              flat
+              @click="removeEventsProposals(index)"
+              title="Supprimer cet évènement"
+            >
+              <v-icon icon="mdi-delete" color="red"></v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-list-item>
     </v-list>
   </v-card>
@@ -89,38 +95,48 @@
     <v-row no-gutters>
       <v-col>
         <v-list>
-          <v-list-item v-for="(param, index) in rootChildren" class="pr-0">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              :model-value="param.proba"
-              @update:model-value="s => props.modelValue.AnswerRoot.Probabilities![index] = s"
-              hide-details
-              label="Probabilité"
-              :color="color"
-              class="mr-2"
-            >
-            </v-text-field>
-
-            <v-select
-              variant="outlined"
-              density="compact"
-              label="Evènement"
-              :items="props.modelValue.EventsProposals || []"
-              :model-value="props.modelValue.EventsProposals![param.value]"
-              @update:model-value="s => props.modelValue.AnswerRoot.Children![index].Value = props.modelValue.EventsProposals?.indexOf(s)!"
-              hide-details
-            ></v-select>
-
-            <v-btn
-              icon
-              size="small"
-              flat
-              @click="removeRootChildren(index)"
-              title="Supprimer cette issue"
-            >
-              <v-icon icon="mdi-delete" color="red"></v-icon>
-            </v-btn>
+          <v-list-item
+            v-for="(param, index) in rootChildren"
+            class="pr-0"
+            :key="index"
+          >
+            <v-row no-gutters class="mt-2">
+              <v-col>
+                <v-text-field
+                  variant="outlined"
+                  density="compact"
+                  :model-value="param.proba"
+                  @update:model-value="s => props.modelValue.AnswerRoot.Probabilities![index] = s"
+                  hide-details
+                  label="Probabilité"
+                  :color="color"
+                  class="mr-2"
+                >
+                </v-text-field>
+              </v-col>
+              <v-col>
+                <v-select
+                  variant="outlined"
+                  density="compact"
+                  label="Evènement"
+                  :items="props.modelValue.EventsProposals || []"
+                  :model-value="props.modelValue.EventsProposals![param.value]"
+                  @update:model-value="s => props.modelValue.AnswerRoot.Children![index].Value = props.modelValue.EventsProposals?.indexOf(s)!"
+                  hide-details
+                ></v-select>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn
+                  icon
+                  size="small"
+                  flat
+                  @click="removeRootChildren(index)"
+                  title="Supprimer cette issue"
+                >
+                  <v-icon icon="mdi-delete" color="red"></v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
           </v-list-item>
         </v-list>
       </v-col>
@@ -150,7 +166,7 @@ const color = ExpressionColor;
 const rootChildren = computed(() => {
   return (props.modelValue.AnswerRoot.Probabilities || []).map((v, i) => ({
     proba: v,
-    value: props.modelValue.AnswerRoot.Children![i].Value
+    value: props.modelValue.AnswerRoot.Children![i].Value,
   }));
 });
 
@@ -171,7 +187,7 @@ function onChooseDepth(s: string) {
 
   props.modelValue.AnswerRoot = buildRegularTree(
     props.modelValue.AnswerRoot.Probabilities || [],
-    props.modelValue.AnswerRoot.Children!.map(c => c.Value),
+    props.modelValue.AnswerRoot.Children!.map((c) => c.Value),
     sInt
   );
   emit("update:modelValue", props.modelValue);
@@ -188,8 +204,8 @@ function buildRegularTree(
     }
     return {
       Probabilities: probalities,
-      Children: events.map(e => buildWithValue(e, depth - 1)),
-      Value: value
+      Children: events.map((e) => buildWithValue(e, depth - 1)),
+      Value: value,
     };
   };
 
@@ -208,7 +224,7 @@ function addRootChildren() {
   props.modelValue.AnswerRoot.Children?.push({
     Children: [],
     Probabilities: [],
-    Value: 0
+    Value: 0,
   });
   props.modelValue.AnswerRoot.Probabilities?.push("0.5");
 }

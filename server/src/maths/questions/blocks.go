@@ -420,20 +420,24 @@ func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (valid
 type SignTableBlock struct {
 	Label     string
 	FxSymbols []SignSymbol
-	Xs        []Interpolated // always math content
-	Signs     []bool         // with length len(Xs) - 1
+	Xs        []string // valid expression
+	Signs     []bool   // is positive, with length len(Xs) - 1
 }
 
 func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
+	return st.instantiateST(params)
+}
+
+func (st SignTableBlock) instantiateST(params expression.Vars) (SignTableInstance, error) {
 	out := SignTableInstance{
 		Label: st.Label,
-		Xs:    make([]string, len(st.Xs)),
+		Xs:    make([]*expression.Expr, len(st.Xs)),
 	}
 	var err error
 	for i, c := range st.Xs {
-		out.Xs[i], err = c.instantiateAndMerge(params)
+		out.Xs[i], err = expression.Parse(c)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 	}
 	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
@@ -451,7 +455,7 @@ func (st SignTableBlock) setupValidator(expression.RandomParameters) (validator,
 	}
 
 	for _, c := range st.Xs {
-		_, err := c.parse()
+		_, err := expression.Parse(c)
 		if err != nil {
 			return nil, err
 		}
@@ -478,6 +482,7 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 				Segments: make([]repere.Segment, len(f.Drawings.Segments)),
 				Points:   make(map[string]repere.LabeledPoint),
 				Lines:    make([]repere.Line, len(f.Drawings.Lines)),
+				Circles:  make([]repere.Circle, len(f.Drawings.Circles)),
 				Areas:    make([]repere.Area, len(f.Drawings.Areas)),
 			},
 			Bounds:     f.Bounds,
@@ -515,6 +520,11 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 	for i, s := range f.Drawings.Segments {
 		instance := repere.Segment(s)
 
+		instance.LabelName, err = Interpolated(s.LabelName).instantiateAndMerge(params)
+		if err != nil {
+			return out, err
+		}
+
 		instance.From, err = instantiateLaTeXExpr(s.From, params)
 		if err != nil {
 			return out, err
@@ -541,6 +551,31 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 			A:     a,
 			B:     b,
 			Color: l.Color,
+		}
+	}
+
+	for i, circle := range f.Drawings.Circles {
+		legend, err := Interpolated(circle.Legend).instantiateAndMerge(params)
+		if err != nil {
+			return out, err
+		}
+
+		center, err := CoordExpression(circle.Center).instantiateToFloat(params)
+		if err != nil {
+			return out, err
+		}
+
+		radius, err := evaluateExpr(circle.Radius, params)
+		if err != nil {
+			return out, err
+		}
+
+		out.Figure.Drawings.Circles[i] = repere.Circle{
+			Radius:    radius,
+			Center:    center,
+			LineColor: circle.LineColor,
+			FillColor: circle.FillColor,
+			Legend:    legend,
 		}
 	}
 
@@ -592,6 +627,12 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 	// ... and undefined points
 	out.references = make([]*expression.Expr, 0, 2*len(f.Drawings.Segments))
 	for _, seg := range f.Drawings.Segments {
+		// validate the syntax for the name, which support interpolation
+		_, err = Interpolated(seg.LabelName).parse()
+		if err != nil {
+			return nil, err
+		}
+
 		from, err := expression.Parse(seg.From)
 		if err != nil {
 			return nil, err
@@ -602,6 +643,7 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 		}
 		out.references = append(out.references, from, to)
 	}
+
 	for _, area := range f.Drawings.Areas {
 		if len(area.Points) < 3 {
 			return nil, errors.New("Une surface requiert au moins 3 points.")
@@ -614,6 +656,25 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 			}
 			out.references = append(out.references, e)
 		}
+	}
+
+	for _, circle := range f.Drawings.Circles {
+		center, err := CoordExpression(circle.Center).parse()
+		if err != nil {
+			return nil, err
+		}
+
+		radius, err := expression.Parse(circle.Radius)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = Interpolated(circle.Legend).parse()
+		if err != nil {
+			return nil, err
+		}
+
+		out.circlesDims = append(out.circlesDims, center.X, center.Y, radius)
 	}
 
 	out.lines = make([][2]*expression.Expr, len(f.Drawings.Lines))

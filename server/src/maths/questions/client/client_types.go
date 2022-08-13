@@ -33,6 +33,7 @@ func (FigurePointFieldBlock) isBlock()      {}
 func (FigureVectorFieldBlock) isBlock()     {}
 func (FigureVectorPairFieldBlock) isBlock() {}
 func (VariationTableFieldBlock) isBlock()   {}
+func (SignTableFieldBlock) isBlock()        {}
 func (FunctionPointsFieldBlock) isBlock()   {}
 func (TreeFieldBlock) isBlock()             {}
 func (TableFieldBlock) isBlock()            {}
@@ -186,6 +187,14 @@ type VariationTableFieldBlock struct {
 	ID              int
 }
 
+// SignTableFieldBlock asks to complete a
+// sign table (with fixed length)
+type SignTableFieldBlock struct {
+	Label           string // LaTeX code
+	LengthProposals []int  // propositions of the number of zeros (excluding potential edges)
+	ID              int
+}
+
 // FunctionPointsFieldBlock asks to place points
 // to draw the graph of a function
 type FunctionPointsFieldBlock struct {
@@ -217,6 +226,8 @@ type TableFieldBlock struct {
 type VectorFieldBlock struct {
 	ID            int
 	DisplayColumn bool
+	// Typical values range from 1 to 15
+	SizeHintX, SizeHintY SizeHint
 }
 
 // Statement is a basic statement
@@ -265,6 +276,7 @@ func (PointAnswer) isAnswer()           {}
 func (DoublePointAnswer) isAnswer()     {}
 func (DoublePointPairAnswer) isAnswer() {}
 func (VariationTableAnswer) isAnswer()  {}
+func (SignTableAnswer) isAnswer()       {}
 func (FunctionPointsAnswer) isAnswer()  {}
 func (TreeAnswer) isAnswer()            {}
 func (TableAnswer) isAnswer()           {}
@@ -313,6 +325,12 @@ type VariationTableAnswer struct {
 	Xs     []string // expressions
 	Fxs    []string // expressions
 	Arrows []bool   // isUp
+}
+
+type SignTableAnswer struct {
+	Xs        []string // expressions
+	FxSymbols []SignSymbol
+	Signs     []bool // is positive, with length len(Xs) - 1
 }
 
 type FunctionPointsAnswer struct {

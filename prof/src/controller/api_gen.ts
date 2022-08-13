@@ -46,6 +46,7 @@ export enum BlockKind {
   ProofFieldBlock = "ProofFieldBlock",
   RadioFieldBlock = "RadioFieldBlock",
   SignTableBlock = "SignTableBlock",
+  SignTableFieldBlock = "SignTableFieldBlock",
   TableBlock = "TableBlock",
   TableFieldBlock = "TableFieldBlock",
   TextBlock = "TextBlock",
@@ -73,6 +74,7 @@ export interface Block {
     | ProofFieldBlock
     | RadioFieldBlock
     | SignTableBlock
+    | SignTableFieldBlock
     | TableBlock
     | TableFieldBlock
     | TextBlock
@@ -240,7 +242,7 @@ export interface ExerciceUpdateVisiblityIn {
 // github.com/benoitkugler/maths-online/maths/questions.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
-  Label: TextPart;
+  Label: Interpolated;
   ComparisonLevel: ComparisonLevel;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
@@ -544,6 +546,14 @@ export interface RandomArea {
   Color: string;
   Points: string[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/repere.RandomCircle
+export interface RandomCircle {
+  Center: RandomCoord;
+  Radius: string;
+  LineColor: string;
+  FillColor: string;
+  Legend: string;
+}
 // github.com/benoitkugler/maths-online/maths/repere.RandomCoord
 export interface RandomCoord {
   X: string;
@@ -554,6 +564,7 @@ export interface RandomDrawings {
   Points: NamedRandomLabeledPoint[] | null;
   Segments: RandomSegment[] | null;
   Lines: RandomLine[] | null;
+  Circles: RandomCircle[] | null;
   Areas: RandomArea[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
@@ -669,8 +680,12 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
 export interface SignTableBlock {
   Label: string;
   FxSymbols: SignSymbol[] | null;
-  Xs: Interpolated[] | null;
+  Xs: string[] | null;
   Signs: boolean[] | null;
+}
+// github.com/benoitkugler/maths-online/maths/questions.SignTableFieldBlock
+export interface SignTableFieldBlock {
+  Answer: SignTableBlock;
 }
 // github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
 export interface StartSessionOut {

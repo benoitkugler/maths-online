@@ -189,3 +189,28 @@ class _ExpressionFieldState extends State<ExpressionField> {
     );
   }
 }
+
+/// [ExpressionCell] wraps an [ExpressionField] in a [TableCell]
+class ExpressionCell extends StatelessWidget {
+  final Color color;
+  final ExpressionController controller;
+  final TableCellVerticalAlignment align;
+
+  const ExpressionCell(this.color, this.controller, this.align, {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TableCell(
+      verticalAlignment: align,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: ExpressionField(
+          color,
+          controller,
+          maxWidthFactor: 0.2,
+        ),
+      ),
+    );
+  }
+}

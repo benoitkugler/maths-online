@@ -31,7 +31,7 @@
         :hint="entryHint"
         @keyup="onEnter"
       >
-        <template v-slot:appendInner>
+        <template v-slot:append-inner>
           <v-btn icon size="x-small" :disabled="!isEntryValid" @click="add">
             <v-icon icon="mdi-plus" color="green"></v-icon>
           </v-btn>
@@ -62,7 +62,7 @@ const emit = defineEmits<{
 function onDelete(s: number[]) {
   emit(
     "update:model-value",
-    s.map(index => props.modelValue[index])
+    s.map((index) => props.modelValue[index])
   );
 }
 
@@ -91,7 +91,7 @@ function parseEntry(s: string): number[] {
     chunks = s.split(";");
   }
   if (chunks.length > 1) {
-    return chunks.map(v => Number(v.trim())).filter(n => !isNaN(n));
+    return chunks.map((v) => Number(v.trim())).filter((n) => !isNaN(n));
   }
 
   chunks = s.split(":");

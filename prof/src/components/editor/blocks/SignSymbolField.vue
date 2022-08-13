@@ -1,5 +1,5 @@
 <template>
-  <v-btn rounded @click="nextSymbol" size="small" class="my-2">
+  <v-btn rounded @click="nextSymbol" size="small" class="my-2" block>
     {{ symbolItems[props.modelValue] }}
   </v-btn>
 </template>

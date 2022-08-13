@@ -75,6 +75,7 @@ import OrderedListFieldVue from "./blocks/OrderedListField.vue";
 import ProofFieldVue from "./blocks/ProofField.vue";
 import RadioFieldVue from "./blocks/RadioField.vue";
 import SignTableVue from "./blocks/SignTable.vue";
+import SignTableFieldVue from "./blocks/SignTableField.vue";
 import TableVue from "./blocks/TableB.vue";
 import TableFieldVue from "./blocks/TableField.vue";
 import TextVue from "./blocks/TextB.vue";
@@ -133,6 +134,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(FigureVectorFieldVue) };
     case BlockKind.VariationTableFieldBlock:
       return { Props: data, Component: markRaw(VariationTableFieldVue) };
+    case BlockKind.SignTableFieldBlock:
+      return { Props: data, Component: markRaw(SignTableFieldVue) };
     case BlockKind.FunctionPointsFieldBlock:
       return { Props: data, Component: markRaw(FunctionPointsFieldVue) };
     case BlockKind.FigureVectorPairFieldBlock:

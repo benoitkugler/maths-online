@@ -76,6 +76,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "SignTableFieldBlock":
+		var data SignTableFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "TableBlock":
 		var data TableBlock
 		err = json.Unmarshal(wr.Data, &data)
@@ -146,6 +150,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "RadioFieldBlock", Data: data}
 	case SignTableBlock:
 		wr = wrapper{Kind: "SignTableBlock", Data: data}
+	case SignTableFieldBlock:
+		wr = wrapper{Kind: "SignTableFieldBlock", Data: data}
 	case TableBlock:
 		wr = wrapper{Kind: "TableBlock", Data: data}
 	case TableFieldBlock:
@@ -182,6 +188,7 @@ const (
 	ProofFieldBlockBlKind            = "ProofFieldBlock"
 	RadioFieldBlockBlKind            = "RadioFieldBlock"
 	SignTableBlockBlKind             = "SignTableBlock"
+	SignTableFieldBlockBlKind        = "SignTableFieldBlock"
 	TableBlockBlKind                 = "TableBlock"
 	TableFieldBlockBlKind            = "TableFieldBlock"
 	TextBlockBlKind                  = "TextBlock"

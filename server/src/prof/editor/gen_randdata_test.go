@@ -193,6 +193,15 @@ func randSlicerep_RandomArea() []repere.RandomArea {
 	return out
 }
 
+func randSlicerep_RandomCircle() []repere.RandomCircle {
+	l := 40 + rand.Intn(10)
+	out := make([]repere.RandomCircle, l)
+	for i := range out {
+		out[i] = randrep_RandomCircle()
+	}
+	return out
+}
+
 func randSlicerep_RandomLine() []repere.RandomLine {
 	l := 40 + rand.Intn(10)
 	out := make([]repere.RandomLine, l)
@@ -273,6 +282,7 @@ func randque_Block() questions.Block {
 		randque_ProofFieldBlock(),
 		randque_RadioFieldBlock(),
 		randque_SignTableBlock(),
+		randque_SignTableFieldBlock(),
 		randque_TableBlock(),
 		randque_TableFieldBlock(),
 		randque_TextBlock(),
@@ -281,7 +291,7 @@ func randque_Block() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(21)
+	i := rand.Intn(22)
 	return choix[i]
 }
 
@@ -299,7 +309,7 @@ func randque_Enonce() questions.Enonce {
 func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
 	return questions.ExpressionFieldBlock{
 		Expression:      randstring(),
-		Label:           randque_TextPart(),
+		Label:           randque_Interpolated(),
 		ComparisonLevel: randexp_ComparisonLevel(),
 	}
 }
@@ -460,8 +470,14 @@ func randque_SignTableBlock() questions.SignTableBlock {
 	return questions.SignTableBlock{
 		Label:     randstring(),
 		FxSymbols: randSliceque_SignSymbol(),
-		Xs:        randSliceque_Interpolated(),
+		Xs:        randSlicestring(),
 		Signs:     randSlicebool(),
+	}
+}
+
+func randque_SignTableFieldBlock() questions.SignTableFieldBlock {
+	return questions.SignTableFieldBlock{
+		Answer: randque_SignTableBlock(),
 	}
 }
 
@@ -572,6 +588,16 @@ func randrep_RandomArea() repere.RandomArea {
 	}
 }
 
+func randrep_RandomCircle() repere.RandomCircle {
+	return repere.RandomCircle{
+		Center:    randrep_RandomCoord(),
+		Radius:    randstring(),
+		LineColor: randstring(),
+		FillColor: randstring(),
+		Legend:    randstring(),
+	}
+}
+
 func randrep_RandomCoord() repere.RandomCoord {
 	return repere.RandomCoord{
 		X: randstring(),
@@ -584,6 +610,7 @@ func randrep_RandomDrawings() repere.RandomDrawings {
 		Points:   randSlicerep_NamedRandomLabeledPoint(),
 		Segments: randSlicerep_RandomSegment(),
 		Lines:    randSlicerep_RandomLine(),
+		Circles:  randSlicerep_RandomCircle(),
 		Areas:    randSlicerep_RandomArea(),
 	}
 }

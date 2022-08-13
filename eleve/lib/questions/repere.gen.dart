@@ -26,6 +26,43 @@ JSON areaToJson(Area item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/repere.Circle
+class Circle {
+  final Coord center;
+  final double radius;
+  final String lineColor;
+  final String fillColor;
+  final String legend;
+
+  const Circle(
+      this.center, this.radius, this.lineColor, this.fillColor, this.legend);
+
+  @override
+  String toString() {
+    return "Circle($center, $radius, $lineColor, $fillColor, $legend)";
+  }
+}
+
+Circle circleFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Circle(
+      coordFromJson(json['Center']),
+      doubleFromJson(json['Radius']),
+      stringFromJson(json['LineColor']),
+      stringFromJson(json['FillColor']),
+      stringFromJson(json['Legend']));
+}
+
+JSON circleToJson(Circle item) {
+  return {
+    "Center": coordToJson(item.center),
+    "Radius": doubleToJson(item.radius),
+    "LineColor": stringToJson(item.lineColor),
+    "FillColor": stringToJson(item.fillColor),
+    "Legend": stringToJson(item.legend)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/repere.Coord
 class Coord {
   final double x;
@@ -53,13 +90,15 @@ class Drawings {
   final Map<String, LabeledPoint> points;
   final List<Segment> segments;
   final List<Line> lines;
+  final List<Circle> circles;
   final List<Area> areas;
 
-  const Drawings(this.points, this.segments, this.lines, this.areas);
+  const Drawings(
+      this.points, this.segments, this.lines, this.circles, this.areas);
 
   @override
   String toString() {
-    return "Drawings($points, $segments, $lines, $areas)";
+    return "Drawings($points, $segments, $lines, $circles, $areas)";
   }
 }
 
@@ -69,6 +108,7 @@ Drawings drawingsFromJson(dynamic json_) {
       dictStringToLabeledPointFromJson(json['Points']),
       listSegmentFromJson(json['Segments']),
       listLineFromJson(json['Lines']),
+      listCircleFromJson(json['Circles']),
       listAreaFromJson(json['Areas']));
 }
 
@@ -77,6 +117,7 @@ JSON drawingsToJson(Drawings item) {
     "Points": dictStringToLabeledPointToJson(item.points),
     "Segments": listSegmentToJson(item.segments),
     "Lines": listLineToJson(item.lines),
+    "Circles": listCircleToJson(item.circles),
     "Areas": listAreaToJson(item.areas)
   };
 }
@@ -345,6 +386,17 @@ List<Area> listAreaFromJson(dynamic json) {
 
 List<dynamic> listAreaToJson(List<Area> item) {
   return item.map(areaToJson).toList();
+}
+
+List<Circle> listCircleFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(circleFromJson).toList();
+}
+
+List<dynamic> listCircleToJson(List<Circle> item) {
+  return item.map(circleToJson).toList();
 }
 
 List<Line> listLineFromJson(dynamic json) {

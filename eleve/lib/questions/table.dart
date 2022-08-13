@@ -176,3 +176,44 @@ class _TableFieldState extends State<TableField> {
             .toList());
   }
 }
+
+/// [BaseFunctionTable] serves a container for
+/// variation and sign tables, editable or not.
+class BaseFunctionTable extends StatelessWidget {
+  final String label;
+  final List<Widget> xRow;
+  final List<Widget> fxRow;
+  final Color? headerColor;
+
+  const BaseFunctionTable(this.label, this.xRow, this.fxRow,
+      {Key? key, this.headerColor})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final color = headerColor ?? Colors.grey.shade600;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Table(
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          border: const TableBorder(
+            top: BorderSide(width: 1.5),
+            left: BorderSide(width: 1.5),
+            right: BorderSide(width: 1.5),
+            bottom: BorderSide(width: 1.5),
+            horizontalInside: BorderSide(),
+          ),
+          children: [
+            TableRow(decoration: BoxDecoration(color: color), children: [
+              const MathTableCell(TableCellVerticalAlignment.middle, "x"),
+              ...xRow
+            ]),
+            TableRow(children: [
+              MathTableCell(TableCellVerticalAlignment.middle, label,
+                  width: 70),
+              ...fxRow,
+            ])
+          ]),
+    );
+  }
+}

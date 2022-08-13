@@ -4,6 +4,7 @@ package expression
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -310,6 +311,10 @@ func NewNb(v float64) *Expr {
 }
 
 func (v Number) String() string {
+	if math.IsInf(float64(v), 1) {
+		// do not write the + to avoid -+inf
+		return "inf"
+	}
 	const decimalSeparator = "," // prefer french notation
 	out := strconv.FormatFloat(RoundFloat(float64(v)), 'f', -1, 64)
 	return strings.ReplaceAll(out, ".", decimalSeparator)

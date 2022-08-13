@@ -3,7 +3,7 @@
   <QuillEditor
     theme=""
     toolbar=""
-    class="__quill-text-field elevation-2"
+    class="__quill-text-field elevation-2 mb-2"
     content-type="text"
     @update:content="onTextChange"
     @text-change="updateVisual"

@@ -1,5 +1,5 @@
 <template>
-  <v-menu offset-y close-on-content-click>
+  <v-menu offset-y :close-on-content-click="false">
     <template v-slot:activator="{ isActive, props: slotProps }">
       <v-btn
         title="Modifier la couleur"

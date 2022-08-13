@@ -1,4 +1,5 @@
 import 'package:eleve/questions/fields.dart';
+import 'package:eleve/questions/table.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
 
@@ -40,58 +41,46 @@ class SignTable extends StatelessWidget {
       fxRow.add(pair.fx);
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Table(
-          border: const TableBorder(
-            top: BorderSide(width: 1.5),
-            left: BorderSide(width: 1.5),
-            right: BorderSide(width: 1.5),
-            bottom: BorderSide(width: 1.5),
-            horizontalInside: BorderSide(),
-          ),
-          defaultColumnWidth: const IntrinsicColumnWidth(),
-          children: [
-            TableRow(
-                decoration: BoxDecoration(color: Colors.red.shade200),
-                children: [
-                  const MathTableCell(TableCellVerticalAlignment.middle, "x"),
-                  ...xRow
-                ]),
-            TableRow(children: [
-              MathTableCell(TableCellVerticalAlignment.middle, data.label),
-              ...fxRow,
-            ])
-          ]),
+    return BaseFunctionTable(data.label, xRow, fxRow,
+        headerColor: Colors.red.shade200);
+  }
+}
+
+class ForbiddenValueW extends StatelessWidget {
+  static const height = 40.0;
+
+  /// override theme text color
+  final Color? color;
+
+  const ForbiddenValueW({Key? key, this.color}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor =
+        color ?? Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
+    return Align(
+      child: Container(
+        width: 5,
+        height: height,
+        decoration: BoxDecoration(
+            color: Colors.transparent,
+            border: Border(
+              left: BorderSide(color: textColor),
+              right: BorderSide(color: textColor),
+            )),
+      ),
     );
   }
 }
 
 class _ForbiddenValue extends StatelessWidget {
-  static const height = 40.0;
-
   const _ForbiddenValue({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
-    return TableCell(
+    return const TableCell(
       verticalAlignment: TableCellVerticalAlignment.middle,
-      child: LayoutBuilder(
-        builder: (context, constraints) => Align(
-          child: Container(
-            width: 5,
-            height: height,
-            decoration: BoxDecoration(
-                color: Colors.transparent,
-                border: Border(
-                  left: BorderSide(color: textColor),
-                  right: BorderSide(color: textColor),
-                )),
-          ),
-        ),
-      ),
+      child: ForbiddenValueW(),
     );
   }
 }

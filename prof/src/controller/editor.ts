@@ -27,6 +27,7 @@ import {
   type QuestionHeader,
   type RadioFieldBlock,
   type SignTableBlock,
+  type SignTableFieldBlock,
   type TableBlock,
   type TableFieldBlock,
   type TextBlock,
@@ -171,6 +172,13 @@ export const sortedBlockKindLabels = [
     },
   ],
   [
+    BlockKind.SignTableFieldBlock,
+    {
+      label: "Tableau de signes",
+      isAnswerField: true,
+    },
+  ],
+  [
     BlockKind.FigureAffineLineFieldBlock,
     {
       label: "Droite (affine)",
@@ -212,6 +220,7 @@ interface BlockKindTypes {
   [BlockKind.FigurePointFieldBlock]: FigurePointFieldBlock;
   [BlockKind.FigureVectorFieldBlock]: FigureVectorFieldBlock;
   [BlockKind.VariationTableFieldBlock]: VariationTableFieldBlock;
+  [BlockKind.SignTableFieldBlock]: SignTableFieldBlock;
   [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
   [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
   [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
@@ -263,6 +272,18 @@ export function saveData<T>(data: T, fileName: string) {
   window.URL.revokeObjectURL(url);
 }
 
+const signTableExample: SignTableBlock = {
+  Label: "f(x)",
+  FxSymbols: [
+    SignSymbol.Nothing,
+    SignSymbol.Zero,
+    SignSymbol.ForbiddenValue,
+    SignSymbol.Nothing,
+  ],
+  Xs: ["-inf", "3", "5", "+inf"],
+  Signs: [true, false, true],
+};
+
 export function newBlock(kind: BlockKind): Block {
   switch (kind) {
     case BlockKind.TextBlock: {
@@ -301,6 +322,7 @@ export function newBlock(kind: BlockKind): Block {
             Lines: [],
             Points: [],
             Segments: [],
+            Circles: [],
             Areas: [],
           },
         },
@@ -343,17 +365,7 @@ export function newBlock(kind: BlockKind): Block {
     case BlockKind.SignTableBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: {
-          Label: "f(x)",
-          FxSymbols: [
-            SignSymbol.Nothing,
-            SignSymbol.Zero,
-            SignSymbol.ForbiddenValue,
-            SignSymbol.Nothing,
-          ],
-          Xs: ["\\infty", "3", "5", "+\\infty"],
-          Signs: [true, false, true],
-        },
+        Data: signTableExample,
       };
       return out;
     }
@@ -396,7 +408,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Label: { Kind: TextKind.Text, Content: "" },
+          Label: "",
           Expression: "x^2 + 2x + 1",
           ComparisonLevel: ComparisonLevel.SimpleSubstitutions,
         },
@@ -441,6 +453,7 @@ export function newBlock(kind: BlockKind): Block {
               Lines: [],
               Points: [],
               Segments: [],
+              Circles: [],
               Areas: [],
             },
           },
@@ -468,6 +481,7 @@ export function newBlock(kind: BlockKind): Block {
               Lines: [],
               Points: [],
               Segments: [],
+              Circles: [],
               Areas: [],
             },
           },
@@ -490,6 +504,15 @@ export function newBlock(kind: BlockKind): Block {
             Xs: ["-5", "0", "5"],
             Fxs: ["-3", "2", "-1"],
           },
+        },
+      };
+      return out;
+    }
+    case BlockKind.SignTableFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: signTableExample,
         },
       };
       return out;
@@ -518,7 +541,13 @@ export function newBlock(kind: BlockKind): Block {
               Height: 10,
               Origin: { X: 3, Y: 3 },
             },
-            Drawings: { Points: [], Lines: [], Segments: [], Areas: [] },
+            Drawings: {
+              Points: [],
+              Lines: [],
+              Segments: [],
+              Circles: [],
+              Areas: [],
+            },
           },
           Criterion: VectorPairCriterion.VectorColinear,
         },
@@ -537,7 +566,13 @@ export function newBlock(kind: BlockKind): Block {
               Height: 10,
               Origin: { X: 3, Y: 3 },
             },
-            Drawings: { Points: [], Lines: [], Segments: [], Areas: [] },
+            Drawings: {
+              Points: [],
+              Lines: [],
+              Segments: [],
+              Circles: [],
+              Areas: [],
+            },
           },
           Label: "f",
           A: "1",
