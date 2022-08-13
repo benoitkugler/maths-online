@@ -515,6 +515,11 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 	for i, s := range f.Drawings.Segments {
 		instance := repere.Segment(s)
 
+		instance.LabelName, err = Interpolated(s.LabelName).instantiateAndMerge(params)
+		if err != nil {
+			return out, err
+		}
+
 		instance.From, err = instantiateLaTeXExpr(s.From, params)
 		if err != nil {
 			return out, err
@@ -592,6 +597,12 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 	// ... and undefined points
 	out.references = make([]*expression.Expr, 0, 2*len(f.Drawings.Segments))
 	for _, seg := range f.Drawings.Segments {
+		// validate the syntax for the name, which support interpolation
+		_, err = Interpolated(seg.LabelName).parse()
+		if err != nil {
+			return nil, err
+		}
+
 		from, err := expression.Parse(seg.From)
 		if err != nil {
 			return nil, err

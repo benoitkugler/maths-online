@@ -11,7 +11,7 @@ type RandomLabeledPoint struct {
 }
 
 type RandomSegment struct {
-	LabelName string // optional
+	LabelName string // optional, support interpolation
 	From, To  string // expression.Expression resolving to point name
 	Color     Color
 	LabelPos  LabelPos    // used only if LabelName is not zero

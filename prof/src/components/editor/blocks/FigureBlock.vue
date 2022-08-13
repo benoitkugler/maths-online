@@ -91,7 +91,7 @@
       >
         <v-list-item>
           <v-row class="fix-input-width">
-            <v-col md="3" align-self="center">
+            <v-col md="3" align-self="center" class="mt-2">
               <v-row no-gutters>
                 <v-col cols="12">
                   <v-text-field
@@ -114,7 +114,7 @@
                   ></btn-color-picker> </v-col
               ></v-row>
             </v-col>
-            <v-col md="7">
+            <v-col md="7" class="mt-2">
               <v-row no-gutters>
                 <v-col md="6">
                   <v-text-field
@@ -179,7 +179,7 @@
       >
         <v-list-item>
           <v-row class="fix-input-width">
-            <v-col align-self="center" md="4">
+            <v-col align-self="center" md="4" class="mt-2">
               <v-row>
                 <v-col md="12">
                   <v-combobox
@@ -210,23 +210,21 @@
                 </v-col>
               </v-row>
             </v-col>
-            <v-col md="7">
-              <v-row class="px-0">
+            <v-col md="7" class="mt-2">
+              <v-row no-gutters class="px-0">
                 <v-col md="12">
                   <segment-kind-field
                     v-model="segment.Kind"
                   ></segment-kind-field>
                 </v-col>
                 <v-col md="12">
-                  <v-text-field
-                    density="compact"
-                    variant="outlined"
+                  <interpolated-text
                     label="Légende (Optionnelle)"
-                    hide-details
                     v-model="segment.LabelName"
-                  ></v-text-field>
+                  >
+                  </interpolated-text>
                 </v-col>
-                <v-col md="12">
+                <v-col md="12" class="pt-4">
                   <label-pos-field v-model="segment.LabelPos"></label-pos-field>
                 </v-col>
               </v-row>
@@ -266,7 +264,7 @@
         :key="index"
       >
         <v-list-item>
-          <v-row class="fix-input-width">
+          <v-row class="fix-input-width mt-1">
             <v-col cols="10">
               <v-row>
                 <v-col align-self="center">
@@ -344,7 +342,7 @@
         :key="index"
       >
         <v-list-item>
-          <v-row>
+          <v-row class="mt-1">
             <v-col cols="2" align-self="center">
               <btn-color-picker v-model="area.Color"></btn-color-picker>
             </v-col>
@@ -382,6 +380,7 @@ import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
 import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionListField from "../utils/ExpressionListField.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 import LabelPosField from "../utils/LabelPosField.vue";
 import SegmentKindField from "../utils/SegmentKindField.vue";
 
