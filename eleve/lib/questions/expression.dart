@@ -68,13 +68,7 @@ class ExpressionField extends StatefulWidget {
   // returns a float ratio between 0 and 1
   double get hintWidthRatio {
     // add some additional padding
-    var clamped = hintWidth + 3;
-    if (clamped < 5) {
-      clamped = 5;
-    }
-    if (clamped > 30) {
-      clamped = 30;
-    }
+    var clamped = (hintWidth + 3).clamp(5, 30);
     return clamped.toDouble() / 30.0;
   }
 

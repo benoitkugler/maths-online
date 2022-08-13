@@ -107,18 +107,22 @@ type TableBlock struct {
 	Values            [][]TextOrMath
 }
 
+// SizeHint is the length of the expected answer,
+// in runes. It may be used by the client to adjust the field width.
+type SizeHint = int
+
 // NumberFieldBlock is an answer field where only
 // numbers are allowed
 // answers are compared as float values
 type NumberFieldBlock struct {
 	ID int
+	// Typical values range from 1 to 15
+	SizeHint SizeHint
 }
 type ExpressionFieldBlock struct {
 	Label string // as LaTeX, optional
-	// SizeHint is the length of the expected answer,
-	// in runes. It may be used by the client to adjust the field width.
 	// Typical values range from 1 to 30
-	SizeHint int
+	SizeHint SizeHint
 	ID       int
 }
 

@@ -241,7 +241,12 @@ class _ContentBuilder {
 
   void _handleNumberFieldBlock(NumberFieldBlock element) {
     final ct = _controllers[element.iD] as NumberController;
-    _currentRow.add(WidgetSpan(child: NumberField(_color, ct)));
+    _currentRow.add(WidgetSpan(
+        child: NumberField(
+      _color,
+      ct,
+      sizeHint: element.sizeHint,
+    )));
   }
 
   void _handleExpressionFieldBlock(ExpressionFieldBlock element) {

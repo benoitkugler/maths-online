@@ -47,15 +47,25 @@ class NumberField extends StatelessWidget {
   final bool outlined;
   final bool autofocus;
   final void Function()? onSubmitted;
+  final int? sizeHint;
 
   const NumberField(this._color, this._controller,
       {Key? key,
       this.outlined = false,
       this.autofocus = false,
-      this.onSubmitted})
+      this.onSubmitted,
+      this.sizeHint})
       : super(key: key);
 
   Color get color => _controller.hasError ? Colors.red : _color;
+
+  // takes the potential hint into account
+  double get width {
+    const fullWidth = 110.0; // to support a full digit
+    // add some additional padding
+    final clamped = ((sizeHint ?? 15) + 3).clamp(4, 15);
+    return fullWidth * clamped.toDouble() / 15;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +83,7 @@ class NumberField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
-        width: 80,
+        width: width,
         child: SubmitOnLeave(
           submit: onSubmitted ?? () {},
           child: TextField(

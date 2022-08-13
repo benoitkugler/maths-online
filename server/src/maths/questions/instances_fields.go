@@ -73,7 +73,13 @@ type NumberFieldInstance struct {
 
 func (f NumberFieldInstance) fieldID() int { return f.ID }
 
-func (f NumberFieldInstance) toClient() client.Block { return client.NumberFieldBlock{ID: f.ID} }
+func (f NumberFieldInstance) toClient() client.Block {
+	s := expression.Number(f.Answer).String()
+	return client.NumberFieldBlock{
+		ID:       f.ID,
+		SizeHint: len([]rune(s)),
+	}
+}
 
 func (f NumberFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 	_, ok := answer.(client.NumberAnswer)

@@ -825,22 +825,24 @@ JSON numberAnswerToJson(NumberAnswer item) {
 // github.com/benoitkugler/maths-online/maths/questions/client.NumberFieldBlock
 class NumberFieldBlock implements Block {
   final int iD;
+  final int sizeHint;
 
-  const NumberFieldBlock(this.iD);
+  const NumberFieldBlock(this.iD, this.sizeHint);
 
   @override
   String toString() {
-    return "NumberFieldBlock($iD)";
+    return "NumberFieldBlock($iD, $sizeHint)";
   }
 }
 
 NumberFieldBlock numberFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return NumberFieldBlock(intFromJson(json['ID']));
+  return NumberFieldBlock(
+      intFromJson(json['ID']), intFromJson(json['SizeHint']));
 }
 
 JSON numberFieldBlockToJson(NumberFieldBlock item) {
-  return {"ID": intToJson(item.iD)};
+  return {"ID": intToJson(item.iD), "SizeHint": intToJson(item.sizeHint)};
 }
 
 // github.com/benoitkugler/maths-online/maths/questions/client.OrderedListAnswer
