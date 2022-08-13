@@ -57,8 +57,7 @@ class _App extends StatelessWidget {
             _API(),
             Question("", [
               TextBlock([T("Un long text et suffisant")], true, false, false),
-              NumberFieldBlock(0, 1),
-              NumberFieldBlock(0, 10),
+              VectorFieldBlock(0, true, 2, 100000)
             ]),
             Colors.green,
             (_) {},
