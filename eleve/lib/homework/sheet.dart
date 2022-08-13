@@ -7,7 +7,7 @@ import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
 
-MarkBareme taskMark(List<TaskProgressionHeader> tasks) {
+MarkBareme sheetMark(List<TaskProgressionHeader> tasks) {
   int mark = 0;
   int bareme = 0;
   for (var element in tasks) {
@@ -178,7 +178,7 @@ class _TaskList extends StatelessWidget {
         .toList();
     if (hasNotation) {
       // add the total score of the sheet
-      final total = taskMark(tasks);
+      final total = sheetMark(tasks);
       children.add(ListTile(
         title: const Text("Total"),
         trailing: Text("${total.mark} / ${total.bareme}"),

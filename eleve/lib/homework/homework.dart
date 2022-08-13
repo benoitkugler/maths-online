@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/homework/progression.dart';
+import 'package:eleve/homework/progression_bar.dart';
 import 'package:eleve/homework/sheet.dart';
 import 'package:eleve/homework/types.gen.dart';
 import 'package:eleve/homework/utils.dart';
@@ -211,13 +211,16 @@ class _SheetSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ma = sheetMark(sheet.tasks);
     final hasNotation = sheet.sheet.notation != Notation.noNotation;
     final started = sheet.tasks.where((ex) => ex.hasProgression).length;
     final completed = sheet.tasks
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
         .length;
     return Card(
-      color: emphasize ? Colors.blueAccent : null,
+      elevation: emphasize ? 3 : null,
+      shadowColor: emphasize ? Colors.blueAccent : null,
+      color: emphasize ? Colors.blueAccent.withOpacity(0.3) : null,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -239,13 +242,22 @@ class _SheetSummary extends StatelessWidget {
               ),
             ),
             if (sheet.tasks.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ProgressionBar(
-                    total: sheet.tasks.length,
-                    completed: completed,
-                    started: started),
-              )
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ProgressionBar(
+                        total: sheet.tasks.length,
+                        completed: completed,
+                        started: started),
+                  ),
+                ),
+                if (hasNotation)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text("Note : ${ma.mark} / ${ma.bareme}"),
+                  ),
+              ])
           ],
         ),
       ),

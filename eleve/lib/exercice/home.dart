@@ -42,31 +42,25 @@ extension ProgressionExtension on ProgressionExt {
 /// with its questions and bareme
 class ExerciceHome extends StatelessWidget {
   final StudentExerciceInst data;
-  final Set<int> validatedQuestions;
-  final Set<int> incorrectQuestions;
+  final List<QuestionState> states;
   final void Function(int index) onSelectQuestion;
 
-  const ExerciceHome(this.data, this.validatedQuestions,
-      this.incorrectQuestions, this.onSelectQuestion,
-      {Key? key})
+  const ExerciceHome(this.data, this.states, this.onSelectQuestion, {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    print(incorrectQuestions);
-    print(validatedQuestions);
-    return Scaffold(
-        body: Center(
+    return Center(
       child: Column(children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 20),
           child: ColoredTitle(data.exercice.exercice.title, Colors.purple),
         ),
         Expanded(
-            child: _QuestionList(
-                data, validatedQuestions, incorrectQuestions, onSelectQuestion))
+          child: _QuestionList(data, states, onSelectQuestion),
+        )
       ]),
-    ));
+    );
   }
 }
 
@@ -95,13 +89,11 @@ class MarkBareme {
 
 class _QuestionList extends StatelessWidget {
   final StudentExerciceInst data;
-  final Set<int> validatedQuestions;
-  final Set<int> incorrectQuestions; // temporary indication
+  final List<QuestionState> states;
+
   final void Function(int index) onSelectQuestion;
 
-  const _QuestionList(this.data, this.validatedQuestions,
-      this.incorrectQuestions, this.onSelectQuestion,
-      {Key? key})
+  const _QuestionList(this.data, this.states, this.onSelectQuestion, {Key? key})
       : super(key: key);
 
   MarkBareme get mark {
@@ -116,7 +108,8 @@ class _QuestionList extends StatelessWidget {
     return MarkBareme(mark, bareme);
   }
 
-  void _showProgressionDetails(BuildContext context, int index) {
+  void _showProgressionDetails(BuildContext context, int questionIndex) {
+    final st = states[questionIndex];
     showDialog<void>(
         context: context,
         builder: (context) => Dialog(
@@ -131,11 +124,13 @@ class _QuestionList extends StatelessWidget {
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
+                    if (st == QuestionState.waitingCorrection)
+                      const Text("Tentative en attente de correction"),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Wrap(
                         children: data.progression
-                            .getQuestion(index)
+                            .getQuestion(questionIndex)
                             .map((e) => _SuccessSquare(e))
                             .toList(),
                       ),
@@ -155,26 +150,6 @@ class _QuestionList extends StatelessWidget {
     }
   }
 
-  _QuestionState state(int questionIndex) {
-    if (data.progression.isQuestionCompleted(questionIndex)) {
-      return _QuestionState.checked;
-    }
-
-    if (data.exercice.exercice.flow == Flow.sequencial &&
-        data.progression.nextQuestion < questionIndex) {
-      return _QuestionState.locked;
-    }
-
-    // after validating, both validatedQuestions and incorrectQuestions
-    // may contain the same index : give the priority to incorrectQuestions
-    if (incorrectQuestions.contains(questionIndex)) {
-      return _QuestionState.incorrect;
-    } else if (validatedQuestions.contains(questionIndex)) {
-      return _QuestionState.waitingCorrection;
-    }
-    return _QuestionState.toDo;
-  }
-
   @override
   Widget build(BuildContext context) {
     final mb = mark;
@@ -183,7 +158,7 @@ class _QuestionList extends StatelessWidget {
         ...List<Widget>.generate(
           data.exercice.questions.length,
           (index) => _QuestionRow(
-            state(index),
+            states[index],
             "Question ${index + 1}",
             data.exercice.baremes[index],
             showDetails: () => _showProgressionDetails(context, index),
@@ -195,35 +170,35 @@ class _QuestionList extends StatelessWidget {
           ListTile(
             title: const Text("Total"),
             trailing: Text("${mb.mark} / ${mb.bareme}",
-                style: TextStyle(fontSize: 14)),
+                style: const TextStyle(fontSize: 14)),
           )
       ],
     );
   }
 }
 
-enum _QuestionState { locked, checked, toDo, waitingCorrection, incorrect }
+enum QuestionState { locked, checked, toDo, waitingCorrection, incorrect }
 
-extension _Icon on _QuestionState {
+extension _Icon on QuestionState {
   Icon get icon {
     switch (this) {
-      case _QuestionState.locked:
+      case QuestionState.locked:
         return const Icon(
           IconData(0xf889, fontFamily: 'MaterialIcons'),
           color: Colors.grey,
         );
-      case _QuestionState.checked:
+      case QuestionState.checked:
         return const Icon(IconData(0xe156, fontFamily: 'MaterialIcons'),
             color: Colors.green);
-      case _QuestionState.toDo:
+      case QuestionState.toDo:
         return const Icon(
           assignementIcon,
           color: Colors.purpleAccent,
         );
-      case _QuestionState.waitingCorrection:
+      case QuestionState.waitingCorrection:
         return const Icon(IconData(0xf51a, fontFamily: 'MaterialIcons'),
             color: Colors.orange);
-      case _QuestionState.incorrect:
+      case QuestionState.incorrect:
         return const Icon(IconData(0xf647, fontFamily: 'MaterialIcons'),
             color: Colors.red);
     }
@@ -231,12 +206,12 @@ extension _Icon on _QuestionState {
 }
 
 class _QuestionRow extends StatelessWidget {
-  final _QuestionState state;
+  final QuestionState state;
   final String title;
   final int bareme;
-
   final void Function() showDetails;
   final void Function()? onClick;
+
   const _QuestionRow(this.state, this.title, this.bareme,
       {required this.showDetails, required this.onClick, Key? key})
       : super(key: key);
@@ -248,9 +223,8 @@ class _QuestionRow extends StatelessWidget {
       child: ListTile(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(4))),
-        tileColor: state == _QuestionState.toDo
-            ? Colors.purple.withOpacity(0.5)
-            : null,
+        tileColor:
+            state == QuestionState.toDo ? Colors.purple.withOpacity(0.5) : null,
         leading: OutlinedButton(onPressed: showDetails, child: state.icon),
         title: Text(title),
         trailing: Text("/ $bareme"),
