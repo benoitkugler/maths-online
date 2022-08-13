@@ -6,8 +6,6 @@ import (
 	"errors"
 )
 
-//go:generate ../../../../../structgen/structgen -source=models.go -mode=itfs-json:gen_itfs.go
-
 type Enonce []Block
 
 func loadJSON(out interface{}, src interface{}) error {

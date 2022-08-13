@@ -96,7 +96,7 @@ func (ct *Controller) EditorEndPreview(c echo.Context) error {
 
 type UpdateTagsIn struct {
 	Tags       []string
-	IdQuestion int64
+	IdQuestion IdQuestion
 }
 
 func (ct *Controller) EditorUpdateTags(c echo.Context) error {
@@ -151,7 +151,7 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 }
 
 type ExerciceUpdateVisiblityIn struct {
-	ExerciceID int64
+	ExerciceID IdExercice
 	Public     bool
 }
 

@@ -29,7 +29,7 @@
       <v-card-actions>
         <v-btn @click="classroomToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteClassroom" variant="contained">
+        <v-btn color="red" @click="deleteClassroom" variant="outlined">
           Supprimer
         </v-btn>
       </v-card-actions>
@@ -53,7 +53,7 @@
       <v-card-actions>
         <v-btn @click="classroomToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="green" @click="updateClassroom" variant="contained">
+        <v-btn color="green" @click="updateClassroom" variant="outlined">
           Enregistrer
         </v-btn>
       </v-card-actions>

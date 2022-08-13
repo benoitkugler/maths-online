@@ -2,8 +2,6 @@
 // 2D mathematical figure drawing
 package repere
 
-//go:generate ../../../../../structgen/structgen -source=repere.go -mode=dart:../../../../eleve/lib/questions/repere.gen.dart
-
 // Coord is a coordinate pair, in the usual mathematical plan,
 // where X and Y must be between 0 and the dimension of the figure
 type Coord struct {

@@ -75,6 +75,7 @@
               <v-list>
                 <v-list-item>
                   <v-btn
+                    class="my-1"
                     size="small"
                     @click="showEditDescription = true"
                     title="Editer le commentaire"
@@ -89,6 +90,7 @@
                 </v-list-item>
                 <v-list-item>
                   <v-btn
+                    class="my-1"
                     size="small"
                     @click="download"
                     :disabled="!session_id"
@@ -104,6 +106,7 @@
                 </v-list-item>
                 <v-list-item>
                   <v-btn
+                    class="my-1"
                     size="small"
                     @click="duplicate"
                     title="Dupliquer la question"

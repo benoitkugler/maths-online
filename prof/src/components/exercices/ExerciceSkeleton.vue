@@ -55,7 +55,7 @@
     </keep-alive>
   </v-dialog>
 
-  <v-card class="mt-3 px-2">
+  <v-card class="mt-3 pt-1 px-2">
     <v-row no-gutters class="mb-2">
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
@@ -112,6 +112,7 @@
               <v-list>
                 <v-list-item>
                   <v-btn
+                    class="my-1"
                     size="small"
                     @click="showEditDescription = true"
                     title="Editer le commentaire"
@@ -209,18 +210,15 @@
         <v-list-item>
           <v-row>
             <v-col cols="auto" align-self="center">
-              <v-icon
-                style="cursor: grab"
-                draggable="true"
-                @dragstart="(e) => onItemDragStart(e, index)"
-                size="large"
-                icon="mdi-drag-vertical"
-              ></v-icon>
+              <drag-icon
+                color="black"
+                @start="(e) => onItemDragStart(e, index)"
+              ></drag-icon>
             </v-col>
-            <v-col cols="auto" align-self="center">
+            <v-col cols="auto" align-self="center" class="my-1">
               <v-btn
                 v-if="!isReadonly"
-                size="x-small"
+                size="small"
                 icon
                 @click.stop="removeQuestion(index)"
                 title="Retirer la question"
@@ -230,7 +228,7 @@
               <v-btn
                 v-if="!isReadonly"
                 class="mx-1"
-                size="x-small"
+                size="small"
                 icon
                 @click.stop="duplicateQuestion(index)"
                 title="Dupliquer la question"
@@ -244,9 +242,9 @@
             </v-col>
             <v-col align-self="center">
               <small>({{ question.id_question }})</small>
-              {{ getQuestion(question.id_question).Question.page.title }}</v-col
-            >
-            <v-col cols="auto">
+              {{ getQuestion(question.id_question).Question.page.title }}
+            </v-col>
+            <v-col cols="2" align-self="center">
               <v-menu
                 offset-y
                 close-on-content-click
@@ -304,6 +302,7 @@
 </template>
 
 <script setup lang="ts">
+import DropZone from "@/components/DropZone.vue";
 import type { Flow } from "@/controller/api_gen";
 import {
   FlowLabels,
@@ -312,12 +311,11 @@ import {
   type ExerciceQuestion,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onDragListItemStart, swapItems } from "@/controller/editor";
-import { copy } from "@/controller/utils";
+import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
+import DragIcon from "../DragIcon.vue";
 import DescriptionPannel from "../editor/DescriptionPannel.vue";
-import DropZone from "../editor/DropZone.vue";
 import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {

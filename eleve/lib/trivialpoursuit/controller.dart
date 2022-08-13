@@ -223,7 +223,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       return;
     }
 
-    _sendEvent(Move([], tile));
+    _sendEvent(ClientMove([], tile));
   }
 
   void onTapDice() {
@@ -674,10 +674,10 @@ class _GameStarted extends StatelessWidget {
   }
 }
 
-class GameIcon extends StatelessWidget {
+class TrivialActivityIcon extends StatelessWidget {
   final void Function() onTap;
 
-  const GameIcon(this.onTap, {Key? key}) : super(key: key);
+  const TrivialActivityIcon(this.onTap, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

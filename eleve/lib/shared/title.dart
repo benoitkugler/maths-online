@@ -16,7 +16,7 @@ class ColoredTitle extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),

@@ -1,5 +1,6 @@
 import ClassroomsListVue from "@/views/ClassroomsList.vue";
 import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
+import HomeworkActivityVue from "@/views/HomeworkActivity.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
@@ -21,12 +22,6 @@ const router = createRouter({
       meta: { Label: "Classes et élèves" },
     },
     {
-      path: "/trivial",
-      name: "trivial",
-      component: TrivialPoursuit,
-      meta: { Label: "Configuration du TrivialPoursuit" },
-    },
-    {
       path: "/editor-question",
       name: "editor-question",
       component: QuestionEditor,
@@ -37,6 +32,18 @@ const router = createRouter({
       name: "editor-exercice",
       component: ExerciceEditorVue,
       meta: { Label: "Editeur d'exercices" },
+    },
+    {
+      path: "/trivial",
+      name: "trivial",
+      component: TrivialPoursuit,
+      meta: { Label: "Triv'Maths" },
+    },
+    {
+      path: "/homework",
+      name: "homework",
+      component: HomeworkActivityVue,
+      meta: { Label: "Travail à la maison" },
     },
     // {
     //   path: '/about',

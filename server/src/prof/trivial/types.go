@@ -12,15 +12,15 @@ type QuestionCriterion [][]string
 // for every category.
 type CategoriesQuestions [trivial.NbCategories]QuestionCriterion
 
-type TrivialConfigExt struct {
-	Config TrivialConfig
+type TrivialExt struct {
+	Config Trivial
 	Origin teacher.Origin
 
 	NbQuestionsByCategories [trivial.NbCategories]int
 }
 
-func (tc TrivialConfig) withDetails(db DB, origin teacher.Origin, userID int64) (TrivialConfigExt, error) {
-	out := TrivialConfigExt{Config: tc, Origin: origin}
+func (tc Trivial) withDetails(db DB, origin teacher.Origin, userID uID) (TrivialExt, error) {
+	out := TrivialExt{Config: tc, Origin: origin}
 	for i, cat := range tc.Questions {
 		questions, err := cat.selectQuestions(db, userID)
 		if err != nil {
@@ -32,7 +32,7 @@ func (tc TrivialConfig) withDetails(db DB, origin teacher.Origin, userID int64) 
 }
 
 type LaunchSessionIn struct {
-	IdConfig int64
+	IdConfig IdTrivial
 	// Size of tje groups are fixed by the teacher.
 	Groups []int
 }

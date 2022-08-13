@@ -1,9 +1,7 @@
 package questions
 
 import (
-	"encoding/json"
 	"math"
-	"os"
 	"reflect"
 	"testing"
 
@@ -127,14 +125,13 @@ func TestBug72(t *testing.T) {
 		Answer: 1,
 	}
 
-	ans := field.correctAnswer()
-	if ans.(client.RadioAnswer).Index != 2 { // 0 based
-		t.Fatal(ans)
-	}
-
 	props := field.toClient().(client.DropDownFieldBlock).Proposals
-	if textLineToString(props[2]) != "GB" {
+	if textLineToString(props[0]) != "GB" {
 		t.Fatal(props)
+	}
+	ans := field.correctAnswer()
+	if ans.(client.RadioAnswer).Index != 0 { // 0 based
+		t.Fatal(ans)
 	}
 }
 
@@ -175,42 +172,78 @@ func Test_shufflingMap(t *testing.T) {
 		{5}, {6}, {7},
 	}
 	for _, tt := range tests {
-		shuffler := utils.NewDeterministicRand([]byte{'a', 'b', 'c'})
-		got := shufflingMap(shuffler, tt.n)
+		shuffler := utils.NewDeterministicShuffler([]byte{'a', 'b', 'c'}, tt.n)
+		got := shuffler.OriginalToShuffled()
+
 		indices := make([]int, tt.n)
 		for i := range indices {
 			indices[i] = i
 		}
-		shuffler = utils.NewDeterministicRand([]byte{'a', 'b', 'c'})
-		shuffler.Shuffle(len(indices), reflect.Swapper(indices))
+		out := make([]int, len(indices))
+
+		shuffler = utils.NewDeterministicShuffler([]byte{'a', 'b', 'c'}, tt.n)
+		shuffler.Shuffle(func(dst, src int) { out[dst] = indices[src] })
 
 		new4 := got[4]
-		if indices[new4] != 4 {
+		if out[new4] != 4 {
 			t.Errorf("shufflingMap() = %v", got)
 		}
 	}
 }
 
 func TestInstantiate01(t *testing.T) {
-	by, err := os.ReadFile("examples/bug01.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var fullQuestion struct {
-		Page QuestionPage `json:"page"`
-	}
-	if err = json.Unmarshal(by, &fullQuestion); err != nil {
-		t.Fatal(err)
+	bug01 := QuestionPage{
+		Title: "Construire la courbe représentative d'une fonction",
+		Enonce: []Block{
+			TextBlock{
+				Parts:   "Construire $C_&f&$ la courbe représentative de la fonction : $&f&(x)=&ax^2+bx+c&$",
+				Bold:    false,
+				Italic:  false,
+				Smaller: false,
+			},
+			FunctionPointsFieldBlock{
+				Function: "ax",
+				Label:    "C_f",
+				Variable: expression.NewVar('x'),
+				XGrid: []string{
+					"-2",
+					"-1",
+					"0",
+					"1",
+					"2",
+				},
+			},
+		},
+		Parameters: Parameters{
+			Variables: []RandomParameter{
+				{
+					Expression: "randSymbol(f;g;h;k)",
+					Variable:   expression.NewVar('f'),
+				},
+				{
+					Expression: "randChoice(-0,5;-0,25;0,25;0,5;1)",
+					Variable:   expression.NewVar('a'),
+				},
+				{
+					Expression: "randint(1;3)",
+					Variable:   expression.NewVar('b'),
+				},
+				{
+					Expression: "randint(1;2)",
+					Variable:   expression.NewVar('c'),
+				},
+			},
+		},
 	}
 
-	qu, err := fullQuestion.Page.instantiate()
+	qu, err := bug01.instantiate()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	qu.ToClient() // test there is no crash
 
-	if err = fullQuestion.Page.Validate(); err == nil {
+	if err = bug01.Validate(); err == nil {
 		t.Fatal("expected error because of non integer values")
 	}
 }

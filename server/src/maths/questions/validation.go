@@ -266,8 +266,8 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 }
 
 type areaValidator struct {
-	function1, function2 TextParts
-	domain               expression.Domain
+	top, bottom TextParts
+	domain      expression.Domain
 }
 
 type functionsGraphValidator struct {
@@ -313,34 +313,34 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	// checks that areas are referencing known functions
 	// and that the domains are valid
 	for _, area := range v.areas {
-		f1, err := area.function1.instantiateAndMerge(vars)
+		top, err := area.top.instantiateAndMerge(vars)
 		if err != nil {
 			return err
 		}
-		f2, err := area.function1.instantiateAndMerge(vars)
+		bottom, err := area.bottom.instantiateAndMerge(vars)
 		if err != nil {
 			return err
 		}
-		domains1 := byNames[f1]
-		if f1 == "" {
-			domains1 = []expression.Domain{{}} // no constraints
+		domainsTop := byNames[top]
+		if top == "" {
+			domainsTop = []expression.Domain{{}} // no constraints
 		}
-		if len(domains1) == 0 {
-			return fmt.Errorf("La fonction %s n'est pas définie.", f1)
+		if len(domainsTop) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", top)
 		}
-		domains2 := byNames[f2]
-		if f2 == "" {
-			domains2 = []expression.Domain{{}} // no constraints
+		domainsBottom := byNames[bottom]
+		if bottom == "" {
+			domainsBottom = []expression.Domain{{}} // no constraints
 		}
-		if len(domains2) == 0 {
-			return fmt.Errorf("La fonction %s n'est pas définie.", f2)
+		if len(domainsBottom) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", bottom)
 		}
 
 		// check that the domain in included in one of the domain for f1 and f2
-		if err := area.domain.IsIncludedIntoOne(domains1, vars); err != nil {
+		if err := area.domain.IsIncludedIntoOne(domainsTop, vars); err != nil {
 			return err
 		}
-		if err := area.domain.IsIncludedIntoOne(domains2, vars); err != nil {
+		if err := area.domain.IsIncludedIntoOne(domainsBottom, vars); err != nil {
 			return err
 		}
 	}

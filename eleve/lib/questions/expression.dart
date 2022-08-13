@@ -1,20 +1,16 @@
-import 'dart:convert';
-
-import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 
 class ExpressionController extends FieldController {
-  final BuildMode buildMode;
+  final FieldAPI api;
   final TextEditingController textController;
 
   bool _isDirty = false;
 
-  ExpressionController(this.buildMode, void Function() onEditDone)
+  ExpressionController(this.api, void Function() onEditDone)
       : textController = TextEditingController(),
         super(onEditDone) {
     textController.addListener(() {
@@ -28,11 +24,7 @@ class ExpressionController extends FieldController {
   }
 
   Future<shared.CheckExpressionOut> _checkExpressionSyntax() async {
-    final uri = Uri.parse(buildMode.serverURL("/api/check-expression"))
-        .replace(queryParameters: {"expression": getExpression()});
-
-    final resp = await http.get(uri);
-    return shared.checkExpressionOutFromJson(jsonDecode(resp.body));
+    return api.checkExpressionSyntax(getExpression());
   }
 
   @override
@@ -76,13 +68,7 @@ class ExpressionField extends StatefulWidget {
   // returns a float ratio between 0 and 1
   double get hintWidthRatio {
     // add some additional padding
-    var clamped = hintWidth + 3;
-    if (clamped < 5) {
-      clamped = 5;
-    }
-    if (clamped > 30) {
-      clamped = 30;
-    }
+    var clamped = (hintWidth + 3).clamp(5, 30);
     return clamped.toDouble() / 30.0;
   }
 

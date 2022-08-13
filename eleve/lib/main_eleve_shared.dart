@@ -1,5 +1,6 @@
 import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/homework/homework.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/question_gallery.dart';
 import 'package:eleve/settings.dart';
@@ -149,6 +150,22 @@ class _AppBodyState extends State<_AppBody> {
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
+  void _launchHomework() async {
+    final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
+        builder: (context) =>
+            ActivityStart(() => Navigator.of(context).pop(true))));
+    if (onDone == null) {
+      return;
+    }
+
+    widget.audioPlayer.run();
+    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+            body: Homework(ServerHomeworkAPI(
+                widget.buildMode, widget.settings.studentID)))));
+    onPop.then((value) => widget.audioPlayer.pause());
+  }
+
   void _launchQuestionGallery() {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
@@ -158,9 +175,10 @@ class _AppBodyState extends State<_AppBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Card(
+    return Card(
+      child: Center(
         child: Column(
+          // crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             const Padding(
@@ -176,10 +194,13 @@ class _AppBodyState extends State<_AppBody> {
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.spaceEvenly,
                 children: [
-                  GameIcon(_launchTrivialPoursuit),
+                  TrivialActivityIcon(_launchTrivialPoursuit),
+                  HomeworkActivityIcon(_launchHomework),
                   if (widget.buildMode != BuildMode.production)
                     ElevatedButton(
                         onPressed: _launchQuestionGallery,

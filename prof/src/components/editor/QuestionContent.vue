@@ -52,9 +52,11 @@
 </template>
 
 <script setup lang="ts">
+import DropZone from "@/components/DropZone.vue";
 import type { Block, Question, Variable } from "@/controller/api_gen";
 import { BlockKind } from "@/controller/api_gen";
-import { newBlock, swapItems } from "@/controller/editor";
+import { newBlock } from "@/controller/editor";
+import { swapItems } from "@/controller/utils";
 import { markRaw, ref } from "@vue/reactivity";
 import { computed, nextTick, watch, type Component } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -80,7 +82,6 @@ import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import VectorFieldVue from "./blocks/VectorField.vue";
-import DropZone from "./DropZone.vue";
 
 interface Props {
   modelValue: Block[];

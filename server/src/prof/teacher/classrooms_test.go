@@ -81,16 +81,15 @@ func Test_importPronoteFile(t *testing.T) {
 }
 
 func TestStudentCRUD(t *testing.T) {
-	db := testutils.CreateDBDev(t, "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "gen_create.sql")
+	defer db.Remove()
 
 	teacher, err := Teacher{Id: 1}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := Controller{db: db, admin: Teacher{Id: teacher.Id}}
+	ct := Controller{db: db.DB, admin: Teacher{Id: teacher.Id}}
 	classroom, err := Classroom{IdTeacher: teacher.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)

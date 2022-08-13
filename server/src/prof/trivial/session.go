@@ -26,7 +26,7 @@ type createGame struct {
 // or timed out
 type gameSession struct {
 	id        SessionID
-	idTeacher int64 // optional for demonstration games
+	idTeacher uID // optional for demonstration games
 
 	lock sync.Mutex
 
@@ -46,7 +46,7 @@ type gameSession struct {
 	teacherClients map[*teacherClient]bool
 }
 
-func newGameSession(id SessionID, idTeacher int64) *gameSession {
+func newGameSession(id SessionID, idTeacher uID) *gameSession {
 	return &gameSession{
 		id:                 id,
 		idTeacher:          idTeacher,
@@ -183,8 +183,8 @@ func (gs *gameSession) monitorRemoveGame(gameID tv.RoomID) {
 	}
 }
 
-// pass -1 for anonymous sessions
-func (ct *Controller) createSession(id SessionID, userID int64) *gameSession {
+// pass -1 as userID for anonymous sessions
+func (ct *Controller) createSession(id SessionID, userID uID) *gameSession {
 	// init the session for this teacher
 	session := newGameSession(id, userID)
 
@@ -213,7 +213,7 @@ func (ct *Controller) createSession(id SessionID, userID int64) *gameSession {
 }
 
 // getOrCreateSession returns the session for userID or creates a new one if needed
-func (ct *Controller) getOrCreateSession(userID int64) *gameSession {
+func (ct *Controller) getOrCreateSession(userID uID) *gameSession {
 	if session := ct.getSession(userID); session != nil {
 		return session
 	}

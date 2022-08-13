@@ -6,6 +6,7 @@ import type {
   CheckQuestionParametersOut,
   Classroom,
   ClassroomExt,
+  ClassroomSheets,
   Exercice,
   ExerciceExt,
   ExerciceHeader,
@@ -17,9 +18,11 @@ import type {
   RunningSessionMetaOut,
   SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
+  SheetExt,
   StartSessionOut,
   Student,
-  TrivialConfigExt,
+  Task,
+  TrivialExt,
   UpdateGroupTagsOut,
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
@@ -99,6 +102,53 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  protected onSuccessHomeworkRemoveTask(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice retiré avec succès.");
+    }
+  }
+  protected onSuccessHomeworkAddTask(data: Task): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice ajouté avec succès.");
+    }
+  }
+  protected onSuccessHomeworkReorderSheetTasks(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Liste modifiée avec succès.");
+    }
+  }
+
+  protected onSuccessHomeworkGetSheets(data: ClassroomSheets[] | null): void {
+    this.inRequest = false;
+  }
+  protected onSuccessHomeworkCreateSheet(data: SheetExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche ajoutée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkCopySheet(data: SheetExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche dupliquée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkUpdateSheet(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche modifiée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkDeleteSheet(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Fiche supprimée avec succès.");
+    }
   }
 
   protected onSuccessExercicesGetList(data: ExerciceHeader[] | null): void {
@@ -281,7 +331,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessDuplicateTrivialPoursuit(data: TrivialConfigExt): void {
+  protected onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Session dupliquée.");
@@ -307,13 +357,13 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessGetTrivialPoursuit(data: TrivialConfigExt[] | null): void {
+  protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {
     this.inRequest = false;
   }
-  protected onSuccessCreateTrivialPoursuit(data: TrivialConfigExt): void {
+  protected onSuccessCreateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
   }
-  protected onSuccessUpdateTrivialPoursuit(data: TrivialConfigExt): void {
+  protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Configuration mise à jour.");

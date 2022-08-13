@@ -2,48 +2,76 @@
   <v-app>
     <v-navigation-drawer app v-model="showSideBar" temporary>
       <v-list-item>
-        <v-list-item-avatar>
-          <v-img :src="logoSrc"></v-img>
-        </v-list-item-avatar>
-        <v-list-item-title class="mx-2 title">
-          Accéder à la page...
-        </v-list-item-title>
+        <v-row>
+          <v-col cols="auto">
+            <v-img :src="logoSrc" width="50px"></v-img>
+          </v-col>
+          <v-col align-self="center"> Accéder à la page...</v-col>
+        </v-row>
       </v-list-item>
       <v-divider></v-divider>
 
       <v-list-item>
-        <v-btn link :to="{ name: 'home' }" color="purple-lighten-4"
+        <v-btn link class="my-1" :to="{ name: 'home' }" color="purple-lighten-4"
           >Accueil</v-btn
         >
       </v-list-item>
       <v-list-item>
-        <v-btn link :to="{ name: 'classrooms' }" color="purple-lighten-4"
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'classrooms' }"
+          color="purple-lighten-4"
           >Classes et élèves</v-btn
         >
       </v-list-item>
       <v-divider></v-divider>
 
       <v-list-item>
-        <v-btn link :to="{ name: 'trivial' }" color="pink-lighten-3"
-          >Triv'Maths</v-btn
-        >
-      </v-list-item>
-      <v-divider></v-divider>
-
-      <v-list-item>
-        <v-btn link :to="{ name: 'editor-question' }" color="teal-lighten-4"
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'editor-question' }"
+          color="teal-lighten-4"
           >Editeur de question</v-btn
         >
       </v-list-item>
       <v-list-item>
-        <v-btn link :to="{ name: 'editor-exercice' }" color="teal-lighten-4"
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'editor-exercice' }"
+          color="teal-lighten-4"
           >Editeur d'exercice</v-btn
         >
       </v-list-item>
 
       <v-divider></v-divider>
+
       <v-list-item>
-        <v-btn @click="logout">
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'trivial' }"
+          color="pink-lighten-3"
+          >Triv'Maths</v-btn
+        >
+      </v-list-item>
+
+      <v-list-item>
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'homework' }"
+          color="pink-lighten-3"
+          >Travail à la maison</v-btn
+        >
+      </v-list-item>
+      <v-divider></v-divider>
+
+      <v-divider></v-divider>
+      <v-list-item>
+        <v-btn class="my-1" @click="logout">
           <v-icon icon="mdi-exit-to-app" class="mr-2"></v-icon>
           Déconnexion</v-btn
         >
@@ -80,12 +108,11 @@
         @update:model-value="message = ''"
         :timeout="4000"
         :color="messageColor"
-        top
-        right
-        absolute
+        location="bottom left"
       >
         {{ message }}
       </v-snackbar>
+
       <v-snackbar
         app
         :model-value="errorKind != ''"

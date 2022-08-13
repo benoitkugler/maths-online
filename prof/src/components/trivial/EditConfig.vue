@@ -152,12 +152,20 @@
           }"
           class="my-2"
         >
-          <v-list-item-subtitle>Catégorie {{ index + 1 }}</v-list-item-subtitle>
-          <tags-selector
-            :all-tags="allKnownTags"
-            :model-value="categorie || []"
-            @update:model-value="(v) => updateCategorie(index, v)"
-          ></tags-selector>
+          <v-row>
+            <v-col align-self="center" cols="2">
+              <v-list-item-subtitle>
+                Catégorie {{ index + 1 }}
+              </v-list-item-subtitle>
+            </v-col>
+            <v-col class="my-1">
+              <tags-selector
+                :all-tags="allKnownTags"
+                :model-value="categorie || []"
+                @update:model-value="(v) => updateCategorie(index, v)"
+              ></tags-selector>
+            </v-col>
+          </v-row>
         </v-list-item>
       </v-list>
 
@@ -194,22 +202,22 @@
 
 <script setup lang="ts">
 import type {
+  CategoriesQuestions,
   CheckMissingQuestionsOut,
   QuestionCriterion,
-  TrivialConfig,
+  Trivial,
 } from "@/controller/api_gen";
 import { DifficultyTag } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { removeDuplicates } from "@/controller/editor";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
-import type { CategoriesQuestions } from "@/controller/trivial_config_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagChip from "../editor/utils/TagChip.vue";
 import TagsSelector from "./TagsSelector.vue";
 
 interface Props {
-  edited: TrivialConfig;
+  edited: Trivial;
   allKnownTags: string[];
 }
 
@@ -217,7 +225,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "closed"): void;
-  (e: "update", v: TrivialConfig): void;
+  (e: "update", v: Trivial): void;
 }>();
 
 const colors = colorsPerCategorie;

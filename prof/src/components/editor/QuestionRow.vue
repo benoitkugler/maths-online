@@ -1,15 +1,14 @@
 <template>
   <v-list-item
-    dense
     rounded
-    :class="'py-1 my-2 ' + colorClass"
+    :class="' my-1 ' + colorClass"
     @click="emit('clicked', props.question)"
   >
     <v-row no-gutters>
-      <v-col cols="auto" align-self="center">
+      <v-col cols="auto" align-self="center" class="my-1">
         <v-btn
           v-if="isPersonnal"
-          size="x-small"
+          size="small"
           icon
           @click.stop="emit('delete', props.question)"
           title="Supprimer"

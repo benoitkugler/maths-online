@@ -33,7 +33,7 @@ class _DropDownFieldState extends State<DropDownField> {
           : null,
       focusColor: widget.color,
       dropdownColor: widget.color,
-      hint: const Text("   "),
+      hint: const Text("Choisir..."),
       value: ct.index,
       iconSize: 0,
       alignment: Alignment.center,

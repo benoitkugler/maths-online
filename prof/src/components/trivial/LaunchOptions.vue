@@ -25,7 +25,7 @@
             @click="emit('launch', launchOptions)"
             :disabled="!isValid"
             color="success"
-            variant="contained"
+            variant="outlined"
           >
             Lancer la session
           </v-btn>

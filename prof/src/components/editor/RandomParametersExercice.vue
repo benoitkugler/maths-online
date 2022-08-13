@@ -19,15 +19,10 @@
         <v-list-item class="pr-0 pl-1">
           <v-row no-gutters :class="param.isShared ? 'text-primary' : ''">
             <v-col cols="1" align-self="center">
-              <v-icon
-                size="large"
-                class="pr-2"
-                style="cursor: grab"
-                @dragstart="(e) => onItemDragStart(e, index)"
-                draggable="true"
+              <drag-icon
                 color="green-lighten-3"
-                icon="mdi-drag-vertical"
-              ></v-icon>
+                @start="(e) => onItemDragStart(e, index)"
+              ></drag-icon>
             </v-col>
             <v-col cols="3">
               <variable-field
@@ -52,7 +47,7 @@
             <v-col cols="auto" style="text-align: right" align-self="center">
               <v-btn
                 icon
-                size="x-small"
+                size="small"
                 flat
                 @click="toogleShared(index)"
                 title="Partager le paramètre entre les questions"
@@ -64,7 +59,7 @@
                   size="small"
                 ></v-icon>
               </v-btn>
-              <v-btn icon size="x-small" flat @click="remove(index)">
+              <v-btn icon size="small" flat @click="remove(index)">
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
             </v-col>
@@ -80,15 +75,12 @@
 </template>
 
 <script setup lang="ts">
+import DropZone from "@/components/DropZone.vue";
 import type { RandomParameter, RandomParameters } from "@/controller/api_gen";
-import {
-  ExpressionColor,
-  onDragListItemStart,
-  swapItems,
-  xRune,
-} from "@/controller/editor";
+import { ExpressionColor, xRune } from "@/controller/editor";
+import { onDragListItemStart, swapItems } from "@/controller/utils";
 import { $computed, $ref } from "vue/macros";
-import DropZone from "./DropZone.vue";
+import DragIcon from "../DragIcon.vue";
 import ParametersContainer from "./parameters/ParametersContainer.vue";
 import RandomParametersHelp from "./parameters/RandomParametersHelp.vue";
 import VariableField from "./utils/VariableField.vue";

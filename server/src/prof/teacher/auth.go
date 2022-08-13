@@ -58,7 +58,10 @@ func JWTTeacher(c echo.Context) Teacher {
 // GetDevToken creates a new user and returns a valid token,
 // so that client frontend doesn't have to use password when developping.
 func (ct *Controller) GetDevToken() (string, error) {
-	t, err := Teacher{Mail: fmt.Sprintf("%d", time.Now().Unix())}.Insert(ct.db)
+	t, err := Teacher{
+		Mail:            fmt.Sprintf("%d", time.Now().Unix()),
+		PasswordCrypted: ct.teacherKey.EncryptPassword("1234"),
+	}.Insert(ct.db)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +70,7 @@ func (ct *Controller) GetDevToken() (string, error) {
 		return "", err
 	}
 	type meta struct {
-		IdTeacher int64
+		IdTeacher IdTeacher
 		Token     string
 	}
 	out, err := json.Marshal(meta{IdTeacher: t.Id, Token: token})

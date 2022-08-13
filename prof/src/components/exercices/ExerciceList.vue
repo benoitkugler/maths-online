@@ -12,7 +12,7 @@
       <v-card-actions>
         <v-btn @click="exerciceToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="orange" @click="deleteExercice" variant="contained">
+        <v-btn color="orange" @click="deleteExercice" variant="outlined">
           Supprimer
         </v-btn>
       </v-card-actions>

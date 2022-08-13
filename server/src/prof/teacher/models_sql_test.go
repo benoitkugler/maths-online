@@ -29,9 +29,8 @@ func TestTime(t *testing.T) {
 }
 
 func TestSQLTime(t *testing.T) {
-	db := testutils.CreateDBDev(t, "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "gen_create.sql")
+	defer db.Remove()
 
 	teacher, _ := Teacher{}.Insert(db)
 	classromm, _ := Classroom{IdTeacher: teacher.Id}.Insert(db)
@@ -48,11 +47,10 @@ func TestSQLTime(t *testing.T) {
 
 func TestRoot(t *testing.T) {
 	// create a DB shared by all tests
-	db := testutils.CreateDBDev(t, "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "gen_create.sql")
+	defer db.Remove()
 
-	t.Run("CRUD for Teacher", func(t *testing.T) { testTeacher(t, db) })
+	t.Run("CRUD for Teacher", func(t *testing.T) { testTeacher(t, db.DB) })
 }
 
 func testTeacher(t *testing.T, db *sql.DB) {

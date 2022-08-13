@@ -15,7 +15,7 @@
           color="success"
           @click="endEdit"
           :disabled="!saveEnabled"
-          variant="contained"
+          variant="outlined"
         >
           Enregistrer
         </v-btn>

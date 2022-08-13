@@ -121,7 +121,7 @@ func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.duplicateQuestion(id, user.Id)
+	out, err := ct.duplicateQuestion(IdQuestion(id), user.Id)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) erro
 		return err
 	}
 
-	err = ct.duplicateQuestionWithDifficulty(id, user.Id)
+	err = ct.duplicateQuestionWithDifficulty(IdQuestion(id), user.Id)
 	if err != nil {
 		return err
 	}
@@ -153,11 +153,20 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 		return err
 	}
 
+	err = ct.deleteQuestion(IdQuestion(id), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteQuestion(id IdQuestion, userID uID) error {
 	qu, err := SelectQuestion(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if qu.IdTeacher != user.Id {
+	if qu.IdTeacher != userID {
 		return accessForbidden
 	}
 
@@ -180,7 +189,7 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 		return err
 	}
 
-	return c.NoContent(200)
+	return nil
 }
 
 func (ct *Controller) EditorGetQuestion(c echo.Context) error {
@@ -191,7 +200,7 @@ func (ct *Controller) EditorGetQuestion(c echo.Context) error {
 		return err
 	}
 
-	question, err := SelectQuestion(ct.db, id)
+	question, err := SelectQuestion(ct.db, IdQuestion(id))
 	if err != nil {
 		return err
 	}
@@ -227,7 +236,7 @@ func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
 }
 
 type QuestionUpdateVisiblityIn struct {
-	QuestionID int64
+	QuestionID IdQuestion
 	Public     bool
 }
 
@@ -329,7 +338,7 @@ type QuestionGroup struct {
 type QuestionHeader struct {
 	Title      string
 	Tags       []string
-	Id         int64
+	Id         IdQuestion
 	Difficulty DifficultyTag // deduced from the tags
 	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
 	Origin     teacher.Origin
@@ -339,7 +348,7 @@ func normalizeTitle(title string) string {
 	return removeAccents(strings.TrimSpace(strings.ToLower(title)))
 }
 
-func (qu Question) origin(userID, adminID int64) (teacher.Origin, bool) {
+func (qu Question) origin(userID, adminID uID) (teacher.Origin, bool) {
 	vis, ok := teacher.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
 	if !ok {
 		return teacher.Origin{}, false
@@ -351,7 +360,7 @@ func (qu Question) origin(userID, adminID int64) (teacher.Origin, bool) {
 	}, true
 }
 
-func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out ListQuestionsOut, err error) {
+func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out ListQuestionsOut, err error) {
 	const pagination = 30 // number of groups
 
 	// to find implicit groups, we need all the questions
@@ -366,9 +375,9 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 
 	queryTitle := normalizeTitle(query.TitleQuery)
 	var (
-		ids      IDs
-		ownerIDs IDs
-		groups   = make(map[string][]int64)
+		ids      []IdQuestion
+		ownerIDs []uID
+		groups   = make(map[string][]IdQuestion)
 	)
 	for _, question := range questions {
 		thisTitle := normalizeTitle(question.Page.Title)
@@ -445,7 +454,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID int64) (out 
 
 // duplicateQuestion duplicate the given question, returning
 // the newly created one
-func (ct *Controller) duplicateQuestion(idQuestion, userID int64) (Question, error) {
+func (ct *Controller) duplicateQuestion(idQuestion IdQuestion, userID uID) (Question, error) {
 	qu, err := SelectQuestion(ct.db, idQuestion)
 	if err != nil {
 		return Question{}, utils.SQLError(err)
@@ -495,7 +504,7 @@ func (ct *Controller) duplicateQuestion(idQuestion, userID int64) (Question, err
 // duplicateQuestionWithDifficulty creates new questions with the same title
 // and content as the given question, but with difficulty levels
 // only personnal questions are allowed
-func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion, userID int64) error {
+func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion IdQuestion, userID uID) error {
 	qu, err := SelectQuestion(ct.db, idQuestion)
 	if err != nil {
 		return utils.SQLError(err)
@@ -574,7 +583,7 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion, userID int64) 
 }
 
 // do NOT commit or rollback
-func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion int64) error {
+func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion IdQuestion) error {
 	var nbDiff, nbLevel int
 	for _, tag := range tags {
 		switch tag.Tag {
@@ -603,7 +612,7 @@ func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion int64) error {
 	return nil
 }
 
-func (ct *Controller) updateTags(params UpdateTagsIn, userID int64) error {
+func (ct *Controller) updateTags(params UpdateTagsIn, userID uID) error {
 	question, err := SelectQuestion(ct.db, params.IdQuestion)
 	if err != nil {
 		return utils.SQLError(err)
@@ -639,16 +648,16 @@ func (ct *Controller) updateTags(params UpdateTagsIn, userID int64) error {
 }
 
 type UpdateGroupTagsOut struct {
-	Tags map[int64][]string
+	Tags map[IdQuestion][]string
 }
 
-func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (UpdateGroupTagsOut, error) {
+func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID uID) (UpdateGroupTagsOut, error) {
 	questions, err := SelectAllQuestions(ct.db)
 	if err != nil {
 		return UpdateGroupTagsOut{}, utils.SQLError(err)
 	}
 
-	var groupIDs IDs
+	var groupIDs []IdQuestion
 	for _, question := range questions {
 		if question.Page.Title == params.GroupTitle && question.IdTeacher == userID {
 			groupIDs = append(groupIDs, question.Id)
@@ -675,7 +684,7 @@ func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID int64) (U
 	if err != nil {
 		return UpdateGroupTagsOut{}, utils.SQLError(err)
 	}
-	out := UpdateGroupTagsOut{Tags: make(map[int64][]string)}
+	out := UpdateGroupTagsOut{Tags: make(map[IdQuestion][]string)}
 	for _, idQuestion := range groupIDs {
 		tags := tagsByQuestion[idQuestion]
 
@@ -755,7 +764,7 @@ func (ct *Controller) endPreview(sessionID string) error {
 	return nil
 }
 
-func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID int64) (SaveQuestionAndPreviewOut, error) {
+func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID uID) (SaveQuestionAndPreviewOut, error) {
 	qu, err := SelectQuestion(ct.db, params.Question.Id)
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err

@@ -169,7 +169,7 @@ func TestSessionPlay(t *testing.T) {
 
 	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{Id: 1}) // 1 is the defaut admin
 
-	config, err := TrivialConfig{Questions: demoQuestions, IdTeacher: ct.admin.Id}.Insert(db)
+	config, err := Trivial{Questions: demoQuestions, IdTeacher: ct.admin.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}

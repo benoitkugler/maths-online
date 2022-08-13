@@ -72,7 +72,7 @@
         <v-card-actions>
           <v-btn
             color="primary"
-            variant="contained"
+            variant="outlined"
             :disabled="!areCredencesValid"
             @click="inscription"
           >
@@ -81,7 +81,7 @@
           <v-spacer></v-spacer>
           <v-btn
             color="primary"
-            variant="contained"
+            variant="outlined"
             :disabled="!areCredencesValid"
             @click="connection"
           >

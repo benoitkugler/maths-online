@@ -1,4 +1,5 @@
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
@@ -62,7 +63,7 @@ class QuestionRoute extends StatelessWidget {
           automaticallyImplyLeading: true,
         ),
         body: QuestionW(
-          buildMode,
+          ServerFieldAPI(buildMode),
           question.question,
           question.categorie.color,
           onValid,

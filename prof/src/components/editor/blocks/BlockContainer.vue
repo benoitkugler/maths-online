@@ -46,7 +46,8 @@
 
 <script setup lang="ts">
 import { BlockKind } from "@/controller/api_gen";
-import { BlockKindLabels, onDragListItemStart } from "@/controller/editor";
+import { BlockKindLabels } from "@/controller/editor";
+import { onDragListItemStart } from "@/controller/utils";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import LatexCommands from "./LatexCommands.vue";

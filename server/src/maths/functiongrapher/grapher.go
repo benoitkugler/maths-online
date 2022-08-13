@@ -12,7 +12,7 @@ import (
 // BezierCurve is a quadratic Bezier curve with the
 // additional invariant that P0.X <= P2.X
 type BezierCurve struct {
-	P0, P1, P2 repere.Coord `dart-extern:"repere:repere.gen.dart"`
+	P0, P1, P2 repere.Coord `gomacro-extern:"repere:dart:repere.gen.dart"`
 }
 
 func (seg segment) toCurve() BezierCurve {

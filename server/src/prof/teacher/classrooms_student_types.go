@@ -1,9 +1,7 @@
 package teacher
 
-//go:generate ../../../../../structgen/structgen -source=classrooms_student_types.go -mode=dart:../../../../eleve/lib/shared/students.gen.dart
-
 type StudentHeader struct {
-	Id    int64
+	Id    IdStudent
 	Label string
 }
 
@@ -11,7 +9,7 @@ type AttachStudentToClassroom1Out = []StudentHeader
 
 type AttachStudentToClassroom2In struct {
 	ClassroomCode string
-	IdStudent     int64
+	IdStudent     IdStudent
 	Birthday      string // 2006-01-02
 }
 

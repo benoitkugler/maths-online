@@ -12,7 +12,7 @@
       <v-card-actions>
         <v-btn @click="questionToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteQuestion" variant="contained">
+        <v-btn color="red" @click="deleteQuestion" variant="outlined">
           Supprimer
         </v-btn>
       </v-card-actions>
@@ -32,7 +32,7 @@
       <v-card-actions>
         <v-btn @click="questionToDuplicate = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="green" @click="duplicateDifficulty" variant="contained">
+        <v-btn color="green" @click="duplicateDifficulty" variant="outlined">
           Dupliquer
         </v-btn>
       </v-card-actions>

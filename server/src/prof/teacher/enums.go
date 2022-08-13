@@ -13,7 +13,7 @@ const (
 // NewVisibility returns the visilbity of the ressource owned by
 // `ownerID` and requested by `userID`,
 // or `false` if `userID` does not have access to it.
-func NewVisibility(ownerID, userID, adminID int64, public bool) (Visibility, bool) {
+func NewVisibility(ownerID, userID, adminID IdTeacher, public bool) (Visibility, bool) {
 	var vis Visibility
 	if ownerID == userID {
 		vis = Personnal

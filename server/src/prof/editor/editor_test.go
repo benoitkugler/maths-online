@@ -52,16 +52,15 @@ func BenchmarkValidation(b *testing.B) {
 }
 
 func TestExerciceCRUD(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, teacher.Teacher{Id: 1})
+	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	ex, err := ct.createExercice(1)
 	if err != nil {
@@ -137,16 +136,15 @@ func TestDB(t *testing.T) {
 }
 
 func TestGroupTagsEmpty(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := NewController(db, teacher.Teacher{Id: 1})
+	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	// create an implicit groups with no tags
 	_, err = Question{IdTeacher: 1, Page: questions.QuestionPage{Title: "test"}}.Insert(db)
@@ -163,67 +161,6 @@ func TestGroupTagsEmpty(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(out.Tags) != 2 {
-		t.Fatal(out)
-	}
-}
-
-func TestProgression(t *testing.T) {
-	db := testutils.CreateDBDev(t, "../teacher/gen_create.sql", "gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
-
-	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ct := NewController(db, teacher.Teacher{Id: 1})
-
-	ex, err := ct.createExercice(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Exercice.Id}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Exercice.Id}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Exercice.Id}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tx, err := ct.db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prog, err := Progression{IdExercice: ex.Exercice.Id}.Insert(tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = InsertManyProgressionQuestions(tx,
-		ProgressionQuestion{IdProgression: prog.Id, IdExercice: prog.IdExercice, Index: 0, History: QuestionHistory{false, true}},
-		ProgressionQuestion{IdProgression: prog.Id, IdExercice: prog.IdExercice, Index: 2, History: randQuestionHistory()},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = tx.Commit()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	out, err := ct.fetchProgression(prog.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if out.NextQuestion != 1 {
 		t.Fatal(out)
 	}
 }

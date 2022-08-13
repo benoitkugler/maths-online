@@ -82,9 +82,8 @@ func Test_weightQuestions(t *testing.T) {
 
 func TestSelectQuestions(t *testing.T) {
 	// create a DB shared by all tests
-	db := testutils.CreateDBDev(t, "../editor/gen_create.sql")
-	defer testutils.RemoveDBDev()
-	defer db.Close()
+	db := testutils.NewTestDB(t, "../editor/gen_create.sql")
+	defer db.Remove()
 
 	qu("title1").Insert(db)
 	qu("title1").Insert(db)
@@ -142,7 +141,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 	tests := []struct {
 		qc      QuestionCriterion
 		args    editor.QuestionTags
-		wantOut IDs
+		wantOut []ed.IdQuestion
 	}{
 		{
 			QuestionCriterion{},
@@ -161,7 +160,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 				{IdQuestion: 1, Tag: "xx"},
 				{IdQuestion: 2, Tag: "xx"},
 			},
-			IDs{1},
+			[]ed.IdQuestion{1},
 		},
 		{
 			QuestionCriterion{
@@ -184,7 +183,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 				{IdQuestion: 1, Tag: "TAG1"},
 				{IdQuestion: 2, Tag: "xx"},
 			},
-			IDs{1},
+			[]ed.IdQuestion{1},
 		},
 		{
 			QuestionCriterion{
@@ -197,7 +196,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 				{IdQuestion: 1, Tag: "TAG1"},
 				{IdQuestion: 2, Tag: "TAG3"},
 			},
-			IDs{1, 2},
+			[]ed.IdQuestion{1, 2},
 		},
 	}
 	for _, tt := range tests {

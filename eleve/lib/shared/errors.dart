@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+/// checkServerError throws if the serveur returns an error message
 dynamic checkServerError(String source) {
   final json = jsonDecode(source);
   if (json is Map<String, dynamic>) {

@@ -22,7 +22,7 @@
               <div v-html="command.command.replace('\n', '<br />')"></div>
             </v-col>
             <v-col cols="1" align-self="center">
-              <v-btn icon size="x-small" title="Copier">
+              <v-btn icon size="x-small" title="Copier" class="my-1">
                 <v-icon
                   icon="mdi-content-copy"
                   size="x-small"

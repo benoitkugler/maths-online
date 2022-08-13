@@ -10,12 +10,23 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (l ExerciceQuestions) ensureIndex() {
+type uID = teacher.IdTeacher
+
+// EnsureOrder must be call on the questions of one exercice,
+// to make sure the order in the slice is consistent with the one
+// indicated by `Index`
+func (l ExerciceQuestions) EnsureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
 
-func (l ProgressionQuestions) ensureIndex() {
-	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+// Bareme returns the bareme for one exercice, that is the sum
+// of each question bareme
+func (l ExerciceQuestions) Bareme() int {
+	var out int
+	for _, qu := range l {
+		out += qu.Bareme
+	}
+	return out
 }
 
 type QuestionOrigin struct {
@@ -27,7 +38,7 @@ type ExerciceExt struct {
 	Exercice        Exercice
 	Origin          teacher.Origin
 	Questions       ExerciceQuestions
-	QuestionsSource map[int64]QuestionOrigin
+	QuestionsSource map[IdQuestion]QuestionOrigin
 }
 
 type ExerciceHeader struct {
@@ -47,7 +58,7 @@ func (ct *Controller) ExercicesGetList(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ex Exercice) origin(userID, adminID int64) (teacher.Origin, bool) {
+func (ex Exercice) origin(userID, adminID uID) (teacher.Origin, bool) {
 	vis, ok := teacher.NewVisibility(ex.IdTeacher, userID, adminID, ex.Public)
 	if !ok {
 		return teacher.Origin{}, false
@@ -59,38 +70,45 @@ func (ex Exercice) origin(userID, adminID int64) (teacher.Origin, bool) {
 	}, true
 }
 
-func (ct *Controller) getExercices(userID int64) ([]ExerciceHeader, error) {
+// BuildExerciceHeaders aggregates the content of the tables Exercice and ExerciceQuestion,
+// selecting only the exercices visible by `userID`
+func BuildExerciceHeaders(userID, adminID teacher.IdTeacher, exes Exercices, links ExerciceQuestions) map[IdExercice]ExerciceHeader {
+	out := make(map[IdExercice]ExerciceHeader, len(exes))
+	questionDict := links.ByIdExercice()
+
+	for _, ex := range exes {
+		origin, ok := ex.origin(userID, adminID)
+		if !ok {
+			continue
+		}
+
+		questions := questionDict[ex.Id]
+		questions.EnsureOrder()
+		out[ex.Id] = ExerciceHeader{
+			Exercice:  ex,
+			Origin:    origin,
+			Questions: questions,
+		}
+	}
+
+	return out
+}
+
+func (ct *Controller) getExercices(userID uID) ([]ExerciceHeader, error) {
 	exs, err := SelectAllExercices(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	var (
-		out []ExerciceHeader
-		tmp IDs
-	)
-	for _, ex := range exs {
-		origin, ok := ex.origin(userID, ct.admin.Id)
-		if !ok {
-			continue
-		}
-		out = append(out, ExerciceHeader{
-			Exercice: ex,
-			Origin:   origin,
-		})
-		tmp = append(tmp, ex.Id)
-	}
-
-	links, err := SelectExerciceQuestionsByIdExercices(ct.db, tmp...)
+	links, err := SelectExerciceQuestionsByIdExercices(ct.db, exs.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	dict := links.ByIdExercice()
 
-	for i, ex := range out {
-		s := dict[ex.Exercice.Id]
-		s.ensureIndex()
-		out[i].Questions = s
+	tmp := BuildExerciceHeaders(userID, ct.admin.Id, exs, links)
+	out := make([]ExerciceHeader, 0, len(tmp))
+	for _, ex := range tmp {
+		out = append(out, ex)
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })
@@ -108,7 +126,7 @@ func (ct *Controller) ExerciceGetContent(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.getExercice(idExercice, user.Id)
+	out, err := ct.getExercice(IdExercice(idExercice), user.Id)
 	if err != nil {
 		return err
 	}
@@ -116,8 +134,8 @@ func (ct *Controller) ExerciceGetContent(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getExercice(exerciceID, userID int64) (ExerciceExt, error) {
-	data, err := ct.loadExercice(exerciceID)
+func (ct *Controller) getExercice(exerciceID IdExercice, userID uID) (ExerciceExt, error) {
+	data, err := loadExercice(ct.db, exerciceID)
 	if err != nil {
 		return ExerciceExt{}, err
 	}
@@ -149,7 +167,7 @@ func (ct *Controller) ExerciceCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createExercice(userID int64) (ExerciceHeader, error) {
+func (ct *Controller) createExercice(userID uID) (ExerciceHeader, error) {
 	ex, err := Exercice{IdTeacher: userID, Flow: Parallel}.Insert(ct.db)
 	if err != nil {
 		return ExerciceHeader{}, utils.SQLError(err)
@@ -175,7 +193,7 @@ func (ct *Controller) ExerciceDelete(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteExercice(idExercice, user.Id)
+	err = ct.deleteExercice(IdExercice(idExercice), user.Id)
 	if err != nil {
 		return err
 	}
@@ -183,7 +201,7 @@ func (ct *Controller) ExerciceDelete(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) checkExerciceOwner(idExercice, userID int64) error {
+func (ct *Controller) checkExerciceOwner(idExercice IdExercice, userID uID) error {
 	ex, err := SelectExercice(ct.db, idExercice)
 	if err != nil {
 		return utils.SQLError(err)
@@ -196,7 +214,7 @@ func (ct *Controller) checkExerciceOwner(idExercice, userID int64) error {
 	return nil
 }
 
-func (ct *Controller) deleteExercice(idExercice int64, userID int64) error {
+func (ct *Controller) deleteExercice(idExercice IdExercice, userID uID) error {
 	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
 		return err
 	}
@@ -211,7 +229,7 @@ func (ct *Controller) deleteExercice(idExercice int64, userID int64) error {
 	}
 
 	// delete not standalone questions linked to the exercice
-	var toDelete IDs
+	var toDelete []IdQuestion
 	for _, question := range qus {
 		if question.NeedExercice.Valid {
 			toDelete = append(toDelete, question.Id)
@@ -254,7 +272,7 @@ func (ct *Controller) deleteExercice(idExercice int64, userID int64) error {
 
 type ExerciceCreateQuestionIn struct {
 	SessionID  string
-	IdExercice int64
+	IdExercice IdExercice
 }
 
 // ExerciceCreateQuestion creates a question and appends it
@@ -272,7 +290,7 @@ func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(args.IdExercice)
+	data, err := loadExercice(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -285,13 +303,13 @@ func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int64) (ExerciceExt, error) {
+func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID) (ExerciceExt, error) {
 	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
 		return ExerciceExt{}, err
 	}
 
 	// creates a question
-	question, err := Question{IdTeacher: userID, Public: false, NeedExercice: newID(args.IdExercice)}.Insert(ct.db)
+	question, err := Question{IdTeacher: userID, Public: false, NeedExercice: asNullable(args.IdExercice)}.Insert(ct.db)
 	if err != nil {
 		return ExerciceExt{}, utils.SQLError(err)
 	}
@@ -305,7 +323,7 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int
 
 	err = updateExerciceQuestionList(ct.db, args.IdExercice, existing)
 	if err != nil {
-		return ExerciceExt{}, utils.SQLError(err)
+		return ExerciceExt{}, err
 	}
 
 	return ct.getExercice(args.IdExercice, userID)
@@ -313,7 +331,7 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID int
 
 type ExerciceUpdateQuestionsIn struct {
 	Questions  ExerciceQuestions
-	IdExercice int64
+	IdExercice IdExercice
 	SessionID  string
 }
 
@@ -332,7 +350,7 @@ func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(args.IdExercice)
+	data, err := loadExercice(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -345,7 +363,7 @@ func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID int64) (ExerciceExt, error) {
+func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID uID) (ExerciceExt, error) {
 	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
 		return ExerciceExt{}, err
 	}
@@ -361,7 +379,7 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID i
 	}
 
 	var (
-		toDelete       IDs
+		toDelete       []IdQuestion
 		newQuestionIDs = args.Questions.ByIdQuestion()
 	)
 	for _, link := range links {
@@ -404,7 +422,7 @@ func (ct *Controller) ExerciceUpdate(c echo.Context) error {
 		return err
 	}
 
-	data, err := ct.loadExercice(args.Exercice.Id)
+	data, err := loadExercice(ct.db, args.Exercice.Id)
 	if err != nil {
 		return err
 	}
@@ -417,7 +435,7 @@ func (ct *Controller) ExerciceUpdate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateExercice(in Exercice, userID int64) (Exercice, error) {
+func (ct *Controller) updateExercice(in Exercice, userID uID) (Exercice, error) {
 	if err := ct.checkExerciceOwner(in.Id, userID); err != nil {
 		return Exercice{}, err
 	}
@@ -440,7 +458,7 @@ func (ct *Controller) updateExercice(in Exercice, userID int64) (Exercice, error
 }
 
 type CheckExerciceParametersIn struct {
-	IdExercice         int64
+	IdExercice         IdExercice
 	SharedParameters   questions.Parameters
 	QuestionParameters []questions.Parameters
 }
@@ -453,7 +471,7 @@ type CheckExerciceParametersOut struct {
 // checks that the merging of SharedParameters and QuestionParameters is valid
 func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) (CheckExerciceParametersOut, error) {
 	// fetch the mode of each question
-	data, err := ct.loadExercice(params.IdExercice)
+	data, err := loadExercice(ct.db, params.IdExercice)
 	if err != nil {
 		return CheckExerciceParametersOut{}, err
 	}
@@ -483,7 +501,7 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 
 type SaveExerciceAndPreviewIn struct {
 	SessionID  string
-	IdExercice int64
+	IdExercice IdExercice
 	Parameters questions.Parameters // shared parameters
 	Questions  Questions            // questions content
 }
@@ -494,8 +512,8 @@ type SaveExerciceAndPreviewOut struct {
 	IsValid       bool
 }
 
-func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID int64) (SaveExerciceAndPreviewOut, error) {
-	data, err := ct.loadExercice(params.IdExercice)
+func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
+	data, err := loadExercice(ct.db, params.IdExercice)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}

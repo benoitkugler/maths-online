@@ -464,7 +464,7 @@ func (fa FigureAffineLineFieldBlock) setupValidator(params expression.RandomPara
 }
 
 type TreeNodeAnswer struct {
-	Children      []TreeNodeAnswer `structgen-data:"ignore"`
+	Children      []TreeNodeAnswer `gomacro-data:"ignore"`
 	Probabilities []string         // edges, same length as Children, valid expression.Expression
 	Value         int              // index into the proposals, 0 for the root
 }

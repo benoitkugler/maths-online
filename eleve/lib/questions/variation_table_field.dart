@@ -1,4 +1,3 @@
-import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/types.gen.dart';
@@ -15,11 +14,11 @@ class _VTController {
 
   final void Function() onChange;
 
-  _VTController(BuildMode buildMode, int arrowLength, this.onChange)
-      : xs = List<ExpressionController>.generate(arrowLength + 1,
-            (index) => ExpressionController(buildMode, onChange)),
-        fxs = List<ExpressionController>.generate(arrowLength + 1,
-            (index) => ExpressionController(buildMode, onChange)),
+  _VTController(FieldAPI api, int arrowLength, this.onChange)
+      : xs = List<ExpressionController>.generate(
+            arrowLength + 1, (index) => ExpressionController(api, onChange)),
+        fxs = List<ExpressionController>.generate(
+            arrowLength + 1, (index) => ExpressionController(api, onChange)),
         arrows = List<bool?>.filled(arrowLength, null);
 
   void toggleArrow(int index) {
@@ -86,7 +85,7 @@ class _VTController {
 }
 
 class VariationTableController extends FieldController {
-  final BuildMode buildMode;
+  final FieldAPI api;
   final VariationTableFieldBlock data;
 
   // setup when selecting a length
@@ -94,11 +93,11 @@ class VariationTableController extends FieldController {
 
   int? get selectedArrowLength => ct == null ? null : ct!.arrows.length;
 
-  VariationTableController(this.buildMode, this.data, void Function() onChange)
+  VariationTableController(this.api, this.data, void Function() onChange)
       : super(onChange);
 
   void setArrowLength(int? length) {
-    ct = length == null ? null : _VTController(buildMode, length, onChange);
+    ct = length == null ? null : _VTController(api, length, onChange);
   }
 
   @override

@@ -7,8 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//go:generate ../../../structgen/structgen -source=shared_api.go -mode=dart:../../eleve/lib/shared_gen.dart
-
 type CheckExpressionOut struct {
 	Reason  string
 	IsValid bool
@@ -30,7 +28,7 @@ type InstantiateQuestionsOut = editor.InstantiateQuestionsOut
 
 // standalone endpoint to check if an answer is correct
 func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
-	var args []int64
+	var args []editor.IdQuestion
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -44,9 +42,9 @@ func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
 }
 
 type EvaluateQuestionIn struct {
-	Answer     client.QuestionAnswersIn `dart-extern:"client:questions/types.gen.dart"`
+	Answer     client.QuestionAnswersIn `gomacro-extern:"client:dart:questions/types.gen.dart"`
 	Params     []editor.VarEntry
-	IdQuestion int64
+	IdQuestion editor.IdQuestion
 }
 
 // standalone endpoint to check if an answer is correct
@@ -70,7 +68,7 @@ type (
 	EvaluateExerciceOut = editor.EvaluateExerciceOut
 )
 
-type Exercice struct {
+type StudentExerciceInst struct {
 	Exercice    editor.InstantiatedExercice
 	Progression editor.ProgressionExt
 }

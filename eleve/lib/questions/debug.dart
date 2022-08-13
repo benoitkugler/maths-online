@@ -15,7 +15,7 @@ const bounds = RepereBounds(20, 20, Coord(4, 4));
 const emptyFigure = Figure(Drawings({}, [], [], []), bounds, true, true);
 
 final questionList = [
-  const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
+  const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0, 10)]), []),
   InstantiatedQuestion(
       0,
       Question("", [
@@ -30,7 +30,7 @@ final questionList = [
         ], 1)
       ]),
       []),
-  const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0)]), []),
+  const InstantiatedQuestion(0, Question("", [NumberFieldBlock(0, 10)]), []),
 ];
 
 final proofB = proofFieldBlockFromJson(jsonDecode("""

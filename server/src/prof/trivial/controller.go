@@ -35,6 +35,8 @@ var upgrader = websocket.Upgrader{
 
 var accessForbidden = errors.New("trivial config access forbidden")
 
+type uID = teacher.IdTeacher
+
 // Controller is the top level (singleton) objects
 // handling requests related to trivial pousuit setups
 // It delegates to trivial-poursuit.GameController for the
@@ -61,8 +63,8 @@ func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher
 	}
 }
 
-func (ct *Controller) checkOwner(configID, userID int64) error {
-	in, err := SelectTrivialConfig(ct.db, configID)
+func (ct *Controller) checkOwner(configID IdTrivial, userID uID) error {
+	in, err := SelectTrivial(ct.db, configID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -79,7 +81,7 @@ type RunningSessionMetaOut struct {
 }
 
 // getSession locks and may return nil if no games has started yet
-func (ct *Controller) getSession(userID int64) *gameSession {
+func (ct *Controller) getSession(userID uID) *gameSession {
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
 
@@ -103,13 +105,13 @@ func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getTrivialPoursuits(userID int64) ([]TrivialConfigExt, error) {
-	configs, err := SelectAllTrivialConfigs(ct.db)
+func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
+	configs, err := SelectAllTrivials(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	var out []TrivialConfigExt
+	var out []TrivialExt
 	for _, config := range configs {
 		vis, hasAcces := teacher.NewVisibility(config.IdTeacher, userID, ct.admin.Id, config.Public)
 		if !hasAcces {
@@ -144,7 +146,7 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	tc, err := TrivialConfig{
+	tc, err := Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
 		IdTeacher:       user.Id,
@@ -153,7 +155,7 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := TrivialConfigExt{Config: tc} // 0 questions by categories, not running
+	out := TrivialExt{Config: tc} // 0 questions by categories, not running
 
 	return c.JSON(200, out)
 }
@@ -166,11 +168,11 @@ func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
 		return err
 	}
 
-	if err = ct.checkOwner(id, user.Id); err != nil {
+	if err = ct.checkOwner(IdTrivial(id), user.Id); err != nil {
 		return err
 	}
 
-	_, err = DeleteTrivialConfigById(ct.db, id)
+	_, err = DeleteTrivialById(ct.db, IdTrivial(id))
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -186,7 +188,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return err
 	}
 
-	in, err := SelectTrivialConfig(ct.db, id)
+	in, err := SelectTrivial(ct.db, IdTrivial(id))
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -218,7 +220,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
-	var params TrivialConfig
+	var params Trivial
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -250,7 +252,7 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 }
 
 type UpdateTrivialVisiblityIn struct {
-	ConfigID int64
+	ConfigID IdTrivial
 	Public   bool
 }
 
@@ -262,7 +264,7 @@ func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	qu, err := SelectTrivialConfig(ct.db, args.ConfigID)
+	qu, err := SelectTrivial(ct.db, args.ConfigID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -304,7 +306,7 @@ func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions, userID int64) (CheckMissingQuestionsOut, error) {
+func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions, userID uID) (CheckMissingQuestionsOut, error) {
 	criteria.normalize()
 
 	pattern := criteria.commonTags()
@@ -355,8 +357,8 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) launchConfig(params LaunchSessionIn, userID int64) (LaunchSessionOut, error) {
-	config, err := SelectTrivialConfig(ct.db, params.IdConfig)
+func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSessionOut, error) {
+	config, err := SelectTrivial(ct.db, params.IdConfig)
 	if err != nil {
 		return LaunchSessionOut{}, utils.SQLError(err)
 	}

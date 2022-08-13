@@ -1,13 +1,9 @@
 package client
 
 import (
-	"encoding/json"
-
 	"github.com/benoitkugler/maths-online/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
-
-//go:generate ../../../../../../structgen/structgen -source=client_types.go -mode=dart:../../../../../eleve/lib/questions/types.gen.dart  -mode=itfs-json:gen_itfs_client.go
 
 type Question struct {
 	Title  string
@@ -91,18 +87,18 @@ type SignTableBlock struct {
 }
 
 type FigureBlock struct {
-	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
+	Figure repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
 }
 
 type FunctionArea struct {
-	Color repere.Color `dart-extern:"repere:repere.gen.dart"`
+	Color repere.Color `gomacro-extern:"repere:dart:repere.gen.dart"`
 	Path  []functiongrapher.BezierCurve
 }
 
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []FunctionArea
-	Bounds    repere.RepereBounds `dart-extern:"repere:repere.gen.dart"`
+	Bounds    repere.RepereBounds `gomacro-extern:"repere:dart:repere.gen.dart"`
 }
 
 type TableBlock struct {
@@ -111,18 +107,22 @@ type TableBlock struct {
 	Values            [][]TextOrMath
 }
 
+// SizeHint is the length of the expected answer,
+// in runes. It may be used by the client to adjust the field width.
+type SizeHint = int
+
 // NumberFieldBlock is an answer field where only
 // numbers are allowed
 // answers are compared as float values
 type NumberFieldBlock struct {
 	ID int
+	// Typical values range from 1 to 15
+	SizeHint SizeHint
 }
 type ExpressionFieldBlock struct {
 	Label string // as LaTeX, optional
-	// SizeHint is the length of the expected answer,
-	// in runes. It may be used by the client to adjust the field width.
 	// Typical values range from 1 to 30
-	SizeHint int
+	SizeHint SizeHint
 	ID       int
 }
 
@@ -152,7 +152,7 @@ type OrderedListFieldBlock struct {
 
 // FigurePointFieldBlock asks for one 2D point
 type FigurePointFieldBlock struct {
-	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
+	Figure repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
 	ID     int
 }
 
@@ -162,7 +162,7 @@ type FigurePointFieldBlock struct {
 
 type FigureVectorFieldBlock struct {
 	LineLabel string        // ignored if AsLine is false
-	Figure    repere.Figure `dart-extern:"repere:repere.gen.dart"`
+	Figure    repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
 	ID        int
 	AsLine    bool
 }
@@ -174,7 +174,7 @@ type FigureVectorFieldBlock struct {
 // is not allowed
 
 type FigureVectorPairFieldBlock struct {
-	Figure repere.Figure `dart-extern:"repere:repere.gen.dart"`
+	Figure repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
 	ID     int
 }
 
@@ -192,7 +192,7 @@ type FunctionPointsFieldBlock struct {
 	Label  string              // name of the function
 	Xs     []int               // the grid
 	Dfxs   []float64           // the derivatives of the function, to plot a nice curve
-	Bounds repere.RepereBounds `dart-extern:"repere:repere.gen.dart"`
+	Bounds repere.RepereBounds `gomacro-extern:"repere:dart:repere.gen.dart"`
 	ID     int
 }
 
@@ -347,26 +347,6 @@ type QuestionAnswersIn struct {
 }
 
 type Answers map[int]Answer
-
-func (out *Answers) UnmarshalJSON(src []byte) error {
-	var wr map[int]AnswerWrapper
-
-	err := json.Unmarshal(src, &wr)
-	*out = make(map[int]Answer)
-	for i, v := range wr {
-		(*out)[i] = v.Data
-	}
-
-	return err
-}
-
-func (out Answers) MarshalJSON() ([]byte, error) {
-	tmp := make(map[int]AnswerWrapper)
-	for k, v := range out {
-		tmp[k] = AnswerWrapper{v}
-	}
-	return json.Marshal(tmp)
-}
 
 type QuestionAnswersOut struct {
 	Results         map[int]bool
