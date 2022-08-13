@@ -370,7 +370,7 @@ func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrec
 }
 
 func (f FigurePointFieldInstance) correctAnswer() client.Answer {
-	return client.PointAnswer{f.Answer}
+	return client.PointAnswer{Point: f.Answer}
 }
 
 type FigureVectorFieldInstance struct {
@@ -414,8 +414,8 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 
 func (f FigureVectorFieldInstance) correctAnswer() client.Answer {
 	to := repere.IntCoord{
-		f.AnswerOrigin.X + f.Answer.X,
-		f.AnswerOrigin.Y + f.Answer.Y,
+		X: f.AnswerOrigin.X + f.Answer.X,
+		Y: f.AnswerOrigin.Y + f.Answer.Y,
 	}
 	return client.DoublePointAnswer{From: f.AnswerOrigin, To: to}
 }
@@ -532,24 +532,24 @@ func (f FigureVectorPairFieldInstance) correctAnswer() client.Answer {
 	switch f.Criterion {
 	case VectorEquals:
 		return client.DoublePointPairAnswer{
-			From1: repere.IntCoord{0, 0},
-			To1:   repere.IntCoord{3, 3},
-			From2: repere.IntCoord{0, 1},
-			To2:   repere.IntCoord{3, 4},
+			From1: repere.IntCoord{X: 0, Y: 0},
+			To1:   repere.IntCoord{X: 3, Y: 3},
+			From2: repere.IntCoord{X: 0, Y: 1},
+			To2:   repere.IntCoord{X: 3, Y: 4},
 		}
 	case VectorColinear:
 		return client.DoublePointPairAnswer{
-			From1: repere.IntCoord{0, 0},
-			To1:   repere.IntCoord{3, 3},
-			From2: repere.IntCoord{3, 4},
-			To2:   repere.IntCoord{-1, 0},
+			From1: repere.IntCoord{X: 0, Y: 0},
+			To1:   repere.IntCoord{X: 3, Y: 3},
+			From2: repere.IntCoord{X: 3, Y: 4},
+			To2:   repere.IntCoord{X: -1, Y: 0},
 		}
 	case VectorOrthogonal:
 		return client.DoublePointPairAnswer{
-			From1: repere.IntCoord{0, 0},
-			To1:   repere.IntCoord{4, 0},
-			From2: repere.IntCoord{0, -2},
-			To2:   repere.IntCoord{0, 2},
+			From1: repere.IntCoord{X: 0, Y: 0},
+			To1:   repere.IntCoord{X: 4, Y: 0},
+			From2: repere.IntCoord{X: 0, Y: -2},
+			To2:   repere.IntCoord{X: 0, Y: 2},
 		}
 	default:
 		panic("exhaustive switch")

@@ -21,12 +21,20 @@ type RandomSegment struct {
 type RandomLine struct {
 	Label string
 	A, B  string // must be a valid expression.Expression
-	Color string // #FFFFFF format
+	Color Color
 }
 
 type RandomArea struct {
 	Color  Color
 	Points []string // expression.Expression for polyline point names
+}
+
+type RandomCircle struct {
+	Center    RandomCoord
+	Radius    string // must be a valid expression.Expression
+	LineColor Color  // optional, default to black
+	FillColor Color  // optional, defaul to transparent
+	Legend    string // support interpolation
 }
 
 type NamedRandomLabeledPoint struct {
@@ -38,5 +46,6 @@ type RandomDrawings struct {
 	Points   []NamedRandomLabeledPoint
 	Segments []RandomSegment
 	Lines    []RandomLine
+	Circles  []RandomCircle
 	Areas    []RandomArea
 }

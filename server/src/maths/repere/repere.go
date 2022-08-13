@@ -31,10 +31,20 @@ type Area struct {
 	Color  Color
 	Points []PointName // polyline
 }
+
+type Circle struct {
+	Center    Coord
+	Radius    float64
+	LineColor Color  // optional, default to black
+	FillColor Color  // optional, defaul to transparent
+	Legend    string // LaTeX
+}
+
 type Drawings struct {
 	Points   map[PointName]LabeledPoint
 	Segments []Segment
 	Lines    []Line
+	Circles  []Circle
 	Areas    []Area
 }
 

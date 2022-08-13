@@ -377,6 +377,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_repe_RandomCircle (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_repe_RandomCircle (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_repe_RandomLine (data jsonb)
     RETURNS boolean
     AS $$
@@ -1532,6 +1555,31 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_repe_RandomCircle (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Center', 'Radius', 'LineColor', 'FillColor', 'Legend'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_repe_RandomCoord (data -> 'Center')
+        AND gomacro_validate_json_string (data -> 'Radius')
+        AND gomacro_validate_json_string (data -> 'LineColor')
+        AND gomacro_validate_json_string (data -> 'FillColor')
+        AND gomacro_validate_json_string (data -> 'Legend');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_repe_RandomCoord (data jsonb)
     RETURNS boolean
     AS $$
@@ -1565,13 +1613,14 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Points', 'Segments', 'Lines', 'Areas'))
+            bool_and(key IN ('Points', 'Segments', 'Lines', 'Areas', 'Circles'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_repe_NamedRandomLabeledPoint (data -> 'Points')
         AND gomacro_validate_json_array_repe_RandomSegment (data -> 'Segments')
         AND gomacro_validate_json_array_repe_RandomLine (data -> 'Lines')
-        AND gomacro_validate_json_array_repe_RandomArea (data -> 'Areas');
+        AND gomacro_validate_json_array_repe_RandomArea (data -> 'Areas')
+        AND gomacro_validate_json_array_repe_RandomCircle (data -> 'Circles');
     RETURN is_valid;
 END;
 $$

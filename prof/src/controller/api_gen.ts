@@ -544,6 +544,14 @@ export interface RandomArea {
   Color: string;
   Points: string[] | null;
 }
+// github.com/benoitkugler/maths-online/maths/repere.RandomCircle
+export interface RandomCircle {
+  Center: RandomCoord;
+  Radius: string;
+  LineColor: string;
+  FillColor: string;
+  Legend: string;
+}
 // github.com/benoitkugler/maths-online/maths/repere.RandomCoord
 export interface RandomCoord {
   X: string;
@@ -555,6 +563,7 @@ export interface RandomDrawings {
   Segments: RandomSegment[] | null;
   Lines: RandomLine[] | null;
   Areas: RandomArea[] | null;
+  Circles: RandomCircle[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {

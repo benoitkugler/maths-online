@@ -193,6 +193,15 @@ func randSlicerep_RandomArea() []repere.RandomArea {
 	return out
 }
 
+func randSlicerep_RandomCircle() []repere.RandomCircle {
+	l := 40 + rand.Intn(10)
+	out := make([]repere.RandomCircle, l)
+	for i := range out {
+		out[i] = randrep_RandomCircle()
+	}
+	return out
+}
+
 func randSlicerep_RandomLine() []repere.RandomLine {
 	l := 40 + rand.Intn(10)
 	out := make([]repere.RandomLine, l)
@@ -572,6 +581,16 @@ func randrep_RandomArea() repere.RandomArea {
 	}
 }
 
+func randrep_RandomCircle() repere.RandomCircle {
+	return repere.RandomCircle{
+		Center:    randrep_RandomCoord(),
+		Radius:    randstring(),
+		LineColor: randstring(),
+		FillColor: randstring(),
+		Legend:    randstring(),
+	}
+}
+
 func randrep_RandomCoord() repere.RandomCoord {
 	return repere.RandomCoord{
 		X: randstring(),
@@ -585,6 +604,7 @@ func randrep_RandomDrawings() repere.RandomDrawings {
 		Segments: randSlicerep_RandomSegment(),
 		Lines:    randSlicerep_RandomLine(),
 		Areas:    randSlicerep_RandomArea(),
+		Circles:  randSlicerep_RandomCircle(),
 	}
 }
 

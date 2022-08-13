@@ -194,6 +194,8 @@ type figureValidator struct {
 	points     []*expression.Expr // X,Y
 	references []*expression.Expr
 
+	circlesDims []*expression.Expr // center and radius
+
 	lines [][2]*expression.Expr // A, B
 }
 
@@ -228,6 +230,13 @@ func (v figureValidator) validate(vars expression.Vars) error {
 		resolvedRef := ref.AsLaTeX()
 		if hasPoint := points[resolvedRef]; !hasPoint {
 			return fmt.Errorf("L'expression %s ne définit pas un point connu.", resolvedRef)
+		}
+	}
+
+	// check for valid circle dimensions
+	for _, circleNum := range v.circlesDims {
+		if err := circleNum.IsValidNumber(vars, false, true); err != nil {
+			return err
 		}
 	}
 

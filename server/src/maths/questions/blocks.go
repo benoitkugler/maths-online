@@ -478,6 +478,7 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 				Segments: make([]repere.Segment, len(f.Drawings.Segments)),
 				Points:   make(map[string]repere.LabeledPoint),
 				Lines:    make([]repere.Line, len(f.Drawings.Lines)),
+				Circles:  make([]repere.Circle, len(f.Drawings.Circles)),
 				Areas:    make([]repere.Area, len(f.Drawings.Areas)),
 			},
 			Bounds:     f.Bounds,
@@ -549,6 +550,31 @@ func (f FigureBlock) instantiateF(params expression.Vars) (FigureInstance, error
 		}
 	}
 
+	for i, circle := range f.Drawings.Circles {
+		legend, err := Interpolated(circle.Legend).instantiateAndMerge(params)
+		if err != nil {
+			return out, err
+		}
+
+		center, err := CoordExpression(circle.Center).instantiateToFloat(params)
+		if err != nil {
+			return out, err
+		}
+
+		radius, err := evaluateExpr(circle.Radius, params)
+		if err != nil {
+			return out, err
+		}
+
+		out.Figure.Drawings.Circles[i] = repere.Circle{
+			Radius:    radius,
+			Center:    center,
+			LineColor: circle.LineColor,
+			FillColor: circle.FillColor,
+			Legend:    legend,
+		}
+	}
+
 	for i, area := range f.Drawings.Areas {
 		instance := repere.Area{
 			Color:  area.Color,
@@ -613,6 +639,7 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 		}
 		out.references = append(out.references, from, to)
 	}
+
 	for _, area := range f.Drawings.Areas {
 		if len(area.Points) < 3 {
 			return nil, errors.New("Une surface requiert au moins 3 points.")
@@ -625,6 +652,25 @@ func (f FigureBlock) setupValidator(expression.RandomParameters) (validator, err
 			}
 			out.references = append(out.references, e)
 		}
+	}
+
+	for _, circle := range f.Drawings.Circles {
+		center, err := CoordExpression(circle.Center).parse()
+		if err != nil {
+			return nil, err
+		}
+
+		radius, err := expression.Parse(circle.Radius)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = Interpolated(circle.Legend).parse()
+		if err != nil {
+			return nil, err
+		}
+
+		out.circlesDims = append(out.circlesDims, center.X, center.Y, radius)
 	}
 
 	out.lines = make([][2]*expression.Expr, len(f.Drawings.Lines))

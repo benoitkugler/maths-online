@@ -26,6 +26,43 @@ JSON areaToJson(Area item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/repere.Circle
+class Circle {
+  final Coord center;
+  final double radius;
+  final String lineColor;
+  final String fillColor;
+  final String legend;
+
+  const Circle(
+      this.center, this.radius, this.lineColor, this.fillColor, this.legend);
+
+  @override
+  String toString() {
+    return "Circle($center, $radius, $lineColor, $fillColor, $legend)";
+  }
+}
+
+Circle circleFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return Circle(
+      coordFromJson(json['Center']),
+      doubleFromJson(json['Radius']),
+      stringFromJson(json['LineColor']),
+      stringFromJson(json['FillColor']),
+      stringFromJson(json['Legend']));
+}
+
+JSON circleToJson(Circle item) {
+  return {
+    "Center": coordToJson(item.center),
+    "Radius": doubleToJson(item.radius),
+    "LineColor": stringToJson(item.lineColor),
+    "FillColor": stringToJson(item.fillColor),
+    "Legend": stringToJson(item.legend)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/repere.Coord
 class Coord {
   final double x;
