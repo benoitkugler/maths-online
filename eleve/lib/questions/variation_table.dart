@@ -1,46 +1,9 @@
 import 'dart:math';
 
 import 'package:eleve/questions/fields.dart';
+import 'package:eleve/questions/table.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:flutter/material.dart';
-
-class BaseVariationTable extends StatelessWidget {
-  final String label;
-  final List<Widget> xRow;
-  final List<Widget> fxRow;
-
-  const BaseVariationTable(this.label, this.xRow, this.fxRow, {Key? key})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Table(
-          defaultColumnWidth: const IntrinsicColumnWidth(),
-          border: const TableBorder(
-            top: BorderSide(width: 1.5),
-            left: BorderSide(width: 1.5),
-            right: BorderSide(width: 1.5),
-            bottom: BorderSide(width: 1.5),
-            horizontalInside: BorderSide(),
-          ),
-          children: [
-            TableRow(
-                decoration: BoxDecoration(color: Colors.grey.shade600),
-                children: [
-                  const MathTableCell(TableCellVerticalAlignment.middle, "x"),
-                  ...xRow
-                ]),
-            TableRow(children: [
-              MathTableCell(TableCellVerticalAlignment.middle, label,
-                  width: 70),
-              ...fxRow,
-            ])
-          ]),
-    );
-  }
-}
 
 class VariationTable extends StatelessWidget {
   final VariationTableBlock data;
@@ -68,7 +31,7 @@ class VariationTable extends StatelessWidget {
       }
     }
 
-    return BaseVariationTable(data.label, xRow, fxRow);
+    return BaseFunctionTable(data.label, xRow, fxRow);
   }
 }
 

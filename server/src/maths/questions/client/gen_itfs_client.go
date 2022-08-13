@@ -56,6 +56,10 @@ func (out *AnswerWrapper) UnmarshalJSON(src []byte) error {
 		var data RadioAnswer
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "SignTableAnswer":
+		var data SignTableAnswer
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "TableAnswer":
 		var data TableAnswer
 		err = json.Unmarshal(wr.Data, &data)
@@ -104,6 +108,8 @@ func (item AnswerWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "ProofAnswer", Data: data}
 	case RadioAnswer:
 		wr = wrapper{Kind: "RadioAnswer", Data: data}
+	case SignTableAnswer:
+		wr = wrapper{Kind: "SignTableAnswer", Data: data}
 	case TableAnswer:
 		wr = wrapper{Kind: "TableAnswer", Data: data}
 	case TreeAnswer:
@@ -129,6 +135,7 @@ const (
 	PointAnswerAnKind           = "PointAnswer"
 	ProofAnswerAnKind           = "ProofAnswer"
 	RadioAnswerAnKind           = "RadioAnswer"
+	SignTableAnswerAnKind       = "SignTableAnswer"
 	TableAnswerAnKind           = "TableAnswer"
 	TreeAnswerAnKind            = "TreeAnswer"
 	VariationTableAnswerAnKind  = "VariationTableAnswer"
@@ -315,6 +322,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data SignTableBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "SignTableFieldBlock":
+		var data SignTableFieldBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "TableBlock":
 		var data TableBlock
 		err = json.Unmarshal(wr.Data, &data)
@@ -385,6 +396,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "RadioFieldBlock", Data: data}
 	case SignTableBlock:
 		wr = wrapper{Kind: "SignTableBlock", Data: data}
+	case SignTableFieldBlock:
+		wr = wrapper{Kind: "SignTableFieldBlock", Data: data}
 	case TableBlock:
 		wr = wrapper{Kind: "TableBlock", Data: data}
 	case TableFieldBlock:
@@ -421,6 +434,7 @@ const (
 	ProofFieldBlockBlKind            = "ProofFieldBlock"
 	RadioFieldBlockBlKind            = "RadioFieldBlock"
 	SignTableBlockBlKind             = "SignTableBlock"
+	SignTableFieldBlockBlKind        = "SignTableFieldBlock"
 	TableBlockBlKind                 = "TableBlock"
 	TableFieldBlockBlKind            = "TableFieldBlock"
 	TextBlockBlKind                  = "TextBlock"

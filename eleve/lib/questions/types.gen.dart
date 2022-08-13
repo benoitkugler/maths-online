@@ -28,6 +28,8 @@ Answer answerFromJson(dynamic json_) {
       return proofAnswerFromJson(data);
     case "RadioAnswer":
       return radioAnswerFromJson(data);
+    case "SignTableAnswer":
+      return signTableAnswerFromJson(data);
     case "TableAnswer":
       return tableAnswerFromJson(data);
     case "TreeAnswer":
@@ -66,6 +68,8 @@ JSON answerToJson(Answer item) {
     return {'Kind': "ProofAnswer", 'Data': proofAnswerToJson(item)};
   } else if (item is RadioAnswer) {
     return {'Kind': "RadioAnswer", 'Data': radioAnswerToJson(item)};
+  } else if (item is SignTableAnswer) {
+    return {'Kind': "SignTableAnswer", 'Data': signTableAnswerToJson(item)};
   } else if (item is TableAnswer) {
     return {'Kind': "TableAnswer", 'Data': tableAnswerToJson(item)};
   } else if (item is TreeAnswer) {
@@ -207,6 +211,8 @@ Block blockFromJson(dynamic json_) {
       return radioFieldBlockFromJson(data);
     case "SignTableBlock":
       return signTableBlockFromJson(data);
+    case "SignTableFieldBlock":
+      return signTableFieldBlockFromJson(data);
     case "TableBlock":
       return tableBlockFromJson(data);
     case "TableFieldBlock":
@@ -279,6 +285,11 @@ JSON blockToJson(Block item) {
     return {'Kind': "RadioFieldBlock", 'Data': radioFieldBlockToJson(item)};
   } else if (item is SignTableBlock) {
     return {'Kind': "SignTableBlock", 'Data': signTableBlockToJson(item)};
+  } else if (item is SignTableFieldBlock) {
+    return {
+      'Kind': "SignTableFieldBlock",
+      'Data': signTableFieldBlockToJson(item)
+    };
   } else if (item is TableBlock) {
     return {'Kind': "TableBlock", 'Data': tableBlockToJson(item)};
   } else if (item is TableFieldBlock) {
@@ -1219,6 +1230,54 @@ JSON signColumnToJson(SignColumn item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/questions/client.SignSymbol
+enum SignSymbol { nothing, zero, forbiddenValue }
+
+extension _SignSymbolExt on SignSymbol {
+  static SignSymbol fromValue(int i) {
+    return SignSymbol.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+SignSymbol signSymbolFromJson(dynamic json) =>
+    _SignSymbolExt.fromValue(json as int);
+
+dynamic signSymbolToJson(SignSymbol item) => item.toValue();
+
+// github.com/benoitkugler/maths-online/maths/questions/client.SignTableAnswer
+class SignTableAnswer implements Answer {
+  final List<String> xs;
+  final List<SignSymbol> fxSymbols;
+  final List<bool> signs;
+
+  const SignTableAnswer(this.xs, this.fxSymbols, this.signs);
+
+  @override
+  String toString() {
+    return "SignTableAnswer($xs, $fxSymbols, $signs)";
+  }
+}
+
+SignTableAnswer signTableAnswerFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return SignTableAnswer(
+      listStringFromJson(json['Xs']),
+      listSignSymbolFromJson(json['FxSymbols']),
+      listBoolFromJson(json['Signs']));
+}
+
+JSON signTableAnswerToJson(SignTableAnswer item) {
+  return {
+    "Xs": listStringToJson(item.xs),
+    "FxSymbols": listSignSymbolToJson(item.fxSymbols),
+    "Signs": listBoolToJson(item.signs)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/questions/client.SignTableBlock
 class SignTableBlock implements Block {
   final String label;
@@ -1242,6 +1301,34 @@ JSON signTableBlockToJson(SignTableBlock item) {
   return {
     "Label": stringToJson(item.label),
     "Columns": listSignColumnToJson(item.columns)
+  };
+}
+
+// github.com/benoitkugler/maths-online/maths/questions/client.SignTableFieldBlock
+class SignTableFieldBlock implements Block {
+  final String label;
+  final List<int> lengthProposals;
+  final int iD;
+
+  const SignTableFieldBlock(this.label, this.lengthProposals, this.iD);
+
+  @override
+  String toString() {
+    return "SignTableFieldBlock($label, $lengthProposals, $iD)";
+  }
+}
+
+SignTableFieldBlock signTableFieldBlockFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return SignTableFieldBlock(stringFromJson(json['Label']),
+      listIntFromJson(json['LengthProposals']), intFromJson(json['ID']));
+}
+
+JSON signTableFieldBlockToJson(SignTableFieldBlock item) {
+  return {
+    "Label": stringToJson(item.label),
+    "LengthProposals": listIntToJson(item.lengthProposals),
+    "ID": intToJson(item.iD)
   };
 }
 
@@ -1824,6 +1911,17 @@ List<SignColumn> listSignColumnFromJson(dynamic json) {
 
 List<dynamic> listSignColumnToJson(List<SignColumn> item) {
   return item.map(signColumnToJson).toList();
+}
+
+List<SignSymbol> listSignSymbolFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(signSymbolFromJson).toList();
+}
+
+List<dynamic> listSignSymbolToJson(List<SignSymbol> item) {
+  return item.map(signSymbolToJson).toList();
 }
 
 List<String> listStringFromJson(dynamic json) {
