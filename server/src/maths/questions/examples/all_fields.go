@@ -28,7 +28,7 @@ var questionsList = [...]que.QuestionPage{
 var blockList = [...]que.Block{
 	que.ExpressionFieldBlock{
 		Expression:      "x^2 + 2x + 1",
-		Label:           que.NewPExpr("(x+1)^2"),
+		Label:           "&(x+1)^2&",
 		ComparisonLevel: que.SimpleSubstitutions,
 	},
 	que.FigureAffineLineFieldBlock{

@@ -646,7 +646,7 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Expression')
-        AND gomacro_validate_json_ques_TextPart (data -> 'Label')
+        AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_expr_ComparisonLevel (data -> 'ComparisonLevel');
     RETURN is_valid;
 END;

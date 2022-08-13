@@ -240,7 +240,7 @@ export interface ExerciceUpdateVisiblityIn {
 // github.com/benoitkugler/maths-online/maths/questions.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
-  Label: TextPart;
+  Label: Interpolated;
   ComparisonLevel: ComparisonLevel;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock

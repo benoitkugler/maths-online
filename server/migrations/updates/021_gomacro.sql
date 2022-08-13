@@ -19,3 +19,8 @@ ALTER TABLE trivial_configs RENAME TO trivials;
 ALTER TABLE trivials RENAME COLUMN id_teacher TO IdTeacher;
 COMMIT;
 
+BEGIN;
+ALTER TABLE questions
+    DROP CONSTRAINT page_structgen_validate_json_que_questionpage;
+COMMIT;
+

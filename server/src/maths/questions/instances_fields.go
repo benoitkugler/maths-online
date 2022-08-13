@@ -104,8 +104,7 @@ func (f NumberFieldInstance) correctAnswer() client.Answer {
 // if expected
 type ExpressionFieldInstance struct {
 	// if not empty, the field is displayed on a new line
-	// expression are added an equal symbol : <expression> =
-	Label StringOrExpression
+	LabelLaTeX string
 
 	Answer          *expression.Expr
 	ComparisonLevel expression.ComparisonLevel
@@ -115,15 +114,9 @@ type ExpressionFieldInstance struct {
 func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
 func (f ExpressionFieldInstance) toClient() client.Block {
-	var label string
-	if f.Label.Expression != nil {
-		label = f.Label.Expression.AsLaTeX() + " = "
-	} else {
-		label = f.Label.String
-	}
 	return client.ExpressionFieldBlock{
 		ID:       f.ID,
-		Label:    label,
+		Label:    f.LabelLaTeX,
 		SizeHint: len([]rune(f.Answer.String())),
 	}
 }

@@ -1,21 +1,24 @@
 <template>
-  <v-row class="mt-2">
-    <v-col cols="5" class="pb-0">
-      <text-part-field
+  <v-row>
+    <v-col cols="6" align-self="center">
+      <interpolated-text
         v-model="props.modelValue.Label"
         label="Préfixe"
         hint="Ajouté devant le champ de réponse. Optionnel"
       >
-      </text-part-field>
+      </interpolated-text>
     </v-col>
-    <v-col cols="7" class="pb-0">
+    <v-col cols="6" class="pb-0" align-self="center">
       <v-text-field
+        class="mt-5"
         variant="outlined"
         density="compact"
         v-model="props.modelValue.Expression"
         label="Réponse"
         hint="Expression"
+        persistent-hint
         :color="color"
+        @blur="emitUpdate"
       >
       </v-text-field>
     </v-col>
@@ -38,7 +41,7 @@ import { ComparisonLevel, TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
-import TextPartField from "./TextPartField.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: ExpressionFieldBlock;
