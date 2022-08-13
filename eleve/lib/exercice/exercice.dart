@@ -315,11 +315,11 @@ class _ExerciceWState extends State<ExerciceW> {
           actions: [
             IconButton(
                 onPressed: goToPreviousEnabled ? goToPrevious : null,
-                icon: Icon(IconData(0xf572,
+                icon: const Icon(IconData(0xf572,
                     fontFamily: 'MaterialIcons', matchTextDirection: true))),
             IconButton(
                 onPressed: goToNextEnabled ? goToNext : null,
-                icon: Icon(IconData(0xf57a,
+                icon: const Icon(IconData(0xf57a,
                     fontFamily: 'MaterialIcons', matchTextDirection: true))),
           ],
         ),
