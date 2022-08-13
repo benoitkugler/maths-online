@@ -85,6 +85,7 @@ class _ExerciceWState extends State<ExerciceW> {
     final index = questionIndex!;
 
     // if we are not at the current question, just go to it
+    // and return
     if (index != progression.nextQuestion) {
       setState(() {
         questionIndex = progression.nextQuestion;
@@ -105,12 +106,24 @@ class _ExerciceWState extends State<ExerciceW> {
     nextQuestions = resp.newQuestions; // buffer until retry
 
     final isCorrect = resp.results[index]!.isCorrect;
-
+    final hasNextQuestion = isCorrect && progression.nextQuestion != -1;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade200,
-      duration: Duration(seconds: isCorrect ? 2 : 4),
+      duration: Duration(
+          seconds: hasNextQuestion ? 10000 : 4), // block on correct answer
       content:
           Text(isCorrect ? "Bonne réponse ! Bravo." : "Réponse incorrecte"),
+      action: hasNextQuestion
+          ? SnackBarAction(
+              label: "Continuer l'exercice",
+              textColor: Colors.black,
+              onPressed: () {
+                setState(() {
+                  questionIndex = progression.nextQuestion;
+                });
+              },
+            )
+          : null,
     ));
 
     if (progression.nextQuestion == -1) {
@@ -119,11 +132,10 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     if (isCorrect) {
-      // go to next question
       setState(() {
         results.clear();
-        questionIndex = progression.nextQuestion;
       });
+      // wait for the user to go to the next question
     } else {
       // show errors and ask for retry
       setState(() {
