@@ -16,7 +16,6 @@
         append-inner-icon=""
         :hint="props.hint"
         :persistent-hint="!!props.hint"
-        :hide-details="!props.hint"
       >
       </v-autocomplete>
     </v-col>

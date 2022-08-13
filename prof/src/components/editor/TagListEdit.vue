@@ -8,7 +8,7 @@
         closable
         class="ma-1"
         :color="tagColor(tag)"
-        @click:close="e => onDelete(e, index)"
+        @click:close="(e) => onDelete(e, index)"
         >{{ tag }}</v-chip
       >
     </v-col>
@@ -20,14 +20,14 @@
         hide-details
         label="Ajouter..."
         :search="entry"
-        @update:search="s => (entry = s)"
+        @update:search="(s) => (entry = s)"
         @keyup="onEnterKey"
         @update:model-value="onSelectItem"
         append-icon=""
         hide-no-data
         auto-select-first
       >
-        <template v-slot:appendInner>
+        <template v-slot:append-inner>
           <v-btn
             icon
             size="x-small"
@@ -64,7 +64,7 @@ const emit = defineEmits<{
 let entry = $ref("");
 
 const tagItems = computed(() => {
-  return props.allTags.filter(t => !props.modelValue.includes(t));
+  return props.allTags.filter((t) => !props.modelValue.includes(t));
 });
 
 const isEntryValid = computed(() => {

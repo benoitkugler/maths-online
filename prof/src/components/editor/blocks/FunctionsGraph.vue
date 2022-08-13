@@ -19,7 +19,7 @@
     <v-list>
       <div v-for="(fn, index) in props.modelValue.FunctionExprs" :key="index">
         <v-list-item>
-          <v-row>
+          <v-row class="mt-1">
             <v-col cols="10">
               <v-row>
                 <v-col cols="3" align-self="center">
@@ -65,12 +65,7 @@
             </v-col>
 
             <v-col cols="2" align-self="center">
-              <v-btn
-                icon
-                size="x-small"
-                flat
-                @click="deleteFunctionExpr(index)"
-              >
+              <v-btn icon size="x-small" @click="deleteFunctionExpr(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -113,7 +108,7 @@
               ></BaseVariationTable>
             </v-col>
             <v-col cols="2" align-self="center" class="pr-0 pl-1">
-              <v-btn icon size="x-small" flat @click="deleteFunctionVar(index)">
+              <v-btn icon size="x-small" @click="deleteFunctionVar(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -145,7 +140,7 @@
     <v-list>
       <div v-for="(area, index) in props.modelValue.Areas" :key="index">
         <v-list-item>
-          <v-row>
+          <v-row class="mt-1">
             <v-col cols="2" align-self="center">
               <btn-color-picker v-model="area.Color"></btn-color-picker>
             </v-col>

@@ -6,10 +6,10 @@
     <v-col md="10" align-self="center">
       <v-table style="overflow-x: auto; max-width: 70vh">
         <tr>
-          <th></th>
+          <th style="min-width: 100px"></th>
           <td
             v-for="(_, index) in props.modelValue.Xs"
-            style="text-align: center; width: 40px"
+            style="text-align: center; min-width: 50px"
             :key="index"
           >
             <v-btn
@@ -36,7 +36,7 @@
           </td>
         </tr>
         <tr>
-          <td class="px-2" style="width: 40px">
+          <td class="px-2">
             <v-text-field
               variant="outlined"
               density="compact"

@@ -24,18 +24,23 @@
             class="pr-0"
             :ref="(el:any) => (answerPropsRefs[index] = el as Element)"
           >
-            <interpolated-text v-model="props.modelValue.Answer![index]">
-            </interpolated-text>
-
-            <v-btn
-              icon
-              size="small"
-              flat
-              @click="removeAnswer(index)"
-              title="Supprimer cet élément"
-            >
-              <v-icon icon="mdi-delete" color="red"></v-icon>
-            </v-btn>
+            <v-row no-gutters>
+              <v-col>
+                <interpolated-text v-model="props.modelValue.Answer![index]">
+                </interpolated-text>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn
+                  icon
+                  size="small"
+                  flat
+                  @click="removeAnswer(index)"
+                  title="Supprimer cet élément"
+                >
+                  <v-icon icon="mdi-delete" color="red"></v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
           </v-list-item>
         </v-list>
       </v-col>
@@ -66,20 +71,25 @@
             :key="index"
             class="pr-0"
           >
-            <interpolated-text
-              v-model="props.modelValue.AdditionalProposals![index]"
-            >
-            </interpolated-text>
-
-            <v-btn
-              icon
-              size="small"
-              flat
-              @click="removeAdditionalProposal(index)"
-              title="Supprimer cet élément"
-            >
-              <v-icon icon="mdi-delete" color="red"></v-icon>
-            </v-btn>
+            <v-row no-gutters>
+              <v-col>
+                <interpolated-text
+                  v-model="props.modelValue.AdditionalProposals![index]"
+                >
+                </interpolated-text>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn
+                  icon
+                  size="small"
+                  flat
+                  @click="removeAdditionalProposal(index)"
+                  title="Supprimer cet élément"
+                >
+                  <v-icon icon="mdi-delete" color="red"></v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
           </v-list-item>
         </v-list>
       </v-col>
