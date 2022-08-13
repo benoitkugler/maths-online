@@ -603,8 +603,8 @@ func randrep_RandomDrawings() repere.RandomDrawings {
 		Points:   randSlicerep_NamedRandomLabeledPoint(),
 		Segments: randSlicerep_RandomSegment(),
 		Lines:    randSlicerep_RandomLine(),
-		Areas:    randSlicerep_RandomArea(),
 		Circles:  randSlicerep_RandomCircle(),
+		Areas:    randSlicerep_RandomArea(),
 	}
 }
 

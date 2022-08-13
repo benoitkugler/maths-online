@@ -1613,14 +1613,14 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Points', 'Segments', 'Lines', 'Areas', 'Circles'))
+            bool_and(key IN ('Points', 'Segments', 'Lines', 'Circles', 'Areas'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_repe_NamedRandomLabeledPoint (data -> 'Points')
         AND gomacro_validate_json_array_repe_RandomSegment (data -> 'Segments')
         AND gomacro_validate_json_array_repe_RandomLine (data -> 'Lines')
-        AND gomacro_validate_json_array_repe_RandomArea (data -> 'Areas')
-        AND gomacro_validate_json_array_repe_RandomCircle (data -> 'Circles');
+        AND gomacro_validate_json_array_repe_RandomCircle (data -> 'Circles')
+        AND gomacro_validate_json_array_repe_RandomArea (data -> 'Areas');
     RETURN is_valid;
 END;
 $$

@@ -562,8 +562,8 @@ export interface RandomDrawings {
   Points: NamedRandomLabeledPoint[] | null;
   Segments: RandomSegment[] | null;
   Lines: RandomLine[] | null;
-  Areas: RandomArea[] | null;
   Circles: RandomCircle[] | null;
+  Areas: RandomArea[] | null;
 }
 // github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {

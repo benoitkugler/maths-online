@@ -58,19 +58,20 @@ class RepereMetrics {
   double get resolution => max(max(figure.width, figure.height).toDouble(),
       1); // avoid crash on empty figure
 
-  double get canvasWidth => _displayLength * figure.width / resolution;
-  double get canvasHeight => _displayLength * figure.height / resolution;
+  double get canvasWidth => lengthToVis(figure.width.toDouble());
+  double get canvasHeight => lengthToVis(figure.height.toDouble());
 
   /// [size] is the actual widget size used
   Size get size => Size(canvasWidth, canvasHeight);
+
+  double lengthToVis(double logical) => _displayLength * logical / resolution;
 
   Offset logicalToVisual(Coord point) {
     // shift by the origin
     final x = figure.origin.x + point.x;
     final y = figure.origin.y + point.y;
 
-    return Offset(_displayLength * x / resolution,
-        canvasHeight - _displayLength * y / resolution);
+    return Offset(lengthToVis(x), canvasHeight - lengthToVis(y));
   }
 
   Offset logicalIntToVisual(IntCoord point) {
@@ -534,6 +535,13 @@ class DrawingsPainter extends CustomPainter {
       out.add(lineLabel(metrics, AffineLine.fromLine(line), line.label));
     }
 
+    for (var circle in drawings.circles) {
+      final label = _circleLabel(circle);
+      if (label != null) {
+        out.add(label);
+      }
+    }
+
     return out;
   }
 
@@ -634,6 +642,44 @@ class DrawingsPainter extends CustomPainter {
     }
   }
 
+  PositionnedText? _circleLabel(Circle circle) {
+    if (circle.legend.isEmpty) {
+      return null;
+    }
+
+    final lineColor = fromHex(circle.lineColor, onEmpty: Colors.black);
+    // position the legeng on the right, sligthly top
+    final position = Coord(
+      circle.center.x + circle.radius,
+      circle.center.y + circle.radius / 3,
+    );
+    return PositionnedText(circle.legend, PosPoint(position, LabelPos.right),
+        color: lineColor);
+  }
+
+  void _paintCircle(Canvas canvas, Circle circle) {
+    if (circle.radius <= 0) {
+      return;
+    }
+
+    final lineColor = fromHex(circle.lineColor, onEmpty: Colors.black);
+    final fillColor = fromHex(circle.fillColor, onEmpty: Colors.transparent);
+    final center = metrics.logicalToVisual(circle.center);
+    final radius = metrics.lengthToVis(circle.radius);
+    canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = fillColor);
+    canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..color = lineColor);
+  }
+
   void _paintArea(Canvas canvas, Area area) {
     if (area.points.isEmpty) {
       return;
@@ -726,6 +772,10 @@ class DrawingsPainter extends CustomPainter {
 
     for (var segment in drawings.segments) {
       _paintSegment(canvas, segment);
+    }
+
+    for (var circle in drawings.circles) {
+      _paintCircle(canvas, circle);
     }
 
     for (var line in drawings.lines) {
