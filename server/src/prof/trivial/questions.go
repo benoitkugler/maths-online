@@ -11,26 +11,24 @@ import (
 
 var demoQuestions = CategoriesQuestions{
 	{
-		{"Pourcentages", "Valeur initiale"},
-		{"Pourcentages", "Valeur finale"},
+		{"POURCENTAGES", "EVOLUTION UNIQUE"},
 	},
 	{
-		{"Pourcentages", "Taux global"},
-		{"Pourcentages", "Taux réciproque"},
+		{"POURCENTAGES", "TAUX GLOBAL"},
+		{"POURCENTAGES", "TAUX RÉCIPROQUE"},
 	},
 	{
-		{"Pourcentages", "Proportion"},
-		{"Pourcentages", "Proportion de proportion"},
-		{"Pourcentages", "Pourcentage d'un nombre"},
+		{"POURCENTAGES", "PROPORTION"},
+		{"POURCENTAGES", "PROPORTION DE PROPORTION"},
+		{"POURCENTAGES", "POURCENTAGE D'UN NOMBRE"},
 	},
 	{
-		{"Pourcentages", "Evolutions identiques"},
-		{"Pourcentages", "Evolution unique"},
-		{"Pourcentages", "Evolutions successives"},
+		{"POURCENTAGES", "EVOLUTIONS IDENTIQUES"},
+		{"POURCENTAGES", "EVOLUTIONS SUCCESSIVES"},
 	},
 	{
-		{"Pourcentages", "Coefficient multiplicateur"},
-		{"Pourcentages", "Taux d'évolution"},
+		{"POURCENTAGES", "COEFFICIENT MULTIPLICATEUR"},
+		{"POURCENTAGES", "TAUX D'EVOLUTION"},
 	},
 }
 
