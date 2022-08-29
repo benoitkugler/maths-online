@@ -14,19 +14,20 @@ import (
 	"unicode"
 
 	"github.com/benoitkugler/maths-online/pass"
+	tc "github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
 
 type ClassroomExt struct {
-	Classroom Classroom
+	Classroom tc.Classroom
 
 	NbStudents int
 }
 
-func (ct *Controller) checkAcces(userID IdTeacher, classroomID IdClassroom) error {
+func (ct *Controller) checkAcces(userID tc.IdTeacher, classroomID tc.IdClassroom) error {
 	// check the access
-	classroom, err := SelectClassroom(ct.db, classroomID)
+	classroom, err := tc.SelectClassroom(ct.db, classroomID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -39,8 +40,8 @@ func (ct *Controller) checkAcces(userID IdTeacher, classroomID IdClassroom) erro
 }
 
 // check that the user has the ownership on the student
-func (ct *Controller) checkStudentOwnership(userID IdTeacher, studentID IdStudent) error {
-	student, err := SelectStudent(ct.db, studentID)
+func (ct *Controller) checkStudentOwnership(userID tc.IdTeacher, studentID tc.IdStudent) error {
+	student, err := tc.SelectStudent(ct.db, studentID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -55,12 +56,12 @@ func (ct *Controller) checkStudentOwnership(userID IdTeacher, studentID IdStuden
 func (ct *Controller) TeacherGetClassrooms(c echo.Context) error {
 	user := JWTTeacher(c)
 
-	classrooms, err := SelectClassroomsByIdTeachers(ct.db, user.Id)
+	classrooms, err := tc.SelectClassroomsByIdTeachers(ct.db, user.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	students, err := SelectStudentsByIdClassrooms(ct.db, classrooms.IDs()...)
+	students, err := tc.SelectStudentsByIdClassrooms(ct.db, classrooms.IDs()...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -79,7 +80,7 @@ func (ct *Controller) TeacherGetClassrooms(c echo.Context) error {
 func (ct *Controller) TeacherCreateClassroom(c echo.Context) error {
 	user := JWTTeacher(c)
 
-	_, err := Classroom{IdTeacher: user.Id, Name: "Nouvelle classe"}.Insert(ct.db)
+	_, err := tc.Classroom{IdTeacher: user.Id, Name: "Nouvelle classe"}.Insert(ct.db)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func (ct *Controller) TeacherCreateClassroom(c echo.Context) error {
 func (ct *Controller) TeacherUpdateClassroom(c echo.Context) error {
 	user := JWTTeacher(c)
 
-	var args Classroom
+	var args tc.Classroom
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -117,7 +118,7 @@ func (ct *Controller) TeacherDeleteClassroom(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteClassroom(IdClassroom(id), user.Id)
+	err = ct.deleteClassroom(tc.IdClassroom(id), user.Id)
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func (ct *Controller) TeacherDeleteClassroom(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) deleteClassroom(idClassroom IdClassroom, userID IdTeacher) error {
+func (ct *Controller) deleteClassroom(idClassroom tc.IdClassroom, userID tc.IdTeacher) error {
 	// check the access
 	if err := ct.checkAcces(userID, idClassroom); err != nil {
 		return err
@@ -136,13 +137,13 @@ func (ct *Controller) deleteClassroom(idClassroom IdClassroom, userID IdTeacher)
 		return utils.SQLError(err)
 	}
 
-	_, err = DeleteStudentsByIdClassrooms(tx, idClassroom)
+	_, err = tc.DeleteStudentsByIdClassrooms(tx, idClassroom)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
 	}
 
-	_, err = DeleteClassroomById(tx, idClassroom)
+	_, err = tc.DeleteClassroomById(tx, idClassroom)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
@@ -165,11 +166,11 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	}
 
 	// check the access
-	if err = ct.checkAcces(user.Id, IdClassroom(idClassroom)); err != nil {
+	if err = ct.checkAcces(user.Id, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
-	out, err := ct.getClassroomStudents(IdClassroom(idClassroom))
+	out, err := ct.getClassroomStudents(tc.IdClassroom(idClassroom))
 	if err != nil {
 		return err
 	}
@@ -177,13 +178,13 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getClassroomStudents(idClassroom IdClassroom) ([]Student, error) {
-	stds, err := SelectStudentsByIdClassrooms(ct.db, idClassroom)
+func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
+	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	out := make([]Student, 0, len(stds))
+	out := make([]tc.Student, 0, len(stds))
 	for _, student := range stds {
 		out = append(out, student)
 	}
@@ -217,7 +218,7 @@ func parsePronoteName(s string) (name, surname string) {
 	return chunks[0], strings.Join(chunks[1:], " ")
 }
 
-func parsePronoteStudentList(file io.Reader) ([]Student, error) {
+func parsePronoteStudentList(file io.Reader) ([]tc.Student, error) {
 	const pronoteDateLayout = "02/01/2006"
 
 	r := csv.NewReader(file)
@@ -234,7 +235,7 @@ func parsePronoteStudentList(file io.Reader) ([]Student, error) {
 	}
 	lines = lines[1:]
 
-	out := make([]Student, len(lines))
+	out := make([]tc.Student, len(lines))
 	for i, line := range lines {
 		if len(line) < 2 {
 			return nil, errors.New("Fichier d'élèves invalide : champs manquants")
@@ -246,7 +247,7 @@ func parsePronoteStudentList(file io.Reader) ([]Student, error) {
 			return nil, fmt.Errorf("Fichier d'élèves invalide (date) : %s", err)
 		}
 
-		out[i] = Student{Name: name, Surname: surname, Birthday: Date(birthday)}
+		out[i] = tc.Student{Name: name, Surname: surname, Birthday: tc.Date(birthday)}
 	}
 
 	return out, nil
@@ -263,7 +264,7 @@ func (ct *Controller) TeacherImportStudents(c echo.Context) error {
 		return fmt.Errorf("invalid ID parameter %s : %s", idClassroomS, err)
 	}
 
-	if err = ct.checkAcces(user.Id, IdClassroom(idClassroom)); err != nil {
+	if err = ct.checkAcces(user.Id, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
@@ -278,7 +279,7 @@ func (ct *Controller) TeacherImportStudents(c echo.Context) error {
 	}
 	defer file.Close()
 
-	err = ct.importPronoteFile(file, IdClassroom(idClassroom))
+	err = ct.importPronoteFile(file, tc.IdClassroom(idClassroom))
 	if err != nil {
 		return err
 	}
@@ -286,7 +287,7 @@ func (ct *Controller) TeacherImportStudents(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) importPronoteFile(file io.Reader, idClassroom IdClassroom) error {
+func (ct *Controller) importPronoteFile(file io.Reader, idClassroom tc.IdClassroom) error {
 	list, err := parsePronoteStudentList(file)
 	if err != nil {
 		return err
@@ -324,7 +325,7 @@ func (ct *Controller) TeacherAddStudent(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.addStudent(IdClassroom(idClassroom), user.Id)
+	out, err := ct.addStudent(tc.IdClassroom(idClassroom), user.Id)
 	if err != nil {
 		return err
 	}
@@ -332,15 +333,15 @@ func (ct *Controller) TeacherAddStudent(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addStudent(idClassroom IdClassroom, userID IdTeacher) (Student, error) {
+func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher) (tc.Student, error) {
 	// check the access
 	if err := ct.checkAcces(userID, idClassroom); err != nil {
-		return Student{}, err
+		return tc.Student{}, err
 	}
 
-	st, err := Student{IdClassroom: idClassroom, Name: "Nouvel", Surname: "Eleve", Birthday: Date(time.Now())}.Insert(ct.db)
+	st, err := tc.Student{IdClassroom: idClassroom, Name: "Nouvel", Surname: "Eleve", Birthday: tc.Date(time.Now())}.Insert(ct.db)
 	if err != nil {
-		return Student{}, utils.SQLError(err)
+		return tc.Student{}, utils.SQLError(err)
 	}
 
 	return st, nil
@@ -356,7 +357,7 @@ func (ct *Controller) TeacherDeleteStudent(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteStudent(IdStudent(idStudent), user.Id)
+	err = ct.deleteStudent(tc.IdStudent(idStudent), user.Id)
 	if err != nil {
 		return err
 	}
@@ -364,12 +365,12 @@ func (ct *Controller) TeacherDeleteStudent(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) deleteStudent(idStudent IdStudent, userID IdTeacher) error {
+func (ct *Controller) deleteStudent(idStudent tc.IdStudent, userID tc.IdTeacher) error {
 	if err := ct.checkStudentOwnership(userID, idStudent); err != nil {
 		return err
 	}
 
-	_, err := DeleteStudentById(ct.db, idStudent)
+	_, err := tc.DeleteStudentById(ct.db, idStudent)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -381,7 +382,7 @@ func (ct *Controller) deleteStudent(idStudent IdStudent, userID IdTeacher) error
 func (ct *Controller) TeacherUpdateStudent(c echo.Context) error {
 	user := JWTTeacher(c)
 
-	var args Student
+	var args tc.Student
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -394,13 +395,13 @@ func (ct *Controller) TeacherUpdateStudent(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateStudent(st Student, userID IdTeacher) error {
+func (ct *Controller) updateStudent(st tc.Student, userID tc.IdTeacher) error {
 	if err := ct.checkStudentOwnership(userID, st.Id); err != nil {
 		return err
 	}
 
 	// partial update
-	existing, err := SelectStudent(ct.db, st.Id)
+	existing, err := tc.SelectStudent(ct.db, st.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -417,11 +418,11 @@ func (ct *Controller) updateStudent(st Student, userID IdTeacher) error {
 }
 
 type classroomsCode struct {
-	codes map[string]IdClassroom // code for student -> id_classroom
+	codes map[string]tc.IdClassroom // code for student -> id_classroom
 	lock  sync.Mutex
 }
 
-func (cc *classroomsCode) newCode(idClassroom IdClassroom) string {
+func (cc *classroomsCode) newCode(idClassroom tc.IdClassroom) string {
 	cc.lock.Lock()
 	defer cc.lock.Unlock()
 
@@ -446,7 +447,7 @@ func (cc *classroomsCode) expireCode(code string) {
 }
 
 // return the ID of the classroom
-func (cc *classroomsCode) checkCode(code string) (IdClassroom, error) {
+func (cc *classroomsCode) checkCode(code string) (tc.IdClassroom, error) {
 	cc.lock.Lock()
 	defer cc.lock.Unlock()
 
@@ -472,11 +473,11 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 	}
 
 	// check the access
-	if err = ct.checkAcces(user.Id, IdClassroom(idClassroom)); err != nil {
+	if err = ct.checkAcces(user.Id, tc.IdClassroom(idClassroom)); err != nil {
 		return err
 	}
 
-	code := ct.classCodes.newCode(IdClassroom(idClassroom))
+	code := ct.classCodes.newCode(tc.IdClassroom(idClassroom))
 	out := GenerateClassroomCodeOut{Code: code}
 
 	return c.JSON(200, out)
@@ -504,7 +505,7 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 		return CheckStudentClassroomOut{IsOK: false}, nil
 	}
 
-	student, err := SelectStudent(ct.db, IdStudent(idStudent))
+	student, err := tc.SelectStudent(ct.db, tc.IdStudent(idStudent))
 	if err == sql.ErrNoRows {
 		// the student has been removed
 		return CheckStudentClassroomOut{IsOK: false}, nil
@@ -512,12 +513,12 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 		return out, utils.SQLError(err)
 	}
 
-	classroom, err := SelectClassroom(ct.db, student.IdClassroom)
+	classroom, err := tc.SelectClassroom(ct.db, student.IdClassroom)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	teacher, err := SelectTeacher(ct.db, classroom.IdTeacher)
+	teacher, err := tc.SelectTeacher(ct.db, classroom.IdTeacher)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -543,7 +544,7 @@ func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
 	}
 
 	// return the list of the student who are not yet identified
-	stds, err := SelectStudentsByIdClassrooms(ct.db, idClassroom)
+	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -567,7 +568,7 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 		return out, err
 	}
 
-	student, err := SelectStudent(ct.db, args.IdStudent)
+	student, err := tc.SelectStudent(ct.db, args.IdStudent)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -578,7 +579,7 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 	}
 
 	// check if the birthday is correct
-	if args.Birthday != time.Time(student.Birthday).Format(DateLayout) {
+	if args.Birthday != time.Time(student.Birthday).Format(tc.DateLayout) {
 		return AttachStudentToClassroom2Out{ErrInvalidBirthday: true}, nil
 	}
 

@@ -14,7 +14,9 @@ import (
 
 	"github.com/benoitkugler/maths-online/maths/expression"
 	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -86,7 +88,7 @@ type ListQuestionsIn struct {
 }
 
 func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args ListQuestionsIn
 	if err := c.Bind(&args); err != nil {
@@ -101,27 +103,11 @@ func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) EditorCreateQuestion(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+// EditorCreateQuestion creates a group with one question.
+func (ct *Controller) EditorCreateQuestiongroup(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
 
-	question := Question{IdTeacher: user.Id, Public: false}
-	question, err := question.Insert(ct.db)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, question)
-}
-
-func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
-
-	id, err := utils.QueryParamInt64(c, "id")
-	if err != nil {
-		return err
-	}
-
-	out, err := ct.duplicateQuestion(IdQuestion(id), user.Id)
+	out, err := ct.createQuestion(user.Id)
 	if err != nil {
 		return err
 	}
@@ -129,15 +115,99 @@ func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+func (ct *Controller) createQuestion(userID uID) (ed.Questiongroup, error) {
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ed.Questiongroup{}, utils.SQLError(err)
+	}
+
+	group, err := ed.Questiongroup{IdTeacher: userID, Public: false}.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ed.Questiongroup{}, utils.SQLError(err)
+	}
+
+	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ed.Questiongroup{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ed.Questiongroup{}, utils.SQLError(err)
+	}
+
+	return group, nil
+}
+
+func (ct *Controller) getGroup(qu ed.Question) (ed.Questiongroup, error) {
+	if !qu.IdGroup.Valid {
+		return ed.Questiongroup{}, errors.New("internal error: question without group")
+	}
+
+	group, err := ed.SelectQuestiongroup(ct.db, qu.IdGroup.ID)
+	if err != nil {
+		return ed.Questiongroup{}, utils.SQLError(err)
+	}
+	return group, nil
+}
+
+// EditorDuplicateQuestion duplicate one variant inside a group.
+func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.duplicateQuestionWithDifficulty(IdQuestion(id), user.Id)
+	out, err := ct.duplicateQuestion(ed.IdQuestion(id), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+// duplicateQuestion duplicate the given question, returning
+// the newly created one
+func (ct *Controller) duplicateQuestion(idQuestion ed.IdQuestion, userID uID) (ed.Question, error) {
+	qu, err := ed.SelectQuestion(ct.db, idQuestion)
+	if err != nil {
+		return ed.Question{}, utils.SQLError(err)
+	}
+
+	group, err := ct.getGroup(qu)
+	if err != nil {
+		return ed.Question{}, err
+	}
+
+	if !group.IsVisibleBy(userID) {
+		return ed.Question{}, accessForbidden
+	}
+
+	// shallow copy is enough
+	newQuestion := qu
+	newQuestion, err = newQuestion.Insert(ct.db)
+	if err != nil {
+		return ed.Question{}, utils.SQLError(err)
+	}
+
+	return newQuestion, nil
+}
+
+// EditorDuplicateQuestiongroup duplicates the whole group, deep copying
+// every question.
+func (ct *Controller) EditorDuplicateQuestiongroup(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.duplicateQuestiongroup(ed.IdQuestiongroup(id), user.Id)
 	if err != nil {
 		return err
 	}
@@ -145,15 +215,18 @@ func (ct *Controller) EditorDuplicateQuestionWithDifficulty(c echo.Context) erro
 	return c.NoContent(200)
 }
 
+// EditorDeleteQuestion remove the given question,
+// also removing the group if needed.
+// TODO: check usage in exercices and tasks
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteQuestion(IdQuestion(id), user.Id)
+	err = ct.deleteQuestion(ed.IdQuestion(id), user.Id)
 	if err != nil {
 		return err
 	}
@@ -161,22 +234,28 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) deleteQuestion(id IdQuestion, userID uID) error {
-	qu, err := SelectQuestion(ct.db, id)
+func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) error {
+	qu, err := ed.SelectQuestion(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if qu.IdTeacher != userID {
+
+	group, err := ct.getGroup(qu)
+	if err != nil {
+		return err
+	}
+
+	if group.IdTeacher != userID {
 		return accessForbidden
 	}
 
-	links, err := SelectExerciceQuestionsByIdQuestions(ct.db, id)
+	links, err := ed.SelectExerciceQuestionsByIdQuestions(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
 	if len(links) != 0 {
-		ex, err := SelectExercice(ct.db, links[0].IdExercice)
+		ex, err := ed.SelectExercice(ct.db, links[0].IdExercice)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -184,28 +263,44 @@ func (ct *Controller) deleteQuestion(id IdQuestion, userID uID) error {
 		return fmt.Errorf("La question est utilisée dans l'exercice %s : %d.", ex.Title, ex.Id)
 	}
 
-	_, err = DeleteQuestionById(ct.db, id)
+	_, err = ed.DeleteQuestionById(ct.db, id)
 	if err != nil {
-		return err
+		return utils.SQLError(err)
+	}
+
+	// check if group is empty
+	ques, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if len(ques) == 0 {
+		_, err = ed.DeleteQuestiongroupById(ct.db, group.Id)
+		if err != nil {
+			return utils.SQLError(err)
+		}
 	}
 
 	return nil
 }
 
 func (ct *Controller) EditorGetQuestion(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	question, err := SelectQuestion(ct.db, IdQuestion(id))
+	question, err := ed.SelectQuestion(ct.db, ed.IdQuestion(id))
 	if err != nil {
 		return err
 	}
 
-	if !question.IsVisibleBy(user.Id) {
+	group, err := ct.getGroup(question)
+	if err != nil {
+		return err
+	}
+	if !group.IsVisibleBy(user.Id) {
 		return accessForbidden
 	}
 
@@ -236,12 +331,12 @@ func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
 }
 
 type QuestionUpdateVisiblityIn struct {
-	QuestionID IdQuestion
-	Public     bool
+	ID     ed.IdQuestiongroup
+	Public bool
 }
 
 func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	// we only accept public question from admin account
 	if user.Id != ct.admin.Id {
@@ -253,38 +348,16 @@ func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	qu, err := SelectQuestion(ct.db, args.QuestionID)
+	group, err := ed.SelectQuestiongroup(ct.db, args.ID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if qu.IdTeacher != user.Id {
+	if group.IdTeacher != user.Id {
 		return accessForbidden
 	}
 
-	if !args.Public {
-		// check that it is not harmful to hide the question again,
-		// that is exercices using this question are owned by the admin
-		links, err := SelectExerciceQuestionsByIdQuestions(ct.db, qu.Id)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-		exercices, err := SelectExercices(ct.db, links.IdExercices()...)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-		usedExercices := make(Exercices)
-		for _, link := range links {
-			ex := exercices[link.IdExercice]
-			if ex.IdTeacher != user.Id {
-				usedExercices[ex.Id] = ex
-			}
-		}
-		if L := len(usedExercices); L != 0 {
-			return fmt.Errorf("La question est utilisée dans %d exercice(s).", L)
-		}
-	}
-	qu.Public = args.Public
-	qu, err = qu.Update(ct.db)
+	group.Public = args.Public
+	group, err = group.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -294,7 +367,7 @@ func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
 
 type SaveQuestionAndPreviewIn struct {
 	SessionID string
-	Question  Question
+	Question  ed.Question
 }
 
 type SaveQuestionAndPreviewOut struct {
@@ -304,7 +377,7 @@ type SaveQuestionAndPreviewOut struct {
 
 // For non personnal questions, only preview.
 func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args SaveQuestionAndPreviewIn
 	if err := c.Bind(&args); err != nil {
@@ -320,40 +393,37 @@ func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
 }
 
 type ListQuestionsOut struct {
-	Questions   []QuestionGroup // limited by `pagination`
-	NbGroups    int             // total number of groups (passing the given filter)
-	NbQuestions int             // total number of questions (passing the given filter)
+	Groups      []QuestiongroupExt // limited by `pagination`
+	NbGroups    int                // total number of groups (passing the given filter)
+	NbQuestions int                // total number of questions
 }
 
-// QuestionGroup groups the question forming an implicit
-// group, defined by a shared title
+// QuestiongroupExt adds the question and tags to a QuestionGroup
 // Standalone question are represented by a group of length one.
-type QuestionGroup struct {
-	Title     string
+type QuestiongroupExt struct {
+	Group     ed.Questiongroup
+	Origin    tcAPI.Origin
+	Tags      []string
 	Questions []QuestionHeader
-	Size      int // the total size of the group, regardless of the current filter
 }
 
 // QuestionHeader is a sumary of the meta data of a question
 type QuestionHeader struct {
-	Title      string
-	Tags       []string
-	Id         IdQuestion
-	Difficulty DifficultyTag // deduced from the tags
-	IsInGroup  bool          // true if the question is in an implicit group, ignoring the current filter
-	Origin     teacher.Origin
+	Id         ed.IdQuestion
+	Subtitle   string
+	Difficulty ed.DifficultyTag // deduced from the tags
 }
 
 func normalizeTitle(title string) string {
-	return removeAccents(strings.TrimSpace(strings.ToLower(title)))
+	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
 }
 
-func (qu Question) origin(userID, adminID uID) (teacher.Origin, bool) {
-	vis, ok := teacher.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
-	if !ok {
-		return teacher.Origin{}, false
+func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, bool) {
+	vis := tcAPI.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
+	if vis.Restricted() {
+		return tcAPI.Origin{}, false
 	}
-	return teacher.Origin{
+	return tcAPI.Origin{
 		AllowPublish: userID == adminID,
 		IsPublic:     qu.Public,
 		Visibility:   vis,
@@ -363,173 +433,105 @@ func (qu Question) origin(userID, adminID uID) (teacher.Origin, bool) {
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out ListQuestionsOut, err error) {
 	const pagination = 30 // number of groups
 
-	// to find implicit groups, we need all the questions
-	questions, err := SelectAllQuestions(ct.db)
+	groups, err := ed.SelectAllQuestiongroups(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	questions.RestrictVisible(userID)
-	questions.RestrictNeedExercice()
+	groups.RestrictVisible(userID)
 
-	// the group are not modified by the title query though
-
+	// restrict the groups to matching title
 	queryTitle := normalizeTitle(query.TitleQuery)
-	var (
-		ids      []IdQuestion
-		ownerIDs []uID
-		groups   = make(map[string][]IdQuestion)
-	)
-	for _, question := range questions {
-		thisTitle := normalizeTitle(question.Page.Title)
-		if strings.Contains(thisTitle, queryTitle) {
-			groups[question.Page.Title] = append(groups[question.Page.Title], question.Id)
-			ids = append(ids, question.Id)
-			ownerIDs = append(ownerIDs, question.IdTeacher)
+	for _, group := range groups {
+		thisTitle := normalizeTitle(group.Title)
+		if queryTitle != "" && !strings.Contains(thisTitle, queryTitle) {
+			delete(groups, group.Id)
 		}
 	}
 
 	// load the tags ...
-	tags, err := SelectQuestionTagsByIdQuestions(ct.db, ids...)
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, groups.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	tagsMap := tags.ByIdQuestion()
+	tagsMap := tags.ByIdQuestiongroup()
+
+	// ... and the tmp
+	tmp, err := ed.SelectQuestionsByIdGroups(ct.db, groups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	questionsByGroup := tmp.ByGroup()
 
 	// normalize query
 	for i, t := range query.Tags {
-		query.Tags[i] = NormalizeTag(t)
+		query.Tags[i] = ed.NormalizeTag(t)
 	}
 
-	// .. and build the group, restricting the questions matching the given tags
-	out.Questions = make([]QuestionGroup, 0, len(groups))
-	for title, ids := range groups {
-		group := QuestionGroup{
-			Title: title,
-			Size:  len(ids),
+	// .. and build the groups, restricting to the ones matching the given tags
+	for _, group := range groups {
+		crible := tagsMap[group.Id].Crible()
+		if !crible.HasAll(query.Tags) {
+			continue
+		}
+		questions := questionsByGroup[group.Id]
+		if len(questions) == 0 { // ignore empty groupExts
+			continue
 		}
 
-		// select the questions
-		for _, id := range ids {
-			crible := tagsMap[id].Crible()
+		origin, _ := questionOrigin(group, userID, ct.admin.Id)
+		groupExt := QuestiongroupExt{
+			Group:  group,
+			Origin: origin,
+			Tags:   tagsMap[group.Id].List(),
+		}
 
-			if !crible.HasAll(query.Tags) {
-				continue
-			}
-
-			qu := questions[id]
-			origin, _ := qu.origin(userID, ct.admin.Id)
+		for _, question := range questions {
 			question := QuestionHeader{
-				Id:         id,
-				Title:      title,
-				Difficulty: crible.Difficulty(),
-				IsInGroup:  len(ids) > 1,
-				Tags:       tagsMap[id].List(),
-				Origin:     origin,
+				Id:         question.Id,
+				Subtitle:   question.Page.Title,
+				Difficulty: question.Difficulty,
 			}
-			group.Questions = append(group.Questions, question)
+			groupExt.Questions = append(groupExt.Questions, question)
 		}
 
 		// sort to make sure the display is consistent between two queries
-		sort.Slice(group.Questions, func(i, j int) bool { return group.Questions[i].Id < group.Questions[j].Id })
-		sort.SliceStable(group.Questions, func(i, j int) bool { return group.Questions[i].Difficulty < group.Questions[j].Difficulty })
+		sort.Slice(groupExt.Questions, func(i, j int) bool { return groupExt.Questions[i].Id < groupExt.Questions[j].Id })
+		sort.SliceStable(groupExt.Questions, func(i, j int) bool { return groupExt.Questions[i].Difficulty < groupExt.Questions[j].Difficulty })
 
-		// ignore empty groups
-		if len(group.Questions) != 0 {
-			out.Questions = append(out.Questions, group)
-		}
-
-		out.NbQuestions += len(group.Questions)
+		out.NbQuestions += len(groupExt.Questions)
 	}
 
 	// sort before pagination
-	sort.Slice(out.Questions, func(i, j int) bool { return out.Questions[i].Title < out.Questions[j].Title })
+	sort.Slice(out.Groups, func(i, j int) bool { return out.Groups[i].Group.Title < out.Groups[j].Group.Title })
 
-	out.NbGroups = len(out.Questions)
-	if len(out.Questions) > pagination {
-		out.Questions = out.Questions[:pagination]
+	out.NbGroups = len(out.Groups)
+	if len(out.Groups) > pagination {
+		out.Groups = out.Groups[:pagination]
 	}
 
 	return out, nil
 }
 
-// duplicateQuestion duplicate the given question, returning
-// the newly created one
-func (ct *Controller) duplicateQuestion(idQuestion IdQuestion, userID uID) (Question, error) {
-	qu, err := SelectQuestion(ct.db, idQuestion)
-	if err != nil {
-		return Question{}, utils.SQLError(err)
-	}
-
-	if !qu.IsVisibleBy(userID) {
-		return Question{}, accessForbidden
-	}
-
-	tags, err := SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
-	if err != nil {
-		return Question{}, utils.SQLError(err)
-	}
-
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return Question{}, utils.SQLError(err)
-	}
-
-	// shallow copy is enough; make the question private
-	newQuestion := qu
-	newQuestion.IdTeacher = userID
-	newQuestion.Public = false
-	newQuestion, err = newQuestion.Insert(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return Question{}, utils.SQLError(err)
-	}
-
-	for i := range tags {
-		tags[i].IdQuestion = newQuestion.Id
-	}
-	err = updateTags(tx, tags, newQuestion.Id)
-	if err != nil {
-		_ = tx.Rollback()
-		return Question{}, err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return Question{}, utils.SQLError(err)
-	}
-
-	return newQuestion, nil
-}
-
-// duplicateQuestionWithDifficulty creates new questions with the same title
-// and content as the given question, but with difficulty levels
+// duplicateQuestiongroup creates a new group with the same title, questions and tags
 // only personnal questions are allowed
-func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion IdQuestion, userID uID) error {
-	qu, err := SelectQuestion(ct.db, idQuestion)
+func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID uID) error {
+	group, err := ed.SelectQuestiongroup(ct.db, idGroup)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	if qu.IdTeacher != userID {
+	if group.IdTeacher != userID {
 		return accessForbidden
 	}
 
-	tags, err := SelectQuestionTagsByIdQuestions(ct.db, qu.Id)
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, group.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	// if the question already has a difficulty, respect it
-	// otherwise, attribute the difficulty one
-	currentDifficulty := tags.Crible().Difficulty()
-	var newDifficulties [2]DifficultyTag
-	switch currentDifficulty {
-	case Diff1:
-		newDifficulties = [2]DifficultyTag{Diff2, Diff3}
-	case Diff2:
-		newDifficulties = [2]DifficultyTag{Diff1, Diff3}
-	case Diff3:
-		newDifficulties = [2]DifficultyTag{Diff1, Diff2}
+	questions, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
 	}
 
 	tx, err := ct.db.Begin()
@@ -537,41 +539,26 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion IdQuestion, use
 		return utils.SQLError(err)
 	}
 
-	if currentDifficulty == "" {
-		// update the current question
-		newTags := append(tags, QuestionTag{IdQuestion: idQuestion, Tag: string(Diff1)})
-		err = updateTags(tx, newTags, idQuestion)
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		newDifficulties = [2]DifficultyTag{Diff2, Diff3}
+	// start by inserting a new group ...
+	newGroup, err := group.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
 	}
-
-	for _, diff := range newDifficulties {
-		newQuestion := qu // shallow copy is enough
-		newQuestion, err = newQuestion.Insert(tx)
+	// .. then add its tags ..
+	err = ed.UpdateTags(tx, tags, newGroup.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	// finaly, copy the questions...
+	for _, question := range questions {
+		question.IdGroup = newGroup.Id.AsOptional() // re-direct the group
+		_, err = question.Insert(tx)
 		if err != nil {
 			_ = tx.Rollback()
 			return utils.SQLError(err)
 		}
-		var newTags QuestionTags
-		for _, t := range tags {
-			// do not add existing difficulties
-			switch DifficultyTag(t.Tag) {
-			case Diff1, Diff2, Diff3:
-				continue
-			}
-
-			t.IdQuestion = newQuestion.Id
-			newTags = append(newTags, t)
-		}
-		newTags = append(newTags, QuestionTag{IdQuestion: newQuestion.Id, Tag: string(diff)})
-		err = updateTags(tx, newTags, newQuestion.Id)
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
 	}
 
 	err = tx.Commit()
@@ -582,54 +569,45 @@ func (ct *Controller) duplicateQuestionWithDifficulty(idQuestion IdQuestion, use
 	return nil
 }
 
-// do NOT commit or rollback
-func updateTags(tx *sql.Tx, tags QuestionTags, idQuestion IdQuestion) error {
-	var nbDiff, nbLevel int
-	for _, tag := range tags {
-		switch tag.Tag {
-		case string(Diff1), string(Diff2), string(Diff3):
-			nbDiff++
-		case string(Seconde), string(Premiere), string(Terminale):
-			nbLevel++
-		}
-	}
-	if nbDiff > 1 {
-		return errors.New("Un seul niveau de difficulté est autorisé par question.")
-	}
-
-	if nbLevel > 1 {
-		return errors.New("Une seule classe est autorisée par question.")
-	}
-
-	_, err := DeleteQuestionTagsByIdQuestions(tx, idQuestion)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	err = InsertManyQuestionTags(tx, tags...)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	return nil
+type UpdateQuestiongroupTagsIn struct {
+	Id   ed.IdQuestiongroup
+	Tags []string
 }
 
-func (ct *Controller) updateTags(params UpdateTagsIn, userID uID) error {
-	question, err := SelectQuestion(ct.db, params.IdQuestion)
+func (ct *Controller) EditorUpdateTags(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args UpdateQuestiongroupTagsIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	err := ct.updateTags(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateTags(params UpdateQuestiongroupTagsIn, userID uID) error {
+	group, err := ed.SelectQuestiongroup(ct.db, params.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if question.IdTeacher != userID {
+	if group.IdTeacher != userID {
 		return accessForbidden
 	}
 
-	var tags QuestionTags
+	var tags ed.QuestiongroupTags
 	for _, tag := range params.Tags {
 		// enforce proper tags
-		tag = NormalizeTag(tag)
+		tag = ed.NormalizeTag(tag)
 		if tag == "" {
 			continue
 		}
 
-		tags = append(tags, QuestionTag{IdQuestion: params.IdQuestion, Tag: tag})
+		tags = append(tags, ed.QuestiongroupTag{IdQuestiongroup: params.Id, Tag: tag})
 	}
 
 	tx, err := ct.db.Begin()
@@ -637,7 +615,7 @@ func (ct *Controller) updateTags(params UpdateTagsIn, userID uID) error {
 		return err
 	}
 
-	err = updateTags(tx, tags, params.IdQuestion)
+	err = ed.UpdateTags(tx, tags, params.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -645,79 +623,6 @@ func (ct *Controller) updateTags(params UpdateTagsIn, userID uID) error {
 
 	err = tx.Commit()
 	return err
-}
-
-type UpdateGroupTagsOut struct {
-	Tags map[IdQuestion][]string
-}
-
-func (ct *Controller) updateGroupTags(params UpdateGroupTagsIn, userID uID) (UpdateGroupTagsOut, error) {
-	questions, err := SelectAllQuestions(ct.db)
-	if err != nil {
-		return UpdateGroupTagsOut{}, utils.SQLError(err)
-	}
-
-	var groupIDs []IdQuestion
-	for _, question := range questions {
-		if question.Page.Title == params.GroupTitle && question.IdTeacher == userID {
-			groupIDs = append(groupIDs, question.Id)
-		}
-	}
-
-	// compute the current common tags
-	tags, err := SelectQuestionTagsByIdQuestions(ct.db, groupIDs...)
-	if err != nil {
-		return UpdateGroupTagsOut{}, utils.SQLError(err)
-	}
-	tagsByQuestion := tags.ByIdQuestion()
-	var allTags [][]string
-	for _, qus := range tagsByQuestion {
-		allTags = append(allTags, qus.List())
-	}
-	commonTags := CommonTags(allTags)
-
-	NormalizeTags(params.CommonTags)
-
-	// replace commonTags by the input query
-	crible := NewCrible(commonTags)
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return UpdateGroupTagsOut{}, utils.SQLError(err)
-	}
-	out := UpdateGroupTagsOut{Tags: make(map[IdQuestion][]string)}
-	for _, idQuestion := range groupIDs {
-		tags := tagsByQuestion[idQuestion]
-
-		var newTags QuestionTags
-		// start with the "exclusive" tags
-		for _, tag := range tags {
-			if !crible[tag.Tag] {
-				newTags = append(newTags, tag)
-			}
-		}
-
-		exclusive := newTags.Crible()
-		// then add the new common tags, making sure
-		// no duplicate is added
-		for _, tag := range params.CommonTags {
-			if exclusive[tag] {
-				continue
-			}
-			newTags = append(newTags, QuestionTag{IdQuestion: idQuestion, Tag: tag})
-		}
-
-		// finally udpate the tags on DB
-		err = updateTags(tx, newTags, idQuestion)
-		if err != nil {
-			_ = tx.Rollback()
-			return out, err
-		}
-
-		out.Tags[idQuestion] = newTags.List()
-	}
-
-	err = tx.Commit()
-	return out, err
 }
 
 func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) CheckQuestionParametersOut {
@@ -765,12 +670,17 @@ func (ct *Controller) endPreview(sessionID string) error {
 }
 
 func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID uID) (SaveQuestionAndPreviewOut, error) {
-	qu, err := SelectQuestion(ct.db, params.Question.Id)
+	qu, err := ed.SelectQuestion(ct.db, params.Question.Id)
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
 
-	if !qu.IsVisibleBy(userID) {
+	group, err := ct.getGroup(qu)
+	if err != nil {
+		return SaveQuestionAndPreviewOut{}, err
+	}
+
+	if !group.IsVisibleBy(userID) {
 		return SaveQuestionAndPreviewOut{}, accessForbidden
 	}
 
@@ -779,7 +689,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	}
 
 	// if the question is owned : save it, else only preview
-	if qu.IdTeacher == userID {
+	if group.IdTeacher == userID {
 		_, err := params.Question.Update(ct.db)
 		if err != nil {
 			return SaveQuestionAndPreviewOut{}, utils.SQLError(err)

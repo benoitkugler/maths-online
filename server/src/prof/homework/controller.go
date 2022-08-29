@@ -7,9 +7,12 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	ed "github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/tasks"
+	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	ho "github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/tasks"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	taAPI "github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -34,7 +37,7 @@ func NewController(db *sql.DB, admin teacher.Teacher, studentKey pass.Encrypter)
 }
 
 func (ct *Controller) HomeworkGetSheets(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	out, err := ct.getSheets(user.Id)
 	if err != nil {
@@ -52,7 +55,7 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 	}
 
 	// load all the sheets required
-	sheetsDict, err := SelectSheetsByIdClassrooms(ct.db, classrooms.IDs()...)
+	sheetsDict, err := ho.SelectSheetsByIdClassrooms(ct.db, classrooms.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -76,7 +79,7 @@ type CreateSheetIn struct {
 }
 
 func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args CreateSheetIn
 	if err := c.Bind(&args); err != nil {
@@ -92,32 +95,32 @@ func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (Sheet, error) {
+func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (ho.Sheet, error) {
 	class, err := teacher.SelectClassroom(ct.db, idClassroom)
 	if err != nil {
-		return Sheet{}, utils.SQLError(err)
+		return ho.Sheet{}, utils.SQLError(err)
 	}
 
 	if class.IdTeacher != userID {
-		return Sheet{}, accessForbidden
+		return ho.Sheet{}, accessForbidden
 	}
 
-	sheet, err := Sheet{
+	sheet, err := ho.Sheet{
 		IdClassroom: class.Id,
 		Title:       "Feuille d'exercices",
-		Notation:    SuccessNotation,
+		Notation:    ho.SuccessNotation,
 		Activated:   false,
-		Deadline:    Time(time.Now().Add(time.Hour * 24 * 14).Round(time.Hour)), // two weeks
+		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 14).Round(time.Hour)), // two weeks
 	}.Insert(ct.db)
 	if err != nil {
-		return Sheet{}, utils.SQLError(err)
+		return ho.Sheet{}, utils.SQLError(err)
 	}
 
 	return sheet, nil
 }
 
-func (ct *Controller) checkSheetOwner(idSheet IdSheet, userID uID) error {
-	sheet, err := SelectSheet(ct.db, idSheet)
+func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
+	sheet, err := ho.SelectSheet(ct.db, idSheet)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -136,9 +139,9 @@ func (ct *Controller) checkSheetOwner(idSheet IdSheet, userID uID) error {
 }
 
 func (ct *Controller) HomeworkUpdateSheet(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
-	var args Sheet
+	var args ho.Sheet
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -151,7 +154,7 @@ func (ct *Controller) HomeworkUpdateSheet(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateSheet(sheet Sheet, userID uID) error {
+func (ct *Controller) updateSheet(sheet ho.Sheet, userID uID) error {
 	if err := ct.checkSheetOwner(sheet.Id, userID); err != nil {
 		return err
 	}
@@ -165,12 +168,12 @@ func (ct *Controller) updateSheet(sheet Sheet, userID uID) error {
 }
 
 type AddTaskIn struct {
-	IdSheet    IdSheet
+	IdSheet    ho.IdSheet
 	IdExercice ed.IdExercice
 }
 
 func (ct *Controller) HomeworkAddTask(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args AddTaskIn
 	if err := c.Bind(&args); err != nil {
@@ -195,6 +198,7 @@ func (ct *Controller) addTaskTo(args AddTaskIn, userID uID) (tasks.Task, error) 
 		return tasks.Task{}, utils.SQLError(err)
 	}
 
+	// TODO:
 	task, err := tasks.Task{IdExercice: args.IdExercice}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
@@ -202,13 +206,13 @@ func (ct *Controller) addTaskTo(args AddTaskIn, userID uID) (tasks.Task, error) 
 	}
 
 	// link the task to the sheet, appending
-	links, err := SelectSheetTasksByIdSheets(tx, args.IdSheet)
+	links, err := ho.SelectSheetTasksByIdSheets(tx, args.IdSheet)
 	if err != nil {
 		_ = tx.Rollback()
 		return tasks.Task{}, utils.SQLError(err)
 	}
 
-	err = InsertManySheetTasks(tx, SheetTask{IdSheet: args.IdSheet, IdTask: task.Id, Index: len(links)})
+	err = ho.InsertManySheetTasks(tx, ho.SheetTask{IdSheet: args.IdSheet, IdTask: task.Id, Index: len(links)})
 	if err != nil {
 		_ = tx.Rollback()
 		return tasks.Task{}, utils.SQLError(err)
@@ -225,7 +229,7 @@ func (ct *Controller) addTaskTo(args AddTaskIn, userID uID) (tasks.Task, error) 
 // HomeworkRemoveTask deletes the given tasks, also removing
 // all potential student progressions
 func (ct *Controller) HomeworkRemoveTask(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id-task")
 	if err != nil {
@@ -246,7 +250,7 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 		return utils.SQLError(err)
 	}
 
-	link, found, err := SelectSheetTaskByIdTask(tx, idTask)
+	link, found, err := ho.SelectSheetTaskByIdTask(tx, idTask)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
@@ -262,12 +266,12 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 		return err
 	}
 
-	currentLinks, err := SelectSheetTasksByIdSheets(tx, link.IdSheet)
+	currentLinks, err := ho.SelectSheetTasksByIdSheets(tx, link.IdSheet)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
 	}
-	currentLinks.ensureOrder()
+	currentLinks.EnsureOrder()
 
 	var filtered []tasks.IdTask
 	for _, link := range currentLinks {
@@ -298,12 +302,12 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 }
 
 type ReorderSheetTasksIn struct {
-	IdSheet IdSheet
+	IdSheet ho.IdSheet
 	Tasks   []tasks.IdTask
 }
 
 func (ct *Controller) HomeworkReorderSheetTasks(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args ReorderSheetTasksIn
 	if err := c.Bind(&args); err != nil {
@@ -342,14 +346,14 @@ func (ct *Controller) reorderSheetTasks(args ReorderSheetTasksIn, userID uID) er
 }
 
 func (ct *Controller) HomeworkDeleteSheet(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	idSheet, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteSheet(IdSheet(idSheet), user.Id)
+	err = ct.deleteSheet(ho.IdSheet(idSheet), user.Id)
 	if err != nil {
 		return err
 	}
@@ -357,8 +361,8 @@ func (ct *Controller) HomeworkDeleteSheet(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) deleteSheet(idSheet IdSheet, userID uID) error {
-	sheet, err := SelectSheet(ct.db, idSheet)
+func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
+	sheet, err := ho.SelectSheet(ct.db, idSheet)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -372,7 +376,7 @@ func (ct *Controller) deleteSheet(idSheet IdSheet, userID uID) error {
 		return accessForbidden
 	}
 
-	_, err = DeleteSheetById(ct.db, idSheet)
+	_, err = ho.DeleteSheetById(ct.db, idSheet)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -381,12 +385,12 @@ func (ct *Controller) deleteSheet(idSheet IdSheet, userID uID) error {
 }
 
 type CopySheetIn struct {
-	IdSheet     IdSheet
+	IdSheet     ho.IdSheet
 	IdClassroom teacher.IdClassroom
 }
 
 func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args CopySheetIn
 	if err := c.Bind(&args); err != nil {
@@ -411,12 +415,12 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, accessForbidden
 	}
 
-	sheet, err := SelectSheet(ct.db, args.IdSheet)
+	sheet, err := ho.SelectSheet(ct.db, args.IdSheet)
 	if err != nil {
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	links, err := SelectSheetTasksByIdSheets(ct.db, sheet.Id)
+	links, err := ho.SelectSheetTasksByIdSheets(ct.db, sheet.Id)
 	if err != nil {
 		return SheetExt{}, utils.SQLError(err)
 	}
@@ -440,23 +444,23 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	}
 
 	// create new tasks : a task can't be be shared
-	newLinks := make(SheetTasks, len(links))
+	newLinks := make(ho.SheetTasks, len(links))
 	for i, link := range links {
 		ta, err := tasks.Task{IdExercice: taskMap[link.IdTask].IdExercice}.Insert(tx)
 		if err != nil {
 			_ = tx.Rollback()
 			return SheetExt{}, utils.SQLError(err)
 		}
-		newLinks[i] = SheetTask{IdSheet: newSheet.Id, IdTask: ta.Id, Index: i}
+		newLinks[i] = ho.SheetTask{IdSheet: newSheet.Id, IdTask: ta.Id, Index: i}
 	}
 
-	err = InsertManySheetTasks(tx, newLinks...)
+	err = ho.InsertManySheetTasks(tx, newLinks...)
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(tx, []IdSheet{newSheet.Id}, userID, ct.admin.Id)
+	loader, err := newSheetLoader(tx, []ho.IdSheet{newSheet.Id}, userID, ct.admin.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, utils.SQLError(err)
@@ -497,19 +501,19 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 		return nil, utils.SQLError(err)
 	}
 
-	sheets, err := SelectSheetsByIdClassrooms(ct.db, student.IdClassroom)
+	sheets, err := ho.SelectSheetsByIdClassrooms(ct.db, student.IdClassroom)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	links1, err := SelectSheetTasksByIdSheets(ct.db, sheets.IDs()...)
+	links1, err := ho.SelectSheetTasksByIdSheets(ct.db, sheets.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	sheetToTasks := links1.ByIdSheet()
 
 	// collect the student progressions
-	progMap, err := tasks.LoadTasksProgression(ct.db, idStudent, links1.IdTasks())
+	progMap, err := taAPI.LoadTasksProgression(ct.db, idStudent, links1.IdTasks())
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -520,7 +524,7 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 		}
 
 		tasksForSheet := sheetToTasks[sheet.Id] // defined exercices
-		taskList := make([]tasks.TaskProgressionHeader, len(tasksForSheet))
+		taskList := make([]taAPI.TaskProgressionHeader, len(tasksForSheet))
 		for i, exLink := range tasksForSheet {
 			taskList[i] = progMap[exLink.IdTask]
 		}
@@ -541,7 +545,7 @@ func (ct *Controller) StudentInstantiateExercice(c echo.Context) error {
 		return err
 	}
 
-	out, err := ed.InstantiateExercice(ct.db, ed.IdExercice(idE))
+	out, err := taAPI.InstantiateWork(ct.db, ed.IdExercice(idE))
 	if err != nil {
 		return err
 	}
@@ -562,7 +566,7 @@ func (ct *Controller) StudentEvaluateExercice(c echo.Context) error {
 		return err
 	}
 
-	ex, mark, err := tasks.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex)
+	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex)
 	if err != nil {
 		return err
 	}

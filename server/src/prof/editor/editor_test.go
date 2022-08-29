@@ -6,39 +6,36 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/utils/testutils"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
 
 func TestValidation(t *testing.T) {
-	db, err := testutils.DB.ConnectPostgres()
+	db, err := tu.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		t.Skipf("DB %v not available : %s", tu.DB, err)
 		return
 	}
 
-	qu, err := SelectAllQuestions(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qu, err := ed.SelectAllQuestions(db)
+	tu.Assert(t, err == nil)
 	qu.RestrictNeedExercice()
 
 	ti := time.Now()
 	err = validateAllQuestions(qu, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
 }
 
 func BenchmarkValidation(b *testing.B) {
-	db, err := testutils.DB.ConnectPostgres()
+	db, err := tu.DB.ConnectPostgres()
 	if err != nil {
-		b.Skipf("DB %v not available : %s", testutils.DB, err)
+		b.Skipf("DB %v not available : %s", tu.DB, err)
 		return
 	}
 
-	qu, err := SelectAllQuestions(db)
+	qu, err := ed.SelectAllQuestions(db)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -52,45 +49,35 @@ func BenchmarkValidation(b *testing.B) {
 }
 
 func TestExerciceCRUD(t *testing.T) {
-	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	ex, err := ct.createExercice(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 
 	l, err := ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Exercice.Id}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 	if len(l.Questions) != 1 {
 		t.Fatal(l)
 	}
 
-	qu, err := Question{IdTeacher: 1}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	qu, err := ed.Question{NeedExercice: ex.Exercice.Id.AsOptional()}.Insert(db)
+	tu.Assert(t, err == nil)
 
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
-		Questions: ExerciceQuestions{
+		Questions: ed.ExerciceQuestions{
 			l.Questions[0],
-			ExerciceQuestion{IdQuestion: qu.Id},
-			ExerciceQuestion{IdQuestion: qu.Id},
+			ed.ExerciceQuestion{IdQuestion: qu.Id},
+			ed.ExerciceQuestion{IdQuestion: qu.Id},
 		},
 	}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 	if len(l.Questions) != 3 {
 		t.Fatal(l)
 	}
@@ -99,68 +86,52 @@ func TestExerciceCRUD(t *testing.T) {
 	updated.Bareme = 5
 	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Exercice.Id,
-		Questions: ExerciceQuestions{
+		Questions: ed.ExerciceQuestions{
 			l.Questions[0],
 			updated,
 		},
 	}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 
-	exe, err := ct.updateExercice(Exercice{Id: ex.Exercice.Id, Description: "test", Title: "test2", Flow: Sequencial}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if exe.Flow != Sequencial {
+	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Exercice.Id, Description: "test", Title: "test2", Flow: ed.Sequencial}, 1)
+	tu.Assert(t, err == nil)
+	if exe.Flow != ed.Sequencial {
 		t.Fatal(exe)
 	}
 
 	err = ct.deleteExercice(ex.Exercice.Id, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 }
 
 func TestDB(t *testing.T) {
-	db, err := testutils.DB.ConnectPostgres()
+	db, err := tu.DB.ConnectPostgres()
 	if err != nil {
 		t.Skip("DB not available")
 	}
 
 	ct := NewController(db, teacher.Teacher{Id: 1})
 	_, err = ct.getExercices(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 }
 
 func TestGroupTagsEmpty(t *testing.T) {
-	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.Assert(t, err == nil)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
-	// create an implicit groups with no tags
-	_, err = Question{IdTeacher: 1, Page: questions.QuestionPage{Title: "test"}}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = Question{IdTeacher: 1, Page: questions.QuestionPage{Title: "test"}}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// create a group with no tags
+	group, err := ed.Questiongroup{IdTeacher: 1}.Insert(db)
+	tu.Assert(t, err == nil)
 
-	out, err := ct.updateGroupTags(UpdateGroupTagsIn{GroupTitle: "test", CommonTags: []string{"newtag1", "newtag2"}}, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(out.Tags) != 2 {
-		t.Fatal(out)
-	}
+	_, err = ed.Question{IdGroup: group.Id.AsOptional(), Page: questions.QuestionPage{Title: "subtitle 1"}}.Insert(db)
+	tu.Assert(t, err == nil)
+	_, err = ed.Question{IdGroup: group.Id.AsOptional(), Page: questions.QuestionPage{Title: "subtitle 2"}}.Insert(db)
+	tu.Assert(t, err == nil)
+
+	err = ct.updateTags(UpdateQuestiongroupTagsIn{Id: group.Id, Tags: []string{"newtag1", "newtag2"}}, 1)
+	tu.Assert(t, err == nil)
 }

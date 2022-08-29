@@ -1,4 +1,4 @@
-// Package teacher implements the logic related to teacher accounts.
+// Package teacher provides the data structures related to teacher and student accounts.
 package teacher
 
 type (

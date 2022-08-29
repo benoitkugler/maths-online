@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/sql/editor"
+	ho "github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -25,9 +26,12 @@ func setupDB(t *testing.T) (db tu.TestDB, out sample) {
 	out.class, err = teacher.Classroom{IdTeacher: out.userID, Name: "test"}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	out.exe1, err = editor.Exercice{IdTeacher: out.userID}.Insert(db)
+	group, err := editor.Exercicegroup{IdTeacher: out.userID}.Insert(db)
 	tu.Assert(t, err == nil)
-	out.exe2, err = editor.Exercice{IdTeacher: out.userID}.Insert(db)
+
+	out.exe1, err = editor.Exercice{IdGroup: group.Id}.Insert(db)
+	tu.Assert(t, err == nil)
+	out.exe2, err = editor.Exercice{IdGroup: group.Id}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	return db, out
@@ -47,7 +51,7 @@ func TestCRUDSheet(t *testing.T) {
 	sh, err := ct.createSheet(class.Id, userID)
 	tu.Assert(t, err == nil)
 
-	updated := randSheet()
+	updated := ho.Sheet{}
 	updated.Id = sh.Id
 	updated.IdClassroom = class.Id
 	err = ct.updateSheet(updated, userID)

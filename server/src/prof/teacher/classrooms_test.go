@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	tc "github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
 
@@ -57,11 +58,11 @@ func Test_importPronoteFile(t *testing.T) {
 	}
 
 	ct := Controller{db: db}
-	classroom, err := Classroom{IdTeacher: 1}.Insert(db)
+	classroom, err := tc.Classroom{IdTeacher: 1}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer DeleteClassroomById(db, classroom.Id)
+	defer tc.DeleteClassroomById(db, classroom.Id)
 
 	err = ct.importPronoteFile(f, classroom.Id)
 	if err != nil {
@@ -77,20 +78,20 @@ func Test_importPronoteFile(t *testing.T) {
 		t.Fatal(len(out))
 	}
 
-	DeleteStudentsByIdClassrooms(db, classroom.Id)
+	tc.DeleteStudentsByIdClassrooms(db, classroom.Id)
 }
 
 func TestStudentCRUD(t *testing.T) {
-	db := testutils.NewTestDB(t, "gen_create.sql")
+	db := testutils.NewTestDB(t, "../../sql/teacher/gen_create.sql")
 	defer db.Remove()
 
-	teacher, err := Teacher{Id: 1}.Insert(db)
+	teacher, err := tc.Teacher{Id: 1}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ct := Controller{db: db.DB, admin: Teacher{Id: teacher.Id}}
-	classroom, err := Classroom{IdTeacher: teacher.Id}.Insert(db)
+	ct := Controller{db: db.DB, admin: tc.Teacher{Id: teacher.Id}}
+	classroom, err := tc.Classroom{IdTeacher: teacher.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +102,7 @@ func TestStudentCRUD(t *testing.T) {
 	}
 
 	st.Name = "sdlsl"
-	st.Birthday = Date(time.Now())
+	st.Birthday = tc.Date(time.Now())
 	if err = ct.updateStudent(st, teacher.Id); err != nil {
 		t.Fatal(err)
 	}

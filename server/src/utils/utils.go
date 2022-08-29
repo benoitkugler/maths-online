@@ -8,9 +8,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 func RandomString(numberOnly bool, length int) string {
@@ -153,4 +157,13 @@ func NewDeterministicShuffler(hash []byte, n int) Shuffler {
 	}
 
 	return out
+}
+
+func RemoveAccents(s string) string {
+	noAccent := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	output, _, e := transform.String(noAccent, s)
+	if e != nil {
+		return s
+	}
+	return output
 }

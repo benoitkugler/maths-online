@@ -12,8 +12,10 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	tc "github.com/benoitkugler/maths-online/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
@@ -63,8 +65,8 @@ func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher
 	}
 }
 
-func (ct *Controller) checkOwner(configID IdTrivial, userID uID) error {
-	in, err := SelectTrivial(ct.db, configID)
+func (ct *Controller) checkOwner(configID tc.IdTrivial, userID uID) error {
+	in, err := tc.SelectTrivial(ct.db, configID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -95,7 +97,7 @@ func (ct *Controller) getSession(userID uID) *gameSession {
 }
 
 func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var out RunningSessionMetaOut
 	if session := ct.getSession(user.Id); session != nil {
@@ -106,25 +108,24 @@ func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
 }
 
 func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
-	configs, err := SelectAllTrivials(ct.db)
+	configs, err := tc.SelectAllTrivials(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
+	sel, err := newQuestionSelector(ct.db)
+	if err != nil {
+		return nil, err
+	}
+
 	var out []TrivialExt
 	for _, config := range configs {
-		vis, hasAcces := teacher.NewVisibility(config.IdTeacher, userID, ct.admin.Id, config.Public)
-		if !hasAcces {
-			continue // do not expose
-		}
-		origin := teacher.Origin{
-			AllowPublish: userID == ct.admin.Id,
-			Visibility:   vis,
-			IsPublic:     config.Public,
-		}
-		item, err := config.withDetails(ct.db, origin, userID)
+		item, err := newTrivialExt(sel, config, userID, ct.admin.Id)
 		if err != nil {
 			return nil, err
+		}
+		if item.Origin.Visibility.Restricted() {
+			continue // do not expose
 		}
 		out = append(out, item)
 	}
@@ -135,7 +136,7 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 }
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
-	teacher := teacher.JWTTeacher(c)
+	teacher := tcAPI.JWTTeacher(c)
 	out, err := ct.getTrivialPoursuits(teacher.Id)
 	if err != nil {
 		return err
@@ -144,9 +145,9 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
-	tc, err := Trivial{
+	item, err := tc.Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
 		IdTeacher:       user.Id,
@@ -155,24 +156,31 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out := TrivialExt{Config: tc} // 0 questions by categories, not running
+	sel, err := newQuestionSelector(ct.db)
+	if err != nil {
+		return err
+	}
+	out, err := newTrivialExt(sel, item, user.Id, ct.admin.Id)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(200, out)
 }
 
 func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	if err = ct.checkOwner(IdTrivial(id), user.Id); err != nil {
+	if err = ct.checkOwner(tc.IdTrivial(id), user.Id); err != nil {
 		return err
 	}
 
-	_, err = DeleteTrivialById(ct.db, IdTrivial(id))
+	_, err = tc.DeleteTrivialById(ct.db, tc.IdTrivial(id))
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -181,20 +189,20 @@ func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	in, err := SelectTrivial(ct.db, IdTrivial(id))
+	in, err := tc.SelectTrivial(ct.db, tc.IdTrivial(id))
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	_, hasAcces := teacher.NewVisibility(in.IdTeacher, user.Id, ct.admin.Id, in.Public)
-	if !hasAcces {
+	vis := tcAPI.NewVisibility(in.IdTeacher, user.Id, ct.admin.Id, in.Public)
+	if vis.Restricted() {
 		return accessForbidden
 	}
 
@@ -207,11 +215,11 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out, err := config.withDetails(ct.db, teacher.Origin{
-		AllowPublish: user.IsAdmin,
-		Visibility:   teacher.Personnal,
-		IsPublic:     config.Public,
-	}, user.Id)
+	sel, err := newQuestionSelector(ct.db)
+	if err != nil {
+		return err
+	}
+	out, err := newTrivialExt(sel, config, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -220,12 +228,12 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
-	var params Trivial
+	var params tc.Trivial
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
 
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	if err := ct.checkOwner(params.Id, user.Id); err != nil {
 		return err
@@ -239,11 +247,11 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out, err := config.withDetails(ct.db, teacher.Origin{
-		AllowPublish: user.IsAdmin,
-		Visibility:   teacher.Personnal,
-		IsPublic:     config.Public,
-	}, user.Id)
+	sel, err := newQuestionSelector(ct.db)
+	if err != nil {
+		return err
+	}
+	out, err := newTrivialExt(sel, config, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -252,19 +260,19 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 }
 
 type UpdateTrivialVisiblityIn struct {
-	ConfigID IdTrivial
+	ConfigID tc.IdTrivial
 	Public   bool
 }
 
 func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args UpdateTrivialVisiblityIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	qu, err := SelectTrivial(ct.db, args.ConfigID)
+	qu, err := tc.SelectTrivial(ct.db, args.ConfigID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -291,12 +299,12 @@ type CheckMissingQuestionsOut struct {
 // It first finds the current common tags, and then checks that no
 // questions sharing the same tags are left behind.
 func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
-	var criteria CategoriesQuestions
+	var criteria tc.CategoriesQuestions
 	if err := c.Bind(&criteria); err != nil {
 		return err
 	}
 
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	out, err := ct.checkMissingQuestions(criteria, user.Id)
 	if err != nil {
@@ -306,23 +314,24 @@ func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) checkMissingQuestions(criteria CategoriesQuestions, userID uID) (CheckMissingQuestionsOut, error) {
-	criteria.normalize()
+func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, userID uID) (CheckMissingQuestionsOut, error) {
+	criteria.Normalize()
 
-	pattern := criteria.commonTags()
+	pattern := commonTags(criteria)
 	if len(pattern) == 0 { // no pattern found, return early
 		return CheckMissingQuestionsOut{}, nil
 	}
 
-	existingQuestions, err := editor.SelectQuestionByTags(ct.db, userID, pattern...)
+	existingQuestions, err := editor.SelectQuestiongroupByTags(ct.db, userID, pattern)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, utils.SQLError(err)
 	}
 
-	usedQuestions, err := criteria.selectQuestionIds(ct.db, userID)
+	pool, err := selectQuestions(ct.db, criteria, userID)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, err
 	}
+	usedQuestions := allQuestions(pool)
 
 	// check is existingQuestions is included in usedQuestions
 	// if not, add the tags as hint
@@ -347,7 +356,7 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 		return fmt.Errorf("invalid parameters format: %s", err)
 	}
 
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	out, err := ct.launchConfig(in, user.Id)
 	if err != nil {
@@ -358,7 +367,7 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSessionOut, error) {
-	config, err := SelectTrivial(ct.db, params.IdConfig)
+	config, err := tc.SelectTrivial(ct.db, params.IdConfig)
 	if err != nil {
 		return LaunchSessionOut{}, utils.SQLError(err)
 	}
@@ -372,7 +381,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 	// populate the session with the required games :
 
 	// select the questions
-	questionPool, err := config.Questions.selectQuestions(ct.db, userID)
+	questionPool, err := selectQuestions(ct.db, config.Questions, userID)
 	if err != nil {
 		return LaunchSessionOut{}, err
 	}
@@ -400,7 +409,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 // StopTrivialGame stops a game, optionnaly restarting it,
 // interrupting the connection with clients.
 func (ct *Controller) StopTrivialGame(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var in stopGame
 	if err := c.Bind(&in); err != nil {

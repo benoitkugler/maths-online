@@ -9,6 +9,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/mailer"
 	"github.com/benoitkugler/maths-online/pass"
+	tc "github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -23,7 +24,7 @@ type Controller struct {
 	smtp                   pass.SMTP
 	host                   string // used for links
 
-	admin Teacher // loaded at creation
+	admin tc.Teacher // loaded at creation
 
 	classCodes *classroomsCode
 }
@@ -37,24 +38,24 @@ func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encry
 		studentKey: studentKey,
 		smtp:       smtp,
 		host:       host,
-		classCodes: &classroomsCode{codes: make(map[string]IdClassroom)},
+		classCodes: &classroomsCode{codes: make(map[string]tc.IdClassroom)},
 	}
 }
 
 // LoadAdminTeacher loads and stores the admin account.
 // By convention, only one account has admin rights. It is manually created at
 // DB setup, and never added (neiter removed) at run time.
-func (ct *Controller) LoadAdminTeacher() (Teacher, error) {
+func (ct *Controller) LoadAdminTeacher() (tc.Teacher, error) {
 	rows, err := ct.db.Query("SELECT * FROM teachers WHERE IsAdmin = true")
 	if err != nil {
-		return Teacher{}, utils.SQLError(err)
+		return tc.Teacher{}, utils.SQLError(err)
 	}
-	teachers, err := ScanTeachers(rows)
+	teachers, err := tc.ScanTeachers(rows)
 	if err != nil {
-		return Teacher{}, utils.SQLError(err)
+		return tc.Teacher{}, utils.SQLError(err)
 	}
 	if len(teachers) != 1 {
-		return Teacher{}, errors.New("exactly one teacher must be admin")
+		return tc.Teacher{}, errors.New("exactly one teacher must be admin")
 	}
 	ct.admin = teachers[teachers.IDs()[0]]
 	return ct.admin, nil
@@ -110,7 +111,7 @@ func (ct *Controller) askInscription(args AskInscriptionIn) (AskInscriptionOut, 
 
 	// TODO: should we accept anybody ?
 
-	teachers, err := SelectAllTeachers(ct.db)
+	teachers, err := tc.SelectAllTeachers(ct.db)
 	if err != nil {
 		return AskInscriptionOut{}, utils.SQLError(err)
 	}
@@ -146,7 +147,7 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 		return err
 	}
 
-	t := Teacher{
+	t := tc.Teacher{
 		Mail:            args.Mail,
 		PasswordCrypted: ct.teacherKey.EncryptPassword(args.Password),
 	}
@@ -163,7 +164,7 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 
 func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
 	row := ct.db.QueryRow("SELECT * FROM teachers WHERE mail = $1", args.Mail)
-	teacher, err := ScanTeacher(row)
+	teacher, err := tc.ScanTeacher(row)
 	if err == sql.ErrNoRows {
 		return LogginOut{Error: "Cette adresse mail n'est pas utilisée."}, nil
 	}

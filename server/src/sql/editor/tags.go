@@ -3,36 +3,42 @@ package editor
 import (
 	"sort"
 	"strings"
-	"unicode"
 
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
+	"github.com/benoitkugler/maths-online/utils"
 )
 
-// NormalizeTag returns `tag` with accents stripped
+// DifficultyQuery is an union of tags. An empty slice means no selection : all variants are accepted.
+type DifficultyQuery []DifficultyTag
+
+// Match returns `true` if the query accepts `diff`.
+func (dq DifficultyQuery) Match(diff DifficultyTag) bool {
+	if len(dq) == 0 {
+		return true
+	}
+	for _, query := range dq {
+		if query == diff {
+			return true
+		}
+	}
+	return false
+}
+
+// TagQuery is an intersection of tags, with an optionnal
+// one for the difficulty
+type TagQuery struct {
+	// Union, empty means no criterion
+	Difficulties DifficultyQuery
+	Tags         []string
+}
+
+// NormalizeTag returns `tag` with spaces and accents stripped
 // and in upper case.
 func NormalizeTag(tag string) string {
-	return strings.ToUpper(removeAccents(strings.TrimSpace((tag))))
-}
-
-func NormalizeTags(tags []string) {
-	for i := range tags {
-		tags[i] = NormalizeTag(tags[i])
-	}
-}
-
-func removeAccents(s string) string {
-	noAccent := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	output, _, e := transform.String(noAccent, s)
-	if e != nil {
-		return s
-	}
-	return output
+	return strings.ToUpper(utils.RemoveAccents(strings.TrimSpace((tag))))
 }
 
 // List returns the sorted tags from the `Tag` attribute.
-func (qus QuestionTags) List() []string {
+func (qus QuestiongroupTags) List() []string {
 	out := make([]string, len(qus))
 	for i, tag := range qus {
 		out[i] = tag.Tag
@@ -84,24 +90,7 @@ func NewCrible(tags []string) Crible {
 }
 
 // Crible build a set from the tags
-func (qus QuestionTags) Crible() Crible {
-	tmp := qus.List()
-	NormalizeTags(tmp)
-	return NewCrible(tmp)
-}
-
-// Difficulty returns the difficulty of the question,
-// or an empty string.
-func (cr Crible) Difficulty() DifficultyTag {
-	if cr[string(Diff1)] {
-		return Diff1
-	} else if cr[string(Diff2)] {
-		return Diff2
-	} else if cr[string(Diff3)] {
-		return Diff3
-	}
-	return ""
-}
+func (qus QuestiongroupTags) Crible() Crible { return NewCrible(qus.List()) }
 
 // HasAll returns `true` is all the `tags` are present in the crible.
 func (cr Crible) HasAll(tags []string) bool {

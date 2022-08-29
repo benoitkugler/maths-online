@@ -4,77 +4,68 @@ import (
 	"reflect"
 	"testing"
 
-	ex "github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/prof/editor"
-	ed "github.com/benoitkugler/maths-online/prof/editor"
-	tv "github.com/benoitkugler/maths-online/trivial"
-	"github.com/benoitkugler/maths-online/utils/testutils"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	tr "github.com/benoitkugler/maths-online/sql/trivial"
+	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
 
-func qu(title string) ed.Question {
-	return ed.Question{Page: ex.QuestionPage{Title: title}}
+func qu(group ed.IdQuestiongroup) ed.Question {
+	return ed.Question{IdGroup: group.AsOptional()}
 }
 
-func quD(title, diff string) questionDiff {
-	return questionDiff{question: qu(title), diff: ed.DifficultyTag(diff)}
-}
-
-var dummyQuestions = tv.QuestionPool{
-	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
-	tv.WeigthedQuestions{Questions: []ed.Question{qu("Qu1")}, Weights: []float64{1}},
+func quD(id ed.IdQuestion, group ed.IdQuestiongroup, diff ed.DifficultyTag) ed.Question {
+	return ed.Question{Id: id, IdGroup: group.AsOptional(), Difficulty: diff}
 }
 
 func Test_weightQuestions(t *testing.T) {
 	tests := []struct {
-		args []questionDiff
+		args ed.Questions
 		want []float64
 	}{
 		{nil, []float64{}},
-		{[]questionDiff{{}}, []float64{1}},
+		{ed.Questions{1: {}}, []float64{1}},
 		{
-			[]questionDiff{
-				quD("1", ""),
-				quD("2", ""),
-				quD("3", ""),
+			ed.Questions{
+				1: quD(1, 1, ""),
+				2: quD(2, 2, ""),
+				3: quD(3, 3, ""),
 			},
 			[]float64{1. / 3, 1. / 3, 1. / 3},
 		},
 		{
-			[]questionDiff{
-				quD("1", ""),
-				quD("1", ""),
-				quD("2", ""),
-				quD("3", ""),
+			ed.Questions{
+				0: quD(0, 1, ""),
+				1: quD(1, 1, ""),
+				2: quD(2, 2, ""),
+				3: quD(3, 3, ""),
 			},
 			[]float64{1. / 6, 1. / 6, 1. / 3, 1. / 3},
 		},
 		{
-			[]questionDiff{
-				quD("1", ""),
-				quD("1", "_"),
-				quD("1", "_"),
-				quD("2", ""),
-				quD("3", ""),
+			ed.Questions{
+				0: quD(0, 1, ""),
+				1: quD(1, 1, "_"),
+				2: quD(2, 1, "_"),
+				3: quD(3, 2, ""),
+				4: quD(4, 3, ""),
 			},
 			[]float64{1. / 6, 1. / 12, 1. / 12, 1. / 3, 1. / 3},
 		},
 		{
-			[]questionDiff{
-				quD("1", ""),
-				quD("1", "_"),
-				quD("1", "_"),
-				quD("2", ""),
-				quD("2", ""),
-				quD("3", ""),
+			ed.Questions{
+				0: quD(0, 1, ""),
+				1: quD(1, 1, "_"),
+				2: quD(2, 1, "_"),
+				3: quD(3, 2, ""),
+				4: quD(4, 2, ""),
+				5: quD(5, 3, ""),
 			},
 			[]float64{1. / 6, 1. / 12, 1. / 12, 1. / 6, 1. / 6, 1. / 3},
 		},
 	}
 	for _, tt := range tests {
-		if got := weightQuestions(tt.args); !reflect.DeepEqual(got, tt.want) {
+		if got := weightQuestions(tt.args).Weights; !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("weightQuestions() = %v, want %v", got, tt.want)
 		}
 	}
@@ -82,38 +73,44 @@ func Test_weightQuestions(t *testing.T) {
 
 func TestSelectQuestions(t *testing.T) {
 	// create a DB shared by all tests
-	db := testutils.NewTestDB(t, "../editor/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
-	qu("title1").Insert(db)
-	qu("title1").Insert(db)
-	qu("title1").Insert(db)
-	qu("title1").Insert(db)
-	qu("title2").Insert(db)
-	qu("title2").Insert(db)
-	qu("title3").Insert(db)
+	tc, err := teacher.Teacher{}.Insert(db)
+	tu.Assert(t, err == nil)
 
-	qu("title3").Insert(db)
-	qu("title3").Insert(db)
-	qu("title4").Insert(db)
+	g1, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
+	tu.Assert(t, err == nil)
+	g2, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
+	tu.Assert(t, err == nil)
+	g3, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
+	tu.Assert(t, err == nil)
+	g4, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
+	tu.Assert(t, err == nil)
+
+	quD(0, g1.Id, ed.Diff1).Insert(db)
+	quD(0, g1.Id, ed.Diff2).Insert(db)
+	quD(0, g1.Id, ed.Diff3).Insert(db)
+	quD(0, g1.Id, ed.Diff3).Insert(db)
+
+	qu(g2.Id).Insert(db)
+	qu(g2.Id).Insert(db)
+
+	qu(g3.Id).Insert(db)
+	qu(g3.Id).Insert(db)
+	qu(g3.Id).Insert(db)
+
+	qu(g4.Id).Insert(db)
 
 	tx, err := db.Begin()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ed.InsertManyQuestionTags(tx,
-		ed.QuestionTag{IdQuestion: 1, Tag: string(ed.Diff1)},
-		ed.QuestionTag{IdQuestion: 2, Tag: string(ed.Diff2)},
-		ed.QuestionTag{IdQuestion: 3, Tag: string(ed.Diff3)},
-		ed.QuestionTag{IdQuestion: 4, Tag: string(ed.Diff3)},
+	err = ed.InsertManyQuestiongroupTags(tx,
 		// categorie tags
-		ed.QuestionTag{IdQuestion: 1, Tag: "keep"},
-		ed.QuestionTag{IdQuestion: 2, Tag: "keep"},
-		ed.QuestionTag{IdQuestion: 3, Tag: "keep"},
-		ed.QuestionTag{IdQuestion: 4, Tag: "keep"},
-		ed.QuestionTag{IdQuestion: 5, Tag: "keep"},
-		ed.QuestionTag{IdQuestion: 6, Tag: "keep"},
-		ed.QuestionTag{IdQuestion: 7, Tag: "keep"},
+		ed.QuestiongroupTag{IdQuestiongroup: 1, Tag: "KEEP"},
+		ed.QuestiongroupTag{IdQuestiongroup: 2, Tag: "KEEP"},
+		ed.QuestiongroupTag{IdQuestiongroup: 3, Tag: "KEEP"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -122,16 +119,24 @@ func TestSelectQuestions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	criterion := QuestionCriterion{{"keep"}}
-	cats := CategoriesQuestions{criterion, criterion, criterion, criterion, criterion}
-
-	pool, err := cats.selectQuestions(db, 0)
-	if err != nil {
-		t.Fatal(err)
+	criterion := tr.QuestionCriterion{{"KEEP"}}
+	cats := tr.CategoriesQuestions{
+		Tags:         [...]tr.QuestionCriterion{criterion, criterion, criterion, criterion, criterion},
+		Difficulties: nil,
 	}
 
+	pool, err := selectQuestions(db, cats, tc.Id)
+	tu.Assert(t, err == nil)
+
 	if !reflect.DeepEqual(pool[0].Weights, []float64{
-		1. / 9, 1. / 9, 1. / 18, 1. / 18, 1. / 6, 1. / 6, 1. / 3,
+		// group 1 : 4 questions -> 3 sub group
+		1. / 9,
+		1. / 9,
+		1. / 18, 1. / 18,
+		// group 2 : 2 questions
+		1. / 6, 1. / 6,
+		// group 3 : 3 questions
+		1. / 9, 1. / 9, 1. / 9,
 	}) {
 		t.Fatal(pool[0].Weights)
 	}
@@ -139,69 +144,97 @@ func TestSelectQuestions(t *testing.T) {
 
 func TestQuestionCriterion_filter(t *testing.T) {
 	tests := []struct {
-		qc      QuestionCriterion
-		args    editor.QuestionTags
-		wantOut []ed.IdQuestion
+		qc      tr.QuestionCriterion
+		args    ed.QuestiongroupTags
+		wantOut []ed.IdQuestiongroup
 	}{
 		{
-			QuestionCriterion{},
-			editor.QuestionTags{
-				{IdQuestion: 1, Tag: ""},
-				{IdQuestion: 2, Tag: ""},
+			tr.QuestionCriterion{},
+			ed.QuestiongroupTags{
+				{IdQuestiongroup: 1, Tag: ""},
+				{IdQuestiongroup: 2, Tag: ""},
 			},
 			nil,
 		},
 		{
-			QuestionCriterion{
+			tr.QuestionCriterion{
 				{"TAG1"},
 			},
-			editor.QuestionTags{
-				{IdQuestion: 1, Tag: "TAG1"},
-				{IdQuestion: 1, Tag: "xx"},
-				{IdQuestion: 2, Tag: "xx"},
+			ed.QuestiongroupTags{
+				{IdQuestiongroup: 1, Tag: "TAG1"},
+				{IdQuestiongroup: 1, Tag: "xx"},
+				{IdQuestiongroup: 2, Tag: "xx"},
 			},
-			[]ed.IdQuestion{1},
+			[]ed.IdQuestiongroup{1},
 		},
 		{
-			QuestionCriterion{
+			tr.QuestionCriterion{
 				{"TAG1", "TAG2"},
 			},
-			editor.QuestionTags{
-				{IdQuestion: 1, Tag: "TAG1"},
-				{IdQuestion: 1, Tag: "xx"},
-				{IdQuestion: 2, Tag: "xx"},
+			ed.QuestiongroupTags{
+				{IdQuestiongroup: 1, Tag: "TAG1"},
+				{IdQuestiongroup: 1, Tag: "xx"},
+				{IdQuestiongroup: 2, Tag: "xx"},
 			},
 			nil,
 		},
 		{
-			QuestionCriterion{
+			tr.QuestionCriterion{
 				{"TAG1", "TAG2"},
 			},
-			editor.QuestionTags{
-				{IdQuestion: 1, Tag: "TAG1"},
-				{IdQuestion: 1, Tag: "TAG2"},
-				{IdQuestion: 1, Tag: "TAG1"},
-				{IdQuestion: 2, Tag: "xx"},
+			ed.QuestiongroupTags{
+				{IdQuestiongroup: 1, Tag: "TAG1"},
+				{IdQuestiongroup: 1, Tag: "TAG2"},
+				{IdQuestiongroup: 1, Tag: "TAG1"},
+				{IdQuestiongroup: 2, Tag: "xx"},
 			},
-			[]ed.IdQuestion{1},
+			[]ed.IdQuestiongroup{1},
 		},
 		{
-			QuestionCriterion{
+			tr.QuestionCriterion{
 				{"TAG1", "TAG2"},
 				{"TAG3"},
 			},
-			editor.QuestionTags{
-				{IdQuestion: 1, Tag: "TAG1"},
-				{IdQuestion: 1, Tag: "TAG2"},
-				{IdQuestion: 1, Tag: "TAG1"},
-				{IdQuestion: 2, Tag: "TAG3"},
+			ed.QuestiongroupTags{
+				{IdQuestiongroup: 1, Tag: "TAG1"},
+				{IdQuestiongroup: 1, Tag: "TAG2"},
+				{IdQuestiongroup: 1, Tag: "TAG1"},
+				{IdQuestiongroup: 2, Tag: "TAG3"},
 			},
-			[]ed.IdQuestion{1, 2},
+			[]ed.IdQuestiongroup{1, 2},
 		},
 	}
 	for _, tt := range tests {
-		if gotOut := tt.qc.filter(tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
+		if gotOut := filterTags(tt.qc, tt.args); !reflect.DeepEqual(gotOut, tt.wantOut) {
 			t.Errorf("QuestionCriterion.filter() = %v, want %v", gotOut, tt.wantOut)
 		}
+	}
+}
+
+func BenchmarkQuestionSearch(b *testing.B) {
+	b.StopTimer()
+
+	db, err := tu.DB.ConnectPostgres()
+	if err != nil {
+		b.Skipf("DB %v not available : %s", tu.DB, err)
+		return
+	}
+
+	sel, err := newQuestionSelector(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	tvs, err := tr.SelectAllTrivials(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	questions := tvs[60].Questions
+
+	b.ResetTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		sel.search(questions, 0)
 	}
 }

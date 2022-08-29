@@ -4,26 +4,27 @@ import (
 	"fmt"
 	"strings"
 
+	ed "github.com/benoitkugler/maths-online/sql/editor"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
 // ValidateAllQuestions fetches all questions from the DB
 // and calls Validate, returning all the errors encountered.
 // It should be used as a maintenance helper when migrating the DB.
-func ValidateAllQuestions(db DB) error {
-	qus, err := SelectAllQuestions(db)
+func ValidateAllQuestions(db ed.DB) error {
+	qus, err := ed.SelectAllQuestions(db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	exs := make(IdExerciceSet)
+	exs := make(ed.IdExerciceSet)
 	for _, question := range qus {
 		if question.NeedExercice.Valid {
-			exs.Add(IdExercice(question.NeedExercice.Int64))
+			exs.Add(question.NeedExercice.ID)
 		}
 	}
 
-	exercices, err := SelectExercices(db, exs.Keys()...)
+	exercices, err := ed.SelectExercices(db, exs.Keys()...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -31,11 +32,11 @@ func ValidateAllQuestions(db DB) error {
 	return validateAllQuestions(qus, exercices)
 }
 
-func validateAllQuestions(questions Questions, exercices Exercices) error {
+func validateAllQuestions(questions ed.Questions, exercices ed.Exercices) error {
 	var errs []string
 	for id, q := range questions {
 		if q.NeedExercice.Valid {
-			ex := exercices[IdExercice(q.NeedExercice.Int64)]
+			ex := exercices[q.NeedExercice.ID]
 			q.Page.Parameters = q.Page.Parameters.Append(ex.Parameters)
 		}
 

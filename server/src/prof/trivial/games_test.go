@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	tr "github.com/benoitkugler/maths-online/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 	"github.com/golang-jwt/jwt"
@@ -139,7 +141,7 @@ type server struct {
 func (s server) handle(w http.ResponseWriter, r *http.Request) {
 	var err error
 	context := s.e.NewContext(r, w)
-	context.Set("user", &jwt.Token{Claims: &teacher.UserMeta{Teacher: teacher.Teacher{Id: 1}}})
+	context.Set("user", &jwt.Token{Claims: &tcAPI.UserMeta{Teacher: teacher.Teacher{Id: 1}}})
 
 	switch url := r.URL; url.Path {
 	case studentSetup:
@@ -169,7 +171,7 @@ func TestSessionPlay(t *testing.T) {
 
 	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{Id: 1}) // 1 is the defaut admin
 
-	config, err := Trivial{Questions: demoQuestions, IdTeacher: ct.admin.Id}.Insert(db)
+	config, err := tr.Trivial{Questions: demoQuestions, IdTeacher: ct.admin.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -9,9 +9,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/utils"
 )
 
 func getUserName() string {
@@ -45,9 +45,11 @@ type TestDB struct {
 // NewTestDB creates a new database and add all the tables
 // as defined in the `generateSQLFile` files.
 func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
+	t.Helper()
+
 	const userPassword = "dummy"
 
-	name := "tmp_dev_" + utils.RandomString(true, 10)
+	name := fmt.Sprintf("tmp_dev_%d", time.Now().UnixNano())
 
 	// cleanup if needed
 	runCmd(exec.Command("dropdb", "--if-exists", name))
@@ -57,11 +59,11 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 	for _, file := range generateSQLFile {
 		file, err := filepath.Abs(file)
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 		_, err = os.Stat(file)
 		if err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 		runCmd(exec.Command("bash", "-c", fmt.Sprintf("psql %s < %s", name, file)))
 	}

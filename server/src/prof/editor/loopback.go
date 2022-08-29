@@ -9,6 +9,8 @@ import (
 	"os"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
+	"github.com/benoitkugler/maths-online/sql/tasks"
+	taAPI "github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
 )
@@ -32,7 +34,7 @@ type loopbackController struct {
 	sessionID       string
 	currentQuestion questions.QuestionInstance
 
-	currentExercice      InstantiatedExercice
+	currentExercice      taAPI.InstantiatedWork
 	currentQuestionIndex int // in the current exercice
 }
 
@@ -50,17 +52,17 @@ func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 	ct.broadcast <- loopbackQuestion{Question: question.ToClient()}
 }
 
-func (ct *loopbackController) setExercice(exercice InstantiatedExercice) {
+func (ct *loopbackController) setExercice(exercice taAPI.InstantiatedWork) {
 	ct.currentExercice = exercice
-	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: ProgressionExt{
+	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: taAPI.ProgressionExt{
 		NextQuestion: ct.currentQuestionIndex,
-		Questions:    make([]QuestionHistory, len(exercice.Questions)),
+		Questions:    make([]tasks.QuestionHistory, len(exercice.Questions)),
 	}}
 }
 
 func (ct *loopbackController) pause() {
 	ct.currentQuestion = questions.QuestionInstance{}
-	ct.currentExercice = InstantiatedExercice{}
+	ct.currentExercice = taAPI.InstantiatedWork{}
 	ct.currentQuestionIndex = 0
 
 	ct.broadcast <- loopbackPaused{}

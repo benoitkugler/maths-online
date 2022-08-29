@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
@@ -52,7 +52,7 @@ func TestController_setupStudentClient(t *testing.T) {
 
 	go gs.mainLoop(context.Background())
 
-	questionPool, err := demoQuestions.selectQuestions(ct.db, ct.admin.Id)
+	questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
 	if err != nil {
 		t.Fatal(err)
 	}

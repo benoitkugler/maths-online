@@ -7,9 +7,12 @@ import (
 	"database/sql"
 	"sort"
 
-	ed "github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/tasks"
+	edAPI "github.com/benoitkugler/maths-online/prof/editor"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	ho "github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/tasks"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	taAPI "github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
@@ -18,7 +21,7 @@ type ClassroomSheets struct {
 	Sheets    []SheetExt
 }
 
-func newClassroomSheets(cl teacher.Classroom, sheepMap map[IdSheet]SheetExt) ClassroomSheets {
+func newClassroomSheets(cl teacher.Classroom, sheepMap map[ho.IdSheet]SheetExt) ClassroomSheets {
 	out := ClassroomSheets{Classroom: cl}
 	for _, sheet := range sheepMap {
 		if sheet.Sheet.IdClassroom == cl.Id {
@@ -31,25 +34,25 @@ func newClassroomSheets(cl teacher.Classroom, sheepMap map[IdSheet]SheetExt) Cla
 
 type TaskExt struct {
 	Id             tasks.IdTask
-	Exercice       ed.ExerciceHeader
-	NbProgressions int // the number of student having started this task
+	Exercice       edAPI.ExerciceHeader // TODO adapt to monoquestion
+	NbProgressions int                  // the number of student having started this task
 }
 
 type SheetExt struct {
-	Sheet Sheet
+	Sheet ho.Sheet
 	Tasks []TaskExt
 }
 
 type sheetLoader struct {
-	links        map[IdSheet]SheetTasks
+	links        map[ho.IdSheet]ho.SheetTasks
 	tasks        tasks.Tasks
-	exes         map[ed.IdExercice]ed.ExerciceHeader
+	exes         map[ed.IdExercice]edAPI.ExerciceHeader
 	progressions map[tasks.IdTask]tasks.Progressions
 }
 
-func newSheetLoader(db DB, idSheets []IdSheet, userID, adminID uID) (out sheetLoader, err error) {
+func newSheetLoader(db ho.DB, idSheets []ho.IdSheet, userID, adminID uID) (out sheetLoader, err error) {
 	// load all the tasks and exercices required...
-	links1, err := SelectSheetTasksByIdSheets(db, idSheets...)
+	links1, err := ho.SelectSheetTasksByIdSheets(db, idSheets...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -84,10 +87,10 @@ func newSheetLoader(db DB, idSheets []IdSheet, userID, adminID uID) (out sheetLo
 	return out, nil
 }
 
-func (loader sheetLoader) newSheetExt(sheet Sheet) SheetExt {
+func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
 	out := SheetExt{Sheet: sheet}
 	links := loader.links[sheet.Id]
-	links.ensureOrder()
+	links.EnsureOrder()
 	for _, link := range links {
 		idExercice := loader.tasks[link.IdTask].IdExercice
 		out.Tasks = append(out.Tasks, TaskExt{
@@ -99,30 +102,26 @@ func (loader sheetLoader) newSheetExt(sheet Sheet) SheetExt {
 	return out
 }
 
-func (loader sheetLoader) buildSheetExts(sheets Sheets) map[IdSheet]SheetExt {
-	out := make(map[IdSheet]SheetExt, len(sheets))
+func (loader sheetLoader) buildSheetExts(sheets ho.Sheets) map[ho.IdSheet]SheetExt {
+	out := make(map[ho.IdSheet]SheetExt, len(sheets))
 	for idSheet, v := range sheets {
 		out[idSheet] = loader.newSheetExt(v)
 	}
 	return out
 }
 
-func (l SheetTasks) ensureOrder() {
-	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
-}
-
-func updateSheetTasksOrder(tx *sql.Tx, idSheet IdSheet, l []tasks.IdTask) error {
-	links := make(SheetTasks, len(l))
+func updateSheetTasksOrder(tx *sql.Tx, idSheet ho.IdSheet, l []tasks.IdTask) error {
+	links := make(ho.SheetTasks, len(l))
 	for i, idTask := range l { // enforce correct index
-		links[i] = SheetTask{IdTask: idTask, IdSheet: idSheet, Index: i}
+		links[i] = ho.SheetTask{IdTask: idTask, IdSheet: idSheet, Index: i}
 	}
 
-	_, err := DeleteSheetTasksByIdSheets(tx, idSheet)
+	_, err := ho.DeleteSheetTasksByIdSheets(tx, idSheet)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	err = InsertManySheetTasks(tx, links...)
+	err = ho.InsertManySheetTasks(tx, links...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -135,6 +134,6 @@ func updateSheetTasksOrder(tx *sql.Tx, idSheet IdSheet, l []tasks.IdTask) error 
 // SheetProgression is the summary of the progression
 // of one student for one sheet
 type SheetProgression struct {
-	Sheet Sheet
-	Tasks []tasks.TaskProgressionHeader
+	Sheet ho.Sheet
+	Tasks []taAPI.TaskProgressionHeader
 }

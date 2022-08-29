@@ -1,59 +1,47 @@
 package trivial
 
 import (
-	"fmt"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/prof/editor"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	tc "github.com/benoitkugler/maths-online/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 )
 
-var demoQuestions = CategoriesQuestions{
-	{
-		{"Pourcentages", "Valeur initiale"},
-		{"Pourcentages", "Valeur finale"},
-	},
-	{
-		{"Pourcentages", "Taux global"},
-		{"Pourcentages", "Taux réciproque"},
-	},
-	{
-		{"Pourcentages", "Proportion"},
-		{"Pourcentages", "Proportion de proportion"},
-		{"Pourcentages", "Pourcentage d'un nombre"},
-	},
-	{
-		{"Pourcentages", "Evolutions identiques"},
-		{"Pourcentages", "Evolution unique"},
-		{"Pourcentages", "Evolutions successives"},
-	},
-	{
-		{"Pourcentages", "Coefficient multiplicateur"},
-		{"Pourcentages", "Taux d'évolution"},
+var demoQuestions = tc.CategoriesQuestions{
+	Tags: [...]tc.QuestionCriterion{
+		{
+			{"Pourcentages", "Valeur initiale"},
+			{"Pourcentages", "Valeur finale"},
+		},
+		{
+			{"Pourcentages", "Taux global"},
+			{"Pourcentages", "Taux réciproque"},
+		},
+		{
+			{"Pourcentages", "Proportion"},
+			{"Pourcentages", "Proportion de proportion"},
+			{"Pourcentages", "Pourcentage d'un nombre"},
+		},
+		{
+			{"Pourcentages", "Evolutions identiques"},
+			{"Pourcentages", "Evolution unique"},
+			{"Pourcentages", "Evolutions successives"},
+		},
+		{
+			{"Pourcentages", "Coefficient multiplicateur"},
+			{"Pourcentages", "Taux d'évolution"},
+		},
 	},
 }
 
-// remove empty intersection and normalizes tags
-func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
-	for _, q := range qc {
-		for i, t := range q {
-			q[i] = editor.NormalizeTag(t)
-		}
-
-		if len(q) != 0 {
-			out = append(out, q)
-		}
-	}
-	return out
-}
-
-func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out []editor.IdQuestion) {
-	for idQuestion, questions := range tags.ByIdQuestion() {
-		questionTags := questions.Crible()
-		for _, union := range qc { // at least one union must match
-			if questionTags.HasAll(union) {
-				out = append(out, idQuestion)
+func filterTags(qc tc.QuestionCriterion, tags ed.QuestiongroupTags) (out []ed.IdQuestiongroup) {
+	for idGroup, groupTags := range tags.ByIdQuestiongroup() {
+		questionTags := groupTags.Crible()
+		for _, intersection := range qc { // at least one intersection must match
+			if questionTags.HasAll(intersection) {
+				out = append(out, idGroup)
 				break // no need to check the other unions
 			}
 		}
@@ -62,146 +50,156 @@ func (qc QuestionCriterion) filter(tags editor.QuestionTags) (out []editor.IdQue
 	return out
 }
 
-// selectQuestions selects the questions matching the criterion, available
-// to the user, and not needing an exercice context.
-func (qc QuestionCriterion) selectQuestions(db DB, userID uID) (editor.Questions, error) {
-	qc = qc.normalize()
+type questionSelector struct {
+	db ed.DB // used to lazily load question content
 
-	// an empty criterion is interpreted as an invalid criterion,
-	// since it is never something you want in practice (at least the class level should be specified)
-	if len(qc) == 0 {
-		return nil, nil
-	}
-
-	tags, err := editor.SelectAllQuestionTags(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	tmp := qc.filter(tags)
-
-	// restrict to user visible and standalone
-	questionsDict, err := editor.SelectQuestions(db, tmp...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	questionsDict.RestrictVisible(userID)
-
-	questionsDict.RestrictNeedExercice()
-
-	return questionsDict, nil
+	tags           ed.QuestiongroupTags // all the DB
+	questionGroups ed.Questiongroups    // all the DB
+	questions      ed.Questions         // all the ones coming from groups
 }
 
-func (cats *CategoriesQuestions) normalize() {
-	for i := range cats {
-		cats[i] = cats[i].normalize()
+// load once for all all the tags and questionGroups
+func newQuestionSelector(db ed.DB) (out questionSelector, err error) {
+	out.db = db
+
+	out.tags, err = ed.SelectAllQuestiongroupTags(db)
+	if err != nil {
+		return out, utils.SQLError(err)
 	}
-}
 
-func (cats CategoriesQuestions) selectQuestions(db DB, userID uID) (out tv.QuestionPool, err error) {
-	// select the questions...
-	for i, cat := range cats {
-		questionsDict, err := cat.selectQuestions(db, userID)
-		if err != nil {
-			return out, err
-		}
+	out.questionGroups, err = ed.SelectAllQuestiongroups(db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
 
-		// this should be avoided by the client side validation
-		if len(questionsDict) == 0 {
-			return out, fmt.Errorf("La catégorie %d n'a aucune question.", i+1)
-		}
-
-		// select the tags, required for difficulty groups
-		tags, err := editor.SelectQuestionTagsByIdQuestions(db, questionsDict.IDs()...)
-		if err != nil {
-			return out, utils.SQLError(err)
-		}
-		tagsDict := tags.ByIdQuestion()
-
-		tmp := make([]questionDiff, 0, len(questionsDict))
-		questions := make([]editor.Question, 0, len(questionsDict))
-		for _, question := range questionsDict {
-			diff := tagsDict[question.Id].Crible().Difficulty()
-			tmp = append(tmp, questionDiff{question: question, diff: diff})
-			questions = append(questions, question)
-		}
-
-		// sorting is not required, but make tests easier to write
-		sort.Slice(tmp, func(i, j int) bool { return tmp[i].question.Id < tmp[j].question.Id })
-		sort.Slice(questions, func(i, j int) bool { return questions[i].Id < questions[j].Id })
-
-		weights := weightQuestions(tmp)
-		out[i] = tv.WeigthedQuestions{
-			Questions: questions,
-			Weights:   weights,
-		}
+	out.questions, err = ed.SelectQuestionsByIdGroups(db, out.questionGroups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
 	}
 
 	return out, nil
 }
 
-type questionDiff struct {
-	diff     editor.DifficultyTag
-	question editor.Question
+// do not error on empty catagories
+func (sel questionSelector) search(query tc.CategoriesQuestions, userID uID) (out tv.QuestionPool, err error) {
+	query.Normalize()
+
+	// select the questions...
+	for i, cat := range query.Tags {
+		// an empty criterion is interpreted as an never matched criterion,
+		// since it is never something you want in practice (at least the class level should be specified)
+		if len(cat) == 0 {
+			return out, nil
+		}
+
+		idGroups := ed.NewIdQuestiongroupSetFrom(filterTags(cat, sel.tags))
+
+		groups := make(ed.Questiongroups, len(idGroups)) // select the groups
+		for id := range idGroups {
+			groups[id] = sel.questionGroups[id]
+		}
+
+		// restrict to user visible
+		groups.RestrictVisible(userID)
+
+		questionsDict := make(ed.Questions) // select the questions
+		for _, qu := range sel.questions {
+			if idGroups.Has(qu.IdGroup.ID) {
+				questionsDict[qu.Id] = qu
+			}
+		}
+
+		// filter by difficulty
+		for _, question := range questionsDict {
+			if !query.Difficulties.Match(question.Difficulty) {
+				delete(questionsDict, question.Id)
+			}
+		}
+
+		wQuestions := weightQuestions(questionsDict)
+
+		out[i] = wQuestions
+	}
+
+	return out, nil
 }
 
-// weightQuestions compute the probabilities of each question in
-// the given slice to account for implicit groups defined by title and difficulties
-func weightQuestions(questions []questionDiff) []float64 {
-	// form title groups
-	groups := make(map[string][]questionDiff)
-	for _, qu := range questions {
-		groups[qu.question.Page.Title] = append(groups[qu.question.Page.Title], qu)
+func selectQuestions(db ed.DB, query tc.CategoriesQuestions, userID uID) (out tv.QuestionPool, err error) {
+	sel, err := newQuestionSelector(db)
+	if err != nil {
+		return out, err
 	}
+	return sel.search(query, userID)
+}
+
+type sorter tv.WeigthedQuestions
+
+func (wq sorter) Len() int { return len(wq.Questions) }
+func (wq sorter) Swap(i, j int) {
+	wq.Questions[i], wq.Questions[j] = wq.Questions[j], wq.Questions[i]
+	wq.Weights[i], wq.Weights[j] = wq.Weights[j], wq.Weights[i]
+}
+func (wq sorter) Less(i, j int) bool { return wq.Questions[i].Id < wq.Questions[j].Id }
+
+// weightQuestions compute the probabilities of each question in
+// the given set to account for groups and difficulties
+func weightQuestions(questions ed.Questions) tv.WeigthedQuestions {
+	// form groups
+	groups := questions.ByGroup()
+
 	// now differentiate against the difficulty;
-	// to simplify, we consider that question without difficulty form a sub-group of their own
-	difficulties := make(map[string]map[editor.DifficultyTag][]questionDiff)
-	for ti, group := range groups {
-		perDifficulty := make(map[editor.DifficultyTag][]questionDiff)
+	// to simplify, we consider that question without difficulty form a common sub-group of their own
+	difficulties := make(map[ed.IdQuestiongroup]map[ed.DifficultyTag][]ed.Question)
+	for idGroup, group := range groups {
+		perDifficulty := make(map[ed.DifficultyTag][]ed.Question)
 		for _, question := range group {
-			perDifficulty[question.diff] = append(perDifficulty[question.diff], question)
+			perDifficulty[question.Difficulty] = append(perDifficulty[question.Difficulty], question)
 		}
-		difficulties[ti] = perDifficulty
+		difficulties[idGroup] = perDifficulty
 	}
 
 	NG := len(groups)
-	out := make([]float64, len(questions))
-	for i, qu := range questions {
-		perDifficulty := difficulties[qu.question.Page.Title]
+	out := tv.WeigthedQuestions{
+		Questions: make([]ed.Question, 0, len(questions)),
+		Weights:   make([]float64, 0, len(questions)),
+	}
+	for _, qu := range questions {
+		perDifficulty := difficulties[qu.IdGroup.ID]
 		ND := len(perDifficulty) // number of difficulties in the group
 		// each group must have a resulting proba of 1/NG,
 		// now, each subgroup must have a resulting proba of 1/ND,
-		// meaning a question if a subgroup with length nd has proba (1/NG) * (1/ND) * (1/nd)
-		nd := len(perDifficulty[qu.diff])
-		out[i] = 1 / float64(NG*ND*nd)
+		// meaning a question in a sub-group with length nd has proba (1/NG) * (1/ND) * (1/nd)
+		nd := len(perDifficulty[qu.Difficulty])
+
+		out.Questions = append(out.Questions, qu)
+		out.Weights = append(out.Weights, 1/float64(NG*ND*nd))
 	}
+
+	// sorting is not required, but make tests easier to write
+	sort.Sort(sorter(out))
 
 	return out
 }
 
 // commonTags returns the tags shared by all categories
-func (cats CategoriesQuestions) commonTags() []string {
+func commonTags(cats tc.CategoriesQuestions) []string {
 	var allUnions [][]string
-	for _, cat := range cats {
+	for _, cat := range cats.Tags {
 		allUnions = append(allUnions, cat...)
 	}
-	return editor.CommonTags(allUnions)
+	return ed.CommonTags(allUnions)
 }
 
-// returns the questions available to `userID` and matching one of the
-// categorie criteria
-func (cats CategoriesQuestions) selectQuestionIds(db DB, userID uID) (editor.IdQuestionSet, error) {
-	crible := make(editor.IdQuestionSet)
+// returns the union of all the question groups in the pool,
+// that is, question matching at least one criteria
+func allQuestions(pool tv.QuestionPool) ed.IdQuestiongroupSet {
+	crible := make(ed.IdQuestiongroupSet)
 
-	for _, cat := range cats {
-		questions, err := cat.selectQuestions(db, userID)
-		if err != nil {
-			return nil, err
-		}
-		for id := range questions {
-			crible.Add(id)
+	for _, cat := range pool {
+		for _, question := range cat.Questions {
+			crible.Add(question.IdGroup.ID)
 		}
 	}
 
-	return crible, nil
+	return crible
 }

@@ -1,6 +1,6 @@
 package trivial
 
-import "github.com/benoitkugler/maths-online/prof/teacher"
+import "github.com/benoitkugler/maths-online/sql/teacher"
 
 type IdTrivial int64
 
@@ -12,6 +12,6 @@ type Trivial struct {
 	QuestionTimeout int // in seconds
 	ShowDecrassage  bool
 	Public          bool
-	IdTeacher       teacher.IdTeacher `json:"id_teacher"`
+	IdTeacher       teacher.IdTeacher
 	Name            string
 }

@@ -6,34 +6,34 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/sql/teacher"
+	tr "github.com/benoitkugler/maths-online/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/trivial"
-	"github.com/benoitkugler/maths-online/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
 
 func TestCreateConfig(t *testing.T) {
-	db, err := testutils.DB.ConnectPostgres()
-	if err != nil {
-		t.Skipf("DB %v not available : %s", testutils.DB, err)
-		return
-	}
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
 
-	out, err := Trivial{
+	tc, err := teacher.Teacher{}.Insert(db)
+	tu.Assert(t, err == nil)
+
+	out, err := tr.Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
-		IdTeacher:       1,
+		IdTeacher:       tc.Id,
 	}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := DeleteTrivialById(db, out.Id); err != nil {
+	if _, err := tr.DeleteTrivialById(db, out.Id); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGetConfig(t *testing.T) {
-	db := testutils.NewTestDB(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/trivial/gen_create.sql")
 	defer db.Remove()
 
 	user1, err := teacher.Teacher{Mail: "1"}.Insert(db)
@@ -45,12 +45,12 @@ func TestGetConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c1, err := Trivial{IdTeacher: user1.Id}.Insert(db)
+	c1, err := tr.Trivial{IdTeacher: user1.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = Trivial{IdTeacher: user2.Id}.Insert(db)
+	_, err = tr.Trivial{IdTeacher: user2.Id}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,97 +100,97 @@ func TestGameTermination(t *testing.T) {
 }
 
 func TestMissingQuestions(t *testing.T) {
-	db, err := testutils.DB.ConnectPostgres()
+	db, err := tu.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		t.Skipf("DB %v not available : %s", tu.DB, err)
 	}
 
 	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})
 
-	criteria := CategoriesQuestions{
-		{
+	criteria := tr.CategoriesQuestions{
+		Tags: [...]tr.QuestionCriterion{
 			{
-				"POURCENTAGES",
-				"VIOLET",
+				{
+					"POURCENTAGES",
+					"VIOLET",
+				},
+				{
+					"POURCENTAGES",
+				},
 			},
 			{
-				"POURCENTAGES",
+				{
+					"POURCENTAGES",
+					"VERT",
+				},
 			},
-		},
-		{
 			{
-				"POURCENTAGES",
-				"VERT",
+				{
+					"POURCENTAGES",
+					"ORANGE",
+				},
 			},
-		},
-		{
 			{
-				"POURCENTAGES",
-				"ORANGE",
+				{
+					"POURCENTAGES",
+					"JAUNE",
+				},
 			},
-		},
-		{
 			{
-				"POURCENTAGES",
-				"JAUNE",
-			},
-		},
-		{
-			{
-				"POURCENTAGES",
-				"BLEU",
+				{
+					"POURCENTAGES",
+					"BLEU",
+				},
 			},
 		},
 	}
 	out, err := ct.checkMissingQuestions(criteria, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(out.Missing) != 0 {
-		t.Fatal()
-	}
+	tu.Assert(t, err == nil)
+	tu.Assert(t, len(out.Missing) == 0)
 
-	criteria = CategoriesQuestions{
-		{
+	criteria = tr.CategoriesQuestions{
+		Tags: [...]tr.QuestionCriterion{
 			{
-				"Pourcentages",
-				"Valeur finale",
-			},
-		},
-		{
-			{
-				"Pourcentages",
-				"Taux réciproque",
-			},
-		},
-		{
-			{
-				"Pourcentages",
-				"Proportion",
+				{
+					"Pourcentages",
+					"Valeur finale",
+				},
 			},
 			{
-				"Pourcentages",
-				"Proportion de proportion",
-			},
-		},
-		{
-			{
-				"Pourcentages",
-				"Evolutions identiques",
+				{
+					"Pourcentages",
+					"Taux réciproque",
+				},
 			},
 			{
-				"Pourcentages",
-				"Evolutions successives",
+				{
+					"Pourcentages",
+					"Proportion",
+				},
+				{
+					"Pourcentages",
+					"Proportion de proportion",
+				},
 			},
-		},
-		{
 			{
-				"Pourcentages",
-				"Coefficient multiplicateur",
+				{
+					"Pourcentages",
+					"Evolutions identiques",
+				},
+				{
+					"Pourcentages",
+					"Evolutions successives",
+				},
 			},
 			{
-				"Pourcentages",
-				"Taux d'évolution",
+				{
+					"Pourcentages",
+					"Coefficient multiplicateur",
+				},
+				{
+					"Pourcentages",
+					"Taux d'évolution",
+				},
 			},
 		},
 	}
@@ -204,9 +204,9 @@ func TestMissingQuestions(t *testing.T) {
 }
 
 func TestGetTrivials(t *testing.T) {
-	db, err := testutils.DB.ConnectPostgres()
+	db, err := tu.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		t.Skipf("DB %v not available : %s", tu.DB, err)
 		return
 	}
 

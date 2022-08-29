@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/teacher"
+	"github.com/benoitkugler/maths-online/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/trivial"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
@@ -167,7 +167,7 @@ func (ct *Controller) setupStudentDemo(room string, nbPlayers int) (gameConnecti
 		session = ct.createSession(sessionID, -1)
 
 		// ... and add one game on the fly
-		questionPool, err := demoQuestions.selectQuestions(ct.db, ct.admin.Id)
+		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
 		if err != nil {
 			return gameConnection{}, err
 		}

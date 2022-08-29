@@ -6,8 +6,17 @@ import (
 	"testing"
 	"time"
 
+	ed "github.com/benoitkugler/maths-online/sql/editor"
 	tv "github.com/benoitkugler/maths-online/trivial"
 )
+
+var dummyQuestions = tv.QuestionPool{
+	tv.WeigthedQuestions{Questions: []ed.Question{qu(1)}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu(1)}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu(1)}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu(1)}, Weights: []float64{1}},
+	tv.WeigthedQuestions{Questions: []ed.Question{qu(1)}, Weights: []float64{1}},
+}
 
 func TestGameID(t *testing.T) {
 	s := make([]string, 20)

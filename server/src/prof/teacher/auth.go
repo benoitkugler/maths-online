@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	tc "github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -17,7 +18,7 @@ const (
 
 // UserMeta are custom claims extending default ones.
 type UserMeta struct {
-	Teacher Teacher
+	Teacher tc.Teacher
 	jwt.StandardClaims
 }
 
@@ -32,7 +33,7 @@ func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
 	return middleware.JWTWithConfig(config)
 }
 
-func (ct *Controller) newToken(teacher Teacher) (string, error) {
+func (ct *Controller) newToken(teacher tc.Teacher) (string, error) {
 	// Set custom claims
 	claims := &UserMeta{
 		Teacher: teacher,
@@ -50,7 +51,7 @@ func (ct *Controller) newToken(teacher Teacher) (string, error) {
 
 // JWTTeacher expects a JWT authentified request, and must
 // only be used in routes protected by `JWTMiddleware`
-func JWTTeacher(c echo.Context) Teacher {
+func JWTTeacher(c echo.Context) tc.Teacher {
 	meta := c.Get("user").(*jwt.Token).Claims.(*UserMeta) // the token is valid here
 	return meta.Teacher
 }
@@ -58,7 +59,7 @@ func JWTTeacher(c echo.Context) Teacher {
 // GetDevToken creates a new user and returns a valid token,
 // so that client frontend doesn't have to use password when developping.
 func (ct *Controller) GetDevToken() (string, error) {
-	t, err := Teacher{
+	t, err := tc.Teacher{
 		Mail:            fmt.Sprintf("%d", time.Now().Unix()),
 		PasswordCrypted: ct.teacherKey.EncryptPassword("1234"),
 	}.Insert(ct.db)
@@ -70,7 +71,7 @@ func (ct *Controller) GetDevToken() (string, error) {
 		return "", err
 	}
 	type meta struct {
-		IdTeacher IdTeacher
+		IdTeacher tc.IdTeacher
 		Token     string
 	}
 	out, err := json.Marshal(meta{IdTeacher: t.Id, Token: token})

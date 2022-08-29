@@ -1,6 +1,9 @@
 package editor
 
-import "github.com/benoitkugler/maths-online/maths/questions/client"
+import (
+	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/tasks"
+)
 
 type LoopbackServerEvent interface {
 	isLoopbackServerEvent()
@@ -21,8 +24,8 @@ type loopbackQuestionCorrectAnswersOut struct {
 }
 
 type loopbackShowExercice struct {
-	Exercice    InstantiatedExercice `gomacro-extern:"editor:dart:shared_gen.dart"`
-	Progression ProgressionExt       `gomacro-extern:"editor:dart:shared_gen.dart"`
+	Exercice    tasks.InstantiatedWork `gomacro-extern:"editor:dart:shared_gen.dart"`
+	Progression tasks.ProgressionExt   `gomacro-extern:"editor:dart:shared_gen.dart"`
 }
 
 func (loopbackPaused) isLoopbackServerEvent()                    {}
@@ -44,7 +47,7 @@ type loopbackQuestionValidIn struct {
 type loopbackQuestionCorrectAnswersIn struct{}
 
 type loopbackExerciceValidIn struct {
-	Answer EvaluateExerciceIn `gomacro-extern:"editor:dart:shared_gen.dart"`
+	Answer tasks.EvaluateWorkIn `gomacro-extern:"editor:dart:shared_gen.dart"`
 }
 
 func (loopbackPing) isLoopbackClientEvent()                     {}

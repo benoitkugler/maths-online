@@ -1,10 +1,11 @@
 package homework
 
 import (
+	"sort"
 	"time"
 
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/tasks"
+	"github.com/benoitkugler/maths-online/sql/tasks"
+	"github.com/benoitkugler/maths-online/sql/teacher"
 )
 
 type IdSheet int64
@@ -44,4 +45,9 @@ type SheetTask struct {
 	IdSheet IdSheet `gomacro-sql-on-delete:"CASCADE"`
 	Index   int     `json:"-"` // order in the list
 	IdTask  tasks.IdTask
+}
+
+// EnsureOrder enforce the slice order indicated by `Index`
+func (l SheetTasks) EnsureOrder() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }

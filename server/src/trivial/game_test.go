@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/prof/editor"
+	"github.com/benoitkugler/maths-online/sql/editor"
 )
 
 func init() {

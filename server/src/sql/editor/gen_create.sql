@@ -1,12 +1,11 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE exercices (
     Id serial PRIMARY KEY,
+    IdGroup integer NOT NULL,
     Title text NOT NULL,
     Description text NOT NULL,
     Parameters jsonb NOT NULL,
-    Flow integer CHECK (Flow IN (0, 1)) NOT NULL,
-    IdTeacher integer NOT NULL,
-    Public boolean NOT NULL
+    Flow integer CHECK (Flow IN (0, 1)) NOT NULL
 );
 
 CREATE TABLE exercice_questions (
@@ -16,35 +15,59 @@ CREATE TABLE exercice_questions (
     Index integer NOT NULL
 );
 
+CREATE TABLE exercicegroups (
+    Id serial PRIMARY KEY,
+    Title text NOT NULL,
+    Public boolean NOT NULL,
+    IdTeacher integer NOT NULL
+);
+
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
     Page jsonb NOT NULL,
-    Public boolean NOT NULL,
-    IdTeacher integer NOT NULL,
     Description text NOT NULL,
-    NeedExercice integer
+    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
+    NeedExercice integer,
+    IdGroup integer
 );
 
-CREATE TABLE question_tags (
+CREATE TABLE questiongroups (
+    Id serial PRIMARY KEY,
+    Title text NOT NULL,
+    Public boolean NOT NULL,
+    IdTeacher integer NOT NULL
+);
+
+CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
-    IdQuestion integer NOT NULL
+    IdQuestiongroup integer NOT NULL
 );
 
 -- constraints
 ALTER TABLE questions
-    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+    ADD CHECK (NeedExercice IS NOT NULL
+        OR IdGroup IS NOT NULL);
 
 ALTER TABLE questions
     ADD FOREIGN KEY (NeedExercice) REFERENCES exercices;
 
-ALTER TABLE question_tags
-    ADD UNIQUE (IdQuestion, Tag);
+ALTER TABLE questions
+    ADD FOREIGN KEY (IdGroup) REFERENCES questiongroups ON DELETE CASCADE;
 
-ALTER TABLE question_tags
-    ADD FOREIGN KEY (IdQuestion) REFERENCES questions ON DELETE CASCADE;
+ALTER TABLE questiongroups
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE questiongroup_tags
+    ADD UNIQUE (IdQuestiongroup, Tag);
+
+ALTER TABLE questiongroup_tags
+    ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
+
+ALTER TABLE exercicegroups
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE exercices
-    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+    ADD FOREIGN KEY (IdGroup) REFERENCES exercicegroups;
 
 ALTER TABLE exercice_questions
     ADD PRIMARY KEY (IdExercice, INDEX);

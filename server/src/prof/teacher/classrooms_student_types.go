@@ -1,7 +1,9 @@
 package teacher
 
+import tc "github.com/benoitkugler/maths-online/sql/teacher"
+
 type StudentHeader struct {
-	Id    IdStudent
+	Id    tc.IdStudent
 	Label string
 }
 
@@ -9,7 +11,7 @@ type AttachStudentToClassroom1Out = []StudentHeader
 
 type AttachStudentToClassroom2In struct {
 	ClassroomCode string
-	IdStudent     IdStudent
+	IdStudent     tc.IdStudent
 	Birthday      string // 2006-01-02
 }
 
@@ -25,7 +27,7 @@ type CheckStudentClassroomOut struct {
 }
 
 type StudentClassroomHeader struct {
-	Student       Student
+	Student       tc.Student
 	ClassroomName string
 	TeacherMail   string
 }

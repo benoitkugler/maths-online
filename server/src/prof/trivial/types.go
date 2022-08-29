@@ -2,38 +2,40 @@ package trivial
 
 import (
 	"github.com/benoitkugler/maths-online/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
+	tr "github.com/benoitkugler/maths-online/sql/trivial"
 	"github.com/benoitkugler/maths-online/trivial"
 )
 
-// QuestionCriterion is an union of intersection of tags.
-type QuestionCriterion [][]string
-
-// CategoriesQuestions defines a union of intersection of tags,
-// for every category.
-type CategoriesQuestions [trivial.NbCategories]QuestionCriterion
-
 type TrivialExt struct {
-	Config Trivial
+	Config tr.Trivial
 	Origin teacher.Origin
 
 	NbQuestionsByCategories [trivial.NbCategories]int
 }
 
-func (tc Trivial) withDetails(db DB, origin teacher.Origin, userID uID) (TrivialExt, error) {
-	out := TrivialExt{Config: tc, Origin: origin}
-	for i, cat := range tc.Questions {
-		questions, err := cat.selectQuestions(db, userID)
-		if err != nil {
-			return out, err
-		}
-		out.NbQuestionsByCategories[i] = len(questions)
+func newTrivialExt(sel questionSelector, config tr.Trivial, userID, adminID uID) (TrivialExt, error) {
+	vis := tcAPI.NewVisibility(config.IdTeacher, userID, adminID, config.Public)
+	origin := tcAPI.Origin{
+		AllowPublish: userID == adminID,
+		Visibility:   vis,
+		IsPublic:     config.Public,
+	}
+
+	out := TrivialExt{Config: config, Origin: origin}
+	questions, err := sel.search(config.Questions, userID)
+	if err != nil {
+		return out, err
+	}
+	for i, cat := range questions {
+		out.NbQuestionsByCategories[i] = len(cat.Questions)
 	}
 	return out, nil
 }
 
 type LaunchSessionIn struct {
-	IdConfig IdTrivial
-	// Size of tje groups are fixed by the teacher.
+	IdConfig tr.IdTrivial
+	// Size of the groups as chosen by the teacher.
 	Groups []int
 }
 

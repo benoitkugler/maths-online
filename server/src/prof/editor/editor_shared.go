@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/prof/teacher"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -21,19 +22,28 @@ func (ct *Controller) EditorStartSession(c echo.Context) error {
 }
 
 // EditorGetTags return all tags currently used by questions.
-// It also add the special difficulty tags.
+// It also add the special level tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	tags, err := SelectAllQuestionTags(ct.db)
+	filtred, err := ct.getTags(user.Id)
 	if err != nil {
 		return err
 	}
 
-	// only return tags used by visible questions
-	questions, err := SelectAllQuestions(ct.db)
+	return c.JSON(200, filtred)
+}
+
+func (ct *Controller) getTags(userID uID) ([]string, error) {
+	tags, err := ed.SelectAllQuestiongroupTags(ct.db)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
+	}
+
+	// only return tags used by visible groups
+	groups, err := ed.SelectAllQuestiongroups(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
 	}
 
 	// add the special difficulty and level tags among the proposition,
@@ -43,7 +53,7 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 		seen    = map[string]bool{}
 	)
 	for _, tag := range tags {
-		if !questions[tag.IdQuestion].IsVisibleBy(user.Id) {
+		if !groups[tag.IdQuestiongroup].IsVisibleBy(userID) {
 			continue
 		}
 		if seen[tag.Tag] {
@@ -51,8 +61,8 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 		}
 
 		switch tag.Tag {
-		case string(Diff1), string(Diff2), string(Diff3): // added after
-		case string(Seconde), string(Premiere), string(Terminale): // added after
+		// case string(Diff1), string(Diff2), string(Diff3): // added after
+		case string(ed.Seconde), string(ed.Premiere), string(ed.Terminale): // added after
 		default:
 			filtred = append(filtred, tag.Tag)
 			seen[tag.Tag] = true
@@ -63,11 +73,11 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 	sort.Strings(filtred)
 
 	filtred = append([]string{
-		string(Diff1), string(Diff2), string(Diff3),
-		string(Seconde), string(Premiere), string(Terminale),
+		// string(Diff1), string(Diff2), string(Diff3),
+		string(ed.Seconde), string(ed.Premiere), string(ed.Terminale),
 	}, filtred...)
 
-	return c.JSON(200, filtred)
+	return filtred, nil
 }
 
 func (ct *Controller) EditorPausePreview(c echo.Context) error {
@@ -94,48 +104,6 @@ func (ct *Controller) EditorEndPreview(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-type UpdateTagsIn struct {
-	Tags       []string
-	IdQuestion IdQuestion
-}
-
-func (ct *Controller) EditorUpdateTags(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
-
-	var args UpdateTagsIn
-	if err := c.Bind(&args); err != nil {
-		return fmt.Errorf("invalid parameters: %s", err)
-	}
-
-	err := ct.updateTags(args, user.Id)
-	if err != nil {
-		return err
-	}
-
-	return c.NoContent(200)
-}
-
-type UpdateGroupTagsIn struct {
-	GroupTitle string
-	CommonTags []string
-}
-
-func (ct *Controller) EditorUpdateGroupTags(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
-
-	var args UpdateGroupTagsIn
-	if err := c.Bind(&args); err != nil {
-		return fmt.Errorf("invalid parameters: %s", err)
-	}
-
-	out, err := ct.updateGroupTags(args, user.Id)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
 func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 	var args CheckExerciceParametersIn
 	if err := c.Bind(&args); err != nil {
@@ -151,7 +119,7 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 }
 
 type ExerciceUpdateVisiblityIn struct {
-	ExerciceID IdExercice
+	ExerciceID ed.IdExercicegroup
 	Public     bool
 }
 
@@ -168,7 +136,7 @@ func (ct *Controller) ExerciceUpdateVisiblity(c echo.Context) error {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	ex, err := SelectExercice(ct.db, args.ExerciceID)
+	ex, err := ed.SelectExercicegroup(ct.db, args.ExerciceID)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -177,7 +145,7 @@ func (ct *Controller) ExerciceUpdateVisiblity(c echo.Context) error {
 	}
 
 	if !args.Public {
-		// TODO: check that it is not harmful to hide the question again
+		// TODO: check that it is not harmful to hide the exercice group again
 	}
 	ex.Public = args.Public
 	ex, err = ex.Update(ct.db)
