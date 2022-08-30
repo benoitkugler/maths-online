@@ -34,7 +34,6 @@ type ExerciceInstance struct {
 }
 
 type QuestionInstance struct {
-	Title  string
 	Enonce EnonceInstance
 }
 
@@ -115,7 +114,6 @@ func (qu QuestionInstance) CorrectAnswer() (out client.QuestionAnswersIn) {
 // expected answers and converting expressions to LaTeX strings.
 func (qi QuestionInstance) ToClient() client.Question {
 	out := client.Question{
-		Title:  qi.Title,
 		Enonce: make(client.Enonce, len(qi.Enonce)),
 	}
 	for i, c := range qi.Enonce {

@@ -42,7 +42,7 @@ func validateAllQuestions(questions ed.Questions, exercices ed.Exercices) error 
 
 		err := q.Page.Validate()
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("%s (ID: %d) -> %s", q.Page.Title, id, err))
+			errs = append(errs, fmt.Sprintf("ID: %d (%s) -> %s", id, q.Subtitle, err))
 		}
 	}
 	if len(errs) == 0 {

@@ -7,24 +7,6 @@ import (
 	"github.com/benoitkugler/maths-online/maths/repere"
 )
 
-var questionsList = [...]que.QuestionPage{
-	{
-		Title: "Remplir un tableau de variation",
-		Enonce: que.Enonce{
-			que.TextBlock{
-				Parts: "Réponse attendue : -2, 0, 2/3 \n 4/9, -2, 2/3",
-			},
-			que.VariationTableFieldBlock{
-				Answer: que.VariationTableBlock{
-					Label: "y = h(x)",
-					Xs:    []string{"-2", "0", "2/3"},
-					Fxs:   []string{"4/9", "-2", "2/3"},
-				},
-			},
-		},
-	},
-}
-
 var blockList = [...]que.Block{
 	que.ExpressionFieldBlock{
 		Expression:      "x^2 + 2x + 1",

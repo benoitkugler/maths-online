@@ -6,6 +6,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/sql/editor"
 	ho "github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
@@ -14,10 +15,11 @@ type sample struct {
 	userID     uID
 	class      teacher.Classroom
 	exe1, exe2 editor.Exercice
+	question   editor.Question
 }
 
 func setupDB(t *testing.T) (db tu.TestDB, out sample) {
-	db = tu.NewTestDB(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "../../tasks/gen_create.sql", "gen_create.sql")
+	db = tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql", "../../sql/homework/gen_create.sql")
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	tu.Assert(t, err == nil)
@@ -34,6 +36,12 @@ func setupDB(t *testing.T) (db tu.TestDB, out sample) {
 	out.exe2, err = editor.Exercice{IdGroup: group.Id}.Insert(db)
 	tu.Assert(t, err == nil)
 
+	quGroup, err := editor.Questiongroup{IdTeacher: out.userID}.Insert(db)
+	tu.Assert(t, err == nil)
+
+	out.question, err = editor.Question{IdGroup: quGroup.Id.AsOptional()}.Insert(db)
+	tu.Assert(t, err == nil)
+
 	return db, out
 }
 
@@ -41,6 +49,7 @@ func TestCRUDSheet(t *testing.T) {
 	db, sample := setupDB(t)
 	defer db.Remove()
 	userID, class, exe1, exe2 := sample.userID, sample.class, sample.exe1, sample.exe2
+	qu := sample.question
 	ct := NewController(db.DB, teacher.Teacher{Id: userID}, pass.Encrypter{})
 
 	l, err := ct.getSheets(userID)
@@ -57,11 +66,17 @@ func TestCRUDSheet(t *testing.T) {
 	err = ct.updateSheet(updated, userID)
 	tu.Assert(t, err == nil)
 
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh.Id, IdExercice: exe2.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: exe2.Id}, userID)
 	tu.Assert(t, err == nil)
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
+	tu.Assert(t, err == nil)
+
+	_, err = ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, Monoquestion: tasks.Monoquestion{
+		IdQuestion: qu.Id,
+		NbRepeat:   4, Bareme: 2,
+	}}, userID)
 	tu.Assert(t, err == nil)
 
 	l, err = ct.getSheets(userID)
@@ -105,13 +120,13 @@ func TestStudentSheets(t *testing.T) {
 	err = ct.updateSheet(sh2, userID)
 	tu.Assert(t, err == nil)
 	// ... and add exercices
-	task1, err := ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe2.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe2.Id}, userID)
 	tu.Assert(t, err == nil)
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh2.Id, IdExercice: exe1.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh2.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
 
 	sheets, err = ct.getStudentSheets(student.Id)
@@ -123,6 +138,6 @@ func TestStudentSheets(t *testing.T) {
 	err = ct.removeTask(task1.Id, userID)
 	tu.Assert(t, err == nil)
 
-	_, err = ct.addTaskTo(AddTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
+	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
 }

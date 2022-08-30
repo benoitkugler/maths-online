@@ -56,9 +56,9 @@ func exerciceOrigin(ex ed.Exercicegroup, userID, adminID uID) (tcAPI.Origin, boo
 	}, true
 }
 
-// BuildExerciceHeaders aggregates the content of the tables Exercice and ExerciceQuestion,
+// buildExerciceHeaders aggregates the content of the tables Exercice and ExerciceQuestion,
 // selecting only the exercices visible by `userID`
-func BuildExerciceHeaders(userID, adminID teacher.IdTeacher, groups ed.Exercicegroups, exes ed.Exercices, links ed.ExerciceQuestions) map[ed.IdExercice]ExerciceHeader {
+func buildExerciceHeaders(userID, adminID teacher.IdTeacher, groups ed.Exercicegroups, exes ed.Exercices, links ed.ExerciceQuestions) map[ed.IdExercice]ExerciceHeader {
 	out := make(map[ed.IdExercice]ExerciceHeader, len(exes))
 	questionDict := links.ByIdExercice()
 
@@ -97,14 +97,14 @@ func (ct *Controller) getExercices(userID uID) ([]ExerciceHeader, error) {
 		return nil, utils.SQLError(err)
 	}
 
-	tmp := BuildExerciceHeaders(userID, ct.admin.Id, groups, exs, links)
+	tmp := buildExerciceHeaders(userID, ct.admin.Id, groups, exs, links)
 	out := make([]ExerciceHeader, 0, len(tmp))
 	for _, ex := range tmp {
 		out = append(out, ex)
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Exercice.Title < out[j].Exercice.Title })
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Exercice.Subtitle < out[j].Exercice.Subtitle })
 
 	return out, nil
 }
@@ -461,7 +461,7 @@ func (ct *Controller) updateExercice(in ed.Exercice, userID uID) (ed.Exercice, e
 
 	// only update meta data
 	ex.Description = in.Description
-	ex.Title = in.Title
+	ex.Subtitle = in.Subtitle
 	ex.Flow = in.Flow
 	ex, err = ex.Update(ct.db)
 	if err != nil {

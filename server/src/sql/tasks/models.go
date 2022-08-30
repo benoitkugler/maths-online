@@ -13,6 +13,7 @@ type (
 
 // Monoquestion is a shortcut for an exercice composed of only one question.
 // It is used to avoid creating cumbersome exercice wrappers around questions.
+// It may only be used for standalone questions, that is question in a group
 type Monoquestion struct {
 	Id         IdMonoquestion
 	IdQuestion editor.IdQuestion

@@ -6,7 +6,6 @@ import (
 )
 
 type Question struct {
-	Title  string
 	Enonce Enonce
 }
 

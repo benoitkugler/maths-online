@@ -2,7 +2,7 @@
 CREATE TABLE exercices (
     Id serial PRIMARY KEY,
     IdGroup integer NOT NULL,
-    Title text NOT NULL,
+    Subtitle text NOT NULL,
     Description text NOT NULL,
     Parameters jsonb NOT NULL,
     Flow integer CHECK (Flow IN (0, 1)) NOT NULL
@@ -25,6 +25,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
     Page jsonb NOT NULL,
+    Subtitle text NOT NULL,
     Description text NOT NULL,
     Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
     NeedExercice integer,
@@ -1165,10 +1166,9 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('title', 'enonce', 'parameters'))
+            bool_and(key IN ('enonce', 'parameters'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'title')
         AND gomacro_validate_json_array_ques_Block (data -> 'enonce')
         AND gomacro_validate_json_ques_Parameters (data -> 'parameters');
     RETURN is_valid;

@@ -260,7 +260,7 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) error {
 			return utils.SQLError(err)
 		}
 
-		return fmt.Errorf("La question est utilisée dans l'exercice %s : %d.", ex.Title, ex.Id)
+		return fmt.Errorf("La question est utilisée dans l'exercice %s : %d.", ex.Subtitle, ex.Id)
 	}
 
 	_, err = ed.DeleteQuestionById(ct.db, id)
@@ -488,7 +488,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 		for _, question := range questions {
 			question := QuestionHeader{
 				Id:         question.Id,
-				Subtitle:   question.Page.Title,
+				Subtitle:   question.Subtitle,
 				Difficulty: question.Difficulty,
 			}
 			groupExt.Questions = append(groupExt.Questions, question)

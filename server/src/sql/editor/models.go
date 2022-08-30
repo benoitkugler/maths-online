@@ -20,7 +20,8 @@ type (
 type Question struct {
 	Id          IdQuestion
 	Page        questions.QuestionPage
-	Description string
+	Subtitle    string // used to differentiate questions inside a group
+	Description string // implementation notes
 
 	Difficulty DifficultyTag
 
@@ -63,7 +64,7 @@ type Exercice struct {
 	Id      IdExercice
 	IdGroup IdExercicegroup
 
-	Title       string // subtitle, only shown to the teacher
+	Subtitle    string // subtitle, only shown to the teacher
 	Description string // used internally by the teachers
 	// Parameters are parameters shared by all the questions,
 	// which are added to the individual ones.

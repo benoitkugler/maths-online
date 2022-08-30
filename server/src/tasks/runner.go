@@ -69,14 +69,19 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 	return out, nil
 }
 
-// EvaluateQuestion instantiate the given question with the given parameters,
+type EvaluateQuestionParams struct {
+	Answer     Answer
+	IdQuestion ed.IdQuestion
+}
+
+// Evaluate instantiate the given question with the given parameters,
 // and evaluate the given answer.
-func EvaluateQuestion(db ed.DB, id ed.IdQuestion, answer Answer) (client.QuestionAnswersOut, error) {
-	qu, err := ed.SelectQuestion(db, id)
+func (params EvaluateQuestionParams) Evaluate(db ed.DB) (client.QuestionAnswersOut, error) {
+	qu, err := ed.SelectQuestion(db, params.IdQuestion)
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
-	return evaluateQuestion(qu, answer)
+	return evaluateQuestion(qu, params.Answer)
 }
 
 func evaluateQuestion(qu ed.Question, answer Answer) (client.QuestionAnswersOut, error) {
@@ -103,7 +108,7 @@ type WorkID struct {
 	IsExercice bool
 }
 
-func newWorkID(task ta.Task) WorkID {
+func NewWorkID(task ta.Task) WorkID {
 	if task.IdExercice.Valid {
 		return newWorkIDFromEx(task.IdExercice.ID)
 	}
@@ -114,14 +119,16 @@ func newWorkIDFromEx(id ed.IdExercice) WorkID { return WorkID{ID: int64(id), IsE
 
 func newWorkIDFromMono(id ta.IdMonoquestion) WorkID { return WorkID{ID: int64(id), IsExercice: false} }
 
-type workLoader interface {
-	title() string
+// Work is the common interface for exerices and mono-questions.
+type Work interface {
+	Title() string    // as presented to the student
+	Subtitle() string // used by the teacher
 	flow() ed.Flow
 	QuestionsList() ([]ed.Question, taskBareme)
 	Instantiate() (InstantiatedWork, error)
 }
 
-func newWorkLoader(db ed.DB, work WorkID) (workLoader, error) {
+func newWorkLoader(db ed.DB, work WorkID) (Work, error) {
 	if work.IsExercice {
 		return NewExerciceData(db, ed.IdExercice(work.ID))
 	}
@@ -214,8 +221,9 @@ func NewExerciceData(db ed.DB, id ed.IdExercice) (ExerciceData, error) {
 	return ExerciceData{Group: group, Exercice: ex, Links: links, QuestionsSource: dict}, nil
 }
 
-func (ex ExerciceData) title() string { return ex.Exercice.Title }
-func (ex ExerciceData) flow() ed.Flow { return ex.Exercice.Flow }
+func (ex ExerciceData) Title() string    { return ex.Group.Title }
+func (ex ExerciceData) Subtitle() string { return ex.Exercice.Subtitle }
+func (ex ExerciceData) flow() ed.Flow    { return ex.Exercice.Flow }
 
 // QuestionsList resolve the links list using `QuestionsSource`
 func (ex ExerciceData) QuestionsList() ([]ed.Question, taskBareme) {
@@ -236,7 +244,7 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 
 	out := InstantiatedWork{
 		ID:      newWorkIDFromEx(ex.Id),
-		Title:   ex.Title,
+		Title:   data.Title(),
 		Flow:    ex.Flow,
 		Baremes: baremes,
 	}
@@ -257,8 +265,9 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 }
 
 type MonoquestionData struct {
-	params   ta.Monoquestion
-	question ed.Question
+	params        ta.Monoquestion
+	questiongroup ed.Questiongroup
+	question      ed.Question
 }
 
 // NewMonoquestionData loads the given Monoquestion and the associated question
@@ -273,11 +282,17 @@ func NewMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out MonoquestionData, 
 		return out, utils.SQLError(err)
 	}
 
+	out.questiongroup, err = ed.SelectQuestiongroup(db, out.question.IdGroup.ID)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	return out, nil
 }
 
-func (data MonoquestionData) title() string { return data.question.Page.Title }
-func (MonoquestionData) flow() ed.Flow      { return ed.Parallel }
+func (data MonoquestionData) Title() string    { return data.questiongroup.Title }
+func (data MonoquestionData) Subtitle() string { return data.question.Subtitle }
+func (MonoquestionData) flow() ed.Flow         { return ed.Parallel }
 
 // QuestionsList returns the generated list of questions
 func (data MonoquestionData) QuestionsList() ([]ed.Question, taskBareme) {
@@ -295,7 +310,7 @@ func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
 	questions, baremes := data.QuestionsList()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromMono(data.params.Id),
-		Title:   data.question.Page.Title,
+		Title:   data.Title(),
 		Flow:    ed.Parallel,
 		Baremes: baremes,
 	}
@@ -323,11 +338,11 @@ type EvaluateWorkOut struct {
 	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
 }
 
-// EvaluateWork checks the answer provided for the given exercice and
+// Evaluate checks the answer provided for the given exercice and
 // update the in-memory progression.
 // The given progression must either be empty or have same length
 // as the exercice.
-func EvaluateWork(db ed.DB, args EvaluateWorkIn) (EvaluateWorkOut, error) {
+func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 	data, err := newWorkLoader(db, args.ID)
 	if err != nil {
 		return EvaluateWorkOut{}, utils.SQLError(err)

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/utils/testutils"
@@ -93,7 +92,7 @@ func TestExerciceCRUD(t *testing.T) {
 	}, 1)
 	tu.Assert(t, err == nil)
 
-	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Exercice.Id, Description: "test", Title: "test2", Flow: ed.Sequencial}, 1)
+	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Exercice.Id, Description: "test", Subtitle: "test2", Flow: ed.Sequencial}, 1)
 	tu.Assert(t, err == nil)
 	if exe.Flow != ed.Sequencial {
 		t.Fatal(exe)
@@ -127,9 +126,9 @@ func TestGroupTagsEmpty(t *testing.T) {
 	group, err := ed.Questiongroup{IdTeacher: 1}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	_, err = ed.Question{IdGroup: group.Id.AsOptional(), Page: questions.QuestionPage{Title: "subtitle 1"}}.Insert(db)
+	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(db)
 	tu.Assert(t, err == nil)
-	_, err = ed.Question{IdGroup: group.Id.AsOptional(), Page: questions.QuestionPage{Title: "subtitle 2"}}.Insert(db)
+	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	err = ct.updateTags(UpdateQuestiongroupTagsIn{Id: group.Id, Tags: []string{"newtag1", "newtag2"}}, 1)

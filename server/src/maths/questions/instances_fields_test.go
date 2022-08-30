@@ -193,7 +193,7 @@ func Test_shufflingMap(t *testing.T) {
 
 func TestInstantiate01(t *testing.T) {
 	bug01 := QuestionPage{
-		Title: "Construire la courbe représentative d'une fonction",
+		// Construire la courbe représentative d'une fonction
 		Enonce: []Block{
 			TextBlock{
 				Parts:   "Construire $C_&f&$ la courbe représentative de la fonction : $&f&(x)=&ax^2+bx+c&$",

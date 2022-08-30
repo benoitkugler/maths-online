@@ -77,30 +77,30 @@ func TestEvaluateExercice(t *testing.T) {
 	}
 
 	// no error since the exercice is parallel
-	_, err = EvaluateWork(db, EvaluateWorkIn{
+	_, err = EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
 		Answers:     map[int]Answer{},
-	})
+	}.Evaluate(db)
 	tu.Assert(t, err == nil)
 
-	out, err := EvaluateWork(db, EvaluateWorkIn{
+	out, err := EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
 		Answers: map[int]Answer{
 			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
 		},
-	})
+	}.Evaluate(db)
 	tu.Assert(t, err == nil)
 	tu.Assert(t, out.Progression.NextQuestion == 0) // wrong answer
 
-	out, err = EvaluateWork(db, EvaluateWorkIn{
+	out, err = EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
 		Answers: map[int]Answer{
 			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
 		},
-	})
+	}.Evaluate(db)
 	tu.Assert(t, err == nil)
 	tu.Assert(t, out.Progression.NextQuestion == 1) // correct answer
 }

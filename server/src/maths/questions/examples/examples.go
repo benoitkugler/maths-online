@@ -5,29 +5,49 @@ package examples
 import (
 	"fmt"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
+	que "github.com/benoitkugler/maths-online/maths/questions"
 )
 
+type LabeledQuestion struct {
+	Title    string
+	Question que.QuestionInstance
+}
+
 // Questions returns a version of the examples.
-func Questions() (out []questions.QuestionInstance) {
-	for _, qu := range questionsList {
-		out = append(out, qu.Instantiate())
-	}
+func Questions() (out []LabeledQuestion) {
+	out = append(out, LabeledQuestion{
+		Title: "Remplir un tableau de variation",
+		Question: que.QuestionPage{
+			Enonce: que.Enonce{
+				que.TextBlock{
+					Parts: "Réponse attendue : -2, 0, 2/3 \n 4/9, -2, 2/3",
+				},
+				que.VariationTableFieldBlock{
+					Answer: que.VariationTableBlock{
+						Label: "y = h(x)",
+						Xs:    []string{"-2", "0", "2/3"},
+						Fxs:   []string{"4/9", "-2", "2/3"},
+					},
+				},
+			},
+		}.Instantiate(),
+	},
+	)
 
 	for _, block := range blockList {
 		title := fmt.Sprintf("%T", block)
-		enonce := questions.Enonce{
-			questions.TextBlock{
-				Parts: questions.Interpolated("Exemple du moule " + title),
+		enonce := que.Enonce{
+			que.TextBlock{
+				Parts: que.Interpolated("Exemple du moule " + title),
 				Bold:  true,
 			},
 			block,
 		}
-		qu := questions.QuestionPage{
-			Title:  title,
-			Enonce: enonce,
-		}
-		out = append(out, qu.Instantiate())
+		qu := que.QuestionPage{Enonce: enonce}.Instantiate()
+		out = append(out, LabeledQuestion{
+			Title:    title,
+			Question: qu,
+		})
 	}
 
 	return out

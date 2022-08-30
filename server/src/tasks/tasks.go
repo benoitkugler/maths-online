@@ -28,26 +28,28 @@ func (qh *ProgressionExt) InferNextQuestion() {
 	qh.NextQuestion = -1
 }
 
-type tasksContents struct {
-	tasks         ta.Tasks
-	groups        ed.Exercicegroups
-	exercices     ed.Exercices
-	exToQuestions map[ed.IdExercice]ed.ExerciceQuestions
+// TasksContents is an helper struct to unify tasks loading.
+type TasksContents struct {
+	Tasks          ta.Tasks
+	exercicegroups ed.Exercicegroups
+	exercices      ed.Exercices
+	exToQuestions  map[ed.IdExercice]ed.ExerciceQuestions
 
-	monoquestions ta.Monoquestions
+	monoquestions  ta.Monoquestions
+	questiongroups ed.Questiongroups // for questions in monoquestions
 
 	questions ed.Questions // provide both exercices and monoquestions contents
 }
 
-func loadTasksContents(db ta.DB, ids []ta.IdTask) (out tasksContents, err error) {
-	out.tasks, err = ta.SelectTasks(db, ids...)
+func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) {
+	out.Tasks, err = ta.SelectTasks(db, ids...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
 	// fetch the associated exerciceIDs or monoquestionIDs
 	exerciceIDs, monoquestionIDs := make(ed.IdExerciceSet), make(ta.IdMonoquestionSet)
-	for _, task := range out.tasks {
+	for _, task := range out.Tasks {
 		if task.IdExercice.Valid {
 			exerciceIDs.Add(task.IdExercice.ID)
 		} else {
@@ -59,7 +61,7 @@ func loadTasksContents(db ta.DB, ids []ta.IdTask) (out tasksContents, err error)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	out.groups, err = ed.SelectExercicegroups(db, out.exercices.IdGroups()...)
+	out.exercicegroups, err = ed.SelectExercicegroups(db, out.exercices.IdGroups()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -80,24 +82,48 @@ func loadTasksContents(db ta.DB, ids []ta.IdTask) (out tasksContents, err error)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
+
+	questiongroupsId := make(ed.IdQuestiongroupSet) // select the groups required
+	for _, qu := range out.questions {
+		if qu.IdGroup.Valid {
+			questiongroupsId.Add(qu.IdGroup.ID)
+		}
+	}
+
+	out.questiongroups, err = ed.SelectQuestiongroups(db, questiongroupsId.Keys()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	return out, nil
 }
 
-func (contents tasksContents) getWork(task ta.Task) workLoader {
+// GetWork returns the task content for `task`.
+func (contents TasksContents) GetWork(task ta.Task) Work {
 	if task.IdExercice.Valid {
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
-		return ExerciceData{Group: contents.groups[ex.IdGroup], Exercice: ex, Links: questions, QuestionsSource: contents.questions}
+		return ExerciceData{
+			Group:           contents.exercicegroups[ex.IdGroup],
+			Exercice:        ex,
+			Links:           questions,
+			QuestionsSource: contents.questions,
+		}
 	}
 
 	monoquestion := contents.monoquestions[task.IdMonoquestion.Id]
-	return MonoquestionData{params: monoquestion, question: contents.questions[monoquestion.IdQuestion]}
+	question := contents.questions[monoquestion.IdQuestion]
+	return MonoquestionData{
+		params:        monoquestion,
+		question:      question,
+		questiongroup: contents.questiongroups[question.IdGroup.ID],
+	}
 }
 
 // loadProgressions loads the progression contents
 func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]ProgressionExt, error) {
 	// fetch the associated tasks
-	tasks, err := loadTasksContents(db, prs.IdTasks())
+	tasks, err := NewTasksContents(db, prs.IdTasks())
 	if err != nil {
 		return nil, err
 	}
@@ -110,8 +136,8 @@ func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]Progr
 
 	out := make(map[ta.IdProgression]ProgressionExt, len(prs))
 	for _, pr := range prs {
-		task := tasks.tasks[pr.IdTask]
-		work := tasks.getWork(task)
+		task := tasks.Tasks[pr.IdTask]
+		work := tasks.GetWork(task)
 		// get the questions length
 		tmp, _ := work.QuestionsList()
 		L := len(tmp)
@@ -226,7 +252,7 @@ type TaskProgressionHeader struct {
 // LoadTasksProgression fetches the progression of one student against
 // the given tasks.
 func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.IdTask) (map[ta.IdTask]TaskProgressionHeader, error) {
-	contents, err := loadTasksContents(db, idTasks)
+	contents, err := NewTasksContents(db, idTasks)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -244,8 +270,8 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 
 	progressionsByTask := links1.ByIdTask()
 
-	out := make(map[ta.IdTask]TaskProgressionHeader, len(contents.tasks))
-	for _, task := range contents.tasks {
+	out := make(map[ta.IdTask]TaskProgressionHeader, len(contents.Tasks))
+	for _, task := range contents.Tasks {
 		// select the right progression, which may be empty
 		// before the student starts the exercice,
 		// that is progs has either length one or zero
@@ -256,9 +282,9 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 		}
 		progression := extendedProgressions[idProg] // may be empty
 
-		work := contents.getWork(task)
+		work := contents.GetWork(task)
 		_, baremes := work.QuestionsList()
-		title := work.title()
+		title := work.Title()
 
 		out[task.Id] = TaskProgressionHeader{
 			Id:    task.Id,
@@ -278,7 +304,7 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 // the student progression, returning the updated mark.
 // If needed, a new progression item is created.
 func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn) (out EvaluateWorkOut, mark int, err error) {
-	out, err = EvaluateWork(db, ex)
+	out, err = ex.Evaluate(db)
 	if err != nil {
 		return
 	}
@@ -301,7 +327,7 @@ func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStud
 		return out, mark, utils.SQLError(err)
 	}
 
-	loader, err := newWorkLoader(db, newWorkID(task))
+	loader, err := newWorkLoader(db, NewWorkID(task))
 	if err != nil {
 		return
 	}

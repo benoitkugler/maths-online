@@ -22,7 +22,7 @@ func randExercice() Exercice {
 	return Exercice{
 		Id:          randIdExercice(),
 		IdGroup:     randIdExercicegroup(),
-		Title:       randstring(),
+		Subtitle:    randstring(),
 		Description: randstring(),
 		Parameters:  randque_Parameters(),
 		Flow:        randFlow(),
@@ -93,6 +93,7 @@ func randQuestion() Question {
 	return Question{
 		Id:           randIdQuestion(),
 		Page:         randque_QuestionPage(),
+		Subtitle:     randstring(),
 		Description:  randstring(),
 		Difficulty:   randDifficultyTag(),
 		NeedExercice: randOptionalIdExercice(),
@@ -475,7 +476,6 @@ func randque_ProofSequence() questions.ProofSequence {
 
 func randque_QuestionPage() questions.QuestionPage {
 	return questions.QuestionPage{
-		Title:      randstring(),
 		Enonce:     randque_Enonce(),
 		Parameters: randque_Parameters(),
 	}

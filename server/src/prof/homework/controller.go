@@ -167,20 +167,25 @@ func (ct *Controller) updateSheet(sheet ho.Sheet, userID uID) error {
 	return nil
 }
 
-type AddTaskIn struct {
+type AddExerciceToTaskIn struct {
 	IdSheet    ho.IdSheet
 	IdExercice ed.IdExercice
+}
+
+type AddMonoquestionToTaskIn struct {
+	IdSheet      ho.IdSheet
+	Monoquestion tasks.Monoquestion
 }
 
 func (ct *Controller) HomeworkAddTask(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
-	var args AddTaskIn
+	var args AddExerciceToTaskIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	task, err := ct.addTaskTo(args, user.Id)
+	task, err := ct.addExerciceTo(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -188,8 +193,56 @@ func (ct *Controller) HomeworkAddTask(c echo.Context) error {
 	return c.JSON(200, task)
 }
 
-func (ct *Controller) addTaskTo(args AddTaskIn, userID uID) (tasks.Task, error) {
-	if err := ct.checkSheetOwner(args.IdSheet, userID); err != nil {
+func (ct *Controller) HomeworkAddMonoquestion(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args AddMonoquestionToTaskIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	task, err := ct.addMonoquestionTo(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, task)
+}
+
+func (ct *Controller) addExerciceTo(args AddExerciceToTaskIn, userID uID) (tasks.Task, error) {
+	task := tasks.Task{IdExercice: args.IdExercice.AsOptional()}
+	return ct.addTaskTo(args.IdSheet, task, userID)
+}
+
+func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID) (tasks.Task, error) {
+	// create the monoquestion, checking that the question has a group
+	question, err := ed.SelectQuestion(ct.db, args.Monoquestion.IdQuestion)
+	if err != nil {
+		return tasks.Task{}, utils.SQLError(err)
+	}
+
+	if !question.IdGroup.Valid {
+		return tasks.Task{}, errors.New("internal error: (mono)question not included in a group")
+	}
+
+	mono, err := args.Monoquestion.Insert(ct.db)
+	if err != nil {
+		return tasks.Task{}, utils.SQLError(err)
+	}
+	task := tasks.Task{IdMonoquestion: mono.Id.AsOptional()}
+	out, err := ct.addTaskTo(args.IdSheet, task, userID)
+	if err != nil {
+		// cleanup the monoquestion
+		_, _ = tasks.DeleteMonoquestionById(ct.db, mono.Id)
+		return tasks.Task{}, err
+	}
+
+	return out, nil
+}
+
+// addTaskTo insert the given new task in the DB, and adds it to sheet
+func (ct *Controller) addTaskTo(sheet ho.IdSheet, task tasks.Task, userID uID) (tasks.Task, error) {
+	if err := ct.checkSheetOwner(sheet, userID); err != nil {
 		return tasks.Task{}, err
 	}
 
@@ -198,21 +251,20 @@ func (ct *Controller) addTaskTo(args AddTaskIn, userID uID) (tasks.Task, error) 
 		return tasks.Task{}, utils.SQLError(err)
 	}
 
-	// TODO:
-	task, err := tasks.Task{IdExercice: args.IdExercice}.Insert(tx)
+	task, err = task.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return tasks.Task{}, utils.SQLError(err)
 	}
 
 	// link the task to the sheet, appending
-	links, err := ho.SelectSheetTasksByIdSheets(tx, args.IdSheet)
+	links, err := ho.SelectSheetTasksByIdSheets(tx, sheet)
 	if err != nil {
 		_ = tx.Rollback()
 		return tasks.Task{}, utils.SQLError(err)
 	}
 
-	err = ho.InsertManySheetTasks(tx, ho.SheetTask{IdSheet: args.IdSheet, IdTask: task.Id, Index: len(links)})
+	err = ho.InsertManySheetTasks(tx, ho.SheetTask{IdSheet: sheet, IdTask: task.Id, Index: len(links)})
 	if err != nil {
 		_ = tx.Rollback()
 		return tasks.Task{}, utils.SQLError(err)
@@ -288,10 +340,19 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 	}
 
 	// and then cleanup the unused task
-	_, err = tasks.DeleteTaskById(tx, idTask)
+	removedTask, err := tasks.DeleteTaskById(tx, idTask)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
+	}
+
+	// delete the potential associated monoquestion
+	if removedTask.IdMonoquestion.Valid {
+		_, err = tasks.DeleteMonoquestionById(tx, removedTask.IdMonoquestion.Id)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
 	}
 
 	err = tx.Commit()
@@ -299,6 +360,40 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 		return utils.SQLError(err)
 	}
 	return nil
+}
+
+func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args tasks.Monoquestion
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	// check that the monoquestion is in a sheet owner by user
+	idSheet, err := ho.LoadMonoquestionSheet(ct.db, args.Id)
+	if err != nil {
+		return err
+	}
+	err = ct.checkSheetOwner(idSheet, user.Id)
+	if err != nil {
+		return err
+	}
+
+	// only update bareme and repetitions
+	mono, err := tasks.SelectMonoquestion(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	mono.Bareme = args.Bareme
+	mono.NbRepeat = args.NbRepeat
+	_, err = mono.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
 }
 
 type ReorderSheetTasksIn struct {
@@ -446,12 +541,13 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	// create new tasks : a task can't be be shared
 	newLinks := make(ho.SheetTasks, len(links))
 	for i, link := range links {
-		ta, err := tasks.Task{IdExercice: taskMap[link.IdTask].IdExercice}.Insert(tx)
+		newTask := taskMap[link.IdTask]
+		newTask, err = newTask.Insert(tx)
 		if err != nil {
 			_ = tx.Rollback()
 			return SheetExt{}, utils.SQLError(err)
 		}
-		newLinks[i] = ho.SheetTask{IdSheet: newSheet.Id, IdTask: ta.Id, Index: i}
+		newLinks[i] = ho.SheetTask{IdSheet: newSheet.Id, IdTask: newTask.Id, Index: i}
 	}
 
 	err = ho.InsertManySheetTasks(tx, newLinks...)
@@ -540,12 +636,17 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 }
 
 func (ct *Controller) StudentInstantiateExercice(c echo.Context) error {
-	idE, err := utils.QueryParamInt64(c, "id")
+	idTask, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := taAPI.InstantiateWork(ct.db, ed.IdExercice(idE))
+	task, err := tasks.SelectTask(ct.db, tasks.IdTask(idTask))
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	out, err := taAPI.InstantiateWork(ct.db, taAPI.NewWorkID(task))
 	if err != nil {
 		return err
 	}

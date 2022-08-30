@@ -166,7 +166,7 @@ func main() {
 		fmt.Println("CORS activé.")
 	}
 
-	setupRoutes(e, tvc, edit, tc, hwc)
+	setupRoutes(e, db, tvc, edit, tc, hwc)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -243,7 +243,7 @@ func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
 
-func setupRoutes(e *echo.Echo,
+func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
 ) {
@@ -291,18 +291,18 @@ func setupRoutes(e *echo.Echo,
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)
 	e.POST("/api/evaluate-question", func(c echo.Context) error {
-		return evaluateQuestion(edit, c)
+		return evaluateQuestion(db, c)
 	})
 
 	// standalone question/exercice
 	e.POST("/api/questions/instantiate", func(c echo.Context) error {
-		return instantiateQuestions(edit, c)
+		return instantiateQuestions(db, c)
 	})
 	e.POST("/api/questions/evaluate", func(c echo.Context) error {
-		return evaluateQuestion(edit, c)
+		return evaluateQuestion(db, c)
 	})
 	e.POST("/api/exercices/evaluate", func(c echo.Context) error {
-		return evaluateExercice(edit, c)
+		return evaluateExercice(db, c)
 	})
 
 	// student homework API
@@ -311,15 +311,20 @@ func setupRoutes(e *echo.Echo,
 	e.POST("/api/student/homework/exercice/evaluate", home.StudentEvaluateExercice)
 }
 
+type labeledQuestion struct {
+	Title    string
+	Question client.Question
+}
+
 // routes for a (temporary) question quick access
 func setupQuestionSampleAPI(e *echo.Echo) {
 	sampleQuestions := examples.Questions()
 	e.GET("/questions", func(c echo.Context) error {
-		var out []client.Question
+		var out []labeledQuestion
 		for _, qu := range sampleQuestions {
-			out = append(out, qu.ToClient())
+			out = append(out, labeledQuestion{Title: qu.Title, Question: qu.Question.ToClient()})
 		}
-		return c.JSONPretty(200, out, " ")
+		return c.JSONPretty(200, sampleQuestions, " ")
 	})
 
 	e.POST("/questions/syntaxe/:index", func(c echo.Context) error {
@@ -330,7 +335,7 @@ func setupQuestionSampleAPI(e *echo.Echo) {
 			return err
 		}
 
-		out := sampleQuestions[index].CheckSyntaxe(data)
+		out := sampleQuestions[index].Question.CheckSyntaxe(data)
 
 		return c.JSON(200, out)
 	})
@@ -344,7 +349,7 @@ func setupQuestionSampleAPI(e *echo.Echo) {
 			return err
 		}
 
-		out := sampleQuestions[index].EvaluateAnswer(data)
+		out := sampleQuestions[index].Question.EvaluateAnswer(data)
 
 		return c.JSON(200, out)
 	})

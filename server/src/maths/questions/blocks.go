@@ -88,7 +88,6 @@ func (rp RandomParameters) toMap() expression.RandomParameters {
 // describes the question (description, question, field answer),
 // and are parametrized by random values.
 type QuestionPage struct {
-	Title      string     `json:"title"` // name of the question, optional
 	Enonce     Enonce     `json:"enonce"`
 	Parameters Parameters `json:"parameters"` // random parameters shared by the all the blocks
 }
@@ -100,11 +99,11 @@ type QuestionPage struct {
 func (qu QuestionPage) Instantiate() (out QuestionInstance) {
 	out, err := qu.instantiate()
 	if err != nil {
-		return QuestionInstance{Title: "Erreur", Enonce: EnonceInstance{
+		return QuestionInstance{Enonce: EnonceInstance{
 			TextInstance{
 				Parts: []client.TextOrMath{
 					{
-						Text: fmt.Sprintf("Erreur inatendue : %v", err),
+						Text: fmt.Sprintf("Erreur inattendue : %v", err),
 					},
 				},
 			},
@@ -136,7 +135,7 @@ func (qu QuestionPage) InstantiateWith(params expression.Vars) (QuestionInstance
 			currentID++
 		}
 	}
-	return QuestionInstance{Title: qu.Title, Enonce: enonce}, nil
+	return QuestionInstance{Enonce: enonce}, nil
 }
 
 // TextPart is either a plain text, a LaTeX code or an expression

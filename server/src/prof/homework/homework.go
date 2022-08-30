@@ -7,8 +7,6 @@ import (
 	"database/sql"
 	"sort"
 
-	edAPI "github.com/benoitkugler/maths-online/prof/editor"
-	ed "github.com/benoitkugler/maths-online/sql/editor"
 	ho "github.com/benoitkugler/maths-online/sql/homework"
 	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
@@ -34,8 +32,10 @@ func newClassroomSheets(cl teacher.Classroom, sheepMap map[ho.IdSheet]SheetExt) 
 
 type TaskExt struct {
 	Id             tasks.IdTask
-	Exercice       edAPI.ExerciceHeader // TODO adapt to monoquestion
-	NbProgressions int                  // the number of student having started this task
+	IdWork         taAPI.WorkID
+	Title          string // title of the underlying exercice or question
+	Subtitle       string // subtitle of the underlying exercice or question
+	NbProgressions int    // the number of student having started this task
 }
 
 type SheetExt struct {
@@ -44,9 +44,12 @@ type SheetExt struct {
 }
 
 type sheetLoader struct {
-	links        map[ho.IdSheet]ho.SheetTasks
-	tasks        tasks.Tasks
-	exes         map[ed.IdExercice]edAPI.ExerciceHeader
+	links map[ho.IdSheet]ho.SheetTasks
+	// tasks        tasks.Tasks
+	// exes         map[ed.IdExercice]edAPI.ExerciceHeader
+
+	tasks taAPI.TasksContents
+
 	progressions map[tasks.IdTask]tasks.Progressions
 }
 
@@ -57,31 +60,18 @@ func newSheetLoader(db ho.DB, idSheets []ho.IdSheet, userID, adminID uID) (out s
 		return out, utils.SQLError(err)
 	}
 
-	tasksMap, err := tasks.SelectTasks(db, links1.IdTasks()...)
+	out.tasks, err = taAPI.NewTasksContents(db, links1.IdTasks())
 	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	exes, err := ed.SelectExercices(db, tasksMap.IdExercices()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	// ... and their questions
-	questions, err := ed.SelectExerciceQuestionsByIdExercices(db, exes.IDs()...)
-	if err != nil {
-		return out, utils.SQLError(err)
+		return out, err
 	}
 
 	// also load the current progressions
-	links2, err := tasks.SelectProgressionsByIdTasks(db, tasksMap.IDs()...)
+	links2, err := tasks.SelectProgressionsByIdTasks(db, out.tasks.Tasks.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
 	out.links = links1.ByIdSheet()
-	out.tasks = tasksMap
-	out.exes = ed.BuildExerciceHeaders(userID, adminID, exes, questions)
 	out.progressions = links2.ByIdTask()
 
 	return out, nil
@@ -92,11 +82,14 @@ func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
 	links := loader.links[sheet.Id]
 	links.EnsureOrder()
 	for _, link := range links {
-		idExercice := loader.tasks[link.IdTask].IdExercice
+		task := loader.tasks.Tasks[link.IdTask]
+		work := loader.tasks.GetWork(task)
 		out.Tasks = append(out.Tasks, TaskExt{
-			Id:             link.IdTask,
-			Exercice:       loader.exes[idExercice],
-			NbProgressions: len(loader.progressions[link.IdTask]),
+			Id:             task.Id,
+			IdWork:         taAPI.NewWorkID(task),
+			Title:          work.Title(),
+			Subtitle:       work.Subtitle(),
+			NbProgressions: len(loader.progressions[task.Id]),
 		})
 	}
 	return out

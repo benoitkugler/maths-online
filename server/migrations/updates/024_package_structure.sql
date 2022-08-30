@@ -44,6 +44,7 @@ WHERE (
 CREATE TABLE questions2 (
     Id serial PRIMARY KEY,
     Page jsonb NOT NULL,
+    Subtitle text NOT NULL,
     Description text NOT NULL,
     Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
     NeedExercice integer,
@@ -53,8 +54,9 @@ INSERT INTO questions2
 SELECT
     id,
     Page,
+    Page ->> 'title', -- Subtitle, modified after
     Description,
-    '', --completed after
+    '', --diffculty : completed after
     NeedExercice,
     (
         CASE WHEN NeedExercice IS NULL THEN
@@ -147,7 +149,11 @@ WHERE
 UPDATE
     questions2
 SET
-    page = jsonb_set(page, '{title}', to_jsonb (''::text))
+    page = page - 'title';
+UPDATE
+    questions2
+SET
+    Subtitle = ''
 WHERE
     NeedExercice IS NULL;
 WITH tagstrings (
@@ -173,7 +179,7 @@ WITH tagstrings (
 UPDATE
     questions2
 SET
-    page = jsonb_set(page, '{title}', to_jsonb (tagstrings.tags))
+    Subtitle = tagstrings.tags
 FROM
     tagstrings
 WHERE
@@ -212,7 +218,7 @@ FROM
 CREATE TABLE exercices2 (
     Id serial PRIMARY KEY,
     IdGroup integer NOT NULL,
-    Title text NOT NULL,
+    Subtitle text NOT NULL,
     Description text NOT NULL,
     Parameters jsonb NOT NULL,
     Flow integer CHECK (Flow IN (0, 1)) NOT NULL
@@ -227,7 +233,7 @@ SELECT
             exercicegroups
         WHERE
             exercicegroups.title = exercices.title),
-    -- there is no tags for exercice yet
+    -- there is no tags for exercice yet, so the subtitle is empty
     '', Description, Parameters, Flow
 FROM
     exercices;

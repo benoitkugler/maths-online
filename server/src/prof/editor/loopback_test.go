@@ -47,7 +47,7 @@ func TestLoopback(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	loopback.setQuestion(questions.QuestionInstance{Title: "Test", Enonce: questions.EnonceInstance{
+	loopback.setQuestion(questions.QuestionInstance{Enonce: questions.EnonceInstance{
 		questions.NumberFieldInstance{ID: 0},
 	}})
 

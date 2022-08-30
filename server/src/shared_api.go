@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/prof/editor"
+	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/tasks"
 	"github.com/labstack/echo/v4"
 )
 
@@ -24,16 +24,16 @@ func checkExpressionSyntax(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type InstantiateQuestionsOut = editor.InstantiateQuestionsOut
+type InstantiateQuestionsOut = tasks.InstantiateQuestionsOut
 
 // standalone endpoint to check if an answer is correct
-func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
-	var args []editor.IdQuestion
+func instantiateQuestions(db ed.DB, c echo.Context) error {
+	var args []ed.IdQuestion
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.InstantiateQuestions(args)
+	out, err := tasks.InstantiateQuestions(db, args)
 	if err != nil {
 		return err
 	}
@@ -41,20 +41,14 @@ func instantiateQuestions(ct *editor.Controller, c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type EvaluateQuestionIn struct {
-	Answer     client.QuestionAnswersIn `gomacro-extern:"client:dart:questions/types.gen.dart"`
-	Params     []editor.VarEntry
-	IdQuestion editor.IdQuestion
-}
-
 // standalone endpoint to check if an answer is correct
-func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
-	var args EvaluateQuestionIn
+func evaluateQuestion(db ed.DB, c echo.Context) error {
+	var args tasks.EvaluateQuestionParams
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.EvaluateQuestion(args.IdQuestion, editor.Answer{Params: args.Params, Answer: args.Answer})
+	out, err := args.Evaluate(db)
 	if err != nil {
 		return err
 	}
@@ -64,24 +58,24 @@ func evaluateQuestion(ct *editor.Controller, c echo.Context) error {
 
 // import for dart code generation
 type (
-	EvaluateExerciceIn  = editor.EvaluateExerciceIn
-	EvaluateExerciceOut = editor.EvaluateExerciceOut
+	EvaluateWorkIn  = tasks.EvaluateWorkIn
+	EvaluateWorkOut = tasks.EvaluateWorkOut
 )
 
-type StudentExerciceInst struct {
-	Exercice    editor.InstantiatedExercice
-	Progression editor.ProgressionExt
+type StudentWork struct {
+	Exercice    tasks.InstantiatedWork
+	Progression tasks.ProgressionExt
 }
 
 // standalone endpoint to check if an exercice answer is correct
-// note that this API does not handle progression save
-func evaluateExercice(ct *editor.Controller, c echo.Context) error {
-	var args EvaluateExerciceIn
+// note that this API does not handle progression persistence
+func evaluateExercice(db ed.DB, c echo.Context) error {
+	var args EvaluateWorkIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.EvaluateExercice(args)
+	out, err := args.Evaluate(db)
 	if err != nil {
 		return err
 	}
