@@ -5,6 +5,7 @@ import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -54,11 +55,7 @@ class _DecrassageState extends State<Decrassage> {
   }
 
   void _showError(dynamic error) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 5),
-      backgroundColor: Theme.of(context).colorScheme.error,
-      content: Text("Une erreur est survenue : $error"),
-    ));
+    showError("Une erreur est survenue", error, context);
   }
 
   void _selectQuestion(int questionIndex) {
@@ -74,7 +71,7 @@ class _DecrassageState extends State<Decrassage> {
       final uri =
           Uri.parse(widget.buildMode.serverURL("/api/questions/evaluate"));
       final args = shared.EvaluateQuestionIn(
-          data, currentQuestion!.params, currentQuestion!.id);
+          shared.Answer(currentQuestion!.params, data), currentQuestion!.id);
       final resp = await http.post(uri,
           body: jsonEncode(shared.evaluateQuestionInToJson(args)),
           headers: {

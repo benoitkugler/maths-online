@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
-import 'package:eleve/trivialpoursuit/controller.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 

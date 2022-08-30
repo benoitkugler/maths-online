@@ -87,18 +87,18 @@ type SignTableBlock struct {
 }
 
 type FigureBlock struct {
-	Figure repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Figure repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
 }
 
 type FunctionArea struct {
-	Color repere.Color `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Color repere.Color `gomacro-extern:"repere#dart#repere.gen.dart"`
 	Path  []functiongrapher.BezierCurve
 }
 
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []FunctionArea
-	Bounds    repere.RepereBounds `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Bounds    repere.RepereBounds `gomacro-extern:"repere#dart#repere.gen.dart"`
 }
 
 type TableBlock struct {
@@ -152,7 +152,7 @@ type OrderedListFieldBlock struct {
 
 // FigurePointFieldBlock asks for one 2D point
 type FigurePointFieldBlock struct {
-	Figure repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Figure repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
 	ID     int
 }
 
@@ -162,7 +162,7 @@ type FigurePointFieldBlock struct {
 
 type FigureVectorFieldBlock struct {
 	LineLabel string        // ignored if AsLine is false
-	Figure    repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Figure    repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
 	ID        int
 	AsLine    bool
 }
@@ -174,7 +174,7 @@ type FigureVectorFieldBlock struct {
 // is not allowed
 
 type FigureVectorPairFieldBlock struct {
-	Figure repere.Figure `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Figure repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
 	ID     int
 }
 
@@ -200,7 +200,7 @@ type FunctionPointsFieldBlock struct {
 	Label  string              // name of the function
 	Xs     []int               // the grid
 	Dfxs   []float64           // the derivatives of the function, to plot a nice curve
-	Bounds repere.RepereBounds `gomacro-extern:"repere:dart:repere.gen.dart"`
+	Bounds repere.RepereBounds `gomacro-extern:"repere#dart#repere.gen.dart"`
 	ID     int
 }
 

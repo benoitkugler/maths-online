@@ -1,5 +1,5 @@
-import 'package:eleve/trivialpoursuit/board.dart';
-import 'package:eleve/trivialpoursuit/categories.dart';
+import 'package:eleve/activities/trivialpoursuit/board.dart';
+import 'package:eleve/activities/trivialpoursuit/categories.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/maths/questions/examples"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/homework"
@@ -307,50 +305,6 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 
 	// student homework API
 	e.GET("/api/student/homework/sheets", home.StudentGetSheets)
-	e.GET("/api/student/homework/exercice/instantiate", home.StudentInstantiateExercice)
-	e.POST("/api/student/homework/exercice/evaluate", home.StudentEvaluateExercice)
-}
-
-type labeledQuestion struct {
-	Title    string
-	Question client.Question
-}
-
-// routes for a (temporary) question quick access
-func setupQuestionSampleAPI(e *echo.Echo) {
-	sampleQuestions := examples.Questions()
-	e.GET("/questions", func(c echo.Context) error {
-		var out []labeledQuestion
-		for _, qu := range sampleQuestions {
-			out = append(out, labeledQuestion{Title: qu.Title, Question: qu.Question.ToClient()})
-		}
-		return c.JSONPretty(200, sampleQuestions, " ")
-	})
-
-	e.POST("/questions/syntaxe/:index", func(c echo.Context) error {
-		index, _ := strconv.Atoi(c.Param("index"))
-		var data client.QuestionSyntaxCheckIn
-		err := c.Bind(&data)
-		if err != nil {
-			return err
-		}
-
-		out := sampleQuestions[index].Question.CheckSyntaxe(data)
-
-		return c.JSON(200, out)
-	})
-
-	e.POST("/questions/answer/:index", func(c echo.Context) error {
-		index, _ := strconv.Atoi(c.Param("index"))
-
-		var data client.QuestionAnswersIn
-		err := c.Bind(&data)
-		if err != nil {
-			return err
-		}
-
-		out := sampleQuestions[index].Question.EvaluateAnswer(data)
-
-		return c.JSON(200, out)
-	})
+	e.GET("/api/student/homework/task/instantiate", home.StudentInstantiateTask)
+	e.POST("/api/student/homework/task/evaluate", home.StudentEvaluateTask)
 }

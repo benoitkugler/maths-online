@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:eleve/activities/trivialpoursuit/board.dart';
+import 'package:eleve/activities/trivialpoursuit/dice.dart' as dice;
+import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
+import 'package:eleve/activities/trivialpoursuit/game_debug.dart';
+import 'package:eleve/activities/trivialpoursuit/game_end.dart';
+import 'package:eleve/activities/trivialpoursuit/lobby.dart';
+import 'package:eleve/activities/trivialpoursuit/pie.dart';
+import 'package:eleve/activities/trivialpoursuit/question.dart';
+import 'package:eleve/activities/trivialpoursuit/question_result.dart';
+import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/types.gen.dart' as Types;
 import 'package:eleve/settings.dart';
-import 'package:eleve/trivialpoursuit/board.dart';
-import 'package:eleve/trivialpoursuit/dice.dart' as dice;
-import 'package:eleve/trivialpoursuit/events.gen.dart';
-import 'package:eleve/trivialpoursuit/game_debug.dart';
-import 'package:eleve/trivialpoursuit/game_end.dart';
-import 'package:eleve/trivialpoursuit/lobby.dart';
-import 'package:eleve/trivialpoursuit/pie.dart';
-import 'package:eleve/trivialpoursuit/question.dart';
-import 'package:eleve/trivialpoursuit/question_result.dart';
-import 'package:eleve/trivialpoursuit/success_recap.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 

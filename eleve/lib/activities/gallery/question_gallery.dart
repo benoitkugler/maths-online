@@ -6,6 +6,7 @@ import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
+import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,7 +20,7 @@ class QuestionGallery extends StatefulWidget {
 }
 
 class _QuestionGalleryState extends State<QuestionGallery> {
-  List<Question> questions = [];
+  List<LabeledQuestion> questions = [];
 
   int? currentQuestionIndex;
   Color? questionColor;
@@ -38,7 +39,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
       final resp = await http.get(server);
       setState(() {
         questions = (jsonDecode(resp.body) as List<dynamic>)
-            .map(questionFromJson)
+            .map(labeledQuestionFromJson)
             .toList();
       });
     } catch (e) {
@@ -109,7 +110,7 @@ class _QuestionGalleryState extends State<QuestionGallery> {
         child: currentQuestionIndex != null
             ? QuestionW(
                 ServerFieldAPI(widget.buildMode),
-                questions[currentQuestionIndex!],
+                questions[currentQuestionIndex!].question,
                 questionColor!,
                 (v) => _validate(v, context),
                 footerQuote: pickQuote(),

@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:eleve/activities/homework/progression_bar.dart';
+import 'package:eleve/activities/homework/sheet.dart';
+import 'package:eleve/activities/homework/types.gen.dart';
+import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/homework/progression_bar.dart';
-import 'package:eleve/homework/sheet.dart';
-import 'package:eleve/homework/types.gen.dart';
-import 'package:eleve/homework/utils.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/errors.dart';
@@ -17,9 +17,9 @@ typedef Sheets = List<SheetProgression>;
 
 abstract class HomeworkAPI extends FieldAPI {
   Future<Sheets> loadSheets();
-  Future<InstantiatedExercice> loadExercice(int idExercice);
-  Future<StudentEvaluateExerciceOut> evaluateExercice(
-      IdTask idTask, EvaluateExerciceIn ex);
+  Future<InstantiatedWork> loadWork(IdTask id);
+  Future<StudentEvaluateTaskOut> evaluateExercice(
+      IdTask idTask, EvaluateWorkIn ex);
 }
 
 class ServerHomeworkAPI implements HomeworkAPI {
@@ -43,26 +43,26 @@ class ServerHomeworkAPI implements HomeworkAPI {
   }
 
   @override
-  Future<InstantiatedExercice> loadExercice(int idExercice) async {
-    const serverEndpoint = "/api/student/homework/exercice/instantiate";
+  Future<InstantiatedWork> loadWork(IdTask idTask) async {
+    const serverEndpoint = "/api/student/homework/task/instantiate";
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
-        query: {studentIDKey: studentID, "id": idExercice.toString()}));
+        query: {studentIDKey: studentID, "id": idTask.toString()}));
     final resp = await http.get(uri);
-    return instantiatedExerciceFromJson(jsonDecode(resp.body));
+    return instantiatedWorkFromJson(jsonDecode(resp.body));
   }
 
   @override
-  Future<StudentEvaluateExerciceOut> evaluateExercice(
-      IdTask idTask, EvaluateExerciceIn ex) async {
-    const serverEndpoint = "/api/student/homework/exercice/evaluate";
+  Future<StudentEvaluateTaskOut> evaluateExercice(
+      IdTask idTask, EvaluateWorkIn ex) async {
+    const serverEndpoint = "/api/student/homework/task/evaluate";
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
     final resp = await http.post(uri,
-        body: jsonEncode(studentEvaluateExerciceInToJson(
-            StudentEvaluateExerciceIn(studentID, idTask, ex))),
+        body: jsonEncode(studentEvaluateTaskInToJson(
+            StudentEvaluateTaskIn(studentID, idTask, ex))),
         headers: {
           'Content-type': 'application/json',
         });
-    return studentEvaluateExerciceOutFromJson(checkServerError(resp.body));
+    return studentEvaluateTaskOutFromJson(checkServerError(resp.body));
   }
 }
 
@@ -158,7 +158,7 @@ class _SheetListState extends State<_SheetList> {
     final index =
         sheets.indexWhere((element) => element.sheet.id == notif.idSheet);
     final actual = sheets[index];
-    notif.updateTasks(actual.tasks);
+    notif.applyTo(actual.tasks);
     setState(() {
       sheets[index] = SheetProgression(actual.sheet, actual.tasks);
     });

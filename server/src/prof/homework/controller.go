@@ -635,7 +635,7 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 	return out, nil
 }
 
-func (ct *Controller) StudentInstantiateExercice(c echo.Context) error {
+func (ct *Controller) StudentInstantiateTask(c echo.Context) error {
 	idTask, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
@@ -654,10 +654,10 @@ func (ct *Controller) StudentInstantiateExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// StudentEvaluateExercice calls ed.EvaluteExercice and registers
+// StudentEvaluateTask calls ed.EvaluteExercice and registers
 // the student progression, returning the update mark.
-func (ct *Controller) StudentEvaluateExercice(c echo.Context) error {
-	var args StudentEvaluateExerciceIn
+func (ct *Controller) StudentEvaluateTask(c echo.Context) error {
+	var args StudentEvaluateTaskIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -671,7 +671,7 @@ func (ct *Controller) StudentEvaluateExercice(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out := StudentEvaluateExerciceOut{Ex: ex, Mark: mark}
+	out := StudentEvaluateTaskOut{Ex: ex, Mark: mark}
 
 	return c.JSON(200, out)
 }

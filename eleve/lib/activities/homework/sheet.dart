@@ -1,8 +1,8 @@
+import 'package:eleve/activities/homework/homework.dart';
+import 'package:eleve/activities/homework/types.gen.dart';
+import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/homework/homework.dart';
-import 'package:eleve/homework/types.gen.dart';
-import 'package:eleve/homework/utils.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart';
@@ -21,12 +21,12 @@ class _ExerciceAPI implements ExerciceAPI {
   final HomeworkAPI api;
   final IdTask idTask;
 
-  StudentEvaluateExerciceOut? lastState;
+  StudentEvaluateTaskOut? lastState;
 
   _ExerciceAPI(this.api, this.idTask);
 
   @override
-  Future<EvaluateExerciceOut> evaluate(EvaluateExerciceIn params) async {
+  Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final res = await api.evaluateExercice(idTask, params);
     lastState = res;
     return res.ex;
@@ -47,12 +47,12 @@ class SheetMarkNotification extends Notification {
   const SheetMarkNotification(
       this.idSheet, this.idTask, this.newProgression, this.newMark);
 
-  /// [updateTasks] updates [tasks] in place
-  void updateTasks(List<TaskProgressionHeader> tasks) {
+  /// [applyTo] updates [tasks] in place
+  void applyTo(List<TaskProgressionHeader> tasks) {
     final index = tasks.indexWhere((element) => element.id == idTask);
     final current = tasks[index];
-    tasks[index] = TaskProgressionHeader(current.id, current.idExercice,
-        current.titleExercice, true, newProgression, newMark, current.bareme);
+    tasks[index] = TaskProgressionHeader(current.id, current.title, true,
+        newProgression, newMark, current.bareme);
   }
 }
 
@@ -95,11 +95,10 @@ class _SheetWState extends State<SheetW> {
                 ),
               ),
             ));
-    final instantiatedExercice = await widget.api.loadExercice(task.idExercice);
+    final instantiatedExercice = await widget.api.loadWork(task.id);
     Navigator.of(context).pop(); // remove the dialog
 
-    final studentEx =
-        StudentExerciceInst(instantiatedExercice, task.progression);
+    final studentEx = StudentWork(instantiatedExercice, task.progression);
     final controller = _ExerciceAPI(widget.api, task.id);
     // actually launch the exercice
     await Navigator.of(context).push(MaterialPageRoute<void>(
@@ -112,7 +111,7 @@ class _SheetWState extends State<SheetW> {
 
       // locally update the task mark
       setState(() {
-        notif.updateTasks(tasks);
+        notif.applyTo(tasks);
       });
 
       // inform the top level sheet widget of the modification
@@ -169,11 +168,12 @@ class _TaskList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final children = tasks
-        .map((ex) => ListTile(
-              onTap: () => onStart(ex),
-              leading: getCompletion(ex).icon,
-              title: Text(ex.titleExercice),
-              trailing: hasNotation ? Text("${ex.mark} / ${ex.bareme}") : null,
+        .map((task) => ListTile(
+              onTap: () => onStart(task),
+              leading: getCompletion(task).icon,
+              title: Text(task.title),
+              trailing:
+                  hasNotation ? Text("${task.mark} / ${task.bareme}") : null,
             ))
         .toList();
     if (hasNotation) {

@@ -1,12 +1,12 @@
+import 'package:eleve/activities/gallery/question_gallery.dart';
+import 'package:eleve/activities/homework/homework.dart';
+import 'package:eleve/activities/trivialpoursuit/controller.dart';
+import 'package:eleve/activities/trivialpoursuit/login.dart';
 import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/homework/homework.dart';
 import 'package:eleve/main_shared.dart';
-import 'package:eleve/questions/question_gallery.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/activity_start.dart';
-import 'package:eleve/trivialpoursuit/controller.dart';
-import 'package:eleve/trivialpoursuit/login.dart';
 import 'package:flutter/material.dart' hide Flow;
 import 'package:upgrader/upgrader.dart';
 

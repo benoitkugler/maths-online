@@ -1,7 +1,11 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/maths/questions/examples"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
 	"github.com/benoitkugler/maths-online/tasks"
 	"github.com/labstack/echo/v4"
@@ -41,9 +45,11 @@ func instantiateQuestions(db ed.DB, c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type EvaluateQuestionIn = tasks.EvaluateQuestionIn
+
 // standalone endpoint to check if an answer is correct
 func evaluateQuestion(db ed.DB, c echo.Context) error {
-	var args tasks.EvaluateQuestionParams
+	var args EvaluateQuestionIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -81,4 +87,48 @@ func evaluateExercice(db ed.DB, c echo.Context) error {
 	}
 
 	return c.JSON(200, out)
+}
+
+type labeledQuestion struct {
+	Title    string
+	Question client.Question
+}
+
+// routes for a (temporary) question quick access
+func setupQuestionSampleAPI(e *echo.Echo) {
+	sampleQuestions := examples.Questions()
+	e.GET("/questions", func(c echo.Context) error {
+		var out []labeledQuestion
+		for _, qu := range sampleQuestions {
+			out = append(out, labeledQuestion{Title: qu.Title, Question: qu.Question.ToClient()})
+		}
+		return c.JSONPretty(200, sampleQuestions, " ")
+	})
+
+	e.POST("/questions/syntaxe/:index", func(c echo.Context) error {
+		index, _ := strconv.Atoi(c.Param("index"))
+		var data client.QuestionSyntaxCheckIn
+		err := c.Bind(&data)
+		if err != nil {
+			return err
+		}
+
+		out := sampleQuestions[index].Question.CheckSyntaxe(data)
+
+		return c.JSON(200, out)
+	})
+
+	e.POST("/questions/answer/:index", func(c echo.Context) error {
+		index, _ := strconv.Atoi(c.Param("index"))
+
+		var data client.QuestionAnswersIn
+		err := c.Bind(&data)
+		if err != nil {
+			return err
+		}
+
+		out := sampleQuestions[index].Question.EvaluateAnswer(data)
+
+		return c.JSON(200, out)
+	})
 }

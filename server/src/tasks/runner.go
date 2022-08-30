@@ -16,13 +16,13 @@ import (
 
 type InstantiatedQuestion struct {
 	Id       ed.IdQuestion
-	Question client.Question `gomacro-extern:"client:dart:questions/types.gen.dart"`
+	Question client.Question `gomacro-extern:"client#dart#questions/types.gen.dart"`
 	Params   []VarEntry
 }
 
 type Answer struct {
 	Params []VarEntry
-	Answer client.QuestionAnswersIn `gomacro-extern:"client:dart:questions/types.gen.dart"`
+	Answer client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
 }
 
 type InstantiateQuestionsOut []InstantiatedQuestion
@@ -69,14 +69,14 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 	return out, nil
 }
 
-type EvaluateQuestionParams struct {
+type EvaluateQuestionIn struct {
 	Answer     Answer
 	IdQuestion ed.IdQuestion
 }
 
 // Evaluate instantiate the given question with the given parameters,
 // and evaluate the given answer.
-func (params EvaluateQuestionParams) Evaluate(db ed.DB) (client.QuestionAnswersOut, error) {
+func (params EvaluateQuestionIn) Evaluate(db ed.DB) (client.QuestionAnswersOut, error) {
 	qu, err := ed.SelectQuestion(db, params.IdQuestion)
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
@@ -333,7 +333,7 @@ type EvaluateWorkIn struct {
 }
 
 type EvaluateWorkOut struct {
-	Results      map[int]client.QuestionAnswersOut `gomacro-extern:"client:dart:questions/types.gen.dart"`
+	Results      map[int]client.QuestionAnswersOut `gomacro-extern:"client#dart#questions/types.gen.dart"`
 	Progression  ProgressionExt                    // the updated progression
 	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
 }

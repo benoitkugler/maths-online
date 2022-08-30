@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eleve/trivialpoursuit/events.gen.dart';
+import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:test/test.dart';
 
 void main() {

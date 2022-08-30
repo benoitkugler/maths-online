@@ -245,7 +245,7 @@ type TaskProgressionHeader struct {
 
 	HasProgression bool
 	// empty if HasProgression is false
-	Progression  ProgressionExt `gomacro-extern:"editor:dart:../shared_gen.dart"`
+	Progression  ProgressionExt `gomacro-extern:"tasks#dart#package:eleve/shared_gen.dart"`
 	Mark, Bareme int            // student mark / exercice total
 }
 

@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:eleve/trivialpoursuit/events.gen.dart';
+import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:flutter/material.dart';
 
 import "categories.dart";

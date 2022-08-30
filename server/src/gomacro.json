@@ -116,7 +116,7 @@
     "trivial/client_models.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/trivialpoursuit/events.gen.dart"
+            "Output": "../../eleve/lib/activities/trivialpoursuit/events.gen.dart"
         },
         {
             "Mode": "go/unions",
@@ -132,7 +132,7 @@
     "prof/homework/student_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/homework/types.gen.dart"
+            "Output": "../../eleve/lib/activities/homework/types.gen.dart"
         }
     ],
     "prof_api.go": [

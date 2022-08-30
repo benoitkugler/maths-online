@@ -121,12 +121,3 @@ func updateSheetTasksOrder(tx *sql.Tx, idSheet ho.IdSheet, l []tasks.IdTask) err
 
 	return nil
 }
-
-// Student API
-
-// SheetProgression is the summary of the progression
-// of one student for one sheet
-type SheetProgression struct {
-	Sheet ho.Sheet
-	Tasks []taAPI.TaskProgressionHeader
-}

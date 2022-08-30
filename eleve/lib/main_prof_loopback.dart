@@ -61,7 +61,7 @@ class _QuestionData {
 }
 
 class _ExerciceData {
-  final StudentExerciceInst exercice;
+  final StudentWork exercice;
   const _ExerciceData(this.exercice);
 }
 
@@ -159,7 +159,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
         questionData = _QuestionData(questionData!.question, ans.data);
       });
     } else if (event is LoopbackShowExercice) {
-      final ex = StudentExerciceInst(event.exercice, event.progression);
+      final ex = StudentWork(event.exercice, event.progression);
       setState(() {
         mode = _Mode.exercice;
         exerciceData = _ExerciceData(ex);
@@ -256,20 +256,19 @@ class _LoopbackServerAPI implements ExerciceAPI {
   }
 
   @override
-  Future<EvaluateExerciceOut> evaluate(EvaluateExerciceIn params) async {
+  Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final uri = Uri.parse(buildMode.serverURL("/api/exercices/evaluate"));
-    final resp = await http.post(uri,
-        body: jsonEncode(evaluateExerciceInToJson(params)),
-        headers: {
-          'Content-type': 'application/json',
-        });
-    return evaluateExerciceOutFromJson(jsonDecode(resp.body));
+    final resp = await http
+        .post(uri, body: jsonEncode(evaluateWorkInToJson(params)), headers: {
+      'Content-type': 'application/json',
+    });
+    return evaluateWorkOutFromJson(jsonDecode(resp.body));
   }
 }
 
 class _ExerciceLoopback extends StatelessWidget {
   final _LoopbackServerAPI api;
-  final StudentExerciceInst exercice;
+  final StudentWork exercice;
 
   const _ExerciceLoopback(this.api, this.exercice, {Key? key})
       : super(key: key);

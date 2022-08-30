@@ -10,7 +10,7 @@ import 'package:flutter/material.dart' hide Flow;
 class NotificationExerciceDone extends Notification {}
 
 abstract class ExerciceAPI extends FieldAPI {
-  Future<EvaluateExerciceOut> evaluate(EvaluateExerciceIn params);
+  Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params);
 }
 
 /// ExerciceW is the widget providing one exercice to
@@ -22,7 +22,7 @@ class ExerciceW extends StatefulWidget {
 
   /// [data] stores the server instantiated exercice with
   /// the initial progression state.
-  final StudentExerciceInst data;
+  final StudentWork data;
 
   const ExerciceW(this.api, this.data, {Key? key}) : super(key: key);
 
@@ -66,7 +66,7 @@ class _ExerciceWState extends State<ExerciceW> {
   }
 
   // handle the errors
-  Future<EvaluateExerciceOut?> _evaluate(EvaluateExerciceIn params) async {
+  Future<EvaluateWorkOut?> _evaluate(EvaluateWorkIn params) async {
     try {
       final res = await widget.api.evaluate(params);
       return res;
@@ -101,8 +101,8 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     // validate the given answer
-    final resp = await _evaluate(EvaluateExerciceIn(
-        widget.data.exercice.exercice.id,
+    final resp = await _evaluate(EvaluateWorkIn(
+        widget.data.exercice.iD,
         {index: Answer(questions[index].params, currentAnswers[index]!)},
         progression));
     if (resp == null) {
@@ -181,8 +181,8 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     // all good, lets send the results
-    final resp = await _evaluate(EvaluateExerciceIn(
-        widget.data.exercice.exercice.id, toSend, progression));
+    final resp = await _evaluate(
+        EvaluateWorkIn(widget.data.exercice.iD, toSend, progression));
     if (resp == null) {
       return;
     }
@@ -226,7 +226,7 @@ class _ExerciceWState extends State<ExerciceW> {
 
   void onValideQuestion(QuestionAnswersIn answer) async {
     currentAnswers[questionIndex!] = answer;
-    switch (widget.data.exercice.exercice.flow) {
+    switch (widget.data.exercice.flow) {
       case Flow.sequencial:
         return onValidQuestionSequential();
       case Flow.parallel:
@@ -237,7 +237,7 @@ class _ExerciceWState extends State<ExerciceW> {
   bool get goToPreviousEnabled => questionIndex != null;
 
   bool get goToNextEnabled {
-    switch (widget.data.exercice.exercice.flow) {
+    switch (widget.data.exercice.flow) {
       case Flow.sequencial: // do not show locked questions
         return questionIndex == null ||
             questionIndex! < progression.nextQuestion;
@@ -270,7 +270,7 @@ class _ExerciceWState extends State<ExerciceW> {
         return QuestionState.checked;
       }
 
-      if (widget.data.exercice.exercice.flow == Flow.sequencial &&
+      if (widget.data.exercice.flow == Flow.sequencial &&
           progression.nextQuestion < questionIndex) {
         return QuestionState.locked;
       }
@@ -335,9 +335,11 @@ class _ExerciceWState extends State<ExerciceW> {
           },
           child: questionIndex == null
               ? ExerciceHome(
-                  StudentExerciceInst(
-                    InstantiatedExercice(
-                        ex.exercice,
+                  StudentWork(
+                    InstantiatedWork(
+                        ex.iD,
+                        ex.title,
+                        ex.flow,
                         // replace the questions
                         questions,
                         ex.baremes),

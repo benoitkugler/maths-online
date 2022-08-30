@@ -41,7 +41,7 @@ extension ProgressionExtension on ProgressionExt {
 /// ExerciceHome shows a welcome screen when opening an exercice,
 /// with its questions and bareme
 class ExerciceHome extends StatelessWidget {
-  final StudentExerciceInst data;
+  final StudentWork data;
   final List<QuestionState> states;
   final void Function(int index) onSelectQuestion;
 
@@ -54,7 +54,7 @@ class ExerciceHome extends StatelessWidget {
       child: Column(children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 20),
-          child: ColoredTitle(data.exercice.exercice.title, Colors.purple),
+          child: ColoredTitle(data.exercice.title, Colors.purple),
         ),
         Expanded(
           child: _QuestionList(data, states, onSelectQuestion),
@@ -88,7 +88,7 @@ class MarkBareme {
 }
 
 class _QuestionList extends StatelessWidget {
-  final StudentExerciceInst data;
+  final StudentWork data;
   final List<QuestionState> states;
 
   final void Function(int index) onSelectQuestion;
@@ -142,7 +142,7 @@ class _QuestionList extends StatelessWidget {
   }
 
   bool allowDoQuestion(int questionIndex) {
-    switch (data.exercice.exercice.flow) {
+    switch (data.exercice.flow) {
       case Flow.sequencial:
         return data.progression.nextQuestion == questionIndex;
       case Flow.parallel:

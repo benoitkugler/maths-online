@@ -54,6 +54,32 @@ JSON checkExpressionOutToJson(CheckExpressionOut item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/tasks.EvaluateQuestionIn
+class EvaluateQuestionIn {
+  final Answer answer;
+  final IdQuestion idQuestion;
+
+  const EvaluateQuestionIn(this.answer, this.idQuestion);
+
+  @override
+  String toString() {
+    return "EvaluateQuestionIn($answer, $idQuestion)";
+  }
+}
+
+EvaluateQuestionIn evaluateQuestionInFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return EvaluateQuestionIn(
+      answerFromJson(json['Answer']), intFromJson(json['IdQuestion']));
+}
+
+JSON evaluateQuestionInToJson(EvaluateQuestionIn item) {
+  return {
+    "Answer": answerToJson(item.answer),
+    "IdQuestion": intToJson(item.idQuestion)
+  };
+}
+
 // github.com/benoitkugler/maths-online/tasks.EvaluateWorkIn
 class EvaluateWorkIn {
   final WorkID iD;
@@ -199,6 +225,32 @@ JSON instantiatedWorkToJson(InstantiatedWork item) {
     "Flow": flowToJson(item.flow),
     "Questions": listInstantiatedQuestionToJson(item.questions),
     "Baremes": listIntToJson(item.baremes)
+  };
+}
+
+// github.com/benoitkugler/maths-online.labeledQuestion
+class LabeledQuestion {
+  final String title;
+  final Question question;
+
+  const LabeledQuestion(this.title, this.question);
+
+  @override
+  String toString() {
+    return "LabeledQuestion($title, $question)";
+  }
+}
+
+LabeledQuestion labeledQuestionFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return LabeledQuestion(
+      stringFromJson(json['Title']), questionFromJson(json['Question']));
+}
+
+JSON labeledQuestionToJson(LabeledQuestion item) {
+  return {
+    "Title": stringToJson(item.title),
+    "Question": questionToJson(item.question)
   };
 }
 
