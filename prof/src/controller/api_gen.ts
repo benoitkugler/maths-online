@@ -3,8 +3,8 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-// github.com/benoitkugler/maths-online/prof/homework.AddTaskIn
-export interface AddTaskIn {
+// github.com/benoitkugler/maths-online/prof/homework.AddExerciceToTaskIn
+export interface AddExerciceToTaskIn {
   IdSheet: IdSheet;
   IdExercice: IdExercice;
 }
@@ -83,8 +83,11 @@ export interface Block {
     | VariationTableFieldBlock
     | VectorFieldBlock;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.CategoriesQuestions
-export type CategoriesQuestions = QuestionCriterion[];
+// github.com/benoitkugler/maths-online/sql/trivial.CategoriesQuestions
+export interface CategoriesQuestions {
+  Tags: QuestionCriterion[];
+  Difficulties: DifficultyQuery;
+}
 // github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersIn
 export interface CheckExerciceParametersIn {
   IdExercice: IdExercice;
@@ -111,7 +114,7 @@ export interface CheckQuestionParametersOut {
   ErrDefinition: ErrParameters;
   Variables: Variable[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.Classroom
+// github.com/benoitkugler/maths-online/sql/teacher.Classroom
 export interface Classroom {
   id: IdClassroom;
   id_teacher: IdTeacher;
@@ -159,19 +162,23 @@ export interface CopySheetIn {
 export interface CreateSheetIn {
   IdClassroom: IdClassroom;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.Date
+// github.com/benoitkugler/maths-online/sql/teacher.Date
 export type Date = Date_;
-// github.com/benoitkugler/maths-online/prof/editor.DifficultyTag
+// github.com/benoitkugler/maths-online/sql/editor.DifficultyQuery
+export type DifficultyQuery = DifficultyTag[] | null;
+// github.com/benoitkugler/maths-online/sql/editor.DifficultyTag
 export enum DifficultyTag {
   Diff1 = "★",
   Diff2 = "★★",
   Diff3 = "★★★",
+  DiffEmpty = "",
 }
 
 export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
   [DifficultyTag.Diff1]: "1 étoile",
   [DifficultyTag.Diff2]: "2 étoiles",
   [DifficultyTag.Diff3]: "3 étoiles",
+  [DifficultyTag.DiffEmpty]: "",
 };
 
 // github.com/benoitkugler/maths-online/maths/questions.Enonce
@@ -187,15 +194,14 @@ export interface ErrQuestionInvalid {
   ErrEnonce: errEnonce;
   ParametersInvalid: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.Exercice
+// github.com/benoitkugler/maths-online/sql/editor.Exercice
 export interface Exercice {
   Id: IdExercice;
-  Title: string;
+  IdGroup: IdExercicegroup;
+  Subtitle: string;
   Description: string;
   Parameters: Parameters;
   Flow: Flow;
-  IdTeacher: IdTeacher;
-  Public: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
@@ -207,7 +213,7 @@ export interface ExerciceExt {
   Exercice: Exercice;
   Origin: Origin;
   Questions: ExerciceQuestions;
-  QuestionsSource: { [key: IdQuestion]: QuestionOrigin } | null;
+  QuestionsSource: { [key: IdQuestion]: Question } | null;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceHeader
 export interface ExerciceHeader {
@@ -215,13 +221,13 @@ export interface ExerciceHeader {
   Origin: Origin;
   Questions: ExerciceQuestions;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestion
+// github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestion
 export interface ExerciceQuestion {
   id_exercice: IdExercice;
   id_question: IdQuestion;
   bareme: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestions
+// github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestions
 export type ExerciceQuestions = ExerciceQuestion[] | null;
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateIn
 export interface ExerciceUpdateIn {
@@ -236,7 +242,7 @@ export interface ExerciceUpdateQuestionsIn {
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateVisiblityIn
 export interface ExerciceUpdateVisiblityIn {
-  ExerciceID: IdExercice;
+  ExerciceID: IdExercicegroup;
   Public: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/questions.ExpressionFieldBlock
@@ -276,7 +282,7 @@ export interface FigureVectorPairFieldBlock {
   Figure: FigureBlock;
   Criterion: VectorPairCriterion;
 }
-// github.com/benoitkugler/maths-online/prof/editor.Flow
+// github.com/benoitkugler/maths-online/sql/editor.Flow
 export enum Flow {
   Parallel = 0,
   Sequencial = 1,
@@ -329,21 +335,27 @@ export interface FunctionsGraphBlock {
 export interface GenerateClassroomCodeOut {
   Code: string;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.IdClassroom
+// github.com/benoitkugler/maths-online/sql/teacher.IdClassroom
 export type IdClassroom = number;
-// github.com/benoitkugler/maths-online/prof/editor.IdExercice
+// github.com/benoitkugler/maths-online/sql/editor.IdExercice
 export type IdExercice = number;
-// github.com/benoitkugler/maths-online/prof/editor.IdQuestion
+// github.com/benoitkugler/maths-online/sql/editor.IdExercicegroup
+export type IdExercicegroup = number;
+// github.com/benoitkugler/maths-online/sql/tasks.IdMonoquestion
+export type IdMonoquestion = number;
+// github.com/benoitkugler/maths-online/sql/editor.IdQuestion
 export type IdQuestion = number;
-// github.com/benoitkugler/maths-online/prof/homework.IdSheet
+// github.com/benoitkugler/maths-online/sql/editor.IdQuestiongroup
+export type IdQuestiongroup = number;
+// github.com/benoitkugler/maths-online/sql/homework.IdSheet
 export type IdSheet = number;
-// github.com/benoitkugler/maths-online/prof/teacher.IdStudent
+// github.com/benoitkugler/maths-online/sql/teacher.IdStudent
 export type IdStudent = number;
-// github.com/benoitkugler/maths-online/tasks.IdTask
+// github.com/benoitkugler/maths-online/sql/tasks.IdTask
 export type IdTask = number;
-// github.com/benoitkugler/maths-online/prof/teacher.IdTeacher
+// github.com/benoitkugler/maths-online/sql/teacher.IdTeacher
 export type IdTeacher = number;
-// github.com/benoitkugler/maths-online/prof/trivial.IdTrivial
+// github.com/benoitkugler/maths-online/sql/trivial.IdTrivial
 export type IdTrivial = number;
 // github.com/benoitkugler/maths-online/maths/questions.Interpolated
 export type Interpolated = string;
@@ -388,7 +400,7 @@ export interface ListQuestionsIn {
 }
 // github.com/benoitkugler/maths-online/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
-  Questions: QuestionGroup[] | null;
+  Groups: QuestiongroupExt[] | null;
   NbGroups: number;
   NbQuestions: number;
 }
@@ -408,7 +420,7 @@ export interface NamedRandomLabeledPoint {
   Name: string;
   Point: RandomLabeledPoint;
 }
-// github.com/benoitkugler/maths-online/prof/homework.Notation
+// github.com/benoitkugler/maths-online/sql/homework.Notation
 export enum Notation {
   NoNotation = 0,
   SuccessNotation = 1,
@@ -420,14 +432,24 @@ export const NotationLabels: { [key in Notation]: string } = {
     "a question gives point if it has been successfully completed (at least) once",
 };
 
-// database/sql.NullInt64
-export interface NullInt64 {
-  Int64: number;
-  Valid: boolean;
-}
 // github.com/benoitkugler/maths-online/maths/questions.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;
+}
+// github.com/benoitkugler/maths-online/sql/editor.OptionalIdExercice
+export interface OptionalIdExercice {
+  Valid: boolean;
+  ID: IdExercice;
+}
+// github.com/benoitkugler/maths-online/sql/tasks.OptionalIdMonoquestion
+export interface OptionalIdMonoquestion {
+  Valid: boolean;
+  Id: IdMonoquestion;
+}
+// github.com/benoitkugler/maths-online/sql/editor.OptionalIdQuestiongroup
+export interface OptionalIdQuestiongroup {
+  ID: IdQuestiongroup;
+  Valid: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/questions.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
@@ -491,49 +513,49 @@ export interface ProofSequence {
 export interface ProofStatement {
   Content: Interpolated;
 }
-// github.com/benoitkugler/maths-online/prof/editor.Question
+// github.com/benoitkugler/maths-online/sql/editor.Question
 export interface Question {
-  id: IdQuestion;
-  page: QuestionPage;
-  public: boolean;
-  id_teacher: IdTeacher;
-  description: string;
-  need_exercice: NullInt64;
+  Id: IdQuestion;
+  Page: QuestionPage;
+  Subtitle: string;
+  Description: string;
+  Difficulty: DifficultyTag;
+  NeedExercice: OptionalIdExercice;
+  IdGroup: OptionalIdQuestiongroup;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.QuestionCriterion
+// github.com/benoitkugler/maths-online/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
-// github.com/benoitkugler/maths-online/prof/editor.QuestionGroup
-export interface QuestionGroup {
-  Title: string;
-  Questions: QuestionHeader[] | null;
-  Size: number;
-}
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
-  Title: string;
-  Tags: string[] | null;
   Id: IdQuestion;
+  Subtitle: string;
   Difficulty: DifficultyTag;
-  IsInGroup: boolean;
-  Origin: Origin;
-}
-// github.com/benoitkugler/maths-online/prof/editor.QuestionOrigin
-export interface QuestionOrigin {
-  Question: Question;
-  Origin: Origin;
 }
 // github.com/benoitkugler/maths-online/maths/questions.QuestionPage
 export interface QuestionPage {
-  title: string;
   enonce: Enonce;
   parameters: Parameters;
 }
 // github.com/benoitkugler/maths-online/prof/editor.QuestionUpdateVisiblityIn
 export interface QuestionUpdateVisiblityIn {
-  QuestionID: IdQuestion;
+  ID: IdQuestiongroup;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.Questions
+// github.com/benoitkugler/maths-online/sql/editor.Questiongroup
+export interface Questiongroup {
+  Id: IdQuestiongroup;
+  Title: string;
+  Public: boolean;
+  IdTeacher: IdTeacher;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestiongroupExt
+export interface QuestiongroupExt {
+  Group: Questiongroup;
+  Origin: Origin;
+  Tags: string[] | null;
+  Questions: QuestionHeader[] | null;
+}
+// github.com/benoitkugler/maths-online/sql/editor.Questions
 export type Questions = { [key: IdQuestion]: Question } | null;
 // github.com/benoitkugler/maths-online/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {
@@ -649,7 +671,7 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
-// github.com/benoitkugler/maths-online/prof/homework.Sheet
+// github.com/benoitkugler/maths-online/sql/homework.Sheet
 export interface Sheet {
   Id: IdSheet;
   IdClassroom: IdClassroom;
@@ -691,7 +713,7 @@ export interface SignTableFieldBlock {
 export interface StartSessionOut {
   ID: string;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.Student
+// github.com/benoitkugler/maths-online/sql/teacher.Student
 export interface Student {
   Id: IdStudent;
   Name: string;
@@ -713,15 +735,18 @@ export interface TableFieldBlock {
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/tasks.Task
+// github.com/benoitkugler/maths-online/sql/tasks.Task
 export interface Task {
   Id: IdTask;
-  IdExercice: IdExercice;
+  IdExercice: OptionalIdExercice;
+  IdMonoquestion: OptionalIdMonoquestion;
 }
 // github.com/benoitkugler/maths-online/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
-  Exercice: ExerciceHeader;
+  IdWork: WorkID;
+  Title: string;
+  Subtitle: string;
   NbProgressions: number;
 }
 // github.com/benoitkugler/maths-online/maths/questions.TextBlock
@@ -760,14 +785,14 @@ export interface TreeNodeAnswer {
   Probabilities: string[] | null;
   Value: number;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.Trivial
+// github.com/benoitkugler/maths-online/sql/trivial.Trivial
 export interface Trivial {
   Id: IdTrivial;
   Questions: CategoriesQuestions;
   QuestionTimeout: number;
   ShowDecrassage: boolean;
   Public: boolean;
-  id_teacher: IdTeacher;
+  IdTeacher: IdTeacher;
   Name: string;
 }
 // github.com/benoitkugler/maths-online/prof/trivial.TrivialExt
@@ -776,19 +801,10 @@ export interface TrivialExt {
   Origin: Origin;
   NbQuestionsByCategories: number[];
 }
-// github.com/benoitkugler/maths-online/prof/editor.UpdateGroupTagsIn
-export interface UpdateGroupTagsIn {
-  GroupTitle: string;
-  CommonTags: string[] | null;
-}
-// github.com/benoitkugler/maths-online/prof/editor.UpdateGroupTagsOut
-export interface UpdateGroupTagsOut {
-  Tags: { [key: IdQuestion]: string[] | null } | null;
-}
-// github.com/benoitkugler/maths-online/prof/editor.UpdateTagsIn
-export interface UpdateTagsIn {
+// github.com/benoitkugler/maths-online/prof/editor.UpdateQuestiongroupTagsIn
+export interface UpdateQuestiongroupTagsIn {
+  Id: IdQuestiongroup;
   Tags: string[] | null;
-  IdQuestion: IdQuestion;
 }
 // github.com/benoitkugler/maths-online/prof/trivial.UpdateTrivialVisiblityIn
 export interface UpdateTrivialVisiblityIn {
@@ -833,14 +849,22 @@ export const VectorPairCriterionLabels: {
 
 // github.com/benoitkugler/maths-online/prof/teacher.Visibility
 export enum Visibility {
-  Personnal = 0,
-  Admin = 1,
+  Admin = 2,
+  Personnal = 1,
+  hidden = 0,
 }
 
 export const VisibilityLabels: { [key in Visibility]: string } = {
-  [Visibility.Personnal]: "Personnel",
   [Visibility.Admin]: "Officiel",
+  [Visibility.Personnal]: "Personnel",
+  [Visibility.hidden]: "not accessible by the user",
 };
+
+// github.com/benoitkugler/maths-online/tasks.WorkID
+export interface WorkID {
+  ID: number;
+  IsExercice: boolean;
+}
 
 class DateTag {
   private _ = "D" as const;
@@ -1546,9 +1570,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorDuplicateQuestion(data: Question): void;
 
-  protected async rawEditorDuplicateQuestionWithDifficulty(params: {
-    id: number;
-  }) {
+  protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question-duplicate";
     const rep: AxiosResponse<never> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
@@ -1557,43 +1579,43 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** EditorDuplicateQuestionWithDifficulty wraps rawEditorDuplicateQuestionWithDifficulty and handles the error */
-  async EditorDuplicateQuestionWithDifficulty(params: { id: number }) {
+  /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
+  async EditorDuplicateQuestiongroup(params: { id: number }) {
     this.startRequest();
     try {
-      const out = await this.rawEditorDuplicateQuestionWithDifficulty(params);
-      this.onSuccessEditorDuplicateQuestionWithDifficulty(out);
+      const out = await this.rawEditorDuplicateQuestiongroup(params);
+      this.onSuccessEditorDuplicateQuestiongroup(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorDuplicateQuestionWithDifficulty(
-    data: never
-  ): void;
+  protected abstract onSuccessEditorDuplicateQuestiongroup(data: never): void;
 
-  protected async rawEditorCreateQuestion() {
+  protected async rawEditorCreateQuestiongroup() {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    const rep: AxiosResponse<Question> = await Axios.put(fullUrl, null, {
+    const rep: AxiosResponse<Questiongroup> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
-  /** EditorCreateQuestion wraps rawEditorCreateQuestion and handles the error */
-  async EditorCreateQuestion() {
+  /** EditorCreateQuestiongroup wraps rawEditorCreateQuestiongroup and handles the error */
+  async EditorCreateQuestiongroup() {
     this.startRequest();
     try {
-      const out = await this.rawEditorCreateQuestion();
-      this.onSuccessEditorCreateQuestion(out);
+      const out = await this.rawEditorCreateQuestiongroup();
+      this.onSuccessEditorCreateQuestiongroup(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorCreateQuestion(data: Question): void;
+  protected abstract onSuccessEditorCreateQuestiongroup(
+    data: Questiongroup
+  ): void;
 
   protected async rawEditorGetQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
@@ -1641,7 +1663,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorDeleteQuestion(data: never): void;
 
-  protected async rawEditorUpdateTags(params: UpdateTagsIn) {
+  protected async rawEditorUpdateTags(params: UpdateQuestiongroupTagsIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/tags";
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
@@ -1650,7 +1672,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorUpdateTags wraps rawEditorUpdateTags and handles the error */
-  async EditorUpdateTags(params: UpdateTagsIn) {
+  async EditorUpdateTags(params: UpdateQuestiongroupTagsIn) {
     this.startRequest();
     try {
       const out = await this.rawEditorUpdateTags(params);
@@ -1662,32 +1684,6 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorUpdateTags(data: never): void;
-
-  protected async rawEditorUpdateGroupTags(params: UpdateGroupTagsIn) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question/group-tags";
-    const rep: AxiosResponse<UpdateGroupTagsOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() }
-    );
-    return rep.data;
-  }
-
-  /** EditorUpdateGroupTags wraps rawEditorUpdateGroupTags and handles the error */
-  async EditorUpdateGroupTags(params: UpdateGroupTagsIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorUpdateGroupTags(params);
-      this.onSuccessEditorUpdateGroupTags(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorUpdateGroupTags(
-    data: UpdateGroupTagsOut
-  ): void;
 
   protected async rawQuestionUpdateVisiblity(
     params: QuestionUpdateVisiblityIn
@@ -2147,7 +2143,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkRemoveTask(data: never): void;
 
-  protected async rawHomeworkAddTask(params: AddTaskIn) {
+  protected async rawHomeworkAddTask(params: AddExerciceToTaskIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
     const rep: AxiosResponse<Task> = await Axios.put(fullUrl, params, {
       headers: this.getHeaders(),
@@ -2156,7 +2152,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkAddTask wraps rawHomeworkAddTask and handles the error */
-  async HomeworkAddTask(params: AddTaskIn) {
+  async HomeworkAddTask(params: AddExerciceToTaskIn) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkAddTask(params);

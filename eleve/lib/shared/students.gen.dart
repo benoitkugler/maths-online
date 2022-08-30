@@ -87,20 +87,20 @@ JSON checkStudentClassroomOutToJson(CheckStudentClassroomOut item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/teacher.Date
+// github.com/benoitkugler/maths-online/sql/teacher.Date
 typedef Date = DateTime;
 
-// github.com/benoitkugler/maths-online/prof/teacher.IdClassroom
+// github.com/benoitkugler/maths-online/sql/teacher.IdClassroom
 typedef IdClassroom = int;
 
-// github.com/benoitkugler/maths-online/prof/teacher.IdStudent
+// github.com/benoitkugler/maths-online/sql/teacher.IdStudent
 typedef IdStudent = int;
 
 String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
-// github.com/benoitkugler/maths-online/prof/teacher.Student
+// github.com/benoitkugler/maths-online/sql/teacher.Student
 class Student {
   final IdStudent id;
   final String name;

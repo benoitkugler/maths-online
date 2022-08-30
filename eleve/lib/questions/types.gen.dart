@@ -1006,28 +1006,23 @@ JSON proofFieldBlockToJson(ProofFieldBlock item) {
 
 // github.com/benoitkugler/maths-online/maths/questions/client.Question
 class Question {
-  final String title;
   final Enonce enonce;
 
-  const Question(this.title, this.enonce);
+  const Question(this.enonce);
 
   @override
   String toString() {
-    return "Question($title, $enonce)";
+    return "Question($enonce)";
   }
 }
 
 Question questionFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Question(
-      stringFromJson(json['Title']), listBlockFromJson(json['Enonce']));
+  return Question(listBlockFromJson(json['Enonce']));
 }
 
 JSON questionToJson(Question item) {
-  return {
-    "Title": stringToJson(item.title),
-    "Enonce": listBlockToJson(item.enonce)
-  };
+  return {"Enonce": listBlockToJson(item.enonce)};
 }
 
 // github.com/benoitkugler/maths-online/maths/questions/client.QuestionAnswersIn
@@ -1891,14 +1886,14 @@ List<dynamic> listListIntToJson(List<TreeShape> item) {
   return item.map(listIntToJson).toList();
 }
 
-List<List<TextOrMath>> listListTextOrMathFromJson(dynamic json) {
+List<TextLine> listListTextOrMathFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(listTextOrMathFromJson).toList();
 }
 
-List<dynamic> listListTextOrMathToJson(List<List<TextOrMath>> item) {
+List<dynamic> listListTextOrMathToJson(List<TextLine> item) {
   return item.map(listTextOrMathToJson).toList();
 }
 

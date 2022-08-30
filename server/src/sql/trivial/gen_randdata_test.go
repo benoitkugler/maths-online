@@ -20,7 +20,7 @@ func randArray5QuestionCriterion() [5]QuestionCriterion {
 func randCategoriesQuestions() CategoriesQuestions {
 	return CategoriesQuestions{
 		Tags:         randArray5QuestionCriterion(),
-		Difficulties: randSliceedi_DifficultyTag(),
+		Difficulties: randedi_DifficultyQuery(),
 	}
 }
 
@@ -74,6 +74,10 @@ func randTrivial() Trivial {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
+}
+
+func randedi_DifficultyQuery() editor.DifficultyQuery {
+	return editor.DifficultyQuery(randSliceedi_DifficultyTag())
 }
 
 func randedi_DifficultyTag() editor.DifficultyTag {

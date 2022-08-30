@@ -242,7 +242,7 @@ JSON gameTerminatedToJson(GameTerminated item) {
   return {};
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.IdQuestion
+// github.com/benoitkugler/maths-online/sql/editor.IdQuestion
 typedef IdQuestion = int;
 
 // github.com/benoitkugler/maths-online/trivial.LobbyUpdate

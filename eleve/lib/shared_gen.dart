@@ -2,7 +2,7 @@
 
 import 'questions/types.gen.dart';
 
-// github.com/benoitkugler/maths-online/prof/editor.Answer
+// github.com/benoitkugler/maths-online/tasks.Answer
 class Answer {
   final List<VarEntry> params;
   final QuestionAnswersIn answer;
@@ -54,59 +54,59 @@ JSON checkExpressionOutToJson(CheckExpressionOut item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.EvaluateExerciceIn
-class EvaluateExerciceIn {
-  final IdExercice idExercice;
+// github.com/benoitkugler/maths-online/tasks.EvaluateWorkIn
+class EvaluateWorkIn {
+  final WorkID iD;
   final Map<int, Answer> answers;
   final ProgressionExt progression;
 
-  const EvaluateExerciceIn(this.idExercice, this.answers, this.progression);
+  const EvaluateWorkIn(this.iD, this.answers, this.progression);
 
   @override
   String toString() {
-    return "EvaluateExerciceIn($idExercice, $answers, $progression)";
+    return "EvaluateWorkIn($iD, $answers, $progression)";
   }
 }
 
-EvaluateExerciceIn evaluateExerciceInFromJson(dynamic json_) {
+EvaluateWorkIn evaluateWorkInFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return EvaluateExerciceIn(
-      intFromJson(json['IdExercice']),
+  return EvaluateWorkIn(
+      workIDFromJson(json['ID']),
       dictIntToAnswerFromJson(json['Answers']),
       progressionExtFromJson(json['Progression']));
 }
 
-JSON evaluateExerciceInToJson(EvaluateExerciceIn item) {
+JSON evaluateWorkInToJson(EvaluateWorkIn item) {
   return {
-    "IdExercice": intToJson(item.idExercice),
+    "ID": workIDToJson(item.iD),
     "Answers": dictIntToAnswerToJson(item.answers),
     "Progression": progressionExtToJson(item.progression)
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.EvaluateExerciceOut
-class EvaluateExerciceOut {
+// github.com/benoitkugler/maths-online/tasks.EvaluateWorkOut
+class EvaluateWorkOut {
   final Map<int, QuestionAnswersOut> results;
   final ProgressionExt progression;
   final List<InstantiatedQuestion> newQuestions;
 
-  const EvaluateExerciceOut(this.results, this.progression, this.newQuestions);
+  const EvaluateWorkOut(this.results, this.progression, this.newQuestions);
 
   @override
   String toString() {
-    return "EvaluateExerciceOut($results, $progression, $newQuestions)";
+    return "EvaluateWorkOut($results, $progression, $newQuestions)";
   }
 }
 
-EvaluateExerciceOut evaluateExerciceOutFromJson(dynamic json_) {
+EvaluateWorkOut evaluateWorkOutFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return EvaluateExerciceOut(
+  return EvaluateWorkOut(
       dictIntToQuestionAnswersOutFromJson(json['Results']),
       progressionExtFromJson(json['Progression']),
       listInstantiatedQuestionFromJson(json['NewQuestions']));
 }
 
-JSON evaluateExerciceOutToJson(EvaluateExerciceOut item) {
+JSON evaluateWorkOutToJson(EvaluateWorkOut item) {
   return {
     "Results": dictIntToQuestionAnswersOutToJson(item.results),
     "Progression": progressionExtToJson(item.progression),
@@ -114,78 +114,7 @@ JSON evaluateExerciceOutToJson(EvaluateExerciceOut item) {
   };
 }
 
-// github.com/benoitkugler/maths-online.EvaluateQuestionIn
-class EvaluateQuestionIn {
-  final QuestionAnswersIn answer;
-  final List<VarEntry> params;
-  final IdQuestion idQuestion;
-
-  const EvaluateQuestionIn(this.answer, this.params, this.idQuestion);
-
-  @override
-  String toString() {
-    return "EvaluateQuestionIn($answer, $params, $idQuestion)";
-  }
-}
-
-EvaluateQuestionIn evaluateQuestionInFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return EvaluateQuestionIn(questionAnswersInFromJson(json['Answer']),
-      listVarEntryFromJson(json['Params']), intFromJson(json['IdQuestion']));
-}
-
-JSON evaluateQuestionInToJson(EvaluateQuestionIn item) {
-  return {
-    "Answer": questionAnswersInToJson(item.answer),
-    "Params": listVarEntryToJson(item.params),
-    "IdQuestion": intToJson(item.idQuestion)
-  };
-}
-
-// github.com/benoitkugler/maths-online/prof/editor.Exercice
-class Exercice {
-  final IdExercice id;
-  final String title;
-  final String description;
-  final Parameters parameters;
-  final Flow flow;
-  final IdTeacher idTeacher;
-  final bool public;
-
-  const Exercice(this.id, this.title, this.description, this.parameters,
-      this.flow, this.idTeacher, this.public);
-
-  @override
-  String toString() {
-    return "Exercice($id, $title, $description, $parameters, $flow, $idTeacher, $public)";
-  }
-}
-
-Exercice exerciceFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return Exercice(
-      intFromJson(json['Id']),
-      stringFromJson(json['Title']),
-      stringFromJson(json['Description']),
-      parametersFromJson(json['Parameters']),
-      flowFromJson(json['Flow']),
-      intFromJson(json['IdTeacher']),
-      boolFromJson(json['Public']));
-}
-
-JSON exerciceToJson(Exercice item) {
-  return {
-    "Id": intToJson(item.id),
-    "Title": stringToJson(item.title),
-    "Description": stringToJson(item.description),
-    "Parameters": parametersToJson(item.parameters),
-    "Flow": flowToJson(item.flow),
-    "IdTeacher": intToJson(item.idTeacher),
-    "Public": boolToJson(item.public)
-  };
-}
-
-// github.com/benoitkugler/maths-online/prof/editor.Flow
+// github.com/benoitkugler/maths-online/sql/editor.Flow
 enum Flow { parallel, sequencial }
 
 extension _FlowExt on Flow {
@@ -202,49 +131,13 @@ Flow flowFromJson(dynamic json) => _FlowExt.fromValue(json as int);
 
 dynamic flowToJson(Flow item) => item.toValue();
 
-// github.com/benoitkugler/maths-online/prof/editor.IdExercice
-typedef IdExercice = int;
-
-// github.com/benoitkugler/maths-online/prof/editor.IdQuestion
+// github.com/benoitkugler/maths-online/sql/editor.IdQuestion
 typedef IdQuestion = int;
 
-// github.com/benoitkugler/maths-online/prof/teacher.IdTeacher
-typedef IdTeacher = int;
-
-// github.com/benoitkugler/maths-online/prof/editor.InstantiateQuestionsOut
+// github.com/benoitkugler/maths-online/tasks.InstantiateQuestionsOut
 typedef InstantiateQuestionsOut = List<InstantiatedQuestion>;
 
-// github.com/benoitkugler/maths-online/prof/editor.InstantiatedExercice
-class InstantiatedExercice {
-  final Exercice exercice;
-  final List<InstantiatedQuestion> questions;
-  final List<int> baremes;
-
-  const InstantiatedExercice(this.exercice, this.questions, this.baremes);
-
-  @override
-  String toString() {
-    return "InstantiatedExercice($exercice, $questions, $baremes)";
-  }
-}
-
-InstantiatedExercice instantiatedExerciceFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return InstantiatedExercice(
-      exerciceFromJson(json['Exercice']),
-      listInstantiatedQuestionFromJson(json['Questions']),
-      listIntFromJson(json['Baremes']));
-}
-
-JSON instantiatedExerciceToJson(InstantiatedExercice item) {
-  return {
-    "Exercice": exerciceToJson(item.exercice),
-    "Questions": listInstantiatedQuestionToJson(item.questions),
-    "Baremes": listIntToJson(item.baremes)
-  };
-}
-
-// github.com/benoitkugler/maths-online/prof/editor.InstantiatedQuestion
+// github.com/benoitkugler/maths-online/tasks.InstantiatedQuestion
 class InstantiatedQuestion {
   final IdQuestion id;
   final Question question;
@@ -272,33 +165,44 @@ JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/maths/questions.Parameters
-class Parameters {
-  final RandomParameters variables;
-  final List<String> intrinsics;
+// github.com/benoitkugler/maths-online/tasks.InstantiatedWork
+class InstantiatedWork {
+  final WorkID iD;
+  final String title;
+  final Flow flow;
+  final List<InstantiatedQuestion> questions;
+  final List<int> baremes;
 
-  const Parameters(this.variables, this.intrinsics);
+  const InstantiatedWork(
+      this.iD, this.title, this.flow, this.questions, this.baremes);
 
   @override
   String toString() {
-    return "Parameters($variables, $intrinsics)";
+    return "InstantiatedWork($iD, $title, $flow, $questions, $baremes)";
   }
 }
 
-Parameters parametersFromJson(dynamic json_) {
+InstantiatedWork instantiatedWorkFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return Parameters(listRandomParameterFromJson(json['Variables']),
-      listStringFromJson(json['Intrinsics']));
+  return InstantiatedWork(
+      workIDFromJson(json['ID']),
+      stringFromJson(json['Title']),
+      flowFromJson(json['Flow']),
+      listInstantiatedQuestionFromJson(json['Questions']),
+      listIntFromJson(json['Baremes']));
 }
 
-JSON parametersToJson(Parameters item) {
+JSON instantiatedWorkToJson(InstantiatedWork item) {
   return {
-    "Variables": listRandomParameterToJson(item.variables),
-    "Intrinsics": listStringToJson(item.intrinsics)
+    "ID": workIDToJson(item.iD),
+    "Title": stringToJson(item.title),
+    "Flow": flowToJson(item.flow),
+    "Questions": listInstantiatedQuestionToJson(item.questions),
+    "Baremes": listIntToJson(item.baremes)
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.ProgressionExt
+// github.com/benoitkugler/maths-online/tasks.ProgressionExt
 class ProgressionExt {
   final List<QuestionHistory> questions;
   final int nextQuestion;
@@ -324,69 +228,40 @@ JSON progressionExtToJson(ProgressionExt item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.QuestionHistory
+// github.com/benoitkugler/maths-online/sql/tasks.QuestionHistory
 typedef QuestionHistory = List<bool>;
-
-// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
-class RandomParameter {
-  final String expression;
-  final Variable variable;
-
-  const RandomParameter(this.expression, this.variable);
-
-  @override
-  String toString() {
-    return "RandomParameter($expression, $variable)";
-  }
-}
-
-RandomParameter randomParameterFromJson(dynamic json_) {
-  final json = (json_ as JSON);
-  return RandomParameter(
-      stringFromJson(json['expression']), variableFromJson(json['variable']));
-}
-
-JSON randomParameterToJson(RandomParameter item) {
-  return {
-    "expression": stringToJson(item.expression),
-    "variable": variableToJson(item.variable)
-  };
-}
-
-// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
-typedef RandomParameters = List<RandomParameter>;
 
 String stringFromJson(dynamic json) => json == null ? "" : json as String;
 
 String stringToJson(String item) => item;
 
-// github.com/benoitkugler/maths-online.StudentExerciceInst
-class StudentExerciceInst {
-  final InstantiatedExercice exercice;
+// github.com/benoitkugler/maths-online.StudentWork
+class StudentWork {
+  final InstantiatedWork exercice;
   final ProgressionExt progression;
 
-  const StudentExerciceInst(this.exercice, this.progression);
+  const StudentWork(this.exercice, this.progression);
 
   @override
   String toString() {
-    return "StudentExerciceInst($exercice, $progression)";
+    return "StudentWork($exercice, $progression)";
   }
 }
 
-StudentExerciceInst studentExerciceInstFromJson(dynamic json_) {
+StudentWork studentWorkFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return StudentExerciceInst(instantiatedExerciceFromJson(json['Exercice']),
+  return StudentWork(instantiatedWorkFromJson(json['Exercice']),
       progressionExtFromJson(json['Progression']));
 }
 
-JSON studentExerciceInstToJson(StudentExerciceInst item) {
+JSON studentWorkToJson(StudentWork item) {
   return {
-    "Exercice": instantiatedExerciceToJson(item.exercice),
+    "Exercice": instantiatedWorkToJson(item.exercice),
     "Progression": progressionExtToJson(item.progression)
   };
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.VarEntry
+// github.com/benoitkugler/maths-online/tasks.VarEntry
 class VarEntry {
   final Variable variable;
   final String resolved;
@@ -432,6 +307,28 @@ Variable variableFromJson(dynamic json_) {
 
 JSON variableToJson(Variable item) {
   return {"Indice": stringToJson(item.indice), "Name": intToJson(item.name)};
+}
+
+// github.com/benoitkugler/maths-online/tasks.WorkID
+class WorkID {
+  final int iD;
+  final bool isExercice;
+
+  const WorkID(this.iD, this.isExercice);
+
+  @override
+  String toString() {
+    return "WorkID($iD, $isExercice)";
+  }
+}
+
+WorkID workIDFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return WorkID(intFromJson(json['ID']), boolFromJson(json['IsExercice']));
+}
+
+JSON workIDToJson(WorkID item) {
+  return {"ID": intToJson(item.iD), "IsExercice": boolToJson(item.isExercice)};
 }
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
@@ -511,28 +408,6 @@ List<QuestionHistory> listListBoolFromJson(dynamic json) {
 
 List<dynamic> listListBoolToJson(List<QuestionHistory> item) {
   return item.map(listBoolToJson).toList();
-}
-
-List<RandomParameter> listRandomParameterFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(randomParameterFromJson).toList();
-}
-
-List<dynamic> listRandomParameterToJson(List<RandomParameter> item) {
-  return item.map(randomParameterToJson).toList();
-}
-
-List<String> listStringFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(stringFromJson).toList();
-}
-
-List<dynamic> listStringToJson(List<String> item) {
-  return item.map(stringToJson).toList();
 }
 
 List<VarEntry> listVarEntryFromJson(dynamic json) {
