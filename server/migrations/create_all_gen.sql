@@ -1,6 +1,6 @@
-
 -- sql/teacher/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+
 CREATE TABLE classrooms (
     Id serial PRIMARY KEY,
     IdTeacher integer NOT NULL,
@@ -28,6 +28,9 @@ CREATE TABLE teachers (
 ALTER TABLE teachers
     ADD UNIQUE (Mail);
 
+ALTER TABLE teachers
+    ADD UNIQUE (Mail);
+
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
@@ -36,6 +39,7 @@ ALTER TABLE students
 
 -- sql/editor/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+
 CREATE TABLE exercices (
     Id serial PRIMARY KEY,
     IdGroup integer NOT NULL,
@@ -460,6 +464,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_repe_RandomCircle (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_repe_RandomCircle (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_repe_RandomLine (data jsonb)
     RETURNS boolean
     AS $$
@@ -587,7 +614,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Indice', 'Name'))
+            bool_and(KEY IN ('Indice', 'Name'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Indice')
@@ -609,7 +636,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'Color'))
+            bool_and(KEY IN ('Label', 'Color'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
@@ -672,6 +699,8 @@ BEGIN
         RETURN gomacro_validate_json_ques_SignTableBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'SignTableFieldBlock' THEN
         RETURN gomacro_validate_json_ques_SignTableFieldBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'SignTableFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_SignTableFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'TableBlock' THEN
         RETURN gomacro_validate_json_ques_TableBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'TableFieldBlock' THEN
@@ -705,7 +734,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('X', 'Y'))
+            bool_and(KEY IN ('X', 'Y'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'X')
@@ -727,7 +756,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel'))
+            bool_and(KEY IN ('Expression', 'Label', 'ComparisonLevel'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Expression')
@@ -750,7 +779,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'A', 'B', 'Figure'))
+            bool_and(KEY IN ('Label', 'A', 'B', 'Figure'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
@@ -774,7 +803,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Drawings', 'Bounds', 'ShowGrid', 'ShowOrigin'))
+            bool_and(KEY IN ('Drawings', 'Bounds', 'ShowGrid', 'ShowOrigin'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_repe_RandomDrawings (data -> 'Drawings')
@@ -798,7 +827,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer', 'Figure'))
+            bool_and(KEY IN ('Answer', 'Figure'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
@@ -820,7 +849,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer', 'AnswerOrigin', 'Figure', 'MustHaveOrigin'))
+            bool_and(KEY IN ('Answer', 'AnswerOrigin', 'Figure', 'MustHaveOrigin'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
@@ -844,7 +873,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Figure', 'Criterion'))
+            bool_and(KEY IN ('Figure', 'Criterion'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure')
@@ -866,7 +895,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Parts'))
+            bool_and(KEY IN ('Parts'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Parts');
@@ -887,7 +916,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Bottom', 'Top', 'Left', 'Right', 'Color'))
+            bool_and(KEY IN ('Bottom', 'Top', 'Left', 'Right', 'Color'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Bottom')
@@ -912,7 +941,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Function', 'Decoration', 'Variable', 'From', 'To'))
+            bool_and(KEY IN ('Function', 'Decoration', 'Variable', 'From', 'To'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Function')
@@ -937,7 +966,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Function', 'Label', 'Variable', 'XGrid'))
+            bool_and(KEY IN ('Function', 'Label', 'Variable', 'XGrid'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Function')
@@ -961,7 +990,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('FunctionExprs', 'FunctionVariations', 'Areas'))
+            bool_and(KEY IN ('FunctionExprs', 'FunctionVariations', 'Areas'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_FunctionDefinition (data -> 'FunctionExprs')
@@ -984,7 +1013,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Expression'))
+            bool_and(KEY IN ('Expression'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Expression');
@@ -1005,7 +1034,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'Answer', 'AdditionalProposals'))
+            bool_and(KEY IN ('Label', 'Answer', 'AdditionalProposals'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
@@ -1028,7 +1057,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Variables', 'Intrinsics'))
+            bool_and(KEY IN ('Variables', 'Intrinsics'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_RandomParameter (data -> 'Variables')
@@ -1075,7 +1104,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Terms'))
+            bool_and(KEY IN ('Terms'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Terms');
@@ -1096,7 +1125,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer'))
+            bool_and(KEY IN ('Answer'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_ProofSequence (data -> 'Answer');
@@ -1137,7 +1166,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Left', 'Right', 'Op'))
+            bool_and(KEY IN ('Left', 'Right', 'Op'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_ProofAssertion (data -> 'Left')
@@ -1160,7 +1189,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Parts'))
+            bool_and(KEY IN ('Parts'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_ProofAssertion (data -> 'Parts');
@@ -1181,7 +1210,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Content'))
+            bool_and(KEY IN ('Content'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Content');
@@ -1202,7 +1231,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('title', 'enonce', 'parameters'))
+            bool_and(KEY IN ('title', 'enonce', 'parameters'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'title')
@@ -1225,7 +1254,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer', 'Proposals', 'AsDropDown'))
+            bool_and(KEY IN ('Answer', 'Proposals', 'AsDropDown'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Answer')
@@ -1248,7 +1277,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('expression', 'variable'))
+            bool_and(KEY IN ('expression', 'variable'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'expression')
@@ -1286,7 +1315,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'FxSymbols', 'Xs', 'Signs'))
+            bool_and(KEY IN ('Label', 'FxSymbols', 'Xs', 'Signs'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
@@ -1310,7 +1339,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer'))
+            bool_and(KEY IN ('Answer'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_SignTableBlock (data -> 'Answer');
@@ -1331,7 +1360,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('HorizontalHeaders', 'VerticalHeaders', 'Values'))
+            bool_and(KEY IN ('HorizontalHeaders', 'VerticalHeaders', 'Values'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_TextPart (data -> 'HorizontalHeaders')
@@ -1354,7 +1383,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('HorizontalHeaders', 'VerticalHeaders', 'Answer'))
+            bool_and(KEY IN ('HorizontalHeaders', 'VerticalHeaders', 'Answer'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_TextPart (data -> 'HorizontalHeaders')
@@ -1377,7 +1406,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Parts', 'Bold', 'Italic', 'Smaller'))
+            bool_and(KEY IN ('Parts', 'Bold', 'Italic', 'Smaller'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Parts')
@@ -1417,7 +1446,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Content', 'Kind'))
+            bool_and(KEY IN ('Content', 'Kind'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Content')
@@ -1439,7 +1468,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('EventsProposals', 'AnswerRoot'))
+            bool_and(KEY IN ('EventsProposals', 'AnswerRoot'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_string (data -> 'EventsProposals')
@@ -1461,7 +1490,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Children', 'Probabilities', 'Value'))
+            bool_and(KEY IN ('Children', 'Probabilities', 'Value'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_TreeNodeAnswer (data -> 'Children')
@@ -1484,7 +1513,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'Xs', 'Fxs'))
+            bool_and(KEY IN ('Label', 'Xs', 'Fxs'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
@@ -1507,7 +1536,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer'))
+            bool_and(KEY IN ('Answer'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_VariationTableBlock (data -> 'Answer');
@@ -1528,7 +1557,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Answer', 'AcceptColinear', 'DisplayColumn'))
+            bool_and(KEY IN ('Answer', 'AcceptColinear', 'DisplayColumn'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
@@ -1567,7 +1596,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('X', 'Y'))
+            bool_and(KEY IN ('X', 'Y'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'X')
@@ -1605,7 +1634,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Name', 'Point'))
+            bool_and(KEY IN ('Name', 'Point'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Name')
@@ -1627,7 +1656,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Color', 'Points'))
+            bool_and(KEY IN ('Color', 'Points'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Color')
@@ -1649,7 +1678,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Center', 'Radius', 'LineColor', 'FillColor', 'Legend'))
+            bool_and(KEY IN ('Center', 'Radius', 'LineColor', 'FillColor', 'Legend'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_repe_RandomCoord (data -> 'Center')
@@ -1674,7 +1703,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('X', 'Y'))
+            bool_and(KEY IN ('X', 'Y'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'X')
@@ -1696,12 +1725,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Points', 'Segments', 'Lines', 'Circles', 'Areas'))
+            bool_and(KEY IN ('Points', 'Segments', 'Lines', 'Circles', 'Areas'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_repe_NamedRandomLabeledPoint (data -> 'Points')
         AND gomacro_validate_json_array_repe_RandomSegment (data -> 'Segments')
         AND gomacro_validate_json_array_repe_RandomLine (data -> 'Lines')
+        AND gomacro_validate_json_array_repe_RandomCircle (data -> 'Circles')
         AND gomacro_validate_json_array_repe_RandomCircle (data -> 'Circles')
         AND gomacro_validate_json_array_repe_RandomArea (data -> 'Areas');
     RETURN is_valid;
@@ -1721,7 +1751,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Color', 'Coord', 'Pos'))
+            bool_and(KEY IN ('Color', 'Coord', 'Pos'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Color')
@@ -1744,7 +1774,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'A', 'B', 'Color'))
+            bool_and(KEY IN ('Label', 'A', 'B', 'Color'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
@@ -1768,7 +1798,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('LabelName', 'From', 'To', 'Color', 'LabelPos', 'Kind'))
+            bool_and(KEY IN ('LabelName', 'From', 'To', 'Color', 'LabelPos', 'Kind'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'LabelName')
@@ -1794,7 +1824,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Width', 'Height', 'Origin'))
+            bool_and(KEY IN ('Width', 'Height', 'Origin'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Width')
@@ -1845,6 +1875,7 @@ ALTER TABLE questions
 
 -- sql/trivial/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+
 CREATE TABLE trivials (
     Id serial PRIMARY KEY,
     Questions jsonb NOT NULL,
@@ -1988,7 +2019,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Tags', 'Difficulties'))
+            bool_and(KEY IN ('Tags', 'Difficulties'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_5_array_array_string (data -> 'Tags')
@@ -2004,6 +2035,7 @@ ALTER TABLE trivials
 
 -- sql/tasks/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+
 CREATE TABLE monoquestions (
     Id serial PRIMARY KEY,
     IdQuestion integer NOT NULL,
@@ -2064,13 +2096,15 @@ ALTER TABLE progression_questions
 
 -- sql/homework/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+
 CREATE TABLE sheets (
     Id serial PRIMARY KEY,
     IdClassroom integer NOT NULL,
     Title text NOT NULL,
     Notation integer CHECK (Notation IN (0, 1)) NOT NULL,
     Activated boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    Deadline timestamp(0
+) with time zone NOT NULL
 );
 
 CREATE TABLE sheet_tasks (

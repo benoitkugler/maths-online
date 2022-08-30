@@ -64,7 +64,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   Map<PlayerID, String> lobby = {};
 
-  GameState state = const GameState({}, 0, "");
+  GameState state = const GameState(
+      {"": PlayerStatus("", QuestionReview([], []), [], false)}, 0, "");
   Set<int> highligthedTiles = {};
 
   /// null when no animation is displayed
