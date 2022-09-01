@@ -54,7 +54,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/editor/question-duplicate-one", edit.EditorDuplicateQuestion)
 	gr.GET("/api/prof/editor/question-duplicate", edit.EditorDuplicateQuestiongroup)
 	gr.PUT("/api/prof/editor/question", edit.EditorCreateQuestiongroup)
-	gr.GET("/api/prof/editor/question", edit.EditorGetQuestion)
+	gr.GET("/api/prof/editor/question", edit.EditorGetQuestions)
 	gr.DELETE("/api/prof/editor/question", edit.EditorDeleteQuestion)
 	gr.POST("/api/prof/editor/question/tags", edit.EditorUpdateTags)
 	gr.POST("/api/prof/editor/question/visibility", edit.QuestionUpdateVisiblity)

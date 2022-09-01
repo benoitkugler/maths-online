@@ -1617,28 +1617,28 @@ export abstract class AbstractAPI {
     data: Questiongroup
   ): void;
 
-  protected async rawEditorGetQuestion(params: { id: number }) {
+  protected async rawEditorGetQuestions(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
+    const rep: AxiosResponse<Question[] | null> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
-  /** EditorGetQuestion wraps rawEditorGetQuestion and handles the error */
-  async EditorGetQuestion(params: { id: number }) {
+  /** EditorGetQuestions wraps rawEditorGetQuestions and handles the error */
+  async EditorGetQuestions(params: { id: number }) {
     this.startRequest();
     try {
-      const out = await this.rawEditorGetQuestion(params);
-      this.onSuccessEditorGetQuestion(out);
+      const out = await this.rawEditorGetQuestions(params);
+      this.onSuccessEditorGetQuestions(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorGetQuestion(data: Question): void;
+  protected abstract onSuccessEditorGetQuestions(data: Question[] | null): void;
 
   protected async rawEditorDeleteQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";

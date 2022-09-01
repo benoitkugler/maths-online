@@ -283,28 +283,39 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) error {
 	return nil
 }
 
-func (ct *Controller) EditorGetQuestion(c echo.Context) error {
+// EditorGetQuestions returns the questions for the given group
+func (ct *Controller) EditorGetQuestions(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
-	id, err := utils.QueryParamInt64(c, "id")
+	idGroup, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	question, err := ed.SelectQuestion(ct.db, ed.IdQuestion(id))
+	// check the access
+	group, err := ed.SelectQuestiongroup(ct.db, ed.IdQuestiongroup(idGroup))
 	if err != nil {
-		return err
+		return utils.SQLError(err)
 	}
 
-	group, err := ct.getGroup(question)
-	if err != nil {
-		return err
-	}
 	if !group.IsVisibleBy(user.Id) {
 		return accessForbidden
 	}
 
-	return c.JSON(200, question)
+	dict, err := ed.SelectQuestionsByIdGroups(ct.db, ed.IdQuestiongroup(idGroup))
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	var out []ed.Question
+	for _, qu := range dict {
+		out = append(out, qu)
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Id < out[j].Id })
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Difficulty < out[j].Difficulty })
+
+	return c.JSON(200, out)
 }
 
 type CheckQuestionParametersIn struct {
