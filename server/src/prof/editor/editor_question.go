@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -115,30 +116,36 @@ func (ct *Controller) EditorCreateQuestiongroup(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createQuestion(userID uID) (ed.Questiongroup, error) {
+func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return ed.Questiongroup{}, utils.SQLError(err)
+		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
 	group, err := ed.Questiongroup{IdTeacher: userID, Public: false}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
-		return ed.Questiongroup{}, utils.SQLError(err)
+		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
-	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(tx)
+	qu, err := ed.Question{IdGroup: group.Id.AsOptional()}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
-		return ed.Questiongroup{}, utils.SQLError(err)
+		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return ed.Questiongroup{}, utils.SQLError(err)
+		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
-	return group, nil
+	origin, _ := questionOrigin(group, userID, ct.admin.Id)
+	return QuestiongroupExt{
+		Group:     group,
+		Tags:      nil,
+		Origin:    origin,
+		Questions: []QuestionHeader{newQuestionHeader(qu)},
+	}, nil
 }
 
 func (ct *Controller) getGroup(qu ed.Question) (ed.Questiongroup, error) {
@@ -425,8 +432,12 @@ type QuestionHeader struct {
 	Difficulty ed.DifficultyTag // deduced from the tags
 }
 
-func normalizeTitle(title string) string {
-	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
+func newQuestionHeader(question ed.Question) QuestionHeader {
+	return QuestionHeader{
+		Id:         question.Id,
+		Subtitle:   question.Subtitle,
+		Difficulty: question.Difficulty,
+	}
 }
 
 func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, bool) {
@@ -441,6 +452,46 @@ func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, boo
 	}, true
 }
 
+type questionGroupQuery interface {
+	match(ed.Questiongroup) bool
+}
+
+func newQuery(title string) (questionGroupQuery, error) {
+	// special case for pattern id-group:id1, id2, ...
+	if strings.HasPrefix(title, "id-group:") {
+		idsString := strings.TrimSpace(title[len("id-group:"):])
+		if len(idsString) != 0 {
+			out := make(ed.IdQuestiongroupSet)
+			ids := strings.Split(idsString, ",")
+
+			for _, id := range ids {
+				idV, err := strconv.Atoi(id)
+				if err != nil {
+					return nil, fmt.Errorf("Requête invalide: entier attendu (%s)", err)
+				}
+				out.Add(ed.IdQuestiongroup(idV))
+			}
+			return queryByIds(out), nil
+		}
+	}
+	return queryByTitle(normalizeTitle(title)), nil
+}
+
+type queryByTitle string
+
+func (qt queryByTitle) match(group ed.Questiongroup) bool {
+	thisTitle := normalizeTitle(group.Title)
+	return qt == "" || strings.Contains(thisTitle, string(qt))
+}
+
+type queryByIds ed.IdQuestiongroupSet
+
+func (qt queryByIds) match(group ed.Questiongroup) bool { return qt[group.Id] }
+
+func normalizeTitle(title string) string {
+	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
+}
+
 func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out ListQuestionsOut, err error) {
 	const pagination = 30 // number of groups
 
@@ -451,10 +502,12 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 	groups.RestrictVisible(userID)
 
 	// restrict the groups to matching title
-	queryTitle := normalizeTitle(query.TitleQuery)
+	matcher, err := newQuery(query.TitleQuery)
+	if err != nil {
+		return out, err
+	}
 	for _, group := range groups {
-		thisTitle := normalizeTitle(group.Title)
-		if queryTitle != "" && !strings.Contains(thisTitle, queryTitle) {
+		if !matcher.match(group) {
 			delete(groups, group.Id)
 		}
 	}
@@ -466,7 +519,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 	}
 	tagsMap := tags.ByIdQuestiongroup()
 
-	// ... and the tmp
+	// ... and the questions
 	tmp, err := ed.SelectQuestionsByIdGroups(ct.db, groups.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -497,12 +550,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 		}
 
 		for _, question := range questions {
-			question := QuestionHeader{
-				Id:         question.Id,
-				Subtitle:   question.Subtitle,
-				Difficulty: question.Difficulty,
-			}
-			groupExt.Questions = append(groupExt.Questions, question)
+			groupExt.Questions = append(groupExt.Questions, newQuestionHeader(question))
 		}
 
 		// sort to make sure the display is consistent between two queries
@@ -510,6 +558,8 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 		sort.SliceStable(groupExt.Questions, func(i, j int) bool { return groupExt.Questions[i].Difficulty < groupExt.Questions[j].Difficulty })
 
 		out.NbQuestions += len(groupExt.Questions)
+
+		out.Groups = append(out.Groups, groupExt)
 	}
 
 	// sort before pagination
