@@ -15,6 +15,7 @@ import type {
   ListQuestionsOut,
   LogginOut,
   Question,
+  QuestiongroupExt,
   RunningSessionMetaOut,
   SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
@@ -23,7 +24,6 @@ import type {
   Student,
   Task,
   TrivialExt,
-  UpdateGroupTagsOut,
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
@@ -102,6 +102,22 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  protected onSuccessEditorDuplicateQuestiongroup(data: never): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question (et variantes) dupliquée avec succès.");
+    }
+  }
+  protected onSuccessEditorCreateQuestiongroup(data: QuestiongroupExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question créée avec succès.");
+    }
+  }
+  protected onSuccessEditorGetQuestions(data: Question[] | null): void {
+    this.inRequest = false;
   }
 
   protected onSuccessHomeworkRemoveTask(data: never): void {
@@ -292,13 +308,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessEditorUpdateGroupTags(data: UpdateGroupTagsOut): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Etiquettes modifiées avec succès.");
-    }
-  }
-
   protected onSuccessUpdateTrivialVisiblity(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -310,7 +319,7 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessQuestionUpdateVisiblity(data: any): void {
+  protected onSuccessQuestionUpdateVisiblity(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Visibilité modifiée avec succès.");
@@ -347,13 +356,6 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question dupliquée.");
-    }
-  }
-
-  protected onSuccessEditorDuplicateQuestionWithDifficulty(data: any): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Groupe de question créé.");
     }
   }
 
@@ -405,9 +407,7 @@ class Controller extends AbstractAPI {
   protected onSuccessEditorGetTags(data: any): void {
     this.inRequest = false;
   }
-  protected onSuccessEditorGetQuestion(data: any): void {
-    this.inRequest = false;
-  }
+
   protected onSuccessEditorDeleteQuestion(data: any): void {
     this.inRequest = false;
     if (this.showMessage) {

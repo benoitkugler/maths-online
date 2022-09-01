@@ -936,7 +936,7 @@ export abstract class AbstractAPI {
       params: { data: params["data"] },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** ValidateInscription wraps rawValidateInscription and handles the error */
@@ -1004,7 +1004,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** TeacherCreateClassroom wraps rawTeacherCreateClassroom and handles the error */
@@ -1049,7 +1049,7 @@ export abstract class AbstractAPI {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** TeacherDeleteClassroom wraps rawTeacherDeleteClassroom and handles the error */
@@ -1121,7 +1121,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** TeacherUpdateStudent wraps rawTeacherUpdateStudent and handles the error */
@@ -1144,7 +1144,7 @@ export abstract class AbstractAPI {
       params: { "id-student": String(params["id-student"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** TeacherDeleteStudent wraps rawTeacherDeleteStudent and handles the error */
@@ -1172,7 +1172,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, formData, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** TeacherImportStudents wraps rawTeacherImportStudents and handles the error */
@@ -1293,7 +1293,7 @@ export abstract class AbstractAPI {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** DeleteTrivialPoursuit wraps rawDeleteTrivialPoursuit and handles the error */
@@ -1315,7 +1315,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** UpdateTrivialVisiblity wraps rawUpdateTrivialVisiblity and handles the error */
@@ -1437,7 +1437,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** StopTrivialGame wraps rawStopTrivialGame and handles the error */
@@ -1482,7 +1482,7 @@ export abstract class AbstractAPI {
       params: { sessionID: params["sessionID"] },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
@@ -1576,7 +1576,7 @@ export abstract class AbstractAPI {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
@@ -1595,9 +1595,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorCreateQuestiongroup() {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    const rep: AxiosResponse<Questiongroup> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<QuestiongroupExt> = await Axios.put(
+      fullUrl,
+      null,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -1614,7 +1616,7 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorCreateQuestiongroup(
-    data: Questiongroup
+    data: QuestiongroupExt
   ): void;
 
   protected async rawEditorGetQuestions(params: { id: number }) {
@@ -1646,7 +1648,7 @@ export abstract class AbstractAPI {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
@@ -1668,7 +1670,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** EditorUpdateTags wraps rawEditorUpdateTags and handles the error */
@@ -1692,7 +1694,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** QuestionUpdateVisiblity wraps rawQuestionUpdateVisiblity and handles the error */
@@ -1841,7 +1843,7 @@ export abstract class AbstractAPI {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** ExerciceDelete wraps rawExerciceDelete and handles the error */
@@ -1933,7 +1935,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** ExerciceUpdateVisiblity wraps rawExerciceUpdateVisiblity and handles the error */
@@ -2058,7 +2060,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** HomeworkUpdateSheet wraps rawHomeworkUpdateSheet and handles the error */
@@ -2081,7 +2083,7 @@ export abstract class AbstractAPI {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** HomeworkDeleteSheet wraps rawHomeworkDeleteSheet and handles the error */
@@ -2126,7 +2128,7 @@ export abstract class AbstractAPI {
       params: { "id-task": String(params["id-task"]) },
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** HomeworkRemoveTask wraps rawHomeworkRemoveTask and handles the error */
@@ -2170,7 +2172,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<never> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
-    return rep.data;
+    return true;
   }
 
   /** HomeworkReorderSheetTasks wraps rawHomeworkReorderSheetTasks and handles the error */

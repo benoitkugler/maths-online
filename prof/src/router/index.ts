@@ -1,5 +1,4 @@
 import ClassroomsListVue from "@/views/ClassroomsList.vue";
-import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import HomeworkActivityVue from "@/views/HomeworkActivity.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
@@ -27,12 +26,12 @@ const router = createRouter({
       component: QuestionEditor,
       meta: { Label: "Editeur de question" },
     },
-    {
-      path: "/editor-exercice",
-      name: "editor-exercice",
-      component: ExerciceEditorVue,
-      meta: { Label: "Editeur d'exercices" },
-    },
+    // {
+    //   path: "/editor-exercice",
+    //   name: "editor-exercice",
+    //   component: ExerciceEditorVue,
+    //   meta: { Label: "Editeur d'exercices" },
+    // },
     {
       path: "/trivial",
       name: "trivial",

@@ -2,16 +2,14 @@
   <div class="ma-2">
     <v-row>
       <v-col>
-        <QuestionEditorPannel
+        <GroupPannel
           v-if="viewKind == 'editor'"
           :session_id="sessionID"
-          :question="currentQuestion!"
-          :origin="currentOrigin"
-          :tags="currentTags"
+          :group="currentGroup!"
+          :variants="currentVariants"
           :all-tags="allKnownTags"
-          @back="backToQuestions"
-          @duplicated="onDuplicated"
-        ></QuestionEditorPannel>
+          @back="backToList"
+        ></GroupPannel>
         <keep-alive>
           <QuestionList
             v-if="viewKind == 'questions'"
@@ -30,22 +28,20 @@
 </template>
 
 <script setup lang="ts">
-import type { Origin, Question } from "@/controller/api_gen";
+import type { Question, QuestiongroupExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { personnalOrigin } from "@/controller/editor";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
-import QuestionEditorPannel from "../components/editor/QuestionEditorPannel.vue";
-import QuestionList from "../components/editor/QuestionList.vue";
+import GroupPannel from "../components/editor/questions/GroupPannel.vue";
+import QuestionList from "../components/editor/questions/QuestionList.vue";
 
 let sessionID = $ref("");
 let allKnownTags = $ref<string[]>([]);
 
 let viewKind: "questions" | "editor" = $ref("questions");
-let currentQuestion: Question | null = $ref(null);
-let currentTags: string[] = $ref([]);
-let currentOrigin: Origin = $ref(personnalOrigin());
+let currentGroup: QuestiongroupExt | null = $ref(null);
+let currentVariants: Question[] = $ref([]);
 
 onMounted(async () => {
   if (!controller.editorSessionID.length) {
@@ -61,24 +57,26 @@ async function fetchTags() {
   allKnownTags = tags || [];
 }
 
-function backToQuestions(tags: string[]) {
-  currentTags = tags;
-  fetchTags();
+function backToList() {
+  currentGroup = null;
+  currentVariants = [];
+
+  fetchTags(); // required since the tags may have changed
+
   controller.EditorPausePreview({ sessionID: sessionID });
   viewKind = "questions";
 }
 
-function onDuplicated(question: Question) {
-  currentQuestion = question;
-  // copy to avoid potential side effects
-  currentTags = currentTags.map((v) => v);
-  currentOrigin = personnalOrigin();
-}
+// function onDuplicated(question: Question) {
+//   currentQuestion = question;
+//   // copy to avoid potential side effects
+//   currentTags = currentTags.map((v) => v);
+//   currentOrigin = personnalOrigin();
+// }
 
-function editQuestion(question: Question, tags: string[], origin: Origin) {
-  currentQuestion = question;
-  currentTags = tags;
-  currentOrigin = origin;
+function editQuestion(group: QuestiongroupExt, variants: Question[]) {
+  currentGroup = group;
+  currentVariants = variants;
   viewKind = "editor";
 }
 </script>

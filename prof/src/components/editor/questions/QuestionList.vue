@@ -1,25 +1,5 @@
 <template>
-  <v-dialog
-    :model-value="questionToDelete != null"
-    @update:model-value="questionToDelete = null"
-  >
-    <v-card title="Confirmer">
-      <v-card-text
-        >Etes-vous certain de vouloir supprimer la question
-        <i>{{ questionToDelete?.Title }}</i> ? <br />
-        Cette opération est irréversible.
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="questionToDelete = null">Retour</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteQuestion" variant="outlined">
-          Supprimer
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <v-dialog
+  <!-- <v-dialog
     :model-value="questionToDuplicate != null"
     @update:model-value="questionToDuplicate = null"
   >
@@ -37,7 +17,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-  </v-dialog>
+  </v-dialog> -->
 
   <v-card class="pt-2 pb-0">
     <v-row>
@@ -46,7 +26,7 @@
       <v-col align-self="center" style="text-align: right" cols="4">
         <v-btn
           class="mx-2"
-          @click="createQuestion"
+          @click="createQuestiongroup"
           title="Créer une nouvelle question"
         >
           <v-icon icon="mdi-plus" color="success"></v-icon>
@@ -92,7 +72,7 @@
         <v-col>
           <v-list style="height: 52vh" class="overflow-y-auto">
             <div
-              v-if="questions.length == 0"
+              v-if="groups.length == 0"
               style="width: 100%; text-align: center"
             >
               <i>
@@ -104,29 +84,23 @@
               </i>
             </div>
 
-            <div v-for="questionGroup in questions" :key="questionGroup.Title">
-              <question-row
-                v-if="questionGroup.Size == 1"
-                :question="questionGroup.Questions![0]"
-                @clicked="startEdit"
-                @delete="(question) => (questionToDelete = question)"
-                @duplicate="(question) => (questionToDuplicate = question)"
-                @update-public="updatePublic"
-              ></question-row>
-              <question-group-row
-                v-else
+            <div v-for="questionGroup in groups" :key="questionGroup.Group.Id">
+              <questiongroup-row
                 :group="questionGroup"
                 :all-tags="props.tags"
-                @clicked="startEdit"
-                @delete="(question) => (questionToDelete = question)"
+                @clicked="startEdit(questionGroup)"
                 @update-public="updatePublic"
-                @update-tags="(tags) => updateGroupTags(questionGroup, tags)"
-              ></question-group-row>
+                @update-tags="
+                  (tags) => updateGroupTags(questionGroup.Group, tags)
+                "
+              ></questiongroup-row>
             </div>
           </v-list>
           <div class="my-2">
-            {{ questions.length }} / {{ serverNbGroups }} questions affichées.
-            ({{ displayedNbQuestions }} / {{ serverNbQuestions }}
+            {{ groups.length }} / {{ serverNbGroups }} questions affichées. ({{
+              displayedNbQuestions
+            }}
+            / {{ serverNbQuestions }}
             variantes)
           </div>
         </v-col>
@@ -137,33 +111,30 @@
 
 <script setup lang="ts">
 import type {
-  Origin,
-  Question,
-  QuestionGroup,
-  QuestionHeader,
+Question,
+Questiongroup,
+QuestiongroupExt
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
-import { personnalOrigin } from "@/controller/editor";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
-import QuestionGroupRow from "./QuestionGroupRow.vue";
-import QuestionRow from "./QuestionRow.vue";
+import QuestiongroupRow from "./QuestiongroupRow.vue";
 
 interface Props {
-  tags: string[];
+  tags: string[]; // queried once for all
 }
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "edit", question: Question, tags: string[], origin: Origin): void;
+  (e: "edit", group: QuestiongroupExt, questions: Question[]): void;
 }>();
 
-let questions = $ref<QuestionGroup[]>([]);
+let groups = $ref<QuestiongroupExt[]>([]);
 let serverNbGroups = $ref(0);
 let serverNbQuestions = $ref(0);
 const displayedNbQuestions = computed(() => {
   let nb = 0;
-  questions.forEach((group) => {
+  groups.forEach((group) => {
     nb += group.Questions?.length || 0;
   });
   return nb;
@@ -201,68 +172,50 @@ async function fetchQuestions() {
   if (result == undefined) {
     return;
   }
-  questions = result.Questions || [];
+  groups = result.Groups || [];
   serverNbGroups = result.NbGroups;
   serverNbQuestions = result.NbQuestions;
 }
 
-async function createQuestion() {
-  const out = await controller.EditorCreateQuestion();
+async function createQuestiongroup() {
+  const out = await controller.EditorCreateQuestiongroup();
   if (out == undefined) {
     return;
   }
-  emit("edit", out, [], personnalOrigin());
+  await startEdit(out);
 }
 
-let questionToDuplicate: QuestionHeader | null = $ref(null);
-async function duplicateDifficulty() {
-  await controller.EditorDuplicateQuestionWithDifficulty({
-    id: questionToDuplicate!.Id,
-  });
-  questionToDuplicate = null;
-  await fetchQuestions();
-}
-
-async function startEdit(question: QuestionHeader) {
-  const out = await controller.EditorGetQuestion({ id: question.Id });
+async function startEdit(group: QuestiongroupExt) {
+  // load the questions
+  const out = await controller.EditorGetQuestions({ id: group.Group.Id });
   if (out == undefined) {
     return;
   }
-  emit("edit", out, question.Tags || [], question.Origin);
+  emit("edit", group, out);
 }
 
-let questionToDelete: QuestionHeader | null = $ref(null);
-async function deleteQuestion() {
-  await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
-  await fetchQuestions(); // delete modify the groups
-  questionToDelete = null;
-}
-
-async function updatePublic(questionID: number, isPublic: boolean) {
+async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.QuestionUpdateVisiblity({
-    QuestionID: questionID,
+    ID: id,
     Public: isPublic,
   });
   if (res === undefined) {
     return;
   }
-  questions.forEach((group) => {
-    const index = group.Questions?.findIndex((qu) => qu.Id == questionID);
-    if (index !== undefined) {
-      group.Questions![index].Origin.IsPublic = isPublic;
-    }
-  });
+
+  const index = groups.findIndex((gr) => gr.Group.Id == id);
+  groups[index].Origin.IsPublic = isPublic;
 }
 
-async function updateGroupTags(group: QuestionGroup, newTags: string[]) {
-  const res = await controller.EditorUpdateGroupTags({
-    GroupTitle: group.Title,
-    CommonTags: newTags,
+async function updateGroupTags(group: Questiongroup, newTags: string[]) {
+  const rep = await controller.EditorUpdateTags({
+    Id: group.Id,
+    Tags: newTags,
   });
-  if (res == undefined) {
-    return;
+  if (rep == undefined) {
+      return;
   }
-
-  group.Questions?.forEach((qu) => (qu.Tags = (res.Tags || {})[qu.Id] || []));
+  const index = groups.findIndex((gr) => gr.Group.Id == group.Id);
+  groups[index].Tags = newTags;
 }
 </script>

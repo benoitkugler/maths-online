@@ -201,7 +201,6 @@ import {
   Visibility,
   type errEnonce,
   type ErrParameters,
-  type Origin,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
@@ -222,20 +221,17 @@ import TagListField from "./TagListField.vue";
 interface Props {
   session_id: string;
   question: Question;
-  tags: string[];
-  origin: Origin;
   allTags: string[]; // to provide auto completion
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "back", tags: string[]): void;
+  (e: "back"): void;
   (e: "duplicated", question: Question): void;
 }>();
 
 let question = $ref(copy(props.question));
-let tags = $ref(copy(props.tags));
 
 onMounted(() => {
   history.addListener();
