@@ -2,4 +2,4 @@
 
 ## Version de test sur iOS
 
-Sur iOS, l'appli est téléchargeable et utilisable via TestFligth, avec le lien https://testflight.apple.com/join/ruFSPcPH
+Sur iOS, l'appli est téléchargeable et utilisable via TestFlight, avec le lien https://testflight.apple.com/join/ruFSPcPH
