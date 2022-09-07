@@ -2,20 +2,20 @@
   <div class="ma-2">
     <v-row>
       <v-col>
-        <GroupPannel
+        <QuestiongroupPannel
           v-if="viewKind == 'editor'"
           :session_id="sessionID"
           :group="currentGroup!"
           :variants="currentVariants"
           :all-tags="allKnownTags"
           @back="backToList"
-        ></GroupPannel>
+        ></QuestiongroupPannel>
         <keep-alive>
-          <QuestionList
+          <QuestiongroupList
             v-if="viewKind == 'questions'"
             :tags="allKnownTags"
             @edit="editQuestion"
-          ></QuestionList>
+          ></QuestiongroupList>
         </keep-alive>
       </v-col>
       <v-col cols="auto">
@@ -33,8 +33,8 @@ import { controller } from "@/controller/controller";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
-import GroupPannel from "../components/editor/questions/GroupPannel.vue";
-import QuestionList from "../components/editor/questions/QuestionList.vue";
+import QuestiongroupList from "../components/editor/questions/QuestiongroupList.vue";
+import QuestiongroupPannel from "../components/editor/questions/QuestiongroupPannel.vue";
 
 let sessionID = $ref("");
 let allKnownTags = $ref<string[]>([]);
