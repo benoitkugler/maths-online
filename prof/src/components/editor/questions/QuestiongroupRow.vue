@@ -1,5 +1,5 @@
 <template>
-  <v-list-item @click="emit('clicked')">
+  <v-list-item @click="emit('clicked')" class="px-1">
     <v-row no-gutters justify="space-between">
       <v-col cols="auto" align-self="center">
         <OriginButton
@@ -8,11 +8,15 @@
         ></OriginButton>
       </v-col>
 
-        
       <v-col class="my-3 mx-1" style="text-align: left" align-self="center">
-            {{ props.group.Group.Title }} <v-badge color="info" inline :content="props.group.Questions?.length || 0 "></v-badge>
+        {{ props.group.Group.Title }}
+        <v-badge
+          color="info"
+          inline
+          :content="props.group.Questions?.length || 0"
+        ></v-badge>
       </v-col>
-      <v-col cols="6" align-self="center">
+      <v-col cols="5" align-self="center">
         <TagListField
           :readonly="!isEditable"
           :model-value="props.group.Tags || []"

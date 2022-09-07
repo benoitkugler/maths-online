@@ -24,7 +24,6 @@ import {
   type Origin,
   type ProofAssertion,
   type ProofFieldBlock,
-  type QuestionHeader,
   type RadioFieldBlock,
   type SignTableBlock,
   type SignTableFieldBlock,
@@ -754,13 +753,9 @@ export function commonTags(tags: string[][]) {
     .map((entry) => entry[0]);
 }
 
-/** return the list of tags shared by all the questions */
-export function commonGroupTags(questions: QuestionHeader[]) {
-  return commonTags(questions.map((qu) => qu.Tags || []));
-}
-
 /** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
 export const visiblityColors: { [key in Visibility]: string } = {
+  [Visibility.hidden]: "",
   [Visibility.Admin]: "yellow-lighten-3",
   [Visibility.Personnal]: "white",
 };

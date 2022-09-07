@@ -1,23 +1,28 @@
 <template>
-  <!-- <v-dialog
+  <v-dialog
     :model-value="questionToDelete != null"
     @update:model-value="questionToDelete = null"
   >
     <v-card title="Confirmer">
       <v-card-text
-        >Etes-vous certain de vouloir supprimer la question
-        <i>{{ questionToDelete?.Title }}</i> ? <br />
+        >Etes-vous certain de vouloir supprimer la variante
+        <i>{{ questionToDelete?.Id }} - {{ questionToDelete?.Subtitle }}</i> ?
+        <br />
         Cette opération est irréversible.
+
+        <div v-if="variants.length == 1" class="mt-2">
+          Le groupe de questions associé sera aussi supprimé.
+        </div>
       </v-card-text>
       <v-card-actions>
         <v-btn @click="questionToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteQuestion" variant="outlined">
+        <v-btn color="red" @click="deleteVariante" variant="outlined">
           Supprimer
         </v-btn>
       </v-card-actions>
     </v-card>
-  </v-dialog> -->
+  </v-dialog>
 
   <v-card class="mt-3 px-2">
     <v-row no-gutters class="mb-2">
@@ -33,38 +38,46 @@
       </v-col>
 
       <v-col>
-            <v-text-field
-              class="my-2 input-small"
-              variant="outlined"
-              density="compact"
-              label="Nom de la question"
-              v-model="group.Group.Title"
-              :readonly="isReadonly"
-              hide-details
-            ></v-text-field
-          >
-          </v-col> 
+        <v-text-field
+          class="my-2 input-small"
+          variant="outlined"
+          density="comfortable"
+          label="Nom de la question"
+          v-model="group.Group.Title"
+          :readonly="isReadonly"
+          @blur="updateQuestiongroup"
+          hide-details
+        ></v-text-field>
+      </v-col>
 
-          <v-col cols="3" class="px-1" align-self="center">
-            <TagListField
-              label="Catégories"
-              :all-tags="props.allTags"
-              :model-value="group.Tags || []"
-              @update:model-value="saveTags"
-              :readonly="isReadonly"
-            ></TagListField
-          ></v-col>
+      <v-col cols="3" class="px-1" align-self="center">
+        <TagListField
+          label="Catégories"
+          :all-tags="props.allTags"
+          :model-value="group.Tags || []"
+          @update:model-value="saveTags"
+          :readonly="isReadonly"
+        ></TagListField
+      ></v-col>
 
       <v-col cols="auto" align-self="center" class="px-1">
-          <VariantsSelector
-              :variants="variants"
-              :readonly="isReadonly"
-              v-model="variantIndex"
-              ></VariantsSelector>
+        <VariantsSelector
+          :variants="variants"
+          :readonly="isReadonly"
+          v-model="variantIndex"
+          @delete="(qu) => (questionToDelete = qu)"
+          @duplicate="duplicateVariante"
+        ></VariantsSelector>
       </v-col>
     </v-row>
 
-    TODO
+    <VariantPannel
+      :question="variants[variantIndex]"
+      :readonly="isReadonly"
+      :session_id="props.session_id"
+      :all-tags="props.allTags"
+      @update="(qu) => (variants[variantIndex] = qu)"
+    ></VariantPannel>
   </v-card>
 </template>
 
@@ -76,6 +89,7 @@ import { copy } from "@/controller/utils";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
+import VariantPannel from "./VariantPannel.vue";
 import VariantsSelector from "./VariantsSelector.vue";
 
 interface Props {
@@ -96,26 +110,32 @@ let variants = $ref(copy(props.variants));
 
 let variantIndex = $ref(0);
 
-let questionToDelete: Question | null = $ref(null);
-async function deleteQuestion() {
-  await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
-
-  questionToDelete = null;
-}
-
 const isReadonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
-async function saveTags(newTags: string[]) {
-  const rep = await controller.EditorUpdateTags({ Id: group.Group.Id, Tags: newTags });
-  if (rep === undefined) {
-    return;
-  }
-  group.Tags = newTags;
+async function updateQuestiongroup() {
+  await controller.EditorUpdateQuestiongroup(group.Group);
 }
 
-async function duplicate(question: Question) {
+let questionToDelete: Question | null = $ref(null);
+async function deleteVariante() {
+  await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
+
+  variants = variants.filter((qu) => qu.Id != questionToDelete!.Id);
+  questionToDelete = null;
+
+  if (variants.length && variantIndex >= variants.length) {
+    variantIndex = 0;
+  }
+  // if there is no more variant, that means the questiongroup is deleted:
+  // go back
+  if (!variants.length) {
+    emit("back");
+  }
+}
+
+async function duplicateVariante(question: Question) {
   const newQuestion = await controller.EditorDuplicateQuestion({
     id: question.Id,
   });
@@ -123,7 +143,18 @@ async function duplicate(question: Question) {
     return;
   }
   variants.push(newQuestion);
-  variantIndex += 1; // go to the new question
+  variantIndex = variants.length - 1; // go to the new question
+}
+
+async function saveTags(newTags: string[]) {
+  const rep = await controller.EditorUpdateTags({
+    Id: group.Group.Id,
+    Tags: newTags,
+  });
+  if (rep === undefined) {
+    return;
+  }
+  group.Tags = newTags;
 }
 
 function backToList() {

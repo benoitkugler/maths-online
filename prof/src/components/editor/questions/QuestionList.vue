@@ -1,24 +1,4 @@
 <template>
-  <!-- <v-dialog
-    :model-value="questionToDuplicate != null"
-    @update:model-value="questionToDuplicate = null"
-  >
-    <v-card title="Dupliquer avec difficulté" max-width="600">
-      <v-card-text
-        >Voulez-vous dupliquer la question
-        <i>{{ questionToDuplicate?.Title }}</i> en générant les étiquettes des
-        niveaux de difficulté manquants ? <br />
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="questionToDuplicate = null">Retour</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="green" @click="duplicateDifficulty" variant="outlined">
-          Dupliquer
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog> -->
-
   <v-card class="pt-2 pb-0">
     <v-row>
       <v-col> <v-card-title>Liste des questions</v-card-title> </v-col>
@@ -42,7 +22,7 @@
             label="Rechercher"
             hint="Rechercher une question par nom."
             variant="outlined"
-            density="comfortable"
+            density="compact"
             v-model="querySearch"
             @update:model-value="updateQuerySearch"
             persistent-hint
@@ -52,7 +32,7 @@
         <v-col>
           <v-autocomplete
             variant="outlined"
-            density="comfortable"
+            density="compact"
             multiple
             chips
             closable-chips
@@ -70,7 +50,7 @@
       </v-row>
       <v-row no-gutters>
         <v-col>
-          <v-list style="height: 52vh" class="overflow-y-auto">
+          <v-list style="height: 56vh" class="overflow-y-auto">
             <div
               v-if="groups.length == 0"
               style="width: 100%; text-align: center"
@@ -111,9 +91,9 @@
 
 <script setup lang="ts">
 import type {
-Question,
-Questiongroup,
-QuestiongroupExt
+  Question,
+  Questiongroup,
+  QuestiongroupExt,
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
@@ -195,7 +175,7 @@ async function startEdit(group: QuestiongroupExt) {
 }
 
 async function updatePublic(id: number, isPublic: boolean) {
-  const res = await controller.QuestionUpdateVisiblity({
+  const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
     Public: isPublic,
   });
@@ -213,7 +193,7 @@ async function updateGroupTags(group: Questiongroup, newTags: string[]) {
     Tags: newTags,
   });
   if (rep == undefined) {
-      return;
+    return;
   }
   const index = groups.findIndex((gr) => gr.Group.Id == group.Id);
   groups[index].Tags = newTags;

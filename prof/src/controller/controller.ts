@@ -104,7 +104,7 @@ class Controller extends AbstractAPI {
     this.inRequest = true;
   }
 
-  protected onSuccessEditorDuplicateQuestiongroup(data: never): void {
+  protected onSuccessEditorDuplicateQuestiongroup(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question (et variantes) dupliquée avec succès.");
@@ -116,11 +116,33 @@ class Controller extends AbstractAPI {
       this.showMessage("Question créée avec succès.");
     }
   }
+
+  protected onSuccessEditorSaveQuestionMeta(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question enregistrée avec succès.");
+    }
+  }
+
+  protected onSuccessEditorUpdateQuestiongroup(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question modifiée avec succès.");
+    }
+  }
+
+  protected onSuccessEditorUpdateQuestiongroupVis(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
+  }
+
   protected onSuccessEditorGetQuestions(data: Question[] | null): void {
     this.inRequest = false;
   }
 
-  protected onSuccessHomeworkRemoveTask(data: never): void {
+  protected onSuccessHomeworkRemoveTask(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Exercice retiré avec succès.");
@@ -132,7 +154,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Exercice ajouté avec succès.");
     }
   }
-  protected onSuccessHomeworkReorderSheetTasks(data: never): void {
+  protected onSuccessHomeworkReorderSheetTasks(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Liste modifiée avec succès.");
@@ -154,13 +176,13 @@ class Controller extends AbstractAPI {
       this.showMessage("Fiche dupliquée avec succès.");
     }
   }
-  protected onSuccessHomeworkUpdateSheet(data: never): void {
+  protected onSuccessHomeworkUpdateSheet(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Fiche modifiée avec succès.");
     }
   }
-  protected onSuccessHomeworkDeleteSheet(data: never): void {
+  protected onSuccessHomeworkDeleteSheet(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Fiche supprimée avec succès.");
@@ -188,7 +210,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExerciceUpdateVisiblity(data: any): void {
+  protected onSuccessExerciceUpdateVisiblity(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Visibilité modifiée avec succès.");
@@ -224,7 +246,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Exercice créé avec succès.");
     }
   }
-  protected onSuccessExerciceDelete(data: any): void {
+  protected onSuccessExerciceDelete(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Exercice supprimé avec succès.");
@@ -255,20 +277,20 @@ class Controller extends AbstractAPI {
       this.showMessage("Elève ajouté avec succès.");
     }
   }
-  protected onSuccessTeacherUpdateStudent(data: any): void {
+  protected onSuccessTeacherUpdateStudent(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Profil mis à jour avec succès.");
     }
   }
-  protected onSuccessTeacherDeleteStudent(data: any): void {
+  protected onSuccessTeacherDeleteStudent(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Profil supprimé avec succès.");
     }
   }
 
-  protected onSuccessTeacherImportStudents(data: any): void {
+  protected onSuccessTeacherImportStudents(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Liste importée avec succès.");
@@ -282,7 +304,7 @@ class Controller extends AbstractAPI {
   protected onSuccessTeacherGetClassrooms(data: ClassroomExt[] | null): void {
     this.inRequest = false;
   }
-  protected onSuccessTeacherCreateClassroom(data: any): void {
+  protected onSuccessTeacherCreateClassroom(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Classe créée avec succès.");
@@ -294,21 +316,21 @@ class Controller extends AbstractAPI {
       this.showMessage("Classe mise à jour avec succès.");
     }
   }
-  protected onSuccessTeacherDeleteClassroom(data: any): void {
+  protected onSuccessTeacherDeleteClassroom(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Classe supprimée avec succès.");
     }
   }
 
-  protected onSuccessStopTrivialGame(data: any): void {
+  protected onSuccessStopTrivialGame(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Partie interrompue avec succès");
     }
   }
 
-  protected onSuccessUpdateTrivialVisiblity(data: any): void {
+  protected onSuccessUpdateTrivialVisiblity(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Visibilité modifiée avec succès.");
@@ -319,14 +341,7 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessQuestionUpdateVisiblity(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Visibilité modifiée avec succès.");
-    }
-  }
-
-  protected onSuccessValidateInscription(data: any): void {
+  protected onSuccessValidateInscription(): void {
     this.inRequest = false;
   }
   protected onSuccessLoggin(data: LogginOut): void {
@@ -352,7 +367,7 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessEditorDuplicateQuestion(data: any): void {
+  protected onSuccessEditorDuplicateQuestion(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question dupliquée.");
@@ -371,7 +386,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Configuration mise à jour.");
     }
   }
-  protected onSuccessDeleteTrivialPoursuit(data: any): void {
+  protected onSuccessDeleteTrivialPoursuit(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Configuration supprimée.");
@@ -398,23 +413,23 @@ class Controller extends AbstractAPI {
   protected onSuccessEditorCreateQuestion(data: Question): void {
     this.inRequest = false;
   }
-  protected onSuccessEditorUpdateTags(data: any): void {
+  protected onSuccessEditorUpdateTags(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage(`Etiquettes modifiées avec succès.`);
     }
   }
-  protected onSuccessEditorGetTags(data: any): void {
+  protected onSuccessEditorGetTags(): void {
     this.inRequest = false;
   }
 
-  protected onSuccessEditorDeleteQuestion(data: any): void {
+  protected onSuccessEditorDeleteQuestion(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question supprimée avec succès.");
     }
   }
-  protected onSuccessEditorPausePreview(data: any): void {
+  protected onSuccessEditorPausePreview(): void {
     this.inRequest = false;
   }
 }

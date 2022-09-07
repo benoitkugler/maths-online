@@ -12,146 +12,112 @@
 
   <v-dialog v-model="showEditDescription">
     <description-pannel
-      v-model="question.description"
-      :readonly="isReadonly"
+      :description="question.Description"
+      :readonly="props.readonly"
+      @save="saveDescription"
     ></description-pannel>
   </v-dialog>
 
   <v-card class="mt-3 px-2">
     <v-row no-gutters class="mb-2">
-      <v-col cols="auto" align-self="center" class="pr-2">
-        <v-btn
-          size="small"
-          icon
-          title="Retour aux questions"
-          @click="backToList"
-        >
-          <v-icon icon="mdi-arrow-left"></v-icon>
-        </v-btn>
+      <v-col>
+        <v-text-field
+          class="my-2 input-small"
+          variant="outlined"
+          density="compact"
+          label="Sous-titre de la variante (optionnel)"
+          v-model="question.Subtitle"
+          :readonly="props.readonly"
+          hide-details
+          @blur="saveMeta"
+        ></v-text-field
+      ></v-col>
+
+      <v-col align-self="center">
+        <DifficultyField
+          class="px-1"
+          v-model="question.Difficulty"
+          @update:model-value="saveMeta"
+          :readonly="props.readonly"
+        ></DifficultyField>
       </v-col>
 
-      <v-col>
-        <v-row no-gutters>
-          <v-col>
-            <v-text-field
-              class="my-2 input-small"
-              variant="outlined"
-              density="compact"
-              label="Nom de la question"
-              v-model="question.page.title"
-              :readonly="isReadonly"
-              hide-details
-            ></v-text-field
-          ></v-col>
-          <v-col cols="auto" align-self="center">
+      <v-col cols="auto" align-self="center">
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
             <v-btn
-              class="mx-2"
-              icon
-              @click="save"
-              :disabled="!session_id"
-              :title="
-                isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
-              "
+              title="Ajouter un bloc de contenu (énoncé ou champ de réponse)"
+              v-on="{ isActive }"
+              v-bind="props"
               size="small"
             >
-              <v-icon
-                :icon="isReadonly ? 'mdi-eye' : 'mdi-content-save'"
-                size="small"
-              ></v-icon>
+              <v-icon icon="mdi-plus" color="green"></v-icon>
+              Insérer du contenu
             </v-btn>
+          </template>
+          <block-bar @add="addBlock"></block-bar>
+        </v-menu>
+      </v-col>
 
-            <v-menu offset-y close-on-content-click>
-              <template v-slot:activator="{ isActive, props }">
-                <v-btn
-                  icon
-                  title="Plus d'options"
-                  v-on="{ isActive }"
-                  v-bind="props"
-                  size="x-small"
-                >
-                  <v-icon icon="mdi-dots-vertical"></v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item>
-                  <v-btn
-                    class="my-1"
-                    size="small"
-                    @click="showEditDescription = true"
-                    title="Editer le commentaire"
-                  >
-                    <v-icon
-                      class="mr-2"
-                      icon="mdi-message-reply-text"
-                      size="small"
-                    ></v-icon>
-                    Commentaire
-                  </v-btn>
-                </v-list-item>
-                <v-list-item>
-                  <v-btn
-                    class="my-1"
-                    size="small"
-                    @click="download"
-                    :disabled="!session_id"
-                    title="Télécharger la question au format .json"
-                  >
-                    <v-icon
-                      class="mr-2"
-                      icon="mdi-download"
-                      size="small"
-                    ></v-icon>
-                    Télécharger
-                  </v-btn>
-                </v-list-item>
-                <v-list-item>
-                  <v-btn
-                    class="my-1"
-                    size="small"
-                    @click="duplicate"
-                    title="Dupliquer la question"
-                  >
-                    <v-icon
-                      class="mr-2"
-                      icon="mdi-content-copy"
-                      color="info"
-                      size="small"
-                    ></v-icon>
-                    Dupliquer
-                  </v-btn>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-col>
-        </v-row>
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          class="mx-2"
+          icon
+          @click="save"
+          :disabled="!session_id"
+          :title="
+            props.readonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
+          "
+          size="small"
+        >
+          <v-icon
+            :icon="props.readonly ? 'mdi-eye' : 'mdi-content-save'"
+            size="small"
+          ></v-icon>
+        </v-btn>
 
-        <v-row no-gutters>
-          <v-col class="pr-2" align-self="center">
-            <tag-list-field
-              label="Catégories"
-              :all-tags="props.allTags"
-              :model-value="tags"
-              @update:model-value="saveTags"
-              :readonly="isReadonly"
-            ></tag-list-field
-          ></v-col>
-          <v-col cols="auto">
-            <v-menu offset-y close-on-content-click>
-              <template v-slot:activator="{ isActive, props }">
-                <v-btn
-                  title="Ajouter un bloc de contenu (énoncé ou champ de réponse)"
-                  v-on="{ isActive }"
-                  v-bind="props"
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
+            <v-btn
+              icon
+              title="Plus d'options"
+              v-on="{ isActive }"
+              v-bind="props"
+              size="x-small"
+            >
+              <v-icon icon="mdi-dots-vertical"></v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
+                @click="showEditDescription = true"
+                title="Editer le commentaire"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-message-reply-text"
                   size="small"
-                >
-                  <v-icon icon="mdi-plus" color="green"></v-icon>
-                  Insérer du contenu
-                </v-btn>
-              </template>
-              <block-bar @add="addBlock"></block-bar>
-            </v-menu>
-          </v-col>
-        </v-row>
+                ></v-icon>
+                Commentaire
+              </v-btn>
+            </v-list-item>
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
+                @click="download"
+                :disabled="!session_id"
+                title="Télécharger la question au format .json"
+              >
+                <v-icon class="mr-2" icon="mdi-download" size="small"></v-icon>
+                Télécharger
+              </v-btn>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-col>
     </v-row>
 
@@ -159,14 +125,14 @@
       <v-col md="4">
         <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
           <RandomParametersQuestion
-            :parameters="question.page.parameters.Variables"
+            :parameters="question.Page.parameters.Variables"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
             @update="updateRandomParameters"
             @done="checkParameters"
           ></RandomParametersQuestion>
           <IntrinsicsParametersQuestion
-            :parameters="question.page.parameters.Intrinsics || []"
+            :parameters="question.Page.parameters.Intrinsics || []"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
             @update="updateIntrinsics"
@@ -176,7 +142,7 @@
       </v-col>
       <v-col class="pr-1">
         <QuestionContent
-          :model-value="question.page.enonce || []"
+          :model-value="question.Page.enonce || []"
           @update:model-value="onUpdateEnonce"
           @importQuestion="onImportQuestion"
           :available-parameters="availableParameters"
@@ -193,45 +159,46 @@
 import type {
   Block,
   BlockKind,
+  errEnonce,
+  ErrParameters,
   Question,
   RandomParameter,
   Variable,
-} from "@/controller/api_gen";
-import {
-  Visibility,
-  type errEnonce,
-  type ErrParameters,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
 import { History } from "@/controller/editor_history";
 import { copy } from "@/controller/utils";
 import { ref } from "@vue/reactivity";
-import { computed, onMounted, onUnmounted } from "@vue/runtime-core";
+import { computed, onMounted, onUnmounted, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
-import BlockBar from "./BlockBar.vue";
-import DescriptionPannel from "./DescriptionPannel.vue";
-import IntrinsicsParametersQuestion from "./IntrinsicsParametersQuestion.vue";
-import SnackErrorParameters from "./parameters/SnackErrorParameters.vue";
-import QuestionContent from "./QuestionContent.vue";
-import RandomParametersQuestion from "./RandomParametersQuestion.vue";
-import SnackErrorEnonce from "./SnackErrorEnonce.vue";
-import TagListField from "./TagListField.vue";
+import BlockBar from "../BlockBar.vue";
+import DescriptionPannel from "../DescriptionPannel.vue";
+import IntrinsicsParametersQuestion from "../IntrinsicsParametersQuestion.vue";
+import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
+import QuestionContent from "../QuestionContent.vue";
+import RandomParametersQuestion from "../RandomParametersQuestion.vue";
+import SnackErrorEnonce from "../SnackErrorEnonce.vue";
+import DifficultyField from "../utils/DifficultyField.vue";
 
 interface Props {
   session_id: string;
   question: Question;
+  readonly: boolean;
   allTags: string[]; // to provide auto completion
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "back"): void;
-  (e: "duplicated", question: Question): void;
+  (e: "update", question: Question): void;
 }>();
 
 let question = $ref(copy(props.question));
+
+watch(props, () => {
+  question = copy(props.question);
+});
 
 onMounted(() => {
   history.addListener();
@@ -241,29 +208,18 @@ onUnmounted(() => {
   history.clearListener();
 });
 
-const isReadonly = computed(
-  () => props.origin.Visibility != Visibility.Personnal
-);
-
 interface historyEntry {
   question: Question;
-  tags: string[];
 }
 
 let history = new History(
-  { question, tags }, // start with initial question in history
+  { question }, // start with initial question in history
   controller.showMessage!,
   restoreHistory
 );
 
 function restoreHistory(snapshot: historyEntry) {
-  // do we need to save the tags ?
-  const tagsEqual = JSON.stringify(tags) == JSON.stringify(snapshot.tags);
   question = snapshot.question;
-  tags = snapshot.tags;
-  if (!tagsEqual) {
-    controller.EditorUpdateTags({ IdQuestion: question.id, Tags: tags });
-  }
 }
 
 let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
@@ -275,29 +231,45 @@ function addBlock(kind: BlockKind) {
 }
 
 function onUpdateEnonce(v: Block[]) {
-  question.page.enonce = v;
-  history.add({ question, tags });
+  question.Page.enonce = v;
+  history.add({ question });
 }
 
 function updateRandomParameters(l: RandomParameter[], shouldCheck: boolean) {
-  question.page.parameters.Variables = l;
+  question.Page.parameters.Variables = l;
   if (shouldCheck) {
     checkParameters();
   }
 
-  history.add({ question, tags });
+  history.add({ question });
 }
 
 function updateIntrinsics(l: string[], shouldCheck: boolean) {
-  question.page.parameters.Intrinsics = l;
+  question.Page.parameters.Intrinsics = l;
   if (shouldCheck) {
     checkParameters();
   }
 
-  history.add({ question, tags });
+  history.add({ question });
 }
 
 let errorEnnonce = $ref<errEnonce | null>(null);
+
+async function saveMeta() {
+  if (props.readonly) {
+    return;
+  }
+  await controller.EditorSaveQuestionMeta({
+    Question: question,
+  });
+  emit("update", question);
+}
+
+async function saveDescription(desc: string) {
+  showEditDescription = false;
+  question.Description = desc;
+  saveMeta();
+}
 
 async function save() {
   const res = await controller.EditorSaveQuestionAndPreview({
@@ -328,10 +300,10 @@ function download() {
 
 async function onImportQuestion(imported: Question) {
   // keep the current ID
-  imported.id = question.id;
+  imported.Id = question.Id;
   question = imported;
 
-  history.add({ question, tags });
+  history.add({ question });
 }
 
 let errorParameters = $ref<ErrParameters | null>(null);
@@ -343,7 +315,7 @@ async function checkParameters() {
   isCheckingParameters = true;
   const out = await controller.EditorCheckQuestionParameters({
     SessionID: props.session_id || "",
-    Parameters: question.page.parameters,
+    Parameters: question.Page.parameters,
   });
   isCheckingParameters = false;
   if (out === undefined) return;
@@ -353,26 +325,6 @@ async function checkParameters() {
 
   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
   availableParameters.value = out.Variables || [];
-}
-
-async function saveTags(newTags: string[]) {
-  await controller.EditorUpdateTags({ IdQuestion: question.id, Tags: newTags });
-  tags = newTags;
-  history.add({ question, tags });
-}
-
-async function duplicate() {
-  const newQuestion = await controller.EditorDuplicateQuestion({
-    id: question.id,
-  });
-  if (newQuestion == undefined) {
-    return;
-  }
-  emit("duplicated", newQuestion);
-}
-
-function backToList() {
-  emit("back", tags);
 }
 
 let showEditDescription = $ref(false);

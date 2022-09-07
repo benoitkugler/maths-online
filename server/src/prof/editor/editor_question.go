@@ -348,12 +348,38 @@ func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func (ct *Controller) EditorUpdateQuestiongroup(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args ed.Questiongroup
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	group, err := ed.SelectQuestiongroup(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if group.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	group.Title = args.Title
+	_, err = group.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
 type QuestionUpdateVisiblityIn struct {
 	ID     ed.IdQuestiongroup
 	Public bool
 }
 
-func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
+func (ct *Controller) EditorUpdateQuestiongroupVis(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	// we only accept public question from admin account
@@ -378,6 +404,28 @@ func (ct *Controller) QuestionUpdateVisiblity(c echo.Context) error {
 	group, err = group.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+type SaveQuestionMetaIn struct {
+	Question ed.Question
+}
+
+// EditorSaveQuestionMeta only save the meta data of the question,
+// not its content.
+func (ct *Controller) EditorSaveQuestionMeta(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args SaveQuestionMetaIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	err := ct.saveQuestionMeta(args, user.Id)
+	if err != nil {
+		return err
 	}
 
 	return c.NoContent(200)
@@ -727,6 +775,33 @@ func (ct *Controller) endPreview(sessionID string) error {
 	}
 
 	loopback.clientLeft <- true
+	return nil
+}
+
+func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) error {
+	qu, err := ed.SelectQuestion(ct.db, params.Question.Id)
+	if err != nil {
+		return err
+	}
+
+	group, err := ct.getGroup(qu)
+	if err != nil {
+		return err
+	}
+
+	if group.IdTeacher != userID {
+		return accessForbidden
+	}
+
+	qu.Description = params.Question.Description
+	qu.Subtitle = params.Question.Subtitle
+	qu.Difficulty = params.Question.Difficulty
+
+	_, err = params.Question.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
 	return nil
 }
 

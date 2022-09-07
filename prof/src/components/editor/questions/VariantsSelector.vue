@@ -7,14 +7,17 @@
         v-bind="slotProps"
         block
       >
-            Variantes...
+        Variantes...
       </v-btn>
     </template>
-    <v-card width="800">
+    <v-card width="600">
       <v-card-text>
-        <v-list style="height: 70vh">
+        <v-list style="max-height: 70vh">
           <v-list-item
+            density="comfortable"
+            :active="index == props.modelValue"
             rounded
+            class="my-1"
             v-for="(question, index) in variants"
             @click="
               emit('update:model-value', index);
@@ -27,7 +30,7 @@
                 <v-btn
                   v-if="!props.readonly"
                   class="ml-1"
-                  size="x-small"
+                  size="small"
                   icon
                   @click.stop="emit('delete', question)"
                   title="Supprimer la variante"
@@ -38,7 +41,7 @@
                 <v-btn
                   v-if="!props.readonly"
                   class="mx-1"
-                  size="x-small"
+                  size="small"
                   icon
                   @click.stop="emit('duplicate', question)"
                   title="Dupliquer la variante"
@@ -50,27 +53,21 @@
                   ></v-icon>
                 </v-btn>
               </v-col>
-              <v-col align-self="center" class="my-3" cols="7"> ({{ question.Id }}) {{ question.Subtitle || '...' }} </v-col>
-              <v-col align-self="center" style="text-align: right;">
+              <v-col align-self="center" class="my-4" cols="7">
+                ({{ question.Id }}) {{ question.Subtitle || "..." }}
+              </v-col>
+              <v-col align-self="center" style="text-align: right">
                 <TagChip
                   v-if="question.Difficulty"
                   :tag="question.Difficulty"
                 ></TagChip>
-                <v-chip v-else size="small" label title="Difficulté">Aucune</v-chip>
+                <v-chip v-else size="small" label title="Difficulté"
+                  >Aucune</v-chip
+                >
               </v-col>
             </v-row>
           </v-list-item>
-          <v-divider></v-divider>
-         </v-list>
-            <v-btn class="ma-1" @click="
-              emit('add');
-              showMenu = false;
-            "
-            :disabled="props.readonly"
-            >
-                <v-icon icon="mdi-plus" color="green"></v-icon>
-                Ajouter une variante
-            </v-btn>
+        </v-list>
       </v-card-text>
     </v-card>
   </v-menu>
@@ -78,7 +75,6 @@
 
 <script setup lang="ts">
 import type { Question } from "@/controller/api_gen";
-import { computed } from "vue";
 import { $ref } from "vue/macros";
 import TagChip from "../utils/TagChip.vue";
 
@@ -92,12 +88,9 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update:model-value", v: number): void;
-  (e: "add"): void;
   (e: "delete", question: Question): void;
   (e: "duplicate", question: Question): void;
 }>();
-
-const currentQuestion = computed(() => props.variants[props.modelValue]);
 
 const showMenu = $ref(false);
 </script>

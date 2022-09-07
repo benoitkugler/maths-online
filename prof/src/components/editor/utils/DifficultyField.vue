@@ -1,13 +1,31 @@
 <template>
-  <TagChip :tag="props.modelValue || 'Aucune'" @click="onClick"></TagChip>
+  <v-select
+    style="max-width: 200px"
+    :items="[
+      DifficultyTag.DiffEmpty,
+      DifficultyTag.Diff1,
+      DifficultyTag.Diff2,
+      DifficultyTag.Diff3,
+    ]"
+    label="Difficulté"
+    variant="outlined"
+    density="compact"
+    :model-value="props.modelValue"
+    @update:model-value="(tag) => emit('update:model-value', tag)"
+    :color="tagColor(props.modelValue)"
+    hide-details
+    :disabled="props.readonly"
+  >
+  </v-select>
 </template>
 
 <script setup lang="ts">
 import { DifficultyTag } from "@/controller/api_gen";
-import TagChip from "./TagChip.vue";
+import { tagColor } from "@/controller/editor";
 
 interface Props {
   modelValue: DifficultyTag;
+  readonly: boolean;
 }
 
 const props = defineProps<Props>();
@@ -15,23 +33,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update:model-value", v: DifficultyTag): void;
 }>();
-
-function onClick() {
-  switch (props.modelValue) {
-    case DifficultyTag.DiffEmpty:
-      emit("update:model-value", DifficultyTag.Diff1);
-      break;
-    case DifficultyTag.Diff1:
-      emit("update:model-value", DifficultyTag.Diff2);
-      break;
-    case DifficultyTag.Diff2:
-      emit("update:model-value", DifficultyTag.Diff3);
-      break;
-    case DifficultyTag.Diff3:
-      emit("update:model-value", DifficultyTag.DiffEmpty);
-      break;
-  }
-}
 </script>
 
 <style scoped></style>
