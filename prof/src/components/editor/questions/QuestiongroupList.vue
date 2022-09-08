@@ -71,7 +71,7 @@
                 @clicked="startEdit(questionGroup)"
                 @update-public="updatePublic"
                 @update-tags="
-                  (tags) => updateGroupTags(questionGroup.Group, tags)
+                  tags => updateGroupTags(questionGroup.Group, tags)
                 "
               ></questiongroup-row>
             </div>
@@ -93,7 +93,7 @@
 import type {
   Question,
   Questiongroup,
-  QuestiongroupExt,
+  QuestiongroupExt
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
@@ -114,8 +114,8 @@ let serverNbGroups = $ref(0);
 let serverNbQuestions = $ref(0);
 const displayedNbQuestions = computed(() => {
   let nb = 0;
-  groups.forEach((group) => {
-    nb += group.Questions?.length || 0;
+  groups.forEach(group => {
+    nb += group.Variants?.length || 0;
   });
   return nb;
 });
@@ -147,7 +147,7 @@ async function updateQueryTags() {
 async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: querySearch,
-    Tags: queryTags,
+    Tags: queryTags
   });
   if (result == undefined) {
     return;
@@ -177,25 +177,25 @@ async function startEdit(group: QuestiongroupExt) {
 async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
-    Public: isPublic,
+    Public: isPublic
   });
   if (res === undefined) {
     return;
   }
 
-  const index = groups.findIndex((gr) => gr.Group.Id == id);
+  const index = groups.findIndex(gr => gr.Group.Id == id);
   groups[index].Origin.IsPublic = isPublic;
 }
 
 async function updateGroupTags(group: Questiongroup, newTags: string[]) {
   const rep = await controller.EditorUpdateTags({
     Id: group.Id,
-    Tags: newTags,
+    Tags: newTags
   });
   if (rep == undefined) {
     return;
   }
-  const index = groups.findIndex((gr) => gr.Group.Id == group.Id);
+  const index = groups.findIndex(gr => gr.Group.Id == group.Id);
   groups[index].Tags = newTags;
 }
 </script>
