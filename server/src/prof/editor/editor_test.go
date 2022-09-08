@@ -56,20 +56,21 @@ func TestExerciceCRUD(t *testing.T) {
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
-	ex, err := ct.createExercice(1)
+	group, err := ct.createExercice(1)
 	tu.Assert(t, err == nil)
+	ex := group.Variants[0]
 
-	l, err := ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Exercice.Id}, 1)
+	l, err := ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Id}, 1)
 	tu.Assert(t, err == nil)
 	if len(l.Questions) != 1 {
 		t.Fatal(l)
 	}
 
-	qu, err := ed.Question{NeedExercice: ex.Exercice.Id.AsOptional()}.Insert(db)
+	qu, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
-		IdExercice: ex.Exercice.Id,
+		IdExercice: ex.Id,
 		Questions: ed.ExerciceQuestions{
 			l.Questions[0],
 			ed.ExerciceQuestion{IdQuestion: qu.Id},
@@ -84,7 +85,7 @@ func TestExerciceCRUD(t *testing.T) {
 	updated := l.Questions[1]
 	updated.Bareme = 5
 	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
-		IdExercice: ex.Exercice.Id,
+		IdExercice: ex.Id,
 		Questions: ed.ExerciceQuestions{
 			l.Questions[0],
 			updated,
@@ -92,13 +93,13 @@ func TestExerciceCRUD(t *testing.T) {
 	}, 1)
 	tu.Assert(t, err == nil)
 
-	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Exercice.Id, Description: "test", Subtitle: "test2", Flow: ed.Sequencial}, 1)
+	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Id, Description: "test", Subtitle: "test2", Flow: ed.Sequencial}, 1)
 	tu.Assert(t, err == nil)
 	if exe.Flow != ed.Sequencial {
 		t.Fatal(exe)
 	}
 
-	err = ct.deleteExercice(ex.Exercice.Id, 1)
+	err = ct.deleteExercice(ex.Id, 1)
 	tu.Assert(t, err == nil)
 }
 
@@ -109,7 +110,7 @@ func TestDB(t *testing.T) {
 	}
 
 	ct := NewController(db, teacher.Teacher{Id: 1})
-	_, err = ct.getExercices(1)
+	_, err = ct.searchExercices(Query{}, 1)
 	tu.Assert(t, err == nil)
 }
 

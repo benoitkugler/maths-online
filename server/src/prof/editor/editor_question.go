@@ -83,7 +83,9 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
-type ListQuestionsIn struct {
+type SearchQuestionsIn = Query
+
+type Query struct {
 	TitleQuery string // empty means all
 	Tags       []string
 }
@@ -91,7 +93,7 @@ type ListQuestionsIn struct {
 func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
-	var args ListQuestionsIn
+	var args SearchQuestionsIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
@@ -141,10 +143,10 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 
 	origin, _ := questionOrigin(group, userID, ct.admin.Id)
 	return QuestiongroupExt{
-		Group:     group,
-		Tags:      nil,
-		Origin:    origin,
-		Questions: []QuestionHeader{newQuestionHeader(qu)},
+		Group:    group,
+		Tags:     nil,
+		Origin:   origin,
+		Variants: []QuestionHeader{newQuestionHeader(qu)},
 	}, nil
 }
 
@@ -467,17 +469,17 @@ type ListQuestionsOut struct {
 // QuestiongroupExt adds the question and tags to a QuestionGroup
 // Standalone question are represented by a group of length one.
 type QuestiongroupExt struct {
-	Group     ed.Questiongroup
-	Origin    tcAPI.Origin
-	Tags      []string
-	Questions []QuestionHeader
+	Group    ed.Questiongroup
+	Origin   tcAPI.Origin
+	Tags     []string
+	Variants []QuestionHeader
 }
 
-// QuestionHeader is a sumary of the meta data of a question
+// QuestionHeader is a summary of the meta data of a question
 type QuestionHeader struct {
 	Id         ed.IdQuestion
 	Subtitle   string
-	Difficulty ed.DifficultyTag // deduced from the tags
+	Difficulty ed.DifficultyTag
 }
 
 func newQuestionHeader(question ed.Question) QuestionHeader {
@@ -500,16 +502,16 @@ func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, boo
 	}, true
 }
 
-type questionGroupQuery interface {
-	match(ed.Questiongroup) bool
+type itemGroupQuery interface {
+	match(id int64, title string) bool
 }
 
-func newQuery(title string) (questionGroupQuery, error) {
-	// special case for pattern id-group:id1, id2, ...
-	if strings.HasPrefix(title, "id-group:") {
-		idsString := strings.TrimSpace(title[len("id-group:"):])
+func newQuery(title string) (itemGroupQuery, error) {
+	// special case for pattern id:id1, id2, ...
+	if strings.HasPrefix(title, "id:") {
+		idsString := strings.TrimSpace(title[len("id:"):])
 		if len(idsString) != 0 {
-			out := make(ed.IdQuestiongroupSet)
+			out := make(queryByIds)
 			ids := strings.Split(idsString, ",")
 
 			for _, id := range ids {
@@ -517,9 +519,9 @@ func newQuery(title string) (questionGroupQuery, error) {
 				if err != nil {
 					return nil, fmt.Errorf("Requête invalide: entier attendu (%s)", err)
 				}
-				out.Add(ed.IdQuestiongroup(idV))
+				out[int64(idV)] = true
 			}
-			return queryByIds(out), nil
+			return out, nil
 		}
 	}
 	return queryByTitle(normalizeTitle(title)), nil
@@ -527,20 +529,20 @@ func newQuery(title string) (questionGroupQuery, error) {
 
 type queryByTitle string
 
-func (qt queryByTitle) match(group ed.Questiongroup) bool {
-	thisTitle := normalizeTitle(group.Title)
-	return qt == "" || strings.Contains(thisTitle, string(qt))
+func (qt queryByTitle) match(_ int64, title string) bool {
+	itemTitle := normalizeTitle(title)
+	return qt == "" || strings.Contains(itemTitle, string(qt))
 }
 
-type queryByIds ed.IdQuestiongroupSet
+type queryByIds map[int64]bool
 
-func (qt queryByIds) match(group ed.Questiongroup) bool { return qt[group.Id] }
+func (qt queryByIds) match(id int64, _ string) bool { return qt[id] }
 
 func normalizeTitle(title string) string {
 	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
 }
 
-func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out ListQuestionsOut, err error) {
+func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
 	const pagination = 30 // number of groups
 
 	groups, err := ed.SelectAllQuestiongroups(ct.db)
@@ -555,7 +557,7 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 		return out, err
 	}
 	for _, group := range groups {
-		if !matcher.match(group) {
+		if !matcher.match(int64(group.Id), group.Title) {
 			delete(groups, group.Id)
 		}
 	}
@@ -598,14 +600,14 @@ func (ct *Controller) searchQuestions(query ListQuestionsIn, userID uID) (out Li
 		}
 
 		for _, question := range questions {
-			groupExt.Questions = append(groupExt.Questions, newQuestionHeader(question))
+			groupExt.Variants = append(groupExt.Variants, newQuestionHeader(question))
 		}
 
 		// sort to make sure the display is consistent between two queries
-		sort.Slice(groupExt.Questions, func(i, j int) bool { return groupExt.Questions[i].Id < groupExt.Questions[j].Id })
-		sort.SliceStable(groupExt.Questions, func(i, j int) bool { return groupExt.Questions[i].Difficulty < groupExt.Questions[j].Difficulty })
+		sort.Slice(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Id < groupExt.Variants[j].Id })
+		sort.SliceStable(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Difficulty < groupExt.Variants[j].Difficulty })
 
-		out.NbQuestions += len(groupExt.Questions)
+		out.NbQuestions += len(groupExt.Variants)
 
 		out.Groups = append(out.Groups, groupExt)
 	}

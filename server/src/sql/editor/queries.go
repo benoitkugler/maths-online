@@ -140,6 +140,24 @@ func (qu Exercicegroup) IsVisibleBy(userID teacher.IdTeacher) bool {
 	return qu.Public || qu.IdTeacher == userID
 }
 
+// RestrictVisible remove the questions not visible by `userID`
+func (qus Exercicegroups) RestrictVisible(userID teacher.IdTeacher) {
+	for id, ex := range qus {
+		if !ex.IsVisibleBy(userID) {
+			delete(qus, id)
+		}
+	}
+}
+
+func (qus Exercices) ByGroup() map[IdExercicegroup][]Exercice {
+	out := make(map[IdExercicegroup][]Exercice)
+	for _, exercice := range qus {
+		idGroup := exercice.IdGroup
+		out[idGroup] = append(out[idGroup], exercice)
+	}
+	return out
+}
+
 // SelectQuestiongroupByTags returns the question groups matching the given query,
 // and available to `userID`, returning their tags.
 // It panics if `pattern` is empty.

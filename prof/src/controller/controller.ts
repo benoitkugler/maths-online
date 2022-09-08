@@ -9,9 +9,10 @@ import type {
   ClassroomSheets,
   Exercice,
   ExerciceExt,
-  ExerciceHeader,
+  ExercicegroupExt,
   GenerateClassroomCodeOut,
   LaunchSessionOut,
+  ListExercicesOut,
   ListQuestionsOut,
   LogginOut,
   Question,
@@ -23,7 +24,7 @@ import type {
   StartSessionOut,
   Student,
   Task,
-  TrivialExt,
+  TrivialExt
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
@@ -189,7 +190,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExercicesGetList(data: ExerciceHeader[] | null): void {
+  protected onSuccessExercicesGetList(data: ListExercicesOut): void {
     this.inRequest = false;
   }
   protected onSuccessExerciceGetContent(data: ExerciceExt): void {
@@ -240,7 +241,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExerciceCreate(data: ExerciceHeader): void {
+  protected onSuccessExerciceCreate(data: ExercicegroupExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Exercice créé avec succès.");

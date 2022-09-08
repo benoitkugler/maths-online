@@ -501,6 +501,140 @@ func DeleteExercicegroupsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([
 	return ScanIdExercicegroupArray(rows)
 }
 
+func scanOneExercicegroupTag(row scanner) (ExercicegroupTag, error) {
+	var item ExercicegroupTag
+	err := row.Scan(
+		&item.Tag,
+		&item.IdExercicegroup,
+	)
+	return item, err
+}
+
+func ScanExercicegroupTag(row *sql.Row) (ExercicegroupTag, error) {
+	return scanOneExercicegroupTag(row)
+}
+
+// SelectAll returns all the items in the exercicegroup_tags table.
+func SelectAllExercicegroupTags(db DB) (ExercicegroupTags, error) {
+	rows, err := db.Query("SELECT * FROM exercicegroup_tags")
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercicegroupTags(rows)
+}
+
+type ExercicegroupTags []ExercicegroupTag
+
+func ScanExercicegroupTags(rs *sql.Rows) (ExercicegroupTags, error) {
+	var (
+		item ExercicegroupTag
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ExercicegroupTags, 0, 16)
+	for rs.Next() {
+		item, err = scanOneExercicegroupTag(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links ExercicegroupTag in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyExercicegroupTags(tx *sql.Tx, items ...ExercicegroupTag) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("exercicegroup_tags",
+		"tag",
+		"idexercicegroup",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.Tag, item.IdExercicegroup)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ExercicegroupTag from the database.
+// Only the foreign keys IdExercicegroup fields are used in 'item'.
+func (item ExercicegroupTag) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM exercicegroup_tags WHERE IdExercicegroup = $1;`, item.IdExercicegroup)
+	return err
+}
+
+// ByIdExercicegroup returns a map with 'IdExercicegroup' as keys.
+func (items ExercicegroupTags) ByIdExercicegroup() map[IdExercicegroup]ExercicegroupTags {
+	out := make(map[IdExercicegroup]ExercicegroupTags)
+	for _, target := range items {
+		out[target.IdExercicegroup] = append(out[target.IdExercicegroup], target)
+	}
+	return out
+}
+
+// IdExercicegroups returns the list of ids of IdExercicegroup
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items ExercicegroupTags) IdExercicegroups() []IdExercicegroup {
+	out := make([]IdExercicegroup, len(items))
+	for index, target := range items {
+		out[index] = target.IdExercicegroup
+	}
+	return out
+}
+
+func SelectExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups ...IdExercicegroup) (ExercicegroupTags, error) {
+	rows, err := tx.Query("SELECT * FROM exercicegroup_tags WHERE idexercicegroup = ANY($1)", IdExercicegroupArrayToPQ(idExercicegroups))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercicegroupTags(rows)
+}
+
+func DeleteExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups ...IdExercicegroup) (ExercicegroupTags, error) {
+	rows, err := tx.Query("DELETE FROM exercicegroup_tags WHERE idexercicegroup = ANY($1) RETURNING *", IdExercicegroupArrayToPQ(idExercicegroups))
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercicegroupTags(rows)
+}
+
+// SelectExercicegroupTagByIdExercicegroupAndTag return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectExercicegroupTagByIdExercicegroupAndTag(tx DB, idExercicegroup IdExercicegroup, tag string) (item ExercicegroupTag, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM exercicegroup_tags WHERE IdExercicegroup = $1 AND Tag = $2", idExercicegroup, tag)
+	item, err = ScanExercicegroupTag(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneQuestion(row scanner) (Question, error) {
 	var item Question
 	err := row.Scan(

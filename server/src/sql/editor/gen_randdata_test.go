@@ -47,6 +47,13 @@ func randExercicegroup() Exercicegroup {
 	}
 }
 
+func randExercicegroupTag() ExercicegroupTag {
+	return ExercicegroupTag{
+		Tag:             randstring(),
+		IdExercicegroup: randIdExercicegroup(),
+	}
+}
+
 func randFlow() Flow {
 	choix := [...]Flow{Parallel, Sequencial}
 	i := rand.Intn(len(choix))

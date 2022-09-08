@@ -47,6 +47,16 @@ func (qus QuestiongroupTags) List() []string {
 	return out
 }
 
+// List returns the sorted tags from the `Tag` attribute.
+func (qus ExercicegroupTags) List() []string {
+	out := make([]string, len(qus))
+	for i, tag := range qus {
+		out[i] = tag.Tag
+	}
+	sort.Strings(out)
+	return out
+}
+
 // CommonTags returns the tags found in every list.
 func CommonTags(tags [][]string) []string {
 	L := len(tags)
@@ -91,6 +101,9 @@ func NewCrible(tags []string) Crible {
 
 // Crible build a set from the tags
 func (qus QuestiongroupTags) Crible() Crible { return NewCrible(qus.List()) }
+
+// Crible build a set from the tags
+func (qus ExercicegroupTags) Crible() Crible { return NewCrible(qus.List()) }
 
 // HasAll returns `true` is all the `tags` are present in the crible.
 func (cr Crible) HasAll(tags []string) bool {

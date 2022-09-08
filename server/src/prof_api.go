@@ -64,7 +64,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/editor/question/preview", edit.EditorSaveQuestionAndPreview)
 
 	// exercice editor
-	gr.GET("/api/prof/editor/exercices", edit.ExercicesGetList)
+	gr.POST("/api/prof/editor/exercices", edit.ExercicesGetList)
 	gr.GET("/api/prof/editor/exercice", edit.ExerciceGetContent)
 	gr.PUT("/api/prof/editor/exercice", edit.ExerciceCreate)
 	gr.DELETE("/api/prof/editor/exercice", edit.ExerciceDelete)

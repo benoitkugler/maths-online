@@ -20,6 +20,32 @@ type QuestionOrigin struct {
 	Origin   tcAPI.Origin
 }
 
+type ExercicegroupExt struct {
+	Group    ed.Exercicegroup
+	Origin   tcAPI.Origin
+	Tags     []string
+	Variants []ExerciceHeader
+}
+
+type ExerciceHeader struct {
+	Id         ed.IdExercice
+	Subtitle   string
+	Difficulty ed.DifficultyTag
+}
+
+func newExerciceHeader(exercice ed.Exercice) ExerciceHeader {
+	return ExerciceHeader{
+		Id:         exercice.Id,
+		Subtitle:   exercice.Subtitle,
+		Difficulty: ed.DiffEmpty, // for now, we don't support difficulty on exercices
+	}
+}
+
+// type ExerciceHeader struct {
+// 	Exercice  ed.Exercice
+// 	Questions ed.ExerciceQuestions
+// }
+
 type ExerciceExt struct {
 	Exercice        ed.Exercice
 	Origin          tcAPI.Origin
@@ -27,16 +53,17 @@ type ExerciceExt struct {
 	QuestionsSource map[ed.IdQuestion]ed.Question
 }
 
-type ExerciceHeader struct {
-	Exercice  ed.Exercice
-	Origin    tcAPI.Origin
-	Questions ed.ExerciceQuestions
-}
+type SearchExercicesIn = Query
 
 func (ct *Controller) ExercicesGetList(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
-	out, err := ct.getExercices(user.Id)
+	var args SearchExercicesIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.searchExercices(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -56,55 +83,89 @@ func exerciceOrigin(ex ed.Exercicegroup, userID, adminID uID) (tcAPI.Origin, boo
 	}, true
 }
 
-// buildExerciceHeaders aggregates the content of the tables Exercice and ExerciceQuestion,
-// selecting only the exercices visible by `userID`
-func buildExerciceHeaders(userID, adminID teacher.IdTeacher, groups ed.Exercicegroups, exes ed.Exercices, links ed.ExerciceQuestions) map[ed.IdExercice]ExerciceHeader {
-	out := make(map[ed.IdExercice]ExerciceHeader, len(exes))
-	questionDict := links.ByIdExercice()
+type ListExercicesOut struct {
+	Groups      []ExercicegroupExt // limited by `pagination`
+	NbGroups    int                // total number of groups (passing the given filter)
+	NbExercices int                // total number of exercices contained in the groups
+}
 
-	for _, ex := range exes {
-		group := groups[ex.IdGroup]
-		origin, ok := exerciceOrigin(group, userID, adminID)
-		if !ok {
+func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercicesOut, err error) {
+	const pagination = 30 // number of groups
+
+	groups, err := ed.SelectAllExercicegroups(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	groups.RestrictVisible(userID)
+
+	// restrict the groups to matching title
+	matcher, err := newQuery(query.TitleQuery)
+	if err != nil {
+		return out, err
+	}
+	for _, group := range groups {
+		if !matcher.match(int64(group.Id), group.Title) {
+			delete(groups, group.Id)
+		}
+	}
+
+	// load the tags ...
+	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, groups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	tagsMap := tags.ByIdExercicegroup()
+
+	// ... and the exercices
+	tmp, err := ed.SelectExercicesByIdGroups(ct.db, groups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	exercicesByGroup := tmp.ByGroup()
+
+	// normalize query
+	for i, t := range query.Tags {
+		query.Tags[i] = ed.NormalizeTag(t)
+	}
+
+	// .. and build the groups, restricting to the ones matching the given tags
+	for _, group := range groups {
+		crible := tagsMap[group.Id].Crible()
+		if !crible.HasAll(query.Tags) {
+			continue
+		}
+		exercices := exercicesByGroup[group.Id]
+		if len(exercices) == 0 { // ignore empty groupExts
 			continue
 		}
 
-		questions := questionDict[ex.Id]
-		questions.EnsureOrder()
-		out[ex.Id] = ExerciceHeader{
-			Exercice:  ex,
-			Origin:    origin,
-			Questions: questions,
+		origin, _ := exerciceOrigin(group, userID, ct.admin.Id)
+		groupExt := ExercicegroupExt{
+			Group:  group,
+			Origin: origin,
+			Tags:   tagsMap[group.Id].List(),
 		}
+
+		for _, exercice := range exercices {
+			groupExt.Variants = append(groupExt.Variants, newExerciceHeader(exercice))
+		}
+
+		// sort to make sure the display is consistent between two queries
+		sort.Slice(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Id < groupExt.Variants[j].Id })
+		sort.SliceStable(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Difficulty < groupExt.Variants[j].Difficulty })
+
+		out.NbExercices += len(groupExt.Variants)
+
+		out.Groups = append(out.Groups, groupExt)
 	}
 
-	return out
-}
+	// sort before pagination
+	sort.Slice(out.Groups, func(i, j int) bool { return out.Groups[i].Group.Title < out.Groups[j].Group.Title })
 
-func (ct *Controller) getExercices(userID uID) ([]ExerciceHeader, error) {
-	groups, err := ed.SelectAllExercicegroups(ct.db)
-	if err != nil {
-		return nil, utils.SQLError(err)
+	out.NbGroups = len(out.Groups)
+	if len(out.Groups) > pagination {
+		out.Groups = out.Groups[:pagination]
 	}
-
-	exs, err := ed.SelectAllExercices(ct.db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, exs.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	tmp := buildExerciceHeaders(userID, ct.admin.Id, groups, exs, links)
-	out := make([]ExerciceHeader, 0, len(tmp))
-	for _, ex := range tmp {
-		out = append(out, ex)
-	}
-
-	sort.Slice(out, func(i, j int) bool { return out[i].Exercice.Id < out[j].Exercice.Id })
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Exercice.Subtitle < out[j].Exercice.Subtitle })
 
 	return out, nil
 }
@@ -159,35 +220,36 @@ func (ct *Controller) ExerciceCreate(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createExercice(userID uID) (ExerciceHeader, error) {
+func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
+		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
 	group, err := ed.Exercicegroup{IdTeacher: userID}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
-		return ExerciceHeader{}, utils.SQLError(err)
+		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
 	ex, err := ed.Exercice{IdGroup: group.Id, Flow: ed.Parallel}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
-		return ExerciceHeader{}, utils.SQLError(err)
+		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
+		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
 	origin, _ := exerciceOrigin(group, userID, ct.admin.Id)
-	out := ExerciceHeader{
-		Exercice: ex,
+	out := ExercicegroupExt{
+		Group:    group,
 		Origin:   origin,
+		Tags:     nil,
+		Variants: []ExerciceHeader{newExerciceHeader(ex)},
 	}
-
 	return out, nil
 }
 

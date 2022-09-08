@@ -56,6 +56,12 @@ type Exercicegroup struct {
 	IdTeacher teacher.IdTeacher // IdTeacher is the owner of the exercice
 }
 
+// gomacro:SQL ADD UNIQUE(IdExercicegroup, Tag)
+type ExercicegroupTag struct {
+	Tag             string
+	IdExercicegroup IdExercicegroup `gomacro-sql-on-delete:"CASCADE"`
+}
+
 // Exercice is the data structure for a full exercice, composed of a list of questions.
 // There are two kinds of exercice :
 //	- parallel : all the questions are independant

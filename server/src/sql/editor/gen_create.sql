@@ -22,6 +22,11 @@ CREATE TABLE exercicegroups (
     IdTeacher integer NOT NULL
 );
 
+CREATE TABLE exercicegroup_tags (
+    Tag text NOT NULL,
+    IdExercicegroup integer NOT NULL
+);
+
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
     Page jsonb NOT NULL,
@@ -66,6 +71,12 @@ ALTER TABLE questiongroup_tags
 
 ALTER TABLE exercicegroups
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE exercicegroup_tags
+    ADD UNIQUE (IdExercicegroup, Tag);
+
+ALTER TABLE exercicegroup_tags
+    ADD FOREIGN KEY (IdExercicegroup) REFERENCES exercicegroups ON DELETE CASCADE;
 
 ALTER TABLE exercices
     ADD FOREIGN KEY (IdGroup) REFERENCES exercicegroups;
