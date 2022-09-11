@@ -90,6 +90,13 @@ type Query struct {
 	Tags       []string
 }
 
+func (query Query) normalize() {
+	// normalize query
+	for i, t := range query.Tags {
+		query.Tags[i] = ed.NormalizeTag(t)
+	}
+}
+
 func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -551,6 +558,8 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	}
 	groups.RestrictVisible(userID)
 
+	query.normalize()
+
 	// restrict the groups to matching title
 	matcher, err := newQuery(query.TitleQuery)
 	if err != nil {
@@ -575,11 +584,6 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 		return out, utils.SQLError(err)
 	}
 	questionsByGroup := tmp.ByGroup()
-
-	// normalize query
-	for i, t := range query.Tags {
-		query.Tags[i] = ed.NormalizeTag(t)
-	}
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
@@ -657,7 +661,7 @@ func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID 
 		return utils.SQLError(err)
 	}
 	// .. then add its tags ..
-	err = ed.UpdateTags(tx, tags, newGroup.Id)
+	err = ed.UpdateQuestiongroupTags(tx, tags, newGroup.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -685,7 +689,7 @@ type UpdateQuestiongroupTagsIn struct {
 	Tags []string
 }
 
-func (ct *Controller) EditorUpdateTags(c echo.Context) error {
+func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args UpdateQuestiongroupTagsIn
@@ -726,7 +730,7 @@ func (ct *Controller) updateTags(params UpdateQuestiongroupTagsIn, userID uID) e
 		return err
 	}
 
-	err = ed.UpdateTags(tx, tags, params.Id)
+	err = ed.UpdateQuestiongroupTags(tx, tags, params.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err

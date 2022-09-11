@@ -74,9 +74,9 @@ func (qus Questions) ByGroup() map[IdQuestiongroup][]Question {
 	return out
 }
 
-// UpdateTags enforces proper IdQuestiongroup, mutating `tags`.
+// UpdateQuestiongroupTags enforces proper IdQuestiongroup, mutating `tags`.
 // It does NOT commit or rollback.
-func UpdateTags(tx *sql.Tx, tags QuestiongroupTags, id IdQuestiongroup) error {
+func UpdateQuestiongroupTags(tx *sql.Tx, tags QuestiongroupTags, id IdQuestiongroup) error {
 	var nbLevel int
 	for i, tag := range tags {
 		tags[i].IdQuestiongroup = id
@@ -96,6 +96,34 @@ func UpdateTags(tx *sql.Tx, tags QuestiongroupTags, id IdQuestiongroup) error {
 		return utils.SQLError(err)
 	}
 	err = InsertManyQuestiongroupTags(tx, tags...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+// UpdateExercicegroupTags enforces proper IdExercicegroup, mutating `tags`.
+// It does NOT commit or rollback.
+func UpdateExercicegroupTags(tx *sql.Tx, tags ExercicegroupTags, id IdExercicegroup) error {
+	var nbLevel int
+	for i, tag := range tags {
+		tags[i].IdExercicegroup = id
+
+		switch tag.Tag {
+		case string(Seconde), string(Premiere), string(Terminale):
+			nbLevel++
+		}
+	}
+
+	if nbLevel > 1 {
+		return errors.New("Une seule classe est autorisée par question.")
+	}
+
+	_, err := DeleteExercicegroupTagsByIdExercicegroups(tx, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	err = InsertManyExercicegroupTags(tx, tags...)
 	if err != nil {
 		return utils.SQLError(err)
 	}

@@ -3,25 +3,26 @@
     <v-row>
       <v-col cols="8">
         <keep-alive>
-          <exercice-list
-            v-if="currentExercice == null"
-            @clicked="showExercice"
-          ></exercice-list>
+          <exercicegroup-list
+            v-if="currentExercicegroup == null"
+            @edit="editExercice"
+            :tags="allTags"
+          ></exercicegroup-list>
         </keep-alive>
         <exercice-skeleton
-          v-if="currentExercice != null && editMode == 'skeleton'"
+          v-if="currentExercicegroup != null && editMode == 'skeleton'"
           @back="backToList"
           @next="editMode = 'questions'"
-          :exercice="currentExercice"
-          @update="(v) => (currentExercice = v)"
+          :exercice="currentExercicegroup"
+          @update="(v) => (currentExercicegroup = v)"
           :all-tags="allTags"
           :session_id="sessionID"
         ></exercice-skeleton>
         <exercice-editor-pannel
-          v-else-if="currentExercice != null && editMode == 'questions'"
+          v-else-if="currentExercicegroup != null && editMode == 'questions'"
           :session_id="sessionID"
-          :exercice="currentExercice"
-          @update="(v) => (currentExercice = v)"
+          :exercice="currentExercicegroup"
+          @update="(v) => (currentExercicegroup = v)"
           @back="editMode = 'skeleton'"
         ></exercice-editor-pannel>
       </v-col>
@@ -35,18 +36,18 @@
 </template>
 
 <script setup lang="ts">
-import type { ExerciceExt, ExerciceHeader } from "@/controller/api_gen";
+import type { ExercicegroupExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
-import ExerciceEditorPannel from "../components/exercices/ExerciceEditorPannel.vue";
-import ExerciceList from "../components/exercices/ExerciceList.vue";
-import ExerciceSkeleton from "../components/exercices/ExerciceSkeleton.vue";
+import ExerciceEditorPannel from "../components/editor/exercices/ExerciceEditorPannel.vue";
+import ExercicegroupList from "../components/editor/exercices/ExercicegroupList.vue";
+import ExerciceSkeleton from "../components/editor/exercices/ExerciceSkeleton.vue";
 
 let sessionID = $ref("");
 
-let currentExercice = $ref<ExerciceExt | null>(null);
+let currentExercicegroup = $ref<ExercicegroupExt | null>(null);
 let editMode = $ref<"skeleton" | "questions">("skeleton");
 
 let allTags = $ref<string[]>([]);
@@ -64,16 +65,13 @@ onMounted(async () => {
   fetchTags();
 });
 
-async function showExercice(ex: ExerciceHeader) {
-  const res = await controller.ExerciceGetContent({ id: ex.Exercice.Id });
-  if (res == undefined) {
-    return;
-  }
-  currentExercice = res;
+async function editExercice(ex: ExercicegroupExt) {
+  currentExercicegroup = ex;
+  editMode = "skeleton";
 }
 
 async function backToList() {
-  currentExercice = null;
+  currentExercicegroup = null;
   controller.EditorPausePreview({ sessionID: sessionID });
 }
 </script>

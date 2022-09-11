@@ -242,7 +242,7 @@ export interface ExerciceUpdateQuestionsIn {
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateVisiblityIn
 export interface ExerciceUpdateVisiblityIn {
-  ExerciceID: IdExercicegroup;
+  ID: IdExercicegroup;
   Public: boolean;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Exercicegroup
@@ -824,6 +824,11 @@ export interface TrivialExt {
   Config: Trivial;
   Origin: Origin;
   NbQuestionsByCategories: number[];
+}
+// github.com/benoitkugler/maths-online/prof/editor.UpdateExercicegroupTagsIn
+export interface UpdateExercicegroupTagsIn {
+  Id: IdExercicegroup;
+  Tags: string[] | null;
 }
 // github.com/benoitkugler/maths-online/prof/editor.UpdateQuestiongroupTagsIn
 export interface UpdateQuestiongroupTagsIn {
@@ -1653,25 +1658,27 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorUpdateQuestiongroup(): void;
 
-  protected async rawEditorUpdateTags(params: UpdateQuestiongroupTagsIn) {
+  protected async rawEditorUpdateQuestionTags(
+    params: UpdateQuestiongroupTagsIn
+  ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/tags";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
     return true;
   }
 
-  /** EditorUpdateTags wraps rawEditorUpdateTags and handles the error */
-  async EditorUpdateTags(params: UpdateQuestiongroupTagsIn) {
+  /** EditorUpdateQuestionTags wraps rawEditorUpdateQuestionTags and handles the error */
+  async EditorUpdateQuestionTags(params: UpdateQuestiongroupTagsIn) {
     this.startRequest();
     try {
-      const out = await this.rawEditorUpdateTags(params);
-      this.onSuccessEditorUpdateTags();
+      const out = await this.rawEditorUpdateQuestionTags(params);
+      this.onSuccessEditorUpdateQuestionTags();
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorUpdateTags(): void;
+  protected abstract onSuccessEditorUpdateQuestionTags(): void;
 
   protected async rawEditorUpdateQuestiongroupVis(
     params: QuestionUpdateVisiblityIn
@@ -1817,8 +1824,8 @@ export abstract class AbstractAPI {
     data: SaveQuestionAndPreviewOut
   ): void;
 
-  protected async rawExercicesGetList(params: Query) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercices";
+  protected async rawEditorSearchExercices(params: Query) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
     const rep: AxiosResponse<ListExercicesOut> = await Axios.post(
       fullUrl,
       params,
@@ -1827,21 +1834,65 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExercicesGetList wraps rawExercicesGetList and handles the error */
-  async ExercicesGetList(params: Query) {
+  /** EditorSearchExercices wraps rawEditorSearchExercices and handles the error */
+  async EditorSearchExercices(params: Query) {
     this.startRequest();
     try {
-      const out = await this.rawExercicesGetList(params);
-      this.onSuccessExercicesGetList(out);
+      const out = await this.rawEditorSearchExercices(params);
+      this.onSuccessEditorSearchExercices(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExercicesGetList(data: ListExercicesOut): void;
+  protected abstract onSuccessEditorSearchExercices(
+    data: ListExercicesOut
+  ): void;
 
-  protected async rawExerciceGetContent(params: { id: number }) {
+  protected async rawEditorUpdateExercicegroup(params: Exercicegroup) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** EditorUpdateExercicegroup wraps rawEditorUpdateExercicegroup and handles the error */
+  async EditorUpdateExercicegroup(params: Exercicegroup) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorUpdateExercicegroup(params);
+      this.onSuccessEditorUpdateExercicegroup();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorUpdateExercicegroup(): void;
+
+  protected async rawEditorUpdateExerciceTags(
+    params: UpdateExercicegroupTagsIn
+  ) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/tags";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** EditorUpdateExerciceTags wraps rawEditorUpdateExerciceTags and handles the error */
+  async EditorUpdateExerciceTags(params: UpdateExercicegroupTagsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorUpdateExerciceTags(params);
+      this.onSuccessEditorUpdateExerciceTags();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorUpdateExerciceTags(): void;
+
+  protected async rawEditorGetExerciceContent(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
@@ -1850,21 +1901,21 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceGetContent wraps rawExerciceGetContent and handles the error */
-  async ExerciceGetContent(params: { id: number }) {
+  /** EditorGetExerciceContent wraps rawEditorGetExerciceContent and handles the error */
+  async EditorGetExerciceContent(params: { id: number }) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceGetContent(params);
-      this.onSuccessExerciceGetContent(out);
+      const out = await this.rawEditorGetExerciceContent(params);
+      this.onSuccessEditorGetExerciceContent(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceGetContent(data: ExerciceExt): void;
+  protected abstract onSuccessEditorGetExerciceContent(data: ExerciceExt): void;
 
-  protected async rawExerciceCreate() {
+  protected async rawEditorCreateExercice() {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExercicegroupExt> = await Axios.put(
       fullUrl,
@@ -1874,21 +1925,23 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceCreate wraps rawExerciceCreate and handles the error */
-  async ExerciceCreate() {
+  /** EditorCreateExercice wraps rawEditorCreateExercice and handles the error */
+  async EditorCreateExercice() {
     this.startRequest();
     try {
-      const out = await this.rawExerciceCreate();
-      this.onSuccessExerciceCreate(out);
+      const out = await this.rawEditorCreateExercice();
+      this.onSuccessEditorCreateExercice(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceCreate(data: ExercicegroupExt): void;
+  protected abstract onSuccessEditorCreateExercice(
+    data: ExercicegroupExt
+  ): void;
 
-  protected async rawExerciceDelete(params: { id: number }) {
+  protected async rawEditorDeleteExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
@@ -1897,21 +1950,21 @@ export abstract class AbstractAPI {
     return true;
   }
 
-  /** ExerciceDelete wraps rawExerciceDelete and handles the error */
-  async ExerciceDelete(params: { id: number }) {
+  /** EditorDeleteExercice wraps rawEditorDeleteExercice and handles the error */
+  async EditorDeleteExercice(params: { id: number }) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceDelete(params);
-      this.onSuccessExerciceDelete();
+      const out = await this.rawEditorDeleteExercice(params);
+      this.onSuccessEditorDeleteExercice();
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceDelete(): void;
+  protected abstract onSuccessEditorDeleteExercice(): void;
 
-  protected async rawExerciceUpdate(params: ExerciceUpdateIn) {
+  protected async rawEditorUpdateExercice(params: ExerciceUpdateIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
@@ -1919,21 +1972,23 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceUpdate wraps rawExerciceUpdate and handles the error */
-  async ExerciceUpdate(params: ExerciceUpdateIn) {
+  /** EditorUpdateExercice wraps rawEditorUpdateExercice and handles the error */
+  async EditorUpdateExercice(params: ExerciceUpdateIn) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceUpdate(params);
-      this.onSuccessExerciceUpdate(out);
+      const out = await this.rawEditorUpdateExercice(params);
+      this.onSuccessEditorUpdateExercice(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceUpdate(data: Exercice): void;
+  protected abstract onSuccessEditorUpdateExercice(data: Exercice): void;
 
-  protected async rawExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
+  protected async rawEditorExerciceCreateQuestion(
+    params: ExerciceCreateQuestionIn
+  ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
     const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, params, {
       headers: this.getHeaders(),
@@ -1941,21 +1996,23 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceCreateQuestion wraps rawExerciceCreateQuestion and handles the error */
-  async ExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
+  /** EditorExerciceCreateQuestion wraps rawEditorExerciceCreateQuestion and handles the error */
+  async EditorExerciceCreateQuestion(params: ExerciceCreateQuestionIn) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceCreateQuestion(params);
-      this.onSuccessExerciceCreateQuestion(out);
+      const out = await this.rawEditorExerciceCreateQuestion(params);
+      this.onSuccessEditorExerciceCreateQuestion(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceCreateQuestion(data: ExerciceExt): void;
+  protected abstract onSuccessEditorExerciceCreateQuestion(
+    data: ExerciceExt
+  ): void;
 
-  protected async rawExerciceUpdateQuestions(
+  protected async rawEditorExerciceUpdateQuestions(
     params: ExerciceUpdateQuestionsIn
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
@@ -1965,41 +2022,43 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ExerciceUpdateQuestions wraps rawExerciceUpdateQuestions and handles the error */
-  async ExerciceUpdateQuestions(params: ExerciceUpdateQuestionsIn) {
+  /** EditorExerciceUpdateQuestions wraps rawEditorExerciceUpdateQuestions and handles the error */
+  async EditorExerciceUpdateQuestions(params: ExerciceUpdateQuestionsIn) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceUpdateQuestions(params);
-      this.onSuccessExerciceUpdateQuestions(out);
+      const out = await this.rawEditorExerciceUpdateQuestions(params);
+      this.onSuccessEditorExerciceUpdateQuestions(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceUpdateQuestions(data: ExerciceExt): void;
+  protected abstract onSuccessEditorExerciceUpdateQuestions(
+    data: ExerciceExt
+  ): void;
 
-  protected async rawExerciceUpdateVisiblity(
+  protected async rawEditorUpdateExercicegroupVis(
     params: ExerciceUpdateVisiblityIn
   ) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/visibility";
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/visibility";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
     return true;
   }
 
-  /** ExerciceUpdateVisiblity wraps rawExerciceUpdateVisiblity and handles the error */
-  async ExerciceUpdateVisiblity(params: ExerciceUpdateVisiblityIn) {
+  /** EditorUpdateExercicegroupVis wraps rawEditorUpdateExercicegroupVis and handles the error */
+  async EditorUpdateExercicegroupVis(params: ExerciceUpdateVisiblityIn) {
     this.startRequest();
     try {
-      const out = await this.rawExerciceUpdateVisiblity(params);
-      this.onSuccessExerciceUpdateVisiblity();
+      const out = await this.rawEditorUpdateExercicegroupVis(params);
+      this.onSuccessEditorUpdateExercicegroupVis();
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessExerciceUpdateVisiblity(): void;
+  protected abstract onSuccessEditorUpdateExercicegroupVis(): void;
 
   protected async rawEditorCheckExerciceParameters(
     params: CheckExerciceParametersIn

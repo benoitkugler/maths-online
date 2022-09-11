@@ -1,21 +1,21 @@
 <template>
   <v-dialog
-    :model-value="questionToDelete != null"
-    @update:model-value="questionToDelete = null"
+    :model-value="exerciceToDelete != null"
+    @update:model-value="exerciceToDelete = null"
   >
     <v-card title="Confirmer">
       <v-card-text
         >Etes-vous certain de vouloir supprimer la variante
-        <i>{{ questionToDelete?.Id }} - {{ questionToDelete?.Subtitle }}</i> ?
+        <i>{{ exerciceToDelete?.Id }} - {{ exerciceToDelete?.Subtitle }}</i> ?
         <br />
         Cette opération est irréversible.
 
         <div v-if="variants.length == 1" class="mt-2">
-          Le groupe de questions associé sera aussi supprimé.
+          Le groupe d'exercices associé sera aussi supprimé.
         </div>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="questionToDelete = null">Retour</v-btn>
+        <v-btn @click="exerciceToDelete = null">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteVariante" variant="outlined">
           Supprimer
@@ -30,7 +30,7 @@
         <v-btn
           size="small"
           icon
-          title="Retour aux questions"
+          title="Retour aux exercices"
           @click="backToList"
         >
           <v-icon icon="mdi-arrow-left"></v-icon>
@@ -42,10 +42,10 @@
           class="my-2 input-small"
           variant="outlined"
           density="comfortable"
-          label="Nom de la question"
+          label="Nom de l'exercice"
           v-model="group.Group.Title"
           :readonly="isReadonly"
-          @blur="updateQuestiongroup"
+          @blur="updateExercicegroup"
           hide-details
         ></v-text-field>
       </v-col>
@@ -65,14 +65,14 @@
           :variants="variants"
           :readonly="isReadonly"
           v-model="variantIndex"
-          @delete="(qu) => (questionToDelete = qu)"
+          @delete="(qu) => (exerciceToDelete = qu)"
           @duplicate="duplicateVariante"
         ></VariantsSelector>
       </v-col>
     </v-row>
 
     <VariantPannel
-      :question="variants[variantIndex]"
+      :exercice="variants[variantIndex]"
       :readonly="isReadonly"
       :session_id="props.session_id"
       :all-tags="props.allTags"
@@ -82,20 +82,23 @@
 </template>
 
 <script setup lang="ts">
-import type { Question, QuestiongroupExt } from "@/controller/api_gen";
+import type {
+  Exercice,
+  ExercicegroupExt,
+  ExerciceHeader,
+} from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
-import VariantPannel from "./VariantPannel.vue";
 import VariantsSelector from "./VariantsSelector.vue";
 
 interface Props {
   session_id: string;
-  group: QuestiongroupExt;
-  variants: Question[];
+  group: ExercicegroupExt;
+  variants: ExerciceHeader[];
   allTags: string[]; // to provide auto completion
 }
 
@@ -114,36 +117,36 @@ const isReadonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
-async function updateQuestiongroup() {
-  await controller.EditorUpdateQuestiongroup(group.Group);
+async function updateExercicegroup() {
+  await controller.EditorUpdateExercicegroup(group.Group);
 }
 
-let questionToDelete: Question | null = $ref(null);
+let exerciceToDelete: Exercice | null = $ref(null);
 async function deleteVariante() {
-  await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
+  await controller.EditorDeleteExercice({ id: exerciceToDelete!.Id });
 
-  variants = variants.filter((qu) => qu.Id != questionToDelete!.Id);
-  questionToDelete = null;
+  variants = variants.filter((qu) => qu.Id != exerciceToDelete!.Id);
+  exerciceToDelete = null;
 
   if (variants.length && variantIndex >= variants.length) {
     variantIndex = 0;
   }
-  // if there is no more variant, that means the questiongroup is deleted:
+  // if there is no more variant, that means the exercicegroup is deleted:
   // go back
   if (!variants.length) {
     emit("back");
   }
 }
 
-async function duplicateVariante(question: Question) {
-  const newQuestion = await controller.EditorDuplicateQuestion({
-    id: question.Id,
+async function duplicateVariante(exercice: Exercice) {
+  const newExercice = await controller.EditorDuplicateExercice({
+    id: exercice.Id,
   });
-  if (newQuestion == undefined) {
+  if (newExercice == undefined) {
     return;
   }
-  variants.push(newQuestion);
-  variantIndex = variants.length - 1; // go to the new question
+  variants.push(newExercice);
+  variantIndex = variants.length - 1; // go to the new exercice
 }
 
 async function saveTags(newTags: string[]) {

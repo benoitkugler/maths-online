@@ -67,13 +67,6 @@ function backToList() {
   viewKind = "questions";
 }
 
-// function onDuplicated(question: Question) {
-//   currentQuestion = question;
-//   // copy to avoid potential side effects
-//   currentTags = currentTags.map((v) => v);
-//   currentOrigin = personnalOrigin();
-// }
-
 function editQuestion(group: QuestiongroupExt, variants: Question[]) {
   currentGroup = group;
   currentVariants = variants;

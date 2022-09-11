@@ -55,7 +55,7 @@ type ExerciceExt struct {
 
 type SearchExercicesIn = Query
 
-func (ct *Controller) ExercicesGetList(c echo.Context) error {
+func (ct *Controller) EditorSearchExercices(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args SearchExercicesIn
@@ -98,6 +98,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 	}
 	groups.RestrictVisible(userID)
 
+	query.normalize()
+
 	// restrict the groups to matching title
 	matcher, err := newQuery(query.TitleQuery)
 	if err != nil {
@@ -122,11 +124,6 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		return out, utils.SQLError(err)
 	}
 	exercicesByGroup := tmp.ByGroup()
-
-	// normalize query
-	for i, t := range query.Tags {
-		query.Tags[i] = ed.NormalizeTag(t)
-	}
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
@@ -170,8 +167,89 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 	return out, nil
 }
 
-// ExerciceGetContent loads the questions associated with the given exercice
-func (ct *Controller) ExerciceGetContent(c echo.Context) error {
+func (ct *Controller) EditorUpdateExercicegroup(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args ed.Exercicegroup
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	group, err := ed.SelectExercicegroup(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if group.IdTeacher != user.Id {
+		return accessForbidden
+	}
+
+	group.Title = args.Title
+	_, err = group.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
+
+// EditorDuplicateExercice duplicate one variant inside a group.
+func (ct *Controller) EditorDuplicateExercice(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.duplicateExercice(ed.IdExercice(id), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+// duplicateExercice duplicate the given exercice, returning
+// the newly created one
+func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (ed.Exercice, error) {
+	ex, err := ed.SelectExercice(ct.db, idExercice)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	group, err := ct.getGroup(ex)
+	if err != nil {
+		return ed.Exercice{}, err
+	}
+
+	if !group.IsVisibleBy(userID) {
+		return ed.Exercice{}, accessForbidden
+	}
+
+	// shallow copy is enough
+	newExercice := ex
+	newExercice, err = newExercice.Insert(ct.db)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	// also copy the questions
+	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, ex.Id)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+	questions, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
+	for _, question := range questions {
+		question.NeedExercice = newExercice.Id.AsOptional()
+		// TODO: waiting for structure update
+	}
+
+	return newExercice, nil
+}
+
+// EditorGetExerciceContent loads the questions associated with the given exercice
+func (ct *Controller) EditorGetExerciceContent(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	idExercice, err := utils.QueryParamInt64(c, "id")
@@ -208,8 +286,8 @@ func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (Exercic
 	return out, nil
 }
 
-// ExerciceCreate creates a new exercice group with one exercice
-func (ct *Controller) ExerciceCreate(c echo.Context) error {
+// EditorCreateExercice creates a new exercice group with one exercice
+func (ct *Controller) EditorCreateExercice(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	out, err := ct.createExercice(user.Id)
@@ -253,9 +331,65 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 	return out, nil
 }
 
-// ExerciceDelete remove the given exercice, also cleaning
+type UpdateExercicegroupTagsIn struct {
+	Id   ed.IdExercicegroup
+	Tags []string
+}
+
+func (ct *Controller) EditorUpdateExerciceTags(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args UpdateExercicegroupTagsIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	err := ct.updateExerciceTags(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userID uID) error {
+	group, err := ed.SelectExercicegroup(ct.db, params.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if group.IdTeacher != userID {
+		return accessForbidden
+	}
+
+	var tags ed.ExercicegroupTags
+	for _, tag := range params.Tags {
+		// enforce proper tags
+		tag = ed.NormalizeTag(tag)
+		if tag == "" {
+			continue
+		}
+
+		tags = append(tags, ed.ExercicegroupTag{IdExercicegroup: params.Id, Tag: tag})
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = ed.UpdateExercicegroupTags(tx, tags, params.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	return err
+}
+
+// EditorDeleteExercice remove the given exercice, also cleaning
 // up the exercice group if needed.
-func (ct *Controller) ExerciceDelete(c echo.Context) error {
+func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	idExercice, err := utils.QueryParamInt64(c, "id")
@@ -350,9 +484,9 @@ type ExerciceCreateQuestionIn struct {
 	IdExercice ed.IdExercice
 }
 
-// ExerciceCreateQuestion creates a question and appends it
+// EditorExerciceCreateQuestion creates a question and appends it
 // to the given exercice.
-func (ct *Controller) ExerciceCreateQuestion(c echo.Context) error {
+func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args ExerciceCreateQuestionIn
@@ -411,9 +545,9 @@ type ExerciceUpdateQuestionsIn struct {
 	SessionID  string
 }
 
-// ExerciceUpdateQuestions updates the question links and
+// EditorExerciceUpdateQuestions updates the question links and
 // the preview
-func (ct *Controller) ExerciceUpdateQuestions(c echo.Context) error {
+func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args ExerciceUpdateQuestionsIn
@@ -483,9 +617,9 @@ type ExerciceUpdateIn struct {
 	SessionID string
 }
 
-// ExerciceUpdate update the exercice metadata and
+// EditorUpdateExercice update the exercice metadata and
 // update the preview
-func (ct *Controller) ExerciceUpdate(c echo.Context) error {
+func (ct *Controller) EditorUpdateExercice(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args ExerciceUpdateIn

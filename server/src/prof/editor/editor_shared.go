@@ -34,14 +34,23 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 	return c.JSON(200, filtred)
 }
 
+// for now, we merge question and exercice tags
 func (ct *Controller) getTags(userID uID) ([]string, error) {
-	tags, err := ed.SelectAllQuestiongroupTags(ct.db)
+	questionTags, err := ed.SelectAllQuestiongroupTags(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	exerciceTags, err := ed.SelectAllExercicegroupTags(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
 	// only return tags used by visible groups
-	groups, err := ed.SelectAllQuestiongroups(ct.db)
+	questionGroups, err := ed.SelectAllQuestiongroups(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	exerciceGroups, err := ed.SelectAllExercicegroups(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -50,22 +59,27 @@ func (ct *Controller) getTags(userID uID) ([]string, error) {
 	// in first choices
 	var (
 		filtred []string
-		seen    = map[string]bool{}
+		allTags = map[string]bool{}
 	)
-	for _, tag := range tags {
-		if !groups[tag.IdQuestiongroup].IsVisibleBy(userID) {
+	for _, tag := range questionTags {
+		if !questionGroups[tag.IdQuestiongroup].IsVisibleBy(userID) {
 			continue
 		}
-		if seen[tag.Tag] {
+		allTags[tag.Tag] = true
+	}
+	for _, tag := range exerciceTags {
+		if !exerciceGroups[tag.IdExercicegroup].IsVisibleBy(userID) {
 			continue
 		}
+		allTags[tag.Tag] = true
+	}
 
-		switch tag.Tag {
+	for tag := range allTags {
+		switch tag {
 		// case string(Diff1), string(Diff2), string(Diff3): // added after
 		case string(ed.Seconde), string(ed.Premiere), string(ed.Terminale): // added after
 		default:
-			filtred = append(filtred, tag.Tag)
-			seen[tag.Tag] = true
+			filtred = append(filtred, tag)
 		}
 	}
 
@@ -119,11 +133,11 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 }
 
 type ExerciceUpdateVisiblityIn struct {
-	ExerciceID ed.IdExercicegroup
-	Public     bool
+	ID     ed.IdExercicegroup
+	Public bool
 }
 
-func (ct *Controller) ExerciceUpdateVisiblity(c echo.Context) error {
+func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
 	// we only accept public question from admin account
@@ -136,7 +150,7 @@ func (ct *Controller) ExerciceUpdateVisiblity(c echo.Context) error {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	ex, err := ed.SelectExercicegroup(ct.db, args.ExerciceID)
+	ex, err := ed.SelectExercicegroup(ct.db, args.ID)
 	if err != nil {
 		return utils.SQLError(err)
 	}

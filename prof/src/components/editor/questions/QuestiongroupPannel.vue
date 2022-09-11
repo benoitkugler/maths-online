@@ -147,7 +147,7 @@ async function duplicateVariante(question: Question) {
 }
 
 async function saveTags(newTags: string[]) {
-  const rep = await controller.EditorUpdateTags({
+  const rep = await controller.EditorUpdateQuestionTags({
     Id: group.Group.Id,
     Tags: newTags,
   });

@@ -23,7 +23,7 @@ type Question struct {
 	Subtitle    string // used to differentiate questions inside a group
 	Description string // implementation notes
 
-	Difficulty DifficultyTag
+	Difficulty DifficultyTag // only used for question in groups (not in exercices)
 
 	// NeedExercice is not null if the question is part
 	// of an exercice and requires its parameters to be
