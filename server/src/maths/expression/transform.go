@@ -592,8 +592,7 @@ func AreExpressionsEquivalent(e1, e2 *Expr, level ComparisonLevel) bool {
 
 // partial evaluation a.k.a substitution
 
-// Substitute replaces variables contained in `vars`, returning
-// a copy.
+// Substitute replaces variables contained in `vars`, updating `expr` in place.
 func (expr *Expr) Substitute(vars Vars) {
 	if expr == nil {
 		return
