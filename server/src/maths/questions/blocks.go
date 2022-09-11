@@ -438,6 +438,7 @@ func (st SignTableBlock) instantiateST(params expression.Vars) (SignTableInstanc
 		if err != nil {
 			return out, err
 		}
+		out.Xs[i].Substitute(params)
 	}
 	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
 	out.Signs = append([]bool(nil), st.Signs...)
