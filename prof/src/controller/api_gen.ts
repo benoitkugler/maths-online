@@ -201,7 +201,6 @@ export interface Exercice {
   Subtitle: string;
   Description: string;
   Parameters: Parameters;
-  Flow: Flow;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
@@ -211,9 +210,7 @@ export interface ExerciceCreateQuestionIn {
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {
   Exercice: Exercice;
-  Origin: Origin;
-  Questions: ExerciceQuestions;
-  QuestionsSource: { [key: IdQuestion]: Question } | null;
+  Questions: ExerciceQuestionExt[] | null;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceHeader
 export interface ExerciceHeader {
@@ -226,6 +223,11 @@ export interface ExerciceQuestion {
   id_exercice: IdExercice;
   id_question: IdQuestion;
   bareme: number;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestionExt
+export interface ExerciceQuestionExt {
+  Question: Question;
+  Bareme: number;
 }
 // github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestions
 export type ExerciceQuestions = ExerciceQuestion[] | null;
@@ -296,17 +298,6 @@ export interface FigureVectorPairFieldBlock {
   Figure: FigureBlock;
   Criterion: VectorPairCriterion;
 }
-// github.com/benoitkugler/maths-online/sql/editor.Flow
-export enum Flow {
-  Parallel = 0,
-  Sequencial = 1,
-}
-
-export const FlowLabels: { [key in Flow]: string } = {
-  [Flow.Parallel]: "Questions indépendantes",
-  [Flow.Sequencial]: "Questions liées",
-};
-
 // github.com/benoitkugler/maths-online/maths/questions.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
@@ -575,8 +566,6 @@ export interface QuestiongroupExt {
   Tags: string[] | null;
   Variants: QuestionHeader[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/editor.Questions
-export type Questions = { [key: IdQuestion]: Question } | null;
 // github.com/benoitkugler/maths-online/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {
   Answer: string;
@@ -660,7 +649,7 @@ export interface SaveExerciceAndPreviewIn {
   SessionID: string;
   IdExercice: IdExercice;
   Parameters: Parameters;
-  Questions: Questions;
+  Questions: Question[] | null;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewOut
 export interface SaveExerciceAndPreviewOut {
@@ -1567,7 +1556,7 @@ export abstract class AbstractAPI {
   ): void;
 
   protected async rawEditorDuplicateQuestion(params: { id: number }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question-duplicate-one";
+    const fullUrl = this.baseUrl + "/api/prof/editor/question/duplicate";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
@@ -1588,29 +1577,6 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorDuplicateQuestion(data: Question): void;
-
-  protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/question-duplicate";
-    await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
-    });
-    return true;
-  }
-
-  /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
-  async EditorDuplicateQuestiongroup(params: { id: number }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorDuplicateQuestiongroup(params);
-      this.onSuccessEditorDuplicateQuestiongroup();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorDuplicateQuestiongroup(): void;
 
   protected async rawEditorCreateQuestiongroup() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
@@ -1985,6 +1951,31 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorUpdateExercice(data: Exercice): void;
+
+  protected async rawEditorDuplicateExercice(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";
+    const rep: AxiosResponse<ExerciceHeader> = await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorDuplicateExercice wraps rawEditorDuplicateExercice and handles the error */
+  async EditorDuplicateExercice(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDuplicateExercice(params);
+      this.onSuccessEditorDuplicateExercice(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDuplicateExercice(
+    data: ExerciceHeader
+  ): void;
 
   protected async rawEditorExerciceCreateQuestion(
     params: ExerciceCreateQuestionIn

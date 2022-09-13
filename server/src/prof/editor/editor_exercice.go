@@ -41,16 +41,19 @@ func newExerciceHeader(exercice ed.Exercice) ExerciceHeader {
 	}
 }
 
+type ExerciceQuestionExt struct {
+	Question ed.Question
+	Bareme   int
+}
+
 // type ExerciceHeader struct {
 // 	Exercice  ed.Exercice
 // 	Questions ed.ExerciceQuestions
 // }
 
 type ExerciceExt struct {
-	Exercice        ed.Exercice
-	Origin          tcAPI.Origin
-	Questions       ed.ExerciceQuestions
-	QuestionsSource map[ed.IdQuestion]ed.Question
+	Exercice  ed.Exercice
+	Questions []ExerciceQuestionExt
 }
 
 type SearchExercicesIn = Query
@@ -210,42 +213,77 @@ func (ct *Controller) EditorDuplicateExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func (ct *Controller) getExerciceGroup(qu ed.Exercice) (ed.Exercicegroup, error) {
+	group, err := ed.SelectExercicegroup(ct.db, qu.IdGroup)
+	if err != nil {
+		return ed.Exercicegroup{}, utils.SQLError(err)
+	}
+	return group, nil
+}
+
 // duplicateExercice duplicate the given exercice, returning
 // the newly created one
-func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (ed.Exercice, error) {
+func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (ExerciceHeader, error) {
 	ex, err := ed.SelectExercice(ct.db, idExercice)
 	if err != nil {
-		return ed.Exercice{}, utils.SQLError(err)
+		return ExerciceHeader{}, utils.SQLError(err)
 	}
 
-	group, err := ct.getGroup(ex)
+	group, err := ct.getExerciceGroup(ex)
 	if err != nil {
-		return ed.Exercice{}, err
+		return ExerciceHeader{}, err
 	}
 
 	if !group.IsVisibleBy(userID) {
-		return ed.Exercice{}, accessForbidden
+		return ExerciceHeader{}, accessForbidden
 	}
 
 	// shallow copy is enough
 	newExercice := ex
 	newExercice, err = newExercice.Insert(ct.db)
 	if err != nil {
-		return ed.Exercice{}, utils.SQLError(err)
+		return ExerciceHeader{}, utils.SQLError(err)
 	}
 
 	// also copy the questions
 	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, ex.Id)
 	if err != nil {
-		return ed.Exercice{}, utils.SQLError(err)
+		return ExerciceHeader{}, utils.SQLError(err)
 	}
 	questions, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
-	for _, question := range questions {
-		question.NeedExercice = newExercice.Id.AsOptional()
-		// TODO: waiting for structure update
+	if err != nil {
+		return ExerciceHeader{}, utils.SQLError(err)
 	}
 
-	return newExercice, nil
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ExerciceHeader{}, utils.SQLError(err)
+	}
+
+	for index, link := range links {
+		question := questions[link.IdQuestion]
+		question.NeedExercice = newExercice.Id.AsOptional()
+		question, err = question.Insert(tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return ExerciceHeader{}, utils.SQLError(err)
+		}
+		links[index].IdExercice = newExercice.Id
+		links[index].IdQuestion = question.Id
+	}
+
+	err = ed.UpdateExerciceQuestionList(tx, newExercice.Id, links)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceHeader{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ExerciceHeader{}, utils.SQLError(err)
+	}
+
+	return newExerciceHeader(newExercice), nil
 }
 
 // EditorGetExerciceContent loads the questions associated with the given exercice
@@ -271,16 +309,14 @@ func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (Exercic
 		return ExerciceExt{}, err
 	}
 
-	origin, ok := exerciceOrigin(data.Group, userID, ct.admin.Id)
-	if !ok {
-		return ExerciceExt{}, accessForbidden
+	questions, baremes := data.QuestionsList()
+	l := make([]ExerciceQuestionExt, len(questions))
+	for i := range questions {
+		l[i] = ExerciceQuestionExt{Question: questions[i], Bareme: baremes[i]}
 	}
-
 	out := ExerciceExt{
-		Exercice:        data.Exercice,
-		Origin:          origin,
-		Questions:       data.Links,
-		QuestionsSource: data.QuestionsSource,
+		Exercice:  data.Exercice,
+		Questions: l,
 	}
 
 	return out, nil
@@ -310,7 +346,7 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
-	ex, err := ed.Exercice{IdGroup: group.Id, Flow: ed.Parallel}.Insert(tx)
+	ex, err := ed.Exercice{IdGroup: group.Id}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExercicegroupExt{}, utils.SQLError(err)
@@ -523,17 +559,29 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 	}
 
 	// creates a question linked to the given exercice
-	question, err := ed.Question{NeedExercice: args.IdExercice.AsOptional()}.Insert(ct.db)
+	tx, err := ct.db.Begin()
 	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	question, err := ed.Question{NeedExercice: args.IdExercice.AsOptional()}.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
 		return ExerciceExt{}, utils.SQLError(err)
 	}
 
 	// append it to the current questions
 	existingLinks = append(existingLinks, ed.ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: 1})
 
-	err = ed.UpdateExerciceQuestionList(ct.db, args.IdExercice, existingLinks)
+	err = ed.UpdateExerciceQuestionList(tx, args.IdExercice, existingLinks)
 	if err != nil {
+		_ = tx.Rollback()
 		return ExerciceExt{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
 	}
 
 	return ct.getExercice(args.IdExercice, userID)
@@ -599,12 +647,24 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID u
 		}
 	}
 
-	err = ed.UpdateExerciceQuestionList(ct.db, args.IdExercice, args.Questions)
+	tx, err := ct.db.Begin()
 	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	err = ed.UpdateExerciceQuestionList(tx, args.IdExercice, args.Questions)
+	if err != nil {
+		_ = tx.Rollback()
 		return ExerciceExt{}, err
 	}
 
-	_, err = ed.DeleteQuestionsByIDs(ct.db, toDelete...)
+	_, err = ed.DeleteQuestionsByIDs(tx, toDelete...)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return ExerciceExt{}, utils.SQLError(err)
 	}
@@ -658,7 +718,6 @@ func (ct *Controller) updateExercice(in ed.Exercice, userID uID) (ed.Exercice, e
 	// only update meta data
 	ex.Description = in.Description
 	ex.Subtitle = in.Subtitle
-	ex.Flow = in.Flow
 	ex, err = ex.Update(ct.db)
 	if err != nil {
 		return ed.Exercice{}, utils.SQLError(err)
@@ -691,11 +750,9 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 		return CheckExerciceParametersOut{}, fmt.Errorf("internal error: mismatched question length (%d != %d)", L1, L2)
 	}
 
-	for index, question := range qus {
+	for index := range qus {
 		toCheck := params.QuestionParameters[index]
-		if question.NeedExercice.Valid { // add the shared parameters // TODO: probably cleanup the check
-			toCheck = toCheck.Append(params.SharedParameters)
-		}
+		toCheck = toCheck.Append(params.SharedParameters)
 
 		err := toCheck.Validate()
 		if err != nil {
@@ -713,7 +770,7 @@ type SaveExerciceAndPreviewIn struct {
 	SessionID  string
 	IdExercice ed.IdExercice
 	Parameters questions.Parameters // shared parameters
-	Questions  ed.Questions         // questions content
+	Questions  []ed.Question        // questions content
 }
 
 type SaveExerciceAndPreviewOut struct {
@@ -753,11 +810,11 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	// always apply change in memory, so that preview is correctly updated
 	ex.Parameters = params.Parameters // save the shared parameters
 	for _, incomming := range params.Questions {
-		qu := data.QuestionsSource[incomming.Id]
+		qu := data.QuestionsMap[incomming.Id]
 		// update the content
 		qu.Page = incomming.Page
 		qu.Description = incomming.Description
-		data.QuestionsSource[incomming.Id] = qu
+		data.QuestionsMap[incomming.Id] = qu
 	}
 
 	// if the exercice is owned : save it, else only preview
@@ -774,8 +831,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 
 		// update the linked questions
-		// TODO: only do it for sequencial exercices
-		for _, qu := range data.QuestionsSource {
+		for _, qu := range data.QuestionsMap {
 			_, err = qu.Update(tx)
 			if err != nil {
 				_ = tx.Rollback()

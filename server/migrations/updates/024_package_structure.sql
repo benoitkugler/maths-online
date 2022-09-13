@@ -42,7 +42,7 @@ WHERE (
         AND questiongroups.idteacher = questions.idteacher);
 -- attach questions to groups, by creating a new table, required to insert difficulty at the correct place
 CREATE TABLE questions2 (
-    Id serial PRIMARY KEY,
+    Id serial,
     Page jsonb NOT NULL,
     Subtitle text NOT NULL,
     Description text NOT NULL,
@@ -190,6 +190,8 @@ ALTER TABLE exercice_questions
     DROP CONSTRAINT exercice_questions_id_question_fkey;
 DROP TABLE questions;
 ALTER TABLE questions2 RENAME TO questions;
+ALTER TABLE questions
+    ADD PRIMARY KEY (id);
 -- add the constraint back (just to check)
 ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
@@ -216,12 +218,11 @@ FROM
     exercices;
 -- attach exercices to groups, by creating a new table, required to insert idgroup at the correct place
 CREATE TABLE exercices2 (
-    Id serial PRIMARY KEY,
+    Id serial,
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
     Description text NOT NULL,
     Parameters jsonb NOT NULL,
-    Flow integer CHECK (Flow IN (0, 1)) NOT NULL
 );
 INSERT INTO exercices2
 SELECT
@@ -234,7 +235,7 @@ SELECT
         WHERE
             exercicegroups.title = exercices.title),
     -- there is no tags for exercice yet, so the subtitle is empty
-    '', Description, Parameters, Flow
+    '', Description, Parameters
 FROM
     exercices;
 -- we loose current progressions and tasks but it is OK here // TODO: maybe not, check that
@@ -244,6 +245,8 @@ ALTER TABLE tasks
     DROP CONSTRAINT tasks_idexercice_fkey;
 DROP TABLE exercices CASCADE;
 ALTER TABLE exercices2 RENAME TO exercices;
+ALTER TABLE exercices
+    ADD PRIMARY KEY (id);
 -- check by puting the constraint back
 ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdExercice) REFERENCES exercices ON DELETE CASCADE;
@@ -349,3 +352,16 @@ COMMIT;
 ALTER TABLE tasks
     ADD COLUMN IdMonoquestion integer;
 
+SELECT
+    setval('questions_id_seq', (
+            SELECT
+                MAX(id)
+            FROM questions));
+
+SELECT
+    setval('exercices_id_seq', (
+            SELECT
+                MAX(id)
+            FROM exercices));
+
+-- TODO: check standalone questions included in exercice

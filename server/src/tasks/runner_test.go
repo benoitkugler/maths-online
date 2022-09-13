@@ -32,7 +32,7 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 	group, err := ed.Exercicegroup{IdTeacher: idTeacher}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	ex, err := ed.Exercice{IdGroup: group.Id, Flow: ed.Parallel}.Insert(db)
+	ex, err := ed.Exercice{IdGroup: group.Id}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	qu, err := ed.Question{

@@ -189,10 +189,10 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 // ExerciceData is an helper struct to unify question loading
 // for an exercice.
 type ExerciceData struct {
-	Group           ed.Exercicegroup // the exercice group
-	Exercice        ed.Exercice
-	Links           ed.ExerciceQuestions
-	QuestionsSource ed.Questions
+	Group        ed.Exercicegroup // the exercice group
+	Exercice     ed.Exercice
+	Links        ed.ExerciceQuestions
+	QuestionsMap ed.Questions
 }
 
 // NewExerciceData loads the given exercice and the associated questions
@@ -218,19 +218,19 @@ func NewExerciceData(db ed.DB, id ed.IdExercice) (ExerciceData, error) {
 	if err != nil {
 		return ExerciceData{}, utils.SQLError(err)
 	}
-	return ExerciceData{Group: group, Exercice: ex, Links: links, QuestionsSource: dict}, nil
+	return ExerciceData{Group: group, Exercice: ex, Links: links, QuestionsMap: dict}, nil
 }
 
 func (ex ExerciceData) Title() string    { return ex.Group.Title }
 func (ex ExerciceData) Subtitle() string { return ex.Exercice.Subtitle }
-func (ex ExerciceData) flow() ed.Flow    { return ex.Exercice.Flow }
+func (ExerciceData) flow() ed.Flow       { return ed.Sequencial }
 
-// QuestionsList resolve the links list using `QuestionsSource`
+// QuestionsList resolve the links list using `source`
 func (ex ExerciceData) QuestionsList() ([]ed.Question, taskBareme) {
 	questions := make([]ed.Question, len(ex.Links))
 	baremes := make([]int, len(ex.Links))
 	for i, link := range ex.Links {
-		questions[i] = ex.QuestionsSource[link.IdQuestion]
+		questions[i] = ex.QuestionsMap[link.IdQuestion]
 		baremes[i] = ex.Links[i].Bareme
 	}
 	return questions, baremes
@@ -245,7 +245,7 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 	out := InstantiatedWork{
 		ID:      newWorkIDFromEx(ex.Id),
 		Title:   data.Title(),
-		Flow:    ex.Flow,
+		Flow:    data.flow(),
 		Baremes: baremes,
 	}
 

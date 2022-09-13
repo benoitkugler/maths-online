@@ -104,10 +104,10 @@ func (contents TasksContents) GetWork(task ta.Task) Work {
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
 		return ExerciceData{
-			Group:           contents.exercicegroups[ex.IdGroup],
-			Exercice:        ex,
-			Links:           questions,
-			QuestionsSource: contents.questions,
+			Group:        contents.exercicegroups[ex.IdGroup],
+			Exercice:     ex,
+			Links:        questions,
+			QuestionsMap: contents.questions,
 		}
 	}
 

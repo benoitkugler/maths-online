@@ -36,7 +36,7 @@
           >Editeur de question</v-btn
         >
       </v-list-item>
-      <!-- <v-list-item>
+      <v-list-item>
         <v-btn
           link
           class="my-1"
@@ -44,7 +44,7 @@
           color="teal-lighten-4"
           >Editeur d'exercice</v-btn
         >
-      </v-list-item> -->
+      </v-list-item>
 
       <v-divider></v-divider>
 

@@ -61,44 +61,39 @@
       ></v-col>
 
       <v-col cols="auto" align-self="center" class="px-1">
-        <VariantsSelector
+        <ExerciceVariantsSelector
           :variants="variants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (exerciceToDelete = qu)"
           @duplicate="duplicateVariante"
-        ></VariantsSelector>
+        ></ExerciceVariantsSelector>
       </v-col>
     </v-row>
 
-    <VariantPannel
+    TODO
+    <!-- <VariantPannel
       :exercice="variants[variantIndex]"
       :readonly="isReadonly"
       :session_id="props.session_id"
       :all-tags="props.allTags"
       @update="(qu) => (variants[variantIndex] = qu)"
-    ></VariantPannel>
+    ></VariantPannel> -->
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type {
-  Exercice,
-  ExercicegroupExt,
-  ExerciceHeader,
-} from "@/controller/api_gen";
+import type { ExercicegroupExt, ExerciceHeader } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
-import VariantsSelector from "./VariantsSelector.vue";
+import ExerciceVariantsSelector from "./ExerciceVariantsSelector.vue";
 
 interface Props {
   session_id: string;
   group: ExercicegroupExt;
-  variants: ExerciceHeader[];
   allTags: string[]; // to provide auto completion
 }
 
@@ -109,19 +104,20 @@ const emit = defineEmits<{
 }>();
 
 let group = $ref(copy(props.group));
-let variants = $ref(copy(props.variants));
+let variants = $ref(copy(props.group.Variants || []));
 
 let variantIndex = $ref(0);
 
-const isReadonly = computed(
+let isReadonly = $computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
 async function updateExercicegroup() {
+  if (isReadonly) return;
   await controller.EditorUpdateExercicegroup(group.Group);
 }
 
-let exerciceToDelete: Exercice | null = $ref(null);
+let exerciceToDelete: ExerciceHeader | null = $ref(null);
 async function deleteVariante() {
   await controller.EditorDeleteExercice({ id: exerciceToDelete!.Id });
 
@@ -138,7 +134,7 @@ async function deleteVariante() {
   }
 }
 
-async function duplicateVariante(exercice: Exercice) {
+async function duplicateVariante(exercice: ExerciceHeader) {
   const newExercice = await controller.EditorDuplicateExercice({
     id: exercice.Id,
   });
@@ -150,7 +146,7 @@ async function duplicateVariante(exercice: Exercice) {
 }
 
 async function saveTags(newTags: string[]) {
-  const rep = await controller.EditorUpdateTags({
+  const rep = await controller.EditorUpdateExerciceTags({
     Id: group.Group.Id,
     Tags: newTags,
   });

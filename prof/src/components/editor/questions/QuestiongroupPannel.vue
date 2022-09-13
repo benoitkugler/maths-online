@@ -61,23 +61,23 @@
       ></v-col>
 
       <v-col cols="auto" align-self="center" class="px-1">
-        <VariantsSelector
+        <QuestionVariantsSelector
           :variants="variants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (questionToDelete = qu)"
           @duplicate="duplicateVariante"
-        ></VariantsSelector>
+        ></QuestionVariantsSelector>
       </v-col>
     </v-row>
 
-    <VariantPannel
+    <QuestionVariantPannel
       :question="variants[variantIndex]"
       :readonly="isReadonly"
       :session_id="props.session_id"
       :all-tags="props.allTags"
       @update="(qu) => (variants[variantIndex] = qu)"
-    ></VariantPannel>
+    ></QuestionVariantPannel>
   </v-card>
 </template>
 
@@ -86,11 +86,10 @@ import type { Question, QuestiongroupExt } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
-import VariantPannel from "./VariantPannel.vue";
-import VariantsSelector from "./VariantsSelector.vue";
+import QuestionVariantPannel from "./QuestionVariantPannel.vue";
+import QuestionVariantsSelector from "./QuestionVariantsSelector.vue";
 
 interface Props {
   session_id: string;
@@ -110,11 +109,12 @@ let variants = $ref(copy(props.variants));
 
 let variantIndex = $ref(0);
 
-const isReadonly = computed(
+let isReadonly = $computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
 async function updateQuestiongroup() {
+  if (isReadonly) return;
   await controller.EditorUpdateQuestiongroup(group.Group);
 }
 

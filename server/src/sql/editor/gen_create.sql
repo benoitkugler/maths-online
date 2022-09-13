@@ -4,8 +4,7 @@ CREATE TABLE exercices (
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
     Description text NOT NULL,
-    Parameters jsonb NOT NULL,
-    Flow integer CHECK (Flow IN (0, 1)) NOT NULL
+    Parameters jsonb NOT NULL
 );
 
 CREATE TABLE exercice_questions (
@@ -55,6 +54,9 @@ ALTER TABLE questions
         OR IdGroup IS NOT NULL);
 
 ALTER TABLE questions
+    ADD UNIQUE (Id, NeedExercice);
+
+ALTER TABLE questions
     ADD FOREIGN KEY (NeedExercice) REFERENCES exercices;
 
 ALTER TABLE questions
@@ -83,6 +85,12 @@ ALTER TABLE exercices
 
 ALTER TABLE exercice_questions
     ADD PRIMARY KEY (IdExercice, INDEX);
+
+ALTER TABLE exercice_questions
+    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id);
+
+ALTER TABLE exercice_questions
+    ADD UNIQUE (IdQuestion);
 
 ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdExercice) REFERENCES exercices ON DELETE CASCADE;

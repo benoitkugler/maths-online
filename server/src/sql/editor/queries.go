@@ -132,29 +132,20 @@ func UpdateExercicegroupTags(tx *sql.Tx, tags ExercicegroupTags, id IdExercicegr
 
 // UpdateExerciceQuestionList set the questions for the given exercice,
 // overiding `IdExercice` and `index` fields of the list items.
-func UpdateExerciceQuestionList(db *sql.DB, idExercice IdExercice, l ExerciceQuestions) error {
+// Do NOT commit or rollback
+func UpdateExerciceQuestionList(tx *sql.Tx, idExercice IdExercice, l ExerciceQuestions) error {
 	// enforce fields
 	for i := range l {
 		l[i].Index = i
 		l[i].IdExercice = idExercice
 	}
-	tx, err := db.Begin()
+
+	_, err := DeleteExerciceQuestionsByIdExercices(tx, idExercice)
 	if err != nil {
-		return utils.SQLError(err)
-	}
-	_, err = DeleteExerciceQuestionsByIdExercices(db, idExercice)
-	if err != nil {
-		_ = tx.Rollback()
 		return utils.SQLError(err)
 	}
 
 	err = InsertManyExerciceQuestions(tx, l...)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
-
-	err = tx.Commit()
 	if err != nil {
 		return utils.SQLError(err)
 	}

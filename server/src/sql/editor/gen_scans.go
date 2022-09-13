@@ -33,7 +33,6 @@ func scanOneExercice(row scanner) (Exercice, error) {
 		&item.Subtitle,
 		&item.Description,
 		&item.Parameters,
-		&item.Flow,
 	)
 	return item, err
 }
@@ -102,22 +101,22 @@ func ScanExercices(rs *sql.Rows) (Exercices, error) {
 // Insert one Exercice in the database and returns the item with id filled.
 func (item Exercice) Insert(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`INSERT INTO exercices (
-		idgroup, subtitle, description, parameters, flow
+		idgroup, subtitle, description, parameters
 		) VALUES (
-		$1, $2, $3, $4, $5
+		$1, $2, $3, $4
 		) RETURNING *;
-		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters, item.Flow)
+		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters)
 	return ScanExercice(row)
 }
 
 // Update Exercice in the database and returns the new version.
 func (item Exercice) Update(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`UPDATE exercices SET (
-		idgroup, subtitle, description, parameters, flow
+		idgroup, subtitle, description, parameters
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
-		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters, item.Flow, item.Id)
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING *;
+		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters, item.Id)
 	return ScanExercice(row)
 }
 
@@ -306,10 +305,10 @@ func DeleteExerciceQuestionsByIdExercices(tx DB, idExercices ...IdExercice) (Exe
 }
 
 // ByIdQuestion returns a map with 'IdQuestion' as keys.
-func (items ExerciceQuestions) ByIdQuestion() map[IdQuestion]ExerciceQuestions {
-	out := make(map[IdQuestion]ExerciceQuestions)
+func (items ExerciceQuestions) ByIdQuestion() map[IdQuestion]ExerciceQuestion {
+	out := make(map[IdQuestion]ExerciceQuestion, len(items))
 	for _, target := range items {
-		out[target.IdQuestion] = append(out[target.IdQuestion], target)
+		out[target.IdQuestion] = target
 	}
 	return out
 }
@@ -323,6 +322,16 @@ func (items ExerciceQuestions) IdQuestions() []IdQuestion {
 		out[index] = target.IdQuestion
 	}
 	return out
+}
+
+// SelectExerciceQuestionByIdQuestion return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectExerciceQuestionByIdQuestion(tx DB, idQuestion IdQuestion) (item ExerciceQuestion, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM exercice_questions WHERE idquestion = $1", idQuestion)
+	item, err = ScanExerciceQuestion(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func SelectExerciceQuestionsByIdQuestions(tx DB, idQuestions ...IdQuestion) (ExerciceQuestions, error) {
@@ -777,6 +786,16 @@ func DeleteQuestionsByIdGroups(tx DB, idGroups ...IdQuestiongroup) ([]IdQuestion
 		return nil, err
 	}
 	return ScanIdQuestionArray(rows)
+}
+
+// SelectQuestionByIdAndNeedExercice return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectQuestionByIdAndNeedExercice(tx DB, id IdQuestion, needExercice OptionalIdExercice) (item Question, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM questions WHERE Id = $1 AND NeedExercice = $2", id, needExercice)
+	item, err = ScanQuestion(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func scanOneQuestiongroup(row scanner) (Questiongroup, error) {

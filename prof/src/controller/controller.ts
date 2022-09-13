@@ -10,6 +10,7 @@ import type {
   Exercice,
   ExerciceExt,
   ExercicegroupExt,
+  ExerciceHeader,
   GenerateClassroomCodeOut,
   LaunchSessionOut,
   ListExercicesOut,
@@ -190,9 +191,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExercicesGetList(data: ListExercicesOut): void {
-    this.inRequest = false;
-  }
   protected onSuccessExerciceGetContent(data: ExerciceExt): void {
     this.inRequest = false;
   }
@@ -211,12 +209,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExerciceUpdateVisiblity(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Visibilité modifiée avec succès.");
-    }
-  }
   protected onSuccessEditorCheckExerciceParameters(
     data: CheckExerciceParametersOut
   ): void {
@@ -226,38 +218,6 @@ class Controller extends AbstractAPI {
     data: SaveExerciceAndPreviewOut
   ): void {
     this.inRequest = false;
-  }
-
-  protected onSuccessExerciceCreateQuestion(data: ExerciceExt): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Question ajoutée avec succès.");
-    }
-  }
-  protected onSuccessExerciceUpdateQuestions(data: ExerciceExt): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Questions modifiées avec succès.");
-    }
-  }
-
-  protected onSuccessExerciceCreate(data: ExercicegroupExt): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Exercice créé avec succès.");
-    }
-  }
-  protected onSuccessExerciceDelete(): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Exercice supprimé avec succès.");
-    }
-  }
-  protected onSuccessExerciceUpdate(data: Exercice): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Exercice mis à jour avec succès.");
-    }
   }
 
   protected onSuccessGetTrivialRunningSessions(
@@ -432,6 +392,73 @@ class Controller extends AbstractAPI {
   }
   protected onSuccessEditorPausePreview(): void {
     this.inRequest = false;
+  }
+
+  protected onSuccessEditorUpdateQuestionTags(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Etiquettes modifiées avec succès.");
+    }
+  }
+  protected onSuccessEditorSearchExercices(data: ListExercicesOut): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorUpdateExercicegroup(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice modifié avec succès.");
+    }
+  }
+  protected onSuccessEditorUpdateExerciceTags(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Etiquettes modifiées avec succès.");
+    }
+  }
+  protected onSuccessEditorGetExerciceContent(data: ExerciceExt): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorCreateExercice(data: ExercicegroupExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice crée avec succès.");
+    }
+  }
+  protected onSuccessEditorDeleteExercice(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice supprimé avec succès.");
+    }
+  }
+  protected onSuccessEditorUpdateExercice(data: Exercice): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice modifié avec succès.");
+    }
+  }
+  protected onSuccessEditorDuplicateExercice(data: ExerciceHeader): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Variante dupliquée avec succès.");
+    }
+  }
+  protected onSuccessEditorExerciceCreateQuestion(data: ExerciceExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question ajoutée avec succès.");
+    }
+  }
+  protected onSuccessEditorExerciceUpdateQuestions(data: ExerciceExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Questions modifiées avec succès.");
+    }
+  }
+  protected onSuccessEditorUpdateExercicegroupVis(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Visibilité modifiée avec succès.");
+    }
   }
 }
 

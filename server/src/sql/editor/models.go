@@ -17,6 +17,7 @@ type (
 // Question is a standalone question version, used for instance in games
 // or as part of a full exercice.
 // gomacro:SQL ADD CHECK(NeedExercice IS NOT NULL OR IdGroup IS NOT NULL)
+// gomacro:SQL ADD UNIQUE(Id, NeedExercice)
 type Question struct {
 	Id          IdQuestion
 	Page        questions.QuestionPage
@@ -63,9 +64,7 @@ type ExercicegroupTag struct {
 }
 
 // Exercice is the data structure for a full exercice, composed of a list of questions.
-// There are two kinds of exercice :
-//	- parallel : all the questions are independant
-//	- progression : the questions are linked together by a shared Parameters set
+// The questions are linked together by a shared Parameters set, and are to be tried sequentially.
 type Exercice struct {
 	Id      IdExercice
 	IdGroup IdExercicegroup
@@ -76,13 +75,14 @@ type Exercice struct {
 	// which are added to the individual ones.
 	// It will be empty for parallel exercices
 	Parameters questions.Parameters
-	Flow       Flow
 }
 
 // TODO: check delete question API
 // ExerciceQuestion models an ordered list of questions.
 // All link items should be updated at once to preserve `Index` invariants
 // gomacro:SQL ADD PRIMARY KEY (IdExercice, Index)
+// gomacro:SQL ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id)
+// gomacro:SQL ADD UNIQUE (IdQuestion)
 type ExerciceQuestion struct {
 	IdExercice IdExercice `json:"id_exercice" gomacro-sql-on-delete:"CASCADE"`
 	IdQuestion IdQuestion `json:"id_question"`

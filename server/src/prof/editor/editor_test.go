@@ -72,7 +72,7 @@ func TestExerciceCRUD(t *testing.T) {
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Id,
 		Questions: ed.ExerciceQuestions{
-			l.Questions[0],
+			ed.ExerciceQuestion{IdQuestion: l.Questions[0].Question.Id},
 			ed.ExerciceQuestion{IdQuestion: qu.Id},
 			ed.ExerciceQuestion{IdQuestion: qu.Id},
 		},
@@ -87,15 +87,15 @@ func TestExerciceCRUD(t *testing.T) {
 	_, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Id,
 		Questions: ed.ExerciceQuestions{
-			l.Questions[0],
-			updated,
+			ed.ExerciceQuestion{IdQuestion: l.Questions[0].Question.Id},
+			ed.ExerciceQuestion{IdQuestion: updated.Question.Id},
 		},
 	}, 1)
 	tu.Assert(t, err == nil)
 
-	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Id, Description: "test", Subtitle: "test2", Flow: ed.Sequencial}, 1)
+	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Id, Description: "test", Subtitle: "test2"}, 1)
 	tu.Assert(t, err == nil)
-	if exe.Flow != ed.Sequencial {
+	if exe.Description != "test" {
 		t.Fatal(exe)
 	}
 

@@ -31,7 +31,7 @@
                   Créer ou modifier une question
                 </v-btn>
               </v-col>
-              <!-- <v-col>
+              <v-col>
                 <v-btn
                   link
                   block
@@ -40,7 +40,7 @@
                 >
                   Créer ou modifier un exercice
                 </v-btn>
-              </v-col> -->
+              </v-col>
               <v-col>
                 <v-btn
                   link
