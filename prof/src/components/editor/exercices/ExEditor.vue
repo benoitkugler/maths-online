@@ -19,7 +19,7 @@
     </DescriptionPannel>
   </v-dialog>
 
-  <v-card class="mt-3 px-2">
+  <v-card class="px-2">
     <v-row no-gutters class="mb-2">
       <v-col cols="auto" align-self="center">
         <v-btn
@@ -45,7 +45,7 @@
           <v-icon icon="mdi-arrow-right" size="small"></v-icon>
         </v-btn>
       </v-col>
-
+      <v-spacer></v-spacer>
       <!-- <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
@@ -69,90 +69,80 @@
         ></v-text-field
       ></v-col> -->
 
-      <v-col cols="3" align-self="center" class="px-1">
-        <v-row no-gutters justify="center">
-          <v-col cols="auto" align-self="center" class="py-1">
+      <v-col cols="auto" align-self="center">
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
             <v-btn
-              class="mx-2"
-              icon
-              @click="save"
-              :disabled="!sessionId"
-              :title="
-                isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
-              "
+              title="Ajouter un bloc de contenu (énoncé ou champ de réponse)"
+              v-on="{ isActive }"
+              v-bind="props"
               size="small"
             >
-              <v-icon
-                :icon="isReadonly ? 'mdi-eye' : 'mdi-content-save'"
-                size="small"
-              ></v-icon>
+              <v-icon icon="mdi-plus" color="green"></v-icon>
+              Insérer du contenu
             </v-btn>
+          </template>
+          <BlockBar @add="addBlock"></BlockBar>
+        </v-menu>
+      </v-col>
 
-            <v-menu offset-y close-on-content-click>
-              <template v-slot:activator="{ isActive, props }">
-                <v-btn
-                  icon
-                  title="Plus d'options"
-                  v-on="{ isActive }"
-                  v-bind="props"
-                  size="x-small"
-                >
-                  <v-icon icon="mdi-dots-vertical"></v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item>
-                  <v-btn
-                    size="small"
-                    @click="showEditDescription = true"
-                    title="Editer le commentaire"
-                  >
-                    <v-icon
-                      class="mr-2"
-                      icon="mdi-message-reply-text"
-                      size="small"
-                    ></v-icon>
-                    Commentaire
-                  </v-btn>
-                </v-list-item>
-                <v-list-item>
-                  <v-btn
-                    size="small"
-                    @click="download"
-                    :disabled="!question.Question.Page.enonce?.length"
-                    title="Télécharger la question au format .json"
-                  >
-                    <v-icon
-                      class="mr-2"
-                      icon="mdi-download"
-                      size="small"
-                    ></v-icon>
-                    Télécharger
-                  </v-btn>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-col>
-        </v-row>
+      <v-col cols="auto" align-self="center" class="py-1">
+        <v-btn
+          class="mx-2"
+          icon
+          @click="save"
+          :disabled="!sessionId"
+          :title="isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'"
+          size="small"
+        >
+          <v-icon
+            :icon="isReadonly ? 'mdi-eye' : 'mdi-content-save'"
+            size="small"
+          ></v-icon>
+        </v-btn>
 
-        <v-row no-gutters>
-          <v-col cols="auto">
-            <v-menu offset-y close-on-content-click>
-              <template v-slot:activator="{ isActive, props }">
-                <v-btn
-                  title="Ajouter un bloc de contenu (énoncé ou champ de réponse)"
-                  v-on="{ isActive }"
-                  v-bind="props"
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
+            <v-btn
+              icon
+              title="Plus d'options"
+              v-on="{ isActive }"
+              v-bind="props"
+              size="x-small"
+            >
+              <v-icon icon="mdi-dots-vertical"></v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item class="ma-0 pa-0">
+              <v-btn
+                variant="tonal"
+                class="ma-2"
+                @click="showEditDescription = true"
+                title="Editer le commentaire"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-message-reply-text"
                   size="small"
-                >
-                  <v-icon icon="mdi-plus" color="green"></v-icon>
-                  Insérer du contenu
-                </v-btn>
-              </template>
-              <BlockBar @add="addBlock"></BlockBar>
-            </v-menu>
-          </v-col>
-        </v-row>
+                ></v-icon>
+                Commentaire
+              </v-btn>
+            </v-list-item>
+            <v-list-item class="ma-0 pa-0">
+              <v-btn
+                variant="tonal"
+                class="ma-2"
+                @click="download"
+                :disabled="!question.Question.Page.enonce?.length"
+                title="Télécharger la question au format .json"
+              >
+                <v-icon class="mr-2" icon="mdi-download" size="small"></v-icon>
+                Télécharger
+              </v-btn>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-col>
     </v-row>
 

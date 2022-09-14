@@ -9,7 +9,7 @@
       :exercice="exercice"
       :is-readonly="props.isReadonly"
       @go-to-question="goToQuestion"
-      @update="(ex) => (exercice = ex)"
+      @update="notifieUpdate"
     ></ExSkeleton>
     <ExEditor
       v-else
@@ -17,7 +17,7 @@
       :question-index="questionIndex"
       :exercice="exercice"
       :is-readonly="props.isReadonly"
-      @update="(ex) => (exercice = ex)"
+      @update="notifieUpdate"
     ></ExEditor>
   </div>
 </template>
@@ -38,6 +38,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: "update", ex: ExerciceHeader): void;
+}>();
 
 let questionIndex = $ref(0);
 
@@ -62,6 +66,15 @@ async function fetchExercice() {
   });
   if (res == undefined) return;
   exercice = res;
+}
+
+function notifieUpdate(ex: ExerciceExt) {
+  exercice = ex;
+  emit("update", {
+    Id: ex.Exercice.Id,
+    Difficulty: "",
+    Subtitle: ex.Exercice.Subtitle,
+  });
 }
 </script>
 

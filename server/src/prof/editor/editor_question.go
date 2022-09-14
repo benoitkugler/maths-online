@@ -784,18 +784,38 @@ func (ct *Controller) endPreview(sessionID string) error {
 	return nil
 }
 
+// return the owner of the group of of the exercice
+func (ct *Controller) getQuestionOwner(question ed.Question) (teacher.IdTeacher, error) {
+	if question.IdGroup.Valid {
+		group, err := ct.getGroup(question)
+		if err != nil {
+			return 0, err
+		}
+		return group.IdTeacher, nil
+	}
+	ex, err := ed.SelectExercice(ct.db, question.NeedExercice.ID)
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	group, err := ed.SelectExercicegroup(ct.db, ex.IdGroup)
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	return group.IdTeacher, nil
+}
+
 func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) error {
 	qu, err := ed.SelectQuestion(ct.db, params.Question.Id)
 	if err != nil {
 		return err
 	}
 
-	group, err := ct.getGroup(qu)
+	owner, err := ct.getQuestionOwner(qu)
 	if err != nil {
 		return err
 	}
 
-	if group.IdTeacher != userID {
+	if owner != userID {
 		return accessForbidden
 	}
 

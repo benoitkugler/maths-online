@@ -460,6 +460,19 @@ class Controller extends AbstractAPI {
       this.showMessage("Visibilité modifiée avec succès.");
     }
   }
+
+  protected onSuccessEditorSaveExerciceMeta(data: Exercice): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice modifié avec succès.");
+    }
+  }
+  protected onSuccessEditorExerciceImportQuestion(data: ExerciceExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question importée avec succès.");
+    }
+  }
 }
 
 const localhost = "http://localhost:1323";

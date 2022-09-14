@@ -50,82 +50,79 @@
         @selected="
           (q) => {
             showImportQuestion = false;
-            addQuestion(q.Id);
+            importQuestion(q.Id);
           }
         "
       ></question-selector>
     </keep-alive>
   </v-dialog>
 
-  <v-card class="mt-3 pt-1 px-2">
+  <v-card class="px-2">
     <v-row no-gutters class="mb-2">
       <v-col>
-        <v-row no-gutters>
-          <v-col>
-            <v-text-field
-              class="my-2 input-small"
-              variant="outlined"
-              density="compact"
-              label="Sous-titre de la variante (optionnel)"
-              v-model="props.exercice.Exercice.Subtitle"
-              :readonly="props.isReadonly"
-              hide-details
-              @blur="saveMeta"
-            ></v-text-field
-          ></v-col>
-          <v-col cols="auto" align-self="center">
-            <v-menu offset-y close-on-content-click>
-              <template v-slot:activator="{ isActive, props }">
-                <v-btn
-                  icon
-                  title="Plus d'options"
-                  v-on="{ isActive }"
-                  v-bind="props"
-                  size="x-small"
-                >
-                  <v-icon icon="mdi-dots-vertical"></v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item>
-                  <v-btn
-                    class="my-1"
-                    size="small"
-                    @click="showEditDescription = true"
-                    title="Editer le commentaire"
-                  >
-                    <v-icon
-                      class="mr-2"
-                      icon="mdi-message-reply-text"
-                      size="small"
-                    ></v-icon>
-                    Commentaire
-                  </v-btn>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-col>
+        <v-text-field
+          class="my-2 input-small"
+          variant="outlined"
+          density="compact"
+          label="Sous-titre de la variante (optionnel)"
+          v-model="props.exercice.Exercice.Subtitle"
+          :readonly="props.isReadonly"
+          hide-details
+          @blur="saveMeta"
+        ></v-text-field
+      ></v-col>
 
-          <v-col cols="auto" align-self="center" class="pl-2">
+      <v-col cols="auto" align-self="center" class="pl-2">
+        <v-btn
+          title="Créer et ajouter une question"
+          size="small"
+          @click="createQuestion()"
+        >
+          <v-icon icon="mdi-plus" color="green"></v-icon>
+          Créer une question
+        </v-btn>
+        <v-btn
+          title="Importer une question existante"
+          size="small"
+          class="mx-2"
+          @click="showImportQuestion = true"
+        >
+          <v-icon icon="mdi-plus" color="green"></v-icon>
+          Importer
+        </v-btn>
+      </v-col>
+
+      <v-col cols="auto" align-self="center">
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
             <v-btn
-              title="Créer et ajouter une question"
-              size="small"
-              @click="createQuestion()"
+              icon
+              title="Plus d'options"
+              v-on="{ isActive }"
+              v-bind="props"
+              size="x-small"
             >
-              <v-icon icon="mdi-plus" color="green"></v-icon>
-              Créer une question
+              <v-icon icon="mdi-dots-vertical"></v-icon>
             </v-btn>
-            <v-btn
-              title="Importer une question existante"
-              size="small"
-              class="mx-2"
-              @click="showImportQuestion = true"
-            >
-              <v-icon icon="mdi-plus" color="green"></v-icon>
-              Importer
-            </v-btn>
-          </v-col>
-        </v-row>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
+                @click="showEditDescription = true"
+                title="Editer le commentaire"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-message-reply-text"
+                  size="small"
+                ></v-icon>
+                Commentaire
+              </v-btn>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-col>
     </v-row>
 
@@ -136,7 +133,7 @@
       ></drop-zone>
 
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
-        <v-list-item>
+        <v-list-item @click="emit('goToQuestion', index)">
           <v-row>
             <v-col cols="auto" align-self="center">
               <drag-icon
@@ -162,7 +159,7 @@
             <v-col cols="2" align-self="center">
               <v-menu
                 offset-y
-                close-on-content-click
+                :close-on-content-click="false"
                 :model-value="questionIndexToEdit == index"
                 @update:model-value="
                   questionIndexToEdit = null;
@@ -287,16 +284,10 @@ function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
   }));
 }
 
-async function addQuestion(idQuestion: number) {
-  const current = toExerciceQuestions(props.exercice.Questions || []);
-  current.push({
-    id_exercice: -1,
-    id_question: idQuestion,
-    bareme: 1,
-  });
-  const res = await controller.EditorExerciceUpdateQuestions({
+async function importQuestion(idQuestion: number) {
+  const res = await controller.EditorExerciceImportQuestion({
     IdExercice: props.exercice.Exercice.Id,
-    Questions: current,
+    IdQuestion: idQuestion,
     SessionID: props.sessionId,
   });
   if (res == undefined) {

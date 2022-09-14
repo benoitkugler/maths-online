@@ -588,6 +588,86 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 	return ct.getExercice(args.IdExercice, userID)
 }
 
+type ExerciceImportQuestionIn struct {
+	IdQuestion ed.IdQuestion
+	IdExercice ed.IdExercice
+	SessionID  string
+}
+
+// EditorExerciceImportQuestion imports an already existing question,
+// making a copy and associating it with the given exercice.
+// It also updates the preview
+func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args ExerciceImportQuestionIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.importQuestionEx(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	if err != nil {
+		return err
+	}
+
+	err = ct.updateExercicePreview(data, args.SessionID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) importQuestionEx(args ExerciceImportQuestionIn, userID uID) (ExerciceExt, error) {
+	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
+		return ExerciceExt{}, err
+	}
+
+	existingLinks, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	// copy the question to import : shallow copy is enough
+	question, err := ed.SelectQuestion(ct.db, args.IdQuestion)
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+	question.IdGroup = ed.OptionalIdQuestiongroup{}
+	question.NeedExercice = args.IdExercice.AsOptional()
+	question, err = question.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	// append it to the current questions
+	existingLinks = append(existingLinks, ed.ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: 1})
+
+	err = ed.UpdateExerciceQuestionList(tx, args.IdExercice, existingLinks)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	return ct.getExercice(args.IdExercice, userID)
+}
+
 type ExerciceUpdateQuestionsIn struct {
 	Questions  ed.ExerciceQuestions
 	IdExercice ed.IdExercice

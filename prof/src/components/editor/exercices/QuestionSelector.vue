@@ -34,8 +34,8 @@
         </v-col>
       </v-row>
 
-      <div style="height: 47vh" class="overflow-y-auto">
-        <v-expansion-panels>
+      <div style="height: 47vh; width: 800px" class="overflow-y-auto">
+        <v-expansion-panels class="pa-2">
           <v-expansion-panel v-for="(group, index) in questions" :key="index">
             <v-expansion-panel-title>
               {{ group.Group.Title }}
@@ -51,11 +51,11 @@
                     <v-col>
                       <small>({{ question.Id }})</small> {{ question.Subtitle }}
                     </v-col>
-                    <v-col cols="5">
-                      <difficulty-field
-                        :model-value="question.Difficulty"
-                        :readonly="true"
-                      ></difficulty-field>
+                    <v-spacer></v-spacer>
+                    <v-col cols="auto">
+                      <tag-chip
+                        :tag="question.Difficulty || 'Aucune difficulté'"
+                      ></tag-chip>
                     </v-col>
                   </v-row>
                 </v-list-item>
@@ -84,7 +84,7 @@ import type {
   QuestionHeader,
 } from "../../../controller/api_gen";
 import { controller } from "../../../controller/controller";
-import DifficultyField from "../utils/DifficultyField.vue";
+import TagChip from "../utils/TagChip.vue";
 
 export interface Query {
   search: string;

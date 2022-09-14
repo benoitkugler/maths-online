@@ -25,7 +25,7 @@
   </v-dialog>
 
   <v-card class="mt-3 px-2">
-    <v-row no-gutters class="mb-2">
+    <v-row no-gutters>
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"

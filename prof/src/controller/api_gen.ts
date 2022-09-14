@@ -218,6 +218,12 @@ export interface ExerciceHeader {
   Subtitle: string;
   Difficulty: DifficultyTag;
 }
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceImportQuestionIn
+export interface ExerciceImportQuestionIn {
+  IdQuestion: IdQuestion;
+  IdExercice: IdExercice;
+  SessionID: string;
+}
 // github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestion
 export interface ExerciceQuestion {
   id_exercice: IdExercice;
@@ -1996,6 +2002,32 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceCreateQuestion(
+    data: ExerciceExt
+  ): void;
+
+  protected async rawEditorExerciceImportQuestion(
+    params: ExerciceImportQuestionIn
+  ) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions/import";
+    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorExerciceImportQuestion wraps rawEditorExerciceImportQuestion and handles the error */
+  async EditorExerciceImportQuestion(params: ExerciceImportQuestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorExerciceImportQuestion(params);
+      this.onSuccessEditorExerciceImportQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorExerciceImportQuestion(
     data: ExerciceExt
   ): void;
 
