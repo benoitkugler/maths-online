@@ -1,12 +1,5 @@
 <template>
-  <v-dialog v-model="showEditDescription">
-    <description-pannel
-      v-model="props.exercice.Exercice.Description"
-      :readonly="isReadonly"
-    ></description-pannel>
-  </v-dialog>
-
-  <v-dialog v-model="showFlowDocumentation">
+  <!-- <v-dialog v-model="showFlowDocumentation">
     <v-card title="Déroulement d'un exercice">
       <v-card-text>
         Un exercice peut se dérouler de deux manières différentes :
@@ -37,6 +30,15 @@
         </v-list>
       </v-card-text>
     </v-card>
+  </v-dialog> -->
+
+  <!-- description for the whole exercice, not a particular question -->
+  <v-dialog v-model="showEditDescription">
+    <description-pannel
+      :description="props.exercice.Exercice.Description"
+      :readonly="props.isReadonly"
+      @save="saveDescription"
+    ></description-pannel>
   </v-dialog>
 
   <v-dialog v-model="showImportQuestion" :retain-focus="false">
@@ -57,17 +59,6 @@
 
   <v-card class="mt-3 pt-1 px-2">
     <v-row no-gutters class="mb-2">
-      <v-col cols="auto" align-self="center" class="pr-2">
-        <v-btn
-          size="small"
-          icon
-          title="Retour aux exercices"
-          @click="emit('back')"
-        >
-          <v-icon icon="mdi-arrow-left"></v-icon>
-        </v-btn>
-      </v-col>
-
       <v-col>
         <v-row no-gutters>
           <v-col>
@@ -75,28 +66,14 @@
               class="my-2 input-small"
               variant="outlined"
               density="compact"
-              label="Nom de l'exercice"
-              v-model="props.exercice.Exercice.Title"
-              :readonly="isReadonly"
+              label="Sous-titre de la variante (optionnel)"
+              v-model="props.exercice.Exercice.Subtitle"
+              :readonly="props.isReadonly"
               hide-details
+              @blur="saveMeta"
             ></v-text-field
           ></v-col>
           <v-col cols="auto" align-self="center">
-            <v-btn
-              class="mx-2"
-              icon
-              @click="save"
-              :title="
-                isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
-              "
-              size="small"
-            >
-              <v-icon
-                :icon="isReadonly ? 'mdi-eye' : 'mdi-content-save'"
-                size="small"
-              ></v-icon>
-            </v-btn>
-
             <v-menu offset-y close-on-content-click>
               <template v-slot:activator="{ isActive, props }">
                 <v-btn
@@ -128,43 +105,7 @@
               </v-list>
             </v-menu>
           </v-col>
-        </v-row>
 
-        <v-row no-gutters>
-          <!-- <v-col class="pr-2">
-            <tag-list-field
-              label="Catégories"
-              v-model="tags"
-              :all-tags="props.allTags"
-              @update:model-value="saveTags"
-              :readonly="isReadonly"
-            ></tag-list-field
-          ></v-col> -->
-          <v-col cols="auto">
-            <v-select
-              density="compact"
-              variant="outlined"
-              :items="flowItems.map((v) => v.text)"
-              label="Déroulement"
-              hide-details
-              :model-value="
-                flowItems.find((v) => v.value == props.exercice.Exercice.Flow)
-                  ?.text
-              "
-              @update:model-value="v => props.exercice.Exercice.Flow = flowItems.find((item) => item.text == v)!.value"
-            >
-              <template v-slot:append>
-                <v-btn
-                  icon
-                  size="x-small"
-                  @click="showFlowDocumentation = true"
-                >
-                  <v-icon icon="mdi-help" color="info" size="x-small"></v-icon>
-                </v-btn>
-              </template>
-            </v-select>
-          </v-col>
-          <v-spacer></v-spacer>
           <v-col cols="auto" align-self="center" class="pl-2">
             <v-btn
               title="Créer et ajouter une question"
@@ -185,18 +126,6 @@
             </v-btn>
           </v-col>
         </v-row>
-      </v-col>
-
-      <v-col cols="auto" align-self="center" class="pl-2">
-        <v-btn
-          size="small"
-          icon
-          title="Editer le contenu des questions"
-          @click="emit('next')"
-          :disabled="!props.exercice.Questions?.length"
-        >
-          <v-icon icon="mdi-arrow-right"></v-icon>
-        </v-btn>
       </v-col>
     </v-row>
 
@@ -225,24 +154,10 @@
               >
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
-              <v-btn
-                v-if="!isReadonly"
-                class="mx-1"
-                size="small"
-                icon
-                @click.stop="duplicateQuestion(index)"
-                title="Dupliquer la question"
-              >
-                <v-icon
-                  icon="mdi-content-copy"
-                  color="info"
-                  size="small"
-                ></v-icon>
-              </v-btn>
             </v-col>
             <v-col align-self="center">
-              <small>({{ question.id_question }})</small>
-              {{ getQuestion(question.id_question).Question.page.title }}
+              Question {{ index + 1 }}
+              <small>(Id : {{ question.Question.Id }})</small>
             </v-col>
             <v-col cols="2" align-self="center">
               <v-menu
@@ -265,7 +180,7 @@
                       questionIndexToEdit = index;
                     "
                     :disabled="isReadonly"
-                    >/ {{ question.bareme }}
+                    >/ {{ question.Bareme }}
                   </v-chip>
                 </template>
                 <v-card subtitle="Modifier le barème">
@@ -277,7 +192,7 @@
                       type="number"
                       label="Barème"
                       hide-details
-                      v-model.number="questionToEdit.bareme"
+                      v-model.number="questionToEdit.Bareme"
                     ></v-text-field>
                   </v-card-text>
                   <v-card-actions>
@@ -303,75 +218,60 @@
 
 <script setup lang="ts">
 import DropZone from "@/components/DropZone.vue";
-import type { Flow } from "@/controller/api_gen";
-import {
-  FlowLabels,
-  Visibility,
-  type ExerciceExt,
-  type ExerciceQuestion,
-} from "@/controller/api_gen";
+import type { ExerciceExt, ExerciceQuestionExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
-import { computed } from "vue";
+import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import DragIcon from "../DragIcon.vue";
-import DescriptionPannel from "../editor/DescriptionPannel.vue";
+import DragIcon from "../../DragIcon.vue";
+import DescriptionPannel from "../DescriptionPannel.vue";
 import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {
+  sessionId: string;
   exercice: ExerciceExt;
-  session_id: string;
-  allTags: string[];
+  isReadonly: boolean;
+  allTags: string[]; // used to select the question to import
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  (e: "back"): void;
-  (e: "next"): void;
   (e: "update", exercice: ExerciceExt): void;
-  (e: "duplicate", exercice: ExerciceExt): void;
+  (e: "goToQuestion", questionIndex: number): void;
 }>();
 
-const isReadonly = computed(
-  () => props.exercice.Origin.Visibility != Visibility.Personnal
-);
-
-const flowItems = Object.entries(FlowLabels).map((k) => ({
-  value: Number(k[0]) as Flow,
-  text: k[1],
-}));
-
-let showEditDescription = $ref(false);
-
-function getQuestion(questionID: number) {
-  console.log(
-    questionID,
-    props.exercice.QuestionsSource,
-    props.exercice.QuestionsSource![questionID]
-  );
-
-  return props.exercice.QuestionsSource![questionID];
-}
+onMounted(async () => {
+  await controller.EditorSaveExerciceAndPreview({
+    OnlyPreview: true,
+    IdExercice: props.exercice.Exercice.Id,
+    SessionID: props.sessionId,
+    Parameters: { Intrinsics: [], Variables: [] }, // ignored
+    Questions: [], // ignored
+  });
+});
 
 let query = $ref<Query>({ search: "", tags: [] });
-
-async function save() {
-  const res = await controller.ExerciceUpdate({
-    Exercice: props.exercice.Exercice,
-    SessionID: props.session_id,
-  });
-  if (res == undefined) {
-    return;
-  }
-  props.exercice.Exercice = res;
-}
-
 let showImportQuestion = $ref(false);
 
+let showEditDescription = $ref(false);
+async function saveDescription(description: string) {
+  showEditDescription = false;
+  props.exercice.Exercice.Description = description;
+  saveMeta();
+}
+
+async function saveMeta() {
+  if (props.isReadonly) {
+    return;
+  }
+  await controller.EditorSaveExerciceMeta(props.exercice.Exercice);
+  emit("update", props.exercice);
+}
+
 async function createQuestion() {
-  const res = await controller.ExerciceCreateQuestion({
+  const res = await controller.EditorExerciceCreateQuestion({
     IdExercice: props.exercice.Exercice.Id,
-    SessionID: props.session_id,
+    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
@@ -379,17 +279,25 @@ async function createQuestion() {
   emit("update", res);
 }
 
-async function addQuestion(idQuestion: number) {
-  const current = copy(props.exercice.Questions || []);
-  current.push({
-    bareme: 1,
-    id_question: idQuestion,
+function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
+  return questions.map((qu) => ({
     id_exercice: -1,
+    id_question: qu.Question.Id,
+    bareme: qu.Bareme,
+  }));
+}
+
+async function addQuestion(idQuestion: number) {
+  const current = toExerciceQuestions(props.exercice.Questions || []);
+  current.push({
+    id_exercice: -1,
+    id_question: idQuestion,
+    bareme: 1,
   });
-  const res = await controller.ExerciceUpdateQuestions({
+  const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: current,
-    SessionID: props.session_id,
+    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
@@ -398,12 +306,12 @@ async function addQuestion(idQuestion: number) {
 }
 
 async function removeQuestion(index: number) {
-  const l = copy(props.exercice.Questions || []);
+  const l = toExerciceQuestions(props.exercice.Questions || []);
   l.splice(index, 1);
-  const res = await controller.ExerciceUpdateQuestions({
+  const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
-    SessionID: props.session_id,
+    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
@@ -411,21 +319,7 @@ async function removeQuestion(index: number) {
   emit("update", res);
 }
 
-async function duplicateQuestion(index: number) {
-  const l = copy(props.exercice.Questions || []);
-  const added = l.slice(0, index).concat(l[index]).concat(l.slice(index));
-  const res = await controller.ExerciceUpdateQuestions({
-    IdExercice: props.exercice.Exercice.Id,
-    Questions: added,
-    SessionID: props.session_id,
-  });
-  if (res == undefined) {
-    return;
-  }
-  emit("update", res);
-}
-
-let questionToEdit = $ref<ExerciceQuestion | null>(null);
+let questionToEdit = $ref<ExerciceQuestionExt | null>(null);
 let questionIndexToEdit = $ref<number | null>(null);
 async function saveEditedQuestion() {
   if (questionIndexToEdit == null || questionToEdit == null) {
@@ -436,10 +330,10 @@ async function saveEditedQuestion() {
 
   questionToEdit = null;
   questionIndexToEdit = null;
-  const res = await controller.ExerciceUpdateQuestions({
+  const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
-    Questions: current,
-    SessionID: props.session_id,
+    Questions: toExerciceQuestions(current),
+    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
@@ -466,18 +360,16 @@ the block at index `target` (which is between 0 and nbBlocks)
  */
 async function swapQuestions(origin: number, target: number) {
   const l = swapItems(origin, target, props.exercice.Questions!);
-  const res = await controller.ExerciceUpdateQuestions({
+  const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
-    Questions: l,
-    SessionID: props.session_id,
+    Questions: toExerciceQuestions(l),
+    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
   }
   emit("update", res);
 }
-
-let showFlowDocumentation = $ref(false);
 </script>
 
 <style scoped>

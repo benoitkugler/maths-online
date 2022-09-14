@@ -12,7 +12,8 @@
 
   <v-dialog v-model="showEditDescription">
     <DescriptionPannel
-      v-model="question.Question.description"
+      :description="question.Question.Description"
+      @save="saveQuestionDescription"
       :readonly="isReadonly"
     >
     </DescriptionPannel>
@@ -20,7 +21,32 @@
 
   <v-card class="mt-3 px-2">
     <v-row no-gutters class="mb-2">
-      <v-col cols="auto" align-self="center" class="pr-2">
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          size="small"
+          icon
+          title="Aller à la question précédente"
+          @click="questionIndex = questionIndex - 1"
+          :disabled="questionIndex <= 0"
+        >
+          <v-icon icon="mdi-arrow-left" size="small"></v-icon>
+        </v-btn>
+        Question {{ questionIndex + 1 }} /
+        {{ (props.exercice.Questions || []).length }}
+        <v-btn
+          size="small"
+          icon
+          title="Aller à la question suivante"
+          @click="questionIndex = questionIndex + 1"
+          :disabled="
+            questionIndex >= (props.exercice.Questions || []).length - 1
+          "
+        >
+          <v-icon icon="mdi-arrow-right" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+
+      <!-- <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
           icon
@@ -37,11 +63,11 @@
           variant="outlined"
           density="compact"
           label="Nom de la question"
-          v-model="question.Question.page.title"
+          v-model="question.Question.Page.title"
           :readonly="isReadonly"
           hide-details
         ></v-text-field
-      ></v-col>
+      ></v-col> -->
 
       <v-col cols="3" align-self="center" class="px-1">
         <v-row no-gutters justify="center">
@@ -50,7 +76,7 @@
               class="mx-2"
               icon
               @click="save"
-              :disabled="!session_id"
+              :disabled="!sessionId"
               :title="
                 isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
               "
@@ -93,7 +119,7 @@
                   <v-btn
                     size="small"
                     @click="download"
-                    :disabled="!question.Question.page.enonce?.length"
+                    :disabled="!question.Question.Page.enonce?.length"
                     title="Télécharger la question au format .json"
                   >
                     <v-icon
@@ -128,30 +154,6 @@
           </v-col>
         </v-row>
       </v-col>
-
-      <v-col cols="auto" align-self="center">
-        <v-btn
-          size="small"
-          icon
-          title="Aller à la question précédente"
-          @click="questionIndex = questionIndex - 1"
-          :disabled="questionIndex <= 0"
-        >
-          <v-icon icon="mdi-arrow-left" size="small"></v-icon>
-        </v-btn>
-        {{ questionIndex + 1 }} / {{ (props.exercice.Questions || []).length }}
-        <v-btn
-          size="small"
-          icon
-          title="Aller à la question suivante"
-          @click="questionIndex = questionIndex + 1"
-          :disabled="
-            questionIndex >= (props.exercice.Questions || []).length - 1
-          "
-        >
-          <v-icon icon="mdi-arrow-right" size="small"></v-icon>
-        </v-btn>
-      </v-col>
     </v-row>
 
     <v-row no-gutters>
@@ -159,7 +161,7 @@
         <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
           <RandomParametersExercice
             :shared-parameters="props.exercice.Exercice.Parameters.Variables"
-            :question-parameters="question.Question.page.parameters.Variables"
+            :question-parameters="question.Question.Page.parameters.Variables"
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
             @update="updateRandomParameters"
@@ -170,7 +172,7 @@
               props.exercice.Exercice.Parameters.Intrinsics || []
             "
             :question-parameters="
-              question.Question.page.parameters.Intrinsics || []
+              question.Question.Page.parameters.Intrinsics || []
             "
             :is-loading="isCheckingParameters"
             :is-validated="!showErrorParameters"
@@ -181,7 +183,7 @@
       </v-col>
       <v-col class="pr-1">
         <QuestionContent
-          :model-value="question.Question.page.enonce || []"
+          :model-value="question.Question.Page.enonce || []"
           @update:model-value="updateQuestion"
           @importQuestion="onImportQuestion"
           :available-parameters="[]"
@@ -195,47 +197,44 @@
 </template>
 
 <script setup lang="ts">
-import type { Block, RandomParameter } from "@/controller/api_gen";
-import {
+import type {
+  Block,
   BlockKind,
-  Visibility,
-  type errEnonce,
-  type ErrParameters,
-  type ExerciceExt,
-  type Question,
+  errEnonce,
+  ErrParameters,
+  ExerciceExt,
+  Question,
+  RandomParameter,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
 import { History } from "@/controller/editor_history";
 import { computed, onMounted, onUnmounted } from "vue";
 import { $computed, $ref } from "vue/macros";
-import BlockBar from "../editor/BlockBar.vue";
-import DescriptionPannel from "../editor/DescriptionPannel.vue";
-import IntrinsicsParametersExercice from "../editor/IntrinsicsParametersExercice.vue";
-import SnackErrorParameters from "../editor/parameters/SnackErrorParameters.vue";
-import QuestionContent from "../editor/QuestionContent.vue";
-import RandomParametersExercice from "../editor/RandomParametersExercice.vue";
-import SnackErrorEnonce from "../editor/SnackErrorEnonce.vue";
+import BlockBar from "../BlockBar.vue";
+import DescriptionPannel from "../DescriptionPannel.vue";
+import IntrinsicsParametersExercice from "../IntrinsicsParametersExercice.vue";
+import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
+import QuestionContent from "../QuestionContent.vue";
+import RandomParametersExercice from "../RandomParametersExercice.vue";
+import SnackErrorEnonce from "../SnackErrorEnonce.vue";
 
 interface Props {
-  session_id: string;
+  sessionId: string;
   exercice: ExerciceExt;
+  questionIndex: number;
+  isReadonly: boolean;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "back"): void;
   (e: "update", ex: ExerciceExt): void;
 }>();
 
-let questionIndex = $ref(0);
+let questionIndex = $ref(props.questionIndex);
 
-let question = $computed(() => {
-  const questionID = (props.exercice.Questions || [])[questionIndex]
-    .id_question;
-  return getQuestion(questionID);
-});
+let question = $computed(() => (props.exercice.Questions || [])[questionIndex]);
 
 let history = new History(
   props.exercice,
@@ -254,16 +253,17 @@ function restoreHistory(snapshot: ExerciceExt) {
   emit("update", snapshot);
 }
 
-function getQuestion(questionID: number) {
-  return props.exercice.QuestionsSource![questionID];
+let showEditDescription = $ref(false);
+async function saveQuestionDescription(description: string) {
+  showEditDescription = false;
+  question.Question.Description = description;
+  const res = await controller.EditorSaveQuestionMeta({
+    Question: question.Question,
+  });
 }
 
-const isReadonly = computed(
-  () => question.Origin.Visibility != Visibility.Personnal
-);
-
 function updateQuestion(qu: Block[]) {
-  question.Question.page.enonce = qu;
+  question.Question.Page.enonce = qu;
   history.add(props.exercice);
 }
 
@@ -273,7 +273,7 @@ function updateRandomParameters(
   shouldCheck: boolean
 ) {
   props.exercice.Exercice.Parameters.Variables = sharedP;
-  question.Question.page.parameters.Variables = questionP;
+  question.Question.Page.parameters.Variables = questionP;
   if (shouldCheck) {
     checkParameters();
   }
@@ -286,14 +286,12 @@ function updateIntrinsics(
   shouldCheck: boolean
 ) {
   props.exercice.Exercice.Parameters.Intrinsics = sharedP;
-  question.Question.page.parameters.Intrinsics = questionP;
+  question.Question.Page.parameters.Intrinsics = questionP;
   if (shouldCheck) {
     checkParameters();
   }
   history.add(props.exercice);
 }
-
-let showEditDescription = $ref(false);
 
 let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
 function addBlock(kind: BlockKind) {
@@ -315,9 +313,7 @@ async function checkParameters() {
     IdExercice: props.exercice.Exercice.Id,
     SharedParameters: props.exercice.Exercice.Parameters,
     QuestionParameters:
-      props.exercice.Questions?.map(
-        (q) => getQuestion(q.id_question).Question.page.parameters
-      ) || [],
+      props.exercice.Questions?.map((q) => q.Question.Page.parameters) || [],
   });
   isCheckingParameters = false;
   if (out === undefined) return;
@@ -335,15 +331,11 @@ async function checkParameters() {
 
 async function save() {
   const res = await controller.EditorSaveExerciceAndPreview({
-    SessionID: props.session_id || "",
+    OnlyPreview: false,
+    SessionID: props.sessionId || "",
     IdExercice: props.exercice.Exercice.Id,
     Parameters: props.exercice.Exercice.Parameters,
-    Questions: Object.fromEntries(
-      Object.entries(props.exercice.QuestionsSource || {}).map((k) => [
-        k[0],
-        k[1].Question,
-      ])
-    ),
+    Questions: props.exercice.Questions?.map((qu) => qu.Question) || [],
   });
   if (res == undefined) {
     return;
@@ -376,7 +368,7 @@ function download() {
 
 async function onImportQuestion(imported: Question) {
   // keep the current ID
-  imported.id = question.Question.id;
+  imported.Id = question.Question.Id;
   question.Question = imported;
 
   history.add(props.exercice);

@@ -34,26 +34,36 @@
         </v-col>
       </v-row>
 
-      <v-list style="height: 47vh" class="overflow-y-auto">
-        <v-list-item
-          v-for="(question, index) in questions"
-          :key="index"
-          @click="emit('selected', question)"
-        >
-          <v-row>
-            <v-col>
-              <small>({{ question.Id }})</small> {{ question.Title }}
-            </v-col>
-            <v-col cols="5">
-              <tag-list-field
-                readonly
-                :model-value="question.Tags || []"
-                :all-tags="[]"
-              ></tag-list-field>
-            </v-col>
-          </v-row>
-        </v-list-item>
-      </v-list>
+      <div style="height: 47vh" class="overflow-y-auto">
+        <v-expansion-panels>
+          <v-expansion-panel v-for="(group, index) in questions" :key="index">
+            <v-expansion-panel-title>
+              {{ group.Group.Title }}
+            </v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-list>
+                <v-list-item
+                  v-for="(question, index) in group.Variants"
+                  :key="index"
+                  @click="emit('selected', question)"
+                >
+                  <v-row>
+                    <v-col>
+                      <small>({{ question.Id }})</small> {{ question.Subtitle }}
+                    </v-col>
+                    <v-col cols="5">
+                      <difficulty-field
+                        :model-value="question.Difficulty"
+                        :readonly="true"
+                      ></difficulty-field>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+              </v-list>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </div>
       <div class="my-2">
         {{ questions.length }} / {{ serverNbQuestions }} variantes de questions
         affichées
@@ -69,9 +79,12 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import type { QuestionHeader } from "../../controller/api_gen";
-import { controller } from "../../controller/controller";
-import TagListField from "../editor/TagListField.vue";
+import type {
+  QuestiongroupExt,
+  QuestionHeader,
+} from "../../../controller/api_gen";
+import { controller } from "../../../controller/controller";
+import DifficultyField from "../utils/DifficultyField.vue";
 
 export interface Query {
   search: string;
@@ -90,7 +103,7 @@ const emit = defineEmits<{
   (e: "update:query", query: Query): void;
 }>();
 
-let questions = $ref<QuestionHeader[]>([]);
+let questions = $ref<QuestiongroupExt[]>([]);
 let serverNbQuestions = $ref(0);
 
 let timerId = 0;
@@ -121,12 +134,8 @@ async function fetchQuestions() {
     TitleQuery: props.query.search,
     Tags: props.query.tags,
   });
-  if (result == undefined) {
-    return;
-  }
-  const qus: QuestionHeader[] = [];
-  (result.Questions || []).forEach((gr) => qus.push(...(gr.Questions || [])));
-  questions = qus;
+  if (result == undefined) return;
+  questions = result.Groups || [];
   serverNbQuestions = result.NbQuestions;
 }
 </script>

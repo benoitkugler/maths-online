@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 
@@ -631,10 +632,6 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID u
 	if err != nil {
 		return ExerciceExt{}, utils.SQLError(err)
 	}
-	questions, err := ed.SelectQuestions(ct.db, args.Questions.IdQuestions()...)
-	if err != nil {
-		return ExerciceExt{}, utils.SQLError(err)
-	}
 
 	var (
 		toDelete       []ed.IdQuestion
@@ -642,7 +639,7 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID u
 	)
 	for _, link := range links {
 		_, willBeUsed := newQuestionIDs[link.IdQuestion]
-		if shouldDelete := questions[link.IdQuestion].NeedExercice.Valid && !willBeUsed; shouldDelete {
+		if !willBeUsed {
 			toDelete = append(toDelete, link.IdQuestion)
 		}
 	}
@@ -672,14 +669,10 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID u
 	return ct.getExercice(args.IdExercice, userID)
 }
 
-type ExerciceUpdateIn struct {
-	Exercice  ed.Exercice
-	SessionID string
-}
+type ExerciceUpdateIn = ed.Exercice
 
-// EditorUpdateExercice update the exercice metadata and
-// update the preview
-func (ct *Controller) EditorUpdateExercice(c echo.Context) error {
+// EditorSaveExerciceMeta update the exercice metadata.
+func (ct *Controller) EditorSaveExerciceMeta(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args ExerciceUpdateIn
@@ -687,17 +680,7 @@ func (ct *Controller) EditorUpdateExercice(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.updateExercice(args.Exercice, user.Id)
-	if err != nil {
-		return err
-	}
-
-	data, err := tasks.NewExerciceData(ct.db, args.Exercice.Id)
-	if err != nil {
-		return err
-	}
-
-	err = ct.updateExercicePreview(data, args.SessionID)
+	out, err := ct.updateExercice(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -767,10 +750,11 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 }
 
 type SaveExerciceAndPreviewIn struct {
-	SessionID  string
-	IdExercice ed.IdExercice
-	Parameters questions.Parameters // shared parameters
-	Questions  []ed.Question        // questions content
+	OnlyPreview bool // if true, skip the save part (Parameters and Questions are thus ignored)
+	SessionID   string
+	IdExercice  ed.IdExercice
+	Parameters  questions.Parameters // shared parameters
+	Questions   []ed.Question        // questions content
 }
 
 type SaveExerciceAndPreviewOut struct {
@@ -790,57 +774,62 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		return SaveExerciceAndPreviewOut{}, accessForbidden
 	}
 
-	// validate all the questions, using shared parameters if needed
 	qus, _ := data.QuestionsList()
-	for index, question := range qus {
-		toCheck := params.Questions[question.Id].Page
-		if question.NeedExercice.Valid { // add the shared parameters
-			toCheck.Parameters = toCheck.Parameters.Append(params.Parameters)
+	// validate all the questions, using shared parameters if needed
+	if !params.OnlyPreview {
+		if len(params.Questions) != len(qus) {
+			return SaveExerciceAndPreviewOut{}, errors.New("internal error: inconsistent questions length")
+		}
+		for index, question := range qus {
+			toCheck := params.Questions[index].Page
+			if question.NeedExercice.Valid { // add the shared parameters
+				toCheck.Parameters = toCheck.Parameters.Append(params.Parameters)
+			}
+
+			err = toCheck.Validate()
+			if err != nil {
+				return SaveExerciceAndPreviewOut{
+					Error:         err.(questions.ErrQuestionInvalid),
+					QuestionIndex: index,
+				}, nil
+			}
 		}
 
-		err = toCheck.Validate()
-		if err != nil {
-			return SaveExerciceAndPreviewOut{
-				Error:         err.(questions.ErrQuestionInvalid),
-				QuestionIndex: index,
-			}, nil
-		}
-	}
-
-	// always apply change in memory, so that preview is correctly updated
-	ex.Parameters = params.Parameters // save the shared parameters
-	for _, incomming := range params.Questions {
-		qu := data.QuestionsMap[incomming.Id]
-		// update the content
-		qu.Page = incomming.Page
-		qu.Description = incomming.Description
-		data.QuestionsMap[incomming.Id] = qu
-	}
-
-	// if the exercice is owned : save it, else only preview
-	if data.Group.IdTeacher == userID {
-		tx, err := ct.db.Begin()
-		if err != nil {
-			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+		// always apply change in memory, so that preview is correctly updated
+		ex.Parameters = params.Parameters // save the shared parameters
+		for _, incomming := range params.Questions {
+			qu := data.QuestionsMap[incomming.Id]
+			// update the content
+			qu.Page = incomming.Page
+			qu.Description = incomming.Description
+			data.QuestionsMap[incomming.Id] = qu
 		}
 
-		_, err = ex.Update(tx)
-		if err != nil {
-			_ = tx.Rollback()
-			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
-		}
+		// if the exercice is owned : save it, else only preview
+		if data.Group.IdTeacher == userID {
+			tx, err := ct.db.Begin()
+			if err != nil {
+				return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+			}
 
-		// update the linked questions
-		for _, qu := range data.QuestionsMap {
-			_, err = qu.Update(tx)
+			_, err = ex.Update(tx)
 			if err != nil {
 				_ = tx.Rollback()
 				return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
 			}
-		}
 
-		if err := tx.Commit(); err != nil {
-			return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+			// update the linked questions
+			for _, qu := range data.QuestionsMap {
+				_, err = qu.Update(tx)
+				if err != nil {
+					_ = tx.Rollback()
+					return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+				}
+			}
+
+			if err := tx.Commit(); err != nil {
+				return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+			}
 		}
 	}
 

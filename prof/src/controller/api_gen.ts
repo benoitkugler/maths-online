@@ -231,11 +231,6 @@ export interface ExerciceQuestionExt {
 }
 // github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestions
 export type ExerciceQuestions = ExerciceQuestion[] | null;
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateIn
-export interface ExerciceUpdateIn {
-  Exercice: Exercice;
-  SessionID: string;
-}
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateQuestionsIn
 export interface ExerciceUpdateQuestionsIn {
   Questions: ExerciceQuestions;
@@ -646,6 +641,7 @@ export interface RunningSessionMetaOut {
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewIn
 export interface SaveExerciceAndPreviewIn {
+  OnlyPreview: boolean;
   SessionID: string;
   IdExercice: IdExercice;
   Parameters: Parameters;
@@ -1930,7 +1926,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorDeleteExercice(): void;
 
-  protected async rawEditorUpdateExercice(params: ExerciceUpdateIn) {
+  protected async rawEditorSaveExerciceMeta(params: Exercice) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
@@ -1938,19 +1934,19 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** EditorUpdateExercice wraps rawEditorUpdateExercice and handles the error */
-  async EditorUpdateExercice(params: ExerciceUpdateIn) {
+  /** EditorSaveExerciceMeta wraps rawEditorSaveExerciceMeta and handles the error */
+  async EditorSaveExerciceMeta(params: Exercice) {
     this.startRequest();
     try {
-      const out = await this.rawEditorUpdateExercice(params);
-      this.onSuccessEditorUpdateExercice(out);
+      const out = await this.rawEditorSaveExerciceMeta(params);
+      this.onSuccessEditorSaveExerciceMeta(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorUpdateExercice(data: Exercice): void;
+  protected abstract onSuccessEditorSaveExerciceMeta(data: Exercice): void;
 
   protected async rawEditorDuplicateExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";

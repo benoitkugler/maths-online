@@ -71,14 +71,13 @@
       </v-col>
     </v-row>
 
-    TODO
-    <!-- <VariantPannel
-      :exercice="variants[variantIndex]"
-      :readonly="isReadonly"
-      :session_id="props.session_id"
+    <ExerciceVariantPannel
+      :exercice-header="variants[variantIndex]"
+      :is-readonly="isReadonly"
+      :session-id="props.session_id"
       :all-tags="props.allTags"
       @update="(qu) => (variants[variantIndex] = qu)"
-    ></VariantPannel> -->
+    ></ExerciceVariantPannel>
   </v-card>
 </template>
 
@@ -89,6 +88,7 @@ import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
 import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
+import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
 import ExerciceVariantsSelector from "./ExerciceVariantsSelector.vue";
 
 interface Props {
