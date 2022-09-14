@@ -20,7 +20,7 @@
       </v-col>
       <v-col cols="auto">
         <keep-alive>
-          <ClientPreview :session_id="sessionID"></ClientPreview>
+          <ClientPreview :session-id="sessionID"></ClientPreview>
         </keep-alive>
       </v-col>
     </v-row>

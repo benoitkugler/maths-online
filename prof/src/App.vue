@@ -78,7 +78,11 @@
       </v-list-item>
     </v-navigation-drawer>
 
-    <v-app-bar app dense color="secondary">
+    <v-app-bar
+      app
+      :density="appBarDense ? 'compact' : undefined"
+      color="secondary"
+    >
       <v-app-bar-nav-icon
         @click="showSideBar = !showSideBar"
         v-if="isLoggedIn"
@@ -129,6 +133,8 @@
 
 <script setup lang="ts">
 import logoSrc from "@/assets/logo.png";
+import { computed } from "@vue/reactivity";
+import { useRoute } from "vue-router";
 import { $ref } from "vue/macros";
 import { controller, IsDev } from "./controller/controller";
 import LogginScreen from "./views/LogginScreen.vue";
@@ -153,6 +159,8 @@ controller.showMessage = (s, color) => {
 };
 
 let isLoggedIn = $ref(IsDev);
+
+const appBarDense = computed(() => useRoute().name != "home");
 
 function onLoggin() {
   isLoggedIn = true;

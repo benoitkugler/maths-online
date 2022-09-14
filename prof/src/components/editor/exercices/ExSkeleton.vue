@@ -126,7 +126,7 @@
       </v-col>
     </v-row>
 
-    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 66vh">
+    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 67vh">
       <drop-zone
         v-if="showDropZone"
         @drop="(origin) => swapQuestions(origin, 0)"
@@ -218,7 +218,6 @@ import DropZone from "@/components/DropZone.vue";
 import type { ExerciceExt, ExerciceQuestionExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
-import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
 import DescriptionPannel from "../DescriptionPannel.vue";
@@ -236,16 +235,6 @@ const emit = defineEmits<{
   (e: "update", exercice: ExerciceExt): void;
   (e: "goToQuestion", questionIndex: number): void;
 }>();
-
-onMounted(async () => {
-  await controller.EditorSaveExerciceAndPreview({
-    OnlyPreview: true,
-    IdExercice: props.exercice.Exercice.Id,
-    SessionID: props.sessionId,
-    Parameters: { Intrinsics: [], Variables: [] }, // ignored
-    Questions: [], // ignored
-  });
-});
 
 let query = $ref<Query>({ search: "", tags: [] });
 let showImportQuestion = $ref(false);

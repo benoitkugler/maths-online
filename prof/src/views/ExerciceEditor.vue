@@ -1,7 +1,7 @@
 <template>
   <div class="ma-2">
     <v-row>
-      <v-col cols="8">
+      <v-col>
         <keep-alive>
           <exercicegroup-list
             v-if="currentExercicegroup == null"
@@ -19,7 +19,7 @@
       </v-col>
       <v-col cols="auto">
         <keep-alive>
-          <client-preview :session_id="sessionID"></client-preview>
+          <client-preview :session-id="sessionID"></client-preview>
         </keep-alive>
       </v-col>
     </v-row>

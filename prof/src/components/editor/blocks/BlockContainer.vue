@@ -20,7 +20,7 @@
           <span v-if="isAnswer" class="ml-1">(Champ de réponse)</span>
         </v-card-subtitle>
       </v-col>
-      <v-col cols="4" style="text-align: right" class="my-2">
+      <v-col cols="4" style="text-align: right" class="my-1">
         <v-btn
           v-if="showLaTeXDoc"
           class="mr-2"

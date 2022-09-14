@@ -1,7 +1,7 @@
 <template>
-  <iframe v-show="session_id" :src="src" width="350px" height="100%"></iframe>
+  <iframe v-show="sessionId" :src="src" width="350px" height="100%"></iframe>
   <div
-    v-if="session_id.length == 0"
+    v-if="sessionId.length == 0"
     class="mx-4 d-flex"
     style="
       width: 350px;
@@ -19,12 +19,12 @@ import { controller, PreviewMode } from "@/controller/controller";
 import { computed } from "@vue/runtime-core";
 
 const props = defineProps({
-  session_id: { type: String, required: true }
+  sessionId: { type: String, required: true },
 });
 
 let src = computed(() =>
   controller.getURL(
-    `/prof-loopback-app?sessionID=${props.session_id}&mode=${PreviewMode}`
+    `/prof-loopback-app?sessionID=${props.sessionId}&mode=${PreviewMode}`
   )
 );
 </script>

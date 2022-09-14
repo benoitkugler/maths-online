@@ -23,8 +23,13 @@
 </template>
 
 <script setup lang="ts">
-import type { ExerciceExt, ExerciceHeader } from "@/controller/api_gen";
+import {
+  DifficultyTag,
+  type ExerciceExt,
+  type ExerciceHeader,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { refreshExercicePreview } from "@/controller/editor";
 import { onMounted, watch } from "vue";
 import { $ref } from "vue/macros";
 import ExEditor from "./ExEditor.vue";
@@ -49,10 +54,14 @@ let viewMode = $ref<"skeleton" | "question">("skeleton");
 
 let exercice = $ref<ExerciceExt | null>(null);
 
-onMounted(fetchExercice);
+onMounted(() => {
+  fetchExercice();
+  refreshExercicePreview(props.sessionId, props.exerciceHeader.Id);
+});
 
 watch(props, (_) => {
   fetchExercice();
+  refreshExercicePreview(props.sessionId, props.exerciceHeader.Id);
 });
 
 function goToQuestion(index: number) {
@@ -72,7 +81,7 @@ function notifieUpdate(ex: ExerciceExt) {
   exercice = ex;
   emit("update", {
     Id: ex.Exercice.Id,
-    Difficulty: "",
+    Difficulty: DifficultyTag.DiffEmpty, // for now, we dont support difficulty on exercice
     Subtitle: ex.Exercice.Subtitle,
   });
 }
