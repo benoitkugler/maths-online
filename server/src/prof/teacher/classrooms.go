@@ -19,6 +19,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const classroomCodeDuration = 6 * time.Hour
+
 type ClassroomExt struct {
 	Classroom tc.Classroom
 
@@ -435,7 +437,7 @@ func (cc *classroomsCode) newCode(idClassroom tc.IdClassroom) string {
 	cc.codes[code] = idClassroom
 
 	// time its removal
-	time.AfterFunc(6*time.Hour, func() { cc.expireCode(code) })
+	time.AfterFunc(classroomCodeDuration, func() { cc.expireCode(code) })
 
 	return code
 }
