@@ -116,6 +116,9 @@ class _DecrassageState extends State<Decrassage> {
 
   @override
   Widget build(BuildContext context) {
+    final ct = QuestionController(
+        currentQuestion!.question, ServerFieldAPI(widget.buildMode), false);
+    ct.setAnswers(currentAnswer);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -154,12 +157,9 @@ class _DecrassageState extends State<Decrassage> {
                   ),
                 )
               : QuestionW(
-                  ServerFieldAPI(widget.buildMode),
-                  currentQuestion!.question,
+                  ct,
                   Colors.pink,
                   _evaluateQuestion,
-                  answer: currentAnswer,
-                  blockOnSubmit: false,
                   footerQuote: pickQuote(),
                   timeout: null,
                   title: "Question ${currentQuestionIndex! + 1}",

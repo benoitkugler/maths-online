@@ -61,8 +61,11 @@ class _QuestionData {
 }
 
 class _ExerciceData {
-  final StudentWork exercice;
-  const _ExerciceData(this.exercice);
+  final ExerciceController ct;
+
+  final Answers? serverAnswer; // of the current question
+
+  const _ExerciceData(this.ct, this.serverAnswer);
 }
 
 /// owns the websocket connection and switch between question
@@ -82,7 +85,9 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
   late WebSocketChannel channel;
   late Timer _keepAliveTimmer;
 
-  _Mode mode = _Mode.paused;
+  _Mode get mode => questionData != null
+      ? _Mode.question
+      : (exerciceData != null ? _Mode.exercice : _Mode.paused);
   _QuestionData? questionData;
   _ExerciceData? exerciceData;
 
@@ -143,12 +148,12 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
 
     if (event is LoopbackPaused) {
       setState(() {
-        mode = _Mode.paused;
+        questionData = null;
+        exerciceData = null;
       });
     } else if (event is LoopbackQuestion) {
       final qu = event.question;
       setState(() {
-        mode = _Mode.question;
         questionData = _QuestionData(qu, null);
       });
     } else if (event is LoopbackQuestionValidOut) {
@@ -161,8 +166,12 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     } else if (event is LoopbackShowExercice) {
       final ex = StudentWork(event.exercice, event.progression);
       setState(() {
-        mode = _Mode.exercice;
-        exerciceData = _ExerciceData(ex);
+        exerciceData = _ExerciceData(ExerciceController(ex, null), null);
+      });
+    } else if (event is LoopbackExerciceCorrectAnswersOut) {
+      final ans = event.answers;
+      setState(() {
+        exerciceData = _ExerciceData(exerciceData!.ct, ans.data);
       });
     }
   }
@@ -175,7 +184,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     if (mode == _Mode.question) {
       _send(const LoopbackQuestionCorrectAnswersIn());
     } else if (mode == _Mode.exercice) {
-      // TODO:
+      _send(LoopbackExerciceCorrectAnswsersIn(exerciceData!.ct.questionIndex!));
     }
   }
 
@@ -211,8 +220,8 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
           ),
         );
       case _Mode.exercice:
-        return _ExerciceLoopback(
-            _LoopbackServerAPI(widget.buildMode), exerciceData!.exercice);
+        return _ExerciceLoopback(_LoopbackServerAPI(widget.buildMode),
+            exerciceData!, _showCorrectAnswer);
     }
   }
 }
@@ -230,17 +239,16 @@ class _QuestionLoopback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ct = QuestionController(question, ServerFieldAPI(buildMode), false);
+    ct.setAnswers(answers);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: QuestionW(
-        ServerFieldAPI(buildMode),
-        question,
+        ct,
         Color.fromARGB(255, 150 + Random().nextInt(100),
             150 + Random().nextInt(100), Random().nextInt(256)),
         onValid,
         timeout: null,
-        blockOnSubmit: false,
-        answer: answers,
       ),
     );
   }
@@ -268,13 +276,17 @@ class _LoopbackServerAPI implements ExerciceAPI {
 
 class _ExerciceLoopback extends StatelessWidget {
   final _LoopbackServerAPI api;
-  final StudentWork exercice;
+  final _ExerciceData data;
+  final void Function() onShowCorrectAnswer;
 
-  const _ExerciceLoopback(this.api, this.exercice, {Key? key})
+  const _ExerciceLoopback(this.api, this.data, this.onShowCorrectAnswer,
+      {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(api, exercice);
+    return ExerciceW(api, data.ct,
+        onShowCorrectAnswer: onShowCorrectAnswer,
+        questionAnswers: data.serverAnswer);
   }
 }

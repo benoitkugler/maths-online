@@ -26,12 +26,15 @@ import 'package:eleve/shared/zommables.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
-enum InputState {
+enum _InputState {
   /// fields are enabled and validated button will trigger validate
   working,
 
   /// fields and validated button are disabled
-  waiting,
+  done,
+
+  /// fields and validated button are disabled
+  waitingForPlayers,
 
   /// fields are disabled and validated button will trigger reset
   displayingFeedback,
@@ -41,18 +44,21 @@ enum InputState {
 /// question (internally, it is composed of multiple controllers, one for each field)
 /// It should be created when displaying a question, then manipulated inside the [setState]
 /// method of a [StatefulWidget].
-class QuestionController {
+class QuestionController extends ChangeNotifier {
   /// If [blockOnSubmit] is true, the validate button and the fields are disabled
   /// after one validation.
   final bool blockOnSubmit;
 
+  /// [question] defines the content of the question to display.
+  final Question question;
+
   final Map<int, FieldController> _fields = {};
 
-  InputState state = InputState.working;
+  _InputState state = _InputState.working;
 
   void answer() {
     if (blockOnSubmit) {
-      state = InputState.waiting;
+      state = _InputState.waitingForPlayers;
       for (var element in _fields.values) {
         element.disable();
       }
@@ -61,13 +67,15 @@ class QuestionController {
 
   bool get enableButtonClick {
     switch (state) {
-      case InputState.working: // check if the fields are valid
+      case _InputState.working: // check if the fields are valid
         final areAnswersValid =
             _fields.values.every((ct) => !ct.hasError && ct.hasValidData());
         return areAnswersValid;
-      case InputState.waiting:
+      case _InputState.done:
         return false;
-      case InputState.displayingFeedback:
+      case _InputState.waitingForPlayers:
+        return false;
+      case _InputState.displayingFeedback:
         return true;
     }
   }
@@ -78,73 +86,87 @@ class QuestionController {
     );
   }
 
-  /// [setAnswers] shows the given answers and switch the state
-  /// to working (activated)
-  void setAnswers(Map<int, Answer> answers) {
-    state = InputState.working;
+  /// If [answers] is not null, [setAnswers] shows the given answers and switch the state
+  /// to working (activated), that is, no input is required to valid.
+  void setAnswers(Map<int, Answer>? answers) {
+    if (answers == null) {
+      return;
+    }
+    state = _InputState.working;
     _fields.forEach((key, value) {
       value.setData(answers[key]!);
     });
   }
 
-  /// [setFeedback] marks the fields with a false value
-  /// as error, and switch the state to feedback mode.
-  void setFeedback(Map<int, bool> results) {
-    state = InputState.displayingFeedback;
+  /// If [results] is not null, [setFeedback] marks the fields with a false value
+  /// as error, and switch the state to feedback mode, replacing
+  /// the validation text button is replaced
+  void setFeedback(Map<int, bool>? results) {
+    if (results == null) {
+      return;
+    }
+    state = _InputState.displayingFeedback;
     _fields.forEach((key, value) {
       value.setError(!(results[key] ?? false));
       value.disable();
     });
   }
 
+  /// [setDone] disable the question and indicate the question is done
+  void setDone() {
+    state = _InputState.done;
+  }
+
+  void _onEditDone(int fieldID) {
+    notifyListeners();
+  }
+
   /// Walks throught the question content and creates the field controllers,
   /// later used when building widgets.
-  /// [onEditDone] is called when one field is updated by the user
-  /// It should in return trigger a setState on the widget using the controller.
   ///
   /// [api] is used to validate expression syntax
-  QuestionController(List<Block> enonce, FieldAPI api, this.blockOnSubmit,
-      void Function(int fieldID) onEditDone) {
-    for (var block in enonce) {
+  QuestionController(this.question, FieldAPI api, this.blockOnSubmit) {
+    for (var block in question.enonce) {
       if (block is NumberFieldBlock) {
-        _fields[block.iD] = NumberController(() => onEditDone(block.iD));
+        _fields[block.iD] = NumberController(() => _onEditDone(block.iD));
       } else if (block is ExpressionFieldBlock) {
         _fields[block.iD] =
-            ExpressionController(api, () => onEditDone(block.iD));
+            ExpressionController(api, () => _onEditDone(block.iD));
       } else if (block is RadioFieldBlock) {
         _fields[block.iD] =
-            RadioController(() => onEditDone(block.iD), block.proposals);
+            RadioController(() => _onEditDone(block.iD), block.proposals);
       } else if (block is DropDownFieldBlock) {
         _fields[block.iD] =
-            DropDownController(() => onEditDone(block.iD), block.proposals);
+            DropDownController(() => _onEditDone(block.iD), block.proposals);
       } else if (block is OrderedListFieldBlock) {
         _fields[block.iD] =
-            OrderedListController(() => onEditDone(block.iD), block);
+            OrderedListController(() => _onEditDone(block.iD), block);
       } else if (block is FigurePointFieldBlock) {
-        _fields[block.iD] = FigurePointController(() => onEditDone(block.iD));
+        _fields[block.iD] = FigurePointController(() => _onEditDone(block.iD));
       } else if (block is FigureVectorFieldBlock) {
         _fields[block.iD] =
-            FigureVectorController(block, () => onEditDone(block.iD));
+            FigureVectorController(block, () => _onEditDone(block.iD));
       } else if (block is FigureVectorPairFieldBlock) {
         _fields[block.iD] = FigureVectorPairController(
-            block.figure, () => onEditDone(block.iD));
+            block.figure, () => _onEditDone(block.iD));
       } else if (block is VariationTableFieldBlock) {
         _fields[block.iD] =
-            VariationTableController(api, block, () => onEditDone(block.iD));
+            VariationTableController(api, block, () => _onEditDone(block.iD));
       } else if (block is SignTableFieldBlock) {
         _fields[block.iD] =
-            SignTableController(api, block, () => onEditDone(block.iD));
+            SignTableController(api, block, () => _onEditDone(block.iD));
       } else if (block is FunctionPointsFieldBlock) {
         _fields[block.iD] =
-            FunctionPointsController(block, () => onEditDone(block.iD));
+            FunctionPointsController(block, () => _onEditDone(block.iD));
       } else if (block is TreeFieldBlock) {
-        _fields[block.iD] = TreeController(block, () => onEditDone(block.iD));
+        _fields[block.iD] = TreeController(block, () => _onEditDone(block.iD));
       } else if (block is TableFieldBlock) {
-        _fields[block.iD] = TableController(block, () => onEditDone(block.iD));
+        _fields[block.iD] = TableController(block, () => _onEditDone(block.iD));
       } else if (block is VectorFieldBlock) {
-        _fields[block.iD] = VectorController(block, () => onEditDone(block.iD));
+        _fields[block.iD] =
+            VectorController(block, () => _onEditDone(block.iD));
       } else if (block is ProofFieldBlock) {
-        _fields[block.iD] = ProofController(block, () => onEditDone(block.iD));
+        _fields[block.iD] = ProofController(block, () => _onEditDone(block.iD));
       }
     }
   }
@@ -177,7 +199,9 @@ class _ContentBuilder {
   bool lastIsText = false; // used to insert new line between to text block
   static const fontSize = 18.0;
 
-  _ContentBuilder(this._content, this._controllers, this._color);
+  _ContentBuilder(QuestionController ct, this._color)
+      : _content = ct.question.enonce,
+        _controllers = ct._fields;
 
   void _flushCurrentRow() {
     if (_currentRow.isEmpty) {
@@ -525,15 +549,15 @@ class _ListRows extends StatelessWidget {
 }
 
 /// [QuestionW] is the widget used to display a question
-/// The interactivity is handled internally; with the two
-/// hooks [onCheckSyntax] and [onValid] provided as external API,
-/// as well as the [syntaxFeedback] parameter
+/// The interactivity is handled internally; with the
+/// hook [onValid] provided as external API,
+/// as well as the [feedback] parameter
 class QuestionW extends StatefulWidget {
-  final FieldAPI api;
+  final QuestionController controller;
 
-  final Question question;
   final Color color;
 
+  /// [onValid] is called hen the validation button is clicked
   final void Function(QuestionAnswersIn) onValid;
 
   /// [onRetry] is called when the user clicks on the
@@ -548,32 +572,16 @@ class QuestionW extends StatefulWidget {
   /// question has been answered
   final QuoteData footerQuote;
 
-  /// If [blockOnSubmit] is true, the validate button is disabled
-  /// after one validation
-  final bool blockOnSubmit;
-
-  /// If [answer] is provided, the question controllers and fields
-  /// are filled using the answers given, and no input is required to valid.
-  final Answers? answer;
-
-  /// If [feedback] is provided, errors indicators are displayed for incorrect (false)
-  /// fields, and the validation text button is replaced
-  final Map<int, bool>? feedback;
-
   final String title;
 
   const QuestionW(
-    this.api,
-    this.question,
+    this.controller,
     this.color,
     this.onValid, {
     Key? key,
     this.title = "Question",
     this.timeout = const Duration(seconds: 60),
     this.footerQuote = const QuoteData("", "", ""),
-    this.blockOnSubmit = true,
-    this.answer,
-    this.feedback,
     this.onRetry,
   }) : super(key: key);
 
@@ -583,7 +591,6 @@ class QuestionW extends StatefulWidget {
 
 class _QuestionWState extends State<QuestionW> {
   late _ContentBuilder builder;
-  late QuestionController controller;
 
   @override
   void initState() {
@@ -602,29 +609,22 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   void _initController() {
-    controller = QuestionController(
-        widget.question.enonce, widget.api, widget.blockOnSubmit, _onEditDone);
-    if (widget.answer != null) {
-      controller.setAnswers(widget.answer!);
-    }
-    if (widget.feedback != null) {
-      controller.setFeedback(widget.feedback!);
-    }
+    widget.controller.removeListener(_onControllerChange);
+    widget.controller.addListener(_onControllerChange);
   }
 
   void _buildFields() {
-    builder = _ContentBuilder(
-        widget.question.enonce, controller._fields, widget.color);
+    builder = _ContentBuilder(widget.controller, widget.color);
     builder.build();
   }
 
-  void _onEditDone(int fieldID) async {
+  void _onControllerChange() {
     setState(() {});
   }
 
   void onValidate() {
-    final answers = controller.answers();
-    controller.answer();
+    final answers = widget.controller.answers();
+    widget.controller.answer();
     _buildFields();
     setState(() {});
     widget.onValid(answers);
@@ -637,25 +637,29 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   String get buttonLabel {
-    switch (controller.state) {
-      case InputState.working:
+    switch (widget.controller.state) {
+      case _InputState.working:
         return "Valider";
-      case InputState.waiting:
-        return "En attente...";
-      case InputState.displayingFeedback:
+      case _InputState.done:
+        return "Question terminée";
+      case _InputState.waitingForPlayers:
+        return "En attente des autres joueurs...";
+      case _InputState.displayingFeedback:
         return "Essayer à nouveau";
     }
   }
 
   void onButtonClick() {
-    switch (controller.state) {
-      case InputState.working:
-      case InputState.waiting:
+    switch (widget.controller.state) {
+      case _InputState.working:
         onValidate();
         break;
-      case InputState.displayingFeedback:
+      case _InputState.displayingFeedback:
         onReset();
         break;
+      case _InputState.waitingForPlayers:
+      case _InputState.done:
+        return;
     }
   }
 
@@ -677,8 +681,9 @@ class _QuestionWState extends State<QuestionW> {
               child: _ListRows(
             builder,
             ElevatedButton(
-              onPressed: controller.enableButtonClick ? onButtonClick : null,
-              style: ElevatedButton.styleFrom(primary: widget.color),
+              onPressed:
+                  widget.controller.enableButtonClick ? onButtonClick : null,
+              style: ElevatedButton.styleFrom(backgroundColor: widget.color),
               child: Text(
                 buttonLabel,
                 style: const TextStyle(fontSize: 18),
@@ -692,10 +697,14 @@ class _QuestionWState extends State<QuestionW> {
               padding: const EdgeInsets.only(top: 6),
               child: AnimatedOpacity(
                   duration: const Duration(seconds: 2),
-                  opacity: controller.state == InputState.waiting ? 1 : 0,
-                  child: Quote(controller.state == InputState.waiting
-                      ? widget.footerQuote
-                      : const QuoteData("", "", ""))),
+                  opacity:
+                      widget.controller.state == _InputState.waitingForPlayers
+                          ? 1
+                          : 0,
+                  child: Quote(
+                      widget.controller.state == _InputState.waitingForPlayers
+                          ? widget.footerQuote
+                          : const QuoteData("", "", ""))),
             ),
           ]
         ],

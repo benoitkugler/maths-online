@@ -28,11 +28,17 @@ type loopbackShowExercice struct {
 	Progression tasks.ProgressionExt   `gomacro-extern:"tasks#dart#shared_gen.dart"`
 }
 
+type loopbackExerciceCorrectAnswersOut struct {
+	Answers       client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
+	QuestionIndex int
+}
+
 func (loopbackPaused) isLoopbackServerEvent()                    {}
 func (loopbackQuestion) isLoopbackServerEvent()                  {}
 func (loopbackQuestionValidOut) isLoopbackServerEvent()          {}
 func (loopbackQuestionCorrectAnswersOut) isLoopbackServerEvent() {}
 func (loopbackShowExercice) isLoopbackServerEvent()              {}
+func (loopbackExerciceCorrectAnswersOut) isLoopbackServerEvent() {}
 
 type LoopbackClientEvent interface {
 	isLoopbackClientEvent()
@@ -46,11 +52,11 @@ type loopbackQuestionValidIn struct {
 
 type loopbackQuestionCorrectAnswersIn struct{}
 
-type loopbackExerciceValidIn struct {
-	Answer tasks.EvaluateWorkIn `gomacro-extern:"tasks#dart#shared_gen.dart"`
+type loopbackExerciceCorrectAnswsersIn struct {
+	QuestionIndex int
 }
 
-func (loopbackPing) isLoopbackClientEvent()                     {}
-func (loopbackQuestionValidIn) isLoopbackClientEvent()          {}
-func (loopbackQuestionCorrectAnswersIn) isLoopbackClientEvent() {}
-func (loopbackExerciceValidIn) isLoopbackClientEvent()          {}
+func (loopbackPing) isLoopbackClientEvent()                      {}
+func (loopbackQuestionValidIn) isLoopbackClientEvent()           {}
+func (loopbackQuestionCorrectAnswersIn) isLoopbackClientEvent()  {}
+func (loopbackExerciceCorrectAnswsersIn) isLoopbackClientEvent() {}

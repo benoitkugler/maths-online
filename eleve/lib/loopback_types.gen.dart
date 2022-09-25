@@ -11,8 +11,8 @@ LoopbackClientEvent loopbackClientEventFromJson(dynamic json_) {
   final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
-    case "loopbackExerciceValidIn":
-      return loopbackExerciceValidInFromJson(data);
+    case "loopbackExerciceCorrectAnswsersIn":
+      return loopbackExerciceCorrectAnswsersInFromJson(data);
     case "loopbackPing":
       return loopbackPingFromJson(data);
     case "loopbackQuestionCorrectAnswersIn":
@@ -25,10 +25,10 @@ LoopbackClientEvent loopbackClientEventFromJson(dynamic json_) {
 }
 
 JSON loopbackClientEventToJson(LoopbackClientEvent item) {
-  if (item is LoopbackExerciceValidIn) {
+  if (item is LoopbackExerciceCorrectAnswsersIn) {
     return {
-      'Kind': "loopbackExerciceValidIn",
-      'Data': loopbackExerciceValidInToJson(item)
+      'Kind': "loopbackExerciceCorrectAnswsersIn",
+      'Data': loopbackExerciceCorrectAnswsersInToJson(item)
     };
   } else if (item is LoopbackPing) {
     return {'Kind': "loopbackPing", 'Data': loopbackPingToJson(item)};
@@ -47,25 +47,56 @@ JSON loopbackClientEventToJson(LoopbackClientEvent item) {
   }
 }
 
-// github.com/benoitkugler/maths-online/prof/editor.loopbackExerciceValidIn
-class LoopbackExerciceValidIn implements LoopbackClientEvent {
-  final EvaluateWorkIn answer;
+// github.com/benoitkugler/maths-online/prof/editor.loopbackExerciceCorrectAnswersOut
+class LoopbackExerciceCorrectAnswersOut implements LoopbackServerEvent {
+  final QuestionAnswersIn answers;
+  final int questionIndex;
 
-  const LoopbackExerciceValidIn(this.answer);
+  const LoopbackExerciceCorrectAnswersOut(this.answers, this.questionIndex);
 
   @override
   String toString() {
-    return "LoopbackExerciceValidIn($answer)";
+    return "LoopbackExerciceCorrectAnswersOut($answers, $questionIndex)";
   }
 }
 
-LoopbackExerciceValidIn loopbackExerciceValidInFromJson(dynamic json_) {
+LoopbackExerciceCorrectAnswersOut loopbackExerciceCorrectAnswersOutFromJson(
+    dynamic json_) {
   final json = (json_ as JSON);
-  return LoopbackExerciceValidIn(evaluateWorkInFromJson(json['Answer']));
+  return LoopbackExerciceCorrectAnswersOut(
+      questionAnswersInFromJson(json['Answers']),
+      intFromJson(json['QuestionIndex']));
 }
 
-JSON loopbackExerciceValidInToJson(LoopbackExerciceValidIn item) {
-  return {"Answer": evaluateWorkInToJson(item.answer)};
+JSON loopbackExerciceCorrectAnswersOutToJson(
+    LoopbackExerciceCorrectAnswersOut item) {
+  return {
+    "Answers": questionAnswersInToJson(item.answers),
+    "QuestionIndex": intToJson(item.questionIndex)
+  };
+}
+
+// github.com/benoitkugler/maths-online/prof/editor.loopbackExerciceCorrectAnswsersIn
+class LoopbackExerciceCorrectAnswsersIn implements LoopbackClientEvent {
+  final int questionIndex;
+
+  const LoopbackExerciceCorrectAnswsersIn(this.questionIndex);
+
+  @override
+  String toString() {
+    return "LoopbackExerciceCorrectAnswsersIn($questionIndex)";
+  }
+}
+
+LoopbackExerciceCorrectAnswsersIn loopbackExerciceCorrectAnswsersInFromJson(
+    dynamic json_) {
+  final json = (json_ as JSON);
+  return LoopbackExerciceCorrectAnswsersIn(intFromJson(json['QuestionIndex']));
+}
+
+JSON loopbackExerciceCorrectAnswsersInToJson(
+    LoopbackExerciceCorrectAnswsersIn item) {
+  return {"QuestionIndex": intToJson(item.questionIndex)};
 }
 
 // github.com/benoitkugler/maths-online/prof/editor.loopbackPaused
@@ -222,6 +253,8 @@ LoopbackServerEvent loopbackServerEventFromJson(dynamic json_) {
   final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
+    case "loopbackExerciceCorrectAnswersOut":
+      return loopbackExerciceCorrectAnswersOutFromJson(data);
     case "loopbackPaused":
       return loopbackPausedFromJson(data);
     case "loopbackQuestion":
@@ -238,7 +271,12 @@ LoopbackServerEvent loopbackServerEventFromJson(dynamic json_) {
 }
 
 JSON loopbackServerEventToJson(LoopbackServerEvent item) {
-  if (item is LoopbackPaused) {
+  if (item is LoopbackExerciceCorrectAnswersOut) {
+    return {
+      'Kind': "loopbackExerciceCorrectAnswersOut",
+      'Data': loopbackExerciceCorrectAnswersOutToJson(item)
+    };
+  } else if (item is LoopbackPaused) {
     return {'Kind': "loopbackPaused", 'Data': loopbackPausedToJson(item)};
   } else if (item is LoopbackQuestion) {
     return {'Kind': "loopbackQuestion", 'Data': loopbackQuestionToJson(item)};
@@ -289,3 +327,6 @@ JSON loopbackShowExerciceToJson(LoopbackShowExercice item) {
 }
 
 typedef JSON = Map<String, dynamic>; // alias to shorten JSON convertors
+int intFromJson(dynamic json) => json as int;
+
+int intToJson(int item) => item;

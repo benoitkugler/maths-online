@@ -109,12 +109,11 @@ class _QuestionGalleryState extends State<QuestionGallery> {
         padding: const EdgeInsets.all(8.0),
         child: currentQuestionIndex != null
             ? QuestionW(
-                ServerFieldAPI(widget.buildMode),
-                questions[currentQuestionIndex!].question,
+                QuestionController(questions[currentQuestionIndex!].question,
+                    ServerFieldAPI(widget.buildMode), false),
                 questionColor!,
                 (v) => _validate(v, context),
                 footerQuote: pickQuote(),
-                blockOnSubmit: false,
               )
             : const Text("Chargement"),
       ),

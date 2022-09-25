@@ -274,8 +274,8 @@ class HomeworkActivityIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GestureDetector(
-          onTap: onTap,
+        RawMaterialButton(
+          onPressed: onTap,
           child: Image.asset("lib/images/homework.png", width: 68),
         ),
         const Padding(

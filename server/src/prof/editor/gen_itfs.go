@@ -20,8 +20,8 @@ func (out *LoopbackClientEventWrapper) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	switch wr.Kind {
-	case "loopbackExerciceValidIn":
-		var data loopbackExerciceValidIn
+	case "loopbackExerciceCorrectAnswsersIn":
+		var data loopbackExerciceCorrectAnswsersIn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case "loopbackPing":
@@ -50,8 +50,8 @@ func (item LoopbackClientEventWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
-	case loopbackExerciceValidIn:
-		wr = wrapper{Kind: "loopbackExerciceValidIn", Data: data}
+	case loopbackExerciceCorrectAnswsersIn:
+		wr = wrapper{Kind: "loopbackExerciceCorrectAnswsersIn", Data: data}
 	case loopbackPing:
 		wr = wrapper{Kind: "loopbackPing", Data: data}
 	case loopbackQuestionCorrectAnswersIn:
@@ -66,10 +66,10 @@ func (item LoopbackClientEventWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	loopbackExerciceValidInLoKind          = "loopbackExerciceValidIn"
-	loopbackPingLoKind                     = "loopbackPing"
-	loopbackQuestionCorrectAnswersInLoKind = "loopbackQuestionCorrectAnswersIn"
-	loopbackQuestionValidInLoKind          = "loopbackQuestionValidIn"
+	loopbackExerciceCorrectAnswsersInLoKind = "loopbackExerciceCorrectAnswsersIn"
+	loopbackPingLoKind                      = "loopbackPing"
+	loopbackQuestionCorrectAnswersInLoKind  = "loopbackQuestionCorrectAnswersIn"
+	loopbackQuestionValidInLoKind           = "loopbackQuestionValidIn"
 )
 
 // LoopbackServerEventWrapper may be used as replacements for LoopbackServerEvent
@@ -88,6 +88,10 @@ func (out *LoopbackServerEventWrapper) UnmarshalJSON(src []byte) error {
 		return err
 	}
 	switch wr.Kind {
+	case "loopbackExerciceCorrectAnswersOut":
+		var data loopbackExerciceCorrectAnswersOut
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "loopbackPaused":
 		var data loopbackPaused
 		err = json.Unmarshal(wr.Data, &data)
@@ -122,6 +126,8 @@ func (item LoopbackServerEventWrapper) MarshalJSON() ([]byte, error) {
 	}
 	var wr wrapper
 	switch data := item.Data.(type) {
+	case loopbackExerciceCorrectAnswersOut:
+		wr = wrapper{Kind: "loopbackExerciceCorrectAnswersOut", Data: data}
 	case loopbackPaused:
 		wr = wrapper{Kind: "loopbackPaused", Data: data}
 	case loopbackQuestion:
@@ -140,6 +146,7 @@ func (item LoopbackServerEventWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
+	loopbackExerciceCorrectAnswersOutLoKind = "loopbackExerciceCorrectAnswersOut"
 	loopbackPausedLoKind                    = "loopbackPaused"
 	loopbackQuestionLoKind                  = "loopbackQuestion"
 	loopbackQuestionCorrectAnswersOutLoKind = "loopbackQuestionCorrectAnswersOut"

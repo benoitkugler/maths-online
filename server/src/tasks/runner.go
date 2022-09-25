@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/maths/questions"
 	"github.com/benoitkugler/maths-online/maths/questions/client"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
 	ta "github.com/benoitkugler/maths-online/sql/tasks"
@@ -18,7 +19,13 @@ type InstantiatedQuestion struct {
 	Id       ed.IdQuestion
 	Question client.Question `gomacro-extern:"client#dart#questions/types.gen.dart"`
 	Params   []VarEntry
+
+	// this field is private, not exported as JSON,
+	// and used to simplify the loopback logic
+	instance questions.QuestionInstance
 }
+
+func (iq InstantiatedQuestion) Instance() questions.QuestionInstance { return iq.instance }
 
 type Answer struct {
 	Params []VarEntry
@@ -63,6 +70,7 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 			Id:       id,
 			Question: instance.ToClient(),
 			Params:   newVarList(vars),
+			instance: instance,
 		}
 	}
 
@@ -180,6 +188,7 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 			Id:       question.Id,
 			Question: instance.ToClient(),
 			Params:   newVarList(ownVars),
+			instance: instance,
 		}
 	}
 

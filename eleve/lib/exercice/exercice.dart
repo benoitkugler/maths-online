@@ -13,6 +13,38 @@ abstract class ExerciceAPI extends FieldAPI {
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params);
 }
 
+/// [ExerciceController] exposes the state
+/// which will change during an exercice,
+/// so that parent widget may react properly.
+class ExerciceController {
+  /// [exeAndProg] stores the server instantiated exercice with
+  /// the progression state.
+  StudentWork exeAndProg;
+
+  /// [questionIndex] is the current question, or null for the summary
+  int? questionIndex;
+
+  ExerciceController(this.exeAndProg, this.questionIndex);
+}
+
+extension _CopyIW on InstantiatedWork {
+  InstantiatedWork copyWithQuestions(List<InstantiatedQuestion> questions) {
+    return InstantiatedWork(
+        iD,
+        title,
+        flow,
+        // replace the questions
+        questions,
+        baremes);
+  }
+}
+
+extension _CopySW on StudentWork {
+  StudentWork copyWithQuestions(List<InstantiatedQuestion> questions) {
+    return StudentWork(exercice.copyWithQuestions(questions), progression);
+  }
+}
+
 /// ExerciceW is the widget providing one exercice to
 /// the student.
 /// It is used in the editor loopback, and as the base for
@@ -20,29 +52,33 @@ abstract class ExerciceAPI extends FieldAPI {
 class ExerciceW extends StatefulWidget {
   final ExerciceAPI api;
 
-  /// [data] stores the server instantiated exercice with
-  /// the initial progression state.
-  final StudentWork data;
+  final ExerciceController controller;
 
-  const ExerciceW(this.api, this.data, {Key? key}) : super(key: key);
+  /// If not null, [questionAnswers] overide the user answers
+  /// for the current question
+  final Answers? questionAnswers;
+
+  final void Function()? onShowCorrectAnswer;
+
+  const ExerciceW(this.api, this.controller,
+      {Key? key, this.questionAnswers, this.onShowCorrectAnswer})
+      : super(key: key);
 
   @override
   State<ExerciceW> createState() => _ExerciceWState();
 }
 
 class _ExerciceWState extends State<ExerciceW> {
-  late List<InstantiatedQuestion> questions; // will change upon wrong answer
-  late ProgressionExt progression; // will change on validate
-
   // the questions to display when trying again
+  // this is a temporay slice, affected to the controller on user validation
   List<InstantiatedQuestion> nextQuestions = [];
 
   // the currrent answsers of the student, filled
   // when validating a question
   Map<int, QuestionAnswersIn> currentAnswers = {};
-  Map<int, QuestionAnswersOut> results = {};
 
-  int? questionIndex; // null means summary
+  // the feedback to display
+  Map<int, QuestionAnswersOut> feedback = {};
 
   @override
   void initState() {
@@ -57,12 +93,15 @@ class _ExerciceWState extends State<ExerciceW> {
   }
 
   void reset() {
-    questions = widget.data.exercice.questions;
-    progression = widget.data.progression;
     nextQuestions = [];
     currentAnswers.clear();
-    results.clear();
-    questionIndex = null;
+    feedback.clear();
+    // show answers from the server
+    if (widget.controller.questionIndex != null &&
+        widget.questionAnswers != null) {
+      currentAnswers[widget.controller.questionIndex!] =
+          QuestionAnswersIn(widget.questionAnswers!);
+    }
   }
 
   // handle the errors
@@ -78,7 +117,7 @@ class _ExerciceWState extends State<ExerciceW> {
 
   void onExerciceOver() async {
     setState(() {
-      questionIndex = null;
+      widget.controller.questionIndex = null;
     });
 
     // exercice is over
@@ -89,31 +128,37 @@ class _ExerciceWState extends State<ExerciceW> {
   }
 
   void onValidQuestionSequential() async {
-    final index = questionIndex!;
+    final ct = widget.controller;
+    final index = ct.questionIndex!;
 
     // if we are not at the current question, just go to it
     // and return
-    if (index != progression.nextQuestion) {
+    if (index != ct.exeAndProg.progression.nextQuestion) {
       setState(() {
-        questionIndex = progression.nextQuestion;
+        ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
       });
       return;
     }
 
     // validate the given answer
     final resp = await _evaluate(EvaluateWorkIn(
-        widget.data.exercice.iD,
-        {index: Answer(questions[index].params, currentAnswers[index]!)},
-        progression));
+        ct.exeAndProg.exercice.iD,
+        {
+          index: Answer(ct.exeAndProg.exercice.questions[index].params,
+              currentAnswers[index]!)
+        },
+        ct.exeAndProg.progression));
     if (resp == null) {
       return;
     }
 
-    progression = resp.progression; // update the progression
+    ct.exeAndProg = StudentWork(
+        ct.exeAndProg.exercice, resp.progression); // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
 
     final isCorrect = resp.results[index]!.isCorrect;
-    final hasNextQuestion = isCorrect && progression.nextQuestion != -1;
+    final hasNextQuestion =
+        isCorrect && ct.exeAndProg.progression.nextQuestion != -1;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade200,
       duration: Duration(
@@ -126,38 +171,41 @@ class _ExerciceWState extends State<ExerciceW> {
               textColor: Colors.black,
               onPressed: () {
                 setState(() {
-                  questionIndex = progression.nextQuestion;
+                  ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
                 });
               },
             )
           : null,
     ));
 
-    if (progression.nextQuestion == -1) {
+    if (ct.exeAndProg.progression.nextQuestion == -1) {
       onExerciceOver();
       return;
     }
 
     if (isCorrect) {
       setState(() {
-        results.clear();
+        feedback.clear();
       });
       // wait for the user to go to the next question
     } else {
       // show errors and ask for retry
       setState(() {
-        results = {index: resp.results[index]!};
+        feedback = {index: resp.results[index]!};
       });
     }
   }
 
   // only validate if all the questions have been completed
   void onValidQuestionParallel() async {
+    final ct = widget.controller;
+    final questions = ct.exeAndProg.exercice.questions;
+
     // check if all the questions are done
     final toSend = <int, Answer>{};
     int? goToQuestion;
     for (var index = 0; index < questions.length; index++) {
-      final history = progression.getQuestion(index);
+      final history = ct.exeAndProg.progression.getQuestion(index);
       if (history.isEmpty || !history.last) {
         // the question must be answered
         if (!currentAnswers.containsKey(index)) {
@@ -175,22 +223,23 @@ class _ExerciceWState extends State<ExerciceW> {
     if (goToQuestion != null) {
       // there are still some questions to to
       setState(() {
-        questionIndex = goToQuestion;
+        widget.controller.questionIndex = goToQuestion;
       });
       return;
     }
 
     // all good, lets send the results
-    final resp = await _evaluate(
-        EvaluateWorkIn(widget.data.exercice.iD, toSend, progression));
+    final resp = await _evaluate(EvaluateWorkIn(
+        ct.exeAndProg.exercice.iD, toSend, ct.exeAndProg.progression));
     if (resp == null) {
       return;
     }
 
-    progression = resp.progression; // update the progression
+    ct.exeAndProg = StudentWork(
+        ct.exeAndProg.exercice, resp.progression); // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
 
-    if (progression.nextQuestion == -1) {
+    if (isExerciceOver) {
       onExerciceOver();
       return;
     }
@@ -211,22 +260,23 @@ class _ExerciceWState extends State<ExerciceW> {
 
     // display the errors and go to the menu
     setState(() {
-      results = resp.results;
-      questionIndex = null;
+      feedback = resp.results;
+      widget.controller.questionIndex = null;
     });
   }
 
   void onRetryQuestion() {
+    final ct = widget.controller;
     setState(() {
-      questions = nextQuestions;
+      ct.exeAndProg = ct.exeAndProg.copyWithQuestions(nextQuestions);
       currentAnswers.clear();
-      results.clear();
+      feedback.clear();
     });
   }
 
   void onValideQuestion(QuestionAnswersIn answer) async {
-    currentAnswers[questionIndex!] = answer;
-    switch (widget.data.exercice.flow) {
+    currentAnswers[widget.controller.questionIndex!] = answer;
+    switch (widget.controller.exeAndProg.exercice.flow) {
       case Flow.sequencial:
         return onValidQuestionSequential();
       case Flow.parallel:
@@ -234,44 +284,61 @@ class _ExerciceWState extends State<ExerciceW> {
     }
   }
 
-  bool get goToPreviousEnabled => questionIndex != null;
+  bool get isExerciceOver =>
+      widget.controller.exeAndProg.progression.nextQuestion == -1;
+
+  bool get goToPreviousEnabled => widget.controller.questionIndex != null;
 
   bool get goToNextEnabled {
-    switch (widget.data.exercice.flow) {
-      case Flow.sequencial: // do not show locked questions
-        return questionIndex == null ||
-            questionIndex! < progression.nextQuestion;
+    final ex = widget.controller.exeAndProg;
+    final currentIndex = widget.controller.questionIndex;
+    final hasNextQuestion = currentIndex != ex.exercice.questions.length - 1;
+    switch (ex.exercice.flow) {
+      case Flow
+          .sequencial: // do not show locked questions when exercice is not over
+        return currentIndex == null ||
+            (isExerciceOver && hasNextQuestion) ||
+            currentIndex < ex.progression.nextQuestion;
       case Flow.parallel: // no restriction:
-        return questionIndex != questions.length - 1;
+        return hasNextQuestion;
     }
   }
 
   void goToPrevious() {
-    final newIndex = questionIndex == 0 ? null : questionIndex! - 1;
+    final newIndex = widget.controller.questionIndex == 0
+        ? null
+        : widget.controller.questionIndex! - 1;
     setState(() {
-      questionIndex = newIndex;
+      widget.controller.questionIndex = newIndex;
     });
   }
 
   void goToNext() {
-    final newIndex = questionIndex == null ? 0 : questionIndex! + 1;
+    // remove potential snackbar
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    final newIndex = widget.controller.questionIndex == null
+        ? 0
+        : widget.controller.questionIndex! + 1;
     setState(() {
-      questionIndex = newIndex;
+      widget.controller.questionIndex = newIndex;
     });
   }
 
   List<QuestionState> get questionStates {
+    final exP = widget.controller.exeAndProg;
     final validatedQuestions = currentAnswers.keys.toSet();
     final incorrectQuestions =
-        results.keys.where((index) => !results[index]!.isCorrect).toSet();
+        feedback.keys.where((index) => !feedback[index]!.isCorrect).toSet();
 
-    return List<QuestionState>.generate(questions.length, (questionIndex) {
-      if (progression.isQuestionCompleted(questionIndex)) {
+    return List<QuestionState>.generate(exP.exercice.questions.length,
+        (questionIndex) {
+      if (exP.progression.isQuestionCompleted(questionIndex)) {
         return QuestionState.checked;
       }
 
-      if (widget.data.exercice.flow == Flow.sequencial &&
-          progression.nextQuestion < questionIndex) {
+      if (exP.exercice.flow == Flow.sequencial &&
+          exP.progression.nextQuestion < questionIndex) {
         return QuestionState.locked;
       }
 
@@ -306,13 +373,34 @@ class _ExerciceWState extends State<ExerciceW> {
     return res ?? false;
   }
 
+  QuestionController questionController() {
+    final exP = widget.controller.exeAndProg;
+    final out = QuestionController(
+        exP.exercice.questions[widget.controller.questionIndex!].question,
+        widget.api,
+        true);
+    out.setAnswers(currentAnswers[widget.controller.questionIndex!]?.data);
+    // feedback has the priority against answers
+    out.setFeedback(feedback[widget.controller.questionIndex!]?.results);
+    if (questionStates[widget.controller.questionIndex!] ==
+        QuestionState.checked) {
+      out.setDone();
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ex = widget.data.exercice;
+    final exP = widget.controller.exeAndProg;
     return Scaffold(
         appBar: AppBar(
           title: const Text("Exercice"),
           actions: [
+            if (widget.onShowCorrectAnswer != null &&
+                widget.controller.questionIndex != null)
+              TextButton(
+                  onPressed: widget.onShowCorrectAnswer,
+                  child: const Text("Afficher la réponse.")),
             IconButton(
                 onPressed: goToPreviousEnabled ? goToPrevious : null,
                 icon: const Icon(IconData(0xf572,
@@ -333,32 +421,19 @@ class _ExerciceWState extends State<ExerciceW> {
             }
             return true; // nothing to loose
           },
-          child: questionIndex == null
+          child: widget.controller.questionIndex == null
               ? ExerciceHome(
-                  StudentWork(
-                    InstantiatedWork(
-                        ex.iD,
-                        ex.title,
-                        ex.flow,
-                        // replace the questions
-                        questions,
-                        ex.baremes),
-                    progression,
-                  ),
+                  exP,
                   questionStates,
                   (index) => setState(() {
-                        questionIndex = index;
+                        widget.controller.questionIndex = index;
                       }))
               : QuestionW(
-                  widget.api,
-                  questions[questionIndex!].question,
+                  questionController(),
                   Colors.purpleAccent,
                   onValideQuestion,
-                  title: "Question ${questionIndex! + 1}",
+                  title: "Question ${widget.controller.questionIndex! + 1}",
                   timeout: null,
-                  blockOnSubmit: true,
-                  feedback: results[questionIndex!]?.results,
-                  answer: currentAnswers[questionIndex!]?.data,
                   onRetry: onRetryQuestion,
                 ),
         ));

@@ -99,13 +99,14 @@ class _SheetWState extends State<SheetW> {
     Navigator.of(context).pop(); // remove the dialog
 
     final studentEx = StudentWork(instantiatedExercice, task.progression);
-    final controller = _ExerciceAPI(widget.api, task.id);
+    final exeAPI = _ExerciceAPI(widget.api, task.id);
+    final exController = ExerciceController(studentEx, null);
     // actually launch the exercice
     await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => ExerciceW(controller, studentEx)));
+        builder: (context) => ExerciceW(exeAPI, exController)));
 
-    if (controller.lastState != null) {
-      final state = controller.lastState!;
+    if (exeAPI.lastState != null) {
+      final state = exeAPI.lastState!;
       final notif = SheetMarkNotification(
           widget.sheet.sheet.id, task.id, state.ex.progression, state.mark);
 

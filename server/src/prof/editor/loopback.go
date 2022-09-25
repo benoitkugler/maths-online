@@ -3,7 +3,6 @@ package editor
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -34,8 +33,7 @@ type loopbackController struct {
 	sessionID       string
 	currentQuestion questions.QuestionInstance
 
-	currentExercice      taAPI.InstantiatedWork
-	currentQuestionIndex int // in the current exercice
+	currentExercice taAPI.InstantiatedWork
 }
 
 func newLoopbackController(sessionID string) *loopbackController {
@@ -55,7 +53,7 @@ func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 func (ct *loopbackController) setExercice(exercice taAPI.InstantiatedWork) {
 	ct.currentExercice = exercice
 	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: taAPI.ProgressionExt{
-		NextQuestion: ct.currentQuestionIndex,
+		NextQuestion: 0,
 		Questions:    make([]tasks.QuestionHistory, len(exercice.Questions)),
 	}}
 }
@@ -63,7 +61,6 @@ func (ct *loopbackController) setExercice(exercice taAPI.InstantiatedWork) {
 func (ct *loopbackController) pause() {
 	ct.currentQuestion = questions.QuestionInstance{}
 	ct.currentExercice = taAPI.InstantiatedWork{}
-	ct.currentQuestionIndex = 0
 
 	ct.broadcast <- loopbackPaused{}
 }
@@ -125,9 +122,17 @@ func (cl *previewClient) startLoop() {
 		case loopbackQuestionCorrectAnswersIn:
 			out := cl.controller.currentQuestion.CorrectAnswer()
 			cl.controller.broadcast <- loopbackQuestionCorrectAnswersOut{out}
-		case loopbackExerciceValidIn:
-			// TODO:
-			fmt.Println(data)
+		case loopbackExerciceCorrectAnswsersIn:
+			questions := cl.controller.currentExercice.Questions
+			if data.QuestionIndex < 0 || data.QuestionIndex >= len(questions) {
+				LoopackLogger.Printf("invalid question index: %d", data.QuestionIndex)
+				continue
+			}
+			answers := questions[data.QuestionIndex].Instance().CorrectAnswer()
+			cl.controller.broadcast <- loopbackExerciceCorrectAnswersOut{
+				QuestionIndex: data.QuestionIndex,
+				Answers:       answers,
+			}
 		}
 	}
 

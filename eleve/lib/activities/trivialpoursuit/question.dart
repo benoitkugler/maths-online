@@ -43,6 +43,10 @@ class QuestionRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ct =
+        QuestionController(question.question, ServerFieldAPI(buildMode), true);
+    ct.setAnswers(answer);
+
     // make the route block until validated
     return WillPopScope(
       onWillPop: () async {
@@ -63,13 +67,11 @@ class QuestionRoute extends StatelessWidget {
           automaticallyImplyLeading: true,
         ),
         body: QuestionW(
-          ServerFieldAPI(buildMode),
-          question.question,
+          ct,
           question.categorie.color,
           onValid,
           timeout: readonly ? null : Duration(seconds: question.timeoutSeconds),
           footerQuote: pickQuote(),
-          answer: answer,
         ),
       ),
     );
