@@ -53,7 +53,7 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		if task.IdExercice.Valid {
 			exerciceIDs.Add(task.IdExercice.ID)
 		} else {
-			monoquestionIDs.Add(task.IdMonoquestion.Id)
+			monoquestionIDs.Add(task.IdMonoquestion.ID)
 		}
 	}
 
@@ -111,7 +111,7 @@ func (contents TasksContents) GetWork(task ta.Task) Work {
 		}
 	}
 
-	monoquestion := contents.monoquestions[task.IdMonoquestion.Id]
+	monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
 	question := contents.questions[monoquestion.IdQuestion]
 	return MonoquestionData{
 		params:        monoquestion,
@@ -175,7 +175,7 @@ func updateProgression(db *sql.DB, prog ta.Progression, questions []ta.QuestionH
 		}
 		expectedLength = len(reference)
 	} else {
-		monoquestion, err := ta.SelectMonoquestion(db, task.IdMonoquestion.Id)
+		monoquestion, err := ta.SelectMonoquestion(db, task.IdMonoquestion.ID)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -337,11 +337,12 @@ func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStud
 	return out, mark, nil
 }
 
-type taskBareme []int // for each question
+// TaskBareme stores the baremes of a task, for each question.
+type TaskBareme []int
 
 // total returns the bareme for one task, that is the sum
 // of each question's bareme
-func (bareme taskBareme) total() int {
+func (bareme TaskBareme) total() int {
 	var out int
 	for _, questionBareme := range bareme {
 		out += questionBareme
@@ -351,7 +352,7 @@ func (bareme taskBareme) total() int {
 
 // compute the student mark
 // an empty progression is supported and returns 0
-func (bareme taskBareme) computeMark(progression []ta.QuestionHistory) int {
+func (bareme TaskBareme) computeMark(progression []ta.QuestionHistory) int {
 	if len(progression) == 0 {
 		return 0
 	}

@@ -33,7 +33,7 @@ func randMonoquestion() Monoquestion {
 func randOptionalIdMonoquestion() OptionalIdMonoquestion {
 	return OptionalIdMonoquestion{
 		Valid: randbool(),
-		Id:    randIdMonoquestion(),
+		ID:    randIdMonoquestion(),
 	}
 }
 

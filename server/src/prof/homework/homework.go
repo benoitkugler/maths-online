@@ -36,6 +36,35 @@ type TaskExt struct {
 	Title          string // title of the underlying exercice or question
 	Subtitle       string // subtitle of the underlying exercice or question
 	NbProgressions int    // the number of student having started this task
+	Baremes        taAPI.TaskBareme
+}
+
+func newTaskExt(task tasks.Task, work taAPI.Work, progressions tasks.Progressions) TaskExt {
+	_, baremes := work.QuestionsList()
+	return TaskExt{
+		Id:             task.Id,
+		IdWork:         taAPI.NewWorkID(task),
+		Title:          work.Title(),
+		Subtitle:       work.Subtitle(),
+		NbProgressions: len(progressions),
+		Baremes:        baremes,
+	}
+}
+
+func loadTaskExt(db ho.DB, idTask tasks.IdTask) (TaskExt, error) {
+	loader, err := taAPI.NewTasksContents(db, []tasks.IdTask{idTask})
+	if err != nil {
+		return TaskExt{}, err
+	}
+
+	task := loader.Tasks[idTask]
+
+	progressions, err := tasks.SelectProgressionsByIdTasks(db, idTask)
+	if err != nil {
+		return TaskExt{}, utils.SQLError(err)
+	}
+
+	return newTaskExt(task, loader.GetWork(task), progressions), nil
 }
 
 type SheetExt struct {
@@ -45,15 +74,13 @@ type SheetExt struct {
 
 type sheetLoader struct {
 	links map[ho.IdSheet]ho.SheetTasks
-	// tasks        tasks.Tasks
-	// exes         map[ed.IdExercice]edAPI.ExerciceHeader
 
 	tasks taAPI.TasksContents
 
 	progressions map[tasks.IdTask]tasks.Progressions
 }
 
-func newSheetLoader(db ho.DB, idSheets []ho.IdSheet, userID, adminID uID) (out sheetLoader, err error) {
+func newSheetLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error) {
 	// load all the tasks and exercices required...
 	links1, err := ho.SelectSheetTasksByIdSheets(db, idSheets...)
 	if err != nil {
@@ -84,13 +111,7 @@ func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
 	for _, link := range links {
 		task := loader.tasks.Tasks[link.IdTask]
 		work := loader.tasks.GetWork(task)
-		out.Tasks = append(out.Tasks, TaskExt{
-			Id:             task.Id,
-			IdWork:         taAPI.NewWorkID(task),
-			Title:          work.Title(),
-			Subtitle:       work.Subtitle(),
-			NbProgressions: len(loader.progressions[task.Id]),
-		})
+		out.Tasks = append(out.Tasks, newTaskExt(task, work, loader.progressions[task.Id]))
 	}
 	return out
 }

@@ -8,7 +8,9 @@
       v-if="sheetToUpdate != null"
       :sheet="sheetToUpdate"
       @update="updateSheet"
-      @addTask="addTaskToSheet"
+      @addExercice="addExerciceToSheet"
+      @addMonoquestion="addMonoquestionToSheet"
+      @udpate-monoquestion="updateMonoquestion"
       @removeTask="removeTaskFromSheet"
       @reorderTasks="reorderSheetTasks"
       @close="sheetToUpdate = null"
@@ -72,6 +74,8 @@
 import type {
   ClassroomSheets,
   ExerciceHeader,
+  Monoquestion,
+  QuestionHeader,
   Sheet,
   SheetExt,
   TaskExt,
@@ -166,9 +170,9 @@ async function updateSheet(sheet: Sheet) {
   cl.Sheets![sheetIndex].Sheet = sheet;
 }
 
-async function addTaskToSheet(sheet: Sheet, exercice: ExerciceHeader) {
-  const newTask = await controller.HomeworkAddTask({
-    IdExercice: exercice.Exercice.Id,
+async function addExerciceToSheet(sheet: Sheet, exercice: ExerciceHeader) {
+  const newTask = await controller.HomeworkAddExercice({
+    IdExercice: exercice.Id,
     IdSheet: sheet.Id,
   });
   if (newTask == undefined) {
@@ -177,11 +181,35 @@ async function addTaskToSheet(sheet: Sheet, exercice: ExerciceHeader) {
 
   const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
   const cl = classrooms[clIndex];
-  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).concat({
-    Id: newTask.Id,
-    Exercice: exercice,
-    NbProgressions: 0,
+  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).concat(
+    newTask
+  );
+}
+
+async function addMonoquestionToSheet(sheet: Sheet, question: QuestionHeader) {
+  const newTask = await controller.HomeworkAddMonoquestion({
+    IdQuestion: question.Id,
+    IdSheet: sheet.Id,
   });
+  if (newTask == undefined) {
+    return;
+  }
+
+  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
+  const cl = classrooms[clIndex];
+  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).concat(
+    newTask
+  );
+}
+
+async function updateMonoquestion(sheet: Sheet, qu: Monoquestion) {
+  const task = await controller.HomeworkUpdateMonoquestion(qu);
+  if (task == undefined) return;
+  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
+  const cl = classrooms[clIndex];
+  const tasks = cl.Sheets![sheetIndex].Tasks || [];
+  const index = tasks.findIndex((v) => v.Id == task.Id);
+  tasks[index] = task;
 }
 
 async function removeTaskFromSheet(sheet: Sheet, task: TaskExt) {

@@ -1,10 +1,22 @@
 <template>
-  <v-dialog v-model="showSelector">
+  <v-dialog v-model="showExerciceSelector">
     <exercice-selector
-      @close="showSelector = false"
-      @select="addExercice"
-      :exercices="allExercices"
+      :query="exerciceQuery"
+      :tags="props.allTags"
+      @closed="showExerciceSelector = false"
+      @selected="addExercice"
+      @update:query="(q) => (exerciceQuery = q)"
     ></exercice-selector>
+  </v-dialog>
+
+  <v-dialog v-model="showMonoquestionSelector">
+    <question-selector
+      :query="questionQuery"
+      :tags="props.allTags"
+      @closed="showMonoquestionSelector = false"
+      @selected="addMonoquestion"
+      @update:query="(q) => (questionQuery = q)"
+    ></question-selector>
   </v-dialog>
 
   <v-dialog
@@ -13,8 +25,8 @@
   >
     <v-card title="Confirmer">
       <v-card-text
-        >Etes-vous certain de vouloir retirer l'exercice
-        <i>{{ taskToRemove?.Exercice.Exercice.Title }}</i> ? <br />
+        >Etes-vous certain de vouloir retirer la tâche
+        <i>{{ taskToRemove?.Title }}</i> ? <br />
         La progression des {{ taskToRemove?.NbProgressions }} élève(s) sera
         perdue, et cette opération est irréversible.
       </v-card-text>
@@ -38,12 +50,26 @@
   <v-card>
     <v-row>
       <v-col align-self="center">
-        <v-card-title> Liste des exercices </v-card-title>
+        <v-card-title> Liste des tâches </v-card-title>
       </v-col>
       <v-col align-self="center" style="text-align: right">
-        <v-btn class="my-1 mr-2" @click="showSelector = true">
+        <v-btn
+          size="small"
+          class="my-1 mr-2"
+          @click="showExerciceSelector = true"
+          title="Ajouter un exercice..."
+        >
           <v-icon color="green" icon="mdi-plus"></v-icon>
-          Ajouter
+          Exercice
+        </v-btn>
+        <v-btn
+          size="small"
+          class="my-1 mr-2"
+          title="Ajouter une question (avec répétitions)..."
+          @click="showMonoquestionSelector = true"
+        >
+          <v-icon color="green" icon="mdi-plus"></v-icon>
+          Question
         </v-btn>
       </v-col>
     </v-row>
@@ -64,14 +90,14 @@
 
         <div v-for="(task, index) in sheet.Tasks" :key="index">
           <v-list-item>
-            <v-row>
-              <v-col cols="1" align-self="center">
+            <v-row no-gutters>
+              <v-col cols="auto" align-self="center">
                 <drag-icon
                   color="black"
                   @start="(e) => onItemDragStart(e, index)"
                 ></drag-icon>
               </v-col>
-              <v-col cols="3" align-self="center">
+              <v-col cols="auto" align-self="center">
                 <v-btn
                   icon
                   size="small"
@@ -81,20 +107,71 @@
                 >
                   <v-icon color="red" icon="mdi-close"></v-icon>
                 </v-btn>
+
+                <v-menu
+                  v-if="!task.IdWork.IsExercice"
+                  offset-y
+                  :close-on-content-click="false"
+                  :model-value="monoquestionToEditIndex == index"
+                  @update:model-value="
+                    monoquestionToEdit = null;
+                    monoquestionToEditIndex = null;
+                  "
+                >
+                  <template v-slot:activator="{ isActive, props }">
+                    <v-btn
+                      v-on="{ isActive }"
+                      v-bind="props"
+                      @click="
+                        monoquestionToEditIndex = index;
+                        monoquestionToEdit = monoquestionFromTask(task);
+                      "
+                      icon
+                      size="small"
+                      variant="flat"
+                      title="Modifier les paramètres de la question"
+                    >
+                      <v-icon icon="mdi-pencil"></v-icon>
+                    </v-btn>
+                  </template>
+                  <monoquestion-details
+                    v-if="monoquestionToEdit != null"
+                    :monoquestion="monoquestionToEdit!"
+                    @update="
+                      (qu) => {
+                        monoquestionToEdit = null;
+                        monoquestionToEditIndex = null;
+                        emit('updateMonoquestion', qu);
+                      }
+                    "
+                  ></monoquestion-details>
+                </v-menu>
               </v-col>
               <v-col align-self="center">
-                {{ task.Exercice.Exercice.Title }}
+                <v-tooltip>
+                  <template v-slot:activator="{ isActive, props }">
+                    <span v-on="{ isActive }" v-bind="props">
+                      {{ task.Title }}
+                    </span>
+                  </template>
+                  {{ taskTooltip(task) }}
+                </v-tooltip>
               </v-col>
-              <v-col align-self="center">
+              <v-col cols="auto" align-self="center" class="px-3">
                 <span v-if="!task.NbProgressions" class="text-grey"
-                  >Non démarré</span
+                  >Non démarrée</span
                 >
                 <v-chip v-else color="secondary"
-                  >Démarré par {{ task.NbProgressions }}</v-chip
+                  >Démarrée par {{ task.NbProgressions }}</v-chip
                 >
               </v-col>
-              <v-col align-self="center" style="text-align: right">
-                / {{ exerciceBareme(task.Exercice) }}
+              <v-col
+                cols="auto"
+                align-self="center"
+                style="text-align: right"
+                class="pl-2"
+              >
+                / {{ taskBareme(task) }}
               </v-col>
             </v-row>
           </v-list-item>
@@ -119,49 +196,62 @@
 </template>
 
 <script setup lang="ts">
-import type { ExerciceHeader, SheetExt, TaskExt } from "@/controller/api_gen";
-import { controller } from "@/controller/controller";
+import type {
+  ExerciceHeader,
+  Monoquestion,
+  QuestionHeader,
+  SheetExt,
+  TaskExt,
+} from "@/controller/api_gen";
 import {
-  exerciceBareme,
+  monoquestionFromTask,
   onDragListItemStart,
   sheetBareme,
   swapItems,
+  taskBareme,
 } from "@/controller/utils";
-import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
 import DropZone from "../DropZone.vue";
-import ExerciceSelector from "./ExerciceSelector.vue";
+import QuestionSelector from "../editor/exercices/QuestionSelector.vue";
+import type { ExerciceQuery } from "../ExerciceSelector.vue";
+import ExerciceSelector from "../ExerciceSelector.vue";
+import type { QuestionQuery } from "../QuestionSelector.vue";
+import MonoquestionDetails from "./MonoquestionDetails.vue";
 
 interface Props {
   sheet: SheetExt;
+  allTags: string[];
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "add", ex: ExerciceHeader): void;
+  (e: "addExercice", ex: ExerciceHeader): void;
+  (e: "addMonoquestion", qu: QuestionHeader): void;
+  (e: "updateMonoquestion", qu: Monoquestion): void;
   (e: "remove", task: TaskExt): void;
   (e: "reorder", tasks: TaskExt[]): void;
 }>();
 
-onMounted(fetchExercices);
-
 let taskToRemove = $ref<TaskExt | null>(null);
 
-let showSelector = $ref(false);
-let allExercices = $ref<ExerciceHeader[]>([]);
-async function fetchExercices() {
-  const res = await controller.ExercicesGetList();
-  if (res == undefined) {
-    return;
-  }
-  allExercices = res;
-}
+let showMonoquestionSelector = $ref(false);
+
+let showExerciceSelector = $ref(false);
+let exerciceQuery = $ref<ExerciceQuery>({ search: "", tags: [] });
+let questionQuery = $ref<QuestionQuery>({ search: "", tags: [] });
 
 function addExercice(ex: ExerciceHeader) {
-  emit("add", ex);
+  emit("addExercice", ex);
 }
+
+function addMonoquestion(qu: QuestionHeader) {
+  emit("addMonoquestion", qu);
+}
+
+let monoquestionToEditIndex = $ref<number | null>(null);
+let monoquestionToEdit = $ref<Monoquestion | null>(null);
 
 function removeExercice(index: number) {
   const task = props.sheet.Tasks![index];
@@ -187,5 +277,15 @@ function swap(origin: number, target: number) {
   showDropZone = false;
   const l = swapItems(origin, target, props.sheet.Tasks!);
   emit("reorder", l);
+}
+
+function taskTooltip(task: TaskExt) {
+  const out = `${task.IdWork.IsExercice ? "Exercice" : "Question"} ${
+    task.IdWork.ID
+  }`;
+  if (!task.IdWork.IsExercice) {
+    return out + ` (répétée ${task.Baremes?.length} fois)`;
+  }
+  return out;
 }
 </script>

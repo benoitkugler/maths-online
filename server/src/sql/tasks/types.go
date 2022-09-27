@@ -5,11 +5,11 @@ package tasks
 
 type OptionalIdMonoquestion struct {
 	Valid bool
-	Id    IdMonoquestion
+	ID    IdMonoquestion
 }
 
 func (id IdMonoquestion) AsOptional() OptionalIdMonoquestion {
-	return OptionalIdMonoquestion{Id: id, Valid: true}
+	return OptionalIdMonoquestion{ID: id, Valid: true}
 }
 
 // QuestionHistory stores the successes for one question,

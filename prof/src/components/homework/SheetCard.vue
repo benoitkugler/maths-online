@@ -3,7 +3,7 @@
     <v-card-text>
       <v-row>
         <v-col>
-          <v-chip>{{ sheet.Tasks?.length || 0 }} ex. </v-chip>
+          <v-chip>{{ sheet.Tasks?.length || 0 }} tâche(s) </v-chip>
         </v-col>
         <v-col style="text-align: right">
           <v-chip :color="sheet.Sheet.Notation == 0 ? 'black' : 'primary'">

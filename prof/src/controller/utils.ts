@@ -1,4 +1,4 @@
-import type { Date_, ExerciceHeader, SheetExt, Time } from "./api_gen";
+import type { Date_, Monoquestion, SheetExt, TaskExt, Time } from "./api_gen";
 
 export function copy<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
@@ -18,7 +18,7 @@ export function formatTime(time: Time) {
     year: "numeric",
     day: "numeric",
     month: "short",
-    hour: "2-digit",
+    hour: "2-digit"
   });
 }
 
@@ -54,12 +54,19 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
   }
 }
 
-export function exerciceBareme(ex: ExerciceHeader) {
-  return ex.Questions?.reduce((v, qu) => v + qu.bareme, 0) || 0;
+export function taskBareme(task: TaskExt) {
+  return task.Baremes?.reduce((v, qu) => v + qu, 0) || 0;
 }
 
 export function sheetBareme(sheet: SheetExt) {
-  return (
-    sheet.Tasks?.reduce((v, task) => v + exerciceBareme(task.Exercice), 0) || 0
-  );
+  return sheet.Tasks?.reduce((v, task) => v + taskBareme(task), 0) || 0;
+}
+
+export function monoquestionFromTask(task: TaskExt): Monoquestion {
+  return {
+    Id: task.IdWork.ID,
+    IdQuestion: -1,
+    Bareme: (task.Baremes || [])[0],
+    NbRepeat: task.Baremes?.length || 0
+  };
 }

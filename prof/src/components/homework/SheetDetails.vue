@@ -2,7 +2,7 @@
   <v-card min-width="1200">
     <v-row class="mx-2 mt-1">
       <v-col>
-        <v-card-title>Modifier la fiche</v-card-title>
+        <v-card-title>Modifier la feuille</v-card-title>
       </v-col>
 
       <v-col style="text-align: right">
@@ -53,7 +53,7 @@
                 class="mt-3"
                 density="compact"
                 v-model="props.sheet.Sheet.Activated"
-                label="Fiche active"
+                label="Feuille active"
                 :messages="
                   props.sheet.Sheet.Activated
                     ? `Désactiver la feuille, la rendant invisible aux élèves. 
@@ -71,7 +71,14 @@
         <v-col cols="6">
           <SheetTasks
             :sheet="props.sheet"
-            @add="(v) => emit('addTask', props.sheet.Sheet, v)"
+            :all-tags="allTags"
+            @add-exercice="(v) => emit('addExercice', props.sheet.Sheet, v)"
+            @add-monoquestion="
+              (v) => emit('addMonoquestion', props.sheet.Sheet, v)
+            "
+            @update-monoquestion="
+              (v) => emit('udpateMonoquestion', props.sheet.Sheet, v)
+            "
             @remove="(v) => emit('removeTask', props.sheet.Sheet, v)"
             @reorder="(v) => emit('reorderTasks', props.sheet.Sheet, v)"
           ></SheetTasks>
@@ -88,11 +95,15 @@
 <script setup lang="ts">
 import type {
   ExerciceHeader,
+  Monoquestion,
+  QuestionHeader,
   Sheet,
   SheetExt,
   TaskExt,
 } from "@/controller/api_gen";
-import { computed } from "vue";
+import { controller } from "@/controller/controller";
+import { computed, onMounted } from "vue";
+import { $ref } from "vue/macros";
 import NotationField from "./NotationField.vue";
 import SheetTasks from "./SheetTasks.vue";
 import TimeField from "./TimeField.vue";
@@ -106,7 +117,9 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "update", sheet: Sheet): void;
-  (e: "addTask", sheet: Sheet, ex: ExerciceHeader): void;
+  (e: "addExercice", sheet: Sheet, ex: ExerciceHeader): void;
+  (e: "addMonoquestion", sheet: Sheet, ex: QuestionHeader): void;
+  (e: "udpateMonoquestion", sheet: Sheet, qu: Monoquestion): void;
   (e: "removeTask", sheet: Sheet, task: TaskExt): void;
   (e: "reorderTasks", sheet: Sheet, tasks: TaskExt[]): void;
 }>();
@@ -117,5 +130,12 @@ const color = computed(() =>
 
 function update() {
   emit("update", props.sheet.Sheet);
+}
+
+onMounted(fetchTags);
+let allTags = $ref<string[]>([]);
+async function fetchTags() {
+  const tags = await controller.EditorGetTags();
+  allTags = tags || [];
 }
 </script>

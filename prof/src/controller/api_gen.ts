@@ -8,6 +8,11 @@ export interface AddExerciceToTaskIn {
   IdSheet: IdSheet;
   IdExercice: IdExercice;
 }
+// github.com/benoitkugler/maths-online/prof/homework.AddMonoquestionToTaskIn
+export interface AddMonoquestionToTaskIn {
+  IdSheet: IdSheet;
+  IdQuestion: IdQuestion;
+}
 // github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
   Mail: string;
@@ -422,6 +427,13 @@ export interface LogginOut {
   IsPasswordError: boolean;
   Token: string;
 }
+// github.com/benoitkugler/maths-online/sql/tasks.Monoquestion
+export interface Monoquestion {
+  Id: IdMonoquestion;
+  IdQuestion: IdQuestion;
+  NbRepeat: number;
+  Bareme: number;
+}
 // github.com/benoitkugler/maths-online/maths/repere.NamedRandomLabeledPoint
 export interface NamedRandomLabeledPoint {
   Name: string;
@@ -447,11 +459,6 @@ export interface NumberFieldBlock {
 export interface OptionalIdExercice {
   Valid: boolean;
   ID: IdExercice;
-}
-// github.com/benoitkugler/maths-online/sql/tasks.OptionalIdMonoquestion
-export interface OptionalIdMonoquestion {
-  Valid: boolean;
-  Id: IdMonoquestion;
 }
 // github.com/benoitkugler/maths-online/sql/editor.OptionalIdQuestiongroup
 export interface OptionalIdQuestiongroup {
@@ -750,12 +757,8 @@ export interface TableFieldBlock {
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/tasks.Task
-export interface Task {
-  Id: IdTask;
-  IdExercice: OptionalIdExercice;
-  IdMonoquestion: OptionalIdMonoquestion;
-}
+// github.com/benoitkugler/maths-online/tasks.TaskBareme
+export type TaskBareme = number[] | null;
 // github.com/benoitkugler/maths-online/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
@@ -763,6 +766,7 @@ export interface TaskExt {
   Title: string;
   Subtitle: string;
   NbProgressions: number;
+  Baremes: TaskBareme;
 }
 // github.com/benoitkugler/maths-online/maths/questions.TextBlock
 export interface TextBlock {
@@ -2270,27 +2274,71 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkRemoveTask(): void;
 
-  protected async rawHomeworkAddTask(params: AddExerciceToTaskIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
-    const rep: AxiosResponse<Task> = await Axios.put(fullUrl, params, {
+  protected async rawHomeworkAddExercice(params: AddExerciceToTaskIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/exercice";
+    const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
-  /** HomeworkAddTask wraps rawHomeworkAddTask and handles the error */
-  async HomeworkAddTask(params: AddExerciceToTaskIn) {
+  /** HomeworkAddExercice wraps rawHomeworkAddExercice and handles the error */
+  async HomeworkAddExercice(params: AddExerciceToTaskIn) {
     this.startRequest();
     try {
-      const out = await this.rawHomeworkAddTask(params);
-      this.onSuccessHomeworkAddTask(out);
+      const out = await this.rawHomeworkAddExercice(params);
+      this.onSuccessHomeworkAddExercice(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessHomeworkAddTask(data: Task): void;
+  protected abstract onSuccessHomeworkAddExercice(data: TaskExt): void;
+
+  protected async rawHomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
+    const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkAddMonoquestion wraps rawHomeworkAddMonoquestion and handles the error */
+  async HomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkAddMonoquestion(params);
+      this.onSuccessHomeworkAddMonoquestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkAddMonoquestion(data: TaskExt): void;
+
+  protected async rawHomeworkUpdateMonoquestion(params: Monoquestion) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
+    const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkUpdateMonoquestion wraps rawHomeworkUpdateMonoquestion and handles the error */
+  async HomeworkUpdateMonoquestion(params: Monoquestion) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkUpdateMonoquestion(params);
+      this.onSuccessHomeworkUpdateMonoquestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void;
 
   protected async rawHomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";

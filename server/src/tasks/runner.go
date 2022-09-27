@@ -120,7 +120,7 @@ func NewWorkID(task ta.Task) WorkID {
 	if task.IdExercice.Valid {
 		return newWorkIDFromEx(task.IdExercice.ID)
 	}
-	return newWorkIDFromMono(task.IdMonoquestion.Id)
+	return newWorkIDFromMono(task.IdMonoquestion.ID)
 }
 
 func newWorkIDFromEx(id ed.IdExercice) WorkID { return WorkID{ID: int64(id), IsExercice: true} }
@@ -132,7 +132,7 @@ type Work interface {
 	Title() string    // as presented to the student
 	Subtitle() string // used by the teacher
 	flow() ed.Flow
-	QuestionsList() ([]ed.Question, taskBareme)
+	QuestionsList() ([]ed.Question, TaskBareme)
 	Instantiate() (InstantiatedWork, error)
 }
 
@@ -235,7 +235,7 @@ func (ex ExerciceData) Subtitle() string { return ex.Exercice.Subtitle }
 func (ExerciceData) flow() ed.Flow       { return ed.Sequencial }
 
 // QuestionsList resolve the links list using `source`
-func (ex ExerciceData) QuestionsList() ([]ed.Question, taskBareme) {
+func (ex ExerciceData) QuestionsList() ([]ed.Question, TaskBareme) {
 	questions := make([]ed.Question, len(ex.Links))
 	baremes := make([]int, len(ex.Links))
 	for i, link := range ex.Links {
@@ -304,7 +304,7 @@ func (data MonoquestionData) Subtitle() string { return data.question.Subtitle }
 func (MonoquestionData) flow() ed.Flow         { return ed.Parallel }
 
 // QuestionsList returns the generated list of questions
-func (data MonoquestionData) QuestionsList() ([]ed.Question, taskBareme) {
+func (data MonoquestionData) QuestionsList() ([]ed.Question, TaskBareme) {
 	questions := make([]ed.Question, data.params.NbRepeat)
 	baremes := make([]int, data.params.NbRepeat)
 	// repeat the question

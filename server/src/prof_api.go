@@ -86,6 +86,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.DELETE("/api/prof/homework", home.HomeworkDeleteSheet)
 	gr.POST("/api/prof/homework/copy-sheet", home.HomeworkCopySheet)
 	gr.DELETE("/api/prof/homework/sheet", home.HomeworkRemoveTask)
-	gr.PUT("/api/prof/homework/sheet", home.HomeworkAddTask)
+	gr.PUT("/api/prof/homework/sheet/exercice", home.HomeworkAddExercice)
+	gr.PUT("/api/prof/homework/sheet/monoquestion", home.HomeworkAddMonoquestion)
+	gr.POST("/api/prof/homework/sheet/monoquestion", home.HomeworkUpdateMonoquestion)
 	gr.POST("/api/prof/homework/sheet", home.HomeworkReorderSheetTasks)
 }

@@ -60,7 +60,7 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 		return nil, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(ct.db, sheetsDict.IDs(), userID, ct.admin.Id)
+	loader, err := newSheetLoader(ct.db, sheetsDict.IDs())
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -173,11 +173,11 @@ type AddExerciceToTaskIn struct {
 }
 
 type AddMonoquestionToTaskIn struct {
-	IdSheet      ho.IdSheet
-	Monoquestion tasks.Monoquestion
+	IdSheet    ho.IdSheet
+	IdQuestion ed.IdQuestion
 }
 
-func (ct *Controller) HomeworkAddTask(c echo.Context) error {
+func (ct *Controller) HomeworkAddExercice(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	var args AddExerciceToTaskIn
@@ -209,73 +209,78 @@ func (ct *Controller) HomeworkAddMonoquestion(c echo.Context) error {
 	return c.JSON(200, task)
 }
 
-func (ct *Controller) addExerciceTo(args AddExerciceToTaskIn, userID uID) (tasks.Task, error) {
+func (ct *Controller) addExerciceTo(args AddExerciceToTaskIn, userID uID) (TaskExt, error) {
 	task := tasks.Task{IdExercice: args.IdExercice.AsOptional()}
 	return ct.addTaskTo(args.IdSheet, task, userID)
 }
 
-func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID) (tasks.Task, error) {
+func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID) (TaskExt, error) {
 	// create the monoquestion, checking that the question has a group
-	question, err := ed.SelectQuestion(ct.db, args.Monoquestion.IdQuestion)
+	question, err := ed.SelectQuestion(ct.db, args.IdQuestion)
 	if err != nil {
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 
 	if !question.IdGroup.Valid {
-		return tasks.Task{}, errors.New("internal error: (mono)question not included in a group")
+		return TaskExt{}, errors.New("internal error: (mono)question not included in a group")
 	}
 
-	mono, err := args.Monoquestion.Insert(ct.db)
+	mono, err := tasks.Monoquestion{IdQuestion: args.IdQuestion, Bareme: 1, NbRepeat: 3}.Insert(ct.db)
 	if err != nil {
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 	task := tasks.Task{IdMonoquestion: mono.Id.AsOptional()}
 	out, err := ct.addTaskTo(args.IdSheet, task, userID)
 	if err != nil {
 		// cleanup the monoquestion
 		_, _ = tasks.DeleteMonoquestionById(ct.db, mono.Id)
-		return tasks.Task{}, err
+		return TaskExt{}, err
 	}
 
 	return out, nil
 }
 
 // addTaskTo insert the given new task in the DB, and adds it to sheet
-func (ct *Controller) addTaskTo(sheet ho.IdSheet, task tasks.Task, userID uID) (tasks.Task, error) {
+func (ct *Controller) addTaskTo(sheet ho.IdSheet, task tasks.Task, userID uID) (TaskExt, error) {
 	if err := ct.checkSheetOwner(sheet, userID); err != nil {
-		return tasks.Task{}, err
+		return TaskExt{}, err
 	}
 
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 
 	task, err = task.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 
 	// link the task to the sheet, appending
 	links, err := ho.SelectSheetTasksByIdSheets(tx, sheet)
 	if err != nil {
 		_ = tx.Rollback()
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 
 	err = ho.InsertManySheetTasks(tx, ho.SheetTask{IdSheet: sheet, IdTask: task.Id, Index: len(links)})
 	if err != nil {
 		_ = tx.Rollback()
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return tasks.Task{}, utils.SQLError(err)
+		return TaskExt{}, utils.SQLError(err)
 	}
 
-	return task, nil
+	out, err := loadTaskExt(ct.db, task.Id)
+	if err != nil {
+		return TaskExt{}, err
+	}
+
+	return out, nil
 }
 
 // HomeworkRemoveTask deletes the given tasks, also removing
@@ -348,7 +353,7 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 
 	// delete the potential associated monoquestion
 	if removedTask.IdMonoquestion.Valid {
-		_, err = tasks.DeleteMonoquestionById(tx, removedTask.IdMonoquestion.Id)
+		_, err = tasks.DeleteMonoquestionById(tx, removedTask.IdMonoquestion.ID)
 		if err != nil {
 			_ = tx.Rollback()
 			return utils.SQLError(err)
@@ -371,7 +376,7 @@ func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
 	}
 
 	// check that the monoquestion is in a sheet owner by user
-	idSheet, err := ho.LoadMonoquestionSheet(ct.db, args.Id)
+	idTask, idSheet, err := ho.LoadMonoquestionSheet(ct.db, args.Id)
 	if err != nil {
 		return err
 	}
@@ -393,7 +398,13 @@ func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	return c.NoContent(200)
+	// reload the task to properly update the UI
+	out, err := loadTaskExt(ct.db, idTask)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
 }
 
 type ReorderSheetTasksIn struct {
@@ -541,7 +552,23 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	// create new tasks : a task can't be be shared
 	newLinks := make(ho.SheetTasks, len(links))
 	for i, link := range links {
-		newTask := taskMap[link.IdTask]
+		task := taskMap[link.IdTask]
+		newTask := task
+		// for monoquestion, also copy the monoquestion
+		if task.IdMonoquestion.Valid {
+			monoquestion, err := tasks.SelectMonoquestion(tx, task.IdMonoquestion.ID)
+			if err != nil {
+				_ = tx.Rollback()
+				return SheetExt{}, utils.SQLError(err)
+			}
+			monoquestion, err = monoquestion.Insert(tx)
+			if err != nil {
+				_ = tx.Rollback()
+				return SheetExt{}, utils.SQLError(err)
+			}
+			newTask.IdMonoquestion = monoquestion.Id.AsOptional()
+		}
+
 		newTask, err = newTask.Insert(tx)
 		if err != nil {
 			_ = tx.Rollback()
@@ -556,7 +583,7 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(tx, []ho.IdSheet{newSheet.Id}, userID, ct.admin.Id)
+	loader, err := newSheetLoader(tx, []ho.IdSheet{newSheet.Id})
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, utils.SQLError(err)

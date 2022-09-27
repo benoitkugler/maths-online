@@ -24,7 +24,7 @@ import type {
   SheetExt,
   StartSessionOut,
   Student,
-  Task,
+  TaskExt,
   TrivialExt
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
@@ -150,12 +150,27 @@ class Controller extends AbstractAPI {
       this.showMessage("Exercice retiré avec succès.");
     }
   }
-  protected onSuccessHomeworkAddTask(data: Task): void {
+
+  protected onSuccessHomeworkAddExercice(data: TaskExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Exercice ajouté avec succès.");
     }
   }
+  protected onSuccessHomeworkAddMonoquestion(data: TaskExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question ajoutée avec succès.");
+    }
+  }
+
+  protected onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Paramètres de la question modifiés avec succès.");
+    }
+  }
+
   protected onSuccessHomeworkReorderSheetTasks(): void {
     this.inRequest = false;
     if (this.showMessage) {

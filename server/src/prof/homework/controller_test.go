@@ -6,7 +6,6 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/sql/editor"
 	ho "github.com/benoitkugler/maths-online/sql/homework"
-	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
@@ -73,10 +72,7 @@ func TestCRUDSheet(t *testing.T) {
 	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: exe1.Id}, userID)
 	tu.Assert(t, err == nil)
 
-	_, err = ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, Monoquestion: tasks.Monoquestion{
-		IdQuestion: qu.Id,
-		NbRepeat:   4, Bareme: 2,
-	}}, userID)
+	_, err = ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: qu.Id}, userID)
 	tu.Assert(t, err == nil)
 
 	l, err = ct.getSheets(userID)

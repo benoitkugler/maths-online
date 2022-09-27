@@ -829,13 +829,13 @@ func (s *OptionalIdMonoquestion) Scan(src interface{}) error {
 	}
 	*s = OptionalIdMonoquestion{
 		Valid: tmp.Valid,
-		Id:    IdMonoquestion(tmp.Int64),
+		ID:    IdMonoquestion(tmp.Int64),
 	}
 	return nil
 }
 
 func (s OptionalIdMonoquestion) Value() (driver.Value, error) {
 	return sql.NullInt64{
-		Int64: int64(s.Id),
+		Int64: int64(s.ID),
 		Valid: s.Valid}.Value()
 }
