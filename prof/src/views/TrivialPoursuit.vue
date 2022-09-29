@@ -8,7 +8,7 @@
       v-if="editedConfig != null"
       :edited="editedConfig"
       :all-known-tags="allKnownTags"
-      @close="editedConfig = null"
+      @closed="editedConfig = null"
       @update="updateConfig"
     >
     </edit-config>
@@ -70,14 +70,14 @@
         class="my-3"
       >
         <v-row>
-          <v-col cols="4" align-self="center">
+          <v-col cols="3" align-self="center">
             <origin-button
               :origin="config.Origin"
               @update-public="(b) => updatePublic(config.Config, b)"
             ></origin-button>
             <v-btn
               class="mx-2 my-1"
-              size="small"
+              size="x-small"
               icon
               @click="duplicateConfig(config.Config)"
               title="Dupliquer cette session"
@@ -87,7 +87,7 @@
 
             <v-btn
               icon
-              size="small"
+              size="x-small"
               title="Editer"
               class="mx-2"
               @click="editedConfig = config.Config"
@@ -99,7 +99,7 @@
             <v-btn
               v-if="isPersonnal(config)"
               icon
-              size="small"
+              size="x-small"
               title="Lancer"
               class="mx-2"
               @click="launchingConfig = config.Config"
@@ -114,7 +114,7 @@
             <v-btn
               v-if="isPersonnal(config)"
               class="mx-2"
-              size="small"
+              size="x-small"
               icon
               @click="deleteConfig(config.Config)"
               title="Supprimer cette session"
@@ -122,35 +122,45 @@
               <v-icon icon="mdi-delete" color="red"></v-icon>
             </v-btn>
           </v-col>
-          <v-col cols="3" align-self="center">
+          <v-col cols="3" align-self="center" style="text-align: center">
             {{ config.Config.Name }}
             <small class="text-grey">
-              {{ categorie(config.Config) }}
+              {{ formatCategories(config.Config) }}
             </small>
           </v-col>
-          <v-col align-self="center" cols="5">
-            <v-row justify="center" class="bg-grey-lighten-1 rounded">
-              <v-col
-                cols="6"
-                align-self="center"
-                style="text-align: center"
-                v-if="config.Config.Questions!.every(v=>!v)"
-              >
-                <i>Aucune question configurée.</i>
-              </v-col>
-              <v-col
-                class="my-1"
-                cols="2"
-                align-self="center"
-                v-for="(categorie, index) in config.Config.Questions || []"
-                :key="index"
-                v-show="categorie && categorie.length != 0"
-              >
-                <v-chip :color="colors[index]" variant="outlined">
-                  {{ config.NbQuestionsByCategories[index] }}
-                </v-chip>
-              </v-col>
-            </v-row>
+          <v-col cols="2" align-self="center" style="text-align: center">
+            <small class="text-primary">
+              {{ formatDifficulties(config.Config) }}
+            </small>
+          </v-col>
+          <v-col align-self="center" cols="4">
+            <v-card class="bg-grey-lighten-2">
+              <v-card-text class="px-0 py-1">
+                <v-row justify="center">
+                  <v-col
+                    cols="6"
+                    align-self="center"
+                    style="text-align: center"
+                    v-if="config.Config.Questions.Tags.every((v) => !v)"
+                  >
+                    <i>Aucune question configurée.</i>
+                  </v-col>
+                  <v-col
+                    class="my-1"
+                    cols="2"
+                    align-self="center"
+                    v-for="(categorie, index) in config.Config.Questions.Tags ||
+                    []"
+                    :key="index"
+                    v-show="categorie && categorie.length != 0"
+                  >
+                    <v-chip :color="colors[index]" variant="outlined">
+                      {{ config.NbQuestionsByCategories[index] }}
+                    </v-chip>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
           </v-col>
         </v-row>
       </v-list-item>
@@ -219,7 +229,7 @@ async function createConfig() {
 
 async function updateConfig(config: Trivial) {
   // remove empty categories
-  config.Questions = config.Questions.map((q) =>
+  config.Questions.Tags = config.Questions.Tags.map((q) =>
     (q || []).filter((v) => v && v.length != 0)
   );
   const res = await controller.UpdateTrivialPoursuit(config);
@@ -280,9 +290,9 @@ async function launchSession(groups: number[]) {
   showMonitor = true;
 }
 
-function categorie(config: Trivial) {
+function formatCategories(config: Trivial) {
   const allUnions: string[][] = [];
-  config.Questions.forEach((cat) =>
+  config.Questions.Tags.forEach((cat) =>
     allUnions.push(...(cat || []).map((s) => s || []))
   );
   const common = commonTags(allUnions);
@@ -290,6 +300,14 @@ function categorie(config: Trivial) {
     return "(" + common.join(", ") + ")";
   }
   return "";
+}
+
+function formatDifficulties(config: Trivial) {
+  const l = config.Questions.Difficulties || [];
+  if (l.length) {
+    return l.join(", ");
+  }
+  return "Toutes difficultés";
 }
 
 let sessionMeta = $ref<RunningSessionMetaOut>({ NbGames: 0 });

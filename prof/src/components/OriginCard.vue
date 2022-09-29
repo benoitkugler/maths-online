@@ -12,7 +12,7 @@
         ></v-switch>
       </div>
       <div v-else-if="isPersonnal">
-        <v-btn>TODO: Demander à rendre public</v-btn>
+        <v-btn>Demander à rendre public : à venir...</v-btn>
       </div>
     </v-card-text>
   </v-card>

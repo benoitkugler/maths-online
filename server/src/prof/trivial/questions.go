@@ -190,12 +190,12 @@ func commonTags(cats tc.CategoriesQuestions) []string {
 
 // returns the union of all the question groups in the pool,
 // that is, question matching at least one criteria
-func allQuestions(pool tv.QuestionPool) ed.IdQuestiongroupSet {
-	crible := make(ed.IdQuestiongroupSet)
+func allQuestions(pool tv.QuestionPool) ed.IdQuestionSet {
+	crible := make(ed.IdQuestionSet)
 
 	for _, cat := range pool {
 		for _, question := range cat.Questions {
-			crible.Add(question.IdGroup.ID)
+			crible.Add(question.Id)
 		}
 	}
 

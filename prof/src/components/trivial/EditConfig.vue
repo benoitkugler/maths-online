@@ -36,7 +36,11 @@
           </v-list-subheader>
         </v-col>
         <v-col cols="auto" align-self="center">
-          <v-menu offset-y close-on-content-click v-model="showDifficultyCard">
+          <v-menu
+            offset-y
+            :close-on-content-click="false"
+            v-model="showDifficultyCard"
+          >
             <template v-slot:activator="{ isActive, props }">
               <v-btn
                 class="mr-1"
@@ -48,35 +52,12 @@
                 Difficulté
               </v-btn>
             </template>
-            <v-card subtitle="Ajuster les étiquettes de difficulté.">
-              <v-card-text>
-                <v-checkbox
-                  hide-details
-                  :label="difficulties.Diff1"
-                  v-model="diffChoices[difficulties.Diff1]"
-                >
-                </v-checkbox>
-                <v-checkbox
-                  hide-details
-                  :label="difficulties.Diff2"
-                  v-model="diffChoices[difficulties.Diff2]"
-                >
-                </v-checkbox>
-                <v-checkbox
-                  hide-details
-                  :label="difficulties.Diff3"
-                  v-model="diffChoices[difficulties.Diff3]"
-                >
-                </v-checkbox>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="success" @click="adjustDifficulty"
-                  >Appliquer</v-btn
-                >
-              </v-card-actions>
-            </v-card>
+            <DifficultyChoices
+              :difficulties="props.edited.Questions.Difficulties || []"
+              @update:difficulties="onEditDifficulties"
+            ></DifficultyChoices>
           </v-menu>
+
           <v-menu offset-y close-on-content-click>
             <template v-slot:activator="{ isActive, props }">
               <v-btn
@@ -142,7 +123,7 @@
           </div>
         </v-alert>
         <v-list-item
-          v-for="(categorie, index) in props.edited.Questions"
+          v-for="(categorie, index) in props.edited.Questions.Tags"
           :key="index"
           rounded
           :style="{
@@ -184,7 +165,7 @@
         <v-col cols="6">
           <v-checkbox
             density="compact"
-            label="Afficher un décrassage en fin de partie"
+            label="Afficher le décrassage en fin de partie"
             v-model.number="props.edited.ShowDecrassage"
           ></v-checkbox>
         </v-col>
@@ -204,16 +185,16 @@
 import type {
   CategoriesQuestions,
   CheckMissingQuestionsOut,
+  DifficultyTag,
   QuestionCriterion,
   Trivial,
 } from "@/controller/api_gen";
-import { DifficultyTag } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { removeDuplicates } from "@/controller/editor";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagChip from "../editor/utils/TagChip.vue";
+import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
 
 interface Props {
@@ -232,69 +213,32 @@ const colors = colorsPerCategorie;
 
 const propositions = questionPropositions;
 
-const difficulties = DifficultyTag;
 let showDifficultyCard = $ref(false);
-let diffChoices = $ref<{ [key in DifficultyTag]: boolean }>({
-  [DifficultyTag.Diff1]: true,
-  [DifficultyTag.Diff2]: true,
-  [DifficultyTag.Diff3]: true,
-});
-function adjustDifficulty() {
+
+function onEditDifficulties(difficulties: DifficultyTag[]) {
   showDifficultyCard = false;
-  // first remove any difficulty tags...
-  let tmp = props.edited.Questions.map(
-    (union) =>
-      union?.map(
-        (inter) =>
-          inter?.filter(
-            (tag) =>
-              tag != DifficultyTag.Diff1 &&
-              tag != DifficultyTag.Diff2 &&
-              tag != DifficultyTag.Diff3
-          ) || []
-      ) || []
-  );
-  // and keep unique intersections...
-  tmp = tmp.map((ls) => removeDuplicates(ls));
-  // then duplicate adding wanted tags
-  // unless all tags are selected
-  const allSelected = Object.values(diffChoices).every((v) => v);
-  const toAdd = Object.entries(diffChoices)
-    .filter((entry) => entry[1])
-    .map((entry) => entry[0]);
-
-  if (!allSelected) {
-    tmp = tmp.map((ls) => {
-      const withDiff: string[][] = [];
-      ls.forEach((l) => {
-        toAdd.forEach((diff) => withDiff.push(l.concat(diff)));
-      });
-      return withDiff;
-    });
-  }
-
-  props.edited.Questions = tmp;
-  fetchHint();
+  props.edited.Questions.Difficulties = difficulties;
+  fetchHintForMissing();
 }
 
 function updateCategorie(index: number, cat: QuestionCriterion) {
-  props.edited.Questions[index] = cat;
-  fetchHint();
+  props.edited.Questions.Tags[index] = cat;
+  fetchHintForMissing();
 }
 
 function importQuestions(criteria: CategoriesQuestions) {
   props.edited.Questions = criteria;
-  fetchHint();
+  fetchHintForMissing();
 }
 
-onMounted(fetchHint);
+onMounted(fetchHintForMissing);
 
 let hint = $ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
-async function fetchHint() {
+async function fetchHintForMissing() {
   const criteria = props.edited.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
-  if (!criteria.every((qu) => qu?.length)) {
+  if (!criteria.Tags.every((qu) => qu?.length)) {
     hint = { Pattern: [], Missing: [] };
     return;
   }

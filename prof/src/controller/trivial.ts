@@ -6,8 +6,8 @@ export const colorsPerCategorie = [
   "purple",
   "green",
   "orange",
-  "yellow",
-  "blue",
+  "yellow-darken-2",
+  "blue"
 ];
 
 export class TrivialMonitorController {
@@ -39,29 +39,28 @@ export const questionPropositions: {
 }[] = [
   {
     name: "Pourcentages",
-    Questions: [
-      [
-        ["Pourcentages", "Valeur initiale"],
-        ["Pourcentages", "Valeur finale"],
-      ],
-      [
-        ["Pourcentages", "Taux global"],
-        ["Pourcentages", "Taux réciproque"],
-      ],
-      [
-        ["Pourcentages", "Proportion"],
-        ["Pourcentages", "Proportion de proportion"],
-        ["Pourcentages", "Pourcentage d'un nombre"],
-      ],
-      [
-        ["Pourcentages", "Evolutions identiques"],
-        ["Pourcentages", "Evolution unique"],
-        ["Pourcentages", "Evolutions successives"],
-      ],
-      [
-        ["Pourcentages", "Coefficient multiplicateur"],
-        ["Pourcentages", "Taux d'évolution"],
-      ],
-    ],
-  },
+    Questions: {
+      Difficulties: [], // all difficulties accepted,
+      Tags: [
+        [["Pourcentages", "EVOLUTION UNIQUE"]],
+        [
+          ["Pourcentages", "Taux global"],
+          ["Pourcentages", "Taux réciproque"]
+        ],
+        [
+          ["Pourcentages", "Proportion"],
+          ["Pourcentages", "Proportion de proportion"],
+          ["Pourcentages", "Pourcentage d'un nombre"]
+        ],
+        [
+          ["Pourcentages", "Evolutions identiques"],
+          ["Pourcentages", "Evolutions successives"]
+        ],
+        [
+          ["Pourcentages", "Coefficient multiplicateur"],
+          ["Pourcentages", "Taux d'évolution"]
+        ]
+      ]
+    }
+  }
 ];

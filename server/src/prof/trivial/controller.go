@@ -322,9 +322,22 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 		return CheckMissingQuestionsOut{}, nil
 	}
 
-	existingQuestions, err := editor.SelectQuestiongroupByTags(ct.db, userID, pattern)
+	existingQuestiongroups, err := editor.SelectQuestiongroupByTags(ct.db, userID, pattern)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, utils.SQLError(err)
+	}
+	var ids []editor.IdQuestiongroup
+	for i := range existingQuestiongroups {
+		ids = append(ids, i)
+	}
+
+	// restrict the search to the selected difficulties, if any,
+	// to avoid false alerts
+	questions, err := editor.SelectQuestionsByIdGroups(ct.db, ids...)
+	for id, question := range questions {
+		if !criteria.Difficulties.Match(question.Difficulty) {
+			delete(questions, id)
+		}
 	}
 
 	pool, err := selectQuestions(ct.db, criteria, userID)
@@ -336,8 +349,9 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 	// check is existingQuestions is included in usedQuestions
 	// if not, add the tags as hint
 	hint := editor.NewTagListSet()
-	for idExisting, tags := range existingQuestions {
+	for idExisting, question := range questions {
 		if !usedQuestions.Has(idExisting) {
+			tags := existingQuestiongroups[question.IdGroup.ID]
 			hint.Add(tags.List())
 		}
 	}
