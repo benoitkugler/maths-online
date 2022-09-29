@@ -26,11 +26,11 @@
   <v-row class="my-1 mx-6 fill-height">
     <v-col cols="6" align-self="center">
       <v-card>
-        <v-card-title class="bg-secondary rounded"> Se connecter </v-card-title>
+        <v-card-title class="bg-primary rounded"> Se connecter </v-card-title>
         <v-progress-linear
           indeterminate
           v-show="isLoading"
-          color="secondary"
+          color="primary"
         ></v-progress-linear>
         <v-form class="px-3 mt-4">
           <v-row>
@@ -92,10 +92,10 @@
     </v-col>
     <v-col cols="6" align-self="center">
       <v-card>
-        <v-card-title class="bg-primary rounded">
+        <v-card-title class="bg-secondary rounded">
           Bienvenue sur Isyro
         </v-card-title>
-        <v-card-text
+        <v-card-text class="py-3"
           >Isyro est une plateforme pédagogique pour concevoir des exercices
           interactifs, à utiliser en classe comme à la maison.
         </v-card-text>
