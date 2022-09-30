@@ -1,20 +1,22 @@
---v1.0.0
+--v0.8.0
 -- add explicit question groups, add exercices groups, add monoquestions
+---
 -- constraints must be added after this script
---
---
--- questions
 --
 
 BEGIN;
+--
+-- update question table
+--
+
 CREATE TABLE questiongroups (
     Id serial PRIMARY KEY,
     Title text NOT NULL,
     Public boolean NOT NULL,
     IdTeacher integer NOT NULL
 );
--- questions : compute implicit groups with the title
--- to handle groups with mixed public attribute, we compute it later
+-- compute implicit groups with the title.
+-- To handle groups with mixed public attribute, we compute it later,
 -- defaulting to False
 
 INSERT INTO questiongroups (title, public, idteacher)
@@ -184,17 +186,22 @@ FROM
     tagstrings
 WHERE
     tagstrings.idquestion = questions2.id;
+-- remove the useless question_tags table
 DROP TABLE question_tags;
--- remove constraint on exercice_question
+-- temporary remove constraint on exercice_question
 ALTER TABLE exercice_questions
     DROP CONSTRAINT exercice_questions_id_question_fkey;
+-- switch to questions v2
 DROP TABLE questions;
 ALTER TABLE questions2 RENAME TO questions;
 ALTER TABLE questions
     ADD PRIMARY KEY (id);
--- add the constraint back (just to check)
+-- add the constraint back
 ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
+-- temporary remove primary key, which is added back with the constraints
+ALTER TABLE exercice_questions
+    DROP CONSTRAINT exercice_questions_pkey CASCADE;
 COMMIT;
 
 --
@@ -202,6 +209,11 @@ COMMIT;
 --
 
 BEGIN;
+-- create an empty table
+CREATE TABLE exercicegroup_tags (
+    Tag text NOT NULL,
+    IdExercicegroup integer NOT NULL
+);
 CREATE TABLE exercicegroups (
     Id serial PRIMARY KEY,
     Title text NOT NULL,
@@ -222,7 +234,7 @@ CREATE TABLE exercices2 (
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
     Description text NOT NULL,
-    Parameters jsonb NOT NULL,
+    Parameters jsonb NOT NULL
 );
 INSERT INTO exercices2
 SELECT
@@ -271,9 +283,14 @@ BEGIN
             bool_and((
                 SELECT
                     bool_or(intersection ? difficulty)
-                    FROM jsonb_array_elements(union_) AS intersection))
+                    FROM jsonb_array_elements(
+                        CASE WHEN union_ = 'null'::jsonb THEN
+                            '[]'
+                        ELSE
+                            union_
+                        END) AS intersection))
         FROM
-            jsonb_array_elements(questions) AS union_);
+            jsonb_array_elements(jsonb_strip_nulls (questions)) AS union_);
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -289,7 +306,12 @@ BEGIN
             jsonb_agg((
                 SELECT
                     jsonb_agg(DISTINCT __migration_sort_json_array (intersection - '★' - '★★' - '★★★'))
-                    FROM jsonb_array_elements(union_) AS intersection))
+                    FROM jsonb_array_elements(
+                        CASE WHEN union_ = 'null'::jsonb THEN
+                            '[]'
+                        ELSE
+                            union_
+                        END) AS intersection))
         FROM
             jsonb_array_elements(questions) AS union_);
 END;
@@ -348,9 +370,31 @@ SET
     Questions = jsonb_set(Questions, '{Tags}', __migration_remove_diff (Questions -> 'Tags'));
 COMMIT;
 
+BEGIN;
 -- add monoquestion field
+CREATE TABLE monoquestions (
+    Id serial PRIMARY KEY,
+    IdQuestion integer NOT NULL,
+    NbRepeat integer NOT NULL,
+    Bareme integer NOT NULL
+);
 ALTER TABLE tasks
     ADD COLUMN IdMonoquestion integer;
+-- remove idexercice from tasks
+ALTER TABLE progressions
+    DROP COLUMN idexercice CASCADE;
+ALTER TABLE progression_questions
+    DROP COLUMN idexercice CASCADE;
+-- temporary remove primary key, which is added back with the constraints
+ALTER TABLE sheet_tasks
+    DROP CONSTRAINT sheet_tasks_pkey CASCADE;
+COMMIT;
+
+ALTER SEQUENCE questions2_id_seq
+    RENAME TO questions_id_seq;
+
+ALTER SEQUENCE exercices2_id_seq
+    RENAME TO exercices_id_seq;
 
 SELECT
     setval('questions_id_seq', (
