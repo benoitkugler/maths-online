@@ -435,6 +435,7 @@ class _ExerciceWState extends State<ExerciceW> {
                   title: "Question ${widget.controller.questionIndex! + 1}",
                   timeout: null,
                   onRetry: onRetryQuestion,
+                  onSubmitButtonText: "Correction...",
                 ),
         ));
   }

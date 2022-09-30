@@ -249,6 +249,7 @@ class _QuestionLoopback extends StatelessWidget {
             150 + Random().nextInt(100), Random().nextInt(256)),
         onValid,
         timeout: null,
+        onSubmitButtonText: "Correction...",
       ),
     );
   }

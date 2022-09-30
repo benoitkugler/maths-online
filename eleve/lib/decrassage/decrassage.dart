@@ -163,6 +163,7 @@ class _DecrassageState extends State<Decrassage> {
                   footerQuote: pickQuote(),
                   timeout: null,
                   title: "Question ${currentQuestionIndex! + 1}",
+                  onSubmitButtonText: "Correction...",
                 )),
     );
   }

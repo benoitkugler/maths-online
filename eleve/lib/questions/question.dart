@@ -34,7 +34,7 @@ enum _InputState {
   done,
 
   /// fields and validated button are disabled
-  waitingForPlayers,
+  submitting,
 
   /// fields are disabled and validated button will trigger reset
   displayingFeedback,
@@ -58,7 +58,7 @@ class QuestionController extends ChangeNotifier {
 
   void answer() {
     if (blockOnSubmit) {
-      state = _InputState.waitingForPlayers;
+      state = _InputState.submitting;
       for (var element in _fields.values) {
         element.disable();
       }
@@ -73,7 +73,7 @@ class QuestionController extends ChangeNotifier {
         return areAnswersValid;
       case _InputState.done:
         return false;
-      case _InputState.waitingForPlayers:
+      case _InputState.submitting:
         return false;
       case _InputState.displayingFeedback:
         return true;
@@ -572,7 +572,12 @@ class QuestionW extends StatefulWidget {
   /// question has been answered
   final QuoteData footerQuote;
 
+  /// [title] is the tilte of the question
   final String title;
+
+  /// [onSubmitButtonText] is displayed when submiting
+  /// an answer
+  final String onSubmitButtonText;
 
   const QuestionW(
     this.controller,
@@ -583,6 +588,7 @@ class QuestionW extends StatefulWidget {
     this.timeout = const Duration(seconds: 60),
     this.footerQuote = const QuoteData("", "", ""),
     this.onRetry,
+    required this.onSubmitButtonText,
   }) : super(key: key);
 
   @override
@@ -642,8 +648,9 @@ class _QuestionWState extends State<QuestionW> {
         return "Valider";
       case _InputState.done:
         return "Question terminée";
-      case _InputState.waitingForPlayers:
-        return "En attente des autres joueurs...";
+      case _InputState.submitting:
+        // return "En attente des autres joueurs...";
+        return widget.onSubmitButtonText;
       case _InputState.displayingFeedback:
         return "Essayer à nouveau";
     }
@@ -657,7 +664,7 @@ class _QuestionWState extends State<QuestionW> {
       case _InputState.displayingFeedback:
         onReset();
         break;
-      case _InputState.waitingForPlayers:
+      case _InputState.submitting:
       case _InputState.done:
         return;
     }
@@ -698,13 +705,10 @@ class _QuestionWState extends State<QuestionW> {
               child: AnimatedOpacity(
                   duration: const Duration(seconds: 2),
                   opacity:
-                      widget.controller.state == _InputState.waitingForPlayers
-                          ? 1
-                          : 0,
-                  child: Quote(
-                      widget.controller.state == _InputState.waitingForPlayers
-                          ? widget.footerQuote
-                          : const QuoteData("", "", ""))),
+                      widget.controller.state == _InputState.submitting ? 1 : 0,
+                  child: Quote(widget.controller.state == _InputState.submitting
+                      ? widget.footerQuote
+                      : const QuoteData("", "", ""))),
             ),
           ]
         ],

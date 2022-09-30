@@ -72,6 +72,7 @@ class QuestionRoute extends StatelessWidget {
           onValid,
           timeout: readonly ? null : Duration(seconds: question.timeoutSeconds),
           footerQuote: pickQuote(),
+          onSubmitButtonText: "En attente des autres joueurs...",
         ),
       ),
     );
