@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"github.com/lib/pq"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -45,7 +46,10 @@ func WebsocketError(ws *websocket.Conn, err error) {
 }
 
 func SQLError(err error) error {
-	return fmt.Errorf("La requête SQL a échoué : %s", err)
+	if err, ok := err.(*pq.Error); ok {
+		return fmt.Errorf("La requête SQL a échoué : %s (table %s)", err, err.Table)
+	}
+	return fmt.Errorf("La requête SQL a échoué : %s %T", err, err)
 }
 
 // QueryParamInt64 parse the query param `name` to an int64
