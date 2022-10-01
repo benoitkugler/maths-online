@@ -58,3 +58,14 @@ func TestPassword(t *testing.T) {
 
 	fmt.Printf("'\\x%s'\n", hex.EncodeToString(enc.EncryptPassword(pass)))
 }
+
+func TestDecodePassword(t *testing.T) {
+	enc := NewEncrypterFromKey("dummy key")
+
+	hexEncrypted := hex.EncodeToString(enc.EncryptPassword("test"))
+	pass, err := hex.DecodeString(hexEncrypted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(enc.DecryptPassword(pass))
+}
