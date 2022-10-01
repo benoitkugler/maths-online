@@ -489,6 +489,12 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 		return utils.SQLError(err)
 	}
 
+	// we also need to remove the monoquestions associated
+	tasksMap, err := tasks.SelectTasks(ct.db, ts.IdTasks()...)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return utils.SQLError(err)
@@ -504,6 +510,17 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
+	}
+
+	// delete the potential associated monoquestion
+	for _, removedTask := range tasksMap {
+		if removedTask.IdMonoquestion.Valid {
+			_, err = tasks.DeleteMonoquestionById(tx, removedTask.IdMonoquestion.ID)
+			if err != nil {
+				_ = tx.Rollback()
+				return utils.SQLError(err)
+			}
+		}
 	}
 
 	err = tx.Commit()
