@@ -465,6 +465,9 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) error
 		return err
 	}
 
+	// TODO: check if it used in tasks
+	// (SQL constraint will trigger with a non user friendly error message)
+
 	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, idExercice)
 	if err != nil {
 		return utils.SQLError(err)

@@ -482,7 +482,31 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 		return accessForbidden
 	}
 
-	_, err = ho.DeleteSheetById(ct.db, idSheet)
+	// garbage collect the associated tasks :
+	// the link table "sheet_tasks" is automatically cleaned up, but not the "tasks" table
+	ts, err := ho.SelectSheetTasksByIdSheets(ct.db, idSheet)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	_, err = ho.DeleteSheetById(tx, idSheet)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	_, err = tasks.DeleteTasksByIDs(tx, ts.IdTasks()...)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return utils.SQLError(err)
 	}

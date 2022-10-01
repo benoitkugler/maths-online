@@ -265,6 +265,9 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) error {
 		return accessForbidden
 	}
 
+	// TODO: check if it used in tasks
+	// (SQL constraint will trigger with a non user friendly error message)
+
 	links, err := ed.SelectExerciceQuestionsByIdQuestions(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
