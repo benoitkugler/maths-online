@@ -30,7 +30,7 @@ class TreeController extends FieldController {
     selectedShape = shape;
     if (shape != null) {
       controllers = _NodeController.editableFromShape(
-          onChange, shape, true, data.eventsProposals, enabled);
+          onChange, shape, true, data.eventsProposals, isEnabled);
     }
   }
 
@@ -55,10 +55,10 @@ class TreeController extends FieldController {
   }
 
   @override
-  void disable() {
+  void setEnabled(bool b) {
     // also disable children controllers
-    super.disable();
-    controllers?.disable();
+    super.setEnabled(b);
+    controllers?.setEnabled(b);
   }
 }
 
@@ -107,11 +107,11 @@ class _NodeController {
     return _NodeController(isRoot, dd, children, edgesControllers);
   }
 
-  void disable() {
-    valueController?.disable();
-    edgesController?.forEach((c) => c.disable());
+  void setEnabled(bool b) {
+    valueController?.setEnabled(b);
+    edgesController?.forEach((c) => c.setEnabled(b));
     for (var c in children) {
-      c.disable();
+      c.setEnabled(b);
     }
   }
 
@@ -190,7 +190,7 @@ class _TreeFieldState extends State<TreeField> {
     final ct = widget.controller;
     return ct.selectedShape == null
         ? InkWell(
-            onTap: ct.enabled ? _showShapeSelection : null,
+            onTap: ct.isEnabled ? _showShapeSelection : null,
             child: Container(
               padding: const EdgeInsets.all(12),
               child: const Text(
@@ -249,9 +249,10 @@ class _OneTree extends StatelessWidget {
                       left: 3,
                       child: FloatingActionButton(
                           mini: true,
-                          onPressed: controller.valueController?.enabled == true
-                              ? onBack
-                              : null,
+                          onPressed:
+                              controller.valueController?.isEnabled == true
+                                  ? onBack
+                                  : null,
                           tooltip: "Changer de forme",
                           child: const Icon(
                             IconData(0xe092,
@@ -345,7 +346,7 @@ class _NodeState extends State<_Node> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: GestureDetector(
-        onTapUp: valueCt?.enabled == true
+        onTapUp: valueCt?.isEnabled == true
             ? (details) {
                 final index = painter.onHit(details.localPosition);
                 if (index != null) {

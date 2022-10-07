@@ -123,7 +123,7 @@ class _FunctionPointsState extends State<FunctionPoints> {
               metrics.logicalIntToVisual(logical),
               index,
               widget.zoom.value.getMaxScaleOnAxis(),
-              disabled: !widget.controller.enabled,
+              disabled: !widget.controller.isEnabled,
               color: color,
             );
           }),

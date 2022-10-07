@@ -15,9 +15,9 @@ class ProofController extends FieldController {
         super(onChange);
 
   @override
-  void disable() {
-    controller.disable();
-    super.disable();
+  void setEnabled(bool enabled) {
+    controller.setEnabled(enabled);
+    super.setEnabled(enabled);
   }
 
   @override
@@ -73,8 +73,8 @@ abstract class _AssertionController {
 
   bool _isEnabled = true;
   bool get isEnabled => _isEnabled;
-  void disable() {
-    _isEnabled = false;
+  void setEnabled(bool b) {
+    _isEnabled = b;
   }
 
   Assertion getData();
@@ -164,10 +164,10 @@ class _NodeController extends _AssertionController {
   }
 
   @override
-  void disable() {
-    left.disable();
-    right.disable();
-    super.disable();
+  void setEnabled(bool b) {
+    left.setEnabled(b);
+    right.setEnabled(b);
+    super.setEnabled(b);
   }
 
   @override
@@ -206,11 +206,11 @@ class _SequenceController extends _AssertionController {
   }
 
   @override
-  void disable() {
+  void setEnabled(bool b) {
     for (var element in parts) {
-      element.disable();
+      element.setEnabled(b);
     }
-    super.disable();
+    super.setEnabled(b);
   }
 
   @override
@@ -269,7 +269,7 @@ class _ProofFieldState extends State<ProofField> {
         ),
         const SizedBox(height: 5),
         _Proposals(
-            widget.controller.enabled, widget.controller.currentProposals)
+            widget.controller.isEnabled, widget.controller.currentProposals)
       ],
     );
   }

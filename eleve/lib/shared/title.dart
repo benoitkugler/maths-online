@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// TODO: better UI coherence
 class ColoredTitle extends StatelessWidget {
   final String title;
   final Color color;

@@ -3,6 +3,7 @@ import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart' hide Answer;
+import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared_gen.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -10,12 +11,44 @@ import 'package:flutter/material.dart' hide Flow;
 class NotificationExerciceDone extends Notification {}
 
 abstract class ExerciceAPI extends FieldAPI {
+  /// [evaluate] must evaluate the exercice answers, according
+  /// to the exercice mode, and returns the feedback and the new version
+  /// of the questions if needed
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params);
+}
+
+class ExerciceQuestionController extends BaseQuestionController {
+  void Function() onClick;
+
+  ExerciceQuestionController(Question question, FieldAPI api, this.onClick)
+      : super(question, api);
+
+  void markDone() {
+    state.buttonLabel = "Question terminée";
+    state.buttonEnabled = false;
+    state.footerQuote = pickQuote();
+    setDisabled();
+  }
+
+  // delegate to the exercice widget
+  @override
+  void onPrimaryButtonClick() {
+    onClick();
+  }
+}
+
+enum ExerciceState {
+  /// the student is working on a question, validation triggers evaluation
+  answering,
+
+  /// the wrong answers are displayed in red, validation triggers retry
+  displayingFeedback
 }
 
 /// [ExerciceController] exposes the state
 /// which will change during an exercice,
 /// so that parent widget may react properly.
+///
 class ExerciceController {
   /// [exeAndProg] stores the server instantiated exercice with
   /// the progression state.
@@ -24,7 +57,98 @@ class ExerciceController {
   /// [questionIndex] is the current question, or null for the summary
   int? questionIndex;
 
-  ExerciceController(this.exeAndProg, this.questionIndex);
+  ExerciceState state = ExerciceState.answering;
+
+  List<QuestionStatus> questionStates = [];
+
+  List<ExerciceQuestionController> _questions;
+
+  // questions validated but not submitted
+  Set<int> waitingQuestions = {};
+
+  /// onValid is the callback triggered when validatin a question
+  /// and is filled by the widget using the controller
+  void Function() onValid;
+
+  ExerciceController(this.exeAndProg, this.questionIndex, FieldAPI api)
+      : onValid = (() => {}),
+        _questions = [] {
+    _questions = exeAndProg.exercice.questions
+        .map((qu) => ExerciceQuestionController(qu.question, api, onValid))
+        .toList();
+    _refreshStates();
+  }
+
+  /// [showFeedback] set the given feedback (for many questions)
+  /// and set the state to displayingFeedback
+  void showFeedback(Map<int, QuestionAnswersOut> feedbacks) {
+    state = ExerciceState.displayingFeedback;
+    for (var question in feedbacks.entries) {
+      final index = question.key;
+      final feedback = question.value.results;
+      _questions[index].setFeedback(feedback);
+    }
+    for (var question in _questions) {
+      question.state.buttonEnabled = true;
+      question.state.buttonLabel = "Essayer à nouveau...";
+    }
+  }
+
+  void reset() {
+    for (var question in _questions) {
+      question.setFeedback(null);
+    }
+    waitingQuestions.clear();
+    _refreshStates();
+  }
+
+  void _refreshStates() {
+    questionStates = _computeQuestionStates();
+    for (var index = 0; index < _questions.length; index++) {
+      final qu = _questions[index];
+      if (questionStates[index] == QuestionStatus.checked) {
+        qu.markDone();
+      }
+    }
+  }
+
+  void updateProgression(ProgressionExt progression) {
+    exeAndProg = StudentWork(exeAndProg.exercice, progression);
+    _refreshStates();
+  }
+
+  List<QuestionStatus> _computeQuestionStates() {
+    final exP = exeAndProg;
+    return List<QuestionStatus>.generate(exP.exercice.questions.length,
+        (questionIndex) {
+      if (exP.progression.isQuestionCompleted(questionIndex)) {
+        return QuestionStatus.checked;
+      }
+
+      if (exP.exercice.flow == Flow.sequencial &&
+          exP.progression.nextQuestion < questionIndex) {
+        return QuestionStatus.locked;
+      }
+
+      // after validating, a question may be both incorrect and waiting submit:
+      // give the priority to incorrectQuestions
+      final qu = _questions[questionIndex];
+      if (!qu.feedback().values.every((success) => success)) {
+        return QuestionStatus.incorrect;
+      } else if (waitingQuestions.contains(questionIndex)) {
+        return QuestionStatus.waitingCorrection;
+      }
+      return QuestionStatus.toDo;
+    });
+  }
+
+  /// setQuestionAnswers show the answers for the current question
+  void setQuestionAnswers(Answers answers) {
+    if (questionIndex == null) return;
+    _questions[questionIndex!].setAnswers(answers);
+    _questions[questionIndex!].state.buttonEnabled = true;
+    _questions[questionIndex!].state.buttonLabel = "Valider";
+  }
 }
 
 extension _CopyIW on InstantiatedWork {
@@ -54,14 +178,10 @@ class ExerciceW extends StatefulWidget {
 
   final ExerciceController controller;
 
-  /// If not null, [questionAnswers] overide the user answers
-  /// for the current question
-  final Answers? questionAnswers;
-
   final void Function()? onShowCorrectAnswer;
 
   const ExerciceW(this.api, this.controller,
-      {Key? key, this.questionAnswers, this.onShowCorrectAnswer})
+      {Key? key, this.onShowCorrectAnswer})
       : super(key: key);
 
   @override
@@ -72,13 +192,6 @@ class _ExerciceWState extends State<ExerciceW> {
   // the questions to display when trying again
   // this is a temporay slice, affected to the controller on user validation
   List<InstantiatedQuestion> nextQuestions = [];
-
-  // the currrent answsers of the student, filled
-  // when validating a question
-  Map<int, QuestionAnswersIn> currentAnswers = {};
-
-  // the feedback to display
-  Map<int, QuestionAnswersOut> feedback = {};
 
   @override
   void initState() {
@@ -94,14 +207,7 @@ class _ExerciceWState extends State<ExerciceW> {
 
   void reset() {
     nextQuestions = [];
-    currentAnswers.clear();
-    feedback.clear();
-    // show answers from the server
-    if (widget.controller.questionIndex != null &&
-        widget.questionAnswers != null) {
-      currentAnswers[widget.controller.questionIndex!] =
-          QuestionAnswersIn(widget.questionAnswers!);
-    }
+    widget.controller.reset();
   }
 
   // handle the errors
@@ -145,7 +251,7 @@ class _ExerciceWState extends State<ExerciceW> {
         ct.exeAndProg.exercice.iD,
         {
           index: Answer(ct.exeAndProg.exercice.questions[index].params,
-              currentAnswers[index]!)
+              ct._questions[index].answers())
         },
         ct.exeAndProg.progression));
     if (resp == null) {
@@ -184,14 +290,11 @@ class _ExerciceWState extends State<ExerciceW> {
     }
 
     if (isCorrect) {
-      setState(() {
-        feedback.clear();
-      });
       // wait for the user to go to the next question
     } else {
       // show errors and ask for retry
       setState(() {
-        feedback = {index: resp.results[index]!};
+        ct.showFeedback({index: resp.results[index]!});
       });
     }
   }
@@ -208,14 +311,14 @@ class _ExerciceWState extends State<ExerciceW> {
       final history = ct.exeAndProg.progression.getQuestion(index);
       if (history.isEmpty || !history.last) {
         // the question must be answered
-        if (!currentAnswers.containsKey(index)) {
+        if (!ct.waitingQuestions.contains(index)) {
           // go to this question
           goToQuestion = index;
           break;
         } else {
           // add it to the send answsers
           toSend[index] =
-              Answer(questions[index].params, currentAnswers[index]!);
+              Answer(questions[index].params, ct._questions[index].answers());
         }
       }
     }
@@ -260,22 +363,31 @@ class _ExerciceWState extends State<ExerciceW> {
 
     // display the errors and go to the menu
     setState(() {
-      feedback = resp.results;
+      ct.showFeedback(resp.results);
       widget.controller.questionIndex = null;
     });
   }
 
-  void onRetryQuestion() {
+  void onQuestionClick() {
+    switch (widget.controller.state) {
+      case ExerciceState.answering:
+        return _onValideQuestion();
+      case ExerciceState.displayingFeedback:
+        return _onRetryQuestion();
+    }
+  }
+
+  void _onRetryQuestion() {
     final ct = widget.controller;
     setState(() {
+      ct.reset();
+      ct.waitingQuestions.clear();
       ct.exeAndProg = ct.exeAndProg.copyWithQuestions(nextQuestions);
-      currentAnswers.clear();
-      feedback.clear();
     });
   }
 
-  void onValideQuestion(QuestionAnswersIn answer) async {
-    currentAnswers[widget.controller.questionIndex!] = answer;
+  void _onValideQuestion() async {
+    widget.controller.waitingQuestions.add(widget.controller.questionIndex!);
     switch (widget.controller.exeAndProg.exercice.flow) {
       case Flow.sequencial:
         return onValidQuestionSequential();
@@ -325,34 +437,6 @@ class _ExerciceWState extends State<ExerciceW> {
     });
   }
 
-  List<QuestionState> get questionStates {
-    final exP = widget.controller.exeAndProg;
-    final validatedQuestions = currentAnswers.keys.toSet();
-    final incorrectQuestions =
-        feedback.keys.where((index) => !feedback[index]!.isCorrect).toSet();
-
-    return List<QuestionState>.generate(exP.exercice.questions.length,
-        (questionIndex) {
-      if (exP.progression.isQuestionCompleted(questionIndex)) {
-        return QuestionState.checked;
-      }
-
-      if (exP.exercice.flow == Flow.sequencial &&
-          exP.progression.nextQuestion < questionIndex) {
-        return QuestionState.locked;
-      }
-
-      // after validating, both validatedQuestions and incorrectQuestions
-      // may contain the same index : give the priority to incorrectQuestions
-      if (incorrectQuestions.contains(questionIndex)) {
-        return QuestionState.incorrect;
-      } else if (validatedQuestions.contains(questionIndex)) {
-        return QuestionState.waitingCorrection;
-      }
-      return QuestionState.toDo;
-    });
-  }
-
   Future<bool> confirmeLeave() async {
     final res = await showDialog<bool?>(
         context: context,
@@ -373,24 +457,9 @@ class _ExerciceWState extends State<ExerciceW> {
     return res ?? false;
   }
 
-  QuestionController questionController() {
-    final exP = widget.controller.exeAndProg;
-    final out = QuestionController(
-        exP.exercice.questions[widget.controller.questionIndex!].question,
-        widget.api,
-        true);
-    out.setAnswers(currentAnswers[widget.controller.questionIndex!]?.data);
-    // feedback has the priority against answers
-    out.setFeedback(feedback[widget.controller.questionIndex!]?.results);
-    if (questionStates[widget.controller.questionIndex!] ==
-        QuestionState.checked) {
-      out.setDone();
-    }
-    return out;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final ct = widget.controller;
     final exP = widget.controller.exeAndProg;
     return Scaffold(
         appBar: AppBar(
@@ -413,8 +482,8 @@ class _ExerciceWState extends State<ExerciceW> {
         ),
         body: WillPopScope(
           onWillPop: () async {
-            final isDirty = questionStates
-                .any((st) => st == QuestionState.waitingCorrection);
+            final isDirty = ct.questionStates
+                .any((st) => st == QuestionStatus.waitingCorrection);
             if (isDirty) {
               final ok = await confirmeLeave();
               return ok;
@@ -424,18 +493,15 @@ class _ExerciceWState extends State<ExerciceW> {
           child: widget.controller.questionIndex == null
               ? ExerciceHome(
                   exP,
-                  questionStates,
+                  ct.questionStates,
                   (index) => setState(() {
                         widget.controller.questionIndex = index;
                       }))
               : QuestionW(
-                  questionController(),
+                  widget
+                      .controller._questions[widget.controller.questionIndex!],
                   Colors.purpleAccent,
-                  onValideQuestion,
                   title: "Question ${widget.controller.questionIndex! + 1}",
-                  timeout: null,
-                  onRetry: onRetryQuestion,
-                  onSubmitButtonText: "Correction...",
                 ),
         ));
   }

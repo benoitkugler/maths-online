@@ -8,21 +8,30 @@ import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:http/http.dart' as http;
 
 abstract class FieldController {
+  bool _hasError = false;
+
   /// [hasError] may be set to true to indicate
   /// that the answer does not follow the correct syntax
   /// or is incorrect.
   bool get hasError => _hasError;
 
-  bool _hasError = false;
+  /// [setError] sets the error state.
+  /// It can be override for controllers which needs to
+  /// update children.
   void setError(bool hasError) {
     _hasError = hasError;
   }
 
-  bool _enabled = true;
-  bool get enabled => _enabled;
+  bool _isEnabled = true;
 
-  void disable() {
-    _enabled = false;
+  /// [isEnabled] is true if the field is actionnable.
+  bool get isEnabled => _isEnabled;
+
+  /// [setEnabled] disabled or enabled one field.
+  /// If can be overriden for controllers which needs to
+  /// update children.
+  void setEnabled(bool enabled) {
+    _isEnabled = enabled;
   }
 
   /// [onChange] should be called when the state change
@@ -52,9 +61,8 @@ class ServerFieldAPI implements FieldAPI {
   final BuildMode buildMode;
   const ServerFieldAPI(this.buildMode);
 
-  @override
-
   /// checkExpressionSyntaxCall implements [FieldAPI] with a server call
+  @override
   Future<shared.CheckExpressionOut> checkExpressionSyntax(
       String expression) async {
     final uri = Uri.parse(buildMode.serverURL("/api/check-expression"))

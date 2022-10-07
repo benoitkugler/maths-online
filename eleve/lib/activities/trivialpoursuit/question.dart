@@ -6,20 +6,52 @@ import 'package:eleve/quotes.dart';
 import 'package:flutter/material.dart';
 
 import 'categories.dart';
-import 'events.gen.dart';
+import 'events.gen.dart' hide Answer;
 
-class QuestionRoute extends StatelessWidget {
+class InGameQuestionController extends BaseQuestionController {
+  final void Function(QuestionAnswersIn) onValid;
+
+  InGameQuestionController(ShowQuestion question, FieldAPI api, this.onValid)
+      : super(question.question, api) {
+    state.timeout =
+        Duration(seconds: question.timeoutSeconds); // show the timeout bar
+    state.footerQuote =
+        const QuoteData("", "", ""); // reserve space but don't show any text
+  }
+
+  @override
+  void onPrimaryButtonClick() {
+    state.buttonEnabled = false;
+    state.buttonLabel = "En attente des autres joueurs...";
+    state.footerQuote = pickQuote();
+    setDisabled();
+    // propagate the event
+    onValid(answers());
+  }
+}
+
+class LastQuestionController extends BaseQuestionController {
+  final void Function() onClose;
+  LastQuestionController(
+      Question question, FieldAPI api, Map<int, Answer> answers, this.onClose)
+      : super(question, api) {
+    setAnswers(answers);
+  }
+
+  @override
+  void onPrimaryButtonClick() {
+    // simple go back
+    onClose();
+  }
+}
+
+class InGameQuestionRoute extends StatelessWidget {
   final BuildMode buildMode;
   final ShowQuestion question;
   final void Function(QuestionAnswersIn) onValid;
 
-  /// if [readonly] is true, do no block when leaving the question,
-  /// and do not display the timer
-  final bool readonly;
-  final Answers? answer;
-
-  const QuestionRoute(this.buildMode, this.question, this.onValid,
-      {Key? key, this.readonly = false, this.answer})
+  const InGameQuestionRoute(this.buildMode, this.question, this.onValid,
+      {Key? key})
       : super(key: key);
 
   Future<bool> _confirmCancel(BuildContext context) async {
@@ -44,16 +76,11 @@ class QuestionRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ct =
-        QuestionController(question.question, ServerFieldAPI(buildMode), true);
-    ct.setAnswers(answer);
+        InGameQuestionController(question, ServerFieldAPI(buildMode), onValid);
 
     // make the route block until validated
     return WillPopScope(
       onWillPop: () async {
-        if (readonly) {
-          return true;
-        }
-
         final cancel = await _confirmCancel(context);
         if (cancel) {
           // send an empty response
@@ -69,11 +96,38 @@ class QuestionRoute extends StatelessWidget {
         body: QuestionW(
           ct,
           question.categorie.color,
-          onValid,
-          timeout: readonly ? null : Duration(seconds: question.timeoutSeconds),
-          footerQuote: pickQuote(),
-          onSubmitButtonText: "En attente des autres joueurs...",
         ),
+      ),
+    );
+  }
+}
+
+class LastQuestionRoute extends StatelessWidget {
+  final BuildMode buildMode;
+  final ShowQuestion question;
+  final void Function() onDone;
+
+  final Answers answers;
+
+  const LastQuestionRoute(
+      this.buildMode, this.question, this.onDone, this.answers,
+      {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = LastQuestionController(
+        question.question, ServerFieldAPI(buildMode), answers, onDone);
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+      ),
+      body: QuestionW(
+        ct,
+        question.categorie.color,
+        title: "Dernière question",
       ),
     );
   }

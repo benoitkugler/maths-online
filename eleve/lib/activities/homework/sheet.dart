@@ -100,7 +100,7 @@ class _SheetWState extends State<SheetW> {
 
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id);
-    final exController = ExerciceController(studentEx, null);
+    final exController = ExerciceController(studentEx, null, exeAPI);
     // actually launch the exercice
     await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (context) => ExerciceW(exeAPI, exController)));

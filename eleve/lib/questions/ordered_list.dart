@@ -124,7 +124,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
       children: [
         _AnswerRow(
             ct.hasError ? Colors.red : widget._color,
-            ct.enabled,
+            ct.isEnabled,
             answers,
             ct.label,
             (symbol, isStart) => setState(() {
@@ -132,7 +132,7 @@ class _OrderedListFieldState extends State<OrderedListField> {
                   ct.insertAnswerAt(symbol.item, isStart ? 0 : answers.length);
                 })),
         const SizedBox(height: 20),
-        _PropsRow(widget._color, ct.enabled, props, (symbol) {
+        _PropsRow(widget._color, ct.isEnabled, props, (symbol) {
           setState(() {
             ct.removeAnswer(symbol.item);
           });

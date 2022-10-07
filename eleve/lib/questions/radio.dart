@@ -57,7 +57,7 @@ class _RadioFieldState extends State<RadioField> {
           title: TextRow(buildText(prop, TextS(), 18), verticalPadding: 2),
           value: index,
           groupValue: widget._controller.index,
-          onChanged: widget._controller.enabled
+          onChanged: widget._controller.isEnabled
               ? (int? value) {
                   setState(() {
                     widget._controller.setIndex(value);

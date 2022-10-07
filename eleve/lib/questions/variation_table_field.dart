@@ -48,13 +48,12 @@ class _VTController {
             : TableCellVerticalAlignment.top);
   }
 
-  void disable() {
-    enabled = false;
+  void setEnabled(bool enabled) {
     for (var ct in xs) {
-      ct.disable();
+      ct.setEnabled(enabled);
     }
     for (var ct in fxs) {
-      ct.disable();
+      ct.setEnabled(enabled);
     }
   }
 
@@ -102,9 +101,9 @@ class VariationTableController extends FieldController {
   }
 
   @override
-  void disable() {
-    super.disable();
-    ct?.disable();
+  void setEnabled(bool enabled) {
+    super.setEnabled(enabled);
+    ct?.setEnabled(enabled);
   }
 
   @override
@@ -180,7 +179,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
             ),
           )
         : _OneTable(ct.hasError ? Colors.red : widget.color, ct.ct!,
-            ct.data.label, ct.enabled ? _resetArrowLength : null);
+            ct.data.label, ct.isEnabled ? _resetArrowLength : null);
   }
 }
 

@@ -105,11 +105,11 @@ class TableController extends FieldController {
         super(onChange);
 
   @override
-  void disable() {
-    super.disable();
+  void setEnabled(bool enabled) {
+    super.setEnabled(enabled);
     for (var row in _controllers) {
       for (var cell in row) {
-        cell.disable();
+        cell.setEnabled(enabled);
       }
     }
   }

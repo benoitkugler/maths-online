@@ -57,7 +57,7 @@ class _DropDownFieldState extends State<DropDownField> {
                       verticalPadding: 1),
                 ),
               )),
-      onChanged: ct.enabled
+      onChanged: ct.isEnabled
           ? (v) => setState(() {
                 ct.setIndex(v);
               })

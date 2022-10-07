@@ -39,10 +39,10 @@ class _STController {
     onChange();
   }
 
-  void disable() {
+  void setEnabled(bool enabled) {
     enabled = false;
     for (var ct in xs) {
-      ct.disable();
+      ct.setEnabled(enabled);
     }
   }
 
@@ -89,9 +89,9 @@ class SignTableController extends FieldController {
   }
 
   @override
-  void disable() {
-    super.disable();
-    ct?.disable();
+  void setEnabled(bool enabled) {
+    super.setEnabled(enabled);
+    ct?.setEnabled(enabled);
   }
 
   @override
@@ -167,7 +167,7 @@ class SignTableFieldState extends State<SignTableField> {
             ),
           )
         : _OneTable(ct.hasError ? Colors.red : widget.color, ct.ct!,
-            ct.data.label, ct.enabled ? _resetArrowLength : null);
+            ct.data.label, ct.isEnabled ? _resetArrowLength : null);
   }
 }
 

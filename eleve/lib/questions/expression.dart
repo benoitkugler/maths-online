@@ -147,7 +147,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
       child: SubmitOnLeave(
         submit: _submit,
         child: TextField(
-          enabled: widget._controller.enabled,
+          enabled: widget._controller.isEnabled,
           onSubmitted: (_) {
             _submit();
           },

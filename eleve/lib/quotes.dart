@@ -7,6 +7,8 @@ class QuoteData {
   final String comment; // may be empty
   final String author; // may be empty
   const QuoteData(this.content, this.comment, this.author);
+
+  bool get isEmpty => content.isEmpty && comment.isEmpty && author.isEmpty;
 }
 
 const _quotes = [

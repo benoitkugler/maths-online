@@ -42,7 +42,7 @@ extension ProgressionExtension on ProgressionExt {
 /// with its questions and bareme
 class ExerciceHome extends StatelessWidget {
   final StudentWork data;
-  final List<QuestionState> states;
+  final List<QuestionStatus> states;
   final void Function(int index) onSelectQuestion;
 
   const ExerciceHome(this.data, this.states, this.onSelectQuestion, {Key? key})
@@ -89,7 +89,7 @@ class MarkBareme {
 
 class _QuestionList extends StatelessWidget {
   final StudentWork data;
-  final List<QuestionState> states;
+  final List<QuestionStatus> states;
 
   final void Function(int index) onSelectQuestion;
 
@@ -124,7 +124,7 @@ class _QuestionList extends StatelessWidget {
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
-                    if (st == QuestionState.waitingCorrection)
+                    if (st == QuestionStatus.waitingCorrection)
                       const Text("Tentative en attente de correction"),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -177,28 +177,28 @@ class _QuestionList extends StatelessWidget {
   }
 }
 
-enum QuestionState { locked, checked, toDo, waitingCorrection, incorrect }
+enum QuestionStatus { locked, checked, toDo, waitingCorrection, incorrect }
 
-extension _Icon on QuestionState {
+extension _Icon on QuestionStatus {
   Icon get icon {
     switch (this) {
-      case QuestionState.locked:
+      case QuestionStatus.locked:
         return const Icon(
           IconData(0xf889, fontFamily: 'MaterialIcons'),
           color: Colors.grey,
         );
-      case QuestionState.checked:
+      case QuestionStatus.checked:
         return const Icon(IconData(0xe156, fontFamily: 'MaterialIcons'),
             color: Colors.green);
-      case QuestionState.toDo:
+      case QuestionStatus.toDo:
         return const Icon(
           assignementIcon,
           color: Colors.purpleAccent,
         );
-      case QuestionState.waitingCorrection:
+      case QuestionStatus.waitingCorrection:
         return const Icon(IconData(0xf51a, fontFamily: 'MaterialIcons'),
             color: Colors.orange);
-      case QuestionState.incorrect:
+      case QuestionStatus.incorrect:
         return const Icon(IconData(0xf647, fontFamily: 'MaterialIcons'),
             color: Colors.red);
     }
@@ -206,7 +206,7 @@ extension _Icon on QuestionState {
 }
 
 class _QuestionRow extends StatelessWidget {
-  final QuestionState state;
+  final QuestionStatus state;
   final String title;
   final int bareme;
   final void Function() showDetails;
@@ -223,8 +223,9 @@ class _QuestionRow extends StatelessWidget {
       child: ListTile(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(4))),
-        tileColor:
-            state == QuestionState.toDo ? Colors.purple.withOpacity(0.5) : null,
+        tileColor: state == QuestionStatus.toDo
+            ? Colors.purple.withOpacity(0.5)
+            : null,
         leading: OutlinedButton(onPressed: showDetails, child: state.icon),
         title: Text(title),
         trailing: Text("/ $bareme"),

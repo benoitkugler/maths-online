@@ -135,7 +135,7 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
               metrics.logicalIntToVisual(from),
               VectorPointID.from,
               zoomFactor,
-              disabled: !widget.controller.enabled,
+              disabled: !widget.controller.isEnabled,
               color: color,
             ),
             DraggableGridPoint(
@@ -143,7 +143,7 @@ class _FigureVectorFieldState extends State<FigureVectorField> {
               metrics.logicalIntToVisual(to),
               VectorPointID.to,
               zoomFactor,
-              disabled: !widget.controller.enabled,
+              disabled: !widget.controller.isEnabled,
               color: color,
             ),
           ],

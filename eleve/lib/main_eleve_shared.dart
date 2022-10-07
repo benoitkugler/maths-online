@@ -1,4 +1,3 @@
-import 'package:eleve/activities/gallery/question_gallery.dart';
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/activities/trivialpoursuit/login.dart';
@@ -166,13 +165,6 @@ class _AppBodyState extends State<_AppBody> {
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
-  void _launchQuestionGallery() {
-    widget.audioPlayer.run();
-    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => QuestionGallery(widget.buildMode)));
-    onPop.then((value) => widget.audioPlayer.pause());
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -201,10 +193,6 @@ class _AppBodyState extends State<_AppBody> {
                 children: [
                   TrivialActivityIcon(_launchTrivialPoursuit),
                   HomeworkActivityIcon(_launchHomework),
-                  if (widget.buildMode != BuildMode.production)
-                    ElevatedButton(
-                        onPressed: _launchQuestionGallery,
-                        child: const Text("Galerie de questions")),
                 ],
               ),
             )

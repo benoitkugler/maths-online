@@ -9,9 +9,9 @@ import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
-import 'package:eleve/questions/types.gen.dart' hide Answer;
+import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/shared_gen.dart' hide Answer;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -51,22 +51,28 @@ class LoopbackApp extends StatelessWidget {
   }
 }
 
+class LoopackQuestionController extends BaseQuestionController {
+  final void Function(QuestionAnswersIn) sendAnswers;
+
+  LoopackQuestionController(Question question, FieldAPI api, this.sendAnswers)
+      : super(question, api);
+
+  @override
+  void onPrimaryButtonClick() {
+    state.buttonEnabled = false;
+    state.buttonLabel = "Correction...";
+    sendAnswers(answers());
+  }
+
+  @override
+  void setAnswers(Map<int, Answer> answers) {
+    state.buttonEnabled = true;
+    state.buttonLabel = "Valider";
+    super.setAnswers(answers);
+  }
+}
+
 enum _Mode { paused, question, exercice }
-
-class _QuestionData {
-  final Question question;
-  final Answers? serverAnswer;
-
-  const _QuestionData(this.question, this.serverAnswer);
-}
-
-class _ExerciceData {
-  final ExerciceController ct;
-
-  final Answers? serverAnswer; // of the current question
-
-  const _ExerciceData(this.ct, this.serverAnswer);
-}
 
 /// owns the websocket connection and switch between question
 /// or exercice mode
@@ -88,8 +94,8 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
   _Mode get mode => questionData != null
       ? _Mode.question
       : (exerciceData != null ? _Mode.exercice : _Mode.paused);
-  _QuestionData? questionData;
-  _ExerciceData? exerciceData;
+  LoopackQuestionController? questionData;
+  ExerciceController? exerciceData;
 
   @override
   void initState() {
@@ -146,6 +152,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
       return;
     }
 
+    final api = ServerFieldAPI(widget.buildMode);
     if (event is LoopbackPaused) {
       setState(() {
         questionData = null;
@@ -154,24 +161,25 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     } else if (event is LoopbackQuestion) {
       final qu = event.question;
       setState(() {
-        questionData = _QuestionData(qu, null);
+        questionData =
+            LoopackQuestionController(qu, api, evaluateQuestionAnswer);
       });
     } else if (event is LoopbackQuestionValidOut) {
       _onServerValidAnswer(event.answers);
     } else if (event is LoopbackQuestionCorrectAnswersOut) {
       final ans = event.answers;
       setState(() {
-        questionData = _QuestionData(questionData!.question, ans.data);
+        questionData!.setAnswers(ans.data);
       });
     } else if (event is LoopbackShowExercice) {
       final ex = StudentWork(event.exercice, event.progression);
       setState(() {
-        exerciceData = _ExerciceData(ExerciceController(ex, null), null);
+        exerciceData = ExerciceController(ex, null, api);
       });
     } else if (event is LoopbackExerciceCorrectAnswersOut) {
       final ans = event.answers;
       setState(() {
-        exerciceData = _ExerciceData(exerciceData!.ct, ans.data);
+        exerciceData!.setQuestionAnswers(ans.data);
       });
     }
   }
@@ -184,7 +192,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     if (mode == _Mode.question) {
       _send(const LoopbackQuestionCorrectAnswersIn());
     } else if (mode == _Mode.exercice) {
-      _send(LoopbackExerciceCorrectAnswsersIn(exerciceData!.ct.questionIndex!));
+      _send(LoopbackExerciceCorrectAnswsersIn(exerciceData!.questionIndex!));
     }
   }
 
@@ -213,10 +221,7 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
                 child: const Text("Afficher la réponse."))
           ]),
           body: _QuestionLoopback(
-            widget.buildMode,
-            questionData!.question,
-            questionData!.serverAnswer,
-            evaluateQuestionAnswer,
+            questionData!,
           ),
         );
       case _Mode.exercice:
@@ -227,29 +232,18 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
 }
 
 class _QuestionLoopback extends StatelessWidget {
-  final BuildMode buildMode;
-  final Question question;
-  final Answers? answers;
-  final void Function(QuestionAnswersIn) onValid;
+  final LoopackQuestionController controller;
 
-  const _QuestionLoopback(
-      this.buildMode, this.question, this.answers, this.onValid,
-      {Key? key})
-      : super(key: key);
+  const _QuestionLoopback(this.controller, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final ct = QuestionController(question, ServerFieldAPI(buildMode), false);
-    ct.setAnswers(answers);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: QuestionW(
-        ct,
+        controller,
         Color.fromARGB(255, 150 + Random().nextInt(100),
             150 + Random().nextInt(100), Random().nextInt(256)),
-        onValid,
-        timeout: null,
-        onSubmitButtonText: "Correction...",
       ),
     );
   }
@@ -277,17 +271,19 @@ class _LoopbackServerAPI implements ExerciceAPI {
 
 class _ExerciceLoopback extends StatelessWidget {
   final _LoopbackServerAPI api;
-  final _ExerciceData data;
+  final ExerciceController ct;
   final void Function() onShowCorrectAnswer;
 
-  const _ExerciceLoopback(this.api, this.data, this.onShowCorrectAnswer,
+  const _ExerciceLoopback(this.api, this.ct, this.onShowCorrectAnswer,
       {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(api, data.ct,
-        onShowCorrectAnswer: onShowCorrectAnswer,
-        questionAnswers: data.serverAnswer);
+    return ExerciceW(
+      api,
+      ct,
+      onShowCorrectAnswer: onShowCorrectAnswer,
+    );
   }
 }

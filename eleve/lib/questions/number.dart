@@ -87,7 +87,7 @@ class NumberField extends StatelessWidget {
         child: SubmitOnLeave(
           submit: onSubmitted ?? () {},
           child: TextField(
-            enabled: _controller.enabled,
+            enabled: _controller.isEnabled,
             onSubmitted: onSubmitted != null ? (_) => onSubmitted!() : null,
             autofocus: autofocus,
             controller: _controller.textController,

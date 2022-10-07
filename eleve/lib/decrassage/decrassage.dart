@@ -10,6 +10,24 @@ import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+class DecrassageQuestionController extends BaseQuestionController {
+  final int questionIndex;
+  final void Function(QuestionAnswersIn) onValid;
+
+  DecrassageQuestionController(
+      this.questionIndex, Question question, FieldAPI api, this.onValid)
+      : super(question, api) {
+    state.footerQuote = pickQuote();
+  }
+
+  @override
+  void onPrimaryButtonClick() {
+    state.buttonEnabled = false;
+    state.buttonLabel = "Correction...";
+    onValid(answers());
+  }
+}
+
 class Decrassage extends StatefulWidget {
   final List<int> idQuestions;
   final BuildMode buildMode;
@@ -23,8 +41,10 @@ class Decrassage extends StatefulWidget {
 
 class _DecrassageState extends State<Decrassage> {
   shared.InstantiateQuestionsOut questions = [];
-  int? currentQuestionIndex;
-  Map<int, Answer>? currentAnswer;
+  // int? currentQuestionIndex;
+  // Map<int, Answer>? currentAnswer;
+
+  DecrassageQuestionController? ct; // null when loading
 
   @override
   void initState() {
@@ -32,8 +52,8 @@ class _DecrassageState extends State<Decrassage> {
     super.initState();
   }
 
-  shared.InstantiatedQuestion? get currentQuestion =>
-      currentQuestionIndex == null ? null : questions[currentQuestionIndex!];
+  // shared.InstantiatedQuestion? get currentQuestion =>
+  //     currentQuestionIndex == null ? null : questions[currentQuestionIndex!];
 
   void _loadQuestions() async {
     try {
@@ -46,8 +66,7 @@ class _DecrassageState extends State<Decrassage> {
       setState(() {
         questions =
             shared.listInstantiatedQuestionFromJson(jsonDecode(resp.body));
-        currentQuestionIndex = 0;
-        currentAnswer = null;
+        ct = controllerForIndex(0);
       });
     } catch (e) {
       _showError(e);
@@ -58,20 +77,29 @@ class _DecrassageState extends State<Decrassage> {
     showError("Une erreur est survenue", error, context);
   }
 
+  DecrassageQuestionController controllerForIndex(int questionIndex) {
+    return DecrassageQuestionController(
+        questionIndex,
+        questions[questionIndex].question,
+        ServerFieldAPI(widget.buildMode),
+        _evaluateQuestion);
+  }
+
   void _selectQuestion(int questionIndex) {
     setState(() {
-      currentQuestionIndex = questionIndex;
-      currentAnswer = null;
+      ct = controllerForIndex(questionIndex);
     });
   }
 
   void _evaluateQuestion(QuestionAnswersIn data) async {
+    final qc = ct!;
     final QuestionAnswersOut answerResult;
+    final questionOrigin = questions[qc.questionIndex];
     try {
       final uri =
           Uri.parse(widget.buildMode.serverURL("/api/questions/evaluate"));
       final args = shared.EvaluateQuestionIn(
-          shared.Answer(currentQuestion!.params, data), currentQuestion!.id);
+          shared.Answer(questionOrigin.params, data), questionOrigin.id);
       final resp = await http.post(uri,
           body: jsonEncode(shared.evaluateQuestionInToJson(args)),
           headers: {
@@ -93,16 +121,16 @@ class _DecrassageState extends State<Decrassage> {
           : SnackBarAction(
               label: "Afficher la réponse",
               onPressed: () => setState(() {
-                currentAnswer = answerResult.expectedAnswers;
+                qc.setAnswers(answerResult.expectedAnswers);
               }),
             ),
     ));
+
     if (isValid) {
-      if (currentQuestionIndex! < questions.length - 1) {
+      if (qc.questionIndex < questions.length - 1) {
         // go to the next question
         setState(() {
-          currentQuestionIndex = currentQuestionIndex! + 1;
-          currentAnswer = null;
+          ct = controllerForIndex(ct!.questionIndex + 1);
         });
       } else {
         // assume the student has followed the order
@@ -116,9 +144,6 @@ class _DecrassageState extends State<Decrassage> {
 
   @override
   Widget build(BuildContext context) {
-    final ct = QuestionController(
-        currentQuestion!.question, ServerFieldAPI(widget.buildMode), false);
-    ct.setAnswers(currentAnswer);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -143,7 +168,7 @@ class _DecrassageState extends State<Decrassage> {
       ),
       body: Padding(
           padding: const EdgeInsets.all(10),
-          child: questions.isEmpty
+          child: ct == null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -157,13 +182,9 @@ class _DecrassageState extends State<Decrassage> {
                   ),
                 )
               : QuestionW(
-                  ct,
+                  ct!,
                   Colors.pink,
-                  _evaluateQuestion,
-                  footerQuote: pickQuote(),
-                  timeout: null,
-                  title: "Question ${currentQuestionIndex! + 1}",
-                  onSubmitButtonText: "Correction...",
+                  title: "Question ${ct!.questionIndex + 1}",
                 )),
     );
   }

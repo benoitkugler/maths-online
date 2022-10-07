@@ -73,7 +73,7 @@ class _FigurePointFieldState extends State<FigurePointField> {
     final painter = DrawingsPainter(metrics, widget.figure.drawings);
     final texts = painter.extractTexts();
     return GestureDetector(
-      onTapUp: widget.controller.enabled
+      onTapUp: widget.controller.isEnabled
           ? (details) => _setCurrentPoint(details.localPosition, metrics)
           : null,
       child: BaseRepere(

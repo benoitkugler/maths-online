@@ -330,7 +330,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
-      builder: (context) => QuestionRoute(
+      builder: (context) => InGameQuestionRoute(
         widget.buildMode,
         event,
         (a) {
@@ -349,14 +349,13 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/last-question"),
-      builder: (context) => QuestionRoute(
+      builder: (context) => LastQuestionRoute(
         widget.buildMode,
         lastQuestion!.question,
-        (_) {
+        () {
           Navigator.of(context).pop();
         },
-        readonly: true,
-        answer: lastQuestion!.answer,
+        lastQuestion!.answer,
       ),
     ));
   }
