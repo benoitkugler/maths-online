@@ -41,7 +41,7 @@ class NumberController extends FieldController {
   }
 }
 
-class NumberField extends StatelessWidget {
+class NumberField extends StatefulWidget {
   final Color _color;
   final NumberController _controller;
   final bool outlined;
@@ -57,19 +57,24 @@ class NumberField extends StatelessWidget {
       this.sizeHint})
       : super(key: key);
 
-  Color get color => _controller.hasError ? Colors.red : _color;
+  @override
+  State<NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<NumberField> {
+  Color get color => widget._controller.hasError ? Colors.red : widget._color;
 
   // takes the potential hint into account
   double get width {
     const fullWidth = 110.0; // to support a full digit
     // add some additional padding
-    final clamped = ((sizeHint ?? 15) + 3).clamp(4, 15);
+    final clamped = ((widget.sizeHint ?? 15) + 3).clamp(4, 15);
     return fullWidth * clamped.toDouble() / 15;
   }
 
   @override
   Widget build(BuildContext context) {
-    final border = outlined
+    final border = widget.outlined
         ? OutlineInputBorder(
             borderSide: BorderSide(
               color: color,
@@ -85,12 +90,14 @@ class NumberField extends StatelessWidget {
       child: SizedBox(
         width: width,
         child: SubmitOnLeave(
-          submit: onSubmitted ?? () {},
+          submit: widget.onSubmitted ?? () {},
           child: TextField(
-            enabled: _controller.isEnabled,
-            onSubmitted: onSubmitted != null ? (_) => onSubmitted!() : null,
-            autofocus: autofocus,
-            controller: _controller.textController,
+            enabled: widget._controller.isEnabled,
+            onSubmitted: widget.onSubmitted != null
+                ? (_) => widget.onSubmitted!()
+                : null,
+            autofocus: widget.autofocus,
+            controller: widget._controller.textController,
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.only(top: 10, bottom: 2),
@@ -102,8 +109,9 @@ class NumberField extends StatelessWidget {
 
             cursorColor: color,
             style: TextStyle(
-                color:
-                    _controller.hasError ? Colors.red.shade200 : Colors.white),
+                color: widget._controller.hasError
+                    ? Colors.red.shade200
+                    : Colors.white),
             textAlign: TextAlign.center,
             textAlignVertical: TextAlignVertical.center,
             keyboardType: const TextInputType.numberWithOptions(

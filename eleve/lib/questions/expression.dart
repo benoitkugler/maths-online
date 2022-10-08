@@ -38,6 +38,7 @@ class ExpressionController extends FieldController {
   }
 
   void setExpression(String expr) {
+    print("setExpr $expr");
     textController.text = expr;
   }
 
@@ -110,6 +111,8 @@ class ExpressionField extends StatefulWidget {
 class _ExpressionFieldState extends State<ExpressionField> {
   void _submit() async {
     if (widget._controller.getExpression().isEmpty) {
+      // return early
+      widget._controller.submit();
       return;
     }
     final rep = await widget._controller._checkExpressionSyntax();

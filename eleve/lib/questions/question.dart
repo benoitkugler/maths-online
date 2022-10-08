@@ -36,6 +36,17 @@ abstract class BaseQuestionController extends ChangeNotifier {
   /// is clicked, and must update [state] accordingly.
   void onPrimaryButtonClick();
 
+  /// [onFieldChange] is called when one field is updated
+  /// by the user.
+  /// The default implementation enables the primary button
+  /// if all the fields are valid and [notifyListeners].
+  void onFieldChange() {
+    state.buttonEnabled =
+        state.fields.values.every((field) => field.hasValidData());
+    print("field changed ${state.buttonEnabled}");
+    notifyListeners();
+  }
+
   /// [answers] wraps all the fields answers
   QuestionAnswersIn answers() {
     return QuestionAnswersIn(
@@ -59,15 +70,20 @@ abstract class BaseQuestionController extends ChangeNotifier {
   void setFeedback(Map<int, bool>? feedback) {
     state.fields.forEach((fieldID, field) {
       field.setError(!(feedback != null && (feedback[fieldID] ?? false)));
-      field.setEnabled(feedback == null);
+    });
+    setFieldsEnabled(feedback == null);
+  }
+
+  /// [setFieldsEnabled] set the enabled property for all the question fields
+  void setFieldsEnabled(bool enabled) {
+    state.fields.forEach((fieldID, field) {
+      field.setEnabled(enabled);
     });
   }
 
-  /// [setDisabled] disable all the question fields
-  void setDisabled() {
-    state.fields.forEach((fieldID, field) {
-      field.setEnabled(false);
-    });
+  /// [disableAllFields] disable all the question fields
+  void disableAllFields() {
+    setFieldsEnabled(false);
   }
 
   /// Walks throught the question content and creates the field controllers,
@@ -76,7 +92,7 @@ abstract class BaseQuestionController extends ChangeNotifier {
   /// [api] is used to validate expression syntax
   BaseQuestionController(Question question, FieldAPI api)
       : state = QuestionState(question: question) {
-    state.fields = _createFieldControllers(question, api, notifyListeners);
+    state.fields = _createFieldControllers(question, api, onFieldChange);
   }
 }
 
@@ -129,7 +145,7 @@ class QuestionState {
   Map<int, FieldController> fields = {};
 
   String buttonLabel = "Valider";
-  bool buttonEnabled = true;
+  bool buttonEnabled = false;
 
   /// [timeout] is the duration for the question
   /// It may be set to [null] to hide the timeout bar.
@@ -145,152 +161,6 @@ class QuestionState {
   });
 }
 
-// enum _InputState {
-//   /// fields are enabled and validated button will trigger validate
-//   working,
-
-//   /// fields and validated button are disabled
-//   done,
-
-//   /// fields and validated button are disabled
-//   submitting,
-
-//   /// fields are disabled and validated button will trigger reset
-//   displayingFeedback,
-// }
-
-// /// [QuestionController] is the controller for a whole
-// /// question (internally, it is composed of multiple controllers, one for each field)
-// /// It should be created when displaying a question, then manipulated inside the [setState]
-// /// method of a [StatefulWidget].
-// class QuestionController extends ChangeNotifier {
-//   /// If [blockOnSubmit] is true, the validate button and the fields are disabled
-//   /// after one validation.
-//   final bool blockOnSubmit;
-
-//   /// [question] defines the content of the question to display.
-//   final Question question;
-
-//   final Map<int, FieldController> _fields = {};
-
-//   _InputState state = _InputState.working;
-
-//   void answer() {
-//     if (blockOnSubmit) {
-//       state = _InputState.submitting;
-//       for (var element in _fields.values) {
-//         element.disable();
-//       }
-//     }
-//   }
-
-//   bool get enableButtonClick {
-//     switch (state) {
-//       case _InputState.working: // check if the fields are valid
-//         final areAnswersValid =
-//             _fields.values.every((ct) => !ct.hasError && ct.hasValidData());
-//         return areAnswersValid;
-//       case _InputState.done:
-//         return false;
-//       case _InputState.submitting:
-//         return false;
-//       case _InputState.displayingFeedback:
-//         return true;
-//     }
-//   }
-
-//   QuestionAnswersIn answers() {
-//     return QuestionAnswersIn(
-//       _fields.map((key, ct) => MapEntry(key, ct.getData())),
-//     );
-//   }
-
-//   /// If [answers] is not null, [setAnswers] shows the given answers and switch the state
-//   /// to working (activated), that is, no input is required to valid.
-//   void setAnswers(Map<int, Answer>? answers) {
-//     if (answers == null) {
-//       return;
-//     }
-//     state = _InputState.working;
-//     _fields.forEach((key, value) {
-//       value.setData(answers[key]!);
-//     });
-//   }
-
-//   /// If [results] is not null, [setFeedback] marks the fields with a false value
-//   /// as error, and switch the state to feedback mode, replacing
-//   /// the validation text button is replaced
-//   void setFeedback(Map<int, bool>? results) {
-//     if (results == null) {
-//       return;
-//     }
-//     state = _InputState.displayingFeedback;
-//     _fields.forEach((key, value) {
-//       value.setError(!(results[key] ?? false));
-//       value.disable();
-//     });
-//   }
-
-//   /// [setDone] disable the question and indicate the question is done
-//   void setDone() {
-//     state = _InputState.done;
-//   }
-
-//   void _onEditDone(int fieldID) {
-//     notifyListeners();
-//   }
-
-//   /// Walks throught the question content and creates the field controllers,
-//   /// later used when building widgets.
-//   ///
-//   /// [api] is used to validate expression syntax
-//   QuestionController(this.question, FieldAPI api, this.blockOnSubmit) {
-//     for (var block in question.enonce) {
-//       if (block is NumberFieldBlock) {
-//         _fields[block.iD] = NumberController(() => _onEditDone(block.iD));
-//       } else if (block is ExpressionFieldBlock) {
-//         _fields[block.iD] =
-//             ExpressionController(api, () => _onEditDone(block.iD));
-//       } else if (block is RadioFieldBlock) {
-//         _fields[block.iD] =
-//             RadioController(() => _onEditDone(block.iD), block.proposals);
-//       } else if (block is DropDownFieldBlock) {
-//         _fields[block.iD] =
-//             DropDownController(() => _onEditDone(block.iD), block.proposals);
-//       } else if (block is OrderedListFieldBlock) {
-//         _fields[block.iD] =
-//             OrderedListController(() => _onEditDone(block.iD), block);
-//       } else if (block is FigurePointFieldBlock) {
-//         _fields[block.iD] = FigurePointController(() => _onEditDone(block.iD));
-//       } else if (block is FigureVectorFieldBlock) {
-//         _fields[block.iD] =
-//             FigureVectorController(block, () => _onEditDone(block.iD));
-//       } else if (block is FigureVectorPairFieldBlock) {
-//         _fields[block.iD] = FigureVectorPairController(
-//             block.figure, () => _onEditDone(block.iD));
-//       } else if (block is VariationTableFieldBlock) {
-//         _fields[block.iD] =
-//             VariationTableController(api, block, () => _onEditDone(block.iD));
-//       } else if (block is SignTableFieldBlock) {
-//         _fields[block.iD] =
-//             SignTableController(api, block, () => _onEditDone(block.iD));
-//       } else if (block is FunctionPointsFieldBlock) {
-//         _fields[block.iD] =
-//             FunctionPointsController(block, () => _onEditDone(block.iD));
-//       } else if (block is TreeFieldBlock) {
-//         _fields[block.iD] = TreeController(block, () => _onEditDone(block.iD));
-//       } else if (block is TableFieldBlock) {
-//         _fields[block.iD] = TableController(block, () => _onEditDone(block.iD));
-//       } else if (block is VectorFieldBlock) {
-//         _fields[block.iD] =
-//             VectorController(block, () => _onEditDone(block.iD));
-//       } else if (block is ProofFieldBlock) {
-//         _fields[block.iD] = ProofController(block, () => _onEditDone(block.iD));
-//       }
-//     }
-//   }
-// }
-
 WidgetSpan _inlineMath(String content, double fontSize) {
   return WidgetSpan(
     baseline: TextBaseline.alphabetic,
@@ -304,8 +174,14 @@ WidgetSpan _inlineMath(String content, double fontSize) {
   );
 }
 
+class _LaidoutFields {
+  final List<Widget> rows; // final output
+  final List<GlobalKey> zoomableKeys;
+  _LaidoutFields(this.rows, this.zoomableKeys);
+}
+
 /// utility class used to layout the blocks
-class _ContentBuilder {
+class _FieldsBuilder {
   final List<Block> _content;
   final Color _color;
 
@@ -318,7 +194,14 @@ class _ContentBuilder {
   bool lastIsText = false; // used to insert new line between to text block
   static const fontSize = 18.0;
 
-  _ContentBuilder(this._content, this.fields, this._color);
+  _FieldsBuilder(this._content, this.fields, this._color);
+
+  static _LaidoutFields build(
+      List<Block> content, Map<int, FieldController> fields, Color color) {
+    final builder = _FieldsBuilder(content, fields, color);
+    builder._build();
+    return _LaidoutFields(builder.rows, builder.zoomableKeys);
+  }
 
   void _flushCurrentRow() {
     if (_currentRow.isEmpty) {
@@ -557,7 +440,7 @@ class _ContentBuilder {
   }
 
   /// populate [rows]
-  void build() {
+  void _build() {
     for (var element in _content) {
       // plain widgets
 
@@ -618,11 +501,11 @@ class _ContentBuilder {
   }
 }
 
-class _ListRows extends StatelessWidget {
-  final _ContentBuilder content;
+class _ListRowsOld extends StatelessWidget {
+  final _FieldsBuilder content;
   final Widget button;
 
-  const _ListRows(this.content, this.button, {Key? key}) : super(key: key);
+  const _ListRowsOld(this.content, this.button, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -639,174 +522,32 @@ class _ListRows extends StatelessWidget {
   }
 }
 
-// /// [QuestionW] is the widget used to display a question
-// /// The interactivity is handled internally; with the
-// /// hook [onValid] provided as external API,
-// /// as well as the [feedback] parameter
-// class QuestionWOld extends StatefulWidget {
-//   final QuestionController controller;
+class _ListRows extends StatelessWidget {
+  final List<Block> content;
+  final Map<int, FieldController> fields;
+  final Color color;
 
-//   final Color color;
+  final Widget button;
 
-//   /// [onValid] is called hen the validation button is clicked
-//   final void Function(QuestionAnswersIn) onValid;
+  const _ListRows(this.content, this.fields, this.color, this.button,
+      {Key? key})
+      : super(key: key);
 
-//   /// [onRetry] is called when the user clicks on the
-//   /// main button, when displaying feedback.
-//   final void Function()? onRetry;
-
-//   /// [timeout] is the duration for the question
-//   /// It may be set to [null] to hide the timeout bar.
-//   final Duration? timeout;
-
-//   /// [footerQuote] is displayed at the bottom of the screen when the
-//   /// question has been answered
-//   final QuoteData footerQuote;
-
-//   /// [title] is the tilte of the question
-//   final String title;
-
-//   /// [onSubmitButtonText] is displayed when submiting
-//   /// an answer
-//   final String onSubmitButtonText;
-
-//   const QuestionWOld(
-//     this.controller,
-//     this.color,
-//     this.onValid, {
-//     Key? key,
-//     this.title = "Question",
-//     this.timeout = const Duration(seconds: 60),
-//     this.footerQuote = const QuoteData("", "", ""),
-//     this.onRetry,
-//     required this.onSubmitButtonText,
-//   }) : super(key: key);
-
-//   @override
-//   State<QuestionW> createState() => _QuestionWState();
-// }
-
-// class _QuestionWStateOld extends State<QuestionW> {
-//   late _ContentBuilder builder;
-
-//   @override
-//   void initState() {
-//     _initController();
-//     _buildFields();
-
-//     super.initState();
-//   }
-
-//   @override
-//   void didUpdateWidget(QuestionW oldWidget) {
-//     _initController();
-//     _buildFields();
-
-//     super.didUpdateWidget(oldWidget);
-//   }
-
-//   void _initController() {
-//     widget.controller.removeListener(_onControllerChange);
-//     widget.controller.addListener(_onControllerChange);
-//   }
-
-//   void _buildFields() {
-//     builder = _ContentBuilder(widget.controller, widget.color);
-//     builder.build();
-//   }
-
-//   void _onControllerChange() {
-//     setState(() {});
-//   }
-
-//   void onValidate() {
-//     final answers = widget.controller.answers();
-//     widget.controller.answer();
-//     _buildFields();
-//     setState(() {});
-//     widget.onValid(answers);
-//   }
-
-//   void onReset() {
-//     if (widget.onRetry != null) {
-//       widget.onRetry!();
-//     }
-//   }
-
-//   String get buttonLabel {
-//     switch (widget.controller.state) {
-//       case _InputState.working:
-//         return "Valider";
-//       case _InputState.done:
-//         return "Question terminée";
-//       case _InputState.submitting:
-//         // return "En attente des autres joueurs...";
-//         return widget.onSubmitButtonText;
-//       case _InputState.displayingFeedback:
-//         return "Essayer à nouveau";
-//     }
-//   }
-
-//   void onButtonClick() {
-//     switch (widget.controller.state) {
-//       case _InputState.working:
-//         onValidate();
-//         break;
-//       case _InputState.displayingFeedback:
-//         onReset();
-//         break;
-//       case _InputState.submitting:
-//       case _InputState.done:
-//         return;
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     const spacing = SizedBox(height: 20.0);
-//     final timeout = widget.timeout;
-
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 5.0),
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-//         children: [
-//           Padding(
-//             padding: const EdgeInsets.symmetric(vertical: 8.0),
-//             child: ColoredTitle(widget.title, widget.color),
-//           ),
-//           Expanded(
-//               child: _ListRows(
-//             builder,
-//             ElevatedButton(
-//               onPressed:
-//                   widget.controller.enableButtonClick ? onButtonClick : null,
-//               style: ElevatedButton.styleFrom(backgroundColor: widget.color),
-//               child: Text(
-//                 buttonLabel,
-//                 style: const TextStyle(fontSize: 18),
-//               ),
-//             ),
-//           )),
-//           if (timeout != null) ...[
-//             spacing,
-//             TimeoutBar(timeout, widget.color),
-//             Padding(
-//               padding: const EdgeInsets.only(top: 6),
-//               child: AnimatedOpacity(
-//                   duration: const Duration(seconds: 2),
-//                   opacity:
-//                       widget.controller.state == _InputState.submitting ? 1 : 0,
-//                   child: Quote(widget.controller.state == _InputState.submitting
-//                       ? widget.footerQuote
-//                       : const QuoteData("", "", ""))),
-//             ),
-//           ]
-//         ],
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    final rows = _FieldsBuilder.build(content, fields, color);
+    return ListWithZoomables([
+      ...rows.rows
+          .map(
+            (e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0), child: e),
+          )
+          .toList(),
+      const SizedBox(height: 10.0),
+      button
+    ], rows.zoomableKeys, shrinkWrap: true);
+  }
+}
 
 /// [QuestionW] is the widget used to display a question
 /// The interactivity is handled internally; with the
@@ -832,12 +573,9 @@ class QuestionW extends StatefulWidget {
 }
 
 class _QuestionWState extends State<QuestionW> {
-  late _ContentBuilder builder;
-
   @override
   void initState() {
     _initController();
-    _buildFields();
 
     super.initState();
   }
@@ -845,7 +583,6 @@ class _QuestionWState extends State<QuestionW> {
   @override
   void didUpdateWidget(QuestionW oldWidget) {
     _initController();
-    _buildFields();
 
     super.didUpdateWidget(oldWidget);
   }
@@ -855,25 +592,19 @@ class _QuestionWState extends State<QuestionW> {
     widget.controller.addListener(_onControllerChange);
   }
 
-  void _buildFields() {
-    builder = _ContentBuilder(widget.controller.state.question.enonce,
-        widget.controller.state.fields, widget.color);
-    builder.build();
-  }
-
   void _onControllerChange() {
     setState(() {});
   }
 
   void onButtonClick() {
     widget.controller.onPrimaryButtonClick();
-    // _buildFields();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final state = widget.controller.state;
+    print("question button enabled : ${state.buttonEnabled}");
     const spacing = SizedBox(height: 20.0);
 
     return Padding(
@@ -887,7 +618,9 @@ class _QuestionWState extends State<QuestionW> {
           ),
           Expanded(
               child: _ListRows(
-            builder,
+            widget.controller.state.question.enonce,
+            widget.controller.state.fields,
+            widget.color,
             ElevatedButton(
               onPressed: state.buttonEnabled ? onButtonClick : null,
               style: ElevatedButton.styleFrom(backgroundColor: widget.color),

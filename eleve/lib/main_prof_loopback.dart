@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:js' as js;
-import 'dart:math';
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/exercice.dart';
+import 'package:eleve/loopback/question.dart';
 import 'package:eleve/loopback_types.gen.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared_gen.dart' hide Answer;
@@ -48,27 +47,6 @@ class LoopbackApp extends StatelessWidget {
       supportedLocales: locales,
       home: _EditorLoopback(sessionID, buildMode),
     );
-  }
-}
-
-class LoopackQuestionController extends BaseQuestionController {
-  final void Function(QuestionAnswersIn) sendAnswers;
-
-  LoopackQuestionController(Question question, FieldAPI api, this.sendAnswers)
-      : super(question, api);
-
-  @override
-  void onPrimaryButtonClick() {
-    state.buttonEnabled = false;
-    state.buttonLabel = "Correction...";
-    sendAnswers(answers());
-  }
-
-  @override
-  void setAnswers(Map<int, Answer> answers) {
-    state.buttonEnabled = true;
-    state.buttonLabel = "Valider";
-    super.setAnswers(answers);
   }
 }
 
@@ -131,16 +109,10 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
   }
 
   void _onServerValidAnswer(QuestionAnswersOut rep) {
-    final crible = rep.results;
-    final errors = crible.values.where((value) => !value).toList();
-    final isValid = errors.isEmpty;
-    final errorMessage = errors.length >= 2
-        ? "${errors.length} champs sont incorrects"
-        : "Un champ est incorrect";
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: isValid ? Colors.lightGreen : Colors.red,
-      content: Text(isValid ? "Bonne réponse" : errorMessage),
-    ));
+    LoopbackQuestionW.showServerValidation(rep, context);
+    setState(() {
+      questionData!.setFeedback(rep.results);
+    });
   }
 
   void listen(dynamic data) {
@@ -214,38 +186,11 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
           )),
         );
       case _Mode.question:
-        return Scaffold(
-          appBar: AppBar(actions: [
-            TextButton(
-                onPressed: _showCorrectAnswer,
-                child: const Text("Afficher la réponse."))
-          ]),
-          body: _QuestionLoopback(
-            questionData!,
-          ),
-        );
+        return LoopbackQuestionW(questionData!, _showCorrectAnswer);
       case _Mode.exercice:
         return _ExerciceLoopback(_LoopbackServerAPI(widget.buildMode),
             exerciceData!, _showCorrectAnswer);
     }
-  }
-}
-
-class _QuestionLoopback extends StatelessWidget {
-  final LoopackQuestionController controller;
-
-  const _QuestionLoopback(this.controller, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: QuestionW(
-        controller,
-        Color.fromARGB(255, 150 + Random().nextInt(100),
-            150 + Random().nextInt(100), Random().nextInt(256)),
-      ),
-    );
   }
 }
 

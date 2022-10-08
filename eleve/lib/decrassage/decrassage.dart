@@ -10,6 +10,40 @@ import 'package:eleve/shared_gen.dart' as shared;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+/// [DecrassageAPI] provides the logic to load a list
+/// of questions
+abstract class DecrassageAPI extends FieldAPI {
+  Future<shared.InstantiateQuestionsOut> loadQuestions(List<int> ids);
+  Future<QuestionAnswersOut> evaluateQuestion(shared.EvaluateQuestionIn answer);
+}
+
+/// [ServerDecrassageAPI] is the default implementation of
+/// [DecrassageAPI], using an http call to the server.
+class ServerDecrassageAPI extends ServerFieldAPI implements DecrassageAPI {
+  const ServerDecrassageAPI(super.buildMode);
+
+  @override
+  Future<shared.InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
+    final uri = Uri.parse(buildMode.serverURL("/api/questions/instantiate"));
+    final resp = await http.post(uri, body: jsonEncode(ids), headers: {
+      'Content-type': 'application/json',
+    });
+    return shared.listInstantiatedQuestionFromJson(jsonDecode(resp.body));
+  }
+
+  @override
+  Future<QuestionAnswersOut> evaluateQuestion(
+      shared.EvaluateQuestionIn answer) async {
+    final uri = Uri.parse(buildMode.serverURL("/api/questions/evaluate"));
+    final resp = await http.post(uri,
+        body: jsonEncode(shared.evaluateQuestionInToJson(answer)),
+        headers: {
+          'Content-type': 'application/json',
+        });
+    return questionAnswersOutFromJson(jsonDecode(resp.body));
+  }
+}
+
 class DecrassageQuestionController extends BaseQuestionController {
   final int questionIndex;
   final void Function(QuestionAnswersIn) onValid;
@@ -29,11 +63,10 @@ class DecrassageQuestionController extends BaseQuestionController {
 }
 
 class Decrassage extends StatefulWidget {
+  final DecrassageAPI api;
   final List<int> idQuestions;
-  final BuildMode buildMode;
 
-  const Decrassage(this.idQuestions, this.buildMode, {Key? key})
-      : super(key: key);
+  const Decrassage(this.api, this.idQuestions, {Key? key}) : super(key: key);
 
   @override
   _DecrassageState createState() => _DecrassageState();
@@ -41,8 +74,6 @@ class Decrassage extends StatefulWidget {
 
 class _DecrassageState extends State<Decrassage> {
   shared.InstantiateQuestionsOut questions = [];
-  // int? currentQuestionIndex;
-  // Map<int, Answer>? currentAnswer;
 
   DecrassageQuestionController? ct; // null when loading
 
@@ -52,20 +83,11 @@ class _DecrassageState extends State<Decrassage> {
     super.initState();
   }
 
-  // shared.InstantiatedQuestion? get currentQuestion =>
-  //     currentQuestionIndex == null ? null : questions[currentQuestionIndex!];
-
   void _loadQuestions() async {
     try {
-      final uri =
-          Uri.parse(widget.buildMode.serverURL("/api/questions/instantiate"));
-      final resp =
-          await http.post(uri, body: jsonEncode(widget.idQuestions), headers: {
-        'Content-type': 'application/json',
-      });
+      final res = await widget.api.loadQuestions(widget.idQuestions);
       setState(() {
-        questions =
-            shared.listInstantiatedQuestionFromJson(jsonDecode(resp.body));
+        questions = res;
         ct = controllerForIndex(0);
       });
     } catch (e) {
@@ -78,11 +100,8 @@ class _DecrassageState extends State<Decrassage> {
   }
 
   DecrassageQuestionController controllerForIndex(int questionIndex) {
-    return DecrassageQuestionController(
-        questionIndex,
-        questions[questionIndex].question,
-        ServerFieldAPI(widget.buildMode),
-        _evaluateQuestion);
+    return DecrassageQuestionController(questionIndex,
+        questions[questionIndex].question, widget.api, _evaluateQuestion);
   }
 
   void _selectQuestion(int questionIndex) {
@@ -96,16 +115,9 @@ class _DecrassageState extends State<Decrassage> {
     final QuestionAnswersOut answerResult;
     final questionOrigin = questions[qc.questionIndex];
     try {
-      final uri =
-          Uri.parse(widget.buildMode.serverURL("/api/questions/evaluate"));
       final args = shared.EvaluateQuestionIn(
           shared.Answer(questionOrigin.params, data), questionOrigin.id);
-      final resp = await http.post(uri,
-          body: jsonEncode(shared.evaluateQuestionInToJson(args)),
-          headers: {
-            'Content-type': 'application/json',
-          });
-      answerResult = questionAnswersOutFromJson(jsonDecode(resp.body));
+      answerResult = await widget.api.evaluateQuestion(args);
     } catch (e) {
       _showError(e);
       return;
@@ -113,17 +125,20 @@ class _DecrassageState extends State<Decrassage> {
 
     final isValid = answerResult.results.values.every((element) => element);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: isValid ? Colors.lightGreen : Colors.red.shade200,
-      duration: Duration(seconds: isValid ? 2 : 4),
+      backgroundColor: isValid ? Colors.lightGreen : Colors.red.shade300,
+      duration: Duration(seconds: isValid ? 3 : 10),
       content: Text(isValid ? "Bonne réponse" : "Réponse incorrecte"),
       action: isValid
           ? null
           : SnackBarAction(
               label: "Afficher la réponse",
-              onPressed: () => setState(() {
-                qc.setAnswers(answerResult.expectedAnswers);
+              textColor: Colors.black87,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                setState(() {
+                  qc.setAnswers(answerResult.expectedAnswers);
+                });
               }),
-            ),
     ));
 
     if (isValid) {
@@ -170,10 +185,10 @@ class _DecrassageState extends State<Decrassage> {
           padding: const EdgeInsets.all(10),
           child: ct == null
               ? Center(
-                  child: Column(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Text("Chargement"),
+                      Text("Chargement des questions..."),
                       Padding(
                         padding: EdgeInsets.all(12.0),
                         child: CircularProgressIndicator(),

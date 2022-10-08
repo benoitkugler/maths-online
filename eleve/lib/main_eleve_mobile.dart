@@ -3,7 +3,7 @@ import 'package:eleve/main_eleve_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
 
-final bm = buildMode();
+final bm = buildModeFromEnv();
 // final bm = BuildMode.dev;
 
 void main() async {

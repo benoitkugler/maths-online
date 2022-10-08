@@ -32,7 +32,8 @@ class GameEndPannel extends StatelessWidget {
   void _showDecrassage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-          builder: (context) => Decrassage(decrassage, buildMode)),
+          builder: (context) =>
+              Decrassage(ServerDecrassageAPI(buildMode), decrassage)),
     );
   }
 

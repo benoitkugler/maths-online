@@ -57,7 +57,7 @@ extension APISetting on BuildMode {
 }
 
 /// buildMode returns the build mode
-BuildMode buildMode() {
+BuildMode buildModeFromEnv() {
   const buildMode = String.fromEnvironment("mode");
   return APISetting.fromString(buildMode);
 }

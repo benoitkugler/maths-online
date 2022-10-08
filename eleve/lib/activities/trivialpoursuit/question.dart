@@ -1,4 +1,3 @@
-import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/questions/types.gen.dart';
@@ -24,7 +23,7 @@ class InGameQuestionController extends BaseQuestionController {
     state.buttonEnabled = false;
     state.buttonLabel = "En attente des autres joueurs...";
     state.footerQuote = pickQuote();
-    setDisabled();
+    disableAllFields();
     // propagate the event
     onValid(answers());
   }
@@ -36,6 +35,9 @@ class LastQuestionController extends BaseQuestionController {
       Question question, FieldAPI api, Map<int, Answer> answers, this.onClose)
       : super(question, api) {
     setAnswers(answers);
+    disableAllFields();
+    state.buttonEnabled = true;
+    state.buttonLabel = "Retour";
   }
 
   @override
@@ -46,12 +48,11 @@ class LastQuestionController extends BaseQuestionController {
 }
 
 class InGameQuestionRoute extends StatelessWidget {
-  final BuildMode buildMode;
+  final FieldAPI api;
   final ShowQuestion question;
   final void Function(QuestionAnswersIn) onValid;
 
-  const InGameQuestionRoute(this.buildMode, this.question, this.onValid,
-      {Key? key})
+  const InGameQuestionRoute(this.api, this.question, this.onValid, {Key? key})
       : super(key: key);
 
   Future<bool> _confirmCancel(BuildContext context) async {
@@ -75,8 +76,7 @@ class InGameQuestionRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ct =
-        InGameQuestionController(question, ServerFieldAPI(buildMode), onValid);
+    final ct = InGameQuestionController(question, api, onValid);
 
     // make the route block until validated
     return WillPopScope(
@@ -103,21 +103,19 @@ class InGameQuestionRoute extends StatelessWidget {
 }
 
 class LastQuestionRoute extends StatelessWidget {
-  final BuildMode buildMode;
+  final FieldAPI api;
   final ShowQuestion question;
   final void Function() onDone;
 
   final Answers answers;
 
-  const LastQuestionRoute(
-      this.buildMode, this.question, this.onDone, this.answers,
+  const LastQuestionRoute(this.api, this.question, this.onDone, this.answers,
       {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final ct = LastQuestionController(
-        question.question, ServerFieldAPI(buildMode), answers, onDone);
+    final ct = LastQuestionController(question.question, api, answers, onDone);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,

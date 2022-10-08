@@ -27,7 +27,7 @@ class ExerciceQuestionController extends BaseQuestionController {
     state.buttonLabel = "Question terminée";
     state.buttonEnabled = false;
     state.footerQuote = pickQuote();
-    setDisabled();
+    disableAllFields();
   }
 
   // delegate to the exercice widget
