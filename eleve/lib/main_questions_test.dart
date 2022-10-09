@@ -20,7 +20,7 @@ class _FieldAPI implements FieldAPI {
 
   @override
   Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return CheckExpressionOut("", true);
+    return const CheckExpressionOut("", true);
   }
 }
 
@@ -267,7 +267,7 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
 
   @override
   Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return CheckExpressionOut("", true);
+    return const CheckExpressionOut("", true);
   }
 
   @override
@@ -306,7 +306,7 @@ class _ExerciceParallelAPI implements ExerciceAPI {
 
   @override
   Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return CheckExpressionOut("", true);
+    return const CheckExpressionOut("", true);
   }
 
   @override
