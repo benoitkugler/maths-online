@@ -53,7 +53,7 @@ class ExerciceHome extends StatelessWidget {
     return Center(
       child: Column(children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 10),
           child: ColoredTitle(data.exercice.title, Colors.purple),
         ),
         Expanded(
@@ -142,6 +142,11 @@ class _QuestionList extends StatelessWidget {
   }
 
   bool allowDoQuestion(int questionIndex) {
+    // if the question has been validated, always allow access
+    if (states[questionIndex] == QuestionStatus.checked) {
+      return true;
+    }
+
     switch (data.exercice.flow) {
       case Flow.sequencial:
         return data.progression.nextQuestion == questionIndex;

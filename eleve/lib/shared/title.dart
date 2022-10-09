@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// TODO: better UI coherence
 class ColoredTitle extends StatelessWidget {
   final String title;
   final Color color;
@@ -23,6 +22,7 @@ class ColoredTitle extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           title,
+          textAlign: TextAlign.center,
           style: TextStyle(fontSize: 22, shadows: shadows),
         ),
       ),

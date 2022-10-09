@@ -5,6 +5,7 @@ import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
+import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/repere.gen.dart';
 import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared_gen.dart';
@@ -14,25 +15,12 @@ void main() async {
   runApp(const _QuestionTestApp());
 }
 
-class _API implements ExerciceAPI {
-  _API();
+class _FieldAPI implements FieldAPI {
+  _FieldAPI();
 
   @override
   Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
     return CheckExpressionOut("", true);
-  }
-
-  @override
-  Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final indexQuestion = params.answers.keys.first;
-    return EvaluateWorkOut(
-        params.answers.map((key, value) =>
-            MapEntry(key, QuestionAnswersOut({0: key == 1}, {}))),
-        ProgressionExt([
-          [false],
-          [true]
-        ], indexQuestion == 0 ? 1 : -1),
-        [quI1, quI2]);
   }
 }
 
@@ -64,17 +52,9 @@ final qu3 = Question([
   const NumberFieldBlock(0, 10)
 ]);
 
-final quI1 = InstantiatedQuestion(0, qu1, []);
-final quI2 = InstantiatedQuestion(0, qu2, []);
-
-final exercice = ExerciceController(
-    StudentWork(
-      InstantiatedWork(
-          WorkID(0, true), "", Flow.parallel, [quI1, quI2], [1, 1]),
-      ProgressionExt([], 0),
-    ),
-    null,
-    _API());
+final quI1 = InstantiatedQuestion(1, qu1, []);
+final quI2 = InstantiatedQuestion(2, qu2, []);
+final quI3 = InstantiatedQuestion(3, qu3, []);
 
 /// a dev widget testing the behavior of the question/exercice
 /// widgets for each context
@@ -136,10 +116,14 @@ class _QuestionTestApp extends StatelessWidget {
 
   void showLoopackQuestion(BuildContext context) async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => _Loopback(() => Navigator.of(context).pop())));
+        builder: (context) =>
+            _LoopbackQuestion(() => Navigator.of(context).pop())));
   }
 
-  void showExerciceSequencial(BuildContext context) async {}
+  void showExerciceSequencial(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => const _ExerciceSequential()));
+  }
 
   void showExerciceParallel(BuildContext context) async {}
 
@@ -153,7 +137,7 @@ class _TrivialInGame extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: InGameQuestionRoute(
-          _API(),
+          _FieldAPI(),
           ShowQuestion(60, Categorie.blue, 0, questionComplexe),
           (a) => onValid(a, context)),
     );
@@ -174,7 +158,7 @@ class _TrivialLast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LastQuestionRoute(
-      _API(),
+      _FieldAPI(),
       ShowQuestion(60, Categorie.blue, 0, questionComplexe),
       onDone,
       questionComplexeAnswers,
@@ -219,21 +203,22 @@ class _Decrassage extends StatelessWidget {
   }
 }
 
-class _Loopback extends StatefulWidget {
+class _LoopbackQuestion extends StatefulWidget {
   final void Function() onDone;
 
-  const _Loopback(this.onDone, {super.key});
+  const _LoopbackQuestion(this.onDone, {super.key});
 
   @override
-  State<_Loopback> createState() => _LoopbackState();
+  State<_LoopbackQuestion> createState() => _LoopbackQuestionState();
 }
 
-class _LoopbackState extends State<_Loopback> {
+class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   late final LoopackQuestionController controller;
 
   @override
   void initState() {
-    controller = LoopackQuestionController(questionComplexe, _API(), onValid);
+    controller =
+        LoopackQuestionController(questionComplexe, _FieldAPI(), onValid);
     super.initState();
   }
 
@@ -258,5 +243,74 @@ class _LoopbackState extends State<_Loopback> {
     setState(() {
       controller.setFeedback(rep);
     });
+  }
+}
+
+final workParallel = StudentWork(
+  InstantiatedWork(const WorkID(0, true), "Identités remarquables (parallèle)",
+      Flow.parallel, [quI1, quI2, quI3], [1, 1, 2]),
+  ProgressionExt([[], [], []], 0),
+);
+
+final workSequencial = StudentWork(
+  InstantiatedWork(const WorkID(0, true), "Identités remarquables (séquentiel)",
+      Flow.sequencial, [quI1, quI2, quI3], [1, 1, 2]),
+  ProgressionExt([[], [], []], 0),
+);
+
+class _ExerciceSequentialAPI implements ExerciceAPI {
+  _ExerciceSequentialAPI();
+
+  @override
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
+    return CheckExpressionOut("", true);
+  }
+
+  @override
+  Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
+    final questionIndex = params.answers.keys.first;
+    final answer = params.answers[questionIndex]!;
+    final isCorrect =
+        questionIndex == (answer.answer.data[0] as NumberAnswer).value;
+    final res = {
+      questionIndex: QuestionAnswersOut({0: isCorrect}, {})
+    };
+    params.progression.questions[questionIndex].add(isCorrect);
+    return EvaluateWorkOut(
+        res,
+        ProgressionExt(
+            params.progression.questions,
+            isCorrect
+                ? (questionIndex == 2 ? -1 : questionIndex + 1)
+                : questionIndex),
+        [quI1, quI2, quI3]);
+  }
+}
+
+class _ExerciceSequential extends StatefulWidget {
+  const _ExerciceSequential({super.key});
+
+  @override
+  State<_ExerciceSequential> createState() => _ExerciceSequentialState();
+}
+
+class _ExerciceSequentialState extends State<_ExerciceSequential> {
+  late final ExerciceController controller;
+
+  @override
+  void initState() {
+    controller = ExerciceController(workSequencial, null, _FieldAPI());
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ExerciceSequential oldWidget) {
+    controller = ExerciceController(workSequencial, null, _FieldAPI());
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExerciceW(_ExerciceSequentialAPI(), controller);
   }
 }

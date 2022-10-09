@@ -43,7 +43,6 @@ abstract class BaseQuestionController extends ChangeNotifier {
   void onFieldChange() {
     state.buttonEnabled =
         state.fields.values.every((field) => field.hasValidData());
-    print("field changed ${state.buttonEnabled}");
     notifyListeners();
   }
 
@@ -66,10 +65,10 @@ abstract class BaseQuestionController extends ChangeNotifier {
 
   /// If [feedback] is not null, [setFeedback] marks the fields with a false value
   /// as error, and disable all fields
-  /// If is is null, it remove error indicator and enable them again.
+  /// If is is null, it removes error indicator and enable them again.
   void setFeedback(Map<int, bool>? feedback) {
     state.fields.forEach((fieldID, field) {
-      field.setError(!(feedback != null && (feedback[fieldID] ?? false)));
+      field.setError(feedback == null ? false : !(feedback[fieldID] ?? false));
     });
     setFieldsEnabled(feedback == null);
   }
@@ -587,13 +586,19 @@ class _QuestionWState extends State<QuestionW> {
     super.didUpdateWidget(oldWidget);
   }
 
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onControllerChange);
+    super.dispose();
+  }
+
   void _initController() {
     widget.controller.removeListener(_onControllerChange);
     widget.controller.addListener(_onControllerChange);
   }
 
   void _onControllerChange() {
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void onButtonClick() {
@@ -604,7 +609,6 @@ class _QuestionWState extends State<QuestionW> {
   @override
   Widget build(BuildContext context) {
     final state = widget.controller.state;
-    print("question button enabled : ${state.buttonEnabled}");
     const spacing = SizedBox(height: 20.0);
 
     return Padding(
