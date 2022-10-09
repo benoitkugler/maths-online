@@ -38,23 +38,24 @@ const questionComplexeAnswers = {
   2: PointAnswer(IntCoord(3, 8)),
 };
 
-final qu1 = Question([
-  TextBlock([T("Test 1")], false, false, false),
-  const NumberFieldBlock(0, 10)
-]);
+Question numberQuestion(String title) {
+  return Question([
+    TextBlock([T(title)], false, false, false),
+    const NumberFieldBlock(0, 10)
+  ]);
+}
 
-final qu2 = Question([
-  TextBlock([T("Test 2")], false, false, false),
-  const NumberFieldBlock(0, 10)
-]);
-final qu3 = Question([
-  TextBlock([T("Test 3")], false, false, false),
-  const NumberFieldBlock(0, 10)
-]);
+final qu1 = numberQuestion("Test 1");
+final qu2 = numberQuestion("Test 2");
+final qu3 = numberQuestion("Test 3");
 
 final quI1 = InstantiatedQuestion(1, qu1, []);
 final quI2 = InstantiatedQuestion(2, qu2, []);
 final quI3 = InstantiatedQuestion(3, qu3, []);
+
+final quI1bis = InstantiatedQuestion(1, numberQuestion("Variante 1"), []);
+final quI2bis = InstantiatedQuestion(2, numberQuestion("Variante 2"), []);
+final quI3bis = InstantiatedQuestion(3, numberQuestion("Variante 3"), []);
 
 /// a dev widget testing the behavior of the question/exercice
 /// widgets for each context
@@ -125,7 +126,10 @@ class _QuestionTestApp extends StatelessWidget {
         builder: (context) => const _ExerciceSequential()));
   }
 
-  void showExerciceParallel(BuildContext context) async {}
+  void showExerciceParallel(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => const _ExerciceParallel()));
+  }
 
   void showLoopackExercice(BuildContext context) async {}
 }
@@ -283,34 +287,56 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
             isCorrect
                 ? (questionIndex == 2 ? -1 : questionIndex + 1)
                 : questionIndex),
-        [quI1, quI2, quI3]);
+        [quI1bis, quI2bis, quI3bis]);
   }
 }
 
-class _ExerciceSequential extends StatefulWidget {
+class _ExerciceSequential extends StatelessWidget {
   const _ExerciceSequential({super.key});
 
   @override
-  State<_ExerciceSequential> createState() => _ExerciceSequentialState();
+  Widget build(BuildContext context) {
+    return ExerciceW(_ExerciceSequentialAPI(),
+        ExerciceController(workSequencial, null, _FieldAPI()));
+  }
 }
 
-class _ExerciceSequentialState extends State<_ExerciceSequential> {
-  late final ExerciceController controller;
+class _ExerciceParallelAPI implements ExerciceAPI {
+  _ExerciceParallelAPI();
 
   @override
-  void initState() {
-    controller = ExerciceController(workSequencial, null, _FieldAPI());
-    super.initState();
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
+    return CheckExpressionOut("", true);
   }
 
   @override
-  void didUpdateWidget(covariant _ExerciceSequential oldWidget) {
-    controller = ExerciceController(workSequencial, null, _FieldAPI());
-    super.didUpdateWidget(oldWidget);
+  Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
+    final res = <int, QuestionAnswersOut>{};
+    for (var item in params.answers.entries) {
+      final questionIndex = item.key;
+      final answer = item.value.answer;
+      final isCorrect = questionIndex == (answer.data[0] as NumberAnswer).value;
+      params.progression.questions[questionIndex].add(isCorrect);
+      res[questionIndex] = QuestionAnswersOut({0: isCorrect}, {});
+    }
+    params.progression.questions
+        .indexWhere((l) => l.every((sucess) => !sucess));
+    return EvaluateWorkOut(
+        res,
+        ProgressionExt(
+            params.progression.questions,
+            params.progression.questions
+                .indexWhere((l) => l.every((sucess) => !sucess))),
+        [quI1bis, quI2bis, quI3bis]);
   }
+}
+
+class _ExerciceParallel extends StatelessWidget {
+  const _ExerciceParallel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceSequentialAPI(), controller);
+    return ExerciceW(_ExerciceParallelAPI(),
+        ExerciceController(workParallel, null, _FieldAPI()));
   }
 }

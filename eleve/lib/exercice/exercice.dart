@@ -45,6 +45,12 @@ enum ExerciceStatus {
   displayingFeedback
 }
 
+class _ParallelAnswerStatus {
+  final int? questionToDo;
+  final Map<int, Answer> answersToSend;
+  const _ParallelAnswerStatus(this.questionToDo, this.answersToSend);
+}
+
 /// [ExerciceController] exposes the state
 /// which will change during an exercice,
 /// so that parent widget may react properly.
@@ -64,19 +70,25 @@ class ExerciceController {
   List<_ExerciceQuestionController> _questions;
 
   // questions validated but not submitted
-  Set<int> waitingQuestions = {};
+  final Set<int> _waitingQuestions = {};
 
   /// onValid is the callback triggered when validatin a question
   /// and is filled by the widget using the controller
   void Function()? onValid;
 
-  ExerciceController(this.exeAndProg, this.questionIndex, FieldAPI api)
+  final FieldAPI api;
+
+  ExerciceController(this.exeAndProg, this.questionIndex, this.api)
       : _questions = [] {
-    _questions = exeAndProg.exercice.questions
+    _questions = _createControllers(api);
+    _refreshStates();
+  }
+
+  List<_ExerciceQuestionController> _createControllers(FieldAPI api) {
+    return exeAndProg.exercice.questions
         .map((qu) =>
             _ExerciceQuestionController(qu.question, api, _onQuestionValid))
         .toList();
-    _refreshStates();
   }
 
   void _onQuestionValid() {
@@ -90,6 +102,8 @@ class ExerciceController {
         _questions[questionIndex!].state.buttonLabel = "Valider...";
         break;
     }
+    _waitingQuestions.add(questionIndex!);
+    _refreshStates();
     if (onValid != null) onValid!();
   }
 
@@ -106,15 +120,24 @@ class ExerciceController {
       question.state.buttonEnabled = true;
       question.state.buttonLabel = "Essayer à nouveau...";
     }
+    _refreshStates();
   }
 
   void reset() {
     for (var question in _questions) {
       question.setFeedback(null);
+      question.state.buttonEnabled = false;
+      question.state.buttonLabel = "Valider";
     }
-    waitingQuestions.clear();
+    _waitingQuestions.clear();
     _refreshStates();
     status = ExerciceStatus.answering;
+  }
+
+  void resetWithNextQuestions(List<InstantiatedQuestion> nextQuestions) {
+    exeAndProg = exeAndProg.copyWithQuestions(nextQuestions);
+    _questions = _createControllers(api);
+    reset();
   }
 
   void _refreshStates() {
@@ -127,8 +150,11 @@ class ExerciceController {
     }
   }
 
+  /// [updateProgression] is called after receiving the server
+  /// answer. It removes waiting questions and update the questions status.
   void updateProgression(ProgressionExt progression) {
     exeAndProg = StudentWork(exeAndProg.exercice, progression);
+    _waitingQuestions.clear();
     _refreshStates();
   }
 
@@ -148,9 +174,9 @@ class ExerciceController {
       // after validating, a question may be both incorrect and waiting submit:
       // give the priority to incorrectQuestions
       final qu = _questions[questionIndex];
-      if (!qu.feedback().values.every((success) => success)) {
+      if (qu.feedback().values.any((error) => error)) {
         return QuestionStatus.incorrect;
-      } else if (waitingQuestions.contains(questionIndex)) {
+      } else if (_waitingQuestions.contains(questionIndex)) {
         return QuestionStatus.waitingCorrection;
       }
       return QuestionStatus.toDo;
@@ -163,6 +189,26 @@ class ExerciceController {
     _questions[questionIndex!].setAnswers(answers);
     _questions[questionIndex!].state.buttonEnabled = true;
     _questions[questionIndex!].state.buttonLabel = "Valider";
+  }
+
+  /// [hasAnsweredAll] check if all the questions are done
+  _ParallelAnswerStatus hasAnsweredAll() {
+    final toSend = <int, Answer>{};
+    for (var index = 0; index < _questions.length; index++) {
+      final history = exeAndProg.progression.getQuestion(index);
+      if (history.isEmpty || !history.last) {
+        // the question must be answered
+        if (!_waitingQuestions.contains(index)) {
+          // go to this question
+          return _ParallelAnswerStatus(index, {});
+        } else {
+          // add it to the send answsers
+          toSend[index] = Answer(exeAndProg.exercice.questions[index].params,
+              _questions[index].answers());
+        }
+      }
+    }
+    return _ParallelAnswerStatus(null, toSend);
   }
 }
 
@@ -316,38 +362,21 @@ class _ExerciceWState extends State<ExerciceW> {
   // only validate if all the questions have been completed
   void onValidQuestionParallel() async {
     final ct = widget.controller;
-    final questions = ct.exeAndProg.exercice.questions;
 
     // check if all the questions are done
-    final toSend = <int, Answer>{};
-    int? goToQuestion;
-    for (var index = 0; index < questions.length; index++) {
-      final history = ct.exeAndProg.progression.getQuestion(index);
-      if (history.isEmpty || !history.last) {
-        // the question must be answered
-        if (!ct.waitingQuestions.contains(index)) {
-          // go to this question
-          goToQuestion = index;
-          break;
-        } else {
-          // add it to the send answsers
-          toSend[index] =
-              Answer(questions[index].params, ct._questions[index].answers());
-        }
-      }
-    }
+    final bilan = ct.hasAnsweredAll();
 
-    if (goToQuestion != null) {
+    if (bilan.questionToDo != null) {
       // there are still some questions to to
       setState(() {
-        widget.controller.questionIndex = goToQuestion;
+        widget.controller.questionIndex = bilan.questionToDo;
       });
       return;
     }
 
     // all good, lets send the results
-    final resp = await _evaluate(EvaluateWorkIn(
-        ct.exeAndProg.exercice.iD, toSend, ct.exeAndProg.progression));
+    final resp = await _evaluate(EvaluateWorkIn(ct.exeAndProg.exercice.iD,
+        bilan.answersToSend, ct.exeAndProg.progression));
     if (resp == null) {
       return;
     }
@@ -393,13 +422,11 @@ class _ExerciceWState extends State<ExerciceW> {
   void _onRetryQuestion() {
     final ct = widget.controller;
     setState(() {
-      ct.reset();
-      ct.exeAndProg = ct.exeAndProg.copyWithQuestions(nextQuestions);
+      ct.resetWithNextQuestions(nextQuestions);
     });
   }
 
   void _onValideQuestion() async {
-    widget.controller.waitingQuestions.add(widget.controller.questionIndex!);
     switch (widget.controller.exeAndProg.exercice.flow) {
       case Flow.sequencial:
         return onValidQuestionSequential();
