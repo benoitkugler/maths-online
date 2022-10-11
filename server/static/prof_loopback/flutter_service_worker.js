@@ -4,9 +4,9 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
   "manifest.json": "6be06c3ebad0d6a2ecb2cdd71690d463",
-"main.dart.js": "345884dd06a76536821944b053622178",
-"index.html": "d245776d0801921646e3d6f2b93532fa",
-"/": "d245776d0801921646e3d6f2b93532fa",
+"main.dart.js": "891b8f4106dfb5f97d088e9e1e6ec9e7",
+"index.html": "c5a252565828f1394c52d553d7d26321",
+"/": "c5a252565828f1394c52d553d7d26321",
 "flutter.js": "f85e6fb278b0fd20c349186fb46ae36d",
 "canvaskit/profiling/canvaskit.js": "38164e5a72bdad0faa4ce740c9b8e564",
 "canvaskit/profiling/canvaskit.wasm": "95a45378b69e77af5ed2bc72b2209b94",
@@ -28,7 +28,8 @@ const RESOURCES = {
 "assets/lib/images/cahier-stylo-calc.png": "bcb9cf0dab554acd3cf016b00ac99295",
 "assets/lib/images/homework.png": "6abd88313fee1c358625a37de03e9eea",
 "assets/lib/images/grey-wood.png": "bd0ccd0b83244e6556952255a2bca327",
-"assets/AssetManifest.json": "2ac65e16259099caffbb62338d1daedd",
+"assets/lib/images/confetti-icon.png": "0f21338db09afd3feb612fd63d8d1789",
+"assets/AssetManifest.json": "2b0b8c6e4fc0168a233e769606ff1a55",
 "assets/shaders/ink_sparkle.frag": "84bf0a980c38a80936c4c5ddfaa00ed6",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Main-Bold.ttf": "9eef86c1f9efa78ab93d41a0551948f7",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Size1-Regular.ttf": "1e6a3368d660edc3a2fbbe72edfeaa85",
