@@ -43,6 +43,7 @@ abstract class BaseQuestionController extends ChangeNotifier {
   void onFieldChange() {
     state.buttonEnabled =
         state.fields.values.every((field) => field.hasValidData());
+    print("onFieldCHange ${state.buttonEnabled}");
     notifyListeners();
   }
 

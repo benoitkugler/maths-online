@@ -124,12 +124,6 @@ class ExerciceController {
   }
 
   void reset() {
-    for (var question in _questions) {
-      question.setFeedback(null);
-      question.state.buttonEnabled = false;
-      question.state.buttonLabel = "Valider";
-    }
-    _waitingQuestions.clear();
     _refreshStates();
     status = ExerciceStatus.answering;
   }
@@ -137,6 +131,7 @@ class ExerciceController {
   void resetWithNextQuestions(List<InstantiatedQuestion> nextQuestions) {
     exeAndProg = exeAndProg.copyWithQuestions(nextQuestions);
     _questions = _createControllers(api);
+    _waitingQuestions.clear();
     reset();
   }
 
@@ -189,6 +184,7 @@ class ExerciceController {
     _questions[questionIndex!].setAnswers(answers);
     _questions[questionIndex!].state.buttonEnabled = true;
     _questions[questionIndex!].state.buttonLabel = "Valider";
+    _waitingQuestions.add(questionIndex!);
   }
 
   /// [hasAnsweredAll] check if all the questions are done
@@ -209,6 +205,30 @@ class ExerciceController {
       }
     }
     return _ParallelAnswerStatus(null, toSend);
+  }
+
+  bool isExerciceOver() => exeAndProg.progression.nextQuestion == -1;
+
+  bool get goToPreviousEnabled => questionIndex != null;
+
+  bool get goToNextEnabled {
+    final currentIndex = questionIndex;
+    final hasNextQuestion = exeAndProg.exercice.questions.isNotEmpty &&
+        currentIndex != exeAndProg.exercice.questions.length - 1;
+    // always allow to go to already done question
+    if (hasNextQuestion &&
+        questionStates[(currentIndex ?? -1) + 1] == QuestionStatus.checked) {
+      return true;
+    }
+    switch (exeAndProg.exercice.flow) {
+      case Flow
+          .sequencial: // do not show locked questions when exercice is not over
+        return currentIndex == null ||
+            (isExerciceOver() && hasNextQuestion) ||
+            currentIndex < exeAndProg.progression.nextQuestion;
+      case Flow.parallel: // no restriction:
+        return hasNextQuestion;
+    }
   }
 }
 
@@ -256,17 +276,17 @@ class _ExerciceWState extends State<ExerciceW> {
 
   @override
   void initState() {
-    reset();
+    _init();
     super.initState();
   }
 
   @override
   void didUpdateWidget(covariant ExerciceW oldWidget) {
-    reset();
+    _init();
     super.didUpdateWidget(oldWidget);
   }
 
-  void reset() {
+  void _init() {
     nextQuestions = [];
     widget.controller.reset();
     widget.controller.onValid = onQuestionButtonClick;
@@ -384,7 +404,7 @@ class _ExerciceWState extends State<ExerciceW> {
     ct.updateProgression(resp.progression); // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
 
-    if (isExerciceOver) {
+    if (ct.isExerciceOver()) {
       onExerciceOver();
       return;
     }
@@ -432,33 +452,6 @@ class _ExerciceWState extends State<ExerciceW> {
         return onValidQuestionSequential();
       case Flow.parallel:
         return onValidQuestionParallel();
-    }
-  }
-
-  bool get isExerciceOver =>
-      widget.controller.exeAndProg.progression.nextQuestion == -1;
-
-  bool get goToPreviousEnabled => widget.controller.questionIndex != null;
-
-  bool get goToNextEnabled {
-    final ex = widget.controller.exeAndProg;
-    final currentIndex = widget.controller.questionIndex;
-    final hasNextQuestion = ex.exercice.questions.isNotEmpty &&
-        currentIndex != ex.exercice.questions.length - 1;
-    // always allow to go to already done question
-    if (hasNextQuestion &&
-        widget.controller.questionStates[(currentIndex ?? -1) + 1] ==
-            QuestionStatus.checked) {
-      return true;
-    }
-    switch (ex.exercice.flow) {
-      case Flow
-          .sequencial: // do not show locked questions when exercice is not over
-        return currentIndex == null ||
-            (isExerciceOver && hasNextQuestion) ||
-            currentIndex < ex.progression.nextQuestion;
-      case Flow.parallel: // no restriction:
-        return hasNextQuestion;
     }
   }
 
@@ -511,17 +504,16 @@ class _ExerciceWState extends State<ExerciceW> {
         appBar: AppBar(
           title: const Text("Exercice"),
           actions: [
-            if (widget.onShowCorrectAnswer != null &&
-                widget.controller.questionIndex != null)
+            if (widget.onShowCorrectAnswer != null && ct.questionIndex != null)
               TextButton(
                   onPressed: widget.onShowCorrectAnswer,
-                  child: const Text("Afficher la réponse.")),
+                  child: const Text("Afficher la réponse")),
             IconButton(
-                onPressed: goToPreviousEnabled ? goToPrevious : null,
+                onPressed: ct.goToPreviousEnabled ? goToPrevious : null,
                 icon: const Icon(IconData(0xf572,
                     fontFamily: 'MaterialIcons', matchTextDirection: true))),
             IconButton(
-                onPressed: goToNextEnabled ? goToNext : null,
+                onPressed: ct.goToNextEnabled ? goToNext : null,
                 icon: const Icon(IconData(0xf57a,
                     fontFamily: 'MaterialIcons', matchTextDirection: true))),
           ],
@@ -536,12 +528,12 @@ class _ExerciceWState extends State<ExerciceW> {
             }
             return true; // nothing to loose
           },
-          child: widget.controller.questionIndex == null
+          child: ct.questionIndex == null
               ? ExerciceHome(
                   exP,
                   ct.questionStates,
                   (index) => setState(() {
-                        widget.controller.questionIndex = index;
+                        ct.questionIndex = index;
                       }))
               : QuestionW(
                   widget

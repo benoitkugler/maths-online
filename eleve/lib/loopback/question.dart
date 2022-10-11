@@ -20,7 +20,7 @@ class LoopackQuestionController extends BaseQuestionController {
 
   @override
   void setAnswers(Map<int, Answer> answers) {
-    super.setAnswers(answers);
+    super.setAnswers(answers); // this trigger onFieldChange
     state.buttonEnabled = true;
     state.buttonLabel = "Valider";
   }

@@ -57,6 +57,10 @@ final quI1bis = InstantiatedQuestion(1, numberQuestion("Variante 1"), []);
 final quI2bis = InstantiatedQuestion(2, numberQuestion("Variante 2"), []);
 final quI3bis = InstantiatedQuestion(3, numberQuestion("Variante 3"), []);
 
+const qu1Answer = {0: NumberAnswer(0)};
+const qu2Answer = {0: NumberAnswer(1)};
+const qu3Answer = {0: NumberAnswer(2)};
+
 /// a dev widget testing the behavior of the question/exercice
 /// widgets for each context
 class _QuestionTestApp extends StatelessWidget {
@@ -93,8 +97,11 @@ class _QuestionTestApp extends StatelessWidget {
                   onPressed: () => showExerciceParallel(context),
                   child: const Text("Homework: Parallel")),
               ElevatedButton(
-                  onPressed: () => showLoopackExercice(context),
-                  child: const Text("Loopack: Exercice")),
+                  onPressed: () => showLoopackExerciceSequencial(context),
+                  child: const Text("Loopack: Exercice Sequencial")),
+              ElevatedButton(
+                  onPressed: () => showLoopackExerciceParallel(context),
+                  child: const Text("Loopack: Exercice Parallel")),
             ],
           ),
         ));
@@ -131,7 +138,15 @@ class _QuestionTestApp extends StatelessWidget {
         builder: (context) => const _ExerciceParallel()));
   }
 
-  void showLoopackExercice(BuildContext context) async {}
+  void showLoopackExerciceSequencial(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => const _LoopbackExerciceSequential()));
+  }
+
+  void showLoopackExerciceParallel(BuildContext context) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => const _LoopbackExerciceParallel()));
+  }
 }
 
 class _TrivialInGame extends StatelessWidget {
@@ -301,6 +316,34 @@ class _ExerciceSequential extends StatelessWidget {
   }
 }
 
+class _LoopbackExerciceSequential extends StatefulWidget {
+  const _LoopbackExerciceSequential({super.key});
+
+  @override
+  State<_LoopbackExerciceSequential> createState() =>
+      _LoopbackExerciceSequentialState();
+}
+
+class _LoopbackExerciceSequentialState
+    extends State<_LoopbackExerciceSequential> {
+  ExerciceController ct = ExerciceController(workSequencial, null, _FieldAPI());
+
+  @override
+  Widget build(BuildContext context) {
+    return ExerciceW(_ExerciceSequentialAPI(), ct,
+        onShowCorrectAnswer: onShowCorrectAnswer);
+  }
+
+  void onShowCorrectAnswer() async {
+    // mimic server send and receive
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final ans = {0: qu1Answer, 1: qu2Answer, 2: qu3Answer}[ct.questionIndex!]!;
+    setState(() {
+      ct.setQuestionAnswers(ans);
+    });
+  }
+}
+
 class _ExerciceParallelAPI implements ExerciceAPI {
   _ExerciceParallelAPI();
 
@@ -338,5 +381,35 @@ class _ExerciceParallel extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExerciceW(_ExerciceParallelAPI(),
         ExerciceController(workParallel, null, _FieldAPI()));
+  }
+}
+
+class _LoopbackExerciceParallel extends StatefulWidget {
+  const _LoopbackExerciceParallel({super.key});
+
+  @override
+  State<_LoopbackExerciceParallel> createState() =>
+      _LoopbackExerciceParallelState();
+}
+
+class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
+  ExerciceController ct = ExerciceController(workParallel, null, _FieldAPI());
+
+  @override
+  Widget build(BuildContext context) {
+    return ExerciceW(
+      _ExerciceParallelAPI(),
+      ct,
+      onShowCorrectAnswer: onShowCorrectAnswer,
+    );
+  }
+
+  void onShowCorrectAnswer() async {
+    // mimic server send and receive
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final ans = {0: qu1Answer, 1: qu2Answer, 2: qu3Answer}[ct.questionIndex!]!;
+    setState(() {
+      ct.setQuestionAnswers(ans);
+    });
   }
 }

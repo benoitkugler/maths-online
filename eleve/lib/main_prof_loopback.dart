@@ -188,8 +188,8 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
       case _Mode.question:
         return LoopbackQuestionW(questionData!, _showCorrectAnswer);
       case _Mode.exercice:
-        return _ExerciceLoopback(_LoopbackServerAPI(widget.buildMode),
-            exerciceData!, _showCorrectAnswer);
+        return ExerciceW(_LoopbackServerAPI(widget.buildMode), exerciceData!,
+            onShowCorrectAnswer: _showCorrectAnswer);
     }
   }
 }
@@ -211,24 +211,5 @@ class _LoopbackServerAPI implements ExerciceAPI {
       'Content-type': 'application/json',
     });
     return evaluateWorkOutFromJson(jsonDecode(resp.body));
-  }
-}
-
-class _ExerciceLoopback extends StatelessWidget {
-  final _LoopbackServerAPI api;
-  final ExerciceController ct;
-  final void Function() onShowCorrectAnswer;
-
-  const _ExerciceLoopback(this.api, this.ct, this.onShowCorrectAnswer,
-      {Key? key})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ExerciceW(
-      api,
-      ct,
-      onShowCorrectAnswer: onShowCorrectAnswer,
-    );
   }
 }
