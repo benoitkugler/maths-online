@@ -5,3 +5,4 @@ server/src/prof/teacher/students_sample.csv
 eleve/lib/main_dev.dart
 **/node_modules/*
 **/.vscode/*
+eleve/lib/generated_plugin_registrant.dart
