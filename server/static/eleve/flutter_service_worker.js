@@ -4,15 +4,15 @@ const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
   "manifest.json": "6be06c3ebad0d6a2ecb2cdd71690d463",
-"main.dart.js": "8381d3e4e7b367983d46658995681a3c",
-"index.html": "46d8177194edb0547381939830298cbc",
-"/": "46d8177194edb0547381939830298cbc",
-"flutter.js": "eb2682e33f25cd8f1fc59011497c35f8",
-"canvaskit/profiling/canvaskit.js": "ae2949af4efc61d28a4a80fffa1db900",
-"canvaskit/profiling/canvaskit.wasm": "95e736ab31147d1b2c7b25f11d4c32cd",
-"canvaskit/canvaskit.js": "c2b4e5f3d7a3d82aed024e7249a78487",
-"canvaskit/canvaskit.wasm": "4b83d89d9fecbea8ca46f2f760c5a9ba",
-"assets/NOTICES": "9116f9e893d87794ae47cf78c55313a9",
+"main.dart.js": "40d94dd9905ede41df138fff54610b14",
+"index.html": "1c4c4613f2f8c084cda3f7c219db5c52",
+"/": "1c4c4613f2f8c084cda3f7c219db5c52",
+"flutter.js": "f85e6fb278b0fd20c349186fb46ae36d",
+"canvaskit/profiling/canvaskit.js": "38164e5a72bdad0faa4ce740c9b8e564",
+"canvaskit/profiling/canvaskit.wasm": "95a45378b69e77af5ed2bc72b2209b94",
+"canvaskit/canvaskit.js": "2bc454a691c631b07a9307ac4ca47797",
+"canvaskit/canvaskit.wasm": "bf50631470eb967688cca13ee181af62",
+"assets/NOTICES": "ac801d7ba5bc6e4c52b49fea73e77bdc",
 "assets/fonts/MaterialIcons-Regular.otf": "95db9098c58fd6db106f1116bae85a0b",
 "assets/lib/music/PremiersPas.mp3": "417ae4956516ac0a5996ace1044d4f54",
 "assets/lib/music/Forgive.mp3": "2f7e56852ae5e980cd33caf0f213960c",
@@ -28,7 +28,9 @@ const RESOURCES = {
 "assets/lib/images/cahier-stylo-calc.png": "bcb9cf0dab554acd3cf016b00ac99295",
 "assets/lib/images/homework.png": "6abd88313fee1c358625a37de03e9eea",
 "assets/lib/images/grey-wood.png": "bd0ccd0b83244e6556952255a2bca327",
-"assets/AssetManifest.json": "2ac65e16259099caffbb62338d1daedd",
+"assets/lib/images/confetti-icon.png": "0f21338db09afd3feb612fd63d8d1789",
+"assets/AssetManifest.json": "2b0b8c6e4fc0168a233e769606ff1a55",
+"assets/shaders/ink_sparkle.frag": "84bf0a980c38a80936c4c5ddfaa00ed6",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Main-Bold.ttf": "9eef86c1f9efa78ab93d41a0551948f7",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Size1-Regular.ttf": "1e6a3368d660edc3a2fbbe72edfeaa85",
 "assets/packages/flutter_math_fork/lib/katex_fonts/fonts/KaTeX_Caligraphic-Bold.ttf": "a9c8e437146ef63fcd6fae7cf65ca859",
@@ -66,7 +68,7 @@ const RESOURCES = {
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
-"version.json": "26f9864e3eaf0effaadf1e187c546603"
+"version.json": "54404d379421b2f8aa5115f0fd2c3458"
 };
 
 // The application shell files that are downloaded before a service worker can
@@ -74,7 +76,6 @@ const RESOURCES = {
 const CORE = [
   "main.dart.js",
 "index.html",
-"assets/NOTICES",
 "assets/AssetManifest.json",
 "assets/FontManifest.json"];
 // During install, the TEMP cache is populated with the application shell files.
@@ -173,9 +174,11 @@ self.addEventListener("fetch", (event) => {
     .then((cache) =>  {
       return cache.match(event.request).then((response) => {
         // Either respond with the cached resource, or perform a fetch and
-        // lazily populate the cache.
+        // lazily populate the cache only if the resource was successfully fetched.
         return response || fetch(event.request).then((response) => {
-          cache.put(event.request, response.clone());
+          if (response && Boolean(response.ok)) {
+            cache.put(event.request, response.clone());
+          }
           return response;
         });
       })
