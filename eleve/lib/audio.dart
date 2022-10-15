@@ -87,7 +87,8 @@ class Audio {
 
     final songName =
         availableSongs[playlist[_currentSong % playlist.length]].path;
-    await _player.setSourceAsset("lib/music/$songName");
+    await _player
+        .setSourceAsset("music/$songName"); // the audio cache prefix is assets/
     await _player.setReleaseMode(ReleaseMode.stop);
     await _player.resume();
     _player.onPlayerStateChanged.listen((event) {

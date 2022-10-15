@@ -65,7 +65,7 @@ class ActivityStart extends StatelessWidget {
       body: Column(
         children: [
           Image.asset(
-            "lib/images/cahier-stylo-calc.png",
+            "assets/images/cahier-stylo-calc.png",
           ),
           Expanded(
             child: Center(

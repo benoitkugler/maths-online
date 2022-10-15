@@ -622,7 +622,7 @@ class _GameStarted extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
       decoration: BoxDecoration(
         image: DecorationImage(
-            image: const AssetImage("lib/images/grey-wood.png"),
+            image: const AssetImage("assets/images/grey-wood.png"),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
                 const Color.fromARGB(255, 57, 115, 119).withOpacity(0.6),

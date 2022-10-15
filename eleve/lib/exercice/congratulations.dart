@@ -43,7 +43,7 @@ class _CongratsState extends State<Congrats> {
               duration: const Duration(seconds: 3),
               opacity: opacity,
               child: Image.asset(
-                "lib/images/confetti-icon.png",
+                "assets/images/confetti-icon.png",
                 width: 120,
               ),
             ),

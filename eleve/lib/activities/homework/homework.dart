@@ -276,7 +276,7 @@ class HomeworkActivityIcon extends StatelessWidget {
       children: [
         RawMaterialButton(
           onPressed: onTap,
-          child: Image.asset("lib/images/homework.png", width: 68),
+          child: Image.asset("assets/images/homework.png", width: 68),
         ),
         const Padding(
           padding: EdgeInsets.only(top: 8, bottom: 6),
