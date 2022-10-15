@@ -175,6 +175,6 @@ class _DiceState extends State<Dice> with SingleTickerProviderStateMixin {
     }
     return widget.animation != null
         ? Colors.red
-        : Color.fromARGB(255, 33, 243, 208);
+        : const Color.fromARGB(255, 33, 243, 208);
   }
 }

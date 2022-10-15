@@ -171,11 +171,11 @@ class _DecrassageState extends State<Decrassage> {
                 itemBuilder: (context) => List<PopupMenuEntry<int>>.generate(
                     questions.length,
                     (index) => PopupMenuItem(
-                          child: Text("Question ${index + 1}"),
                           value: index,
+                          child: Text("Question ${index + 1}"),
                         )),
-                child: const Text("Choisir la question"),
                 onSelected: _selectQuestion,
+                child: const Text("Choisir la question"),
               ),
             ),
           )

@@ -42,9 +42,9 @@ class _EleveAppState extends State<EleveApp> {
   }
 
   void _loadSettings() async {
-    final _settings = await loadUserSettings();
+    final set = await loadUserSettings();
     setState(() {
-      settings = _settings;
+      settings = set;
     });
   }
 

@@ -168,7 +168,7 @@ class _SheetListState extends State<_SheetList> {
   void onSelectSheet(SheetProgression sheet) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) {
       return NotificationListener<SheetMarkNotification>(
-          child: SheetW(widget.api, sheet), onNotification: updateMark);
+          onNotification: updateMark, child: SheetW(widget.api, sheet));
     }));
   }
 

@@ -22,9 +22,9 @@ class Pie extends StatelessWidget {
     return RawMaterialButton(
       onPressed: onPressed,
       elevation: 2.0,
-      child: Pie(glowWidth, success),
       padding: const EdgeInsets.all(5.0),
       shape: const CircleBorder(),
+      child: Pie(glowWidth, success),
     );
   }
 

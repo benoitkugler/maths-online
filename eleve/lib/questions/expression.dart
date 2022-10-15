@@ -38,7 +38,6 @@ class ExpressionController extends FieldController {
   }
 
   void setExpression(String expr) {
-    print("setExpr $expr");
     textController.text = expr;
   }
 
@@ -101,7 +100,7 @@ class ExpressionField extends StatefulWidget {
     ];
     return functions.any((element) =>
         newValue.text.endsWith(element) &&
-        !oldValue.text.endsWith(element + "("));
+        !oldValue.text.endsWith("$element("));
   }
 
   @override
@@ -159,7 +158,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
               if (ExpressionField.isTypingFunc(oldValue, newValue)) {
                 final sel = newValue.selection;
                 return newValue.copyWith(
-                    text: newValue.text + "()",
+                    text: "${newValue.text}()",
                     selection: sel.copyWith(
                         baseOffset: sel.baseOffset + 1,
                         extentOffset: sel.extentOffset + 1));

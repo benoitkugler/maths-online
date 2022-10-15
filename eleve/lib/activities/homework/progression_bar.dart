@@ -42,7 +42,7 @@ class _Layer extends StatelessWidget {
       decoration: BoxDecoration(
           color: color,
           border: Border.all(width: 2, color: Colors.transparent),
-          borderRadius: BorderRadius.all(Radius.circular(4))),
+          borderRadius: const BorderRadius.all(Radius.circular(4))),
     );
   }
 }

@@ -330,16 +330,16 @@ class _TilePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final _path = desc.path;
+    final path = desc.path;
 
     if (isHighlighted) {
-      canvas.drawPath(_path, _strokeStyle());
-      canvas.drawPath(_path, _fillStyle());
+      canvas.drawPath(path, _strokeStyle());
+      canvas.drawPath(path, _fillStyle());
     } else {
       canvas.save();
-      canvas.clipPath(_path); // no to stroke outside the path
-      canvas.drawPath(_path, _strokeStyle());
-      canvas.drawPath(_path, _fillStyle());
+      canvas.clipPath(path); // no to stroke outside the path
+      canvas.drawPath(path, _strokeStyle());
+      canvas.drawPath(path, _fillStyle());
       canvas.restore();
     }
   }

@@ -193,13 +193,13 @@ class _TreeFieldState extends State<TreeField> {
             onTap: ct.isEnabled ? _showShapeSelection : null,
             child: Container(
               padding: const EdgeInsets.all(12),
-              child: const Text(
-                "Sélectionner la forme de l'arbre...",
-                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 14),
-              ),
               decoration: BoxDecoration(
                 border: Border.all(color: widget.color),
                 borderRadius: BorderRadius.circular(5),
+              ),
+              child: const Text(
+                "Sélectionner la forme de l'arbre...",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 14),
               ),
             ),
           )

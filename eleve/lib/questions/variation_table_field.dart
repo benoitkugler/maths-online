@@ -148,6 +148,10 @@ class _VariationTableFieldState extends State<VariationTableField> {
     return ct.selectedArrowLength == null
         ? Container(
             padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: widget.color),
+              borderRadius: BorderRadius.circular(5),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -163,7 +167,7 @@ class _VariationTableFieldState extends State<VariationTableField> {
                             padding: const EdgeInsets.all(8.0),
                             child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                    primary: widget.color),
+                                    backgroundColor: widget.color),
                                 child: Text(e.toString()),
                                 onPressed: () => setState(() {
                                       ct.setArrowLength(e);
@@ -172,10 +176,6 @@ class _VariationTableFieldState extends State<VariationTableField> {
                         )
                         .toList()),
               ],
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(color: widget.color),
-              borderRadius: BorderRadius.circular(5),
             ),
           )
         : _OneTable(ct.hasError ? Colors.red : widget.color, ct.ct!,

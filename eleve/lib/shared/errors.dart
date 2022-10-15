@@ -24,7 +24,7 @@ class ErrorBar extends StatelessWidget {
     return RichText(
         text: TextSpan(children: [
       TextSpan(
-          text: topic + "\n",
+          text: "$topic \n",
           style: const TextStyle(fontWeight: FontWeight.bold)),
       const TextSpan(text: "Détails : "),
       TextSpan(

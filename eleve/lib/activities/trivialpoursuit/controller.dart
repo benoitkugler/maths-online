@@ -13,14 +13,14 @@ import 'package:eleve/activities/trivialpoursuit/question_result.dart';
 import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/types.gen.dart' as Types;
+import 'package:eleve/questions/types.gen.dart' as types;
 import 'package:eleve/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class _LastQuestion {
   final ShowQuestion question;
-  final Types.Answers answer;
+  final types.Answers answer;
   const _LastQuestion(this.question, this.answer);
 }
 
@@ -526,8 +526,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       // simplify developpement
       onDoubleTap: widget.apiURL.isEmpty ? processEventsDebug : null,
       child: AnimatedSwitcher(
-        child: _game,
         duration: const Duration(seconds: 3),
+        child: _game,
       ),
     );
   }
@@ -657,11 +657,11 @@ class _GameStarted extends StatelessWidget {
                   foregroundColor: const Color.fromARGB(255, 60, 209, 255),
                   backgroundColor: const Color.fromARGB(255, 110, 171, 182),
                   onPressed: () => _showRules(context),
+                  tooltip: "Afficher la règle du jeu",
                   child: const Icon(
                     IconData(0xe33d, fontFamily: 'MaterialIcons'),
                     size: 40,
                   ),
-                  tooltip: "Afficher la règle du jeu",
                 ),
               ),
               Padding(

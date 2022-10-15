@@ -288,8 +288,8 @@ class _Proposals extends StatelessWidget {
         (i) => DragText(_TermFromProposals(proposals[i], i), proposals[i],
             enabled: enabled));
     return Wrap(
-      children: children,
       runSpacing: 6,
+      children: children,
     );
   }
 }
@@ -504,10 +504,10 @@ class _EqualityWState extends State<_EqualityW> {
     }
 
     return Wrap(
-      children: children,
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       runSpacing: 4,
+      children: children,
     );
   }
 }
@@ -594,8 +594,8 @@ class _SequenceW extends StatelessWidget {
     }
     children.removeLast();
     return Column(
-      children: children,
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
     );
   }
 }

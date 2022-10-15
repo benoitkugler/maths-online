@@ -213,7 +213,7 @@ class Quote extends StatelessWidget {
                 )
               ]
             : [
-                Text(data.content + " " + data.author,
+                Text("${data.content} ${data.author}",
                     style: const TextStyle(
                         fontStyle: FontStyle.italic,
                         shadows: shadows,

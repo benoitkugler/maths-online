@@ -217,9 +217,9 @@ class _PositionnedTextW extends StatelessWidget {
       child: CustomSingleChildLayout(
         delegate: _PosSingleChildLayoutDelegate(metrics, text.pos.pos),
         child: Container(
-          child: textMath(text.text, TextStyle(color: text.color)),
           color: Colors.white.withOpacity(0.85),
           padding: const EdgeInsets.all(1),
+          child: textMath(text.text, TextStyle(color: text.color)),
         ),
       ),
     );
@@ -490,7 +490,7 @@ Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   color = color.replaceAll("#", ""); // remove (optional) starting #
   if (color.length == 6) {
     // accept ARGB strings
-    color = "FF" + color;
+    color = "FF$color";
   }
   final c = int.tryParse(color, radix: 16);
   return c == null ? onEmpty : Color(c);
@@ -845,6 +845,15 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
         child: Draggable<T>(
           maxSimultaneousDrags: disabled ? 0 : null,
           data: id,
+          feedback: Transform.translate(
+            offset: Offset(-radius * zoomFactor / 2, -radius * zoomFactor / 2),
+            child: Container(
+              width: radius * zoomFactor,
+              height: radius * zoomFactor,
+              decoration: BoxDecoration(
+                  color: color.withOpacity(0.8), shape: BoxShape.circle),
+            ),
+          ),
           child: Container(
             color: Colors.transparent,
             width: outerRadius,
@@ -856,15 +865,6 @@ class DraggableGridPoint<T extends Object> extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: color.withOpacity(0.8), shape: BoxShape.circle),
               ),
-            ),
-          ),
-          feedback: Transform.translate(
-            offset: Offset(-radius * zoomFactor / 2, -radius * zoomFactor / 2),
-            child: Container(
-              width: radius * zoomFactor,
-              height: radius * zoomFactor,
-              decoration: BoxDecoration(
-                  color: color.withOpacity(0.8), shape: BoxShape.circle),
             ),
           ),
         ));
@@ -881,6 +881,8 @@ class GridPointHighlight extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
+      left: visual.dx - 20,
+      top: visual.dy - 50,
       child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
@@ -888,8 +890,6 @@ class GridPointHighlight extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(8),
           child: Text("( ${logical.x} ; ${logical.y} )")),
-      left: visual.dx - 20,
-      top: visual.dy - 50,
     );
   }
 }

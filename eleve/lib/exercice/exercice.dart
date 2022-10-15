@@ -45,10 +45,10 @@ enum ExerciceStatus {
   displayingFeedback
 }
 
-class _ParallelAnswerStatus {
+class ParallelAnswerStatus {
   final int? questionToDo;
   final Map<int, Answer> answersToSend;
-  const _ParallelAnswerStatus(this.questionToDo, this.answersToSend);
+  const ParallelAnswerStatus(this.questionToDo, this.answersToSend);
 }
 
 /// [ExerciceController] exposes the state
@@ -188,7 +188,7 @@ class ExerciceController {
   }
 
   /// [hasAnsweredAll] check if all the questions are done
-  _ParallelAnswerStatus hasAnsweredAll() {
+  ParallelAnswerStatus hasAnsweredAll() {
     final toSend = <int, Answer>{};
     for (var index = 0; index < _questions.length; index++) {
       final history = exeAndProg.progression.getQuestion(index);
@@ -196,7 +196,7 @@ class ExerciceController {
         // the question must be answered
         if (!_waitingQuestions.contains(index)) {
           // go to this question
-          return _ParallelAnswerStatus(index, {});
+          return ParallelAnswerStatus(index, {});
         } else {
           // add it to the send answsers
           toSend[index] = Answer(exeAndProg.exercice.questions[index].params,
@@ -204,7 +204,7 @@ class ExerciceController {
         }
       }
     }
-    return _ParallelAnswerStatus(null, toSend);
+    return ParallelAnswerStatus(null, toSend);
   }
 
   bool isExerciceOver() => exeAndProg.progression.nextQuestion == -1;

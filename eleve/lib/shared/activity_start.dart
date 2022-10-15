@@ -87,13 +87,13 @@ class ActivityStart extends StatelessWidget {
               ]),
               child: ElevatedButton(
                 onPressed: onContinue,
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.lightGreen,
+                    padding: const EdgeInsets.all(16)),
                 child: const Text(
                   "J'ai mon matériel !",
                   style: TextStyle(fontSize: 18),
                 ),
-                style: ElevatedButton.styleFrom(
-                    primary: Colors.lightGreen,
-                    padding: const EdgeInsets.all(16)),
               ),
             ),
           ),

@@ -43,7 +43,6 @@ abstract class BaseQuestionController extends ChangeNotifier {
   void onFieldChange() {
     state.buttonEnabled =
         state.fields.values.every((field) => field.hasValidData());
-    print("onFieldCHange ${state.buttonEnabled}");
     notifyListeners();
   }
 
@@ -498,27 +497,6 @@ class _FieldsBuilder {
 
     // flush the current row
     _flushCurrentRow();
-  }
-}
-
-class _ListRowsOld extends StatelessWidget {
-  final _FieldsBuilder content;
-  final Widget button;
-
-  const _ListRowsOld(this.content, this.button, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListWithZoomables([
-      ...content.rows
-          .map(
-            (e) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0), child: e),
-          )
-          .toList(),
-      const SizedBox(height: 10.0),
-      button
-    ], content.zoomableKeys, shrinkWrap: true);
   }
 }
 

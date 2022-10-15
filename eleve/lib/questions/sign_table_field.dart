@@ -136,6 +136,10 @@ class SignTableFieldState extends State<SignTableField> {
     return ct.selectedSignsLength == null
         ? Container(
             padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: widget.color),
+              borderRadius: BorderRadius.circular(5),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -151,7 +155,7 @@ class SignTableFieldState extends State<SignTableField> {
                             padding: const EdgeInsets.all(8.0),
                             child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                    primary: widget.color),
+                                    backgroundColor: widget.color),
                                 child: Text(e.toString()),
                                 onPressed: () => setState(() {
                                       ct.setSignsLength(e);
@@ -160,10 +164,6 @@ class SignTableFieldState extends State<SignTableField> {
                         )
                         .toList()),
               ],
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(color: widget.color),
-              borderRadius: BorderRadius.circular(5),
             ),
           )
         : _OneTable(ct.hasError ? Colors.red : widget.color, ct.ct!,
@@ -262,11 +262,11 @@ class SignButton extends StatelessWidget {
         child: SizedBox(
           width: 80,
           child: TextButton(
+            onPressed: onTap,
             child: Text(
               isPositive ? "+" : "-",
               style: const TextStyle(fontSize: 18),
             ),
-            onPressed: onTap,
           ),
         ));
   }
@@ -300,8 +300,8 @@ class SignSymbolButton extends StatelessWidget {
     return TableCell(
         verticalAlignment: TableCellVerticalAlignment.middle,
         child: OutlinedButton(
-          child: text,
           onPressed: onTap,
+          child: text,
         ));
   }
 }

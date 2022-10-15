@@ -90,9 +90,9 @@ class Zoomable extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: InteractiveViewer(
           transformationController: controller,
-          child: child,
           maxScale: 5,
           key: innerKey,
+          child: child,
         ));
   }
 }

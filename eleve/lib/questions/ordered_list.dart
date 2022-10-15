@@ -16,9 +16,9 @@ class OrderedListController extends FieldController {
   final String label;
   final int expectedLength;
 
-  List<_IndexedProposal> answers = [];
+  List<_IndexedProposal> _answers = [];
 
-  List<_IndexedProposal> proposals = [];
+  List<_IndexedProposal> _proposals = [];
 
   OrderedListController(void Function() onChange, OrderedListFieldBlock field)
       : expectedLength = field.answerLength,
@@ -28,7 +28,7 @@ class OrderedListController extends FieldController {
       _references.add(_IndexedProposal(i, field.proposals[i]));
     }
     // start with all propositions
-    proposals = _references;
+    _proposals = _references;
   }
 
   /// insertAnswerAt inserts [symbol] right after [location]
@@ -36,63 +36,64 @@ class OrderedListController extends FieldController {
   /// is is also removed from its old location if it was already in
   /// the answers
   void insertAnswerAt(_IndexedProposal symbol, int location) {
-    proposals.removeWhere((element) => element.index == symbol.index);
+    _proposals.removeWhere((element) => element.index == symbol.index);
     final existing =
-        answers.indexWhere((element) => element.index == symbol.index);
+        _answers.indexWhere((element) => element.index == symbol.index);
     if (existing != -1) {
       // remove the current symbol from answers
-      answers.removeAt(existing);
+      _answers.removeAt(existing);
       // adjust the new location
       if (location > existing) {
         location--;
       }
     }
-    answers.insert(location, symbol);
+    _answers.insert(location, symbol);
     onChange();
   }
 
   /// swapWithAnswer adds [symbol] into the answers, removing the
   /// previous element at [answerIndex]
   void swapWithAnswer(_IndexedProposal symbol, int answerIndex) {
-    proposals.add(answers[answerIndex]);
-    answers[answerIndex] = symbol;
+    _proposals.add(_answers[answerIndex]);
+    _answers[answerIndex] = symbol;
     onChange();
   }
 
   /// swapBetweenAnswers swap the orders of symbols at indices
   /// [answerIndex1] and [answerIndex2]
   void swapBetweenAnswers(int answerIndex1, int answerIndex2) {
-    final tmp = answers[answerIndex1];
-    answers[answerIndex1] = answers[answerIndex2];
-    answers[answerIndex2] = tmp;
+    final tmp = _answers[answerIndex1];
+    _answers[answerIndex1] = _answers[answerIndex2];
+    _answers[answerIndex2] = tmp;
     onChange();
   }
 
   /// remove [symbol] from the chosen answer and put it back
   /// in the proposals
   void removeAnswer(_IndexedProposal symbol) {
-    answers.removeWhere((element) => element.index == symbol.index);
-    proposals.add(symbol);
+    _answers.removeWhere((element) => element.index == symbol.index);
+    _proposals.add(symbol);
     onChange();
   }
 
   @override
   bool hasValidData() {
-    return answers.isNotEmpty;
+    return _answers.isNotEmpty;
   }
 
   @override
   Answer getData() {
-    return OrderedListAnswer(answers.map((item) => item.index).toList());
+    return OrderedListAnswer(_answers.map((item) => item.index).toList());
   }
 
   @override
   void setData(Answer answer) {
     final ans = (answer as OrderedListAnswer).indices;
-    answers = ans.map((e) => _IndexedProposal(e, _references[e].text)).toList();
+    _answers =
+        ans.map((e) => _IndexedProposal(e, _references[e].text)).toList();
     // set the proposals to the remaining items
     final used = ans.toSet();
-    proposals =
+    _proposals =
         _references.where((element) => !used.contains(element.index)).toList();
   }
 }
@@ -118,8 +119,8 @@ class _OrderedListFieldState extends State<OrderedListField> {
   @override
   Widget build(BuildContext context) {
     final ct = widget._controller;
-    final props = ct.proposals;
-    final answers = ct.answers;
+    final props = ct._proposals;
+    final answers = ct._answers;
     return Column(
       children: [
         _AnswerRow(

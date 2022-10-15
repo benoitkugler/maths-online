@@ -21,7 +21,7 @@ class Song {
   final SongCategorie categorie;
 
   String get title => path
-      .splitMapJoin(RegExp('[A-Z]'), onMatch: (m) => " " + m.group(0)!)
+      .splitMapJoin(RegExp('[A-Z]'), onMatch: (m) => " ${m.group(0)!}")
       .trimLeft();
 
   const Song(this.path, this.categorie);
@@ -47,8 +47,8 @@ class Audio {
     Song("Tempos.mp3", SongCategorie.guitare),
   ];
 
-  AudioPlayer _player = AudioPlayer();
-  final AudioCache _cache = AudioCache(prefix: "lib/music/");
+  final AudioPlayer _player = AudioPlayer();
+  // final AssetSource _cache = AssetSource("lib/music/");
   PlaylistController playlist = [];
 
   Audio();
@@ -67,14 +67,14 @@ class Audio {
     return _startNextSong();
   }
 
-  /// stop the player and skip to the next song
+  /// stop the player
   void pause() async {
     await _player.stop();
   }
 
   void _onSongDone() async {
     await _player.stop();
-    await _player.dispose();
+    // await _player.dispose();
     await _startNextSong();
   }
 
@@ -85,11 +85,13 @@ class Audio {
 
     _currentSong++;
 
-    _player = await _cache
-        .play(availableSongs[playlist[_currentSong % playlist.length]].path);
-    await _player.setReleaseMode(ReleaseMode.STOP);
+    final songName =
+        availableSongs[playlist[_currentSong % playlist.length]].path;
+    await _player.setSourceAsset("lib/music/$songName");
+    await _player.setReleaseMode(ReleaseMode.stop);
+    await _player.resume();
     _player.onPlayerStateChanged.listen((event) {
-      if (event == PlayerState.COMPLETED) {
+      if (event == PlayerState.completed) {
         _onSongDone();
       }
     });
