@@ -27,6 +27,11 @@ export class TrivialMonitorController {
     socket.addEventListener("message", function (event) {
       onServerEvent(JSON.parse(event.data));
     });
+
+    // Ping the server to keep the connection alive
+    setInterval(() => {
+      socket.send("Ping");
+    }, 10000);
   }
 }
 

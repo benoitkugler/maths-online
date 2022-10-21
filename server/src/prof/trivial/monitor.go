@@ -52,7 +52,7 @@ func (tc *teacherClient) sendSummary(summaries map[tv.RoomID]tv.Summary) {
 // start loop listenning for ping messages
 func (tc *teacherClient) startLoop() {
 	for {
-		// read in a message
+		// read in a ping message
 		_, _, err := tc.conn.ReadMessage()
 		if err != nil {
 			WarningLogger.Printf("teacher connection: %s", err)
