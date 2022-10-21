@@ -113,7 +113,6 @@ func (gs *gameSession) exploitReplay(review tv.Replay) {
 }
 
 func (gs *gameSession) afterGameEnd(gameID tv.RoomID) {
-	fmt.Println("afterGameEnd")
 	gs.lock.Lock()
 	delete(gs.games, gameID)
 	gs.lock.Unlock()
