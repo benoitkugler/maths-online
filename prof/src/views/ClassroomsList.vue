@@ -60,7 +60,7 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="80%">
+  <v-card class="my-5 mx-auto" width="90%">
     <v-row>
       <v-col md="9" sm="6">
         <v-card-title>Mes classes</v-card-title>
