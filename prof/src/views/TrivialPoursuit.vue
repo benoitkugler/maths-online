@@ -17,6 +17,7 @@
   <v-dialog
     :model-value="launchingConfig != null"
     @update:model-value="launchingConfig = null"
+    max-width="870px"
   >
     <launch-options @launch="launchSession"></launch-options>
   </v-dialog>
