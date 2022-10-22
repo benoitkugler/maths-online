@@ -83,17 +83,37 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
+type OriginKind uint8
+
+const (
+	All OriginKind = iota
+	OnlyPersonnal
+	OnlyAdmin
+)
+
 type SearchQuestionsIn = Query
 
 type Query struct {
 	TitleQuery string // empty means all
 	Tags       []string
+	Origin     OriginKind
 }
 
 func (query Query) normalize() {
 	// normalize query
 	for i, t := range query.Tags {
 		query.Tags[i] = ed.NormalizeTag(t)
+	}
+}
+
+func (query Query) matchOrigin(vis tcAPI.Visibility) bool {
+	switch query.Origin {
+	case OnlyPersonnal:
+		return vis == tcAPI.Personnal
+	case OnlyAdmin:
+		return vis == tcAPI.Admin
+	default:
+		return true
 	}
 }
 
@@ -563,13 +583,16 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 
 	query.normalize()
 
-	// restrict the groups to matching title
+	// restrict the groups to matching title and origin
 	matcher, err := newQuery(query.TitleQuery)
 	if err != nil {
 		return out, err
 	}
 	for _, group := range groups {
-		if !matcher.match(int64(group.Id), group.Title) {
+		vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+		keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+		if !keep {
 			delete(groups, group.Id)
 		}
 	}

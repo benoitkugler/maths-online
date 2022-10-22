@@ -47,6 +47,12 @@
             persistent-hint
           ></v-autocomplete>
         </v-col>
+        <v-col cols="auto" align-self="center">
+          <origin-select
+            :origin="queryOrigin"
+            @update:origin="updateQueryOrigin"
+          ></origin-select>
+        </v-col>
       </v-row>
       <v-row no-gutters>
         <v-col>
@@ -90,10 +96,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Exercicegroup, ExercicegroupExt } from "@/controller/api_gen";
+import {
+  OriginKind,
+  type Exercicegroup,
+  type ExercicegroupExt,
+} from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import OriginSelect from "../../OriginSelect.vue";
 import ExercicegroupRow from "./ExercicegroupRow.vue";
 
 interface Props {
@@ -119,6 +130,7 @@ const displayedNbExercices = computed(() => {
 let querySearch = $ref("");
 
 let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
+let queryOrigin = $ref(OriginKind.All);
 
 let timerId = 0;
 
@@ -140,10 +152,16 @@ async function updateQueryTags() {
   await fetchExercices();
 }
 
+async function updateQueryOrigin(o: OriginKind) {
+  queryOrigin = o;
+  await fetchExercices();
+}
+
 async function fetchExercices() {
   const result = await controller.EditorSearchExercices({
     TitleQuery: querySearch,
     Tags: queryTags,
+    Origin: queryOrigin,
   });
   if (result == undefined) {
     return;

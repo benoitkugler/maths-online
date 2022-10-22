@@ -493,6 +493,19 @@ export interface Origin {
   IsPublic: boolean;
   Visibility: Visibility;
 }
+// github.com/benoitkugler/maths-online/prof/editor.OriginKind
+export enum OriginKind {
+  All = 0,
+  OnlyPersonnal = 1,
+  OnlyAdmin = 2,
+}
+
+export const OriginKindLabels: { [key in OriginKind]: string } = {
+  [OriginKind.All]: "",
+  [OriginKind.OnlyPersonnal]: "",
+  [OriginKind.OnlyAdmin]: "",
+};
+
 // github.com/benoitkugler/maths-online/maths/questions.Parameters
 export interface Parameters {
   Variables: RandomParameters;
@@ -547,6 +560,7 @@ export interface ProofStatement {
 export interface Query {
   TitleQuery: string;
   Tags: string[] | null;
+  Origin: OriginKind;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Question
 export interface Question {

@@ -47,6 +47,12 @@
             persistent-hint
           ></v-autocomplete>
         </v-col>
+        <v-col cols="auto" align-self="center">
+          <origin-select
+            :origin="queryOrigin"
+            @update:origin="updateQueryOrigin"
+          ></origin-select>
+        </v-col>
       </v-row>
       <v-row no-gutters>
         <v-col>
@@ -90,14 +96,16 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Question,
-  Questiongroup,
-  QuestiongroupExt,
+import {
+  OriginKind,
+  type Question,
+  type Questiongroup,
+  type QuestiongroupExt,
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import OriginSelect from "../../OriginSelect.vue";
 import QuestiongroupRow from "./QuestiongroupRow.vue";
 
 interface Props {
@@ -124,6 +132,8 @@ let querySearch = $ref("");
 
 let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
 
+let queryOrigin = $ref(OriginKind.All);
+
 let timerId = 0;
 
 onMounted(fetchQuestions);
@@ -144,10 +154,16 @@ async function updateQueryTags() {
   await fetchQuestions();
 }
 
+async function updateQueryOrigin(o: OriginKind) {
+  queryOrigin = o;
+  await fetchQuestions();
+}
+
 async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: querySearch,
     Tags: queryTags,
+    Origin: queryOrigin,
   });
   if (result == undefined) {
     return;

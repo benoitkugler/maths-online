@@ -104,13 +104,16 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 
 	query.normalize()
 
-	// restrict the groups to matching title
+	// restrict the groups to matching title and origin
 	matcher, err := newQuery(query.TitleQuery)
 	if err != nil {
 		return out, err
 	}
 	for _, group := range groups {
-		if !matcher.match(int64(group.Id), group.Title) {
+		vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+		keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+		if !keep {
 			delete(groups, group.Id)
 		}
 	}
