@@ -39,6 +39,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/trivial/config/visibility", tvc.UpdateTrivialVisiblity)
 	gr.GET("/api/prof/trivial/config/duplicate", tvc.DuplicateTrivialPoursuit)
 	gr.POST("/api/prof/trivial/config/check-missing-questions", tvc.CheckMissingQuestions)
+	gr.GET("/api/prof/trivial/monitor", tvc.TrivialTeacherMonitor)
+	// e.GET("/prof/trivial/monitor", tvc.TrivialTeacherMonitor, tc.JWTMiddlewareForQuery())
 
 	// trivialpoursuit game server
 	gr.GET("/api/trivial/sessions", tvc.GetTrivialRunningSessions)
@@ -52,7 +54,6 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 
 	gr.POST("/api/prof/editor/questiongroups", edit.EditorSearchQuestions)
 	gr.GET("/api/prof/editor/question/duplicate", edit.EditorDuplicateQuestion)
-	// gr.GET("/api/prof/editor/questiongroup/duplicate", edit.EditorDuplicateQuestiongroup)
 	gr.PUT("/api/prof/editor/questiongroup", edit.EditorCreateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup", edit.EditorUpdateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup/tags", edit.EditorUpdateQuestionTags)

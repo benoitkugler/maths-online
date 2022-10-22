@@ -262,7 +262,6 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
 	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
 
-	e.GET("/prof/trivial/monitor", tvc.ConnectTeacherMonitor, tc.JWTMiddlewareForQuery())
 	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
 	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
 

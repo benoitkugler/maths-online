@@ -342,6 +342,18 @@ export interface FunctionsGraphBlock {
   FunctionVariations: VariationTableBlock[] | null;
   Areas: FunctionArea[] | null;
 }
+// github.com/benoitkugler/maths-online/prof/trivial.GamePlayers
+export interface GamePlayers {
+  Player: string;
+  Successes: Success;
+}
+// github.com/benoitkugler/maths-online/prof/trivial.GameSummary
+export interface GameSummary {
+  GameID: RoomID;
+  CurrentPlayer: string;
+  Players: GamePlayers[] | null;
+  RoomSize: number;
+}
 // github.com/benoitkugler/maths-online/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
   Code: string;
@@ -426,6 +438,10 @@ export interface LogginOut {
   Error: string;
   IsPasswordError: boolean;
   Token: string;
+}
+// github.com/benoitkugler/maths-online/prof/trivial.MonitorOut
+export interface MonitorOut {
+  Games: GameSummary[] | null;
 }
 // github.com/benoitkugler/maths-online/sql/tasks.Monoquestion
 export interface Monoquestion {
@@ -745,6 +761,8 @@ export interface Student {
   IsClientAttached: boolean;
   id_classroom: IdClassroom;
 }
+// github.com/benoitkugler/maths-online/trivial.Success
+export type Success = boolean[];
 // github.com/benoitkugler/maths-online/maths/questions.TableBlock
 export interface TableBlock {
   HorizontalHeaders: TextPart[] | null;
@@ -1397,6 +1415,28 @@ export abstract class AbstractAPI {
   protected abstract onSuccessCheckMissingQuestions(
     data: CheckMissingQuestionsOut
   ): void;
+
+  protected async rawTrivialTeacherMonitor() {
+    const fullUrl = this.baseUrl + "/api/prof/trivial/monitor";
+    const rep: AxiosResponse<MonitorOut> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TrivialTeacherMonitor wraps rawTrivialTeacherMonitor and handles the error */
+  async TrivialTeacherMonitor() {
+    this.startRequest();
+    try {
+      const out = await this.rawTrivialTeacherMonitor();
+      this.onSuccessTrivialTeacherMonitor(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTrivialTeacherMonitor(data: MonitorOut): void;
 
   protected async rawGetTrivialRunningSessions() {
     const fullUrl = this.baseUrl + "/api/trivial/sessions";

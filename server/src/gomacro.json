@@ -123,12 +123,6 @@
             "Output": "trivial/gen_itfs.go"
         }
     ],
-    "prof/trivial/monitor_types.go": [
-        {
-            "Mode": "typescript/types",
-            "Output": "../../prof/src/controller/trivial_config_socket_gen.ts"
-        }
-    ],
     "prof/homework/student_types.go": [
         {
             "Mode": "dart",
