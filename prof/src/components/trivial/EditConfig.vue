@@ -1,5 +1,5 @@
 <template>
-  <v-card max-height="80vh" width="800" class="overflow-y-auto py-2">
+  <v-card max-height="80vh" class="overflow-y-auto py-2">
     <v-row>
       <v-col>
         <v-card-title>Modifier la session de Triv'Maths</v-card-title>
