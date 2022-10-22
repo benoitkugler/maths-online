@@ -96,6 +96,7 @@ func TestGameState_nextPlayer(t *testing.T) {
 	}
 }
 
+// use a new connection
 func (r *Room) mustJoin(t *testing.T, id PlayerID) {
 	t.Helper()
 
@@ -270,7 +271,7 @@ func TestDisconnectInQuestion(t *testing.T) {
 	}
 }
 
-func TestDisconnectInBeforeNextTurn(t *testing.T) {
+func TestDisconnectInQuestionResult(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: time.Minute})
 
 	go r.Listen()
@@ -298,6 +299,41 @@ func TestDisconnectInBeforeNextTurn(t *testing.T) {
 	r.Leave <- "p2"
 
 	if g := r.lg(); g.playerTurn != "p3" || g.phase != pTurnStarted {
+		t.Fatal(g)
+	}
+}
+
+func TestAllDisconnectInQuestionResult(t *testing.T) {
+	r := NewRoom("<test>", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+
+	go r.Listen()
+
+	r.mustJoin(t, "p1")
+	r.mustJoin(t, "p2")
+
+	r.throwAndMove("p1")
+
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p2"}
+
+	time.Sleep(time.Millisecond)
+
+	r.Leave <- "p1"
+
+	time.Sleep(time.Millisecond)
+
+	r.Leave <- "p2"
+
+	// no more players, the game is "staled"
+
+	if g := r.lg(); g.phase != pQuestionResult {
+		t.Fatal(g)
+	}
+
+	// upon reconnection, starts a new turn
+	r.mustJoin(t, "p2")
+
+	if g := r.lg(); g.phase != pTurnStarted || g.playerTurn != "p2" {
 		t.Fatal(g)
 	}
 }

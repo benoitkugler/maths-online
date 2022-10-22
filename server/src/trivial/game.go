@@ -95,8 +95,10 @@ func newGame(options Options) game {
 	}
 }
 
+// hasStarted returns true if the the game is not in the lobby anymore
 func (g *game) hasStarted() bool { return g.phase != pGameLobby }
 
+// nbActivePlayers returns the number of players currently connected
 func (r *Room) nbActivePlayers() int {
 	var out int
 	for _, pl := range r.players {
@@ -176,8 +178,10 @@ func (r *Room) removePlayer(player Player) Events {
 		endQuestion := r.tryEndQuestion(false)
 		out = append(out, endQuestion...)
 	case pQuestionResult:
-		endTurn := r.tryEndTurn()
-		out = append(out, endTurn...)
+		if r.nbActivePlayers() > 0 {
+			endTurn := r.tryEndTurn()
+			out = append(out, endTurn...)
+		} // else no more players are present, do nothing and wait for reconnection
 	default:
 		panic("exhaustive switch")
 	}
@@ -258,6 +262,7 @@ func (r *Room) arePlayersReadyForNextTurn() bool {
 
 // if all the players are ready, go to the next turn (or end the game if needed)
 // otherwise, it is a no-op
+// tryEndTurn will panic if there is no more active players in the game
 func (r *Room) tryEndTurn() Events {
 	if !r.arePlayersReadyForNextTurn() { // do nothing
 		return nil
