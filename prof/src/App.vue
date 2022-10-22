@@ -92,7 +92,9 @@
         <b>{{ $route.meta.Label }}</b>
       </v-app-bar-title>
       <v-spacer></v-spacer>
-      <small>(Version {{ version }})</small>
+      <div class="mr-2">
+        <small>(Version {{ version }})</small>
+      </div>
     </v-app-bar>
 
     <v-main>
