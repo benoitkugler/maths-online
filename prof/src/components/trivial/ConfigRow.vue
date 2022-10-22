@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col cols="3" align-self="center">
+    <v-col cols="5" md="3" align-self="center">
       <OriginButton
         :origin="config.Origin"
         @update-public="(b) => emit('update-public', b)"
@@ -49,18 +49,18 @@
         <v-icon icon="mdi-delete" color="red"></v-icon>
       </v-btn>
     </v-col>
-    <v-col cols="3" align-self="center" style="text-align: center">
+    <v-col cols="4" md="3" align-self="center" style="text-align: center">
       {{ config.Config.Name }}
       <small class="text-grey">
         {{ formatCategories(config.Config) }}
       </small>
     </v-col>
-    <v-col cols="2" align-self="center" style="text-align: center">
+    <v-col cols="3" md="2" align-self="center" style="text-align: center">
       <small class="text-primary">
         {{ formatDifficulties(config.Config) }}
       </small>
     </v-col>
-    <v-col align-self="center" cols="4">
+    <v-col align-self="center" md="4">
       <v-card class="bg-grey-lighten-2">
         <v-card-text class="px-0 py-1">
           <v-row justify="center">

@@ -24,7 +24,7 @@
         </v-col>
       </v-row>
       <v-row>
-        <v-col>
+        <v-col cols="12" md="auto">
           <v-list-subheader>
             <h3>Choix des questions</h3>
             <small
@@ -35,7 +35,7 @@
             >
           </v-list-subheader>
         </v-col>
-        <v-col cols="auto" align-self="center">
+        <v-col cols="12" md="auto" align-self="center" class="mb-1">
           <v-menu
             offset-y
             :close-on-content-click="false"
@@ -151,7 +151,7 @@
       </v-list>
 
       <v-row class="mt-2">
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-text-field
             density="compact"
             variant="outlined"
@@ -162,7 +162,7 @@
             v-model.number="props.edited.QuestionTimeout"
           ></v-text-field>
         </v-col>
-        <v-col cols="6">
+        <v-col cols="12" md="6">
           <v-checkbox
             density="compact"
             label="Afficher le décrassage en fin de partie"

@@ -32,16 +32,16 @@
     <session-monitor @closed="closeMonitor"></session-monitor>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="80%">
+  <v-card class="my-5 mx-auto" width="90%">
     <v-row class="mx-0">
-      <v-col>
+      <v-col cols="9">
         <v-card-title>Triv'Maths</v-card-title>
         <v-card-subtitle
           >Configurer et lancer une partie de Triv'Maths</v-card-subtitle
         >
       </v-col>
 
-      <v-col align-self="center" style="text-align: right" cols="4">
+      <v-col align-self="center" style="text-align: right" cols="3">
         <v-btn
           size="small"
           @click="createConfig"
