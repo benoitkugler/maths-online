@@ -33,7 +33,7 @@
   </v-dialog>
 
   <v-card class="my-5 mx-auto" width="80%">
-    <v-row>
+    <v-row class="mx-0">
       <v-col>
         <v-card-title>Triv'Maths</v-card-title>
         <v-card-subtitle
@@ -43,9 +43,9 @@
 
       <v-col align-self="center" style="text-align: right" cols="4">
         <v-btn
-          class="mx-2"
+          size="small"
           @click="createConfig"
-          title="Créer une nouvelle session"
+          title="Créer une nouvelle partie"
         >
           <v-icon icon="mdi-plus" color="success"></v-icon>
           Créer
