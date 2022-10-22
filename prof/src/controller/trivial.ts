@@ -1,6 +1,4 @@
 import type { CategoriesQuestions } from "./api_gen";
-import { controller } from "./controller";
-import type { teacherSocketData } from "./trivial_config_socket_gen";
 
 export const colorsPerCategorie = [
   "purple",
@@ -9,31 +7,6 @@ export const colorsPerCategorie = [
   "yellow-darken-2",
   "blue"
 ];
-
-export class TrivialMonitorController {
-  constructor(onServerEvent: (data: teacherSocketData) => void) {
-    const url =
-      controller.getURL(`/prof/trivial/monitor`).replace("http", "ws") +
-      "?token=" +
-      controller.getToken();
-    const socket = new WebSocket(url);
-
-    // Connection opened
-    socket.addEventListener("open", function (event) {
-      socket.send("Hello Server!");
-    });
-
-    // Listen for messages
-    socket.addEventListener("message", function (event) {
-      onServerEvent(JSON.parse(event.data));
-    });
-
-    // Ping the server to keep the connection alive
-    setInterval(() => {
-      socket.send("Ping");
-    }, 10000);
-  }
-}
 
 /** questionPropositions is a list of question to use in a 
 trivial configuration, working nicely with the officialy supported questions

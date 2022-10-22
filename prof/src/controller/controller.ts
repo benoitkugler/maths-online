@@ -16,6 +16,7 @@ import type {
   ListExercicesOut,
   ListQuestionsOut,
   LogginOut,
+  MonitorOut,
   Question,
   QuestiongroupExt,
   RunningSessionMetaOut,
@@ -376,6 +377,10 @@ class Controller extends AbstractAPI {
     if (this.showMessage) {
       this.showMessage(`Parties lancées avec succès.`);
     }
+  }
+
+  protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {
+    this.inRequest = false;
   }
 
   protected onSuccessEditorStartSession(data: StartSessionOut): void {

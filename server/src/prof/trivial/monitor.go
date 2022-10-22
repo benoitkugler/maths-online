@@ -1,7 +1,6 @@
 package trivial
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/prof/teacher"
@@ -75,7 +74,7 @@ func (ct *Controller) TrivialTeacherMonitor(c echo.Context) error {
 
 	session := ct.getSession(user.Id)
 	if session == nil {
-		return fmt.Errorf("internal error: no running session for %d", user.Id)
+		return c.JSON(200, MonitorOut{})
 	}
 
 	out := newMonitorOut(session.collectSummaries())
