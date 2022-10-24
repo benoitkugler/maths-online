@@ -254,16 +254,18 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
         content: isOwnTurn
             ? const Text("C'est à toi de lancer le dé !")
             : Text("Au tour de ${event.playerName}"),
-        action: SnackBarAction(
-            label: "OK",
-            onPressed: () =>
-                ScaffoldMessenger.of(context).hideCurrentSnackBar()),
+        action: SnackBarAction(label: "OK", onPressed: _removeCurrentSnackbar),
       ),
     );
 
     setState(() {
       diceDisabled = !isOwnTurn;
     });
+  }
+
+  void _removeCurrentSnackbar() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
   }
 
   // triggers and wait for a dice roll
@@ -389,7 +391,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   Future<void> _onPlayersStillInQuestionResult(
       PlayersStillInQuestionResult event) async {
-    print("$event $playerID");
     // ignore the event if we are one of the waiting players
     if (event.players.contains(playerID)) {
       return;
