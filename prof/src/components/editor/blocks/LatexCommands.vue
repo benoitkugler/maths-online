@@ -139,6 +139,14 @@ const commands = [
     description: "Intersection",
     command: `\\cap `,
   },
+  {
+    description: "Angle",
+    command: `\\widehat{BAC}`,
+  },
+  {
+    description: "Limite",
+    command: `\\lim_{x \\to 0} f(x)`,
+  },
 ];
 
 async function copyAndClose(command: string) {

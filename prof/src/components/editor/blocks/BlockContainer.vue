@@ -87,59 +87,6 @@ function onDragStart(payload: DragEvent) {
 }
 
 let showDocumentation = $ref(false);
-const commands = [
-  { description: "Vecteur", command: "\\overrightarrow{AB}" },
-  { description: "Accolade ouverte", command: "\\{" },
-  {
-    description: "Coordonées d'un vecteur (colonne)",
-    command: `\\begin{pmatrix} x \\\\ y \\end{pmatrix}`,
-  },
-  {
-    description: "Ensemble des réels",
-    command: `\\R`,
-  },
-  {
-    description: "Ensemble vide",
-    command: `\\empty`,
-  },
-  {
-    description: "Inclus",
-    command: `\\subset`,
-  },
-  {
-    description: "Non inclus",
-    command: `\\not\\subset`,
-  },
-  {
-    description: "Antislash",
-    command: `\\backslash`,
-  },
-  {
-    description: "Infini",
-    command: `\\infty`,
-  },
-  {
-    description: "Inférieur ou égal (<=)",
-    command: `\\leq `,
-  },
-  {
-    description: "Supérieur ou égal (>=)",
-    command: `\\geq `,
-  },
-  {
-    description: "Union",
-    command: `\\cup `,
-  },
-  {
-    description: "Intersection",
-    command: `\\cap `,
-  },
-];
-
-async function copyAndClose(command: string) {
-  showDocumentation = false;
-  await navigator.clipboard.writeText(command);
-}
 </script>
 
 <style scoped></style>
