@@ -295,6 +295,36 @@ func (r *Room) tryEndTurn() Events {
 	return Events{v}
 }
 
+func (r *Room) reconnectPlayer(player Player, connection Connection) Events {
+	// if the game was started then temporary left by all players, trigger a new turn
+	triggerNewTurn := r.game.hasStarted() && r.nbActivePlayers() == 0
+
+	pc := r.players[player.ID]
+	pc.conn = connection // use the new client connection
+	pc.pl.Pseudo = player.Pseudo
+
+	events := Events{PlayerReconnected{
+		ID:     pc.pl.ID,
+		Pseudo: player.Pseudo,
+	}}
+	if triggerNewTurn {
+		ProgressLogger.Printf("Game %s : reviving by starting a new turn...", r.ID)
+
+		eventTurn := r.startTurn()
+		events = append(events, eventTurn)
+	} else {
+		// when in question, mark the reconnected player as having answered
+		// if it has not yet
+		if r.game.phase == pDoingQuestion {
+			if _, has := r.game.currentAnswers[player.ID]; !has {
+				r.game.currentAnswers[player.ID] = false
+			}
+		}
+	}
+
+	return events
+}
+
 // winners returns the players who win, or an empty slice
 // use it to check if the game is over
 func (r *Room) winners() (out []serial) {

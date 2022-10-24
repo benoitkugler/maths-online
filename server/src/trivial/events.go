@@ -119,23 +119,8 @@ func (r *Room) Join(player Player, connection Connection) error {
 	} else { // reconnection
 		ProgressLogger.Printf("Game %s : reconnecting player %s...", r.ID, player.ID)
 
-		// if the game was started then temporary left by all players, trigger a new turn
-		triggerNewTurn := r.game.hasStarted() && r.nbActivePlayers() == 0
+		events := r.reconnectPlayer(player, connection)
 
-		pc := r.players[player.ID]
-		pc.conn = connection // use the new client connection
-		pc.pl.Pseudo = player.Pseudo
-
-		events := Events{PlayerReconnected{
-			ID:     pc.pl.ID,
-			Pseudo: player.Pseudo,
-		}}
-		if triggerNewTurn {
-			ProgressLogger.Printf("Game %s : reviving by starting a new turn...", r.ID)
-
-			eventTurn := r.startTurn()
-			events = append(events, eventTurn)
-		}
 		r.broadcastEvents(events)
 	}
 

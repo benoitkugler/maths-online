@@ -338,6 +338,36 @@ func TestAllDisconnectInQuestionResult(t *testing.T) {
 	}
 }
 
+func TestReconnectInQuestion(t *testing.T) {
+	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+
+	go r.Listen()
+
+	r.mustJoin(t, "p1")
+	r.mustJoin(t, "p2")
+
+	r.throwAndMove("p1")
+
+	// disconnect p2 ...
+	r.Leave <- "p2"
+
+	time.Sleep(time.Millisecond)
+
+	// ...and reconnect it before p1 has answered
+	r.mustJoin(t, "p2")
+
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
+
+	time.Sleep(time.Millisecond)
+
+	if g := r.lg(); g.questionTimer.Stop() {
+		t.Fatal("question should have been closed")
+	}
+	if g := r.lg(); g.phase != pQuestionResult {
+		t.Fatalf("unexpected phase %v", g.phase)
+	}
+}
+
 func TestHandleClientEvent(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
 
