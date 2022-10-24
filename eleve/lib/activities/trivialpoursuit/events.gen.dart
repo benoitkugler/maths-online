@@ -500,6 +500,33 @@ JSON playerTurnToJson(PlayerTurn item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/trivial.PlayersStillInQuestionResult
+class PlayersStillInQuestionResult implements ServerEvent {
+  final List<PlayerID> players;
+  final List<String> playerNames;
+
+  const PlayersStillInQuestionResult(this.players, this.playerNames);
+
+  @override
+  String toString() {
+    return "PlayersStillInQuestionResult($players, $playerNames)";
+  }
+}
+
+PlayersStillInQuestionResult playersStillInQuestionResultFromJson(
+    dynamic json_) {
+  final json = (json_ as JSON);
+  return PlayersStillInQuestionResult(listStringFromJson(json['Players']),
+      listStringFromJson(json['PlayerNames']));
+}
+
+JSON playersStillInQuestionResultToJson(PlayersStillInQuestionResult item) {
+  return {
+    "Players": listStringToJson(item.players),
+    "PlayerNames": listStringToJson(item.playerNames)
+  };
+}
+
 // github.com/benoitkugler/maths-online/trivial.PossibleMoves
 class PossibleMoves implements ServerEvent {
   final String playerName;
@@ -609,6 +636,8 @@ ServerEvent serverEventFromJson(dynamic json_) {
       return playerReconnectedFromJson(data);
     case "PlayerTurn":
       return playerTurnFromJson(data);
+    case "PlayersStillInQuestionResult":
+      return playersStillInQuestionResultFromJson(data);
     case "PossibleMoves":
       return possibleMovesFromJson(data);
     case "ShowQuestion":
@@ -644,6 +673,11 @@ JSON serverEventToJson(ServerEvent item) {
     return {'Kind': "PlayerReconnected", 'Data': playerReconnectedToJson(item)};
   } else if (item is PlayerTurn) {
     return {'Kind': "PlayerTurn", 'Data': playerTurnToJson(item)};
+  } else if (item is PlayersStillInQuestionResult) {
+    return {
+      'Kind': "PlayersStillInQuestionResult",
+      'Data': playersStillInQuestionResultToJson(item)
+    };
   } else if (item is PossibleMoves) {
     return {'Kind': "PossibleMoves", 'Data': possibleMovesToJson(item)};
   } else if (item is ShowQuestion) {
@@ -817,14 +851,14 @@ List<dynamic> listBoolToJson(List<bool> item) {
   return item.map(boolToJson).toList();
 }
 
-List<int> listIntFromJson(dynamic json) {
+List<IdQuestion> listIntFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(intFromJson).toList();
 }
 
-List<dynamic> listIntToJson(List<int> item) {
+List<dynamic> listIntToJson(List<IdQuestion> item) {
   return item.map(intToJson).toList();
 }
 

@@ -82,19 +82,20 @@ type ServerEvent interface {
 	isServerEvent()
 }
 
-func (PlayerJoin) isServerEvent()          {}
-func (PlayerReconnected) isServerEvent()   {}
-func (LobbyUpdate) isServerEvent()         {}
-func (GameStart) isServerEvent()           {}
-func (PlayerLeft) isServerEvent()          {}
-func (PlayerTurn) isServerEvent()          {}
-func (DiceThrow) isServerEvent()           {}
-func (Move) isServerEvent()                {}
-func (PossibleMoves) isServerEvent()       {}
-func (ShowQuestion) isServerEvent()        {}
-func (PlayerAnswerResults) isServerEvent() {}
-func (GameEnd) isServerEvent()             {}
-func (GameTerminated) isServerEvent()      {}
+func (PlayerJoin) isServerEvent()                   {}
+func (PlayerReconnected) isServerEvent()            {}
+func (LobbyUpdate) isServerEvent()                  {}
+func (GameStart) isServerEvent()                    {}
+func (PlayerLeft) isServerEvent()                   {}
+func (PlayerTurn) isServerEvent()                   {}
+func (DiceThrow) isServerEvent()                    {}
+func (Move) isServerEvent()                         {}
+func (PossibleMoves) isServerEvent()                {}
+func (ShowQuestion) isServerEvent()                 {}
+func (PlayerAnswerResults) isServerEvent()          {}
+func (PlayersStillInQuestionResult) isServerEvent() {}
+func (GameEnd) isServerEvent()                      {}
+func (GameTerminated) isServerEvent()               {}
 
 // PlayerJoin is only emitted to the actual player
 // who join the game
@@ -174,6 +175,13 @@ type PlayerAnswerResults struct {
 type playerAnswerResult struct {
 	Success    bool
 	AskForMask bool // true if Success is false and if the player has not already marked 3
+}
+
+// PlayersStillInQuestionResult is emitted when some players are
+// still in the [pQuestionResult] step
+type PlayersStillInQuestionResult struct {
+	Players     []serial
+	PlayerNames []string
 }
 
 // GameEnd is emitted when at least one player has won

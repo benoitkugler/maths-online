@@ -199,7 +199,7 @@ class Quote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const shadows = [
-      BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 5)
+      BoxShadow(color: Colors.white, blurRadius: 7, spreadRadius: 3)
     ];
     const fontSize = 16.0;
     return Padding(

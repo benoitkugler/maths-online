@@ -1,4 +1,5 @@
 import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
+import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:flutter/material.dart';
 
@@ -141,21 +142,29 @@ class _QuestionResultState extends State<QuestionResult> {
   }
 }
 
-// class _ExpectedAnswer extends StatelessWidget {
-//   final String content;
-//   final Color color;
+class WaitForPlayersDialog extends StatelessWidget {
+  final List<String> playerNames;
 
-//   const _ExpectedAnswer(this.content, this.color, {Key? key}) : super(key: key);
+  const WaitForPlayersDialog(this.playerNames, {super.key});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         border: Border.all(color: color),
-//         borderRadius: BorderRadius.circular(6),
-//       ),
-//       padding: const EdgeInsets.all(12),
-//       child: Text("La bonne réponse est : $content"),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                  "En attente de ${playerNames.join(', ')} pour le prochain tour"),
+            ),
+            const LinearProgressIndicator(),
+            const SizedBox(height: 40),
+            Quote(pickQuote()),
+          ],
+        ),
+      ),
+    );
+  }
+}

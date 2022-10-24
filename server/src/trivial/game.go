@@ -248,23 +248,28 @@ func (r *Room) tryEndQuestion(force bool) Events {
 	return Events{out}
 }
 
-func (r *Room) arePlayersReadyForNextTurn() bool {
+// arePlayersReadyForNextTurn return `true`, nil if all the players
+// are ready for the next turn,
+// or false and the list of players not ready
+func (r *Room) arePlayersReadyForNextTurn() (bool, []serial) {
+	var notReady []serial
 	for _, pl := range r.players {
-		if pl.conn == nil {
+		if pl.conn == nil { // ignore inactive players
 			continue
 		}
-		if ok := r.game.currentWantNextTurn[pl.pl.ID]; !ok {
-			return false
+		playerID := pl.pl.ID
+		if ok := r.game.currentWantNextTurn[playerID]; !ok {
+			notReady = append(notReady, playerID)
 		}
 	}
-	return true
+	return len(notReady) == 0, notReady
 }
 
 // if all the players are ready, go to the next turn (or end the game if needed)
-// otherwise, it is a no-op
+// otherwise, it is a no-op.
 // tryEndTurn will panic if there is no more active players in the game
 func (r *Room) tryEndTurn() Events {
-	if !r.arePlayersReadyForNextTurn() { // do nothing
+	if areReady, _ := r.arePlayersReadyForNextTurn(); !areReady { // do nothing
 		return nil
 	}
 
@@ -495,7 +500,20 @@ func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) (Events, er
 		pReview.MarkedQuestions = append(pReview.MarkedQuestions, g.question.ID)
 	}
 
-	return r.tryEndTurn(), nil
+	// notify all the players
+	var evts Events
+
+	allReady, notReady := r.arePlayersReadyForNextTurn()
+	if !allReady {
+		evts = append(evts, PlayersStillInQuestionResult{
+			Players:     notReady,
+			PlayerNames: r.serialsToPseudos(notReady),
+		})
+	}
+
+	evts = append(evts, r.tryEndTurn()...)
+
+	return evts, nil
 }
 
 type playerAdvance struct {

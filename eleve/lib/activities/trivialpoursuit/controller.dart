@@ -60,7 +60,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   late Timer _keepAliveTimmer;
   final eventQueue = StreamController<StateUpdate>();
 
+  // the id of the client player
   PlayerID playerID = "";
+
   bool hasGameStarted = false;
 
   Map<PlayerID, String> lobby = {};
@@ -241,6 +243,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     // reset the last question
     lastQuestion = null;
 
+    // remove potential dialog
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
+
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -364,12 +369,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   Future<void> _onPlayerAnswerResults(PlayerAnswerResults event) async {
     // close the additional routes (question or recap)
     // until the "main" board
-    Navigator.of(context).popUntil((route) {
-      if (route.settings.name == "/board") {
-        return true;
-      }
-      return false;
-    });
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
 
     var wantNextTurn =
         await Navigator.of(context).push(MaterialPageRoute<WantNextTurn>(
@@ -385,6 +385,24 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     ));
     wantNextTurn ??= const WantNextTurn(false);
     _sendEvent(wantNextTurn);
+  }
+
+  Future<void> _onPlayersStillInQuestionResult(
+      PlayersStillInQuestionResult event) async {
+    print("$event $playerID");
+    // ignore the event if we are one of the waiting players
+    if (event.players.contains(playerID)) {
+      return;
+    }
+
+    // close a potential previous dialog
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
+
+    showDialog<void>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (context) => WaitForPlayersDialog(event.playerNames),
+        barrierDismissible: false);
   }
 
   void _onPlayerReconnected(PlayerReconnected event) {
@@ -459,6 +477,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       return _onShowQuestion(event);
     } else if (event is PlayerAnswerResults) {
       return _onPlayerAnswerResults(event);
+    } else if (event is PlayersStillInQuestionResult) {
+      return _onPlayersStillInQuestionResult(event);
     } else if (event is GameEnd) {
       _onGameEnd(event);
     } else if (event is GameTerminated) {

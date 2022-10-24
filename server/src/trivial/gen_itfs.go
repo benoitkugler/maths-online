@@ -157,6 +157,10 @@ func (out *ServerEventWrapper) UnmarshalJSON(src []byte) error {
 		var data PlayerTurn
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "PlayersStillInQuestionResult":
+		var data PlayersStillInQuestionResult
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "PossibleMoves":
 		var data PossibleMoves
 		err = json.Unmarshal(wr.Data, &data)
@@ -201,6 +205,8 @@ func (item ServerEventWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "PlayerReconnected", Data: data}
 	case PlayerTurn:
 		wr = wrapper{Kind: "PlayerTurn", Data: data}
+	case PlayersStillInQuestionResult:
+		wr = wrapper{Kind: "PlayersStillInQuestionResult", Data: data}
 	case PossibleMoves:
 		wr = wrapper{Kind: "PossibleMoves", Data: data}
 	case ShowQuestion:
@@ -213,17 +219,18 @@ func (item ServerEventWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	DiceThrowSeKind           = "DiceThrow"
-	GameEndSeKind             = "GameEnd"
-	GameStartSeKind           = "GameStart"
-	GameTerminatedSeKind      = "GameTerminated"
-	LobbyUpdateSeKind         = "LobbyUpdate"
-	MoveSeKind                = "Move"
-	PlayerAnswerResultsSeKind = "PlayerAnswerResults"
-	PlayerJoinSeKind          = "PlayerJoin"
-	PlayerLeftSeKind          = "PlayerLeft"
-	PlayerReconnectedSeKind   = "PlayerReconnected"
-	PlayerTurnSeKind          = "PlayerTurn"
-	PossibleMovesSeKind       = "PossibleMoves"
-	ShowQuestionSeKind        = "ShowQuestion"
+	DiceThrowSeKind                    = "DiceThrow"
+	GameEndSeKind                      = "GameEnd"
+	GameStartSeKind                    = "GameStart"
+	GameTerminatedSeKind               = "GameTerminated"
+	LobbyUpdateSeKind                  = "LobbyUpdate"
+	MoveSeKind                         = "Move"
+	PlayerAnswerResultsSeKind          = "PlayerAnswerResults"
+	PlayerJoinSeKind                   = "PlayerJoin"
+	PlayerLeftSeKind                   = "PlayerLeft"
+	PlayerReconnectedSeKind            = "PlayerReconnected"
+	PlayerTurnSeKind                   = "PlayerTurn"
+	PlayersStillInQuestionResultSeKind = "PlayersStillInQuestionResult"
+	PossibleMovesSeKind                = "PossibleMoves"
+	ShowQuestionSeKind                 = "ShowQuestion"
 )

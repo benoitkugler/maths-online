@@ -426,6 +426,7 @@ func TestHandleClientEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	_, _, err = r.handleClientEvent(WantNextTurn{}, Player{ID: "p2"})
 	if err != nil {
 		t.Fatal(err)
