@@ -443,22 +443,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_expr_ComparisonLevel (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a expr_ComparisonLevel', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_expr_Variable (data jsonb)
     RETURNS boolean
     AS $$
@@ -577,6 +561,22 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_ComparisonLevel (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (102, 2, 1, 0);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a ques_ComparisonLevel', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_CoordExpression (data jsonb)
     RETURNS boolean
     AS $$
@@ -615,7 +615,7 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Expression')
         AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_expr_ComparisonLevel (data -> 'ComparisonLevel');
+        AND gomacro_validate_json_ques_ComparisonLevel (data -> 'ComparisonLevel');
     RETURN is_valid;
 END;
 $$
