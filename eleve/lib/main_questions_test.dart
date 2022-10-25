@@ -27,9 +27,10 @@ class _FieldAPI implements FieldAPI {
 final questionComplexe = Question([
   TextBlock([T("A question to exercice many fields")], false, false, false),
   const NumberFieldBlock(0, 10),
-  const ExpressionFieldBlock("x=", 10, 1),
+  const ExpressionFieldBlock("x=", "", 10, 1),
+  const ExpressionFieldBlock("", " = 0", 10, 2),
   const FigurePointFieldBlock(
-      Figure(Drawings({}, [], [], [], []), bounds, true, true), 2)
+      Figure(Drawings({}, [], [], [], []), bounds, true, true), 3)
 ]);
 
 const questionComplexeAnswers = {

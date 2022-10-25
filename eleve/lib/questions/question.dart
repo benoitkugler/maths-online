@@ -286,7 +286,7 @@ class _FieldsBuilder {
       ct,
       hintWidth: element.sizeHint,
     ));
-    if (element.label.isNotEmpty) {
+    if (element.label.isNotEmpty || element.suffix.isNotEmpty) {
       // start a new line
       _flushCurrentRow();
 
@@ -295,9 +295,15 @@ class _FieldsBuilder {
           child: Text.rich(
             TextSpan(
               children: [
-                _inlineMath(element.label, fontSize),
-                const TextSpan(text: " "),
+                if (element.label.isNotEmpty) ...[
+                  _inlineMath(element.label, fontSize),
+                  const TextSpan(text: " "),
+                ],
                 field,
+                if (element.suffix.isNotEmpty) ...[
+                  const TextSpan(text: " "),
+                  _inlineMath(element.suffix, fontSize),
+                ],
               ],
             ),
           ),
