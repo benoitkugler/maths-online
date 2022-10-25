@@ -172,6 +172,14 @@ func (c parsedCoord) validate(vars expression.Vars, checkPrecision bool) error {
 	return nil
 }
 
+type linearEquationValidator struct {
+	expr *expression.Expr
+}
+
+func (v linearEquationValidator) validate(vars expression.Vars) error {
+	return v.expr.IsValidLinearEquation(vars)
+}
+
 type variationTableValidator struct {
 	label TextParts
 	xs    []*expression.Expr

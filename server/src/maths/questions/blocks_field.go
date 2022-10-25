@@ -74,7 +74,7 @@ func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (insta
 }
 
 func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	_, err := expression.Parse(f.Expression)
+	expr, err := expression.Parse(f.Expression)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,13 @@ func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (valid
 	if err != nil {
 		return nil, err
 	}
-	return noOpValidator{}, err
+
+	switch f.ComparisonLevel {
+	case AsLinearEquation:
+		return linearEquationValidator{expr: expr}, nil
+	default:
+		return noOpValidator{}, nil
+	}
 }
 
 type RadioFieldBlock struct {

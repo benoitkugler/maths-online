@@ -108,18 +108,22 @@ type ExpressionFieldInstance struct {
 	LabelLaTeX string
 
 	Answer          *expression.Expr
-	ComparisonLevel expression.ComparisonLevel
+	ComparisonLevel ComparisonLevel
 	ID              int
 }
 
 func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
 func (f ExpressionFieldInstance) toClient() client.Block {
-	return client.ExpressionFieldBlock{
+	out := client.ExpressionFieldBlock{
 		ID:       f.ID,
 		Label:    f.LabelLaTeX,
 		SizeHint: len([]rune(f.Answer.String())),
 	}
+	if f.ComparisonLevel == AsLinearEquation {
+		out.Suffix = " = 0"
+	}
+	return out
 }
 
 func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) error {
@@ -144,8 +148,10 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 
 func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	expr, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
-
-	return expression.AreExpressionsEquivalent(f.Answer, expr, f.ComparisonLevel)
+	if f.ComparisonLevel == AsLinearEquation {
+		return expression.AreLinearEquationsEquivalent(f.Answer, expr)
+	}
+	return expression.AreExpressionsEquivalent(f.Answer, expr, expression.ComparisonLevel(f.ComparisonLevel))
 }
 
 func (f ExpressionFieldInstance) correctAnswer() client.Answer {

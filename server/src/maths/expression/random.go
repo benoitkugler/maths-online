@@ -506,3 +506,12 @@ func checkIntervalsDisjoints(intervals [][2]float64) *jointIntervals {
 
 	return nil
 }
+
+// IsValidLinearEquation checks that, once instantiated, [expr]
+// is a linear equation (such as 2x - 3y + t/2 - 0.5)
+func (expr *Expr) IsValidLinearEquation(vars Vars) error {
+	expr = expr.Copy()
+	expr.Substitute(vars)
+	_, err := expr.isLinearEquation()
+	return err
+}

@@ -452,26 +452,31 @@ JSON expressionAnswerToJson(ExpressionAnswer item) {
 // github.com/benoitkugler/maths-online/maths/questions/client.ExpressionFieldBlock
 class ExpressionFieldBlock implements Block {
   final String label;
+  final String suffix;
   final int sizeHint;
   final int iD;
 
-  const ExpressionFieldBlock(this.label, this.sizeHint, this.iD);
+  const ExpressionFieldBlock(this.label, this.suffix, this.sizeHint, this.iD);
 
   @override
   String toString() {
-    return "ExpressionFieldBlock($label, $sizeHint, $iD)";
+    return "ExpressionFieldBlock($label, $suffix, $sizeHint, $iD)";
   }
 }
 
 ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ExpressionFieldBlock(stringFromJson(json['Label']),
-      intFromJson(json['SizeHint']), intFromJson(json['ID']));
+  return ExpressionFieldBlock(
+      stringFromJson(json['Label']),
+      stringFromJson(json['Suffix']),
+      intFromJson(json['SizeHint']),
+      intFromJson(json['ID']));
 }
 
 JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
+    "Suffix": stringToJson(item.suffix),
     "SizeHint": intToJson(item.sizeHint),
     "ID": intToJson(item.iD)
   };

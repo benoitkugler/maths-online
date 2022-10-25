@@ -22,7 +22,7 @@ func TestPanics(t *testing.T) {
 	testutils.ShouldPanic(t, func() { _ = (invalidOperator).asLaTeX(nil, nil) })
 	testutils.ShouldPanic(t, func() { _ = (invalidOperator).serialize(nil, nil) })
 
-	testutils.ShouldPanic(t, func() { plus.needParenthesis(&Expr{}, false) })
+	testutils.ShouldPanic(t, func() { plus.needParenthesis(&Expr{}, false, true) })
 	testutils.ShouldPanic(t, func() {
 		e := &Expr{atom: invalidOperator}
 		e.simplifyNumbers()
@@ -56,6 +56,10 @@ func TestPanics(t *testing.T) {
 
 	testutils.ShouldPanic(t, func() {
 		MustParse("x + ")
+	})
+
+	testutils.ShouldPanic(t, func() {
+		(&Expr{}).isLinearTerm()
 	})
 }
 

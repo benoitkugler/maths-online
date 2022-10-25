@@ -120,7 +120,8 @@ type NumberFieldBlock struct {
 	SizeHint SizeHint
 }
 type ExpressionFieldBlock struct {
-	Label string // as LaTeX, optional
+	Label  string // as LaTeX, optional
+	Suffix string // as LeTeX, optional
 	// Typical values range from 1 to 30
 	SizeHint SizeHint
 	ID       int

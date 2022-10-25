@@ -281,12 +281,6 @@ func randbool() bool {
 	return i == 1
 }
 
-func randexp_ComparisonLevel() expression.ComparisonLevel {
-	choix := [...]expression.ComparisonLevel{expression.Strict, expression.SimpleSubstitutions, expression.ExpandedSubstitutions}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randexp_Variable() expression.Variable {
 	return expression.Variable{
 		Indice: randstring(),
@@ -342,6 +336,12 @@ func randque_Block() questions.Block {
 	return choix[i]
 }
 
+func randque_ComparisonLevel() questions.ComparisonLevel {
+	choix := [...]questions.ComparisonLevel{questions.AsLinearEquation, questions.ExpandedSubstitutions, questions.SimpleSubstitutions, questions.Strict}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randque_CoordExpression() questions.CoordExpression {
 	return questions.CoordExpression{
 		X: randstring(),
@@ -357,7 +357,7 @@ func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
 	return questions.ExpressionFieldBlock{
 		Expression:      randstring(),
 		Label:           randque_Interpolated(),
-		ComparisonLevel: randexp_ComparisonLevel(),
+		ComparisonLevel: randque_ComparisonLevel(),
 	}
 }
 

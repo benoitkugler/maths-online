@@ -43,9 +43,10 @@ func TestNumberFieldInstance_evaluateAnswer(t *testing.T) {
 		{NumberFieldInstance{Answer: 1}, client.NumberAnswer{Value: 1}, true},
 		{NumberFieldInstance{Answer: 1}, client.NumberAnswer{Value: 1.1}, false},
 		{RadioFieldInstance{Answer: 2, Proposals: []client.TextLine{{}, {}}}, client.RadioAnswer{Index: 0}, true}, // the answer is swapped
-		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "x + 2"}, true},
-		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: expression.SimpleSubstitutions}, client.ExpressionAnswer{Expression: "2+x "}, true},
-		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: expression.ExpandedSubstitutions}, client.ExpressionAnswer{Expression: "2+ 1*x "}, true},
+		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: SimpleSubstitutions}, client.ExpressionAnswer{Expression: "x + 2"}, true},
+		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: SimpleSubstitutions}, client.ExpressionAnswer{Expression: "2+x "}, true},
+		{ExpressionFieldInstance{Answer: expression.MustParse("x+2"), ComparisonLevel: ExpandedSubstitutions}, client.ExpressionAnswer{Expression: "2+ 1*x "}, true},
+		{ExpressionFieldInstance{Answer: expression.MustParse("4x+2y+2"), ComparisonLevel: AsLinearEquation}, client.ExpressionAnswer{Expression: "2x + 1 + y"}, true},
 	}
 	for _, tt := range tests {
 		f := tt.field

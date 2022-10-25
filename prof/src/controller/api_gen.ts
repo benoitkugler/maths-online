@@ -135,17 +135,19 @@ export interface ClassroomSheets {
   Classroom: Classroom;
   Sheets: SheetExt[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
+// github.com/benoitkugler/maths-online/maths/questions.ComparisonLevel
 export enum ComparisonLevel {
-  Strict = 0,
-  SimpleSubstitutions = 1,
+  AsLinearEquation = 102,
   ExpandedSubstitutions = 2,
+  SimpleSubstitutions = 1,
+  Strict = 0,
 }
 
 export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
-  [ComparisonLevel.Strict]: "",
-  [ComparisonLevel.SimpleSubstitutions]: "",
-  [ComparisonLevel.ExpandedSubstitutions]: "",
+  [ComparisonLevel.AsLinearEquation]: "",
+  [ComparisonLevel.ExpandedSubstitutions]: "Complète",
+  [ComparisonLevel.SimpleSubstitutions]: "Simple",
+  [ComparisonLevel.Strict]: "Exacte",
 };
 
 // github.com/benoitkugler/maths-online/maths/repere.Coord
