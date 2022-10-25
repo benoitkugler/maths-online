@@ -8,7 +8,7 @@
       >
       </interpolated-text>
     </v-col>
-    <v-col cols="6" class="pb-0" align-self="center">
+    <v-col cols="6" align-self="center">
       <v-text-field
         class="mt-5"
         variant="outlined"
@@ -22,15 +22,17 @@
       >
       </v-text-field>
     </v-col>
-    <v-col cols="12" class="pt-0">
-      <v-checkbox
-        :model-value="isComparaisonStrict"
-        @update:model-value="changeComparaison"
-        color="secondary"
-        label="Comparaison stricte"
+    <v-col cols="12" class="mt-1">
+      <v-select
+        variant="outlined"
         density="compact"
-        :messages="[comparaisonMessage]"
-      ></v-checkbox>
+        :messages="[comparisonMessage]"
+        :items="comparisonSelectItems"
+        label="Mode de comparaison"
+        v-model="props.modelValue.ComparisonLevel"
+        @update:model-value="emitUpdate()"
+      >
+      </v-select>
     </v-col>
   </v-row>
 </template>
@@ -40,7 +42,6 @@ import type { ExpressionFieldBlock } from "@/controller/api_gen";
 import { ComparisonLevel, TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
-import { $computed } from "vue/macros";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
@@ -57,23 +58,24 @@ function emitUpdate() {
   emit("update:modelValue", props.modelValue);
 }
 
-let isComparaisonStrict = $computed(
-  () =>
-    props.modelValue.ComparisonLevel != ComparisonLevel.ExpandedSubstitutions
-);
-
-const comparaisonMessage = computed(() => {
-  return isComparaisonStrict
-    ? "Les expressions sont peu transformées : (x+1)^2 et x^2 + 2x + 1 ne sont pas considérées comme égales."
-    : "Les formules usuelles de développement et factorisation sont appliquées en évaluant la réponse : (x+1)^2 et x^2 + 2x + 1 sont considérées égales.";
+const comparisonMessage = computed(() => {
+  switch (props.modelValue.ComparisonLevel) {
+    case ComparisonLevel.SimpleSubstitutions:
+      return "Les expressions sont peu transformées : (x+1)^2 et x^2 + 2x + 1 ne sont pas considérées comme égales.";
+    case ComparisonLevel.ExpandedSubstitutions:
+      return "Les formules usuelles de développement et factorisation sont appliquées en évaluant la réponse : (x+1)^2 et x^2 + 2x + 1 sont considérées égales.";
+    case ComparisonLevel.AsLinearEquation:
+      return "L'expression définit une équation linéaire, comparée à un facteur près.";
+    default:
+      return "";
+  }
 });
 
-function changeComparaison(b: boolean) {
-  props.modelValue.ComparisonLevel = b
-    ? ComparisonLevel.SimpleSubstitutions
-    : ComparisonLevel.ExpandedSubstitutions;
-  emitUpdate();
-}
+const comparisonSelectItems = [
+  { title: "Comparaison stricte", value: ComparisonLevel.SimpleSubstitutions },
+  { title: "Comparaison large", value: ComparisonLevel.ExpandedSubstitutions },
+  { title: "Equation linéaire", value: ComparisonLevel.AsLinearEquation },
+];
 </script>
 
 <style></style>

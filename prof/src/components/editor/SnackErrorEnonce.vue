@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showErrVarsDetails">
+  <v-dialog v-model="showErrVarsDetails" max-width="800">
     <v-card subtitle="Valeurs des paramètres aléatoires">
       <v-card-text>
         L'erreur est rencontrée pour les valeurs suivantes :
