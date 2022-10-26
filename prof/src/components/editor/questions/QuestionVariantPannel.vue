@@ -18,29 +18,32 @@
     ></description-pannel>
   </v-dialog>
 
-  <v-card class="mt-3 px-2">
+  <v-card class="mt-1 px-2">
     <v-row no-gutters class="mb-2">
-      <v-col>
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="compact"
-          label="Sous-titre de la variante (optionnel)"
-          v-model="question.Subtitle"
-          :readonly="props.readonly"
-          hide-details
-          @blur="saveMeta"
-        ></v-text-field
-      ></v-col>
+      <template v-if="props.showVariantMeta">
+        <v-col>
+          <v-text-field
+            class="my-2 input-small"
+            variant="outlined"
+            density="compact"
+            label="Sous-titre de la variante (optionnel)"
+            v-model="question.Subtitle"
+            :readonly="props.readonly"
+            hide-details
+            @blur="saveMeta"
+          ></v-text-field
+        ></v-col>
 
-      <v-col align-self="center">
-        <DifficultyField
-          class="px-1"
-          v-model="question.Difficulty"
-          @update:model-value="saveMeta"
-          :readonly="props.readonly"
-        ></DifficultyField>
-      </v-col>
+        <v-col align-self="center">
+          <DifficultyField
+            class="px-1"
+            v-model="question.Difficulty"
+            @update:model-value="saveMeta"
+            :readonly="props.readonly"
+          ></DifficultyField>
+        </v-col>
+      </template>
+      <v-spacer v-else></v-spacer>
 
       <v-col cols="auto" align-self="center">
         <v-menu offset-y close-on-content-click>
@@ -61,7 +64,7 @@
 
       <v-col cols="auto" align-self="center">
         <v-btn
-          class="mx-2"
+          class="my-1 mx-2"
           icon
           @click="save"
           :disabled="!session_id"
@@ -186,6 +189,7 @@ interface Props {
   question: Question;
   readonly: boolean;
   allTags: string[]; // to provide auto completion
+  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();

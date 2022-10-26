@@ -2,6 +2,7 @@
   <v-dialog
     :model-value="questionToDelete != null"
     @update:model-value="questionToDelete = null"
+    max-width="800"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -10,8 +11,8 @@
         <br />
         Cette opération est irréversible.
 
-        <div v-if="variants.length == 1" class="mt-2">
-          Le groupe de questions associé sera aussi supprimé.
+        <div v-if="ownVariants.length == 1" class="mt-2">
+          La question associée sera aussi supprimée.
         </div>
       </v-card-text>
       <v-card-actions>
@@ -24,8 +25,8 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="mt-3 px-2">
-    <v-row no-gutters class="mb-2">
+  <v-card class="mt-1 px-2">
+    <v-row no-gutters>
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
@@ -41,7 +42,7 @@
         <v-text-field
           class="my-2 input-small"
           variant="outlined"
-          density="comfortable"
+          density="compact"
           label="Nom de la question"
           v-model="group.Group.Title"
           :readonly="isReadonly"
@@ -62,7 +63,7 @@
 
       <v-col cols="auto" align-self="center" class="px-1">
         <QuestionVariantsSelector
-          :variants="variants"
+          :variants="ownVariants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (questionToDelete = qu)"
@@ -72,11 +73,12 @@
     </v-row>
 
     <QuestionVariantPannel
-      :question="variants[variantIndex]"
+      :question="ownVariants[variantIndex]"
       :readonly="isReadonly"
       :session_id="props.session_id"
       :all-tags="props.allTags"
-      @update="(qu) => (variants[variantIndex] = qu)"
+      :show-variant-meta="ownVariants.length >= 2"
+      @update="(qu) => (ownVariants[variantIndex] = qu)"
     ></QuestionVariantPannel>
   </v-card>
 </template>
@@ -105,7 +107,7 @@ const emit = defineEmits<{
 }>();
 
 let group = $ref(copy(props.group));
-let variants = $ref(copy(props.variants));
+let ownVariants = $ref(copy(props.variants));
 
 let variantIndex = $ref(0);
 
@@ -122,15 +124,15 @@ let questionToDelete: Question | null = $ref(null);
 async function deleteVariante() {
   await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
 
-  variants = variants.filter((qu) => qu.Id != questionToDelete!.Id);
+  ownVariants = ownVariants.filter((qu) => qu.Id != questionToDelete!.Id);
   questionToDelete = null;
 
-  if (variants.length && variantIndex >= variants.length) {
+  if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
   // if there is no more variant, that means the questiongroup is deleted:
   // go back
-  if (!variants.length) {
+  if (!ownVariants.length) {
     emit("back");
   }
 }
@@ -142,8 +144,8 @@ async function duplicateVariante(question: Question) {
   if (newQuestion == undefined) {
     return;
   }
-  variants.push(newQuestion);
-  variantIndex = variants.length - 1; // go to the new question
+  ownVariants.push(newQuestion);
+  variantIndex = ownVariants.length - 1; // go to the new question
 }
 
 async function saveTags(newTags: string[]) {
