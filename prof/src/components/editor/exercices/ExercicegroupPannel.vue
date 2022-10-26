@@ -2,6 +2,7 @@
   <v-dialog
     :model-value="exerciceToDelete != null"
     @update:model-value="exerciceToDelete = null"
+    max-width="800"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -10,8 +11,8 @@
         <br />
         Cette opération est irréversible.
 
-        <div v-if="variants.length == 1" class="mt-2">
-          Le groupe d'exercices associé sera aussi supprimé.
+        <div v-if="ownVariants.length == 1" class="mt-2">
+          L'exercice associé sera aussi supprimé.
         </div>
       </v-card-text>
       <v-card-actions>
@@ -62,7 +63,7 @@
 
       <v-col cols="auto" align-self="center" class="px-1">
         <ExerciceVariantsSelector
-          :variants="variants"
+          :variants="ownVariants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (exerciceToDelete = qu)"
@@ -72,11 +73,12 @@
     </v-row>
 
     <ExerciceVariantPannel
-      :exercice-header="variants[variantIndex]"
+      :exercice-header="ownVariants[variantIndex]"
       :is-readonly="isReadonly"
       :session-id="props.session_id"
       :all-tags="props.allTags"
-      @update="(qu) => (variants[variantIndex] = qu)"
+      :show-variant-meta="ownVariants.length >= 2"
+      @update="(qu) => (ownVariants[variantIndex] = qu)"
     ></ExerciceVariantPannel>
   </v-card>
 </template>
@@ -104,7 +106,7 @@ const emit = defineEmits<{
 }>();
 
 let group = $ref(copy(props.group));
-let variants = $ref(copy(props.group.Variants || []));
+let ownVariants = $ref(copy(props.group.Variants || []));
 
 let variantIndex = $ref(0);
 
@@ -121,15 +123,15 @@ let exerciceToDelete: ExerciceHeader | null = $ref(null);
 async function deleteVariante() {
   await controller.EditorDeleteExercice({ id: exerciceToDelete!.Id });
 
-  variants = variants.filter((qu) => qu.Id != exerciceToDelete!.Id);
+  ownVariants = ownVariants.filter((qu) => qu.Id != exerciceToDelete!.Id);
   exerciceToDelete = null;
 
-  if (variants.length && variantIndex >= variants.length) {
+  if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
   // if there is no more variant, that means the exercicegroup is deleted:
   // go back
-  if (!variants.length) {
+  if (!ownVariants.length) {
     emit("back");
   }
 }
@@ -141,8 +143,8 @@ async function duplicateVariante(exercice: ExerciceHeader) {
   if (newExercice == undefined) {
     return;
   }
-  variants.push(newExercice);
-  variantIndex = variants.length - 1; // go to the new exercice
+  ownVariants.push(newExercice);
+  variantIndex = ownVariants.length - 1; // go to the new exercice
 }
 
 async function saveTags(newTags: string[]) {

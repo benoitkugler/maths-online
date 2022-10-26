@@ -8,6 +8,7 @@
       :all-tags="props.allTags"
       :exercice="exercice"
       :is-readonly="props.isReadonly"
+      :show-variant-meta="props.showVariantMeta"
       @go-to-question="goToQuestion"
       @update="notifieUpdate"
     ></ExSkeleton>
@@ -40,6 +41,7 @@ interface Props {
   sessionId: string;
   isReadonly: boolean;
   allTags: string[]; // to provide auto completion
+  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();

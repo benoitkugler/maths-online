@@ -1,37 +1,4 @@
 <template>
-  <!-- <v-dialog v-model="showFlowDocumentation">
-    <v-card title="Déroulement d'un exercice">
-      <v-card-text>
-        Un exercice peut se dérouler de deux manières différentes :
-        séquentiellement ou en parallèle.
-        <v-list>
-          <v-list-item>
-            <v-row>
-              <v-col cols="3"> <b>Déroulé séquentiel</b></v-col>
-              <v-col>
-                L'élève répond aux questions l'une après l'autre, et ne peux pas
-                accéder à la question suivante tant qu'il n'a pas réussi la
-                question courante.</v-col
-              >
-            </v-row>
-          </v-list-item>
-          <v-list-item>
-            <v-row>
-              <v-col cols="3">
-                <b>Déroulé parallèle</b>
-              </v-col>
-              <v-col>
-                L'élève répond à toutes les questions avant de valider, dans
-                l'ordre de son choix, puis peut reprendre les questions
-                fausses.</v-col
-              >
-            </v-row>
-          </v-list-item>
-        </v-list>
-      </v-card-text>
-    </v-card>
-  </v-dialog> -->
-
   <!-- description for the whole exercice, not a particular question -->
   <v-dialog v-model="showEditDescription">
     <description-pannel
@@ -59,18 +26,21 @@
 
   <v-card class="px-2">
     <v-row no-gutters class="mb-2">
-      <v-col>
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="compact"
-          label="Sous-titre de la variante (optionnel)"
-          v-model="props.exercice.Exercice.Subtitle"
-          :readonly="props.isReadonly"
-          hide-details
-          @blur="saveMeta"
-        ></v-text-field
-      ></v-col>
+      <template v-if="props.showVariantMeta">
+        <v-col>
+          <v-text-field
+            class="my-2 input-small"
+            variant="outlined"
+            density="compact"
+            label="Sous-titre de la variante (optionnel)"
+            v-model="props.exercice.Exercice.Subtitle"
+            :readonly="props.isReadonly"
+            hide-details
+            @blur="saveMeta"
+          ></v-text-field
+        ></v-col>
+      </template>
+      <v-spacer v-else></v-spacer>
 
       <v-col cols="auto" align-self="center" class="pl-2">
         <v-btn
@@ -228,6 +198,7 @@ interface Props {
   exercice: ExerciceExt;
   isReadonly: boolean;
   allTags: string[]; // used to select the question to import
+  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();
