@@ -388,13 +388,17 @@
 
               <v-row class="mb-2">
                 <v-col>
-                  <div class="text-grey mb-1">Couleur de ligne :</div>
+                  <div class="text-grey mb-1">
+                    <small>Couleur de ligne :</small>
+                  </div>
                   <btn-color-picker
                     v-model="circle.LineColor"
                   ></btn-color-picker>
                 </v-col>
                 <v-col>
-                  <div class="text-grey mb-1">Couleur de remplissage :</div>
+                  <div class="text-grey mb-1">
+                    <small>Couleur de remplissage :</small>
+                  </div>
                   <btn-color-picker
                     v-model="circle.FillColor"
                   ></btn-color-picker>
@@ -403,7 +407,7 @@
             </v-col>
 
             <v-col cols="auto" align-self="center">
-              <v-btn icon size="x-small" @click="deleteLine(index)">
+              <v-btn icon size="x-small" @click="deleteCircle(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>

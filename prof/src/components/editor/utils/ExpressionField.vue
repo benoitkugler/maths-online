@@ -55,11 +55,4 @@ function onTextChange(s: string) {
   text-align: v-bind(align);
   width: v-bind("props.width");
 }
-.expression-field-input:deep(.v-field__input) {
-  padding: 0px 6px;
-  margin-bottom: 5px;
-}
-.expression-field-input:deep(.v-field__field) {
-  margin-top: 4px;
-}
 </style>

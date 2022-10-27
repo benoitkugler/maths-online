@@ -347,7 +347,8 @@ export function newBlock(kind: BlockKind): Block {
             }
           ],
           FunctionVariations: [],
-          Areas: []
+          Areas: [],
+          Points: []
         }
       };
       return out;
