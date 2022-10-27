@@ -282,15 +282,20 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
 }
 
-type areaValidator struct {
+type areaVData struct {
 	top, bottom TextParts
 	domain      expression.Domain
 }
 
+type functionPointVData struct {
+	fnLabel TextParts
+	x       *expression.Expr
+}
 type functionsGraphValidator struct {
 	functions          []function
 	variationValidator []variationTableValidator
-	areas              []areaValidator
+	areas              []areaVData
+	points             []functionPointVData
 }
 
 func (v functionsGraphValidator) validate(vars expression.Vars) error {
@@ -361,6 +366,24 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 			return err
 		}
 	}
+
+	// check that points reference known functions and
+	// are in valid domains
+	for _, point := range v.points {
+		fnLabel, err := point.fnLabel.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		domains := byNames[fnLabel]
+		if len(domains) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", fnLabel)
+		}
+		// check that the abscisse is in one domain
+		if err := point.x.IsIncludedIntoOne(domains, vars); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

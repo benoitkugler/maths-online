@@ -331,6 +331,13 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
+// github.com/benoitkugler/maths-online/maths/questions.FunctionPoint
+export interface FunctionPoint {
+  Function: Interpolated;
+  X: string;
+  Color: string;
+  Legend: Interpolated;
+}
 // github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
   Function: string;
@@ -343,6 +350,7 @@ export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
   FunctionVariations: VariationTableBlock[] | null;
   Areas: FunctionArea[] | null;
+  Points: FunctionPoint[] | null;
 }
 // github.com/benoitkugler/maths-online/prof/trivial.GamePlayers
 export interface GamePlayers {

@@ -261,6 +261,7 @@ func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 type FunctionsGraphInstance struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []client.FunctionArea
+	Points    []client.FunctionPoint
 }
 
 func (fg FunctionsGraphInstance) toClient() client.Block {
@@ -272,6 +273,7 @@ func (fg FunctionsGraphInstance) toClient() client.Block {
 	return client.FunctionsGraphBlock{
 		Functions: fg.Functions,
 		Areas:     fg.Areas,
+		Points:    fg.Points,
 		Bounds:    functiongrapher.BoundingBox(allSegments),
 	}
 }

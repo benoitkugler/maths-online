@@ -177,6 +177,15 @@ func randSliceque_FunctionDefinition() []questions.FunctionDefinition {
 	return out
 }
 
+func randSliceque_FunctionPoint() []questions.FunctionPoint {
+	l := 40 + rand.Intn(10)
+	out := make([]questions.FunctionPoint, l)
+	for i := range out {
+		out[i] = randque_FunctionPoint()
+	}
+	return out
+}
+
 func randSliceque_Interpolated() []questions.Interpolated {
 	l := 40 + rand.Intn(10)
 	out := make([]questions.Interpolated, l)
@@ -428,6 +437,15 @@ func randque_FunctionDefinition() questions.FunctionDefinition {
 	}
 }
 
+func randque_FunctionPoint() questions.FunctionPoint {
+	return questions.FunctionPoint{
+		Function: randque_Interpolated(),
+		X:        randstring(),
+		Color:    randstring(),
+		Legend:   randque_Interpolated(),
+	}
+}
+
 func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
 	return questions.FunctionPointsFieldBlock{
 		Function: randstring(),
@@ -442,6 +460,7 @@ func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 		FunctionExprs:      randSliceque_FunctionDefinition(),
 		FunctionVariations: randSliceque_VariationTableBlock(),
 		Areas:              randSliceque_FunctionArea(),
+		Points:             randSliceque_FunctionPoint(),
 	}
 }
 

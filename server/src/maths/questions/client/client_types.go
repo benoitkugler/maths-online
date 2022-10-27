@@ -95,9 +95,15 @@ type FunctionArea struct {
 	Path  []functiongrapher.BezierCurve
 }
 
+type FunctionPoint struct {
+	Color  repere.Color `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Legend string       // LaTeX code
+	Coord  repere.Coord `gomacro-extern:"repere#dart#repere.gen.dart"`
+}
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []FunctionArea
+	Points    []FunctionPoint
 	Bounds    repere.RepereBounds `gomacro-extern:"repere#dart#repere.gen.dart"`
 }
 

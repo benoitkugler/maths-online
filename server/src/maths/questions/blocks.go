@@ -265,13 +265,15 @@ func (t TextBlock) setupValidator(expression.RandomParameters) (validator, error
 }
 
 // FormulaContent is a list of chunks, either
-//	- static math symbols, such as f(x) =
-//	- valid expression, such as a*x - b, which will be instantiated
+//   - static math symbols, such as f(x) =
+//   - valid expression, such as a*x - b, which will be instantiated
+//
 // when rendering the question
 //
 // For instance, the formula "f(x) = a*(x + 2)"
 // is represented by two FormulaPart elements:
-// 	{ f(x) = } and { a*(x + 2) }
+//
+//	{ f(x) = } and { a*(x + 2) }
 type FormulaContent []FormulaPart
 
 // FormulaPart forms a logic chunk of a formula.
@@ -743,19 +745,88 @@ func (fg FunctionDefinition) instantiate(params expression.Vars) (expression.Fun
 }
 
 type FunctionArea struct {
-	// reference to function names, with empty meaning
+	// reference to function [Label]s, with empty meaning
 	// horizontal line
 	Bottom, Top Interpolated
 	Left, Right string // expression.Expression
 	Color       repere.Color
 }
 
+// FunctionPoint draws a point at a given
+// abscice for a given function
+type FunctionPoint struct {
+	Function Interpolated // reference to a function [Label]
+	X        string       // expression.Expression
+	Color    repere.Color
+	Legend   Interpolated // legend
+}
+
 // FunctionsGraphBlock draws a figure with functions
 // curves and colored areas
+// Function are identifier by their [Label]
 type FunctionsGraphBlock struct {
 	FunctionExprs      []FunctionDefinition
 	FunctionVariations []VariationTableBlock
 	Areas              []FunctionArea
+	Points             []FunctionPoint
+}
+
+func (fg FunctionsGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	out := functionsGraphValidator{
+		functions:          make([]function, len(fg.FunctionExprs)),
+		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
+		areas:              make([]areaVData, len(fg.Areas)),
+		points:             make([]functionPointVData, len(fg.Points)),
+	}
+	for i, f := range fg.FunctionExprs {
+		var err error
+		out.functions[i], err = newFunction(f, params)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, vt := range fg.FunctionVariations {
+		var err error
+		out.variationValidator[i], err = vt.setupValidatorVT()
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, area := range fg.Areas {
+		var err error
+		out.areas[i].top, err = area.Top.parse()
+		if err != nil {
+			return nil, err
+		}
+		out.areas[i].bottom, err = area.Bottom.parse()
+		if err != nil {
+			return nil, err
+		}
+		out.areas[i].domain.From, err = expression.Parse(area.Left)
+		if err != nil {
+			return nil, err
+		}
+		out.areas[i].domain.To, err = expression.Parse(area.Right)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, point := range fg.Points {
+		_, err := point.Legend.parse() // check the syntax for the legend
+		if err != nil {
+			return nil, err
+		}
+
+		out.points[i].fnLabel, err = point.Function.parse()
+		if err != nil {
+			return nil, err
+		}
+		out.points[i].x, err = expression.Parse(point.X)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
 }
 
 func extractValues(vt VariationTableInstance) (xs, fxs []float64) {
@@ -844,7 +915,7 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 			return nil, err
 		}
 
-		// select the curve containing [left, right] (protected by the validation)
+		// select the curve containing [left, right] (guarded by the validation)
 		topCandidates := byNames[topLabel]
 		if topLabel == "" { // use the abscisse axis
 			topCandidates = []domainCurves{{curves: functiongrapher.HorizontalAxis(left, right, 0), domain: [2]float64{left, right}}}
@@ -869,61 +940,43 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 		})
 	}
 
+	// instantiate points
+	for _, point := range fg.Points {
+		legend, err := point.Legend.instantiateAndMerge(params)
+		if err != nil {
+			return nil, err
+		}
+
+		x, err := evaluateExpr(point.X, params)
+		if err != nil {
+			return nil, err
+		}
+		// select the curve containing x (guarded by the validation)
+		fnLabel, err := point.Function.instantiateAndMerge(params)
+		if err != nil {
+			return nil, err
+		}
+		candidates := byNames[fnLabel]
+		domain, err := selectByDomain(candidates, x, x)
+		if err != nil {
+			return nil, err
+		}
+		y, err := functiongrapher.OrdinateAt(domain.curves, x)
+		if err != nil {
+			return nil, err
+		}
+		out.Points = append(out.Points, client.FunctionPoint{
+			Color:  point.Color,
+			Legend: legend,
+			Coord: repere.Coord{
+				X: x,
+				Y: y,
+			},
+		})
+	}
+
 	return out, nil
 }
-
-func (fg FunctionsGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	out := functionsGraphValidator{
-		functions:          make([]function, len(fg.FunctionExprs)),
-		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
-		areas:              make([]areaValidator, len(fg.Areas)),
-	}
-	for i, f := range fg.FunctionExprs {
-		var err error
-		out.functions[i], err = newFunction(f, params)
-		if err != nil {
-			return nil, err
-		}
-	}
-	for i, vt := range fg.FunctionVariations {
-		var err error
-		out.variationValidator[i], err = vt.setupValidatorVT()
-		if err != nil {
-			return nil, err
-		}
-	}
-	for i, area := range fg.Areas {
-		var err error
-		out.areas[i].top, err = area.Top.parse()
-		if err != nil {
-			return nil, err
-		}
-		out.areas[i].bottom, err = area.Bottom.parse()
-		if err != nil {
-			return nil, err
-		}
-		out.areas[i].domain.From, err = expression.Parse(area.Left)
-		if err != nil {
-			return nil, err
-		}
-		out.areas[i].domain.To, err = expression.Parse(area.Right)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return out, nil
-}
-
-// type FunctionVariationGraphBlock VariationTableBlock
-
-// func (f FunctionVariationGraphBlock) instantiate(params expression.Vars, _ int) (instance, error) {
-// 	out, err := VariationTableBlock(f).instantiateVT(params)
-// 	return FunctionVariationGraphInstance(out), err
-// }
-
-// func (f FunctionVariationGraphBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-// 	return VariationTableBlock(f).setupValidator(params)
-// }
 
 type TableBlock struct {
 	HorizontalHeaders []TextPart
