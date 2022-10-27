@@ -345,14 +345,14 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 		}
 		domainsTop := byNames[top]
 		if top == "" {
-			domainsTop = []expression.Domain{{}} // no constraints
+			domainsTop = []expression.Domain{{}} // use the abscisse axis, which has no constraints
 		}
 		if len(domainsTop) == 0 {
 			return fmt.Errorf("La fonction %s n'est pas définie.", top)
 		}
 		domainsBottom := byNames[bottom]
 		if bottom == "" {
-			domainsBottom = []expression.Domain{{}} // no constraints
+			domainsBottom = []expression.Domain{{}} // use the abscisse axis, which has no constraints
 		}
 		if len(domainsBottom) == 0 {
 			return fmt.Errorf("La fonction %s n'est pas définie.", bottom)
@@ -375,6 +375,9 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 			return err
 		}
 		domains := byNames[fnLabel]
+		if fnLabel == "" { // use the abscisse axis, which has no constraints
+			domains = []expression.Domain{{}}
+		}
 		if len(domains) == 0 {
 			return fmt.Errorf("La fonction %s n'est pas définie.", fnLabel)
 		}

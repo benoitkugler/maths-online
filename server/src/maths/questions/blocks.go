@@ -846,6 +846,10 @@ type domainCurves struct {
 	domain [2]float64
 }
 
+func horizontalAxis(left, right float64) domainCurves {
+	return domainCurves{curves: functiongrapher.HorizontalAxis(left, right, 0), domain: [2]float64{left, right}}
+}
+
 func selectByDomain(candidates []domainCurves, left, right float64) (domainCurves, error) {
 	for _, c := range candidates {
 		if c.domain[0] <= left && right <= c.domain[1] {
@@ -918,7 +922,7 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 		// select the curve containing [left, right] (guarded by the validation)
 		topCandidates := byNames[topLabel]
 		if topLabel == "" { // use the abscisse axis
-			topCandidates = []domainCurves{{curves: functiongrapher.HorizontalAxis(left, right, 0), domain: [2]float64{left, right}}}
+			topCandidates = []domainCurves{horizontalAxis(left, right)}
 		}
 		top, err := selectByDomain(topCandidates, left, right)
 		if err != nil {
@@ -926,7 +930,7 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 		}
 		bottomCandidates := byNames[bottomLabel]
 		if bottomLabel == "" { // use the abscisse axis
-			bottomCandidates = []domainCurves{{curves: functiongrapher.HorizontalAxis(left, right, 0), domain: [2]float64{left, right}}}
+			bottomCandidates = []domainCurves{horizontalAxis(left, right)}
 		}
 		bottom, err := selectByDomain(bottomCandidates, left, right)
 		if err != nil {
@@ -957,6 +961,10 @@ func (fg FunctionsGraphBlock) instantiate(params expression.Vars, _ int) (instan
 			return nil, err
 		}
 		candidates := byNames[fnLabel]
+		if fnLabel == "" { // use the abscisse axis
+			candidates = []domainCurves{horizontalAxis(x, x)}
+		}
+
 		domain, err := selectByDomain(candidates, x, x)
 		if err != nil {
 			return nil, err
