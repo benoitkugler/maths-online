@@ -534,9 +534,7 @@ class _ListRows extends StatelessWidget {
 }
 
 /// [QuestionW] is the widget used to display a question
-/// The interactivity is handled internally; with the
-/// hook [onDone] provided as external API,
-/// as well as the [feedback] parameter
+/// The interactivity is handled by the [controller] field.
 class QuestionW extends StatefulWidget {
   final BaseQuestionController controller;
 
