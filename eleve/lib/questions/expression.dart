@@ -10,9 +10,14 @@ class ExpressionController extends FieldController {
 
   bool _isDirty = false;
 
-  ExpressionController(this.api, void Function() onEditDone)
+  ExpressionController(this.api, void Function() onEditDone,
+      {bool showFractionHelp = true})
       : textController = TextEditingController(),
         super(onEditDone) {
+    if (showFractionHelp) {
+      textController.text = "(  ) / (  )";
+      textController.selection = const TextSelection.collapsed(offset: 2);
+    }
     textController.addListener(() {
       _isDirty = true;
     });
@@ -108,6 +113,18 @@ class ExpressionField extends StatefulWidget {
 }
 
 class _ExpressionFieldState extends State<ExpressionField> {
+  void _showSyntaxError(String reason) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: Colors.red,
+      content: Text.rich(TextSpan(children: [
+        const TextSpan(text: "Syntaxe invalide: "),
+        TextSpan(
+            text: reason, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ])),
+    ));
+  }
+
   void _submit() async {
     if (widget._controller.getExpression().isEmpty) {
       // return early
@@ -120,15 +137,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
     });
 
     if (!rep.isValid) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Colors.red,
-        content: Text.rich(TextSpan(children: [
-          const TextSpan(text: "Syntaxe invalide: "),
-          TextSpan(
-              text: rep.reason,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-        ])),
-      ));
+      _showSyntaxError(rep.reason);
     }
 
     widget._controller.submit();

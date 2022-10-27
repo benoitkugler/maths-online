@@ -102,7 +102,8 @@ Map<int, FieldController> _createFieldControllers(
     if (block is NumberFieldBlock) {
       fields[block.iD] = NumberController(onChange);
     } else if (block is ExpressionFieldBlock) {
-      fields[block.iD] = ExpressionController(api, onChange);
+      fields[block.iD] = ExpressionController(api, onChange,
+          showFractionHelp: block.showFractionHelp);
     } else if (block is RadioFieldBlock) {
       fields[block.iD] = RadioController(onChange, block.proposals);
     } else if (block is DropDownFieldBlock) {
