@@ -109,7 +109,11 @@ type ExpressionFieldInstance struct {
 
 	Answer          *expression.Expr
 	ComparisonLevel ComparisonLevel
-	ID              int
+
+	// If true an hint for fraction is displayed
+	ShowFractionHelp bool
+
+	ID int
 }
 
 func (f ExpressionFieldInstance) fieldID() int { return f.ID }

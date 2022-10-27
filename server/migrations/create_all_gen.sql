@@ -770,12 +770,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel'))
+            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel', 'ShowFractionHelp'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Expression')
         AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_ques_ComparisonLevel (data -> 'ComparisonLevel');
+        AND gomacro_validate_json_ques_ComparisonLevel (data -> 'ComparisonLevel')
+        AND gomacro_validate_json_boolean (data -> 'ShowFractionHelp');
     RETURN is_valid;
 END;
 $$

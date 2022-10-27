@@ -454,3 +454,21 @@ func Test_rat_reduce(t *testing.T) {
 		}
 	}
 }
+
+func TestExpr_IsFraction(t *testing.T) {
+	tests := []struct {
+		expr string
+		want bool
+	}{
+		{"1", false},
+		{"(2x+1)/3", true},
+		{"(2x+1)/(4x+1)", true},
+		{"2x / 8", false},
+	}
+	for _, tt := range tests {
+		expr := mustParse(t, tt.expr)
+		if got := expr.IsFraction(); got != tt.want {
+			t.Errorf("Expr.IsFraction() = %v, want %v", got, tt.want)
+		}
+	}
+}

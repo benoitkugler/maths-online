@@ -364,9 +364,10 @@ func randque_Enonce() questions.Enonce {
 
 func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
 	return questions.ExpressionFieldBlock{
-		Expression:      randstring(),
-		Label:           randque_Interpolated(),
-		ComparisonLevel: randque_ComparisonLevel(),
+		Expression:       randstring(),
+		Label:            randque_Interpolated(),
+		ComparisonLevel:  randque_ComparisonLevel(),
+		ShowFractionHelp: randbool(),
 	}
 }
 

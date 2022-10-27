@@ -128,9 +128,14 @@ type NumberFieldBlock struct {
 type ExpressionFieldBlock struct {
 	Label  string // as LaTeX, optional
 	Suffix string // as LeTeX, optional
+
 	// Typical values range from 1 to 30
 	SizeHint SizeHint
-	ID       int
+
+	// If true, the field is diplayed with two subfields
+	ShowFractionHelp bool
+
+	ID int
 }
 
 // TextLine is the general form of a static chunk of text,

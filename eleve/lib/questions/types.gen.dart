@@ -454,13 +454,15 @@ class ExpressionFieldBlock implements Block {
   final String label;
   final String suffix;
   final int sizeHint;
+  final bool showFractionHelp;
   final int iD;
 
-  const ExpressionFieldBlock(this.label, this.suffix, this.sizeHint, this.iD);
+  const ExpressionFieldBlock(
+      this.label, this.suffix, this.sizeHint, this.showFractionHelp, this.iD);
 
   @override
   String toString() {
-    return "ExpressionFieldBlock($label, $suffix, $sizeHint, $iD)";
+    return "ExpressionFieldBlock($label, $suffix, $sizeHint, $showFractionHelp, $iD)";
   }
 }
 
@@ -470,6 +472,7 @@ ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
       stringFromJson(json['Label']),
       stringFromJson(json['Suffix']),
       intFromJson(json['SizeHint']),
+      boolFromJson(json['ShowFractionHelp']),
       intFromJson(json['ID']));
 }
 
@@ -478,6 +481,7 @@ JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
     "Label": stringToJson(item.label),
     "Suffix": stringToJson(item.suffix),
     "SizeHint": intToJson(item.sizeHint),
+    "ShowFractionHelp": boolToJson(item.showFractionHelp),
     "ID": intToJson(item.iD)
   };
 }

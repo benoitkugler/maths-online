@@ -12,7 +12,13 @@ import (
 // for usual maths symbols.
 func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
-func (expr *Expr) simplifyForPrint() {
+// DefaultSimplify performs a serie of basic simplifications,
+// removing zero values and -(-...).
+// It is used before printing an expression, and should also be used
+// after substitutions.
+// Note that it applies a subset of the simplifications defined by
+// the [SimpleSimplifications] flag.
+func (expr *Expr) DefaultSimplify() {
 	for nbPasses := 0; nbPasses < 2; nbPasses++ {
 		expr.normalizeNegativeNumbers()
 		expr.extractNegativeInMults()
@@ -29,7 +35,7 @@ func (expr *Expr) AsLaTeX() string {
 	}
 
 	expr = expr.Copy()
-	expr.simplifyForPrint()
+	expr.DefaultSimplify()
 
 	return expr.atom.asLaTeX(expr.left, expr.right)
 }
@@ -41,7 +47,7 @@ func (expr *Expr) AsLaTeX() string {
 // See `AsLaTeX` for a better display format.
 func (expr *Expr) String() string {
 	expr = expr.Copy()
-	expr.simplifyForPrint()
+	expr.DefaultSimplify()
 	return expr.Serialize()
 }
 

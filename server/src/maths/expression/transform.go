@@ -494,7 +494,7 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 
 		expr.expandMinus()
 		expr.sortPlusAndMultOperands()
-		expr.simplifyForPrint()
+		expr.DefaultSimplify()
 		expr.extractNegativeInMults()
 
 		if expr.equals(ref) {

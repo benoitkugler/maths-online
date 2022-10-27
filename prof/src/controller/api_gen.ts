@@ -274,6 +274,7 @@ export interface ExpressionFieldBlock {
   Expression: string;
   Label: Interpolated;
   ComparisonLevel: ComparisonLevel;
+  ShowFractionHelp: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {
