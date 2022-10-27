@@ -412,7 +412,8 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Label: "",
           Expression: "x^2 + 2x + 1",
-          ComparisonLevel: ComparisonLevel.SimpleSubstitutions
+          ComparisonLevel: ComparisonLevel.SimpleSubstitutions,
+          ShowFractionHelp: false
         }
       };
       return out;

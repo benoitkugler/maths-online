@@ -1,14 +1,14 @@
 <template>
-  <v-row>
-    <v-col cols="6" align-self="center">
+  <v-row class="pb-1 mb-1">
+    <v-col cols="5" align-self="center">
       <interpolated-text
         v-model="props.modelValue.Label"
-        label="Préfixe"
-        hint="Ajouté devant le champ de réponse. Optionnel"
+        label="Préfixe (optionnel)"
+        hint="Ajouté devant le champ de réponse."
       >
       </interpolated-text>
     </v-col>
-    <v-col cols="6" align-self="center">
+    <v-col cols="7" align-self="center">
       <v-text-field
         class="mt-5"
         variant="outlined"
@@ -33,6 +33,15 @@
         @update:model-value="emitUpdate()"
       >
       </v-select>
+    </v-col>
+    <v-col cols="12">
+      <v-checkbox
+        density="compact"
+        label="Afficher une aide pour les fractions"
+        v-model="props.modelValue.ShowFractionHelp"
+        @update:model-value="emitUpdate()"
+        messages="Si la réponse est une fraction, une aide sur la syntaxe est affichée dans le champ de réponse."
+      ></v-checkbox>
     </v-col>
   </v-row>
 </template>

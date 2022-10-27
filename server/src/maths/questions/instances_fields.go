@@ -120,9 +120,10 @@ func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
 func (f ExpressionFieldInstance) toClient() client.Block {
 	out := client.ExpressionFieldBlock{
-		ID:       f.ID,
-		Label:    f.LabelLaTeX,
-		SizeHint: len([]rune(f.Answer.String())),
+		ID:               f.ID,
+		Label:            f.LabelLaTeX,
+		SizeHint:         len([]rune(f.Answer.String())),
+		ShowFractionHelp: f.ShowFractionHelp,
 	}
 	if f.ComparisonLevel == AsLinearEquation {
 		out.Suffix = " = 0"
