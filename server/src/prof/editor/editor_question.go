@@ -532,6 +532,15 @@ func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, boo
 	}, true
 }
 
+func isQueryVariant(query string) (int64, bool) {
+	if strings.HasPrefix(query, "variante:") {
+		idS := strings.TrimPrefix(query, "variante:")
+		id, err := strconv.ParseInt(idS, 10, 64)
+		return id, err == nil
+	}
+	return 0, false
+}
+
 type itemGroupQuery interface {
 	match(id int64, title string) bool
 }
@@ -575,27 +584,43 @@ func normalizeTitle(title string) string {
 func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
 	const pagination = 30 // number of groups
 
-	groups, err := ed.SelectAllQuestiongroups(ct.db)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	groups.RestrictVisible(userID)
-
 	query.normalize()
 
-	// restrict the groups to matching title and origin
-	matcher, err := newQuery(query.TitleQuery)
-	if err != nil {
-		return out, err
-	}
-	for _, group := range groups {
-		vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+	var groups ed.Questiongroups
+	if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
+		qu, err := ed.SelectQuestion(ct.db, ed.IdQuestion(idVariant))
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		if !qu.IdGroup.Valid {
+			return out, accessForbidden
+		}
+		groups, err = ed.SelectQuestiongroups(ct.db, qu.IdGroup.ID)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+	} else {
+		groups, err = ed.SelectAllQuestiongroups(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		matcher, err := newQuery(query.TitleQuery)
+		if err != nil {
+			return out, err
+		}
 
-		keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
-		if !keep {
-			delete(groups, group.Id)
+		// restrict the groups to matching title and origin
+		for _, group := range groups {
+			vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+			keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+			if !keep {
+				delete(groups, group.Id)
+			}
 		}
 	}
+
+	groups.RestrictVisible(userID)
 
 	// load the tags ...
 	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, groups.IDs()...)
