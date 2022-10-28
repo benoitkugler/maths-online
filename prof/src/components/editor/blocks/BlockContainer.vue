@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showDocumentation">
+  <v-dialog v-model="showDocumentation" max-width="1000px">
     <latex-commands @close="showDocumentation = false"></latex-commands>
   </v-dialog>
 
