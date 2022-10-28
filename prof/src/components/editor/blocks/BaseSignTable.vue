@@ -1,6 +1,7 @@
 <template>
   <small class="text-grey mt-1">
-    Utiliser &2a - 4& pour insérer une expression dans la ligne x.
+    Les cases de la ligne <b>x</b> sont des expressions. Utiliser inf (ou -inf)
+    pour l'infini.
   </small>
   <v-row>
     <v-col md="10" align-self="center">
@@ -27,11 +28,13 @@
           <template v-for="(x, index) in props.modelValue.Xs" :key="index">
             <td v-if="index"></td>
             <td style="text-align: center">
-              <interpolated-text
+              <expression-field
                 :model-value="x"
                 @update:model-value="s => props.modelValue.Xs![index] = s"
+                center
+                width="50px"
               >
-              </interpolated-text>
+              </expression-field>
             </td>
           </template>
         </tr>
@@ -90,7 +93,7 @@
 <script setup lang="ts">
 import type { SignTableBlock } from "@/controller/api_gen";
 import { SignSymbol } from "@/controller/api_gen";
-import InterpolatedText from "../utils/InterpolatedText.vue";
+import ExpressionField from "../utils/ExpressionField.vue";
 import SignSymbolField from "./SignSymbolField.vue";
 
 interface Props {
