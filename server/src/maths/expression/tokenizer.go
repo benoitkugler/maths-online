@@ -381,6 +381,12 @@ func (tk *tokenizer) tryReadConstant() (constant, bool) {
 	case piRune:
 		tk.pos++
 		return piConstant, true
+	case 'p': // also accepts pi for π
+		if tk.pos+1 < len(tk.src) && tk.src[tk.pos+1] == 'i' {
+			tk.pos += 2
+			return piConstant, true
+		}
+		return 0, false
 	default:
 		_ = exhaustiveConstantSwitch
 		return 0, false
