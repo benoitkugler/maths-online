@@ -34,7 +34,7 @@
         </v-col>
       </v-row>
 
-      <div style="height: 47vh; width: 800px" class="overflow-y-auto">
+      <div style="height: 47vh" class="overflow-y-auto">
         <v-expansion-panels class="pa-2">
           <v-expansion-panel v-for="(group, index) in questions" :key="index">
             <v-expansion-panel-title>

@@ -108,45 +108,6 @@
                 >
                   <v-icon color="red" icon="mdi-close"></v-icon>
                 </v-btn>
-
-                <v-menu
-                  v-if="!task.IdWork.IsExercice"
-                  offset-y
-                  :close-on-content-click="false"
-                  :model-value="monoquestionToEditIndex == index"
-                  @update:model-value="
-                    monoquestionToEdit = null;
-                    monoquestionToEditIndex = null;
-                  "
-                >
-                  <template v-slot:activator="{ isActive, props }">
-                    <v-btn
-                      v-on="{ isActive }"
-                      v-bind="props"
-                      @click="
-                        monoquestionToEditIndex = index;
-                        monoquestionToEdit = monoquestionFromTask(task);
-                      "
-                      icon
-                      size="small"
-                      variant="flat"
-                      title="Modifier les paramètres de la question"
-                    >
-                      <v-icon icon="mdi-pencil"></v-icon>
-                    </v-btn>
-                  </template>
-                  <monoquestion-details
-                    v-if="monoquestionToEdit != null"
-                    :monoquestion="monoquestionToEdit!"
-                    @update="
-                      (qu) => {
-                        monoquestionToEdit = null;
-                        monoquestionToEditIndex = null;
-                        emit('updateMonoquestion', qu);
-                      }
-                    "
-                  ></monoquestion-details>
-                </v-menu>
               </v-col>
               <v-col align-self="center">
                 <v-tooltip>
@@ -172,7 +133,42 @@
                 style="text-align: right"
                 class="pl-2"
               >
-                / {{ taskBareme(task) }}
+                <v-menu
+                  v-if="!task.IdWork.IsExercice"
+                  offset-y
+                  :close-on-content-click="false"
+                  :model-value="monoquestionToEditIndex == index"
+                  @update:model-value="
+                    monoquestionToEdit = null;
+                    monoquestionToEditIndex = null;
+                  "
+                >
+                  <template v-slot:activator="{ isActive, props }">
+                    <v-chip
+                      elevation="2"
+                      v-on="{ isActive }"
+                      v-bind="props"
+                      @click="
+                        monoquestionToEditIndex = index;
+                        monoquestionToEdit = monoquestionFromTask(task);
+                      "
+                    >
+                      / {{ taskBareme(task) }}
+                    </v-chip>
+                  </template>
+                  <monoquestion-details
+                    v-if="monoquestionToEdit != null"
+                    :monoquestion="monoquestionToEdit!"
+                    @update="
+                      (qu) => {
+                        monoquestionToEdit = null;
+                        monoquestionToEditIndex = null;
+                        emit('updateMonoquestion', qu);
+                      }
+                    "
+                  ></monoquestion-details>
+                </v-menu>
+                <v-chip v-else> / {{ taskBareme(task) }} </v-chip>
               </v-col>
             </v-row>
           </v-list-item>
