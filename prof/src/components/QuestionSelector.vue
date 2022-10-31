@@ -79,7 +79,11 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import type { QuestiongroupExt, QuestionHeader } from "../controller/api_gen";
+import {
+  OriginKind,
+  type QuestiongroupExt,
+  type QuestionHeader,
+} from "../controller/api_gen";
 import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
 
@@ -130,6 +134,7 @@ async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: props.query.search,
     Tags: props.query.tags,
+    Origin: OriginKind.All,
   });
   if (result == undefined) return;
   questions = result.Groups || [];

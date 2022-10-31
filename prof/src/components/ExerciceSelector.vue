@@ -34,7 +34,7 @@
         </v-col>
       </v-row>
 
-      <div style="height: 47vh; width: 800px" class="overflow-y-auto">
+      <div style="height: 47vh" class="overflow-y-auto">
         <v-expansion-panels class="pa-2">
           <v-expansion-panel v-for="(group, index) in exercices" :key="index">
             <v-expansion-panel-title>
@@ -79,7 +79,11 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import type { ExercicegroupExt, ExerciceHeader } from "../controller/api_gen";
+import {
+  OriginKind,
+  type ExercicegroupExt,
+  type ExerciceHeader,
+} from "../controller/api_gen";
 import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
 
@@ -130,6 +134,7 @@ async function fetchExercices() {
   const result = await controller.EditorSearchExercices({
     TitleQuery: props.query.search,
     Tags: props.query.tags,
+    Origin: OriginKind.All,
   });
   if (result == undefined) return;
   exercices = result.Groups || [];

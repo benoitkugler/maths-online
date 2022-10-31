@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showExerciceSelector">
+  <v-dialog v-model="showExerciceSelector" max-width="1000">
     <exercice-selector
       :query="exerciceQuery"
       :tags="props.allTags"
@@ -9,7 +9,7 @@
     ></exercice-selector>
   </v-dialog>
 
-  <v-dialog v-model="showMonoquestionSelector">
+  <v-dialog v-model="showMonoquestionSelector" max-width="1000">
     <question-selector
       :query="questionQuery"
       :tags="props.allTags"
@@ -22,6 +22,7 @@
   <v-dialog
     :model-value="taskToRemove != null"
     @update:model-value="taskToRemove = null"
+    max-width="600px"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -213,10 +214,10 @@ import {
 import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
 import DropZone from "../DropZone.vue";
-import QuestionSelector from "../editor/exercices/QuestionSelector.vue";
 import type { ExerciceQuery } from "../ExerciceSelector.vue";
 import ExerciceSelector from "../ExerciceSelector.vue";
 import type { QuestionQuery } from "../QuestionSelector.vue";
+import QuestionSelector from "../QuestionSelector.vue";
 import MonoquestionDetails from "./MonoquestionDetails.vue";
 
 interface Props {

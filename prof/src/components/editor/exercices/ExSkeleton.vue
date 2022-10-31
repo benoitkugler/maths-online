@@ -12,7 +12,7 @@
     <keep-alive>
       <question-selector
         :tags="props.allTags"
-        :query="query"
+        :query="questionQuery"
         @closed="showImportQuestion = false"
         @selected="
           (q) => {
@@ -190,8 +190,10 @@ import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
+import QuestionSelector, {
+  type QuestionQuery,
+} from "../../QuestionSelector.vue";
 import DescriptionPannel from "../DescriptionPannel.vue";
-import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {
   sessionId: string;
@@ -207,7 +209,7 @@ const emit = defineEmits<{
   (e: "goToQuestion", questionIndex: number): void;
 }>();
 
-let query = $ref<Query>({ search: "", tags: [] });
+let questionQuery = $ref<QuestionQuery>({ search: "", tags: [] });
 let showImportQuestion = $ref(false);
 
 let showEditDescription = $ref(false);

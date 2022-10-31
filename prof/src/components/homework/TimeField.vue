@@ -1,18 +1,18 @@
 <template>
-  <v-input hide-details>
-    <v-row>
+  <div class="my-1">
+    <v-row no-gutters class="mb-1">
       <v-col>
-        <small class="text-grey-darken-3 ml-2">
-          {{ "Arrêt des notes" }}
+        <small class="text-grey-darken-1 ml-2">
+          {{ "Date de rendu" }}
         </small>
       </v-col>
     </v-row>
-    <v-row>
+    <v-row class="px-1">
       <DateFieldRaw
         :model-value="date"
         @update:model-value="updateDate"
       ></DateFieldRaw>
-      <v-col cols="4" align-self="center">
+      <v-col cols="6" md="3" align-self="center">
         <v-select
           variant="outlined"
           density="compact"
@@ -25,7 +25,7 @@
         </v-select>
       </v-col>
     </v-row>
-  </v-input>
+  </div>
 </template>
 
 <script setup lang="ts">
