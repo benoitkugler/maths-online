@@ -73,7 +73,7 @@ class ServerFieldAPI implements FieldAPI {
   }
 }
 
-Widget textMath(String content, TextStyle style, {Key? key}) {
+Math textMath(String content, TextStyle style, {Key? key}) {
   style = style.copyWith(fontSize: (style.fontSize ?? 12) - 1);
   // remove bold since it also changes the font, with indesirable visual effect
   style = style.copyWith(fontWeight: FontWeight.normal);
@@ -86,13 +86,16 @@ Widget textMath(String content, TextStyle style, {Key? key}) {
   );
 }
 
-WidgetSpan _inlineMath(
+// handle line breaking inside TextBlock by retuning a list of text chunk
+Iterable<WidgetSpan> _inlineMath(
     String content, TextStyle style, PlaceholderAlignment aligment, Key? key) {
-  return WidgetSpan(
-    baseline: TextBaseline.alphabetic,
-    alignment: aligment,
-    child: textMath(content, style, key: key),
-  );
+  final tex = textMath(content, style, key: key);
+  final breakResult = tex.texBreak();
+  return breakResult.parts.map((p) => WidgetSpan(
+        baseline: TextBaseline.alphabetic,
+        alignment: aligment,
+        child: p,
+      ));
 }
 
 class TextS {
@@ -119,7 +122,7 @@ List<InlineSpan> buildText(TextLine parts, TextS style, double fontSize,
   for (var part in parts) {
     if (part.isMath) {
       out.add(const TextSpan(text: " "));
-      out.add(_inlineMath(
+      out.addAll(_inlineMath(
           part.text,
           ts,
           baselineMiddle

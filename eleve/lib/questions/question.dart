@@ -225,10 +225,13 @@ class _FieldsBuilder {
     _flushCurrentRow();
 
     rows.add(Center(
-        child: Math.tex(
-      element.formula,
-      mathStyle: MathStyle.display,
-      textStyle: const TextStyle(fontSize: fontSize),
+        child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Math.tex(
+        element.formula,
+        mathStyle: MathStyle.display,
+        textStyle: const TextStyle(fontSize: fontSize),
+      ),
     )));
   }
 
