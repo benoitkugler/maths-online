@@ -11,6 +11,7 @@ import (
 )
 
 type ProgressionExt struct {
+	// Questions stores the progression for each question of the task.
 	Questions    []ta.QuestionHistory
 	NextQuestion int
 }
@@ -300,28 +301,31 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 	return out, nil
 }
 
-// EvaluateTaskExercice calls `EvaluateExercice` and registers
+// EvaluateTaskExercice calls `EvaluateExercice` and, if [registerProgression] is true, registers
 // the student progression, returning the updated mark.
 // If needed, a new progression item is created.
-func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn) (out EvaluateWorkOut, mark int, err error) {
+// If [registerProgression] is false, no progression is created.
+func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn, registerProgression bool) (out EvaluateWorkOut, mark int, err error) {
 	out, err = ex.Evaluate(db)
 	if err != nil {
 		return
 	}
 
-	// persists the progression on DB ...
-	prog, err := loadOrCreateProgressionFor(db, idTask, idStudent)
-	if err != nil {
-		return
+	if registerProgression {
+		// persists the progression on DB ...
+		prog, err := loadOrCreateProgressionFor(db, idTask, idStudent)
+		if err != nil {
+			return out, 0, err
+		}
+
+		// ... update the progression questions
+		err = updateProgression(db, prog, out.Progression.Questions)
+		if err != nil {
+			return out, 0, err
+		}
 	}
 
-	// ... update the progression questions
-	err = updateProgression(db, prog, out.Progression.Questions)
-	if err != nil {
-		return
-	}
-
-	// and compute the new mark
+	// in any case compute the (new) mark
 	task, err := ta.SelectTask(db, idTask)
 	if err != nil {
 		return out, mark, utils.SQLError(err)

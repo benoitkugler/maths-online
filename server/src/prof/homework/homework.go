@@ -5,6 +5,7 @@ package homework
 
 import (
 	"database/sql"
+	"fmt"
 	"sort"
 
 	ho "github.com/benoitkugler/maths-online/sql/homework"
@@ -141,4 +142,17 @@ func updateSheetTasksOrder(tx *sql.Tx, idSheet ho.IdSheet, l []tasks.IdTask) err
 	}
 
 	return nil
+}
+
+func sheetFromTask(db tasks.DB, idTask tasks.IdTask) (ho.Sheet, error) {
+	link, found, err := ho.SelectSheetTaskByIdTask(db, idTask)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
+	}
+
+	if !found {
+		return ho.Sheet{}, fmt.Errorf("internal error: task %d without sheet", idTask)
+	}
+
+	return ho.SelectSheet(db, link.IdSheet)
 }
