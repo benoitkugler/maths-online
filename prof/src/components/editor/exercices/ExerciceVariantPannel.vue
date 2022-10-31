@@ -19,6 +19,7 @@
       :exercice="exercice"
       :is-readonly="props.isReadonly"
       @update="notifieUpdate"
+      @back="questionIndex = -1"
     ></ExEditor>
   </div>
 </template>
@@ -31,6 +32,7 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { refreshExercicePreview } from "@/controller/editor";
+import { computed } from "@vue/reactivity";
 import { onMounted, watch } from "vue";
 import { $ref } from "vue/macros";
 import ExEditor from "./ExEditor.vue";
@@ -50,9 +52,9 @@ const emit = defineEmits<{
   (e: "update", ex: ExerciceHeader): void;
 }>();
 
-let questionIndex = $ref(0);
+let questionIndex = $ref(-1);
 
-let viewMode = $ref<"skeleton" | "question">("skeleton");
+const viewMode = computed(() => (questionIndex >= 0 ? "question" : "skeleton"));
 
 let exercice = $ref<ExerciceExt | null>(null);
 
@@ -68,7 +70,6 @@ watch(props, (_) => {
 
 function goToQuestion(index: number) {
   questionIndex = index;
-  viewMode = "question";
 }
 
 async function fetchExercice() {

@@ -1,6 +1,6 @@
 <template>
   <!-- description for the whole exercice, not a particular question -->
-  <v-dialog v-model="showEditDescription">
+  <v-dialog v-model="showEditDescription" max-width="600px">
     <description-pannel
       :description="props.exercice.Exercice.Description"
       :readonly="props.isReadonly"
@@ -117,7 +117,7 @@
                 size="small"
                 icon
                 @click.stop="removeQuestion(index)"
-                title="Retirer la question"
+                title="Supprimer la question"
               >
                 <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
               </v-btn>
