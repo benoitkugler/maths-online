@@ -188,6 +188,7 @@ class _SheetListState extends State<_SheetList> {
           child: Text("Aucun travail à la maison n'est planifié."));
     }
     final bestSheet = selectMainSheetID();
+    final now = DateTime.now();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2),
       child: ListView(
@@ -196,7 +197,11 @@ class _SheetListState extends State<_SheetList> {
                 onTap: () => onSelectSheet(e),
                 child: _SheetSummary(
                   e,
-                  emphasize: e.sheet.id == bestSheet,
+                  status: e.sheet.deadline.isBefore(now)
+                      ? SheetStatus.expired
+                      : (e.sheet.id == bestSheet
+                          ? SheetStatus.suggested
+                          : SheetStatus.normal),
                 )))
             .toList(),
       ),
@@ -204,10 +209,25 @@ class _SheetListState extends State<_SheetList> {
   }
 }
 
+enum SheetStatus { normal, suggested, expired }
+
+extension SheetStatusUI on SheetStatus {
+  Color? get color {
+    switch (this) {
+      case SheetStatus.normal:
+        return null;
+      case SheetStatus.suggested:
+        return Colors.blueAccent;
+      case SheetStatus.expired:
+        return Colors.orange.shade300;
+    }
+  }
+}
+
 class _SheetSummary extends StatelessWidget {
   final SheetProgression sheet;
-  final bool emphasize;
-  const _SheetSummary(this.sheet, {this.emphasize = false, Key? key})
+  final SheetStatus status;
+  const _SheetSummary(this.sheet, {this.status = SheetStatus.normal, Key? key})
       : super(key: key);
 
   @override
@@ -219,9 +239,9 @@ class _SheetSummary extends StatelessWidget {
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
         .length;
     return Card(
-      elevation: emphasize ? 3 : null,
-      shadowColor: emphasize ? Colors.blueAccent : null,
-      color: emphasize ? Colors.blueAccent.withOpacity(0.3) : null,
+      elevation: status == SheetStatus.suggested ? 3 : null,
+      shadowColor: status.color,
+      color: status.color?.withOpacity(0.3),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(

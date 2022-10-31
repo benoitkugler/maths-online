@@ -95,8 +95,17 @@ class _API extends _FieldAPI implements HomeworkAPI {
     await Future<void>.delayed(const Duration(seconds: 1));
     return [
       SheetProgression(
-          Sheet(1, 1, "Feuille de test", Notation.successNotation, true,
+          Sheet(1, 1, "Feuille en cours", Notation.successNotation, true,
               DateTime.now().add(const Duration(days: 3))),
+          [
+            const TaskProgressionHeader(
+                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+            const TaskProgressionHeader(
+                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+          ]),
+      SheetProgression(
+          Sheet(2, 1, "Feuille périmée", Notation.successNotation, true,
+              DateTime.now().subtract(const Duration(days: 3))),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
