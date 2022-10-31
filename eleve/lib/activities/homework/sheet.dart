@@ -143,8 +143,18 @@ class _SheetWState extends State<SheetW> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
-                    Text("pour le ${formatTime(widget.sheet.sheet.deadline)}",
-                        style: const TextStyle(fontSize: 18)),
+                    RichText(
+                        text: TextSpan(
+                            style: const TextStyle(fontSize: 16),
+                            children: [
+                          const TextSpan(text: "A rendre avant le\n"),
+                          TextSpan(
+                              text: formatTime(widget.sheet.sheet.deadline),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                        ]))
+                    // Text("pour le ${formatTime(widget.sheet.sheet.deadline)}",
+                    //     style: const TextStyle(fontSize: 18)),
                   ],
                 ),
               ),

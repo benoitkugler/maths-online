@@ -66,18 +66,19 @@ class ServerHomeworkAPI implements HomeworkAPI {
   }
 }
 
-/// Homework is the entry point for the homework
-/// activity
-class Homework extends StatefulWidget {
+/// [HomeworkW] is the entry point widget for the homework
+/// activity.
+class HomeworkW extends StatefulWidget {
   final HomeworkAPI api;
 
-  const Homework(this.api, {Key? key}) : super(key: key);
+  /// Creates a new [HomeworkW] widget
+  const HomeworkW(this.api, {Key? key}) : super(key: key);
 
   @override
-  State<Homework> createState() => _HomeworkState();
+  State<HomeworkW> createState() => _HomeworkWState();
 }
 
-class _HomeworkState extends State<Homework> {
+class _HomeworkWState extends State<HomeworkW> {
   late Future<Sheets> sheets;
 
   @override
@@ -88,7 +89,7 @@ class _HomeworkState extends State<Homework> {
   }
 
   @override
-  void didUpdateWidget(covariant Homework oldWidget) {
+  void didUpdateWidget(covariant HomeworkW oldWidget) {
     sheets = widget.api.loadSheets();
     super.didUpdateWidget(oldWidget);
   }
@@ -237,7 +238,13 @@ class _SheetSummary extends StatelessWidget {
                 children: [
                   Text(hasNotation ? "Travail noté" : "Travail non noté"),
                   if (hasNotation)
-                    Text("Pour le ${formatTime(sheet.sheet.deadline)}")
+                    RichText(
+                        text: TextSpan(children: [
+                      const TextSpan(text: "A rendre avant le\n"),
+                      TextSpan(
+                          text: formatTime(sheet.sheet.deadline),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ]))
                 ],
               ),
             ),
