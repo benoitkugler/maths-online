@@ -176,25 +176,31 @@ class _AppBodyState extends State<_AppBody> {
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                "Bienvenue dans Isyro",
+                "Bienvenue sur Isyro !",
                 style: TextStyle(fontSize: 25),
               ),
             ),
-            const Text(
-              "Activités disponibles",
-              style: TextStyle(fontSize: 20),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.spaceEvenly,
-                children: [
-                  TrivialActivityIcon(_launchTrivialPoursuit),
-                  HomeworkActivityIcon(_launchHomework),
-                ],
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Activités disponibles",
+                  style: TextStyle(fontSize: 20),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.spaceEvenly,
+                    children: [
+                      TrivialActivityIcon(_launchTrivialPoursuit),
+                      HomeworkActivityIcon(_launchHomework),
+                    ],
+                  ),
+                )
+              ],
             )
           ],
         ),
