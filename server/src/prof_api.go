@@ -91,4 +91,5 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.PUT("/api/prof/homework/sheet/monoquestion", home.HomeworkAddMonoquestion)
 	gr.POST("/api/prof/homework/sheet/monoquestion", home.HomeworkUpdateMonoquestion)
 	gr.POST("/api/prof/homework/sheet", home.HomeworkReorderSheetTasks)
+	gr.POST("/api/prof/homework/marks", home.HomeworkGetMarks)
 }

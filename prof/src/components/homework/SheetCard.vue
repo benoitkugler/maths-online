@@ -71,10 +71,12 @@
 import type { Classroom, SheetExt } from "@/controller/api_gen";
 import { formatTime } from "@/controller/utils";
 import { computed } from "vue";
+import { SheetStatus } from "./utils";
 
 interface Props {
   sheet: SheetExt;
   classrooms: Classroom[];
+  status: SheetStatus;
 }
 
 const props = defineProps<Props>();
@@ -85,9 +87,18 @@ const emit = defineEmits<{
   (e: "copy", target: number): void;
 }>();
 
-const color = computed(() =>
-  props.sheet.Sheet.Activated ? "blue-lighten-4" : "grey-lighten-4"
-);
+const color = computed(() => {
+  switch (props.status) {
+    case SheetStatus.normal:
+      return props.sheet.Sheet.Activated ? "blue-lighten-4" : "grey-lighten-4";
+    case SheetStatus.notSelected:
+      return "grey-lighten-3";
+    case SheetStatus.selected:
+      return "blue";
+    default:
+      return "";
+  }
+});
 
 const deadline = computed(() => formatTime(props.sheet.Sheet.Deadline));
 </script>

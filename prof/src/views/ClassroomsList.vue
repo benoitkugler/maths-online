@@ -18,6 +18,7 @@
   <v-dialog
     :model-value="classroomToDelete != null"
     @update:model-value="classroomToDelete = null"
+    max-width="600px"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -39,6 +40,7 @@
   <v-dialog
     :model-value="classroomToUpdate != null"
     @update:model-value="classroomToUpdate = null"
+    max-width="600px"
   >
     <v-card title="Modifier la classe" v-if="classroomToUpdate != null">
       <v-card-text class="my-2">
@@ -51,7 +53,7 @@
         ></v-text-field>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="classroomToDelete = null">Retour</v-btn>
+        <v-btn @click="classroomToUpdate = null">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="green" @click="updateClassroom" variant="outlined">
           Enregistrer

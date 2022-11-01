@@ -1,6 +1,7 @@
 package homework
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -15,10 +16,11 @@ import (
 )
 
 type sample struct {
-	userID     uID
-	class      teacher.Classroom
-	exe1, exe2 editor.Exercice
-	question   editor.Question
+	userID   uID
+	class    teacher.Classroom
+	exe1     editor.Exercice // with one question, / 2
+	exe2     editor.Exercice
+	question editor.Question // used as mono question
 }
 
 func setupDB(t *testing.T) (db tu.TestDB, out sample) {
@@ -230,4 +232,89 @@ func TestEvaluateTask(t *testing.T) {
 	if len(taHeader.Progression.Questions[0]) != 1 {
 		t.Fatal()
 	}
+}
+
+func createProgressionWith(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, questions []ta.QuestionHistory) error {
+	prog, err := ta.Progression{IdStudent: idStudent, IdTask: idTask}.Insert(db)
+	if err != nil {
+		return err
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	links := make(ta.ProgressionQuestions, len(questions))
+	for i, qu := range questions {
+		links[i] = ta.ProgressionQuestion{IdProgression: prog.Id, Index: i, History: qu}
+	}
+	err = ta.InsertManyProgressionQuestions(tx, links...)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	return err
+}
+
+func TestGetMarks(t *testing.T) {
+	db, sp := setupDB(t)
+	defer db.Remove()
+	class := sp.class
+	studentKey := pass.Encrypter{}
+	ct := NewController(db.DB, teacher.Teacher{Id: sp.userID}, studentKey)
+
+	// setup the sheet and exercices
+	sh, err := ct.createSheet(class.Id, sp.userID)
+	tu.Assert(t, err == nil)
+	sh.Activated = true
+	sh.Deadline = ho.Time(time.Now().Add(time.Hour))
+	err = ct.updateSheet(sh, sp.userID)
+	tu.Assert(t, err == nil)
+	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
+	tu.Assert(t, err == nil)
+	task2, err := ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: sp.question.Id}, sp.userID)
+	tu.Assert(t, err == nil)
+
+	out, err := ct.getMarks(HowemorkMarksIn{
+		IdClassroom: class.Id,
+		IdSheets:    []ho.IdSheet{sh.Id},
+	}, sp.userID)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, len(out.Students) == 0)
+
+	// add students and progressions
+	student1, err := teacher.Student{IdClassroom: sp.class.Id}.Insert(ct.db)
+	tu.Assert(t, err == nil)
+	student2, err := teacher.Student{IdClassroom: sp.class.Id}.Insert(ct.db)
+	tu.Assert(t, err == nil)
+
+	// task1 has one question
+	err = createProgressionWith(ct.db, task1.Id, student1.Id, []ta.QuestionHistory{
+		{false, false, true},
+	})
+	// do not create progression for student 2
+
+	// task2 has 3 questions
+	err = createProgressionWith(ct.db, task2.Id, student1.Id, []ta.QuestionHistory{
+		{false, false, true},
+		{true},
+		{},
+	})
+	err = createProgressionWith(ct.db, task2.Id, student2.Id, []ta.QuestionHistory{
+		{false, false, false},
+		{false, false, true},
+		{false, true, false},
+	})
+
+	out, err = ct.getMarks(HowemorkMarksIn{
+		IdClassroom: class.Id,
+		IdSheets:    []ho.IdSheet{sh.Id},
+	}, sp.userID)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, len(out.Students) == 2)
+	// student1 : 4/5 => 16/20
+	// student2 : 2/5 => 8 /20
+	ma := out.Marks[sh.Id]
+	tu.Assert(t, ma[student1.Id] == 16)
+	tu.Assert(t, ma[student2.Id] == 8)
 }

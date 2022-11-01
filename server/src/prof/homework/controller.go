@@ -60,7 +60,7 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 		return nil, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(ct.db, sheetsDict.IDs())
+	loader, err := newSheetsLoader(ct.db, sheetsDict.IDs())
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -214,6 +214,7 @@ func (ct *Controller) addExerciceTo(args AddExerciceToTaskIn, userID uID) (TaskE
 	return ct.addTaskTo(args.IdSheet, task, userID)
 }
 
+// used defaut value of  Bareme: 1, NbRepeat: 3
 func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID) (TaskExt, error) {
 	// create the monoquestion, checking that the question has a group
 	question, err := ed.SelectQuestion(ct.db, args.IdQuestion)
@@ -619,7 +620,7 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(tx, []ho.IdSheet{newSheet.Id})
+	loader, err := newSheetsLoader(tx, []ho.IdSheet{newSheet.Id})
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, utils.SQLError(err)
@@ -631,6 +632,101 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	}
 
 	out := loader.newSheetExt(newSheet)
+
+	return out, nil
+}
+
+type HowemorkMarksIn struct {
+	IdClassroom teacher.IdClassroom
+	IdSheets    []ho.IdSheet
+}
+
+type HomeworkMarksOut struct {
+	Students []tcAPI.StudentHeader                        // the students of the classroom
+	Marks    map[ho.IdSheet]map[teacher.IdStudent]float64 // the notes for each sheet and student, /20
+}
+
+func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args HowemorkMarksIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.getMarks(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksOut, error) {
+	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+	if classroom.IdTeacher != userID {
+		return HomeworkMarksOut{}, accessForbidden
+	}
+
+	students, err := tcAPI.LoadClassroomStudents(ct.db, classroom.Id)
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+	sheets, err := ho.SelectSheets(ct.db, args.IdSheets...)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+
+	out := HomeworkMarksOut{
+		Students: make([]tcAPI.StudentHeader, len(students)),
+		Marks:    make(map[ho.IdSheet]map[teacher.IdStudent]float64),
+	}
+	// student list
+	for i, s := range students {
+		out.Students[i] = tcAPI.NewStudentHeader(s)
+	}
+	// compute the sheets marks :
+	loader, err := newSheetsLoader(ct.db, args.IdSheets)
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+	// load all the progressions : for each task and student
+	progressions, err := loader.tasks.LoadProgressions(ct.db, loader.allProgressions())
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+
+	for id, sheet := range sheets {
+		if sheet.IdClassroom != classroom.Id {
+			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
+		}
+
+		markByStudent := make(map[teacher.IdStudent]float64)
+		var sheetTotal int
+		// for each student, get its progression for each task
+		tasks := loader.taskForSheet(id)
+		for _, link := range tasks {
+			work := loader.tasks.GetWork(loader.tasks.Tasks[link.IdTask])
+			_, bareme := work.QuestionsList()
+			taskTotal := bareme.Total()
+			sheetTotal += taskTotal
+			// add each progression to the student note
+			for _, prog := range loader.progressions[link.IdTask] {
+				idStudent := prog.IdStudent
+				extentedProg := progressions[prog.Id]
+				studentMark := bareme.ComputeMark(extentedProg.Questions)
+				markByStudent[idStudent] = markByStudent[idStudent] + float64(studentMark)
+			}
+		}
+		// normalize the mark / 20
+		for id, mark := range markByStudent {
+			markByStudent[id] = 20 * mark / float64(sheetTotal)
+		}
+		out.Marks[id] = markByStudent
+	}
 
 	return out, nil
 }

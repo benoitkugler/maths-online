@@ -12,6 +12,7 @@ import type {
   ExercicegroupExt,
   ExerciceHeader,
   GenerateClassroomCodeOut,
+  HomeworkMarksOut,
   LaunchSessionOut,
   ListExercicesOut,
   ListQuestionsOut,
@@ -204,6 +205,13 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Fiche supprimée avec succès.");
+    }
+  }
+
+  protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Notes chargées avec succès.");
     }
   }
 

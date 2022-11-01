@@ -369,6 +369,16 @@ export interface GameSummary {
 export interface GenerateClassroomCodeOut {
   Code: string;
 }
+// github.com/benoitkugler/maths-online/prof/homework.HomeworkMarksOut
+export interface HomeworkMarksOut {
+  Students: StudentHeader[] | null;
+  Marks: { [key: IdSheet]: { [key: IdStudent]: number } | null } | null;
+}
+// github.com/benoitkugler/maths-online/prof/homework.HowemorkMarksIn
+export interface HowemorkMarksIn {
+  IdClassroom: IdClassroom;
+  IdSheets: IdSheet[] | null;
+}
 // github.com/benoitkugler/maths-online/sql/teacher.IdClassroom
 export type IdClassroom = number;
 // github.com/benoitkugler/maths-online/sql/editor.IdExercice
@@ -785,6 +795,11 @@ export interface Student {
   TrivialSuccess: number;
   IsClientAttached: boolean;
   id_classroom: IdClassroom;
+}
+// github.com/benoitkugler/maths-online/prof/teacher.StudentHeader
+export interface StudentHeader {
+  Id: IdStudent;
+  Label: string;
 }
 // github.com/benoitkugler/maths-online/trivial.Success
 export type Success = boolean[];
@@ -2424,4 +2439,28 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkReorderSheetTasks(): void;
+
+  protected async rawHomeworkGetMarks(params: HowemorkMarksIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/marks";
+    const rep: AxiosResponse<HomeworkMarksOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** HomeworkGetMarks wraps rawHomeworkGetMarks and handles the error */
+  async HomeworkGetMarks(params: HowemorkMarksIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkGetMarks(params);
+      this.onSuccessHomeworkGetMarks(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void;
 }

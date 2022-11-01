@@ -21,6 +21,7 @@
   <v-dialog
     :model-value="sheetToDelete != null"
     @update:model-value="sheetToDelete = null"
+    max-width="800px"
   >
     <v-card title="Confirmer">
       <v-card-text

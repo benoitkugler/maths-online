@@ -7,6 +7,10 @@ type StudentHeader struct {
 	Label string
 }
 
+func NewStudentHeader(st tc.Student) StudentHeader {
+	return StudentHeader{Id: st.Id, Label: st.Name + " " + st.Surname}
+}
+
 type AttachStudentToClassroom1Out = []StudentHeader
 
 type AttachStudentToClassroom2In struct {

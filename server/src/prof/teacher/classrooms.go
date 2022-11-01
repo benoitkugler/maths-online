@@ -180,8 +180,10 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
-	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
+// LoadClassroomStudents returns the students for one classroom,
+// sorted alphabetically.
+func LoadClassroomStudents(db tc.DB, id tc.IdClassroom) ([]tc.Student, error) {
+	stds, err := tc.SelectStudentsByIdClassrooms(db, id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -195,6 +197,10 @@ func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Stu
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out, nil
+}
+
+func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
+	return LoadClassroomStudents(ct.db, idClassroom)
 }
 
 // split NAME NAME Surname into NAME NAME ; Surname
@@ -556,7 +562,7 @@ func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
 		if student.IsClientAttached {
 			continue
 		}
-		out = append(out, StudentHeader{Id: student.Id, Label: student.Name + " " + student.Surname})
+		out = append(out, NewStudentHeader(student))
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Label < out[j].Label })
