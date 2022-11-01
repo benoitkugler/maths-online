@@ -465,7 +465,8 @@ func (ct *Controller) EditorSaveQuestionMeta(c echo.Context) error {
 
 type SaveQuestionAndPreviewIn struct {
 	SessionID string
-	Question  ed.Question
+	Id        ed.IdQuestion
+	Page      questions.QuestionPage
 }
 
 type SaveQuestionAndPreviewOut struct {
@@ -883,7 +884,7 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 }
 
 func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID uID) (SaveQuestionAndPreviewOut, error) {
-	qu, err := ed.SelectQuestion(ct.db, params.Question.Id)
+	qu, err := ed.SelectQuestion(ct.db, params.Id)
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
@@ -897,19 +898,20 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		return SaveQuestionAndPreviewOut{}, accessForbidden
 	}
 
-	if err := params.Question.Page.Validate(); err != nil {
+	if err := params.Page.Validate(); err != nil {
 		return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
 	// if the question is owned : save it, else only preview
 	if group.IdTeacher == userID {
-		_, err := params.Question.Update(ct.db)
+		qu.Page = params.Page
+		_, err := qu.Update(ct.db)
 		if err != nil {
 			return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
 		}
 	}
 
-	question := params.Question.Page.Instantiate()
+	question := params.Page.Instantiate()
 
 	ct.lock.Lock()
 	defer ct.lock.Unlock()

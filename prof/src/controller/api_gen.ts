@@ -720,7 +720,8 @@ export interface SaveExerciceAndPreviewOut {
 // github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewIn
 export interface SaveQuestionAndPreviewIn {
   SessionID: string;
-  Question: Question;
+  Id: IdQuestion;
+  Page: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewOut
 export interface SaveQuestionAndPreviewOut {

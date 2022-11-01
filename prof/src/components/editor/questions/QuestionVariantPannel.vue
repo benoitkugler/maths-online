@@ -278,7 +278,8 @@ async function saveDescription(desc: string) {
 async function save() {
   const res = await controller.EditorSaveQuestionAndPreview({
     SessionID: props.session_id || "",
-    Question: question,
+    Id: question.Id,
+    Page: question.Page,
   });
   if (res == undefined) {
     return;
@@ -303,9 +304,8 @@ function download() {
 }
 
 async function onImportQuestion(imported: Question) {
-  // keep the current ID
-  imported.Id = question.Id;
-  question = imported;
+  // only import the data fields
+  question.Page = imported.Page;
 
   history.add({ question });
 }

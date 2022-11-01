@@ -47,28 +47,6 @@
         </v-btn>
       </v-col>
       <v-spacer></v-spacer>
-      <!-- <v-col cols="auto" align-self="center" class="pr-2">
-        <v-btn
-          size="small"
-          icon
-          title="Retour à la liste des questions"
-          @click="emit('back')"
-        >
-          <v-icon icon="mdi-arrow-left"></v-icon>
-        </v-btn>
-      </v-col>
-
-      <v-col align-self="center">
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="compact"
-          label="Nom de la question"
-          v-model="question.Question.Page.title"
-          :readonly="isReadonly"
-          hide-details
-        ></v-text-field
-      ></v-col> -->
 
       <v-col cols="auto" align-self="center">
         <v-menu offset-y close-on-content-click>
@@ -367,9 +345,8 @@ function download() {
 }
 
 async function onImportQuestion(imported: Question) {
-  // keep the current ID
-  imported.Id = question.Question.Id;
-  question.Question = imported;
+  // only import the data fields
+  question.Question.Page = imported.Page;
 
   history.add(props.exercice);
 
