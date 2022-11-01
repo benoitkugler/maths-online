@@ -4,7 +4,7 @@ export const colorsPerCategorie = [
   "purple",
   "green",
   "orange",
-  "yellow-darken-2",
+  "#FDD835",
   "blue"
 ];
 
