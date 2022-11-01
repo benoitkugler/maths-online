@@ -768,6 +768,91 @@ func (ct *Controller) importQuestionEx(args ExerciceImportQuestionIn, userID uID
 	return ct.getExercice(args.IdExercice, userID)
 }
 
+type ExerciceDuplicateQuestionIn struct {
+	QuestionIndex int
+	IdExercice    ed.IdExercice
+	SessionID     string
+}
+
+// EditorExerciceDuplicateQuestion duplicate the question at the given
+// index in the given exercice (variant), also updating the preview
+func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args ExerciceDuplicateQuestionIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.duplicateQuestionEx(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	if err != nil {
+		return err
+	}
+
+	err = ct.updateExercicePreview(data, args.SessionID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) duplicateQuestionEx(args ExerciceDuplicateQuestionIn, userID uID) (ExerciceExt, error) {
+	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
+		return ExerciceExt{}, err
+	}
+
+	existingLinks, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+	existingLinks.EnsureOrder()
+
+	if args.QuestionIndex >= len(existingLinks) {
+		return ExerciceExt{}, errors.New("internal error: invalid question index")
+	}
+	link := existingLinks[args.QuestionIndex]
+
+	question, err := ed.SelectQuestion(ct.db, link.IdQuestion)
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	// duplicate the question : shallow copy is enough
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+	question, err = question.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	// and insert it to the current questions
+	newLink := ed.ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: link.Bareme}
+	index := args.QuestionIndex + 1
+	existingLinks = append(existingLinks[:index], append([]ed.ExerciceQuestion{newLink}, existingLinks[index:]...)...)
+
+	err = ed.UpdateExerciceQuestionList(tx, args.IdExercice, existingLinks)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	return ct.getExercice(args.IdExercice, userID)
+}
+
 type ExerciceUpdateQuestionsIn struct {
 	Questions  ed.ExerciceQuestions
 	IdExercice ed.IdExercice

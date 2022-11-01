@@ -1,5 +1,5 @@
 <template>
-  <div v-if="exercice == null">Loading {{ props.exerciceHeader }}</div>
+  <div v-if="exercice == null">Chargement de l'exercice...</div>
   <div v-else>
     <!-- Display either the skeleton or the question editor -->
     <ExSkeleton

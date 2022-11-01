@@ -77,6 +77,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/editor/exercice/duplicate", edit.EditorDuplicateExercice)
 	gr.PUT("/api/prof/editor/exercice/questions", edit.EditorExerciceCreateQuestion)
 	gr.POST("/api/prof/editor/exercice/questions/import", edit.EditorExerciceImportQuestion)
+	gr.POST("/api/prof/editor/exercice/questions/duplicate", edit.EditorExerciceDuplicateQuestion)
 	gr.POST("/api/prof/editor/exercice/questions", edit.EditorExerciceUpdateQuestions)
 	gr.POST("/api/prof/editor/exercicegroup/visibility", edit.EditorUpdateExercicegroupVis)
 	gr.POST("/api/prof/editor/exercice/check-params", edit.EditorCheckExerciceParameters)

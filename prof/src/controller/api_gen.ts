@@ -214,6 +214,12 @@ export interface ExerciceCreateQuestionIn {
   SessionID: string;
   IdExercice: IdExercice;
 }
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceDuplicateQuestionIn
+export interface ExerciceDuplicateQuestionIn {
+  QuestionIndex: number;
+  IdExercice: IdExercice;
+  SessionID: string;
+}
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {
   Exercice: Exercice;
@@ -2159,6 +2165,33 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceImportQuestion(
+    data: ExerciceExt
+  ): void;
+
+  protected async rawEditorExerciceDuplicateQuestion(
+    params: ExerciceDuplicateQuestionIn
+  ) {
+    const fullUrl =
+      this.baseUrl + "/api/prof/editor/exercice/questions/duplicate";
+    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorExerciceDuplicateQuestion wraps rawEditorExerciceDuplicateQuestion and handles the error */
+  async EditorExerciceDuplicateQuestion(params: ExerciceDuplicateQuestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorExerciceDuplicateQuestion(params);
+      this.onSuccessEditorExerciceDuplicateQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorExerciceDuplicateQuestion(
     data: ExerciceExt
   ): void;
 

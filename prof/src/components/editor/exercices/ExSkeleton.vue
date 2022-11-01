@@ -113,13 +113,22 @@
             </v-col>
             <v-col cols="auto" align-self="center" class="my-1">
               <v-btn
+                class="mx-2 my-1"
+                size="x-small"
+                icon
+                @click.stop="duplicateQuestion(index)"
+                title="Dupliquer cette question"
+              >
+                <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+              </v-btn>
+              <v-btn
                 v-if="!isReadonly"
-                size="small"
+                size="x-small"
                 icon
                 @click.stop="removeQuestion(index)"
-                title="Supprimer la question"
+                title="Supprimer cette question"
               >
-                <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
+                <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
             <v-col align-self="center">
@@ -266,9 +275,17 @@ async function removeQuestion(index: number) {
     Questions: l,
     SessionID: props.sessionId,
   });
-  if (res == undefined) {
-    return;
-  }
+  if (res == undefined) return;
+  emit("update", res);
+}
+
+async function duplicateQuestion(index: number) {
+  const res = await controller.EditorExerciceDuplicateQuestion({
+    IdExercice: props.exercice.Exercice.Id,
+    QuestionIndex: index,
+    SessionID: props.sessionId,
+  });
+  if (res == undefined) return;
   emit("update", res);
 }
 

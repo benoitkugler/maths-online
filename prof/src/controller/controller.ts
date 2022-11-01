@@ -490,6 +490,12 @@ class Controller extends AbstractAPI {
       this.showMessage("Questions modifiées avec succès.");
     }
   }
+  protected onSuccessEditorExerciceDuplicateQuestion(data: ExerciceExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question dupliquée avec succès.");
+    }
+  }
   protected onSuccessEditorUpdateExercicegroupVis(): void {
     this.inRequest = false;
     if (this.showMessage) {
