@@ -54,6 +54,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 
 	gr.POST("/api/prof/editor/questiongroups", edit.EditorSearchQuestions)
 	gr.GET("/api/prof/editor/question/duplicate", edit.EditorDuplicateQuestion)
+	gr.GET("/api/prof/editor/questiongroup/duplicate", edit.EditorDuplicateQuestiongroup)
 	gr.PUT("/api/prof/editor/questiongroup", edit.EditorCreateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup", edit.EditorUpdateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup/tags", edit.EditorUpdateQuestionTags)
@@ -68,6 +69,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/editor/exercicegroups", edit.EditorSearchExercices)
 	gr.POST("/api/prof/editor/exercicegroup", edit.EditorUpdateExercicegroup)
 	gr.POST("/api/prof/editor/exercicegroup/tags", edit.EditorUpdateExerciceTags)
+	gr.GET("/api/prof/editor/exercicegroup/duplicate", edit.EditorDuplicateExercicegroup)
 	gr.GET("/api/prof/editor/exercice", edit.EditorGetExerciceContent)
 	gr.PUT("/api/prof/editor/exercice", edit.EditorCreateExercice)
 	gr.DELETE("/api/prof/editor/exercice", edit.EditorDeleteExercice)

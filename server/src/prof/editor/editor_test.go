@@ -74,11 +74,10 @@ func TestExerciceCRUD(t *testing.T) {
 		Questions: ed.ExerciceQuestions{
 			ed.ExerciceQuestion{IdQuestion: l.Questions[0].Question.Id},
 			ed.ExerciceQuestion{IdQuestion: qu.Id},
-			ed.ExerciceQuestion{IdQuestion: qu.Id},
 		},
 	}, 1)
 	tu.Assert(t, err == nil)
-	if len(l.Questions) != 3 {
+	if len(l.Questions) != 2 {
 		t.Fatal(l)
 	}
 
@@ -98,6 +97,9 @@ func TestExerciceCRUD(t *testing.T) {
 	if exe.Description != "test" {
 		t.Fatal(exe)
 	}
+
+	err = ct.duplicateExercicegroup(group.Group.Id, 1)
+	tu.Assert(t, err == nil)
 
 	err = ct.deleteExercice(ex.Id, 1)
 	tu.Assert(t, err == nil)

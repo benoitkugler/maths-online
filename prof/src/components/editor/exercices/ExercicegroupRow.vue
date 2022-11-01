@@ -6,6 +6,16 @@
           :origin="props.group.Origin"
           @update-public="(b) => emit('updatePublic', props.group.Group.Id, b)"
         ></OriginButton>
+
+        <v-btn
+          class="mx-2 my-1"
+          size="x-small"
+          icon
+          @click.stop="emit('duplicate')"
+          title="Dupliquer cet exercice"
+        >
+          <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+        </v-btn>
       </v-col>
 
       <v-col class="my-3 mx-1" style="text-align: left" align-self="center">
@@ -81,6 +91,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "clicked"): void;
+  (e: "duplicate"): void;
   (e: "updatePublic", exercicegroupID: number, isPublic: boolean): void;
   (e: "updateTags", tags: string[]): void;
 }>();

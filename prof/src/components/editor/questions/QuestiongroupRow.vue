@@ -4,8 +4,18 @@
       <v-col cols="auto" align-self="center">
         <OriginButton
           :origin="props.group.Origin"
-          @update-public="b => emit('updatePublic', props.group.Group.Id, b)"
+          @update-public="(b) => emit('updatePublic', props.group.Group.Id, b)"
         ></OriginButton>
+
+        <v-btn
+          class="mx-2 my-1"
+          size="x-small"
+          icon
+          @click.stop="emit('duplicate')"
+          title="Dupliquer cette question"
+        >
+          <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+        </v-btn>
       </v-col>
 
       <v-col class="my-3 mx-1" style="text-align: left" align-self="center">
@@ -56,7 +66,7 @@
         <TagListField
           :readonly="!isEditable"
           :model-value="props.group.Tags || []"
-          @update:model-value="l => emit('updateTags', l)"
+          @update:model-value="(l) => emit('updateTags', l)"
           :all-tags="props.allTags"
           y-padding
         >
@@ -81,6 +91,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "clicked"): void;
+  (e: "duplicate"): void;
   (e: "updatePublic", questiongroupID: number, isPublic: boolean): void;
   (e: "updateTags", tags: string[]): void;
 }>();

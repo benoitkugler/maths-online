@@ -75,6 +75,7 @@
                 :group="questionGroup"
                 :all-tags="props.tags"
                 @clicked="startEdit(questionGroup)"
+                @duplicate="duplicate(questionGroup)"
                 @update-public="updatePublic"
                 @update-tags="
                   (tags) => updateGroupTags(questionGroup.Group, tags)
@@ -188,6 +189,14 @@ async function startEdit(group: QuestiongroupExt) {
     return;
   }
   emit("edit", group, out);
+}
+
+async function duplicate(group: QuestiongroupExt) {
+  const ok = await controller.EditorDuplicateQuestiongroup({
+    id: group.Group.Id,
+  });
+  if (!ok) return;
+  await fetchQuestions();
 }
 
 async function updatePublic(id: number, isPublic: boolean) {

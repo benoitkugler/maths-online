@@ -234,7 +234,7 @@ func (ct *Controller) duplicateQuestion(idQuestion ed.IdQuestion, userID uID) (e
 }
 
 // EditorDuplicateQuestiongroup duplicates the whole group, deep copying
-// every question.
+// every question, and assigns it to the current user.
 func (ct *Controller) EditorDuplicateQuestiongroup(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -249,6 +249,65 @@ func (ct *Controller) EditorDuplicateQuestiongroup(c echo.Context) error {
 	}
 
 	return c.NoContent(200)
+}
+
+// duplicateQuestiongroup creates a new group with the same title, (copied) questions and tags
+func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID uID) error {
+	group, err := ed.SelectQuestiongroup(ct.db, idGroup)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if !group.IsVisibleBy(userID) {
+		return accessForbidden
+	}
+
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	questions, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// start by inserting a new group ...
+	newGroup := group
+	newGroup.IdTeacher = userID
+	newGroup.Public = false
+	newGroup, err = newGroup.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	// .. then add its tags ..
+	err = ed.UpdateQuestiongroupTags(tx, tags, newGroup.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	// finaly, copy the questions...
+	for _, question := range questions {
+		question.IdGroup = newGroup.Id.AsOptional() // re-direct to the new group
+		_, err = question.Insert(tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
 }
 
 // EditorDeleteQuestion remove the given question,
@@ -677,63 +736,6 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	}
 
 	return out, nil
-}
-
-// duplicateQuestiongroup creates a new group with the same title, questions and tags
-// only personnal questions are allowed
-func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID uID) error {
-	group, err := ed.SelectQuestiongroup(ct.db, idGroup)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	if group.IdTeacher != userID {
-		return accessForbidden
-	}
-
-	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, group.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	questions, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	// start by inserting a new group ...
-	newGroup, err := group.Insert(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
-	// .. then add its tags ..
-	err = ed.UpdateQuestiongroupTags(tx, tags, newGroup.Id)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	// finaly, copy the questions...
-	for _, question := range questions {
-		question.IdGroup = newGroup.Id.AsOptional() // re-direct the group
-		_, err = question.Insert(tx)
-		if err != nil {
-			_ = tx.Rollback()
-			return utils.SQLError(err)
-		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	return nil
 }
 
 type UpdateQuestiongroupTagsIn struct {

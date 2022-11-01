@@ -1665,6 +1665,29 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorDuplicateQuestion(data: Question): void;
 
+  protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
+    await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
+  async EditorDuplicateQuestiongroup(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDuplicateQuestiongroup(params);
+      this.onSuccessEditorDuplicateQuestiongroup();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDuplicateQuestiongroup(): void;
+
   protected async rawEditorCreateQuestiongroup() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
     const rep: AxiosResponse<QuestiongroupExt> = await Axios.put(
@@ -1944,6 +1967,29 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorUpdateExerciceTags(): void;
+
+  protected async rawEditorDuplicateExercicegroup(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
+    await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** EditorDuplicateExercicegroup wraps rawEditorDuplicateExercicegroup and handles the error */
+  async EditorDuplicateExercicegroup(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDuplicateExercicegroup(params);
+      this.onSuccessEditorDuplicateExercicegroup();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDuplicateExercicegroup(): void;
 
   protected async rawEditorGetExerciceContent(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";

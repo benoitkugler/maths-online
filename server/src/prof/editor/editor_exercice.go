@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"sort"
@@ -217,15 +218,7 @@ func (ct *Controller) EditorDuplicateExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getExerciceGroup(qu ed.Exercice) (ed.Exercicegroup, error) {
-	group, err := ed.SelectExercicegroup(ct.db, qu.IdGroup)
-	if err != nil {
-		return ed.Exercicegroup{}, utils.SQLError(err)
-	}
-	return group, nil
-}
-
-// duplicateExercice duplicate the given exercice, returning
+// duplicateExercice duplicate the given exercice (variant), returning
 // the newly created one
 func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (ExerciceHeader, error) {
 	ex, err := ed.SelectExercice(ct.db, idExercice)
@@ -242,41 +235,12 @@ func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (E
 		return ExerciceHeader{}, accessForbidden
 	}
 
-	// shallow copy is enough
-	newExercice := ex
-	newExercice, err = newExercice.Insert(ct.db)
-	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
-	}
-
-	// also copy the questions
-	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, ex.Id)
-	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
-	}
-	questions, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
-	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
-	}
-
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return ExerciceHeader{}, utils.SQLError(err)
 	}
 
-	for index, link := range links {
-		question := questions[link.IdQuestion]
-		question.NeedExercice = newExercice.Id.AsOptional()
-		question, err = question.Insert(tx)
-		if err != nil {
-			_ = tx.Rollback()
-			return ExerciceHeader{}, utils.SQLError(err)
-		}
-		links[index].IdExercice = newExercice.Id
-		links[index].IdQuestion = question.Id
-	}
-
-	err = ed.UpdateExerciceQuestionList(tx, newExercice.Id, links)
+	newExercice, err := duplicateExerciceTo(tx, idExercice, group)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExerciceHeader{}, err
@@ -288,6 +252,136 @@ func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (E
 	}
 
 	return newExerciceHeader(newExercice), nil
+}
+
+// duplicateExerciceTo duplicate the given exercice (variant) and assign it
+// to the given group.
+// It does NOT rollback or commit
+func duplicateExerciceTo(tx *sql.Tx, idExercice ed.IdExercice, group ed.Exercicegroup) (ed.Exercice, error) {
+	ex, err := ed.SelectExercice(tx, idExercice)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	// shallow copy is enough
+	newExercice := ex
+	newExercice.IdGroup = group.Id // re-direct to the given group
+	newExercice, err = newExercice.Insert(tx)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	// also copy the questions
+	links, err := ed.SelectExerciceQuestionsByIdExercices(tx, ex.Id)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+	questions, err := ed.SelectQuestions(tx, links.IdQuestions()...)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	for index, link := range links {
+		question := questions[link.IdQuestion]
+		question.NeedExercice = newExercice.Id.AsOptional() // redirect the questions to the new exerice variant
+		question, err = question.Insert(tx)
+		if err != nil {
+			return ed.Exercice{}, utils.SQLError(err)
+		}
+		links[index].IdExercice = newExercice.Id
+		links[index].IdQuestion = question.Id
+	}
+
+	err = ed.UpdateExerciceQuestionList(tx, newExercice.Id, links)
+	if err != nil {
+		return ed.Exercice{}, err
+	}
+
+	return newExercice, nil
+}
+
+// EditorDuplicateExercicegroup duplicates the whole group, deep copying
+// every exercice (variant), and assigns it to the current user.
+func (ct *Controller) EditorDuplicateExercicegroup(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.duplicateExercicegroup(ed.IdExercicegroup(id), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+// duplicateExercicegroup creates a new group with the same title, (copied) exercices and tags
+func (ct *Controller) duplicateExercicegroup(idGroup ed.IdExercicegroup, userID uID) error {
+	group, err := ed.SelectExercicegroup(ct.db, idGroup)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if !group.IsVisibleBy(userID) {
+		return accessForbidden
+	}
+
+	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	variants, err := ed.SelectExercicesByIdGroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// start by inserting a new group ...
+	newGroup := group
+	newGroup.IdTeacher = userID // redirect to the current user
+	newGroup.Public = false
+	newGroup, err = newGroup.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	// .. then add its tags ..
+	err = ed.UpdateExercicegroupTags(tx, tags, newGroup.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	// finaly, copy the exercice variantes...
+	for _, variant := range variants {
+		_, err = duplicateExerciceTo(tx, variant.Id, newGroup)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
+func (ct *Controller) getExerciceGroup(qu ed.Exercice) (ed.Exercicegroup, error) {
+	group, err := ed.SelectExercicegroup(ct.db, qu.IdGroup)
+	if err != nil {
+		return ed.Exercicegroup{}, utils.SQLError(err)
+	}
+	return group, nil
 }
 
 // EditorGetExerciceContent loads the questions associated with the given exercice

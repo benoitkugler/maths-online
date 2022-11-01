@@ -75,6 +75,7 @@
                 :group="exerciceGroup"
                 :all-tags="props.tags"
                 @clicked="startEdit(exerciceGroup)"
+                @duplicate="duplicate(exerciceGroup)"
                 @update-public="updatePublic"
                 @update-tags="
                   (tags) => updateGroupTags(exerciceGroup.Group, tags)
@@ -154,6 +155,14 @@ async function updateQueryTags() {
 
 async function updateQueryOrigin(o: OriginKind) {
   queryOrigin = o;
+  await fetchExercices();
+}
+
+async function duplicate(group: ExercicegroupExt) {
+  const ok = await controller.EditorDuplicateExercicegroup({
+    id: group.Group.Id,
+  });
+  if (!ok) return;
   await fetchExercices();
 }
 

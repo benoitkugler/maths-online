@@ -114,6 +114,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Question (et variantes) dupliquée avec succès.");
     }
   }
+
   protected onSuccessEditorCreateQuestiongroup(data: QuestiongroupExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -242,6 +243,13 @@ class Controller extends AbstractAPI {
     data: SaveExerciceAndPreviewOut
   ): void {
     this.inRequest = false;
+  }
+
+  protected onSuccessEditorDuplicateExercicegroup(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice (et variantes) dupliqué avec succès.");
+    }
   }
 
   protected onSuccessGetTrivialRunningSessions(
