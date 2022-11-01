@@ -8,7 +8,7 @@
     <v-card
       title="Paramètres aléatoires"
       subtitle="Description des fonctions"
-      style="width: 800px; max-height: 70vh"
+      style="max-height: 70vh"
       class="overflow-y-auto"
     >
       <v-card-text>
@@ -82,6 +82,11 @@ const helpContent = [
   ["floor(x)", "Renvoie la partie entière de x"],
   ["isPrime(n)", "Renvoie 1 is n est un nombre premier, 0 sinon"],
   ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0"],
+  ["x % 3", "Renvoie le reste de la division euclidienne de x par 3."],
+  [
+    "x // 3",
+    "Renvoie le quotient (entier) de la division euclidienne de x par 3.",
+  ],
   ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs"],
   ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs"],
   ["exp(x)", "Fonction exponentielle"],
