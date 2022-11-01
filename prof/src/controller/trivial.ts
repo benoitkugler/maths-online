@@ -1,4 +1,5 @@
 import type { CategoriesQuestions } from "./api_gen";
+import { LevelTag } from "./exercice_gen";
 
 export const colorsPerCategorie = [
   "purple",
@@ -16,27 +17,27 @@ export const questionPropositions: {
   Questions: CategoriesQuestions;
 }[] = [
   {
-    name: "Pourcentages",
+    name: "Pourcentages - 2NDE",
     Questions: {
       Difficulties: [], // all difficulties accepted,
       Tags: [
-        [["Pourcentages", "EVOLUTION UNIQUE"]],
+        [[LevelTag.Seconde, "POURCENTAGES", "EVOLUTION UNIQUE"]],
         [
-          ["Pourcentages", "Taux global"],
-          ["Pourcentages", "Taux réciproque"]
+          [LevelTag.Seconde, "POURCENTAGES", "Taux global"],
+          [LevelTag.Seconde, "POURCENTAGES", "Taux réciproque"]
         ],
         [
-          ["Pourcentages", "Proportion"],
-          ["Pourcentages", "Proportion de proportion"],
-          ["Pourcentages", "Pourcentage d'un nombre"]
+          [LevelTag.Seconde, "POURCENTAGES", "Proportion"],
+          [LevelTag.Seconde, "POURCENTAGES", "Proportion de proportion"],
+          [LevelTag.Seconde, "POURCENTAGES", "Pourcentage d'un nombre"]
         ],
         [
-          ["Pourcentages", "Evolutions identiques"],
-          ["Pourcentages", "Evolutions successives"]
+          [LevelTag.Seconde, "POURCENTAGES", "Evolutions identiques"],
+          [LevelTag.Seconde, "POURCENTAGES", "Evolutions successives"]
         ],
         [
-          ["Pourcentages", "Coefficient multiplicateur"],
-          ["Pourcentages", "Taux d'évolution"]
+          [LevelTag.Seconde, "POURCENTAGES", "Coefficient multiplicateur"],
+          [LevelTag.Seconde, "POURCENTAGES", "Taux d'évolution"]
         ]
       ]
     }

@@ -3,7 +3,7 @@
     :model-value="editedConfig != null"
     @update:model-value="editedConfig = null"
     :retain-focus="false"
-    max-width="800"
+    max-width="1200"
   >
     <edit-config
       v-if="editedConfig != null"

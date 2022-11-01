@@ -35,6 +35,19 @@
             >
           </v-list-subheader>
         </v-col>
+        <v-spacer></v-spacer>
+        <v-col cols="12" sm="6" md="3">
+          <v-select
+            variant="outlined"
+            density="compact"
+            label="Classe"
+            hide-details
+            :model-value="currentLevel"
+            @update:model-value="onUpdateLevel"
+            :items="levelItems"
+          >
+          </v-select>
+        </v-col>
         <v-col cols="12" md="auto" align-self="center" class="mb-1">
           <v-menu
             offset-y
@@ -190,7 +203,10 @@ import type {
   Trivial,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { commonTags } from "@/controller/editor";
+import { LevelTag, LevelTagLabels } from "@/controller/exercice_gen";
 import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
+import { computed } from "@vue/reactivity";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagChip from "../editor/utils/TagChip.vue";
@@ -213,6 +229,8 @@ const colors = colorsPerCategorie;
 
 const propositions = questionPropositions;
 
+const levelItems = Object.keys(LevelTagLabels);
+
 let showDifficultyCard = $ref(false);
 
 function onEditDifficulties(difficulties: DifficultyTag[]) {
@@ -220,6 +238,36 @@ function onEditDifficulties(difficulties: DifficultyTag[]) {
   props.edited.Questions.Difficulties = difficulties;
   fetchHintForMissing();
 }
+
+function onUpdateLevel(level: LevelTag) {
+  const levelTags = Object.values(LevelTag) as string[];
+  console.log(levelTags);
+
+  // remove any level instructions for the current tags ...
+  const newTags = props.edited.Questions.Tags.map(
+    (cat) =>
+      cat?.map((l) => (l || []).filter((tag) => !levelTags.includes(tag))) || []
+  );
+  // ... then add the given one
+  newTags.forEach((cat) => cat.forEach((l) => l.push(level)));
+  props.edited.Questions.Tags = newTags;
+  fetchHintForMissing();
+}
+
+const currentLevel = computed(() => {
+  const all: string[][] = [];
+  props.edited.Questions.Tags.forEach((l) =>
+    all.push(...(l || []).map((ls) => ls || []))
+  );
+  const sharedTags = commonTags(all);
+  const presentLevels = Object.values(LevelTag).filter((tag) =>
+    sharedTags.includes(tag)
+  );
+  if (presentLevels.length == 1) {
+    return presentLevels[0] as LevelTag;
+  }
+  return undefined;
+});
 
 function updateCategorie(index: number, cat: QuestionCriterion) {
   props.edited.Questions.Tags[index] = cat;

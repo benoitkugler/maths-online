@@ -85,6 +85,9 @@ func CommonTags(tags [][]string) []string {
 			out = append(out, tag)
 		}
 	}
+
+	sort.Strings(out)
+
 	return out
 }
 
