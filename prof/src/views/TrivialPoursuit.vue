@@ -24,6 +24,27 @@
   </v-dialog>
 
   <v-dialog
+    :model-value="trivialToDelete != null"
+    @update:model-value="trivialToDelete = null"
+    max-width="800px"
+  >
+    <v-card title="Confirmer">
+      <v-card-text
+        >Etes-vous certain de vouloir supprimer la partie
+        <i>{{ trivialToDelete?.Name }}</i> ? <br />
+        Cette opération est irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="trivialToDelete = null">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="red" @click="deleteConfig" variant="elevated">
+          Supprimer
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
     fullscreen
     :model-value="showMonitor"
     @update:model-value="showMonitorChanged"
@@ -80,7 +101,7 @@
           @duplicate="duplicateConfig(config.Config)"
           @edit="editedConfig = config.Config"
           @launch="launchingConfig = config.Config"
-          @delete="deleteConfig(config.Config)"
+          @delete="trivialToDelete = config.Config"
         ></config-row>
       </v-list-item>
     </v-list>
@@ -173,9 +194,14 @@ async function duplicateConfig(config: Trivial) {
   _configs.push(res);
 }
 
-async function deleteConfig(config: Trivial) {
-  await controller.DeleteTrivialPoursuit({ id: config.Id });
-  _configs = _configs.filter((c) => c.Config.Id != config.Id);
+let trivialToDelete = $ref<Trivial | null>(null);
+
+async function deleteConfig() {
+  if (trivialToDelete == null) return;
+  const id = trivialToDelete.Id;
+  await controller.DeleteTrivialPoursuit({ id: id });
+  trivialToDelete = null;
+  _configs = _configs.filter((c) => c.Config.Id != id);
 }
 
 let launchingConfig = $ref<Trivial | null>(null);
