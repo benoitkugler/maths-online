@@ -16,3 +16,7 @@ SET
                 FROM jsonb_array_elements(page -> 'enonce')), '[]'));
 COMMIT;
 
+-- restore the constraint
+ALTER TABLE questions
+    ADD CONSTRAINT Page_gomacro CHECK (gomacro_validate_json_ques_QuestionPage (Page));
+

@@ -1,5 +1,9 @@
 --v0.9.0
 -- add points to FunctionsGraph
+-- the constraints must be restore after the update scripts
+
+ALTER TABLE questions
+    DROP CONSTRAINT Page_gomacro;
 
 BEGIN;
 UPDATE
