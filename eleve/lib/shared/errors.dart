@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 /// checkServerError throws if the serveur returns an error message
+/// It should be called on the response body, before deserializing,
+/// as a replacement for [jsonDecode]
 dynamic checkServerError(String source) {
   final json = jsonDecode(source);
   if (json is Map<String, dynamic>) {

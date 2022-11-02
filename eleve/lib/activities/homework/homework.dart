@@ -39,7 +39,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
     final uri = Uri.parse(
         buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID}));
     final resp = await http.get(uri);
-    return listSheetProgressionFromJson(jsonDecode(resp.body));
+    return listSheetProgressionFromJson(checkServerError(resp.body));
   }
 
   @override
@@ -48,7 +48,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
         query: {studentIDKey: studentID, "id": idTask.toString()}));
     final resp = await http.get(uri);
-    return instantiatedWorkFromJson(jsonDecode(resp.body));
+    return instantiatedWorkFromJson(checkServerError(resp.body));
   }
 
   @override
@@ -63,6 +63,29 @@ class ServerHomeworkAPI implements HomeworkAPI {
           'Content-type': 'application/json',
         });
     return studentEvaluateTaskOutFromJson(checkServerError(resp.body));
+  }
+}
+
+class HomeworkDisabled extends StatelessWidget {
+  const HomeworkDisabled({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Travail à la maison"),
+        ),
+        body: const Center(
+            child: Card(
+          margin: EdgeInsets.all(20),
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              "Cette activité n'est pas disponible, car tu n'es pas inscris sur une classe.",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        )));
   }
 }
 
