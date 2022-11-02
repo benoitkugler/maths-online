@@ -156,6 +156,11 @@ func main() {
 	fmt.Println("Demo classroom loaded.")
 
 	tvc := trivial.NewController(db, studentKey, demoCode, admin)
+	if err = tvc.CheckDemoQuestions(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Trivial demo questions checked.")
+
 	hwc := homework.NewController(db, admin, studentKey)
 	edit := editor.NewController(db, admin)
 
