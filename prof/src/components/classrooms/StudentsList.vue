@@ -3,6 +3,7 @@
     :model-value="studentToDelete != null"
     @update:model-value="studentToDelete = null"
     :retain-focus="false"
+    max-width="800px"
   >
     <v-card title="Confirmer la suppression" v-if="studentToDelete != null">
       <v-card-text>
@@ -183,9 +184,13 @@
                     v-if="student.IsClientAttached"
                   >
                     <template v-slot:activator="{ isActive, props }">
-                      <v-badge v-on="{ isActive }" v-bind="props" color="green"
-                        >.</v-badge
+                      <v-badge
+                        v-on="{ isActive }"
+                        v-bind="props"
+                        color="green"
+                        inline
                       >
+                      </v-badge>
                     </template>
                     L'élève a reliée son application.
                   </v-tooltip>

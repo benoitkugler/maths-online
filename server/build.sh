@@ -12,5 +12,5 @@ echo "Moving executable and leaving source..."
 cd .. && 
 mv src/main . &&
 echo "Running dry..." &&
-PORT=8000 IP=aaaa::2:a2cc DEMO_PIN_TRIVIAL=1234 ./main -dry &&
+PORT=8000 IP=aaaa::2:a2cc DEMO_CODE=1234 ./main -dry &&
 echo "All good !"

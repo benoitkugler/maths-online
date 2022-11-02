@@ -95,9 +95,7 @@ const emit = defineEmits<{
 const mayClick = $computed(() => (inSelect ? "click" : ""));
 
 let inSelect = $ref(false);
-let selectedSheets = $ref(
-  new Set(props.classroom.Sheets?.map((sh) => sh.Sheet.Id))
-);
+let selectedSheets = $ref<Set<number>>(new Set());
 
 let showNotes = $ref(false);
 
@@ -110,6 +108,8 @@ function onToggle(sh: SheetExt) {
 }
 function onShowNotes() {
   if (!inSelect) {
+    // start with all selected
+    selectedSheets = new Set(props.classroom.Sheets?.map((sh) => sh.Sheet.Id));
     inSelect = true;
   } else {
     inSelect = false;
