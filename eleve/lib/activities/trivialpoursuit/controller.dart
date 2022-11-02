@@ -654,7 +654,12 @@ class _GameStarted extends StatelessWidget {
             ],
           );
         });
-    return res ?? false;
+    final leave = res ?? false;
+    if (leave) {
+      // cleanup potential snacks
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
+    return leave;
   }
 
   @override
