@@ -54,26 +54,52 @@ func connectDB(dev bool) (*sql.DB, error) {
 	return db, err
 }
 
-func getStudentEncrypter(dev bool) (out pass.Encrypter, err error) {
+func getStudentEncrypter(dev bool) (out pass.Encrypter) {
 	if dev {
-		out = pass.Encrypter{1, 2, 3, 4, 5, 6}
+		return pass.Encrypter{1, 2, 3, 4, 5, 6}
 	} else {
-		out, err = pass.NewEncrypter("STUDENT_ENC_KEY")
+		out, err := pass.NewEncrypter("STUDENT_ENC_KEY")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return out
 	}
-
-	fmt.Printf("Student encrypter setup with key %v.\n", out)
-	return out, err
 }
 
-func getTeacherEncrypter(dev bool) (out pass.Encrypter, err error) {
+func getTeacherEncrypter(dev bool) (out pass.Encrypter) {
 	if dev {
-		out = pass.Encrypter{4, 5, 6, 7, 8, 9}
+		return pass.Encrypter{4, 5, 6, 7, 8, 9}
 	} else {
-		out, err = pass.NewEncrypter("TEACHER_ENC_KEY")
+		out, err := pass.NewEncrypter("TEACHER_ENC_KEY")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return out
 	}
+}
 
-	fmt.Printf("Teacher encrypter setup with key %v.\n", out)
-	return out, err
+func getDemoCode() string {
+	demoCode := os.Getenv("DEMO_CODE")
+	if demoCode == "" {
+		log.Fatal("Missing DEMO_CODE env. variable")
+	}
+	return demoCode
+}
+
+func devSetup(e *echo.Echo, tc *teacher.Controller) {
+	dev, err := tc.GetDevToken()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(dev)
+
+	// also Cross origin requests
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
+		AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
+		ExposeHeaders: []string{"Content-Disposition"},
+	}))
+	fmt.Println("CORS activé.")
 }
 
 func sanityChecks(db *sql.DB, skipValidation bool) {
@@ -96,21 +122,14 @@ func main() {
 	adress := getAdress(*devPtr)
 	host := getPublicHost(*devPtr)
 
-	studentKey, err := getStudentEncrypter(*devPtr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	studentKey := getStudentEncrypter(*devPtr)
+	fmt.Printf("Student encrypter setup with key: %v\n", studentKey)
 
-	teacherKey, err := getTeacherEncrypter(*devPtr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	teacherKey := getTeacherEncrypter(*devPtr)
+	fmt.Printf("Teacher encrypter setup with key: %v\n", teacherKey)
 
-	demoPinTrivial := os.Getenv("DEMO_PIN_TRIVIAL")
-	if demoPinTrivial == "" {
-		log.Fatal("Missing DEMO_PIN_TRIVIAL env. variable")
-	}
-	fmt.Println("Demo pin for Trivial:", demoPinTrivial)
+	demoCode := getDemoCode()
+	fmt.Printf("Demontration code for student activities: %s\n", demoCode)
 
 	db, err := connectDB(*devPtr)
 	if err != nil {
@@ -124,24 +143,21 @@ func main() {
 	}
 	fmt.Printf("SMTP configured with %v.\n", smtp)
 
-	tc := teacher.NewController(db, smtp, teacherKey, studentKey, host)
+	tc := teacher.NewController(db, smtp, teacherKey, studentKey, host, demoCode)
 	admin, err := tc.LoadAdminTeacher()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Admin teacher loaded.")
+	_, err = tc.LoadDemoClassroom()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Demo classroom loaded.")
 
-	tvc := trivial.NewController(db, studentKey, demoPinTrivial, admin)
+	tvc := trivial.NewController(db, studentKey, demoCode, admin)
 	hwc := homework.NewController(db, admin, studentKey)
 	edit := editor.NewController(db, admin)
-
-	if *devPtr {
-		dev, err := tc.GetDevToken()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(dev)
-	}
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -156,12 +172,7 @@ func main() {
 	}
 
 	if *devPtr {
-		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
-			AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
-			ExposeHeaders: []string{"Content-Disposition"},
-		}))
-		fmt.Println("CORS activé.")
+		devSetup(e, tc)
 	}
 
 	setupRoutes(e, db, tvc, edit, tc, hwc)
@@ -267,8 +278,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 
 	// student client classroom managment
 	e.GET("/api/classroom/login", tc.CheckStudentClassroom)
-	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
-	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
+	e.GET("/api/classroom/attach", tc.AttachStudentToClassroomStep1)
+	e.POST("/api/classroom/attach", tc.AttachStudentToClassroomStep2)
 
 	// prof. back office
 	for _, route := range []string{

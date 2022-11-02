@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/pass"
 	tc "github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils/testutils"
 )
@@ -114,4 +115,32 @@ func TestStudentCRUD(t *testing.T) {
 	if err = ct.deleteStudent(st.Id, teacher.Id); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestDemoStudent(t *testing.T) {
+	const DEMO_CODE = "1234"
+	db := testutils.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../../migrations/create_manual.sql")
+	defer db.Remove()
+
+	ct := NewController(db.DB, pass.SMTP{}, pass.Encrypter{}, pass.Encrypter{}, "localhost:1323", DEMO_CODE)
+
+	_, err := ct.LoadAdminTeacher()
+	testutils.Assert(t, err == nil)
+	_, err = ct.LoadDemoClassroom()
+	testutils.Assert(t, err == nil)
+
+	_, err = ct.attachStudentCandidates("invalid code")
+	testutils.Assert(t, err != nil)
+
+	l, err := ct.attachStudentCandidates(DEMO_CODE + ".1")
+	testutils.Assert(t, err == nil)
+	testutils.Assert(t, len(l) == 1)
+
+	out, err := ct.validAttachStudent(AttachStudentToClassroom2In{
+		ClassroomCode: DEMO_CODE + ".1",
+		IdStudent:     l[0].Id,
+		Birthday:      "2000-01-01",
+	})
+	testutils.Assert(t, err == nil)
+	testutils.Assert(t, !out.ErrAlreadyAttached && !out.ErrInvalidBirthday)
 }
