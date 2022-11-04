@@ -2,6 +2,7 @@
   <v-dialog
     :model-value="showInscriptionValidated"
     @update:model-value="removeInscriptionValidated"
+    max-width="600px"
   >
     <v-card title="Inscription validée" color="success">
       <v-card-text>
@@ -11,7 +12,7 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="showSuccessInscription">
+  <v-dialog v-model="showSuccessInscription" max-width="600px">
     <v-card title="Inscription enregistrée" color="success">
       <v-card-text>
         Merci pour votre inscription ! <br />
