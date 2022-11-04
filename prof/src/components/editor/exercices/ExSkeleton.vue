@@ -103,7 +103,7 @@
       ></drop-zone>
 
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
-        <v-list-item @click="emit('goToQuestion', index)">
+        <v-list-item link @click="emit('goToQuestion', index)">
           <v-row>
             <v-col cols="auto" align-self="center">
               <drag-icon

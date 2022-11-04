@@ -19,6 +19,7 @@
             rounded
             class="my-1"
             v-for="(question, index) in variants"
+            link
             @click="
               emit('update:model-value', index);
               showMenu = false;

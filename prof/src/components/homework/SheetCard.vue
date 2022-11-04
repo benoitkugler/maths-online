@@ -52,6 +52,7 @@
           <v-list-item
             v-for="(classroom, index) in classrooms"
             :key="index"
+            link
             @click="emit('copy', classroom.id)"
           >
             {{ classroom.name }}

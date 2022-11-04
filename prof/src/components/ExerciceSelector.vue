@@ -43,6 +43,7 @@
             <v-expansion-panel-text>
               <v-list>
                 <v-list-item
+                  link
                   v-for="(exercice, index) in group.Variants"
                   :key="index"
                   @click="emit('selected', exercice)"
