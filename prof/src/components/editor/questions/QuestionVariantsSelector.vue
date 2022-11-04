@@ -54,7 +54,11 @@
                 </v-btn>
               </v-col>
               <v-col align-self="center" class="my-4" cols="7">
-                ({{ question.Id }}) {{ question.Subtitle || "..." }}
+                ({{ question.Id }})
+                <template v-if="question.Subtitle">{{
+                  question.Subtitle
+                }}</template>
+                <i v-else>(Sans titre)</i>
               </v-col>
               <v-col align-self="center" style="text-align: right">
                 <TagChip
