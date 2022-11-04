@@ -800,3 +800,9 @@ export function refreshExercicePreview(sessionID: string, id: IdExercice) {
     Questions: [] // ignored
   });
 }
+
+export interface VariantG {
+  Id: number;
+  Subtitle: string;
+  Difficulty: DifficultyTag;
+}
