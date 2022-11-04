@@ -74,7 +74,7 @@ const comparisonMessage = computed(() => {
     case ComparisonLevel.ExpandedSubstitutions:
       return "Les formules usuelles de développement et factorisation sont appliquées en évaluant la réponse : (x+1)^2 et x^2 + 2x + 1 sont considérées égales.";
     case ComparisonLevel.AsLinearEquation:
-      return "L'expression définit une équation linéaire, comparée à un facteur près.";
+      return "L'expression définit une équation cartésienne, comparée à un facteur près.";
     default:
       return "";
   }
@@ -83,7 +83,7 @@ const comparisonMessage = computed(() => {
 const comparisonSelectItems = [
   { title: "Comparaison stricte", value: ComparisonLevel.SimpleSubstitutions },
   { title: "Comparaison large", value: ComparisonLevel.ExpandedSubstitutions },
-  { title: "Equation linéaire", value: ComparisonLevel.AsLinearEquation },
+  { title: "Equation cartésienne", value: ComparisonLevel.AsLinearEquation },
 ];
 </script>
 
