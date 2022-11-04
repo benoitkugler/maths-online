@@ -77,7 +77,7 @@
       :readonly="isReadonly"
       :session_id="props.session_id"
       :all-tags="props.allTags"
-      :show-variant-meta="ownVariants.length >= 2"
+      :show-variant-meta="true"
       @update="(qu) => (ownVariants[variantIndex] = qu)"
     ></QuestionVariantPannel>
   </v-card>

@@ -77,7 +77,7 @@
       :is-readonly="isReadonly"
       :session-id="props.session_id"
       :all-tags="props.allTags"
-      :show-variant-meta="ownVariants.length >= 2"
+      :show-variant-meta="true"
       @update="(qu) => (ownVariants[variantIndex] = qu)"
     ></ExerciceVariantPannel>
   </v-card>
