@@ -74,7 +74,7 @@ const colorClass = computed(() => {
   if (props.hasError) {
     return "bg-red";
   }
-  return isAnswer.value ? "bg-pink-lighten-3" : "bg-purple-lighten-3";
+  return isAnswer.value ? "bg-pink-lighten-3" : "bg-purple-lighten-4";
 });
 
 const showLaTeXDoc = computed(() => {
