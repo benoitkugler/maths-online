@@ -65,7 +65,7 @@
                 <v-btn
                   link
                   block
-                  href="https://education.alwaysdata.net/test-eleve"
+                  href="https://isyro.fr/test-eleve"
                   color="primary"
                 >
                   Tester l'application élève
