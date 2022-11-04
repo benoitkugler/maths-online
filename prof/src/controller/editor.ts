@@ -720,7 +720,7 @@ export function tagColor(tag: string) {
     tag == DifficultyTag.Diff2 ||
     tag == DifficultyTag.Diff3
   ) {
-    return "secondary";
+    return "secondary-darken-1";
   }
   if (
     tag == LevelTag.Seconde ||
@@ -729,7 +729,7 @@ export function tagColor(tag: string) {
   ) {
     return "pink";
   }
-  return "primary";
+  return "primary-darken-1";
 }
 
 // returns 0 for question without difficulty
