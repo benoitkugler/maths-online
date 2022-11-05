@@ -9,7 +9,6 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/homework"
 	ta "github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/tasks"
@@ -560,39 +559,19 @@ func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) e
 	return nil
 }
 
-type ExerciceUses struct {
-	Tasks  []ta.Task
-	Sheets []homework.Sheet // the sheet containing the task
-}
-
 // getExerciceUses returns the item using the given exercice
-func getExerciceUses(db ed.DB, id ed.IdExercice) (out ExerciceUses, err error) {
+func getExerciceUses(db ed.DB, id ed.IdExercice) (out QuestionExerciceUses, err error) {
 	tas, err := ta.SelectTasksByIdExercices(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	links, err := homework.SelectSheetTasksByIdTasks(db, tas.IDs()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	sheets, err := homework.SelectSheets(db, links.IdSheets()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	taskToSheet := links.ByIdTask()
-
-	for _, ta := range tas {
-		out.Tasks = append(out.Tasks, ta)
-		out.Sheets = append(out.Sheets, sheets[taskToSheet[ta.Id].IdSheet])
-	}
-
-	return out, nil
+	return newQuestionExericeUses(db, tas.IDs())
 }
 
 type DeleteExerciceOut struct {
 	Deleted   bool
-	BlockedBy ExerciceUses // non empty iff Deleted == false
+	BlockedBy QuestionExerciceUses // non empty iff Deleted == false
 }
 
 func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (DeleteExerciceOut, error) {
@@ -604,7 +583,7 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 	if err != nil {
 		return DeleteExerciceOut{}, err
 	}
-	if len(uses.Tasks) != 0 {
+	if len(uses) != 0 {
 		return DeleteExerciceOut{
 			Deleted:   false,
 			BlockedBy: uses,

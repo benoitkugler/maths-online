@@ -331,15 +331,46 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type QuestionUses struct {
-	Monoquestions []tasks.Monoquestion
-	Tasks         []tasks.IdTask   // the id of the task containing the [Monoquestions]
-	Sheets        []homework.Sheet // the sheet containing the task
+type TaskDetails struct {
+	Id        tasks.IdTask
+	Sheet     homework.Sheet
+	Classroom teacher.Classroom
+}
+
+type QuestionExerciceUses []TaskDetails // the task containing the [Monoquestions]
+
+func newQuestionExericeUses(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, error) {
+	links, err := homework.SelectSheetTasksByIdTasks(db, idTasks...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	sheets, err := homework.SelectSheets(db, links.IdSheets()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	taskToSheet := links.ByIdTask()
+
+	classrooms, err := teacher.SelectClassrooms(db, sheets.IdClassrooms()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make([]TaskDetails, len(idTasks))
+	for i, id := range idTasks {
+		sheet := sheets[taskToSheet[id].IdSheet]
+		out[i] = TaskDetails{
+			Id:        id,
+			Sheet:     sheet,
+			Classroom: classrooms[sheet.IdClassroom],
+		}
+	}
+
+	return out, nil
 }
 
 // getQuestionUses returns the item using the given question
 // exercices are not considered since questions in exercices can't be accessed directly
-func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionUses, err error) {
+func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionExerciceUses, err error) {
 	monoquestions, err := tasks.SelectMonoquestionsByIdQuestions(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -350,28 +381,12 @@ func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionUses, err error) {
 		return out, utils.SQLError(err)
 	}
 
-	links, err := homework.SelectSheetTasksByIdTasks(db, tasks.IDs()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	sheets, err := homework.SelectSheets(db, links.IdSheets()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	taskToSheet := links.ByIdTask()
-
-	for _, ta := range tasks {
-		out.Tasks = append(out.Tasks, ta.Id)
-		out.Monoquestions = append(out.Monoquestions, monoquestions[ta.IdMonoquestion.ID])
-		out.Sheets = append(out.Sheets, sheets[taskToSheet[ta.Id].IdSheet])
-	}
-
-	return out, nil
+	return newQuestionExericeUses(db, tasks.IDs())
 }
 
 type DeleteQuestionOut struct {
 	Deleted   bool
-	BlockedBy QuestionUses // non empty iff Deleted == false
+	BlockedBy QuestionExerciceUses // non empty iff Deleted == false
 }
 
 func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuestionOut, error) {
@@ -393,7 +408,7 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuesti
 	if err != nil {
 		return DeleteQuestionOut{}, err
 	}
-	if len(uses.Monoquestions) != 0 {
+	if len(uses) != 0 {
 		return DeleteQuestionOut{
 			Deleted:   false,
 			BlockedBy: uses,

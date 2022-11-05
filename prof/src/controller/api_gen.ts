@@ -174,12 +174,12 @@ export type Date = Date_;
 // github.com/benoitkugler/maths-online/prof/editor.DeleteExerciceOut
 export interface DeleteExerciceOut {
   Deleted: boolean;
-  BlockedBy: ExerciceUses;
+  BlockedBy: QuestionExerciceUses;
 }
 // github.com/benoitkugler/maths-online/prof/editor.DeleteQuestionOut
 export interface DeleteQuestionOut {
   Deleted: boolean;
-  BlockedBy: QuestionUses;
+  BlockedBy: QuestionExerciceUses;
 }
 // github.com/benoitkugler/maths-online/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
@@ -270,11 +270,6 @@ export interface ExerciceUpdateQuestionsIn {
 export interface ExerciceUpdateVisiblityIn {
   ID: IdExercicegroup;
   Public: boolean;
-}
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceUses
-export interface ExerciceUses {
-  Tasks: Task[] | null;
-  Sheets: Sheet[] | null;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Exercicegroup
 export interface Exercicegroup {
@@ -518,11 +513,6 @@ export interface OptionalIdExercice {
   Valid: boolean;
   ID: IdExercice;
 }
-// github.com/benoitkugler/maths-online/sql/tasks.OptionalIdMonoquestion
-export interface OptionalIdMonoquestion {
-  Valid: boolean;
-  ID: IdMonoquestion;
-}
 // github.com/benoitkugler/maths-online/sql/editor.OptionalIdQuestiongroup
 export interface OptionalIdQuestiongroup {
   ID: IdQuestiongroup;
@@ -621,6 +611,8 @@ export interface Question {
 }
 // github.com/benoitkugler/maths-online/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.QuestionExerciceUses
+export type QuestionExerciceUses = TaskDetails[] | null;
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Id: IdQuestion;
@@ -636,12 +628,6 @@ export interface QuestionPage {
 export interface QuestionUpdateVisiblityIn {
   ID: IdQuestiongroup;
   Public: boolean;
-}
-// github.com/benoitkugler/maths-online/prof/editor.QuestionUses
-export interface QuestionUses {
-  Monoquestions: Monoquestion[] | null;
-  Tasks: IdTask[] | null;
-  Sheets: Sheet[] | null;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Questiongroup
 export interface Questiongroup {
@@ -848,14 +834,14 @@ export interface TableFieldBlock {
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/tasks.Task
-export interface Task {
-  Id: IdTask;
-  IdExercice: OptionalIdExercice;
-  IdMonoquestion: OptionalIdMonoquestion;
-}
 // github.com/benoitkugler/maths-online/tasks.TaskBareme
 export type TaskBareme = number[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.TaskDetails
+export interface TaskDetails {
+  Id: IdTask;
+  Sheet: Sheet;
+  Classroom: Classroom;
+}
 // github.com/benoitkugler/maths-online/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
