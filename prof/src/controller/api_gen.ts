@@ -171,6 +171,16 @@ export interface CreateSheetIn {
 }
 // github.com/benoitkugler/maths-online/sql/teacher.Date
 export type Date = Date_;
+// github.com/benoitkugler/maths-online/prof/editor.DeleteExerciceOut
+export interface DeleteExerciceOut {
+  Deleted: boolean;
+  BlockedBy: ExerciceUses;
+}
+// github.com/benoitkugler/maths-online/prof/editor.DeleteQuestionOut
+export interface DeleteQuestionOut {
+  Deleted: boolean;
+  BlockedBy: QuestionUses;
+}
 // github.com/benoitkugler/maths-online/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
 // github.com/benoitkugler/maths-online/sql/editor.DifficultyTag
@@ -260,6 +270,11 @@ export interface ExerciceUpdateQuestionsIn {
 export interface ExerciceUpdateVisiblityIn {
   ID: IdExercicegroup;
   Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceUses
+export interface ExerciceUses {
+  Tasks: Task[] | null;
+  Sheets: Sheet[] | null;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Exercicegroup
 export interface Exercicegroup {
@@ -503,6 +518,11 @@ export interface OptionalIdExercice {
   Valid: boolean;
   ID: IdExercice;
 }
+// github.com/benoitkugler/maths-online/sql/tasks.OptionalIdMonoquestion
+export interface OptionalIdMonoquestion {
+  Valid: boolean;
+  ID: IdMonoquestion;
+}
 // github.com/benoitkugler/maths-online/sql/editor.OptionalIdQuestiongroup
 export interface OptionalIdQuestiongroup {
   ID: IdQuestiongroup;
@@ -616,6 +636,12 @@ export interface QuestionPage {
 export interface QuestionUpdateVisiblityIn {
   ID: IdQuestiongroup;
   Public: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/editor.QuestionUses
+export interface QuestionUses {
+  Monoquestions: Monoquestion[] | null;
+  Tasks: IdTask[] | null;
+  Sheets: Sheet[] | null;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Questiongroup
 export interface Questiongroup {
@@ -821,6 +847,12 @@ export interface TableFieldBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
+}
+// github.com/benoitkugler/maths-online/sql/tasks.Task
+export interface Task {
+  Id: IdTask;
+  IdExercice: OptionalIdExercice;
+  IdMonoquestion: OptionalIdMonoquestion;
 }
 // github.com/benoitkugler/maths-online/tasks.TaskBareme
 export type TaskBareme = number[] | null;
@@ -1809,11 +1841,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorDeleteQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    await Axios.delete(fullUrl, {
+    const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return true;
+    return rep.data;
   }
 
   /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
@@ -1821,14 +1853,16 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteQuestion(params);
-      this.onSuccessEditorDeleteQuestion();
+      this.onSuccessEditorDeleteQuestion(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorDeleteQuestion(): void;
+  protected abstract onSuccessEditorDeleteQuestion(
+    data: DeleteQuestionOut
+  ): void;
 
   protected async rawEditorSaveQuestionMeta(params: SaveQuestionMetaIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/variant";
@@ -2048,11 +2082,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorDeleteExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
-    await Axios.delete(fullUrl, {
+    const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return true;
+    return rep.data;
   }
 
   /** EditorDeleteExercice wraps rawEditorDeleteExercice and handles the error */
@@ -2060,14 +2094,16 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteExercice(params);
-      this.onSuccessEditorDeleteExercice();
+      this.onSuccessEditorDeleteExercice(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorDeleteExercice(): void;
+  protected abstract onSuccessEditorDeleteExercice(
+    data: DeleteExerciceOut
+  ): void;
 
   protected async rawEditorSaveExerciceMeta(params: Exercice) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";

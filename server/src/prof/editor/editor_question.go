@@ -17,6 +17,8 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -312,7 +314,7 @@ func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID 
 
 // EditorDeleteQuestion remove the given question,
 // also removing the group if needed.
-// TODO: check usage in exercices and tasks
+// An information is returned if the question is used in monoquestions (tasks)
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -321,64 +323,101 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteQuestion(ed.IdQuestion(id), user.Id)
+	out, err := ct.deleteQuestion(ed.IdQuestion(id), user.Id)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
-func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) error {
+type QuestionUses struct {
+	Monoquestions []tasks.Monoquestion
+	Tasks         []tasks.IdTask   // the id of the task containing the [Monoquestions]
+	Sheets        []homework.Sheet // the sheet containing the task
+}
+
+// getQuestionUses returns the item using the given question
+// exercices are not considered since questions in exercices can't be accessed directly
+func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionUses, err error) {
+	monoquestions, err := tasks.SelectMonoquestionsByIdQuestions(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	tasks, err := tasks.SelectTasksByIdMonoquestions(db, monoquestions.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	links, err := homework.SelectSheetTasksByIdTasks(db, tasks.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	sheets, err := homework.SelectSheets(db, links.IdSheets()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	taskToSheet := links.ByIdTask()
+
+	for _, ta := range tasks {
+		out.Tasks = append(out.Tasks, ta.Id)
+		out.Monoquestions = append(out.Monoquestions, monoquestions[ta.IdMonoquestion.ID])
+		out.Sheets = append(out.Sheets, sheets[taskToSheet[ta.Id].IdSheet])
+	}
+
+	return out, nil
+}
+
+type DeleteQuestionOut struct {
+	Deleted   bool
+	BlockedBy QuestionUses // non empty iff Deleted == false
+}
+
+func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuestionOut, error) {
 	qu, err := ed.SelectQuestion(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, utils.SQLError(err)
 	}
 
 	group, err := ct.getGroup(qu)
 	if err != nil {
-		return err
+		return DeleteQuestionOut{}, err
 	}
 
 	if group.IdTeacher != userID {
-		return accessForbidden
+		return DeleteQuestionOut{}, accessForbidden
 	}
 
-	// TODO: check if it used in tasks
-	// (SQL constraint will trigger with a non user friendly error message)
-
-	links, err := ed.SelectExerciceQuestionsByIdQuestions(ct.db, id)
+	uses, err := getQuestionUses(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, err
 	}
-
-	if len(links) != 0 {
-		ex, err := ed.SelectExercice(ct.db, links[0].IdExercice)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-
-		return fmt.Errorf("La question est utilisée dans l'exercice %s : %d.", ex.Subtitle, ex.Id)
+	if len(uses.Monoquestions) != 0 {
+		return DeleteQuestionOut{
+			Deleted:   false,
+			BlockedBy: uses,
+		}, nil
 	}
 
 	_, err = ed.DeleteQuestionById(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, utils.SQLError(err)
 	}
 
 	// check if group is empty
 	ques, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, utils.SQLError(err)
 	}
 	if len(ques) == 0 {
 		_, err = ed.DeleteQuestiongroupById(ct.db, group.Id)
 		if err != nil {
-			return utils.SQLError(err)
+			return DeleteQuestionOut{}, utils.SQLError(err)
 		}
 	}
 
-	return nil
+	return DeleteQuestionOut{Deleted: true}, nil
 }
 
 // EditorGetQuestions returns the questions for the given group

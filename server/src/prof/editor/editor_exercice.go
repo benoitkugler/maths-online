@@ -9,6 +9,8 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/homework"
+	ta "github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
@@ -523,6 +525,7 @@ func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userI
 
 // EditorDeleteExercice remove the given exercice, also cleaning
 // up the exercice group if needed.
+// It returns information if the exercice is used in tasks
 func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -531,12 +534,12 @@ func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteExercice(ed.IdExercice(idExercice), user.Id)
+	out, err := ct.deleteExercice(ed.IdExercice(idExercice), user.Id)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) error {
@@ -557,21 +560,64 @@ func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) e
 	return nil
 }
 
-func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) error {
-	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
-		return err
+type ExerciceUses struct {
+	Tasks  []ta.Task
+	Sheets []homework.Sheet // the sheet containing the task
+}
+
+// getExerciceUses returns the item using the given exercice
+func getExerciceUses(db ed.DB, id ed.IdExercice) (out ExerciceUses, err error) {
+	tas, err := ta.SelectTasksByIdExercices(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
 	}
 
-	// TODO: check if it used in tasks
-	// (SQL constraint will trigger with a non user friendly error message)
+	links, err := homework.SelectSheetTasksByIdTasks(db, tas.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	sheets, err := homework.SelectSheets(db, links.IdSheets()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	taskToSheet := links.ByIdTask()
+
+	for _, ta := range tas {
+		out.Tasks = append(out.Tasks, ta)
+		out.Sheets = append(out.Sheets, sheets[taskToSheet[ta.Id].IdSheet])
+	}
+
+	return out, nil
+}
+
+type DeleteExerciceOut struct {
+	Deleted   bool
+	BlockedBy ExerciceUses // non empty iff Deleted == false
+}
+
+func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (DeleteExerciceOut, error) {
+	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
+		return DeleteExerciceOut{}, err
+	}
+
+	uses, err := getExerciceUses(ct.db, idExercice)
+	if err != nil {
+		return DeleteExerciceOut{}, err
+	}
+	if len(uses.Tasks) != 0 {
+		return DeleteExerciceOut{
+			Deleted:   false,
+			BlockedBy: uses,
+		}, nil
+	}
 
 	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, idExercice)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 	qus, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// delete not standalone questions linked to the exercice
@@ -584,36 +630,36 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) error
 
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// remove the links
 	_, err = ed.DeleteExerciceQuestionsByIdExercices(tx, idExercice)
 	if err != nil {
 		_ = tx.Rollback()
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// remove the actual questions
 	_, err = ed.DeleteQuestionsByIDs(tx, toDelete...)
 	if err != nil {
 		_ = tx.Rollback()
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// finaly remove the exercice
 	_, err = ed.DeleteExerciceById(tx, idExercice)
 	if err != nil {
 		_ = tx.Rollback()
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
-	return nil
+	return DeleteExerciceOut{Deleted: true}, nil
 }
 
 type ExerciceCreateQuestionIn struct {
