@@ -83,22 +83,41 @@ import type {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { $ref } from "vue/macros";
 import ClassroomSheetsRow from "../components/homework/ClassroomSheetsRow.vue";
 import SheetDetails from "../components/homework/SheetDetails.vue";
 
 let classrooms = $ref<ClassroomSheets[]>([]);
 
+const route = useRoute();
+
 onMounted(() => {
   fetchClassrooms();
 });
 
-onActivated(fetchClassrooms);
+onActivated(async () => {
+  await fetchClassrooms();
+  showDetailsFromQuery();
+});
 
 const classroomList = computed(() => classrooms.map((cl) => cl.Classroom));
 
 let sheetToUpdate = $ref<SheetExt | null>(null);
 let sheetToDelete = $ref<SheetExt | null>(null);
+
+function showDetailsFromQuery() {
+  const idSheet = Number(route.query["idSheet"]);
+  if (isNaN(idSheet)) return;
+  classrooms.forEach((cl) =>
+    cl.Sheets?.forEach((sh) => {
+      if (sh.Sheet.Id == idSheet) {
+        sheetToUpdate = sh;
+        return;
+      }
+    })
+  );
+}
 
 async function fetchClassrooms() {
   const res = await controller.HomeworkGetSheets();

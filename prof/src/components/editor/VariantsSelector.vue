@@ -1,5 +1,5 @@
 <template>
-  <v-menu offset-y :close-on-content-click="false" v-model="showMenu">
+  <v-menu offset-y :close-on-content-click="true" v-model="showMenu">
     <template v-slot:activator="{ isActive, props: slotProps }">
       <v-btn
         title="Gérer les variantes"
@@ -18,13 +18,13 @@
             :active="index == props.modelValue"
             rounded
             class="my-1"
-            v-for="(question, index) in variants"
+            v-for="(variant, index) in variants"
             link
             @click="
               emit('update:model-value', index);
               showMenu = false;
             "
-            :key="question.Id"
+            :key="variant.Id"
           >
             <v-row>
               <v-col align-self="center" cols="auto">
@@ -33,7 +33,10 @@
                   class="ml-1"
                   size="small"
                   icon
-                  @click.stop="emit('delete', question)"
+                  @click.stop="
+                    showMenu = false;
+                    emit('delete', variant);
+                  "
                   title="Supprimer la variante"
                 >
                   <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
@@ -44,7 +47,7 @@
                   class="mx-1"
                   size="small"
                   icon
-                  @click.stop="emit('duplicate', question)"
+                  @click.stop="emit('duplicate', variant)"
                   title="Dupliquer la variante"
                 >
                   <v-icon
@@ -55,16 +58,16 @@
                 </v-btn>
               </v-col>
               <v-col align-self="center" class="my-4" cols="7">
-                ({{ question.Id }})
-                <template v-if="question.Subtitle">{{
-                  question.Subtitle
+                ({{ variant.Id }})
+                <template v-if="variant.Subtitle">{{
+                  variant.Subtitle
                 }}</template>
                 <i v-else>(Sans titre)</i>
               </v-col>
               <v-col align-self="center" style="text-align: right">
                 <TagChip
-                  v-if="question.Difficulty"
-                  :tag="question.Difficulty"
+                  v-if="variant.Difficulty"
+                  :tag="variant.Difficulty"
                 ></TagChip>
                 <v-chip v-else size="small" label title="Difficulté"
                   >Aucune</v-chip
@@ -79,12 +82,12 @@
 </template>
 
 <script setup lang="ts">
-import type { ExerciceHeader } from "@/controller/api_gen";
+import type { VariantG } from "@/controller/editor";
 import { $ref } from "vue/macros";
-import TagChip from "../utils/TagChip.vue";
+import TagChip from "./utils/TagChip.vue";
 
 interface Props {
-  variants: ExerciceHeader[];
+  variants: VariantG[];
   readonly: boolean;
   modelValue: number; // index into variants
 }
@@ -93,8 +96,8 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update:model-value", v: number): void;
-  (e: "delete", question: ExerciceHeader): void;
-  (e: "duplicate", question: ExerciceHeader): void;
+  (e: "delete", variant: VariantG): void;
+  (e: "duplicate", variant: VariantG): void;
 }>();
 
 const showMenu = $ref(false);

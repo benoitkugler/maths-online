@@ -2,7 +2,7 @@
   <v-dialog
     :model-value="exerciceToDelete != null"
     @update:model-value="exerciceToDelete = null"
-    max-width="800"
+    max-width="700"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -23,6 +23,18 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+  </v-dialog>
+
+  <v-dialog
+    :model-value="deletedBlocked != null"
+    @update:model-value="deletedBlocked = null"
+    max-width="600"
+  >
+    <UsesCard
+      :uses="deletedBlocked || []"
+      @back="deletedBlocked = null"
+      @go-to="goToSheet"
+    ></UsesCard>
   </v-dialog>
 
   <v-card class="mt-3 px-2">
@@ -62,13 +74,13 @@
       ></v-col>
 
       <v-col cols="auto" align-self="center" class="px-1">
-        <ExerciceVariantsSelector
+        <VariantsSelector
           :variants="ownVariants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (exerciceToDelete = qu)"
           @duplicate="duplicateVariante"
-        ></ExerciceVariantsSelector>
+        ></VariantsSelector>
       </v-col>
     </v-row>
 
@@ -84,14 +96,22 @@
 </template>
 
 <script setup lang="ts">
-import type { ExercicegroupExt, ExerciceHeader } from "@/controller/api_gen";
+import type {
+  ExercicegroupExt,
+  ExerciceHeader,
+  QuestionExerciceUses,
+  Sheet,
+} from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import type { VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
+import { useRouter } from "vue-router";
 import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
+import UsesCard from "../UsesCard.vue";
+import VariantsSelector from "../VariantsSelector.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
-import ExerciceVariantsSelector from "./ExerciceVariantsSelector.vue";
 
 interface Props {
   session_id: string;
@@ -104,6 +124,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "back"): void;
 }>();
+
+const router = useRouter();
 
 let group = $ref(copy(props.group));
 let ownVariants = $ref(copy(props.group.Variants || []));
@@ -119,13 +141,30 @@ async function updateExercicegroup() {
   await controller.EditorUpdateExercicegroup(group.Group);
 }
 
+let deletedBlocked = $ref<QuestionExerciceUses>(null);
+function goToSheet(sh: Sheet) {
+  deletedBlocked = null;
+
+  router.push({ name: "homework", query: { idSheet: sh.Id } });
+}
+
 let exerciceToDelete: ExerciceHeader | null = $ref(null);
 async function deleteVariante() {
-  await controller.EditorDeleteExercice({ id: exerciceToDelete!.Id });
-
-  ownVariants = ownVariants.filter((qu) => qu.Id != exerciceToDelete!.Id);
+  const exe = exerciceToDelete;
+  if (exe == null) return;
+  const res = await controller.EditorDeleteExercice({
+    id: exe.Id,
+  });
   exerciceToDelete = null;
 
+  if (res == undefined) return;
+  // check if the question is used
+  if (!res.Deleted) {
+    deletedBlocked = res.BlockedBy;
+    return;
+  }
+
+  ownVariants = ownVariants.filter((qu) => qu.Id != exe.Id);
   if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
@@ -136,7 +175,7 @@ async function deleteVariante() {
   }
 }
 
-async function duplicateVariante(exercice: ExerciceHeader) {
+async function duplicateVariante(exercice: VariantG) {
   const newExercice = await controller.EditorDuplicateExercice({
     id: exercice.Id,
   });

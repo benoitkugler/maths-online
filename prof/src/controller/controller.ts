@@ -7,6 +7,8 @@ import type {
   Classroom,
   ClassroomExt,
   ClassroomSheets,
+  DeleteExerciceOut,
+  DeleteQuestionOut,
   Exercice,
   ExerciceExt,
   ExercicegroupExt,
@@ -420,9 +422,11 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessEditorDeleteQuestion(): void {
+  protected onSuccessEditorDeleteQuestion(data: DeleteQuestionOut): void {
     this.inRequest = false;
-    if (this.showMessage) {
+    console.log(data);
+
+    if (this.showMessage && data.Deleted) {
       this.showMessage("Question supprimée avec succès.");
     }
   }
@@ -460,9 +464,9 @@ class Controller extends AbstractAPI {
       this.showMessage("Exercice crée avec succès.");
     }
   }
-  protected onSuccessEditorDeleteExercice(): void {
+  protected onSuccessEditorDeleteExercice(data: DeleteExerciceOut): void {
     this.inRequest = false;
-    if (this.showMessage) {
+    if (this.showMessage && data.Deleted) {
       this.showMessage("Exercice supprimé avec succès.");
     }
   }
