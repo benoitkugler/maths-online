@@ -97,7 +97,7 @@
       </div>
     </v-app-bar>
 
-    <v-main>
+    <v-main :class="{ 'background-logo': !isLoggedIn }">
       <loggin-screen v-if="!isLoggedIn" @loggin="onLoggin"></loggin-screen>
       <router-view v-else v-slot="{ Component }">
         <transition>
@@ -174,3 +174,11 @@ function logout() {
   controller.logout();
 }
 </script>
+
+<style>
+.background-logo {
+  background: url("@/assets/logo-alpha30.png") no-repeat fixed !important;
+  background-position: bottom 10px right 10px !important;
+  background-size: 15% !important;
+}
+</style>

@@ -24,7 +24,7 @@
     </v-card>
   </v-dialog>
 
-  <v-row class="my-1 mx-6 fill-height">
+  <v-row class="my-1 mx-6 pb-3 fill-height">
     <v-col cols="6" align-self="center">
       <v-card>
         <v-card-title class="bg-primary rounded"> Se connecter </v-card-title>
