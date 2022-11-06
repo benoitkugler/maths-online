@@ -177,6 +177,15 @@ func randSliceque_FunctionDefinition() []questions.FunctionDefinition {
 	return out
 }
 
+func randSliceque_FunctionPoint() []questions.FunctionPoint {
+	l := 40 + rand.Intn(10)
+	out := make([]questions.FunctionPoint, l)
+	for i := range out {
+		out[i] = randque_FunctionPoint()
+	}
+	return out
+}
+
 func randSliceque_Interpolated() []questions.Interpolated {
 	l := 40 + rand.Intn(10)
 	out := make([]questions.Interpolated, l)
@@ -281,12 +290,6 @@ func randbool() bool {
 	return i == 1
 }
 
-func randexp_ComparisonLevel() expression.ComparisonLevel {
-	choix := [...]expression.ComparisonLevel{expression.Strict, expression.SimpleSubstitutions, expression.ExpandedSubstitutions}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randexp_Variable() expression.Variable {
 	return expression.Variable{
 		Indice: randstring(),
@@ -342,6 +345,12 @@ func randque_Block() questions.Block {
 	return choix[i]
 }
 
+func randque_ComparisonLevel() questions.ComparisonLevel {
+	choix := [...]questions.ComparisonLevel{questions.AsLinearEquation, questions.ExpandedSubstitutions, questions.SimpleSubstitutions, questions.Strict}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randque_CoordExpression() questions.CoordExpression {
 	return questions.CoordExpression{
 		X: randstring(),
@@ -355,9 +364,10 @@ func randque_Enonce() questions.Enonce {
 
 func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
 	return questions.ExpressionFieldBlock{
-		Expression:      randstring(),
-		Label:           randque_Interpolated(),
-		ComparisonLevel: randexp_ComparisonLevel(),
+		Expression:       randstring(),
+		Label:            randque_Interpolated(),
+		ComparisonLevel:  randque_ComparisonLevel(),
+		ShowFractionHelp: randbool(),
 	}
 }
 
@@ -428,6 +438,15 @@ func randque_FunctionDefinition() questions.FunctionDefinition {
 	}
 }
 
+func randque_FunctionPoint() questions.FunctionPoint {
+	return questions.FunctionPoint{
+		Function: randque_Interpolated(),
+		X:        randstring(),
+		Color:    randstring(),
+		Legend:   randque_Interpolated(),
+	}
+}
+
 func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
 	return questions.FunctionPointsFieldBlock{
 		Function: randstring(),
@@ -442,6 +461,7 @@ func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 		FunctionExprs:      randSliceque_FunctionDefinition(),
 		FunctionVariations: randSliceque_VariationTableBlock(),
 		Areas:              randSliceque_FunctionArea(),
+		Points:             randSliceque_FunctionPoint(),
 	}
 }
 

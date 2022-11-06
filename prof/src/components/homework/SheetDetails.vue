@@ -1,5 +1,5 @@
 <template>
-  <v-card min-width="1200">
+  <v-card>
     <v-row class="mx-2 mt-1">
       <v-col>
         <v-card-title>Modifier la feuille</v-card-title>

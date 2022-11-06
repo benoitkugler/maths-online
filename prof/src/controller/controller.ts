@@ -7,15 +7,19 @@ import type {
   Classroom,
   ClassroomExt,
   ClassroomSheets,
+  DeleteExerciceOut,
+  DeleteQuestionOut,
   Exercice,
   ExerciceExt,
   ExercicegroupExt,
   ExerciceHeader,
   GenerateClassroomCodeOut,
+  HomeworkMarksOut,
   LaunchSessionOut,
   ListExercicesOut,
   ListQuestionsOut,
   LogginOut,
+  MonitorOut,
   Question,
   QuestiongroupExt,
   RunningSessionMetaOut,
@@ -112,6 +116,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Question (et variantes) dupliquée avec succès.");
     }
   }
+
   protected onSuccessEditorCreateQuestiongroup(data: QuestiongroupExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -206,6 +211,13 @@ class Controller extends AbstractAPI {
     }
   }
 
+  protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Notes chargées avec succès.");
+    }
+  }
+
   protected onSuccessExerciceGetContent(data: ExerciceExt): void {
     this.inRequest = false;
   }
@@ -233,6 +245,13 @@ class Controller extends AbstractAPI {
     data: SaveExerciceAndPreviewOut
   ): void {
     this.inRequest = false;
+  }
+
+  protected onSuccessEditorDuplicateExercicegroup(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Exercice (et variantes) dupliqué avec succès.");
+    }
   }
 
   protected onSuccessGetTrivialRunningSessions(
@@ -378,6 +397,10 @@ class Controller extends AbstractAPI {
     }
   }
 
+  protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessEditorStartSession(data: StartSessionOut): void {
     this.editorSessionID = data.ID;
     this.inRequest = false;
@@ -399,9 +422,11 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessEditorDeleteQuestion(): void {
+  protected onSuccessEditorDeleteQuestion(data: DeleteQuestionOut): void {
     this.inRequest = false;
-    if (this.showMessage) {
+    console.log(data);
+
+    if (this.showMessage && data.Deleted) {
       this.showMessage("Question supprimée avec succès.");
     }
   }
@@ -439,9 +464,9 @@ class Controller extends AbstractAPI {
       this.showMessage("Exercice crée avec succès.");
     }
   }
-  protected onSuccessEditorDeleteExercice(): void {
+  protected onSuccessEditorDeleteExercice(data: DeleteExerciceOut): void {
     this.inRequest = false;
-    if (this.showMessage) {
+    if (this.showMessage && data.Deleted) {
       this.showMessage("Exercice supprimé avec succès.");
     }
   }
@@ -467,6 +492,12 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Questions modifiées avec succès.");
+    }
+  }
+  protected onSuccessEditorExerciceDuplicateQuestion(data: ExerciceExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Question dupliquée avec succès.");
     }
   }
   protected onSuccessEditorUpdateExercicegroupVis(): void {

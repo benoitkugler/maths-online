@@ -5,6 +5,7 @@ package homework
 
 import (
 	"database/sql"
+	"fmt"
 	"sort"
 
 	ho "github.com/benoitkugler/maths-online/sql/homework"
@@ -72,6 +73,8 @@ type SheetExt struct {
 	Tasks []TaskExt
 }
 
+// sheetLoader is an helper type to
+// unify sheet tasks loading
 type sheetLoader struct {
 	links map[ho.IdSheet]ho.SheetTasks
 
@@ -80,7 +83,7 @@ type sheetLoader struct {
 	progressions map[tasks.IdTask]tasks.Progressions
 }
 
-func newSheetLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error) {
+func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error) {
 	// load all the tasks and exercices required...
 	links1, err := ho.SelectSheetTasksByIdSheets(db, idSheets...)
 	if err != nil {
@@ -104,10 +107,25 @@ func newSheetLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error
 	return out, nil
 }
 
+func (loader sheetLoader) allProgressions() (out tasks.Progressions) {
+	out = make(tasks.Progressions)
+	for _, progressionForTask := range loader.progressions {
+		for _, prog := range progressionForTask {
+			out[prog.Id] = prog
+		}
+	}
+	return out
+}
+
+func (loader sheetLoader) taskForSheet(id ho.IdSheet) ho.SheetTasks {
+	links := loader.links[id]
+	links.EnsureOrder()
+	return links
+}
+
 func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
 	out := SheetExt{Sheet: sheet}
-	links := loader.links[sheet.Id]
-	links.EnsureOrder()
+	links := loader.taskForSheet(sheet.Id)
 	for _, link := range links {
 		task := loader.tasks.Tasks[link.IdTask]
 		work := loader.tasks.GetWork(task)
@@ -141,4 +159,17 @@ func updateSheetTasksOrder(tx *sql.Tx, idSheet ho.IdSheet, l []tasks.IdTask) err
 	}
 
 	return nil
+}
+
+func sheetFromTask(db tasks.DB, idTask tasks.IdTask) (ho.Sheet, error) {
+	link, found, err := ho.SelectSheetTaskByIdTask(db, idTask)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
+	}
+
+	if !found {
+		return ho.Sheet{}, fmt.Errorf("internal error: task %d without sheet", idTask)
+	}
+
+	return ho.SelectSheet(db, link.IdSheet)
 }

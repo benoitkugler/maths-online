@@ -41,9 +41,6 @@ type gameSession struct {
 	createGameEvents   chan createGame // calls createGame()
 	stopGameEvents     chan stopGame   // calls stopGame()
 	afterGameEndEvents chan tv.RoomID  // calls afterGameEnd()
-
-	// clients to which send the content of `monitor`
-	teacherClients map[*teacherClient]bool
 }
 
 func newGameSession(id SessionID, idTeacher uID) *gameSession {
@@ -55,7 +52,6 @@ func newGameSession(id SessionID, idTeacher uID) *gameSession {
 		createGameEvents:   make(chan createGame),
 		stopGameEvents:     make(chan stopGame),
 		afterGameEndEvents: make(chan tv.RoomID),
-		teacherClients:     make(map[*teacherClient]bool),
 	}
 }
 
@@ -113,12 +109,9 @@ func (gs *gameSession) exploitReplay(review tv.Replay) {
 }
 
 func (gs *gameSession) afterGameEnd(gameID tv.RoomID) {
-	fmt.Println("afterGameEnd")
 	gs.lock.Lock()
 	delete(gs.games, gameID)
 	gs.lock.Unlock()
-
-	gs.monitorRemoveGame(gameID)
 }
 
 func (gs *gameSession) stopGame(params stopGame) {
@@ -146,9 +139,6 @@ func (gs *gameSession) stopGame(params stopGame) {
 
 // mainLoop blocks until all games are terminated or `ctx` is Done
 func (gs *gameSession) mainLoop(ctx context.Context) {
-	monitorTicker := time.NewTicker(2 * time.Second)
-	defer monitorTicker.Stop()
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -166,20 +156,7 @@ func (gs *gameSession) mainLoop(ctx context.Context) {
 			}
 		case gameID := <-gs.afterGameEndEvents:
 			gs.afterGameEnd(gameID)
-		case <-monitorTicker.C:
-			sum := gs.collectSummaries()
-			for client := range gs.teacherClients {
-				client.sendSummary(sum)
-			}
 		}
-	}
-}
-
-func (gs *gameSession) monitorRemoveGame(gameID tv.RoomID) {
-	// notify the monitors
-	sum := gs.collectSummaries()
-	for client := range gs.teacherClients {
-		client.sendSummary(sum)
 	}
 }
 

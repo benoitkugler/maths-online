@@ -123,6 +123,7 @@ class _SheetWState extends State<SheetW> {
   @override
   Widget build(BuildContext context) {
     final hasNotation = widget.sheet.sheet.notation != Notation.noNotation;
+    final isExpired = widget.sheet.sheet.deadline.isBefore(DateTime.now());
     return Scaffold(
       appBar: AppBar(title: const Text("Fiche de travail")),
       body: Padding(
@@ -136,18 +137,36 @@ class _SheetWState extends State<SheetW> {
                   child: ColoredTitle(
                       widget.sheet.sheet.title, Colors.blueAccent)),
             ),
-            if (hasNotation)
+            if (hasNotation) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
-                    Text("pour le ${formatTime(widget.sheet.sheet.deadline)}",
-                        style: const TextStyle(fontSize: 18)),
+                    RichText(
+                        text: TextSpan(
+                            style: const TextStyle(fontSize: 16),
+                            children: [
+                          const TextSpan(text: "A rendre avant le\n"),
+                          TextSpan(
+                              text: formatTime(widget.sheet.sheet.deadline),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                        ]))
                   ],
                 ),
               ),
+              if (isExpired)
+                const Card(
+                  color: Colors.orange,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                        "La progression et les notes de cette fiche sont verrouillées, car sa date de rendu est dépassée."),
+                  ),
+                )
+            ],
             Expanded(
                 child: _TaskList(widget.sheet.tasks, hasNotation,
                     (ex) => _startExercice(ex, context))),

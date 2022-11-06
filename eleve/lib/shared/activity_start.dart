@@ -41,8 +41,8 @@ class _Text extends StatelessWidget {
       style: const TextStyle(fontSize: 22, shadows: [
         Shadow(
           color: Colors.lightBlueAccent,
-          offset: Offset(0, 2),
-          blurRadius: 12,
+          offset: Offset(0, 1),
+          blurRadius: 6,
         ),
       ]),
     );

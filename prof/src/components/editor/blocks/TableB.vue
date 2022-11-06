@@ -114,7 +114,7 @@
         label="Entête horizontal"
         hide-details
         :model-value="props.modelValue.HorizontalHeaders != null"
-        @update:model-value="toogleHorizontal"
+        @update:model-value="b=>toogleHorizontal(b as unknown as boolean)"
         color="secondary"
       ></v-switch>
     </v-col>
@@ -123,7 +123,7 @@
         label="Entête vertical"
         hide-details
         :model-value="props.modelValue.VerticalHeaders != null"
-        @update:model-value="toogleVertical"
+        @update:model-value="b => toogleVertical(b as unknown as boolean)"
         color="secondary"
       ></v-switch>
     </v-col>

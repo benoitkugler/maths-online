@@ -28,10 +28,14 @@ class Song {
 }
 
 class Audio {
+  /// GrooveBow, Forgive, EntreCielEtTerre
+  static const PlaylistController DefaultPlaylist = [0, 1, 2];
+
   /// [availableSongs] is the list of soundtracks available
   /// in the app.
   static const availableSongs = <Song>[
     Song("GrooveBow.mp3", SongCategorie.disco),
+    Song("Forgive.mp3", SongCategorie.guitare),
     Song("EntreCielEtTerre.mp3", SongCategorie.alternative),
     Song("NouvelleTrajectoire.mp3", SongCategorie.disco),
     Song("AlternativeConnect.mp3", SongCategorie.disco),
@@ -39,7 +43,6 @@ class Audio {
     Song("DropFlow.mp3", SongCategorie.disco),
     // Song("Envolées.mp3", SongCategorie.guitare),
     Song("FarUp.mp3", SongCategorie.guitare),
-    Song("Forgive.mp3", SongCategorie.guitare),
     Song("PremiersPas.mp3", SongCategorie.guitare),
     // Song("SetOnFire.mp3", SongCategorie.guitare),
     // Song("Solitude.mp3", SongCategorie.guitare),
@@ -48,7 +51,6 @@ class Audio {
   ];
 
   final AudioPlayer _player = AudioPlayer();
-  // final AssetSource _cache = AssetSource("lib/music/");
   PlaylistController playlist = [];
 
   Audio();

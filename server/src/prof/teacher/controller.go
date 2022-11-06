@@ -24,20 +24,24 @@ type Controller struct {
 	smtp                   pass.SMTP
 	host                   string // used for links
 
-	admin tc.Teacher // loaded at creation
+	admin         tc.Teacher   // loaded at creation
+	demoClassroom tc.Classroom // loaded at creation
+
+	demoCode string
 
 	classCodes *classroomsCode
 }
 
 // NewController return a new controller.
 // `LoadAdminTeacher` should be called once.
-func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encrypter, host string) *Controller {
+func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encrypter, host, demoCode string) *Controller {
 	return &Controller{
 		db:         db,
 		teacherKey: teacherKey,
 		studentKey: studentKey,
 		smtp:       smtp,
 		host:       host,
+		demoCode:   demoCode,
 		classCodes: &classroomsCode{codes: make(map[string]tc.IdClassroom)},
 	}
 }
@@ -55,10 +59,28 @@ func (ct *Controller) LoadAdminTeacher() (tc.Teacher, error) {
 		return tc.Teacher{}, utils.SQLError(err)
 	}
 	if len(teachers) != 1 {
-		return tc.Teacher{}, errors.New("exactly one teacher must be admin")
+		return tc.Teacher{}, errors.New("internal error: exactly one teacher must be admin")
 	}
 	ct.admin = teachers[teachers.IDs()[0]]
+
 	return ct.admin, nil
+}
+
+// LoadDemoClassroom loads and stores the demo classroom, which is a [Classroom]
+// manually created at DB setup, and attributed to the admin account,
+// with a special ID = 1 .
+func (ct *Controller) LoadDemoClassroom() (tc.Classroom, error) {
+	cl, err := tc.SelectClassroom(ct.db, 1)
+	if err != nil {
+		return tc.Classroom{}, utils.SQLError(err)
+	}
+	// sanity checks
+	if cl.IdTeacher != ct.admin.Id {
+		return tc.Classroom{}, errors.New("internal error: unexpected owner of the the demo classroom")
+	}
+	ct.demoClassroom = cl
+
+	return cl, nil
 }
 
 const ValidateInscriptionEndPoint = "inscription"
@@ -130,7 +152,7 @@ func (ct *Controller) askInscription(args AskInscriptionIn) (AskInscriptionOut, 
 		return AskInscriptionOut{Error: err.Error()}, nil
 	}
 
-	err = mailer.SendMail(ct.smtp, args.Mail, "Bienvenue sur Isyro", mailText)
+	err = mailer.SendMail(ct.smtp, []string{args.Mail}, "Bienvenue sur Isyro", mailText)
 	if err != nil {
 		return AskInscriptionOut{}, fmt.Errorf("Erreur interne (%s)", err)
 	}

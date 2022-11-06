@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showConfirmStopGame">
+  <v-dialog v-model="showConfirmStopGame" max-width="800">
     <v-card title="Terminer la partie">
       <v-card-text> Confirmez-vous l'interruption de la partie ? </v-card-text>
       <v-card-actions>

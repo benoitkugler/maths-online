@@ -5,8 +5,13 @@ import (
 	"testing"
 )
 
+// an empty string return nil
 func mustParse(t *testing.T, s string) *Expr {
 	t.Helper()
+
+	if s == "" {
+		return nil
+	}
 
 	want, err := Parse(s)
 	if err != nil {

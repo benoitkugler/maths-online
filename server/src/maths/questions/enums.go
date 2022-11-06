@@ -26,12 +26,13 @@ const (
 // by Go, which is not recognized by the PSQL JSON constraints
 func (s SignSymbol) MarshalJSON() ([]byte, error) { return json.Marshal(uint8(s)) }
 
-type ComparisonLevel = expression.ComparisonLevel
+type ComparisonLevel uint8
 
 const (
-	Strict                ComparisonLevel = expression.Strict                // Exacte
-	SimpleSubstitutions   ComparisonLevel = expression.SimpleSubstitutions   // Simple
-	ExpandedSubstitutions ComparisonLevel = expression.ExpandedSubstitutions // Complète
+	Strict                                = ComparisonLevel(expression.Strict)                // Exacte
+	SimpleSubstitutions                   = ComparisonLevel(expression.SimpleSubstitutions)   // Simple
+	ExpandedSubstitutions                 = ComparisonLevel(expression.ExpandedSubstitutions) // Complète
+	AsLinearEquation      ComparisonLevel = ExpandedSubstitutions + 100
 )
 
 type VectorPairCriterion uint8

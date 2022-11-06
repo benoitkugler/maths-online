@@ -135,17 +135,19 @@ export interface ClassroomSheets {
   Classroom: Classroom;
   Sheets: SheetExt[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/expression.ComparisonLevel
+// github.com/benoitkugler/maths-online/maths/questions.ComparisonLevel
 export enum ComparisonLevel {
-  Strict = 0,
-  SimpleSubstitutions = 1,
+  AsLinearEquation = 102,
   ExpandedSubstitutions = 2,
+  SimpleSubstitutions = 1,
+  Strict = 0,
 }
 
 export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
-  [ComparisonLevel.Strict]: "",
-  [ComparisonLevel.SimpleSubstitutions]: "",
-  [ComparisonLevel.ExpandedSubstitutions]: "",
+  [ComparisonLevel.AsLinearEquation]: "",
+  [ComparisonLevel.ExpandedSubstitutions]: "Complète",
+  [ComparisonLevel.SimpleSubstitutions]: "Simple",
+  [ComparisonLevel.Strict]: "Exacte",
 };
 
 // github.com/benoitkugler/maths-online/maths/repere.Coord
@@ -169,6 +171,16 @@ export interface CreateSheetIn {
 }
 // github.com/benoitkugler/maths-online/sql/teacher.Date
 export type Date = Date_;
+// github.com/benoitkugler/maths-online/prof/editor.DeleteExerciceOut
+export interface DeleteExerciceOut {
+  Deleted: boolean;
+  BlockedBy: QuestionExerciceUses;
+}
+// github.com/benoitkugler/maths-online/prof/editor.DeleteQuestionOut
+export interface DeleteQuestionOut {
+  Deleted: boolean;
+  BlockedBy: QuestionExerciceUses;
+}
 // github.com/benoitkugler/maths-online/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
 // github.com/benoitkugler/maths-online/sql/editor.DifficultyTag
@@ -211,6 +223,12 @@ export interface Exercice {
 export interface ExerciceCreateQuestionIn {
   SessionID: string;
   IdExercice: IdExercice;
+}
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceDuplicateQuestionIn
+export interface ExerciceDuplicateQuestionIn {
+  QuestionIndex: number;
+  IdExercice: IdExercice;
+  SessionID: string;
 }
 // github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
 export interface ExerciceExt {
@@ -272,6 +290,7 @@ export interface ExpressionFieldBlock {
   Expression: string;
   Label: Interpolated;
   ComparisonLevel: ComparisonLevel;
+  ShowFractionHelp: boolean;
 }
 // github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {
@@ -329,6 +348,13 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
+// github.com/benoitkugler/maths-online/maths/questions.FunctionPoint
+export interface FunctionPoint {
+  Function: Interpolated;
+  X: string;
+  Color: string;
+  Legend: Interpolated;
+}
 // github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
   Function: string;
@@ -341,10 +367,33 @@ export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
   FunctionVariations: VariationTableBlock[] | null;
   Areas: FunctionArea[] | null;
+  Points: FunctionPoint[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/trivial.GamePlayers
+export interface GamePlayers {
+  Player: string;
+  Successes: Success;
+}
+// github.com/benoitkugler/maths-online/prof/trivial.GameSummary
+export interface GameSummary {
+  GameID: RoomID;
+  CurrentPlayer: string;
+  Players: GamePlayers[] | null;
+  RoomSize: number;
 }
 // github.com/benoitkugler/maths-online/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
   Code: string;
+}
+// github.com/benoitkugler/maths-online/prof/homework.HomeworkMarksOut
+export interface HomeworkMarksOut {
+  Students: StudentHeader[] | null;
+  Marks: { [key: IdSheet]: { [key: IdStudent]: number } | null } | null;
+}
+// github.com/benoitkugler/maths-online/prof/homework.HowemorkMarksIn
+export interface HowemorkMarksIn {
+  IdClassroom: IdClassroom;
+  IdSheets: IdSheet[] | null;
 }
 // github.com/benoitkugler/maths-online/sql/teacher.IdClassroom
 export type IdClassroom = number;
@@ -427,6 +476,10 @@ export interface LogginOut {
   IsPasswordError: boolean;
   Token: string;
 }
+// github.com/benoitkugler/maths-online/prof/trivial.MonitorOut
+export interface MonitorOut {
+  Games: GameSummary[] | null;
+}
 // github.com/benoitkugler/maths-online/sql/tasks.Monoquestion
 export interface Monoquestion {
   Id: IdMonoquestion;
@@ -477,6 +530,19 @@ export interface Origin {
   IsPublic: boolean;
   Visibility: Visibility;
 }
+// github.com/benoitkugler/maths-online/prof/editor.OriginKind
+export enum OriginKind {
+  All = 0,
+  OnlyPersonnal = 1,
+  OnlyAdmin = 2,
+}
+
+export const OriginKindLabels: { [key in OriginKind]: string } = {
+  [OriginKind.All]: "",
+  [OriginKind.OnlyPersonnal]: "",
+  [OriginKind.OnlyAdmin]: "",
+};
+
 // github.com/benoitkugler/maths-online/maths/questions.Parameters
 export interface Parameters {
   Variables: RandomParameters;
@@ -531,6 +597,7 @@ export interface ProofStatement {
 export interface Query {
   TitleQuery: string;
   Tags: string[] | null;
+  Origin: OriginKind;
 }
 // github.com/benoitkugler/maths-online/sql/editor.Question
 export interface Question {
@@ -544,6 +611,8 @@ export interface Question {
 }
 // github.com/benoitkugler/maths-online/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.QuestionExerciceUses
+export type QuestionExerciceUses = TaskDetails[] | null;
 // github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Id: IdQuestion;
@@ -669,7 +738,8 @@ export interface SaveExerciceAndPreviewOut {
 // github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewIn
 export interface SaveQuestionAndPreviewIn {
   SessionID: string;
-  Question: Question;
+  Id: IdQuestion;
+  Page: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewOut
 export interface SaveQuestionAndPreviewOut {
@@ -745,6 +815,13 @@ export interface Student {
   IsClientAttached: boolean;
   id_classroom: IdClassroom;
 }
+// github.com/benoitkugler/maths-online/prof/teacher.StudentHeader
+export interface StudentHeader {
+  Id: IdStudent;
+  Label: string;
+}
+// github.com/benoitkugler/maths-online/trivial.Success
+export type Success = boolean[];
 // github.com/benoitkugler/maths-online/maths/questions.TableBlock
 export interface TableBlock {
   HorizontalHeaders: TextPart[] | null;
@@ -759,6 +836,12 @@ export interface TableFieldBlock {
 }
 // github.com/benoitkugler/maths-online/tasks.TaskBareme
 export type TaskBareme = number[] | null;
+// github.com/benoitkugler/maths-online/prof/editor.TaskDetails
+export interface TaskDetails {
+  Id: IdTask;
+  Sheet: Sheet;
+  Classroom: Classroom;
+}
 // github.com/benoitkugler/maths-online/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
@@ -1398,6 +1481,28 @@ export abstract class AbstractAPI {
     data: CheckMissingQuestionsOut
   ): void;
 
+  protected async rawTrivialTeacherMonitor() {
+    const fullUrl = this.baseUrl + "/api/prof/trivial/monitor";
+    const rep: AxiosResponse<MonitorOut> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TrivialTeacherMonitor wraps rawTrivialTeacherMonitor and handles the error */
+  async TrivialTeacherMonitor() {
+    this.startRequest();
+    try {
+      const out = await this.rawTrivialTeacherMonitor();
+      this.onSuccessTrivialTeacherMonitor(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTrivialTeacherMonitor(data: MonitorOut): void;
+
   protected async rawGetTrivialRunningSessions() {
     const fullUrl = this.baseUrl + "/api/trivial/sessions";
     const rep: AxiosResponse<RunningSessionMetaOut> = await Axios.get(fullUrl, {
@@ -1584,6 +1689,29 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorDuplicateQuestion(data: Question): void;
 
+  protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
+    await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
+  async EditorDuplicateQuestiongroup(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDuplicateQuestiongroup(params);
+      this.onSuccessEditorDuplicateQuestiongroup();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDuplicateQuestiongroup(): void;
+
   protected async rawEditorCreateQuestiongroup() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
     const rep: AxiosResponse<QuestiongroupExt> = await Axios.put(
@@ -1699,11 +1827,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorDeleteQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
-    await Axios.delete(fullUrl, {
+    const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return true;
+    return rep.data;
   }
 
   /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
@@ -1711,14 +1839,16 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteQuestion(params);
-      this.onSuccessEditorDeleteQuestion();
+      this.onSuccessEditorDeleteQuestion(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorDeleteQuestion(): void;
+  protected abstract onSuccessEditorDeleteQuestion(
+    data: DeleteQuestionOut
+  ): void;
 
   protected async rawEditorSaveQuestionMeta(params: SaveQuestionMetaIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/variant";
@@ -1864,6 +1994,29 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorUpdateExerciceTags(): void;
 
+  protected async rawEditorDuplicateExercicegroup(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
+    await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** EditorDuplicateExercicegroup wraps rawEditorDuplicateExercicegroup and handles the error */
+  async EditorDuplicateExercicegroup(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDuplicateExercicegroup(params);
+      this.onSuccessEditorDuplicateExercicegroup();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorDuplicateExercicegroup(): void;
+
   protected async rawEditorGetExerciceContent(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
@@ -1915,11 +2068,11 @@ export abstract class AbstractAPI {
 
   protected async rawEditorDeleteExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
-    await Axios.delete(fullUrl, {
+    const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
       headers: this.getHeaders(),
     });
-    return true;
+    return rep.data;
   }
 
   /** EditorDeleteExercice wraps rawEditorDeleteExercice and handles the error */
@@ -1927,14 +2080,16 @@ export abstract class AbstractAPI {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteExercice(params);
-      this.onSuccessEditorDeleteExercice();
+      this.onSuccessEditorDeleteExercice(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessEditorDeleteExercice(): void;
+  protected abstract onSuccessEditorDeleteExercice(
+    data: DeleteExerciceOut
+  ): void;
 
   protected async rawEditorSaveExerciceMeta(params: Exercice) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
@@ -2032,6 +2187,33 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceImportQuestion(
+    data: ExerciceExt
+  ): void;
+
+  protected async rawEditorExerciceDuplicateQuestion(
+    params: ExerciceDuplicateQuestionIn
+  ) {
+    const fullUrl =
+      this.baseUrl + "/api/prof/editor/exercice/questions/duplicate";
+    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorExerciceDuplicateQuestion wraps rawEditorExerciceDuplicateQuestion and handles the error */
+  async EditorExerciceDuplicateQuestion(params: ExerciceDuplicateQuestionIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorExerciceDuplicateQuestion(params);
+      this.onSuccessEditorExerciceDuplicateQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorExerciceDuplicateQuestion(
     data: ExerciceExt
   ): void;
 
@@ -2359,4 +2541,28 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkReorderSheetTasks(): void;
+
+  protected async rawHomeworkGetMarks(params: HowemorkMarksIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/marks";
+    const rep: AxiosResponse<HomeworkMarksOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** HomeworkGetMarks wraps rawHomeworkGetMarks and handles the error */
+  async HomeworkGetMarks(params: HowemorkMarksIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkGetMarks(params);
+      this.onSuccessHomeworkGetMarks(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void;
 }

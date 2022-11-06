@@ -158,10 +158,12 @@ class _AppBodyState extends State<_AppBody> {
     }
 
     widget.audioPlayer.run();
+    final isIdentified = widget.settings.studentID.isNotEmpty;
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-            body: Homework(ServerHomeworkAPI(
-                widget.buildMode, widget.settings.studentID)))));
+        builder: (_) => isIdentified
+            ? HomeworkW(
+                ServerHomeworkAPI(widget.buildMode, widget.settings.studentID))
+            : const HomeworkDisabled()));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
@@ -176,25 +178,31 @@ class _AppBodyState extends State<_AppBody> {
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                "Bienvenue dans Isyro",
+                "Bienvenue sur Isyro !",
                 style: TextStyle(fontSize: 25),
               ),
             ),
-            const Text(
-              "Activités disponibles",
-              style: TextStyle(fontSize: 20),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.spaceEvenly,
-                children: [
-                  TrivialActivityIcon(_launchTrivialPoursuit),
-                  HomeworkActivityIcon(_launchHomework),
-                ],
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Activités disponibles",
+                  style: TextStyle(fontSize: 20),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.spaceEvenly,
+                    children: [
+                      TrivialActivityIcon(_launchTrivialPoursuit),
+                      HomeworkActivityIcon(_launchHomework),
+                    ],
+                  ),
+                )
+              ],
             )
           ],
         ),

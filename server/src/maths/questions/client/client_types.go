@@ -95,9 +95,15 @@ type FunctionArea struct {
 	Path  []functiongrapher.BezierCurve
 }
 
+type FunctionPoint struct {
+	Color  repere.Color `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Legend string       // LaTeX code
+	Coord  repere.Coord `gomacro-extern:"repere#dart#repere.gen.dart"`
+}
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []FunctionArea
+	Points    []FunctionPoint
 	Bounds    repere.RepereBounds `gomacro-extern:"repere#dart#repere.gen.dart"`
 }
 
@@ -120,10 +126,16 @@ type NumberFieldBlock struct {
 	SizeHint SizeHint
 }
 type ExpressionFieldBlock struct {
-	Label string // as LaTeX, optional
+	Label  string // as LaTeX, optional
+	Suffix string // as LeTeX, optional
+
 	// Typical values range from 1 to 30
 	SizeHint SizeHint
-	ID       int
+
+	// If true, the field is diplayed with two subfields
+	ShowFractionHelp bool
+
+	ID int
 }
 
 // TextLine is the general form of a static chunk of text,

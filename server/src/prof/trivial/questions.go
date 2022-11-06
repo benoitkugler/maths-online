@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"fmt"
 	"sort"
 
 	ed "github.com/benoitkugler/maths-online/sql/editor"
@@ -10,26 +11,22 @@ import (
 )
 
 var demoQuestions = tc.CategoriesQuestions{
+	Difficulties: nil, // all difficulties accepted
 	Tags: [...]tc.QuestionCriterion{
 		{
-			{"POURCENTAGES", "EVOLUTION UNIQUE"},
+			{"EXEMPLE", "COMBINAISONS"},
 		},
 		{
-			{"POURCENTAGES", "TAUX GLOBAL"},
-			{"POURCENTAGES", "TAUX RÉCIPROQUE"},
+			{"EXEMPLE", "ADDITION"},
 		},
 		{
-			{"POURCENTAGES", "PROPORTION"},
-			{"POURCENTAGES", "PROPORTION DE PROPORTION"},
-			{"POURCENTAGES", "POURCENTAGE D'UN NOMBRE"},
+			{"EXEMPLE", "SOUSTRACTION"},
 		},
 		{
-			{"POURCENTAGES", "EVOLUTIONS IDENTIQUES"},
-			{"POURCENTAGES", "EVOLUTIONS SUCCESSIVES"},
+			{"EXEMPLE", "MULTIPLICATION"},
 		},
 		{
-			{"POURCENTAGES", "COEFFICIENT MULTIPLICATEUR"},
-			{"POURCENTAGES", "TAUX D'EVOLUTION"},
+			{"EXEMPLE", "DIVISION"},
 		},
 	},
 }
@@ -200,4 +197,19 @@ func allQuestions(pool tv.QuestionPool) ed.IdQuestionSet {
 	}
 
 	return crible
+}
+
+// CheckDemoQuestions checks that the categories registred for the demo
+// games indeed contains questions.
+func (ct *Controller) CheckDemoQuestions() error {
+	pool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
+	if err != nil {
+		return err
+	}
+	for index, cat := range pool {
+		if len(cat.Questions) == 0 {
+			return fmt.Errorf("categorie %d has no questions", index)
+		}
+	}
+	return nil
 }

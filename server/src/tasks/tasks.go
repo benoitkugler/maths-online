@@ -11,6 +11,7 @@ import (
 )
 
 type ProgressionExt struct {
+	// Questions stores the progression for each question of the task.
 	Questions    []ta.QuestionHistory
 	NextQuestion int
 }
@@ -120,14 +121,10 @@ func (contents TasksContents) GetWork(task ta.Task) Work {
 	}
 }
 
-// loadProgressions loads the progression contents
-func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]ProgressionExt, error) {
-	// fetch the associated tasks
-	tasks, err := NewTasksContents(db, prs.IdTasks())
-	if err != nil {
-		return nil, err
-	}
-
+// LoadProgressions load the question progression related to the tasks
+// in [contents] and [prs].
+// Note that [prs] must be only concern tasks present in [contents].
+func (contents TasksContents) LoadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]ProgressionExt, error) {
 	links2, err := ta.SelectProgressionQuestionsByIdProgressions(db, prs.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -136,8 +133,8 @@ func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]Progr
 
 	out := make(map[ta.IdProgression]ProgressionExt, len(prs))
 	for _, pr := range prs {
-		task := tasks.Tasks[pr.IdTask]
-		work := tasks.GetWork(task)
+		task := contents.Tasks[pr.IdTask]
+		work := contents.GetWork(task)
 		// get the questions length
 		tmp, _ := work.QuestionsList()
 		L := len(tmp)
@@ -157,6 +154,17 @@ func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]Progr
 	}
 
 	return out, nil
+}
+
+// loadProgressions loads the progression contents
+func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]ProgressionExt, error) {
+	// fetch the associated tasks
+	tasks, err := NewTasksContents(db, prs.IdTasks())
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks.LoadProgressions(db, prs)
 }
 
 // updateProgression write the question results for the given progression.
@@ -292,36 +300,39 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 
 			HasProgression: hasProg,
 			Progression:    progression,
-			Bareme:         baremes.total(),
-			Mark:           baremes.computeMark(progression.Questions),
+			Bareme:         baremes.Total(),
+			Mark:           baremes.ComputeMark(progression.Questions),
 		}
 	}
 
 	return out, nil
 }
 
-// EvaluateTaskExercice calls `EvaluateExercice` and registers
+// EvaluateTaskExercice calls `EvaluateExercice` and, if [registerProgression] is true, registers
 // the student progression, returning the updated mark.
 // If needed, a new progression item is created.
-func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn) (out EvaluateWorkOut, mark int, err error) {
+// If [registerProgression] is false, no progression is created.
+func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn, registerProgression bool) (out EvaluateWorkOut, mark int, err error) {
 	out, err = ex.Evaluate(db)
 	if err != nil {
 		return
 	}
 
-	// persists the progression on DB ...
-	prog, err := loadOrCreateProgressionFor(db, idTask, idStudent)
-	if err != nil {
-		return
+	if registerProgression {
+		// persists the progression on DB ...
+		prog, err := loadOrCreateProgressionFor(db, idTask, idStudent)
+		if err != nil {
+			return out, 0, err
+		}
+
+		// ... update the progression questions
+		err = updateProgression(db, prog, out.Progression.Questions)
+		if err != nil {
+			return out, 0, err
+		}
 	}
 
-	// ... update the progression questions
-	err = updateProgression(db, prog, out.Progression.Questions)
-	if err != nil {
-		return
-	}
-
-	// and compute the new mark
+	// in any case compute the (new) mark
 	task, err := ta.SelectTask(db, idTask)
 	if err != nil {
 		return out, mark, utils.SQLError(err)
@@ -332,7 +343,7 @@ func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStud
 		return
 	}
 	_, baremes := loader.QuestionsList()
-	mark = baremes.computeMark(out.Progression.Questions)
+	mark = baremes.ComputeMark(out.Progression.Questions)
 
 	return out, mark, nil
 }
@@ -340,9 +351,9 @@ func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStud
 // TaskBareme stores the baremes of a task, for each question.
 type TaskBareme []int
 
-// total returns the bareme for one task, that is the sum
+// Total returns the bareme for one task, that is the sum
 // of each question's bareme
-func (bareme TaskBareme) total() int {
+func (bareme TaskBareme) Total() int {
 	var out int
 	for _, questionBareme := range bareme {
 		out += questionBareme
@@ -350,9 +361,10 @@ func (bareme TaskBareme) total() int {
 	return out
 }
 
-// compute the student mark
-// an empty progression is supported and returns 0
-func (bareme TaskBareme) computeMark(progression []ta.QuestionHistory) int {
+// ComputeMark computes the student mark.
+// An empty [progression] is supported and returns 0.
+// Otherwise, the length of [progression] must match the length of [bareme]
+func (bareme TaskBareme) ComputeMark(progression []ta.QuestionHistory) int {
 	if len(progression) == 0 {
 		return 0
 	}

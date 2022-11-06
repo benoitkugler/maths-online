@@ -1,34 +1,13 @@
 import type { CategoriesQuestions } from "./api_gen";
-import { controller } from "./controller";
-import type { teacherSocketData } from "./trivial_config_socket_gen";
+import { LevelTag } from "./exercice_gen";
 
 export const colorsPerCategorie = [
   "purple",
   "green",
   "orange",
-  "yellow-darken-2",
+  "#FDD835",
   "blue"
 ];
-
-export class TrivialMonitorController {
-  constructor(onServerEvent: (data: teacherSocketData) => void) {
-    const url =
-      controller.getURL(`/prof/trivial/monitor`).replace("http", "ws") +
-      "?token=" +
-      controller.getToken();
-    const socket = new WebSocket(url);
-
-    // Connection opened
-    socket.addEventListener("open", function (event) {
-      socket.send("Hello Server!");
-    });
-
-    // Listen for messages
-    socket.addEventListener("message", function (event) {
-      onServerEvent(JSON.parse(event.data));
-    });
-  }
-}
 
 /** questionPropositions is a list of question to use in a 
 trivial configuration, working nicely with the officialy supported questions
@@ -38,27 +17,27 @@ export const questionPropositions: {
   Questions: CategoriesQuestions;
 }[] = [
   {
-    name: "Pourcentages",
+    name: "Pourcentages - 2NDE",
     Questions: {
       Difficulties: [], // all difficulties accepted,
       Tags: [
-        [["Pourcentages", "EVOLUTION UNIQUE"]],
+        [[LevelTag.Seconde, "POURCENTAGES", "EVOLUTION UNIQUE"]],
         [
-          ["Pourcentages", "Taux global"],
-          ["Pourcentages", "Taux réciproque"]
+          [LevelTag.Seconde, "POURCENTAGES", "Taux global"],
+          [LevelTag.Seconde, "POURCENTAGES", "Taux réciproque"]
         ],
         [
-          ["Pourcentages", "Proportion"],
-          ["Pourcentages", "Proportion de proportion"],
-          ["Pourcentages", "Pourcentage d'un nombre"]
+          [LevelTag.Seconde, "POURCENTAGES", "Proportion"],
+          [LevelTag.Seconde, "POURCENTAGES", "Proportion de proportion"],
+          [LevelTag.Seconde, "POURCENTAGES", "Pourcentage d'un nombre"]
         ],
         [
-          ["Pourcentages", "Evolutions identiques"],
-          ["Pourcentages", "Evolutions successives"]
+          [LevelTag.Seconde, "POURCENTAGES", "Evolutions identiques"],
+          [LevelTag.Seconde, "POURCENTAGES", "Evolutions successives"]
         ],
         [
-          ["Pourcentages", "Coefficient multiplicateur"],
-          ["Pourcentages", "Taux d'évolution"]
+          [LevelTag.Seconde, "POURCENTAGES", "Coefficient multiplicateur"],
+          [LevelTag.Seconde, "POURCENTAGES", "Taux d'évolution"]
         ]
       ]
     }

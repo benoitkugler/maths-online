@@ -64,6 +64,7 @@ func TestTokens(t *testing.T) {
 		{"2 <= 4", []tokenData{numberText("2"), lesser, numberText("4")}},
 		{"2 >= 4", []tokenData{numberText("2"), greater, numberText("4")}},
 		{"2 == 4", []tokenData{numberText("2"), equals, numberText("4")}},
+		{"2pi^2", []tokenData{numberText("2"), mult, piConstant, pow, numberText("2")}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

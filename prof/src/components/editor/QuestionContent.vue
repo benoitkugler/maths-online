@@ -61,13 +61,13 @@ import { markRaw, ref } from "@vue/reactivity";
 import { computed, nextTick, watch, type Component } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockContainer from "./blocks/BlockContainer.vue";
+import ExpressionFieldVue from "./blocks/ExpressionField.vue";
 import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
 import FigureBlockVue from "./blocks/FigureBlock.vue";
 import FigurePointFieldVue from "./blocks/FigurePointField.vue";
 import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
 import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
 import FormulaBVue from "./blocks/FormulaB.vue";
-import FormulaFieldVue from "./blocks/FormulaField.vue";
 import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
 import FunctionsGraphVue from "./blocks/FunctionsGraph.vue";
 import NumberFieldVue from "./blocks/NumberField.vue";
@@ -123,7 +123,7 @@ function dataToBlock(data: Block): block {
     case BlockKind.NumberFieldBlock:
       return { Props: data, Component: markRaw(NumberFieldVue) };
     case BlockKind.ExpressionFieldBlock:
-      return { Props: data, Component: markRaw(FormulaFieldVue) };
+      return { Props: data, Component: markRaw(ExpressionFieldVue) };
     case BlockKind.RadioFieldBlock:
       return { Props: data, Component: markRaw(RadioFieldVue) };
     case BlockKind.OrderedListFieldBlock:

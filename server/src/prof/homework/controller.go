@@ -60,7 +60,7 @@ func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
 		return nil, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(ct.db, sheetsDict.IDs())
+	loader, err := newSheetsLoader(ct.db, sheetsDict.IDs())
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -214,6 +214,7 @@ func (ct *Controller) addExerciceTo(args AddExerciceToTaskIn, userID uID) (TaskE
 	return ct.addTaskTo(args.IdSheet, task, userID)
 }
 
+// used defaut value of  Bareme: 1, NbRepeat: 3
 func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID) (TaskExt, error) {
 	// create the monoquestion, checking that the question has a group
 	question, err := ed.SelectQuestion(ct.db, args.IdQuestion)
@@ -307,23 +308,18 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 		return utils.SQLError(err)
 	}
 
-	link, found, err := ho.SelectSheetTaskByIdTask(tx, idTask)
+	sheet, err := sheetFromTask(tx, idTask)
 	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
-
-	if !found {
-		_ = tx.Rollback()
-		return errors.New("internal error: task without sheet")
-	}
-
-	if err := ct.checkSheetOwner(link.IdSheet, userID); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 
-	currentLinks, err := ho.SelectSheetTasksByIdSheets(tx, link.IdSheet)
+	if err := ct.checkSheetOwner(sheet.Id, userID); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	currentLinks, err := ho.SelectSheetTasksByIdSheets(tx, sheet.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
@@ -338,7 +334,7 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 	}
 
 	// start by updating the links
-	err = updateSheetTasksOrder(tx, link.IdSheet, filtered)
+	err = updateSheetTasksOrder(tx, sheet.Id, filtered)
 	if err != nil {
 		_ = tx.Rollback()
 		return utils.SQLError(err)
@@ -624,7 +620,7 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	loader, err := newSheetLoader(tx, []ho.IdSheet{newSheet.Id})
+	loader, err := newSheetsLoader(tx, []ho.IdSheet{newSheet.Id})
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, utils.SQLError(err)
@@ -636,6 +632,101 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	}
 
 	out := loader.newSheetExt(newSheet)
+
+	return out, nil
+}
+
+type HowemorkMarksIn struct {
+	IdClassroom teacher.IdClassroom
+	IdSheets    []ho.IdSheet
+}
+
+type HomeworkMarksOut struct {
+	Students []tcAPI.StudentHeader                        // the students of the classroom
+	Marks    map[ho.IdSheet]map[teacher.IdStudent]float64 // the notes for each sheet and student, /20
+}
+
+func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args HowemorkMarksIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.getMarks(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksOut, error) {
+	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+	if classroom.IdTeacher != userID {
+		return HomeworkMarksOut{}, accessForbidden
+	}
+
+	students, err := tcAPI.LoadClassroomStudents(ct.db, classroom.Id)
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+	sheets, err := ho.SelectSheets(ct.db, args.IdSheets...)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+
+	out := HomeworkMarksOut{
+		Students: make([]tcAPI.StudentHeader, len(students)),
+		Marks:    make(map[ho.IdSheet]map[teacher.IdStudent]float64),
+	}
+	// student list
+	for i, s := range students {
+		out.Students[i] = tcAPI.NewStudentHeader(s)
+	}
+	// compute the sheets marks :
+	loader, err := newSheetsLoader(ct.db, args.IdSheets)
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+	// load all the progressions : for each task and student
+	progressions, err := loader.tasks.LoadProgressions(ct.db, loader.allProgressions())
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+
+	for id, sheet := range sheets {
+		if sheet.IdClassroom != classroom.Id {
+			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
+		}
+
+		markByStudent := make(map[teacher.IdStudent]float64)
+		var sheetTotal int
+		// for each student, get its progression for each task
+		tasks := loader.taskForSheet(id)
+		for _, link := range tasks {
+			work := loader.tasks.GetWork(loader.tasks.Tasks[link.IdTask])
+			_, bareme := work.QuestionsList()
+			taskTotal := bareme.Total()
+			sheetTotal += taskTotal
+			// add each progression to the student note
+			for _, prog := range loader.progressions[link.IdTask] {
+				idStudent := prog.IdStudent
+				extentedProg := progressions[prog.Id]
+				studentMark := bareme.ComputeMark(extentedProg.Questions)
+				markByStudent[idStudent] = markByStudent[idStudent] + float64(studentMark)
+			}
+		}
+		// normalize the mark / 20
+		for id, mark := range markByStudent {
+			markByStudent[id] = 20 * mark / float64(sheetTotal)
+		}
+		out.Marks[id] = markByStudent
+	}
 
 	return out, nil
 }
@@ -724,22 +815,36 @@ func (ct *Controller) StudentInstantiateTask(c echo.Context) error {
 
 // StudentEvaluateTask calls ed.EvaluteExercice and registers
 // the student progression, returning the update mark.
+// However, if the sheet is expired, it does not register the progression.
 func (ct *Controller) StudentEvaluateTask(c echo.Context) error {
 	var args StudentEvaluateTaskIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	idStudent, err := ct.studentKey.DecryptID(args.StudentID)
+	out, err := ct.studentEvaluateTask(args)
 	if err != nil {
 		return err
 	}
-
-	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex)
-	if err != nil {
-		return err
-	}
-	out := StudentEvaluateTaskOut{Ex: ex, Mark: mark}
 
 	return c.JSON(200, out)
+}
+
+func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEvaluateTaskOut, error) {
+	idStudent, err := ct.studentKey.DecryptID(args.StudentID)
+	if err != nil {
+		return StudentEvaluateTaskOut{}, err
+	}
+
+	sheet, err := sheetFromTask(ct.db, args.IdTask)
+	if err != nil {
+		return StudentEvaluateTaskOut{}, err
+	}
+
+	registerProgression := !sheet.IsExpired()
+	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex, registerProgression)
+	if err != nil {
+		return StudentEvaluateTaskOut{}, err
+	}
+	return StudentEvaluateTaskOut{Ex: ex, Mark: mark}, nil
 }

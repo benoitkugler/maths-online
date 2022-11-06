@@ -48,7 +48,8 @@ func BenchmarkValidation(b *testing.B) {
 }
 
 func TestExerciceCRUD(t *testing.T) {
-	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql",
+		"../../sql/homework/gen_create.sql")
 	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
@@ -74,11 +75,10 @@ func TestExerciceCRUD(t *testing.T) {
 		Questions: ed.ExerciceQuestions{
 			ed.ExerciceQuestion{IdQuestion: l.Questions[0].Question.Id},
 			ed.ExerciceQuestion{IdQuestion: qu.Id},
-			ed.ExerciceQuestion{IdQuestion: qu.Id},
 		},
 	}, 1)
 	tu.Assert(t, err == nil)
-	if len(l.Questions) != 3 {
+	if len(l.Questions) != 2 {
 		t.Fatal(l)
 	}
 
@@ -99,7 +99,10 @@ func TestExerciceCRUD(t *testing.T) {
 		t.Fatal(exe)
 	}
 
-	err = ct.deleteExercice(ex.Id, 1)
+	err = ct.duplicateExercicegroup(group.Group.Id, 1)
+	tu.Assert(t, err == nil)
+
+	_, err = ct.deleteExercice(ex.Id, 1)
 	tu.Assert(t, err == nil)
 }
 

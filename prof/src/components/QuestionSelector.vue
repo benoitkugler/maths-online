@@ -34,7 +34,7 @@
         </v-col>
       </v-row>
 
-      <div style="height: 47vh; width: 800px" class="overflow-y-auto">
+      <div style="height: 47vh" class="overflow-y-auto">
         <v-expansion-panels class="pa-2">
           <v-expansion-panel v-for="(group, index) in questions" :key="index">
             <v-expansion-panel-title>
@@ -43,6 +43,7 @@
             <v-expansion-panel-text>
               <v-list>
                 <v-list-item
+                  link
                   v-for="(question, index) in group.Variants"
                   :key="index"
                   @click="emit('selected', question)"
@@ -79,7 +80,11 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import type { QuestiongroupExt, QuestionHeader } from "../controller/api_gen";
+import {
+  OriginKind,
+  type QuestiongroupExt,
+  type QuestionHeader,
+} from "../controller/api_gen";
 import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
 
@@ -130,6 +135,7 @@ async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: props.query.search,
     Tags: props.query.tags,
+    Origin: OriginKind.All,
   });
   if (result == undefined) return;
   questions = result.Groups || [];

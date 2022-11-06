@@ -6,6 +6,7 @@
       dense
       class="py-0 bg-purple-lighten-4 ma-1"
       v-for="kind in staticKinds"
+      link
       @click="emit('add', kind)"
       :key="kind"
     >
@@ -20,6 +21,7 @@
       dense
       class="py-0 bg-pink-lighten-4 ma-1"
       v-for="kind in fieldKinds"
+      link
       :key="kind"
       @click="emit('add', kind)"
     >

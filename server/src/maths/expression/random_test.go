@@ -100,7 +100,7 @@ func TestRandomVariables_instantiate(t *testing.T) {
 	}
 }
 
-func TestrandSymbol(t *testing.T) {
+func Test_randSymbol(t *testing.T) {
 	for range [10]int{} {
 		rv := RandomParameters{NewVar('P'): mustParse(t, "randSymbol(A;B;C)")}
 		vars, err := rv.Instantiate()
@@ -360,6 +360,14 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 	}
 }
 
+func mustParseDomains(t *testing.T, domains [][2]string) []Domain {
+	out := make([]Domain, len(domains))
+	for i, d := range domains {
+		out[i] = Domain{mustParse(t, d[0]), mustParse(t, d[1])}
+	}
+	return out
+}
+
 func TestAreDisjointsDomains(t *testing.T) {
 	tests := []struct {
 		domains [][2]string
@@ -378,14 +386,94 @@ func TestAreDisjointsDomains(t *testing.T) {
 		{
 			[][2]string{{"0", "1"}, {"x", "0.5"}}, Vars{NewVar('x'): newNb(0)}, true,
 		},
+		{ // evaluation error
+			[][2]string{{"0", "1"}, {"x", "0.5"}}, nil, true,
+		},
 	}
 	for _, tt := range tests {
-		domains := make([]Domain, len(tt.domains))
-		for i, d := range tt.domains {
-			domains[i] = Domain{mustParse(t, d[0]), mustParse(t, d[1])}
-		}
+		domains := mustParseDomains(t, tt.domains)
 		if err := AreDisjointsDomains(domains, tt.vars); (err != nil) != tt.wantErr {
 			t.Errorf("AreDisjointsDomains() error = %v, wantErr %v", err, tt.wantErr)
+		}
+	}
+}
+
+func TestDomain_IsIncludedIntoOne(t *testing.T) {
+	tests := []struct {
+		From    string
+		To      string
+		domains [][2]string
+		vars    Vars
+		wantErr bool
+	}{
+		{
+			"1", "2", [][2]string{{"0", "1"}, {"1", "2"}}, nil, false,
+		},
+		{ // infinity
+			"1", "2", [][2]string{{"", ""}, {"2", "2"}}, nil, false,
+		},
+		{
+			"1", "2", [][2]string{{"0", "1"}, {"1.5", "2"}}, nil, true,
+		},
+		{
+			"x", "2", [][2]string{{"0", "1"}, {"1.5", "2"}}, Vars{NewVar('x'): newNb(0)}, true,
+		},
+		{
+			"x", "2", [][2]string{{"0", "1"}, {"x", "3"}}, Vars{NewVar('x'): newNb(-1)}, false,
+		},
+		{ // evaluation error
+			"x", "2", [][2]string{{"0", "1"}, {"1", "2"}}, nil, true,
+		},
+		{ // evaluation error
+			"1", "2", [][2]string{{"x", "1"}, {"x", "2"}}, nil, true,
+		},
+	}
+	for _, tt := range tests {
+		d := Domain{
+			From: mustParse(t, tt.From),
+			To:   mustParse(t, tt.To),
+		}
+		domains := mustParseDomains(t, tt.domains)
+		if err := d.IsIncludedIntoOne(domains, tt.vars); (err != nil) != tt.wantErr {
+			t.Errorf("Domain.IsIncludedIntoOne() error = %v, wantErr %v", err, tt.wantErr)
+		}
+	}
+}
+
+func TestExpr_IsIncludedIntoOne(t *testing.T) {
+	tests := []struct {
+		expr    string
+		domains [][2]string
+		vars    Vars
+		wantErr bool
+	}{
+		{
+			"1", [][2]string{{"0", "1"}, {"1", "2"}}, nil, false,
+		},
+		{ // infinity
+			"1", [][2]string{{"-2", "-1"}, {"0", ""}}, nil, false,
+		},
+		{
+			"1", [][2]string{{"0", "0.8"}, {"1.5", "2"}}, nil, true,
+		},
+		{
+			"x", [][2]string{{"0", "1"}, {"1.5", "2"}}, Vars{NewVar('x'): newNb(-1)}, true,
+		},
+		{
+			"x", [][2]string{{"0", "1"}, {"x-1", "3"}}, Vars{NewVar('x'): newNb(-1)}, false,
+		},
+		{ // evaluation error
+			"x", [][2]string{{"0", "1"}, {"1", "2"}}, nil, true,
+		},
+		{ // evaluation error
+			"1", [][2]string{{"x", "1"}, {"x", "2"}}, nil, true,
+		},
+	}
+	for _, tt := range tests {
+		e := mustParse(t, tt.expr)
+		domains := mustParseDomains(t, tt.domains)
+		if err := e.IsIncludedIntoOne(domains, tt.vars); (err != nil) != tt.wantErr {
+			t.Errorf("Domain.IsIncludedIntoOne() error = %v, wantErr %v", err, tt.wantErr)
 		}
 	}
 }

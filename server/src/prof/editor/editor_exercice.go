@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"sort"
@@ -8,6 +9,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
+	ta "github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
@@ -104,13 +106,16 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 
 	query.normalize()
 
-	// restrict the groups to matching title
+	// restrict the groups to matching title and origin
 	matcher, err := newQuery(query.TitleQuery)
 	if err != nil {
 		return out, err
 	}
 	for _, group := range groups {
-		if !matcher.match(int64(group.Id), group.Title) {
+		vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+		keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+		if !keep {
 			delete(groups, group.Id)
 		}
 	}
@@ -214,15 +219,7 @@ func (ct *Controller) EditorDuplicateExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getExerciceGroup(qu ed.Exercice) (ed.Exercicegroup, error) {
-	group, err := ed.SelectExercicegroup(ct.db, qu.IdGroup)
-	if err != nil {
-		return ed.Exercicegroup{}, utils.SQLError(err)
-	}
-	return group, nil
-}
-
-// duplicateExercice duplicate the given exercice, returning
+// duplicateExercice duplicate the given exercice (variant), returning
 // the newly created one
 func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (ExerciceHeader, error) {
 	ex, err := ed.SelectExercice(ct.db, idExercice)
@@ -239,41 +236,12 @@ func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (E
 		return ExerciceHeader{}, accessForbidden
 	}
 
-	// shallow copy is enough
-	newExercice := ex
-	newExercice, err = newExercice.Insert(ct.db)
-	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
-	}
-
-	// also copy the questions
-	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, ex.Id)
-	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
-	}
-	questions, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
-	if err != nil {
-		return ExerciceHeader{}, utils.SQLError(err)
-	}
-
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return ExerciceHeader{}, utils.SQLError(err)
 	}
 
-	for index, link := range links {
-		question := questions[link.IdQuestion]
-		question.NeedExercice = newExercice.Id.AsOptional()
-		question, err = question.Insert(tx)
-		if err != nil {
-			_ = tx.Rollback()
-			return ExerciceHeader{}, utils.SQLError(err)
-		}
-		links[index].IdExercice = newExercice.Id
-		links[index].IdQuestion = question.Id
-	}
-
-	err = ed.UpdateExerciceQuestionList(tx, newExercice.Id, links)
+	newExercice, err := duplicateExerciceTo(tx, idExercice, group)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExerciceHeader{}, err
@@ -285,6 +253,136 @@ func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (E
 	}
 
 	return newExerciceHeader(newExercice), nil
+}
+
+// duplicateExerciceTo duplicate the given exercice (variant) and assign it
+// to the given group.
+// It does NOT rollback or commit
+func duplicateExerciceTo(tx *sql.Tx, idExercice ed.IdExercice, group ed.Exercicegroup) (ed.Exercice, error) {
+	ex, err := ed.SelectExercice(tx, idExercice)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	// shallow copy is enough
+	newExercice := ex
+	newExercice.IdGroup = group.Id // re-direct to the given group
+	newExercice, err = newExercice.Insert(tx)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	// also copy the questions
+	links, err := ed.SelectExerciceQuestionsByIdExercices(tx, ex.Id)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+	questions, err := ed.SelectQuestions(tx, links.IdQuestions()...)
+	if err != nil {
+		return ed.Exercice{}, utils.SQLError(err)
+	}
+
+	for index, link := range links {
+		question := questions[link.IdQuestion]
+		question.NeedExercice = newExercice.Id.AsOptional() // redirect the questions to the new exerice variant
+		question, err = question.Insert(tx)
+		if err != nil {
+			return ed.Exercice{}, utils.SQLError(err)
+		}
+		links[index].IdExercice = newExercice.Id
+		links[index].IdQuestion = question.Id
+	}
+
+	err = ed.UpdateExerciceQuestionList(tx, newExercice.Id, links)
+	if err != nil {
+		return ed.Exercice{}, err
+	}
+
+	return newExercice, nil
+}
+
+// EditorDuplicateExercicegroup duplicates the whole group, deep copying
+// every exercice (variant), and assigns it to the current user.
+func (ct *Controller) EditorDuplicateExercicegroup(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.duplicateExercicegroup(ed.IdExercicegroup(id), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+// duplicateExercicegroup creates a new group with the same title, (copied) exercices and tags
+func (ct *Controller) duplicateExercicegroup(idGroup ed.IdExercicegroup, userID uID) error {
+	group, err := ed.SelectExercicegroup(ct.db, idGroup)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if !group.IsVisibleBy(userID) {
+		return accessForbidden
+	}
+
+	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	variants, err := ed.SelectExercicesByIdGroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// start by inserting a new group ...
+	newGroup := group
+	newGroup.IdTeacher = userID // redirect to the current user
+	newGroup.Public = false
+	newGroup, err = newGroup.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	// .. then add its tags ..
+	err = ed.UpdateExercicegroupTags(tx, tags, newGroup.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	// finaly, copy the exercice variantes...
+	for _, variant := range variants {
+		_, err = duplicateExerciceTo(tx, variant.Id, newGroup)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
+func (ct *Controller) getExerciceGroup(qu ed.Exercice) (ed.Exercicegroup, error) {
+	group, err := ed.SelectExercicegroup(ct.db, qu.IdGroup)
+	if err != nil {
+		return ed.Exercicegroup{}, utils.SQLError(err)
+	}
+	return group, nil
 }
 
 // EditorGetExerciceContent loads the questions associated with the given exercice
@@ -426,6 +524,7 @@ func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userI
 
 // EditorDeleteExercice remove the given exercice, also cleaning
 // up the exercice group if needed.
+// It returns information if the exercice is used in tasks
 func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -434,12 +533,12 @@ func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteExercice(ed.IdExercice(idExercice), user.Id)
+	out, err := ct.deleteExercice(ed.IdExercice(idExercice), user.Id)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) error {
@@ -460,21 +559,44 @@ func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) e
 	return nil
 }
 
-func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) error {
-	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
-		return err
+// getExerciceUses returns the item using the given exercice
+func getExerciceUses(db ed.DB, id ed.IdExercice) (out QuestionExerciceUses, err error) {
+	tas, err := ta.SelectTasksByIdExercices(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
 	}
 
-	// TODO: check if it used in tasks
-	// (SQL constraint will trigger with a non user friendly error message)
+	return newQuestionExericeUses(db, tas.IDs())
+}
+
+type DeleteExerciceOut struct {
+	Deleted   bool
+	BlockedBy QuestionExerciceUses // non empty iff Deleted == false
+}
+
+func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (DeleteExerciceOut, error) {
+	if err := ct.checkExerciceOwner(idExercice, userID); err != nil {
+		return DeleteExerciceOut{}, err
+	}
+
+	uses, err := getExerciceUses(ct.db, idExercice)
+	if err != nil {
+		return DeleteExerciceOut{}, err
+	}
+	if len(uses) != 0 {
+		return DeleteExerciceOut{
+			Deleted:   false,
+			BlockedBy: uses,
+		}, nil
+	}
 
 	links, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, idExercice)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 	qus, err := ed.SelectQuestions(ct.db, links.IdQuestions()...)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// delete not standalone questions linked to the exercice
@@ -487,36 +609,36 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) error
 
 	tx, err := ct.db.Begin()
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// remove the links
 	_, err = ed.DeleteExerciceQuestionsByIdExercices(tx, idExercice)
 	if err != nil {
 		_ = tx.Rollback()
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// remove the actual questions
 	_, err = ed.DeleteQuestionsByIDs(tx, toDelete...)
 	if err != nil {
 		_ = tx.Rollback()
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	// finaly remove the exercice
 	_, err = ed.DeleteExerciceById(tx, idExercice)
 	if err != nil {
 		_ = tx.Rollback()
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteExerciceOut{}, utils.SQLError(err)
 	}
 
-	return nil
+	return DeleteExerciceOut{Deleted: true}, nil
 }
 
 type ExerciceCreateQuestionIn struct {
@@ -656,6 +778,91 @@ func (ct *Controller) importQuestionEx(args ExerciceImportQuestionIn, userID uID
 
 	// append it to the current questions
 	existingLinks = append(existingLinks, ed.ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: 1})
+
+	err = ed.UpdateExerciceQuestionList(tx, args.IdExercice, existingLinks)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	return ct.getExercice(args.IdExercice, userID)
+}
+
+type ExerciceDuplicateQuestionIn struct {
+	QuestionIndex int
+	IdExercice    ed.IdExercice
+	SessionID     string
+}
+
+// EditorExerciceDuplicateQuestion duplicate the question at the given
+// index in the given exercice (variant), also updating the preview
+func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args ExerciceDuplicateQuestionIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.duplicateQuestionEx(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	if err != nil {
+		return err
+	}
+
+	err = ct.updateExercicePreview(data, args.SessionID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) duplicateQuestionEx(args ExerciceDuplicateQuestionIn, userID uID) (ExerciceExt, error) {
+	if err := ct.checkExerciceOwner(args.IdExercice, userID); err != nil {
+		return ExerciceExt{}, err
+	}
+
+	existingLinks, err := ed.SelectExerciceQuestionsByIdExercices(ct.db, args.IdExercice)
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+	existingLinks.EnsureOrder()
+
+	if args.QuestionIndex >= len(existingLinks) {
+		return ExerciceExt{}, errors.New("internal error: invalid question index")
+	}
+	link := existingLinks[args.QuestionIndex]
+
+	question, err := ed.SelectQuestion(ct.db, link.IdQuestion)
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	// duplicate the question : shallow copy is enough
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+	question, err = question.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return ExerciceExt{}, utils.SQLError(err)
+	}
+
+	// and insert it to the current questions
+	newLink := ed.ExerciceQuestion{IdExercice: args.IdExercice, IdQuestion: question.Id, Bareme: link.Bareme}
+	index := args.QuestionIndex + 1
+	existingLinks = append(existingLinks[:index], append([]ed.ExerciceQuestion{newLink}, existingLinks[index:]...)...)
 
 	err = ed.UpdateExerciceQuestionList(tx, args.IdExercice, existingLinks)
 	if err != nil {

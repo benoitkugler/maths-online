@@ -71,7 +71,8 @@ func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) cli
 }
 
 // EvaluateAnswer check if the given answers are correct, and complete.
-// TODO: provide detailled feedback
+// An empty [answers] is supported, corresponding to the case where the student
+// has left the question.
 func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) client.QuestionAnswersOut {
 	fields := qu.fields()
 
@@ -79,18 +80,19 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 		Results:         make(map[int]bool, len(fields)),
 		ExpectedAnswers: make(map[int]client.Answer, len(fields)),
 	}
+
 	for id, reference := range fields {
 		out.ExpectedAnswers[id] = reference.correctAnswer()
 		out.Results[id] = false
-		answer, ok := answers.Data[id]
-		if !ok { // should not happen since the client forces the user to fill all fields
-			log.Println("invalid id")
+
+		answer := answers.Data[id]
+		if answer == nil {
+			// the field was not provided, skip verification
 			continue
 		}
 
 		if err := reference.validateAnswerSyntax(answer); err != nil {
-			log.Println("invalid field", err)
-			out.Results[id] = false
+			log.Println("internal error: invalid field syntax", err)
 			continue
 		}
 
@@ -259,6 +261,7 @@ func (f FigureInstance) toClient() client.Block { return client.FigureBlock(f) }
 type FunctionsGraphInstance struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []client.FunctionArea
+	Points    []client.FunctionPoint
 }
 
 func (fg FunctionsGraphInstance) toClient() client.Block {
@@ -270,6 +273,7 @@ func (fg FunctionsGraphInstance) toClient() client.Block {
 	return client.FunctionsGraphBlock{
 		Functions: fg.Functions,
 		Areas:     fg.Areas,
+		Points:    fg.Points,
 		Bounds:    functiongrapher.BoundingBox(allSegments),
 	}
 }

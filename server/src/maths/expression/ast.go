@@ -120,8 +120,9 @@ type randVariable struct {
 }
 
 // String returns one of the two forms
-// 			randSymbol(A;B;C)
-//			choiceSymbol((A;B;C); randInt(1;4))
+//
+//	randSymbol(A;B;C)
+//	choiceSymbol((A;B;C); randInt(1;4))
 func (rv randVariable) String() string {
 	var args []string
 	for _, v := range rv.choices {
@@ -284,7 +285,7 @@ const (
 
 func (c constant) String() string {
 	switch c {
-	case piConstant:
+	case piConstant: // favor the nicer π instead of pi
 		return string(piRune)
 	case eConstant:
 		return "e"

@@ -48,9 +48,10 @@ func (n NumberFieldBlock) setupValidator(params expression.RandomParameters) (va
 }
 
 type ExpressionFieldBlock struct {
-	Expression      string       // a valid expression, in the format used by expression.Expression
-	Label           Interpolated // optional
-	ComparisonLevel ComparisonLevel
+	Expression       string       // a valid expression, in the format used by expression.Expression
+	Label            Interpolated // optional
+	ComparisonLevel  ComparisonLevel
+	ShowFractionHelp bool // if true an hint for fraction is displayed when applicable
 }
 
 func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
@@ -59,6 +60,7 @@ func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (insta
 		return nil, err
 	}
 	answer.Substitute(params)
+	answer.DefaultSimplify() // needed for better [IsFraction] result
 
 	label, err := f.Label.instantiateAndMerge(params)
 	if err != nil {
@@ -66,15 +68,16 @@ func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (insta
 	}
 
 	return ExpressionFieldInstance{
-		LabelLaTeX:      label,
-		Answer:          answer,
-		ComparisonLevel: f.ComparisonLevel,
-		ID:              ID,
+		LabelLaTeX:       label,
+		Answer:           answer,
+		ComparisonLevel:  f.ComparisonLevel,
+		ShowFractionHelp: f.ShowFractionHelp && answer.IsFraction(),
+		ID:               ID,
 	}, nil
 }
 
 func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	_, err := expression.Parse(f.Expression)
+	expr, err := expression.Parse(f.Expression)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +85,13 @@ func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (valid
 	if err != nil {
 		return nil, err
 	}
-	return noOpValidator{}, err
+
+	switch f.ComparisonLevel {
+	case AsLinearEquation:
+		return linearEquationValidator{expr: expr}, nil
+	default:
+		return noOpValidator{}, nil
+	}
 }
 
 type RadioFieldBlock struct {

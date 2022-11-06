@@ -1,19 +1,6 @@
 <template>
-  <v-card title="Démarrer la session" width="870px">
+  <v-card title="Démarrer la session">
     <v-card-text class="mt-2">
-      <!-- <v-select
-        variant="outlined"
-        density="comfortable"
-        label="Formation des groupes"
-        :items="strategyItems"
-        :model-value="strategyItems[launchOptions.Kind]"
-        @update:model-value="
-          (s) => (launchOptions.Kind = strategyItems.indexOf(s))
-        "
-        :hint="hint"
-        persistent-hint
-      >
-      </v-select> -->
       {{ hint }}
       <fixed-size-groups v-model="launchOptions"> </fixed-size-groups>
 
@@ -49,24 +36,6 @@ const emit = defineEmits<{
 }>();
 
 let launchOptions = $ref<number[]>([]);
-// let launchOptions = $ref<GroupStrategy>({
-//   Kind: GroupStrategyKind.RandomGroupStrategy,
-//   Data: { MaxPlayersPerGroup: 4, TotalPlayersNumber: 0 }
-// });
-
-// const groupStrategyComponent = computed(() => {
-//   switch (launchOptions.Kind) {
-//     case GroupStrategyKind.RandomGroupStrategy:
-//       return markRaw(RandomGroupsVue);
-//     case GroupStrategyKind.FixedSizeGroupStrategy:
-//       return markRaw(FixedSizeGroupsVue);
-//   }
-// });
-
-// const strategyItems = [
-//   "Taille des groupes fixées",
-//   "Création aléatoire des groupes",
-// ];
 
 const hint =
   "Le nombre et la taille de chaque groupe est fixée au lancement. Chaque groupe est accessible par un code différent.";

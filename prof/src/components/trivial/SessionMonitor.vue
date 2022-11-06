@@ -5,7 +5,7 @@
         <v-card-title>Suivre la session de Triv'Maths</v-card-title>
       </v-col>
       <v-col style="text-align: right">
-        <v-btn icon flat class="mx-2" @click="emit('closed')">
+        <v-btn icon flat class="mx-2" @click="onClose">
           <v-icon icon="mdi-close"></v-icon>
         </v-btn>
       </v-col>
@@ -28,11 +28,7 @@
 <script setup lang="ts">
 import type { stopGame } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { TrivialMonitorController } from "@/controller/trivial";
-import type {
-  gameSummary,
-  teacherSocketData,
-} from "@/controller/trivial_config_socket_gen";
+import type { gameSummary } from "@/controller/trivial_config_socket_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import GameMonitor from "./GameMonitor.vue";
@@ -47,17 +43,30 @@ const emit = defineEmits<{
 
 let summaries = $ref<gameSummary[]>([]);
 
-let ct: TrivialMonitorController;
+let intervalHandle: number;
 onMounted(() => {
-  ct = new TrivialMonitorController(onServerData);
+  intervalHandle = setInterval(fetchMonitorData, 5000);
+  fetchMonitorData();
 });
 
-function onServerData(data: teacherSocketData) {
-  summaries = data.Games || [];
+async function fetchMonitorData() {
+  const res = await controller.TrivialTeacherMonitor();
+  if (res == undefined) return;
+  summaries = res.Games || [];
 }
 
 async function stopTrivGame(params: stopGame) {
   await controller.StopTrivialGame(params);
+  await fetchMonitorData();
+  // automatically close an empty monitor dialog
+  if (!summaries.length) {
+    onClose();
+  }
+}
+
+function onClose() {
+  clearInterval(intervalHandle);
+  emit("closed");
 }
 </script>
 

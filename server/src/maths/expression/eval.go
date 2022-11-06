@@ -513,8 +513,10 @@ func powRat(r rat, pow float64) rat {
 
 // performs some basic simplifications to convert expressions to numbers
 // examples :
-//	2*3 -> 6
-//  ln(1) -> 0
+//
+//		2*3 -> 6
+//	 ln(1) -> 0
+//
 // due to the binary representation, some expressions cannot be simplified, such as
 // (1 + x + 2)
 func (expr *Expr) simplifyNumbers() {
@@ -543,4 +545,9 @@ func (expr *Expr) simplifyNumbers() {
 		res := op.evaluate(newRat(float64(leftNumber)), newRat(float64(rightNumber)))
 		*expr = *res.toExpr()
 	}
+}
+
+// IsFraction returns true for expression of the form (...) / (...)
+func (expr *Expr) IsFraction() bool {
+	return expr.atom == div
 }

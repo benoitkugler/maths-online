@@ -3,6 +3,7 @@
     :model-value="editedConfig != null"
     @update:model-value="editedConfig = null"
     :retain-focus="false"
+    max-width="1200"
   >
     <edit-config
       v-if="editedConfig != null"
@@ -17,8 +18,30 @@
   <v-dialog
     :model-value="launchingConfig != null"
     @update:model-value="launchingConfig = null"
+    max-width="870px"
   >
     <launch-options @launch="launchSession"></launch-options>
+  </v-dialog>
+
+  <v-dialog
+    :model-value="trivialToDelete != null"
+    @update:model-value="trivialToDelete = null"
+    max-width="800px"
+  >
+    <v-card title="Confirmer">
+      <v-card-text
+        >Etes-vous certain de vouloir supprimer la partie
+        <i>{{ trivialToDelete?.Name }}</i> ? <br />
+        Cette opération est irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="trivialToDelete = null">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="red" @click="deleteConfig" variant="elevated">
+          Supprimer
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-dialog>
 
   <v-dialog
@@ -30,20 +53,20 @@
     <session-monitor @closed="closeMonitor"></session-monitor>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="80%">
-    <v-row>
-      <v-col>
+  <v-card class="my-5 mx-auto" width="90%">
+    <v-row class="mx-0">
+      <v-col cols="9">
         <v-card-title>Triv'Maths</v-card-title>
         <v-card-subtitle
           >Configurer et lancer une partie de Triv'Maths</v-card-subtitle
         >
       </v-col>
 
-      <v-col align-self="center" style="text-align: right" cols="4">
+      <v-col align-self="center" style="text-align: right" cols="3">
         <v-btn
-          class="mx-2"
+          size="small"
           @click="createConfig"
-          title="Créer une nouvelle session"
+          title="Créer une nouvelle partie"
         >
           <v-icon icon="mdi-plus" color="success"></v-icon>
           Créer
@@ -69,118 +92,32 @@
         :key="config.Config.Id"
         class="my-3"
       >
-        <v-row>
-          <v-col cols="3" align-self="center">
-            <origin-button
-              :origin="config.Origin"
-              @update-public="(b) => updatePublic(config.Config, b)"
-            ></origin-button>
-            <v-btn
-              class="mx-2 my-1"
-              size="x-small"
-              icon
-              @click="duplicateConfig(config.Config)"
-              title="Dupliquer cette session"
-            >
-              <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
-            </v-btn>
-
-            <v-btn
-              icon
-              size="x-small"
-              title="Editer"
-              class="mx-2"
-              @click="editedConfig = config.Config"
-              v-if="isPersonnal(config)"
-            >
-              <v-icon icon="mdi-pencil"></v-icon>
-            </v-btn>
-
-            <v-btn
-              v-if="isPersonnal(config)"
-              icon
-              size="x-small"
-              title="Lancer"
-              class="mx-2"
-              @click="launchingConfig = config.Config"
-              :disabled="
-                isLaunching ||
-                !config.NbQuestionsByCategories.every((v) => v > 0)
-              "
-            >
-              <v-icon icon="mdi-play" color="green"></v-icon>
-            </v-btn>
-
-            <v-btn
-              v-if="isPersonnal(config)"
-              class="mx-2"
-              size="x-small"
-              icon
-              @click="deleteConfig(config.Config)"
-              title="Supprimer cette session"
-            >
-              <v-icon icon="mdi-delete" color="red"></v-icon>
-            </v-btn>
-          </v-col>
-          <v-col cols="3" align-self="center" style="text-align: center">
-            {{ config.Config.Name }}
-            <small class="text-grey">
-              {{ formatCategories(config.Config) }}
-            </small>
-          </v-col>
-          <v-col cols="2" align-self="center" style="text-align: center">
-            <small class="text-primary">
-              {{ formatDifficulties(config.Config) }}
-            </small>
-          </v-col>
-          <v-col align-self="center" cols="4">
-            <v-card class="bg-grey-lighten-2">
-              <v-card-text class="px-0 py-1">
-                <v-row justify="center">
-                  <v-col
-                    cols="6"
-                    align-self="center"
-                    style="text-align: center"
-                    v-if="config.Config.Questions.Tags.every((v) => !v)"
-                  >
-                    <i>Aucune question configurée.</i>
-                  </v-col>
-                  <v-col
-                    class="my-1"
-                    cols="2"
-                    align-self="center"
-                    v-for="(categorie, index) in config.Config.Questions.Tags ||
-                    []"
-                    :key="index"
-                    v-show="categorie && categorie.length != 0"
-                  >
-                    <v-chip :color="colors[index]" variant="outlined">
-                      {{ config.NbQuestionsByCategories[index] }}
-                    </v-chip>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+        <config-row
+          :config="config"
+          :disable-launch="
+            isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
+          "
+          @update-public="(b) => updatePublic(config.Config, b)"
+          @duplicate="duplicateConfig(config.Config)"
+          @edit="editedConfig = config.Config"
+          @launch="launchingConfig = config.Config"
+          @delete="trivialToDelete = config.Config"
+        ></config-row>
       </v-list-item>
     </v-list>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import {
-  Visibility,
-  type RunningSessionMetaOut,
-  type Trivial,
-  type TrivialExt,
+import type {
+  RunningSessionMetaOut,
+  Trivial,
+  TrivialExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { commonTags } from "@/controller/editor";
-import { colorsPerCategorie } from "@/controller/trivial";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
-import OriginButton from "../components/OriginButton.vue";
+import ConfigRow from "../components/trivial/ConfigRow.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
@@ -199,8 +136,6 @@ const configs = computed(() => {
 
 let isLaunching = $ref(false);
 
-const colors = colorsPerCategorie;
-
 onMounted(async () => {
   fetchSessionMeta();
 
@@ -214,10 +149,6 @@ onMounted(async () => {
   const tags = await controller.EditorGetTags();
   allKnownTags = tags || [];
 });
-
-function isPersonnal(config: TrivialExt) {
-  return config.Origin.Visibility == Visibility.Personnal;
-}
 
 async function createConfig() {
   const res = await controller.CreateTrivialPoursuit();
@@ -263,9 +194,14 @@ async function duplicateConfig(config: Trivial) {
   _configs.push(res);
 }
 
-async function deleteConfig(config: Trivial) {
-  await controller.DeleteTrivialPoursuit({ id: config.Id });
-  _configs = _configs.filter((c) => c.Config.Id != config.Id);
+let trivialToDelete = $ref<Trivial | null>(null);
+
+async function deleteConfig() {
+  if (trivialToDelete == null) return;
+  const id = trivialToDelete.Id;
+  await controller.DeleteTrivialPoursuit({ id: id });
+  trivialToDelete = null;
+  _configs = _configs.filter((c) => c.Config.Id != id);
 }
 
 let launchingConfig = $ref<Trivial | null>(null);
@@ -288,26 +224,6 @@ async function launchSession(groups: number[]) {
 
   // automatically jump to monitor screen
   showMonitor = true;
-}
-
-function formatCategories(config: Trivial) {
-  const allUnions: string[][] = [];
-  config.Questions.Tags.forEach((cat) =>
-    allUnions.push(...(cat || []).map((s) => s || []))
-  );
-  const common = commonTags(allUnions);
-  if (common.length != 0) {
-    return "(" + common.join(", ") + ")";
-  }
-  return "";
-}
-
-function formatDifficulties(config: Trivial) {
-  const l = config.Questions.Difficulties || [];
-  if (l.length) {
-    return l.join(", ");
-  }
-  return "Toutes difficultés";
 }
 
 let sessionMeta = $ref<RunningSessionMetaOut>({ NbGames: 0 });

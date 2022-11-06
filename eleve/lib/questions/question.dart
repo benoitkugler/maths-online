@@ -102,7 +102,8 @@ Map<int, FieldController> _createFieldControllers(
     if (block is NumberFieldBlock) {
       fields[block.iD] = NumberController(onChange);
     } else if (block is ExpressionFieldBlock) {
-      fields[block.iD] = ExpressionController(api, onChange);
+      fields[block.iD] = ExpressionController(api, onChange,
+          showFractionHelp: block.showFractionHelp);
     } else if (block is RadioFieldBlock) {
       fields[block.iD] = RadioController(onChange, block.proposals);
     } else if (block is DropDownFieldBlock) {
@@ -224,10 +225,13 @@ class _FieldsBuilder {
     _flushCurrentRow();
 
     rows.add(Center(
-        child: Math.tex(
-      element.formula,
-      mathStyle: MathStyle.display,
-      textStyle: const TextStyle(fontSize: fontSize),
+        child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Math.tex(
+        element.formula,
+        mathStyle: MathStyle.display,
+        textStyle: const TextStyle(fontSize: fontSize),
+      ),
     )));
   }
 
@@ -286,7 +290,7 @@ class _FieldsBuilder {
       ct,
       hintWidth: element.sizeHint,
     ));
-    if (element.label.isNotEmpty) {
+    if (element.label.isNotEmpty || element.suffix.isNotEmpty) {
       // start a new line
       _flushCurrentRow();
 
@@ -295,9 +299,15 @@ class _FieldsBuilder {
           child: Text.rich(
             TextSpan(
               children: [
-                _inlineMath(element.label, fontSize),
-                const TextSpan(text: " "),
+                if (element.label.isNotEmpty) ...[
+                  _inlineMath(element.label, fontSize),
+                  const TextSpan(text: " "),
+                ],
                 field,
+                if (element.suffix.isNotEmpty) ...[
+                  const TextSpan(text: " "),
+                  _inlineMath(element.suffix, fontSize),
+                ],
               ],
             ),
           ),
@@ -528,9 +538,7 @@ class _ListRows extends StatelessWidget {
 }
 
 /// [QuestionW] is the widget used to display a question
-/// The interactivity is handled internally; with the
-/// hook [onDone] provided as external API,
-/// as well as the [feedback] parameter
+/// The interactivity is handled by the [controller] field.
 class QuestionW extends StatefulWidget {
   final BaseQuestionController controller;
 

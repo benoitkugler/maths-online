@@ -39,7 +39,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
     final uri = Uri.parse(
         buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID}));
     final resp = await http.get(uri);
-    return listSheetProgressionFromJson(jsonDecode(resp.body));
+    return listSheetProgressionFromJson(checkServerError(resp.body));
   }
 
   @override
@@ -48,7 +48,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
         query: {studentIDKey: studentID, "id": idTask.toString()}));
     final resp = await http.get(uri);
-    return instantiatedWorkFromJson(jsonDecode(resp.body));
+    return instantiatedWorkFromJson(checkServerError(resp.body));
   }
 
   @override
@@ -66,18 +66,42 @@ class ServerHomeworkAPI implements HomeworkAPI {
   }
 }
 
-/// Homework is the entry point for the homework
-/// activity
-class Homework extends StatefulWidget {
-  final HomeworkAPI api;
-
-  const Homework(this.api, {Key? key}) : super(key: key);
+class HomeworkDisabled extends StatelessWidget {
+  const HomeworkDisabled({super.key});
 
   @override
-  State<Homework> createState() => _HomeworkState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Travail à la maison"),
+        ),
+        body: const Center(
+            child: Card(
+          margin: EdgeInsets.all(20),
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              "Cette activité n'est pas disponible, car tu n'es pas inscris sur une classe.",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        )));
+  }
 }
 
-class _HomeworkState extends State<Homework> {
+/// [HomeworkW] is the entry point widget for the homework
+/// activity.
+class HomeworkW extends StatefulWidget {
+  final HomeworkAPI api;
+
+  /// Creates a new [HomeworkW] widget
+  const HomeworkW(this.api, {Key? key}) : super(key: key);
+
+  @override
+  State<HomeworkW> createState() => _HomeworkWState();
+}
+
+class _HomeworkWState extends State<HomeworkW> {
   late Future<Sheets> sheets;
 
   @override
@@ -88,7 +112,7 @@ class _HomeworkState extends State<Homework> {
   }
 
   @override
-  void didUpdateWidget(covariant Homework oldWidget) {
+  void didUpdateWidget(covariant HomeworkW oldWidget) {
     sheets = widget.api.loadSheets();
     super.didUpdateWidget(oldWidget);
   }
@@ -187,6 +211,7 @@ class _SheetListState extends State<_SheetList> {
           child: Text("Aucun travail à la maison n'est planifié."));
     }
     final bestSheet = selectMainSheetID();
+    final now = DateTime.now();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2),
       child: ListView(
@@ -195,7 +220,11 @@ class _SheetListState extends State<_SheetList> {
                 onTap: () => onSelectSheet(e),
                 child: _SheetSummary(
                   e,
-                  emphasize: e.sheet.id == bestSheet,
+                  status: e.sheet.deadline.isBefore(now)
+                      ? SheetStatus.expired
+                      : (e.sheet.id == bestSheet
+                          ? SheetStatus.suggested
+                          : SheetStatus.normal),
                 )))
             .toList(),
       ),
@@ -203,10 +232,25 @@ class _SheetListState extends State<_SheetList> {
   }
 }
 
+enum SheetStatus { normal, suggested, expired }
+
+extension SheetStatusUI on SheetStatus {
+  Color? get color {
+    switch (this) {
+      case SheetStatus.normal:
+        return null;
+      case SheetStatus.suggested:
+        return Colors.blueAccent;
+      case SheetStatus.expired:
+        return Colors.orange.shade300;
+    }
+  }
+}
+
 class _SheetSummary extends StatelessWidget {
   final SheetProgression sheet;
-  final bool emphasize;
-  const _SheetSummary(this.sheet, {this.emphasize = false, Key? key})
+  final SheetStatus status;
+  const _SheetSummary(this.sheet, {this.status = SheetStatus.normal, Key? key})
       : super(key: key);
 
   @override
@@ -218,9 +262,9 @@ class _SheetSummary extends StatelessWidget {
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
         .length;
     return Card(
-      elevation: emphasize ? 3 : null,
-      shadowColor: emphasize ? Colors.blueAccent : null,
-      color: emphasize ? Colors.blueAccent.withOpacity(0.3) : null,
+      elevation: status == SheetStatus.suggested ? 3 : null,
+      shadowColor: status.color,
+      color: status.color?.withOpacity(0.3),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -237,7 +281,13 @@ class _SheetSummary extends StatelessWidget {
                 children: [
                   Text(hasNotation ? "Travail noté" : "Travail non noté"),
                   if (hasNotation)
-                    Text("Pour le ${formatTime(sheet.sheet.deadline)}")
+                    RichText(
+                        text: TextSpan(children: [
+                      const TextSpan(text: "A rendre avant le\n"),
+                      TextSpan(
+                          text: formatTime(sheet.sheet.deadline),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ]))
                 ],
               ),
             ),

@@ -1,22 +1,18 @@
 <template>
-  <v-input hide-details>
-    <v-row>
-      <v-col>
-        <small class="text-grey-darken-3 ml-2">
-          {{ "Arrêt des notes" }}
-        </small>
+  <div class="my-1">
+    <v-row class="px-1">
+      <v-col cols="12" sm="6" md="9">
+        <DateField
+          label="Date de rendu"
+          :model-value="date"
+          @update:model-value="updateDate"
+        ></DateField>
       </v-col>
-    </v-row>
-    <v-row>
-      <DateFieldRaw
-        :model-value="date"
-        @update:model-value="updateDate"
-      ></DateFieldRaw>
-      <v-col cols="4" align-self="center">
+      <v-col cols="12" sm="6" md="3" align-self="center">
         <v-select
           variant="outlined"
           density="compact"
-          label="Heure"
+          label="Heure de rendu"
           :items="hours"
           hide-details
           v-model="hour"
@@ -25,14 +21,14 @@
         </v-select>
       </v-col>
     </v-row>
-  </v-input>
+  </div>
 </template>
 
 <script setup lang="ts">
 import type { Date_, Time } from "@/controller/api_gen";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
-import DateFieldRaw from "../DateFieldRaw.vue";
+import DateField from "../DateField.vue";
 
 interface Props {
   modelValue: Time;

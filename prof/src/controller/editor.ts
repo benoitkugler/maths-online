@@ -347,7 +347,8 @@ export function newBlock(kind: BlockKind): Block {
             }
           ],
           FunctionVariations: [],
-          Areas: []
+          Areas: [],
+          Points: []
         }
       };
       return out;
@@ -411,7 +412,8 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Label: "",
           Expression: "x^2 + 2x + 1",
-          ComparisonLevel: ComparisonLevel.SimpleSubstitutions
+          ComparisonLevel: ComparisonLevel.SimpleSubstitutions,
+          ShowFractionHelp: false
         }
       };
       return out;
@@ -718,7 +720,7 @@ export function tagColor(tag: string) {
     tag == DifficultyTag.Diff2 ||
     tag == DifficultyTag.Diff3
   ) {
-    return "secondary";
+    return "secondary-darken-1";
   }
   if (
     tag == LevelTag.Seconde ||
@@ -727,7 +729,7 @@ export function tagColor(tag: string) {
   ) {
     return "pink";
   }
-  return "primary";
+  return "primary-darken-1";
 }
 
 // returns 0 for question without difficulty
@@ -797,4 +799,10 @@ export function refreshExercicePreview(sessionID: string, id: IdExercice) {
     Parameters: { Intrinsics: [], Variables: [] }, // ignored
     Questions: [] // ignored
   });
+}
+
+export interface VariantG {
+  Id: number;
+  Subtitle: string;
+  Difficulty: DifficultyTag;
 }

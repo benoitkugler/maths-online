@@ -157,7 +157,7 @@
                     item
                     :model-value="nameToSelection(area.Top)"
                     @update:model-value="
-                      (s) => (area.Top = nameFromSelection(s))
+                      (s) => (area.Top = nameFromSelection(s as string))
                     "
                     :color="expressionColor"
                   ></v-combobox>
@@ -180,7 +180,7 @@
                     :items="functionsNamesItems"
                     :model-value="nameToSelection(area.Bottom)"
                     @update:model-value="
-                      (s) => (area.Bottom = nameFromSelection(s))
+                      (s) => (area.Bottom = nameFromSelection(s as string))
                     "
                     :color="expressionColor"
                   ></v-combobox>
@@ -195,6 +195,65 @@
             </v-col>
             <v-col md="1" align-self="center" class="pl-1 pr-0">
               <v-btn icon size="x-small" @click="deleteArea(index)">
+                <v-icon icon="mdi-delete" color="red"></v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-list-item>
+        <v-divider></v-divider>
+      </div>
+    </v-list>
+  </v-card>
+
+  <v-card color="secondary" class="my-1">
+    <v-row no-gutters>
+      <v-col align-self="center" md="9">
+        <v-card-subtitle> Points sur les courbes </v-card-subtitle>
+      </v-col>
+      <v-col md="3" style="text-align: right">
+        <v-btn
+          icon
+          @click="addPoint"
+          title="Ajouter un point appartenant à une des courbes"
+          size="x-small"
+          class="mr-2 my-2"
+        >
+          <v-icon icon="mdi-plus" color="green" size="small"></v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-list>
+      <div v-for="(point, index) in props.modelValue.Points" :key="index">
+        <v-list-item>
+          <v-row>
+            <v-col cols="2" align-self="center">
+              <btn-color-picker v-model="point.Color"></btn-color-picker>
+            </v-col>
+            <v-col cols="4" align-self="center">
+              <v-combobox
+                density="compact"
+                variant="outlined"
+                hide-details
+                hide-no-data
+                label="Fonction"
+                :items="functionsNamesItems"
+                item
+                :model-value="nameToSelection(point.Function)"
+                @update:model-value="
+                  (s) => (point.Function = nameFromSelection(s as string))
+                "
+                :color="expressionColor"
+              ></v-combobox>
+            </v-col>
+            <v-col cols="2" align-self="center">
+              <ExpressionField label="X" v-model="point.X"></ExpressionField>
+            </v-col>
+            <v-col cols="3" align-self="center">
+              <InterpolatedText v-model="point.Legend" label="Légende">
+              </InterpolatedText>
+            </v-col>
+            <v-col md="1" align-self="center" class="pl-1 pr-0">
+              <v-btn icon size="x-small" @click="deletePoint(index)">
                 <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
@@ -220,6 +279,7 @@ import {
 import { $computed } from "vue/macros";
 import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionField from "../utils/ExpressionField.vue";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 import BaseVariationTable from "./BaseVariationTable.vue";
 
 interface Props {
@@ -269,6 +329,7 @@ function updateVar(index: number, v: VariationTableBlock) {
   emit("update:modelValue", props.modelValue);
 }
 
+/** includes the special [abscisseAxis] value */
 const functionsNamesItems = $computed(() => {
   const set: { [key: string]: boolean } = {};
   props.modelValue.FunctionExprs?.forEach(
@@ -281,7 +342,7 @@ const functionsNamesItems = $computed(() => {
   return out;
 });
 
-const abscisseAxis = "<Axe des abscisses>";
+const abscisseAxis = "<Axe Ox>";
 
 function nameFromSelection(s: string) {
   return s == abscisseAxis ? "" : s;
@@ -303,6 +364,21 @@ function addArea() {
 
 function deleteArea(index: number) {
   props.modelValue.Areas?.splice(index, 1);
+  emit("update:modelValue", props.modelValue);
+}
+
+function addPoint() {
+  props.modelValue.Points?.push({
+    Color: lastColorUsed.color,
+    Function: nameFromSelection(functionsNamesItems[0]),
+    X: "0",
+    Legend: `P_${1 + (props.modelValue.Points.length || 0)}`,
+  });
+  emit("update:modelValue", props.modelValue);
+}
+
+function deletePoint(index: number) {
+  props.modelValue.Points?.splice(index, 1);
   emit("update:modelValue", props.modelValue);
 }
 

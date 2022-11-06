@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="isEditing" :retain-focus="false">
-    <v-card subtitle="Modifier les étiquettes de la question">
+  <v-dialog v-model="isEditing" :retain-focus="false" max-width="800">
+    <v-card title="Modifier les étiquettes de la question">
       <v-card-text>
         <tag-list-edit
           v-model="tmpList"

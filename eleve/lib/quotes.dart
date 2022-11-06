@@ -185,6 +185,11 @@ const _quotes = [
       "",
       "Margaret Lee Runbeck"),
   QuoteData("Les mots sont plus forts que les armes.", "", "Laurent Jacqua"),
+  QuoteData("Prendre conscience de son ignorance est un grand pas vers la connaissance.", "", "Benjamin Disraeli"),
+  QuoteData("On aide plus un être en lui donnant de lui-même une image favorable qu'en le mettant sans cesse en face de ses défauts.", "", "Albert Camus"),
+  QuoteData("La valeur d'un homme tient dans sa capacité à donner et non dans sa capacité à recevoir.", "", "Albert Einstein"),
+  QuoteData("Il n'est jamais trop tard pour devenir ce que vous auriez toujours dû être.", "", "George Eliot"),
+  QuoteData("Les grands changements viennent des petites choses.", "", "Paulo Coelho"),
 ];
 
 QuoteData pickQuote() {
@@ -199,7 +204,7 @@ class Quote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const shadows = [
-      BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 5)
+      BoxShadow(color: Colors.white, blurRadius: 6, spreadRadius: 3)
     ];
     const fontSize = 16.0;
     return Padding(

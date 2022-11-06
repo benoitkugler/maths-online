@@ -172,6 +172,14 @@ func (c parsedCoord) validate(vars expression.Vars, checkPrecision bool) error {
 	return nil
 }
 
+type linearEquationValidator struct {
+	expr *expression.Expr
+}
+
+func (v linearEquationValidator) validate(vars expression.Vars) error {
+	return v.expr.IsValidLinearEquation(vars)
+}
+
 type variationTableValidator struct {
 	label TextParts
 	xs    []*expression.Expr
@@ -274,15 +282,20 @@ func newFunction(fn FunctionDefinition, params expression.RandomParameters) (fun
 	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
 }
 
-type areaValidator struct {
+type areaVData struct {
 	top, bottom TextParts
 	domain      expression.Domain
 }
 
+type functionPointVData struct {
+	fnLabel TextParts
+	x       *expression.Expr
+}
 type functionsGraphValidator struct {
 	functions          []function
 	variationValidator []variationTableValidator
-	areas              []areaValidator
+	areas              []areaVData
+	points             []functionPointVData
 }
 
 func (v functionsGraphValidator) validate(vars expression.Vars) error {
@@ -332,14 +345,14 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 		}
 		domainsTop := byNames[top]
 		if top == "" {
-			domainsTop = []expression.Domain{{}} // no constraints
+			domainsTop = []expression.Domain{{}} // use the abscisse axis, which has no constraints
 		}
 		if len(domainsTop) == 0 {
 			return fmt.Errorf("La fonction %s n'est pas définie.", top)
 		}
 		domainsBottom := byNames[bottom]
 		if bottom == "" {
-			domainsBottom = []expression.Domain{{}} // no constraints
+			domainsBottom = []expression.Domain{{}} // use the abscisse axis, which has no constraints
 		}
 		if len(domainsBottom) == 0 {
 			return fmt.Errorf("La fonction %s n'est pas définie.", bottom)
@@ -353,6 +366,27 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 			return err
 		}
 	}
+
+	// check that points reference known functions and
+	// are in valid domains
+	for _, point := range v.points {
+		fnLabel, err := point.fnLabel.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		domains := byNames[fnLabel]
+		if fnLabel == "" { // use the abscisse axis, which has no constraints
+			domains = []expression.Domain{{}}
+		}
+		if len(domains) == 0 {
+			return fmt.Errorf("La fonction %s n'est pas définie.", fnLabel)
+		}
+		// check that the abscisse is in one domain
+		if err := point.x.IsIncludedIntoOne(domains, vars); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -1,6 +1,5 @@
 <template>
   <v-card
-    width="1000px"
     title="Syntaxe LaTeX"
     subtitle="La syntaxe LaTeX permet d'utiliser entre autres les commandes suivantes."
   >
@@ -138,6 +137,14 @@ const commands = [
   {
     description: "Intersection",
     command: `\\cap `,
+  },
+  {
+    description: "Angle",
+    command: `\\widehat{BAC}`,
+  },
+  {
+    description: "Limite",
+    command: `\\lim_{x \\to 0} f(x)`,
   },
 ];
 

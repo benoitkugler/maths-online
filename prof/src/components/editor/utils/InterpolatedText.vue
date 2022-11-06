@@ -1,16 +1,18 @@
 <template>
-  <small v-if="props.label" class="text-grey">{{ props.label }} </small>
-  <QuillEditor
-    theme=""
-    toolbar=""
-    class="__quill-text-field elevation-2 mb-2"
-    content-type="text"
-    @update:content="onTextChange"
-    @text-change="updateVisual"
-    :content="props.modelValue"
-    :options="{ formats: ['color', 'bold', 'align'] }"
-    ref="quill"
-  />
+  <div>
+    <small v-if="props.label" class="ml-2 text-grey">{{ props.label }} </small>
+    <QuillEditor
+      theme=""
+      toolbar=""
+      class="__quill-text-field elevation-2 mb-2"
+      content-type="text"
+      @update:content="onTextChange"
+      @text-change="updateVisual"
+      :content="props.modelValue"
+      :options="{ formats: ['color', 'bold', 'align'] }"
+      ref="quill"
+    />
+  </div>
   <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
 </template>
 
@@ -110,6 +112,6 @@ const activeColor = computed(() => (props.forceLatex ? laTeXColor : "black"));
   height: unset;
 }
 .ql-editor {
-  padding: 4px 4px;
+  padding: 6px 4px;
 }
 </style>

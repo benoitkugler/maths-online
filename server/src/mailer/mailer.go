@@ -50,8 +50,8 @@ func getFromAuth(creds pass.SMTP) (string, smtp.Auth) {
 }
 
 // SendMail one simple mail.
-func SendMail(smtp pass.SMTP, to, subject, text string) (err error) {
-	e, err := newMail([]string{to}, subject, text, smtp, nil)
+func SendMail(smtp pass.SMTP, to []string, subject, text string) (err error) {
+	e, err := newMail(to, subject, text, smtp, nil)
 	if err != nil {
 		return err
 	}

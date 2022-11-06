@@ -180,8 +180,10 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
-	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
+// LoadClassroomStudents returns the students for one classroom,
+// sorted alphabetically.
+func LoadClassroomStudents(db tc.DB, id tc.IdClassroom) ([]tc.Student, error) {
+	stds, err := tc.SelectStudentsByIdClassrooms(db, id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -195,6 +197,10 @@ func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Stu
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out, nil
+}
+
+func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
+	return LoadClassroomStudents(ct.db, idClassroom)
 }
 
 // split NAME NAME Surname into NAME NAME ; Surname
@@ -420,8 +426,8 @@ func (ct *Controller) updateStudent(st tc.Student, userID tc.IdTeacher) error {
 }
 
 type classroomsCode struct {
-	codes map[string]tc.IdClassroom // code for student -> id_classroom
 	lock  sync.Mutex
+	codes map[string]tc.IdClassroom // code for student -> id_classroom
 }
 
 func (cc *classroomsCode) newCode(idClassroom tc.IdClassroom) string {
@@ -535,20 +541,38 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 	}, nil
 }
 
-// AttachStudentToClassroom1 uses a temporary classroom code to
+// AttachStudentToClassroomStep1 uses a temporary classroom code to
 // attach a student to the classroom.
-func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
+// More precisely, it checks the given code and returns a list of student
+// propositions.
+// As a special case, it also accepts a special demo code <DEMO_CODE>.[0-9] which creates a
+// profile linked to the demo classroom.
+func (ct *Controller) AttachStudentToClassroomStep1(c echo.Context) error {
 	code := c.QueryParam("code")
+
+	out, err := ct.attachStudentCandidates(code)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) attachStudentCandidates(code string) (AttachStudentToClassroom1Out, error) {
+	// look for demonstration code
+	if isDemoCode(ct.demoCode, code) {
+		return ct.createDemoStudent()
+	}
 
 	idClassroom, err := ct.classCodes.checkCode(code)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// return the list of the student who are not yet identified
 	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
-		return utils.SQLError(err)
+		return nil, utils.SQLError(err)
 	}
 
 	var out AttachStudentToClassroom1Out
@@ -556,18 +580,58 @@ func (ct *Controller) AttachStudentToClassroom1(c echo.Context) error {
 		if student.IsClientAttached {
 			continue
 		}
-		out = append(out, StudentHeader{Id: student.Id, Label: student.Name + " " + student.Surname})
+		out = append(out, NewStudentHeader(student))
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Label < out[j].Label })
+	return out, nil
+}
+
+func isDemoCode(demoCode string, userCode string) bool {
+	chunks := strings.Split(userCode, ".")
+	if len(chunks) == 2 {
+		return chunks[0] == demoCode
+	}
+	return false
+}
+
+func (ct *Controller) createDemoStudent() (AttachStudentToClassroom1Out, error) {
+	student, err := tc.Student{
+		Name:        "DEMO",
+		Surname:     fmt.Sprintf("User %d", time.Now().Unix()),
+		Birthday:    tc.Date(time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)),
+		IdClassroom: ct.demoClassroom.Id,
+	}.Insert(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	return AttachStudentToClassroom1Out{NewStudentHeader(student)}, nil
+}
+
+// AttachStudentToClassroomStep2 validates the birthday and actually attaches the client to
+// a student account and a classroom.
+func (ct *Controller) AttachStudentToClassroomStep2(c echo.Context) error {
+	var args AttachStudentToClassroom2In
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.validAttachStudent(args)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(200, out)
 }
 
 func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out AttachStudentToClassroom2Out, err error) {
-	_, err = ct.classCodes.checkCode(args.ClassroomCode)
-	if err != nil {
-		return out, err
+	// check for expired codes
+	if !isDemoCode(ct.demoCode, args.ClassroomCode) {
+		_, err = ct.classCodes.checkCode(args.ClassroomCode)
+		if err != nil {
+			return out, err
+		}
 	}
 
 	student, err := tc.SelectStudent(ct.db, args.IdStudent)
@@ -596,20 +660,4 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 	}
 
 	return out, nil
-}
-
-// AttachStudentToClassroom2 validates the birthday and actually attaches the client to
-// a student account and a classroom.
-func (ct *Controller) AttachStudentToClassroom2(c echo.Context) error {
-	var args AttachStudentToClassroom2In
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-
-	out, err := ct.validAttachStudent(args)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
 }

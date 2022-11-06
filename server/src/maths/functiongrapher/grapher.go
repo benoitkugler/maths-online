@@ -3,6 +3,7 @@
 package functiongrapher
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/benoitkugler/maths-online/maths/expression"
@@ -266,7 +267,7 @@ func (bc BezierCurve) splitByX(x float64) (left, right BezierCurve) {
 	return left, right
 }
 
-// assume P0.X <= x <= P2.X and returbs the unique t in [0, 1]
+// assumes P0.X <= x <= P2.X and returns the unique t in [0, 1]
 // such that B(t).X = x
 func (bc BezierCurve) invertX(x float64) (t float64) {
 	// a quad bezier is also a quadratic polynomial
@@ -301,4 +302,27 @@ func (bc BezierCurve) derivative(t float64) float64 {
 	dx := 2*(p2x-p1x-(p1x-p0x))*t + 2*(p1x-p0x)
 	dy := 2*(p2y-p1y-(p1y-p0y))*t + 2*(p1y-p0y)
 	return dy / dx
+}
+
+// OrdinateAt computes the Y position for the point [x]
+// belong to the given [curves]
+// It returns an error if [x] does not belong to [curves]
+func OrdinateAt(curves []BezierCurve, x float64) (float64, error) {
+	// find the correc segment
+	for _, c := range curves {
+		if c.P0.X == x {
+			return c.P0.Y, nil
+		} else if c.P2.X == x {
+			return c.P2.Y, nil
+		} else if c.P0.X <= x && x <= c.P2.X { // compute the y coordinate
+			return c.ordinateAt(x), nil
+		}
+	}
+	return 0, fmt.Errorf("abscisse %f does not belong to the curve", x)
+}
+
+func (bc BezierCurve) ordinateAt(x float64) float64 {
+	ts := bc.invertX(x)
+	_, y := bc.evaluateCurve(ts)
+	return y
 }

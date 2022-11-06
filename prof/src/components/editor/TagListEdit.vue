@@ -19,13 +19,16 @@
         :density="props.horizontal ? 'compact' : 'comfortable'"
         hide-details
         label="Ajouter..."
-        :search="entry"
-        @update:search="(s) => (entry = s)"
+        placeholder="Rechercher une étiquette..."
+        :search="search"
+        @update:search="onSearch"
         @keyup="onEnterKey"
         @update:model-value="onSelectItem"
         append-icon=""
-        hide-no-data
+        no-data-text="Aucune étiquette ne correspond à votre recherche."
+        hide-selected
         auto-select-first
+        :custom-filter="filter"
       >
         <template v-slot:append-inner>
           <v-btn
@@ -34,7 +37,7 @@
             class="my-1"
             color="success"
             :disabled="!isEntryValid"
-            @click="add"
+            @click="add(search)"
           >
             <v-icon icon="mdi-plus" size="x-small"></v-icon>
           </v-btn>
@@ -47,7 +50,7 @@
 <script setup lang="ts">
 import { tagColor, tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { $computed, $ref } from "vue/macros";
 
 interface Props {
   modelValue: string[];
@@ -61,45 +64,80 @@ const emit = defineEmits<{
   (e: "update:model-value", v: string[]): void;
 }>();
 
-let entry = $ref("");
-
-const tagItems = computed(() => {
-  return props.allTags.filter((t) => !props.modelValue.includes(t));
-});
+let search = $ref("");
 
 const isEntryValid = computed(() => {
-  const e = entry.trim();
+  const e = search.trim();
   if (e.length == 0) {
     return false;
   }
   return !props.modelValue.includes(e);
 });
 
-function add() {
-  props.modelValue.push(tagString(entry));
-  entry = "";
+function add(s: string) {
+  props.modelValue.push(tagString(s));
   emit("update:model-value", props.modelValue);
+
+  // reset the search field
+  search = "";
+  setTimeout(() => {
+    tagItems = candidatesTags.slice(0, maxRes);
+    search = "";
+  }, 100);
 }
 
 function onEnterKey(key: KeyboardEvent) {
   if (key.key == "Enter" && isEntryValid.value) {
-    add();
+    add(search);
   }
 }
 
 function onSelectItem(s: string) {
   s = tagString(s);
   if (props.modelValue.includes(s)) {
-    entry = "";
+    search = "";
     return;
   }
-  entry = s;
-  add();
+  add(s);
 }
 
 function onDelete(e: Event, index: number) {
   props.modelValue.splice(index, 1);
   emit("update:model-value", props.modelValue);
+  onSearch("");
+}
+
+// this is used to limit the number of items returned by the search
+let nbResults = 0;
+const maxRes = 10;
+
+let candidatesTags = $computed(() => {
+  return props.allTags.filter((t) => !props.modelValue.includes(t));
+});
+
+let tagItems = $ref(candidatesTags.slice(0, maxRes));
+
+function onSearch(s: string) {
+  search = s;
+  if (s.length) {
+    tagItems = candidatesTags.map((v) => v);
+  } else {
+    tagItems = candidatesTags.slice(0, maxRes);
+  }
+  nbResults = 0;
+}
+
+function filter(value: string, query: string, item: string) {
+  if (nbResults >= maxRes) {
+    return false;
+  }
+  query = query.toUpperCase();
+  const start = value.indexOf(query);
+  if (start != -1) {
+    nbResults += 1;
+    return start;
+  }
+  return false;
 }
 </script>
 

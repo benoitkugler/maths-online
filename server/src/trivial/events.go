@@ -77,8 +77,9 @@ func (r *Room) onTerminate() {
 var ErrGameStarted = errors.New("game already started")
 
 // Join should be used on a new connection, on one the of the following cases:
-//	- totally fresh connection
-//	- reconnection in an already started game
+//   - totally fresh connection
+//   - reconnection in an already started game
+//
 // It is safe for concurrent uses.
 // It returns an error for instance if the game has already started.
 func (r *Room) Join(player Player, connection Connection) error {
@@ -118,15 +119,9 @@ func (r *Room) Join(player Player, connection Connection) error {
 	} else { // reconnection
 		ProgressLogger.Printf("Game %s : reconnecting player %s...", r.ID, player.ID)
 
-		pc := r.players[player.ID]
-		pc.conn = connection // use the new client connection
-		pc.pl.Pseudo = player.Pseudo
+		events := r.reconnectPlayer(player, connection)
 
-		event := PlayerReconnected{
-			ID:     pc.pl.ID,
-			Pseudo: player.Pseudo,
-		}
-		r.broadcastEvents(Events{event})
+		r.broadcastEvents(events)
 	}
 
 	return nil

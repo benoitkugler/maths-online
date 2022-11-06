@@ -1,5 +1,5 @@
 <template>
-  <div v-if="exercice == null">Loading {{ props.exerciceHeader }}</div>
+  <div v-if="exercice == null">Chargement de l'exercice...</div>
   <div v-else>
     <!-- Display either the skeleton or the question editor -->
     <ExSkeleton
@@ -8,6 +8,7 @@
       :all-tags="props.allTags"
       :exercice="exercice"
       :is-readonly="props.isReadonly"
+      :show-variant-meta="props.showVariantMeta"
       @go-to-question="goToQuestion"
       @update="notifieUpdate"
     ></ExSkeleton>
@@ -18,6 +19,7 @@
       :exercice="exercice"
       :is-readonly="props.isReadonly"
       @update="notifieUpdate"
+      @back="questionIndex = -1"
     ></ExEditor>
   </div>
 </template>
@@ -30,6 +32,7 @@ import {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { refreshExercicePreview } from "@/controller/editor";
+import { computed } from "@vue/reactivity";
 import { onMounted, watch } from "vue";
 import { $ref } from "vue/macros";
 import ExEditor from "./ExEditor.vue";
@@ -40,6 +43,7 @@ interface Props {
   sessionId: string;
   isReadonly: boolean;
   allTags: string[]; // to provide auto completion
+  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();
@@ -48,9 +52,9 @@ const emit = defineEmits<{
   (e: "update", ex: ExerciceHeader): void;
 }>();
 
-let questionIndex = $ref(0);
+let questionIndex = $ref(-1);
 
-let viewMode = $ref<"skeleton" | "question">("skeleton");
+const viewMode = computed(() => (questionIndex >= 0 ? "question" : "skeleton"));
 
 let exercice = $ref<ExerciceExt | null>(null);
 
@@ -66,7 +70,6 @@ watch(props, (_) => {
 
 function goToQuestion(index: number) {
   questionIndex = index;
-  viewMode = "question";
 }
 
 async function fetchExercice() {

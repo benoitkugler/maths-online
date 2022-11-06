@@ -16,6 +16,7 @@ import (
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
 	tvGame "github.com/benoitkugler/maths-online/trivial"
+	"github.com/benoitkugler/maths-online/vitrine"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -54,26 +55,60 @@ func connectDB(dev bool) (*sql.DB, error) {
 	return db, err
 }
 
-func getStudentEncrypter(dev bool) (out pass.Encrypter, err error) {
+func getStudentEncrypter(dev bool) (out pass.Encrypter) {
 	if dev {
-		out = pass.Encrypter{1, 2, 3, 4, 5, 6}
+		return pass.Encrypter{1, 2, 3, 4, 5, 6}
 	} else {
-		out, err = pass.NewEncrypter("STUDENT_ENC_KEY")
+		out, err := pass.NewEncrypter("STUDENT_ENC_KEY")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return out
 	}
-
-	fmt.Printf("Student encrypter setup with key %v.\n", out)
-	return out, err
 }
 
-func getTeacherEncrypter(dev bool) (out pass.Encrypter, err error) {
+func getTeacherEncrypter(dev bool) (out pass.Encrypter) {
 	if dev {
-		out = pass.Encrypter{4, 5, 6, 7, 8, 9}
+		return pass.Encrypter{4, 5, 6, 7, 8, 9}
 	} else {
-		out, err = pass.NewEncrypter("TEACHER_ENC_KEY")
+		out, err := pass.NewEncrypter("TEACHER_ENC_KEY")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return out
 	}
+}
 
-	fmt.Printf("Teacher encrypter setup with key %v.\n", out)
-	return out, err
+func getDemoCode() string {
+	demoCode := os.Getenv("DEMO_CODE")
+	if demoCode == "" {
+		log.Fatal("Missing DEMO_CODE env. variable")
+	}
+	return demoCode
+}
+
+func getAdminEmails() []string {
+	m := os.Getenv("ADMIN_MAILS")
+	if m == "" {
+		log.Fatal("Missing ADMIN_MAILS env. variable")
+	}
+	return strings.Split(os.Getenv("ADMIN_MAILS"), ",")
+}
+
+func devSetup(e *echo.Echo, tc *teacher.Controller) {
+	dev, err := tc.GetDevToken()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(dev)
+
+	// also Cross origin requests
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
+		AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
+		ExposeHeaders: []string{"Content-Disposition"},
+	}))
+	fmt.Println("CORS activé.")
 }
 
 func sanityChecks(db *sql.DB, skipValidation bool) {
@@ -96,21 +131,17 @@ func main() {
 	adress := getAdress(*devPtr)
 	host := getPublicHost(*devPtr)
 
-	studentKey, err := getStudentEncrypter(*devPtr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	studentKey := getStudentEncrypter(*devPtr)
+	fmt.Printf("Student encrypter setup with key: %v\n", studentKey)
 
-	teacherKey, err := getTeacherEncrypter(*devPtr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	teacherKey := getTeacherEncrypter(*devPtr)
+	fmt.Printf("Teacher encrypter setup with key: %v\n", teacherKey)
 
-	demoPinTrivial := os.Getenv("DEMO_PIN_TRIVIAL")
-	if demoPinTrivial == "" {
-		log.Fatal("Missing DEMO_PIN_TRIVIAL env. variable")
-	}
-	fmt.Println("Demo pin for Trivial:", demoPinTrivial)
+	demoCode := getDemoCode()
+	fmt.Printf("Demontration code for student activities: %s\n", demoCode)
+
+	adminEmails := getAdminEmails()
+	fmt.Printf("Admin emails for contact form: %v\n", adminEmails)
 
 	db, err := connectDB(*devPtr)
 	if err != nil {
@@ -124,24 +155,27 @@ func main() {
 	}
 	fmt.Printf("SMTP configured with %v.\n", smtp)
 
-	tc := teacher.NewController(db, smtp, teacherKey, studentKey, host)
+	tc := teacher.NewController(db, smtp, teacherKey, studentKey, host, demoCode)
 	admin, err := tc.LoadAdminTeacher()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Admin teacher loaded.")
+	_, err = tc.LoadDemoClassroom()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Demo classroom loaded.")
 
-	tvc := trivial.NewController(db, studentKey, demoPinTrivial, admin)
+	tvc := trivial.NewController(db, studentKey, demoCode, admin)
+	if err = tvc.CheckDemoQuestions(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Trivial demo questions checked.")
+
 	hwc := homework.NewController(db, admin, studentKey)
 	edit := editor.NewController(db, admin)
-
-	if *devPtr {
-		dev, err := tc.GetDevToken()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(dev)
-	}
+	vit := &vitrine.Controller{Smtp: smtp, AdminMails: adminEmails}
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -156,15 +190,10 @@ func main() {
 	}
 
 	if *devPtr {
-		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
-			AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
-			ExposeHeaders: []string{"Content-Disposition"},
-		}))
-		fmt.Println("CORS activé.")
+		devSetup(e, tc)
 	}
 
-	setupRoutes(e, db, tvc, edit, tc, hwc)
+	setupRoutes(e, db, tvc, edit, tc, hwc, vit)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -229,6 +258,10 @@ func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func serveVitrineApp(c echo.Context) error {
+	return c.File("static/vitrine/index.html")
+}
+
 func serveProfApp(c echo.Context) error {
 	return c.File("static/prof/index.html")
 }
@@ -244,12 +277,18 @@ func serveEleveApp(c echo.Context) error {
 func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
+	vit *vitrine.Controller,
 ) {
 	setupProfAPI(e, tvc, edit, tc, home)
 	setupQuestionSampleAPI(e)
 
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
+
+	// main page
+	e.GET("", serveVitrineApp)
+	e.Static("/*", "static/vitrine")
+	e.POST("/reponse-contact", vit.HandleFormMessage)
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
@@ -262,23 +301,18 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
 	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
 
-	e.GET("/prof/trivial/monitor", tvc.ConnectTeacherMonitor, tc.JWTMiddlewareForQuery())
 	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
 	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
 
 	// student client classroom managment
 	e.GET("/api/classroom/login", tc.CheckStudentClassroom)
-	e.GET("/api/classroom/attach", tc.AttachStudentToClassroom1)
-	e.POST("/api/classroom/attach", tc.AttachStudentToClassroom2)
+	e.GET("/api/classroom/attach", tc.AttachStudentToClassroomStep1)
+	e.POST("/api/classroom/attach", tc.AttachStudentToClassroomStep2)
 
 	// prof. back office
 	for _, route := range []string{
 		"/prof",
-		"/prof/",
-		"/prof/trivial",
-		"/prof/trivial/",
-		"/prof/editor",
-		"/prof/editor/",
+		"/prof/*",
 	} {
 		e.GET(route, serveProfApp, noCache)
 	}

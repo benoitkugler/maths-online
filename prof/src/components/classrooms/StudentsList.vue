@@ -3,6 +3,7 @@
     :model-value="studentToDelete != null"
     @update:model-value="studentToDelete = null"
     :retain-focus="false"
+    max-width="800px"
   >
     <v-card title="Confirmer la suppression" v-if="studentToDelete != null">
       <v-card-text>
@@ -22,6 +23,7 @@
     :model-value="studentToUpdate != null"
     @update:model-value="studentToUpdate = null"
     :retain-focus="false"
+    max-width="600"
   >
     <v-card title="Modifier le profil" v-if="studentToUpdate != null">
       <v-card-text>
@@ -83,7 +85,7 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="mx-auto pa-1" width="80%">
+  <v-card class="mx-auto pa-1">
     <v-row>
       <v-col md="9" sm="6">
         <v-card-title
@@ -97,7 +99,7 @@
       </v-col>
     </v-row>
     <v-card-text>
-      <v-card width="80%" class="mx-auto">
+      <v-card width="90%" class="mx-auto">
         <v-row class="mt-1">
           <v-col>
             <v-card-subtitle>Elèves</v-card-subtitle>
@@ -113,7 +115,11 @@
               Code de connection
             </v-btn>
             <v-divider vertical></v-divider>
-            <v-btn class="mx-2" @click="addStudent" title="Créer un profil">
+            <v-btn
+              class="mx-2 my-1"
+              @click="addStudent"
+              title="Créer un profil"
+            >
               <v-icon icon="mdi-plus" color="success"></v-icon>
               Créer
             </v-btn>
@@ -139,9 +145,12 @@
           </v-alert>
 
           <v-list>
-            <v-list-item v-for="student in students" :key="student.Id">
-              <v-row no-gutters>
-                <v-col align-self="center">
+            <v-list-item v-for="(student, index) in students" :key="student.Id">
+              <v-row
+                no-gutters
+                :class="{ 'bg-grey-lighten-3': index % 2 == 0, rounded: true }"
+              >
+                <v-col cols="6" sm="4" md="" align-self="center">
                   <v-btn
                     class="mx-2 my-1"
                     size="x-small"
@@ -161,7 +170,7 @@
                     <v-icon icon="mdi-pencil"></v-icon>
                   </v-btn>
                 </v-col>
-                <v-col align-self="center">
+                <v-col cols="6" sm="" align-self="center">
                   {{ student.Name }} {{ student.Surname }}
                 </v-col>
                 <v-col align-self="center">
@@ -175,9 +184,13 @@
                     v-if="student.IsClientAttached"
                   >
                     <template v-slot:activator="{ isActive, props }">
-                      <v-badge v-on="{ isActive }" v-bind="props" color="green"
-                        >.</v-badge
+                      <v-badge
+                        v-on="{ isActive }"
+                        v-bind="props"
+                        color="green"
+                        inline
                       >
+                      </v-badge>
                     </template>
                     L'élève a reliée son application.
                   </v-tooltip>

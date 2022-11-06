@@ -136,6 +136,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_FunctionPoint (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_ques_FunctionPoint (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_ProofAssertion (data jsonb)
     RETURNS boolean
     AS $$
@@ -443,22 +466,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_expr_ComparisonLevel (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a expr_ComparisonLevel', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_expr_Variable (data jsonb)
     RETURNS boolean
     AS $$
@@ -577,6 +584,22 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_ComparisonLevel (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (102, 2, 1, 0);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a ques_ComparisonLevel', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_CoordExpression (data jsonb)
     RETURNS boolean
     AS $$
@@ -610,12 +633,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel'))
+            bool_and(key IN ('Expression', 'Label', 'ComparisonLevel', 'ShowFractionHelp'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Expression')
         AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_expr_ComparisonLevel (data -> 'ComparisonLevel');
+        AND gomacro_validate_json_ques_ComparisonLevel (data -> 'ComparisonLevel')
+        AND gomacro_validate_json_boolean (data -> 'ShowFractionHelp');
     RETURN is_valid;
 END;
 $$
@@ -809,6 +833,30 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FunctionPoint (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Function', 'X', 'Color', 'Legend'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Function')
+        AND gomacro_validate_json_string (data -> 'X')
+        AND gomacro_validate_json_string (data -> 'Color')
+        AND gomacro_validate_json_string (data -> 'Legend');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FunctionPointsFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -844,12 +892,13 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('FunctionExprs', 'FunctionVariations', 'Areas'))
+            bool_and(key IN ('FunctionExprs', 'FunctionVariations', 'Areas', 'Points'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_FunctionDefinition (data -> 'FunctionExprs')
         AND gomacro_validate_json_array_ques_VariationTableBlock (data -> 'FunctionVariations')
-        AND gomacro_validate_json_array_ques_FunctionArea (data -> 'Areas');
+        AND gomacro_validate_json_array_ques_FunctionArea (data -> 'Areas')
+        AND gomacro_validate_json_array_ques_FunctionPoint (data -> 'Points');
     RETURN is_valid;
 END;
 $$

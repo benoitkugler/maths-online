@@ -456,6 +456,9 @@ class _ExerciceWState extends State<ExerciceW> {
   }
 
   void goToPrevious() {
+    // remove potential snackbar
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
     final newIndex = widget.controller.questionIndex == 0
         ? null
         : widget.controller.questionIndex! - 1;

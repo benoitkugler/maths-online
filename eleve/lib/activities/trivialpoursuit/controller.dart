@@ -60,7 +60,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   late Timer _keepAliveTimmer;
   final eventQueue = StreamController<StateUpdate>();
 
+  // the id of the client player
   PlayerID playerID = "";
+
   bool hasGameStarted = false;
 
   Map<PlayerID, String> lobby = {};
@@ -241,6 +243,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     // reset the last question
     lastQuestion = null;
 
+    // remove potential dialog
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
+
     final isOwnTurn = event.player == playerID;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -249,16 +254,18 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
         content: isOwnTurn
             ? const Text("C'est à toi de lancer le dé !")
             : Text("Au tour de ${event.playerName}"),
-        action: SnackBarAction(
-            label: "OK",
-            onPressed: () =>
-                ScaffoldMessenger.of(context).hideCurrentSnackBar()),
+        action: SnackBarAction(label: "OK", onPressed: _removeCurrentSnackbar),
       ),
     );
 
     setState(() {
       diceDisabled = !isOwnTurn;
     });
+  }
+
+  void _removeCurrentSnackbar() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
   }
 
   // triggers and wait for a dice roll
@@ -311,6 +318,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   void _onMove(Move event) async {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     setState(() {
@@ -364,12 +372,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   Future<void> _onPlayerAnswerResults(PlayerAnswerResults event) async {
     // close the additional routes (question or recap)
     // until the "main" board
-    Navigator.of(context).popUntil((route) {
-      if (route.settings.name == "/board") {
-        return true;
-      }
-      return false;
-    });
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
 
     var wantNextTurn =
         await Navigator.of(context).push(MaterialPageRoute<WantNextTurn>(
@@ -385,6 +388,23 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     ));
     wantNextTurn ??= const WantNextTurn(false);
     _sendEvent(wantNextTurn);
+  }
+
+  Future<void> _onPlayersStillInQuestionResult(
+      PlayersStillInQuestionResult event) async {
+    // ignore the event if we are one of the waiting players
+    if (event.players.contains(playerID)) {
+      return;
+    }
+
+    // close a potential previous dialog
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
+
+    showDialog<void>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (context) => WaitForPlayersDialog(event.playerNames),
+        barrierDismissible: false);
   }
 
   void _onPlayerReconnected(PlayerReconnected event) {
@@ -459,6 +479,8 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       return _onShowQuestion(event);
     } else if (event is PlayerAnswerResults) {
       return _onPlayerAnswerResults(event);
+    } else if (event is PlayersStillInQuestionResult) {
+      return _onPlayersStillInQuestionResult(event);
     } else if (event is GameEnd) {
       _onGameEnd(event);
     } else if (event is GameTerminated) {
@@ -616,60 +638,88 @@ class _GameStarted extends StatelessWidget {
     );
   }
 
+  Future<bool> _confirmLeave(BuildContext context) async {
+    final res = await showDialog<bool?>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Quitter la partie"),
+            content: const Text("Es-tu sûr de vouloir quitter la partie ?"),
+            actions: [
+              TextButton(
+                  child: const Text("Quitter"),
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                  })
+            ],
+          );
+        });
+    final leave = res ?? false;
+    if (leave) {
+      // cleanup potential snacks
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
+    return leave;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-      decoration: BoxDecoration(
-        image: DecorationImage(
-            image: const AssetImage("assets/images/grey-wood.png"),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-                const Color.fromARGB(255, 57, 115, 119).withOpacity(0.6),
-                BlendMode.srcATop)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              pie,
-              Expanded(child: SizedBox(height: 95, child: recapRow))
-            ],
-          ),
-          Expanded(child: Center(
-            child: LayoutBuilder(
-              builder: (_, cts) {
-                return Board(cts.biggest.shortestSide, onTapTile,
-                    availableTiles, pawnTile);
-              },
+    return WillPopScope(
+      onWillPop: () => _confirmLeave(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+              image: const AssetImage("assets/images/grey-wood.png"),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                  const Color.fromARGB(255, 57, 115, 119).withOpacity(0.6),
+                  BlendMode.srcATop)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                pie,
+                Expanded(child: SizedBox(height: 95, child: recapRow))
+              ],
             ),
-          )),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                child: FloatingActionButton(
-                  foregroundColor: const Color.fromARGB(255, 60, 209, 255),
-                  backgroundColor: const Color.fromARGB(255, 110, 171, 182),
-                  onPressed: () => _showRules(context),
-                  tooltip: "Afficher la règle du jeu",
-                  child: const Icon(
-                    IconData(0xe33d, fontFamily: 'MaterialIcons'),
-                    size: 40,
+            Expanded(child: Center(
+              child: LayoutBuilder(
+                builder: (_, cts) {
+                  return Board(cts.biggest.shortestSide, onTapTile,
+                      availableTiles, pawnTile);
+                },
+              ),
+            )),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  child: FloatingActionButton(
+                    foregroundColor: const Color.fromARGB(255, 60, 209, 255),
+                    backgroundColor: const Color.fromARGB(255, 110, 171, 182),
+                    onPressed: () => _showRules(context),
+                    tooltip: "Afficher la règle du jeu",
+                    child: const Icon(
+                      IconData(0xe33d, fontFamily: 'MaterialIcons'),
+                      size: 40,
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
-            ],
-          ),
-        ],
+                Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child:
+                        dice.Dice(onTapDice, diceRollAnimation, diceDisabled)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

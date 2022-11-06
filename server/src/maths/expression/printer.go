@@ -12,7 +12,13 @@ import (
 // for usual maths symbols.
 func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
-func (expr *Expr) simplifyForPrint() {
+// DefaultSimplify performs a serie of basic simplifications,
+// removing zero values and -(-...).
+// It is used before printing an expression, and should also be used
+// after substitutions.
+// Note that it applies a subset of the simplifications defined by
+// the [SimpleSimplifications] flag.
+func (expr *Expr) DefaultSimplify() {
 	for nbPasses := 0; nbPasses < 2; nbPasses++ {
 		expr.normalizeNegativeNumbers()
 		expr.extractNegativeInMults()
@@ -29,7 +35,7 @@ func (expr *Expr) AsLaTeX() string {
 	}
 
 	expr = expr.Copy()
-	expr.simplifyForPrint()
+	expr.DefaultSimplify()
 
 	return expr.atom.asLaTeX(expr.left, expr.right)
 }
@@ -41,7 +47,7 @@ func (expr *Expr) AsLaTeX() string {
 // See `AsLaTeX` for a better display format.
 func (expr *Expr) String() string {
 	expr = expr.Copy()
-	expr.simplifyForPrint()
+	expr.DefaultSimplify()
 	return expr.Serialize()
 }
 
@@ -65,8 +71,8 @@ func addParenthesisPlain(s string) string {
 func (op operator) asLaTeX(left, right *Expr) string {
 	leftCode, rightCode := left.AsLaTeX(), right.AsLaTeX()
 
-	leftHasParenthesis := op.needParenthesis(left, true)
-	rightHasParenthesis := op.needParenthesis(right, false)
+	leftHasParenthesis := op.needParenthesis(left, true, true)
+	rightHasParenthesis := op.needParenthesis(right, false, true)
 
 	// the latex syntax allow to spare some redundant parenthesis
 	ignoreParenthesis := op == div || op == rem || op == mod
@@ -212,7 +218,7 @@ func (v Number) asLaTeX(_, _ *Expr) string {
 // when used with `op`
 // if `isLeft` is true, this is :  expr op ...
 // else this is :                  ...  op expr
-func (op operator) needParenthesis(expr *Expr, isLeftArg bool) bool {
+func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	if expr == nil {
 		return false
 	}
@@ -232,8 +238,18 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg bool) bool {
 				return isLeftArg // (2^3)^5, but 2^(3^5) is usually written 2^3^5
 			}
 			return atom < op
+		case mult:
+			// the parser recognize 1/2*3 as (1/2)*3, as
+			// calculator and programing languages do, but
+			// we usually add parenthesis for clarity
+
+			// (1/2) * y, 3 * (1/2), 1/2 + 3, 2 - 1/2
+			if !isLaTex && isLeftArg && atom == div {
+				return true
+			}
+			return op > atom
 		default:
-			return atom < op
+			return op > atom //  (1+2)*4, (1-2)*4, 4*(1+2)
 		}
 	default:
 		panic(exhaustiveAtomSwitch)
@@ -245,11 +261,11 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg bool) bool {
 func (op operator) serialize(left, right *Expr) string {
 	leftCode, rightCode := left.Serialize(), right.Serialize()
 
-	if leftHasParenthesis := op.needParenthesis(left, true); leftHasParenthesis {
+	if leftHasParenthesis := op.needParenthesis(left, true, false); leftHasParenthesis {
 		leftCode = addParenthesisPlain(leftCode)
 	}
 
-	rightHasParenthesis := op.needParenthesis(right, false)
+	rightHasParenthesis := op.needParenthesis(right, false, false)
 	if rightHasParenthesis {
 		rightCode = addParenthesisPlain(rightCode)
 	}

@@ -8,7 +8,7 @@
           hide-details
           :model-value="props.origin.IsPublic"
           :color="props.origin.IsPublic ? 'blue' : undefined"
-          @update:model-value="(b:boolean) => emit('update', b)"
+          @update:model-value="(b) => emit('update', b as unknown as boolean)"
         ></v-switch>
       </div>
       <div v-else-if="isPersonnal">

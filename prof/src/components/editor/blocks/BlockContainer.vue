@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showDocumentation">
+  <v-dialog v-model="showDocumentation" max-width="1000px">
     <latex-commands @close="showDocumentation = false"></latex-commands>
   </v-dialog>
 
@@ -20,7 +20,8 @@
           <span v-if="isAnswer" class="ml-1">(Champ de réponse)</span>
         </v-card-subtitle>
       </v-col>
-      <v-col cols="4" style="text-align: right" class="my-1">
+      <v-spacer></v-spacer>
+      <v-col cols="auto" style="text-align: right" class="my-1 mr-2">
         <v-btn
           v-if="showLaTeXDoc"
           class="mr-2"
@@ -73,7 +74,7 @@ const colorClass = computed(() => {
   if (props.hasError) {
     return "bg-red";
   }
-  return isAnswer.value ? "bg-pink-lighten-3" : "bg-purple-lighten-3";
+  return isAnswer.value ? "bg-pink-lighten-3" : "bg-purple-lighten-4";
 });
 
 const showLaTeXDoc = computed(() => {
@@ -87,59 +88,6 @@ function onDragStart(payload: DragEvent) {
 }
 
 let showDocumentation = $ref(false);
-const commands = [
-  { description: "Vecteur", command: "\\overrightarrow{AB}" },
-  { description: "Accolade ouverte", command: "\\{" },
-  {
-    description: "Coordonées d'un vecteur (colonne)",
-    command: `\\begin{pmatrix} x \\\\ y \\end{pmatrix}`,
-  },
-  {
-    description: "Ensemble des réels",
-    command: `\\R`,
-  },
-  {
-    description: "Ensemble vide",
-    command: `\\empty`,
-  },
-  {
-    description: "Inclus",
-    command: `\\subset`,
-  },
-  {
-    description: "Non inclus",
-    command: `\\not\\subset`,
-  },
-  {
-    description: "Antislash",
-    command: `\\backslash`,
-  },
-  {
-    description: "Infini",
-    command: `\\infty`,
-  },
-  {
-    description: "Inférieur ou égal (<=)",
-    command: `\\leq `,
-  },
-  {
-    description: "Supérieur ou égal (>=)",
-    command: `\\geq `,
-  },
-  {
-    description: "Union",
-    command: `\\cup `,
-  },
-  {
-    description: "Intersection",
-    command: `\\cap `,
-  },
-];
-
-async function copyAndClose(command: string) {
-  showDocumentation = false;
-  await navigator.clipboard.writeText(command);
-}
 </script>
 
 <style scoped></style>

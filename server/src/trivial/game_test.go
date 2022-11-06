@@ -96,6 +96,7 @@ func TestGameState_nextPlayer(t *testing.T) {
 	}
 }
 
+// use a new connection
 func (r *Room) mustJoin(t *testing.T, id PlayerID) {
 	t.Helper()
 
@@ -270,7 +271,7 @@ func TestDisconnectInQuestion(t *testing.T) {
 	}
 }
 
-func TestDisconnectInBeforeNextTurn(t *testing.T) {
+func TestDisconnectInQuestionResult(t *testing.T) {
 	r := NewRoom("", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: time.Minute})
 
 	go r.Listen()
@@ -299,6 +300,71 @@ func TestDisconnectInBeforeNextTurn(t *testing.T) {
 
 	if g := r.lg(); g.playerTurn != "p3" || g.phase != pTurnStarted {
 		t.Fatal(g)
+	}
+}
+
+func TestAllDisconnectInQuestionResult(t *testing.T) {
+	r := NewRoom("<test>", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+
+	go r.Listen()
+
+	r.mustJoin(t, "p1")
+	r.mustJoin(t, "p2")
+
+	r.throwAndMove("p1")
+
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p2"}
+
+	time.Sleep(time.Millisecond)
+
+	r.Leave <- "p1"
+
+	time.Sleep(time.Millisecond)
+
+	r.Leave <- "p2"
+
+	// no more players, the game is "staled"
+
+	if g := r.lg(); g.phase != pQuestionResult {
+		t.Fatal(g)
+	}
+
+	// upon reconnection, starts a new turn
+	r.mustJoin(t, "p2")
+
+	if g := r.lg(); g.phase != pTurnStarted || g.playerTurn != "p2" {
+		t.Fatal(g)
+	}
+}
+
+func TestReconnectInQuestion(t *testing.T) {
+	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+
+	go r.Listen()
+
+	r.mustJoin(t, "p1")
+	r.mustJoin(t, "p2")
+
+	r.throwAndMove("p1")
+
+	// disconnect p2 ...
+	r.Leave <- "p2"
+
+	time.Sleep(time.Millisecond)
+
+	// ...and reconnect it before p1 has answered
+	r.mustJoin(t, "p2")
+
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
+
+	time.Sleep(time.Millisecond)
+
+	if g := r.lg(); g.questionTimer.Stop() {
+		t.Fatal("question should have been closed")
+	}
+	if g := r.lg(); g.phase != pQuestionResult {
+		t.Fatalf("unexpected phase %v", g.phase)
 	}
 }
 
@@ -390,6 +456,7 @@ func TestHandleClientEvent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	_, _, err = r.handleClientEvent(WantNextTurn{}, Player{ID: "p2"})
 	if err != nil {
 		t.Fatal(err)

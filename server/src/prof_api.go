@@ -39,6 +39,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/trivial/config/visibility", tvc.UpdateTrivialVisiblity)
 	gr.GET("/api/prof/trivial/config/duplicate", tvc.DuplicateTrivialPoursuit)
 	gr.POST("/api/prof/trivial/config/check-missing-questions", tvc.CheckMissingQuestions)
+	gr.GET("/api/prof/trivial/monitor", tvc.TrivialTeacherMonitor)
+	// e.GET("/prof/trivial/monitor", tvc.TrivialTeacherMonitor, tc.JWTMiddlewareForQuery())
 
 	// trivialpoursuit game server
 	gr.GET("/api/trivial/sessions", tvc.GetTrivialRunningSessions)
@@ -52,7 +54,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 
 	gr.POST("/api/prof/editor/questiongroups", edit.EditorSearchQuestions)
 	gr.GET("/api/prof/editor/question/duplicate", edit.EditorDuplicateQuestion)
-	// gr.GET("/api/prof/editor/questiongroup/duplicate", edit.EditorDuplicateQuestiongroup)
+	gr.GET("/api/prof/editor/questiongroup/duplicate", edit.EditorDuplicateQuestiongroup)
 	gr.PUT("/api/prof/editor/questiongroup", edit.EditorCreateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup", edit.EditorUpdateQuestiongroup)
 	gr.POST("/api/prof/editor/questiongroup/tags", edit.EditorUpdateQuestionTags)
@@ -67,6 +69,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/editor/exercicegroups", edit.EditorSearchExercices)
 	gr.POST("/api/prof/editor/exercicegroup", edit.EditorUpdateExercicegroup)
 	gr.POST("/api/prof/editor/exercicegroup/tags", edit.EditorUpdateExerciceTags)
+	gr.GET("/api/prof/editor/exercicegroup/duplicate", edit.EditorDuplicateExercicegroup)
 	gr.GET("/api/prof/editor/exercice", edit.EditorGetExerciceContent)
 	gr.PUT("/api/prof/editor/exercice", edit.EditorCreateExercice)
 	gr.DELETE("/api/prof/editor/exercice", edit.EditorDeleteExercice)
@@ -74,6 +77,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/editor/exercice/duplicate", edit.EditorDuplicateExercice)
 	gr.PUT("/api/prof/editor/exercice/questions", edit.EditorExerciceCreateQuestion)
 	gr.POST("/api/prof/editor/exercice/questions/import", edit.EditorExerciceImportQuestion)
+	gr.POST("/api/prof/editor/exercice/questions/duplicate", edit.EditorExerciceDuplicateQuestion)
 	gr.POST("/api/prof/editor/exercice/questions", edit.EditorExerciceUpdateQuestions)
 	gr.POST("/api/prof/editor/exercicegroup/visibility", edit.EditorUpdateExercicegroupVis)
 	gr.POST("/api/prof/editor/exercice/check-params", edit.EditorCheckExerciceParameters)
@@ -90,4 +94,5 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.PUT("/api/prof/homework/sheet/monoquestion", home.HomeworkAddMonoquestion)
 	gr.POST("/api/prof/homework/sheet/monoquestion", home.HomeworkUpdateMonoquestion)
 	gr.POST("/api/prof/homework/sheet", home.HomeworkReorderSheetTasks)
+	gr.POST("/api/prof/homework/marks", home.HomeworkGetMarks)
 }

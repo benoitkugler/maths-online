@@ -120,7 +120,7 @@ func (tc *teacherC) monitorRequest() {
 
 	// pump monitor messages
 	for {
-		var v teacherSocketData
+		var v MonitorOut
 		err := conn.ReadJSON(&v)
 		check(err)
 	}
@@ -149,7 +149,7 @@ func (s server) handle(w http.ResponseWriter, r *http.Request) {
 	case studentConnect:
 		err = s.ct.ConnectStudentSession(context)
 	case teacherMonitor:
-		err = s.ct.ConnectTeacherMonitor(context)
+		err = s.ct.TrivialTeacherMonitor(context)
 	default:
 		panic(url)
 	}

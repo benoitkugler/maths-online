@@ -11,8 +11,8 @@ class FunctionsGraphW extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metrics = RepereMetrics(function.bounds, context);
-    final painter =
-        BezierCurvesPainter(metrics, function.functions, function.areas);
+    final painter = BezierCurvesPainter(metrics, function.functions,
+        areas: function.areas, points: function.points);
     final texts = painter.extractTexts();
     return BaseRepere(
       metrics,
@@ -33,7 +33,13 @@ class BezierCurvesPainter extends CustomPainter {
   final RepereMetrics metrics;
   final List<FunctionGraph> functions;
   final List<FunctionArea> areas;
-  BezierCurvesPainter(this.metrics, this.functions, this.areas);
+  final List<FunctionPoint> points;
+  BezierCurvesPainter(
+    this.metrics,
+    this.functions, {
+    this.areas = const [],
+    this.points = const [],
+  });
 
   List<PositionnedText> extractTexts() {
     final out = <PositionnedText>[];
@@ -43,9 +49,17 @@ class BezierCurvesPainter extends CustomPainter {
         out.add(text);
       }
     }
+    for (var point in points) {
+      final text = _pointText(point);
+      if (text != null) {
+        out.add(text);
+      }
+    }
     return out;
   }
 
+  // returns null if the function has an empty label
+  // or has no segments
   PositionnedText? _functionText(FunctionGraph fn) {
     if (fn.segments.isEmpty || fn.decoration.label.isEmpty) {
       return null;
@@ -67,6 +81,27 @@ class BezierCurvesPainter extends CustomPainter {
     return PositionnedText(
         fn.decoration.label, PosPoint(Coord(labelPos.x, labelPos.y + 1), pos),
         color: fromHex(fn.decoration.color));
+  }
+
+  // returns null if the legend is empty
+  PositionnedText? _pointText(FunctionPoint point) {
+    if (point.legend.isEmpty) {
+      return null;
+    }
+
+    // adjust the position based on space available
+    final visualLabelPos = metrics.logicalToVisual(point.coord);
+    final putBottom = (visualLabelPos.dy >
+        metrics.size.height / 2); // visual y grows from the top
+    final putLeft = (visualLabelPos.dx > metrics.size.width / 2);
+    LabelPos pos;
+    if (putBottom) {
+      pos = putLeft ? LabelPos.bottomLeft : LabelPos.bottomRight;
+    } else {
+      pos = putLeft ? LabelPos.topLeft : LabelPos.topRight;
+    }
+    return PositionnedText(point.legend, PosPoint(point.coord, pos),
+        color: fromHex(point.color));
   }
 
   Path _buildPath(List<BezierCurve> segments) {
@@ -110,6 +145,17 @@ class BezierCurvesPainter extends CustomPainter {
           ..color = color);
   }
 
+  void _paintPoint(Canvas canvas, FunctionPoint point) {
+    final color = fromHex(point.color);
+    final center = metrics.logicalToVisual(point.coord);
+    canvas.drawCircle(
+        center,
+        2,
+        Paint()
+          ..style = PaintingStyle.fill
+          ..color = color);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     for (var area in areas) {
@@ -117,6 +163,10 @@ class BezierCurvesPainter extends CustomPainter {
     }
     for (var element in functions) {
       _paintFunction(canvas, element);
+    }
+    // paint the point on top of the rest
+    for (var point in points) {
+      _paintPoint(canvas, point);
     }
   }
 

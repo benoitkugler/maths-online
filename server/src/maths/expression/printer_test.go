@@ -105,9 +105,12 @@ func TestExpression_AsLaTeX(t *testing.T) {
 
 func TestParenthesis(t *testing.T) {
 	expr := mustParse(t, "((-1)/3)x + 2")
-	latex := expr.AsLaTeX()
-	if strings.ContainsRune(latex, '(') {
+
+	if latex := expr.AsLaTeX(); strings.ContainsRune(latex, '(') {
 		t.Fatal("unexpected parenthesis", latex)
+	}
+	if s := expr.String(); !strings.ContainsRune(s, '(') {
+		t.Fatal("missing parenthesis", s)
 	}
 
 	expr = mustParse(t, "1 + 1 + a")

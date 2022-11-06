@@ -225,3 +225,35 @@ func TestNewAreaBetween(t *testing.T) {
 		_ = NewAreaBetween(top, bottom, 2.3, 14.7)
 	}
 }
+
+func TestOrdinateAt(t *testing.T) {
+	tests := []struct {
+		variationXs []float64
+		variationYs []float64
+		x           float64
+		wantErr     bool
+	}{
+		{
+			[]float64{-2, -1, 0, 2}, []float64{2, 1, 2, 1}, 1.1, false,
+		},
+		{
+			[]float64{-2, -1, 0, 1}, []float64{2, 1, 2, 1}, -2, false,
+		},
+		{
+			[]float64{-2, -1, 0, 1}, []float64{2, 1, 2, 1}, 1, false,
+		},
+		{
+			[]float64{-2, -1, 0, 1}, []float64{2, 1, 2, 1}, 0, false,
+		},
+		{
+			[]float64{-2, -1, 0, 2}, []float64{2, 1, 2, 1}, 2.1, true,
+		},
+	}
+	for _, tt := range tests {
+		curves := NewFunctionGraphFromVariations(tt.variationXs, tt.variationYs)
+		_, err := OrdinateAt(curves, tt.x)
+		if (err != nil) != tt.wantErr {
+			t.Fatal()
+		}
+	}
+}

@@ -452,27 +452,36 @@ JSON expressionAnswerToJson(ExpressionAnswer item) {
 // github.com/benoitkugler/maths-online/maths/questions/client.ExpressionFieldBlock
 class ExpressionFieldBlock implements Block {
   final String label;
+  final String suffix;
   final int sizeHint;
+  final bool showFractionHelp;
   final int iD;
 
-  const ExpressionFieldBlock(this.label, this.sizeHint, this.iD);
+  const ExpressionFieldBlock(
+      this.label, this.suffix, this.sizeHint, this.showFractionHelp, this.iD);
 
   @override
   String toString() {
-    return "ExpressionFieldBlock($label, $sizeHint, $iD)";
+    return "ExpressionFieldBlock($label, $suffix, $sizeHint, $showFractionHelp, $iD)";
   }
 }
 
 ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
   final json = (json_ as JSON);
-  return ExpressionFieldBlock(stringFromJson(json['Label']),
-      intFromJson(json['SizeHint']), intFromJson(json['ID']));
+  return ExpressionFieldBlock(
+      stringFromJson(json['Label']),
+      stringFromJson(json['Suffix']),
+      intFromJson(json['SizeHint']),
+      boolFromJson(json['ShowFractionHelp']),
+      intFromJson(json['ID']));
 }
 
 JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
+    "Suffix": stringToJson(item.suffix),
     "SizeHint": intToJson(item.sizeHint),
+    "ShowFractionHelp": boolToJson(item.showFractionHelp),
     "ID": intToJson(item.iD)
   };
 }
@@ -674,6 +683,34 @@ JSON functionGraphToJson(FunctionGraph item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/maths/questions/client.FunctionPoint
+class FunctionPoint {
+  final String color;
+  final String legend;
+  final Coord coord;
+
+  const FunctionPoint(this.color, this.legend, this.coord);
+
+  @override
+  String toString() {
+    return "FunctionPoint($color, $legend, $coord)";
+  }
+}
+
+FunctionPoint functionPointFromJson(dynamic json_) {
+  final json = (json_ as JSON);
+  return FunctionPoint(stringFromJson(json['Color']),
+      stringFromJson(json['Legend']), coordFromJson(json['Coord']));
+}
+
+JSON functionPointToJson(FunctionPoint item) {
+  return {
+    "Color": stringToJson(item.color),
+    "Legend": stringToJson(item.legend),
+    "Coord": coordToJson(item.coord)
+  };
+}
+
 // github.com/benoitkugler/maths-online/maths/questions/client.FunctionPointsAnswer
 class FunctionPointsAnswer implements Answer {
   final List<int> fxs;
@@ -736,13 +773,15 @@ JSON functionPointsFieldBlockToJson(FunctionPointsFieldBlock item) {
 class FunctionsGraphBlock implements Block {
   final List<FunctionGraph> functions;
   final List<FunctionArea> areas;
+  final List<FunctionPoint> points;
   final RepereBounds bounds;
 
-  const FunctionsGraphBlock(this.functions, this.areas, this.bounds);
+  const FunctionsGraphBlock(
+      this.functions, this.areas, this.points, this.bounds);
 
   @override
   String toString() {
-    return "FunctionsGraphBlock($functions, $areas, $bounds)";
+    return "FunctionsGraphBlock($functions, $areas, $points, $bounds)";
   }
 }
 
@@ -751,6 +790,7 @@ FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
   return FunctionsGraphBlock(
       listFunctionGraphFromJson(json['Functions']),
       listFunctionAreaFromJson(json['Areas']),
+      listFunctionPointFromJson(json['Points']),
       repereBoundsFromJson(json['Bounds']));
 }
 
@@ -758,6 +798,7 @@ JSON functionsGraphBlockToJson(FunctionsGraphBlock item) {
   return {
     "Functions": listFunctionGraphToJson(item.functions),
     "Areas": listFunctionAreaToJson(item.areas),
+    "Points": listFunctionPointToJson(item.points),
     "Bounds": repereBoundsToJson(item.bounds)
   };
 }
@@ -1851,6 +1892,17 @@ List<FunctionGraph> listFunctionGraphFromJson(dynamic json) {
 
 List<dynamic> listFunctionGraphToJson(List<FunctionGraph> item) {
   return item.map(functionGraphToJson).toList();
+}
+
+List<FunctionPoint> listFunctionPointFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(functionPointFromJson).toList();
+}
+
+List<dynamic> listFunctionPointToJson(List<FunctionPoint> item) {
+  return item.map(functionPointToJson).toList();
 }
 
 List<int> listIntFromJson(dynamic json) {

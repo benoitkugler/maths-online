@@ -390,6 +390,8 @@ func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
 	return nil
 }
 
+// If one of the expression bound is nil, it is interpreted as Infinity (no constraint).
+
 type Domain struct {
 	From, To *Expr
 }
@@ -427,21 +429,41 @@ func (d Domain) eval(vars Vars) (from, to float64, err error) {
 	return from, to, nil
 }
 
-// IsIncludedIntoOne returns an error if `d` is not included in any `other` domains.
-// If one of the expression bound is nil, it is interpreted as Infinity (no constraint).
-func (d Domain) IsIncludedIntoOne(others []Domain, vars Vars) error {
+// IsIncludedIntoOne returns an error if [expr], after evaluation does not
+// belong to one of [domains].
+func (expr *Expr) IsIncludedIntoOne(domains []Domain, vars Vars) error {
+	x, err := expr.Evaluate(vars)
+	if err != nil {
+		return err
+	}
+	var ds []string
+	for _, d := range domains {
+		dFrom, dTo, err := d.eval(vars)
+		if err != nil {
+			return err
+		}
+		if dFrom <= x && x <= dTo { // found it
+			return nil
+		}
+		ds = append(ds, d.String())
+	}
+	return fmt.Errorf("L'abscisse %s n'appartient à aucun des domaines %s.", expr, strings.Join(ds, ", "))
+}
+
+// IsIncludedIntoOne returns an error if [d] is not included in any [domains].
+func (d Domain) IsIncludedIntoOne(domains []Domain, vars Vars) error {
 	dFrom, dTo, err := d.eval(vars)
 	if err != nil {
 		return err
 	}
 
 	var ds []string
-	for _, other := range others {
+	for _, other := range domains {
 		otherFrom, otherTo, err := other.eval(vars)
 		if err != nil {
 			return err
 		}
-		if dFrom >= otherFrom && dTo <= otherTo { // found it
+		if otherFrom <= dFrom && dTo <= otherTo { // found it
 			return nil
 		}
 		ds = append(ds, other.String())
@@ -505,4 +527,13 @@ func checkIntervalsDisjoints(intervals [][2]float64) *jointIntervals {
 	}
 
 	return nil
+}
+
+// IsValidLinearEquation checks that, once instantiated, [expr]
+// is a linear equation (such as 2x - 3y + t/2 - 0.5)
+func (expr *Expr) IsValidLinearEquation(vars Vars) error {
+	expr = expr.Copy()
+	expr.Substitute(vars)
+	_, err := expr.isLinearEquation()
+	return err
 }

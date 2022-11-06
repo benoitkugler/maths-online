@@ -47,6 +47,12 @@
             persistent-hint
           ></v-autocomplete>
         </v-col>
+        <v-col cols="auto" align-self="center">
+          <origin-select
+            :origin="queryOrigin"
+            @update:origin="updateQueryOrigin"
+          ></origin-select>
+        </v-col>
       </v-row>
       <v-row no-gutters>
         <v-col>
@@ -69,6 +75,7 @@
                 :group="questionGroup"
                 :all-tags="props.tags"
                 @clicked="startEdit(questionGroup)"
+                @duplicate="duplicate(questionGroup)"
                 @update-public="updatePublic"
                 @update-tags="
                   (tags) => updateGroupTags(questionGroup.Group, tags)
@@ -90,14 +97,16 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Question,
-  Questiongroup,
-  QuestiongroupExt,
+import {
+  OriginKind,
+  type Question,
+  type Questiongroup,
+  type QuestiongroupExt,
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
+import OriginSelect from "../../OriginSelect.vue";
 import QuestiongroupRow from "./QuestiongroupRow.vue";
 
 interface Props {
@@ -124,6 +133,8 @@ let querySearch = $ref("");
 
 let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
 
+let queryOrigin = $ref(OriginKind.All);
+
 let timerId = 0;
 
 onMounted(fetchQuestions);
@@ -144,10 +155,16 @@ async function updateQueryTags() {
   await fetchQuestions();
 }
 
+async function updateQueryOrigin(o: OriginKind) {
+  queryOrigin = o;
+  await fetchQuestions();
+}
+
 async function fetchQuestions() {
   const result = await controller.EditorSearchQuestions({
     TitleQuery: querySearch,
     Tags: queryTags,
+    Origin: queryOrigin,
   });
   if (result == undefined) {
     return;
@@ -172,6 +189,14 @@ async function startEdit(group: QuestiongroupExt) {
     return;
   }
   emit("edit", group, out);
+}
+
+async function duplicate(group: QuestiongroupExt) {
+  const ok = await controller.EditorDuplicateQuestiongroup({
+    id: group.Group.Id,
+  });
+  if (!ok) return;
+  await fetchQuestions();
 }
 
 async function updatePublic(id: number, isPublic: boolean) {

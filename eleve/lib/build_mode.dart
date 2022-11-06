@@ -33,7 +33,7 @@ extension APISetting on BuildMode {
       {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
-        return _withQuery("wss://education.alwaysdata.net$endpoint", query);
+        return _withQuery("wss://isyro.fr$endpoint", query);
       case BuildMode.dev:
         return _withQuery("ws://localhost:1323$endpoint", query);
       case BuildMode.debug:
@@ -47,7 +47,7 @@ extension APISetting on BuildMode {
   String serverURL(String endpoint, {Map<String, dynamic> query = const {}}) {
     switch (this) {
       case BuildMode.production:
-        return _withQuery("https://education.alwaysdata.net$endpoint", query);
+        return _withQuery("https://isyro.fr$endpoint", query);
       case BuildMode.dev:
         return _withQuery("http://localhost:1323$endpoint", query);
       case BuildMode.debug:

@@ -2,6 +2,7 @@
   <v-dialog
     :model-value="exerciceToDelete != null"
     @update:model-value="exerciceToDelete = null"
+    max-width="700"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -10,8 +11,8 @@
         <br />
         Cette opération est irréversible.
 
-        <div v-if="variants.length == 1" class="mt-2">
-          Le groupe d'exercices associé sera aussi supprimé.
+        <div v-if="ownVariants.length == 1" class="mt-2">
+          L'exercice associé sera aussi supprimé.
         </div>
       </v-card-text>
       <v-card-actions>
@@ -22,6 +23,18 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+  </v-dialog>
+
+  <v-dialog
+    :model-value="deletedBlocked != null"
+    @update:model-value="deletedBlocked = null"
+    max-width="600"
+  >
+    <UsesCard
+      :uses="deletedBlocked || []"
+      @back="deletedBlocked = null"
+      @go-to="goToSheet"
+    ></UsesCard>
   </v-dialog>
 
   <v-card class="mt-3 px-2">
@@ -61,35 +74,44 @@
       ></v-col>
 
       <v-col cols="auto" align-self="center" class="px-1">
-        <ExerciceVariantsSelector
-          :variants="variants"
+        <VariantsSelector
+          :variants="ownVariants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (exerciceToDelete = qu)"
           @duplicate="duplicateVariante"
-        ></ExerciceVariantsSelector>
+        ></VariantsSelector>
       </v-col>
     </v-row>
 
     <ExerciceVariantPannel
-      :exercice-header="variants[variantIndex]"
+      :exercice-header="ownVariants[variantIndex]"
       :is-readonly="isReadonly"
       :session-id="props.session_id"
       :all-tags="props.allTags"
-      @update="(qu) => (variants[variantIndex] = qu)"
+      :show-variant-meta="true"
+      @update="(qu) => (ownVariants[variantIndex] = qu)"
     ></ExerciceVariantPannel>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type { ExercicegroupExt, ExerciceHeader } from "@/controller/api_gen";
+import type {
+  ExercicegroupExt,
+  ExerciceHeader,
+  QuestionExerciceUses,
+  Sheet,
+} from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import type { VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
+import { useRouter } from "vue-router";
 import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
+import UsesCard from "../UsesCard.vue";
+import VariantsSelector from "../VariantsSelector.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
-import ExerciceVariantsSelector from "./ExerciceVariantsSelector.vue";
 
 interface Props {
   session_id: string;
@@ -103,8 +125,10 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
+const router = useRouter();
+
 let group = $ref(copy(props.group));
-let variants = $ref(copy(props.group.Variants || []));
+let ownVariants = $ref(copy(props.group.Variants || []));
 
 let variantIndex = $ref(0);
 
@@ -117,32 +141,49 @@ async function updateExercicegroup() {
   await controller.EditorUpdateExercicegroup(group.Group);
 }
 
+let deletedBlocked = $ref<QuestionExerciceUses>(null);
+function goToSheet(sh: Sheet) {
+  deletedBlocked = null;
+
+  router.push({ name: "homework", query: { idSheet: sh.Id } });
+}
+
 let exerciceToDelete: ExerciceHeader | null = $ref(null);
 async function deleteVariante() {
-  await controller.EditorDeleteExercice({ id: exerciceToDelete!.Id });
-
-  variants = variants.filter((qu) => qu.Id != exerciceToDelete!.Id);
+  const exe = exerciceToDelete;
+  if (exe == null) return;
+  const res = await controller.EditorDeleteExercice({
+    id: exe.Id,
+  });
   exerciceToDelete = null;
 
-  if (variants.length && variantIndex >= variants.length) {
+  if (res == undefined) return;
+  // check if the question is used
+  if (!res.Deleted) {
+    deletedBlocked = res.BlockedBy;
+    return;
+  }
+
+  ownVariants = ownVariants.filter((qu) => qu.Id != exe.Id);
+  if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
   // if there is no more variant, that means the exercicegroup is deleted:
   // go back
-  if (!variants.length) {
+  if (!ownVariants.length) {
     emit("back");
   }
 }
 
-async function duplicateVariante(exercice: ExerciceHeader) {
+async function duplicateVariante(exercice: VariantG) {
   const newExercice = await controller.EditorDuplicateExercice({
     id: exercice.Id,
   });
   if (newExercice == undefined) {
     return;
   }
-  variants.push(newExercice);
-  variantIndex = variants.length - 1; // go to the new exercice
+  ownVariants.push(newExercice);
+  variantIndex = ownVariants.length - 1; // go to the new exercice
 }
 
 async function saveTags(newTags: string[]) {

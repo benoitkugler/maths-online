@@ -26,7 +26,8 @@ func (expr *Expr) extractOperator(op operator) []*Expr {
 // returns -1 if n1 < n2, 0 if n1 == n2, 1 if n1 > n2
 // in the sense of a lexical ordering
 // examples :
-//	2 < 3 < e < pi < x < y < func < + < - < mult < div
+//
+//	2 < 3 < e < pi < x < y < log < + < - < mult < div
 func compareNodes(n1, n2 *Expr) int {
 	a1, a2 := n1.atom, n2.atom
 	l1, l2 := a1.lexicographicOrder(), a2.lexicographicOrder()
@@ -365,8 +366,10 @@ func (expr *Expr) contractMinusMinus() {
 }
 
 // remove unnecessary 1 and 0 such as in
-// 	1 * x -> x
+//
+//	1 * x -> x
 //	 0x -> 0
+//
 // -1 * x -> -x
 func (expr *Expr) simplify0And1() {
 	if expr == nil {
@@ -491,7 +494,7 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 
 		expr.expandMinus()
 		expr.sortPlusAndMultOperands()
-		expr.simplifyForPrint()
+		expr.DefaultSimplify()
 		expr.extractNegativeInMults()
 
 		if expr.equals(ref) {

@@ -1,7 +1,20 @@
 <template>
   <v-dialog
+    :model-value="deletedBlocked != null"
+    @update:model-value="deletedBlocked = null"
+    max-width="600"
+  >
+    <UsesCard
+      :uses="deletedBlocked || []"
+      @back="deletedBlocked = null"
+      @go-to="goToSheet"
+    ></UsesCard>
+  </v-dialog>
+
+  <v-dialog
     :model-value="questionToDelete != null"
     @update:model-value="questionToDelete = null"
+    max-width="700"
   >
     <v-card title="Confirmer">
       <v-card-text
@@ -10,8 +23,8 @@
         <br />
         Cette opération est irréversible.
 
-        <div v-if="variants.length == 1" class="mt-2">
-          Le groupe de questions associé sera aussi supprimé.
+        <div v-if="ownVariants.length == 1" class="mt-2">
+          La question associée sera aussi supprimée.
         </div>
       </v-card-text>
       <v-card-actions>
@@ -24,8 +37,8 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="mt-3 px-2">
-    <v-row no-gutters class="mb-2">
+  <v-card class="mt-1 px-2">
+    <v-row no-gutters>
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
           size="small"
@@ -41,7 +54,7 @@
         <v-text-field
           class="my-2 input-small"
           variant="outlined"
-          density="comfortable"
+          density="compact"
           label="Nom de la question"
           v-model="group.Group.Title"
           :readonly="isReadonly"
@@ -61,35 +74,44 @@
       ></v-col>
 
       <v-col cols="auto" align-self="center" class="px-1">
-        <QuestionVariantsSelector
-          :variants="variants"
+        <VariantsSelector
+          :variants="ownVariants"
           :readonly="isReadonly"
           v-model="variantIndex"
           @delete="(qu) => (questionToDelete = qu)"
           @duplicate="duplicateVariante"
-        ></QuestionVariantsSelector>
+        ></VariantsSelector>
       </v-col>
     </v-row>
 
     <QuestionVariantPannel
-      :question="variants[variantIndex]"
+      :question="ownVariants[variantIndex]"
       :readonly="isReadonly"
       :session_id="props.session_id"
       :all-tags="props.allTags"
-      @update="(qu) => (variants[variantIndex] = qu)"
+      :show-variant-meta="true"
+      @update="(qu) => (ownVariants[variantIndex] = qu)"
     ></QuestionVariantPannel>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type { Question, QuestiongroupExt } from "@/controller/api_gen";
+import type {
+  Question,
+  QuestionExerciceUses,
+  QuestiongroupExt,
+  Sheet,
+} from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import type { VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
+import { useRouter } from "vue-router";
 import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
+import UsesCard from "../UsesCard.vue";
+import VariantsSelector from "../VariantsSelector.vue";
 import QuestionVariantPannel from "./QuestionVariantPannel.vue";
-import QuestionVariantsSelector from "./QuestionVariantsSelector.vue";
 
 interface Props {
   session_id: string;
@@ -104,8 +126,10 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
+const router = useRouter();
+
 let group = $ref(copy(props.group));
-let variants = $ref(copy(props.variants));
+let ownVariants = $ref(copy(props.variants));
 
 let variantIndex = $ref(0);
 
@@ -118,32 +142,47 @@ async function updateQuestiongroup() {
   await controller.EditorUpdateQuestiongroup(group.Group);
 }
 
-let questionToDelete: Question | null = $ref(null);
-async function deleteVariante() {
-  await controller.EditorDeleteQuestion({ id: questionToDelete!.Id });
+let deletedBlocked = $ref<QuestionExerciceUses>(null);
+function goToSheet(sh: Sheet) {
+  deletedBlocked = null;
 
-  variants = variants.filter((qu) => qu.Id != questionToDelete!.Id);
+  router.push({ name: "homework", query: { idSheet: sh.Id } });
+}
+
+let questionToDelete: VariantG | null = $ref(null);
+async function deleteVariante() {
+  const que = questionToDelete;
+  if (que == null) return;
+  const res = await controller.EditorDeleteQuestion({ id: que.Id });
   questionToDelete = null;
 
-  if (variants.length && variantIndex >= variants.length) {
+  if (res == undefined) return;
+  // check if the question is used
+  if (!res.Deleted) {
+    deletedBlocked = res.BlockedBy;
+    return;
+  }
+
+  ownVariants = ownVariants.filter((qu) => qu.Id != que.Id);
+  if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
   // if there is no more variant, that means the questiongroup is deleted:
   // go back
-  if (!variants.length) {
+  if (!ownVariants.length) {
     emit("back");
   }
 }
 
-async function duplicateVariante(question: Question) {
+async function duplicateVariante(variant: VariantG) {
   const newQuestion = await controller.EditorDuplicateQuestion({
-    id: question.Id,
+    id: variant.Id,
   });
   if (newQuestion == undefined) {
     return;
   }
-  variants.push(newQuestion);
-  variantIndex = variants.length - 1; // go to the new question
+  ownVariants.push(newQuestion);
+  variantIndex = ownVariants.length - 1; // go to the new question
 }
 
 async function saveTags(newTags: string[]) {

@@ -1,9 +1,5 @@
 <template>
-  <v-card
-    width="600px"
-    title="Description"
-    subtitle="Note interne affichée aux professeurs."
-  >
+  <v-card title="Description" subtitle="Note interne affichée aux professeurs.">
     <v-card-text>
       <v-textarea
         v-model="description"

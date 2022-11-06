@@ -17,6 +17,8 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -83,17 +85,37 @@ func (ct *Controller) startSession() StartSessionOut {
 	return StartSessionOut{ID: newID}
 }
 
+type OriginKind uint8
+
+const (
+	All OriginKind = iota
+	OnlyPersonnal
+	OnlyAdmin
+)
+
 type SearchQuestionsIn = Query
 
 type Query struct {
 	TitleQuery string // empty means all
 	Tags       []string
+	Origin     OriginKind
 }
 
 func (query Query) normalize() {
 	// normalize query
 	for i, t := range query.Tags {
 		query.Tags[i] = ed.NormalizeTag(t)
+	}
+}
+
+func (query Query) matchOrigin(vis tcAPI.Visibility) bool {
+	switch query.Origin {
+	case OnlyPersonnal:
+		return vis == tcAPI.Personnal
+	case OnlyAdmin:
+		return vis == tcAPI.Admin
+	default:
+		return true
 	}
 }
 
@@ -214,7 +236,7 @@ func (ct *Controller) duplicateQuestion(idQuestion ed.IdQuestion, userID uID) (e
 }
 
 // EditorDuplicateQuestiongroup duplicates the whole group, deep copying
-// every question.
+// every question, and assigns it to the current user.
 func (ct *Controller) EditorDuplicateQuestiongroup(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -231,9 +253,68 @@ func (ct *Controller) EditorDuplicateQuestiongroup(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+// duplicateQuestiongroup creates a new group with the same title, (copied) questions and tags
+func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID uID) error {
+	group, err := ed.SelectQuestiongroup(ct.db, idGroup)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if !group.IsVisibleBy(userID) {
+		return accessForbidden
+	}
+
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	questions, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// start by inserting a new group ...
+	newGroup := group
+	newGroup.IdTeacher = userID
+	newGroup.Public = false
+	newGroup, err = newGroup.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	// .. then add its tags ..
+	err = ed.UpdateQuestiongroupTags(tx, tags, newGroup.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	// finaly, copy the questions...
+	for _, question := range questions {
+		question.IdGroup = newGroup.Id.AsOptional() // re-direct to the new group
+		_, err = question.Insert(tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
 // EditorDeleteQuestion remove the given question,
 // also removing the group if needed.
-// TODO: check usage in exercices and tasks
+// An information is returned if the question is used in monoquestions (tasks)
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -242,64 +323,116 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.deleteQuestion(ed.IdQuestion(id), user.Id)
+	out, err := ct.deleteQuestion(ed.IdQuestion(id), user.Id)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	return c.JSON(200, out)
 }
 
-func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) error {
+type TaskDetails struct {
+	Id        tasks.IdTask
+	Sheet     homework.Sheet
+	Classroom teacher.Classroom
+}
+
+type QuestionExerciceUses []TaskDetails // the task containing the [Monoquestions]
+
+func newQuestionExericeUses(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, error) {
+	links, err := homework.SelectSheetTasksByIdTasks(db, idTasks...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	sheets, err := homework.SelectSheets(db, links.IdSheets()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	taskToSheet := links.ByIdTask()
+
+	classrooms, err := teacher.SelectClassrooms(db, sheets.IdClassrooms()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make([]TaskDetails, len(idTasks))
+	for i, id := range idTasks {
+		sheet := sheets[taskToSheet[id].IdSheet]
+		out[i] = TaskDetails{
+			Id:        id,
+			Sheet:     sheet,
+			Classroom: classrooms[sheet.IdClassroom],
+		}
+	}
+
+	return out, nil
+}
+
+// getQuestionUses returns the item using the given question
+// exercices are not considered since questions in exercices can't be accessed directly
+func getQuestionUses(db ed.DB, id ed.IdQuestion) (out QuestionExerciceUses, err error) {
+	monoquestions, err := tasks.SelectMonoquestionsByIdQuestions(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	tasks, err := tasks.SelectTasksByIdMonoquestions(db, monoquestions.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	return newQuestionExericeUses(db, tasks.IDs())
+}
+
+type DeleteQuestionOut struct {
+	Deleted   bool
+	BlockedBy QuestionExerciceUses // non empty iff Deleted == false
+}
+
+func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuestionOut, error) {
 	qu, err := ed.SelectQuestion(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, utils.SQLError(err)
 	}
 
 	group, err := ct.getGroup(qu)
 	if err != nil {
-		return err
+		return DeleteQuestionOut{}, err
 	}
 
 	if group.IdTeacher != userID {
-		return accessForbidden
+		return DeleteQuestionOut{}, accessForbidden
 	}
 
-	// TODO: check if it used in tasks
-	// (SQL constraint will trigger with a non user friendly error message)
-
-	links, err := ed.SelectExerciceQuestionsByIdQuestions(ct.db, id)
+	uses, err := getQuestionUses(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, err
 	}
-
-	if len(links) != 0 {
-		ex, err := ed.SelectExercice(ct.db, links[0].IdExercice)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-
-		return fmt.Errorf("La question est utilisée dans l'exercice %s : %d.", ex.Subtitle, ex.Id)
+	if len(uses) != 0 {
+		return DeleteQuestionOut{
+			Deleted:   false,
+			BlockedBy: uses,
+		}, nil
 	}
 
 	_, err = ed.DeleteQuestionById(ct.db, id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, utils.SQLError(err)
 	}
 
 	// check if group is empty
 	ques, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
 	if err != nil {
-		return utils.SQLError(err)
+		return DeleteQuestionOut{}, utils.SQLError(err)
 	}
 	if len(ques) == 0 {
 		_, err = ed.DeleteQuestiongroupById(ct.db, group.Id)
 		if err != nil {
-			return utils.SQLError(err)
+			return DeleteQuestionOut{}, utils.SQLError(err)
 		}
 	}
 
-	return nil
+	return DeleteQuestionOut{Deleted: true}, nil
 }
 
 // EditorGetQuestions returns the questions for the given group
@@ -445,7 +578,8 @@ func (ct *Controller) EditorSaveQuestionMeta(c echo.Context) error {
 
 type SaveQuestionAndPreviewIn struct {
 	SessionID string
-	Question  ed.Question
+	Id        ed.IdQuestion
+	Page      questions.QuestionPage
 }
 
 type SaveQuestionAndPreviewOut struct {
@@ -512,6 +646,15 @@ func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, boo
 	}, true
 }
 
+func isQueryVariant(query string) (int64, bool) {
+	if strings.HasPrefix(query, "variante:") {
+		idS := strings.TrimPrefix(query, "variante:")
+		id, err := strconv.ParseInt(idS, 10, 64)
+		return id, err == nil
+	}
+	return 0, false
+}
+
 type itemGroupQuery interface {
 	match(id int64, title string) bool
 }
@@ -555,24 +698,43 @@ func normalizeTitle(title string) string {
 func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
 	const pagination = 30 // number of groups
 
-	groups, err := ed.SelectAllQuestiongroups(ct.db)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	groups.RestrictVisible(userID)
-
 	query.normalize()
 
-	// restrict the groups to matching title
-	matcher, err := newQuery(query.TitleQuery)
-	if err != nil {
-		return out, err
-	}
-	for _, group := range groups {
-		if !matcher.match(int64(group.Id), group.Title) {
-			delete(groups, group.Id)
+	var groups ed.Questiongroups
+	if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
+		qu, err := ed.SelectQuestion(ct.db, ed.IdQuestion(idVariant))
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		if !qu.IdGroup.Valid {
+			return out, accessForbidden
+		}
+		groups, err = ed.SelectQuestiongroups(ct.db, qu.IdGroup.ID)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+	} else {
+		groups, err = ed.SelectAllQuestiongroups(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		matcher, err := newQuery(query.TitleQuery)
+		if err != nil {
+			return out, err
+		}
+
+		// restrict the groups to matching title and origin
+		for _, group := range groups {
+			vis := tcAPI.NewVisibility(group.IdTeacher, userID, ct.admin.Id, group.Public)
+
+			keep := query.matchOrigin(vis) && matcher.match(int64(group.Id), group.Title)
+			if !keep {
+				delete(groups, group.Id)
+			}
 		}
 	}
+
+	groups.RestrictVisible(userID)
 
 	// load the tags ...
 	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, groups.IDs()...)
@@ -628,63 +790,6 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	}
 
 	return out, nil
-}
-
-// duplicateQuestiongroup creates a new group with the same title, questions and tags
-// only personnal questions are allowed
-func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID uID) error {
-	group, err := ed.SelectQuestiongroup(ct.db, idGroup)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	if group.IdTeacher != userID {
-		return accessForbidden
-	}
-
-	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, group.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	questions, err := ed.SelectQuestionsByIdGroups(ct.db, group.Id)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	// start by inserting a new group ...
-	newGroup, err := group.Insert(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return utils.SQLError(err)
-	}
-	// .. then add its tags ..
-	err = ed.UpdateQuestiongroupTags(tx, tags, newGroup.Id)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	// finaly, copy the questions...
-	for _, question := range questions {
-		question.IdGroup = newGroup.Id.AsOptional() // re-direct the group
-		_, err = question.Insert(tx)
-		if err != nil {
-			_ = tx.Rollback()
-			return utils.SQLError(err)
-		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	return nil
 }
 
 type UpdateQuestiongroupTagsIn struct {
@@ -835,7 +940,7 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 }
 
 func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID uID) (SaveQuestionAndPreviewOut, error) {
-	qu, err := ed.SelectQuestion(ct.db, params.Question.Id)
+	qu, err := ed.SelectQuestion(ct.db, params.Id)
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
@@ -849,19 +954,20 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		return SaveQuestionAndPreviewOut{}, accessForbidden
 	}
 
-	if err := params.Question.Page.Validate(); err != nil {
+	if err := params.Page.Validate(); err != nil {
 		return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
 	// if the question is owned : save it, else only preview
 	if group.IdTeacher == userID {
-		_, err := params.Question.Update(ct.db)
+		qu.Page = params.Page
+		_, err := qu.Update(ct.db)
 		if err != nil {
 			return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
 		}
 	}
 
-	question := params.Question.Page.Instantiate()
+	question := params.Page.Instantiate()
 
 	ct.lock.Lock()
 	defer ct.lock.Unlock()

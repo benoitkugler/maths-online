@@ -6,7 +6,6 @@
           <interpolated-text
             :model-value="props.modelValue.Parts"
             @update:model-value="onTextChanged"
-            class="px-2"
           ></interpolated-text>
         </v-col>
         <v-col md="12">

@@ -1,39 +1,6 @@
 <template>
-  <!-- <v-dialog v-model="showFlowDocumentation">
-    <v-card title="Déroulement d'un exercice">
-      <v-card-text>
-        Un exercice peut se dérouler de deux manières différentes :
-        séquentiellement ou en parallèle.
-        <v-list>
-          <v-list-item>
-            <v-row>
-              <v-col cols="3"> <b>Déroulé séquentiel</b></v-col>
-              <v-col>
-                L'élève répond aux questions l'une après l'autre, et ne peux pas
-                accéder à la question suivante tant qu'il n'a pas réussi la
-                question courante.</v-col
-              >
-            </v-row>
-          </v-list-item>
-          <v-list-item>
-            <v-row>
-              <v-col cols="3">
-                <b>Déroulé parallèle</b>
-              </v-col>
-              <v-col>
-                L'élève répond à toutes les questions avant de valider, dans
-                l'ordre de son choix, puis peut reprendre les questions
-                fausses.</v-col
-              >
-            </v-row>
-          </v-list-item>
-        </v-list>
-      </v-card-text>
-    </v-card>
-  </v-dialog> -->
-
   <!-- description for the whole exercice, not a particular question -->
-  <v-dialog v-model="showEditDescription">
+  <v-dialog v-model="showEditDescription" max-width="600px">
     <description-pannel
       :description="props.exercice.Exercice.Description"
       :readonly="props.isReadonly"
@@ -45,7 +12,7 @@
     <keep-alive>
       <question-selector
         :tags="props.allTags"
-        :query="query"
+        :query="questionQuery"
         @closed="showImportQuestion = false"
         @selected="
           (q) => {
@@ -59,18 +26,21 @@
 
   <v-card class="px-2">
     <v-row no-gutters class="mb-2">
-      <v-col>
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="compact"
-          label="Sous-titre de la variante (optionnel)"
-          v-model="props.exercice.Exercice.Subtitle"
-          :readonly="props.isReadonly"
-          hide-details
-          @blur="saveMeta"
-        ></v-text-field
-      ></v-col>
+      <template v-if="props.showVariantMeta">
+        <v-col>
+          <v-text-field
+            class="my-2 input-small"
+            variant="outlined"
+            density="compact"
+            label="Sous-titre de la variante (optionnel)"
+            v-model="props.exercice.Exercice.Subtitle"
+            :readonly="props.isReadonly"
+            hide-details
+            @blur="saveMeta"
+          ></v-text-field
+        ></v-col>
+      </template>
+      <v-spacer v-else></v-spacer>
 
       <v-col cols="auto" align-self="center" class="pl-2">
         <v-btn
@@ -133,7 +103,7 @@
       ></drop-zone>
 
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
-        <v-list-item @click="emit('goToQuestion', index)">
+        <v-list-item link @click="emit('goToQuestion', index)">
           <v-row>
             <v-col cols="auto" align-self="center">
               <drag-icon
@@ -143,13 +113,22 @@
             </v-col>
             <v-col cols="auto" align-self="center" class="my-1">
               <v-btn
+                class="mx-2 my-1"
+                size="x-small"
+                icon
+                @click.stop="duplicateQuestion(index)"
+                title="Dupliquer cette question"
+              >
+                <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+              </v-btn>
+              <v-btn
                 v-if="!isReadonly"
-                size="small"
+                size="x-small"
                 icon
                 @click.stop="removeQuestion(index)"
-                title="Retirer la question"
+                title="Supprimer cette question"
               >
-                <v-icon icon="mdi-delete" color="red" size="small"></v-icon>
+                <v-icon icon="mdi-delete" color="red"></v-icon>
               </v-btn>
             </v-col>
             <v-col align-self="center">
@@ -220,14 +199,17 @@ import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
+import QuestionSelector, {
+  type QuestionQuery,
+} from "../../QuestionSelector.vue";
 import DescriptionPannel from "../DescriptionPannel.vue";
-import QuestionSelector, { type Query } from "./QuestionSelector.vue";
 
 interface Props {
   sessionId: string;
   exercice: ExerciceExt;
   isReadonly: boolean;
   allTags: string[]; // used to select the question to import
+  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();
@@ -236,7 +218,7 @@ const emit = defineEmits<{
   (e: "goToQuestion", questionIndex: number): void;
 }>();
 
-let query = $ref<Query>({ search: "", tags: [] });
+let questionQuery = $ref<QuestionQuery>({ search: "", tags: [] });
 let showImportQuestion = $ref(false);
 
 let showEditDescription = $ref(false);
@@ -293,9 +275,17 @@ async function removeQuestion(index: number) {
     Questions: l,
     SessionID: props.sessionId,
   });
-  if (res == undefined) {
-    return;
-  }
+  if (res == undefined) return;
+  emit("update", res);
+}
+
+async function duplicateQuestion(index: number) {
+  const res = await controller.EditorExerciceDuplicateQuestion({
+    IdExercice: props.exercice.Exercice.Id,
+    QuestionIndex: index,
+    SessionID: props.sessionId,
+  });
+  if (res == undefined) return;
   emit("update", res);
 }
 
