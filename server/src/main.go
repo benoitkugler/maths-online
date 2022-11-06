@@ -16,6 +16,7 @@ import (
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
 	tvGame "github.com/benoitkugler/maths-online/trivial"
+	"github.com/benoitkugler/maths-online/vitrine"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -86,6 +87,14 @@ func getDemoCode() string {
 	return demoCode
 }
 
+func getAdminEmails() []string {
+	m := os.Getenv("ADMIN_MAILS")
+	if m == "" {
+		log.Fatal("Missing ADMIN_MAILS env. variable")
+	}
+	return strings.Split(os.Getenv("ADMIN_MAILS"), ",")
+}
+
 func devSetup(e *echo.Echo, tc *teacher.Controller) {
 	dev, err := tc.GetDevToken()
 	if err != nil {
@@ -131,6 +140,9 @@ func main() {
 	demoCode := getDemoCode()
 	fmt.Printf("Demontration code for student activities: %s\n", demoCode)
 
+	adminEmails := getAdminEmails()
+	fmt.Printf("Admin emails for contact form: %v\n", adminEmails)
+
 	db, err := connectDB(*devPtr)
 	if err != nil {
 		log.Fatal(err)
@@ -163,6 +175,7 @@ func main() {
 
 	hwc := homework.NewController(db, admin, studentKey)
 	edit := editor.NewController(db, admin)
+	vit := &vitrine.Controller{Smtp: smtp, AdminMails: adminEmails}
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -180,7 +193,7 @@ func main() {
 		devSetup(e, tc)
 	}
 
-	setupRoutes(e, db, tvc, edit, tc, hwc)
+	setupRoutes(e, db, tvc, edit, tc, hwc, vit)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -264,6 +277,7 @@ func serveEleveApp(c echo.Context) error {
 func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
+	vit *vitrine.Controller,
 ) {
 	setupProfAPI(e, tvc, edit, tc, home)
 	setupQuestionSampleAPI(e)
@@ -274,6 +288,7 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	// main page
 	e.GET("", serveVitrineApp)
 	e.Static("/*", "static/vitrine")
+	e.POST("/reponse-contact", vit.HandleFormMessage)
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
