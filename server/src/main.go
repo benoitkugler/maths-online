@@ -297,11 +297,7 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	// prof. back office
 	for _, route := range []string{
 		"/prof",
-		"/prof/",
-		"/prof/trivial",
-		"/prof/trivial/",
-		"/prof/editor",
-		"/prof/editor/",
+		"/prof/*",
 	} {
 		e.GET(route, serveProfApp, noCache)
 	}
