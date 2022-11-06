@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/classroom/join_classroom.dart';
 import 'package:eleve/classroom/recap.dart';
@@ -15,12 +16,12 @@ const studentIDKey = "client-id";
 class UserSettings {
   String studentPseudo;
   String studentID;
-  List<int> songs;
+  PlaylistController songs;
 
   UserSettings(
       {this.studentPseudo = "",
       this.studentID = "",
-      this.songs = const [0, 1]});
+      this.songs = Audio.DefaultPlaylist});
 
   String toJson() {
     return jsonEncode({
