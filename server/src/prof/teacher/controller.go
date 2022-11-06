@@ -152,7 +152,7 @@ func (ct *Controller) askInscription(args AskInscriptionIn) (AskInscriptionOut, 
 		return AskInscriptionOut{Error: err.Error()}, nil
 	}
 
-	err = mailer.SendMail(ct.smtp, args.Mail, "Bienvenue sur Isyro", mailText)
+	err = mailer.SendMail(ct.smtp, []string{args.Mail}, "Bienvenue sur Isyro", mailText)
 	if err != nil {
 		return AskInscriptionOut{}, fmt.Errorf("Erreur interne (%s)", err)
 	}
