@@ -245,6 +245,10 @@ func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func serveVitrineApp(c echo.Context) error {
+	return c.File("static/vitrine/index.html")
+}
+
 func serveProfApp(c echo.Context) error {
 	return c.File("static/prof/index.html")
 }
@@ -266,6 +270,10 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 
 	// to sync with the client navigator.sendBeacon
 	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
+
+	// main page
+	e.GET("", serveVitrineApp)
+	e.Static("/*", "static/vitrine")
 
 	// global static files used by frontend apps
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
