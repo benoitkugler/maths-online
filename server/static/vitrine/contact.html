@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Contact - Isyro</title>
+    <meta property="og:title" content="Contact - Isyro" />
+
+    <style data-tag="reset-style-sheet">
+      html {  line-height: 1.15;}body {  margin: 0;}* {  box-sizing: border-box;  border-width: 0;  border-style: solid;}p,li,ul,pre,div,h1,h2,h3,h4,h5,h6,figure,blockquote,figcaption {  margin: 0;  padding: 0;}button {  background-color: transparent;}button,input,optgroup,select,textarea {  font-family: inherit;  font-size: 100%;  line-height: 1.15;  margin: 0;}button,select {  text-transform: none;}button,[type="button"],[type="reset"],[type="submit"] {  -webkit-appearance: button;}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner {  border-style: none;  padding: 0;}button:-moz-focus,[type="button"]:-moz-focus,[type="reset"]:-moz-focus,[type="submit"]:-moz-focus {  outline: 1px dotted ButtonText;}a {  color: inherit;  text-decoration: inherit;}input {  padding: 2px 4px;}img {  display: block;}html { scroll-behavior: smooth  }
+    </style>
+    <style data-tag="default-style-sheet">
+      html {
+        font-family: Open Sans;
+        font-size: 1rem;
+      }
+
+      body {
+        font-weight: 400;
+        font-style:normal;
+        text-decoration: none;
+        text-transform: none;
+        letter-spacing: normal;
+        line-height: 1.625;
+        color: var(--dl-color-secondary-400);
+        background-color: var(--dl-color-gray-white);
+
+      }
+    </style>
+    <link
+      rel="shortcut icon"
+      href="public/playground_assets/icon.png"
+      type="icon/png"
+      sizes="32x32"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&amp;display=swap"
+      data-tag="font"
+    />
+    <style>
+      html * {
+          -webkit-font-smoothing: antialiased;
+      }
+      input::placeholder, textarea::placeholder {
+         color: #d2d6da;
+      }
+    </style>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div>
+      <link href="./contact.css" rel="stylesheet" />
+
+      <div class="contact-container">
+        <div data-role="Header" class="header-header header-root-class-name2">
+          <nav class="header-nav">
+            <div class="header-container">
+              <a href="index.html" class="header-navlink large">Accueil</a>
+              <div class="header-menu">
+                <a href="auteurs.html" class="header-navlink1 large">
+                  Au sujet des auteurs
+                </a>
+                <a href="contact.html" class="header-navlink2 large">
+                  <span>Nous contacter</span>
+                </a>
+              </div>
+            </div>
+          </nav>
+          <div data-role="MobileMenu" class="header-mobile-menu">
+            <div class="header-top">
+              <a href="index.html" class="header-navlink3 large">
+                Soft UI Design System
+              </a>
+              <div data-role="CloseMobileMenu" class="header-close-menu">
+                <svg viewBox="0 0 1024 1024" class="header-icon">
+                  <path
+                    d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+            <div class="header-mid">
+              <div class="header-menu1">
+                <a href="index.html" class="header-navlink4 large">Home</a>
+                <a href="auteurs.html" class="header-navlink5 large">Profile</a>
+                <span class="header-text large">Coming Soon</span>
+              </div>
+            </div>
+            <div class="header-bot">
+              <div class="primary-yellow-button-container">
+                <button class="primary-yellow-button-button button buttonSmall">
+                  <span>buy now</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="contact-contact">
+          <div class="contact-container1">
+            <div class="contact-form">
+              <h2 class="contact-text">
+                <span>Un message ?</span>
+                <br />
+              </h2>
+              <span class="contact-text03">
+                <span>
+                  N'hésitez pas&nbsp; à nous contacter, nous serons heureux de
+                  vous répondre !
+                </span>
+                <br />
+              </span>
+              <form
+                action="https://isyro.fr/api/contact-form"
+                method="POST"
+                enctype="application/x-www-form-urlencoded"
+                class="contact-form1"
+              >
+                <label class="contact-text06">
+                  <span>Votre adresse email</span>
+                  <br />
+                </label>
+                <input
+                  type="text"
+                  name="mail"
+                  enctype="(Optionelle)"
+                  placeholder="(Si vous souhaitez être recontacté)"
+                  class="input"
+                />
+                <label class="contact-text09">
+                  <span>Votre message</span>
+                  <br />
+                </label>
+                <textarea
+                  name="message"
+                  rows="8"
+                  autofocus=""
+                  placeholder="Entrer votre message ici..."
+                  class="contact-textarea small textarea"
+                ></textarea>
+                <div class="contact-container2">
+                  <div class="contact-container3">
+                    <button
+                      type="submit"
+                      class="button blue-button buttonSmall"
+                    >
+                      ENVOYER
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <footer class="footer-footer footer-root-class-name2">
+          <div class="footer-container">
+            <div class="footer-container1">
+              <span class="footer-text">ISYRO</span>
+              <span>Guillaume Lebrat &amp; Benoit Kugler - 2022</span>
+            </div>
+            <div class="footer-container2">
+              <div class="footer-container3">
+                <span class="footer-text2">Liens</span>
+                <a href="vie-prive.html" class="footer-navlink large">
+                  CGU et vie privée
+                </a>
+                <a
+                  href="https://github.com/benoitkugler/maths-online"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  class="footer-link large"
+                >
+                  Github
+                </a>
+              </div>
+            </div>
+          </div>
+          <img
+            alt="image"
+            src="public/playground_assets/waves-white.svg"
+            class="footer-image"
+          />
+        </footer>
+      </div>
+    </div>
+    <script src="https://unpkg.com/@teleporthq/teleport-custom-scripts"></script>
+  </body>
+</html>

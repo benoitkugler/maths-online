@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Isyro</title>
+    <meta
+      name="description"
+      content="Une plateforme numérique dédiée aux mathématiques."
+    />
+    <meta property="og:title" content="Isyro" />
+    <meta
+      property="og:description"
+      content="Une plateforme numérique dédiée aux mathématiques."
+    />
+
+    <style data-tag="reset-style-sheet">
+      html {  line-height: 1.15;}body {  margin: 0;}* {  box-sizing: border-box;  border-width: 0;  border-style: solid;}p,li,ul,pre,div,h1,h2,h3,h4,h5,h6,figure,blockquote,figcaption {  margin: 0;  padding: 0;}button {  background-color: transparent;}button,input,optgroup,select,textarea {  font-family: inherit;  font-size: 100%;  line-height: 1.15;  margin: 0;}button,select {  text-transform: none;}button,[type="button"],[type="reset"],[type="submit"] {  -webkit-appearance: button;}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner {  border-style: none;  padding: 0;}button:-moz-focus,[type="button"]:-moz-focus,[type="reset"]:-moz-focus,[type="submit"]:-moz-focus {  outline: 1px dotted ButtonText;}a {  color: inherit;  text-decoration: inherit;}input {  padding: 2px 4px;}img {  display: block;}html { scroll-behavior: smooth  }
+    </style>
+    <style data-tag="default-style-sheet">
+      html {
+        font-family: Open Sans;
+        font-size: 1rem;
+      }
+
+      body {
+        font-weight: 400;
+        font-style:normal;
+        text-decoration: none;
+        text-transform: none;
+        letter-spacing: normal;
+        line-height: 1.625;
+        color: var(--dl-color-secondary-400);
+        background-color: var(--dl-color-gray-white);
+
+      }
+    </style>
+    <link
+      rel="shortcut icon"
+      href="public/playground_assets/icon.png"
+      type="icon/png"
+      sizes="32x32"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&amp;display=swap"
+      data-tag="font"
+    />
+    <style>
+      html * {
+          -webkit-font-smoothing: antialiased;
+      }
+      input::placeholder, textarea::placeholder {
+         color: #d2d6da;
+      }
+    </style>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div>
+      <link href="./accueil.css" rel="stylesheet" />
+
+      <div class="accueil-container">
+        <div data-role="Header" class="header-header header-root-class-name">
+          <nav class="header-nav">
+            <div class="header-container">
+              <a href="index.html" class="header-navlink large">Accueil</a>
+              <div class="header-menu">
+                <a href="auteurs.html" class="header-navlink1 large">
+                  Au sujet des auteurs
+                </a>
+                <a href="contact.html" class="header-navlink2 large">
+                  <span>Nous contacter</span>
+                </a>
+              </div>
+            </div>
+          </nav>
+          <div data-role="MobileMenu" class="header-mobile-menu">
+            <div class="header-top">
+              <a href="index.html" class="header-navlink3 large">
+                Soft UI Design System
+              </a>
+              <div data-role="CloseMobileMenu" class="header-close-menu">
+                <svg viewBox="0 0 1024 1024" class="header-icon">
+                  <path
+                    d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+            <div class="header-mid">
+              <div class="header-menu1">
+                <a href="index.html" class="header-navlink4 large">Home</a>
+                <a href="auteurs.html" class="header-navlink5 large">Profile</a>
+                <span class="header-text large">Coming Soon</span>
+              </div>
+            </div>
+            <div class="header-bot">
+              <div class="primary-yellow-button-container">
+                <button class="primary-yellow-button-button button buttonSmall">
+                  <span>buy now</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="accueil-hero">
+          <div class="accueil-container01">
+            <div class="accueil-card">
+              <h1 class="accueil-text headingOne">ISYRO</h1>
+              <h1 class="accueil-text01">
+                Une plateforme numérique dédiée aux maths
+              </h1>
+              <span class="accueil-text02">
+                Faites renouer vos élèves avec le plaisir de faire des maths !
+              </span>
+              <div class="accueil-container02">
+                <div class="accueil-container03">
+                  <a
+                    href="https://isyro.fr/prof"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    class="accueil-link"
+                  >
+                    <div class="primary-yellow-button-container">
+                      <button
+                        class="primary-yellow-button-button button buttonSmall"
+                      >
+                        <span>Application enseignant</span>
+                      </button>
+                    </div>
+                  </a>
+                </div>
+                <a href="#features" class="accueil-link1">
+                  <div class="outline-gray-button-container">
+                    <button
+                      class="outline-gray-button-button button buttonSmall"
+                    >
+                      <span>En savoir plus</span>
+                    </button>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <img
+          alt="image"
+          src="https://images.unsplash.com/photo-1583030225577-329fe6cc80d6?ixid=Mnw5MTMyMXwwfDF8c2VhcmNofDE4fHxmcmFjdGFsfGVufDB8fHx8MTY2NzMxNjMxMA&amp;ixlib=rb-4.0.3&amp;h=1500"
+          class="accueil-image"
+        />
+        <section id="features" class="accueil-features">
+          <div class="feature-card-container">
+            <img
+              alt="image"
+              src="public/playground_assets/smartphone-color-1500w.png"
+              class="feature-card-image"
+            />
+            <h5 class="feature-card-text headingThree">
+              <span>Appli mobile</span>
+            </h5>
+            <span class="feature-card-text1">
+              <span>
+                Les élèves utilisent Isyro sur une application disponible pour
+                iOS et Android.
+              </span>
+            </span>
+          </div>
+          <div class="feature-card-container">
+            <img
+              alt="image"
+              src="public/playground_assets/thought-color-1500w.png"
+              class="feature-card-image"
+            />
+            <h5 class="feature-card-text headingThree">
+              <span>Interactif</span>
+            </h5>
+            <span class="feature-card-text1">
+              <span>
+                Plusieurs activités sont disponibles : jeu Triv'Maths, travail à
+                la maison, et d'autres à venir...
+              </span>
+            </span>
+          </div>
+          <div class="feature-card-container">
+            <img
+              alt="image"
+              src="public/playground_assets/personnalisation-color-1500w.png"
+              class="feature-card-image"
+            />
+            <h5 class="feature-card-text headingThree">
+              <span>Personnalisable</span>
+            </h5>
+            <span class="feature-card-text1">
+              <span>
+                Vous pouvez créer vos propres questions et exercices à l'aide
+                d'un éditeur intuitif.
+              </span>
+            </span>
+          </div>
+          <div class="feature-card-container">
+            <img
+              alt="image"
+              src="public/playground_assets/communaute-color-1500w.png"
+              class="feature-card-image"
+            />
+            <h5 class="feature-card-text headingThree">
+              <span>Libre et communautaire</span>
+            </h5>
+            <span class="feature-card-text1">
+              <span>
+                Isyro est libre et gratuit (pour les professeurs comme pour les
+                élèves) ! C'est aussi un projet en développement, où les
+                contributions de chacun sont les bienvenues.
+              </span>
+            </span>
+          </div>
+        </section>
+        <section class="accueil-container04">
+          <div class="accueil-container05">
+            <div class="accueil-container06">
+              <div class="accueil-container07">
+                <h1 class="accueil-text03 headingOne">
+                  En quoi consiste le projet Isyro ?
+                </h1>
+                <span class="accueil-text04">
+                  Découvrez ses caractéristiques
+                </span>
+              </div>
+            </div>
+            <div class="accueil-container08">
+              <img
+                alt="image"
+                src="public/playground_assets/editeur_geometrie1-400w.png"
+                class="accueil-image1"
+              />
+            </div>
+          </div>
+          <div class="accueil-container09">
+            <div class="accueil-container10">
+              <img
+                alt="image"
+                src="public/playground_assets/triv_math_game-900h.jpg"
+                class="accueil-image2"
+              />
+            </div>
+            <div class="accueil-container11">
+              <div class="accueil-container12">
+                <div class="accueil-container13">
+                  <h3 class="headingTwo">
+                    Des activités numériques interactives et aléatoires, créées
+                    par l'enseignant
+                  </h3>
+                  <p class="accueil-text06">
+                    <span>
+                      L'idée d'Isyro est de proposer un contenu ludique et&nbsp;
+                    </span>
+                    <span>
+                      dynamique à vos élèves, grâce à des activités&nbsp;
+                    </span>
+                    <span>
+                      numériques leur permettant de travailler les notions&nbsp;
+                    </span>
+                    <span>
+                      du programme de mathématiques, tout en les encourageant et
+                      les valorisant.
+                    </span>
+                    <br />
+                    <br />
+                    <span>
+                      La plateforme s'articule en deux outils ; une&nbsp;
+                    </span>
+                    <span>
+                      application web pour les professeurs, dédiée à la&nbsp;
+                    </span>
+                    <span>
+                      création de contenu et au pilotage des activités, et&nbsp;
+                    </span>
+                    <span>une application mobile pour les élèves.</span>
+                    <br />
+                    <br />
+                    <span>
+                      Une base de questions et exercices de maths est&nbsp;
+                    </span>
+                    <span>
+                      utilisable dans plusieurs activités : jeu
+                      Triv'Maths,&nbsp;
+                    </span>
+                    <span>travail à la maison, et d'autres à venir...</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="accueil-testimonials">
+          <div class="accueil-container14">
+            <div class="accueil-container15">
+              <div class="accueil-container16">
+                <h2 class="accueil-text22 headingOne">Construisons ensemble</h2>
+                <p class="accueil-text23 lead">
+                  Votre participation comme auteur de questions est précieuse !
+                </p>
+                <p class="accueil-text24">
+                  <span class="body">
+                    Les questions et exercices de la plateforme sont créés via
+                    un éditeur intuitif, qui vous permet à votre tour de
+                    concevoir les problèmes que vous souhaitez.&nbsp;
+                  </span>
+                  <br />
+                  <span>
+                    Si vous le voulez, vous pouvez soumettre votre contenu. Une
+                    fois validé par un comité, il sera partagé à la communauté
+                    et enrichira la base officielle.
+                  </span>
+                  <br />
+                </p>
+              </div>
+            </div>
+            <div class="accueil-logos"></div>
+          </div>
+          <img
+            alt="image"
+            src="public/playground_assets/bottom.svg"
+            class="accueil-bottom-wave-image"
+          />
+          <img
+            alt="image"
+            src="public/playground_assets/waves-white.svg"
+            class="accueil-image3"
+          />
+          <img
+            alt="image"
+            src="public/playground_assets/top.svg"
+            class="accueil-top-wave-image"
+          />
+        </section>
+        <section class="accueil-contaier">
+          <div class="accueil-container17">
+            <div class="accueil-container18">
+              <svg viewBox="0 0 1024 1024" class="accueil-icon">
+                <path
+                  d="M363.722 722.052l41.298-57.816-45.254-45.256-57.818 41.296c-10.722-5.994-22.204-10.774-34.266-14.192l-11.682-70.084h-64l-11.68 70.086c-12.062 3.418-23.544 8.198-34.266 14.192l-57.818-41.298-45.256 45.256 41.298 57.816c-5.994 10.72-10.774 22.206-14.192 34.266l-70.086 11.682v64l70.086 11.682c3.418 12.060 8.198 23.544 14.192 34.266l-41.298 57.816 45.254 45.256 57.818-41.296c10.722 5.994 22.204 10.774 34.266 14.192l11.682 70.084h64l11.68-70.086c12.062-3.418 23.544-8.198 34.266-14.192l57.818 41.296 45.254-45.256-41.298-57.816c5.994-10.72 10.774-22.206 14.192-34.266l70.088-11.68v-64l-70.086-11.682c-3.418-12.060-8.198-23.544-14.192-34.266zM224 864c-35.348 0-64-28.654-64-64s28.652-64 64-64 64 28.654 64 64-28.652 64-64 64zM1024 384v-64l-67.382-12.25c-1.242-8.046-2.832-15.978-4.724-23.79l57.558-37.1-24.492-59.128-66.944 14.468c-4.214-6.91-8.726-13.62-13.492-20.13l39.006-56.342-45.256-45.254-56.342 39.006c-6.512-4.766-13.22-9.276-20.13-13.494l14.468-66.944-59.128-24.494-37.1 57.558c-7.812-1.892-15.744-3.482-23.79-4.724l-12.252-67.382h-64l-12.252 67.382c-8.046 1.242-15.976 2.832-23.79 4.724l-37.098-57.558-59.128 24.492 14.468 66.944c-6.91 4.216-13.62 8.728-20.13 13.494l-56.342-39.006-45.254 45.254 39.006 56.342c-4.766 6.51-9.278 13.22-13.494 20.13l-66.944-14.468-24.492 59.128 57.558 37.1c-1.892 7.812-3.482 15.742-4.724 23.79l-67.384 12.252v64l67.382 12.25c1.242 8.046 2.832 15.978 4.724 23.79l-57.558 37.1 24.492 59.128 66.944-14.468c4.216 6.91 8.728 13.618 13.494 20.13l-39.006 56.342 45.254 45.256 56.342-39.006c6.51 4.766 13.22 9.276 20.13 13.492l-14.468 66.944 59.128 24.492 37.102-57.558c7.81 1.892 15.742 3.482 23.788 4.724l12.252 67.384h64l12.252-67.382c8.044-1.242 15.976-2.832 23.79-4.724l37.1 57.558 59.128-24.492-14.468-66.944c6.91-4.216 13.62-8.726 20.13-13.492l56.342 39.006 45.256-45.256-39.006-56.342c4.766-6.512 9.276-13.22 13.492-20.13l66.944 14.468 24.492-59.13-57.558-37.1c1.892-7.812 3.482-15.742 4.724-23.79l67.382-12.25zM672 491.2c-76.878 0-139.2-62.322-139.2-139.2s62.32-139.2 139.2-139.2 139.2 62.322 139.2 139.2c0 76.878-62.32 139.2-139.2 139.2z"
+                ></path>
+              </svg>
+            </div>
+            <h2 class="accueil-text29 headingTwo">
+              Au coeur d'Isyro, un éditeur de questions aléatoires
+            </h2>
+          </div>
+          <div class="accueil-container19">
+            <div class="accueil-container20">
+              <img
+                alt="image"
+                src="public/playground_assets/editeur1-1100w.png"
+                class="accueil-image4"
+              />
+            </div>
+          </div>
+          <div class="accueil-container21">
+            <div class="list-item-container list-item-root-class-name">
+              <h5 class="list-item-text headingThree">
+                <span>Plusieurs types de champs</span>
+              </h5>
+              <span>
+                <span>
+                  Construisez votre question en incluant formules, figures,
+                  tableaux, arbres de probabilités, .... Notre objectif est de
+                  pouvoir couvrir l'ensemble du programme de mathématiques du
+                  lycée.
+                </span>
+              </span>
+            </div>
+            <div class="list-item-container list-item-root-class-name1">
+              <h5 class="list-item-text headingThree">
+                <span>Correction automatique</span>
+              </h5>
+              <span>
+                <span>
+                  Les champs de réponse peuvent prendre plusieurs formes :
+                  tableau de variations, expression, liste à ordonner, ...
+                  Indiquer la forme générale de la solution et Isyro corrigera
+                  automatiquement la réponse de vos élèves !
+                </span>
+              </span>
+            </div>
+            <div class="list-item-container list-item-root-class-name2">
+              <h5 class="list-item-text headingThree">
+                <span>
+                  De l'aléa pour une utilisation à l'infini (ou presque)
+                </span>
+              </h5>
+              <span>
+                <span>
+                  Tous les énoncés peuvent dépendre de paramètres aléatoires,
+                  permettant de générer une même question avec des valeurs
+                  numériques distinctes.
+                </span>
+              </span>
+            </div>
+          </div>
+        </section>
+        <footer class="footer-footer">
+          <div class="footer-container">
+            <div class="footer-container1">
+              <span class="footer-text">ISYRO</span>
+              <span>Guillaume Lebrat &amp; Benoit Kugler - 2022</span>
+            </div>
+            <div class="footer-container2">
+              <div class="footer-container3">
+                <span class="footer-text2">Liens</span>
+                <a href="vie-prive.html" class="footer-navlink large">
+                  CGU et vie privée
+                </a>
+                <a
+                  href="https://github.com/benoitkugler/maths-online"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  class="footer-link large"
+                >
+                  Github
+                </a>
+              </div>
+            </div>
+          </div>
+          <img
+            alt="image"
+            src="public/playground_assets/waves-white.svg"
+            class="footer-image"
+          />
+        </footer>
+      </div>
+    </div>
+    <script src="https://unpkg.com/@teleporthq/teleport-custom-scripts"></script>
+  </body>
+</html>
