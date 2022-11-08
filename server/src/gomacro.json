@@ -69,6 +69,20 @@
             "Output": "sql/trivial/gen_randdata_test.go"
         }
     ],
+    "sql/reviews/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/reviews/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/reviews/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/reviews/gen_randdata_test.go"
+        }
+    ],
     "maths/questions/blocks_field_proof.go": [
         {
             "Mode": "go/unions",
