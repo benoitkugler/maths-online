@@ -478,6 +478,16 @@ func DeleteReviewParticipationsByIdTeachers(tx DB, idTeachers ...teacher.IdTeach
 	return ScanReviewParticipations(rows)
 }
 
+// SelectReviewParticipationByIdReviewAndIdTeacher return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewParticipationByIdReviewAndIdTeacher(tx DB, idReview IdReview, idTeacher teacher.IdTeacher) (item ReviewParticipation, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM review_participations WHERE IdReview = $1 AND IdTeacher = $2", idReview, idTeacher)
+	item, err = ScanReviewParticipation(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneReviewQuestion(row scanner) (ReviewQuestion, error) {
 	var item ReviewQuestion
 	err := row.Scan(

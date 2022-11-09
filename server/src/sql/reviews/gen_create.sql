@@ -88,6 +88,9 @@ ALTER TABLE review_trivials
     ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
 
 ALTER TABLE review_participations
+    ADD UNIQUE (IdReview, IdTeacher);
+
+ALTER TABLE review_participations
     ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
 
 ALTER TABLE review_participations

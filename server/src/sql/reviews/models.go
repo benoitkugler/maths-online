@@ -49,6 +49,7 @@ type ReviewTrivial struct {
 
 type Comments []Comment
 
+// gomacro:SQL ADD UNIQUE (IdReview, IdTeacher)
 type ReviewParticipation struct {
 	IdReview  IdReview          `gomacro-sql-on-delete:"CASCADE"`
 	IdTeacher teacher.IdTeacher `gomacro-sql-on-delete:"CASCADE"`
