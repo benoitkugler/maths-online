@@ -20,6 +20,7 @@ type Review struct {
 // gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind)
 // gomacro:SQL ADD CHECK (Kind = #[Kind.KQuestion])
 // gomacro:SQL ADD UNIQUE (IdQuestion)
+// gomacro:SQL ADD UNIQUE (IdReview)
 type ReviewQuestion struct {
 	IdReview   IdReview `gomacro-sql-on-delete:"CASCADE"`
 	IdQuestion editor.IdQuestiongroup
@@ -29,6 +30,7 @@ type ReviewQuestion struct {
 // gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind)
 // gomacro:SQL ADD CHECK (Kind = #[Kind.KExercice])
 // gomacro:SQL ADD UNIQUE (IdExercice)
+// gomacro:SQL ADD UNIQUE (IdReview)
 type ReviewExercice struct {
 	IdReview   IdReview `gomacro-sql-on-delete:"CASCADE"`
 	IdExercice editor.IdExercicegroup
@@ -38,6 +40,7 @@ type ReviewExercice struct {
 // gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind)
 // gomacro:SQL ADD CHECK (Kind = #[Kind.KTrivial])
 // gomacro:SQL ADD UNIQUE (IdTrivial)
+// gomacro:SQL ADD UNIQUE (IdReview)
 type ReviewTrivial struct {
 	IdReview  IdReview `gomacro-sql-on-delete:"CASCADE"`
 	IdTrivial trivial.IdTrivial

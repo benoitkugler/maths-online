@@ -223,10 +223,10 @@ func (item ReviewExercice) Delete(tx DB) error {
 }
 
 // ByIdReview returns a map with 'IdReview' as keys.
-func (items ReviewExercices) ByIdReview() map[IdReview]ReviewExercices {
-	out := make(map[IdReview]ReviewExercices)
+func (items ReviewExercices) ByIdReview() map[IdReview]ReviewExercice {
+	out := make(map[IdReview]ReviewExercice, len(items))
 	for _, target := range items {
-		out[target.IdReview] = append(out[target.IdReview], target)
+		out[target.IdReview] = target
 	}
 	return out
 }
@@ -240,6 +240,16 @@ func (items ReviewExercices) IdReviews() []IdReview {
 		out[index] = target.IdReview
 	}
 	return out
+}
+
+// SelectReviewExerciceByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewExerciceByIdReview(tx DB, idReview IdReview) (item ReviewExercice, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM review_exercices WHERE idreview = $1", idReview)
+	item, err = ScanReviewExercice(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func SelectReviewExercicesByIdReviews(tx DB, idReviews ...IdReview) (ReviewExercices, error) {
@@ -557,10 +567,10 @@ func (item ReviewQuestion) Delete(tx DB) error {
 }
 
 // ByIdReview returns a map with 'IdReview' as keys.
-func (items ReviewQuestions) ByIdReview() map[IdReview]ReviewQuestions {
-	out := make(map[IdReview]ReviewQuestions)
+func (items ReviewQuestions) ByIdReview() map[IdReview]ReviewQuestion {
+	out := make(map[IdReview]ReviewQuestion, len(items))
 	for _, target := range items {
-		out[target.IdReview] = append(out[target.IdReview], target)
+		out[target.IdReview] = target
 	}
 	return out
 }
@@ -574,6 +584,16 @@ func (items ReviewQuestions) IdReviews() []IdReview {
 		out[index] = target.IdReview
 	}
 	return out
+}
+
+// SelectReviewQuestionByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewQuestionByIdReview(tx DB, idReview IdReview) (item ReviewQuestion, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM review_questions WHERE idreview = $1", idReview)
+	item, err = ScanReviewQuestion(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func SelectReviewQuestionsByIdReviews(tx DB, idReviews ...IdReview) (ReviewQuestions, error) {
@@ -727,10 +747,10 @@ func (item ReviewTrivial) Delete(tx DB) error {
 }
 
 // ByIdReview returns a map with 'IdReview' as keys.
-func (items ReviewTrivials) ByIdReview() map[IdReview]ReviewTrivials {
-	out := make(map[IdReview]ReviewTrivials)
+func (items ReviewTrivials) ByIdReview() map[IdReview]ReviewTrivial {
+	out := make(map[IdReview]ReviewTrivial, len(items))
 	for _, target := range items {
-		out[target.IdReview] = append(out[target.IdReview], target)
+		out[target.IdReview] = target
 	}
 	return out
 }
@@ -744,6 +764,16 @@ func (items ReviewTrivials) IdReviews() []IdReview {
 		out[index] = target.IdReview
 	}
 	return out
+}
+
+// SelectReviewTrivialByIdReview return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewTrivialByIdReview(tx DB, idReview IdReview) (item ReviewTrivial, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM review_trivials WHERE idreview = $1", idReview)
+	item, err = ScanReviewTrivial(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func SelectReviewTrivialsByIdReviews(tx DB, idReviews ...IdReview) (ReviewTrivials, error) {
