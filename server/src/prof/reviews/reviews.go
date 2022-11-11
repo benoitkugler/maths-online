@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/benoitkugler/maths-online/mailer"
+	"github.com/benoitkugler/maths-online/pass"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/sql/editor"
 	"github.com/benoitkugler/maths-online/sql/reviews"
@@ -25,10 +27,11 @@ var accesForbidden = errors.New("internal error: access forbidden")
 type Controller struct {
 	db    *sql.DB
 	admin teacher.Teacher
+	smtp  pass.SMTP
 }
 
-func NewController(db *sql.DB, admin teacher.Teacher) *Controller {
-	return &Controller{db: db, admin: admin}
+func NewController(db *sql.DB, admin teacher.Teacher, smtp pass.SMTP) *Controller {
+	return &Controller{db: db, admin: admin, smtp: smtp}
 }
 
 type ReviewHeader struct {
@@ -344,6 +347,96 @@ func (ct *Controller) deleteReview(id re.IdReview, userID uID) error {
 
 	// all related items cascade
 	_, err = reviews.DeleteReviewById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
+// ReviewAccept accepts the review, changing the owner of target to admin,
+// notifying the creator and deleting the review.
+// Only admin account may perform this operation.
+func (ct *Controller) ReviewAccept(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.acceptReview(re.IdReview(id), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) acceptReview(id re.IdReview, userID uID) error {
+	if userID != ct.admin.Id {
+		return accesForbidden
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	review, err := re.SelectReview(tx, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	target, err := re.LoadTarget(tx, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	header, err := target.Load(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	tc, err := teacher.SelectTeacher(tx, header.Owner)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	// step 1 : move to admin
+	err = target.MoveToAdmin(tx, ct.admin.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	// step 2 : delete the review
+	_, err = re.DeleteReviewById(tx, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	// step 3 : notify the origin owner
+	body := fmt.Sprintf(`Bonjour, <br/>
+	
+	Votre demande de partage pour la ressource %s (%s) a été acceptée ! <br/><br/>
+
+	Merci infinement pour votre contribution au développement de la plateforme. <br/><br/>
+
+	L'équipe Isyro
+	`, header.Title, review.Kind)
+	err = mailer.SendMail(ct.smtp, []string{tc.Mail}, "[Isyro] - Partage accepté", body)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return utils.SQLError(err)
 	}

@@ -1,9 +1,11 @@
 package reviews
 
 import (
+	"os"
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/sql/editor"
 	re "github.com/benoitkugler/maths-online/sql/reviews"
 	"github.com/benoitkugler/maths-online/sql/teacher"
@@ -19,16 +21,29 @@ type sample struct {
 	trivial  trivial.Trivial
 }
 
+var envs map[string]string
+
+func init() {
+	envs = tu.ReadEnv("../../../.env")
+}
+
 func setupDB(t *testing.T) (tu.TestDB, sample) {
+	for k, v := range envs {
+		t.Setenv(k, v)
+	}
+
+	userMail := os.Getenv("TEST_MAIL")
+	tu.Assert(t, userMail != "")
+
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql",
 		"../../sql/trivial/gen_create.sql", "../../sql/reviews/gen_create.sql")
 
 	admin, err := teacher.Teacher{IsAdmin: true, Mail: " "}.Insert(db)
 	tu.Assert(t, err == nil)
-	user, err := teacher.Teacher{IsAdmin: false}.Insert(db)
+	user, err := teacher.Teacher{IsAdmin: false, Mail: userMail}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	qu, err := editor.Questiongroup{IdTeacher: user.Id}.Insert(db)
+	qu, err := editor.Questiongroup{IdTeacher: user.Id, Title: "Intervertion série intégrale"}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	ex, err := editor.Exercicegroup{IdTeacher: user.Id}.Insert(db)
@@ -48,7 +63,7 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 
 func TestCRUDReviews(t *testing.T) {
 	db, sample := setupDB(t)
-	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID})
+	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID}, pass.SMTP{})
 
 	r1, err := ct.createReview(ReviewCreateIn{Kind: re.KQuestion, Id: int64(sample.question.Id)}, sample.userID)
 	tu.Assert(t, err == nil)
@@ -80,7 +95,7 @@ func TestCRUDReviews(t *testing.T) {
 
 func TestCRUDReview(t *testing.T) {
 	db, sample := setupDB(t)
-	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID})
+	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID}, pass.SMTP{})
 
 	r, err := ct.createReview(ReviewCreateIn{Kind: re.KQuestion, Id: int64(sample.question.Id)}, sample.userID)
 	tu.Assert(t, err == nil)
@@ -108,4 +123,29 @@ func TestCRUDReview(t *testing.T) {
 	tu.Assert(t, err == nil)
 	tu.Assert(t, len(rExt.Comments) == 3)
 	tu.Assert(t, rExt.Approvals == [3]int{0, 1, 1})
+}
+
+func TestAcceptReview(t *testing.T) {
+	db, sample := setupDB(t)
+	smtp, err := pass.NewSMTP()
+	tu.Assert(t, err == nil)
+
+	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID}, smtp)
+
+	r, err := ct.createReview(ReviewCreateIn{Kind: re.KQuestion, Id: int64(sample.question.Id)}, sample.userID)
+	tu.Assert(t, err == nil)
+
+	err = ct.updateReview(ReviewUpdateCommentsIn{IdReview: r.Id, Comments: re.Comments{
+		{Time: time.Now(), Message: "Un premier message"},
+		{Time: time.Now().Add(time.Hour), Message: "Un deuxième message"},
+	}}, sample.adminID)
+	tu.Assert(t, err == nil)
+
+	err = ct.acceptReview(r.Id, ct.admin.Id)
+	tu.Assert(t, err == nil)
+
+	question, err := editor.SelectQuestiongroup(db, sample.question.Id)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, question.Public)
+	tu.Assert(t, question.IdTeacher == sample.adminID)
 }

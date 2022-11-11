@@ -3,6 +3,7 @@ package reviews
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/benoitkugler/maths-online/sql/editor"
@@ -39,6 +40,19 @@ const (
 	KTrivial
 )
 
+func (k Kind) String() string {
+	switch k {
+	case KQuestion:
+		return "Question"
+	case KExercice:
+		return "Exercice"
+	case KTrivial:
+		return "Triv'Maths"
+	default:
+		return fmt.Sprintf("<invalid reviews.Kind %d>", k)
+	}
+}
+
 type TargetHeader struct {
 	Title string
 	Owner teacher.IdTeacher
@@ -53,6 +67,11 @@ type Target interface {
 
 	// Errors should not be wrapped
 	Load(db DB) (TargetHeader, error)
+
+	// MoveToAdmin update the targeted item, marking it
+	// as Public and belonging to the given [adminID].
+	// Errors should not be wrapped
+	MoveToAdmin(db DB, adminID teacher.IdTeacher) error
 }
 
 func (tr ReviewQuestion) Review() IdReview { return tr.IdReview }
@@ -91,7 +110,41 @@ func (tr ReviewTrivial) Load(db DB) (TargetHeader, error) {
 	return TargetHeader{Title: item.Name, Owner: item.IdTeacher}, nil
 }
 
+func (tr ReviewQuestion) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
+	item, err := editor.SelectQuestiongroup(db, tr.IdQuestion)
+	if err != nil {
+		return err
+	}
+	item.IdTeacher = adminID
+	item.Public = true
+	_, err = item.Update(db)
+	return err
+}
+
+func (tr ReviewExercice) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
+	item, err := editor.SelectExercicegroup(db, tr.IdExercice)
+	if err != nil {
+		return err
+	}
+	item.IdTeacher = adminID
+	item.Public = true
+	_, err = item.Update(db)
+	return err
+}
+
+func (tr ReviewTrivial) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
+	item, err := trivial.SelectTrivial(db, tr.IdTrivial)
+	if err != nil {
+		return err
+	}
+	item.IdTeacher = adminID
+	item.Public = true
+	_, err = item.Update(db)
+	return err
+}
+
 // LoadTarget load all the target associated to the given review
+// Errors are wrapped with [utils.SQLError]
 func LoadTarget(db DB, id IdReview) (Target, error) {
 	question, isQuestion, err := SelectReviewQuestionByIdReview(db, id)
 	if err != nil {
