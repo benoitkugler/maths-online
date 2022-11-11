@@ -13,6 +13,19 @@ export interface AddMonoquestionToTaskIn {
   IdSheet: IdSheet;
   IdQuestion: IdQuestion;
 }
+// github.com/benoitkugler/maths-online/sql/reviews.Approval
+export enum Approval {
+  Neutral = 0,
+  InFavor = 1,
+  Opposed = 2,
+}
+
+export const ApprovalLabels: { [key in Approval]: string } = {
+  [Approval.Neutral]: "",
+  [Approval.InFavor]: "",
+  [Approval.Opposed]: "",
+};
+
 // github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
   Mail: string;
@@ -135,6 +148,13 @@ export interface ClassroomSheets {
   Classroom: Classroom;
   Sheets: SheetExt[] | null;
 }
+// github.com/benoitkugler/maths-online/sql/reviews.Comment
+export interface Comment {
+  Time: Time;
+  Message: string;
+}
+// github.com/benoitkugler/maths-online/sql/reviews.Comments
+export type Comments = Comment[] | null;
 // github.com/benoitkugler/maths-online/maths/questions.ComparisonLevel
 export enum ComparisonLevel {
   AsLinearEquation = 102,
@@ -407,6 +427,8 @@ export type IdMonoquestion = number;
 export type IdQuestion = number;
 // github.com/benoitkugler/maths-online/sql/editor.IdQuestiongroup
 export type IdQuestiongroup = number;
+// github.com/benoitkugler/maths-online/sql/reviews.IdReview
+export type IdReview = number;
 // github.com/benoitkugler/maths-online/sql/homework.IdSheet
 export type IdSheet = number;
 // github.com/benoitkugler/maths-online/sql/teacher.IdStudent
@@ -419,6 +441,19 @@ export type IdTeacher = number;
 export type IdTrivial = number;
 // github.com/benoitkugler/maths-online/maths/questions.Interpolated
 export type Interpolated = string;
+// github.com/benoitkugler/maths-online/sql/reviews.Kind
+export enum Kind {
+  KQuestion = 0,
+  KExercice = 1,
+  KTrivial = 2,
+}
+
+export const KindLabels: { [key in Kind]: string } = {
+  [Kind.KQuestion]: "",
+  [Kind.KExercice]: "",
+  [Kind.KTrivial]: "",
+};
+
 // github.com/benoitkugler/maths-online/maths/repere.LabelPos
 export enum LabelPos {
   Top = 0,
@@ -714,6 +749,45 @@ export interface RepereBounds {
   Width: number;
   Height: number;
   Origin: Coord;
+}
+// github.com/benoitkugler/maths-online/sql/reviews.Review
+export interface Review {
+  Id: IdReview;
+  Kind: Kind;
+}
+// github.com/benoitkugler/maths-online/prof/reviews.ReviewComment
+export interface ReviewComment {
+  Comment: Comment;
+  AuthorMail: string;
+  IsOwned: boolean;
+}
+// github.com/benoitkugler/maths-online/prof/reviews.ReviewCreateIn
+export interface ReviewCreateIn {
+  Kind: Kind;
+  Id: number;
+}
+// github.com/benoitkugler/maths-online/prof/reviews.ReviewExt
+export interface ReviewExt {
+  Approvals: number[];
+  Comments: ReviewComment[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/reviews.ReviewHeader
+export interface ReviewHeader {
+  Id: IdReview;
+  Title: string;
+  Kind: Kind;
+  OwnerMail: string;
+  NbComments: number;
+}
+// github.com/benoitkugler/maths-online/prof/reviews.ReviewUpdateApprovalIn
+export interface ReviewUpdateApprovalIn {
+  IdReview: IdReview;
+  Approval: Approval;
+}
+// github.com/benoitkugler/maths-online/prof/reviews.ReviewUpdateCommentsIn
+export interface ReviewUpdateCommentsIn {
+  IdReview: IdReview;
+  Comments: Comments;
 }
 // github.com/benoitkugler/maths-online/trivial.RoomID
 export type RoomID = string;
@@ -2565,4 +2639,157 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void;
+
+  protected async rawReviewCreate(params: ReviewCreateIn) {
+    const fullUrl = this.baseUrl + "/api/prof/review";
+    const rep: AxiosResponse<Review> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ReviewCreate wraps rawReviewCreate and handles the error */
+  async ReviewCreate(params: ReviewCreateIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewCreate(params);
+      this.onSuccessReviewCreate(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewCreate(data: Review): void;
+
+  protected async rawReviewsList() {
+    const fullUrl = this.baseUrl + "/api/prof/reviews";
+    const rep: AxiosResponse<ReviewHeader[] | null> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ReviewsList wraps rawReviewsList and handles the error */
+  async ReviewsList() {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewsList();
+      this.onSuccessReviewsList(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewsList(data: ReviewHeader[] | null): void;
+
+  protected async rawReviewsLoad(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/review";
+    const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ReviewsLoad wraps rawReviewsLoad and handles the error */
+  async ReviewsLoad(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewsLoad(params);
+      this.onSuccessReviewsLoad(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewsLoad(data: ReviewExt): void;
+
+  protected async rawReviewDelete(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/review";
+    await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** ReviewDelete wraps rawReviewDelete and handles the error */
+  async ReviewDelete(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewDelete(params);
+      this.onSuccessReviewDelete();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewDelete(): void;
+
+  protected async rawReviewUpdateApproval(params: ReviewUpdateApprovalIn) {
+    const fullUrl = this.baseUrl + "/api/prof/review/approval";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** ReviewUpdateApproval wraps rawReviewUpdateApproval and handles the error */
+  async ReviewUpdateApproval(params: ReviewUpdateApprovalIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewUpdateApproval(params);
+      this.onSuccessReviewUpdateApproval();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewUpdateApproval(): void;
+
+  protected async rawReviewUpdateCommnents(params: ReviewUpdateCommentsIn) {
+    const fullUrl = this.baseUrl + "/api/prof/review/comments";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** ReviewUpdateCommnents wraps rawReviewUpdateCommnents and handles the error */
+  async ReviewUpdateCommnents(params: ReviewUpdateCommentsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewUpdateCommnents(params);
+      this.onSuccessReviewUpdateCommnents();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewUpdateCommnents(): void;
+
+  protected async rawReviewAccept(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/review/accept";
+    await Axios.post(fullUrl, null, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** ReviewAccept wraps rawReviewAccept and handles the error */
+  async ReviewAccept(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewAccept(params);
+      this.onSuccessReviewAccept();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewAccept(): void;
 }

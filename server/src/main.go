@@ -13,6 +13,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/homework"
+	"github.com/benoitkugler/maths-online/prof/reviews"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
 	tvGame "github.com/benoitkugler/maths-online/trivial"
@@ -176,6 +177,7 @@ func main() {
 	hwc := homework.NewController(db, admin, studentKey)
 	edit := editor.NewController(db, admin)
 	vit := &vitrine.Controller{Smtp: smtp, AdminMails: adminEmails}
+	review := reviews.NewController(db, admin, smtp)
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -193,7 +195,7 @@ func main() {
 		devSetup(e, tc)
 	}
 
-	setupRoutes(e, db, tvc, edit, tc, hwc, vit)
+	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -277,9 +279,9 @@ func serveEleveApp(c echo.Context) error {
 func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
-	vit *vitrine.Controller,
+	vit *vitrine.Controller, review *reviews.Controller,
 ) {
-	setupProfAPI(e, tvc, edit, tc, home)
+	setupProfAPI(e, tvc, edit, tc, home, review)
 	setupQuestionSampleAPI(e)
 
 	// to sync with the client navigator.sendBeacon

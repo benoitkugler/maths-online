@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/homework"
+	"github.com/benoitkugler/maths-online/prof/reviews"
 	"github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/prof/trivial"
 	"github.com/labstack/echo/v4"
@@ -10,7 +11,7 @@ import (
 
 func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	edit *editor.Controller, tc *teacher.Controller,
-	home *homework.Controller,
+	home *homework.Controller, review *reviews.Controller,
 ) {
 	e.POST("/prof/inscription", tc.AskInscription)
 	e.GET(teacher.ValidateInscriptionEndPoint, tc.ValidateInscription)
@@ -95,4 +96,13 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/homework/sheet/monoquestion", home.HomeworkUpdateMonoquestion)
 	gr.POST("/api/prof/homework/sheet", home.HomeworkReorderSheetTasks)
 	gr.POST("/api/prof/homework/marks", home.HomeworkGetMarks)
+
+	// review page
+	gr.PUT("/api/prof/review", review.ReviewCreate)
+	gr.GET("/api/prof/reviews", review.ReviewsList)
+	gr.GET("/api/prof/review", review.ReviewsLoad)
+	gr.DELETE("/api/prof/review", review.ReviewDelete)
+	gr.POST("/api/prof/review/approval", review.ReviewUpdateApproval)
+	gr.POST("/api/prof/review/comments", review.ReviewUpdateCommnents)
+	gr.POST("/api/prof/review/accept", review.ReviewAccept)
 }
