@@ -37,7 +37,7 @@ func NewController(db *sql.DB, admin teacher.Teacher, smtp pass.SMTP) *Controlle
 type ReviewHeader struct {
 	Id         re.IdReview
 	Title      string // of the target resource
-	Kind       re.Kind
+	Kind       re.ReviewKind
 	OwnerMail  string
 	NbComments int
 }
@@ -244,7 +244,7 @@ func (ct *Controller) updateApproval(args ReviewUpdateApprovalIn, userID uID) er
 }
 
 type ReviewCreateIn struct {
-	Kind re.Kind
+	Kind re.ReviewKind
 	Id   int64 // either IdQuestion, IdExercice, IdTrivial
 }
 

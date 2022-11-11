@@ -32,16 +32,10 @@ func randIdReview() IdReview {
 	return IdReview(randint64())
 }
 
-func randKind() Kind {
-	choix := [...]Kind{KQuestion, KExercice, KTrivial}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randReview() Review {
 	return Review{
 		Id:   randIdReview(),
-		Kind: randKind(),
+		Kind: randReviewKind(),
 	}
 }
 
@@ -49,8 +43,14 @@ func randReviewExercice() ReviewExercice {
 	return ReviewExercice{
 		IdReview:   randIdReview(),
 		IdExercice: randedi_IdExercicegroup(),
-		Kind:       randKind(),
+		Kind:       randReviewKind(),
 	}
+}
+
+func randReviewKind() ReviewKind {
+	choix := [...]ReviewKind{KQuestion, KExercice, KTrivial}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randReviewParticipation() ReviewParticipation {
@@ -66,7 +66,7 @@ func randReviewQuestion() ReviewQuestion {
 	return ReviewQuestion{
 		IdReview:   randIdReview(),
 		IdQuestion: randedi_IdQuestiongroup(),
-		Kind:       randKind(),
+		Kind:       randReviewKind(),
 	}
 }
 
@@ -74,7 +74,7 @@ func randReviewTrivial() ReviewTrivial {
 	return ReviewTrivial{
 		IdReview:  randIdReview(),
 		IdTrivial: randtri_IdTrivial(),
-		Kind:      randKind(),
+		Kind:      randReviewKind(),
 	}
 }
 

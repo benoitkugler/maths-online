@@ -30,17 +30,17 @@ const (
 	Opposed
 )
 
-// Kind is an enum describing the kind of item
+// ReviewKind is an enum describing the kind of item
 // which may be in a review
-type Kind uint8
+type ReviewKind uint8
 
 const (
-	KQuestion Kind = iota
-	KExercice
-	KTrivial
+	KQuestion ReviewKind = iota // Question
+	KExercice                   // Exercice
+	KTrivial                    // Trivial
 )
 
-func (k Kind) String() string {
+func (k ReviewKind) String() string {
 	switch k {
 	case KQuestion:
 		return "Question"

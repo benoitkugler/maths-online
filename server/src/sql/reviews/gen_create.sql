@@ -35,7 +35,7 @@ ALTER TABLE review_questions
 
 ALTER TABLE review_questions
     ADD CHECK (Kind = 0
-    /* Kind.KQuestion */);
+    /* ReviewKind.KQuestion */);
 
 ALTER TABLE review_questions
     ADD UNIQUE (IdQuestion);
@@ -54,7 +54,7 @@ ALTER TABLE review_exercices
 
 ALTER TABLE review_exercices
     ADD CHECK (Kind = 1
-    /* Kind.KExercice */);
+    /* ReviewKind.KExercice */);
 
 ALTER TABLE review_exercices
     ADD UNIQUE (IdExercice);
@@ -73,7 +73,7 @@ ALTER TABLE review_trivials
 
 ALTER TABLE review_trivials
     ADD CHECK (Kind = 2
-    /* Kind.KTrivial */);
+    /* ReviewKind.KTrivial */);
 
 ALTER TABLE review_trivials
     ADD UNIQUE (IdTrivial);
