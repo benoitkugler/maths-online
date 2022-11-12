@@ -123,6 +123,9 @@ import TrivialRow from "../components/trivial/TrivialRow.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 let allKnownTags = $ref<string[]>([]);
 
@@ -192,7 +195,8 @@ async function createReview(config: Trivial) {
     Id: config.Id,
   });
   if (res == undefined) return;
-  // TODO; maybe go to review ?
+
+  router.push({ name: "reviews", query: { id: res.Id } });
 }
 
 async function duplicateConfig(config: Trivial) {

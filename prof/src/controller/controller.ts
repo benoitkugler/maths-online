@@ -533,7 +533,7 @@ class Controller extends AbstractAPI {
   protected onSuccessReviewsList(data: ReviewHeader[] | null): void {
     this.inRequest = false;
   }
-  protected onSuccessReviewsLoad(data: ReviewExt): void {
+  protected onSuccessReviewLoad(data: ReviewExt): void {
     this.inRequest = false;
   }
   protected onSuccessReviewDelete(): void {

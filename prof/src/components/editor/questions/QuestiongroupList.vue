@@ -107,6 +107,7 @@ import {
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
+import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
 import OriginSelect from "../../OriginSelect.vue";
 import QuestiongroupRow from "./QuestiongroupRow.vue";
@@ -119,6 +120,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "edit", group: QuestiongroupExt, questions: Question[]): void;
 }>();
+
+const router = useRouter();
 
 let groups = $ref<QuestiongroupExt[]>([]);
 let serverNbGroups = $ref(0);
@@ -220,7 +223,7 @@ async function createReview(ex: Questiongroup) {
     Id: ex.Id,
   });
   if (res == undefined) return;
-  // TODO; maybe go to review ?
+  router.push({ name: "reviews", query: { id: res.Id } });
 }
 
 async function updateGroupTags(group: Questiongroup, newTags: string[]) {

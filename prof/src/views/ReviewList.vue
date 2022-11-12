@@ -44,12 +44,20 @@ import { onActivated, onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ReviewRow from "../components/review/ReviewRow.vue";
 import ReviewPannel from "../components/review/ReviewPannel.vue";
+import { useRoute, useRouter } from "vue-router";
 
 let reviews = $ref<ReviewHeader[]>([]);
 let currentReview = $ref<ReviewHeader | null>(null);
 
-onMounted(fetchReviews);
-onActivated(fetchReviews);
+onMounted(init);
+onActivated(init);
+
+const route = useRoute();
+
+async function init() {
+  await fetchReviews();
+  parseQuery(); // require the updated list of reviews
+}
 
 async function fetchReviews() {
   const res = await controller.ReviewsList();
@@ -59,5 +67,13 @@ async function fetchReviews() {
 
 function goToReview(review: ReviewHeader) {
   currentReview = review;
+}
+
+function parseQuery() {
+  const id = Number(route.query["id"]);
+  if (isNaN(id)) return;
+  const review = reviews.find((re) => re.Id == id);
+  if (review == undefined) return;
+  goToReview(review);
 }
 </script>

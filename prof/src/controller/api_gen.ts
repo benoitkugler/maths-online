@@ -550,6 +550,7 @@ export interface OrderedListFieldBlock {
 export interface Origin {
   AllowPublish: boolean;
   IsPublic: boolean;
+  IsInReview: boolean;
   Visibility: Visibility;
 }
 // github.com/benoitkugler/maths-online/prof/editor.OriginKind
@@ -757,6 +758,7 @@ export interface ReviewCreateIn {
 export interface ReviewExt {
   Approvals: number[];
   Comments: ReviewComment[] | null;
+  UserApproval: Approval;
 }
 // github.com/benoitkugler/maths-online/prof/reviews.ReviewHeader
 export interface ReviewHeader {
@@ -2684,7 +2686,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessReviewsList(data: ReviewHeader[] | null): void;
 
-  protected async rawReviewsLoad(params: { id: number }) {
+  protected async rawReviewLoad(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
@@ -2693,19 +2695,19 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  /** ReviewsLoad wraps rawReviewsLoad and handles the error */
-  async ReviewsLoad(params: { id: number }) {
+  /** ReviewLoad wraps rawReviewLoad and handles the error */
+  async ReviewLoad(params: { id: number }) {
     this.startRequest();
     try {
-      const out = await this.rawReviewsLoad(params);
-      this.onSuccessReviewsLoad(out);
+      const out = await this.rawReviewLoad(params);
+      this.onSuccessReviewLoad(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected abstract onSuccessReviewsLoad(data: ReviewExt): void;
+  protected abstract onSuccessReviewLoad(data: ReviewExt): void;
 
   protected async rawReviewDelete(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";

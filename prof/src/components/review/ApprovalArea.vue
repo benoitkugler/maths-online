@@ -5,8 +5,8 @@
     </v-col>
     <v-col align-self="center" class="mx-1">
       <v-chip
-        variant="outlined"
-        size="large"
+        :variant="isSelected(Approval.Opposed) ? 'outlined' : undefined"
+        :size="isSelected(Approval.Opposed) ? 'large' : undefined"
         @click="emit('update', Approval.Opposed)"
         label
         prepend-icon="mdi-minus"
@@ -16,12 +16,19 @@
       </v-chip>
     </v-col>
     <v-col align-self="center" class="mx-1">
-      <v-chip @click="emit('update', Approval.Neutral)" label>
+      <v-chip
+        :variant="isSelected(Approval.Neutral) ? 'outlined' : undefined"
+        :size="isSelected(Approval.Neutral) ? 'large' : undefined"
+        @click="emit('update', Approval.Neutral)"
+        label
+      >
         {{ props.review.Approvals[Approval.Neutral] }}
       </v-chip>
     </v-col>
     <v-col align-self="center" class="mx-1">
       <v-chip
+        :variant="isSelected(Approval.InFavor) ? 'outlined' : undefined"
+        :size="isSelected(Approval.InFavor) ? 'large' : undefined"
         @click="emit('update', Approval.InFavor)"
         label
         append-icon="mdi-plus"
@@ -39,7 +46,6 @@ import { computed } from "@vue/reactivity";
 
 interface Props {
   review: ReviewExt;
-  //   ownerApproval: Approval;
 }
 
 const props = defineProps<Props>();
@@ -47,4 +53,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update", appro: Approval): void;
 }>();
+
+function isSelected(appro: Approval) {
+  return props.review.UserApproval == appro;
+}
 </script>

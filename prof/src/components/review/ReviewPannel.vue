@@ -80,7 +80,7 @@ onMounted(fetchData);
 onActivated(fetchData);
 
 async function fetchData() {
-  const res = await controller.ReviewsLoad({ id: props.review.Id });
+  const res = await controller.ReviewLoad({ id: props.review.Id });
   if (res == undefined) return;
   reviewExt = res;
 }
