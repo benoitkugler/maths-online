@@ -2,10 +2,10 @@ package teacher
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	tc "github.com/benoitkugler/maths-online/sql/teacher"
+	"github.com/benoitkugler/maths-online/utils"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -59,8 +59,9 @@ func JWTTeacher(c echo.Context) tc.Teacher {
 // GetDevToken creates a new user and returns a valid token,
 // so that client frontend doesn't have to use password when developping.
 func (ct *Controller) GetDevToken() (string, error) {
+	mail := utils.RandomString(false, 8) + "@dummy.com"
 	t, err := tc.Teacher{
-		Mail:            fmt.Sprintf("%d", time.Now().Unix()),
+		Mail:            mail,
 		PasswordCrypted: ct.teacherKey.EncryptPassword("1234"),
 	}.Insert(ct.db)
 	if err != nil {
