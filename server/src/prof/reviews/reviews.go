@@ -116,12 +116,13 @@ type ReviewComment struct {
 }
 
 type ReviewExt struct {
-	Approvals [3]int          // number per Approval values
-	Comments  []ReviewComment // sorted by time (earlier first)
+	Approvals    [3]int          // number per Approval values
+	Comments     []ReviewComment // sorted by time (earlier first)
+	UserApproval re.Approval     // the approval of the user doing the request, or zero
 }
 
-// ReviewsLoad returns the full content of the given review
-func (ct *Controller) ReviewsLoad(c echo.Context) error {
+// ReviewLoad returns the full content of the given review.
+func (ct *Controller) ReviewLoad(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
@@ -157,6 +158,10 @@ func (ct *Controller) loadReview(id re.IdReview, userID uID) (out ReviewExt, err
 				AuthorMail: teacher.Mail,
 				IsOwned:    part.IdTeacher == userID,
 			})
+		}
+
+		if part.IdTeacher == userID {
+			out.UserApproval = part.Approval
 		}
 	}
 

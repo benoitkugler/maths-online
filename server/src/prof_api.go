@@ -100,7 +100,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	// review page
 	gr.PUT("/api/prof/review", review.ReviewCreate)
 	gr.GET("/api/prof/reviews", review.ReviewsList)
-	gr.GET("/api/prof/review", review.ReviewsLoad)
+	gr.GET("/api/prof/review", review.ReviewLoad)
 	gr.DELETE("/api/prof/review", review.ReviewDelete)
 	gr.POST("/api/prof/review/approval", review.ReviewUpdateApproval)
 	gr.POST("/api/prof/review/comments", review.ReviewUpdateCommnents)

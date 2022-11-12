@@ -9,6 +9,7 @@ import (
 	"github.com/benoitkugler/maths-online/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/reviews"
 	ta "github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/tasks"
@@ -77,7 +78,7 @@ func (ct *Controller) EditorSearchExercices(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func exerciceOrigin(ex ed.Exercicegroup, userID, adminID uID) (tcAPI.Origin, bool) {
+func exerciceOrigin(ex ed.Exercicegroup, inReview bool, userID, adminID uID) (tcAPI.Origin, bool) {
 	vis := tcAPI.NewVisibility(ex.IdTeacher, userID, adminID, ex.Public)
 	if vis.Restricted() {
 		return tcAPI.Origin{}, false
@@ -86,6 +87,7 @@ func exerciceOrigin(ex ed.Exercicegroup, userID, adminID uID) (tcAPI.Origin, boo
 		AllowPublish: userID == adminID,
 		IsPublic:     ex.Public,
 		Visibility:   vis,
+		IsInReview:   inReview,
 	}, true
 }
 
@@ -134,6 +136,12 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 	}
 	exercicesByGroup := tmp.ByGroup()
 
+	revs, err := reviews.SelectAllReviewExercices(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	revsMap := revs.ByIdExercice()
+
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
 		crible := tagsMap[group.Id].Crible()
@@ -145,7 +153,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 			continue
 		}
 
-		origin, _ := exerciceOrigin(group, userID, ct.admin.Id)
+		_, inReview := revsMap[group.Id]
+		origin, _ := exerciceOrigin(group, inReview, userID, ct.admin.Id)
 		groupExt := ExercicegroupExt{
 			Group:  group,
 			Origin: origin,
@@ -456,7 +465,7 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
-	origin, _ := exerciceOrigin(group, userID, ct.admin.Id)
+	origin, _ := exerciceOrigin(group, false, userID, ct.admin.Id)
 	out := ExercicegroupExt{
 		Group:    group,
 		Origin:   origin,
