@@ -2,8 +2,6 @@ package tasks
 
 import (
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/maths/questions"
@@ -22,20 +20,20 @@ func TestInstantiateQuestions(t *testing.T) {
 		return
 	}
 
-	out, err := InstantiateQuestions(db, []ed.IdQuestion{24, 29, 37})
+	_, err = InstantiateQuestions(db, []ed.IdQuestion{24, 29, 37})
 	tu.Assert(t, err == nil)
-	s, _ := json.MarshalIndent(out, " ", " ")
-	fmt.Println(string(s)) // may be used as reference for client tests
+	// s, _ := json.MarshalIndent(out, " ", " ")
+	// fmt.Println(string(s)) // may be used as reference for client tests
 }
 
-func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercice, ed.ExerciceQuestions) {
+func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercice, ed.ExerciceQuestions, ta.Monoquestion) {
 	group, err := ed.Exercicegroup{IdTeacher: idTeacher}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	ex, err := ed.Exercice{IdGroup: group.Id}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	qu, err := ed.Question{
+	qu1, err := ed.Question{
 		NeedExercice: ex.Id.AsOptional(),
 		Page: questions.QuestionPage{
 			Enonce: questions.Enonce{
@@ -45,22 +43,43 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 	}.Insert(db)
 	tu.Assert(t, err == nil)
 
+	qu2, err := qu1.Insert(db)
+	tu.Assert(t, err == nil)
+	qu3, err := qu1.Insert(db)
+	tu.Assert(t, err == nil)
+
 	tx, err := db.Begin()
 	tu.Assert(t, err == nil)
 
-	questions := ed.ExerciceQuestions{
-		{IdExercice: ex.Id, IdQuestion: qu.Id, Index: 0, Bareme: 2},
-		{IdExercice: ex.Id, IdQuestion: qu.Id, Index: 1, Bareme: 1},
-		{IdExercice: ex.Id, IdQuestion: qu.Id, Index: 2, Bareme: 3},
+	qus := ed.ExerciceQuestions{
+		{IdExercice: ex.Id, IdQuestion: qu1.Id, Index: 0, Bareme: 2},
+		{IdExercice: ex.Id, IdQuestion: qu2.Id, Index: 1, Bareme: 1},
+		{IdExercice: ex.Id, IdQuestion: qu3.Id, Index: 2, Bareme: 3},
 	}
 
-	err = ed.InsertManyExerciceQuestions(tx, questions...)
+	err = ed.InsertManyExerciceQuestions(tx, qus...)
+	tu.Assert(t, err == nil)
+
+	// monoquestion
+	quGroup, err := ed.Questiongroup{IdTeacher: idTeacher}.Insert(tx)
+	tu.Assert(t, err == nil)
+	qu4, err := ed.Question{
+		IdGroup: quGroup.Id.AsOptional(),
+		Page: questions.QuestionPage{
+			Enonce: questions.Enonce{
+				questions.NumberFieldBlock{Expression: "1"},
+			},
+		},
+	}.Insert(tx)
+	tu.Assert(t, err == nil)
+
+	mono, err := ta.Monoquestion{IdQuestion: qu4.Id, NbRepeat: 3, Bareme: 2}.Insert(tx)
 	tu.Assert(t, err == nil)
 
 	err = tx.Commit()
 	tu.Assert(t, err == nil)
 
-	return ex, questions
+	return ex, qus, mono
 }
 
 func TestEvaluateExercice(t *testing.T) {
@@ -70,7 +89,7 @@ func TestEvaluateExercice(t *testing.T) {
 	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	ex, questions := createEx(t, db.DB, tc.Id)
+	ex, questions, monoquestion := createEx(t, db.DB, tc.Id)
 
 	progExt := ProgressionExt{
 		Questions: make([]ta.QuestionHistory, len(questions)),
@@ -78,7 +97,7 @@ func TestEvaluateExercice(t *testing.T) {
 
 	// no error since the exercice is parallel
 	_, err = EvaluateWorkIn{
-		ID:          newWorkIDFromEx(ex.Id),
+		ID:          newWorkIDFromMono(monoquestion.Id),
 		Progression: progExt,
 		Answers:     map[int]Answer{},
 	}.Evaluate(db)
@@ -119,7 +138,7 @@ func TestProgression(t *testing.T) {
 	tu.Assert(t, err == nil)
 
 	// test with exercice
-	ex, questions := createEx(t, db.DB, tc.Id)
+	ex, questions, _ := createEx(t, db.DB, tc.Id)
 
 	task, err := ta.Task{IdExercice: ex.Id.AsOptional()}.Insert(db)
 	tu.Assert(t, err == nil)

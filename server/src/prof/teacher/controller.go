@@ -223,5 +223,6 @@ func (ct *Controller) Loggin(c echo.Context) error {
 type Origin struct {
 	AllowPublish bool // is the ressource allowed to be made public ?
 	IsPublic     bool // used, for Personnal visibility
+	IsInReview   bool // true if the owner has already stared a review for the resource
 	Visibility   Visibility
 }

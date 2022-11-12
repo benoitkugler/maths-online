@@ -2,7 +2,6 @@ package trivial
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -23,14 +22,18 @@ import (
 
 // Simulate a real world example to exercice the server
 
-func check(err error) {
+func check(t *testing.T, err error) {
+	t.Helper()
+
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 }
 
 // student client connection
 type student struct {
+	t *testing.T
+
 	serverBaseURL string
 	gameCode      string
 
@@ -38,8 +41,8 @@ type student struct {
 	conn     *websocket.Conn
 }
 
-func newStudent(serverBaseURL, gameCode string) *student {
-	return &student{serverBaseURL: serverBaseURL, gameCode: gameCode}
+func newStudent(t *testing.T, serverBaseURL, gameCode string) *student {
+	return &student{t: t, serverBaseURL: serverBaseURL, gameCode: gameCode}
 }
 
 func (st *student) accessGame(deconnect bool) {
@@ -49,7 +52,7 @@ func (st *student) accessGame(deconnect bool) {
 
 func (st *student) setupRequest() {
 	u, err := url.Parse(st.serverBaseURL + studentSetup)
-	check(err)
+	check(st.t, err)
 
 	query := make(url.Values)
 	query.Set("session-id", st.gameCode)
@@ -58,18 +61,18 @@ func (st *student) setupRequest() {
 	u.RawQuery = query.Encode()
 
 	resp, err := http.Get(u.String())
-	check(err)
+	check(st.t, err)
 
 	var meta SetupStudentClientOut
 	err = json.NewDecoder(resp.Body).Decode(&meta)
-	check(err)
+	check(st.t, err)
 
 	st.gameMeta = meta.GameMeta
 }
 
 func (st *student) connectRequest(deconnect bool) {
 	u, err := url.Parse(testutils.WebsocketURL(st.serverBaseURL + studentConnect))
-	check(err)
+	check(st.t, err)
 
 	query := make(url.Values)
 	query.Set("game-meta", st.gameMeta)
@@ -77,15 +80,13 @@ func (st *student) connectRequest(deconnect bool) {
 	u.RawQuery = query.Encode()
 
 	st.conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
-	check(err)
+	check(st.t, err)
 
 	// pump server messages
 	for {
 		var v tv.StateUpdate
 		err := st.conn.ReadJSON(&v)
-		check(err)
-
-		// fmt.Println(v)
+		check(st.t, err)
 
 		// simulate deconnection/reconnection
 		if deconnect {
@@ -97,32 +98,37 @@ func (st *student) connectRequest(deconnect bool) {
 }
 
 func (st *student) decoReco() {
-	time.Sleep(time.Second / 10)
-	st.conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second))
+	time.Sleep(time.Millisecond * 100)
+	st.conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseGoingAway, "simulating deconnection"), time.Now().Add(time.Second))
 	st.conn.Close()
 
-	time.Sleep(time.Second / 10)
+	time.Sleep(time.Millisecond * 100)
 
 	st.accessGame(false)
 }
 
 // teacherC monitor session
 type teacherC struct {
-	serverBaseURL string
+	t *testing.T
+
+	server *httptest.Server
 }
 
 func (tc *teacherC) monitorRequest() {
-	u, err := url.Parse(testutils.WebsocketURL(tc.serverBaseURL + teacherMonitor))
-	check(err)
-
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	check(err)
+	u, err := url.Parse(tc.server.URL + teacherMonitor)
+	check(tc.t, err)
 
 	// pump monitor messages
-	for {
+	for range [10]int{} {
+		resp, err := http.Get(u.String())
+		check(tc.t, err)
 		var v MonitorOut
-		err := conn.ReadJSON(&v)
-		check(err)
+		err = json.NewDecoder(resp.Body).Decode(&v)
+		check(tc.t, err)
+
+		resp.Body.Close()
+
+		time.Sleep(time.Millisecond * 10)
 	}
 }
 
@@ -194,10 +200,10 @@ func TestSessionPlay(t *testing.T) {
 	listener := httptest.NewServer(http.HandlerFunc(s.handle))
 	defer listener.Close()
 
-	tc1 := teacherC{listener.URL}
+	tc1 := teacherC{t, listener}
 	go tc1.monitorRequest()
 
-	tc2 := teacherC{listener.URL}
+	tc2 := teacherC{t, listener}
 	go tc2.monitorRequest()
 
 	time.Sleep(50 * time.Millisecond)
@@ -209,7 +215,7 @@ func TestSessionPlay(t *testing.T) {
 
 		students := make([]*student, size)
 		for j := range students {
-			st := newStudent(listener.URL, roomCode)
+			st := newStudent(t, listener.URL, roomCode)
 
 			go st.accessGame(j == 0)
 
@@ -218,5 +224,5 @@ func TestSessionPlay(t *testing.T) {
 		allStudents = append(allStudents, students)
 	}
 
-	time.Sleep(time.Second / 2)
+	time.Sleep(time.Second * 2)
 }
