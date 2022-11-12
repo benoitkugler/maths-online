@@ -12,7 +12,7 @@
         ></v-switch>
       </div>
       <div v-else-if="isPersonnal">
-        <v-btn>Demander à rendre public : à venir...</v-btn>
+        <v-btn class="mt-1" flat @click="emit('createReview')">Publier</v-btn>
       </div>
     </v-card-text>
   </v-card>
@@ -34,6 +34,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update", isPublic: boolean): void;
+  (e: "createReview"): void;
 }>();
 
 const color = computed(() => visiblityColors[props.origin.Visibility]);

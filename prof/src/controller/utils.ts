@@ -9,7 +9,7 @@ export function formatDate(date: Date_) {
   return d.toLocaleDateString();
 }
 
-export function formatTime(time: Time) {
+export function formatTime(time: Time, showMinute = false) {
   const ti = new Date(time);
   if (isNaN(ti.valueOf()) || ti.getFullYear() <= 1) {
     return "";
@@ -18,7 +18,8 @@ export function formatTime(time: Time) {
     year: "numeric",
     day: "numeric",
     month: "short",
-    hour: "2-digit"
+    hour: "2-digit",
+    minute: showMinute ? "2-digit" : undefined
   });
 }
 

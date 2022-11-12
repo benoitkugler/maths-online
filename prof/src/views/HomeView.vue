@@ -62,6 +62,11 @@
                 </v-btn>
               </v-col>
               <v-col>
+                <v-btn link block :to="{ name: 'reviews' }" color="secondary">
+                  Discuter des publications en cours
+                </v-btn>
+              </v-col>
+              <v-col>
                 <v-btn
                   link
                   block

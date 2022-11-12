@@ -441,19 +441,6 @@ export type IdTeacher = number;
 export type IdTrivial = number;
 // github.com/benoitkugler/maths-online/maths/questions.Interpolated
 export type Interpolated = string;
-// github.com/benoitkugler/maths-online/sql/reviews.Kind
-export enum Kind {
-  KQuestion = 0,
-  KExercice = 1,
-  KTrivial = 2,
-}
-
-export const KindLabels: { [key in Kind]: string } = {
-  [Kind.KQuestion]: "",
-  [Kind.KExercice]: "",
-  [Kind.KTrivial]: "",
-};
-
 // github.com/benoitkugler/maths-online/maths/repere.LabelPos
 export enum LabelPos {
   Top = 0,
@@ -753,7 +740,7 @@ export interface RepereBounds {
 // github.com/benoitkugler/maths-online/sql/reviews.Review
 export interface Review {
   Id: IdReview;
-  Kind: Kind;
+  Kind: ReviewKind;
 }
 // github.com/benoitkugler/maths-online/prof/reviews.ReviewComment
 export interface ReviewComment {
@@ -763,7 +750,7 @@ export interface ReviewComment {
 }
 // github.com/benoitkugler/maths-online/prof/reviews.ReviewCreateIn
 export interface ReviewCreateIn {
-  Kind: Kind;
+  Kind: ReviewKind;
   Id: number;
 }
 // github.com/benoitkugler/maths-online/prof/reviews.ReviewExt
@@ -775,10 +762,23 @@ export interface ReviewExt {
 export interface ReviewHeader {
   Id: IdReview;
   Title: string;
-  Kind: Kind;
+  Kind: ReviewKind;
   OwnerMail: string;
   NbComments: number;
 }
+// github.com/benoitkugler/maths-online/sql/reviews.ReviewKind
+export enum ReviewKind {
+  KQuestion = 0,
+  KExercice = 1,
+  KTrivial = 2,
+}
+
+export const ReviewKindLabels: { [key in ReviewKind]: string } = {
+  [ReviewKind.KQuestion]: "Question",
+  [ReviewKind.KExercice]: "Exercice",
+  [ReviewKind.KTrivial]: "Trivial",
+};
+
 // github.com/benoitkugler/maths-online/prof/reviews.ReviewUpdateApprovalIn
 export interface ReviewUpdateApprovalIn {
   IdReview: IdReview;

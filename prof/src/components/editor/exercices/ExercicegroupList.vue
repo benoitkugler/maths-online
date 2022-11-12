@@ -77,6 +77,7 @@
                 @clicked="startEdit(exerciceGroup)"
                 @duplicate="duplicate(exerciceGroup)"
                 @update-public="updatePublic"
+                @create-review="createReview(exerciceGroup.Group)"
                 @update-tags="
                   (tags) => updateGroupTags(exerciceGroup.Group, tags)
                 "
@@ -99,6 +100,7 @@
 <script setup lang="ts">
 import {
   OriginKind,
+  ReviewKind,
   type Exercicegroup,
   type ExercicegroupExt,
 } from "@/controller/api_gen";
@@ -204,6 +206,15 @@ async function updatePublic(id: number, isPublic: boolean) {
 
   const index = groups.findIndex((gr) => gr.Group.Id == id);
   groups[index].Origin.IsPublic = isPublic;
+}
+
+async function createReview(ex: Exercicegroup) {
+  const res = await controller.ReviewCreate({
+    Kind: ReviewKind.KExercice,
+    Id: ex.Id,
+  });
+  if (res == undefined) return;
+  // TODO; maybe go to review ?
 }
 
 async function updateGroupTags(group: Exercicegroup, newTags: string[]) {

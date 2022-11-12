@@ -22,6 +22,9 @@ import type {
   MonitorOut,
   Question,
   QuestiongroupExt,
+  Review,
+  ReviewExt,
+  ReviewHeader,
   RunningSessionMetaOut,
   SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
@@ -517,6 +520,45 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question importée avec succès.");
+    }
+  }
+
+  // reviews
+  protected onSuccessReviewCreate(data: Review): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Demande de publication créée avec succès.");
+    }
+  }
+  protected onSuccessReviewsList(data: ReviewHeader[] | null): void {
+    this.inRequest = false;
+  }
+  protected onSuccessReviewsLoad(data: ReviewExt): void {
+    this.inRequest = false;
+  }
+  protected onSuccessReviewDelete(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Demande de publication supprimée avec succès.");
+    }
+  }
+  protected onSuccessReviewUpdateApproval(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Vote modifié avec succès.");
+    }
+  }
+
+  protected onSuccessReviewUpdateCommnents(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Commentaires modifiés avec succès.");
+    }
+  }
+  protected onSuccessReviewAccept(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Demande de publication acceptée avec succès.");
     }
   }
 }

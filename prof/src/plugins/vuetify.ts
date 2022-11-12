@@ -11,7 +11,8 @@ const myCustomLightTheme = {
     primary: "#6fdec1",
     "primary-darken-1": "#52a38e",
     secondary: "#e8f241",
-    "secondary-darken-1": "#b3bd0d"
+    "secondary-darken-1": "#b3bd0d",
+    "secondary-lighten-1": "#f4fa91"
   }
 };
 

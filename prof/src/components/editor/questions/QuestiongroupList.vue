@@ -77,6 +77,7 @@
                 @clicked="startEdit(questionGroup)"
                 @duplicate="duplicate(questionGroup)"
                 @update-public="updatePublic"
+                @create-review="createReview(questionGroup.Group)"
                 @update-tags="
                   (tags) => updateGroupTags(questionGroup.Group, tags)
                 "
@@ -99,6 +100,7 @@
 <script setup lang="ts">
 import {
   OriginKind,
+  ReviewKind,
   type Question,
   type Questiongroup,
   type QuestiongroupExt,
@@ -210,6 +212,15 @@ async function updatePublic(id: number, isPublic: boolean) {
 
   const index = groups.findIndex((gr) => gr.Group.Id == id);
   groups[index].Origin.IsPublic = isPublic;
+}
+
+async function createReview(ex: Questiongroup) {
+  const res = await controller.ReviewCreate({
+    Kind: ReviewKind.KQuestion,
+    Id: ex.Id,
+  });
+  if (res == undefined) return;
+  // TODO; maybe go to review ?
 }
 
 async function updateGroupTags(group: Questiongroup, newTags: string[]) {

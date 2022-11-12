@@ -2,6 +2,7 @@ import ClassroomsListVue from "@/views/ClassroomsList.vue";
 import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import HomeworkActivityVue from "@/views/HomeworkActivity.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
+import ReviewListVue from "@/views/ReviewList.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
@@ -44,6 +45,12 @@ const router = createRouter({
       name: "homework",
       component: HomeworkActivityVue,
       meta: { Label: "Travail à la maison" }
+    },
+    {
+      path: "/reviews",
+      name: "reviews",
+      component: ReviewListVue,
+      meta: { Label: "Publications" }
     },
     // {
     //   path: '/about',

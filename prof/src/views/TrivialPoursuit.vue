@@ -92,32 +92,34 @@
         :key="config.Config.Id"
         class="my-3"
       >
-        <config-row
+        <trivial-row
           :config="config"
           :disable-launch="
             isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
           "
           @update-public="(b) => updatePublic(config.Config, b)"
+          @create-review="createReview(config.Config)"
           @duplicate="duplicateConfig(config.Config)"
           @edit="editedConfig = config.Config"
           @launch="launchingConfig = config.Config"
           @delete="trivialToDelete = config.Config"
-        ></config-row>
+        ></trivial-row>
       </v-list-item>
     </v-list>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type {
-  RunningSessionMetaOut,
-  Trivial,
-  TrivialExt,
+import {
+  ReviewKind,
+  type RunningSessionMetaOut,
+  type Trivial,
+  type TrivialExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
-import ConfigRow from "../components/trivial/ConfigRow.vue";
+import TrivialRow from "../components/trivial/TrivialRow.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
@@ -182,6 +184,15 @@ async function updatePublic(config: Trivial, isPublic: boolean) {
   }
   const index = _configs.findIndex((v) => v.Config.Id == config.Id);
   _configs[index].Origin.IsPublic = isPublic;
+}
+
+async function createReview(config: Trivial) {
+  const res = await controller.ReviewCreate({
+    Kind: ReviewKind.KTrivial,
+    Id: config.Id,
+  });
+  if (res == undefined) return;
+  // TODO; maybe go to review ?
 }
 
 async function duplicateConfig(config: Trivial) {
