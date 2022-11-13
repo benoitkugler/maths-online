@@ -25,7 +25,7 @@
   </v-dialog>
 
   <v-row class="my-1 mx-6 pb-3 fill-height">
-    <v-col cols="6" align-self="center">
+    <v-col cols="12" sm="6" align-self="center">
       <v-card>
         <v-card-title class="bg-primary rounded"> Se connecter </v-card-title>
         <v-progress-linear
@@ -91,7 +91,8 @@
         </v-card-actions>
       </v-card>
     </v-col>
-    <v-col cols="6" align-self="center">
+
+    <v-col cols="12" sm="6" align-self="center" class="d-none d-sm-flex">
       <v-card>
         <v-card-title class="bg-secondary rounded">
           Bienvenue sur Isyro

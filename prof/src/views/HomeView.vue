@@ -1,7 +1,7 @@
 <template>
   <v-container class="pb-1 fill-height">
     <v-row class="fill-height" justify="space-between">
-      <v-col sm="12" lg="4" align-self="center">
+      <v-col cols="12" md="6" lg="4" align-self="center">
         <v-card>
           <v-card-title class="bg-secondary rounded pa-4"
             >Bienvenue !</v-card-title
@@ -62,6 +62,11 @@
                 </v-btn>
               </v-col>
               <v-col>
+                <v-btn link block :to="{ name: 'reviews' }" color="secondary">
+                  Discuter des publications en cours
+                </v-btn>
+              </v-col>
+              <v-col>
                 <v-btn
                   link
                   block
@@ -75,7 +80,7 @@
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col sm="12" lg="7" align-self="center">
+      <v-col md="6" lg="7" align-self="center" class="d-none d-md-flex">
         <v-img :src="cahierImg" class="rounded"></v-img>
       </v-col>
     </v-row>

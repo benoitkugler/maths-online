@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/utils/testutils"
 )
 
 // generate formulas.pdf in a temporary directory to perform visual tests
@@ -196,4 +198,19 @@ func TestMinusMinus(t *testing.T) {
 	if s := expr.String(); s != "-(-2 + x)" {
 		t.Fatal(s)
 	}
+}
+
+func TestInstantiateMinusZero(t *testing.T) {
+	// related to issue #144
+	exprB := mustParse(t, "0 * 1 / (-5)")
+	tu.Assert(t, exprB.String() == "0")
+
+	rp := RandomParameters{
+		NewVar('b'): exprB,
+	}
+	vs, err := rp.Instantiate()
+	tu.Assert(t, err == nil)
+
+	instance := vs[NewVar('b')]
+	tu.Assert(t, instance.String() == "0")
 }

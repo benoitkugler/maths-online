@@ -4,6 +4,7 @@
       <OriginButton
         :origin="config.Origin"
         @update-public="(b) => emit('update-public', b)"
+        @create-review="emit('create-review')"
       ></OriginButton>
       <v-btn
         class="mx-2 my-1"
@@ -111,6 +112,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update-public", isPublic: boolean): void;
+  (e: "create-review"): void;
   (e: "duplicate"): void;
   (e: "edit"): void;
   (e: "launch"): void;

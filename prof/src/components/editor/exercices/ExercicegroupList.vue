@@ -77,6 +77,7 @@
                 @clicked="startEdit(exerciceGroup)"
                 @duplicate="duplicate(exerciceGroup)"
                 @update-public="updatePublic"
+                @create-review="createReview(exerciceGroup.Group)"
                 @update-tags="
                   (tags) => updateGroupTags(exerciceGroup.Group, tags)
                 "
@@ -99,11 +100,13 @@
 <script setup lang="ts">
 import {
   OriginKind,
+  ReviewKind,
   type Exercicegroup,
   type ExercicegroupExt,
 } from "@/controller/api_gen";
 import { controller, IsDev } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
+import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
 import OriginSelect from "../../OriginSelect.vue";
 import ExercicegroupRow from "./ExercicegroupRow.vue";
@@ -116,6 +119,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "edit", group: ExercicegroupExt): void;
 }>();
+
+const router = useRouter();
 
 let groups = $ref<ExercicegroupExt[]>([]);
 let serverNbGroups = $ref(0);
@@ -130,7 +135,7 @@ const displayedNbExercices = computed(() => {
 
 let querySearch = $ref("");
 
-let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
+let queryTags = $ref<string[]>([]);
 let queryOrigin = $ref(OriginKind.All);
 
 let timerId = 0;
@@ -204,6 +209,16 @@ async function updatePublic(id: number, isPublic: boolean) {
 
   const index = groups.findIndex((gr) => gr.Group.Id == id);
   groups[index].Origin.IsPublic = isPublic;
+}
+
+async function createReview(ex: Exercicegroup) {
+  const res = await controller.ReviewCreate({
+    Kind: ReviewKind.KExercice,
+    Id: ex.Id,
+  });
+  if (res == undefined) return;
+
+  router.push({ name: "reviews", query: { id: res.Id } });
 }
 
 async function updateGroupTags(group: Exercicegroup, newTags: string[]) {

@@ -1,11 +1,11 @@
 <template>
   <v-card>
-    <v-row class="mx-2 mt-1">
+    <v-row class="mt-2 mx-2">
       <v-col>
-        <v-card-title>Modifier la feuille</v-card-title>
+        <v-card-title>Paramètres de la feuille</v-card-title>
       </v-col>
 
-      <v-col style="text-align: right">
+      <v-col style="text-align: right" align-self="center">
         <v-btn icon @click="emit('close')" variant="text">
           <v-icon icon="mdi-close"></v-icon>
         </v-btn>
@@ -16,8 +16,8 @@
       <v-row>
         <!-- fields -->
         <v-col cols="6">
-          <v-row class="mb-2"
-            ><v-col>
+          <v-row>
+            <v-col>
               <v-text-field
                 variant="outlined"
                 density="compact"
@@ -85,10 +85,7 @@
         </v-col>
       </v-row>
     </v-card-text>
-    <v-card-actions>
-      <v-btn @click="emit('close')">Retour</v-btn>
-      <v-spacer></v-spacer>
-    </v-card-actions>
+    <v-card-actions class="py-0 my-0"></v-card-actions>
   </v-card>
 </template>
 

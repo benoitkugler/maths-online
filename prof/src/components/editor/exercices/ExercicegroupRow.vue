@@ -5,6 +5,7 @@
         <OriginButton
           :origin="props.group.Origin"
           @update-public="(b) => emit('updatePublic', props.group.Group.Id, b)"
+          @create-review="emit('createReview')"
         ></OriginButton>
 
         <v-btn
@@ -54,6 +55,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "clicked"): void;
   (e: "duplicate"): void;
+  (e: "createReview"): void;
   (e: "updatePublic", exercicegroupID: number, isPublic: boolean): void;
   (e: "updateTags", tags: string[]): void;
 }>();

@@ -18,6 +18,7 @@ import (
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/sql/editor"
 	"github.com/benoitkugler/maths-online/sql/homework"
+	"github.com/benoitkugler/maths-online/sql/reviews"
 	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
@@ -170,7 +171,7 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
-	origin, _ := questionOrigin(group, userID, ct.admin.Id)
+	origin, _ := questionOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	return QuestiongroupExt{
 		Group:    group,
 		Tags:     nil,
@@ -634,7 +635,7 @@ func newQuestionHeader(question ed.Question) QuestionHeader {
 	}
 }
 
-func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, bool) {
+func questionOrigin(qu ed.Questiongroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) (tcAPI.Origin, bool) {
 	vis := tcAPI.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
 	if vis.Restricted() {
 		return tcAPI.Origin{}, false
@@ -643,6 +644,7 @@ func questionOrigin(qu ed.Questiongroup, userID, adminID uID) (tcAPI.Origin, boo
 		AllowPublish: userID == adminID,
 		IsPublic:     qu.Public,
 		Visibility:   vis,
+		IsInReview:   inReview,
 	}, true
 }
 
@@ -750,6 +752,12 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	}
 	questionsByGroup := tmp.ByGroup()
 
+	revs, err := reviews.SelectAllReviewQuestions(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	revsMap := revs.ByIdQuestion()
+
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
 		crible := tagsMap[group.Id].Crible()
@@ -761,7 +769,12 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 			continue
 		}
 
-		origin, _ := questionOrigin(group, userID, ct.admin.Id)
+		var inReview tcAPI.OptionalIdReview
+		link, isInReview := revsMap[group.Id]
+		if isInReview {
+			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
+		}
+		origin, _ := questionOrigin(group, inReview, userID, ct.admin.Id)
 		groupExt := QuestiongroupExt{
 			Group:  group,
 			Origin: origin,

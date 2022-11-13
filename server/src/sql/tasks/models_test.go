@@ -16,16 +16,20 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 	ex, err := ed.Exercice{IdGroup: group.Id}.Insert(db)
 	tu.Assert(t, err == nil)
 
-	qu, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
+	qu1, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
+	tu.Assert(t, err == nil)
+	qu2, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
+	tu.Assert(t, err == nil)
+	qu3, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
 	tu.Assert(t, err == nil)
 
 	tx, err := db.Begin()
 	tu.Assert(t, err == nil)
 
 	questions := ed.ExerciceQuestions{
-		{IdExercice: ex.Id, IdQuestion: qu.Id, Index: 0, Bareme: 2},
-		{IdExercice: ex.Id, IdQuestion: qu.Id, Index: 1, Bareme: 1},
-		{IdExercice: ex.Id, IdQuestion: qu.Id, Index: 2, Bareme: 3},
+		{IdExercice: ex.Id, IdQuestion: qu1.Id, Index: 0, Bareme: 2},
+		{IdExercice: ex.Id, IdQuestion: qu2.Id, Index: 1, Bareme: 1},
+		{IdExercice: ex.Id, IdQuestion: qu3.Id, Index: 2, Bareme: 3},
 	}
 
 	err = ed.InsertManyExerciceQuestions(tx, questions...)

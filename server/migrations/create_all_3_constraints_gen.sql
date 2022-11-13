@@ -115,3 +115,72 @@ ALTER TABLE sheet_tasks
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
 
+ALTER TABLE review_questions
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+
+ALTER TABLE review_questions
+    ADD CHECK (Kind = 0
+    /* Kind.KQuestion */);
+
+ALTER TABLE review_questions
+    ADD UNIQUE (IdQuestion);
+
+ALTER TABLE review_questions
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_questions
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_questions
+    ADD FOREIGN KEY (IdQuestion) REFERENCES questiongroups;
+
+ALTER TABLE review_exercices
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+
+ALTER TABLE review_exercices
+    ADD CHECK (Kind = 1
+    /* Kind.KExercice */);
+
+ALTER TABLE review_exercices
+    ADD UNIQUE (IdExercice);
+
+ALTER TABLE review_exercices
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_exercices
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_exercices
+    ADD FOREIGN KEY (IdExercice) REFERENCES exercicegroups;
+
+ALTER TABLE review_trivials
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+
+ALTER TABLE review_trivials
+    ADD CHECK (Kind = 2
+    /* Kind.KTrivial */);
+
+ALTER TABLE review_trivials
+    ADD UNIQUE (IdTrivial);
+
+ALTER TABLE review_trivials
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_trivials
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_trivials
+    ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE review_participations
+    ADD UNIQUE (IdReview, IdTeacher);
+
+ALTER TABLE review_participations
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_participations
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+
+ALTER TABLE review_participations
+    ADD CONSTRAINT Comments_gomacro CHECK (gomacro_validate_json_array_revi_Comment (Comments));
+

@@ -33,7 +33,8 @@ func TestCreateConfig(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
-	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/trivial/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql",
+		"../../sql/trivial/gen_create.sql", "../../sql/reviews/gen_create.sql")
 	defer db.Remove()
 
 	user1, err := teacher.Teacher{Mail: "1"}.Insert(db)

@@ -461,6 +461,12 @@ func (r rat) toExpr() *Expr {
 
 // for integers number, update `r` to be in irreductible form
 func (r *rat) reduce() {
+	// special case for 0 / -5 : avoid spurious -0
+	if r.p == 0 {
+		*r = rat{0, 1}
+		return
+	}
+
 	num, ok1 := IsInt(r.p)
 	den, ok2 := IsInt(r.q)
 	if ok1 && ok2 {

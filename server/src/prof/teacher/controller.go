@@ -9,6 +9,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/mailer"
 	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/sql/reviews"
 	tc "github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
@@ -221,7 +222,13 @@ func (ct *Controller) Loggin(c echo.Context) error {
 }
 
 type Origin struct {
-	AllowPublish bool // is the ressource allowed to be made public ?
-	IsPublic     bool // used, for Personnal visibility
+	AllowPublish bool             // is the ressource allowed to be made public ?
+	IsPublic     bool             // used, for Personnal visibility
+	IsInReview   OptionalIdReview // true if the owner has already stared a review for the resource
 	Visibility   Visibility
+}
+
+type OptionalIdReview struct {
+	InReview bool
+	Id       reviews.IdReview
 }

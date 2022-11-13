@@ -68,6 +68,12 @@
         >
       </v-list-item>
       <v-divider></v-divider>
+      <v-list-item>
+        <v-btn link class="my-1" :to="{ name: 'reviews' }" color="secondary"
+          >Publications</v-btn
+        >
+      </v-list-item>
+      <v-divider></v-divider>
 
       <v-divider></v-divider>
       <v-list-item>

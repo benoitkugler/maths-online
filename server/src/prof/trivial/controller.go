@@ -14,6 +14,7 @@ import (
 	"github.com/benoitkugler/maths-online/pass"
 	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
 	"github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/sql/reviews"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	tc "github.com/benoitkugler/maths-online/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/trivial"
@@ -113,6 +114,12 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 		return nil, utils.SQLError(err)
 	}
 
+	revs, err := reviews.SelectAllReviewTrivials(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	revsMap := revs.ByIdTrivial()
+
 	sel, err := newQuestionSelector(ct.db)
 	if err != nil {
 		return nil, err
@@ -120,7 +127,13 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 
 	var out []TrivialExt
 	for _, config := range configs {
-		item, err := newTrivialExt(sel, config, userID, ct.admin.Id)
+		var inReview tcAPI.OptionalIdReview
+		link, isInReview := revsMap[config.Id]
+		if isInReview {
+			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
+		}
+
+		item, err := newTrivialExt(sel, config, inReview, userID, ct.admin.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +173,7 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, item, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, item, tcAPI.OptionalIdReview{}, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -219,7 +232,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, config, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, config, tcAPI.OptionalIdReview{}, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -251,7 +264,17 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, config, user.Id, ct.admin.Id)
+
+	var inReview tcAPI.OptionalIdReview
+	item, isInReview, err := reviews.SelectReviewTrivialByIdTrivial(ct.db, config.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	if isInReview {
+		inReview = tcAPI.OptionalIdReview{InReview: true, Id: item.IdReview}
+	}
+
+	out, err := newTrivialExt(sel, config, inReview, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}

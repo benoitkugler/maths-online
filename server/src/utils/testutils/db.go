@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -42,6 +43,11 @@ type TestDB struct {
 	name string // unique randomly generated
 }
 
+var (
+	dbCount      int
+	dbCountMutex sync.Mutex
+)
+
 // NewTestDB creates a new database and add all the tables
 // as defined in the `generateSQLFile` files.
 func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
@@ -49,7 +55,10 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 
 	const userPassword = "dummy"
 
-	name := fmt.Sprintf("tmp_dev_%d", time.Now().UnixNano())
+	dbCountMutex.Lock()
+	name := fmt.Sprintf("tmp_dev_%d_%d", time.Now().UnixNano(), dbCount)
+	dbCount++
+	dbCountMutex.Unlock()
 
 	// cleanup if needed
 	runCmd(exec.Command("dropdb", "--if-exists", name))

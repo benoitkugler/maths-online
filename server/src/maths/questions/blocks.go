@@ -78,7 +78,7 @@ type RandomParameter struct {
 func (rp RandomParameters) toMap() expression.RandomParameters {
 	out := make(expression.RandomParameters, len(rp))
 	for _, item := range rp {
-		out[expression.Variable(item.Variable)] = expression.MustParse(item.Expression)
+		out[item.Variable] = expression.MustParse(item.Expression)
 	}
 	return out
 }

@@ -12,6 +12,14 @@ import (
 	"github.com/jordan-wright/email"
 )
 
+var devMail string
+
+// SetDevMail replaces the real mail adress by the given one,
+// when using [SendMail]
+func SetDevMail(mail string) {
+	devMail = mail
+}
+
 // JoinedFile is a file attached to the mail.
 type JoinedFile struct {
 	Content  []byte
@@ -28,6 +36,11 @@ func newMail(to []string, subject, text string, creds pass.SMTP, pjs []JoinedFil
 	e := email.NewEmail()
 
 	e.To = to
+	// in dev mode, replace the real adress
+	if devMail != "" {
+		e.To = []string{devMail}
+	}
+
 	e.From = fmt.Sprintf("Isyro <%s>", creds.User)
 	e.Subject = subject
 	e.HTML = []byte(text)

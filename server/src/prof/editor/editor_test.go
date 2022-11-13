@@ -49,7 +49,7 @@ func BenchmarkValidation(b *testing.B) {
 
 func TestExerciceCRUD(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql",
-		"../../sql/homework/gen_create.sql")
+		"../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql")
 	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)

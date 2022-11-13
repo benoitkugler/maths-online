@@ -6,7 +6,7 @@
           <v-chip>{{ sheet.Tasks?.length || 0 }} tâche(s) </v-chip>
         </v-col>
         <v-col style="text-align: right">
-          <v-chip :color="sheet.Sheet.Notation == 0 ? 'black' : 'primary'">
+          <v-chip :color="sheet.Sheet.Notation == 0 ? 'black' : 'pink'">
             <span v-if="sheet.Sheet.Notation != 0">Notée</span>
             <span v-else>Non notée</span>
           </v-chip>
@@ -61,7 +61,11 @@
       </v-menu>
 
       <v-spacer></v-spacer>
-      <v-btn title="Modifier le contenu de la fiche" @click="emit('update')"
+      <v-btn
+        title="Modifier le contenu de la fiche"
+        @click="emit('update')"
+        variant="outlined"
+        color="primary-darken-1"
         >Modifier</v-btn
       >
     </v-card-actions>
