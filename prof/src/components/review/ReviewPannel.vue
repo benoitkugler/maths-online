@@ -1,5 +1,38 @@
 <template>
-  <v-card v-if="reviewExt != null" max-width="800px">
+  <v-dialog v-model="showConfirmAccept" max-width="600px">
+    <v-card title="Confirmer la validation">
+      <v-card-text>
+        Confirmez-vous la validation de la demande de publication ? <br /><br />
+
+        La ressource sera ajoutée à la base officielle, et les commentaires
+        associés à la demande seront effacés. <br />
+        Le propriétaire de la ressource sera notifié par email.
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="showConfirmAccept = false">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="green" @click="acceptReview"> Accepter</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="showConfirmDelete" max-width="600px">
+    <v-card title="Confirmer la suppression">
+      <v-card-text>
+        Confirmez-vous la suppression de la demande de publication ? <br />
+
+        Les commentaires associés seront supprimés, et cette opération est
+        irréversible.
+      </v-card-text>
+      <v-card-actions>
+        <v-btn @click="showConfirmDelete = false">Retour</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="red" @click="deleteReview"> Supprimer</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-card class="mx-auto" v-if="reviewExt != null" max-width="800px">
     <v-row>
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
@@ -17,13 +50,31 @@
         <v-card-subtitle>{{ labels[props.review.Kind] }}</v-card-subtitle>
       </v-col>
       <v-col cols="auto" align-self="center" class="pr-6">
-        <ApprovalArea
-          :review="reviewExt"
-          @update="updateApproval"
-        ></ApprovalArea>
+        <v-btn
+          v-if="reviewExt.IsAcceptable"
+          variant="outlined"
+          color="success"
+          class="mr-1"
+          @click="showConfirmAccept = true"
+        >
+          Accepter la publication
+        </v-btn>
+        <v-btn
+          v-if="reviewExt.IsDeletable"
+          variant="outlined"
+          color="red"
+          @click="showConfirmDelete = true"
+        >
+          Retirer la publication
+        </v-btn>
       </v-col>
     </v-row>
     <v-card-text class="py-0">
+      <ApprovalArea
+        class="mt-4 mb-1"
+        :review="reviewExt"
+        @update="updateApproval"
+      ></ApprovalArea>
       <v-list>
         <v-list-item
           v-if="!reviewExt.Comments?.length"
@@ -135,5 +186,22 @@ async function updateApproval(appro: Approval) {
   });
   if (res == undefined) return;
   fetchData();
+}
+
+let showConfirmDelete = $ref(false);
+
+async function deleteReview() {
+  showConfirmDelete = false;
+  const res = await controller.ReviewDelete({ id: props.review.Id });
+  if (res == undefined) return;
+  emit("back");
+}
+
+let showConfirmAccept = $ref(false);
+async function acceptReview() {
+  showConfirmAccept = false;
+  const res = await controller.ReviewAccept({ id: props.review.Id });
+  if (res == undefined) return;
+  emit("back");
 }
 </script>

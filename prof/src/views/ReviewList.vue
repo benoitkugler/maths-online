@@ -29,9 +29,8 @@
       </v-list>
     </v-card>
     <review-pannel
-      class="mx-auto"
       :review="currentReview"
-      @back="currentReview = null"
+      @back="backToList"
       v-else
     ></review-pannel>
   </v-container>
@@ -61,7 +60,6 @@ async function init() {
 
 async function fetchReviews() {
   const res = await controller.ReviewsList();
-  if (res == undefined) return;
   reviews = res || [];
 }
 
@@ -75,5 +73,11 @@ function parseQuery() {
   const review = reviews.find((re) => re.Id == id);
   if (review == undefined) return;
   goToReview(review);
+}
+
+// update the list which may have changed due to accept or delete actions
+async function backToList() {
+  currentReview = null;
+  fetchReviews();
 }
 </script>
