@@ -136,7 +136,7 @@ const displayedNbQuestions = computed(() => {
 
 let querySearch = $ref("");
 
-let queryTags = $ref<string[]>(IsDev ? ["DEV"] : []);
+let queryTags = $ref<string[]>([]);
 
 let queryOrigin = $ref(OriginKind.All);
 
