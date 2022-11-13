@@ -288,6 +288,8 @@ async function save() {
   if (res.IsValid) {
     errorEnnonce = null;
     errorParameters = null;
+    // notifie the parent on success
+    emit("update", question);
   } else {
     if (res.Error.ParametersInvalid) {
       errorEnnonce = null;
