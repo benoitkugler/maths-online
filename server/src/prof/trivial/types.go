@@ -14,7 +14,7 @@ type TrivialExt struct {
 	NbQuestionsByCategories [trivial.NbCategories]int
 }
 
-func newTrivialExt(sel questionSelector, config tr.Trivial, inReview bool, userID, adminID uID) (TrivialExt, error) {
+func newTrivialExt(sel questionSelector, config tr.Trivial, inReview tcAPI.OptionalIdReview, userID, adminID uID) (TrivialExt, error) {
 	vis := tcAPI.NewVisibility(config.IdTeacher, userID, adminID, config.Public)
 	origin := tcAPI.Origin{
 		AllowPublish: userID == adminID,

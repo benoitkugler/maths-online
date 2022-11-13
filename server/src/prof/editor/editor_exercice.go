@@ -78,7 +78,7 @@ func (ct *Controller) EditorSearchExercices(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func exerciceOrigin(ex ed.Exercicegroup, inReview bool, userID, adminID uID) (tcAPI.Origin, bool) {
+func exerciceOrigin(ex ed.Exercicegroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) (tcAPI.Origin, bool) {
 	vis := tcAPI.NewVisibility(ex.IdTeacher, userID, adminID, ex.Public)
 	if vis.Restricted() {
 		return tcAPI.Origin{}, false
@@ -153,7 +153,11 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 			continue
 		}
 
-		_, inReview := revsMap[group.Id]
+		var inReview tcAPI.OptionalIdReview
+		link, isInReview := revsMap[group.Id]
+		if isInReview {
+			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
+		}
 		origin, _ := exerciceOrigin(group, inReview, userID, ct.admin.Id)
 		groupExt := ExercicegroupExt{
 			Group:  group,
@@ -465,7 +469,7 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
-	origin, _ := exerciceOrigin(group, false, userID, ct.admin.Id)
+	origin, _ := exerciceOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	out := ExercicegroupExt{
 		Group:    group,
 		Origin:   origin,

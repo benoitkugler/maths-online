@@ -540,6 +540,11 @@ export interface OptionalIdQuestiongroup {
   ID: IdQuestiongroup;
   Valid: boolean;
 }
+// github.com/benoitkugler/maths-online/prof/teacher.OptionalIdReview
+export interface OptionalIdReview {
+  InReview: boolean;
+  Id: IdReview;
+}
 // github.com/benoitkugler/maths-online/maths/questions.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
   Label: Interpolated;
@@ -550,7 +555,7 @@ export interface OrderedListFieldBlock {
 export interface Origin {
   AllowPublish: boolean;
   IsPublic: boolean;
-  IsInReview: boolean;
+  IsInReview: OptionalIdReview;
   Visibility: Visibility;
 }
 // github.com/benoitkugler/maths-online/prof/editor.OriginKind

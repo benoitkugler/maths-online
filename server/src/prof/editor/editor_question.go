@@ -171,7 +171,7 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
-	origin, _ := questionOrigin(group, false, userID, ct.admin.Id)
+	origin, _ := questionOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	return QuestiongroupExt{
 		Group:    group,
 		Tags:     nil,
@@ -635,7 +635,7 @@ func newQuestionHeader(question ed.Question) QuestionHeader {
 	}
 }
 
-func questionOrigin(qu ed.Questiongroup, inReview bool, userID, adminID uID) (tcAPI.Origin, bool) {
+func questionOrigin(qu ed.Questiongroup, inReview tcAPI.OptionalIdReview, userID, adminID uID) (tcAPI.Origin, bool) {
 	vis := tcAPI.NewVisibility(qu.IdTeacher, userID, adminID, qu.Public)
 	if vis.Restricted() {
 		return tcAPI.Origin{}, false
@@ -769,7 +769,11 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 			continue
 		}
 
-		_, inReview := revsMap[group.Id]
+		var inReview tcAPI.OptionalIdReview
+		link, isInReview := revsMap[group.Id]
+		if isInReview {
+			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
+		}
 		origin, _ := questionOrigin(group, inReview, userID, ct.admin.Id)
 		groupExt := QuestiongroupExt{
 			Group:  group,

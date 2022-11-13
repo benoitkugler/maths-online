@@ -127,7 +127,12 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 
 	var out []TrivialExt
 	for _, config := range configs {
-		_, inReview := revsMap[config.Id]
+		var inReview tcAPI.OptionalIdReview
+		link, isInReview := revsMap[config.Id]
+		if isInReview {
+			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
+		}
+
 		item, err := newTrivialExt(sel, config, inReview, userID, ct.admin.Id)
 		if err != nil {
 			return nil, err
@@ -168,7 +173,7 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, item, false, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, item, tcAPI.OptionalIdReview{}, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -227,7 +232,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, config, false, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, config, tcAPI.OptionalIdReview{}, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -259,10 +264,16 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	_, inReview, err := reviews.SelectReviewTrivialByIdTrivial(ct.db, config.Id)
+
+	var inReview tcAPI.OptionalIdReview
+	item, isInReview, err := reviews.SelectReviewTrivialByIdTrivial(ct.db, config.Id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	if isInReview {
+		inReview = tcAPI.OptionalIdReview{InReview: true, Id: item.IdReview}
+	}
+
 	out, err := newTrivialExt(sel, config, inReview, user.Id, ct.admin.Id)
 	if err != nil {
 		return err
