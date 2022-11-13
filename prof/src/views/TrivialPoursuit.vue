@@ -117,7 +117,7 @@ import {
   type TrivialExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onMounted } from "@vue/runtime-core";
+import { computed, onMounted, onActivated } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TrivialRow from "../components/trivial/TrivialRow.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
@@ -141,7 +141,10 @@ const configs = computed(() => {
 
 let isLaunching = $ref(false);
 
-onMounted(async () => {
+onMounted(_init);
+onActivated(_init);
+
+async function _init() {
   fetchSessionMeta();
 
   const res = await controller.GetTrivialPoursuit();
@@ -153,7 +156,7 @@ onMounted(async () => {
 
   const tags = await controller.EditorGetTags();
   allKnownTags = tags || [];
-});
+}
 
 async function createConfig() {
   const res = await controller.CreateTrivialPoursuit();
