@@ -9,7 +9,7 @@
         Le propriétaire de la ressource sera notifié par email.
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="showConfirmAccept = false">Retour</v-btn>
+        <v-btn @click="showConfirmAccept = false" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="green" @click="acceptReview"> Accepter</v-btn>
       </v-card-actions>
@@ -25,7 +25,7 @@
         irréversible.
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="showConfirmDelete = false">Retour</v-btn>
+        <v-btn @click="showConfirmDelete = false" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteReview"> Supprimer</v-btn>
       </v-card-actions>

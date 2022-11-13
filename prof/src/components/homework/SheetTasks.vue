@@ -32,7 +32,7 @@
         perdue, et cette opération est irréversible.
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="taskToRemove = null">Retour</v-btn>
+        <v-btn @click="taskToRemove = null" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn
           color="red"

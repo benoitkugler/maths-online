@@ -28,7 +28,7 @@
         <br />Cette opération est irréversible.
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="classroomToDelete = null">Retour</v-btn>
+        <v-btn @click="classroomToDelete = null" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteClassroom" variant="outlined">
           Supprimer
@@ -53,7 +53,7 @@
         ></v-text-field>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="classroomToUpdate = null">Retour</v-btn>
+        <v-btn @click="classroomToUpdate = null" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="green" @click="updateClassroom" variant="outlined">
           Enregistrer

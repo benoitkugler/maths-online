@@ -12,7 +12,7 @@
         Toute progression sera supprimée, et cette action est irréversible.
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="studentToDelete = null">Retour</v-btn>
+        <v-btn @click="studentToDelete = null" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn @click="deleteStudent" color="red">Supprimer le profile</v-btn>
       </v-card-actions>
@@ -46,7 +46,7 @@
         </date-field>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="studentToUpdate = null">Retour</v-btn>
+        <v-btn @click="studentToUpdate = null" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn @click="updateStudent" color="success">Modifier</v-btn>
       </v-card-actions>
@@ -71,7 +71,7 @@
         </v-file-input>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="showUploadFile = false">Retour</v-btn>
+        <v-btn @click="showUploadFile = false" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn
           color="success"

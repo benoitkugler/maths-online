@@ -16,7 +16,7 @@
         </div>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="exerciceToDelete = null">Retour</v-btn>
+        <v-btn @click="exerciceToDelete = null" color="warning">Retour</v-btn>
         <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteVariante" variant="outlined">
           Supprimer

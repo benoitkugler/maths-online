@@ -24,7 +24,7 @@
       retirer de cette liste.
     </v-card-text>
     <v-card-actions>
-      <v-btn @click="emit('back')">Retour</v-btn>
+      <v-btn @click="emit('back')" color="warning">Retour</v-btn>
       <!-- <v-spacer></v-spacer>
         <v-btn color="red" @click="deleteVariante" variant="outlined">
           OK

@@ -71,7 +71,7 @@
       </div>
     </v-card-text>
     <v-card-actions>
-      <v-btn @click="emit('closed')">Retour</v-btn>
+      <v-btn @click="emit('closed')" color="warning">Retour</v-btn>
       <v-spacer></v-spacer>
     </v-card-actions>
   </v-card>
