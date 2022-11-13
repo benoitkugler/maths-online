@@ -759,6 +759,8 @@ export interface ReviewExt {
   Approvals: number[];
   Comments: ReviewComment[] | null;
   UserApproval: Approval;
+  IsDeletable: boolean;
+  IsAcceptable: boolean;
 }
 // github.com/benoitkugler/maths-online/prof/reviews.ReviewHeader
 export interface ReviewHeader {

@@ -104,6 +104,8 @@ func TestCRUDReview(t *testing.T) {
 	tu.Assert(t, err == nil)
 	tu.Assert(t, len(rExt.Comments) == 0)
 	tu.Assert(t, rExt.Approvals == [3]int{})
+	tu.Assert(t, rExt.IsAcceptable == false)
+	tu.Assert(t, rExt.IsDeletable == true)
 
 	err = ct.updateReview(ReviewUpdateCommentsIn{IdReview: r.Id, Comments: re.Comments{
 		{Time: time.Now(), Message: "Un premier message"},

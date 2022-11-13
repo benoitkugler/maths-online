@@ -119,6 +119,8 @@ type ReviewExt struct {
 	Approvals    [3]int          // number per Approval values
 	Comments     []ReviewComment // sorted by time (earlier first)
 	UserApproval re.Approval     // the approval of the user doing the request, or zero
+	IsDeletable  bool            // does the user have the right to delete the review ?
+	IsAcceptable bool            // does the user have the right to accept the review ?
 }
 
 // ReviewLoad returns the full content of the given review.
@@ -164,6 +166,20 @@ func (ct *Controller) loadReview(id re.IdReview, userID uID) (out ReviewExt, err
 			out.UserApproval = part.Approval
 		}
 	}
+
+	// only admin may accept review
+	out.IsAcceptable = userID == ct.admin.Id
+
+	// admin and owner may delete a review
+	targetLink, err := re.LoadTarget(ct.db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	target, err := targetLink.Load(ct.db)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.IsDeletable = userID == ct.admin.Id || userID == target.Owner
 
 	sort.Slice(out.Comments, func(i, j int) bool {
 		ti, tj := out.Comments[i].Comment.Time, out.Comments[j].Comment.Time
