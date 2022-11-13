@@ -12,6 +12,7 @@ type IdReview int64
 // created content in the admin account.
 // An implicit invariant is that each [Review] is mapped to exactly one item
 // from the tables [ReviewTrivial], [ReviewQuestion], [ReviewExercice].
+// gomacro:SQL ADD UNIQUE (Id, Kind)
 type Review struct {
 	Id   IdReview
 	Kind ReviewKind

@@ -30,6 +30,9 @@ CREATE TABLE review_trivials (
 );
 
 -- constraints
+ALTER TABLE reviews
+    ADD UNIQUE (Id, Kind);
+
 ALTER TABLE review_questions
     ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
 

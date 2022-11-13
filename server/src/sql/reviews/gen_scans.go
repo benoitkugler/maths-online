@@ -848,6 +848,16 @@ func DeleteReviewTrivialsByIdTrivials(tx DB, idTrivials ...trivial.IdTrivial) (R
 	return ScanReviewTrivials(rows)
 }
 
+// SelectReviewByIdAndKind return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReviewByIdAndKind(tx DB, id IdReview, kind ReviewKind) (item Review, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM reviews WHERE Id = $1 AND Kind = $2", id, kind)
+	item, err = ScanReview(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func loadJSON(out interface{}, src interface{}) error {
 	if src == nil {
 		return nil //zero value out
