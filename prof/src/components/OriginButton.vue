@@ -42,6 +42,7 @@
       :origin="props.origin"
       @update="(b) => emit('updatePublic', b)"
       @create-review="confirmeCreate = true"
+      @go-to-review="goToReview"
     ></OriginCard>
   </v-menu>
 </template>
@@ -49,6 +50,7 @@
 <script setup lang="ts">
 import { Visibility, type Origin } from "@/controller/api_gen";
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
 import OriginCard from "./OriginCard.vue";
 
@@ -61,9 +63,15 @@ const emit = defineEmits<{
   (e: "createReview"): void;
 }>();
 
+const router = useRouter();
+
 let confirmeCreate = $ref(false);
 
 const isPersonnalAndShared = computed(
   () => props.origin.Visibility == Visibility.Personnal && props.origin.IsPublic
 );
+
+function goToReview(id: number) {
+  router.push({ name: "reviews", query: { id: id } });
+}
 </script>
