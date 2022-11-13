@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/benoitkugler/maths-online/mailer"
 	"github.com/benoitkugler/maths-online/pass"
 	"github.com/benoitkugler/maths-online/prof/editor"
 	"github.com/benoitkugler/maths-online/prof/homework"
@@ -110,6 +111,13 @@ func devSetup(e *echo.Echo, tc *teacher.Controller) {
 		ExposeHeaders: []string{"Content-Disposition"},
 	}))
 	fmt.Println("CORS activé.")
+
+	devMail := os.Getenv("DEV_MAIL_TO")
+	if devMail == "" {
+		log.Fatal("Missing env. variable DEV_MAIL_TO")
+	}
+	mailer.SetDevMail(devMail)
+	fmt.Println("Mail redirected to ", devMail)
 }
 
 func sanityChecks(db *sql.DB, skipValidation bool) {
