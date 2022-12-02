@@ -92,7 +92,7 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 		}
 
 		if err := reference.validateAnswerSyntax(answer); err != nil {
-			log.Println("internal error: invalid field syntax", err)
+			log.Printf("internal error: invalid field syntax for %T: %s", err, reference)
 			continue
 		}
 
