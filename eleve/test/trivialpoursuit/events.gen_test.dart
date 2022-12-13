@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
+import 'package:eleve/types/src_trivial.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -11,21 +11,60 @@ void main() {
  {
  "Events": [
   {
+   "Data": {
+    "Player": ""
+   },
+   "Kind": "PlayerJoin"
+  },
+  {
+   "Data": {
+    "ID": "",
+    "Pseudo": ""
+   },
+   "Kind": "PlayerReconnected"
+  },
+  {
+   "Data": {
+    "PlayerPseudos": {
+     "0": "Paul"
+    },
+    "Pseudo": "",
+    "ID": "",
+    "IsJoining": false
+   },
+   "Kind": "LobbyUpdate"
+  },
+  {
    "Data": {},
-   "Kind": 6
+   "Kind": "GameStart"
+  },
+  {
+   "Data": {
+    "Player": "1"
+   },
+   "Kind": "PlayerLeft"
   },
   {
    "Data": {
     "PlayerName": "Haha",
-    "Player": 2
+    "Player": "2"
    },
-   "Kind": 9
+   "Kind": "PlayerTurn"
   },
   {
    "Data": {
     "Face": 3
    },
-   "Kind": 4
+   "Kind": "DiceThrow"
+  },
+  {
+   "Data": {
+    "Path": [
+     0
+    ],
+    "Tile": 3
+   },
+   "Kind": "Move"
   },
   {
    "Data": {
@@ -34,22 +73,9 @@ void main() {
      3,
      9
     ],
-    "Player": 2
+    "Player": "2"
    },
-   "Kind": 3
-  },
-  {
-   "Data": {
-    "Path": null,
-    "Tile": 3
-   },
-   "Kind": 1
-  },
-  {
-   "Data": {
-    "Player": 1
-   },
-   "Kind": 8
+   "Kind": "PossibleMoves"
   },
   {
    "Data": {
@@ -57,116 +83,70 @@ void main() {
     "Categorie": 0,
     "ID": 1,
     "Question": {
-     "Title": "",
-     "Enonce": []
+     "Enonce": [
+      {
+       "Data": {
+        "ID": 0,
+        "SizeHint": 0
+       },
+       "Kind": "NumberFieldBlock"
+      }
+     ]
     }
    },
-   "Kind": 10
+   "Kind": "ShowQuestion"
   },
   {
    "Data": {
-    "Player": 0,
-    "Success": true,
     "Categorie": 0,
-    "AskForMask": false
-   },
-   "Kind": 7
-  },
-  {
-   "Data": {
-    "Player": 1,
-    "Success": false,
-    "Categorie": 0,
-    "AskForMask": false
-   },
-   "Kind": 7
-  },
-  {
-   "Data": {
-    "Player": 2,
-    "Success": true,
-    "Categorie": 0,
-    "AskForMask": false
-   },
-   "Kind": 7
-  },
-  {
-   "Data": {
-    "PlayerName": "",
-    "Player": 0
-   },
-   "Kind": 9
-  },
-  {
-   "Data": {
-    "Face": 3
-   },
-   "Kind": 4
-  },
-  {
-   "Data": {
-    "Path": null,
-    "Tile": 4
-   },
-   "Kind": 1
-  },
-  {
-   "Data": {
-    "TimeoutSeconds": 0,
-    "Categorie": 1,
-    "ID": 2,
-    "Question": {
-     "Title": "",
-     "Enonce": []
+    "Results": {
+     "0": {
+      "Success": true,
+      "AskForMask": false
+     },
+     "1": {
+      "Success": false,
+      "AskForMask": false
+     },
+     "2": {
+      "Success": true,
+      "AskForMask": false
+     }
     }
    },
-   "Kind": 10
+   "Kind": "PlayerAnswerResults"
   },
   {
    "Data": {
-    "Player": 0,
-    "Success": false,
-    "Categorie": 0,
-    "AskForMask": false
+    "QuestionDecrassageIds": {
+     "0": [
+      1
+     ]
+    },
+    "Winners": [
+     "2"
+    ],
+    "WinnerNames": [
+     "Paul"
+    ]
    },
-   "Kind": 7
+   "Kind": "GameEnd"
   },
   {
-   "Data": {
-    "Player": 1,
-    "Success": true,
-    "Categorie": 0,
-    "AskForMask": false
-   },
-   "Kind": 7
-  },
-  {
-   "Data": {
-    "Player": 2,
-    "Success": true,
-    "Categorie": 0,
-    "AskForMask": false
-   },
-   "Kind": 7
-  },
-  {
-   "Data": {
-    "PlayerName": "",
-    "Player": 1
-   },
-   "Kind": 9
+   "Data": {},
+   "Kind": "GameTerminated"
   }
  ],
  "State": {
   "Players": null,
   "PawnTile": 0,
-  "Player": 0
+  "PlayerTurn": ""
  }
 }
     """;
       final ev = stateUpdateFromJson(jsonDecode(input));
-      expect(ev.events.length, equals(18));
-      expect(ev.events[0] is GameStart, equals(true));
+      expect(ev.events.length, equals(13));
+      expect(ev.events[0] is PlayerJoin, equals(true));
     },
   );
 

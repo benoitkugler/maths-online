@@ -2,10 +2,12 @@ import 'package:eleve/exercice/congratulations.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
-import 'package:eleve/questions/types.gen.dart' hide Answer;
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
 
 class NotificationExerciceDone extends Notification {}
@@ -47,7 +49,7 @@ enum ExerciceStatus {
 
 class ParallelAnswerStatus {
   final int? questionToDo;
-  final Map<int, Answer> answersToSend;
+  final Map<int, AnswerP> answersToSend;
   const ParallelAnswerStatus(this.questionToDo, this.answersToSend);
 }
 
@@ -189,7 +191,7 @@ class ExerciceController {
 
   /// [hasAnsweredAll] check if all the questions are done
   ParallelAnswerStatus hasAnsweredAll() {
-    final toSend = <int, Answer>{};
+    final toSend = <int, AnswerP>{};
     for (var index = 0; index < _questions.length; index++) {
       final history = exeAndProg.progression.getQuestion(index);
       if (history.isEmpty || !history.last) {
@@ -199,7 +201,7 @@ class ExerciceController {
           return ParallelAnswerStatus(index, {});
         } else {
           // add it to the send answsers
-          toSend[index] = Answer(exeAndProg.exercice.questions[index].params,
+          toSend[index] = AnswerP(exeAndProg.exercice.questions[index].params,
               _questions[index].answers());
         }
       }
@@ -331,7 +333,7 @@ class _ExerciceWState extends State<ExerciceW> {
     final resp = await _evaluate(EvaluateWorkIn(
         ct.exeAndProg.exercice.iD,
         {
-          index: Answer(ct.exeAndProg.exercice.questions[index].params,
+          index: AnswerP(ct.exeAndProg.exercice.questions[index].params,
               ct._questions[index].answers())
         },
         ct.exeAndProg.progression));

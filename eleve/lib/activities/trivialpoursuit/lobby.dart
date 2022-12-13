@@ -1,5 +1,5 @@
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:eleve/quotes.dart';
+import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart';
 
 class GameLobby extends StatelessWidget {

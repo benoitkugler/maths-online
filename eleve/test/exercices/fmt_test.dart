@@ -8,6 +8,6 @@ void main() {
     expect(l.textController.text, equals("6"));
 
     l.setNumber(6.45);
-    expect(l.textController.text, equals("6.45"));
+    expect(l.textController.text, equals("6,45"));
   });
 }

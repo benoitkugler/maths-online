@@ -1,6 +1,6 @@
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/types.gen.dart';
-import 'package:eleve/shared_gen.dart' as shared;
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -28,7 +28,7 @@ class ExpressionController extends FieldController {
     onChange();
   }
 
-  Future<shared.CheckExpressionOut> _checkExpressionSyntax() async {
+  Future<CheckExpressionOut> _checkExpressionSyntax() async {
     return api.checkExpressionSyntax(getExpression());
   }
 

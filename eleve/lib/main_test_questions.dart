@@ -1,4 +1,3 @@
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:eleve/activities/trivialpoursuit/question.dart';
 import 'package:eleve/decrassage/decrassage.dart';
 import 'package:eleve/exercice/exercice.dart';
@@ -6,9 +5,12 @@ import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/repere.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_maths_repere.dart';
+import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_tasks.dart';
+import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart' hide Flow;
 
 void main() async {

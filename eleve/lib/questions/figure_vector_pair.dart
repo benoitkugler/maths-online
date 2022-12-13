@@ -1,7 +1,7 @@
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/repere.dart';
-import 'package:eleve/questions/repere.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_maths_repere.dart';
 import 'package:flutter/material.dart';
 
 enum VectorPairPointID { from1, to1, from2, to2 }

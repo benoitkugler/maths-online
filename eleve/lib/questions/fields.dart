@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/questions/types.gen.dart';
-import 'package:eleve/shared_gen.dart' as shared;
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:http/http.dart' as http;
@@ -53,7 +53,7 @@ abstract class FieldController {
 /// [FieldAPI] provides the server calls required
 /// by the fields widgets.
 abstract class FieldAPI {
-  Future<shared.CheckExpressionOut> checkExpressionSyntax(String expression);
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression);
 }
 
 /// [ServerFieldAPI] is the default implementation of [FieldAPI]
@@ -63,13 +63,12 @@ class ServerFieldAPI implements FieldAPI {
 
   /// checkExpressionSyntaxCall implements [FieldAPI] with a server call
   @override
-  Future<shared.CheckExpressionOut> checkExpressionSyntax(
-      String expression) async {
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
     final uri = Uri.parse(buildMode.serverURL("/api/check-expression"))
         .replace(queryParameters: {"expression": expression});
 
     final resp = await http.get(uri);
-    return shared.checkExpressionOutFromJson(jsonDecode(resp.body));
+    return checkExpressionOutFromJson(jsonDecode(resp.body));
   }
 }
 

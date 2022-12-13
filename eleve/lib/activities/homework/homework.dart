@@ -2,14 +2,17 @@ import 'dart:convert';
 
 import 'package:eleve/activities/homework/progression_bar.dart';
 import 'package:eleve/activities/homework/sheet.dart';
-import 'package:eleve/activities/homework/types.gen.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_prof_homework.dart';
+import 'package:eleve/types/src_sql_homework.dart';
+import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 

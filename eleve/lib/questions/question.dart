@@ -15,7 +15,6 @@ import 'package:eleve/questions/repere.dart';
 import 'package:eleve/questions/sign_table.dart';
 import 'package:eleve/questions/sign_table_field.dart';
 import 'package:eleve/questions/table.dart';
-import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/questions/variation_table.dart';
 import 'package:eleve/questions/variation_table_field.dart';
 import 'package:eleve/questions/vector.dart';
@@ -23,6 +22,7 @@ import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/timeout_bar.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/shared/zommables.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 

@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:eleve/activities/trivialpoursuit/pawn.dart';
+import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart';
 
 import 'categories.dart';

@@ -1,8 +1,9 @@
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/function_graph.dart';
 import 'package:eleve/questions/repere.dart';
-import 'package:eleve/questions/repere.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/types/src_maths_functiongrapher.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_maths_repere.dart';
 import 'package:flutter/material.dart';
 
 class FunctionPointsController extends FieldController {

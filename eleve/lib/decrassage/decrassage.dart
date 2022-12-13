@@ -3,18 +3,18 @@ import 'dart:convert';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
-import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared_gen.dart' as shared;
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 /// [DecrassageAPI] provides the logic to load a list
 /// of questions
 abstract class DecrassageAPI extends FieldAPI {
-  Future<shared.InstantiateQuestionsOut> loadQuestions(List<int> ids);
-  Future<QuestionAnswersOut> evaluateQuestion(shared.EvaluateQuestionIn answer);
+  Future<InstantiateQuestionsOut> loadQuestions(List<int> ids);
+  Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer);
 }
 
 /// [ServerDecrassageAPI] is the default implementation of
@@ -23,20 +23,19 @@ class ServerDecrassageAPI extends ServerFieldAPI implements DecrassageAPI {
   const ServerDecrassageAPI(super.buildMode);
 
   @override
-  Future<shared.InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
+  Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
     final uri = Uri.parse(buildMode.serverURL("/api/questions/instantiate"));
     final resp = await http.post(uri, body: jsonEncode(ids), headers: {
       'Content-type': 'application/json',
     });
-    return shared.listInstantiatedQuestionFromJson(jsonDecode(resp.body));
+    return listInstantiatedQuestionFromJson(jsonDecode(resp.body));
   }
 
   @override
-  Future<QuestionAnswersOut> evaluateQuestion(
-      shared.EvaluateQuestionIn answer) async {
+  Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer) async {
     final uri = Uri.parse(buildMode.serverURL("/api/questions/evaluate"));
     final resp = await http.post(uri,
-        body: jsonEncode(shared.evaluateQuestionInToJson(answer)),
+        body: jsonEncode(evaluateQuestionInToJson(answer)),
         headers: {
           'Content-type': 'application/json',
         });
@@ -73,7 +72,7 @@ class Decrassage extends StatefulWidget {
 }
 
 class _DecrassageState extends State<Decrassage> {
-  shared.InstantiateQuestionsOut questions = [];
+  InstantiateQuestionsOut questions = [];
 
   DecrassageQuestionController? ct; // null when loading
 
@@ -115,8 +114,8 @@ class _DecrassageState extends State<Decrassage> {
     final QuestionAnswersOut answerResult;
     final questionOrigin = questions[qc.questionIndex];
     try {
-      final args = shared.EvaluateQuestionIn(
-          shared.Answer(questionOrigin.params, data), questionOrigin.id);
+      final args = EvaluateQuestionIn(
+          AnswerP(questionOrigin.params, data), questionOrigin.id);
       answerResult = await widget.api.evaluateQuestion(args);
     } catch (e) {
       _showError(e);

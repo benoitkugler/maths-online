@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
+import 'package:eleve/types/src_trivial.dart';
 
 void main() async {
   final jsonMessage = jsonEncode(clientEventITFToJson(const Ping("info")));

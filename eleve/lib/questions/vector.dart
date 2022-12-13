@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/number.dart';
-import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 
 class VectorController extends FieldController {

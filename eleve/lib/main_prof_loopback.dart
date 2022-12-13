@@ -6,12 +6,13 @@ import 'dart:html' as html;
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
-import 'package:eleve/loopback/types.gen.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared_gen.dart' hide Answer;
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_prof_editor.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
