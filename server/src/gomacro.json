@@ -114,7 +114,7 @@
     "prof/editor/loopback_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/loopback_types.gen.dart"
+            "Output": "../../eleve/lib/loopback/types.gen.dart"
         },
         {
             "Mode": "go/unions",

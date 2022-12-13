@@ -3,7 +3,6 @@
 package editor
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -21,6 +20,7 @@ import (
 	"github.com/benoitkugler/maths-online/sql/reviews"
 	"github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
+	taAPI "github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -30,22 +30,19 @@ const sessionTimeout = 6 * time.Hour
 var accessForbidden = errors.New("access fordidden")
 
 // Controller is the global object responsible to
-// handle incoming requests regarding the editor.
+// handle incoming requests regarding the editor for questions and exercices
 type Controller struct {
 	lock sync.Mutex
 
 	db *sql.DB
-
-	sessions map[string]*loopbackController
 
 	admin teacher.Teacher
 }
 
 func NewController(db *sql.DB, admin teacher.Teacher) *Controller {
 	return &Controller{
-		db:       db,
-		sessions: make(map[string]*loopbackController),
-		admin:    admin,
+		db:    db,
+		admin: admin,
 	}
 }
 
@@ -53,38 +50,38 @@ type StartSessionOut struct {
 	ID string
 }
 
-// startSession setup a new editing session.
-// In particular, it launches in the background a
-// `loopbackController` instance to handle preview requests.
-func (ct *Controller) startSession() StartSessionOut {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
+// // startSession setup a new editing session.
+// // In particular, it launches in the background a
+// // `loopbackController` instance to handle preview requests.
+// func (ct *Controller) startSession() StartSessionOut {
+// 	ct.lock.Lock()
+// 	defer ct.lock.Unlock()
 
-	// generate a new session ID
-	newID := utils.RandomID(false, 40, func(s string) bool {
-		_, has := ct.sessions[s]
-		return has
-	})
+// 	// generate a new session ID
+// 	newID := utils.RandomID(false, 40, func(s string) bool {
+// 		_, has := ct.sessions[s]
+// 		return has
+// 	})
 
-	// create and register the loopback controller
-	loopback := newLoopbackController(newID)
-	ct.sessions[newID] = loopback
+// 	// create and register the loopback controller
+// 	loopback := newLoopbackController(newID)
+// 	ct.sessions[newID] = loopback
 
-	// start the websocket for the loopback
-	go func() {
-		ctx, cancelFunc := context.WithTimeout(context.Background(), sessionTimeout)
-		loopback.startLoop(ctx) // block
+// 	// start the websocket for the loopback
+// 	go func() {
+// 		ctx, cancelFunc := context.WithTimeout(context.Background(), sessionTimeout)
+// 		loopback.startLoop(ctx) // block
 
-		cancelFunc() // cancel the timer if needed
+// 		cancelFunc() // cancel the timer if needed
 
-		// remove the loopback controller when the session is over
-		ct.lock.Lock()
-		defer ct.lock.Unlock()
-		delete(ct.sessions, newID)
-	}()
+// 		// remove the loopback controller when the session is over
+// 		ct.lock.Lock()
+// 		defer ct.lock.Unlock()
+// 		delete(ct.sessions, newID)
+// 	}()
 
-	return StartSessionOut{ID: newID}
-}
+// 	return StartSessionOut{ID: newID}
+// }
 
 type OriginKind uint8
 
@@ -583,28 +580,6 @@ type SaveQuestionAndPreviewIn struct {
 	Page      questions.QuestionPage
 }
 
-type SaveQuestionAndPreviewOut struct {
-	Error   questions.ErrQuestionInvalid
-	IsValid bool
-}
-
-// For non personnal questions, only preview.
-func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
-
-	var args SaveQuestionAndPreviewIn
-	if err := c.Bind(&args); err != nil {
-		return fmt.Errorf("invalid parameters: %s", err)
-	}
-
-	out, err := ct.saveQuestionAndPreview(args, user.Id)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
 type ListQuestionsOut struct {
 	Groups      []QuestiongroupExt // limited by `pagination`
 	NbGroups    int                // total number of groups (passing the given filter)
@@ -878,32 +853,32 @@ func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) 
 	return out
 }
 
-func (ct *Controller) pausePreview(sessionID string) error {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
+// func (ct *Controller) pausePreview(sessionID string) error {
+// 	ct.lock.Lock()
+// 	defer ct.lock.Unlock()
 
-	loopback, ok := ct.sessions[sessionID]
-	if !ok {
-		return fmt.Errorf("invalid session ID %s", sessionID)
-	}
+// 	loopback, ok := ct.sessions[sessionID]
+// 	if !ok {
+// 		return fmt.Errorf("invalid session ID %s", sessionID)
+// 	}
 
-	loopback.pause()
-	return nil
-}
+// 	loopback.pause()
+// 	return nil
+// }
 
-// endPreview terminates the current session
-func (ct *Controller) endPreview(sessionID string) error {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
+// // endPreview terminates the current session
+// func (ct *Controller) endPreview(sessionID string) error {
+// 	ct.lock.Lock()
+// 	defer ct.lock.Unlock()
 
-	loopback, ok := ct.sessions[sessionID]
-	if !ok {
-		return fmt.Errorf("invalid session ID %s", sessionID)
-	}
+// 	loopback, ok := ct.sessions[sessionID]
+// 	if !ok {
+// 		return fmt.Errorf("invalid session ID %s", sessionID)
+// 	}
 
-	loopback.clientLeft <- true
-	return nil
-}
+// 	loopback.clientLeft <- true
+// 	return nil
+// }
 
 // return the owner of the group of of the exercice
 func (ct *Controller) getQuestionOwner(question ed.Question) (teacher.IdTeacher, error) {
@@ -952,6 +927,29 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 	return nil
 }
 
+type SaveQuestionAndPreviewOut struct {
+	Error    questions.ErrQuestionInvalid
+	IsValid  bool
+	Question LoopbackShowQuestion
+}
+
+// For non personnal questions, only preview.
+func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	var args SaveQuestionAndPreviewIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := ct.saveQuestionAndPreview(args, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
 func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID uID) (SaveQuestionAndPreviewOut, error) {
 	qu, err := ed.SelectQuestion(ct.db, params.Id)
 	if err != nil {
@@ -980,16 +978,27 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		}
 	}
 
-	question := params.Page.Instantiate()
-
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
-
-	loopback, ok := ct.sessions[params.SessionID]
-	if !ok {
-		return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+	instanceParams, err := params.Page.Parameters.ToMap().Instantiate()
+	if err != nil {
+		return SaveQuestionAndPreviewOut{}, err
+	}
+	question, err := params.Page.InstantiateWith(instanceParams)
+	if err != nil {
+		return SaveQuestionAndPreviewOut{}, err
+	}
+	questionOut := LoopbackShowQuestion{
+		Question: question.ToClient(),
+		Params:   taAPI.NewParams(instanceParams),
 	}
 
-	loopback.setQuestion(question)
-	return SaveQuestionAndPreviewOut{IsValid: true}, nil
+	// ct.lock.Lock()
+	// defer ct.lock.Unlock()
+
+	// loopback, ok := ct.sessions[params.SessionID]
+	// if !ok {
+	// 	return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
+	// }
+
+	// loopback.setQuestion(question)
+	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil
 }

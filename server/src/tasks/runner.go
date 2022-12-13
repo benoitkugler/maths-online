@@ -18,7 +18,7 @@ import (
 type InstantiatedQuestion struct {
 	Id       ed.IdQuestion
 	Question client.Question `gomacro-extern:"client#dart#questions/types.gen.dart"`
-	Params   []VarEntry
+	Params   Params
 
 	// this field is private, not exported as JSON,
 	// and used to simplify the loopback logic
@@ -28,7 +28,7 @@ type InstantiatedQuestion struct {
 func (iq InstantiatedQuestion) Instance() questions.QuestionInstance { return iq.instance }
 
 type Answer struct {
-	Params []VarEntry
+	Params Params
 	Answer client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
 }
 
@@ -39,12 +39,29 @@ type VarEntry struct {
 	Resolved string
 }
 
-func newVarList(vars expression.Vars) []VarEntry {
+// Params is a serialized version of [expression.Vars]
+type Params []VarEntry
+
+// NewParams serialize the given map.
+func NewParams(vars expression.Vars) []VarEntry {
 	varList := make([]VarEntry, 0, len(vars))
 	for k, v := range vars {
 		varList = append(varList, VarEntry{Variable: k, Resolved: v.Serialize()})
 	}
 	return varList
+}
+
+// ToMap parse the [Params]
+func (params Params) ToMap() (expression.Vars, error) {
+	paramsDict := make(expression.Vars)
+	for _, entry := range params {
+		var err error
+		paramsDict[entry.Variable], err = expression.Parse(entry.Resolved)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return paramsDict, nil
 }
 
 // InstantiateQuestions loads and instantiates the given questions,
@@ -69,7 +86,7 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 		out[index] = InstantiatedQuestion{
 			Id:       id,
 			Question: instance.ToClient(),
-			Params:   newVarList(vars),
+			Params:   NewParams(vars),
 			instance: instance,
 		}
 	}
@@ -89,20 +106,18 @@ func (params EvaluateQuestionIn) Evaluate(db ed.DB) (client.QuestionAnswersOut, 
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
-	return evaluateQuestion(qu, params.Answer)
+	return EvaluateQuestion(qu.Page, params.Answer)
 }
 
-func evaluateQuestion(qu ed.Question, answer Answer) (client.QuestionAnswersOut, error) {
-	var err error
-	paramsDict := make(expression.Vars)
-	for _, entry := range answer.Params {
-		paramsDict[entry.Variable], err = expression.Parse(entry.Resolved)
-		if err != nil {
-			return client.QuestionAnswersOut{}, err
-		}
+// EvaluateQuestion instantiate [qu] against the given [answer.Params]
+// and evaluate the given [answer.Answer]
+func EvaluateQuestion(qu questions.QuestionPage, answer Answer) (client.QuestionAnswersOut, error) {
+	paramsDict, err := answer.Params.ToMap()
+	if err != nil {
+		return client.QuestionAnswersOut{}, err
 	}
 
-	instance, err := qu.Page.InstantiateWith(paramsDict)
+	instance, err := qu.InstantiateWith(paramsDict)
 	if err != nil {
 		return client.QuestionAnswersOut{}, err
 	}
@@ -143,6 +158,8 @@ func newWorkLoader(db ed.DB, work WorkID) (Work, error) {
 	return NewMonoquestionData(db, ta.IdMonoquestion(work.ID))
 }
 
+// InstantiatedWork is an instance of an exercice, more precisely
+// of a full Exercice or Monoquestion (one question duplicated)
 type InstantiatedWork struct {
 	ID WorkID
 
@@ -187,7 +204,7 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 		out[index] = InstantiatedQuestion{
 			Id:       question.Id,
 			Question: instance.ToClient(),
-			Params:   newVarList(ownVars),
+			Params:   NewParams(ownVars),
 			instance: instance,
 		}
 	}
@@ -378,7 +395,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 	case ed.Parallel: // all questions
 		for questionIndex, question := range qus {
 			if answer, hasAnswer := args.Answers[questionIndex]; hasAnswer {
-				resp, err := evaluateQuestion(question, answer)
+				resp, err := EvaluateQuestion(question.Page, answer)
 				if err != nil {
 					return EvaluateWorkOut{}, err
 				}
@@ -399,7 +416,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 			return EvaluateWorkOut{}, fmt.Errorf("internal error: missing answer for %d", questionIndex)
 		}
 
-		resp, err := evaluateQuestion(qus[questionIndex], answer)
+		resp, err := EvaluateQuestion(qus[questionIndex].Page, answer)
 		if err != nil {
 			return EvaluateWorkOut{}, err
 		}

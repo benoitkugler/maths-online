@@ -292,8 +292,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	setupProfAPI(e, tvc, edit, tc, home, review)
 	setupQuestionSampleAPI(e)
 
-	// to sync with the client navigator.sendBeacon
-	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
+	// // to sync with the client navigator.sendBeacon
+	// e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
 	// main page
 	e.GET("", serveVitrineApp)
@@ -327,8 +327,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 		e.GET(route, serveProfApp, noCache)
 	}
 
-	// embeded preview app
-	e.GET(editor.LoopbackEndpoint, edit.AccessLoopback)
+	// // embeded preview app
+	// e.GET(editor.LoopbackEndpoint, edit.AccessLoopback)
 
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)

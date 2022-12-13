@@ -13,6 +13,7 @@ import (
 	ta "github.com/benoitkugler/maths-online/sql/tasks"
 	"github.com/benoitkugler/maths-online/sql/teacher"
 	"github.com/benoitkugler/maths-online/tasks"
+	taAPI "github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -49,11 +50,6 @@ type ExerciceQuestionExt struct {
 	Question ed.Question
 	Bareme   int
 }
-
-// type ExerciceHeader struct {
-// 	Exercice  ed.Exercice
-// 	Questions ed.ExerciceQuestions
-// }
 
 type ExerciceExt struct {
 	Exercice  ed.Exercice
@@ -654,6 +650,11 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 	return DeleteExerciceOut{Deleted: true}, nil
 }
 
+type ExerciceWithPreview struct {
+	Ex      ExerciceExt
+	Preview LoopbackShowExercice
+}
+
 type ExerciceCreateQuestionIn struct {
 	SessionID  string
 	IdExercice ed.IdExercice
@@ -669,7 +670,7 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.createQuestionEx(args, user.Id)
+	ex, err := ct.createQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -679,11 +680,12 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := ct.updateExercicePreview(data)
 	if err != nil {
 		return err
 	}
 
+	out := ExerciceWithPreview{ex, preview}
 	return c.JSON(200, out)
 }
 
@@ -743,7 +745,7 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.importQuestionEx(args, user.Id)
+	ex, err := ct.importQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -753,10 +755,12 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := ct.updateExercicePreview(data)
 	if err != nil {
 		return err
 	}
+
+	out := ExerciceWithPreview{ex, preview}
 
 	return c.JSON(200, out)
 }
@@ -822,7 +826,7 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.duplicateQuestionEx(args, user.Id)
+	ex, err := ct.duplicateQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -832,11 +836,12 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := ct.updateExercicePreview(data)
 	if err != nil {
 		return err
 	}
 
+	out := ExerciceWithPreview{ex, preview}
 	return c.JSON(200, out)
 }
 
@@ -907,7 +912,7 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.updateQuestionsEx(args, user.Id)
+	ex, err := ct.updateQuestionsEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -917,11 +922,12 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := ct.updateExercicePreview(data)
 	if err != nil {
 		return err
 	}
 
+	out := ExerciceWithPreview{ex, preview}
 	return c.JSON(200, out)
 }
 
@@ -1054,7 +1060,6 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 
 type SaveExerciceAndPreviewIn struct {
 	OnlyPreview bool // if true, skip the save part (Parameters and Questions are thus ignored)
-	SessionID   string
 	IdExercice  ed.IdExercice
 	Parameters  questions.Parameters // shared parameters
 	Questions   []ed.Question        // questions content
@@ -1062,8 +1067,9 @@ type SaveExerciceAndPreviewIn struct {
 
 type SaveExerciceAndPreviewOut struct {
 	Error         questions.ErrQuestionInvalid
-	QuestionIndex int
+	QuestionIndex int // for the error
 	IsValid       bool
+	Preview       LoopbackShowExercice
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
@@ -1136,29 +1142,34 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	err = ct.updateExercicePreview(data, params.SessionID)
+	preview, err := ct.updateExercicePreview(data)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
 
-	return SaveExerciceAndPreviewOut{IsValid: true}, nil
+	return SaveExerciceAndPreviewOut{IsValid: true, Preview: preview}, nil
 }
 
-// updateExercicePreview instantiates the exercice and send preview data
-func (ct *Controller) updateExercicePreview(content tasks.ExerciceData, sessionID string) error {
+// updateExercicePreview instantiates the exercice and return preview data
+func (ct *Controller) updateExercicePreview(content tasks.ExerciceData) (LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
-		return err
+		return LoopbackShowExercice{}, err
 	}
 
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
+	return LoopbackShowExercice{Exercice: instance, Progression: taAPI.ProgressionExt{
+		NextQuestion: 0,
+		Questions:    make([]ta.QuestionHistory, len(instance.Questions)),
+	}}, nil
 
-	loopback, ok := ct.sessions[sessionID]
-	if !ok {
-		return fmt.Errorf("invalid session ID %s", sessionID)
-	}
+	// ct.lock.Lock()
+	// defer ct.lock.Unlock()
 
-	loopback.setExercice(instance)
-	return nil
+	// loopback, ok := ct.sessions[sessionID]
+	// if !ok {
+	// 	return fmt.Errorf("invalid session ID %s", sessionID)
+	// }
+
+	// loopback.setExercice(instance)
+	// return nil
 }

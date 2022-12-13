@@ -4,7 +4,7 @@ import 'questions/types.gen.dart';
 
 // github.com/benoitkugler/maths-online/tasks.Answer
 class Answer {
-  final List<VarEntry> params;
+  final Params params;
   final QuestionAnswersIn answer;
 
   const Answer(this.params, this.answer);
@@ -167,7 +167,7 @@ typedef InstantiateQuestionsOut = List<InstantiatedQuestion>;
 class InstantiatedQuestion {
   final IdQuestion id;
   final Question question;
-  final List<VarEntry> params;
+  final Params params;
 
   const InstantiatedQuestion(this.id, this.question, this.params);
 
@@ -253,6 +253,9 @@ JSON labeledQuestionToJson(LabeledQuestion item) {
     "Question": questionToJson(item.question)
   };
 }
+
+// github.com/benoitkugler/maths-online/tasks.Params
+typedef Params = List<VarEntry>;
 
 // github.com/benoitkugler/maths-online/tasks.ProgressionExt
 class ProgressionExt {

@@ -49,8 +49,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/trivial/sessions/stop", tvc.StopTrivialGame)
 
 	// question editor
-	gr.PUT("/api/prof/editor/new", edit.EditorStartSession)
-	gr.GET("/api/prof/editor/pause-preview", edit.EditorPausePreview)
+	// gr.PUT("/api/prof/editor/new", edit.EditorStartSession)
+	// gr.GET("/api/prof/editor/pause-preview", edit.EditorPausePreview)
 	gr.GET("/api/prof/editor/tags", edit.EditorGetTags)
 
 	gr.POST("/api/prof/editor/questiongroups", edit.EditorSearchQuestions)

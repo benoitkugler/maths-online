@@ -3,6 +3,10 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+import { InstantiatedWork } from "";
+import { Params } from "";
+import { ProgressionExt } from "";
+import { Question } from "";
 // github.com/benoitkugler/maths-online/prof/homework.AddExerciceToTaskIn
 export interface AddExerciceToTaskIn {
   IdSheet: IdSheet;
@@ -291,6 +295,11 @@ export interface ExerciceUpdateVisiblityIn {
   ID: IdExercicegroup;
   Public: boolean;
 }
+// github.com/benoitkugler/maths-online/prof/editor.ExerciceWithPreview
+export interface ExerciceWithPreview {
+  Ex: ExerciceExt;
+  Preview: LoopbackShowExercice;
+}
 // github.com/benoitkugler/maths-online/sql/editor.Exercicegroup
 export interface Exercicegroup {
   Id: IdExercicegroup;
@@ -497,6 +506,18 @@ export interface LogginOut {
   Error: string;
   IsPasswordError: boolean;
   Token: string;
+}
+// github.com/benoitkugler/maths-online/prof/editor.LoopbackShowExercice
+export interface LoopbackShowExercice {
+  Exercice: InstantiatedWork;
+  Progression: ProgressionExt;
+  Origin: QuestionPage[] | null;
+}
+// github.com/benoitkugler/maths-online/prof/editor.LoopbackShowQuestion
+export interface LoopbackShowQuestion {
+  Question: Question;
+  Params: Params;
+  Origin: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/prof/trivial.MonitorOut
 export interface MonitorOut {
@@ -807,7 +828,6 @@ export interface RunningSessionMetaOut {
 // github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewIn
 export interface SaveExerciceAndPreviewIn {
   OnlyPreview: boolean;
-  SessionID: string;
   IdExercice: IdExercice;
   Parameters: Parameters;
   Questions: Question[] | null;
@@ -817,6 +837,7 @@ export interface SaveExerciceAndPreviewOut {
   Error: ErrQuestionInvalid;
   QuestionIndex: number;
   IsValid: boolean;
+  Preview: LoopbackShowExercice;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewIn
 export interface SaveQuestionAndPreviewIn {
@@ -828,6 +849,7 @@ export interface SaveQuestionAndPreviewIn {
 export interface SaveQuestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
+  Question: LoopbackShowQuestion;
 }
 // github.com/benoitkugler/maths-online/prof/editor.SaveQuestionMetaIn
 export interface SaveQuestionMetaIn {
@@ -883,10 +905,6 @@ export interface SignTableBlock {
 // github.com/benoitkugler/maths-online/maths/questions.SignTableFieldBlock
 export interface SignTableFieldBlock {
   Answer: SignTableBlock;
-}
-// github.com/benoitkugler/maths-online/prof/editor.StartSessionOut
-export interface StartSessionOut {
-  ID: string;
 }
 // github.com/benoitkugler/maths-online/sql/teacher.Student
 export interface Student {
@@ -1656,51 +1674,6 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessStopTrivialGame(): void;
 
-  protected async rawEditorStartSession() {
-    const fullUrl = this.baseUrl + "/api/prof/editor/new";
-    const rep: AxiosResponse<StartSessionOut> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** EditorStartSession wraps rawEditorStartSession and handles the error */
-  async EditorStartSession() {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorStartSession();
-      this.onSuccessEditorStartSession(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorStartSession(data: StartSessionOut): void;
-
-  protected async rawEditorPausePreview(params: { sessionID: string }) {
-    const fullUrl = this.baseUrl + "/api/prof/editor/pause-preview";
-    await Axios.get(fullUrl, {
-      params: { sessionID: params["sessionID"] },
-      headers: this.getHeaders(),
-    });
-    return true;
-  }
-
-  /** EditorPausePreview wraps rawEditorPausePreview and handles the error */
-  async EditorPausePreview(params: { sessionID: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawEditorPausePreview(params);
-      this.onSuccessEditorPausePreview();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected abstract onSuccessEditorPausePreview(): void;
-
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/api/prof/editor/tags";
     const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
@@ -2225,9 +2198,11 @@ export abstract class AbstractAPI {
     params: ExerciceCreateQuestionIn
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -2244,16 +2219,18 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceCreateQuestion(
-    data: ExerciceExt
+    data: ExerciceWithPreview
   ): void;
 
   protected async rawEditorExerciceImportQuestion(
     params: ExerciceImportQuestionIn
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions/import";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -2270,7 +2247,7 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceImportQuestion(
-    data: ExerciceExt
+    data: ExerciceWithPreview
   ): void;
 
   protected async rawEditorExerciceDuplicateQuestion(
@@ -2278,9 +2255,11 @@ export abstract class AbstractAPI {
   ) {
     const fullUrl =
       this.baseUrl + "/api/prof/editor/exercice/questions/duplicate";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -2297,16 +2276,18 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceDuplicateQuestion(
-    data: ExerciceExt
+    data: ExerciceWithPreview
   ): void;
 
   protected async rawEditorExerciceUpdateQuestions(
     params: ExerciceUpdateQuestionsIn
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
-    const rep: AxiosResponse<ExerciceExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -2323,7 +2304,7 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorExerciceUpdateQuestions(
-    data: ExerciceExt
+    data: ExerciceWithPreview
   ): void;
 
   protected async rawEditorUpdateExercicegroupVis(

@@ -12,6 +12,7 @@ import (
 	taAPI "github.com/benoitkugler/maths-online/tasks"
 	"github.com/benoitkugler/maths-online/utils"
 	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
 )
 
 var LoopackLogger = log.New(os.Stdout, "editor-loopback:", log.LstdFlags)
@@ -47,12 +48,12 @@ func newLoopbackController(sessionID string) *loopbackController {
 
 func (ct *loopbackController) setQuestion(question questions.QuestionInstance) {
 	ct.currentQuestion = question
-	ct.broadcast <- loopbackQuestion{Question: question.ToClient()}
+	ct.broadcast <- LoopbackShowQuestion{Question: question.ToClient()}
 }
 
 func (ct *loopbackController) setExercice(exercice taAPI.InstantiatedWork) {
 	ct.currentExercice = exercice
-	ct.broadcast <- loopbackShowExercice{Exercice: exercice, Progression: taAPI.ProgressionExt{
+	ct.broadcast <- LoopbackShowExercice{Exercice: exercice, Progression: taAPI.ProgressionExt{
 		NextQuestion: 0,
 		Questions:    make([]tasks.QuestionHistory, len(exercice.Questions)),
 	}}
@@ -62,7 +63,7 @@ func (ct *loopbackController) pause() {
 	ct.currentQuestion = questions.QuestionInstance{}
 	ct.currentExercice = taAPI.InstantiatedWork{}
 
-	ct.broadcast <- loopbackPaused{}
+	ct.broadcast <- LoopbackPaused{}
 }
 
 func (ct *loopbackController) startLoop(ctx context.Context) {
@@ -104,37 +105,37 @@ func (cl *previewClient) send(data LoopbackServerEvent) {
 // endpoint, only returning on error.
 // the connection is not closed yet
 func (cl *previewClient) startLoop() {
-	for {
-		// read in a message
-		var data LoopbackClientEventWrapper
-		err := cl.conn.ReadJSON(&data)
-		if err != nil {
-			LoopackLogger.Printf("invalid client messsage: %s", err)
-			return
-		}
+	// for {
+	// 	// read in a message
+	// 	var data LoopbackClientEventWrapper
+	// 	err := cl.conn.ReadJSON(&data)
+	// 	if err != nil {
+	// 		LoopackLogger.Printf("invalid client messsage: %s", err)
+	// 		return
+	// 	}
 
-		switch data := data.Data.(type) {
-		case loopbackPing:
-			LoopackLogger.Println("Ping (ignoring)")
-		case loopbackQuestionValidIn:
-			out := cl.controller.currentQuestion.EvaluateAnswer(data.Answers)
-			cl.controller.broadcast <- loopbackQuestionValidOut{out}
-		case loopbackQuestionCorrectAnswersIn:
-			out := cl.controller.currentQuestion.CorrectAnswer()
-			cl.controller.broadcast <- loopbackQuestionCorrectAnswersOut{out}
-		case loopbackExerciceCorrectAnswsersIn:
-			questions := cl.controller.currentExercice.Questions
-			if data.QuestionIndex < 0 || data.QuestionIndex >= len(questions) {
-				LoopackLogger.Printf("invalid question index: %d", data.QuestionIndex)
-				continue
-			}
-			answers := questions[data.QuestionIndex].Instance().CorrectAnswer()
-			cl.controller.broadcast <- loopbackExerciceCorrectAnswersOut{
-				QuestionIndex: data.QuestionIndex,
-				Answers:       answers,
-			}
-		}
-	}
+	// 	switch data := data.Data.(type) {
+	// 	case loopbackPing:
+	// 		LoopackLogger.Println("Ping (ignoring)")
+	// 	case loopbackQuestionValidIn:
+	// 		out := cl.controller.currentQuestion.EvaluateAnswer(data.Answers)
+	// 		cl.controller.broadcast <- loopbackQuestionValidOut{out}
+	// 	case loopbackQuestionCorrectAnswersIn:
+	// 		out := cl.controller.currentQuestion.CorrectAnswer()
+	// 		cl.controller.broadcast <- loopbackQuestionCorrectAnswersOut{out}
+	// 	case loopbackExerciceCorrectAnswsersIn:
+	// 		questions := cl.controller.currentExercice.Questions
+	// 		if data.QuestionIndex < 0 || data.QuestionIndex >= len(questions) {
+	// 			LoopackLogger.Printf("invalid question index: %d", data.QuestionIndex)
+	// 			continue
+	// 		}
+	// 		answers := questions[data.QuestionIndex].Instance().CorrectAnswer()
+	// 		cl.controller.broadcast <- loopbackExerciceCorrectAnswersOut{
+	// 			QuestionIndex: data.QuestionIndex,
+	// 			Answers:       answers,
+	// 		}
+	// 	}
+	// }
 
 	// do not close the connection when the client is leaving
 	// so that iframe reloads may use the same controller
@@ -153,4 +154,46 @@ func (ct *loopbackController) setupWebSocket(w http.ResponseWriter, r *http.Requ
 	ct.incomingClient <- client
 
 	client.startLoop()
+}
+
+// LoopackEvaluateQuestion expects a question definition, a set of
+// random variables, and an answer, and performs the evaluation.
+func (ct *Controller) LoopackEvaluateQuestion(c echo.Context) error {
+	var args LoopackEvaluateQuestionIn
+
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	ans, err := taAPI.EvaluateQuestion(args.Question, args.Answer)
+	if err != nil {
+		return err
+	}
+
+	out := LoopbackEvaluateQuestionOut{ans}
+
+	return c.JSON(200, out)
+}
+
+// LoopbackShowQuestionAnswer expects a question, random parameters,
+// and returns the correct answer for these parameters
+func (ct *Controller) LoopbackShowQuestionAnswer(c echo.Context) error {
+	var args LoopbackShowQuestionAnswerIn
+
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	p, err := args.Params.ToMap()
+	if err != nil {
+		return err
+	}
+	instance, err := args.Question.InstantiateWith(p)
+	if err != nil {
+		return err
+	}
+	ans := instance.CorrectAnswer()
+
+	out := LoopbackShowQuestionAnswerOut{ans}
+	return c.JSON(200, out)
 }
