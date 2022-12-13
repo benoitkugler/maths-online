@@ -652,7 +652,7 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 
 type ExerciceWithPreview struct {
 	Ex      ExerciceExt
-	Preview LoopbackShowExercice
+	Preview LoopbackShowExercice `gomacro:"isOpaque"`
 }
 
 type ExerciceCreateQuestionIn struct {
@@ -1069,7 +1069,7 @@ type SaveExerciceAndPreviewOut struct {
 	Error         questions.ErrQuestionInvalid
 	QuestionIndex int // for the error
 	IsValid       bool
-	Preview       LoopbackShowExercice
+	Preview       LoopbackShowExercice `gomacro:"isOpaque"`
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {

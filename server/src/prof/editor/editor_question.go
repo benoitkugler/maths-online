@@ -930,7 +930,7 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 type SaveQuestionAndPreviewOut struct {
 	Error    questions.ErrQuestionInvalid
 	IsValid  bool
-	Question LoopbackShowQuestion
+	Question LoopbackShowQuestion `gomacro:"isOpaque"`
 }
 
 // For non personnal questions, only preview.

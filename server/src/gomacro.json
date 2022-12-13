@@ -1,4 +1,9 @@
 {
+    "_dart": [
+        {
+            "Output": "../../eleve/lib/types/"
+        }
+    ],
     "sql/editor/models.go": [
         {
             "Mode": "go/sqlcrud",

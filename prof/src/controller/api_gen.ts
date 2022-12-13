@@ -3,21 +3,17 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-import { InstantiatedWork } from "";
-import { Params } from "";
-import { ProgressionExt } from "";
-import { Question } from "";
-// github.com/benoitkugler/maths-online/prof/homework.AddExerciceToTaskIn
+// github.com/benoitkugler/maths-online/server/src/prof/homework.AddExerciceToTaskIn
 export interface AddExerciceToTaskIn {
   IdSheet: IdSheet;
   IdExercice: IdExercice;
 }
-// github.com/benoitkugler/maths-online/prof/homework.AddMonoquestionToTaskIn
+// github.com/benoitkugler/maths-online/server/src/prof/homework.AddMonoquestionToTaskIn
 export interface AddMonoquestionToTaskIn {
   IdSheet: IdSheet;
   IdQuestion: IdQuestion;
 }
-// github.com/benoitkugler/maths-online/sql/reviews.Approval
+// github.com/benoitkugler/maths-online/server/src/sql/reviews.Approval
 export enum Approval {
   Neutral = 0,
   InFavor = 1,
@@ -30,17 +26,17 @@ export const ApprovalLabels: { [key in Approval]: string } = {
   [Approval.Opposed]: "",
 };
 
-// github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionIn
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
   Mail: string;
   Password: string;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.AskInscriptionOut
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionOut
 export interface AskInscriptionOut {
   Error: string;
   IsPasswordError: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/questions/client.Binary
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.Binary
 export enum Binary {
   Invalid = 0,
   And = 1,
@@ -78,7 +74,7 @@ export enum BlockKind {
   VectorFieldBlock = "VectorFieldBlock",
 }
 
-// github.com/benoitkugler/maths-online/maths/questions.Block
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Block
 export interface Block {
   Kind: BlockKind;
   Data:
@@ -105,61 +101,61 @@ export interface Block {
     | VariationTableFieldBlock
     | VectorFieldBlock;
 }
-// github.com/benoitkugler/maths-online/sql/trivial.CategoriesQuestions
+// github.com/benoitkugler/maths-online/server/src/sql/trivial.CategoriesQuestions
 export interface CategoriesQuestions {
   Tags: QuestionCriterion[];
   Difficulties: DifficultyQuery;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersIn
 export interface CheckExerciceParametersIn {
   IdExercice: IdExercice;
   SharedParameters: Parameters;
   QuestionParameters: Parameters[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckExerciceParametersOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersOut
 export interface CheckExerciceParametersOut {
   ErrDefinition: ErrParameters;
   QuestionIndex: number;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.CheckMissingQuestionsOut
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.CheckMissingQuestionsOut
 export interface CheckMissingQuestionsOut {
   Pattern: string[] | null;
   Missing: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckQuestionParametersIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.CheckQuestionParametersIn
 export interface CheckQuestionParametersIn {
   SessionID: string;
   Parameters: Parameters;
 }
-// github.com/benoitkugler/maths-online/prof/editor.CheckQuestionParametersOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.CheckQuestionParametersOut
 export interface CheckQuestionParametersOut {
   ErrDefinition: ErrParameters;
   Variables: Variable[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/teacher.Classroom
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Classroom
 export interface Classroom {
   id: IdClassroom;
   id_teacher: IdTeacher;
   name: string;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.ClassroomExt
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.ClassroomExt
 export interface ClassroomExt {
   Classroom: Classroom;
   NbStudents: number;
 }
-// github.com/benoitkugler/maths-online/prof/homework.ClassroomSheets
+// github.com/benoitkugler/maths-online/server/src/prof/homework.ClassroomSheets
 export interface ClassroomSheets {
   Classroom: Classroom;
   Sheets: SheetExt[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/reviews.Comment
+// github.com/benoitkugler/maths-online/server/src/sql/reviews.Comment
 export interface Comment {
   Time: Time;
   Message: string;
 }
-// github.com/benoitkugler/maths-online/sql/reviews.Comments
+// github.com/benoitkugler/maths-online/server/src/sql/reviews.Comments
 export type Comments = Comment[] | null;
-// github.com/benoitkugler/maths-online/maths/questions.ComparisonLevel
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
 export enum ComparisonLevel {
   AsLinearEquation = 102,
   ExpandedSubstitutions = 2,
@@ -174,40 +170,40 @@ export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
   [ComparisonLevel.Strict]: "Exacte",
 };
 
-// github.com/benoitkugler/maths-online/maths/repere.Coord
+// github.com/benoitkugler/maths-online/server/src/maths/repere.Coord
 export interface Coord {
   X: number;
   Y: number;
 }
-// github.com/benoitkugler/maths-online/maths/questions.CoordExpression
+// github.com/benoitkugler/maths-online/server/src/maths/questions.CoordExpression
 export interface CoordExpression {
   X: string;
   Y: string;
 }
-// github.com/benoitkugler/maths-online/prof/homework.CopySheetIn
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CopySheetIn
 export interface CopySheetIn {
   IdSheet: IdSheet;
   IdClassroom: IdClassroom;
 }
-// github.com/benoitkugler/maths-online/prof/homework.CreateSheetIn
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CreateSheetIn
 export interface CreateSheetIn {
   IdClassroom: IdClassroom;
 }
-// github.com/benoitkugler/maths-online/sql/teacher.Date
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Date
 export type Date = Date_;
-// github.com/benoitkugler/maths-online/prof/editor.DeleteExerciceOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.DeleteExerciceOut
 export interface DeleteExerciceOut {
   Deleted: boolean;
   BlockedBy: QuestionExerciceUses;
 }
-// github.com/benoitkugler/maths-online/prof/editor.DeleteQuestionOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.DeleteQuestionOut
 export interface DeleteQuestionOut {
   Deleted: boolean;
   BlockedBy: QuestionExerciceUses;
 }
-// github.com/benoitkugler/maths-online/sql/editor.DifficultyQuery
+// github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
-// github.com/benoitkugler/maths-online/sql/editor.DifficultyTag
+// github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyTag
 export enum DifficultyTag {
   Diff1 = "★",
   Diff2 = "★★",
@@ -222,20 +218,20 @@ export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
   [DifficultyTag.DiffEmpty]: "",
 };
 
-// github.com/benoitkugler/maths-online/maths/questions.Enonce
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Enonce
 export type Enonce = Block[] | null;
-// github.com/benoitkugler/maths-online/maths/questions.ErrParameters
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ErrParameters
 export interface ErrParameters {
   Origin: string;
   Details: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ErrQuestionInvalid
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ErrQuestionInvalid
 export interface ErrQuestionInvalid {
   ErrParameters: ErrParameters;
   ErrEnonce: errEnonce;
   ParametersInvalid: boolean;
 }
-// github.com/benoitkugler/maths-online/sql/editor.Exercice
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Exercice
 export interface Exercice {
   Id: IdExercice;
   IdGroup: IdExercicegroup;
@@ -243,120 +239,120 @@ export interface Exercice {
   Description: string;
   Parameters: Parameters;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceCreateQuestionIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
   SessionID: string;
   IdExercice: IdExercice;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceDuplicateQuestionIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceDuplicateQuestionIn
 export interface ExerciceDuplicateQuestionIn {
   QuestionIndex: number;
   IdExercice: IdExercice;
   SessionID: string;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceExt
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceExt
 export interface ExerciceExt {
   Exercice: Exercice;
   Questions: ExerciceQuestionExt[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceHeader
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceHeader
 export interface ExerciceHeader {
   Id: IdExercice;
   Subtitle: string;
   Difficulty: DifficultyTag;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceImportQuestionIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceImportQuestionIn
 export interface ExerciceImportQuestionIn {
   IdQuestion: IdQuestion;
   IdExercice: IdExercice;
   SessionID: string;
 }
-// github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestion
+// github.com/benoitkugler/maths-online/server/src/sql/editor.ExerciceQuestion
 export interface ExerciceQuestion {
   id_exercice: IdExercice;
   id_question: IdQuestion;
   bareme: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceQuestionExt
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceQuestionExt
 export interface ExerciceQuestionExt {
   Question: Question;
   Bareme: number;
 }
-// github.com/benoitkugler/maths-online/sql/editor.ExerciceQuestions
+// github.com/benoitkugler/maths-online/server/src/sql/editor.ExerciceQuestions
 export type ExerciceQuestions = ExerciceQuestion[] | null;
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateQuestionsIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceUpdateQuestionsIn
 export interface ExerciceUpdateQuestionsIn {
   Questions: ExerciceQuestions;
   IdExercice: IdExercice;
   SessionID: string;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceUpdateVisiblityIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceUpdateVisiblityIn
 export interface ExerciceUpdateVisiblityIn {
   ID: IdExercicegroup;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExerciceWithPreview
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceWithPreview
 export interface ExerciceWithPreview {
   Ex: ExerciceExt;
-  Preview: LoopbackShowExercice;
+  Preview: unknown;
 }
-// github.com/benoitkugler/maths-online/sql/editor.Exercicegroup
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Exercicegroup
 export interface Exercicegroup {
   Id: IdExercicegroup;
   Title: string;
   Public: boolean;
   IdTeacher: IdTeacher;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ExercicegroupExt
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExercicegroupExt
 export interface ExercicegroupExt {
   Group: Exercicegroup;
   Origin: Origin;
   Tags: string[] | null;
   Variants: ExerciceHeader[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ExpressionFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
   Label: Interpolated;
   ComparisonLevel: ComparisonLevel;
   ShowFractionHelp: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FigureAffineLineFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureAffineLineFieldBlock
 export interface FigureAffineLineFieldBlock {
   Label: string;
   A: string;
   B: string;
   Figure: FigureBlock;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FigureBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureBlock
 export interface FigureBlock {
   Drawings: RandomDrawings;
   Bounds: RepereBounds;
   ShowGrid: boolean;
   ShowOrigin: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FigurePointFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FigurePointFieldBlock
 export interface FigurePointFieldBlock {
   Answer: CoordExpression;
   Figure: FigureBlock;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FigureVectorFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureVectorFieldBlock
 export interface FigureVectorFieldBlock {
   Answer: CoordExpression;
   AnswerOrigin: CoordExpression;
   Figure: FigureBlock;
   MustHaveOrigin: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FigureVectorPairFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureVectorPairFieldBlock
 export interface FigureVectorPairFieldBlock {
   Figure: FigureBlock;
   Criterion: VectorPairCriterion;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FormulaBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FormulaBlock
 export interface FormulaBlock {
   Parts: Interpolated;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionArea
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionArea
 export interface FunctionArea {
   Bottom: Interpolated;
   Top: Interpolated;
@@ -364,12 +360,12 @@ export interface FunctionArea {
   Right: string;
   Color: string;
 }
-// github.com/benoitkugler/maths-online/maths/functiongrapher.FunctionDecoration
+// github.com/benoitkugler/maths-online/server/src/maths/functiongrapher.FunctionDecoration
 export interface FunctionDecoration {
   Label: string;
   Color: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionDefinition
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
   Function: string;
   Decoration: FunctionDecoration;
@@ -377,80 +373,80 @@ export interface FunctionDefinition {
   From: string;
   To: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionPoint
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionPoint
 export interface FunctionPoint {
   Function: Interpolated;
   X: string;
   Color: string;
   Legend: Interpolated;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionPointsFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
   Function: string;
   Label: string;
   Variable: Variable;
   XGrid: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.FunctionsGraphBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionsGraphBlock
 export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
   FunctionVariations: VariationTableBlock[] | null;
   Areas: FunctionArea[] | null;
   Points: FunctionPoint[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.GamePlayers
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.GamePlayers
 export interface GamePlayers {
   Player: string;
   Successes: Success;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.GameSummary
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.GameSummary
 export interface GameSummary {
   GameID: RoomID;
   CurrentPlayer: string;
   Players: GamePlayers[] | null;
   RoomSize: number;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.GenerateClassroomCodeOut
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
   Code: string;
 }
-// github.com/benoitkugler/maths-online/prof/homework.HomeworkMarksOut
+// github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
   Marks: { [key: IdSheet]: { [key: IdStudent]: number } | null } | null;
 }
-// github.com/benoitkugler/maths-online/prof/homework.HowemorkMarksIn
+// github.com/benoitkugler/maths-online/server/src/prof/homework.HowemorkMarksIn
 export interface HowemorkMarksIn {
   IdClassroom: IdClassroom;
   IdSheets: IdSheet[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/teacher.IdClassroom
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
 export type IdClassroom = number;
-// github.com/benoitkugler/maths-online/sql/editor.IdExercice
+// github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercice
 export type IdExercice = number;
-// github.com/benoitkugler/maths-online/sql/editor.IdExercicegroup
+// github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercicegroup
 export type IdExercicegroup = number;
-// github.com/benoitkugler/maths-online/sql/tasks.IdMonoquestion
+// github.com/benoitkugler/maths-online/server/src/sql/tasks.IdMonoquestion
 export type IdMonoquestion = number;
-// github.com/benoitkugler/maths-online/sql/editor.IdQuestion
+// github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestion
 export type IdQuestion = number;
-// github.com/benoitkugler/maths-online/sql/editor.IdQuestiongroup
+// github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestiongroup
 export type IdQuestiongroup = number;
-// github.com/benoitkugler/maths-online/sql/reviews.IdReview
+// github.com/benoitkugler/maths-online/server/src/sql/reviews.IdReview
 export type IdReview = number;
-// github.com/benoitkugler/maths-online/sql/homework.IdSheet
+// github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
 export type IdSheet = number;
-// github.com/benoitkugler/maths-online/sql/teacher.IdStudent
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
 export type IdStudent = number;
-// github.com/benoitkugler/maths-online/sql/tasks.IdTask
+// github.com/benoitkugler/maths-online/server/src/sql/tasks.IdTask
 export type IdTask = number;
-// github.com/benoitkugler/maths-online/sql/teacher.IdTeacher
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
 export type IdTeacher = number;
-// github.com/benoitkugler/maths-online/sql/trivial.IdTrivial
+// github.com/benoitkugler/maths-online/server/src/sql/trivial.IdTrivial
 export type IdTrivial = number;
-// github.com/benoitkugler/maths-online/maths/questions.Interpolated
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Interpolated
 export type Interpolated = string;
-// github.com/benoitkugler/maths-online/maths/repere.LabelPos
+// github.com/benoitkugler/maths-online/server/src/maths/repere.LabelPos
 export enum LabelPos {
   Top = 0,
   Bottom = 1,
@@ -475,67 +471,55 @@ export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Hide]: "Masquer la légende",
 };
 
-// github.com/benoitkugler/maths-online/prof/trivial.LaunchSessionIn
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.LaunchSessionIn
 export interface LaunchSessionIn {
   IdConfig: IdTrivial;
   Groups: number[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.LaunchSessionOut
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.LaunchSessionOut
 export interface LaunchSessionOut {
   GameIDs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ListExercicesOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ListExercicesOut
 export interface ListExercicesOut {
   Groups: ExercicegroupExt[] | null;
   NbGroups: number;
   NbExercices: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.ListQuestionsOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
   Groups: QuestiongroupExt[] | null;
   NbGroups: number;
   NbQuestions: number;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.LogginIn
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.LogginIn
 export interface LogginIn {
   Mail: string;
   Password: string;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.LogginOut
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.LogginOut
 export interface LogginOut {
   Error: string;
   IsPasswordError: boolean;
   Token: string;
 }
-// github.com/benoitkugler/maths-online/prof/editor.LoopbackShowExercice
-export interface LoopbackShowExercice {
-  Exercice: InstantiatedWork;
-  Progression: ProgressionExt;
-  Origin: QuestionPage[] | null;
-}
-// github.com/benoitkugler/maths-online/prof/editor.LoopbackShowQuestion
-export interface LoopbackShowQuestion {
-  Question: Question;
-  Params: Params;
-  Origin: QuestionPage;
-}
-// github.com/benoitkugler/maths-online/prof/trivial.MonitorOut
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.MonitorOut
 export interface MonitorOut {
   Games: GameSummary[] | null;
 }
-// github.com/benoitkugler/maths-online/sql/tasks.Monoquestion
+// github.com/benoitkugler/maths-online/server/src/sql/tasks.Monoquestion
 export interface Monoquestion {
   Id: IdMonoquestion;
   IdQuestion: IdQuestion;
   NbRepeat: number;
   Bareme: number;
 }
-// github.com/benoitkugler/maths-online/maths/repere.NamedRandomLabeledPoint
+// github.com/benoitkugler/maths-online/server/src/maths/repere.NamedRandomLabeledPoint
 export interface NamedRandomLabeledPoint {
   Name: string;
   Point: RandomLabeledPoint;
 }
-// github.com/benoitkugler/maths-online/sql/homework.Notation
+// github.com/benoitkugler/maths-online/server/src/sql/homework.Notation
 export enum Notation {
   NoNotation = 0,
   SuccessNotation = 1,
@@ -547,39 +531,39 @@ export const NotationLabels: { [key in Notation]: string } = {
     "a question gives point if it has been successfully completed (at least) once",
 };
 
-// github.com/benoitkugler/maths-online/maths/questions.NumberFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.NumberFieldBlock
 export interface NumberFieldBlock {
   Expression: string;
 }
-// github.com/benoitkugler/maths-online/sql/editor.OptionalIdExercice
+// github.com/benoitkugler/maths-online/server/src/sql/editor.OptionalIdExercice
 export interface OptionalIdExercice {
   Valid: boolean;
   ID: IdExercice;
 }
-// github.com/benoitkugler/maths-online/sql/editor.OptionalIdQuestiongroup
+// github.com/benoitkugler/maths-online/server/src/sql/editor.OptionalIdQuestiongroup
 export interface OptionalIdQuestiongroup {
   ID: IdQuestiongroup;
   Valid: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.OptionalIdReview
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.OptionalIdReview
 export interface OptionalIdReview {
   InReview: boolean;
   Id: IdReview;
 }
-// github.com/benoitkugler/maths-online/maths/questions.OrderedListFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.OrderedListFieldBlock
 export interface OrderedListFieldBlock {
   Label: Interpolated;
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.Origin
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.Origin
 export interface Origin {
   AllowPublish: boolean;
   IsPublic: boolean;
   IsInReview: OptionalIdReview;
   Visibility: Visibility;
 }
-// github.com/benoitkugler/maths-online/prof/editor.OriginKind
+// github.com/benoitkugler/maths-online/server/src/prof/editor.OriginKind
 export enum OriginKind {
   All = 0,
   OnlyPersonnal = 1,
@@ -592,7 +576,7 @@ export const OriginKindLabels: { [key in OriginKind]: string } = {
   [OriginKind.OnlyAdmin]: "",
 };
 
-// github.com/benoitkugler/maths-online/maths/questions.Parameters
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
 export interface Parameters {
   Variables: RandomParameters;
   Intrinsics: string[] | null;
@@ -606,7 +590,7 @@ export enum ProofAssertionKind {
   ProofStatement = "ProofStatement",
 }
 
-// github.com/benoitkugler/maths-online/maths/questions.ProofAssertion
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertion
 export interface ProofAssertion {
   Kind: ProofAssertionKind;
   Data:
@@ -616,39 +600,39 @@ export interface ProofAssertion {
     | ProofSequence
     | ProofStatement;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ProofAssertions
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertions
 export type ProofAssertions = ProofAssertion[] | null;
-// github.com/benoitkugler/maths-online/maths/questions.ProofEquality
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofEquality
 export interface ProofEquality {
   Terms: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ProofFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofFieldBlock
 export interface ProofFieldBlock {
   Answer: ProofSequence;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ProofInvalid
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofInvalid
 export type ProofInvalid = Record<string, never>;
-// github.com/benoitkugler/maths-online/maths/questions.ProofNode
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofNode
 export interface ProofNode {
   Left: ProofAssertion;
   Right: ProofAssertion;
   Op: Binary;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ProofSequence
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofSequence
 export interface ProofSequence {
   Parts: ProofAssertions;
 }
-// github.com/benoitkugler/maths-online/maths/questions.ProofStatement
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofStatement
 export interface ProofStatement {
   Content: Interpolated;
 }
-// github.com/benoitkugler/maths-online/prof/editor.Query
+// github.com/benoitkugler/maths-online/server/src/prof/editor.Query
 export interface Query {
   TitleQuery: string;
   Tags: string[] | null;
   Origin: OriginKind;
 }
-// github.com/benoitkugler/maths-online/sql/editor.Question
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Question
 export interface Question {
   Id: IdQuestion;
   Page: QuestionPage;
@@ -658,52 +642,52 @@ export interface Question {
   NeedExercice: OptionalIdExercice;
   IdGroup: OptionalIdQuestiongroup;
 }
-// github.com/benoitkugler/maths-online/sql/trivial.QuestionCriterion
+// github.com/benoitkugler/maths-online/server/src/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (string[] | null)[] | null;
-// github.com/benoitkugler/maths-online/prof/editor.QuestionExerciceUses
+// github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionExerciceUses
 export type QuestionExerciceUses = TaskDetails[] | null;
-// github.com/benoitkugler/maths-online/prof/editor.QuestionHeader
+// github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Id: IdQuestion;
   Subtitle: string;
   Difficulty: DifficultyTag;
 }
-// github.com/benoitkugler/maths-online/maths/questions.QuestionPage
+// github.com/benoitkugler/maths-online/server/src/maths/questions.QuestionPage
 export interface QuestionPage {
   enonce: Enonce;
   parameters: Parameters;
 }
-// github.com/benoitkugler/maths-online/prof/editor.QuestionUpdateVisiblityIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionUpdateVisiblityIn
 export interface QuestionUpdateVisiblityIn {
   ID: IdQuestiongroup;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/sql/editor.Questiongroup
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Questiongroup
 export interface Questiongroup {
   Id: IdQuestiongroup;
   Title: string;
   Public: boolean;
   IdTeacher: IdTeacher;
 }
-// github.com/benoitkugler/maths-online/prof/editor.QuestiongroupExt
+// github.com/benoitkugler/maths-online/server/src/prof/editor.QuestiongroupExt
 export interface QuestiongroupExt {
   Group: Questiongroup;
   Origin: Origin;
   Tags: string[] | null;
   Variants: QuestionHeader[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.RadioFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {
   Answer: string;
   Proposals: Interpolated[] | null;
   AsDropDown: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RandomArea
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomArea
 export interface RandomArea {
   Color: string;
   Points: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RandomCircle
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomCircle
 export interface RandomCircle {
   Center: RandomCoord;
   Radius: string;
@@ -711,12 +695,12 @@ export interface RandomCircle {
   FillColor: string;
   Legend: string;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RandomCoord
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomCoord
 export interface RandomCoord {
   X: string;
   Y: string;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RandomDrawings
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomDrawings
 export interface RandomDrawings {
   Points: NamedRandomLabeledPoint[] | null;
   Segments: RandomSegment[] | null;
@@ -724,27 +708,27 @@ export interface RandomDrawings {
   Circles: RandomCircle[] | null;
   Areas: RandomArea[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RandomLabeledPoint
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {
   Color: string;
   Coord: RandomCoord;
   Pos: LabelPos;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RandomLine
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomLine
 export interface RandomLine {
   Label: string;
   A: string;
   B: string;
   Color: string;
 }
-// github.com/benoitkugler/maths-online/maths/questions.RandomParameter
+// github.com/benoitkugler/maths-online/server/src/maths/questions.RandomParameter
 export interface RandomParameter {
   expression: string;
   variable: Variable;
 }
-// github.com/benoitkugler/maths-online/maths/questions.RandomParameters
+// github.com/benoitkugler/maths-online/server/src/maths/questions.RandomParameters
 export type RandomParameters = RandomParameter[] | null;
-// github.com/benoitkugler/maths-online/maths/repere.RandomSegment
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RandomSegment
 export interface RandomSegment {
   LabelName: string;
   From: string;
@@ -753,34 +737,34 @@ export interface RandomSegment {
   LabelPos: LabelPos;
   Kind: SegmentKind;
 }
-// github.com/benoitkugler/maths-online/prof/homework.ReorderSheetTasksIn
+// github.com/benoitkugler/maths-online/server/src/prof/homework.ReorderSheetTasksIn
 export interface ReorderSheetTasksIn {
   IdSheet: IdSheet;
   Tasks: IdTask[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/repere.RepereBounds
+// github.com/benoitkugler/maths-online/server/src/maths/repere.RepereBounds
 export interface RepereBounds {
   Width: number;
   Height: number;
   Origin: Coord;
 }
-// github.com/benoitkugler/maths-online/sql/reviews.Review
+// github.com/benoitkugler/maths-online/server/src/sql/reviews.Review
 export interface Review {
   Id: IdReview;
   Kind: ReviewKind;
 }
-// github.com/benoitkugler/maths-online/prof/reviews.ReviewComment
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewComment
 export interface ReviewComment {
   Comment: Comment;
   AuthorMail: string;
   IsOwned: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/reviews.ReviewCreateIn
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewCreateIn
 export interface ReviewCreateIn {
   Kind: ReviewKind;
   Id: number;
 }
-// github.com/benoitkugler/maths-online/prof/reviews.ReviewExt
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewExt
 export interface ReviewExt {
   Approvals: number[];
   Comments: ReviewComment[] | null;
@@ -788,7 +772,7 @@ export interface ReviewExt {
   IsDeletable: boolean;
   IsAcceptable: boolean;
 }
-// github.com/benoitkugler/maths-online/prof/reviews.ReviewHeader
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewHeader
 export interface ReviewHeader {
   Id: IdReview;
   Title: string;
@@ -796,7 +780,7 @@ export interface ReviewHeader {
   OwnerMail: string;
   NbComments: number;
 }
-// github.com/benoitkugler/maths-online/sql/reviews.ReviewKind
+// github.com/benoitkugler/maths-online/server/src/sql/reviews.ReviewKind
 export enum ReviewKind {
   KQuestion = 0,
   KExercice = 1,
@@ -809,53 +793,53 @@ export const ReviewKindLabels: { [key in ReviewKind]: string } = {
   [ReviewKind.KTrivial]: "Trivial",
 };
 
-// github.com/benoitkugler/maths-online/prof/reviews.ReviewUpdateApprovalIn
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewUpdateApprovalIn
 export interface ReviewUpdateApprovalIn {
   IdReview: IdReview;
   Approval: Approval;
 }
-// github.com/benoitkugler/maths-online/prof/reviews.ReviewUpdateCommentsIn
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewUpdateCommentsIn
 export interface ReviewUpdateCommentsIn {
   IdReview: IdReview;
   Comments: Comments;
 }
-// github.com/benoitkugler/maths-online/trivial.RoomID
+// github.com/benoitkugler/maths-online/server/src/trivial.RoomID
 export type RoomID = string;
-// github.com/benoitkugler/maths-online/prof/trivial.RunningSessionMetaOut
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.RunningSessionMetaOut
 export interface RunningSessionMetaOut {
   NbGames: number;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewIn
 export interface SaveExerciceAndPreviewIn {
   OnlyPreview: boolean;
   IdExercice: IdExercice;
   Parameters: Parameters;
   Questions: Question[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveExerciceAndPreviewOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewOut
 export interface SaveExerciceAndPreviewOut {
   Error: ErrQuestionInvalid;
   QuestionIndex: number;
   IsValid: boolean;
-  Preview: LoopbackShowExercice;
+  Preview: unknown;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionAndPreviewIn
 export interface SaveQuestionAndPreviewIn {
   SessionID: string;
   Id: IdQuestion;
   Page: QuestionPage;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionAndPreviewOut
+// github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionAndPreviewOut
 export interface SaveQuestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
-  Question: LoopbackShowQuestion;
+  Question: unknown;
 }
-// github.com/benoitkugler/maths-online/prof/editor.SaveQuestionMetaIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionMetaIn
 export interface SaveQuestionMetaIn {
   Question: Question;
 }
-// github.com/benoitkugler/maths-online/maths/repere.SegmentKind
+// github.com/benoitkugler/maths-online/server/src/maths/repere.SegmentKind
 export enum SegmentKind {
   SKSegment = 0,
   SKVector = 1,
@@ -868,7 +852,7 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
-// github.com/benoitkugler/maths-online/sql/homework.Sheet
+// github.com/benoitkugler/maths-online/server/src/sql/homework.Sheet
 export interface Sheet {
   Id: IdSheet;
   IdClassroom: IdClassroom;
@@ -877,12 +861,12 @@ export interface Sheet {
   Activated: boolean;
   Deadline: Time;
 }
-// github.com/benoitkugler/maths-online/prof/homework.SheetExt
+// github.com/benoitkugler/maths-online/server/src/prof/homework.SheetExt
 export interface SheetExt {
   Sheet: Sheet;
   Tasks: TaskExt[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.SignSymbol
+// github.com/benoitkugler/maths-online/server/src/maths/questions.SignSymbol
 export enum SignSymbol {
   Nothing = 0,
   Zero = 1,
@@ -895,18 +879,18 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
   [SignSymbol.ForbiddenValue]: "||",
 };
 
-// github.com/benoitkugler/maths-online/maths/questions.SignTableBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableBlock
 export interface SignTableBlock {
   Label: string;
   FxSymbols: SignSymbol[] | null;
   Xs: string[] | null;
   Signs: boolean[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.SignTableFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableFieldBlock
 export interface SignTableFieldBlock {
   Answer: SignTableBlock;
 }
-// github.com/benoitkugler/maths-online/sql/teacher.Student
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Student
 export interface Student {
   Id: IdStudent;
   Name: string;
@@ -916,34 +900,34 @@ export interface Student {
   IsClientAttached: boolean;
   id_classroom: IdClassroom;
 }
-// github.com/benoitkugler/maths-online/prof/teacher.StudentHeader
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentHeader
 export interface StudentHeader {
   Id: IdStudent;
   Label: string;
 }
-// github.com/benoitkugler/maths-online/trivial.Success
+// github.com/benoitkugler/maths-online/server/src/trivial.Success
 export type Success = boolean[];
-// github.com/benoitkugler/maths-online/maths/questions.TableBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TableBlock
 export interface TableBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Values: (TextPart[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.TableFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TableFieldBlock
 export interface TableFieldBlock {
   HorizontalHeaders: TextPart[] | null;
   VerticalHeaders: TextPart[] | null;
   Answer: (string[] | null)[] | null;
 }
-// github.com/benoitkugler/maths-online/tasks.TaskBareme
+// github.com/benoitkugler/maths-online/server/src/tasks.TaskBareme
 export type TaskBareme = number[] | null;
-// github.com/benoitkugler/maths-online/prof/editor.TaskDetails
+// github.com/benoitkugler/maths-online/server/src/prof/editor.TaskDetails
 export interface TaskDetails {
   Id: IdTask;
   Sheet: Sheet;
   Classroom: Classroom;
 }
-// github.com/benoitkugler/maths-online/prof/homework.TaskExt
+// github.com/benoitkugler/maths-online/server/src/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
   IdWork: WorkID;
@@ -952,14 +936,14 @@ export interface TaskExt {
   NbProgressions: number;
   Baremes: TaskBareme;
 }
-// github.com/benoitkugler/maths-online/maths/questions.TextBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TextBlock
 export interface TextBlock {
   Parts: Interpolated;
   Bold: boolean;
   Italic: boolean;
   Smaller: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/questions.TextKind
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TextKind
 export enum TextKind {
   Text = 0,
   StaticMath = 1,
@@ -972,23 +956,23 @@ export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Expression]: "Expression",
 };
 
-// github.com/benoitkugler/maths-online/maths/questions.TextPart
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TextPart
 export interface TextPart {
   Content: string;
   Kind: TextKind;
 }
-// github.com/benoitkugler/maths-online/maths/questions.TreeFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TreeFieldBlock
 export interface TreeFieldBlock {
   EventsProposals: string[] | null;
   AnswerRoot: TreeNodeAnswer;
 }
-// github.com/benoitkugler/maths-online/maths/questions.TreeNodeAnswer
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TreeNodeAnswer
 export interface TreeNodeAnswer {
   Children: TreeNodeAnswer[] | null;
   Probabilities: string[] | null;
   Value: number;
 }
-// github.com/benoitkugler/maths-online/sql/trivial.Trivial
+// github.com/benoitkugler/maths-online/server/src/sql/trivial.Trivial
 export interface Trivial {
   Id: IdTrivial;
   Questions: CategoriesQuestions;
@@ -998,49 +982,49 @@ export interface Trivial {
   IdTeacher: IdTeacher;
   Name: string;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.TrivialExt
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialExt
 export interface TrivialExt {
   Config: Trivial;
   Origin: Origin;
   NbQuestionsByCategories: number[];
 }
-// github.com/benoitkugler/maths-online/prof/editor.UpdateExercicegroupTagsIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupTagsIn
 export interface UpdateExercicegroupTagsIn {
   Id: IdExercicegroup;
   Tags: string[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/editor.UpdateQuestiongroupTagsIn
+// github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateQuestiongroupTagsIn
 export interface UpdateQuestiongroupTagsIn {
   Id: IdQuestiongroup;
   Tags: string[] | null;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.UpdateTrivialVisiblityIn
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.UpdateTrivialVisiblityIn
 export interface UpdateTrivialVisiblityIn {
   ConfigID: IdTrivial;
   Public: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/expression.Variable
+// github.com/benoitkugler/maths-online/server/src/maths/expression.Variable
 export interface Variable {
   Indice: string;
   Name: number;
 }
-// github.com/benoitkugler/maths-online/maths/questions.VariationTableBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
   Label: Interpolated;
   Xs: string[] | null;
   Fxs: string[] | null;
 }
-// github.com/benoitkugler/maths-online/maths/questions.VariationTableFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.VariationTableFieldBlock
 export interface VariationTableFieldBlock {
   Answer: VariationTableBlock;
 }
-// github.com/benoitkugler/maths-online/maths/questions.VectorFieldBlock
+// github.com/benoitkugler/maths-online/server/src/maths/questions.VectorFieldBlock
 export interface VectorFieldBlock {
   Answer: CoordExpression;
   AcceptColinear: boolean;
   DisplayColumn: boolean;
 }
-// github.com/benoitkugler/maths-online/maths/questions.VectorPairCriterion
+// github.com/benoitkugler/maths-online/server/src/maths/questions.VectorPairCriterion
 export enum VectorPairCriterion {
   VectorEquals = 0,
   VectorColinear = 1,
@@ -1055,7 +1039,7 @@ export const VectorPairCriterionLabels: {
   [VectorPairCriterion.VectorOrthogonal]: "Vecteurs orthogonaux",
 };
 
-// github.com/benoitkugler/maths-online/prof/teacher.Visibility
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
 export enum Visibility {
   Admin = 2,
   Personnal = 1,
@@ -1068,7 +1052,7 @@ export const VisibilityLabels: { [key in Visibility]: string } = {
   [Visibility.hidden]: "not accessible by the user",
 };
 
-// github.com/benoitkugler/maths-online/tasks.WorkID
+// github.com/benoitkugler/maths-online/server/src/tasks.WorkID
 export interface WorkID {
   ID: number;
   IsExercice: boolean;
@@ -1081,20 +1065,13 @@ class DateTag {
 // AAAA-MM-YY date format
 export type Date_ = string & DateTag;
 
-class TimeTag {
-  private _ = "T" as const;
-}
-
-// ISO date-time string
-export type Time = string & TimeTag;
-
-// github.com/benoitkugler/maths-online/maths/questions.errEnonce
+// github.com/benoitkugler/maths-online/server/src/maths/questions.errEnonce
 export interface errEnonce {
   Error: string;
   Block: number;
   Vars: { [key: string]: string } | null;
 }
-// github.com/benoitkugler/maths-online/prof/trivial.stopGame
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.stopGame
 export interface stopGame {
   ID: RoomID;
   Restart: boolean;
