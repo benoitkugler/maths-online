@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/sql/tasks"
-	taAPI "github.com/benoitkugler/maths-online/tasks"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )

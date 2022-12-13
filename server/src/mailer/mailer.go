@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/jordan-wright/email"
 )
 

@@ -1,4 +1,4 @@
-module github.com/benoitkugler/maths-online
+module github.com/benoitkugler/maths-online/server/src
 
 go 1.16
 

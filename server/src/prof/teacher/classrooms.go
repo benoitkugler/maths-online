@@ -13,9 +13,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/benoitkugler/maths-online/pass"
-	tc "github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
 

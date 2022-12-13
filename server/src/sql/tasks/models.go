@@ -1,8 +1,8 @@
 package tasks
 
 import (
-	"github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 )
 
 type (

@@ -3,7 +3,7 @@ package questions
 import (
 	"testing"
 
-	ex "github.com/benoitkugler/maths-online/maths/expression"
+	ex "github.com/benoitkugler/maths-online/server/src/maths/expression"
 )
 
 func mustParseMany(exprs []string) []*ex.Expr {

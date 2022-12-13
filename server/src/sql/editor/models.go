@@ -3,8 +3,8 @@
 package editor
 
 import (
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 )
 
 type (

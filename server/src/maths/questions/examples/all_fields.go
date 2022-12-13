@@ -1,10 +1,10 @@
 package examples
 
 import (
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/functiongrapher"
-	que "github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
+	que "github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 var blockList = [...]que.Block{

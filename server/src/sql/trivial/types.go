@@ -1,8 +1,8 @@
 package trivial
 
 import (
-	"github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/trivial"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/trivial"
 )
 
 // QuestionCriterion is an union of intersection of tags.

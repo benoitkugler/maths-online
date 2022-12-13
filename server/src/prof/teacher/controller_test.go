@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/server/src/pass"
 )
 
 func TestController_mailInscription(t *testing.T) {

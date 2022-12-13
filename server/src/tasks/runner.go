@@ -7,17 +7,17 @@ package tasks
 import (
 	"fmt"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	ta "github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type InstantiatedQuestion struct {
 	Id       ed.IdQuestion
-	Question client.Question `gomacro-extern:"client#dart#questions/types.gen.dart"`
+	Question client.Question
 	Params   Params
 
 	// this field is private, not exported as JSON,
@@ -27,9 +27,9 @@ type InstantiatedQuestion struct {
 
 func (iq InstantiatedQuestion) Instance() questions.QuestionInstance { return iq.instance }
 
-type Answer struct {
+type AnswerP struct {
 	Params Params
-	Answer client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
+	Answer client.QuestionAnswersIn
 }
 
 type InstantiateQuestionsOut []InstantiatedQuestion
@@ -95,7 +95,7 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 }
 
 type EvaluateQuestionIn struct {
-	Answer     Answer
+	Answer     AnswerP
 	IdQuestion ed.IdQuestion
 }
 
@@ -111,7 +111,7 @@ func (params EvaluateQuestionIn) Evaluate(db ed.DB) (client.QuestionAnswersOut, 
 
 // EvaluateQuestion instantiate [qu] against the given [answer.Params]
 // and evaluate the given [answer.Answer]
-func EvaluateQuestion(qu questions.QuestionPage, answer Answer) (client.QuestionAnswersOut, error) {
+func EvaluateQuestion(qu questions.QuestionPage, answer AnswerP) (client.QuestionAnswersOut, error) {
 	paramsDict, err := answer.Params.ToMap()
 	if err != nil {
 		return client.QuestionAnswersOut{}, err
@@ -352,16 +352,16 @@ func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
 type EvaluateWorkIn struct {
 	ID WorkID
 
-	Answers map[int]Answer // by question index (not ID)
+	Answers map[int]AnswerP // by question index (not ID)
 	// the current progression, as send by the server,
 	// to update with the given answers
 	Progression ProgressionExt
 }
 
 type EvaluateWorkOut struct {
-	Results      map[int]client.QuestionAnswersOut `gomacro-extern:"client#dart#questions/types.gen.dart"`
-	Progression  ProgressionExt                    // the updated progression
-	NewQuestions []InstantiatedQuestion            // only non empty if the answer is not correct
+	Results      map[int]client.QuestionAnswersOut
+	Progression  ProgressionExt         // the updated progression
+	NewQuestions []InstantiatedQuestion // only non empty if the answer is not correct
 }
 
 // Evaluate checks the answer provided for the given exercice and

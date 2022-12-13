@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 )
 
 func init() {

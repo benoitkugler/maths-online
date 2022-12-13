@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	tr "github.com/benoitkugler/maths-online/sql/trivial"
-	tv "github.com/benoitkugler/maths-online/trivial"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestCreateConfig(t *testing.T) {

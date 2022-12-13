@@ -1,6 +1,6 @@
 package teacher
 
-import tc "github.com/benoitkugler/maths-online/sql/teacher"
+import tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 
 type StudentHeader struct {
 	Id    tc.IdStudent

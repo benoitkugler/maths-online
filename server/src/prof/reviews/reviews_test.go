@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/sql/editor"
-	re "github.com/benoitkugler/maths-online/sql/reviews"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/sql/trivial"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	re "github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 type sample struct {

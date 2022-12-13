@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	ta "github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/utils/testutils"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestInstantiateQuestions(t *testing.T) {
@@ -20,8 +20,9 @@ func TestInstantiateQuestions(t *testing.T) {
 		return
 	}
 
-	_, err = InstantiateQuestions(db, []ed.IdQuestion{24, 29, 37})
+	out, err := InstantiateQuestions(db, []ed.IdQuestion{24, 29, 37})
 	tu.Assert(t, err == nil)
+	tu.Assert(t, len(out) == 3)
 	// s, _ := json.MarshalIndent(out, " ", " ")
 	// fmt.Println(string(s)) // may be used as reference for client tests
 }
@@ -99,14 +100,14 @@ func TestEvaluateExercice(t *testing.T) {
 	_, err = EvaluateWorkIn{
 		ID:          newWorkIDFromMono(monoquestion.Id),
 		Progression: progExt,
-		Answers:     map[int]Answer{},
+		Answers:     map[int]AnswerP{},
 	}.Evaluate(db)
 	tu.Assert(t, err == nil)
 
 	out, err := EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
-		Answers: map[int]Answer{
+		Answers: map[int]AnswerP{
 			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
 		},
 	}.Evaluate(db)
@@ -116,7 +117,7 @@ func TestEvaluateExercice(t *testing.T) {
 	out, err = EvaluateWorkIn{
 		ID:          newWorkIDFromEx(ex.Id),
 		Progression: progExt,
-		Answers: map[int]Answer{
+		Answers: map[int]AnswerP{
 			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
 		},
 	}.Evaluate(db)

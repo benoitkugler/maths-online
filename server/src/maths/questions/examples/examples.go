@@ -5,7 +5,7 @@ package examples
 import (
 	"fmt"
 
-	que "github.com/benoitkugler/maths-online/maths/questions"
+	que "github.com/benoitkugler/maths-online/server/src/maths/questions"
 )
 
 type LabeledQuestion struct {

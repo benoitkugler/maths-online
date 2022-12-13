@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 func LoadMonoquestionSheet(db DB, idMono tasks.IdMonoquestion) (tasks.IdTask, IdSheet, error) {

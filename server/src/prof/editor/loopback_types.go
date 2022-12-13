@@ -1,9 +1,9 @@
 package editor
 
 import (
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/tasks"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
 )
 
 // LoopbackServerEvent describes an event triggered
@@ -17,17 +17,17 @@ type LoopbackServerEvent interface {
 type LoopbackPaused struct{}
 
 type LoopbackShowQuestion struct {
-	Question client.Question `gomacro-extern:"client#dart#../questions/types.gen.dart"`
-	Params   tasks.Params    `gomacro-extern:"tasks#dart#../shared_gen.dart"`
+	Question client.Question
+	Params   tasks.Params
 
-	Origin questions.QuestionPage `gomacro-extern:"questions#dart#editor_question.dart"`
+	Origin questions.QuestionPage
 }
 
 type LoopbackShowExercice struct {
-	Exercice    tasks.InstantiatedWork `gomacro-extern:"tasks#dart#../shared_gen.dart"`
-	Progression tasks.ProgressionExt   `gomacro-extern:"tasks#dart#../shared_gen.dart"`
+	Exercice    tasks.InstantiatedWork
+	Progression tasks.ProgressionExt
 
-	Origin []questions.QuestionPage `gomacro-extern:"questions#dart#editor_question.dart"`
+	Origin []questions.QuestionPage
 }
 
 func (LoopbackPaused) isLoopbackServerEvent()       {}
@@ -35,23 +35,23 @@ func (LoopbackShowQuestion) isLoopbackServerEvent() {}
 func (LoopbackShowExercice) isLoopbackServerEvent() {}
 
 type LoopackEvaluateQuestionIn struct {
-	Question questions.QuestionPage `gomacro-extern:"questions#dart#editor_question.dart"`
-	Answer   tasks.Answer
+	Question questions.QuestionPage
+	Answer   tasks.AnswerP
 }
 
 type LoopbackEvaluateQuestionOut struct {
-	Answers client.QuestionAnswersOut `gomacro-extern:"client#dart#../questions/types.gen.dart"`
+	Answers client.QuestionAnswersOut
 }
 
 type LoopbackShowQuestionAnswerIn struct {
-	Question questions.QuestionPage `gomacro-extern:"questions#dart#editor_question.dart"`
+	Question questions.QuestionPage
 	Params   tasks.Params
 }
 
 type LoopbackShowQuestionAnswerOut struct {
-	Answers client.QuestionAnswersIn `gomacro-extern:"client#dart#../questions/types.gen.dart"`
+	Answers client.QuestionAnswersIn
 }
 type loopbackExerciceCorrectAnswersOut struct {
-	Answers       client.QuestionAnswersIn `gomacro-extern:"client#dart#../questions/types.gen.dart"`
+	Answers       client.QuestionAnswersIn
 	QuestionIndex int
 }

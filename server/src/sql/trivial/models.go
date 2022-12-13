@@ -1,6 +1,6 @@
 package trivial
 
-import "github.com/benoitkugler/maths-online/sql/teacher"
+import "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 
 type IdTrivial int64
 

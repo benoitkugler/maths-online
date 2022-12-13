@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/sql/trivial"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 // Comment stores the content of a comment in a

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type OptionalIdExercice struct {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	cl "github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	cl "github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 )
 
 func tl(text string) cl.TextLine {

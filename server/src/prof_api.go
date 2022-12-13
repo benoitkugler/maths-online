@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/homework"
-	"github.com/benoitkugler/maths-online/prof/reviews"
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/prof/trivial"
+	"github.com/benoitkugler/maths-online/server/src/prof/editor"
+	"github.com/benoitkugler/maths-online/server/src/prof/homework"
+	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
+	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/prof/trivial"
 	"github.com/labstack/echo/v4"
 )
 

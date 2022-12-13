@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/server/src/pass"
 )
 
 func getUserName() string {

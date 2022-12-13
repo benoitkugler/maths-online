@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestValidation(t *testing.T) {

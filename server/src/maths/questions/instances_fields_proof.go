@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	cl "github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/utils"
+	cl "github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type proofStatementIns cl.TextLine

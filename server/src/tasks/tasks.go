@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	ta "github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/utils"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type ProgressionExt struct {
@@ -253,8 +253,8 @@ type TaskProgressionHeader struct {
 
 	HasProgression bool
 	// empty if HasProgression is false
-	Progression  ProgressionExt `gomacro-extern:"tasks#dart#package:eleve/shared_gen.dart"`
-	Mark, Bareme int            // student mark / exercice total
+	Progression  ProgressionExt
+	Mark, Bareme int // student mark / exercice total
 }
 
 // LoadTasksProgression fetches the progression of one student against

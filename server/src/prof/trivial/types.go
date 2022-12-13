@@ -1,10 +1,10 @@
 package trivial
 
 import (
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
-	tr "github.com/benoitkugler/maths-online/sql/trivial"
-	"github.com/benoitkugler/maths-online/trivial"
+	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	"github.com/benoitkugler/maths-online/server/src/trivial"
 )
 
 type TrivialExt struct {

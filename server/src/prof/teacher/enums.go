@@ -1,10 +1,10 @@
 package teacher
 
-import "github.com/benoitkugler/maths-online/sql/teacher"
+import "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 
 // Visibility is the status of a ressource, among :
-//	- personnal : read/write acces for the current teacher
-//	- verified by admins : read access only
+//   - personnal : read/write acces for the current teacher
+//   - verified by admins : read access only
 type Visibility uint8
 
 const (
