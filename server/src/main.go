@@ -327,8 +327,9 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 		e.GET(route, serveProfApp, noCache)
 	}
 
-	// // embeded preview app
-	// e.GET(editor.LoopbackEndpoint, edit.AccessLoopback)
+	// embeded preview app
+	e.POST("/api/loopack/evaluate-question", edit.LoopackEvaluateQuestion)
+	e.POST("/api/loopack/question-answer", edit.LoopbackShowQuestionAnswer)
 
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)

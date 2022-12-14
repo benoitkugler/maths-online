@@ -51,7 +51,3 @@ type LoopbackShowQuestionAnswerIn struct {
 type LoopbackShowQuestionAnswerOut struct {
 	Answers client.QuestionAnswersIn
 }
-type loopbackExerciceCorrectAnswersOut struct {
-	Answers       client.QuestionAnswersIn
-	QuestionIndex int
-}
