@@ -28,7 +28,6 @@ import 'package:flutter_math_fork/flutter_math.dart';
 
 /// [BaseQuestionController] provides methods used by the controller for a whole
 /// question (internally, it is composed of multiple controllers, one for each field)
-/// See [], [] for concrete implementations.
 abstract class BaseQuestionController extends ChangeNotifier {
   final QuestionState state;
 
@@ -56,11 +55,13 @@ abstract class BaseQuestionController extends ChangeNotifier {
     return state.fields.map((key, ct) => MapEntry(key, ct.hasError));
   }
 
-  /// [setAnswers] updates the fields with the given answers.
+  /// [setAnswers] updates the fields with the given answers,
+  /// removing any existing feedback.
   void setAnswers(Map<int, Answer> answers) {
     state.fields.forEach((fieldID, field) {
       field.setData(answers[fieldID]!);
     });
+    setFeedback(null);
   }
 
   /// If [feedback] is not null, [setFeedback] marks the fields with a false value
