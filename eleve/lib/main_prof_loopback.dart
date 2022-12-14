@@ -5,11 +5,14 @@ import 'dart:html' as html;
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/exercice.dart';
+import 'package:eleve/loopback/api.dart';
+import 'package:eleve/loopback/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
@@ -51,8 +54,8 @@ class LoopbackApp extends StatelessWidget {
 
 enum _Mode { paused, question, exercice }
 
-/// owns the websocket connection and switch between question
-/// or exercice mode
+/// listen to HTML events and switch between question
+/// or exercice mode accordingly
 class _EditorLoopback extends StatefulWidget {
   final BuildMode buildMode;
 
@@ -63,19 +66,21 @@ class _EditorLoopback extends StatefulWidget {
 }
 
 class _EditorLoopbackState extends State<_EditorLoopback> {
-  late StreamSubscription<html.MessageEvent> subs;
+  late final StreamSubscription<html.MessageEvent> subs;
+  late final LoopbackAPI _api;
 
   _Mode get mode => questionData != null
       ? _Mode.question
       : (exerciceData != null ? _Mode.exercice : _Mode.paused);
   LoopackQuestionController? questionData;
-  ExerciceController? exerciceData;
+  LoopbackExerciceController? exerciceData;
 
   @override
   void initState() {
     subs = html.window.onMessage.listen((event) {
       listen(event.data as String);
     });
+    _api = LoopbackAPI(widget.buildMode);
     super.initState();
   }
 
@@ -85,19 +90,8 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
     super.dispose();
   }
 
-  // void _send(LoopbackClientEvent event) {
-  //   channel.sink.add(jsonEncode(loopbackClientEventToJson(event)));
-  // }
-
   void _showError(dynamic error) {
     showError("Une erreur est survenue ", error, context);
-  }
-
-  void _onServerValidAnswer(QuestionAnswersOut rep) {
-    LoopbackQuestionW.showServerValidation(rep, context);
-    setState(() {
-      questionData!.setFeedback(rep.results);
-    });
   }
 
   void listen(String jsonEvent) {
@@ -116,41 +110,74 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
         exerciceData = null;
       });
     } else if (event is LoopbackShowQuestion) {
-      final qu = event.question;
       setState(() {
-        questionData =
-            LoopackQuestionController(qu, api, evaluateQuestionAnswer);
+        questionData = LoopackQuestionController(
+            event as LoopbackShowQuestion, api, evaluateQuestionAnswer);
       });
-      // } else if (event is LoopbackQuestionValidOut) {
-      //   _onServerValidAnswer(event.answers);
-      // } else if (event is LoopbackQuestionCorrectAnswersOut) {
-      //   final ans = event.answers;
-      //   setState(() {
-      //     questionData!.setAnswers(ans.data);
-      //   });
     } else if (event is LoopbackShowExercice) {
-      final ex = StudentWork(event.exercice, event.progression);
       setState(() {
-        exerciceData = ExerciceController(ex, null, api);
+        exerciceData =
+            LoopbackExerciceController(event as LoopbackShowExercice, api);
       });
-      // } else if (event is LoopbackExerciceCorrectAnswersOut) {
-      //   final ans = event.answers;
-      //   setState(() {
-      //     exerciceData!.setQuestionAnswers(ans.data);
-      //   });
     }
   }
 
-  void evaluateQuestionAnswer(QuestionAnswersIn data) {
-    // _send(LoopbackQuestionValidIn(data));
+  void evaluateQuestionAnswer(QuestionAnswersIn data) async {
+    try {
+      final res = await _api.evaluateQuestionAnswer(data, questionData!.data);
+      if (!mounted) {
+        return;
+      }
+      LoopbackQuestionW.showServerValidation(res.answers, context);
+      setState(() {
+        questionData!.setFeedback(res.answers.results);
+      });
+    } catch (e) {
+      _showError(e);
+    }
   }
 
-  void _showCorrectAnswer() {
-    // if (mode == _Mode.question) {
-    //   _send(const LoopbackQuestionCorrectAnswersIn());
-    // } else if (mode == _Mode.exercice) {
-    //   _send(LoopbackExerciceCorrectAnswsersIn(exerciceData!.questionIndex!));
-    // }
+  void _showCorrectAnswer() async {
+    final QuestionPage originPage;
+    final Params originParams;
+    switch (mode) {
+      case _Mode.question:
+        originPage = questionData!.data.origin;
+        originParams = questionData!.data.params;
+        break;
+      case _Mode.exercice:
+        final index = exerciceData!.controller.questionIndex!;
+        originPage = exerciceData!.data.origin[index];
+        originParams = exerciceData!
+            .controller.exeAndProg.exercice.questions[index].params;
+        break;
+      case _Mode.paused:
+        return;
+    }
+
+    final QuestionAnswersIn ans;
+    try {
+      final res = await _api.showQuestionAnswer(originPage, originParams);
+      ans = res.answers;
+    } catch (e) {
+      _showError(e);
+      return;
+    }
+
+    switch (mode) {
+      case _Mode.question:
+        setState(() {
+          questionData!.setAnswers(ans.data);
+        });
+        return;
+      case _Mode.exercice:
+        setState(() {
+          exerciceData!.controller.setQuestionAnswers(ans.data);
+        });
+        return;
+      case _Mode.paused:
+        return;
+    }
   }
 
   @override
@@ -173,7 +200,8 @@ class _EditorLoopbackState extends State<_EditorLoopback> {
       case _Mode.question:
         return LoopbackQuestionW(questionData!, _showCorrectAnswer);
       case _Mode.exercice:
-        return ExerciceW(_LoopbackServerAPI(widget.buildMode), exerciceData!,
+        return ExerciceW(
+            _LoopbackServerAPI(widget.buildMode), exerciceData!.controller,
             onShowCorrectAnswer: _showCorrectAnswer);
     }
   }
