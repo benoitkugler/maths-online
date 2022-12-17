@@ -87,16 +87,17 @@
     <QuestionVariantPannel
       :question="ownVariants[variantIndex]"
       :readonly="isReadonly"
-      :session_id="props.session_id"
       :all-tags="props.allTags"
       :show-variant-meta="true"
       @update="(qu) => (ownVariants[variantIndex] = qu)"
+      @preview="(qu) => emit('preview', qu)"
     ></QuestionVariantPannel>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import type {
+  LoopbackShowQuestion,
   Question,
   QuestionExerciceUses,
   QuestiongroupExt,
@@ -114,7 +115,6 @@ import VariantsSelector from "../VariantsSelector.vue";
 import QuestionVariantPannel from "./QuestionVariantPannel.vue";
 
 interface Props {
-  session_id: string;
   group: QuestiongroupExt;
   variants: Question[];
   allTags: string[]; // to provide auto completion
@@ -124,6 +124,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "preview", question: LoopbackShowQuestion): void;
 }>();
 
 const router = useRouter();

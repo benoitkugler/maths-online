@@ -87,10 +87,10 @@
     <ExerciceVariantPannel
       :exercice-header="ownVariants[variantIndex]"
       :is-readonly="isReadonly"
-      :session-id="props.session_id"
       :all-tags="props.allTags"
       :show-variant-meta="true"
-      @update="(qu) => (ownVariants[variantIndex] = qu)"
+      @update="(ex) => (ownVariants[variantIndex] = ex)"
+      @preview="(ex) => emit('preview', ex)"
     ></ExerciceVariantPannel>
   </v-card>
 </template>
@@ -99,6 +99,7 @@
 import type {
   ExercicegroupExt,
   ExerciceHeader,
+  LoopbackShowExercice,
   QuestionExerciceUses,
   Sheet,
 } from "@/controller/api_gen";
@@ -114,7 +115,6 @@ import VariantsSelector from "../VariantsSelector.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
 
 interface Props {
-  session_id: string;
   group: ExercicegroupExt;
   allTags: string[]; // to provide auto completion
 }
@@ -123,6 +123,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "preview", ex: LoopbackShowExercice): void;
 }>();
 
 const router = useRouter();
@@ -139,6 +140,16 @@ let isReadonly = $computed(
 async function updateExercicegroup() {
   if (isReadonly) return;
   await controller.EditorUpdateExercicegroup(group.Group);
+
+  // refresh the preview
+  const res = await controller.EditorSaveExerciceAndPreview({
+    OnlyPreview: true,
+    IdExercice: ownVariants[variantIndex].Id,
+    Parameters: { Intrinsics: [], Variables: [] }, // ignored
+    Questions: [], // ignored
+  });
+  if (res == undefined) return;
+  emit("preview", res.Preview);
 }
 
 let deletedBlocked = $ref<QuestionExerciceUses>(null);

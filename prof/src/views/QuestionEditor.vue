@@ -4,11 +4,11 @@
       <v-col>
         <QuestiongroupPannel
           v-if="viewKind == 'editor'"
-          :session_id="sessionID"
           :group="currentGroup!"
           :variants="currentVariants"
           :all-tags="allKnownTags"
           @back="backToList"
+          @preview="(qu) => preview?.showQuestion(qu)"
         ></QuestiongroupPannel>
         <keep-alive>
           <QuestiongroupList
@@ -20,7 +20,7 @@
       </v-col>
       <v-col cols="auto">
         <keep-alive>
-          <ClientPreview :session-id="sessionID"></ClientPreview>
+          <ClientPreview ref="preview"></ClientPreview>
         </keep-alive>
       </v-col>
     </v-row>
@@ -28,27 +28,27 @@
 </template>
 
 <script setup lang="ts">
-import type { Question, QuestiongroupExt } from "@/controller/api_gen";
+import type {
+  LoopbackShowQuestion,
+  Question,
+  QuestiongroupExt,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { LoopbackServerEventKind } from "@/controller/loopback_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
 import QuestiongroupList from "../components/editor/questions/QuestiongroupList.vue";
 import QuestiongroupPannel from "../components/editor/questions/QuestiongroupPannel.vue";
 
-let sessionID = $ref("");
 let allKnownTags = $ref<string[]>([]);
+let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
 
 let viewKind: "questions" | "editor" = $ref("questions");
 let currentGroup: QuestiongroupExt | null = $ref(null);
 let currentVariants: Question[] = $ref([]);
 
 onMounted(async () => {
-  if (!controller.editorSessionID.length) {
-    await controller.EditorStartSession();
-  }
-  sessionID = controller.editorSessionID;
-
   fetchTags();
 });
 
@@ -63,8 +63,8 @@ function backToList() {
 
   fetchTags(); // required since the tags may have changed
 
-  controller.EditorPausePreview({ sessionID: sessionID });
   viewKind = "questions";
+  preview?.pause();
 }
 
 function editQuestion(group: QuestiongroupExt, variants: Question[]) {

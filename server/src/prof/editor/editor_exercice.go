@@ -652,11 +652,10 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 
 type ExerciceWithPreview struct {
 	Ex      ExerciceExt
-	Preview LoopbackShowExercice `gomacro:"isOpaque"`
+	Preview LoopbackShowExercice
 }
 
 type ExerciceCreateQuestionIn struct {
-	SessionID  string
 	IdExercice ed.IdExercice
 }
 
@@ -731,7 +730,6 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 type ExerciceImportQuestionIn struct {
 	IdQuestion ed.IdQuestion
 	IdExercice ed.IdExercice
-	SessionID  string
 }
 
 // EditorExerciceImportQuestion imports an already existing question,
@@ -813,7 +811,6 @@ func (ct *Controller) importQuestionEx(args ExerciceImportQuestionIn, userID uID
 type ExerciceDuplicateQuestionIn struct {
 	QuestionIndex int
 	IdExercice    ed.IdExercice
-	SessionID     string
 }
 
 // EditorExerciceDuplicateQuestion duplicate the question at the given
@@ -899,7 +896,6 @@ func (ct *Controller) duplicateQuestionEx(args ExerciceDuplicateQuestionIn, user
 type ExerciceUpdateQuestionsIn struct {
 	Questions  ed.ExerciceQuestions
 	IdExercice ed.IdExercice
-	SessionID  string
 }
 
 // EditorExerciceUpdateQuestions updates the question links and
@@ -1069,7 +1065,7 @@ type SaveExerciceAndPreviewOut struct {
 	Error         questions.ErrQuestionInvalid
 	QuestionIndex int // for the error
 	IsValid       bool
-	Preview       LoopbackShowExercice `gomacro:"isOpaque"`
+	Preview       LoopbackShowExercice
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {

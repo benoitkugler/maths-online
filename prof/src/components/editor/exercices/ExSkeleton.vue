@@ -194,7 +194,11 @@
 
 <script setup lang="ts">
 import DropZone from "@/components/DropZone.vue";
-import type { ExerciceExt, ExerciceQuestionExt } from "@/controller/api_gen";
+import type {
+  ExerciceExt,
+  ExerciceQuestionExt,
+  LoopbackShowExercice,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { $ref } from "vue/macros";
@@ -205,7 +209,6 @@ import QuestionSelector, {
 import DescriptionPannel from "../DescriptionPannel.vue";
 
 interface Props {
-  sessionId: string;
   exercice: ExerciceExt;
   isReadonly: boolean;
   allTags: string[]; // used to select the question to import
@@ -215,6 +218,7 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update", exercice: ExerciceExt): void;
+  (e: "preview", exercice: LoopbackShowExercice): void;
   (e: "goToQuestion", questionIndex: number): void;
 }>();
 
@@ -232,19 +236,20 @@ async function saveMeta() {
   if (props.isReadonly) {
     return;
   }
-  await controller.EditorSaveExerciceMeta(props.exercice.Exercice);
+  const res = await controller.EditorSaveExerciceMeta(props.exercice.Exercice);
+  if (res == undefined) return;
   emit("update", props.exercice);
 }
 
 async function createQuestion() {
   const res = await controller.EditorExerciceCreateQuestion({
     IdExercice: props.exercice.Exercice.Id,
-    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
   }
-  emit("update", res);
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
 }
 
 function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
@@ -259,12 +264,12 @@ async function importQuestion(idQuestion: number) {
   const res = await controller.EditorExerciceImportQuestion({
     IdExercice: props.exercice.Exercice.Id,
     IdQuestion: idQuestion,
-    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
   }
-  emit("update", res);
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
 }
 
 async function removeQuestion(index: number) {
@@ -273,20 +278,20 @@ async function removeQuestion(index: number) {
   const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: l,
-    SessionID: props.sessionId,
   });
   if (res == undefined) return;
-  emit("update", res);
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
 }
 
 async function duplicateQuestion(index: number) {
   const res = await controller.EditorExerciceDuplicateQuestion({
     IdExercice: props.exercice.Exercice.Id,
     QuestionIndex: index,
-    SessionID: props.sessionId,
   });
   if (res == undefined) return;
-  emit("update", res);
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
 }
 
 let questionToEdit = $ref<ExerciceQuestionExt | null>(null);
@@ -303,12 +308,12 @@ async function saveEditedQuestion() {
   const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: toExerciceQuestions(current),
-    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
   }
-  emit("update", res);
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
 }
 
 let showDropZone = $ref(false);
@@ -333,12 +338,12 @@ async function swapQuestions(origin: number, target: number) {
   const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: toExerciceQuestions(l),
-    SessionID: props.sessionId,
   });
   if (res == undefined) {
     return;
   }
-  emit("update", res);
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
 }
 </script>
 

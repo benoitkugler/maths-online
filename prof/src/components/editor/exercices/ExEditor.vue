@@ -70,7 +70,6 @@
           class="mx-2"
           icon
           @click="save"
-          :disabled="!sessionId"
           :title="isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'"
           size="small"
         >
@@ -172,6 +171,7 @@ import type {
   errEnonce,
   ErrParameters,
   ExerciceExt,
+  LoopbackShowExercice,
   Question,
   RandomParameter,
 } from "@/controller/api_gen";
@@ -189,7 +189,6 @@ import RandomParametersExercice from "../RandomParametersExercice.vue";
 import SnackErrorEnonce from "../SnackErrorEnonce.vue";
 
 interface Props {
-  sessionId: string;
   exercice: ExerciceExt;
   questionIndex: number;
   isReadonly: boolean;
@@ -199,6 +198,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update", ex: ExerciceExt): void;
+  (e: "preview", qu: LoopbackShowExercice): void;
   (e: "back"): void;
 }>();
 
@@ -310,7 +310,6 @@ async function checkParameters() {
 async function save() {
   const res = await controller.EditorSaveExerciceAndPreview({
     OnlyPreview: false,
-    SessionID: props.sessionId || "",
     IdExercice: props.exercice.Exercice.Id,
     Parameters: props.exercice.Exercice.Parameters,
     Questions: props.exercice.Questions?.map((qu) => qu.Question) || [],
@@ -324,6 +323,7 @@ async function save() {
     errorParameters = null;
 
     emit("update", props.exercice);
+    emit("preview", res.Preview);
   } else {
     if (res.Error.ParametersInvalid) {
       errorEnnonce = null;

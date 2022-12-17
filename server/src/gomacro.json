@@ -122,6 +122,10 @@
             "Output": "../../eleve/lib/loopback/types.gen.dart"
         },
         {
+            "Mode": "typescript/types",
+            "Output": "../../prof/src/controller/loopback_gen.ts"
+        },
+        {
             "Mode": "go/unions",
             "Output": "prof/editor/gen_itfs.go"
         }

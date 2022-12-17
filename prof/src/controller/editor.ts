@@ -777,7 +777,8 @@ export function personnalOrigin(): Origin {
   return {
     IsPublic: false,
     AllowPublish: false,
-    Visibility: Visibility.Personnal
+    Visibility: Visibility.Personnal,
+    IsInReview: { InReview: false, Id: -1 }
   };
 }
 
@@ -789,16 +790,6 @@ export function emptyAssertion(): ProofAssertion {
     Kind: ProofAssertionKind.ProofInvalid,
     Data: {}
   };
-}
-
-export function refreshExercicePreview(sessionID: string, id: IdExercice) {
-  controller.EditorSaveExerciceAndPreview({
-    OnlyPreview: true,
-    IdExercice: id,
-    SessionID: sessionID,
-    Parameters: { Intrinsics: [], Variables: [] }, // ignored
-    Questions: [] // ignored
-  });
 }
 
 export interface VariantG {

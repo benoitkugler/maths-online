@@ -469,7 +469,6 @@ func (ct *Controller) EditorGetQuestions(c echo.Context) error {
 }
 
 type CheckQuestionParametersIn struct {
-	SessionID  string
 	Parameters questions.Parameters
 }
 
@@ -575,9 +574,8 @@ func (ct *Controller) EditorSaveQuestionMeta(c echo.Context) error {
 }
 
 type SaveQuestionAndPreviewIn struct {
-	SessionID string
-	Id        ed.IdQuestion
-	Page      questions.QuestionPage
+	Id   ed.IdQuestion
+	Page questions.QuestionPage
 }
 
 type ListQuestionsOut struct {
@@ -930,7 +928,7 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 type SaveQuestionAndPreviewOut struct {
 	Error    questions.ErrQuestionInvalid
 	IsValid  bool
-	Question LoopbackShowQuestion `gomacro:"isOpaque"`
+	Question LoopbackShowQuestion
 }
 
 // For non personnal questions, only preview.
