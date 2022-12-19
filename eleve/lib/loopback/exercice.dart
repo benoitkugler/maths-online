@@ -7,7 +7,7 @@ class LoopbackExerciceController {
   final ExerciceController controller;
   final LoopbackShowExercice data;
 
-  LoopbackExerciceController(this.data, ServerFieldAPI api)
+  LoopbackExerciceController(this.data, FieldAPI api)
       : controller = ExerciceController(
             StudentWork(data.exercice, data.progression), null, api);
 }
