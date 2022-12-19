@@ -16,10 +16,10 @@ class Variable {
 }
 
 Variable variableFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Variable(stringFromJson(json['Indice']), intFromJson(json['Name']));
 }
 
-JSON variableToJson(Variable item) {
+Map<String, dynamic> variableToJson(Variable item) {
   return {"Indice": stringToJson(item.indice), "Name": intToJson(item.name)};
 }

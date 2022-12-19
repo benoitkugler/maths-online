@@ -16,12 +16,12 @@ class Area {
 }
 
 Area areaFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Area(
       stringFromJson(json['Color']), listStringFromJson(json['Points']));
 }
 
-JSON areaToJson(Area item) {
+Map<String, dynamic> areaToJson(Area item) {
   return {
     "Color": stringToJson(item.color),
     "Points": listStringToJson(item.points)
@@ -46,7 +46,7 @@ class Circle {
 }
 
 Circle circleFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Circle(
       coordFromJson(json['Center']),
       doubleFromJson(json['Radius']),
@@ -55,7 +55,7 @@ Circle circleFromJson(dynamic json_) {
       stringFromJson(json['Legend']));
 }
 
-JSON circleToJson(Circle item) {
+Map<String, dynamic> circleToJson(Circle item) {
   return {
     "Center": coordToJson(item.center),
     "Radius": doubleToJson(item.radius),
@@ -79,11 +79,11 @@ class Coord {
 }
 
 Coord coordFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Coord(doubleFromJson(json['X']), doubleFromJson(json['Y']));
 }
 
-JSON coordToJson(Coord item) {
+Map<String, dynamic> coordToJson(Coord item) {
   return {"X": doubleToJson(item.x), "Y": doubleToJson(item.y)};
 }
 
@@ -105,7 +105,7 @@ class Drawings {
 }
 
 Drawings drawingsFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Drawings(
       dictStringToLabeledPointFromJson(json['Points']),
       listSegmentFromJson(json['Segments']),
@@ -114,7 +114,7 @@ Drawings drawingsFromJson(dynamic json_) {
       listAreaFromJson(json['Areas']));
 }
 
-JSON drawingsToJson(Drawings item) {
+Map<String, dynamic> drawingsToJson(Drawings item) {
   return {
     "Points": dictStringToLabeledPointToJson(item.points),
     "Segments": listSegmentToJson(item.segments),
@@ -140,7 +140,7 @@ class Figure {
 }
 
 Figure figureFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Figure(
       drawingsFromJson(json['Drawings']),
       repereBoundsFromJson(json['Bounds']),
@@ -148,7 +148,7 @@ Figure figureFromJson(dynamic json_) {
       boolFromJson(json['ShowOrigin']));
 }
 
-JSON figureToJson(Figure item) {
+Map<String, dynamic> figureToJson(Figure item) {
   return {
     "Drawings": drawingsToJson(item.drawings),
     "Bounds": repereBoundsToJson(item.bounds),
@@ -171,11 +171,11 @@ class IntCoord {
 }
 
 IntCoord intCoordFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return IntCoord(intFromJson(json['X']), intFromJson(json['Y']));
 }
 
-JSON intCoordToJson(IntCoord item) {
+Map<String, dynamic> intCoordToJson(IntCoord item) {
   return {"X": intToJson(item.x), "Y": intToJson(item.y)};
 }
 
@@ -220,12 +220,12 @@ class LabeledPoint {
 }
 
 LabeledPoint labeledPointFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LabeledPoint(
       stringFromJson(json['Color']), posPointFromJson(json['Point']));
 }
 
-JSON labeledPointToJson(LabeledPoint item) {
+Map<String, dynamic> labeledPointToJson(LabeledPoint item) {
   return {
     "Color": stringToJson(item.color),
     "Point": posPointToJson(item.point)
@@ -248,12 +248,12 @@ class Line {
 }
 
 Line lineFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Line(stringFromJson(json['Label']), stringFromJson(json['Color']),
       doubleFromJson(json['A']), doubleFromJson(json['B']));
 }
 
-JSON lineToJson(Line item) {
+Map<String, dynamic> lineToJson(Line item) {
   return {
     "Label": stringToJson(item.label),
     "Color": stringToJson(item.color),
@@ -276,12 +276,13 @@ class NamedRandomLabeledPoint {
 }
 
 NamedRandomLabeledPoint namedRandomLabeledPointFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return NamedRandomLabeledPoint(
       stringFromJson(json['Name']), randomLabeledPointFromJson(json['Point']));
 }
 
-JSON namedRandomLabeledPointToJson(NamedRandomLabeledPoint item) {
+Map<String, dynamic> namedRandomLabeledPointToJson(
+    NamedRandomLabeledPoint item) {
   return {
     "Name": stringToJson(item.name),
     "Point": randomLabeledPointToJson(item.point)
@@ -302,11 +303,11 @@ class PosPoint {
 }
 
 PosPoint posPointFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return PosPoint(coordFromJson(json['Point']), labelPosFromJson(json['Pos']));
 }
 
-JSON posPointToJson(PosPoint item) {
+Map<String, dynamic> posPointToJson(PosPoint item) {
   return {"Point": coordToJson(item.point), "Pos": labelPosToJson(item.pos)};
 }
 
@@ -324,12 +325,12 @@ class RandomArea {
 }
 
 RandomArea randomAreaFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomArea(
       stringFromJson(json['Color']), listStringFromJson(json['Points']));
 }
 
-JSON randomAreaToJson(RandomArea item) {
+Map<String, dynamic> randomAreaToJson(RandomArea item) {
   return {
     "Color": stringToJson(item.color),
     "Points": listStringToJson(item.points)
@@ -354,7 +355,7 @@ class RandomCircle {
 }
 
 RandomCircle randomCircleFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomCircle(
       randomCoordFromJson(json['Center']),
       stringFromJson(json['Radius']),
@@ -363,7 +364,7 @@ RandomCircle randomCircleFromJson(dynamic json_) {
       stringFromJson(json['Legend']));
 }
 
-JSON randomCircleToJson(RandomCircle item) {
+Map<String, dynamic> randomCircleToJson(RandomCircle item) {
   return {
     "Center": randomCoordToJson(item.center),
     "Radius": stringToJson(item.radius),
@@ -387,11 +388,11 @@ class RandomCoord {
 }
 
 RandomCoord randomCoordFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomCoord(stringFromJson(json['X']), stringFromJson(json['Y']));
 }
 
-JSON randomCoordToJson(RandomCoord item) {
+Map<String, dynamic> randomCoordToJson(RandomCoord item) {
   return {"X": stringToJson(item.x), "Y": stringToJson(item.y)};
 }
 
@@ -413,7 +414,7 @@ class RandomDrawings {
 }
 
 RandomDrawings randomDrawingsFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomDrawings(
       listNamedRandomLabeledPointFromJson(json['Points']),
       listRandomSegmentFromJson(json['Segments']),
@@ -422,7 +423,7 @@ RandomDrawings randomDrawingsFromJson(dynamic json_) {
       listRandomAreaFromJson(json['Areas']));
 }
 
-JSON randomDrawingsToJson(RandomDrawings item) {
+Map<String, dynamic> randomDrawingsToJson(RandomDrawings item) {
   return {
     "Points": listNamedRandomLabeledPointToJson(item.points),
     "Segments": listRandomSegmentToJson(item.segments),
@@ -447,12 +448,12 @@ class RandomLabeledPoint {
 }
 
 RandomLabeledPoint randomLabeledPointFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomLabeledPoint(stringFromJson(json['Color']),
       randomCoordFromJson(json['Coord']), labelPosFromJson(json['Pos']));
 }
 
-JSON randomLabeledPointToJson(RandomLabeledPoint item) {
+Map<String, dynamic> randomLabeledPointToJson(RandomLabeledPoint item) {
   return {
     "Color": stringToJson(item.color),
     "Coord": randomCoordToJson(item.coord),
@@ -476,12 +477,12 @@ class RandomLine {
 }
 
 RandomLine randomLineFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomLine(stringFromJson(json['Label']), stringFromJson(json['A']),
       stringFromJson(json['B']), stringFromJson(json['Color']));
 }
 
-JSON randomLineToJson(RandomLine item) {
+Map<String, dynamic> randomLineToJson(RandomLine item) {
   return {
     "Label": stringToJson(item.label),
     "A": stringToJson(item.a),
@@ -509,7 +510,7 @@ class RandomSegment {
 }
 
 RandomSegment randomSegmentFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RandomSegment(
       stringFromJson(json['LabelName']),
       stringFromJson(json['From']),
@@ -519,7 +520,7 @@ RandomSegment randomSegmentFromJson(dynamic json_) {
       segmentKindFromJson(json['Kind']));
 }
 
-JSON randomSegmentToJson(RandomSegment item) {
+Map<String, dynamic> randomSegmentToJson(RandomSegment item) {
   return {
     "LabelName": stringToJson(item.labelName),
     "From": stringToJson(item.from),
@@ -545,12 +546,12 @@ class RepereBounds {
 }
 
 RepereBounds repereBoundsFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RepereBounds(intFromJson(json['Width']), intFromJson(json['Height']),
       coordFromJson(json['Origin']));
 }
 
-JSON repereBoundsToJson(RepereBounds item) {
+Map<String, dynamic> repereBoundsToJson(RepereBounds item) {
   return {
     "Width": intToJson(item.width),
     "Height": intToJson(item.height),
@@ -577,7 +578,7 @@ class Segment {
 }
 
 Segment segmentFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Segment(
       stringFromJson(json['LabelName']),
       stringFromJson(json['From']),
@@ -587,7 +588,7 @@ Segment segmentFromJson(dynamic json_) {
       segmentKindFromJson(json['Kind']));
 }
 
-JSON segmentToJson(Segment item) {
+Map<String, dynamic> segmentToJson(Segment item) {
   return {
     "LabelName": stringToJson(item.labelName),
     "From": stringToJson(item.from),
@@ -620,7 +621,7 @@ Map<String, LabeledPoint> dictStringToLabeledPointFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as JSON)
+  return (json as Map<String, dynamic>)
       .map((k, v) => MapEntry(k as String, labeledPointFromJson(v)));
 }
 

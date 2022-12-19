@@ -42,7 +42,7 @@ class Sheet {
 }
 
 Sheet sheetFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Sheet(
       intFromJson(json['Id']),
       intFromJson(json['IdClassroom']),
@@ -52,7 +52,7 @@ Sheet sheetFromJson(dynamic json_) {
       dateTimeFromJson(json['Deadline']));
 }
 
-JSON sheetToJson(Sheet item) {
+Map<String, dynamic> sheetToJson(Sheet item) {
   return {
     "Id": intToJson(item.id),
     "IdClassroom": intToJson(item.idClassroom),

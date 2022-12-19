@@ -8,7 +8,7 @@ import 'src_maths_repere.dart';
 abstract class Answer {}
 
 Answer answerFromJson(dynamic json_) {
-  final json = json_ as JSON;
+  final json = json_ as Map<String, dynamic>;
   final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
@@ -45,7 +45,7 @@ Answer answerFromJson(dynamic json_) {
   }
 }
 
-JSON answerToJson(Answer item) {
+Map<String, dynamic> answerToJson(Answer item) {
   if (item is DoublePointAnswer) {
     return {'Kind': "DoublePointAnswer", 'Data': doublePointAnswerToJson(item)};
   } else if (item is DoublePointPairAnswer) {
@@ -106,7 +106,7 @@ dynamic answersToJson(Answers item) {
 abstract class Assertion {}
 
 Assertion assertionFromJson(dynamic json_) {
-  final json = json_ as JSON;
+  final json = json_ as Map<String, dynamic>;
   final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
@@ -123,7 +123,7 @@ Assertion assertionFromJson(dynamic json_) {
   }
 }
 
-JSON assertionToJson(Assertion item) {
+Map<String, dynamic> assertionToJson(Assertion item) {
   if (item is Equality) {
     return {'Kind': "Equality", 'Data': equalityToJson(item)};
   } else if (item is Node) {
@@ -169,7 +169,7 @@ dynamic binaryToJson(Binary item) => item.toValue();
 abstract class Block {}
 
 Block blockFromJson(dynamic json_) {
-  final json = json_ as JSON;
+  final json = json_ as Map<String, dynamic>;
   final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
@@ -222,7 +222,7 @@ Block blockFromJson(dynamic json_) {
   }
 }
 
-JSON blockToJson(Block item) {
+Map<String, dynamic> blockToJson(Block item) {
   if (item is DropDownFieldBlock) {
     return {
       'Kind': "DropDownFieldBlock",
@@ -319,12 +319,12 @@ class DoublePointAnswer implements Answer {
 }
 
 DoublePointAnswer doublePointAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return DoublePointAnswer(
       intCoordFromJson(json['From']), intCoordFromJson(json['To']));
 }
 
-JSON doublePointAnswerToJson(DoublePointAnswer item) {
+Map<String, dynamic> doublePointAnswerToJson(DoublePointAnswer item) {
   return {"From": intCoordToJson(item.from), "To": intCoordToJson(item.to)};
 }
 
@@ -344,7 +344,7 @@ class DoublePointPairAnswer implements Answer {
 }
 
 DoublePointPairAnswer doublePointPairAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return DoublePointPairAnswer(
       intCoordFromJson(json['From1']),
       intCoordFromJson(json['To1']),
@@ -352,7 +352,7 @@ DoublePointPairAnswer doublePointPairAnswerFromJson(dynamic json_) {
       intCoordFromJson(json['To2']));
 }
 
-JSON doublePointPairAnswerToJson(DoublePointPairAnswer item) {
+Map<String, dynamic> doublePointPairAnswerToJson(DoublePointPairAnswer item) {
   return {
     "From1": intCoordToJson(item.from1),
     "To1": intCoordToJson(item.to1),
@@ -375,12 +375,12 @@ class DropDownFieldBlock implements Block {
 }
 
 DropDownFieldBlock dropDownFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return DropDownFieldBlock(
       listTextLineFromJson(json['Proposals']), intFromJson(json['ID']));
 }
 
-JSON dropDownFieldBlockToJson(DropDownFieldBlock item) {
+Map<String, dynamic> dropDownFieldBlockToJson(DropDownFieldBlock item) {
   return {
     "Proposals": listTextLineToJson(item.proposals),
     "ID": intToJson(item.iD)
@@ -413,12 +413,12 @@ class Equality implements Assertion {
 }
 
 Equality equalityFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Equality(listTextLineFromJson(json['Terms']),
       textLineFromJson(json['Def']), boolFromJson(json['WithDef']));
 }
 
-JSON equalityToJson(Equality item) {
+Map<String, dynamic> equalityToJson(Equality item) {
   return {
     "Terms": listTextLineToJson(item.terms),
     "Def": textLineToJson(item.def),
@@ -439,11 +439,11 @@ class ExpressionAnswer implements Answer {
 }
 
 ExpressionAnswer expressionAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return ExpressionAnswer(stringFromJson(json['Expression']));
 }
 
-JSON expressionAnswerToJson(ExpressionAnswer item) {
+Map<String, dynamic> expressionAnswerToJson(ExpressionAnswer item) {
   return {"Expression": stringToJson(item.expression)};
 }
 
@@ -465,7 +465,7 @@ class ExpressionFieldBlock implements Block {
 }
 
 ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return ExpressionFieldBlock(
       stringFromJson(json['Label']),
       stringFromJson(json['Suffix']),
@@ -474,7 +474,7 @@ ExpressionFieldBlock expressionFieldBlockFromJson(dynamic json_) {
       intFromJson(json['ID']));
 }
 
-JSON expressionFieldBlockToJson(ExpressionFieldBlock item) {
+Map<String, dynamic> expressionFieldBlockToJson(ExpressionFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
     "Suffix": stringToJson(item.suffix),
@@ -497,11 +497,11 @@ class FigureBlock implements Block {
 }
 
 FigureBlock figureBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FigureBlock(figureFromJson(json['Figure']));
 }
 
-JSON figureBlockToJson(FigureBlock item) {
+Map<String, dynamic> figureBlockToJson(FigureBlock item) {
   return {"Figure": figureToJson(item.figure)};
 }
 
@@ -519,12 +519,12 @@ class FigurePointFieldBlock implements Block {
 }
 
 FigurePointFieldBlock figurePointFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FigurePointFieldBlock(
       figureFromJson(json['Figure']), intFromJson(json['ID']));
 }
 
-JSON figurePointFieldBlockToJson(FigurePointFieldBlock item) {
+Map<String, dynamic> figurePointFieldBlockToJson(FigurePointFieldBlock item) {
   return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
 }
 
@@ -545,7 +545,7 @@ class FigureVectorFieldBlock implements Block {
 }
 
 FigureVectorFieldBlock figureVectorFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FigureVectorFieldBlock(
       stringFromJson(json['LineLabel']),
       figureFromJson(json['Figure']),
@@ -553,7 +553,7 @@ FigureVectorFieldBlock figureVectorFieldBlockFromJson(dynamic json_) {
       boolFromJson(json['AsLine']));
 }
 
-JSON figureVectorFieldBlockToJson(FigureVectorFieldBlock item) {
+Map<String, dynamic> figureVectorFieldBlockToJson(FigureVectorFieldBlock item) {
   return {
     "LineLabel": stringToJson(item.lineLabel),
     "Figure": figureToJson(item.figure),
@@ -576,12 +576,13 @@ class FigureVectorPairFieldBlock implements Block {
 }
 
 FigureVectorPairFieldBlock figureVectorPairFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FigureVectorPairFieldBlock(
       figureFromJson(json['Figure']), intFromJson(json['ID']));
 }
 
-JSON figureVectorPairFieldBlockToJson(FigureVectorPairFieldBlock item) {
+Map<String, dynamic> figureVectorPairFieldBlockToJson(
+    FigureVectorPairFieldBlock item) {
   return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
 }
 
@@ -598,11 +599,11 @@ class FormulaBlock implements Block {
 }
 
 FormulaBlock formulaBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FormulaBlock(stringFromJson(json['Formula']));
 }
 
-JSON formulaBlockToJson(FormulaBlock item) {
+Map<String, dynamic> formulaBlockToJson(FormulaBlock item) {
   return {"Formula": stringToJson(item.formula)};
 }
 
@@ -620,12 +621,12 @@ class FunctionArea {
 }
 
 FunctionArea functionAreaFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionArea(
       stringFromJson(json['Color']), listBezierCurveFromJson(json['Path']));
 }
 
-JSON functionAreaToJson(FunctionArea item) {
+Map<String, dynamic> functionAreaToJson(FunctionArea item) {
   return {
     "Color": stringToJson(item.color),
     "Path": listBezierCurveToJson(item.path)
@@ -647,12 +648,12 @@ class FunctionPoint {
 }
 
 FunctionPoint functionPointFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionPoint(stringFromJson(json['Color']),
       stringFromJson(json['Legend']), coordFromJson(json['Coord']));
 }
 
-JSON functionPointToJson(FunctionPoint item) {
+Map<String, dynamic> functionPointToJson(FunctionPoint item) {
   return {
     "Color": stringToJson(item.color),
     "Legend": stringToJson(item.legend),
@@ -673,11 +674,11 @@ class FunctionPointsAnswer implements Answer {
 }
 
 FunctionPointsAnswer functionPointsAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionPointsAnswer(listIntFromJson(json['Fxs']));
 }
 
-JSON functionPointsAnswerToJson(FunctionPointsAnswer item) {
+Map<String, dynamic> functionPointsAnswerToJson(FunctionPointsAnswer item) {
   return {"Fxs": listIntToJson(item.fxs)};
 }
 
@@ -699,7 +700,7 @@ class FunctionPointsFieldBlock implements Block {
 }
 
 FunctionPointsFieldBlock functionPointsFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionPointsFieldBlock(
       stringFromJson(json['Label']),
       listIntFromJson(json['Xs']),
@@ -708,7 +709,8 @@ FunctionPointsFieldBlock functionPointsFieldBlockFromJson(dynamic json_) {
       intFromJson(json['ID']));
 }
 
-JSON functionPointsFieldBlockToJson(FunctionPointsFieldBlock item) {
+Map<String, dynamic> functionPointsFieldBlockToJson(
+    FunctionPointsFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
     "Xs": listIntToJson(item.xs),
@@ -735,7 +737,7 @@ class FunctionsGraphBlock implements Block {
 }
 
 FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionsGraphBlock(
       listFunctionGraphFromJson(json['Functions']),
       listFunctionAreaFromJson(json['Areas']),
@@ -743,7 +745,7 @@ FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
       repereBoundsFromJson(json['Bounds']));
 }
 
-JSON functionsGraphBlockToJson(FunctionsGraphBlock item) {
+Map<String, dynamic> functionsGraphBlockToJson(FunctionsGraphBlock item) {
   return {
     "Functions": listFunctionGraphToJson(item.functions),
     "Areas": listFunctionAreaToJson(item.areas),
@@ -767,12 +769,12 @@ class Node implements Assertion {
 }
 
 Node nodeFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Node(assertionFromJson(json['Left']), assertionFromJson(json['Right']),
       binaryFromJson(json['Op']));
 }
 
-JSON nodeToJson(Node item) {
+Map<String, dynamic> nodeToJson(Node item) {
   return {
     "Left": assertionToJson(item.left),
     "Right": assertionToJson(item.right),
@@ -793,11 +795,11 @@ class NumberAnswer implements Answer {
 }
 
 NumberAnswer numberAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return NumberAnswer(doubleFromJson(json['Value']));
 }
 
-JSON numberAnswerToJson(NumberAnswer item) {
+Map<String, dynamic> numberAnswerToJson(NumberAnswer item) {
   return {"Value": doubleToJson(item.value)};
 }
 
@@ -815,12 +817,12 @@ class NumberFieldBlock implements Block {
 }
 
 NumberFieldBlock numberFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return NumberFieldBlock(
       intFromJson(json['ID']), intFromJson(json['SizeHint']));
 }
 
-JSON numberFieldBlockToJson(NumberFieldBlock item) {
+Map<String, dynamic> numberFieldBlockToJson(NumberFieldBlock item) {
   return {"ID": intToJson(item.iD), "SizeHint": intToJson(item.sizeHint)};
 }
 
@@ -837,11 +839,11 @@ class OrderedListAnswer implements Answer {
 }
 
 OrderedListAnswer orderedListAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return OrderedListAnswer(listIntFromJson(json['Indices']));
 }
 
-JSON orderedListAnswerToJson(OrderedListAnswer item) {
+Map<String, dynamic> orderedListAnswerToJson(OrderedListAnswer item) {
   return {"Indices": listIntToJson(item.indices)};
 }
 
@@ -862,7 +864,7 @@ class OrderedListFieldBlock implements Block {
 }
 
 OrderedListFieldBlock orderedListFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return OrderedListFieldBlock(
       stringFromJson(json['Label']),
       listTextLineFromJson(json['Proposals']),
@@ -870,7 +872,7 @@ OrderedListFieldBlock orderedListFieldBlockFromJson(dynamic json_) {
       intFromJson(json['ID']));
 }
 
-JSON orderedListFieldBlockToJson(OrderedListFieldBlock item) {
+Map<String, dynamic> orderedListFieldBlockToJson(OrderedListFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
     "Proposals": listTextLineToJson(item.proposals),
@@ -892,11 +894,11 @@ class PointAnswer implements Answer {
 }
 
 PointAnswer pointAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return PointAnswer(intCoordFromJson(json['Point']));
 }
 
-JSON pointAnswerToJson(PointAnswer item) {
+Map<String, dynamic> pointAnswerToJson(PointAnswer item) {
   return {"Point": intCoordToJson(item.point)};
 }
 
@@ -913,11 +915,11 @@ class Proof {
 }
 
 Proof proofFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Proof(sequenceFromJson(json['Root']));
 }
 
-JSON proofToJson(Proof item) {
+Map<String, dynamic> proofToJson(Proof item) {
   return {"Root": sequenceToJson(item.root)};
 }
 
@@ -934,11 +936,11 @@ class ProofAnswer implements Answer {
 }
 
 ProofAnswer proofAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return ProofAnswer(proofFromJson(json['Proof']));
 }
 
-JSON proofAnswerToJson(ProofAnswer item) {
+Map<String, dynamic> proofAnswerToJson(ProofAnswer item) {
   return {"Proof": proofToJson(item.proof)};
 }
 
@@ -957,12 +959,12 @@ class ProofFieldBlock implements Block {
 }
 
 ProofFieldBlock proofFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return ProofFieldBlock(proofFromJson(json['Shape']),
       listTextLineFromJson(json['TermProposals']), intFromJson(json['ID']));
 }
 
-JSON proofFieldBlockToJson(ProofFieldBlock item) {
+Map<String, dynamic> proofFieldBlockToJson(ProofFieldBlock item) {
   return {
     "Shape": proofToJson(item.shape),
     "TermProposals": listTextLineToJson(item.termProposals),
@@ -983,11 +985,11 @@ class Question {
 }
 
 Question questionFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Question(enonceFromJson(json['Enonce']));
 }
 
-JSON questionToJson(Question item) {
+Map<String, dynamic> questionToJson(Question item) {
   return {"Enonce": enonceToJson(item.enonce)};
 }
 
@@ -1004,11 +1006,11 @@ class QuestionAnswersIn {
 }
 
 QuestionAnswersIn questionAnswersInFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return QuestionAnswersIn(answersFromJson(json['Data']));
 }
 
-JSON questionAnswersInToJson(QuestionAnswersIn item) {
+Map<String, dynamic> questionAnswersInToJson(QuestionAnswersIn item) {
   return {"Data": answersToJson(item.data)};
 }
 
@@ -1026,12 +1028,12 @@ class QuestionAnswersOut {
 }
 
 QuestionAnswersOut questionAnswersOutFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return QuestionAnswersOut(dictIntToBoolFromJson(json['Results']),
       answersFromJson(json['ExpectedAnswers']));
 }
 
-JSON questionAnswersOutToJson(QuestionAnswersOut item) {
+Map<String, dynamic> questionAnswersOutToJson(QuestionAnswersOut item) {
   return {
     "Results": dictIntToBoolToJson(item.results),
     "ExpectedAnswers": answersToJson(item.expectedAnswers)
@@ -1052,12 +1054,12 @@ class QuestionSyntaxCheckIn {
 }
 
 QuestionSyntaxCheckIn questionSyntaxCheckInFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return QuestionSyntaxCheckIn(
       answerFromJson(json['Answer']), intFromJson(json['ID']));
 }
 
-JSON questionSyntaxCheckInToJson(QuestionSyntaxCheckIn item) {
+Map<String, dynamic> questionSyntaxCheckInToJson(QuestionSyntaxCheckIn item) {
   return {"Answer": answerToJson(item.answer), "ID": intToJson(item.iD)};
 }
 
@@ -1076,12 +1078,12 @@ class QuestionSyntaxCheckOut {
 }
 
 QuestionSyntaxCheckOut questionSyntaxCheckOutFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return QuestionSyntaxCheckOut(stringFromJson(json['Reason']),
       intFromJson(json['ID']), boolFromJson(json['IsValid']));
 }
 
-JSON questionSyntaxCheckOutToJson(QuestionSyntaxCheckOut item) {
+Map<String, dynamic> questionSyntaxCheckOutToJson(QuestionSyntaxCheckOut item) {
   return {
     "Reason": stringToJson(item.reason),
     "ID": intToJson(item.iD),
@@ -1102,11 +1104,11 @@ class RadioAnswer implements Answer {
 }
 
 RadioAnswer radioAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RadioAnswer(intFromJson(json['Index']));
 }
 
-JSON radioAnswerToJson(RadioAnswer item) {
+Map<String, dynamic> radioAnswerToJson(RadioAnswer item) {
   return {"Index": intToJson(item.index)};
 }
 
@@ -1124,12 +1126,12 @@ class RadioFieldBlock implements Block {
 }
 
 RadioFieldBlock radioFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return RadioFieldBlock(
       listTextLineFromJson(json['Proposals']), intFromJson(json['ID']));
 }
 
-JSON radioFieldBlockToJson(RadioFieldBlock item) {
+Map<String, dynamic> radioFieldBlockToJson(RadioFieldBlock item) {
   return {
     "Proposals": listTextLineToJson(item.proposals),
     "ID": intToJson(item.iD)
@@ -1149,11 +1151,11 @@ class Sequence implements Assertion {
 }
 
 Sequence sequenceFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Sequence(assertionsFromJson(json['Parts']));
 }
 
-JSON sequenceToJson(Sequence item) {
+Map<String, dynamic> sequenceToJson(Sequence item) {
   return {"Parts": assertionsToJson(item.parts)};
 }
 
@@ -1174,7 +1176,7 @@ class SignColumn {
 }
 
 SignColumn signColumnFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return SignColumn(
       stringFromJson(json['X']),
       boolFromJson(json['IsYForbiddenValue']),
@@ -1182,7 +1184,7 @@ SignColumn signColumnFromJson(dynamic json_) {
       boolFromJson(json['IsPositive']));
 }
 
-JSON signColumnToJson(SignColumn item) {
+Map<String, dynamic> signColumnToJson(SignColumn item) {
   return {
     "X": stringToJson(item.x),
     "IsYForbiddenValue": boolToJson(item.isYForbiddenValue),
@@ -1224,14 +1226,14 @@ class SignTableAnswer implements Answer {
 }
 
 SignTableAnswer signTableAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return SignTableAnswer(
       listStringFromJson(json['Xs']),
       listSignSymbolFromJson(json['FxSymbols']),
       listBoolFromJson(json['Signs']));
 }
 
-JSON signTableAnswerToJson(SignTableAnswer item) {
+Map<String, dynamic> signTableAnswerToJson(SignTableAnswer item) {
   return {
     "Xs": listStringToJson(item.xs),
     "FxSymbols": listSignSymbolToJson(item.fxSymbols),
@@ -1253,12 +1255,12 @@ class SignTableBlock implements Block {
 }
 
 SignTableBlock signTableBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return SignTableBlock(
       stringFromJson(json['Label']), listSignColumnFromJson(json['Columns']));
 }
 
-JSON signTableBlockToJson(SignTableBlock item) {
+Map<String, dynamic> signTableBlockToJson(SignTableBlock item) {
   return {
     "Label": stringToJson(item.label),
     "Columns": listSignColumnToJson(item.columns)
@@ -1280,12 +1282,12 @@ class SignTableFieldBlock implements Block {
 }
 
 SignTableFieldBlock signTableFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return SignTableFieldBlock(stringFromJson(json['Label']),
       listIntFromJson(json['LengthProposals']), intFromJson(json['ID']));
 }
 
-JSON signTableFieldBlockToJson(SignTableFieldBlock item) {
+Map<String, dynamic> signTableFieldBlockToJson(SignTableFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
     "LengthProposals": listIntToJson(item.lengthProposals),
@@ -1306,11 +1308,11 @@ class Statement implements Assertion {
 }
 
 Statement statementFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Statement(textLineFromJson(json['Content']));
 }
 
-JSON statementToJson(Statement item) {
+Map<String, dynamic> statementToJson(Statement item) {
   return {"Content": textLineToJson(item.content)};
 }
 
@@ -1327,11 +1329,11 @@ class TableAnswer implements Answer {
 }
 
 TableAnswer tableAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TableAnswer(listListDoubleFromJson(json['Rows']));
 }
 
-JSON tableAnswerToJson(TableAnswer item) {
+Map<String, dynamic> tableAnswerToJson(TableAnswer item) {
   return {"Rows": listListDoubleToJson(item.rows)};
 }
 
@@ -1350,14 +1352,14 @@ class TableBlock implements Block {
 }
 
 TableBlock tableBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TableBlock(
       listTextOrMathFromJson(json['HorizontalHeaders']),
       listTextOrMathFromJson(json['VerticalHeaders']),
       listListTextOrMathFromJson(json['Values']));
 }
 
-JSON tableBlockToJson(TableBlock item) {
+Map<String, dynamic> tableBlockToJson(TableBlock item) {
   return {
     "HorizontalHeaders": listTextOrMathToJson(item.horizontalHeaders),
     "VerticalHeaders": listTextOrMathToJson(item.verticalHeaders),
@@ -1380,12 +1382,12 @@ class TableFieldBlock implements Block {
 }
 
 TableFieldBlock tableFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TableFieldBlock(listTextOrMathFromJson(json['HorizontalHeaders']),
       listTextOrMathFromJson(json['VerticalHeaders']), intFromJson(json['ID']));
 }
 
-JSON tableFieldBlockToJson(TableFieldBlock item) {
+Map<String, dynamic> tableFieldBlockToJson(TableFieldBlock item) {
   return {
     "HorizontalHeaders": listTextOrMathToJson(item.horizontalHeaders),
     "VerticalHeaders": listTextOrMathToJson(item.verticalHeaders),
@@ -1409,12 +1411,12 @@ class TextBlock implements Block {
 }
 
 TextBlock textBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TextBlock(textLineFromJson(json['Parts']), boolFromJson(json['Bold']),
       boolFromJson(json['Italic']), boolFromJson(json['Smaller']));
 }
 
-JSON textBlockToJson(TextBlock item) {
+Map<String, dynamic> textBlockToJson(TextBlock item) {
   return {
     "Parts": textLineToJson(item.parts),
     "Bold": boolToJson(item.bold),
@@ -1448,11 +1450,11 @@ class TextOrMath {
 }
 
 TextOrMath textOrMathFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TextOrMath(stringFromJson(json['Text']), boolFromJson(json['IsMath']));
 }
 
-JSON textOrMathToJson(TextOrMath item) {
+Map<String, dynamic> textOrMathToJson(TextOrMath item) {
   return {"Text": stringToJson(item.text), "IsMath": boolToJson(item.isMath)};
 }
 
@@ -1469,11 +1471,11 @@ class TreeAnswer implements Answer {
 }
 
 TreeAnswer treeAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TreeAnswer(treeNodeAnswerFromJson(json['Root']));
 }
 
-JSON treeAnswerToJson(TreeAnswer item) {
+Map<String, dynamic> treeAnswerToJson(TreeAnswer item) {
   return {"Root": treeNodeAnswerToJson(item.root)};
 }
 
@@ -1492,12 +1494,12 @@ class TreeFieldBlock implements Block {
 }
 
 TreeFieldBlock treeFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TreeFieldBlock(listTreeShapeFromJson(json['ShapeProposals']),
       listTextOrMathFromJson(json['EventsProposals']), intFromJson(json['ID']));
 }
 
-JSON treeFieldBlockToJson(TreeFieldBlock item) {
+Map<String, dynamic> treeFieldBlockToJson(TreeFieldBlock item) {
   return {
     "ShapeProposals": listTreeShapeToJson(item.shapeProposals),
     "EventsProposals": listTextOrMathToJson(item.eventsProposals),
@@ -1520,12 +1522,12 @@ class TreeNodeAnswer {
 }
 
 TreeNodeAnswer treeNodeAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TreeNodeAnswer(listTreeNodeAnswerFromJson(json['Children']),
       listDoubleFromJson(json['Probabilities']), intFromJson(json['Value']));
 }
 
-JSON treeNodeAnswerToJson(TreeNodeAnswer item) {
+Map<String, dynamic> treeNodeAnswerToJson(TreeNodeAnswer item) {
   return {
     "Children": listTreeNodeAnswerToJson(item.children),
     "Probabilities": listDoubleToJson(item.probabilities),
@@ -1559,12 +1561,12 @@ class VariationColumnNumber {
 }
 
 VariationColumnNumber variationColumnNumberFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VariationColumnNumber(stringFromJson(json['X']),
       stringFromJson(json['Y']), boolFromJson(json['IsUp']));
 }
 
-JSON variationColumnNumberToJson(VariationColumnNumber item) {
+Map<String, dynamic> variationColumnNumberToJson(VariationColumnNumber item) {
   return {
     "X": stringToJson(item.x),
     "Y": stringToJson(item.y),
@@ -1587,12 +1589,12 @@ class VariationTableAnswer implements Answer {
 }
 
 VariationTableAnswer variationTableAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VariationTableAnswer(listStringFromJson(json['Xs']),
       listStringFromJson(json['Fxs']), listBoolFromJson(json['Arrows']));
 }
 
-JSON variationTableAnswerToJson(VariationTableAnswer item) {
+Map<String, dynamic> variationTableAnswerToJson(VariationTableAnswer item) {
   return {
     "Xs": listStringToJson(item.xs),
     "Fxs": listStringToJson(item.fxs),
@@ -1615,14 +1617,14 @@ class VariationTableBlock implements Block {
 }
 
 VariationTableBlock variationTableBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VariationTableBlock(
       stringFromJson(json['Label']),
       listVariationColumnNumberFromJson(json['Columns']),
       listBoolFromJson(json['Arrows']));
 }
 
-JSON variationTableBlockToJson(VariationTableBlock item) {
+Map<String, dynamic> variationTableBlockToJson(VariationTableBlock item) {
   return {
     "Label": stringToJson(item.label),
     "Columns": listVariationColumnNumberToJson(item.columns),
@@ -1645,12 +1647,13 @@ class VariationTableFieldBlock implements Block {
 }
 
 VariationTableFieldBlock variationTableFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VariationTableFieldBlock(stringFromJson(json['Label']),
       listIntFromJson(json['LengthProposals']), intFromJson(json['ID']));
 }
 
-JSON variationTableFieldBlockToJson(VariationTableFieldBlock item) {
+Map<String, dynamic> variationTableFieldBlockToJson(
+    VariationTableFieldBlock item) {
   return {
     "Label": stringToJson(item.label),
     "LengthProposals": listIntToJson(item.lengthProposals),
@@ -1675,7 +1678,7 @@ class VectorFieldBlock implements Block {
 }
 
 VectorFieldBlock vectorFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VectorFieldBlock(
       intFromJson(json['ID']),
       boolFromJson(json['DisplayColumn']),
@@ -1683,7 +1686,7 @@ VectorFieldBlock vectorFieldBlockFromJson(dynamic json_) {
       intFromJson(json['SizeHintY']));
 }
 
-JSON vectorFieldBlockToJson(VectorFieldBlock item) {
+Map<String, dynamic> vectorFieldBlockToJson(VectorFieldBlock item) {
   return {
     "ID": intToJson(item.iD),
     "DisplayColumn": boolToJson(item.displayColumn),
@@ -1706,12 +1709,12 @@ class VectorNumberAnswer implements Answer {
 }
 
 VectorNumberAnswer vectorNumberAnswerFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VectorNumberAnswer(
       doubleFromJson(json['X']), doubleFromJson(json['Y']));
 }
 
-JSON vectorNumberAnswerToJson(VectorNumberAnswer item) {
+Map<String, dynamic> vectorNumberAnswerToJson(VectorNumberAnswer item) {
   return {"X": doubleToJson(item.x), "Y": doubleToJson(item.y)};
 }
 
@@ -1719,7 +1722,7 @@ Map<int, Answer> dictIntToAnswerFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as JSON)
+  return (json as Map<String, dynamic>)
       .map((k, v) => MapEntry(int.parse(k), answerFromJson(v)));
 }
 
@@ -1731,7 +1734,8 @@ Map<int, bool> dictIntToBoolFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as JSON).map((k, v) => MapEntry(int.parse(k), boolFromJson(v)));
+  return (json as Map<String, dynamic>)
+      .map((k, v) => MapEntry(int.parse(k), boolFromJson(v)));
 }
 
 Map<String, dynamic> dictIntToBoolToJson(Map<int, bool> item) {

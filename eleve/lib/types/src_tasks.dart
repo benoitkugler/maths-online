@@ -20,12 +20,12 @@ class AnswerP {
 }
 
 AnswerP answerPFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return AnswerP(paramsFromJson(json['Params']),
       questionAnswersInFromJson(json['Answer']));
 }
 
-JSON answerPToJson(AnswerP item) {
+Map<String, dynamic> answerPToJson(AnswerP item) {
   return {
     "Params": paramsToJson(item.params),
     "Answer": questionAnswersInToJson(item.answer)
@@ -46,12 +46,12 @@ class EvaluateQuestionIn {
 }
 
 EvaluateQuestionIn evaluateQuestionInFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return EvaluateQuestionIn(
       answerPFromJson(json['Answer']), intFromJson(json['IdQuestion']));
 }
 
-JSON evaluateQuestionInToJson(EvaluateQuestionIn item) {
+Map<String, dynamic> evaluateQuestionInToJson(EvaluateQuestionIn item) {
   return {
     "Answer": answerPToJson(item.answer),
     "IdQuestion": intToJson(item.idQuestion)
@@ -73,14 +73,14 @@ class EvaluateWorkIn {
 }
 
 EvaluateWorkIn evaluateWorkInFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkIn(
       workIDFromJson(json['ID']),
       dictIntToAnswerPFromJson(json['Answers']),
       progressionExtFromJson(json['Progression']));
 }
 
-JSON evaluateWorkInToJson(EvaluateWorkIn item) {
+Map<String, dynamic> evaluateWorkInToJson(EvaluateWorkIn item) {
   return {
     "ID": workIDToJson(item.iD),
     "Answers": dictIntToAnswerPToJson(item.answers),
@@ -103,14 +103,14 @@ class EvaluateWorkOut {
 }
 
 EvaluateWorkOut evaluateWorkOutFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkOut(
       dictIntToQuestionAnswersOutFromJson(json['Results']),
       progressionExtFromJson(json['Progression']),
       listInstantiatedQuestionFromJson(json['NewQuestions']));
 }
 
-JSON evaluateWorkOutToJson(EvaluateWorkOut item) {
+Map<String, dynamic> evaluateWorkOutToJson(EvaluateWorkOut item) {
   return {
     "Results": dictIntToQuestionAnswersOutToJson(item.results),
     "Progression": progressionExtToJson(item.progression),
@@ -144,12 +144,12 @@ class InstantiatedQuestion {
 }
 
 InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return InstantiatedQuestion(intFromJson(json['Id']),
       questionFromJson(json['Question']), paramsFromJson(json['Params']));
 }
 
-JSON instantiatedQuestionToJson(InstantiatedQuestion item) {
+Map<String, dynamic> instantiatedQuestionToJson(InstantiatedQuestion item) {
   return {
     "Id": intToJson(item.id),
     "Question": questionToJson(item.question),
@@ -175,7 +175,7 @@ class InstantiatedWork {
 }
 
 InstantiatedWork instantiatedWorkFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return InstantiatedWork(
       workIDFromJson(json['ID']),
       stringFromJson(json['Title']),
@@ -184,7 +184,7 @@ InstantiatedWork instantiatedWorkFromJson(dynamic json_) {
       listIntFromJson(json['Baremes']));
 }
 
-JSON instantiatedWorkToJson(InstantiatedWork item) {
+Map<String, dynamic> instantiatedWorkToJson(InstantiatedWork item) {
   return {
     "ID": workIDToJson(item.iD),
     "Title": stringToJson(item.title),
@@ -219,12 +219,12 @@ class ProgressionExt {
 }
 
 ProgressionExt progressionExtFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return ProgressionExt(listQuestionHistoryFromJson(json['Questions']),
       intFromJson(json['NextQuestion']));
 }
 
-JSON progressionExtToJson(ProgressionExt item) {
+Map<String, dynamic> progressionExtToJson(ProgressionExt item) {
   return {
     "Questions": listQuestionHistoryToJson(item.questions),
     "NextQuestion": intToJson(item.nextQuestion)
@@ -250,7 +250,7 @@ class TaskProgressionHeader {
 }
 
 TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return TaskProgressionHeader(
       intFromJson(json['Id']),
       stringFromJson(json['Title']),
@@ -260,7 +260,7 @@ TaskProgressionHeader taskProgressionHeaderFromJson(dynamic json_) {
       intFromJson(json['Bareme']));
 }
 
-JSON taskProgressionHeaderToJson(TaskProgressionHeader item) {
+Map<String, dynamic> taskProgressionHeaderToJson(TaskProgressionHeader item) {
   return {
     "Id": intToJson(item.id),
     "Title": stringToJson(item.title),
@@ -285,12 +285,12 @@ class VarEntry {
 }
 
 VarEntry varEntryFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return VarEntry(
       variableFromJson(json['Variable']), stringFromJson(json['Resolved']));
 }
 
-JSON varEntryToJson(VarEntry item) {
+Map<String, dynamic> varEntryToJson(VarEntry item) {
   return {
     "Variable": variableToJson(item.variable),
     "Resolved": stringToJson(item.resolved)
@@ -311,11 +311,11 @@ class WorkID {
 }
 
 WorkID workIDFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return WorkID(intFromJson(json['ID']), boolFromJson(json['IsExercice']));
 }
 
-JSON workIDToJson(WorkID item) {
+Map<String, dynamic> workIDToJson(WorkID item) {
   return {"ID": intToJson(item.iD), "IsExercice": boolToJson(item.isExercice)};
 }
 
@@ -323,7 +323,7 @@ Map<int, AnswerP> dictIntToAnswerPFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as JSON)
+  return (json as Map<String, dynamic>)
       .map((k, v) => MapEntry(int.parse(k), answerPFromJson(v)));
 }
 
@@ -336,7 +336,7 @@ Map<int, QuestionAnswersOut> dictIntToQuestionAnswersOutFromJson(dynamic json) {
   if (json == null) {
     return {};
   }
-  return (json as JSON)
+  return (json as Map<String, dynamic>)
       .map((k, v) => MapEntry(int.parse(k), questionAnswersOutFromJson(v)));
 }
 

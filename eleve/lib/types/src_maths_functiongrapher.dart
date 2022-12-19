@@ -18,12 +18,12 @@ class BezierCurve {
 }
 
 BezierCurve bezierCurveFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return BezierCurve(coordFromJson(json['P0']), coordFromJson(json['P1']),
       coordFromJson(json['P2']));
 }
 
-JSON bezierCurveToJson(BezierCurve item) {
+Map<String, dynamic> bezierCurveToJson(BezierCurve item) {
   return {
     "P0": coordToJson(item.p0),
     "P1": coordToJson(item.p1),
@@ -45,12 +45,12 @@ class FunctionDecoration {
 }
 
 FunctionDecoration functionDecorationFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionDecoration(
       stringFromJson(json['Label']), stringFromJson(json['Color']));
 }
 
-JSON functionDecorationToJson(FunctionDecoration item) {
+Map<String, dynamic> functionDecorationToJson(FunctionDecoration item) {
   return {"Label": stringToJson(item.label), "Color": stringToJson(item.color)};
 }
 
@@ -68,12 +68,12 @@ class FunctionGraph {
 }
 
 FunctionGraph functionGraphFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return FunctionGraph(functionDecorationFromJson(json['Decoration']),
       listBezierCurveFromJson(json['Segments']));
 }
 
-JSON functionGraphToJson(FunctionGraph item) {
+Map<String, dynamic> functionGraphToJson(FunctionGraph item) {
   return {
     "Decoration": functionDecorationToJson(item.decoration),
     "Segments": listBezierCurveToJson(item.segments)

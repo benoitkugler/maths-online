@@ -18,12 +18,12 @@ class CheckExpressionOut {
 }
 
 CheckExpressionOut checkExpressionOutFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return CheckExpressionOut(
       stringFromJson(json['Reason']), boolFromJson(json['IsValid']));
 }
 
-JSON checkExpressionOutToJson(CheckExpressionOut item) {
+Map<String, dynamic> checkExpressionOutToJson(CheckExpressionOut item) {
   return {
     "Reason": stringToJson(item.reason),
     "IsValid": boolToJson(item.isValid)
@@ -44,12 +44,12 @@ class LabeledQuestion {
 }
 
 LabeledQuestion labeledQuestionFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LabeledQuestion(
       stringFromJson(json['Title']), questionFromJson(json['Question']));
 }
 
-JSON labeledQuestionToJson(LabeledQuestion item) {
+Map<String, dynamic> labeledQuestionToJson(LabeledQuestion item) {
   return {
     "Title": stringToJson(item.title),
     "Question": questionToJson(item.question)
@@ -70,12 +70,12 @@ class StudentWork {
 }
 
 StudentWork studentWorkFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return StudentWork(instantiatedWorkFromJson(json['Exercice']),
       progressionExtFromJson(json['Progression']));
 }
 
-JSON studentWorkToJson(StudentWork item) {
+Map<String, dynamic> studentWorkToJson(StudentWork item) {
   return {
     "Exercice": instantiatedWorkToJson(item.exercice),
     "Progression": progressionExtToJson(item.progression)

@@ -31,7 +31,7 @@ class Student {
 }
 
 Student studentFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return Student(
       intFromJson(json['Id']),
       stringFromJson(json['Name']),
@@ -42,7 +42,7 @@ Student studentFromJson(dynamic json_) {
       intFromJson(json['id_classroom']));
 }
 
-JSON studentToJson(Student item) {
+Map<String, dynamic> studentToJson(Student item) {
   return {
     "Id": intToJson(item.id),
     "Name": stringToJson(item.name),

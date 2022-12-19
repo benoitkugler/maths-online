@@ -18,12 +18,13 @@ class LoopackEvaluateQuestionIn {
 }
 
 LoopackEvaluateQuestionIn loopackEvaluateQuestionInFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopackEvaluateQuestionIn(
       questionPageFromJson(json['Question']), answerPFromJson(json['Answer']));
 }
 
-JSON loopackEvaluateQuestionInToJson(LoopackEvaluateQuestionIn item) {
+Map<String, dynamic> loopackEvaluateQuestionInToJson(
+    LoopackEvaluateQuestionIn item) {
   return {
     "Question": questionPageToJson(item.question),
     "Answer": answerPToJson(item.answer)
@@ -43,12 +44,13 @@ class LoopbackEvaluateQuestionOut {
 }
 
 LoopbackEvaluateQuestionOut loopbackEvaluateQuestionOutFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopbackEvaluateQuestionOut(
       questionAnswersOutFromJson(json['Answers']));
 }
 
-JSON loopbackEvaluateQuestionOutToJson(LoopbackEvaluateQuestionOut item) {
+Map<String, dynamic> loopbackEvaluateQuestionOutToJson(
+    LoopbackEvaluateQuestionOut item) {
   return {"Answers": questionAnswersOutToJson(item.answers)};
 }
 
@@ -63,11 +65,11 @@ class LoopbackPaused implements LoopbackServerEvent {
 }
 
 LoopbackPaused loopbackPausedFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopbackPaused();
 }
 
-JSON loopbackPausedToJson(LoopbackPaused item) {
+Map<String, dynamic> loopbackPausedToJson(LoopbackPaused item) {
   return {};
 }
 
@@ -75,7 +77,7 @@ JSON loopbackPausedToJson(LoopbackPaused item) {
 abstract class LoopbackServerEvent {}
 
 LoopbackServerEvent loopbackServerEventFromJson(dynamic json_) {
-  final json = json_ as JSON;
+  final json = json_ as Map<String, dynamic>;
   final kind = json['Kind'] as String;
   final data = json['Data'];
   switch (kind) {
@@ -90,7 +92,7 @@ LoopbackServerEvent loopbackServerEventFromJson(dynamic json_) {
   }
 }
 
-JSON loopbackServerEventToJson(LoopbackServerEvent item) {
+Map<String, dynamic> loopbackServerEventToJson(LoopbackServerEvent item) {
   if (item is LoopbackPaused) {
     return {'Kind': "LoopbackPaused", 'Data': loopbackPausedToJson(item)};
   } else if (item is LoopbackShowExercice) {
@@ -123,14 +125,14 @@ class LoopbackShowExercice implements LoopbackServerEvent {
 }
 
 LoopbackShowExercice loopbackShowExerciceFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopbackShowExercice(
       instantiatedWorkFromJson(json['Exercice']),
       progressionExtFromJson(json['Progression']),
       listQuestionPageFromJson(json['Origin']));
 }
 
-JSON loopbackShowExerciceToJson(LoopbackShowExercice item) {
+Map<String, dynamic> loopbackShowExerciceToJson(LoopbackShowExercice item) {
   return {
     "Exercice": instantiatedWorkToJson(item.exercice),
     "Progression": progressionExtToJson(item.progression),
@@ -153,12 +155,12 @@ class LoopbackShowQuestion implements LoopbackServerEvent {
 }
 
 LoopbackShowQuestion loopbackShowQuestionFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopbackShowQuestion(questionFromJson(json['Question']),
       paramsFromJson(json['Params']), questionPageFromJson(json['Origin']));
 }
 
-JSON loopbackShowQuestionToJson(LoopbackShowQuestion item) {
+Map<String, dynamic> loopbackShowQuestionToJson(LoopbackShowQuestion item) {
   return {
     "Question": questionToJson(item.question),
     "Params": paramsToJson(item.params),
@@ -181,12 +183,13 @@ class LoopbackShowQuestionAnswerIn {
 
 LoopbackShowQuestionAnswerIn loopbackShowQuestionAnswerInFromJson(
     dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopbackShowQuestionAnswerIn(
       questionPageFromJson(json['Question']), paramsFromJson(json['Params']));
 }
 
-JSON loopbackShowQuestionAnswerInToJson(LoopbackShowQuestionAnswerIn item) {
+Map<String, dynamic> loopbackShowQuestionAnswerInToJson(
+    LoopbackShowQuestionAnswerIn item) {
   return {
     "Question": questionPageToJson(item.question),
     "Params": paramsToJson(item.params)
@@ -207,12 +210,13 @@ class LoopbackShowQuestionAnswerOut {
 
 LoopbackShowQuestionAnswerOut loopbackShowQuestionAnswerOutFromJson(
     dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return LoopbackShowQuestionAnswerOut(
       questionAnswersInFromJson(json['Answers']));
 }
 
-JSON loopbackShowQuestionAnswerOutToJson(LoopbackShowQuestionAnswerOut item) {
+Map<String, dynamic> loopbackShowQuestionAnswerOutToJson(
+    LoopbackShowQuestionAnswerOut item) {
   return {"Answers": questionAnswersInToJson(item.answers)};
 }
 

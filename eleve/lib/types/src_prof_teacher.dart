@@ -19,12 +19,13 @@ class AttachStudentToClassroom2In {
 }
 
 AttachStudentToClassroom2In attachStudentToClassroom2InFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return AttachStudentToClassroom2In(stringFromJson(json['ClassroomCode']),
       intFromJson(json['IdStudent']), stringFromJson(json['Birthday']));
 }
 
-JSON attachStudentToClassroom2InToJson(AttachStudentToClassroom2In item) {
+Map<String, dynamic> attachStudentToClassroom2InToJson(
+    AttachStudentToClassroom2In item) {
   return {
     "ClassroomCode": stringToJson(item.classroomCode),
     "IdStudent": intToJson(item.idStudent),
@@ -49,14 +50,15 @@ class AttachStudentToClassroom2Out {
 
 AttachStudentToClassroom2Out attachStudentToClassroom2OutFromJson(
     dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return AttachStudentToClassroom2Out(
       boolFromJson(json['ErrInvalidBirthday']),
       boolFromJson(json['ErrAlreadyAttached']),
       stringFromJson(json['IdCrypted']));
 }
 
-JSON attachStudentToClassroom2OutToJson(AttachStudentToClassroom2Out item) {
+Map<String, dynamic> attachStudentToClassroom2OutToJson(
+    AttachStudentToClassroom2Out item) {
   return {
     "ErrInvalidBirthday": boolToJson(item.errInvalidBirthday),
     "ErrAlreadyAttached": boolToJson(item.errAlreadyAttached),
@@ -78,12 +80,13 @@ class CheckStudentClassroomOut {
 }
 
 CheckStudentClassroomOut checkStudentClassroomOutFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return CheckStudentClassroomOut(
       boolFromJson(json['IsOK']), studentClassroomHeaderFromJson(json['Meta']));
 }
 
-JSON checkStudentClassroomOutToJson(CheckStudentClassroomOut item) {
+Map<String, dynamic> checkStudentClassroomOutToJson(
+    CheckStudentClassroomOut item) {
   return {
     "IsOK": boolToJson(item.isOK),
     "Meta": studentClassroomHeaderToJson(item.meta)
@@ -106,14 +109,14 @@ class StudentClassroomHeader {
 }
 
 StudentClassroomHeader studentClassroomHeaderFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return StudentClassroomHeader(
       studentFromJson(json['Student']),
       stringFromJson(json['ClassroomName']),
       stringFromJson(json['TeacherMail']));
 }
 
-JSON studentClassroomHeaderToJson(StudentClassroomHeader item) {
+Map<String, dynamic> studentClassroomHeaderToJson(StudentClassroomHeader item) {
   return {
     "Student": studentToJson(item.student),
     "ClassroomName": stringToJson(item.classroomName),
@@ -135,10 +138,10 @@ class StudentHeader {
 }
 
 StudentHeader studentHeaderFromJson(dynamic json_) {
-  final json = (json_ as JSON);
+  final json = (json_ as Map<String, dynamic>);
   return StudentHeader(intFromJson(json['Id']), stringFromJson(json['Label']));
 }
 
-JSON studentHeaderToJson(StudentHeader item) {
+Map<String, dynamic> studentHeaderToJson(StudentHeader item) {
   return {"Id": intToJson(item.id), "Label": stringToJson(item.label)};
 }
