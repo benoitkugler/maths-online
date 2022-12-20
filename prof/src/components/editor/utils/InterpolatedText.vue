@@ -22,7 +22,7 @@ import { computed, onMounted } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
-import type { Sources } from "quill";
+import type { RangeStatic, Sources } from "quill";
 import { $ref } from "vue/macros";
 
 type Props = {
@@ -43,7 +43,11 @@ let quill = $ref<InstanceType<typeof QuillEditor> | null>();
 
 onMounted(() => setTimeout(() => updateVisual(), 100));
 
-function onTextChange(arg: { source: Sources; name: string }) {
+function onTextChange(arg: {
+  source: Sources;
+  name: string;
+  oldRange: RangeStatic;
+}) {
   if (arg.source != "user") return;
   const qu = quill?.getQuill() as Quill;
 
@@ -52,8 +56,13 @@ function onTextChange(arg: { source: Sources; name: string }) {
   // there is a strange behavior with ^
   // as a workaround we reset the text and selection
   let sel = qu.getSelection();
+  console.log(arg, sel);
+
   qu.setText(text);
   if (sel != null) {
+    qu.setSelection(sel?.index, sel?.length);
+  } else if (arg.name == "selection-change") {
+    sel = arg.oldRange;
     qu.setSelection(sel?.index, sel?.length);
   } else {
     qu.setSelection(text.length, 0);
