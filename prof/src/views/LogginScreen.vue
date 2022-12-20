@@ -37,6 +37,7 @@
           <v-row>
             <v-col>
               <v-text-field
+                variant="outlined"
                 label="Mail"
                 v-model="mail"
                 type="email"
@@ -54,6 +55,7 @@
           <v-row>
             <v-col>
               <v-text-field
+                variant="outlined"
                 label="Mot de passe"
                 v-model="password"
                 :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
@@ -73,7 +75,7 @@
         <v-card-actions>
           <v-btn
             color="primary"
-            variant="outlined"
+            variant="elevated"
             :disabled="!areCredencesValid"
             @click="inscription"
           >
@@ -82,7 +84,7 @@
           <v-spacer></v-spacer>
           <v-btn
             color="primary"
-            variant="outlined"
+            variant="elevated"
             :disabled="!areCredencesValid"
             @click="connection"
           >
