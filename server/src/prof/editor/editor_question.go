@@ -671,7 +671,7 @@ func normalizeTitle(title string) string {
 }
 
 func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
-	const pagination = 30 // number of groups
+	const pagination = 10 // number of groups
 
 	query.normalize()
 
@@ -850,33 +850,6 @@ func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) 
 
 	return out
 }
-
-// func (ct *Controller) pausePreview(sessionID string) error {
-// 	ct.lock.Lock()
-// 	defer ct.lock.Unlock()
-
-// 	loopback, ok := ct.sessions[sessionID]
-// 	if !ok {
-// 		return fmt.Errorf("invalid session ID %s", sessionID)
-// 	}
-
-// 	loopback.pause()
-// 	return nil
-// }
-
-// // endPreview terminates the current session
-// func (ct *Controller) endPreview(sessionID string) error {
-// 	ct.lock.Lock()
-// 	defer ct.lock.Unlock()
-
-// 	loopback, ok := ct.sessions[sessionID]
-// 	if !ok {
-// 		return fmt.Errorf("invalid session ID %s", sessionID)
-// 	}
-
-// 	loopback.clientLeft <- true
-// 	return nil
-// }
 
 // return the owner of the group of of the exercice
 func (ct *Controller) getQuestionOwner(question ed.Question) (teacher.IdTeacher, error) {

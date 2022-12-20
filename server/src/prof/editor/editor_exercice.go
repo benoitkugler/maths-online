@@ -94,7 +94,7 @@ type ListExercicesOut struct {
 }
 
 func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercicesOut, err error) {
-	const pagination = 30 // number of groups
+	const pagination = 10 // number of groups
 
 	groups, err := ed.SelectAllExercicegroups(ct.db)
 	if err != nil {
