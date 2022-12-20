@@ -49,8 +49,4 @@ function showExercice(qu: LoopbackShowExercice) {
 let src = computed(() =>
   controller.getURL(`/prof-loopback-app?mode=${PreviewMode}`)
 );
-
-onMounted(() => {
-  console.log(iframe);
-});
 </script>
