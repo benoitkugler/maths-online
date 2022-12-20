@@ -6,8 +6,7 @@
       toolbar=""
       class="__quill-text-field elevation-2 mb-2"
       content-type="text"
-      @update:content="onTextChange"
-      @text-change="updateVisual"
+      @editor-change="onTextChange"
       :content="props.modelValue"
       :options="{ formats: ['color', 'bold', 'align'] }"
       ref="quill"
@@ -19,7 +18,7 @@
 <script setup lang="ts">
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind, itemize } from "@/controller/editor";
-import { computed, onMounted, watch } from "@vue/runtime-core";
+import { computed, onMounted } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
@@ -42,22 +41,33 @@ const emit = defineEmits<{
 
 let quill = $ref<InstanceType<typeof QuillEditor> | null>();
 
-watch(props, () => {
-  const current = quill?.getText().trimEnd(); // quill add a `\n`
-  if (current != props.modelValue) {
-    quill?.setText(props.modelValue);
+onMounted(() => setTimeout(() => updateVisual(), 100));
+
+function onTextChange(arg: { source: Sources; name: string }) {
+  if (arg.source != "user") return;
+  const qu = quill?.getQuill() as Quill;
+
+  let text = qu.getText() || "";
+
+  // there is a strange behavior with ^
+  // as a workaround we reset the text and selection
+  let sel = qu.getSelection();
+  qu.setText(text);
+  if (sel != null) {
+    qu.setSelection(sel?.index, sel?.length);
+  } else {
+    qu.setSelection(text.length, 0);
   }
-  updateVisual({ source: "user" });
-});
 
-onMounted(() => setTimeout(() => updateVisual({ source: "user" }), 100));
-
-function onTextChange(text: string) {
+  // quill add a `\n`, remove it
   emit("update:modelValue", text.trimEnd());
+
+  updateVisual();
 }
 
-function updateVisual(arg: { source: Sources }) {
-  if (arg.source != "user" || quill == null) {
+// arg: { source: Sources }
+function updateVisual() {
+  if (quill == null) {
     return;
   }
   const qu = quill?.getQuill() as Quill;
@@ -71,7 +81,9 @@ function updateVisual(arg: { source: Sources }) {
 // colorize $ $ and & &
 function defaultTransform(quill: Quill) {
   const text = quill.getText() || "";
+
   const parts = itemize(text);
+
   let cursor = 0;
   parts.forEach((p) => {
     quill.formatText(cursor, p.Content.length, {
