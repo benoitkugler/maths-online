@@ -987,16 +987,8 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	questionOut := LoopbackShowQuestion{
 		Question: question.ToClient(),
 		Params:   taAPI.NewParams(instanceParams),
+		Origin:   params.Page,
 	}
 
-	// ct.lock.Lock()
-	// defer ct.lock.Unlock()
-
-	// loopback, ok := ct.sessions[params.SessionID]
-	// if !ok {
-	// 	return SaveQuestionAndPreviewOut{}, fmt.Errorf("invalid session ID %s", params.SessionID)
-	// }
-
-	// loopback.setQuestion(question)
 	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil
 }

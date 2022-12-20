@@ -679,7 +679,7 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := ct.updateExercicePreview(data)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
@@ -753,7 +753,7 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := ct.updateExercicePreview(data)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
@@ -833,7 +833,7 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := ct.updateExercicePreview(data)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
@@ -918,7 +918,7 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	preview, err := ct.updateExercicePreview(data)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
@@ -1138,7 +1138,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	preview, err := ct.updateExercicePreview(data)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
@@ -1146,26 +1146,25 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	return SaveExerciceAndPreviewOut{IsValid: true, Preview: preview}, nil
 }
 
-// updateExercicePreview instantiates the exercice and return preview data
-func (ct *Controller) updateExercicePreview(content tasks.ExerciceData) (LoopbackShowExercice, error) {
+// newExercicePreview instantiates the exercice and return preview data
+func newExercicePreview(content tasks.ExerciceData) (LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
 		return LoopbackShowExercice{}, err
 	}
 
-	return LoopbackShowExercice{Exercice: instance, Progression: taAPI.ProgressionExt{
-		NextQuestion: 0,
-		Questions:    make([]ta.QuestionHistory, len(instance.Questions)),
-	}}, nil
+	qus, _ := content.QuestionsList()
+	questionOrigins := make([]questions.QuestionPage, len(qus))
+	for i, qu := range qus {
+		questionOrigins[i] = qu.Page
+	}
 
-	// ct.lock.Lock()
-	// defer ct.lock.Unlock()
-
-	// loopback, ok := ct.sessions[sessionID]
-	// if !ok {
-	// 	return fmt.Errorf("invalid session ID %s", sessionID)
-	// }
-
-	// loopback.setExercice(instance)
-	// return nil
+	return LoopbackShowExercice{
+		Exercice: instance,
+		Progression: taAPI.ProgressionExt{
+			NextQuestion: 0,
+			Questions:    make([]ta.QuestionHistory, len(instance.Questions)),
+		},
+		Origin: questionOrigins,
+	}, nil
 }

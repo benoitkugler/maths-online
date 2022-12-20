@@ -10,17 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const LoopbackEndpoint = "/prof-loopback/:session_id"
-
-// // EditorStartSession setup a new editing session.
-// // In particular, it launches in the background a
-// // `loopbackController` instance to handle preview requests.
-// func (ct *Controller) EditorStartSession(c echo.Context) error {
-// 	out := ct.startSession()
-
-// 	return c.JSON(200, out)
-// }
-
 // EditorGetTags return all tags currently used by questions.
 // It also add the special level tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
@@ -94,30 +83,6 @@ func (ct *Controller) getTags(userID uID) ([]string, error) {
 	return filtred, nil
 }
 
-// func (ct *Controller) EditorPausePreview(c echo.Context) error {
-// 	sessionID := c.QueryParam("sessionID")
-
-// 	err := ct.pausePreview(sessionID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return c.NoContent(200)
-// }
-
-// // EditorEndPreview cleanly remove the loopback controller instead
-// // of waiting for it to timeout.
-// func (ct *Controller) EditorEndPreview(c echo.Context) error {
-// 	sessionID := c.Param("sessionID")
-
-// 	err := ct.endPreview(sessionID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return c.NoContent(200)
-// }
-
 func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 	var args CheckExerciceParametersIn
 	if err := c.Bind(&args); err != nil {
@@ -186,18 +151,3 @@ func (ct *Controller) EditorSaveExerciceAndPreview(c echo.Context) error {
 
 	return c.JSON(200, out)
 }
-
-// // AccessLoopback establish a connection with the embedded preview app
-// func (ct *Controller) AccessLoopback(c echo.Context) error {
-// 	sessionID := c.Param("session_id")
-
-// 	loopback, ok := ct.sessions[sessionID]
-// 	if !ok {
-// 		return fmt.Errorf("invalid session ID %s", sessionID)
-// 	}
-
-// 	// connect to the websocket handler, which handle errors
-// 	loopback.setupWebSocket(c.Response().Writer, c.Request())
-
-// 	return nil
-// }
