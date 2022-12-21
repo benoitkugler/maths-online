@@ -5,8 +5,8 @@
       theme=""
       toolbar=""
       class="__quill-text-field elevation-2 mb-2"
+      @text-change="onTextChange"
       content-type="text"
-      @editor-change="onTextChange"
       :content="props.modelValue"
       :options="{ formats: ['color', 'bold', 'align'] }"
       ref="quill"
@@ -22,8 +22,9 @@ import { computed, onMounted } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
-import type { RangeStatic, Sources } from "quill";
+import type { Sources } from "quill";
 import { $ref } from "vue/macros";
+import { watch } from "vue";
 
 type Props = {
   modelValue: string;
@@ -43,33 +44,28 @@ let quill = $ref<InstanceType<typeof QuillEditor> | null>();
 
 onMounted(() => setTimeout(() => updateVisual(), 100));
 
-function onTextChange(arg: {
-  source: Sources;
-  name: string;
-  oldRange: RangeStatic;
-}) {
+// required since vue reuse the same component
+watch(props, () => {
+  const current = quill?.getText().trimEnd(); // quill add a `\n`
+  if (current != props.modelValue) {
+    quill?.setText(props.modelValue);
+  }
+  updateVisual();
+});
+
+function onTextChange(arg: { source: Sources }) {
   if (arg.source != "user") return;
   const qu = quill?.getQuill() as Quill;
 
-  let text = qu.getText() || "";
-
-  // there is a strange behavior with ^
-  // as a workaround we reset the text and selection
-  let sel = qu.getSelection();
-  console.log(arg, sel);
-
-  qu.setText(text);
-  if (sel != null) {
-    qu.setSelection(sel?.index, sel?.length);
-  } else if (arg.name == "selection-change") {
-    sel = arg.oldRange;
-    qu.setSelection(sel?.index, sel?.length);
-  } else {
-    qu.setSelection(text.length, 0);
-  }
-
   // quill add a `\n`, remove it
-  emit("update:modelValue", text.trimEnd());
+  let text = (qu.getText() || "").trimEnd();
+
+  emit("update:modelValue", text);
+
+  // there is a strange behavior with ^, ¨
+  if (text.endsWith("^") || text.endsWith("¨")) {
+    return;
+  }
 
   updateVisual();
 }
@@ -101,6 +97,7 @@ function defaultTransform(quill: Quill) {
     });
     cursor += p.Content.length;
   });
+  quill.format("color", "black");
 
   if (props.center) {
     const lineNb = quill.getLines().length;
@@ -109,7 +106,7 @@ function defaultTransform(quill: Quill) {
 }
 
 const laTeXColor = colorByKind[TextKind.StaticMath];
-const activeColor = computed(() => (props.forceLatex ? laTeXColor : "black"));
+const activeColor = computed(() => (props.forceLatex ? laTeXColor : "#444444"));
 </script>
 
 <style>
