@@ -49,8 +49,8 @@ watch(props, () => {
   const current = quill?.getText().trimEnd(); // quill add a `\n`
   if (current != props.modelValue) {
     quill?.setText(props.modelValue);
+    updateVisual();
   }
-  updateVisual();
 });
 
 function onTextChange(arg: { source: Sources }) {
