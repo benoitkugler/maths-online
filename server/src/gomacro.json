@@ -130,6 +130,12 @@
             "Output": "prof/editor/gen_itfs.go"
         }
     ],
+    "prof/reviews/types.go": [
+        {
+            "Mode": "go/unions",
+            "Output": "prof/reviews/gen_itfs.go"
+        }
+    ],
     "prof/teacher/classrooms_student_types.go": [
         {
             "Mode": "dart",
