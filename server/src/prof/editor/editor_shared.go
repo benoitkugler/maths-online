@@ -15,7 +15,7 @@ import (
 func (ct *Controller) EditorGetTags(c echo.Context) error {
 	user := teacher.JWTTeacher(c)
 
-	filtred, err := ct.getTags(user.Id)
+	filtred, err := LoadTags(ct.db, user.Id)
 	if err != nil {
 		return err
 	}
@@ -23,23 +23,24 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 	return c.JSON(200, filtred)
 }
 
-// for now, we merge question and exercice tags
-func (ct *Controller) getTags(userID uID) ([]string, error) {
-	questionTags, err := ed.SelectAllQuestiongroupTags(ct.db)
+// LoadTags returns all the tags visible by [userID], merging
+// questions and exercices.
+func LoadTags(db ed.DB, userID uID) ([]string, error) {
+	questionTags, err := ed.SelectAllQuestiongroupTags(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	exerciceTags, err := ed.SelectAllExercicegroupTags(ct.db)
+	exerciceTags, err := ed.SelectAllExercicegroupTags(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
 	// only return tags used by visible groups
-	questionGroups, err := ed.SelectAllQuestiongroups(ct.db)
+	questionGroups, err := ed.SelectAllQuestiongroups(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	exerciceGroups, err := ed.SelectAllExercicegroups(ct.db)
+	exerciceGroups, err := ed.SelectAllExercicegroups(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}

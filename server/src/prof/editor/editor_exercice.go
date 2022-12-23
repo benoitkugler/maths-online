@@ -32,6 +32,26 @@ type ExercicegroupExt struct {
 	Variants []ExerciceHeader
 }
 
+func NewExercicegroupExt(group ed.Exercicegroup, variants []ed.Exercice, tags []string, inReview tcAPI.OptionalIdReview, userID, adminID uID,
+) ExercicegroupExt {
+	origin, _ := exerciceOrigin(group, inReview, userID, adminID)
+	groupExt := ExercicegroupExt{
+		Group:  group,
+		Origin: origin,
+		Tags:   tags,
+	}
+
+	for _, exercice := range variants {
+		groupExt.Variants = append(groupExt.Variants, newExerciceHeader(exercice))
+	}
+
+	// sort to make sure the display is consistent between two queries
+	sort.Slice(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Id < groupExt.Variants[j].Id })
+	sort.SliceStable(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Difficulty < groupExt.Variants[j].Difficulty })
+
+	return groupExt
+}
+
 type ExerciceHeader struct {
 	Id         ed.IdExercice
 	Subtitle   string
@@ -144,8 +164,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		if !crible.HasAll(query.Tags) {
 			continue
 		}
-		exercices := exercicesByGroup[group.Id]
-		if len(exercices) == 0 { // ignore empty groupExts
+		variants := exercicesByGroup[group.Id]
+		if len(variants) == 0 { // ignore empty groupExts
 			continue
 		}
 
@@ -154,20 +174,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		if isInReview {
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
-		origin, _ := exerciceOrigin(group, inReview, userID, ct.admin.Id)
-		groupExt := ExercicegroupExt{
-			Group:  group,
-			Origin: origin,
-			Tags:   tagsMap[group.Id].List(),
-		}
 
-		for _, exercice := range exercices {
-			groupExt.Variants = append(groupExt.Variants, newExerciceHeader(exercice))
-		}
-
-		// sort to make sure the display is consistent between two queries
-		sort.Slice(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Id < groupExt.Variants[j].Id })
-		sort.SliceStable(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Difficulty < groupExt.Variants[j].Difficulty })
+		groupExt := NewExercicegroupExt(group, variants, tagsMap[group.Id].List(), inReview, userID, ct.admin.Id)
 
 		out.NbExercices += len(groupExt.Variants)
 
