@@ -98,9 +98,12 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 
 // Remove closes the connection and remove the DB.
 func (db TestDB) Remove() {
-	db.Close()
+	err := db.DB.Close()
+	if err != nil {
+		panic(err)
+	}
 
-	runCmd(exec.Command("dropdb", "--if-exists", db.name))
+	runCmd(exec.Command("dropdb", "--if-exists", "--force", db.name))
 }
 
 // DB is a test DB, usually build from importing the current production DB.
