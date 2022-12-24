@@ -19,6 +19,7 @@ import type {
   LaunchSessionOut,
   ListExercicesOut,
   ListQuestionsOut,
+  LoadTargetOut,
   LogginOut,
   MonitorOut,
   Question,
@@ -66,14 +67,13 @@ class Controller extends AbstractAPI {
   handleError(error: any): void {
     this.inRequest = false;
 
-    let kind: string,
-      messageHtml: string,
-      code = null;
+    let kind: string, messageHtml: string;
+    //   code = null;
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       kind = `Erreur côté serveur`;
-      code = error.response.status;
+      //   code = error.response.status;
 
       messageHtml = error.response.data.message;
       if (messageHtml) {
@@ -537,6 +537,11 @@ class Controller extends AbstractAPI {
   protected onSuccessReviewLoad(data: ReviewExt): void {
     this.inRequest = false;
   }
+
+  protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessReviewDelete(): void {
     this.inRequest = false;
     if (this.showMessage) {

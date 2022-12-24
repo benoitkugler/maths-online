@@ -28,13 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  LoopbackShowQuestion,
-  Question,
-  QuestiongroupExt,
-} from "@/controller/api_gen";
+import type { Question, QuestiongroupExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { LoopbackServerEventKind } from "@/controller/loopback_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";

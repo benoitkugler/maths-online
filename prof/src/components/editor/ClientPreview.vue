@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { controller, PreviewMode } from "@/controller/controller";
-import { computed, onMounted, defineExpose } from "@vue/runtime-core";
+import { computed, defineExpose } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import {
   LoopbackServerEventKind,
