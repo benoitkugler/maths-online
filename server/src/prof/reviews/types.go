@@ -4,6 +4,7 @@ import (
 	edAPI "github.com/benoitkugler/maths-online/server/src/prof/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	trivGame "github.com/benoitkugler/maths-online/server/src/trivial"
 )
 
 type TargetContent interface {
@@ -17,7 +18,7 @@ func (TargetExercice) isTargetContent() {}
 type TargetTrivial struct {
 	Config trivial.Trivial
 
-	// TODO: add question numbers
+	NbQuestionsByCategories [trivGame.NbCategories]int
 }
 
 type TargetQuestion struct {

@@ -12,6 +12,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	edAPI "github.com/benoitkugler/maths-online/server/src/prof/editor"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	trAPI "github.com/benoitkugler/maths-online/server/src/prof/trivial"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
@@ -497,7 +498,7 @@ func (ct *Controller) loadTargetContent(id re.IdReview, userID uID) (TargetConte
 	case re.ReviewExercice:
 		return ct.loadExercice(target, userID)
 	case re.ReviewTrivial:
-		return loadTrivial(ct.db, target.IdTrivial)
+		return ct.loadTrivial(target, userID)
 	default:
 		panic("exhaustive switch")
 	}
@@ -564,10 +565,17 @@ func (ct *Controller) loadExercice(target re.ReviewExercice, userID uID) (Target
 	}, nil
 }
 
-func loadTrivial(db re.DB, id trivial.IdTrivial) (TargetTrivial, error) {
-	triv, err := trivial.SelectTrivial(db, id)
+func (ct *Controller) loadTrivial(target re.ReviewTrivial, userID uID) (TargetTrivial, error) {
+	triv, err := trivial.SelectTrivial(ct.db, target.IdTrivial)
 	if err != nil {
 		return TargetTrivial{}, utils.SQLError(err)
 	}
-	return TargetTrivial{Config: triv}, nil
+
+	// we use the admin ID since it will be the one used after validation
+	nbs, err := trAPI.LoadQuestionNumbers(ct.db, triv, ct.admin.Id)
+	if err != nil {
+		return TargetTrivial{}, err
+	}
+
+	return TargetTrivial{Config: triv, NbQuestionsByCategories: nbs}, nil
 }

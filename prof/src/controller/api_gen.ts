@@ -739,6 +739,10 @@ export interface TaskExt {
   NbProgressions: number;
   Baremes: TaskBareme;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
+export interface LoadTargetOut {
+  Content: TargetContent;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewComment
 export interface ReviewComment {
   Comment: Comment;
@@ -775,6 +779,34 @@ export interface ReviewUpdateApprovalIn {
 export interface ReviewUpdateCommentsIn {
   IdReview: IdReview;
   Comments: Comments;
+}
+
+export enum TargetContentKind {
+  TargetExercice = "TargetExercice",
+  TargetQuestion = "TargetQuestion",
+  TargetTrivial = "TargetTrivial",
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetContent
+export interface TargetContent {
+  Kind: TargetContentKind;
+  Data: TargetExercice | TargetQuestion | TargetTrivial;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetExercice
+export interface TargetExercice {
+  Group: ExercicegroupExt;
+  AllTags: string[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetQuestion
+export interface TargetQuestion {
+  Group: QuestiongroupExt;
+  Variants: Question[] | null;
+  AllTags: string[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetTrivial
+export interface TargetTrivial {
+  Config: Trivial;
+  NbQuestionsByCategories: number[];
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
@@ -825,15 +857,15 @@ export interface StudentHeader {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
 export enum Visibility {
-  Admin = 2,
+  Hidden = 0,
   Personnal = 1,
-  hidden = 0,
+  Admin = 2,
 }
 
 export const VisibilityLabels: { [key in Visibility]: string } = {
-  [Visibility.Admin]: "Officiel",
+  [Visibility.Hidden]: "not accessible by the user, except in reviews",
   [Visibility.Personnal]: "Personnel",
-  [Visibility.hidden]: "not accessible by the user",
+  [Visibility.Admin]: "Officiel",
 };
 
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.CheckMissingQuestionsOut
@@ -2686,6 +2718,29 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessReviewLoad(data: ReviewExt): void;
+
+  protected async rawReviewLoadTarget(params: { "id-review": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/review/target";
+    const rep: AxiosResponse<LoadTargetOut> = await Axios.get(fullUrl, {
+      params: { "id-review": String(params["id-review"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** ReviewLoadTarget wraps rawReviewLoadTarget and handles the error */
+  async ReviewLoadTarget(params: { "id-review": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawReviewLoadTarget(params);
+      this.onSuccessReviewLoadTarget(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessReviewLoadTarget(data: LoadTargetOut): void;
 
   protected async rawReviewDelete(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
