@@ -1083,7 +1083,13 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	}
 	ex := &data.Exercice
 
-	if !data.Group.IsVisibleBy(userID) {
+	// if the exercice is in review, allow external user to preview it
+	_, inReview, err := reviews.SelectReviewExerciceByIdExercice(ct.db, data.Group.Id)
+	if err != nil {
+		return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+	}
+
+	if !inReview && !data.Group.IsVisibleBy(userID) {
 		return SaveExerciceAndPreviewOut{}, accessForbidden
 	}
 

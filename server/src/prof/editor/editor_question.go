@@ -907,7 +907,7 @@ func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
 func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, userID uID) (SaveQuestionAndPreviewOut, error) {
 	qu, err := ed.SelectQuestion(ct.db, params.Id)
 	if err != nil {
-		return SaveQuestionAndPreviewOut{}, err
+		return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
 	}
 
 	group, err := ct.getGroup(qu)
@@ -915,7 +915,13 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		return SaveQuestionAndPreviewOut{}, err
 	}
 
-	if !group.IsVisibleBy(userID) {
+	// if the question is in review, allow external user to preview it
+	_, inReview, err := reviews.SelectReviewQuestionByIdQuestion(ct.db, group.Id)
+	if err != nil {
+		return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
+	}
+
+	if !inReview && !group.IsVisibleBy(userID) {
 		return SaveQuestionAndPreviewOut{}, accessForbidden
 	}
 
