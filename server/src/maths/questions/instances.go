@@ -5,9 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/functiongrapher"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 )
 
 type instance interface {
@@ -92,7 +92,7 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 		}
 
 		if err := reference.validateAnswerSyntax(answer); err != nil {
-			log.Println("internal error: invalid field syntax", err)
+			log.Printf("internal error: invalid field syntax for %T: %s", err, reference)
 			continue
 		}
 

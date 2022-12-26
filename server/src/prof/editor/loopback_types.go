@@ -1,62 +1,53 @@
 package editor
 
 import (
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/tasks"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
 )
 
+// LoopbackServerEvent describes an event triggered
+// by the editor web app (usually in response to a server call)
+// It is emitted in the HTML/Javascript side and received in the Dart
+// code.
 type LoopbackServerEvent interface {
 	isLoopbackServerEvent()
 }
 
-type loopbackPaused struct{}
+type LoopbackPaused struct{}
 
-type loopbackQuestion struct {
-	Question client.Question `gomacro-extern:"client#dart#questions/types.gen.dart"`
+type LoopbackShowQuestion struct {
+	Question client.Question `gomacro-opaque:"typescript"`
+	Params   tasks.Params    `gomacro-opaque:"typescript"`
+
+	Origin questions.QuestionPage
 }
 
-type loopbackQuestionValidOut struct {
-	Answers client.QuestionAnswersOut `gomacro-extern:"client#dart#questions/types.gen.dart"`
+type LoopbackShowExercice struct {
+	Exercice    tasks.InstantiatedWork `gomacro-opaque:"typescript"`
+	Progression tasks.ProgressionExt   `gomacro-opaque:"typescript"`
+
+	Origin []questions.QuestionPage
 }
 
-type loopbackQuestionCorrectAnswersOut struct {
-	Answers client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
+func (LoopbackPaused) isLoopbackServerEvent()       {}
+func (LoopbackShowQuestion) isLoopbackServerEvent() {}
+func (LoopbackShowExercice) isLoopbackServerEvent() {}
+
+type LoopackEvaluateQuestionIn struct {
+	Question questions.QuestionPage
+	Answer   tasks.AnswerP `gomacro-opaque:"typescript"`
 }
 
-type loopbackShowExercice struct {
-	Exercice    tasks.InstantiatedWork `gomacro-extern:"tasks#dart#shared_gen.dart"`
-	Progression tasks.ProgressionExt   `gomacro-extern:"tasks#dart#shared_gen.dart"`
+type LoopbackEvaluateQuestionOut struct {
+	Answers client.QuestionAnswersOut `gomacro-opaque:"typescript"`
 }
 
-type loopbackExerciceCorrectAnswersOut struct {
-	Answers       client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
-	QuestionIndex int
+type LoopbackShowQuestionAnswerIn struct {
+	Question questions.QuestionPage
+	Params   tasks.Params `gomacro-opaque:"typescript"`
 }
 
-func (loopbackPaused) isLoopbackServerEvent()                    {}
-func (loopbackQuestion) isLoopbackServerEvent()                  {}
-func (loopbackQuestionValidOut) isLoopbackServerEvent()          {}
-func (loopbackQuestionCorrectAnswersOut) isLoopbackServerEvent() {}
-func (loopbackShowExercice) isLoopbackServerEvent()              {}
-func (loopbackExerciceCorrectAnswersOut) isLoopbackServerEvent() {}
-
-type LoopbackClientEvent interface {
-	isLoopbackClientEvent()
+type LoopbackShowQuestionAnswerOut struct {
+	Answers client.QuestionAnswersIn `gomacro-opaque:"typescript"`
 }
-
-type loopbackPing struct{}
-
-type loopbackQuestionValidIn struct {
-	Answers client.QuestionAnswersIn `gomacro-extern:"client#dart#questions/types.gen.dart"`
-}
-
-type loopbackQuestionCorrectAnswersIn struct{}
-
-type loopbackExerciceCorrectAnswsersIn struct {
-	QuestionIndex int
-}
-
-func (loopbackPing) isLoopbackClientEvent()                      {}
-func (loopbackQuestionValidIn) isLoopbackClientEvent()           {}
-func (loopbackQuestionCorrectAnswersIn) isLoopbackClientEvent()  {}
-func (loopbackExerciceCorrectAnswsersIn) isLoopbackClientEvent() {}

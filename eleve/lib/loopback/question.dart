@@ -2,14 +2,16 @@ import 'dart:math';
 
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
-import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_prof_editor.dart';
 import 'package:flutter/material.dart';
 
 class LoopackQuestionController extends BaseQuestionController {
   final void Function(QuestionAnswersIn) onValid;
 
-  LoopackQuestionController(Question question, FieldAPI api, this.onValid)
-      : super(question, api);
+  final LoopbackShowQuestion data;
+  LoopackQuestionController(this.data, FieldAPI api, this.onValid)
+      : super(data.question, api);
 
   @override
   void onPrimaryButtonClick() {

@@ -13,11 +13,13 @@ import type {
   ExerciceExt,
   ExercicegroupExt,
   ExerciceHeader,
+  ExerciceWithPreview,
   GenerateClassroomCodeOut,
   HomeworkMarksOut,
   LaunchSessionOut,
   ListExercicesOut,
   ListQuestionsOut,
+  LoadTargetOut,
   LogginOut,
   MonitorOut,
   Question,
@@ -29,7 +31,6 @@ import type {
   SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
   SheetExt,
-  StartSessionOut,
   Student,
   TaskExt,
   TrivialExt
@@ -47,8 +48,6 @@ class Controller extends AbstractAPI {
 
   public onError?: (kind: string, htmlError: string) => void;
   public showMessage?: (message: string, color?: string) => void;
-
-  public editorSessionID = "";
 
   logout() {
     this.isLoggedIn = false;
@@ -68,14 +67,13 @@ class Controller extends AbstractAPI {
   handleError(error: any): void {
     this.inRequest = false;
 
-    let kind: string,
-      messageHtml: string,
-      code = null;
+    let kind: string, messageHtml: string;
+    //   code = null;
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
       kind = `Erreur côté serveur`;
-      code = error.response.status;
+      //   code = error.response.status;
 
       messageHtml = error.response.data.message;
       if (messageHtml) {
@@ -404,11 +402,6 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
-  protected onSuccessEditorStartSession(data: StartSessionOut): void {
-    this.editorSessionID = data.ID;
-    this.inRequest = false;
-  }
-
   protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {
     this.inRequest = false;
   }
@@ -485,19 +478,25 @@ class Controller extends AbstractAPI {
       this.showMessage("Variante dupliquée avec succès.");
     }
   }
-  protected onSuccessEditorExerciceCreateQuestion(data: ExerciceExt): void {
+  protected onSuccessEditorExerciceCreateQuestion(
+    data: ExerciceWithPreview
+  ): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question ajoutée avec succès.");
     }
   }
-  protected onSuccessEditorExerciceUpdateQuestions(data: ExerciceExt): void {
+  protected onSuccessEditorExerciceUpdateQuestions(
+    data: ExerciceWithPreview
+  ): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Questions modifiées avec succès.");
     }
   }
-  protected onSuccessEditorExerciceDuplicateQuestion(data: ExerciceExt): void {
+  protected onSuccessEditorExerciceDuplicateQuestion(
+    data: ExerciceWithPreview
+  ): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question dupliquée avec succès.");
@@ -516,7 +515,9 @@ class Controller extends AbstractAPI {
       this.showMessage("Exercice modifié avec succès.");
     }
   }
-  protected onSuccessEditorExerciceImportQuestion(data: ExerciceExt): void {
+  protected onSuccessEditorExerciceImportQuestion(
+    data: ExerciceWithPreview
+  ): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Question importée avec succès.");
@@ -536,6 +537,11 @@ class Controller extends AbstractAPI {
   protected onSuccessReviewLoad(data: ReviewExt): void {
     this.inRequest = false;
   }
+
+  protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessReviewDelete(): void {
     this.inRequest = false;
     if (this.showMessage) {

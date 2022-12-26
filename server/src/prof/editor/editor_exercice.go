@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
-	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/reviews"
-	ta "github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/tasks"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
+	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -29,6 +30,26 @@ type ExercicegroupExt struct {
 	Origin   tcAPI.Origin
 	Tags     []string
 	Variants []ExerciceHeader
+}
+
+func NewExercicegroupExt(group ed.Exercicegroup, variants []ed.Exercice, tags []string, inReview tcAPI.OptionalIdReview, userID, adminID uID,
+) ExercicegroupExt {
+	origin, _ := exerciceOrigin(group, inReview, userID, adminID)
+	groupExt := ExercicegroupExt{
+		Group:  group,
+		Origin: origin,
+		Tags:   tags,
+	}
+
+	for _, exercice := range variants {
+		groupExt.Variants = append(groupExt.Variants, newExerciceHeader(exercice))
+	}
+
+	// sort to make sure the display is consistent between two queries
+	sort.Slice(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Id < groupExt.Variants[j].Id })
+	sort.SliceStable(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Difficulty < groupExt.Variants[j].Difficulty })
+
+	return groupExt
 }
 
 type ExerciceHeader struct {
@@ -49,11 +70,6 @@ type ExerciceQuestionExt struct {
 	Question ed.Question
 	Bareme   int
 }
-
-// type ExerciceHeader struct {
-// 	Exercice  ed.Exercice
-// 	Questions ed.ExerciceQuestions
-// }
 
 type ExerciceExt struct {
 	Exercice  ed.Exercice
@@ -98,7 +114,7 @@ type ListExercicesOut struct {
 }
 
 func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercicesOut, err error) {
-	const pagination = 30 // number of groups
+	const pagination = 10 // number of groups
 
 	groups, err := ed.SelectAllExercicegroups(ct.db)
 	if err != nil {
@@ -148,8 +164,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		if !crible.HasAll(query.Tags) {
 			continue
 		}
-		exercices := exercicesByGroup[group.Id]
-		if len(exercices) == 0 { // ignore empty groupExts
+		variants := exercicesByGroup[group.Id]
+		if len(variants) == 0 { // ignore empty groupExts
 			continue
 		}
 
@@ -158,20 +174,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		if isInReview {
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
-		origin, _ := exerciceOrigin(group, inReview, userID, ct.admin.Id)
-		groupExt := ExercicegroupExt{
-			Group:  group,
-			Origin: origin,
-			Tags:   tagsMap[group.Id].List(),
-		}
 
-		for _, exercice := range exercices {
-			groupExt.Variants = append(groupExt.Variants, newExerciceHeader(exercice))
-		}
-
-		// sort to make sure the display is consistent between two queries
-		sort.Slice(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Id < groupExt.Variants[j].Id })
-		sort.SliceStable(groupExt.Variants, func(i, j int) bool { return groupExt.Variants[i].Difficulty < groupExt.Variants[j].Difficulty })
+		groupExt := NewExercicegroupExt(group, variants, tagsMap[group.Id].List(), inReview, userID, ct.admin.Id)
 
 		out.NbExercices += len(groupExt.Variants)
 
@@ -654,8 +658,12 @@ func (ct *Controller) deleteExercice(idExercice ed.IdExercice, userID uID) (Dele
 	return DeleteExerciceOut{Deleted: true}, nil
 }
 
+type ExerciceWithPreview struct {
+	Ex      ExerciceExt
+	Preview LoopbackShowExercice
+}
+
 type ExerciceCreateQuestionIn struct {
-	SessionID  string
 	IdExercice ed.IdExercice
 }
 
@@ -669,7 +677,7 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.createQuestionEx(args, user.Id)
+	ex, err := ct.createQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -679,11 +687,12 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
 
+	out := ExerciceWithPreview{ex, preview}
 	return c.JSON(200, out)
 }
 
@@ -729,7 +738,6 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 type ExerciceImportQuestionIn struct {
 	IdQuestion ed.IdQuestion
 	IdExercice ed.IdExercice
-	SessionID  string
 }
 
 // EditorExerciceImportQuestion imports an already existing question,
@@ -743,7 +751,7 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.importQuestionEx(args, user.Id)
+	ex, err := ct.importQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -753,10 +761,12 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
+
+	out := ExerciceWithPreview{ex, preview}
 
 	return c.JSON(200, out)
 }
@@ -809,7 +819,6 @@ func (ct *Controller) importQuestionEx(args ExerciceImportQuestionIn, userID uID
 type ExerciceDuplicateQuestionIn struct {
 	QuestionIndex int
 	IdExercice    ed.IdExercice
-	SessionID     string
 }
 
 // EditorExerciceDuplicateQuestion duplicate the question at the given
@@ -822,7 +831,7 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.duplicateQuestionEx(args, user.Id)
+	ex, err := ct.duplicateQuestionEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -832,11 +841,12 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
 
+	out := ExerciceWithPreview{ex, preview}
 	return c.JSON(200, out)
 }
 
@@ -894,7 +904,6 @@ func (ct *Controller) duplicateQuestionEx(args ExerciceDuplicateQuestionIn, user
 type ExerciceUpdateQuestionsIn struct {
 	Questions  ed.ExerciceQuestions
 	IdExercice ed.IdExercice
-	SessionID  string
 }
 
 // EditorExerciceUpdateQuestions updates the question links and
@@ -907,7 +916,7 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.updateQuestionsEx(args, user.Id)
+	ex, err := ct.updateQuestionsEx(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -917,11 +926,12 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	err = ct.updateExercicePreview(data, args.SessionID)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return err
 	}
 
+	out := ExerciceWithPreview{ex, preview}
 	return c.JSON(200, out)
 }
 
@@ -1054,7 +1064,6 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 
 type SaveExerciceAndPreviewIn struct {
 	OnlyPreview bool // if true, skip the save part (Parameters and Questions are thus ignored)
-	SessionID   string
 	IdExercice  ed.IdExercice
 	Parameters  questions.Parameters // shared parameters
 	Questions   []ed.Question        // questions content
@@ -1062,8 +1071,9 @@ type SaveExerciceAndPreviewIn struct {
 
 type SaveExerciceAndPreviewOut struct {
 	Error         questions.ErrQuestionInvalid
-	QuestionIndex int
+	QuestionIndex int // for the error
 	IsValid       bool
+	Preview       LoopbackShowExercice
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
@@ -1073,7 +1083,13 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	}
 	ex := &data.Exercice
 
-	if !data.Group.IsVisibleBy(userID) {
+	// if the exercice is in review, allow external user to preview it
+	_, inReview, err := reviews.SelectReviewExerciceByIdExercice(ct.db, data.Group.Id)
+	if err != nil {
+		return SaveExerciceAndPreviewOut{}, utils.SQLError(err)
+	}
+
+	if !inReview && !data.Group.IsVisibleBy(userID) {
 		return SaveExerciceAndPreviewOut{}, accessForbidden
 	}
 
@@ -1136,29 +1152,33 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	err = ct.updateExercicePreview(data, params.SessionID)
+	preview, err := newExercicePreview(data)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
 
-	return SaveExerciceAndPreviewOut{IsValid: true}, nil
+	return SaveExerciceAndPreviewOut{IsValid: true, Preview: preview}, nil
 }
 
-// updateExercicePreview instantiates the exercice and send preview data
-func (ct *Controller) updateExercicePreview(content tasks.ExerciceData, sessionID string) error {
+// newExercicePreview instantiates the exercice and return preview data
+func newExercicePreview(content tasks.ExerciceData) (LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
-		return err
+		return LoopbackShowExercice{}, err
 	}
 
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
-
-	loopback, ok := ct.sessions[sessionID]
-	if !ok {
-		return fmt.Errorf("invalid session ID %s", sessionID)
+	qus, _ := content.QuestionsList()
+	questionOrigins := make([]questions.QuestionPage, len(qus))
+	for i, qu := range qus {
+		questionOrigins[i] = qu.Page
 	}
 
-	loopback.setExercice(instance)
-	return nil
+	return LoopbackShowExercice{
+		Exercice: instance,
+		Progression: taAPI.ProgressionExt{
+			NextQuestion: 0,
+			Questions:    make([]ta.QuestionHistory, len(instance.Questions)),
+		},
+		Origin: questionOrigins,
+	}, nil
 }

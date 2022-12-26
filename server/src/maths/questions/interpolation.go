@@ -3,8 +3,8 @@ package questions
 import (
 	"regexp"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 )
 
 // Interpolated is a string with $<static math>$ or #{<expression>}

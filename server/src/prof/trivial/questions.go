@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sort"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	tc "github.com/benoitkugler/maths-online/sql/trivial"
-	tv "github.com/benoitkugler/maths-online/trivial"
-	"github.com/benoitkugler/maths-online/utils"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 var demoQuestions = tc.CategoriesQuestions{

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	tc "github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/utils"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/benoitkugler/maths-online/mailer"
-	"github.com/benoitkugler/maths-online/pass"
+	"github.com/benoitkugler/maths-online/server/src/mailer"
+	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/labstack/echo/v4"
 )
 

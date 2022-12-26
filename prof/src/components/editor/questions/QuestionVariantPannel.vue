@@ -67,7 +67,6 @@
           class="my-1 mx-2"
           icon
           @click="save"
-          :disabled="!session_id"
           :title="
             props.readonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
           "
@@ -112,7 +111,6 @@
                 class="my-1"
                 size="small"
                 @click="download"
-                :disabled="!session_id"
                 title="Télécharger la question au format .json"
               >
                 <v-icon class="mr-2" icon="mdi-download" size="small"></v-icon>
@@ -164,6 +162,7 @@ import type {
   BlockKind,
   errEnonce,
   ErrParameters,
+  LoopbackShowQuestion,
   Question,
   RandomParameter,
   Variable,
@@ -185,7 +184,6 @@ import SnackErrorEnonce from "../SnackErrorEnonce.vue";
 import DifficultyField from "../utils/DifficultyField.vue";
 
 interface Props {
-  session_id: string;
   question: Question;
   readonly: boolean;
   allTags: string[]; // to provide auto completion
@@ -196,6 +194,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "update", question: Question): void;
+  (e: "preview", preview: LoopbackShowQuestion): void;
 }>();
 
 let question = $ref(copy(props.question));
@@ -277,7 +276,6 @@ async function saveDescription(desc: string) {
 
 async function save() {
   const res = await controller.EditorSaveQuestionAndPreview({
-    SessionID: props.session_id || "",
     Id: question.Id,
     Page: question.Page,
   });
@@ -290,6 +288,7 @@ async function save() {
     errorParameters = null;
     // notifie the parent on success
     emit("update", question);
+    emit("preview", res.Question);
   } else {
     if (res.Error.ParametersInvalid) {
       errorEnnonce = null;
@@ -320,7 +319,6 @@ let isCheckingParameters = $ref(false);
 async function checkParameters() {
   isCheckingParameters = true;
   const out = await controller.EditorCheckQuestionParameters({
-    SessionID: props.session_id || "",
     Parameters: question.Page.parameters,
   });
   isCheckingParameters = false;

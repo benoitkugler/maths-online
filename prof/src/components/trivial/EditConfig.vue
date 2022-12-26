@@ -135,16 +135,10 @@
             sont utilisées.
           </div>
         </v-alert>
-        <v-list-item
+        <CategorieRow
           v-for="(categorie, index) in props.edited.Questions.Tags"
           :key="index"
-          rounded
-          :style="{
-            'border-color': colors[index],
-            borderWidth: '2px',
-            borderStyle: 'solid',
-          }"
-          class="my-2"
+          :index="index"
         >
           <v-row>
             <v-col align-self="center" cols="2">
@@ -160,7 +154,7 @@
               ></tags-selector>
             </v-col>
           </v-row>
-        </v-list-item>
+        </CategorieRow>
       </v-list>
 
       <v-row class="mt-2">
@@ -212,6 +206,7 @@ import { $ref } from "vue/macros";
 import TagChip from "../editor/utils/TagChip.vue";
 import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
+import CategorieRow from "./CategorieRow.vue";
 
 interface Props {
   edited: Trivial;

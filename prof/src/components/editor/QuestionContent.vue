@@ -40,7 +40,6 @@
           :model-value="row.Props.Data"
           @update:model-value="(v: any) => updateBlock(index, v)"
           :is="row.Component"
-          :available-parameters="props.availableParameters"
         ></component>
       </BlockContainer>
       <drop-zone

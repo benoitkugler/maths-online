@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 func TestPythagorianTriplet_mergeTo(t *testing.T) {

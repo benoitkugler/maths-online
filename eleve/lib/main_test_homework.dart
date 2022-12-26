@@ -1,11 +1,14 @@
 import 'package:eleve/activities/homework/homework.dart';
-import 'package:eleve/activities/homework/types.gen.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/repere.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_maths_repere.dart';
+import 'package:eleve/types/src_prof_homework.dart';
+import 'package:eleve/types/src_sql_homework.dart';
+import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
 
 void main() async {

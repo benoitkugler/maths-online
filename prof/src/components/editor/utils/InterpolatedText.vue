@@ -5,9 +5,8 @@
       theme=""
       toolbar=""
       class="__quill-text-field elevation-2 mb-2"
+      @text-change="onTextChange"
       content-type="text"
-      @update:content="onTextChange"
-      @text-change="updateVisual"
       :content="props.modelValue"
       :options="{ formats: ['color', 'bold', 'align'] }"
       ref="quill"
@@ -19,12 +18,13 @@
 <script setup lang="ts">
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind, itemize } from "@/controller/editor";
-import { computed, onMounted, watch } from "@vue/runtime-core";
+import { computed, onMounted } from "@vue/runtime-core";
 import type { Quill } from "@vueup/vue-quill";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import type { Sources } from "quill";
 import { $ref } from "vue/macros";
+import { watch } from "vue";
 
 type Props = {
   modelValue: string;
@@ -42,22 +42,37 @@ const emit = defineEmits<{
 
 let quill = $ref<InstanceType<typeof QuillEditor> | null>();
 
+onMounted(() => setTimeout(() => updateVisual(), 100));
+
+// required since vue reuse the same component
 watch(props, () => {
   const current = quill?.getText().trimEnd(); // quill add a `\n`
   if (current != props.modelValue) {
     quill?.setText(props.modelValue);
+    updateVisual();
   }
-  updateVisual({ source: "user" });
 });
 
-onMounted(() => setTimeout(() => updateVisual({ source: "user" }), 100));
+function onTextChange(arg: { source: Sources }) {
+  if (arg.source != "user") return;
+  const qu = quill?.getQuill() as Quill;
 
-function onTextChange(text: string) {
-  emit("update:modelValue", text.trimEnd());
+  // quill add a `\n`, remove it
+  let text = (qu.getText() || "").trimEnd();
+
+  emit("update:modelValue", text);
+
+  // there is a strange behavior with ^, ¨
+  if (text.endsWith("^") || text.endsWith("¨")) {
+    return;
+  }
+
+  updateVisual();
 }
 
-function updateVisual(arg: { source: Sources }) {
-  if (arg.source != "user" || quill == null) {
+// arg: { source: Sources }
+function updateVisual() {
+  if (quill == null) {
     return;
   }
   const qu = quill?.getQuill() as Quill;
@@ -71,7 +86,9 @@ function updateVisual(arg: { source: Sources }) {
 // colorize $ $ and & &
 function defaultTransform(quill: Quill) {
   const text = quill.getText() || "";
+
   const parts = itemize(text);
+
   let cursor = 0;
   parts.forEach((p) => {
     quill.formatText(cursor, p.Content.length, {
@@ -80,6 +97,7 @@ function defaultTransform(quill: Quill) {
     });
     cursor += p.Content.length;
   });
+  quill.format("color", "black");
 
   if (props.center) {
     const lineNb = quill.getLines().length;
@@ -88,7 +106,7 @@ function defaultTransform(quill: Quill) {
 }
 
 const laTeXColor = colorByKind[TextKind.StaticMath];
-const activeColor = computed(() => (props.forceLatex ? laTeXColor : "black"));
+const activeColor = computed(() => (props.forceLatex ? laTeXColor : "#444444"));
 </script>
 
 <style>

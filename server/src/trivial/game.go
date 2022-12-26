@@ -5,9 +5,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type WeigthedQuestions struct {

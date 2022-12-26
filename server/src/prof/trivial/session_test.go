@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	tv "github.com/benoitkugler/maths-online/trivial"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 )
 
 var dummyQuestions = tv.QuestionPool{

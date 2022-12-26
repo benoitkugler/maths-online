@@ -3,8 +3,8 @@ package trivial
 import (
 	"sort"
 
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	tv "github.com/benoitkugler/maths-online/trivial"
+	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/labstack/echo/v4"
 )
 

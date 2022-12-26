@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	tr "github.com/benoitkugler/maths-online/sql/trivial"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func qu(group ed.IdQuestiongroup) ed.Question {

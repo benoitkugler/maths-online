@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/homework"
-	"github.com/benoitkugler/maths-online/prof/reviews"
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/prof/trivial"
+	"github.com/benoitkugler/maths-online/server/src/prof/editor"
+	"github.com/benoitkugler/maths-online/server/src/prof/homework"
+	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
+	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/prof/trivial"
 	"github.com/labstack/echo/v4"
 )
 
@@ -49,8 +49,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/trivial/sessions/stop", tvc.StopTrivialGame)
 
 	// question editor
-	gr.PUT("/api/prof/editor/new", edit.EditorStartSession)
-	gr.GET("/api/prof/editor/pause-preview", edit.EditorPausePreview)
+	// gr.PUT("/api/prof/editor/new", edit.EditorStartSession)
+	// gr.GET("/api/prof/editor/pause-preview", edit.EditorPausePreview)
 	gr.GET("/api/prof/editor/tags", edit.EditorGetTags)
 
 	gr.POST("/api/prof/editor/questiongroups", edit.EditorSearchQuestions)
@@ -101,6 +101,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.PUT("/api/prof/review", review.ReviewCreate)
 	gr.GET("/api/prof/reviews", review.ReviewsList)
 	gr.GET("/api/prof/review", review.ReviewLoad)
+	gr.GET("/api/prof/review/target", review.ReviewLoadTarget)
 	gr.DELETE("/api/prof/review", review.ReviewDelete)
 	gr.POST("/api/prof/review/approval", review.ReviewUpdateApproval)
 	gr.POST("/api/prof/review/comments", review.ReviewUpdateCommnents)

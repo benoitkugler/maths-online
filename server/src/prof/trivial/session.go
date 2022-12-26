@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	tv "github.com/benoitkugler/maths-online/trivial"
-	"github.com/benoitkugler/maths-online/utils"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type stopGame struct {

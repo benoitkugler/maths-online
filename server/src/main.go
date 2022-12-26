@@ -10,20 +10,20 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/mailer"
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/prof/editor"
-	"github.com/benoitkugler/maths-online/prof/homework"
-	"github.com/benoitkugler/maths-online/prof/reviews"
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/prof/trivial"
-	tvGame "github.com/benoitkugler/maths-online/trivial"
-	"github.com/benoitkugler/maths-online/vitrine"
+	"github.com/benoitkugler/maths-online/server/src/mailer"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/prof/editor"
+	"github.com/benoitkugler/maths-online/server/src/prof/homework"
+	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
+	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/prof/trivial"
+	tvGame "github.com/benoitkugler/maths-online/server/src/trivial"
+	"github.com/benoitkugler/maths-online/server/src/vitrine"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:generate ../../../gomacro/cmd/gomacro -conf=gomacro.json
+//go:generate ../../../gomacro/cmd/gomacro gomacro.json
 
 func connectDB(dev bool) (*sql.DB, error) {
 	var credentials pass.DB
@@ -292,8 +292,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	setupProfAPI(e, tvc, edit, tc, home, review)
 	setupQuestionSampleAPI(e)
 
-	// to sync with the client navigator.sendBeacon
-	e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
+	// // to sync with the client navigator.sendBeacon
+	// e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
 	// main page
 	e.GET("", serveVitrineApp)
@@ -328,7 +328,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	}
 
 	// embeded preview app
-	e.GET(editor.LoopbackEndpoint, edit.AccessLoopback)
+	e.POST("/api/loopack/evaluate-question", edit.LoopackEvaluateQuestion)
+	e.POST("/api/loopack/question-answer", edit.LoopbackShowQuestionAnswer)
 
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)

@@ -8,15 +8,18 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/mailer"
-	"github.com/benoitkugler/maths-online/pass"
-	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
-	"github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/reviews"
-	re "github.com/benoitkugler/maths-online/sql/reviews"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/sql/trivial"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/mailer"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	edAPI "github.com/benoitkugler/maths-online/server/src/prof/editor"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	trAPI "github.com/benoitkugler/maths-online/server/src/prof/trivial"
+
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	re "github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -463,4 +466,116 @@ func (ct *Controller) acceptReview(id re.IdReview, userID uID) error {
 	}
 
 	return nil
+}
+
+// ReviewLoadTarget return the actual content of the review's target,
+// so that teachers may try it.
+func (ct *Controller) ReviewLoadTarget(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	idReview, err := utils.QueryParamInt64(c, "id-review")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadTargetContent(re.IdReview(idReview), user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, LoadTargetOut{out})
+}
+
+func (ct *Controller) loadTargetContent(id re.IdReview, userID uID) (TargetContent, error) {
+	target, err := re.LoadTarget(ct.db, id)
+	if err != nil {
+		return nil, err
+	}
+
+	switch target := target.(type) {
+	case re.ReviewQuestion:
+		return ct.loadQuestion(target, userID)
+	case re.ReviewExercice:
+		return ct.loadExercice(target, userID)
+	case re.ReviewTrivial:
+		return ct.loadTrivial(target, userID)
+	default:
+		panic("exhaustive switch")
+	}
+}
+
+func (ct *Controller) loadQuestion(target re.ReviewQuestion, userID uID) (TargetQuestion, error) {
+	group, err := editor.SelectQuestiongroup(ct.db, target.IdQuestion)
+	if err != nil {
+		return TargetQuestion{}, utils.SQLError(err)
+	}
+
+	variants, err := edAPI.LoadQuestionVariants(ct.db, target.IdQuestion)
+	if err != nil {
+		return TargetQuestion{}, err
+	}
+
+	questionTags, err := editor.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, target.IdQuestion)
+	if err != nil {
+		return TargetQuestion{}, utils.SQLError(err)
+	}
+
+	questiongroup := edAPI.NewQuestiongroupExt(group, variants, questionTags.List(),
+		tcAPI.OptionalIdReview{InReview: true, Id: target.IdReview}, userID, ct.admin.Id)
+
+	allTags, err := edAPI.LoadTags(ct.db, userID)
+	if err != nil {
+		return TargetQuestion{}, err
+	}
+
+	return TargetQuestion{
+		Group:    questiongroup,
+		Variants: variants,
+		AllTags:  allTags,
+	}, nil
+}
+
+func (ct *Controller) loadExercice(target re.ReviewExercice, userID uID) (TargetExercice, error) {
+	group, err := editor.SelectExercicegroup(ct.db, target.IdExercice)
+	if err != nil {
+		return TargetExercice{}, utils.SQLError(err)
+	}
+
+	m, err := editor.SelectExercicesByIdGroups(ct.db, target.IdExercice)
+	if err != nil {
+		return TargetExercice{}, utils.SQLError(err)
+	}
+	variants := m.ByGroup()[target.IdExercice]
+
+	tags, err := editor.SelectExercicegroupTagsByIdExercicegroups(ct.db, target.IdExercice)
+	if err != nil {
+		return TargetExercice{}, utils.SQLError(err)
+	}
+
+	exercicegroup := edAPI.NewExercicegroupExt(group, variants, tags.List(), tcAPI.OptionalIdReview{InReview: true, Id: target.IdReview}, userID, ct.admin.Id)
+
+	allTags, err := edAPI.LoadTags(ct.db, userID)
+	if err != nil {
+		return TargetExercice{}, err
+	}
+
+	return TargetExercice{
+		Group:   exercicegroup,
+		AllTags: allTags,
+	}, nil
+}
+
+func (ct *Controller) loadTrivial(target re.ReviewTrivial, userID uID) (TargetTrivial, error) {
+	triv, err := trivial.SelectTrivial(ct.db, target.IdTrivial)
+	if err != nil {
+		return TargetTrivial{}, utils.SQLError(err)
+	}
+
+	// we use the admin ID since it will be the one used after validation
+	nbs, err := trAPI.LoadQuestionNumbers(ct.db, triv, ct.admin.Id)
+	if err != nil {
+		return TargetTrivial{}, err
+	}
+
+	return TargetTrivial{Config: triv, NbQuestionsByCategories: nbs}, nil
 }

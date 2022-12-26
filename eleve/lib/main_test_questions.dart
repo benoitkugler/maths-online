@@ -1,4 +1,3 @@
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:eleve/activities/trivialpoursuit/question.dart';
 import 'package:eleve/decrassage/decrassage.dart';
 import 'package:eleve/exercice/exercice.dart';
@@ -6,9 +5,14 @@ import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/repere.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions.dart' as ServerQuestions;
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_maths_repere.dart';
+import 'package:eleve/types/src_prof_editor.dart';
+import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_tasks.dart';
+import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart' hide Flow;
 
 void main() async {
@@ -35,8 +39,9 @@ final questionComplexe = Question([
 
 const questionComplexeAnswers = {
   0: NumberAnswer(11.5),
-  1: ExpressionAnswer("x^2 + 4 /8 "),
-  2: PointAnswer(IntCoord(3, 8)),
+  1: ExpressionAnswer("4 / (2x)"),
+  2: ExpressionAnswer("x^2 + 4 /8 "),
+  3: PointAnswer(IntCoord(3, 8)),
 };
 
 Question numberQuestion(String title) {
@@ -237,8 +242,14 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
 
   @override
   void initState() {
-    controller =
-        LoopackQuestionController(questionComplexe, _FieldAPI(), onValid);
+    controller = LoopackQuestionController(
+        LoopbackShowQuestion(
+            questionComplexe,
+            [],
+            const ServerQuestions.QuestionPage(
+                [], ServerQuestions.Parameters([], []))),
+        _FieldAPI(),
+        onValid);
     super.initState();
   }
 
@@ -253,11 +264,11 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
     });
   }
 
-  // micmic a socket send and receive
+  // micmic an http call
   void onValid(QuestionAnswersIn a) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
 
-    const rep = {0: true, 1: false, 2: true};
+    const rep = {0: true, 1: false, 2: true, 3: true};
     LoopbackQuestionW.showServerValidation(
         const QuestionAnswersOut(rep, {}), context);
     setState(() {

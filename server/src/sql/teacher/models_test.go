@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestTime(t *testing.T) {

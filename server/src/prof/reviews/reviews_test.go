@@ -5,17 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/sql/editor"
-	re "github.com/benoitkugler/maths-online/sql/reviews"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/sql/trivial"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	re "github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 type sample struct {
 	adminID  uID
-	userID   uID
+	userID   uID // own the items
 	question editor.Questiongroup
 	exercice editor.Exercicegroup
 	trivial  trivial.Trivial
@@ -63,6 +64,7 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 
 func TestCRUDReviews(t *testing.T) {
 	db, sample := setupDB(t)
+	defer db.Remove()
 	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID}, pass.SMTP{})
 
 	r1, err := ct.createReview(ReviewCreateIn{Kind: re.KQuestion, Id: int64(sample.question.Id)}, sample.userID)
@@ -129,6 +131,8 @@ func TestCRUDReview(t *testing.T) {
 
 func TestAcceptReview(t *testing.T) {
 	db, sample := setupDB(t)
+	defer db.Remove()
+
 	smtp, err := pass.NewSMTP()
 	tu.Assert(t, err == nil)
 
@@ -150,4 +154,39 @@ func TestAcceptReview(t *testing.T) {
 	tu.Assert(t, err == nil)
 	tu.Assert(t, question.Public)
 	tu.Assert(t, question.IdTeacher == sample.adminID)
+}
+
+func TestLoadTarget(t *testing.T) {
+	db, sample := setupDB(t)
+	defer db.Remove()
+
+	ct := NewController(db.DB, teacher.Teacher{Id: sample.adminID}, pass.SMTP{})
+
+	r1, err := ct.createReview(ReviewCreateIn{Kind: re.KQuestion, Id: int64(sample.question.Id)}, sample.userID)
+	tu.Assert(t, err == nil)
+
+	out1, err := ct.loadTargetContent(r1.Id, sample.userID)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, out1.(TargetQuestion).Group.Origin.Visibility == tcAPI.Personnal)
+
+	out1, err = ct.loadTargetContent(r1.Id, sample.userID+10)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, out1.(TargetQuestion).Group.Origin.Visibility == tcAPI.Hidden)
+
+	err = ct.deleteReview(r1.Id, sample.userID)
+	tu.Assert(t, err == nil)
+
+	r2, err := ct.createReview(ReviewCreateIn{Kind: re.KExercice, Id: int64(sample.exercice.Id)}, sample.userID)
+	tu.Assert(t, err == nil)
+
+	out2, err := ct.loadTargetContent(r2.Id, sample.userID)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, out2.(TargetExercice).Group.Origin.Visibility == tcAPI.Personnal)
+
+	out2, err = ct.loadTargetContent(r2.Id, sample.userID+10)
+	tu.Assert(t, err == nil)
+	tu.Assert(t, out2.(TargetExercice).Group.Origin.Visibility == tcAPI.Hidden)
+
+	err = ct.deleteReview(r2.Id, sample.userID)
+	tu.Assert(t, err == nil)
 }

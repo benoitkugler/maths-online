@@ -1,5 +1,5 @@
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_trivial.dart';
 
 /// used to collect shader warmup
 const typicalUpdates = [

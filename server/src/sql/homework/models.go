@@ -4,8 +4,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 )
 
 type IdSheet int64

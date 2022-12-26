@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 )
 
 // interaction with the client
@@ -161,7 +161,7 @@ type ShowQuestion struct {
 	TimeoutSeconds int
 	Categorie      categorie
 	ID             editor.IdQuestion // to facilitate the tracking of the question results
-	Question       client.Question   `gomacro-extern:"client#dart#package:eleve/questions/types.gen.dart"` // the actual question
+	Question       client.Question   // the actual question
 }
 
 // PlayerAnswerResults indicates
@@ -211,7 +211,7 @@ type ClientMove Move
 
 // the proposition of a client to a question
 type Answer struct {
-	Answer client.QuestionAnswersIn `gomacro-extern:"client#dart#package:eleve/questions/types.gen.dart"`
+	Answer client.QuestionAnswersIn
 }
 
 // DiceClicked is emitted when the current player

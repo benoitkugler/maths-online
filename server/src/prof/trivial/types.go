@@ -1,11 +1,24 @@
 package trivial
 
 import (
-	"github.com/benoitkugler/maths-online/prof/teacher"
-	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
-	tr "github.com/benoitkugler/maths-online/sql/trivial"
-	"github.com/benoitkugler/maths-online/trivial"
+	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	"github.com/benoitkugler/maths-online/server/src/trivial"
 )
+
+// LoadQuestionNumbers returns the number of questions available for
+// each categories, as defined by [config.Questions]
+func LoadQuestionNumbers(db tr.DB, config tr.Trivial, userID uID) (out [trivial.NbCategories]int, err error) {
+	qus, err := selectQuestions(db, config.Questions, userID)
+	if err != nil {
+		return out, err
+	}
+	for i, cat := range qus {
+		out[i] = len(cat.Questions)
+	}
+	return out, nil
+}
 
 type TrivialExt struct {
 	Config tr.Trivial

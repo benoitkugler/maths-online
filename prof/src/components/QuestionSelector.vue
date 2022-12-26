@@ -7,7 +7,7 @@
             label="Rechercher"
             hint="Rechercher une question par nom."
             variant="outlined"
-            density="comfortable"
+            density="compact"
             v-model="props.query.search"
             @update:model-value="updateQuerySearch"
             persistent-hint
@@ -15,22 +15,13 @@
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-autocomplete
-            variant="outlined"
-            density="comfortable"
-            multiple
-            chips
-            closable-chips
-            :items="props.tags"
-            color="primary"
-            label="Catégories"
-            no-data-text="Aucune catégorie n'est encore utilisée."
+          <tag-selector
+            :all-tags="props.tags"
             v-model="props.query.tags"
             @update:model-value="updateQueryTags"
             @blur="updateQueryTags"
-            hint="Restreint la recherche à l'intersection des catégories sélectionnées."
-            persistent-hint
-          ></v-autocomplete>
+          >
+          </tag-selector>
         </v-col>
       </v-row>
 
@@ -87,6 +78,7 @@ import {
 } from "../controller/api_gen";
 import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
+import TagSelector from "./editor/TagSelector.vue";
 
 export interface QuestionQuery {
   search: string;

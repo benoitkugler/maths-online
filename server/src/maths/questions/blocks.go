@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/functiongrapher"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 const ExhaustiveTextKind = "exhaustiveTextKind"

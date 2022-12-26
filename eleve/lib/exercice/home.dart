@@ -1,6 +1,9 @@
-import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/shared/title.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
 
 extension IsCorrect on QuestionAnswersOut {

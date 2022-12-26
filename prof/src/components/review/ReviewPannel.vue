@@ -1,4 +1,12 @@
 <template>
+  <v-dialog fullscreen v-model="showPreviewTarget">
+    <TargetDialog
+      v-if="showPreviewTarget && reviewExt != null"
+      :review="props.review"
+      @back="showPreviewTarget = false"
+    ></TargetDialog>
+  </v-dialog>
+
   <v-dialog v-model="showConfirmAccept" max-width="600px">
     <v-card title="Confirmer la validation">
       <v-card-text>
@@ -51,6 +59,14 @@
       </v-col>
       <v-col cols="auto" align-self="center" class="pr-6">
         <v-btn
+          icon
+          class="mr-2"
+          title="Visualiser"
+          @click="showPreviewTarget = true"
+        >
+          <v-icon>mdi-eye</v-icon>
+        </v-btn>
+        <v-btn
           v-if="reviewExt.IsAcceptable"
           variant="outlined"
           color="success"
@@ -60,12 +76,12 @@
           Accepter la publication
         </v-btn>
         <v-btn
+          icon
           v-if="reviewExt.IsDeletable"
-          variant="outlined"
-          color="red"
           @click="showConfirmDelete = true"
+          title="Retirer la publication"
         >
-          Retirer la publication
+          <v-icon color="red">mdi-delete</v-icon>
         </v-btn>
       </v-col>
     </v-row>
@@ -112,6 +128,7 @@ import { $ref } from "vue/macros";
 import CommentRow from "./CommentRow.vue";
 import NewComment from "./NewComment.vue";
 import ApprovalArea from "./ApprovalArea.vue";
+import TargetDialog from "./TargetDialog.vue";
 
 interface Props {
   review: ReviewHeader;
@@ -167,8 +184,8 @@ function sendComment(comment: string) {
 }
 
 async function updateComment(message: string, index: number) {
-  if (reviewExt == null) return;
-  const comment = reviewExt.Comments![index];
+  if (!reviewExt?.Comments) return;
+  const comment = reviewExt.Comments[index];
   comment.Comment.Message = message;
   _updateComments(ownComments());
 }
@@ -204,4 +221,6 @@ async function acceptReview() {
   if (res == undefined) return;
   emit("back");
 }
+
+let showPreviewTarget = $ref(false);
 </script>

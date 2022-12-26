@@ -1,4 +1,9 @@
 {
+    "_dart": [
+        {
+            "Output": "../../eleve/lib/types/"
+        }
+    ],
     "sql/editor/models.go": [
         {
             "Mode": "go/sqlcrud",
@@ -114,11 +119,21 @@
     "prof/editor/loopback_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/loopback_types.gen.dart"
+            "Output": "../../eleve/lib/loopback/types.gen.dart"
+        },
+        {
+            "Mode": "typescript/types",
+            "Output": "../../prof/src/controller/loopback_gen.ts"
         },
         {
             "Mode": "go/unions",
             "Output": "prof/editor/gen_itfs.go"
+        }
+    ],
+    "prof/reviews/types.go": [
+        {
+            "Mode": "go/unions",
+            "Output": "prof/reviews/gen_itfs.go"
         }
     ],
     "prof/teacher/classrooms_student_types.go": [

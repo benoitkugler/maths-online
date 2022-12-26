@@ -3,7 +3,7 @@ package questions
 import (
 	"encoding/json"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 )
 
 type TextKind uint8

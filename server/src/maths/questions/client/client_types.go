@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/benoitkugler/maths-online/maths/functiongrapher"
-	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 type Question struct {
@@ -87,24 +87,24 @@ type SignTableBlock struct {
 }
 
 type FigureBlock struct {
-	Figure repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Figure repere.Figure
 }
 
 type FunctionArea struct {
-	Color repere.Color `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Color repere.Color
 	Path  []functiongrapher.BezierCurve
 }
 
 type FunctionPoint struct {
-	Color  repere.Color `gomacro-extern:"repere#dart#repere.gen.dart"`
-	Legend string       // LaTeX code
-	Coord  repere.Coord `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Color  repere.Color
+	Legend string // LaTeX code
+	Coord  repere.Coord
 }
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
 	Areas     []FunctionArea
 	Points    []FunctionPoint
-	Bounds    repere.RepereBounds `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Bounds    repere.RepereBounds
 }
 
 type TableBlock struct {
@@ -164,7 +164,7 @@ type OrderedListFieldBlock struct {
 
 // FigurePointFieldBlock asks for one 2D point
 type FigurePointFieldBlock struct {
-	Figure repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Figure repere.Figure
 	ID     int
 }
 
@@ -173,8 +173,8 @@ type FigurePointFieldBlock struct {
 // It may be used for vectors and affine functions
 
 type FigureVectorFieldBlock struct {
-	LineLabel string        // ignored if AsLine is false
-	Figure    repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
+	LineLabel string // ignored if AsLine is false
+	Figure    repere.Figure
 	ID        int
 	AsLine    bool
 }
@@ -186,7 +186,7 @@ type FigureVectorFieldBlock struct {
 // is not allowed
 
 type FigureVectorPairFieldBlock struct {
-	Figure repere.Figure `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Figure repere.Figure
 	ID     int
 }
 
@@ -209,10 +209,10 @@ type SignTableFieldBlock struct {
 // FunctionPointsFieldBlock asks to place points
 // to draw the graph of a function
 type FunctionPointsFieldBlock struct {
-	Label  string              // name of the function
-	Xs     []int               // the grid
-	Dfxs   []float64           // the derivatives of the function, to plot a nice curve
-	Bounds repere.RepereBounds `gomacro-extern:"repere#dart#repere.gen.dart"`
+	Label  string    // name of the function
+	Xs     []int     // the grid
+	Dfxs   []float64 // the derivatives of the function, to plot a nice curve
+	Bounds repere.RepereBounds
 	ID     int
 }
 

@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestQuestionInstance_CompareAnswer(t *testing.T) {

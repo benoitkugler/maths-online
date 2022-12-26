@@ -2,7 +2,11 @@
   <v-card>
     <v-row
       :style="{
-        'background-color': props.isValidated ? 'lightgreen' : 'lightgray',
+        'background-color': props.isLoading
+          ? 'lightgrey'
+          : props.isValidated
+          ? 'lightgreen'
+          : '#FFB74D',
       }"
       class="rounded"
       no-gutters
@@ -11,11 +15,6 @@
         <v-card-subtitle class="py-2">{{ props.title }}</v-card-subtitle>
       </v-col>
       <v-col align-self="center" style="text-align: right">
-        <v-progress-circular
-          v-show="props.isLoading"
-          indeterminate
-          class="mx-1"
-        ></v-progress-circular>
         <v-btn
           icon
           @click="emit('add')"

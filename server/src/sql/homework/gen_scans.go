@@ -7,8 +7,8 @@ import (
 	"database/sql/driver"
 	"time"
 
-	"github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/lib/pq"
 )
 

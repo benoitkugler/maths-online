@@ -6,14 +6,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
-	tcAPI "github.com/benoitkugler/maths-online/prof/teacher"
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	ho "github.com/benoitkugler/maths-online/sql/homework"
-	"github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	taAPI "github.com/benoitkugler/maths-online/tasks"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
+	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
 

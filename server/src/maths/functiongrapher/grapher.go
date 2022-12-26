@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 // BezierCurve is a quadratic Bezier curve with the
 // additional invariant that P0.X <= P2.X
 type BezierCurve struct {
-	P0, P1, P2 repere.Coord `gomacro-extern:"repere#dart#repere.gen.dart"`
+	P0, P1, P2 repere.Coord
 }
 
 func (seg segment) toCurve() BezierCurve {

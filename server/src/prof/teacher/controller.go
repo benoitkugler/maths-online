@@ -7,11 +7,11 @@ import (
 	"net/mail"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/mailer"
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/sql/reviews"
-	tc "github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/mailer"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
 

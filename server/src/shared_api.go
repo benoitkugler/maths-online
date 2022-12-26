@@ -3,11 +3,11 @@ package main
 import (
 	"strconv"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/maths/questions/examples"
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/tasks"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/examples"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
 	"github.com/labstack/echo/v4"
 )
 

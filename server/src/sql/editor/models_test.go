@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func selectOneTeacher(t *testing.T, db *sql.DB) teacher.Teacher {

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 // DifficultyQuery is an union of tags. An empty slice means no selection : all variants are accepted.

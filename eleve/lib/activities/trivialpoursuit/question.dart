@@ -1,11 +1,11 @@
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
-import 'package:eleve/questions/types.gen.dart';
 import 'package:eleve/quotes.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_trivial.dart' hide Answer;
 import 'package:flutter/material.dart';
 
 import 'categories.dart';
-import 'events.gen.dart' hide Answer;
 
 class InGameQuestionController extends BaseQuestionController {
   final void Function(QuestionAnswersIn) onValid;

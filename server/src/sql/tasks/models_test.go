@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercice, ed.ExerciceQuestions) {

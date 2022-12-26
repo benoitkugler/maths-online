@@ -2,9 +2,9 @@
 
 import 'dart:convert';
 
-import 'package:eleve/questions/repere.gen.dart';
-import 'package:eleve/questions/types.gen.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
+import 'package:eleve/types/src_maths_repere.dart';
+import 'package:eleve/types/src_tasks.dart';
 
 TextOrMath T(String s) {
   return TextOrMath(s, false);

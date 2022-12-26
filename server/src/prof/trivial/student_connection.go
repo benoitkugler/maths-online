@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	tv "github.com/benoitkugler/maths-online/trivial"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )

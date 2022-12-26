@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	ed "github.com/benoitkugler/maths-online/sql/editor"
-	"github.com/benoitkugler/maths-online/utils"
+	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 // ValidateAllQuestions fetches all questions from the DB

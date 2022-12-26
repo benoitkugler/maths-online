@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,7 +10,6 @@ void main() {
   {
    "Id": 24,
    "Question": {
-    "Title": "Calculer un taux d'évolution",
     "Enonce": [
      {
       "Data": {
@@ -20,7 +19,7 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "16 €",
+         "Text": "2 €",
          "IsMath": true
         },
         {
@@ -28,7 +27,7 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "66",
+         "Text": "79",
          "IsMath": true
         },
         {
@@ -48,13 +47,13 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
        "Parts": [
         {
-         "Text": "Quel est le pourcentage de la hausse ?+",
+         "Text": "Quel est le pourcentage de la hausse ?\\n+",
          "IsMath": false
         }
        ],
@@ -62,13 +61,14 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
-       "ID": 0
+       "ID": 0,
+       "SizeHint": 4
       },
-      "Kind": 9
+      "Kind": "NumberFieldBlock"
      },
      {
       "Data": {
@@ -82,7 +82,7 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
@@ -96,7 +96,7 @@ void main() {
        "Italic": true,
        "Smaller": true
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      }
     ]
    },
@@ -106,28 +106,27 @@ void main() {
       "Indice": "f",
       "Name": 86
      },
-     "Resolved": "66"
+     "Resolved": "79"
     },
     {
      "Variable": {
       "Indice": "",
       "Name": 116
      },
-     "Resolved": "3,125"
+     "Resolved": "38,5"
     },
     {
      "Variable": {
       "Indice": "i",
       "Name": 86
      },
-     "Resolved": "16"
+     "Resolved": "2"
     }
    ]
   },
   {
    "Id": 29,
    "Question": {
-    "Title": "Calculer un coefficient multiplicateur",
     "Enonce": [
      {
       "Data": {
@@ -137,11 +136,11 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "-68",
+         "Text": "-66",
          "IsMath": true
         },
         {
-         "Text": "% ?",
+         "Text": "% ?\\n\\n",
          "IsMath": false
         },
         {
@@ -153,13 +152,14 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
-       "ID": 0
+       "ID": 0,
+       "SizeHint": 4
       },
-      "Kind": 9
+      "Kind": "NumberFieldBlock"
      }
     ]
    },
@@ -169,14 +169,13 @@ void main() {
       "Indice": "",
       "Name": 116
      },
-     "Resolved": "68"
+     "Resolved": "66"
     }
    ]
   },
   {
    "Id": 37,
    "Question": {
-    "Title": "Calculer un taux d'évolution",
     "Enonce": [
      {
       "Data": {
@@ -186,7 +185,7 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "99 €",
+         "Text": "97 €",
          "IsMath": true
         },
         {
@@ -194,15 +193,15 @@ void main() {
          "IsMath": false
         },
         {
-         "Text": "2018",
+         "Text": "2021",
          "IsMath": true
         },
         {
-         "Text": ".Le 31 décembre de la même année, il possède désormais ",
+         "Text": ".\\nLe 31 décembre de la même année, il possède désormais ",
          "IsMath": false
         },
         {
-         "Text": "71",
+         "Text": "115",
          "IsMath": true
         },
         {
@@ -222,7 +221,7 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
@@ -236,13 +235,14 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
-       "ID": 0
+       "ID": 0,
+       "SizeHint": 5
       },
-      "Kind": 9
+      "Kind": "NumberFieldBlock"
      },
      {
       "Data": {
@@ -256,7 +256,7 @@ void main() {
        "Italic": false,
        "Smaller": false
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      },
      {
       "Data": {
@@ -278,45 +278,45 @@ void main() {
        "Italic": true,
        "Smaller": true
       },
-      "Kind": 15
+      "Kind": "TextBlock"
      }
     ]
    },
    "Params": [
     {
      "Variable": {
-      "Indice": "f",
-      "Name": 86
-     },
-     "Resolved": "71"
-    },
-    {
-     "Variable": {
-      "Indice": "",
-      "Name": 116
-     },
-     "Resolved": "-28 / 99"
-    },
-    {
-     "Variable": {
       "Indice": "",
       "Name": 114
      },
-     "Resolved": "-0,2828"
+     "Resolved": "0,1856"
     },
     {
      "Variable": {
       "Indice": "",
       "Name": 97
      },
-     "Resolved": "2018"
+     "Resolved": "2021"
     },
     {
      "Variable": {
       "Indice": "i",
       "Name": 86
      },
-     "Resolved": "99"
+     "Resolved": "97"
+    },
+    {
+     "Variable": {
+      "Indice": "f",
+      "Name": 86
+     },
+     "Resolved": "115"
+    },
+    {
+     "Variable": {
+      "Indice": "",
+      "Name": 116
+     },
+     "Resolved": "0,1855670103"
     }
    ]
   }

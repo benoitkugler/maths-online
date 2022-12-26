@@ -3,7 +3,7 @@ package functiongrapher
 import (
 	"math"
 
-	"github.com/benoitkugler/maths-online/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 // quadratic polinomial

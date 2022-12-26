@@ -28,7 +28,6 @@
         no-data-text="Aucune étiquette ne correspond à votre recherche."
         hide-selected
         auto-select-first
-        :custom-filter="filter"
       >
         <template v-slot:append-inner>
           <v-btn
@@ -48,9 +47,9 @@
 </template>
 
 <script setup lang="ts">
-import { tagColor, tagString } from "@/controller/editor";
+import { filterTags, tagColor, tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
-import { $computed, $ref } from "vue/macros";
+import { $ref } from "vue/macros";
 
 interface Props {
   modelValue: string[];
@@ -79,10 +78,8 @@ function add(s: string) {
   emit("update:model-value", props.modelValue);
 
   // reset the search field
-  search = "";
   setTimeout(() => {
-    tagItems = candidatesTags.slice(0, maxRes);
-    search = "";
+    onSearch("");
   }, 100);
 }
 
@@ -107,37 +104,11 @@ function onDelete(e: Event, index: number) {
   onSearch("");
 }
 
-// this is used to limit the number of items returned by the search
-let nbResults = 0;
-const maxRes = 10;
-
-let candidatesTags = $computed(() => {
-  return props.allTags.filter((t) => !props.modelValue.includes(t));
-});
-
-let tagItems = $ref(candidatesTags.slice(0, maxRes));
+let tagItems = $ref(filterTags(props.allTags, "", props.modelValue));
 
 function onSearch(s: string) {
   search = s;
-  if (s.length) {
-    tagItems = candidatesTags.map((v) => v);
-  } else {
-    tagItems = candidatesTags.slice(0, maxRes);
-  }
-  nbResults = 0;
-}
-
-function filter(value: string, query: string, item: string) {
-  if (nbResults >= maxRes) {
-    return false;
-  }
-  query = query.toUpperCase();
-  const start = value.indexOf(query);
-  if (start != -1) {
-    nbResults += 1;
-    return start;
-  }
-  return false;
+  tagItems = filterTags(props.allTags, s, props.modelValue);
 }
 </script>
 

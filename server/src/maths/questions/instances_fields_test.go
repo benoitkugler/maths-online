@@ -5,10 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
-	"github.com/benoitkugler/maths-online/maths/questions/client"
-	"github.com/benoitkugler/maths-online/maths/repere"
-	"github.com/benoitkugler/maths-online/utils"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 func TestFieldInstance_validateAnswerSyntax(t *testing.T) {

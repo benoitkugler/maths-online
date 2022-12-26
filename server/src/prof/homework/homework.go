@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"sort"
 
-	ho "github.com/benoitkugler/maths-online/sql/homework"
-	"github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	taAPI "github.com/benoitkugler/maths-online/tasks"
-	"github.com/benoitkugler/maths-online/utils"
+	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
+	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type ClassroomSheets struct {

@@ -1,14 +1,14 @@
 package teacher
 
-import "github.com/benoitkugler/maths-online/sql/teacher"
+import "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 
 // Visibility is the status of a ressource, among :
-//	- personnal : read/write acces for the current teacher
-//	- verified by admins : read access only
+//   - personnal : read/write acces for the current teacher
+//   - verified by admins : read access only
 type Visibility uint8
 
 const (
-	hidden    Visibility = iota // not accessible by the user
+	Hidden    Visibility = iota // not accessible by the user, except in reviews
 	Personnal                   // Personnel
 	Admin                       // Officiel
 )
@@ -22,9 +22,9 @@ func NewVisibility(ownerID, userID, adminID teacher.IdTeacher, public bool) Visi
 	} else if ownerID == adminID && public {
 		return Admin
 	} else {
-		return hidden
+		return Hidden
 	}
 }
 
 // Restricted returns true if the item access if forbidden.
-func (vis Visibility) Restricted() bool { return vis == hidden }
+func (vis Visibility) Restricted() bool { return vis == Hidden }

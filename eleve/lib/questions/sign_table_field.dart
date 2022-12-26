@@ -2,7 +2,7 @@ import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/sign_table.dart';
 import 'package:eleve/questions/table.dart';
-import 'package:eleve/questions/types.gen.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 
 /// [_STController] is the controller for one table (the length is known)

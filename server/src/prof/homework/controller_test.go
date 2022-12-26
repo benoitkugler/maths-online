@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/maths/questions"
-	"github.com/benoitkugler/maths-online/pass"
-	"github.com/benoitkugler/maths-online/sql/editor"
-	ho "github.com/benoitkugler/maths-online/sql/homework"
-	ta "github.com/benoitkugler/maths-online/sql/tasks"
-	"github.com/benoitkugler/maths-online/sql/teacher"
-	"github.com/benoitkugler/maths-online/tasks"
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
+	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 type sample struct {
@@ -189,7 +189,7 @@ func TestEvaluateTask(t *testing.T) {
 		IdTask:    task.Id,
 		Ex: tasks.EvaluateWorkIn{
 			ID: task.IdWork,
-			Answers: map[int]tasks.Answer{
+			Answers: map[int]tasks.AnswerP{
 				0: {},
 			},
 		},
@@ -215,7 +215,7 @@ func TestEvaluateTask(t *testing.T) {
 		IdTask:    task.Id,
 		Ex: tasks.EvaluateWorkIn{
 			ID: task.IdWork,
-			Answers: map[int]tasks.Answer{
+			Answers: map[int]tasks.AnswerP{
 				0: {},
 			},
 			Progression: out.Ex.Progression,

@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:eleve/activities/trivialpoursuit/board.dart';
 import 'package:eleve/activities/trivialpoursuit/dice.dart' as dice;
-import 'package:eleve/activities/trivialpoursuit/events.gen.dart';
 import 'package:eleve/activities/trivialpoursuit/game_debug.dart';
 import 'package:eleve/activities/trivialpoursuit/game_end.dart';
 import 'package:eleve/activities/trivialpoursuit/lobby.dart';
@@ -13,14 +12,15 @@ import 'package:eleve/activities/trivialpoursuit/question_result.dart';
 import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/types.gen.dart' as types;
 import 'package:eleve/settings.dart';
+import 'package:eleve/types/src_maths_questions_client.dart' hide Answer;
+import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class _LastQuestion {
   final ShowQuestion question;
-  final types.Answers answer;
+  final Answers answer;
   const _LastQuestion(this.question, this.answer);
 }
 

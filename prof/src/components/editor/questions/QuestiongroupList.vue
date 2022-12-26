@@ -30,22 +30,12 @@
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-autocomplete
-            variant="outlined"
-            density="compact"
-            multiple
-            chips
-            closable-chips
-            :items="props.tags"
-            color="primary"
-            label="Catégories"
-            no-data-text="Aucune catégorie n'est encore utilisée."
+          <tag-selector
+            :all-tags="props.tags"
             v-model="queryTags"
             @update:model-value="updateQueryTags"
             @blur="updateQueryTags"
-            hint="Restreint la recherche à l'intersection des catégories sélectionnées."
-            persistent-hint
-          ></v-autocomplete>
+          ></tag-selector>
         </v-col>
         <v-col cols="auto" align-self="center">
           <origin-select
@@ -105,12 +95,13 @@ import {
   type Questiongroup,
   type QuestiongroupExt,
 } from "@/controller/api_gen";
-import { controller, IsDev } from "@/controller/controller";
+import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
 import OriginSelect from "../../OriginSelect.vue";
 import QuestiongroupRow from "./QuestiongroupRow.vue";
+import TagSelector from "../TagSelector.vue";
 
 interface Props {
   tags: string[]; // queried once for all

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	tu "github.com/benoitkugler/maths-online/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 // generate formulas.pdf in a temporary directory to perform visual tests

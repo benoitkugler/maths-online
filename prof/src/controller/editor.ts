@@ -777,7 +777,8 @@ export function personnalOrigin(): Origin {
   return {
     IsPublic: false,
     AllowPublish: false,
-    Visibility: Visibility.Personnal
+    Visibility: Visibility.Personnal,
+    IsInReview: { InReview: false, Id: -1 }
   };
 }
 
@@ -791,18 +792,36 @@ export function emptyAssertion(): ProofAssertion {
   };
 }
 
-export function refreshExercicePreview(sessionID: string, id: IdExercice) {
-  controller.EditorSaveExerciceAndPreview({
-    OnlyPreview: true,
-    IdExercice: id,
-    SessionID: sessionID,
-    Parameters: { Intrinsics: [], Variables: [] }, // ignored
-    Questions: [] // ignored
-  });
-}
-
 export interface VariantG {
   Id: number;
   Subtitle: string;
   Difficulty: DifficultyTag;
+}
+
+/** filterTags returns the first tags matching query.
+ * `blackList` may be provided to exclude results.
+ * If `query` is empty, the first items are not returned.
+ */
+export function filterTags(
+  candidates: string[],
+  query: string,
+  blackList: string[]
+) {
+  const pagination = 6;
+  const blackListSet = new Set(blackList);
+  const out: string[] = [];
+  query = query.toUpperCase();
+  for (const candidate of candidates) {
+    if (out.length >= pagination) {
+      break;
+    }
+    if (blackListSet.has(candidate)) {
+      continue;
+    }
+    const start = candidate.indexOf(query);
+    if (query == "" || start != -1) {
+      out.push(candidate);
+    }
+  }
+  return out;
 }

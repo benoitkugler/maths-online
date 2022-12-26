@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 )
 
 const regularText = "This is a regular text"

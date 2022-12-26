@@ -1,10 +1,13 @@
 import 'package:eleve/activities/homework/homework.dart';
-import 'package:eleve/activities/homework/types.gen.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/shared/title.dart';
-import 'package:eleve/shared_gen.dart';
+import 'package:eleve/types/src.dart';
+import 'package:eleve/types/src_prof_homework.dart';
+import 'package:eleve/types/src_sql_homework.dart';
+import 'package:eleve/types/src_sql_tasks.dart';
+import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
 
 MarkBareme sheetMark(List<TaskProgressionHeader> tasks) {

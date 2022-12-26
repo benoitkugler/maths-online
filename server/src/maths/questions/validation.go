@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/benoitkugler/maths-online/maths/expression"
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 )
 
 // maxFunctionBound is the maximum value a function
