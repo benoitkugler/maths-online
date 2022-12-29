@@ -12,7 +12,6 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
-	"github.com/benoitkugler/maths-online/server/src/tasks"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
@@ -207,7 +206,7 @@ func (ct *Controller) EditorUpdateExercicegroup(c echo.Context) error {
 	}
 
 	if group.IdTeacher != user.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	group.Title = args.Title
@@ -250,7 +249,7 @@ func (ct *Controller) duplicateExercice(idExercice ed.IdExercice, userID uID) (E
 	}
 
 	if !group.IsVisibleBy(userID) {
-		return ExerciceHeader{}, accessForbidden
+		return ExerciceHeader{}, errAccessForbidden
 	}
 
 	tx, err := ct.db.Begin()
@@ -344,7 +343,7 @@ func (ct *Controller) duplicateExercicegroup(idGroup ed.IdExercicegroup, userID 
 	}
 
 	if !group.IsVisibleBy(userID) {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, group.Id)
@@ -420,7 +419,7 @@ func (ct *Controller) EditorGetExerciceContent(c echo.Context) error {
 }
 
 func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (ExerciceExt, error) {
-	data, err := tasks.NewExerciceData(ct.db, exerciceID)
+	data, err := taAPI.NewExerciceData(ct.db, exerciceID)
 	if err != nil {
 		return ExerciceExt{}, err
 	}
@@ -510,7 +509,7 @@ func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userI
 		return utils.SQLError(err)
 	}
 	if group.IdTeacher != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	var tags ed.ExercicegroupTags
@@ -570,7 +569,7 @@ func (ct *Controller) checkExerciceOwner(idExercice ed.IdExercice, userID uID) e
 	}
 
 	if group.IdTeacher != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	return nil
@@ -682,7 +681,7 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	data, err := taAPI.NewExerciceData(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -756,7 +755,7 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	data, err := taAPI.NewExerciceData(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -836,7 +835,7 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	data, err := taAPI.NewExerciceData(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -921,7 +920,7 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	data, err := tasks.NewExerciceData(ct.db, args.IdExercice)
+	data, err := taAPI.NewExerciceData(ct.db, args.IdExercice)
 	if err != nil {
 		return err
 	}
@@ -1036,7 +1035,7 @@ type CheckExerciceParametersOut struct {
 // checks that the merging of SharedParameters and QuestionParameters is valid
 func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) (CheckExerciceParametersOut, error) {
 	// fetch the mode of each question
-	data, err := tasks.NewExerciceData(ct.db, params.IdExercice)
+	data, err := taAPI.NewExerciceData(ct.db, params.IdExercice)
 	if err != nil {
 		return CheckExerciceParametersOut{}, err
 	}
@@ -1077,7 +1076,7 @@ type SaveExerciceAndPreviewOut struct {
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
-	data, err := tasks.NewExerciceData(ct.db, params.IdExercice)
+	data, err := taAPI.NewExerciceData(ct.db, params.IdExercice)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
@@ -1090,7 +1089,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 	}
 
 	if !inReview && !data.Group.IsVisibleBy(userID) {
-		return SaveExerciceAndPreviewOut{}, accessForbidden
+		return SaveExerciceAndPreviewOut{}, errAccessForbidden
 	}
 
 	qus, _ := data.QuestionsList()
@@ -1161,7 +1160,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 }
 
 // newExercicePreview instantiates the exercice and return preview data
-func newExercicePreview(content tasks.ExerciceData) (LoopbackShowExercice, error) {
+func newExercicePreview(content taAPI.ExerciceData) (LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
 		return LoopbackShowExercice{}, err

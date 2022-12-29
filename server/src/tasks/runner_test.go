@@ -9,7 +9,6 @@ import (
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
-	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
@@ -84,7 +83,7 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 }
 
 func TestEvaluateExercice(t *testing.T) {
-	db := testutils.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
+	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
 	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)

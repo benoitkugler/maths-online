@@ -9,8 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -25,15 +23,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const sessionTimeout = 6 * time.Hour
-
-var accessForbidden = errors.New("access fordidden")
+var errAccessForbidden = errors.New("access fordidden")
 
 // Controller is the global object responsible to
 // handle incoming requests regarding the editor for questions and exercices
 type Controller struct {
-	lock sync.Mutex
-
 	db *sql.DB
 
 	admin teacher.Teacher
@@ -183,7 +177,7 @@ func (ct *Controller) duplicateQuestion(idQuestion ed.IdQuestion, userID uID) (e
 	}
 
 	if !group.IsVisibleBy(userID) {
-		return ed.Question{}, accessForbidden
+		return ed.Question{}, errAccessForbidden
 	}
 
 	// shallow copy is enough
@@ -222,7 +216,7 @@ func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID 
 	}
 
 	if !group.IsVisibleBy(userID) {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, group.Id)
@@ -362,7 +356,7 @@ func (ct *Controller) deleteQuestion(id ed.IdQuestion, userID uID) (DeleteQuesti
 	}
 
 	if group.IdTeacher != userID {
-		return DeleteQuestionOut{}, accessForbidden
+		return DeleteQuestionOut{}, errAccessForbidden
 	}
 
 	uses, err := getQuestionUses(ct.db, id)
@@ -431,7 +425,7 @@ func (ct *Controller) EditorGetQuestions(c echo.Context) error {
 	}
 
 	if !group.IsVisibleBy(user.Id) {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	out, err := LoadQuestionVariants(ct.db, ed.IdQuestiongroup(idGroup))
@@ -478,7 +472,7 @@ func (ct *Controller) EditorUpdateQuestiongroup(c echo.Context) error {
 	}
 
 	if group.IdTeacher != user.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	group.Title = args.Title
@@ -500,7 +494,7 @@ func (ct *Controller) EditorUpdateQuestiongroupVis(c echo.Context) error {
 
 	// we only accept public question from admin account
 	if user.Id != ct.admin.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	var args QuestionUpdateVisiblityIn
@@ -513,7 +507,7 @@ func (ct *Controller) EditorUpdateQuestiongroupVis(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 	if group.IdTeacher != user.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	group.Public = args.Public
@@ -677,7 +671,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 			return out, utils.SQLError(err)
 		}
 		if !qu.IdGroup.Valid {
-			return out, accessForbidden
+			return out, errAccessForbidden
 		}
 		groups, err = ed.SelectQuestiongroups(ct.db, qu.IdGroup.ID)
 		if err != nil {
@@ -788,7 +782,7 @@ func (ct *Controller) updateTags(params UpdateQuestiongroupTagsIn, userID uID) e
 		return utils.SQLError(err)
 	}
 	if group.IdTeacher != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	var tags ed.QuestiongroupTags
@@ -866,7 +860,7 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 	}
 
 	if owner != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	qu.Description = params.Question.Description
@@ -922,7 +916,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	}
 
 	if !inReview && !group.IsVisibleBy(userID) {
-		return SaveQuestionAndPreviewOut{}, accessForbidden
+		return SaveQuestionAndPreviewOut{}, errAccessForbidden
 	}
 
 	if err := params.Page.Validate(); err != nil {

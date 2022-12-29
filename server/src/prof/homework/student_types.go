@@ -4,7 +4,6 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	sql "github.com/benoitkugler/maths-online/server/src/sql/tasks"
-	"github.com/benoitkugler/maths-online/server/src/tasks"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
 )
 
@@ -22,10 +21,10 @@ type StudentSheets []SheetProgression
 type StudentEvaluateTaskIn struct {
 	StudentID pass.EncryptedID
 	IdTask    sql.IdTask
-	Ex        tasks.EvaluateWorkIn
+	Ex        taAPI.EvaluateWorkIn
 }
 
 type StudentEvaluateTaskOut struct {
-	Ex   tasks.EvaluateWorkOut
+	Ex   taAPI.EvaluateWorkOut
 	Mark int // updated mark
 }

@@ -113,6 +113,7 @@ func TestCRUDReview(t *testing.T) {
 		{Time: time.Now(), Message: "Un premier message"},
 		{Time: time.Now().Add(time.Hour), Message: "Un deuxième message"},
 	}}, sample.adminID)
+	tu.Assert(t, err == nil)
 	err = ct.updateReview(ReviewUpdateCommentsIn{IdReview: r.Id, Comments: re.Comments{
 		{Time: time.Now().Add(time.Minute), Message: "Une réponse"},
 	}}, sample.userID)

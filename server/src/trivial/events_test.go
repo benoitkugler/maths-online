@@ -19,12 +19,6 @@ func (c *clientOut) WriteJSON(v interface{}) error {
 	return err
 }
 
-func (c *clientOut) reset(lock *sync.Mutex) {
-	lock.Lock()
-	defer lock.Unlock()
-	c.updates = c.updates[:0]
-}
-
 func (c *clientOut) lastU(lock *sync.Mutex) StateUpdate {
 	lock.Lock()
 	defer lock.Unlock()

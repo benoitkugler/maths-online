@@ -19,7 +19,7 @@ import (
 
 type uID = teacher.IdTeacher
 
-var accessForbidden = errors.New("resource access forbidden")
+var errAccessForbidden = errors.New("resource access forbidden")
 
 type Controller struct {
 	db    *sql.DB
@@ -102,7 +102,7 @@ func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (
 	}
 
 	if class.IdTeacher != userID {
-		return ho.Sheet{}, accessForbidden
+		return ho.Sheet{}, errAccessForbidden
 	}
 
 	sheet, err := ho.Sheet{
@@ -132,7 +132,7 @@ func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
 	}
 
 	if class.IdTeacher != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	return nil
@@ -475,7 +475,7 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 	}
 
 	if cl.IdTeacher != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	// garbage collect the associated tasks :
@@ -555,7 +555,7 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	}
 
 	if cl.IdTeacher != userID {
-		return SheetExt{}, accessForbidden
+		return SheetExt{}, errAccessForbidden
 	}
 
 	sheet, err := ho.SelectSheet(ct.db, args.IdSheet)
@@ -668,7 +668,7 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 		return HomeworkMarksOut{}, utils.SQLError(err)
 	}
 	if classroom.IdTeacher != userID {
-		return HomeworkMarksOut{}, accessForbidden
+		return HomeworkMarksOut{}, errAccessForbidden
 	}
 
 	students, err := tcAPI.LoadClassroomStudents(ct.db, classroom.Id)

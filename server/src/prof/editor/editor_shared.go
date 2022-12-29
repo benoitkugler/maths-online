@@ -108,7 +108,7 @@ func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
 
 	// we only accept public question from admin account
 	if user.Id != ct.admin.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	var args ExerciceUpdateVisiblityIn
@@ -121,7 +121,7 @@ func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 	if ex.IdTeacher != user.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	if !args.Public {

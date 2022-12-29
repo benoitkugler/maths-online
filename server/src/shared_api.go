@@ -102,7 +102,7 @@ func setupQuestionSampleAPI(e *echo.Echo) {
 		for _, qu := range sampleQuestions {
 			out = append(out, labeledQuestion{Title: qu.Title, Question: qu.Question.ToClient()})
 		}
-		return c.JSONPretty(200, sampleQuestions, " ")
+		return c.JSONPretty(200, out, " ")
 	})
 
 	e.POST("/questions/syntaxe/:index", func(c echo.Context) error {

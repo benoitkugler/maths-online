@@ -99,10 +99,6 @@ func (tp tilePath) origin() int {
 // may advances with `nbMoves`.
 // In this game, you can go back when you have made one step.
 func (b board) choices(currentPos, nbMoves int) tileSet {
-	type target struct {
-		pos    int
-		origin int // -1 for no constraint
-	}
 	// start with the current pos, with no constraint
 	var (
 		currentPaths = []tilePath{{currentPos}}

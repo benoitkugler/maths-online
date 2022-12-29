@@ -292,6 +292,7 @@ func TestGetMarks(t *testing.T) {
 	err = createProgressionWith(ct.db, task1.Id, student1.Id, []ta.QuestionHistory{
 		{false, false, true},
 	})
+	tu.Assert(t, err == nil)
 	// do not create progression for student 2
 
 	// task2 has 3 questions
@@ -300,11 +301,13 @@ func TestGetMarks(t *testing.T) {
 		{true},
 		{},
 	})
+	tu.Assert(t, err == nil)
 	err = createProgressionWith(ct.db, task2.Id, student2.Id, []ta.QuestionHistory{
 		{false, false, false},
 		{false, false, true},
 		{false, true, false},
 	})
+	tu.Assert(t, err == nil)
 
 	out, err = ct.getMarks(HowemorkMarksIn{
 		IdClassroom: class.Id,
