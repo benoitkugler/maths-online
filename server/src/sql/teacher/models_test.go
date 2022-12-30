@@ -18,7 +18,7 @@ func TestTime(t *testing.T) {
 
 	var d2 Date
 	err := json.Unmarshal(s, &d2)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, ti.Equal(time.Time(d2)))
 }
@@ -31,7 +31,7 @@ func TestSQLTime(t *testing.T) {
 	classromm, _ := Classroom{IdTeacher: teacher.Id}.Insert(db)
 
 	st, err := Student{Birthday: Date(time.Now()), IdClassroom: classromm.Id}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	tu.Assert(t, !time.Time(st.Birthday).IsZero())
 }
 
@@ -48,57 +48,57 @@ func TestRoot(t *testing.T) {
 func testTeacher(t *testing.T, db *sql.DB) {
 	teacher := randTeacher()
 	teacher, err := teacher.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	teachers, err := SelectAllTeachers(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(teachers) == 1)
 
 	_, err = DeleteTeacherById(db, teacher.Id)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }
 
 func testClassroom(t *testing.T, db *sql.DB) {
 	tc, err := randTeacher().Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	classroom := randClassroom()
 	classroom.IdTeacher = tc.Id
 	classroom, err = classroom.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	classrooms, err := SelectAllClassrooms(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	if len(classrooms) != 1 {
 		t.Fatal(err)
 	}
 
 	_, err = DeleteClassroomById(db, classroom.Id)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }
 
 func testStudent(t *testing.T, db *sql.DB) {
 	tc, err := randTeacher().Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	classroom := randClassroom()
 	classroom.IdTeacher = tc.Id
 	classroom, err = classroom.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	student := randStudent()
 	student.IdClassroom = classroom.Id
 	student, err = student.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	students, err := SelectAllStudents(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	if len(students) != 1 {
 		t.Fatal(err)
 	}
 
 	_, err = DeleteStudentById(db, student.Id)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }

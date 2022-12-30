@@ -18,12 +18,15 @@ func TestValidation(t *testing.T) {
 	}
 
 	qu, err := ed.SelectAllQuestions(db)
-	tu.Assert(t, err == nil)
-	qu.RestrictNeedExercice()
+	tu.AssertNoErr(t, err)
+
+	exs, err := ed.SelectAllExercices(db)
+	tu.AssertNoErr(t, err)
 
 	ti := time.Now()
-	err = validateAllQuestions(qu, nil)
-	tu.Assert(t, err == nil)
+	err = validateAllQuestions(qu, exs)
+	fmt.Println(err)
+	tu.AssertNoErr(t, err)
 	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
 }
 
@@ -53,22 +56,22 @@ func TestExerciceCRUD(t *testing.T) {
 	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	group, err := ct.createExercice(1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	ex := group.Variants[0]
 
 	l, err := ct.createQuestionEx(ExerciceCreateQuestionIn{IdExercice: ex.Id}, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	if len(l.Questions) != 1 {
 		t.Fatal(l)
 	}
 
 	qu, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	l, err = ct.updateQuestionsEx(ExerciceUpdateQuestionsIn{
 		IdExercice: ex.Id,
@@ -77,7 +80,7 @@ func TestExerciceCRUD(t *testing.T) {
 			ed.ExerciceQuestion{IdQuestion: qu.Id},
 		},
 	}, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	if len(l.Questions) != 2 {
 		t.Fatal(l)
 	}
@@ -91,19 +94,19 @@ func TestExerciceCRUD(t *testing.T) {
 			ed.ExerciceQuestion{IdQuestion: updated.Question.Id},
 		},
 	}, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Id, Description: "test", Subtitle: "test2"}, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	if exe.Description != "test" {
 		t.Fatal(exe)
 	}
 
 	err = ct.duplicateExercicegroup(group.Group.Id, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	_, err = ct.deleteExercice(ex.Id, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }
 
 func TestDB(t *testing.T) {
@@ -114,7 +117,7 @@ func TestDB(t *testing.T) {
 
 	ct := NewController(db, teacher.Teacher{Id: 1})
 	_, err = ct.searchExercices(Query{}, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }
 
 func TestGroupTagsEmpty(t *testing.T) {
@@ -122,19 +125,19 @@ func TestGroupTagsEmpty(t *testing.T) {
 	defer db.Remove()
 
 	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
 	// create a group with no tags
 	group, err := ed.Questiongroup{IdTeacher: 1}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	err = ct.updateTags(UpdateQuestiongroupTagsIn{Id: group.Id, Tags: []string{"newtag1", "newtag2"}}, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }

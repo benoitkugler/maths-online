@@ -11,20 +11,20 @@ import (
 
 func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercice, ed.ExerciceQuestions) {
 	group, err := ed.Exercicegroup{IdTeacher: idTeacher}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	ex, err := ed.Exercice{IdGroup: group.Id}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	qu1, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	qu2, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	qu3, err := ed.Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	tx, err := db.Begin()
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	questions := ed.ExerciceQuestions{
 		{IdExercice: ex.Id, IdQuestion: qu1.Id, Index: 0, Bareme: 2},
@@ -33,10 +33,10 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 	}
 
 	err = ed.InsertManyExerciceQuestions(tx, questions...)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	err = tx.Commit()
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	return ex, questions
 }
@@ -46,12 +46,12 @@ func TestTaskConstraint(t *testing.T) {
 	defer db.Remove()
 
 	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	ex, questions := createEx(t, db.DB, tc.Id)
 
 	mono, err := Monoquestion{IdQuestion: questions[0].IdQuestion}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	// exactly one target must be given
 	_, err = Task{}.Insert(db)

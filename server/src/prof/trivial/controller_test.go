@@ -16,7 +16,7 @@ func TestCreateConfig(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
 
 	tc, err := teacher.Teacher{}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	out, err := tr.Trivial{
 		QuestionTimeout: 120,
@@ -146,7 +146,7 @@ func TestMissingQuestions(t *testing.T) {
 		},
 	}
 	out, err := ct.checkMissingQuestions(criteria, 1)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Missing) == 0)
 
 	criteria = tr.CategoriesQuestions{

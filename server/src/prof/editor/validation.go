@@ -49,5 +49,5 @@ func validateAllQuestions(questions ed.Questions, exercices ed.Exercices) error 
 		return nil
 	}
 
-	return fmt.Errorf("inconsistent table questions: %s", strings.Join(errs, "\n"))
+	return fmt.Errorf("%d invalid table questions: %s", len(errs), strings.Join(errs, "\n"))
 }
