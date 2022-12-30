@@ -667,9 +667,12 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	var groups ed.Questiongroups
 	if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
 		qu, err := ed.SelectQuestion(ct.db, ed.IdQuestion(idVariant))
-		if err != nil {
+		if err == sql.ErrNoRows {
+			return out, fmt.Errorf("La question %d n'existe pas.", idVariant)
+		} else if err != nil {
 			return out, utils.SQLError(err)
 		}
+
 		if !qu.IdGroup.Valid {
 			return out, errAccessForbidden
 		}
