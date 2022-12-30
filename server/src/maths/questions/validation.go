@@ -18,7 +18,7 @@ type ErrParameters struct {
 }
 
 func (err ErrParameters) Error() string {
-	return "invalid random parameters"
+	return fmt.Sprintf("invalid random parameters in %s: %s", err.Origin, err.Details)
 }
 
 // Validate ensure the given `Parameters` are sound,

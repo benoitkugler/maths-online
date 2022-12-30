@@ -77,7 +77,7 @@ func parsePythagorians(variables []string, arguments []string) (out PythagorianT
 		out.Bound, err = strconv.Atoi(strings.TrimSpace(arguments[0]))
 		if err != nil || out.Bound < 2 {
 			return out, ErrIntrinsic{
-				Reason: fmt.Sprintf("L'argument optionnel de la fonction 'pythagorians' doit être un nombre entier >= 2"),
+				Reason: "L'argument optionnel de la fonction 'pythagorians' doit être un nombre entier >= 2",
 			}
 		}
 	default:

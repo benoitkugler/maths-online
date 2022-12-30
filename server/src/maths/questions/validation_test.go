@@ -66,14 +66,14 @@ func Test_figureValidator_validate(t *testing.T) {
 		wantErr    bool
 	}{
 		{[]string{"A", "B"}, nil, nil, false},
-		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;V)")}, false},
-		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;A)")}, true},
-		{[]string{"A_1", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;A_1)")}, true},
-		{[]string{"A_c2", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;A_c2)")}, true},
+		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randChoice(U;V)")}, false},
+		{[]string{"A", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randChoice(U;A)")}, true},
+		{[]string{"A_1", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randChoice(U;A_1)")}, true},
+		{[]string{"A_c2", "R"}, nil, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randChoice(U;A_c2)")}, true},
 		{[]string{"A", "B"}, []string{"A", "A"}, nil, false},
 		{[]string{"A", "B"}, []string{"A", "C"}, nil, true},
-		{[]string{"A", "R"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(U;V)")}, false},
-		{[]string{"A", "B", "C"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randSymbol(A;B;C)")}, false},
+		{[]string{"A", "R"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randChoice(U;V)")}, false},
+		{[]string{"A", "B", "C"}, []string{"R"}, ex.RandomParameters{ex.NewVar('R'): ex.MustParse("randChoice(A;B;C)")}, false},
 	}
 	for _, tt := range tests {
 		v := figureValidator{

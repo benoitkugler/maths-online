@@ -1,10 +1,7 @@
 package expression
 
 import (
-	"math"
 	"testing"
-
-	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 func TestPythagorianTriplet_mergeTo(t *testing.T) {
@@ -148,22 +145,4 @@ func TestOrthogonalProjection_MergeTo(t *testing.T) {
 			t.Fatal()
 		}
 	}
-}
-
-// orthogonalProjection compute the coordinates of the orthogonal
-// projection of B on (AC).
-func orthogonalProjection(B, A, C repere.Coord) repere.Coord {
-	u := C.X - A.X // AC
-	v := C.Y - A.Y // AC
-	// det(AB, AC)
-	abX := B.X - A.X
-	abY := B.Y - A.Y
-	d := abX*v - abY*u
-	// solve for BH = (x, y)
-	// xu + yv = 0
-	// xv - yu = -d
-	norm := u*u + v*v
-	x := math.Round(-d * v / norm)
-	y := math.Round(d * u / norm)
-	return repere.Coord{X: x + B.X, Y: y + B.Y}
 }

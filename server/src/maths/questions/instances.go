@@ -92,7 +92,7 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 		}
 
 		if err := reference.validateAnswerSyntax(answer); err != nil {
-			log.Printf("internal error: invalid field syntax for %T: %s", err, reference)
+			log.Printf("internal error: invalid field syntax for %T: %s", reference, err)
 			continue
 		}
 
@@ -136,13 +136,6 @@ type StringOrExpression struct {
 // IsEmpty returns `true` is the struct is the zero value.
 func (se StringOrExpression) IsEmpty() bool {
 	return se.Expression == nil && se.String == ""
-}
-
-func (fi StringOrExpression) asLaTeX() string {
-	if fi.Expression != nil {
-		return fi.Expression.AsLaTeX()
-	}
-	return fi.String
 }
 
 // TextInstance is a paragraph of text, which may contain expression or

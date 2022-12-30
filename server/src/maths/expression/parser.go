@@ -152,15 +152,9 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 		}
 	case operator:
 		return pr.parseOperator(data, tok.pos, acceptSemiColon)
-	case randVariable:
-		rd, err := pr.parseRandVariable(tok.pos)
-		if err != nil {
-			return nil, err
-		}
-		return &Expr{atom: rd}, nil
 	case roundFn:
 		return pr.parseRoundFunction(tok.pos)
-	case specialFunction:
+	case specialFunctionKind:
 		rd, err := pr.parseSpecialFunction(tok.pos, data)
 		if err != nil {
 			return nil, err
@@ -368,102 +362,6 @@ func IsInt(v float64) (int, bool) {
 	return 0, false
 }
 
-func (pr *parser) parseRandVariable(pos int) (rv randVariable, err error) {
-	// after a function name, their must be a (
-	// with optional whitespaces
-	par := pr.tk.Next()
-
-	if par.data != openPar {
-		return rv, ErrInvalidExpr{
-			Reason: "parenthèse ouvrante manquante après randSymbol",
-			Pos:    pos,
-		}
-	}
-
-	var isComplex bool
-	// distinguish between the two forms by cheking for additional parenthesis
-	if t := pr.tk.Peek(); t.data == openPar { // complex form
-		isComplex = true
-		_ = pr.tk.Next() // consume the parenthesis
-	}
-
-	for {
-		if t := pr.tk.Peek().data; t == closePar || t == nil {
-			break
-		}
-
-		arg := pr.tk.Next()
-		if v, isVariable := arg.data.(Variable); isVariable {
-			rv.choices = append(rv.choices, v)
-		} else {
-			return rv, ErrInvalidExpr{
-				Reason: "randSymbol n'accepte que des variables comme arguments",
-				Pos:    pos,
-			}
-		}
-
-		// four cases here :
-		//	- valid closing parenthesis, closed after the loop
-		//	- valid separator ;
-		//  - invalid character, probably an invalid separator like ,
-		//	- EOF
-		switch next := pr.tk.Peek().data; next {
-		case closePar:
-			continue // without consuming
-		case semicolon: // consume and continue
-			_ = pr.tk.Next()
-		case nil: // EOF, error reported after the loop
-			break
-		default: // invalid separator
-			return rv, ErrInvalidExpr{
-				Reason: "randSymbol utilise ';' comme séparateur",
-				Pos:    pos,
-			}
-		}
-	}
-
-	// for complex form, expect an additional closing ) and a selector
-	if isComplex {
-		tok := pr.tk.Next()
-		if tok.data != closePar {
-			return rv, ErrInvalidExpr{
-				Reason: "parenthèse fermante manquante après les choix de randSymbol",
-				Pos:    tok.pos,
-			}
-		}
-
-		tok = pr.tk.Next()
-		if tok.data != semicolon {
-			return rv, ErrInvalidExpr{
-				Reason: "randSymbol utilise ; pour séparer les choix du sélecteur",
-				Pos:    tok.pos,
-			}
-		}
-
-		// accept a complete expression
-		rv.selector, err = pr.parseExpression(false)
-		if err != nil {
-			return rv, err
-		}
-	}
-
-	if tok := pr.tk.Next(); tok.data != closePar {
-		return rv, ErrInvalidExpr{
-			Reason: "parenthèse fermante manquante après randSymbol",
-			Pos:    tok.pos,
-		}
-	}
-
-	if len(rv.choices) == 0 {
-		return rv, ErrInvalidExpr{
-			Reason: "randSymbol attend au moins un argument",
-			Pos:    pos,
-		}
-	}
-
-	return rv, nil
-}
-
 // special case for the round function,
 // which accept one expression and number of digits
 func (pr *parser) parseRoundFunction(pos int) (expr *Expr, err error) {
@@ -509,7 +407,7 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expr, err error) {
 
 // special case for special functions, which are of the form
 // <function>(<expr>; <expr> ...)
-func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialFunctionA, err error) {
+func (pr *parser) parseSpecialFunction(pos int, fn specialFunctionKind) (rd specialFunction, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
 	par := pr.tk.Next()
@@ -538,10 +436,21 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 			continue
 		}
 
-		// consume the separator
-		if pr.tk.Next().data != semicolon {
+		// four cases here :
+		//	- valid closing parenthesis, closed after the loop
+		//	- valid separator ;
+		//  - invalid character, probably an invalid separator like ,
+		//	- EOF
+		switch next := pr.tk.Peek().data; next {
+		case closePar:
+			continue // without consuming
+		case semicolon: // consume the separator and continue
+			_ = pr.tk.Next()
+		case nil: // EOF, error reported after the loop
+
+		default: // invalid separator
 			return rd, ErrInvalidExpr{
-				Reason: "randXXX utilise ';' comme séparateur",
+				Reason: fmt.Sprintf("%s utilise ';' comme séparateur", rd.kind),
 				Pos:    pos,
 			}
 		}
@@ -549,7 +458,7 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 
 	if tok := pr.tk.Next(); tok.data != closePar {
 		return rd, ErrInvalidExpr{
-			Reason: "parenthèse fermante manquante après randXXX",
+			Reason: fmt.Sprintf("parenthèse fermante manquante après %s", fn),
 			Pos:    tok.pos,
 		}
 	}
@@ -557,4 +466,50 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunction) (rd specialF
 	err = rd.validate(pos)
 
 	return rd, err
+}
+
+func (rd specialFunction) validate(pos int) error {
+	switch rd.kind {
+	case randInt, randPrime:
+		if len(rd.args) < 2 {
+			return ErrInvalidExpr{
+				Reason: fmt.Sprintf("%s attend deux paramètres", rd.kind),
+				Pos:    pos,
+			}
+		}
+
+		// eagerly try to eval start and end in case their are constant,
+		// so that the error is detected during parameter setup
+		start, end, err := rd.startEnd(nil)
+		if err == nil {
+			return rd.validateStartEnd(start, end, pos)
+		}
+	case randChoice:
+		if len(rd.args) == 0 {
+			return ErrInvalidExpr{
+				Reason: "randChoice doit préciser au moins un argument",
+				Pos:    pos,
+			}
+		}
+	case choiceFrom:
+		if len(rd.args) < 2 {
+			return ErrInvalidExpr{
+				Reason: "choiceFrom doit préciser au moins deux arguments",
+				Pos:    pos,
+			}
+		}
+	case randDenominator: // nothing to validate
+
+	case minFn, maxFn:
+		if len(rd.args) == 0 {
+			return ErrInvalidExpr{
+				Reason: "min et max requierent au moins un argument",
+				Pos:    pos,
+			}
+		}
+	default:
+		panic(exhaustiveSpecialFunctionSwitch)
+	}
+
+	return nil
 }

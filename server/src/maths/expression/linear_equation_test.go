@@ -33,6 +33,10 @@ func TestExpr_isLinearEquation(t *testing.T) {
 		if !reflect.DeepEqual(coeffs, tt.wantCoeffs) {
 			t.Fatal(coeffs, tt.wantCoeffs)
 		}
+		err = e.IsValidLinearEquation(nil)
+		if (err != nil) != tt.wantErr {
+			t.Fatal()
+		}
 	}
 }
 

@@ -76,23 +76,14 @@ func compareNodes(n1, n2 *Expr) int {
 			} else {
 				return compareNodes(n1.right, n2.right)
 			}
-		case specialFunctionA:
-			a2 := a2.(specialFunctionA)
+		case specialFunction:
+			a2 := a2.(specialFunction)
 			if a1.kind < a2.kind {
 				return -1
 			} else if a1.kind > a2.kind {
 				return 1
 			} else {
 				return strings.Compare(fmt.Sprint(a1.args), fmt.Sprint(a2.args))
-			}
-		case randVariable:
-			a2 := a2.(randVariable)
-			if len(a1.choices) < len(a2.choices) {
-				return -1
-			} else if len(a1.choices) > len(a2.choices) {
-				return 1
-			} else {
-				return 0
 			}
 		case Variable:
 			a2 := a2.(Variable)

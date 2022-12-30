@@ -1,24 +1,12 @@
 package expression
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
 	"sort"
 	"strings"
 )
-
-// ErrInvalidRandomParameters is returned when instantiating
-// invalid parameter definitions
-type ErrInvalidRandomParameters struct {
-	Detail string
-	Cause  Variable
-}
-
-func (irv ErrInvalidRandomParameters) Error() string {
-	return fmt.Sprintf("Paramètre aléatoire %s invalide : %s", irv.Cause, irv.Detail)
-}
 
 // RandomParameters stores a set of random parameters definitions,
 // which may be related, but cannot contain cycles.
@@ -37,144 +25,18 @@ func (rp RandomParameters) addAnonymousParam(expr *Expr) Variable {
 	panic("implementation limit reached")
 }
 
-var _ ValueResolver = (*randomVarResolver)(nil)
-
-type randomVarResolver struct {
-	defs RandomParameters
-
-	seen    map[Variable]bool // variable that we are currently resolving
-	results map[Variable]rat  // resulting values
-}
-
-func (rvv *randomVarResolver) resolve(v Variable) (*Expr, error) {
-	// first, check if it has already been resolved by side effect
-	if nb, has := rvv.results[v]; has {
-		return nb.toExpr(), nil
-	}
-
-	if rvv.seen[v] {
-		return nil, ErrInvalidRandomParameters{
-			Cause:  v,
-			Detail: fmt.Sprintf("%s est présente dans un cycle et ne peut donc pas être calculée", v),
-		}
-	}
-
-	// start the resolution : to detect invalid cycles,
-	// register the variable
-	rvv.seen[v] = true
-
-	expr, ok := rvv.defs[v]
-	if !ok {
-		return nil, ErrInvalidRandomParameters{
-			Cause:  v,
-			Detail: fmt.Sprintf("%s n'est pas définie", v),
-		}
-	}
-
-	// recurse
-	value, err := expr.evalRat(rvv)
-	if err != nil {
-		return nil, ErrInvalidRandomParameters{
-			Cause:  v,
-			Detail: err.Error(),
-		}
-	}
-
-	// register the result
-	rvv.results[v] = value
-
-	return value.toExpr(), nil
-}
-
-// Validate calls `Instantiate` many to make sure the parameters are always
-// valid regardless of the random value chosen.
-// If not, it returns the first error encountered.
-func (rv RandomParameters) Validate() error {
-	const nbTries = 1_000
-	for i := 0; i < nbTries; i++ {
-		_, err := rv.Instantiate()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Instantiate generate a random version of the
-// variables, resolving possible dependencies.
-// It returns an `ErrInvalidRandomParameters` error for invalid cycles, like a = a +1
-// or a = b + 1; b = a.
-// See `Validate` to statistically check for errors.
-func (rv RandomParameters) Instantiate() (Vars, error) {
-	resolver := &randomVarResolver{
-		defs:    rv,
-		seen:    make(map[Variable]bool),
-		results: make(map[Variable]rat),
-	}
-
-	out := make(Vars, len(rv))
-	for v, expr := range rv {
-		// special case for randVariable
-		if randV, isRandVariable := expr.atom.(randVariable); isRandVariable {
-			resolver.seen[v] = true
-			resolved, err := randV.choice(resolver)
-			if err != nil {
-				return nil, ErrInvalidRandomParameters{
-					Cause:  v,
-					Detail: err.Error(),
-				}
-			}
-			out[v] = NewVarExpr(resolved)
-			continue
-		}
-
-		value, err := resolver.resolve(v) // this triggers the evaluation of the expression
-		if err != nil {
-			return nil, err
-		}
-
-		out[v] = value
-	}
-
-	return out, nil
-}
-
-// evaluate the potential selector and returns a choice
-func (rv randVariable) choice(res ValueResolver) (Variable, error) {
-	var index int
-	// note that the parsing step checks that len(choices) > 0
-	if rv.selector == nil {
-		index = rand.Intn(len(rv.choices))
-	} else {
-		v, err := rv.selector.Evaluate(res)
-		if err != nil {
-			return Variable{}, err
-		}
-		var ok bool
-		index, ok = IsInt(v)
-		if !ok {
-			return Variable{}, errors.New("L'argument de la fonction choice doit être un entier.")
-		}
-		if index < 1 || index > len(rv.choices) {
-			return Variable{}, fmt.Errorf("L'argument de la fonction choice doit être un compris entre 1 et %d.", len(rv.choices))
-		}
-		index -= 1 // using "human" convention
-	}
-	return rv.choices[index], nil
-}
-
 // return list of primes between min and max (inclusive)
 func sieveOfEratosthenes(min, max int) (primes []int) {
-	b := make([]bool, max+1)
+	sieve := make(map[int]bool)
 	for i := 2; i <= max; i++ {
-		if b[i] == true {
+		if sieve[i] {
 			continue
 		}
 		if i >= min {
 			primes = append(primes, i)
 		}
 		for k := i * i; k <= max; k += i {
-			b[k] = true
+			sieve[k] = true
 		}
 	}
 	return
@@ -203,7 +65,7 @@ func generateDivisors(n, threshold int) (out []int) {
 	return out
 }
 
-func (rd specialFunctionA) validateStartEnd(start, end float64, pos int) error {
+func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
 	switch rd.kind {
 	case randInt, randPrime:
 		start, okStart := IsInt(start)
@@ -236,45 +98,6 @@ func (rd specialFunctionA) validateStartEnd(start, end float64, pos int) error {
 			}
 		}
 	}
-	return nil
-}
-
-func (rd specialFunctionA) validate(pos int) error {
-	switch rd.kind {
-	case randInt, randPrime:
-		if len(rd.args) < 2 {
-			return ErrInvalidExpr{
-				Reason: "randXXX attend deux paramètres",
-				Pos:    pos,
-			}
-		}
-
-		// eagerly try to eval start and end in case their are constant,
-		// so that the error is detected during parameter setup
-		start, end, err := rd.startEnd(nil)
-		if err == nil {
-			return rd.validateStartEnd(start, end, pos)
-		}
-	case randChoice:
-		if len(rd.args) == 0 {
-			return ErrInvalidExpr{
-				Reason: "randChoice doit préciser au moins un argument",
-				Pos:    pos,
-			}
-		}
-	case randDenominator: // nothing to validate
-
-	case minFn, maxFn:
-		if len(rd.args) == 0 {
-			return ErrInvalidExpr{
-				Reason: "min et max requierent au moins un argument",
-				Pos:    pos,
-			}
-		}
-	default:
-		panic(exhaustiveSpecialFunctionSwitch)
-	}
-
 	return nil
 }
 

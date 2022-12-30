@@ -227,15 +227,6 @@ func (tp TextParts) instantiateAndMerge(params expression.Vars) (string, error) 
 	return strings.Join(chunks, ""), nil
 }
 
-func (tp TextParts) validate() error {
-	for _, text := range tp {
-		if err := text.validate(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // TextBlock is a chunk of text
 // which may contain maths
 // It support basic interpolation syntax.
@@ -280,20 +271,6 @@ type FormulaContent []FormulaPart
 type FormulaPart struct {
 	Content      string
 	IsExpression bool // when true, Content is interpreted as an expression.Expression
-}
-
-// assume the expression is valid
-func (fp FormulaPart) instantiate(params expression.Vars) (StringOrExpression, error) {
-	if !fp.IsExpression { // nothing to do
-		return StringOrExpression{String: fp.Content}, nil
-	}
-
-	expr, err := expression.Parse(fp.Content)
-	if err != nil {
-		return StringOrExpression{}, err
-	}
-	expr.Substitute(params)
-	return StringOrExpression{Expression: expr}, nil
 }
 
 // FormulaBlock is a math formula, which should be display using

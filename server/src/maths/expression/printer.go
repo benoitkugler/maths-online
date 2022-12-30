@@ -171,11 +171,7 @@ func (r roundFn) asLaTeX(_, right *Expr) string {
 	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(), r.nbDigits)
 }
 
-func (r specialFunctionA) asLaTeX(_, _ *Expr) string {
-	return fmt.Sprintf(`\text{%s}`, r.String())
-}
-
-func (r randVariable) asLaTeX(_, _ *Expr) string {
+func (r specialFunction) asLaTeX(_, _ *Expr) string {
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
@@ -224,7 +220,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	}
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, Variable, randVariable, roundFn, specialFunctionA:
+	case Number, constant, function, Variable, roundFn, specialFunction:
 		return false
 	case operator:
 		switch op {
@@ -310,7 +306,7 @@ func shouldOmitTimes(rightHasParenthesis bool, right *Expr) bool {
 	}
 
 	switch right.atom.(type) {
-	case Variable, constant, function, specialFunctionA, roundFn:
+	case Variable, constant, function, specialFunction, roundFn:
 		return true
 	case operator:
 		// if the first term is not a number, it is safe to remove the *

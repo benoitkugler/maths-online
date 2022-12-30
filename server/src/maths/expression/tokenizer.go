@@ -15,30 +15,51 @@ type tokenData interface {
 	isToken()
 }
 
-func (symbol) isToken()          {}
-func (numberText) isToken()      {}
-func (constant) isToken()        {}
-func (Variable) isToken()        {}
-func (function) isToken()        {}
-func (roundFn) isToken()         {}
-func (specialFunction) isToken() {}
-func (randVariable) isToken()    {}
-func (operator) isToken()        {}
+func (symbol) isToken()              {}
+func (numberText) isToken()          {}
+func (constant) isToken()            {}
+func (Variable) isToken()            {}
+func (function) isToken()            {}
+func (roundFn) isToken()             {}
+func (specialFunctionKind) isToken() {}
+func (operator) isToken()            {}
 
 // differs on regular function by the parsing
 // of its arguments
-type specialFunction uint8
+type specialFunctionKind uint8
 
 const (
-	randInt specialFunction = iota
+	randInt specialFunctionKind = iota
 	randPrime
 	randChoice
+	choiceFrom // the last argument is used as selector
 	randDenominator
 	minFn
 	maxFn
 
 	invalidSpecialFunction
 )
+
+func (sf specialFunctionKind) String() string {
+	switch sf {
+	case randInt:
+		return "randInt"
+	case randPrime:
+		return "randPrime"
+	case randChoice:
+		return "randChoice"
+	case choiceFrom:
+		return "choiceFrom"
+	case randDenominator:
+		return "randDecDen"
+	case minFn:
+		return "min"
+	case maxFn:
+		return "max"
+	default:
+		panic(exhaustiveSpecialFunctionSwitch)
+	}
+}
 
 type symbol uint8
 
@@ -203,9 +224,7 @@ func (tk *tokenizer) readToken() (tok token) {
 		out.data = op
 		tk.pos += isOpRunes
 	case unicode.IsLetter(c) || c == '@': // either a function, a variable, Inf/inf or a constant
-		if tk.tryReadRandVariable() {
-			out.data = randVariable{}
-		} else if isInf := tk.tryReadInf(); isInf {
+		if isInf := tk.tryReadInf(); isInf {
 			out.data = numberText("inf")
 		} else if isRound := tk.tryReadRoundFunction(); isRound {
 			out.data = roundFn{}
@@ -240,7 +259,7 @@ func isImplicitMultRight(t token) bool {
 		return true
 	case function: // (...)log()
 		return true
-	case specialFunction: // (...)randPrime()
+	case specialFunctionKind: // (...)randPrime()
 		return true
 	default:
 		return false
@@ -284,17 +303,9 @@ func (tk *tokenizer) tryReadInf() bool {
 	return false
 }
 
-func (tk *tokenizer) tryReadRandVariable() bool {
-	if s := strings.ToLower(string(tk.peekLetters())); s == "randsymbol" || s == "choicesymbol" {
-		tk.pos += len(s)
-		return true
-	}
-	return false
-}
-
-func (tk *tokenizer) tryReadSpecialFunction() (specialFunction, bool) {
+func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 	letters := tk.peekLetters()
-	var fn specialFunction
+	var fn specialFunctionKind
 	switch strings.ToLower(string(letters)) {
 	case "randint":
 		fn = randInt
@@ -302,6 +313,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunction, bool) {
 		fn = randPrime
 	case "randchoice":
 		fn = randChoice
+	case "choicefrom":
+		fn = choiceFrom
 	case "randdecden":
 		fn = randDenominator
 	case "min":
