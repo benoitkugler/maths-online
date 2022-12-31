@@ -1,5 +1,5 @@
 # maths-online
 
-## Version de test sur iOS
+## Application élève
 
-Sur iOS, l'appli est téléchargeable et utilisable via TestFlight, avec le lien https://testflight.apple.com/join/ruFSPcPH
+Les applications élèves sont disponibles sur AppStore et PlayStore.
