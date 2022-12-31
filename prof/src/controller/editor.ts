@@ -19,7 +19,6 @@ import {
   type FormulaBlock,
   type FunctionPointsFieldBlock,
   type FunctionsGraphBlock,
-  type IdExercice,
   type NumberFieldBlock,
   type OrderedListFieldBlock,
   type Origin,
@@ -31,14 +30,12 @@ import {
   type TableBlock,
   type TableFieldBlock,
   type TextBlock,
-  type TextPart,
   type TreeFieldBlock,
   type Variable,
   type VariationTableBlock,
   type VariationTableFieldBlock,
   type VectorFieldBlock
 } from "./api_gen";
-import { controller } from "./controller";
 import { LevelTag } from "./exercice_gen";
 
 export const ExpressionColor = "orange";
@@ -48,55 +45,6 @@ export const colorByKind: { [key in TextKind]: string } = {
   [TextKind.StaticMath]: "green",
   [TextKind.Expression]: ExpressionColor
 };
-
-const reLaTeX = /\$([^$]+)\$/g;
-const reExpression = /&([^&]+)&/g;
-
-function splitByRegexp(
-  re: RegExp,
-  s: string,
-  kindMatch: TextKind,
-  kindDefault: TextKind
-): TextPart[] {
-  const out: TextPart[] = [];
-  const matches = s.matchAll(re);
-  let cursor = 0;
-  for (const match of matches) {
-    const outerStart = match.index!;
-    const outerEnd = match.index! + match[0].length;
-
-    if (outerStart > cursor) {
-      out.push({ Kind: kindDefault, Content: s.substring(cursor, outerStart) });
-    }
-
-    out.push({ Kind: kindMatch, Content: s.substring(outerStart, outerEnd) });
-
-    cursor = outerEnd;
-  }
-
-  if (s.length > cursor) {
-    out.push({ Kind: kindDefault, Content: s.substring(cursor, s.length) });
-  }
-
-  return out;
-}
-
-export function itemize(s: string): TextPart[] {
-  const out: TextPart[] = [];
-  splitByRegexp(reLaTeX, s, TextKind.StaticMath, TextKind.Text).forEach(
-    chunk => {
-      out.push(
-        ...splitByRegexp(
-          reExpression,
-          chunk.Content,
-          TextKind.Expression,
-          chunk.Kind
-        )
-      );
-    }
-  );
-  return out;
-}
 
 export const sortedBlockKindLabels = [
   [BlockKind.TextBlock, { label: "Texte", isAnswerField: false }],
@@ -671,7 +619,7 @@ export function newBlock(kind: BlockKind): Block {
               },
               {
                 Kind: ProofAssertionKind.ProofStatement,
-                Data: { Content: "$n+m$ est pair" }
+                Data: { Content: "$n+m$ est impair" }
               }
             ]
           }
