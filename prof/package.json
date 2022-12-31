@@ -12,7 +12,6 @@
     "dependencies": {
         "@mdi/font": "5.9.55",
         "@vue/reactivity-transform": "^3.2.31",
-        "@vueup/vue-quill": "^1.0.1",
         "axios": "^0.26.1",
         "katex": "^0.16.4",
         "roboto-fontface": "^0.10.0",
@@ -25,7 +24,6 @@
         "@rushstack/eslint-patch": "^1.2.0",
         "@types/katex": "^0.14.0",
         "@types/node": "^16.18.10",
-        "@types/quill": "^2.0.10",
         "@types/webfontloader": "^1.6.35",
         "@vitejs/plugin-vue": "^2.3.4",
         "@vue/eslint-config-prettier": "^7.0.0",
