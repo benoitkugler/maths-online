@@ -268,6 +268,7 @@
 <script setup lang="ts">
 import type {
   FunctionsGraphBlock,
+  Variable,
   VariationTableBlock,
 } from "@/controller/api_gen";
 import {
@@ -284,6 +285,7 @@ import BaseVariationTable from "./BaseVariationTable.vue";
 
 interface Props {
   modelValue: FunctionsGraphBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

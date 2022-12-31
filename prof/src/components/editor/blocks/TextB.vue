@@ -56,11 +56,12 @@
 </template>
 
 <script setup lang="ts">
-import type { TextBlock } from "@/controller/api_gen";
+import type { TextBlock, Variable } from "@/controller/api_gen";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: TextBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

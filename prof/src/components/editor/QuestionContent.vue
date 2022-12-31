@@ -38,6 +38,7 @@
       >
         <component
           :model-value="row.Props.Data"
+          :available-parameters="props.availableParameters"
           @update:model-value="(v: any) => updateBlock(index, v)"
           :is="row.Component"
         ></component>

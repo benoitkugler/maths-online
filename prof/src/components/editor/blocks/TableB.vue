@@ -131,13 +131,14 @@
 </template>
 
 <script setup lang="ts">
-import type { TableBlock } from "@/controller/api_gen";
+import type { TableBlock, Variable } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { computed } from "@vue/runtime-core";
 import TextPartField from "./TextPartField.vue";
 
 interface Props {
   modelValue: TableBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

@@ -46,13 +46,14 @@
 </template>
 
 <script setup lang="ts">
-import type { FunctionPointsFieldBlock } from "@/controller/api_gen";
+import type { FunctionPointsFieldBlock, Variable } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
 import ExpressionListField from "../utils/ExpressionListField.vue";
 import VariableField from "../utils/VariableField.vue";
 
 interface Props {
   modelValue: FunctionPointsFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

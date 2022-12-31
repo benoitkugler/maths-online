@@ -7,11 +7,12 @@
 </template>
 
 <script setup lang="ts">
-import type { VariationTableBlock } from "@/controller/api_gen";
+import type { Variable, VariationTableBlock } from "@/controller/api_gen";
 import BaseVariationTable from "./BaseVariationTable.vue";
 
 interface Props {
   modelValue: VariationTableBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

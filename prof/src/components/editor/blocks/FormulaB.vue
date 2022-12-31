@@ -10,11 +10,12 @@
 </template>
 
 <script setup lang="ts">
-import type { FormulaBlock } from "@/controller/api_gen";
+import type { FormulaBlock, Variable } from "@/controller/api_gen";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: FormulaBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 
