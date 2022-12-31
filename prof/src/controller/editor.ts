@@ -757,7 +757,7 @@ export function commonTags(tags: string[][]) {
 
 /** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
 export const visiblityColors: { [key in Visibility]: string } = {
-  [Visibility.hidden]: "",
+  [Visibility.Hidden]: "",
   [Visibility.Admin]: "yellow-lighten-3",
   [Visibility.Personnal]: "white"
 };
