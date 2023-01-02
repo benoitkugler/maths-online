@@ -37,11 +37,3 @@ SET
                 jsonb_agg(jsonb_set(value, '{expression}', to_jsonb (__migration_replace_randSymbol (value ->> 'expression'))))
             FROM jsonb_array_elements(coalesce(parameters ->> 'Variables', '[]')::jsonb)), '[]'::jsonb));
 
--- SELECT
---     (
---         SELECT
---             jsonb_agg(chr((value -> 'variable' ->> 'Name')::int) || (value -> 'variable' ->> 'Indice') || ':' || (value ->> 'expression'))
---         FROM
---             jsonb_array_elements(coalesce(page -> 'parameters' ->> 'Variables', '[]')::jsonb))
--- FROM
---     questions;
