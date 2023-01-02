@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { colorByKind } from "@/controller/editor";
 import { TextKind } from "@/controller/loopback_gen";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { $ref } from "vue/macros";
 import { defautTokenize, type Token } from "./interpolated_text";
 
@@ -37,6 +37,15 @@ const emit = defineEmits<{
 }>();
 
 let editor = $ref<HTMLDivElement | null>(null);
+
+// since vue may reuse the same component but change
+// the modelValue, we have to watch for it
+watch(props, () => {
+  const currentText = HTMLToText();
+  if (props.modelValue != currentText) {
+    updateDisplay(props.modelValue);
+  }
+});
 
 function textToHTML(input: string) {
   // to make the line actually show and take space, we insert an invisble char
