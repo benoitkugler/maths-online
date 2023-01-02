@@ -25,7 +25,6 @@ func TestValidation(t *testing.T) {
 
 	ti := time.Now()
 	err = validateAllQuestions(qu, exs)
-	fmt.Println(err)
 	tu.AssertNoErr(t, err)
 	fmt.Println("Validated in :", time.Since(ti), "average :", time.Since(ti)/time.Duration(len(qu)))
 }
