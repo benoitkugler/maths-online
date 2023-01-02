@@ -25,7 +25,7 @@ import (
 
 type uID = teacher.IdTeacher
 
-var accesForbidden = errors.New("internal error: access forbidden")
+var errAccesForbidden = errors.New("internal error: access forbidden")
 
 type Controller struct {
 	db    *sql.DB
@@ -309,7 +309,7 @@ func (ct *Controller) createReview(args ReviewCreateIn, userID uID) (re.Review, 
 	}
 	// check for the owner
 	if header.Owner != userID {
-		return re.Review{}, accesForbidden
+		return re.Review{}, errAccesForbidden
 	}
 
 	// create the review
@@ -366,7 +366,7 @@ func (ct *Controller) deleteReview(id re.IdReview, userID uID) error {
 
 	// delete action is granted for admin and the owner of the review (target)
 	if userID != header.Owner && userID != ct.admin.Id {
-		return accesForbidden
+		return errAccesForbidden
 	}
 
 	// all related items cascade
@@ -399,7 +399,7 @@ func (ct *Controller) ReviewAccept(c echo.Context) error {
 
 func (ct *Controller) acceptReview(id re.IdReview, userID uID) error {
 	if userID != ct.admin.Id {
-		return accesForbidden
+		return errAccesForbidden
 	}
 
 	tx, err := ct.db.Begin()

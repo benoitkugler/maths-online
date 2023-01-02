@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"reflect"
 	"testing"
+
+	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestEvalMissingVariable(t *testing.T) {
@@ -45,7 +47,7 @@ func TestPrecision(t *testing.T) {
 	}
 
 	// Note : we could use math.Big with a large precision to better handle
-	// floating point arithmetic issues, but is seems to worth it, especially
+	// floating point arithmetic issues, but is seems not worth it, especially
 	// since we almost never want the student to precise more than 8 digits
 
 	// b := big.NewFloat(0.25)
@@ -63,7 +65,7 @@ func TestPrecision(t *testing.T) {
 func Test_Expression_eval(t *testing.T) {
 	tests := []struct {
 		expr     string
-		bindings ValueResolver
+		bindings Vars
 		want     float64
 	}{
 		{
@@ -166,6 +168,9 @@ func Test_Expression_eval(t *testing.T) {
 			"0 * randChoice(8; -1)", nil, 0,
 		},
 		{
+			"1 + choiceFrom(2+3;4/4;7; 2)", nil, 1 + 1,
+		},
+		{
 			"0 * randDecDen( )", nil, 0,
 		},
 		{
@@ -179,9 +184,6 @@ func Test_Expression_eval(t *testing.T) {
 		},
 		{
 			"2 * isPrime(11.4)", nil, 0,
-		},
-		{
-			"randSymbol(A;B)", nil, 0, // 0 by convention
 		},
 		{
 			"8 % 3", nil, 2,
@@ -315,7 +317,7 @@ func Test_isPrime(t *testing.T) {
 }
 
 func TestIsDecimal(t *testing.T) {
-	atom := specialFunctionA{kind: randDenominator}
+	atom := specialFunction{kind: randDenominator}
 	for range [200]int{} {
 		n, err := atom.eval(newRat(0), newRat(0), nil)
 		if err != nil {
@@ -471,4 +473,13 @@ func TestExpr_IsFraction(t *testing.T) {
 			t.Errorf("Expr.IsFraction() = %v, want %v", got, tt.want)
 		}
 	}
+}
+
+func TestEvalCycle(t *testing.T) {
+	// cycles may still happened after instantiation
+	// this test checks that when evaluating, they are correctly rejected
+	expr := mustParse(t, "a+1")
+	vars := Vars{NewVar('a'): newVarExpr('a')}
+	_, err := expr.Evaluate(vars)
+	testutils.Assert(t, err != nil)
 }

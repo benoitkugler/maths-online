@@ -220,7 +220,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 		// we still mark invalid answsers for inactive player,
 		// to avoid cheating by leaving before right before the question
 
-		isValid, _ := r.game.currentAnswers[player.pl.ID]
+		isValid := r.game.currentAnswers[player.pl.ID]
 		// update the success
 		player.advance.success[r.game.question.categorie] = isValid // false if not answered
 		player.advance.review.QuestionHistory = append(player.advance.review.QuestionHistory, QR{

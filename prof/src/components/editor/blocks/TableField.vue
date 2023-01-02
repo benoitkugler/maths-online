@@ -10,7 +10,11 @@
           <tr>
             <td></td>
             <th v-if="props.modelValue.VerticalHeaders != null"></th>
-            <td v-for="index in rowLength" style="text-align: center">
+            <td
+              v-for="index in rowLength"
+              style="text-align: center"
+              :key="index"
+            >
               <v-btn
                 icon
                 size="x-small"
@@ -28,6 +32,7 @@
             <th
               v-for="(_, index) in props.modelValue.HorizontalHeaders"
               style="text-align: center; width: 40px"
+              :key="index"
             >
               <text-part-field
                 :model-value="props.modelValue.HorizontalHeaders[index]!"
@@ -38,7 +43,10 @@
               </text-part-field>
             </th>
           </tr>
-          <tr v-for="(row, index) in props.modelValue.Answer || []">
+          <tr
+            v-for="(row, index) in props.modelValue.Answer || []"
+            :key="index"
+          >
             <td style="text-align: center; width: 20px">
               <v-btn
                 icon
@@ -64,6 +72,7 @@
             </th>
             <td
               v-for="(x, j) in row"
+              :key="j"
               style="text-align: center; min-width: 80px"
             >
               <v-text-field
@@ -108,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TableFieldBlock } from "@/controller/api_gen";
+import type { TableFieldBlock, Variable } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
@@ -116,6 +125,7 @@ import TextPartField from "./TextPartField.vue";
 
 interface Props {
   modelValue: TableFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 
@@ -129,10 +139,10 @@ function addColumn() {
   if (props.modelValue.HorizontalHeaders != null) {
     props.modelValue.HorizontalHeaders.push({
       Kind: TextKind.Text,
-      Content: ""
+      Content: "",
     });
   }
-  props.modelValue.Answer?.forEach(row => row!.push("1"));
+  props.modelValue.Answer?.forEach((row) => row!.push("1"));
 }
 
 const rowLength = computed(() => {
@@ -152,7 +162,7 @@ function addRow() {
   if (props.modelValue.VerticalHeaders != null) {
     props.modelValue.VerticalHeaders.push({
       Kind: TextKind.Text,
-      Content: ""
+      Content: "",
     });
   }
 
@@ -165,7 +175,7 @@ function removeColumn(index: number) {
   if (props.modelValue.HorizontalHeaders != null) {
     props.modelValue.HorizontalHeaders.splice(index, 1);
   }
-  props.modelValue.Answer?.forEach(row => row!.splice(index, 1));
+  props.modelValue.Answer?.forEach((row) => row!.splice(index, 1));
 }
 
 function removeRow(index: number) {
@@ -181,7 +191,7 @@ function toogleHorizontal(b: boolean) {
       new Array(rowLength.value),
       () => ({
         Kind: TextKind.Text,
-        Content: ""
+        Content: "",
       })
     );
   } else {
@@ -195,7 +205,7 @@ function toogleVertical(b: boolean) {
       new Array(props.modelValue.Answer?.length || 0),
       () => ({
         Kind: TextKind.Text,
-        Content: ""
+        Content: "",
       })
     );
   } else {

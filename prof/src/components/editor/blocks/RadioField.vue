@@ -75,13 +75,14 @@
 </template>
 
 <script setup lang="ts">
-import type { RadioFieldBlock } from "@/controller/api_gen";
+import type { RadioFieldBlock, Variable } from "@/controller/api_gen";
 import { computed } from "@vue/runtime-core";
 import ExpressionField from "../utils/ExpressionField.vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: RadioFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

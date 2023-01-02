@@ -1,7 +1,6 @@
 package trivial
 
 import (
-	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	"github.com/benoitkugler/maths-online/server/src/trivial"
@@ -22,7 +21,7 @@ func LoadQuestionNumbers(db tr.DB, config tr.Trivial, userID uID) (out [trivial.
 
 type TrivialExt struct {
 	Config tr.Trivial
-	Origin teacher.Origin
+	Origin tcAPI.Origin
 
 	NbQuestionsByCategories [trivial.NbCategories]int
 }

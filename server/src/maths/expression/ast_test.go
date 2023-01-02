@@ -10,12 +10,12 @@ func TestPanics(t *testing.T) {
 	testutils.ShouldPanic(t, func() { (invalidFn).eval(rat{}, rat{}, nil) })
 	testutils.ShouldPanic(t, func() { (invalidConstant).eval(rat{}, rat{}, nil) })
 	testutils.ShouldPanic(t, func() { (invalidOperator).eval(rat{}, rat{}, nil) })
-	testutils.ShouldPanic(t, func() { (specialFunctionA{kind: invalidSpecialFunction}).eval(rat{}, rat{}, nil) })
+	testutils.ShouldPanic(t, func() { (specialFunction{kind: invalidSpecialFunction}).eval(rat{}, rat{}, nil) })
 
 	testutils.ShouldPanic(t, func() { _ = (invalidFn).String() })
 	testutils.ShouldPanic(t, func() { _ = (invalidConstant).String() })
 	testutils.ShouldPanic(t, func() { _ = (invalidOperator).String() })
-	testutils.ShouldPanic(t, func() { _ = (specialFunctionA{kind: invalidSpecialFunction}).String() })
+	testutils.ShouldPanic(t, func() { _ = (specialFunction{kind: invalidSpecialFunction}).String() })
 
 	testutils.ShouldPanic(t, func() { _ = (invalidFn).asLaTeX(nil, nil) })
 	testutils.ShouldPanic(t, func() { _ = (invalidConstant).asLaTeX(nil, nil) })

@@ -77,16 +77,16 @@ func TestSelectQuestions(t *testing.T) {
 	defer db.Remove()
 
 	tc, err := teacher.Teacher{}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	g1, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	g2, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	g3, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	g4, err := ed.Questiongroup{IdTeacher: tc.Id}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	quD(0, g1.Id, ed.Diff1).Insert(db)
 	quD(0, g1.Id, ed.Diff2).Insert(db)
@@ -126,7 +126,7 @@ func TestSelectQuestions(t *testing.T) {
 	}
 
 	pool, err := selectQuestions(db, cats, tc.Id)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	if !reflect.DeepEqual(pool[0].Weights, []float64{
 		// group 1 : 4 questions -> 3 sub group

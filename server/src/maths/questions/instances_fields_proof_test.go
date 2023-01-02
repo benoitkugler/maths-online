@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	cl "github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 )
 
@@ -43,7 +42,7 @@ func TestParityProof(t *testing.T) {
 
 	fmt.Println(string(b))
 
-	var block2 client.ProofFieldBlock
+	var block2 cl.ProofFieldBlock
 	err = json.Unmarshal(b, &block2)
 	if err != nil {
 		t.Fatal(err)

@@ -109,13 +109,14 @@
 </template>
 
 <script setup lang="ts">
-import type { OrderedListFieldBlock } from "@/controller/api_gen";
+import type { OrderedListFieldBlock, Variable } from "@/controller/api_gen";
 import { ref } from "@vue/reactivity";
 import { nextTick } from "@vue/runtime-core";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: OrderedListFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

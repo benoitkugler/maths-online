@@ -22,6 +22,13 @@ func Assert(t *testing.T, b bool) {
 	}
 }
 
+func AssertNoErr(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // ReadEnv read [filename] and return its environnement variables.
 func ReadEnv(filename string) map[string]string {
 	content, err := os.ReadFile(filename)

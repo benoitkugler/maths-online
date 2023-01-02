@@ -7,11 +7,12 @@
 </template>
 
 <script setup lang="ts">
-import type { ProofFieldBlock } from "@/controller/api_gen";
+import type { ProofFieldBlock, Variable } from "@/controller/api_gen";
 import ProofSequence from "./proof/ProofSequence.vue";
 
 interface Props {
   modelValue: ProofFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

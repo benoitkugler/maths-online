@@ -148,12 +148,17 @@
 // TODO: for now, we only support regular trees
 // custom trees require v-treeview component, not available yet
 
-import type { TreeFieldBlock, TreeNodeAnswer } from "@/controller/api_gen";
+import type {
+  TreeFieldBlock,
+  TreeNodeAnswer,
+  Variable,
+} from "@/controller/api_gen";
 import { ExpressionColor } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 
 interface Props {
   modelValue: TreeFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

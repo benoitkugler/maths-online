@@ -13,7 +13,7 @@ import (
 
 func selectOneTeacher(t *testing.T, db *sql.DB) teacher.Teacher {
 	teachers, err := teacher.SelectAllTeachers(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(teachers) != 0)
 	return teachers[teachers.IDs()[0]]
 }
@@ -30,46 +30,46 @@ func TestRoot(t *testing.T) {
 
 func testQuestion(t *testing.T, db *sql.DB) {
 	questions, err := SelectAllQuestions(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	L := len(questions)
 
 	user, err := teacher.Teacher{}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	group := randQuestiongroup()
 	group.IdTeacher = user.Id
 	group, err = group.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	qu := randQuestion()
 	qu.IdGroup = group.Id.AsOptional()
 	qu, err = qu.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	questions, err = SelectAllQuestions(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(questions) == L+1)
 
 	tx, err := db.Begin()
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	err = InsertManyQuestiongroupTags(tx,
 		QuestiongroupTag{IdQuestiongroup: group.Id, Tag: "seconde"},
 		QuestiongroupTag{IdQuestiongroup: group.Id, Tag: "calcul"},
 	)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	if err = tx.Commit(); err != nil {
 		t.Fatal(err)
 	}
 
 	tags, err := SelectAllQuestiongroupTags(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 	tu.Assert(t, reflect.DeepEqual(tags.List(), []string{"calcul", "seconde"}))
 
 	_, err = DeleteQuestionById(db, qu.Id)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }
 
 func testInsertSignTable(t *testing.T, db *sql.DB) {
@@ -77,14 +77,14 @@ func testInsertSignTable(t *testing.T, db *sql.DB) {
 
 	group := Questiongroup{IdTeacher: user.Id}
 	group, err := group.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	qu := randQuestion()
 	qu.IdGroup = group.Id.AsOptional()
 	qu.NeedExercice = OptionalIdExercice{}
 	qu.Page.Enonce = questions.Enonce{randque_SignTableBlock()}
 	qu, err = qu.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 }
 
 func TestLoadQuestions(t *testing.T) {
@@ -95,7 +95,7 @@ func TestLoadQuestions(t *testing.T) {
 	}
 
 	m, err := SelectAllQuestions(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	fmt.Println("Questions :", len(m))
 }
@@ -106,27 +106,27 @@ func testCRUDExercice(t *testing.T, db *sql.DB) {
 	group := randExercicegroup()
 	group.IdTeacher = user.Id
 	group, err := group.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	ex := randExercice()
 	ex.IdGroup = group.Id
 	ex, err = ex.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	qu1, err := Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	qu2, err := Question{NeedExercice: ex.Id.AsOptional()}.Insert(db)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	tx, err := db.Begin()
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	err = InsertManyExerciceQuestions(tx,
 		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu1.Id, Bareme: 4, Index: 0},
 		ExerciceQuestion{IdExercice: ex.Id, IdQuestion: qu2.Id, Bareme: 5, Index: 1},
 	)
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	if err = tx.Commit(); err != nil {
 		t.Fatal(err)

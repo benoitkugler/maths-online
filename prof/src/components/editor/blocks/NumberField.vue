@@ -16,12 +16,13 @@
 </template>
 
 <script setup lang="ts">
-import type { NumberFieldBlock } from "@/controller/api_gen";
+import type { NumberFieldBlock, Variable } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 
 interface Props {
   modelValue: NumberFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 const color = colorByKind[TextKind.Expression];

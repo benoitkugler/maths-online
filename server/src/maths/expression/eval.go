@@ -1,27 +1,73 @@
 package expression
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
 )
 
-type ValueResolver interface {
-	resolve(v Variable) (*Expr, error)
+type varEvaluer interface {
+	resolve(v Variable) (rat, error)
 }
 
-var _ ValueResolver = Vars{}
+var _ varEvaluer = (*evalResolver)(nil)
 
 // Vars maps variables to a chosen value.
 type Vars map[Variable]*Expr
 
-func (vrs Vars) resolve(v Variable) (*Expr, error) {
-	value, ok := vrs[v]
-	if !ok {
-		return nil, ErrMissingVariable{v}
+type evalResolver struct {
+	defs Vars // source of the variables expressions
+
+	seen    map[Variable]bool // variable that we are currently resolving
+	results map[Variable]rat  // resulting values
+}
+
+// handle cycle
+func (vrs Vars) resolver() *evalResolver {
+	return &evalResolver{
+		defs:    vrs,
+		seen:    make(map[Variable]bool),
+		results: make(map[Variable]rat),
 	}
+}
+
+func (vrs *evalResolver) resolve(v Variable) (rat, error) {
+	if value, has := vrs.results[v]; has {
+		return value, nil
+	}
+
+	if vrs.seen[v] {
+		return rat{}, ErrCycleVariable{v}
+	}
+
+	expr, ok := vrs.defs[v]
+	if !ok {
+		return rat{}, ErrMissingVariable{v}
+	}
+
+	vrs.seen[v] = true
+
+	// recurse
+	value, err := expr.evalRat(vrs)
+	if err != nil {
+		return rat{}, err
+	}
+
+	vrs.results[v] = value
+
 	return value, nil
+}
+
+// Evaluate uses the given variables values to evaluate the formula.
+// If a variable is referenced in the expression but not in the bindings,
+// `ErrMissingVariable` is returned.
+// If a variable is in a cycle and can't be resolved, ErrCycleVariable` is returned.
+// If the expression is not valid, like in randInt(2; -2), `ErrInvalidExpr` is returned
+func (expr *Expr) Evaluate(vars Vars) (float64, error) {
+	resolver := vars.resolver()
+	return expr.evalFloat(resolver)
 }
 
 type ErrMissingVariable struct {
@@ -32,6 +78,14 @@ func (mv ErrMissingVariable) Error() string {
 	return fmt.Sprintf("La variable %s n'est pas définie.", mv.Missing)
 }
 
+type ErrCycleVariable struct {
+	InCycle Variable
+}
+
+func (mv ErrCycleVariable) Error() string {
+	return fmt.Sprintf("La variable %s est présente dans un cycle.", mv.InCycle)
+}
+
 // mustEvaluate panics if the expression is invalid or if
 // a variable is missing from `vars`.
 func mustEvaluate(expr string, vars Vars) float64 {
@@ -40,8 +94,8 @@ func mustEvaluate(expr string, vars Vars) float64 {
 }
 
 // mustEvaluate panics if a variable is missing.
-func (expr *Expr) mustEvaluate(bindings ValueResolver) float64 {
-	out, err := expr.Evaluate(bindings)
+func (expr *Expr) mustEvaluate(vars Vars) float64 {
+	out, err := expr.Evaluate(vars)
 	if err != nil {
 		panic(fmt.Sprintf("%s: %s", expr.String(), err))
 	}
@@ -53,11 +107,11 @@ type singleVarResolver struct {
 	value float64
 }
 
-func (res singleVarResolver) resolve(v Variable) (*Expr, error) {
+func (res singleVarResolver) resolve(v Variable) (rat, error) {
 	if res.v != v {
-		return nil, ErrMissingVariable{v}
+		return rat{}, ErrMissingVariable{v}
 	}
-	return NewNb(res.value), nil
+	return newRat(res.value), nil
 }
 
 type FunctionExpr struct {
@@ -76,7 +130,7 @@ type FunctionDefinition struct {
 // The closure will silently return NaN if the expression is invalid.
 func (f FunctionExpr) Closure() func(float64) float64 {
 	return func(xValue float64) float64 {
-		out, err := f.Function.Evaluate(singleVarResolver{f.Variable, xValue})
+		out, err := f.Function.evalFloat(singleVarResolver{f.Variable, xValue})
 		if err != nil {
 			return math.NaN()
 		}
@@ -132,16 +186,12 @@ func isFloatExceedingPrecision(v float64) bool {
 	return s[len(s)-1] != '0'
 }
 
-// Evaluate uses the given variables values to evaluate the formula.
-// If a variable is referenced in the expression but not in the bindings,
-// `ErrMissingVariable` is returned.
-// If the expression is not valid, like in randInt(2; -2), `ErrInvalidExpr` is returned
-func (expr *Expr) Evaluate(bindings ValueResolver) (float64, error) {
+func (expr *Expr) evalFloat(bindings varEvaluer) (float64, error) {
 	r, err := expr.evalRat(bindings)
 	return r.eval(), err
 }
 
-func (expr *Expr) evalRat(bindings ValueResolver) (rat, error) {
+func (expr *Expr) evalRat(bindings varEvaluer) (rat, error) {
 	var (
 		left, right = newRat(0), newRat(0) // 0 is a valid default value
 		err         error
@@ -161,7 +211,7 @@ func (expr *Expr) evalRat(bindings ValueResolver) (rat, error) {
 	return expr.atom.eval(left, right, bindings)
 }
 
-func (op operator) eval(left, right rat, _ ValueResolver) (rat, error) {
+func (op operator) eval(left, right rat, _ varEvaluer) (rat, error) {
 	return op.evaluate(left, right), nil
 }
 
@@ -216,33 +266,29 @@ func (op operator) evaluate(left, right rat) rat {
 	}
 }
 
-func (c constant) eval(_, _ rat, _ ValueResolver) (rat, error) {
+func (c constant) evalRat() rat {
 	switch c {
 	case piConstant:
-		return newRat(math.Pi), nil
+		return newRat(math.Pi)
 	case eConstant:
-		return newRat(math.E), nil
+		return newRat(math.E)
 	default:
 		panic(exhaustiveConstantSwitch)
 	}
 }
 
-func (v Number) eval(_, _ rat, _ ValueResolver) (rat, error) { return newRat(float64(v)), nil }
+func (c constant) eval(_, _ rat, _ varEvaluer) (rat, error) {
+	return c.evalRat(), nil
+}
 
-func (va Variable) eval(_, _ rat, b ValueResolver) (rat, error) {
+func (v Number) eval(_, _ rat, _ varEvaluer) (rat, error) { return newRat(float64(v)), nil }
+
+func (va Variable) eval(_, _ rat, b varEvaluer) (rat, error) {
 	if b == nil {
 		return rat{}, ErrMissingVariable{Missing: va}
 	}
 
-	out, err := b.resolve(va)
-	if err != nil {
-		return rat{}, err
-	}
-	return out.evalRat(b)
-}
-
-func (randVariable) eval(_, _ rat, _ ValueResolver) (rat, error) {
-	return newRat(0), nil
+	return b.resolve(va)
 }
 
 func roundTo(v float64, digits int) float64 {
@@ -250,11 +296,11 @@ func roundTo(v float64, digits int) float64 {
 	return math.Round(v*exp) / exp
 }
 
-func (round roundFn) eval(_, right rat, _ ValueResolver) (rat, error) {
+func (round roundFn) eval(_, right rat, _ varEvaluer) (rat, error) {
 	return newRat(roundTo(right.eval(), round.nbDigits)), nil
 }
 
-func (fn function) eval(_, right rat, _ ValueResolver) (rat, error) {
+func (fn function) eval(_, right rat, _ varEvaluer) (rat, error) {
 	arg := right.eval()
 	switch fn {
 	case logFn:
@@ -319,12 +365,12 @@ const (
 
 var decimalDividors = generateDivisors(maxDecDen, thresholdDecDen)
 
-func (r specialFunctionA) startEnd(res ValueResolver) (float64, float64, error) {
-	start, err := r.args[0].Evaluate(res)
+func (r specialFunction) startEnd(res varEvaluer) (float64, float64, error) {
+	start, err := r.args[0].evalFloat(res)
 	if err != nil {
 		return 0, 0, err
 	}
-	end, err := r.args[1].Evaluate(res)
+	end, err := r.args[1].evalFloat(res)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -332,19 +378,19 @@ func (r specialFunctionA) startEnd(res ValueResolver) (float64, float64, error) 
 	return start, end, nil
 }
 
-func minMax(args []*Expr, res ValueResolver) (float64, float64, error) {
+func minMax(args []*Expr, res varEvaluer) (float64, float64, error) {
 	if len(args) == 0 {
 		return 0, 0, ErrInvalidExpr{
 			Reason: "min et max requierent au moins un argument",
 		}
 	}
-	min, err := args[0].Evaluate(res)
+	min, err := args[0].evalFloat(res)
 	if err != nil {
 		return 0, 0, err
 	}
 	max := min
 	for _, arg := range args[1:] {
-		v, err := arg.Evaluate(res)
+		v, err := arg.evalFloat(res)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -359,7 +405,7 @@ func minMax(args []*Expr, res ValueResolver) (float64, float64, error) {
 }
 
 // return a random number
-func (r specialFunctionA) eval(_, _ rat, res ValueResolver) (rat, error) {
+func (r specialFunction) evalRat(res varEvaluer) (rat, error) {
 	switch r.kind {
 	case randInt:
 		start, end, err := r.startEnd(res)
@@ -387,6 +433,13 @@ func (r specialFunctionA) eval(_, _ rat, res ValueResolver) (rat, error) {
 	case randChoice:
 		index := rand.Intn(len(r.args))
 		return r.args[index].evalRat(res)
+	case choiceFrom:
+		// the parsing step ensure len(r.args) >= 2
+		choice, err := choiceFromSelect(r.args, res)
+		if err != nil {
+			return rat{}, err
+		}
+		return choice.evalRat(res)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
 		return newRat(float64(decimalDividors[index])), nil
@@ -399,6 +452,31 @@ func (r specialFunctionA) eval(_, _ rat, res ValueResolver) (rat, error) {
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
+}
+
+// evaluate the selector and return the expression at the index
+// args must have length >= 2
+func choiceFromSelect(args []*Expr, res varEvaluer) (choice *Expr, err error) {
+	choices, selector := args[:len(args)-1], args[len(args)-1]
+	v, err := selector.evalFloat(res)
+	if err != nil {
+		return nil, err
+	}
+	var ok bool
+	index, ok := IsInt(v)
+	if !ok {
+		return nil, errors.New("Le dernier argument de la fonction choiceFrom doit être un entier.")
+	}
+	if index < 1 || index > len(choices) {
+		return nil, fmt.Errorf("Le dernier argument de la fonction choiceFrom doit être un compris entre 1 et %d.", len(choices))
+	}
+	index -= 1 // using "human" convention
+	return choices[index], nil
+}
+
+// return a random number
+func (r specialFunction) eval(_, _ rat, res varEvaluer) (rat, error) {
+	return r.evalRat(res)
 }
 
 // --------------------------- numbers computations ---------------------------

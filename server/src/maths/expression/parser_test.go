@@ -369,46 +369,49 @@ var expressions = [...]struct {
 	{"randInt(2 * 4; 1)", nil, true}, // not supported for now
 	{"randPrime(-1; 12)", nil, true},
 	{"randPrime(4; 4)", nil, true},
-	{"randInt(0; 1)", &Expr{atom: specialFunctionA{kind: randInt, args: []*Expr{NewNb(0), NewNb(1)}}}, false},
-	{"randInt(2; 12)", &Expr{atom: specialFunctionA{kind: randInt, args: []*Expr{NewNb(2), NewNb(12)}}}, false},
-	{"randInt(-1; 4)", &Expr{atom: specialFunctionA{kind: randInt, args: []*Expr{NewNb(-1), NewNb(4)}}}, false},
-	{"randInt(a; b)", &Expr{atom: specialFunctionA{kind: randInt, args: []*Expr{newVarExpr('a'), newVarExpr('b')}}}, false},
-	{"randPrime(0; 2)", &Expr{atom: specialFunctionA{kind: randPrime, args: []*Expr{NewNb(0), NewNb(2)}}}, false},
-	{"randPrime(2; 12)", &Expr{atom: specialFunctionA{kind: randPrime, args: []*Expr{NewNb(2), NewNb(12)}}}, false},
-	{"randChoice(1.2;4 ; -3)", &Expr{atom: specialFunctionA{kind: randChoice, args: []*Expr{NewNb(1.2), NewNb(4), NewNb(-3)}}}, false},
-	{"randDecDen( )", &Expr{atom: specialFunctionA{kind: randDenominator, args: nil}}, false},
+	{"randInt(0; 1)", &Expr{atom: specialFunction{kind: randInt, args: []*Expr{NewNb(0), NewNb(1)}}}, false},
+	{"randInt(2; 12)", &Expr{atom: specialFunction{kind: randInt, args: []*Expr{NewNb(2), NewNb(12)}}}, false},
+	{"randInt(-1; 4)", &Expr{atom: specialFunction{kind: randInt, args: []*Expr{NewNb(-1), NewNb(4)}}}, false},
+	{"randInt(a; b)", &Expr{atom: specialFunction{kind: randInt, args: []*Expr{newVarExpr('a'), newVarExpr('b')}}}, false},
+	{"randPrime(0; 2)", &Expr{atom: specialFunction{kind: randPrime, args: []*Expr{NewNb(0), NewNb(2)}}}, false},
+	{"randPrime(2; 12)", &Expr{atom: specialFunction{kind: randPrime, args: []*Expr{NewNb(2), NewNb(12)}}}, false},
+	{"randChoice(1.2;4 ; -3)", &Expr{atom: specialFunction{kind: randChoice, args: []*Expr{NewNb(1.2), NewNb(4), NewNb(-3)}}}, false},
+	{"randDecDen( )", &Expr{atom: specialFunction{kind: randDenominator, args: nil}}, false},
 	{"randInt(15; 12)", nil, true},
 	{"randChoice( )", nil, true},
 	{"randChoice(2;", nil, true},
-	// randSymbol
-	{"randSymbol(A; x_A; b;  B; B)", &Expr{atom: randVariable{
-		choices: []Variable{
-			NewVar('A'), {Name: 'x', Indice: "A"}, NewVar('b'), NewVar('B'), NewVar('B'),
+	// randChoice with arbitrary expression
+	{"randChoice(A; x_A; b;  B; B)", &Expr{atom: specialFunction{
+		kind: randChoice,
+		args: []*Expr{
+			newVarExpr('A'), NewVarExpr(Variable{Name: 'x', Indice: "A"}), newVarExpr('b'), newVarExpr('B'), newVarExpr('B'),
 		},
 	}}, false},
-	{"randSymbol( )", nil, true},
-	{"randSymbol)", nil, true},
-	{"randSymbol(0.2 )", nil, true},
-	{"randSymbol(x;", nil, true},
-	{"randSymbol(x,y)", nil, true},
-	// choiceSymbol
-	{"choiceSymbol((A; x_A; b;  B; B); sin(3))", &Expr{atom: randVariable{
-		choices: []Variable{
-			NewVar('A'), {Name: 'x', Indice: "A"}, NewVar('b'), NewVar('B'), NewVar('B'),
+	{"randChoice( )", nil, true},
+	{"randChoice)", nil, true},
+	{"randChoice(x;", nil, true},
+	{"randChoice(x,y)", nil, true},
+	// choiceFrom
+	{"choiceFrom(A; x_A; b;  B; B; sin(3))", &Expr{atom: specialFunction{
+		kind: choiceFrom,
+		args: []*Expr{
+			newVarExpr('A'),
+			NewVarExpr(Variable{Name: 'x', Indice: "A"}),
+			newVarExpr('b'), newVarExpr('B'), newVarExpr('B'),
+			{atom: sinFn, right: newNb(3)},
 		},
-		selector: &Expr{atom: sinFn, right: newNb(3)},
 	}}, false},
-	{"choiceSymbol(())", nil, true},
-	{"choiceSymbol((", nil, true},
-	{"choiceSymbol((0.2 )", nil, true},
-	{"choiceSymbol((x;", nil, true},
-	{"choiceSymbol((x,y))", nil, true},
-	{"choiceSymbol((x;y); )", nil, true},
+	{"choiceFrom( )", nil, true},
+	{"choiceFrom((", nil, true},
+	{"choiceFrom( 0.2 )", nil, true},
+	{"choiceFrom( x;", nil, true},
+	{"choiceFrom( x,y )", nil, true},
+	{"choiceFrom(x;y); )", nil, true},
 	{
 		"2 + 3 * randInt(2; 12)", &Expr{
 			atom:  plus,
 			left:  NewNb(2),
-			right: &Expr{atom: mult, left: NewNb(3), right: &Expr{atom: specialFunctionA{kind: randInt, args: []*Expr{NewNb(2), NewNb(12)}}}},
+			right: &Expr{atom: mult, left: NewNb(3), right: &Expr{atom: specialFunction{kind: randInt, args: []*Expr{NewNb(2), NewNb(12)}}}},
 		}, false,
 	},
 	{
@@ -428,7 +431,7 @@ var expressions = [...]struct {
 		right: &Expr{
 			atom: plus,
 			left: newVarExpr('x'),
-			right: &Expr{atom: specialFunctionA{
+			right: &Expr{atom: specialFunction{
 				kind: randInt,
 				args: []*Expr{NewNb(1), NewNb(5)},
 			}},
@@ -480,8 +483,8 @@ var expressions = [...]struct {
 	},
 }
 
-func Test_invalidrandSymbol(t *testing.T) {
-	expr := "randSymbol(U;V"
+func Test_invalidrandChoice(t *testing.T) {
+	expr := "randChoice(U;V"
 	_, err := Parse(expr)
 	if !strings.Contains(err.Error(), "parenthèse fermante manquante") {
 		t.Fatal(err)

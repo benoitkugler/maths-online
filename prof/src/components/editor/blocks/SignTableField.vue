@@ -6,11 +6,12 @@
 </template>
 
 <script setup lang="ts">
-import type { SignTableFieldBlock } from "@/controller/api_gen";
+import type { SignTableFieldBlock, Variable } from "@/controller/api_gen";
 import BaseSignTable from "./BaseSignTable.vue";
 
 interface Props {
   modelValue: SignTableFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 

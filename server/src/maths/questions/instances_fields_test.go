@@ -144,7 +144,7 @@ func TestFigureAffineLineField(t *testing.T) {
 				Origin: repere.Coord{4, 4},
 			},
 		},
-		AnswerA: 1 / 3,
+		AnswerA: 1. / 3,
 		AnswerB: +3,
 	}
 	if ans := field.correctAnswer(); !field.evaluateAnswer(ans) {
@@ -218,7 +218,7 @@ func TestInstantiate01(t *testing.T) {
 		Parameters: Parameters{
 			Variables: []RandomParameter{
 				{
-					Expression: "randSymbol(f;g;h;k)",
+					Expression: "randChoice(f;g;h;k)",
 					Variable:   expression.NewVar('f'),
 				},
 				{

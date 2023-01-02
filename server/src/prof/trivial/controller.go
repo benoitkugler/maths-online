@@ -36,7 +36,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-var accessForbidden = errors.New("trivial config access forbidden")
+var errAccessForbidden = errors.New("trivial config access forbidden")
 
 type uID = teacher.IdTeacher
 
@@ -73,7 +73,7 @@ func (ct *Controller) checkOwner(configID tc.IdTrivial, userID uID) error {
 	}
 
 	if in.IdTeacher != userID {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	return nil
@@ -216,7 +216,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 
 	vis := tcAPI.NewVisibility(in.IdTeacher, user.Id, ct.admin.Id, in.Public)
 	if vis.Restricted() {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	// attribute the new copy to the current owner, and make it private
@@ -300,7 +300,7 @@ func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 	if qu.IdTeacher != user.Id {
-		return accessForbidden
+		return errAccessForbidden
 	}
 
 	qu.Public = args.Public
@@ -357,6 +357,9 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 	// restrict the search to the selected difficulties, if any,
 	// to avoid false alerts
 	questions, err := editor.SelectQuestionsByIdGroups(ct.db, ids...)
+	if err != nil {
+		return CheckMissingQuestionsOut{}, err
+	}
 	for id, question := range questions {
 		if !criteria.Difficulties.Match(question.Difficulty) {
 			delete(questions, id)
@@ -410,7 +413,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 	}
 
 	if config.IdTeacher != userID {
-		return LaunchSessionOut{}, accessForbidden
+		return LaunchSessionOut{}, errAccessForbidden
 	}
 
 	session := ct.getOrCreateSession(userID)

@@ -4,14 +4,19 @@
     @update:model-value="(s) => emit('update:modelValue', { Terms: s })"
     force-latex
     center
-    :transform="textTransform"
+    :custom-tokenize="tokenizeText"
   ></InterpolatedText>
 </template>
 
 <script setup lang="ts">
-import type { ProofEquality } from "@/controller/api_gen";
-import type Quill from "quill";
+import { TextKind, type ProofEquality } from "@/controller/api_gen";
 import InterpolatedText from "../../utils/InterpolatedText.vue";
+import {
+  itemize,
+  partToToken,
+  splitByRegexp,
+  type Token,
+} from "../../utils/interpolated_text";
 
 interface Props {
   modelValue: ProofEquality;
@@ -22,28 +27,33 @@ const emit = defineEmits<{
   (event: "update:modelValue", value: ProofEquality): void;
 }>();
 
-function textTransform(quill: Quill) {
-  const text = quill.getText();
+function tokenizeText(input: string) {
+  const parts = itemize(input);
+  const out: Token[] = [];
 
-  const avecSep = "avec";
-  const avecIndex = text.indexOf(avecSep);
-  if (avecIndex != -1) {
-    quill.formatText(avecIndex, avecSep.length, {
-      bold: true,
-      color: "blue",
-    });
-  }
-
-  for (const match of text.matchAll(/=/g)) {
-    // do not highlight = after avec sep
-    if (avecIndex != -1 && match.index! >= avecIndex) {
-      continue;
+  parts.forEach((part) => {
+    if (part.Kind == TextKind.Text) {
+      const matchSep = /=/g;
+      const matchStyle = "color: blue; font-weight: bold";
+      // do not split after avec
+      const index = part.Content.indexOf("avec");
+      if (index != -1) {
+        const toColorize = part.Content.substring(0, index);
+        out.push(...splitByRegexp(matchSep, toColorize, matchStyle, ""));
+        out.push({
+          Content: part.Content.substring(index),
+          Kind: "font-style: italic",
+        });
+        return;
+      }
+      out.push(...splitByRegexp(matchSep, part.Content, matchStyle, ""));
+    } else {
+      // defaut to regular color
+      out.push(partToToken(part));
     }
-    quill.formatText(match.index!, match.length, {
-      bold: true,
-      color: "blue",
-    });
-  }
+  });
+
+  return out;
 }
 </script>
 

@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ExpressionFieldBlock } from "@/controller/api_gen";
+import type { ExpressionFieldBlock, Variable } from "@/controller/api_gen";
 import { ComparisonLevel, TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
@@ -55,6 +55,7 @@ import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: ExpressionFieldBlock;
+  availableParameters: Variable[];
 }
 const props = defineProps<Props>();
 const color = colorByKind[TextKind.Expression];

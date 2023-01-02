@@ -125,15 +125,15 @@ func TestDemoStudent(t *testing.T) {
 	ct := NewController(db.DB, pass.SMTP{}, pass.Encrypter{}, pass.Encrypter{}, "localhost:1323", DEMO_CODE)
 
 	_, err := ct.LoadAdminTeacher()
-	testutils.Assert(t, err == nil)
+	testutils.AssertNoErr(t, err)
 	_, err = ct.LoadDemoClassroom()
-	testutils.Assert(t, err == nil)
+	testutils.AssertNoErr(t, err)
 
 	_, err = ct.attachStudentCandidates("invalid code")
 	testutils.Assert(t, err != nil)
 
 	l, err := ct.attachStudentCandidates(DEMO_CODE + ".1")
-	testutils.Assert(t, err == nil)
+	testutils.AssertNoErr(t, err)
 	testutils.Assert(t, len(l) == 1)
 
 	out, err := ct.validAttachStudent(AttachStudentToClassroom2In{
@@ -141,6 +141,6 @@ func TestDemoStudent(t *testing.T) {
 		IdStudent:     l[0].Id,
 		Birthday:      "2000-01-01",
 	})
-	testutils.Assert(t, err == nil)
+	testutils.AssertNoErr(t, err)
 	testutils.Assert(t, !out.ErrAlreadyAttached && !out.ErrInvalidBirthday)
 }

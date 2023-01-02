@@ -46,7 +46,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"x_A + y_B", // indices
 		"randInt(3;14) + 2",
 		"randPrime(3;14) + 2",
-		"randSymbol(A;B) + 2",
+		"randChoice(A;B) + 2",
 		"sgn(-8)",
 		"isPrime(-8)",
 		"8 % 3",
@@ -209,7 +209,7 @@ func TestInstantiateMinusZero(t *testing.T) {
 		NewVar('b'): exprB,
 	}
 	vs, err := rp.Instantiate()
-	tu.Assert(t, err == nil)
+	tu.AssertNoErr(t, err)
 
 	instance := vs[NewVar('b')]
 	tu.Assert(t, instance.String() == "0")

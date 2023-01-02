@@ -80,19 +80,18 @@ type atom interface {
 
 	// return a value is possible as rational, so that
 	// it may be simplified by subsequent operations
-	eval(left, right rat, context ValueResolver) (rat, error)
+	eval(left, right rat, context varEvaluer) (rat, error)
 
 	asLaTeX(left, right *Expr) string
 }
 
-func (Number) lexicographicOrder() int           { return 0 }
-func (constant) lexicographicOrder() int         { return 1 }
-func (operator) lexicographicOrder() int         { return 2 }
-func (Variable) lexicographicOrder() int         { return 3 }
-func (function) lexicographicOrder() int         { return 4 }
-func (specialFunctionA) lexicographicOrder() int { return 5 }
-func (roundFn) lexicographicOrder() int          { return 6 }
-func (randVariable) lexicographicOrder() int     { return 7 }
+func (Number) lexicographicOrder() int          { return 0 }
+func (constant) lexicographicOrder() int        { return 1 }
+func (operator) lexicographicOrder() int        { return 2 }
+func (Variable) lexicographicOrder() int        { return 3 }
+func (function) lexicographicOrder() int        { return 4 }
+func (specialFunction) lexicographicOrder() int { return 5 }
+func (roundFn) lexicographicOrder() int         { return 6 }
 
 // roundFn act as a function, but takes an integer parameter
 // in addition to its regular parameter
@@ -107,35 +106,6 @@ func (rd roundFn) String() string {
 func (rd roundFn) serialize(_, right *Expr) string {
 	return fmt.Sprintf("round(%s ; %d)", right.Serialize(), rd.nbDigits)
 }
-
-// randVariable is a special atom, randomly choosing a variable
-// among the propositions
-// it is only useful when used in random parameters definition,
-// and is treated as zero elsewhere
-type randVariable struct {
-	choices []Variable
-	// nil means choose uniformly in `choices`
-	// if not nil, is is expected to return an indice into [1, len(choices)]
-	selector *Expr
-}
-
-// String returns one of the two forms
-//
-//	randSymbol(A;B;C)
-//	choiceSymbol((A;B;C); randInt(1;4))
-func (rv randVariable) String() string {
-	var args []string
-	for _, v := range rv.choices {
-		args = append(args, v.String())
-	}
-	argS := strings.Join(args, ";")
-	if rv.selector == nil { // shortcut form
-		return fmt.Sprintf("randSymbol(%s)", argS)
-	}
-	return fmt.Sprintf("choiceSymbol((%s); %s)", argS, rv.selector.String())
-}
-
-func (rv randVariable) serialize(_, _ *Expr) string { return rv.String() }
 
 type operator uint8
 
@@ -323,29 +293,13 @@ func (v Number) String() string {
 
 func (v Number) serialize(_, _ *Expr) string { return v.String() }
 
-type specialFunctionA struct {
-	kind specialFunction
+type specialFunction struct {
+	kind specialFunctionKind
 	args []*Expr // the correct length of args is check during parsing
 }
 
-func (sf specialFunctionA) String() string {
-	var name string
-	switch sf.kind {
-	case randInt:
-		name = "randInt"
-	case randPrime:
-		name = "randPrime"
-	case randChoice:
-		name = "randChoice"
-	case randDenominator:
-		name = "randDecDen"
-	case minFn:
-		name = "min"
-	case maxFn:
-		name = "max"
-	default:
-		panic(exhaustiveSpecialFunctionSwitch)
-	}
+func (sf specialFunction) String() string {
+	name := sf.kind.String()
 
 	var args []string
 	for _, n := range sf.args {
@@ -355,4 +309,4 @@ func (sf specialFunctionA) String() string {
 	return name + "(" + strings.Join(args, " ; ") + ")"
 }
 
-func (sf specialFunctionA) serialize(_, _ *Expr) string { return sf.String() }
+func (sf specialFunction) serialize(_, _ *Expr) string { return sf.String() }

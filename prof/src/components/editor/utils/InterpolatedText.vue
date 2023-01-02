@@ -1,135 +1,160 @@
 <template>
-  <div>
+  <div class="mx-0">
     <small v-if="props.label" class="ml-2 text-grey">{{ props.label }} </small>
-    <QuillEditor
-      theme=""
-      toolbar=""
-      class="__quill-text-field elevation-2 mb-2"
-      @text-change="onTextChange"
-      content-type="text"
-      :content="props.modelValue"
-      :options="{ formats: ['color', 'bold', 'align'] }"
-      ref="quill"
-    />
+    <div
+      class="editor elevation-2 mb-2"
+      contenteditable="true"
+      spellcheck="false"
+      ref="editor"
+      @keydown="handleTab"
+      @keyup="onKeyUp"
+      :style="props.center ? 'text-align:  center' : ''"
+    ></div>
+    <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
   </div>
-  <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
 </template>
 
 <script setup lang="ts">
-import { TextKind } from "@/controller/api_gen";
-import { colorByKind, itemize } from "@/controller/editor";
-import { computed, onMounted } from "@vue/runtime-core";
-import type { Quill } from "@vueup/vue-quill";
-import { QuillEditor } from "@vueup/vue-quill";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
-import type { Sources } from "quill";
+import { colorByKind } from "@/controller/editor";
+import { TextKind } from "@/controller/loopback_gen";
+import { computed, onMounted } from "vue";
 import { $ref } from "vue/macros";
-import { watch } from "vue";
+import { defautTokenize, type Token } from "./interpolated_text";
 
 type Props = {
   modelValue: string;
   label?: string;
   hint?: string;
   forceLatex?: boolean;
-  transform?: (quill: Quill) => void;
   center?: boolean;
+  customTokenize?: (input: string) => Token[];
 };
 
 const props = defineProps<Props>();
+
 const emit = defineEmits<{
-  (event: "update:modelValue", value: string): void;
+  (e: "update:modelValue", modelValue: string): void;
 }>();
 
-let quill = $ref<InstanceType<typeof QuillEditor> | null>();
+let editor = $ref<HTMLDivElement | null>(null);
 
-onMounted(() => setTimeout(() => updateVisual(), 100));
+function textToHTML(input: string) {
+  const tokenize = props.customTokenize ? props.customTokenize : defautTokenize;
+  return tokenize(input)
+    .map((part) => `<span style="${part.Kind}">${part.Content}</span>`)
+    .join("")
+    .split("\n")
+    .map((line) => `<div>${line}</div>`)
+    .join("");
+}
 
-// required since vue reuse the same component
-watch(props, () => {
-  const current = quill?.getText().trimEnd(); // quill add a `\n`
-  if (current != props.modelValue) {
-    quill?.setText(props.modelValue);
-    updateVisual();
-  }
-});
-
-function onTextChange(arg: { source: Sources }) {
-  if (arg.source != "user") return;
-  const qu = quill?.getQuill() as Quill;
-
-  // quill add a `\n`, remove it
-  let text = (qu.getText() || "").trimEnd();
+function updateText() {
+  if (editor == null) return "";
+  const text = Array.from(editor.children)
+    .map((row) => (row as HTMLElement).innerText)
+    .join("\n");
 
   emit("update:modelValue", text);
-
-  // there is a strange behavior with ^, ¨
-  if (text.endsWith("^") || text.endsWith("¨")) {
-    return;
-  }
-
-  updateVisual();
+  return text;
 }
 
-// arg: { source: Sources }
-function updateVisual() {
-  if (quill == null) {
-    return;
-  }
-  const qu = quill?.getQuill() as Quill;
+function updateDisplay(source: string) {
+  if (editor == null) return;
+  editor.innerHTML = textToHTML(source);
+}
 
-  defaultTransform(qu);
-  if (props.transform) {
-    props.transform(qu);
+function caret() {
+  if (editor == null) return 0;
+  const range = window.getSelection()?.getRangeAt(0);
+  if (range == undefined) return 0;
+  const prefix = range.cloneRange();
+  prefix.selectNodeContents(editor);
+  prefix.setEnd(range.endContainer, range.endOffset);
+  return prefix.toString().length;
+}
+
+function setCaret(pos: number, parent: HTMLElement) {
+  for (const node of Array.from(parent.childNodes)) {
+    if (node.nodeType == Node.TEXT_NODE) {
+      const text = node.nodeValue!;
+      if (text.length >= pos) {
+        const range = document.createRange();
+        const sel = window.getSelection()!;
+        range.setStart(node, pos);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        return -1;
+      } else {
+        pos = pos - text.length;
+      }
+    } else {
+      pos = setCaret(pos, node as HTMLElement);
+      if (pos < 0) {
+        return pos;
+      }
+    }
+  }
+  return pos;
+}
+
+const tab = "    ";
+function handleTab(e: KeyboardEvent) {
+  if (editor == null) return;
+  if (e.key === "Tab") {
+    const pos = caret() + tab.length;
+    const range = window.getSelection()!.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(tab));
+    const text = updateText();
+    updateDisplay(text);
+    setCaret(pos, editor);
+    e.preventDefault();
   }
 }
 
-// colorize $ $ and & &
-function defaultTransform(quill: Quill) {
-  const text = quill.getText() || "";
-
-  const parts = itemize(text);
-
-  let cursor = 0;
-  parts.forEach((p) => {
-    quill.formatText(cursor, p.Content.length, {
-      color: colorByKind[p.Kind],
-      bold: p.Kind == TextKind.Expression,
-    });
-    cursor += p.Content.length;
-  });
-  quill.format("color", "black");
-
-  if (props.center) {
-    const lineNb = quill.getLines().length;
-    quill.formatLine(0, lineNb, { align: "center" });
+function onKeyUp(e: KeyboardEvent) {
+  if (editor == null) return;
+  const text = updateText();
+  if (e.keyCode >= 0x30 || e.keyCode == 0x20) {
+    const pos = caret();
+    updateDisplay(text);
+    setCaret(pos, editor);
   }
 }
 
-const laTeXColor = colorByKind[TextKind.StaticMath];
-const activeColor = computed(() => (props.forceLatex ? laTeXColor : "#444444"));
+onMounted(() => {
+  updateDisplay(props.modelValue);
+});
+
+const colorLatex = colorByKind[TextKind.StaticMath];
+const activeColor = computed(() => (props.forceLatex ? colorLatex : "#444444"));
 </script>
 
 <style>
-.__quill-text-field {
-  width: 100%;
-  border: 2px solid lightgray;
-  border-radius: 4px;
-  background-color: white;
+.editor {
+  font-family: "Roboto Mono", monospace;
+  font-size: 13px;
+  outline: none;
+  overflow-y: auto;
+  counter-reset: line;
+
   padding: 4px;
+  border-radius: 4px;
+  border: 2px solid lightgray;
 }
 
-.__quill-text-field:hover {
+.editor:hover {
   border: 2px solid gray;
 }
 
-.__quill-text-field:focus-within {
+.editor:focus-within {
   border: 2px solid v-bind("activeColor");
 }
 
-.ql-container {
-  height: unset;
-}
-.ql-editor {
-  padding: 6px 4px;
+.editor div {
+  display: block;
+  position: relative;
+  white-space: pre-wrap;
 }
 </style>
