@@ -39,6 +39,8 @@ const emit = defineEmits<{
 let editor = $ref<HTMLDivElement | null>(null);
 
 function textToHTML(input: string) {
+  // to make the line actually show and take space, we insert an invisble char
+  if (!input.length) return "<div>&#8203</div>";
   const tokenize = props.customTokenize ? props.customTokenize : defautTokenize;
   return tokenize(input)
     .map((part) => `<span style="${part.Kind}">${part.Content}</span>`)
@@ -48,13 +50,23 @@ function textToHTML(input: string) {
     .join("");
 }
 
-function updateText() {
+function HTMLToText() {
   if (editor == null) return "";
   const text = Array.from(editor.children)
     .map((row) => (row as HTMLElement).innerText)
     .join("\n");
 
-  emit("update:modelValue", text);
+  return text;
+}
+
+function updateText() {
+  const text = HTMLToText();
+  // remove the invisible white space inserted
+  if (text.charCodeAt(0) == 8203) {
+    emit("update:modelValue", text.substring(1));
+  } else {
+    emit("update:modelValue", text);
+  }
   return text;
 }
 
