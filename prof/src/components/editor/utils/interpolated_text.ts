@@ -74,3 +74,40 @@ const styles = {
     colorByKind[TextKind.Expression]
   }; font-weight: bold;`
 } as const;
+
+const TokenNewLine = "__newLine" as const;
+
+/** return a list of lines, where each line does not contain line break anymore */
+export function splitNewLines(tokens: Token[]): Token[][] {
+  const out: Token[][] = [];
+  let currentLine: Token[] = [];
+  tokens.forEach(origin => {
+    const splitted = splitOneNewLines(origin);
+    splitted.forEach(token => {
+      if (token.Kind == TokenNewLine) {
+        out.push(currentLine);
+        currentLine = [];
+      } else {
+        currentLine.push(token);
+      }
+    });
+  });
+  if (currentLine.length) {
+    out.push(currentLine);
+  }
+  return out;
+}
+
+function splitOneNewLines(token: Token): Token[] {
+  const out: Token[] = [];
+  token.Content.split("\n").forEach(text =>
+    out.push(
+      {
+        Content: text,
+        Kind: token.Kind
+      },
+      { Content: "", Kind: TokenNewLine }
+    )
+  );
+  return out.slice(0, out.length - 1);
+}

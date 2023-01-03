@@ -19,7 +19,7 @@ import { colorByKind } from "@/controller/editor";
 import { TextKind } from "@/controller/loopback_gen";
 import { computed, onMounted, watch } from "vue";
 import { $ref } from "vue/macros";
-import { defautTokenize, type Token } from "./interpolated_text";
+import { defautTokenize, splitNewLines, type Token } from "./interpolated_text";
 
 type Props = {
   modelValue: string;
@@ -48,34 +48,45 @@ watch(props, () => {
 });
 
 function textToHTML(input: string) {
-  // to make the line actually show and take space, we insert an invisble char
-  if (!input.length) return "<div>&#8203</div>";
+  // to make the line actually show and take space, we insert a line break
+  if (!input.length) return "<div><br/></div>";
   const tokenize = props.customTokenize ? props.customTokenize : defautTokenize;
-  return tokenize(input)
-    .map((part) => `<span style="${part.Kind}">${part.Content}</span>`)
-    .join("")
-    .split("\n")
-    .map((line) => `<div>${line}</div>`)
-    .join("");
+  const tokens = tokenize(input);
+  const withNewLines = splitNewLines(tokens);
+
+  const rows = withNewLines
+    .map((tokens) => {
+      const fullText = tokens.map((tok) => tok.Content).join("");
+      if (!fullText.length) {
+        // avoid empty lines which are not show
+        return "<br/>";
+      }
+      return tokens
+        .map((token) => `<span style="${token.Kind}">${token.Content}</span>`)
+        .join("");
+    })
+    .map((line) => `<div>${line}</div>`);
+
+  return rows.join("");
 }
 
 function HTMLToText() {
   if (editor == null) return "";
-  const text = Array.from(editor.children)
-    .map((row) => (row as HTMLElement).innerText)
+  const rows = Array.from(editor.children);
+  const text = rows
+    .map((row) =>
+      // empty div have innerText as "\n"
+      (row as HTMLElement).innerText == "\n"
+        ? ""
+        : (row as HTMLElement).innerText
+    )
     .join("\n");
-
   return text;
 }
 
 function updateText() {
   const text = HTMLToText();
-  // remove the invisible white space inserted
-  if (text.charCodeAt(0) == 8203) {
-    emit("update:modelValue", text.substring(1));
-  } else {
-    emit("update:modelValue", text);
-  }
+  emit("update:modelValue", text);
   return text;
 }
 
