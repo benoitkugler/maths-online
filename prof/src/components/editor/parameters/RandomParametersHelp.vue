@@ -62,16 +62,11 @@ const emit = defineEmits<{
 const helpContent = [
   [
     "randChoice(-4;12;99)",
-    "Renvoie un nombre aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
+    "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
   ],
   [
-    "choiceSymbol( (A; B; C; D); k)",
-    "Renvoie le symbol à l'index k parmi ceux proposés (ici, k est entre 1 et 4).",
-  ],
-  [
-    "randSymbol(A; B; C)",
-    "Renvoie un symbol choisi uniformément parmi ceux proposés, ici {A, B, C}. \n" +
-      "randSymbol est en fait un raccourci pour choiceSymbol( ... ; randInt(1; ...)).",
+    "choiceFrom(A; B; C; D; k)",
+    "Renvoie l'expression à l'index k parmi celles proposées (ici, k est entre 1 et 4).",
   ],
   ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [
