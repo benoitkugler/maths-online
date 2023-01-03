@@ -64,12 +64,37 @@ func (sf specialFunctionKind) String() string {
 type symbol uint8
 
 const (
-	openPar   symbol = iota // (
-	closePar                // )
-	semicolon               // ;
+	openPar      symbol = iota // (
+	closePar                   // )
+	semicolon                  // ;
+	openBracket                // [
+	closeBracket               // ]
+	openCurly                  // {
+	closeCurly                 // }
 
 	invalidSymbol
 )
+
+func (sy symbol) String() string {
+	switch sy {
+	case openPar:
+		return "("
+	case closePar:
+		return ")"
+	case semicolon:
+		return ";"
+	case openBracket:
+		return "["
+	case closeBracket:
+		return "]"
+	case openCurly:
+		return "{"
+	case closeCurly:
+		return "}"
+	default:
+		panic(exhaustiveSymbolSwitch)
+	}
+}
 
 type numberText string
 
@@ -219,6 +244,18 @@ func (tk *tokenizer) readToken() (tok token) {
 		tk.pos++
 	case c == ';':
 		out.data = semicolon
+		tk.pos++
+	case c == '[':
+		out.data = openBracket
+		tk.pos++
+	case c == ']':
+		out.data = closeBracket
+		tk.pos++
+	case c == '{':
+		out.data = openCurly
+		tk.pos++
+	case c == '}':
+		out.data = closeCurly
 		tk.pos++
 	case isOpRunes != 0:
 		out.data = op

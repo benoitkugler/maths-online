@@ -11,6 +11,39 @@ import (
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
+func generateLatex(t *testing.T, lines []string, outFile string) {
+	code := fmt.Sprintf(`
+		\documentclass{article}
+		\usepackage[utf8]{inputenc}
+		\usepackage{amsmath}
+
+		\begin{document}
+		%s
+		\end{document}
+	`, strings.Join(lines, "\n"))
+
+	dir := filepath.Join(os.TempDir(), "go-latex")
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.Mkdir(dir, os.ModePerm)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	err := os.WriteFile(filepath.Join(dir, outFile), []byte(code), os.ModePerm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("pdflatex", outFile)
+	cmd.Dir = dir
+	err = cmd.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // generate formulas.pdf in a temporary directory to perform visual tests
 func TestExpression_AsLaTeX(t *testing.T) {
 	var lines []string
@@ -67,42 +100,11 @@ func TestExpression_AsLaTeX(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_ = e.AsLaTeX() // check for panic
-
 		code := e.AsLaTeX()
 		lines = append(lines, "$$"+code+"$$")
 	}
 
-	code := fmt.Sprintf(`
-		\documentclass{article}
-		\usepackage[utf8]{inputenc}
-		\usepackage{amsmath}
-
-		\begin{document}
-		%s
-		\end{document}
-	`, strings.Join(lines, "\n"))
-
-	dir := filepath.Join(os.TempDir(), "go-latex")
-
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.Mkdir(dir, os.ModePerm)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err := os.WriteFile(filepath.Join(dir, "formulas.tex"), []byte(code), os.ModePerm)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := exec.Command("pdflatex", "formulas.tex")
-	cmd.Dir = dir
-	err = cmd.Run()
-	if err != nil {
-		t.Fatal(err)
-	}
+	generateLatex(t, lines, "formulas.tex")
 }
 
 func TestParenthesis(t *testing.T) {

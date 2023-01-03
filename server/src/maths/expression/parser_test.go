@@ -486,7 +486,7 @@ var expressions = [...]struct {
 func Test_invalidrandChoice(t *testing.T) {
 	expr := "randChoice(U;V"
 	_, err := Parse(expr)
-	if !strings.Contains(err.Error(), "parenthèse fermante manquante") {
+	if !strings.Contains(err.Error(), "délimiteur manquant") {
 		t.Fatal(err)
 	}
 }

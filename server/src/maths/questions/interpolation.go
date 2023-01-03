@@ -22,7 +22,7 @@ func (s Interpolated) parse() (TextParts, error) {
 		newChunks := splitByExpression(c)
 		for _, part := range newChunks {
 			if part.Kind == Expression {
-				_, err := expression.Parse(part.Content)
+				_, err := expression.ParseCompound(part.Content)
 				if err != nil {
 					return nil, err
 				}

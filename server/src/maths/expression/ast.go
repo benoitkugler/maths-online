@@ -19,6 +19,8 @@ const (
 	exhaustiveAtomSwitch            = "atom"
 
 	exhaustiveIntrinsicSwitch = "intrinsic"
+
+	exhaustiveCompoundSwitch = "compound"
 )
 
 // Expr is a parsed mathematical expression

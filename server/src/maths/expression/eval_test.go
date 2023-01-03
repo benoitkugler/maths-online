@@ -482,4 +482,5 @@ func TestEvalCycle(t *testing.T) {
 	vars := Vars{NewVar('a'): newVarExpr('a')}
 	_, err := expr.Evaluate(vars)
 	testutils.Assert(t, err != nil)
+	_ = err.Error()
 }

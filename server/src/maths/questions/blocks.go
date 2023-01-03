@@ -11,7 +11,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
-const ExhaustiveTextKind = "exhaustiveTextKind"
+const exhaustiveTextKind = "exhaustiveTextKind"
 
 var (
 	_ Block = TextBlock{}
@@ -163,14 +163,14 @@ func (tp TextPart) instantiate(params expression.Vars) (client.TextOrMath, error
 	case StaticMath:
 		return client.TextOrMath{Text: tp.Content, IsMath: true}, nil
 	case Expression:
-		expr, err := expression.Parse(tp.Content)
+		expr, err := expression.ParseCompound(tp.Content)
 		if err != nil {
 			return client.TextOrMath{}, err
 		}
 		expr.Substitute(params)
 		return client.TextOrMath{Text: expr.AsLaTeX(), IsMath: true}, nil
 	default:
-		panic(ExhaustiveTextKind)
+		panic(exhaustiveTextKind)
 	}
 }
 
@@ -179,10 +179,10 @@ func (tp TextPart) validate() error {
 	case Text, StaticMath:
 		return nil // nothing to do
 	case Expression:
-		_, err := expression.Parse(tp.Content)
+		_, err := expression.ParseCompound(tp.Content)
 		return err
 	default:
-		panic(ExhaustiveTextKind)
+		panic(exhaustiveTextKind)
 	}
 }
 

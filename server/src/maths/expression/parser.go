@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// ErrInvalidExpr is returned by `Parse`.
+// ErrInvalidExpr is returned by `Parse` and `ParseCompound`.
 type ErrInvalidExpr struct {
 	Input  string
 	Reason string // in french
@@ -108,7 +108,9 @@ func (pr *parser) pop() *Expr {
 func (pr *parser) parseExpression(acceptSemiColon bool) (*Expr, error) {
 	for {
 		peeked := pr.tk.Peek().data
-		if peeked == nil || peeked == closePar || (acceptSemiColon && peeked == semicolon) {
+		if peeked == nil || peeked == closePar ||
+			peeked == closeCurly || peeked == openBracket || peeked == closeBracket ||
+			(acceptSemiColon && peeked == semicolon) {
 			break
 		}
 
@@ -131,7 +133,7 @@ func (pr *parser) parseExpression(acceptSemiColon bool) (*Expr, error) {
 }
 
 // the next token has already been checked for emptyness,
-// and is assumed not to be a closing )
+// and is assumed not to be a closing delimiter )
 func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 	tok := pr.tk.Next()
 	c := tok.data
@@ -142,9 +144,9 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 			return pr.parseParenthesisBlock(tok.pos)
 		case closePar:
 			panic("internal error")
-		case semicolon:
+		case semicolon, openBracket, closeBracket, openCurly, closeCurly:
 			return nil, ErrInvalidExpr{
-				Reason: "point-virgule inattendu",
+				Reason: fmt.Sprintf("symbole %s inattendu", data),
 				Pos:    tok.pos,
 			}
 		default:
@@ -231,7 +233,9 @@ func (pr *parser) parseUntil(op operator, acceptSemiColon bool) (*Expr, error) {
 		// if we reach EOF, return
 		// same if we encouter a closing )
 		// such as log(  2 + x  )
-		if tok.data == closePar || tok.data == nil || (acceptSemiColon && tok.data == semicolon) {
+		if tok.data == closePar ||
+			tok.data == closeBracket || tok.data == openBracket || tok.data == closeCurly ||
+			tok.data == nil || (acceptSemiColon && tok.data == semicolon) {
 			break
 		}
 
@@ -405,6 +409,64 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expr, err error) {
 	return &Expr{atom: roundFn{nbDigits: nbDigitsI}, right: arg}, nil
 }
 
+// parses a semi colon separated list of expressions, followed by a closing delimiter,
+// such as :
+//
+//		<expr> ; <expr> ; <expr> }
+//		<expr>; <expr> [
+//	 <expr>; <expr>)
+//
+// Note that the oppening symbol must have been read.
+// [isCloser] returns [true] for symbol which are valid closing delimiters
+func (pr *parser) parseExpressionList(isCloser func(symbol) bool) ([]*Expr, symbol, error) {
+	var args []*Expr
+	for {
+		t := pr.tk.Peek().data
+		if ts, isSymbol := t.(symbol); t == nil || (isSymbol && isCloser(ts)) {
+			break
+		}
+
+		// we then accept a whole expression
+		arg, err := pr.parseExpression(true)
+		if err != nil {
+			return nil, 0, err
+		}
+		args = append(args, arg)
+
+		// four cases here :
+		//	- valid closing delimiter, closed after the loop
+		//	- valid separator ;
+		//  - invalid character, probably an invalid separator like ,
+		//	- EOF
+		next := pr.tk.Peek()
+		ns, isSymbol := next.data.(symbol)
+		switch {
+		case isSymbol && isCloser(ns):
+			continue // without consuming
+		case next.data == semicolon: // consume the separator and continue
+			_ = pr.tk.Next()
+		case next.data == nil: // EOF, error reported after the loop
+
+		default: // invalid separator
+			return nil, 0, ErrInvalidExpr{
+				Reason: "le séparateur attendu est ';'",
+				Pos:    next.pos,
+			}
+		}
+	}
+
+	tok := pr.tk.Next()
+	ts, isSymbol := tok.data.(symbol)
+	if !(isSymbol && isCloser(ts)) {
+		return nil, 0, ErrInvalidExpr{
+			Reason: "délimiteur manquant",
+			Pos:    tok.pos,
+		}
+	}
+
+	return args, ts, nil
+}
+
 // special case for special functions, which are of the form
 // <function>(<expr>; <expr> ...)
 func (pr *parser) parseSpecialFunction(pos int, fn specialFunctionKind) (rd specialFunction, err error) {
@@ -413,54 +475,16 @@ func (pr *parser) parseSpecialFunction(pos int, fn specialFunctionKind) (rd spec
 	par := pr.tk.Next()
 	if par.data != openPar {
 		return rd, ErrInvalidExpr{
-			Reason: "parenthèse ouvrante manquante après randXXX",
+			Reason: fmt.Sprintf("parenthèse ouvrante manquante après %s", fn),
 			Pos:    pos,
 		}
 	}
 
 	rd.kind = fn
 
-	for {
-		if t := pr.tk.Peek().data; t == closePar || t == nil {
-			break
-		}
-
-		// we then accept a whole expression
-		arg, err := pr.parseExpression(true)
-		if err != nil {
-			return rd, err
-		}
-		rd.args = append(rd.args, arg)
-
-		if pr.tk.Peek().data == closePar {
-			continue
-		}
-
-		// four cases here :
-		//	- valid closing parenthesis, closed after the loop
-		//	- valid separator ;
-		//  - invalid character, probably an invalid separator like ,
-		//	- EOF
-		switch next := pr.tk.Peek().data; next {
-		case closePar:
-			continue // without consuming
-		case semicolon: // consume the separator and continue
-			_ = pr.tk.Next()
-		case nil: // EOF, error reported after the loop
-
-		default: // invalid separator
-			return rd, ErrInvalidExpr{
-				Reason: fmt.Sprintf("%s utilise ';' comme séparateur", rd.kind),
-				Pos:    pos,
-			}
-		}
-	}
-
-	if tok := pr.tk.Next(); tok.data != closePar {
-		return rd, ErrInvalidExpr{
-			Reason: fmt.Sprintf("parenthèse fermante manquante après %s", fn),
-			Pos:    tok.pos,
-		}
+	rd.args, _, err = pr.parseExpressionList(func(s symbol) bool { return s == closePar })
+	if err != nil {
+		return rd, err
 	}
 
 	err = rd.validate(pos)

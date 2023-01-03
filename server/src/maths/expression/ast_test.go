@@ -61,6 +61,14 @@ func TestPanics(t *testing.T) {
 	testutils.ShouldPanic(t, func() {
 		(&Expr{}).isLinearTerm()
 	})
+
+	testutils.ShouldPanic(t, func() {
+		specialFunction{kind: invalidSpecialFunction}.validate(0)
+	})
+
+	testutils.ShouldPanic(t, func() {
+		AreCompoundsEquivalent(nil, &Expr{}, 0)
+	})
 }
 
 func TestExpression_String(t *testing.T) {

@@ -5,6 +5,21 @@ import (
 	"testing"
 )
 
+func TestTokenUnionTags(t *testing.T) {
+	for _, tk := range []tokenData{
+		symbol(0),
+		numberText(""),
+		constant(0),
+		Variable{},
+		function(0),
+		roundFn{},
+		specialFunctionKind(0),
+		operator(0),
+	} {
+		tk.isToken()
+	}
+}
+
 func allTokens(s string) (tokens, peekTokens []tokenData) {
 	tk := newTokenizer([]byte(s))
 
@@ -66,6 +81,9 @@ func TestTokens(t *testing.T) {
 		{"2 >= 4", []tokenData{numberText("2"), greater, numberText("4")}},
 		{"2 == 4", []tokenData{numberText("2"), equals, numberText("4")}},
 		{"2pi^2", []tokenData{numberText("2"), mult, piConstant, pow, numberText("2")}},
+		{"(3;)", []tokenData{openPar, numberText("3"), semicolon, closePar}},
+		{"{2;4;}", []tokenData{openCurly, numberText("2"), semicolon, numberText("4"), semicolon, closeCurly}},
+		{"]-inf;inf[", []tokenData{closeBracket, minus, numberText("inf"), semicolon, numberText("inf"), openBracket}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

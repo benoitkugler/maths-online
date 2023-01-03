@@ -37,6 +37,13 @@ func TestParseInterpolatedString(t *testing.T) {
 		{
 			"&45x - +&", nil, true,
 		},
+		// expressions with compound
+		{
+			"&{x; y}&&]2; 10[&", TextParts{
+				{Content: "{x; y}", Kind: Expression},
+				{Content: "]2; 10[", Kind: Expression},
+			}, false,
+		},
 	}
 	for _, tt := range tests {
 		got, err := tt.args.parse()
