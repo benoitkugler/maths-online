@@ -133,7 +133,8 @@ func (rvv *paramsInstantiater) resolve(v Variable) (rat, error) {
 }
 
 func (expr *Expr) tryEval(ctx *paramsInstantiater) *Expr {
-	if v, err := expr.evalRat(ctx); err == nil {
+	v, err := expr.evalRat(ctx)
+	if err == nil {
 		return v.toExpr()
 	}
 	return expr
@@ -204,18 +205,19 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 			}
 			return choice.instantiate(ctx)
 		case minFn, maxFn: // no-op, simply recurse
-			out := specialFunction{
+			inst := specialFunction{
 				kind: atom.kind,
 				args: make([]*Expr, len(atom.args)),
 			}
 			for i, arg := range atom.args {
 				var err error
-				out.args[i], err = arg.instantiate(ctx)
+				inst.args[i], err = arg.instantiate(ctx)
 				if err != nil {
 					return nil, err
 				}
 			}
-			return &Expr{atom: out}, nil
+			out := &Expr{atom: inst}
+			return out.tryEval(ctx), nil
 		default:
 			panic(exhaustiveSpecialFunctionSwitch)
 		}
