@@ -18,7 +18,7 @@ type Review struct {
 	Kind ReviewKind
 }
 
-// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind) ON DELETE CASCADE
 // gomacro:SQL ADD CHECK (Kind = #[ReviewKind.KQuestion])
 // gomacro:SQL ADD UNIQUE (IdQuestion)
 // gomacro:SQL ADD UNIQUE (IdReview)
@@ -28,7 +28,7 @@ type ReviewQuestion struct {
 	Kind       ReviewKind // used for integrity
 }
 
-// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind) ON DELETE CASCADE
 // gomacro:SQL ADD CHECK (Kind = #[ReviewKind.KExercice])
 // gomacro:SQL ADD UNIQUE (IdExercice)
 // gomacro:SQL ADD UNIQUE (IdReview)
@@ -38,7 +38,7 @@ type ReviewExercice struct {
 	Kind       ReviewKind // used for integrity
 }
 
-// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind)
+// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind) ON DELETE CASCADE
 // gomacro:SQL ADD CHECK (Kind = #[ReviewKind.KTrivial])
 // gomacro:SQL ADD UNIQUE (IdTrivial)
 // gomacro:SQL ADD UNIQUE (IdReview)

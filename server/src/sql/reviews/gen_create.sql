@@ -34,7 +34,7 @@ ALTER TABLE reviews
     ADD UNIQUE (Id, Kind);
 
 ALTER TABLE review_questions
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_questions
     ADD CHECK (Kind = 0
@@ -53,7 +53,7 @@ ALTER TABLE review_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questiongroups;
 
 ALTER TABLE review_exercices
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_exercices
     ADD CHECK (Kind = 1
@@ -72,7 +72,7 @@ ALTER TABLE review_exercices
     ADD FOREIGN KEY (IdExercice) REFERENCES exercicegroups;
 
 ALTER TABLE review_trivials
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_trivials
     ADD CHECK (Kind = 2
