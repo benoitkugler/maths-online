@@ -48,19 +48,26 @@ func (n NumberFieldBlock) setupValidator(params expression.RandomParameters) (va
 }
 
 type ExpressionFieldBlock struct {
-	Expression       string       // a valid expression, in the format used by expression.Expression
+	// A valid expression, in the format used by expression.Expression or expression.Compound
+	Expression       string
 	Label            Interpolated // optional
 	ComparisonLevel  ComparisonLevel
 	ShowFractionHelp bool // if true an hint for fraction is displayed when applicable
 }
 
 func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	answer, err := expression.Parse(f.Expression)
+	answer, err := expression.ParseCompound(f.Expression)
 	if err != nil {
 		return nil, err
 	}
 	answer.Substitute(params)
-	answer.DefaultSimplify() // needed for better [IsFraction] result
+
+	var showFractionHelp bool
+	answerExpr, ok := answer.(*expression.Expr)
+	if ok {
+		answerExpr.DefaultSimplify() // needed for better [IsFraction] result
+		showFractionHelp = f.ShowFractionHelp && answerExpr.IsFraction()
+	}
 
 	label, err := f.Label.instantiateAndMerge(params)
 	if err != nil {
@@ -71,13 +78,13 @@ func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (insta
 		LabelLaTeX:       label,
 		Answer:           answer,
 		ComparisonLevel:  f.ComparisonLevel,
-		ShowFractionHelp: f.ShowFractionHelp && answer.IsFraction(),
+		ShowFractionHelp: showFractionHelp,
 		ID:               ID,
 	}, nil
 }
 
 func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (validator, error) {
-	expr, err := expression.Parse(f.Expression)
+	expr, err := expression.ParseCompound(f.Expression)
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +93,18 @@ func (f ExpressionFieldBlock) setupValidator(expression.RandomParameters) (valid
 		return nil, err
 	}
 
+	asExpr, isExpr := expr.(*expression.Expr)
+
+	if f.ShowFractionHelp && !isExpr {
+		return nil, errors.New("L'aide aux fractions n'est utilisable que pour une expression simple.")
+	}
+
 	switch f.ComparisonLevel {
 	case AsLinearEquation:
-		return linearEquationValidator{expr: expr}, nil
+		if !isExpr {
+			return nil, errors.New("Une expression simple est attendue pour une équation cartésienne.")
+		}
+		return linearEquationValidator{expr: asExpr}, nil
 	default:
 		return noOpValidator{}, nil
 	}

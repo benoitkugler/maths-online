@@ -9,6 +9,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 	"github.com/benoitkugler/maths-online/server/src/utils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestFieldInstance_validateAnswerSyntax(t *testing.T) {
@@ -190,6 +191,43 @@ func Test_shufflingMap(t *testing.T) {
 			t.Errorf("shufflingMap() = %v", got)
 		}
 	}
+}
+
+func TestExpressionCompound(t *testing.T) {
+	fi := ExpressionFieldBlock{
+		Expression:      "{a; 2}",
+		ComparisonLevel: Strict,
+	}
+	inst, err := fi.instantiate(nil, 0)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !inst.(fieldInstance).evaluateAnswer(client.ExpressionAnswer{Expression: "a"}))
+	tu.Assert(t, inst.(fieldInstance).evaluateAnswer(client.ExpressionAnswer{Expression: "{2; a}"}))
+
+	fi = ExpressionFieldBlock{
+		Expression:       "{a; 2}",
+		ComparisonLevel:  Strict,
+		ShowFractionHelp: true,
+	}
+	_, err = fi.setupValidator(nil)
+	tu.Assert(t, err != nil)
+
+	fi = ExpressionFieldBlock{
+		Expression:      "{a; 2}",
+		ComparisonLevel: AsLinearEquation,
+	}
+	_, err = fi.setupValidator(nil)
+	tu.Assert(t, err != nil)
+
+	fi = ExpressionFieldBlock{
+		Expression:      "2x + 3y",
+		ComparisonLevel: AsLinearEquation,
+	}
+	_, err = fi.setupValidator(nil)
+	tu.AssertNoErr(t, err)
+	inst, err = fi.instantiate(nil, 0)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !inst.(fieldInstance).evaluateAnswer(client.ExpressionAnswer{Expression: "2x + y"}))
+	tu.Assert(t, inst.(fieldInstance).evaluateAnswer(client.ExpressionAnswer{Expression: "4x + 6y"}))
 }
 
 func TestInstantiate01(t *testing.T) {

@@ -116,9 +116,16 @@ func (expr *Expr) isConstantTerm() (float64, bool) {
 }
 
 // AreLinearEquationsEquivalent returns [true] if both expressions
-// defines the same linear equation (up to a non zero factor)
-func AreLinearEquationsEquivalent(e1, e2 *Expr) bool {
-	lc1, err1 := e1.isLinearEquation()
-	lc2, err2 := e2.isLinearEquation()
+// defines the same linear equation (up to a non zero factor).
+//
+// It always returns false if [e1] or [e2] are not [*Expr].
+func AreLinearEquationsEquivalent(e1, e2 Compound) bool {
+	ee1, ok1 := e1.(*Expr)
+	ee2, ok2 := e2.(*Expr)
+	if !(ok1 && ok2) {
+		return false
+	}
+	lc1, err1 := ee1.isLinearEquation()
+	lc2, err2 := ee2.isLinearEquation()
 	return err1 == nil && err2 == nil && lc1.isEquivalent(lc2)
 }

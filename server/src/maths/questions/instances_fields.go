@@ -107,7 +107,7 @@ type ExpressionFieldInstance struct {
 	// if not empty, the field is displayed on a new line
 	LabelLaTeX string
 
-	Answer          *expression.Expr
+	Answer          expression.Compound
 	ComparisonLevel ComparisonLevel
 
 	// If true an hint for fraction is displayed
@@ -140,7 +140,7 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 		}
 	}
 
-	_, err := expression.Parse(expr.Expression)
+	_, err := expression.ParseCompound(expr.Expression)
 	if err != nil {
 		err := err.(expression.ErrInvalidExpr)
 		return InvalidFieldAnswer{
@@ -152,11 +152,11 @@ func (f ExpressionFieldInstance) validateAnswerSyntax(answer client.Answer) erro
 }
 
 func (f ExpressionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	expr, _ := expression.Parse(answer.(client.ExpressionAnswer).Expression)
+	expr, _ := expression.ParseCompound(answer.(client.ExpressionAnswer).Expression)
 	if f.ComparisonLevel == AsLinearEquation {
 		return expression.AreLinearEquationsEquivalent(f.Answer, expr)
 	}
-	return expression.AreExpressionsEquivalent(f.Answer, expr, expression.ComparisonLevel(f.ComparisonLevel))
+	return expression.AreCompoundsEquivalent(f.Answer, expr, expression.ComparisonLevel(f.ComparisonLevel))
 }
 
 func (f ExpressionFieldInstance) correctAnswer() client.Answer {

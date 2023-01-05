@@ -20,7 +20,7 @@ type CheckExpressionOut struct {
 // on the fly validation of expression fields
 func checkExpressionSyntax(c echo.Context) error {
 	expr := c.QueryParam("expression")
-	_, err := expression.Parse(expr)
+	_, err := expression.ParseCompound(expr)
 	out := CheckExpressionOut{IsValid: err == nil}
 	if err != nil {
 		out.Reason = err.Error()
