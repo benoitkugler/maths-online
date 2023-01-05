@@ -194,3 +194,22 @@ func TestCycle(t *testing.T) {
 	err = params.Validate()
 	tu.Assert(t, err != nil)
 }
+
+func TestInstantiateMinMax(t *testing.T) {
+	pr := RandomParameters{
+		NewVar('a'):       mustParse(t, "randChoice(1;2;3)"),
+		NewVar('b'):       mustParse(t, "randChoice(8;9;10)"),
+		NewVarI('s', "1"): mustParse(t, "min(a; b)"),
+		NewVarI('s', "2"): mustParse(t, "max(a; b)"),
+	}
+	vars, err := pr.Instantiate()
+	tu.AssertNoErr(t, err)
+
+	s1 := vars[NewVarI('s', "1")]
+	s2 := vars[NewVarI('s', "2")]
+
+	_, isNumber1 := s1.atom.(Number)
+	_, isNumber2 := s2.atom.(Number)
+	tu.Assert(t, isNumber1)
+	tu.Assert(t, isNumber2)
+}

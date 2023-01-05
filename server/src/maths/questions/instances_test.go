@@ -3,6 +3,7 @@ package questions
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
@@ -81,4 +82,17 @@ func TestBug144(t *testing.T) {
 			tu.Assert(t, k1 == 1)
 		}
 	}
+}
+
+func TestInstantiateMinMax(t *testing.T) {
+	jsonInput := `{"enonce": [{"Data": {"Bold": false, "Parts": "Résoudre dans $\\R$ l'équation :", "Italic": false, "Smaller": false}, "Kind": "TextBlock"}, {"Data": {"Parts": "&k*(x+a)*(x+b)&=&0&"}, "Kind": "FormulaBlock"}, {"Data": {"Label": "", "Answer": ["$S$", "$=$", "$\\{$", "&s_1&", "$;$", "&s_2&", "$\\}$"], "AdditionalProposals": ["$;$", "$:$", "$,$", "$.$", "$($", "$)$", "$[$", "$[$", "$]$", "$]$", "&-s_1&", "&-s_2&", "&k&", "&-k&", "$0$"]}, "Kind": "OrderedListFieldBlock"}, {"Data": {"Bold": false, "Parts": "On rangera les solutions par ordre croissant.", "Italic": true, "Smaller": true}, "Kind": "TextBlock"}], "parameters": {"Variables": [{"variable": {"Name": 113, "Indice": "1"}, "expression": "randint(1;4)*randChoice(-1;1)"}, {"variable": {"Name": 113, "Indice": "2"}, "expression": "randint(1;4)*randChoice(-1;1)"}, {"variable": {"Name": 107, "Indice": ""}, "expression": "randint(2;10)*randChoice(-1;1)"}, {"variable": {"Name": 97, "Indice": ""}, "expression": "2*q_1"}, {"variable": {"Name": 98, "Indice": ""}, "expression": "2*q_2+1"}, {"variable": {"Name": 115, "Indice": "1"}, "expression": "min(-a;-b)"}, {"variable": {"Name": 115, "Indice": "2"}, "expression": "max(-a;-b)"}], "Intrinsics": null}}`
+	var page QuestionPage
+	err := json.Unmarshal([]byte(jsonInput), &page)
+	tu.AssertNoErr(t, err)
+	vars, err := page.Parameters.ToMap().Instantiate()
+	tu.AssertNoErr(t, err)
+
+	// test that the min and max function are properly evaluated
+	tu.Assert(t, !strings.Contains(vars[expression.NewVarI('s', "1")].String(), "min"))
+	tu.Assert(t, !strings.Contains(vars[expression.NewVarI('s', "2")].String(), "max"))
 }
