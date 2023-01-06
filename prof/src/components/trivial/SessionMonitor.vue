@@ -13,7 +13,13 @@
 
     <v-card-text>
       <v-row justify="center">
-        <v-col cols="4" v-for="game in summaries" :key="game.GameID">
+        <v-col
+          cols="12"
+          md="6"
+          lg="4"
+          v-for="game in summaries"
+          :key="game.GameID"
+        >
           <GameMonitor
             :summary="game"
             :show-i-d="true"
