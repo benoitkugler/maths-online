@@ -40,9 +40,9 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="mx-auto" v-if="reviewExt != null" max-width="800px">
+  <v-card class="mx-auto" v-if="reviewExt != null" max-width="1200px">
     <v-row>
-      <v-col cols="auto" align-self="center" class="pr-2">
+      <v-col sm="2" md="auto" align-self="center" class="pr-2">
         <v-btn
           class="ma-2"
           size="small"
@@ -53,11 +53,17 @@
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
       </v-col>
-      <v-col>
+      <v-col md="" sm="10">
         <v-card-title>{{ props.review.Title }}</v-card-title>
         <v-card-subtitle>{{ labels[props.review.Kind] }}</v-card-subtitle>
       </v-col>
-      <v-col cols="auto" align-self="center" class="pr-6">
+      <v-col
+        sm="12"
+        md="auto"
+        align-self="center"
+        class="pr-6"
+        style="text-align: right"
+      >
         <v-btn
           icon
           class="mr-2"
