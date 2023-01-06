@@ -123,6 +123,14 @@ const commands = [
     command: `\\geq `,
   },
   {
+    description: "Inférieur strict (<)",
+    command: `\\lt `,
+  },
+  {
+    description: "Supérieur strict (>)",
+    command: `\\gt `,
+  },
+  {
     description: "Environ égal",
     command: `\\approx `,
   },
@@ -145,6 +153,10 @@ const commands = [
   {
     description: "Limite",
     command: `\\lim_{x \\to 0} f(x)`,
+  },
+  {
+    description: "Barre (moyenne, contraire)",
+    command: `\\bar{x}`,
   },
 ];
 
