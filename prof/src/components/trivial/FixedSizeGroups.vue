@@ -40,8 +40,6 @@ let field = $ref<InstanceType<typeof VCombobox> | null>(null);
 
 // onUpdate is called on delete or when typing Enter
 function onUpdate(v: unknown) {
-  console.log(v);
-
   const final: number[] = [];
   (v as (string | number)[]).forEach((item) => {
     if (typeof item == "string") {
@@ -50,8 +48,6 @@ function onUpdate(v: unknown) {
       final.push(item);
     }
   });
-
-  console.log(final);
 
   emit("update:model-value", final);
 }
@@ -68,7 +64,7 @@ function onSearch(s: string) {
 }
 
 function parseEntry(s: string) {
-  const chunks = s.split("*");
+  let chunks = s.split("*");
   if (chunks.length == 2) {
     const a = Number(chunks[0].trim());
     const b = Number(chunks[1].trim());
@@ -78,11 +74,10 @@ function parseEntry(s: string) {
     return Array.from({ length: a }, () => b);
   }
 
-  const v = Number(s);
-  if (isNaN(v)) {
-    return [];
-  }
-  return [v];
+  return s
+    .split(",")
+    .map((c) => Number(c))
+    .filter((v) => !isNaN(v));
 }
 </script>
 
