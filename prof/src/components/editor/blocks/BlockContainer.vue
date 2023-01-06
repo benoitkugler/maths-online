@@ -1,6 +1,12 @@
 <template>
-  <v-dialog v-model="showDocumentation" max-width="1000px">
-    <latex-commands @close="showDocumentation = false"></latex-commands>
+  <v-dialog v-model="showDocumentationDefault" max-width="1000px">
+    <latex-commands @close="showDocumentationDefault = false"></latex-commands>
+  </v-dialog>
+
+  <v-dialog v-model="showDocumentationExpression" max-width="1000px">
+    <expression-field-doc
+      @close="showDocumentationExpression = false"
+    ></expression-field-doc>
   </v-dialog>
 
   <v-card class="my-2" elevation="3">
@@ -29,7 +35,7 @@
           title="Documentation de la syntaxe LaTeX"
           size="x-small"
         >
-          <v-icon small color="info" @click="showDocumentation = true"
+          <v-icon small color="info" @click="showDocumentation()"
             >mdi-help</v-icon
           >
         </v-btn>
@@ -52,6 +58,7 @@ import { onDragListItemStart } from "@/controller/utils";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import LatexCommands from "./LatexCommands.vue";
+import ExpressionFieldDoc from "./ExpressionFieldDoc.vue";
 
 const emit = defineEmits<{
   (e: "delete"): void;
@@ -78,16 +85,22 @@ const colorClass = computed(() => {
 });
 
 const showLaTeXDoc = computed(() => {
-  return ![BlockKind.ExpressionFieldBlock, BlockKind.NumberFieldBlock].includes(
-    props.kind
-  );
+  return ![BlockKind.NumberFieldBlock].includes(props.kind);
 });
 
 function onDragStart(payload: DragEvent) {
   onDragListItemStart(payload, props.index);
 }
 
-let showDocumentation = $ref(false);
+let showDocumentationDefault = $ref(false);
+let showDocumentationExpression = $ref(false);
+function showDocumentation() {
+  if (props.kind == BlockKind.ExpressionFieldBlock) {
+    showDocumentationExpression = true;
+  } else {
+    showDocumentationDefault = true;
+  }
+}
 </script>
 
 <style scoped></style>
