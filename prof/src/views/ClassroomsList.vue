@@ -76,7 +76,7 @@
           title="Ajouter une nouvelle classe"
         >
           <v-icon icon="mdi-plus" color="success"></v-icon>
-          Créer
+          Créer une classe
         </v-btn>
       </v-col>
     </v-row>
@@ -90,28 +90,12 @@
           v-for="classroom in classrooms"
           :key="classroom.Classroom.id"
         >
-          <v-card :title="classroom.Classroom.name" class="ma-2">
-            <v-card-text>
-              <v-chip @click="classroomToShow = classroom.Classroom">
-                {{ classroom.NbStudents }} élève(s)
-              </v-chip>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-btn
-                icon
-                color="red"
-                title="Supprimer"
-                @click="classroomToDelete = classroom.Classroom"
-              >
-                <v-icon icon="mdi-delete"></v-icon>
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-btn @click="classroomToUpdate = copy(classroom.Classroom)">
-                Modifier
-              </v-btn>
-            </v-card-actions>
-          </v-card>
+          <classroom-card
+            :classroom="classroom"
+            @show-students="classroomToShow = classroom.Classroom"
+            @delete="classroomToDelete = classroom.Classroom"
+            @update="classroomToUpdate = copy(classroom.Classroom)"
+          ></classroom-card>
         </v-col>
       </v-row>
     </v-card-text>
@@ -125,6 +109,7 @@ import { copy } from "@/controller/utils";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import StudentsList from "../components/classrooms/StudentsList.vue";
+import ClassroomCard from "../components/classrooms/ClassroomCard.vue";
 
 let classrooms = $ref<ClassroomExt[]>([]);
 
