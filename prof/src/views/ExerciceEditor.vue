@@ -1,5 +1,11 @@
 <template>
-  <div class="ma-2">
+  <folder-view
+    v-if="viewMode == 'folder'"
+    :index="exercicesIndex"
+    @back="viewMode = 'details'"
+  >
+  </folder-view>
+  <div class="ma-2" v-else>
     <v-row>
       <v-col>
         <keep-alive>
@@ -27,14 +33,22 @@
 </template>
 
 <script setup lang="ts">
-import type { ExercicegroupExt } from "@/controller/api_gen";
+import type { ExercicegroupExt, Index } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { LoopbackServerEventKind } from "@/controller/loopback_gen";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
 import ExercicegroupList from "../components/editor/exercices/ExercicegroupList.vue";
 import ExercicegroupPannel from "../components/editor/exercices/ExercicegroupPannel.vue";
+import FolderView from "../components/editor/FolderView.vue";
+
+let viewMode = $ref<"details" | "folder">("folder");
+
+let exercicesIndex = $ref<Index>([]);
+async function fetchIndex() {
+  const res = await controller.EditorGetExercicesIndex();
+  exercicesIndex = res || [];
+}
 
 let currentExercicegroup = $ref<ExercicegroupExt | null>(null);
 
@@ -47,6 +61,7 @@ async function fetchTags() {
 }
 
 onMounted(async () => {
+  fetchIndex();
   fetchTags();
 });
 

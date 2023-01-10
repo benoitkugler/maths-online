@@ -16,6 +16,7 @@ import type {
   ExerciceWithPreview,
   GenerateClassroomCodeOut,
   HomeworkMarksOut,
+  Index,
   LaunchSessionOut,
   ListExercicesOut,
   ListQuestionsOut,
@@ -109,6 +110,13 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  protected onSuccessEditorGetQuestionsIndex(data: Index): void {
+    this.inRequest = false;
+  }
+  protected onSuccessEditorGetExercicesIndex(data: Index): void {
+    this.inRequest = false;
   }
 
   protected onSuccessEditorDuplicateQuestiongroup(): void {
