@@ -515,6 +515,7 @@ func scanOneExercicegroupTag(row scanner) (ExercicegroupTag, error) {
 	err := row.Scan(
 		&item.Tag,
 		&item.IdExercicegroup,
+		&item.Section,
 	)
 	return item, err
 }
@@ -569,13 +570,14 @@ func InsertManyExercicegroupTags(tx *sql.Tx, items ...ExercicegroupTag) error {
 	stmt, err := tx.Prepare(pq.CopyIn("exercicegroup_tags",
 		"tag",
 		"idexercicegroup",
+		"section",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Tag, item.IdExercicegroup)
+		_, err = stmt.Exec(item.Tag, item.IdExercicegroup, item.Section)
 		if err != nil {
 			return err
 		}
@@ -953,6 +955,7 @@ func scanOneQuestiongroupTag(row scanner) (QuestiongroupTag, error) {
 	err := row.Scan(
 		&item.Tag,
 		&item.IdQuestiongroup,
+		&item.Section,
 	)
 	return item, err
 }
@@ -1007,13 +1010,14 @@ func InsertManyQuestiongroupTags(tx *sql.Tx, items ...QuestiongroupTag) error {
 	stmt, err := tx.Prepare(pq.CopyIn("questiongroup_tags",
 		"tag",
 		"idquestiongroup",
+		"section",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.Tag, item.IdQuestiongroup)
+		_, err = stmt.Exec(item.Tag, item.IdQuestiongroup, item.Section)
 		if err != nil {
 			return err
 		}

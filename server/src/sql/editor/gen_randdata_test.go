@@ -50,6 +50,7 @@ func randExercicegroupTag() ExercicegroupTag {
 	return ExercicegroupTag{
 		Tag:             randstring(),
 		IdExercicegroup: randIdExercicegroup(),
+		Section:         randSection(),
 	}
 }
 
@@ -76,7 +77,7 @@ func randIdQuestiongroup() IdQuestiongroup {
 }
 
 func randLevelTag() LevelTag {
-	choix := [...]LevelTag{Premiere, Seconde, Terminale}
+	choix := [...]LevelTag{CPGE, Premiere, Seconde, Terminale}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -120,7 +121,14 @@ func randQuestiongroupTag() QuestiongroupTag {
 	return QuestiongroupTag{
 		Tag:             randstring(),
 		IdQuestiongroup: randIdQuestiongroup(),
+		Section:         randSection(),
 	}
+}
+
+func randSection() Section {
+	choix := [...]Section{Chapter, Level, TrivMath}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randSliceSliceque_TextPart() [][]questions.TextPart {

@@ -496,6 +496,11 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
+export interface ChapterItems {
+  Chapter: string;
+  GroupCount: number;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersIn
 export interface CheckExerciceParametersIn {
   IdExercice: IdExercice;
@@ -577,6 +582,13 @@ export interface ExercicegroupExt {
   Origin: Origin;
   Tags: string[] | null;
   Variants: ExerciceHeader[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/editor.Index
+export type Index = LevelItems[] | null;
+// github.com/benoitkugler/maths-online/server/src/prof/editor.LevelItems
+export interface LevelItems {
+  Level: LevelTag;
+  Chapters: ChapterItems[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListExercicesOut
 export interface ListExercicesOut {
@@ -966,6 +978,21 @@ export type IdExercicegroup = number;
 export type IdQuestion = number;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestiongroup
 export type IdQuestiongroup = number;
+// github.com/benoitkugler/maths-online/server/src/sql/editor.LevelTag
+export enum LevelTag {
+  CPGE = "CPGE",
+  Premiere = "1ERE",
+  Seconde = "2NDE",
+  Terminale = "TERM",
+}
+
+export const LevelTagLabels: { [key in LevelTag]: string } = {
+  [LevelTag.CPGE]: "CPGE",
+  [LevelTag.Premiere]: "Première",
+  [LevelTag.Seconde]: "Seconde",
+  [LevelTag.Terminale]: "Terminale",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/editor.OptionalIdExercice
 export interface OptionalIdExercice {
   Valid: boolean;
@@ -1718,6 +1745,28 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorGetTags(data: string[] | null): void;
 
+  protected async rawEditorGetQuestionsIndex() {
+    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
+    const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorGetQuestionsIndex wraps rawEditorGetQuestionsIndex and handles the error */
+  async EditorGetQuestionsIndex() {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorGetQuestionsIndex();
+      this.onSuccessEditorGetQuestionsIndex(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorGetQuestionsIndex(data: Index): void;
+
   protected async rawEditorSearchQuestions(params: Query) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
     const rep: AxiosResponse<ListQuestionsOut> = await Axios.post(
@@ -2003,6 +2052,28 @@ export abstract class AbstractAPI {
   protected abstract onSuccessEditorSaveQuestionAndPreview(
     data: SaveQuestionAndPreviewOut
   ): void;
+
+  protected async rawEditorGetExercicesIndex() {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
+    const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorGetExercicesIndex wraps rawEditorGetExercicesIndex and handles the error */
+  async EditorGetExercicesIndex() {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorGetExercicesIndex();
+      this.onSuccessEditorGetExercicesIndex(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorGetExercicesIndex(data: Index): void;
 
   protected async rawEditorSearchExercices(params: Query) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";

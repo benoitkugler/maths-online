@@ -65,6 +65,33 @@ func newExerciceHeader(exercice ed.Exercice) ExerciceHeader {
 	}
 }
 
+func (ct *Controller) EditorGetExercicesIndex(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	out, err := ct.loadExercicesIndex(user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadExercicesIndex(userID uID) (Index, error) {
+	groups, err := ed.SelectAllExercicegroups(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	groups.RestrictVisible(userID)
+
+	// load the tags ...
+	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(ct.db, groups.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	return buildIndex(exercicesToIndex(groups, tags)), nil
+}
+
 type ExerciceQuestionExt struct {
 	Question ed.Question
 	Bareme   int

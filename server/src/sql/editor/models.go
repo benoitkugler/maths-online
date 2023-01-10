@@ -44,9 +44,13 @@ type Questiongroup struct {
 }
 
 // gomacro:SQL ADD UNIQUE(IdQuestiongroup, Tag)
+// gomacro:SQL ADD CHECK(Tag = upper(Tag))
+// gomacro:SQL CREATE UNIQUE INDEX QuestiongroupTag_level ON QuestiongroupTag (IdQuestiongroup) WHERE Section = #[Section.Level]
+// gomacro:SQL CREATE UNIQUE INDEX QuestiongroupTag_chapter ON QuestiongroupTag (IdQuestiongroup) WHERE Section = #[Section.Chapter]
 type QuestiongroupTag struct {
 	Tag             string
 	IdQuestiongroup IdQuestiongroup `gomacro-sql-on-delete:"CASCADE"`
+	Section         Section
 }
 
 // Exercicegroup groups the variant of the same exercice
@@ -58,9 +62,13 @@ type Exercicegroup struct {
 }
 
 // gomacro:SQL ADD UNIQUE(IdExercicegroup, Tag)
+// gomacro:SQL ADD CHECK(Tag = upper(Tag))
+// gomacro:SQL CREATE UNIQUE INDEX ExercicegroupTag_level ON ExercicegroupTag (IdExercicegroup) WHERE Section = #[Section.Level]
+// gomacro:SQL CREATE UNIQUE INDEX ExercicegroupTag_chapter ON ExercicegroupTag (IdExercicegroup) WHERE Section = #[Section.Chapter]
 type ExercicegroupTag struct {
 	Tag             string
 	IdExercicegroup IdExercicegroup `gomacro-sql-on-delete:"CASCADE"`
+	Section         Section
 }
 
 // Exercice is the data structure for a full exercice, composed of a list of questions.
@@ -90,9 +98,19 @@ type ExerciceQuestion struct {
 	Index      int        `json:"-"`
 }
 
+// Section defines one kind of tag.
+type Section uint8
+
+const (
+	_        Section = iota
+	Level            // Niveau
+	Chapter          // Chapitre
+	TrivMath         // Triv'Math
+)
+
 // DifficultyTag are special question tags used to indicate the
 // difficulty of one question.
-// It is used to select question among implicit groups
+// It is used to select question among question groups
 type DifficultyTag string
 
 const (
@@ -110,6 +128,7 @@ const (
 	Seconde   LevelTag = "2NDE" // Seconde
 	Premiere  LevelTag = "1ERE" // Première
 	Terminale LevelTag = "TERM" // Terminale
+	CPGE      LevelTag = "CPGE" // CPGE
 )
 
 type Flow uint8

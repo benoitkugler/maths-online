@@ -140,3 +140,19 @@ func TestGroupTagsEmpty(t *testing.T) {
 	err = ct.updateTags(UpdateQuestiongroupTagsIn{Id: group.Id, Tags: []string{"newtag1", "newtag2"}}, 1)
 	tu.AssertNoErr(t, err)
 }
+
+func TestLoadIndex(t *testing.T) {
+	db, err := tu.DB.ConnectPostgres()
+	if err != nil {
+		t.Skip("DB not available")
+	}
+
+	ct := NewController(db, teacher.Teacher{Id: 1})
+	index, err := ct.loadQuestionsIndex(1)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(index) >= 3)
+
+	index, err = ct.loadExercicesIndex(1)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(index) >= 1)
+}

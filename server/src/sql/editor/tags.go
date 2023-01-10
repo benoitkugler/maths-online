@@ -37,6 +37,25 @@ func NormalizeTag(tag string) string {
 	return strings.ToUpper(utils.RemoveAccents(strings.TrimSpace((tag))))
 }
 
+// TagIndex summarize the classification induced by tags
+type TagIndex struct {
+	Level   LevelTag
+	Chapter string
+}
+
+// Index extract level and chapter information.
+func (qus QuestiongroupTags) Index() (out TagIndex) {
+	for _, tag := range qus {
+		switch tag.Section {
+		case Level:
+			out.Level = LevelTag(tag.Tag)
+		case Chapter:
+			out.Chapter = tag.Tag
+		}
+	}
+	return out
+}
+
 // List returns the sorted tags from the `Tag` attribute.
 func (qus QuestiongroupTags) List() []string {
 	out := make([]string, len(qus))
@@ -54,6 +73,19 @@ func (qus ExercicegroupTags) List() []string {
 		out[i] = tag.Tag
 	}
 	sort.Strings(out)
+	return out
+}
+
+// Index extract level and chapter information.
+func (qus ExercicegroupTags) Index() (out TagIndex) {
+	for _, tag := range qus {
+		switch tag.Section {
+		case Level:
+			out.Level = LevelTag(tag.Tag)
+		case Chapter:
+			out.Chapter = tag.Tag
+		}
+	}
 	return out
 }
 

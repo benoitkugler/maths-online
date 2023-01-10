@@ -152,3 +152,64 @@ func (ct *Controller) EditorSaveExerciceAndPreview(c echo.Context) error {
 
 	return c.JSON(200, out)
 }
+
+// the question/exercice for one level
+type LevelItems struct {
+	Level    ed.LevelTag
+	Chapters []ChapterItems // sorted by Chapter
+}
+
+// the question/exercice for one chapter
+type ChapterItems struct {
+	Chapter    string
+	GroupCount int
+}
+
+// Index exposes the structure of the resources
+type Index []LevelItems
+
+func questionsToIndex(questions ed.Questiongroups, tags ed.QuestiongroupTags) []ed.TagIndex {
+	m := tags.ByIdQuestiongroup()
+	out := make([]ed.TagIndex, 0, len(m))
+	for id := range questions {
+		ls := m[id]
+		out = append(out, ls.Index())
+	}
+	return out
+}
+
+func exercicesToIndex(exercices ed.Exercicegroups, tags ed.ExercicegroupTags) []ed.TagIndex {
+	m := tags.ByIdExercicegroup()
+	out := make([]ed.TagIndex, 0, len(m))
+	for id := range exercices {
+		ls := m[id]
+		out = append(out, ls.Index())
+	}
+	return out
+}
+
+func buildIndex(tags []ed.TagIndex) Index {
+	tmp := map[ed.LevelTag]map[string]int{}
+	for _, item := range tags {
+		byLevel := tmp[item.Level]
+		if byLevel == nil {
+			byLevel = make(map[string]int)
+		}
+		byLevel[item.Chapter] = byLevel[item.Chapter] + 1
+		tmp[item.Level] = byLevel
+	}
+	out := make(Index, 0, len(tmp))
+	for level, byLevel := range tmp {
+		items := LevelItems{
+			Level:    level,
+			Chapters: make([]ChapterItems, 0, len(byLevel)),
+		}
+		for chapter, count := range byLevel {
+			items.Chapters = append(items.Chapters, ChapterItems{Chapter: chapter, GroupCount: count})
+		}
+		sort.Slice(items.Chapters, func(i, j int) bool { return items.Chapters[i].Chapter < items.Chapters[j].Chapter })
+		out = append(out, items)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Level < out[j].Level })
+	return out
+}

@@ -48,6 +48,33 @@ const (
 	OnlyAdmin
 )
 
+func (ct *Controller) EditorGetQuestionsIndex(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	out, err := ct.loadQuestionsIndex(user.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
+	groups, err := ed.SelectAllQuestiongroups(ct.db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	groups.RestrictVisible(userID)
+
+	// load the tags ...
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(ct.db, groups.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	return buildIndex(questionsToIndex(groups, tags)), nil
+}
+
 type SearchQuestionsIn = Query
 
 type Query struct {
