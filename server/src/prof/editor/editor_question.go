@@ -271,7 +271,7 @@ func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID 
 		return utils.SQLError(err)
 	}
 	// .. then add its tags ..
-	err = ed.UpdateQuestiongroupTags(tx, tags, newGroup.Id)
+	err = ed.UpdateQuestiongroupTags(tx, tags.Tags(), newGroup.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -584,11 +584,11 @@ type ListQuestionsOut struct {
 type QuestiongroupExt struct {
 	Group    ed.Questiongroup
 	Origin   tcAPI.Origin
-	Tags     []string
+	Tags     ed.Tags
 	Variants []QuestionHeader
 }
 
-func NewQuestiongroupExt(group ed.Questiongroup, variants []ed.Question, tags []string,
+func NewQuestiongroupExt(group ed.Questiongroup, variants []ed.Question, tags ed.Tags,
 	inReview tcAPI.OptionalIdReview, userID, adminID uID,
 ) QuestiongroupExt {
 	origin, _ := questionOrigin(group, inReview, userID, adminID)
@@ -767,7 +767,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
 
-		groupExt := NewQuestiongroupExt(group, questions, tagsMap[group.Id].List(), inReview, userID, ct.admin.Id)
+		groupExt := NewQuestiongroupExt(group, questions, tagsMap[group.Id].Tags(), inReview, userID, ct.admin.Id)
 
 		out.NbQuestions += len(groupExt.Variants)
 
@@ -787,7 +787,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 
 type UpdateQuestiongroupTagsIn struct {
 	Id   ed.IdQuestiongroup
-	Tags []string
+	Tags ed.Tags
 }
 
 func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
@@ -798,7 +798,7 @@ func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.updateTags(args, user.Id)
+	err := ct.updateQuestionTags(args, user.Id)
 	if err != nil {
 		return err
 	}
@@ -806,7 +806,7 @@ func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateTags(params UpdateQuestiongroupTagsIn, userID uID) error {
+func (ct *Controller) updateQuestionTags(params UpdateQuestiongroupTagsIn, userID uID) error {
 	group, err := ed.SelectQuestiongroup(ct.db, params.Id)
 	if err != nil {
 		return utils.SQLError(err)
@@ -815,23 +815,12 @@ func (ct *Controller) updateTags(params UpdateQuestiongroupTagsIn, userID uID) e
 		return errAccessForbidden
 	}
 
-	var tags ed.QuestiongroupTags
-	for _, tag := range params.Tags {
-		// enforce proper tags
-		tag = ed.NormalizeTag(tag)
-		if tag == "" {
-			continue
-		}
-
-		tags = append(tags, ed.QuestiongroupTag{IdQuestiongroup: params.Id, Tag: tag})
-	}
-
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	err = ed.UpdateQuestiongroupTags(tx, tags, params.Id)
+	err = ed.UpdateQuestiongroupTags(tx, params.Tags, params.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err

@@ -27,11 +27,11 @@ type QuestionOrigin struct {
 type ExercicegroupExt struct {
 	Group    ed.Exercicegroup
 	Origin   tcAPI.Origin
-	Tags     []string
+	Tags     ed.Tags
 	Variants []ExerciceHeader
 }
 
-func NewExercicegroupExt(group ed.Exercicegroup, variants []ed.Exercice, tags []string, inReview tcAPI.OptionalIdReview, userID, adminID uID,
+func NewExercicegroupExt(group ed.Exercicegroup, variants []ed.Exercice, tags ed.Tags, inReview tcAPI.OptionalIdReview, userID, adminID uID,
 ) ExercicegroupExt {
 	origin, _ := exerciceOrigin(group, inReview, userID, adminID)
 	groupExt := ExercicegroupExt{
@@ -201,7 +201,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
 
-		groupExt := NewExercicegroupExt(group, variants, tagsMap[group.Id].List(), inReview, userID, ct.admin.Id)
+		groupExt := NewExercicegroupExt(group, variants, tagsMap[group.Id].Tags(), inReview, userID, ct.admin.Id)
 
 		out.NbExercices += len(groupExt.Variants)
 
@@ -398,7 +398,7 @@ func (ct *Controller) duplicateExercicegroup(idGroup ed.IdExercicegroup, userID 
 		return utils.SQLError(err)
 	}
 	// .. then add its tags ..
-	err = ed.UpdateExercicegroupTags(tx, tags, newGroup.Id)
+	err = ed.UpdateExercicegroupTags(tx, tags.Tags(), newGroup.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -511,7 +511,7 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 
 type UpdateExercicegroupTagsIn struct {
 	Id   ed.IdExercicegroup
-	Tags []string
+	Tags ed.Tags
 }
 
 func (ct *Controller) EditorUpdateExerciceTags(c echo.Context) error {
@@ -539,23 +539,12 @@ func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userI
 		return errAccessForbidden
 	}
 
-	var tags ed.ExercicegroupTags
-	for _, tag := range params.Tags {
-		// enforce proper tags
-		tag = ed.NormalizeTag(tag)
-		if tag == "" {
-			continue
-		}
-
-		tags = append(tags, ed.ExercicegroupTag{IdExercicegroup: params.Id, Tag: tag})
-	}
-
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	err = ed.UpdateExercicegroupTags(tx, tags, params.Id)
+	err = ed.UpdateExercicegroupTags(tx, params.Tags, params.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return err

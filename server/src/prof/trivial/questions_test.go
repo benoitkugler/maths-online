@@ -108,9 +108,9 @@ func TestSelectQuestions(t *testing.T) {
 	}
 	err = ed.InsertManyQuestiongroupTags(tx,
 		// categorie tags
-		ed.QuestiongroupTag{IdQuestiongroup: 1, Tag: "KEEP"},
-		ed.QuestiongroupTag{IdQuestiongroup: 2, Tag: "KEEP"},
-		ed.QuestiongroupTag{IdQuestiongroup: 3, Tag: "KEEP"},
+		ed.QuestiongroupTag{IdQuestiongroup: 1, Tag: "KEEP", Section: ed.TrivMath},
+		ed.QuestiongroupTag{IdQuestiongroup: 2, Tag: "KEEP", Section: ed.TrivMath},
+		ed.QuestiongroupTag{IdQuestiongroup: 3, Tag: "KEEP", Section: ed.TrivMath},
 	)
 	if err != nil {
 		t.Fatal(err)

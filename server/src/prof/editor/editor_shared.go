@@ -25,7 +25,7 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 
 // LoadTags returns all the tags visible by [userID], merging
 // questions and exercices.
-func LoadTags(db ed.DB, userID uID) ([]string, error) {
+func LoadTags(db ed.DB, userID uID) (map[ed.Section][]string, error) {
 	questionTags, err := ed.SelectAllQuestiongroupTags(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -45,43 +45,38 @@ func LoadTags(db ed.DB, userID uID) ([]string, error) {
 		return nil, utils.SQLError(err)
 	}
 
-	// add the special difficulty and level tags among the proposition,
-	// in first choices
-	var (
-		filtred []string
-		allTags = map[string]bool{}
-	)
+	allTags := map[ed.TagSection]bool{}
+
 	for _, tag := range questionTags {
 		if !questionGroups[tag.IdQuestiongroup].IsVisibleBy(userID) {
 			continue
 		}
-		allTags[tag.Tag] = true
+		allTags[ed.TagSection{Tag: tag.Tag, Section: tag.Section}] = true
 	}
 	for _, tag := range exerciceTags {
 		if !exerciceGroups[tag.IdExercicegroup].IsVisibleBy(userID) {
 			continue
 		}
-		allTags[tag.Tag] = true
+		allTags[ed.TagSection{Tag: tag.Tag, Section: tag.Section}] = true
 	}
 
+	// add common suggestions
+	allTags[ed.TagSection{Tag: string(ed.Seconde), Section: ed.Level}] = true
+	allTags[ed.TagSection{Tag: string(ed.Premiere), Section: ed.Level}] = true
+	allTags[ed.TagSection{Tag: string(ed.Terminale), Section: ed.Level}] = true
+	allTags[ed.TagSection{Tag: string(ed.CPGE), Section: ed.Level}] = true
+
+	out := make(map[ed.Section][]string)
 	for tag := range allTags {
-		switch tag {
-		// case string(Diff1), string(Diff2), string(Diff3): // added after
-		case string(ed.Seconde), string(ed.Premiere), string(ed.Terminale): // added after
-		default:
-			filtred = append(filtred, tag)
-		}
+		out[tag.Section] = append(out[tag.Section], tag.Tag)
 	}
 
-	// sort by name but make sure special tags come first
-	sort.Strings(filtred)
+	// sort by name
+	for _, l := range out {
+		sort.Strings(l)
+	}
 
-	filtred = append([]string{
-		// string(Diff1), string(Diff2), string(Diff3),
-		string(ed.Seconde), string(ed.Premiere), string(ed.Terminale),
-	}, filtred...)
-
-	return filtred, nil
+	return out, nil
 }
 
 func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
@@ -173,7 +168,7 @@ func questionsToIndex(questions ed.Questiongroups, tags ed.QuestiongroupTags) []
 	out := make([]ed.TagIndex, 0, len(m))
 	for id := range questions {
 		ls := m[id]
-		out = append(out, ls.Index())
+		out = append(out, ls.Tags().Index())
 	}
 	return out
 }
@@ -183,7 +178,7 @@ func exercicesToIndex(exercices ed.Exercicegroups, tags ed.ExercicegroupTags) []
 	out := make([]ed.TagIndex, 0, len(m))
 	for id := range exercices {
 		ls := m[id]
-		out = append(out, ls.Index())
+		out = append(out, ls.Tags().Index())
 	}
 	return out
 }

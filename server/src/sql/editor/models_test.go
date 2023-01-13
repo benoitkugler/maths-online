@@ -55,8 +55,8 @@ func testQuestion(t *testing.T, db *sql.DB) {
 	tu.AssertNoErr(t, err)
 
 	err = InsertManyQuestiongroupTags(tx,
-		QuestiongroupTag{IdQuestiongroup: group.Id, Tag: "seconde"},
-		QuestiongroupTag{IdQuestiongroup: group.Id, Tag: "calcul"},
+		QuestiongroupTag{IdQuestiongroup: group.Id, Tag: "SECONDE", Section: Level},
+		QuestiongroupTag{IdQuestiongroup: group.Id, Tag: "CALCUL", Section: Chapter},
 	)
 	tu.AssertNoErr(t, err)
 
@@ -66,7 +66,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 
 	tags, err := SelectAllQuestiongroupTags(db)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, reflect.DeepEqual(tags.List(), []string{"calcul", "seconde"}))
+	tu.Assert(t, reflect.DeepEqual(tags.Tags().List(), []string{"SECONDE", "CALCUL"}))
 
 	_, err = DeleteQuestionById(db, qu.Id)
 	tu.AssertNoErr(t, err)

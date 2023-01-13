@@ -520,7 +520,7 @@ func (ct *Controller) loadQuestion(target re.ReviewQuestion, userID uID) (Target
 		return TargetQuestion{}, utils.SQLError(err)
 	}
 
-	questiongroup := edAPI.NewQuestiongroupExt(group, variants, questionTags.List(),
+	questiongroup := edAPI.NewQuestiongroupExt(group, variants, questionTags.Tags(),
 		tcAPI.OptionalIdReview{InReview: true, Id: target.IdReview}, userID, ct.admin.Id)
 
 	allTags, err := edAPI.LoadTags(ct.db, userID)
@@ -552,7 +552,7 @@ func (ct *Controller) loadExercice(target re.ReviewExercice, userID uID) (Target
 		return TargetExercice{}, utils.SQLError(err)
 	}
 
-	exercicegroup := edAPI.NewExercicegroupExt(group, variants, tags.List(), tcAPI.OptionalIdReview{InReview: true, Id: target.IdReview}, userID, ct.admin.Id)
+	exercicegroup := edAPI.NewExercicegroupExt(group, variants, tags.Tags(), tcAPI.OptionalIdReview{InReview: true, Id: target.IdReview}, userID, ct.admin.Id)
 
 	allTags, err := edAPI.LoadTags(ct.db, userID)
 	if err != nil {

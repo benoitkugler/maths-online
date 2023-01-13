@@ -378,7 +378,7 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 	for idExisting, question := range questions {
 		if !usedQuestions.Has(idExisting) {
 			tags := existingQuestiongroups[question.IdGroup.ID]
-			hint.Add(tags.List())
+			hint.Add(tags.Tags().List())
 		}
 	}
 

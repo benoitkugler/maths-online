@@ -137,7 +137,24 @@ func TestGroupTagsEmpty(t *testing.T) {
 	_, err = ed.Question{IdGroup: group.Id.AsOptional()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	err = ct.updateTags(UpdateQuestiongroupTagsIn{Id: group.Id, Tags: []string{"newtag1", "newtag2"}}, 1)
+	err = ct.updateQuestionTags(UpdateQuestiongroupTagsIn{Id: group.Id, Tags: ed.Tags{
+		{Tag: "newtag1", Section: ed.Level},
+		{Tag: "newtag2", Section: ed.Chapter},
+		{Tag: "newtag3", Section: ed.TrivMath},
+		{Tag: "newtag4", Section: ed.TrivMath},
+	}}, 1)
+	tu.AssertNoErr(t, err)
+
+	// same for exercice
+	group2, err := ed.Exercicegroup{IdTeacher: 1}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	err = ct.updateExerciceTags(UpdateExercicegroupTagsIn{Id: group2.Id, Tags: ed.Tags{
+		{Tag: "newtag1", Section: ed.Level},
+		{Tag: "newtag2", Section: ed.Chapter},
+		{Tag: "newtag3", Section: ed.TrivMath},
+		{Tag: "newtag4", Section: ed.TrivMath},
+	}}, 1)
 	tu.AssertNoErr(t, err)
 }
 

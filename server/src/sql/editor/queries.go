@@ -2,7 +2,6 @@ package editor
 
 import (
 	"database/sql"
-	"errors"
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -74,28 +73,19 @@ func (qus Questions) ByGroup() map[IdQuestiongroup][]Question {
 	return out
 }
 
-// UpdateQuestiongroupTags enforces proper IdQuestiongroup, mutating `tags`.
+// UpdateQuestiongroupTags sets the tags of [id], normalizing and validating [tags]
 // It does NOT commit or rollback.
-func UpdateQuestiongroupTags(tx *sql.Tx, tags QuestiongroupTags, id IdQuestiongroup) error {
-	var nbLevel int
-	for i, tag := range tags {
-		tags[i].IdQuestiongroup = id
-
-		switch tag.Tag {
-		case string(Seconde), string(Premiere), string(Terminale):
-			nbLevel++
-		}
+func UpdateQuestiongroupTags(tx *sql.Tx, tags Tags, id IdQuestiongroup) error {
+	tags, err := tags.normalize()
+	if err != nil {
+		return err
 	}
 
-	if nbLevel > 1 {
-		return errors.New("Une seule classe est autorisée par question.")
-	}
-
-	_, err := DeleteQuestiongroupTagsByIdQuestiongroups(tx, id)
+	_, err = DeleteQuestiongroupTagsByIdQuestiongroups(tx, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	err = InsertManyQuestiongroupTags(tx, tags...)
+	err = InsertManyQuestiongroupTags(tx, tags.asQuestionLinks(id)...)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -104,26 +94,17 @@ func UpdateQuestiongroupTags(tx *sql.Tx, tags QuestiongroupTags, id IdQuestiongr
 
 // UpdateExercicegroupTags enforces proper IdExercicegroup, mutating `tags`.
 // It does NOT commit or rollback.
-func UpdateExercicegroupTags(tx *sql.Tx, tags ExercicegroupTags, id IdExercicegroup) error {
-	var nbLevel int
-	for i, tag := range tags {
-		tags[i].IdExercicegroup = id
-
-		switch tag.Tag {
-		case string(Seconde), string(Premiere), string(Terminale):
-			nbLevel++
-		}
+func UpdateExercicegroupTags(tx *sql.Tx, tags Tags, id IdExercicegroup) error {
+	tags, err := tags.normalize()
+	if err != nil {
+		return err
 	}
 
-	if nbLevel > 1 {
-		return errors.New("Une seule classe est autorisée par question.")
-	}
-
-	_, err := DeleteExercicegroupTagsByIdExercicegroups(tx, id)
+	_, err = DeleteExercicegroupTagsByIdExercicegroups(tx, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	err = InsertManyExercicegroupTags(tx, tags...)
+	err = InsertManyExercicegroupTags(tx, tags.asExerciceLinks(id)...)
 	if err != nil {
 		return utils.SQLError(err)
 	}

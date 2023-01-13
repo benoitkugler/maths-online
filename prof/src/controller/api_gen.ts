@@ -580,7 +580,7 @@ export interface ExerciceWithPreview {
 export interface ExercicegroupExt {
   Group: Exercicegroup;
   Origin: Origin;
-  Tags: string[] | null;
+  Tags: Tags;
   Variants: ExerciceHeader[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.Index
@@ -650,7 +650,7 @@ export interface QuestionUpdateVisiblityIn {
 export interface QuestiongroupExt {
   Group: Questiongroup;
   Origin: Origin;
-  Tags: string[] | null;
+  Tags: Tags;
   Variants: QuestionHeader[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewIn
@@ -691,12 +691,12 @@ export interface TaskDetails {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupTagsIn
 export interface UpdateExercicegroupTagsIn {
   Id: IdExercicegroup;
-  Tags: string[] | null;
+  Tags: Tags;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateQuestiongroupTagsIn
 export interface UpdateQuestiongroupTagsIn {
   Id: IdQuestiongroup;
-  Tags: string[] | null;
+  Tags: Tags;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.AddExerciceToTaskIn
 export interface AddExerciceToTaskIn {
@@ -807,13 +807,13 @@ export interface TargetContent {
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetExercice
 export interface TargetExercice {
   Group: ExercicegroupExt;
-  AllTags: string[] | null;
+  AllTags: { [key: Section]: string[] | null } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetQuestion
 export interface TargetQuestion {
   Group: QuestiongroupExt;
   Variants: Question[] | null;
-  AllTags: string[] | null;
+  AllTags: { [key: Section]: string[] | null } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetTrivial
 export interface TargetTrivial {
@@ -1020,6 +1020,26 @@ export interface Questiongroup {
   Public: boolean;
   IdTeacher: IdTeacher;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Section
+export enum Section {
+  Chapter = 2,
+  Level = 1,
+  TrivMath = 3,
+}
+
+export const SectionLabels: { [key in Section]: string } = {
+  [Section.Chapter]: "Chapitre",
+  [Section.Level]: "Niveau",
+  [Section.TrivMath]: "Triv'Math",
+};
+
+// github.com/benoitkugler/maths-online/server/src/sql/editor.TagSection
+export interface TagSection {
+  Tag: string;
+  Section: Section;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Tags
+export type Tags = TagSection[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
 export type IdSheet = number;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Notation
@@ -1725,9 +1745,8 @@ export abstract class AbstractAPI {
 
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/api/prof/editor/tags";
-    const rep: AxiosResponse<string[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<{ [key: Section]: string[] | null } | null> =
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
     return rep.data;
   }
 
@@ -1743,7 +1762,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetTags(data: string[] | null): void;
+  protected abstract onSuccessEditorGetTags(
+    data: { [key: Section]: string[] | null } | null
+  ): void;
 
   protected async rawEditorGetQuestionsIndex() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";

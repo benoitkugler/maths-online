@@ -24,12 +24,12 @@ type TargetTrivial struct {
 type TargetQuestion struct {
 	Group    edAPI.QuestiongroupExt
 	Variants []editor.Question
-	AllTags  []string
+	AllTags  map[editor.Section][]string
 }
 
 type TargetExercice struct {
 	Group   edAPI.ExercicegroupExt
-	AllTags []string
+	AllTags map[editor.Section][]string
 }
 
 type LoadTargetOut struct {

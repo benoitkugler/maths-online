@@ -1,11 +1,121 @@
 package editor
 
 import (
+	"errors"
 	"sort"
 	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
+
+type TagSection struct {
+	Tag     string
+	Section Section
+}
+
+type Tags []TagSection
+
+func (a Tags) Len() int      { return len(a) }
+func (a Tags) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a Tags) Less(i, j int) bool {
+	ai, aj := a[i], a[j]
+	if ai.Section < aj.Section {
+		return true
+	} else if ai.Section > aj.Section {
+		return false
+	}
+	return ai.Tag < aj.Tag
+}
+
+// Tags returns the tags for the given [IdQuestiongroup],
+// sorted by section then tag
+func (qus QuestiongroupTags) Tags() Tags {
+	out := make(Tags, len(qus))
+	for i, tag := range qus {
+		out[i] = TagSection{tag.Tag, tag.Section}
+	}
+	sort.Sort(out)
+	return out
+}
+
+// Tags returns the tags for the given [IdQuestiongroup]
+// sorted by section then tag
+func (exes ExercicegroupTags) Tags() Tags {
+	out := make(Tags, len(exes))
+	for i, tag := range exes {
+		out[i] = TagSection{tag.Tag, tag.Section}
+	}
+	sort.Sort(out)
+	return out
+}
+
+func (ts Tags) asQuestionLinks(id IdQuestiongroup) QuestiongroupTags {
+	out := make(QuestiongroupTags, len(ts))
+	for i, tag := range ts {
+		out[i] = QuestiongroupTag{IdQuestiongroup: id, Tag: tag.Tag, Section: tag.Section}
+	}
+	return out
+}
+
+func (ts Tags) asExerciceLinks(id IdExercicegroup) ExercicegroupTags {
+	out := make(ExercicegroupTags, len(ts))
+	for i, tag := range ts {
+		out[i] = ExercicegroupTag{IdExercicegroup: id, Tag: tag.Tag, Section: tag.Section}
+	}
+	return out
+}
+
+func (ts Tags) normalize() (Tags, error) {
+	var (
+		out                Tags
+		nbLevel, nbChapter int
+	)
+	for _, tag := range ts {
+		// enforce proper tags
+		tag.Tag = NormalizeTag(tag.Tag)
+		if tag.Tag == "" {
+			continue
+		}
+
+		switch tag.Section {
+		case Level:
+			nbLevel++
+		case Chapter:
+			nbChapter++
+		}
+		out = append(out, tag)
+	}
+
+	if nbLevel > 1 {
+		return nil, errors.New("Un seul niveau est autorisé par ressource.")
+	}
+	if nbChapter > 1 {
+		return nil, errors.New("Un seul chapitre est autorisé par ressource.")
+	}
+	return out, nil
+}
+
+// List returns the tags (in the same order).
+func (ts Tags) List() []string {
+	out := make([]string, len(ts))
+	for i, tag := range ts {
+		out[i] = tag.Tag
+	}
+	return out
+}
+
+// Index extract level and chapter information.
+func (ts Tags) Index() (out TagIndex) {
+	for _, tag := range ts {
+		switch tag.Section {
+		case Level:
+			out.Level = LevelTag(tag.Tag)
+		case Chapter:
+			out.Chapter = tag.Tag
+		}
+	}
+	return out
+}
 
 // DifficultyQuery is an union of tags. An empty slice means no selection : all variants are accepted.
 type DifficultyQuery []DifficultyTag
@@ -43,52 +153,6 @@ type TagIndex struct {
 	Chapter string
 }
 
-// Index extract level and chapter information.
-func (qus QuestiongroupTags) Index() (out TagIndex) {
-	for _, tag := range qus {
-		switch tag.Section {
-		case Level:
-			out.Level = LevelTag(tag.Tag)
-		case Chapter:
-			out.Chapter = tag.Tag
-		}
-	}
-	return out
-}
-
-// List returns the sorted tags from the `Tag` attribute.
-func (qus QuestiongroupTags) List() []string {
-	out := make([]string, len(qus))
-	for i, tag := range qus {
-		out[i] = tag.Tag
-	}
-	sort.Strings(out)
-	return out
-}
-
-// List returns the sorted tags from the `Tag` attribute.
-func (qus ExercicegroupTags) List() []string {
-	out := make([]string, len(qus))
-	for i, tag := range qus {
-		out[i] = tag.Tag
-	}
-	sort.Strings(out)
-	return out
-}
-
-// Index extract level and chapter information.
-func (qus ExercicegroupTags) Index() (out TagIndex) {
-	for _, tag := range qus {
-		switch tag.Section {
-		case Level:
-			out.Level = LevelTag(tag.Tag)
-		case Chapter:
-			out.Chapter = tag.Tag
-		}
-	}
-	return out
-}
-
 // CommonTags returns the tags found in every list.
 func CommonTags(tags [][]string) []string {
 	L := len(tags)
@@ -123,7 +187,8 @@ func CommonTags(tags [][]string) []string {
 	return out
 }
 
-// Crible is a set of tags.
+// Crible is a set of tags, not using the section.
+// TODO: check that
 type Crible map[string]bool
 
 func NewCrible(tags []string) Crible {
@@ -135,10 +200,10 @@ func NewCrible(tags []string) Crible {
 }
 
 // Crible build a set from the tags
-func (qus QuestiongroupTags) Crible() Crible { return NewCrible(qus.List()) }
+func (qus QuestiongroupTags) Crible() Crible { return NewCrible(qus.Tags().List()) }
 
 // Crible build a set from the tags
-func (qus ExercicegroupTags) Crible() Crible { return NewCrible(qus.List()) }
+func (qus ExercicegroupTags) Crible() Crible { return NewCrible(qus.Tags().List()) }
 
 // HasAll returns `true` is all the `tags` are present in the crible.
 func (cr Crible) HasAll(tags []string) bool {
