@@ -1,115 +1,123 @@
 <template>
-  <v-row>
-    <v-col :cols="props.horizontal ? 7 : 12">
-      <v-chip
-        v-for="(tag, index) in props.modelValue"
-        :key="tag"
-        label
-        closable
-        class="ma-1"
-        :color="tagColor(tag)"
-        @click:close="(e) => onDelete(e, index)"
-        >{{ tag }}</v-chip
-      >
-    </v-col>
-    <v-col :cols="props.horizontal ? 5 : 12">
-      <v-autocomplete
-        :items="tagItems"
+  <v-card title="Modifier les étiquettes de la question">
+    <v-card-text class="my-1">
+      <v-row>
+        <v-col cols="6">
+          <v-combobox
+            :model-value="levelTag"
+            @update:model-value="(t) => updateLevel(t as string)"
+            :items="levelTags"
+            label="Niveau (classe)"
+            variant="outlined"
+            density="compact"
+            :color="LevelColor"
+          ></v-combobox>
+        </v-col>
+        <v-col cols="6">
+          <v-combobox
+            :model-value="chapterTag"
+            @update:model-value="(t) => updateChapter(t as string)"
+            :items="chapterTags"
+            label="Chapitre"
+            variant="outlined"
+            density="compact"
+            :color="ChapterColor"
+          ></v-combobox>
+        </v-col>
+      </v-row>
+
+      <v-row>
+        <v-col cols="12">
+          <v-combobox
+            :model-value="trivMathTag"
+            @update:model-value="(t) => updateTrivMath(t as string[])"
+            label="TrivMath"
+            :items="trivMathTags"
+            variant="outlined"
+            density="compact"
+            :color="TrivMathColor"
+            multiple
+            hint="Etiquettes supplémentaires permettant de définir les catégories de questions dans l'activité TrivMath."
+            persistent-hint
+            chips
+          ></v-combobox>
+        </v-col>
+      </v-row>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn
+        class="my-1"
+        color="success"
+        @click="emit('save')"
+        :disabled="!saveEnabled"
         variant="outlined"
-        :density="props.horizontal ? 'compact' : 'comfortable'"
-        hide-details
-        label="Ajouter..."
-        placeholder="Rechercher une étiquette..."
-        :search="search"
-        @update:search="onSearch"
-        @keyup="onEnterKey"
-        @update:model-value="onSelectItem"
-        append-icon=""
-        no-data-text="Aucune étiquette ne correspond à votre recherche."
-        hide-selected
-        auto-select-first
       >
-        <template v-slot:append-inner>
-          <v-btn
-            icon
-            size="x-small"
-            class="my-1"
-            color="success"
-            :disabled="!isEntryValid"
-            @click="add(search)"
-          >
-            <v-icon icon="mdi-plus" size="x-small"></v-icon>
-          </v-btn>
-        </template>
-      </v-autocomplete>
-    </v-col>
-  </v-row>
+        Enregistrer
+      </v-btn>
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script setup lang="ts">
-import { filterTags, tagColor, tagString } from "@/controller/editor";
+import { Section, type TagsDB, type TagSection } from "@/controller/api_gen";
+import { ChapterColor, LevelColor, TrivMathColor } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { $computed } from "vue/macros";
 
 interface Props {
-  modelValue: string[];
-  allTags: string[];
-  horizontal: boolean;
+  modelValue: TagSection[];
+  allTags: TagsDB;
+  saveEnabled: boolean;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "update:model-value", v: string[]): void;
+  (e: "update:model-value", v: TagSection[]): void;
+  (e: "save"): void;
 }>();
 
-let search = $ref("");
-
-const isEntryValid = computed(() => {
-  const e = search.trim();
-  if (e.length == 0) {
-    return false;
-  }
-  return !props.modelValue.includes(e);
+let levelTag = $computed(
+  () => props.modelValue.find((ts) => ts.Section == Section.Level)?.Tag || ""
+);
+function updateLevel(t: string) {
+  const newL = props.modelValue
+    .filter((ts) => ts.Section != Section.Level)
+    .concat([{ Section: Section.Level, Tag: t }]);
+  emit("update:model-value", newL);
+}
+let chapterTag = $computed(
+  () => props.modelValue.find((ts) => ts.Section == Section.Chapter)?.Tag || ""
+);
+function updateChapter(t: string) {
+  const newL = props.modelValue
+    .filter((ts) => ts.Section != Section.Chapter)
+    .concat([{ Section: Section.Chapter, Tag: t }]);
+  emit("update:model-value", newL);
+}
+let trivMathTag = $computed(() =>
+  props.modelValue
+    .filter((ts) => ts.Section == Section.TrivMath)
+    .map((ts) => ts.Tag)
+);
+function updateTrivMath(t: string[]) {
+  const newL = props.modelValue
+    .filter((ts) => ts.Section != Section.TrivMath)
+    .concat(t.map((s) => ({ Section: Section.TrivMath, Tag: s })));
+  emit("update:model-value", newL);
+}
+const levelTags = computed(() => {
+  return props.allTags.Levels || [];
 });
-
-function add(s: string) {
-  props.modelValue.push(tagString(s));
-  emit("update:model-value", props.modelValue);
-
-  // reset the search field
-  setTimeout(() => {
-    onSearch("");
-  }, 100);
-}
-
-function onEnterKey(key: KeyboardEvent) {
-  if (key.key == "Enter" && isEntryValid.value) {
-    add(search);
-  }
-}
-
-function onSelectItem(s: string) {
-  s = tagString(s);
-  if (props.modelValue.includes(s)) {
-    search = "";
-    return;
-  }
-  add(s);
-}
-
-function onDelete(e: Event, index: number) {
-  props.modelValue.splice(index, 1);
-  emit("update:model-value", props.modelValue);
-  onSearch("");
-}
-
-let tagItems = $ref(filterTags(props.allTags, "", props.modelValue));
-
-function onSearch(s: string) {
-  search = s;
-  tagItems = filterTags(props.allTags, s, props.modelValue);
-}
+const chapterTags = computed(() => {
+  return (props.allTags.ChaptersByLevel || {})[levelTag] || [];
+});
+const trivMathTags = computed(() => {
+  return (
+    ((props.allTags.TrivByChapters || {})[levelTag] || {})[chapterTag] || []
+  );
+});
 </script>
 
 <style scoped></style>

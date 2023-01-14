@@ -31,6 +31,7 @@ import {
   type ExerciceHeader,
   type IdExercice,
   type LoopbackShowExercice,
+  type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed } from "@vue/reactivity";
@@ -42,7 +43,7 @@ import ExSkeleton from "./ExSkeleton.vue";
 interface Props {
   exerciceHeader: ExerciceHeader;
   isReadonly: boolean;
-  allTags: string[]; // to provide auto completion
+  allTags: TagsDB; // to provide auto completion
   showVariantMeta: boolean;
 }
 

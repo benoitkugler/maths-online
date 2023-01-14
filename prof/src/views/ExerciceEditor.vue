@@ -3,6 +3,7 @@
     v-if="viewMode == 'folder'"
     :index="exercicesIndex"
     @back="viewMode = 'details'"
+    @go-to="showFolder"
   >
   </folder-view>
   <div class="ma-2" v-else>
@@ -12,13 +13,15 @@
           <exercicegroup-list
             v-if="currentExercicegroup == null"
             @edit="editExercice"
-            :tags="allTags"
+            :tags="allKnownTags"
+            @back="viewMode = 'folder'"
+            :initial-query="initialQuery"
           ></exercicegroup-list>
         </keep-alive>
         <exercicegroup-pannel
           v-if="currentExercicegroup != null"
           :group="currentExercicegroup"
-          :all-tags="allTags"
+          :all-tags="allKnownTags"
           @back="backToList"
           @preview="(ex) => preview?.showExercice(ex)"
         ></exercicegroup-pannel>
@@ -33,7 +36,14 @@
 </template>
 
 <script setup lang="ts">
-import type { ExercicegroupExt, Index } from "@/controller/api_gen";
+import {
+  LevelTag,
+  OriginKind,
+  type ExercicegroupExt,
+  type Index,
+  type Query,
+  type TagsDB,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
@@ -54,16 +64,33 @@ let currentExercicegroup = $ref<ExercicegroupExt | null>(null);
 
 let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
 
-let allTags = $ref<string[]>([]);
+let allKnownTags = $ref<TagsDB>({
+  Levels: [],
+  ChaptersByLevel: {},
+  TrivByChapters: {},
+});
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
-  allTags = tags || [];
+  if (tags) {
+    allKnownTags = tags;
+  }
 }
 
 onMounted(async () => {
   fetchIndex();
   fetchTags();
 });
+
+let initialQuery = $ref<Query | null>(null);
+function showFolder(index: [LevelTag, string]) {
+  initialQuery = {
+    TitleQuery: "",
+    LevelTags: index[0] ? [index[0]] : [],
+    ChapterTags: index[1] ? [index[1]] : [],
+    Origin: OriginKind.All,
+  };
+  viewMode = "details";
+}
 
 async function editExercice(ex: ExercicegroupExt) {
   currentExercicegroup = ex;

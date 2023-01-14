@@ -1,29 +1,12 @@
 <template>
   <v-card class="mt-3 px-2" title="Choisir une question">
     <v-card-text>
-      <v-row>
-        <v-col>
-          <v-text-field
-            label="Rechercher"
-            hint="Rechercher une question par nom."
-            variant="outlined"
-            density="compact"
-            v-model="props.query.search"
-            @update:model-value="updateQuerySearch"
-            persistent-hint
-            clearable
-          ></v-text-field>
-        </v-col>
-        <v-col>
-          <tag-selector
-            :all-tags="props.tags"
-            v-model="props.query.tags"
-            @update:model-value="updateQueryTags"
-            @blur="updateQueryTags"
-          >
-          </tag-selector>
-        </v-col>
-      </v-row>
+      <resource-query-row
+        v-model="props.query"
+        :all-tags="props.tags"
+        @update:model-value="updateQuery"
+      >
+      </resource-query-row>
 
       <div style="height: 47vh" class="overflow-y-auto">
         <v-expansion-panels class="pa-2">
@@ -46,7 +29,10 @@
                     <v-spacer></v-spacer>
                     <v-col cols="auto">
                       <tag-chip
-                        :tag="question.Difficulty || 'Aucune difficulté'"
+                        :tag="{
+                          Tag: question.Difficulty || 'Aucune difficulté',
+                          Section: 0,
+                        }"
                       ></tag-chip>
                     </v-col>
                   </v-row>
@@ -71,64 +57,48 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import {
-  OriginKind,
-  type QuestiongroupExt,
-  type QuestionHeader,
+import type {
+  Query,
+  QuestiongroupExt,
+  QuestionHeader,
+  TagsDB,
 } from "../controller/api_gen";
 import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
-import TagSelector from "./editor/TagSelector.vue";
-
-export interface QuestionQuery {
-  search: string;
-  tags: string[];
-}
+import ResourceQueryRow from "./editor/ResourceQueryRow.vue";
 
 interface Props {
-  tags: string[];
-  query: QuestionQuery;
+  tags: TagsDB;
+  query: Query;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "closed"): void;
   (e: "selected", question: QuestionHeader): void;
-  (e: "update:query", query: QuestionQuery): void;
+  (e: "update:query", query: Query): void;
 }>();
 
 let questions = $ref<QuestiongroupExt[]>([]);
 let serverNbQuestions = $ref(0);
 
-let timerId = 0;
-
 onMounted(() => {
-  if (props.query.search || props.query.tags.length) {
+  if (
+    props.query.TitleQuery ||
+    props.query.LevelTags?.length ||
+    props.query.ChapterTags?.length
+  ) {
     fetchQuestions();
   }
 });
 
-function updateQuerySearch() {
-  const debounceDelay = 200;
-  // cancel pending call
-  clearTimeout(timerId);
-
-  // delay new call 500ms
-  timerId = setTimeout(() => {
-    fetchQuestions();
-  }, debounceDelay);
-}
-
-async function updateQueryTags() {
+async function updateQuery(qu: Query) {
+  emit("update:query", qu);
   await fetchQuestions();
 }
 
 async function fetchQuestions() {
-  const result = await controller.EditorSearchQuestions({
-    TitleQuery: props.query.search,
-    Tags: props.query.tags,
-    Origin: OriginKind.All,
-  });
+  const result = await controller.EditorSearchQuestions(props.query);
   if (result == undefined) return;
   questions = result.Groups || [];
   serverNbQuestions = result.NbQuestions;

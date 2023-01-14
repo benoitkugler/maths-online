@@ -194,24 +194,25 @@
 
 <script setup lang="ts">
 import DropZone from "@/components/DropZone.vue";
-import type {
-  ExerciceExt,
-  ExerciceQuestionExt,
-  LoopbackShowExercice,
+import {
+  OriginKind,
+  type ExerciceExt,
+  type ExerciceQuestionExt,
+  type LoopbackShowExercice,
+  type Query,
+  type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
-import QuestionSelector, {
-  type QuestionQuery,
-} from "../../QuestionSelector.vue";
+import QuestionSelector from "../../QuestionSelector.vue";
 import DescriptionPannel from "../DescriptionPannel.vue";
 
 interface Props {
   exercice: ExerciceExt;
   isReadonly: boolean;
-  allTags: string[]; // used to select the question to import
+  allTags: TagsDB; // used to select the question to import
   showVariantMeta: boolean;
 }
 
@@ -222,7 +223,12 @@ const emit = defineEmits<{
   (e: "goToQuestion", questionIndex: number): void;
 }>();
 
-let questionQuery = $ref<QuestionQuery>({ search: "", tags: [] });
+let questionQuery = $ref<Query>({
+  TitleQuery: "",
+  LevelTags: [],
+  ChapterTags: [],
+  Origin: OriginKind.All,
+});
 let showImportQuestion = $ref(false);
 
 let showEditDescription = $ref(false);

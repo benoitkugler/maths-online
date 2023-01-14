@@ -1,6 +1,18 @@
 <template>
   <v-card class="pt-2 pb-0">
     <v-row>
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          class="ml-2"
+          size="small"
+          icon
+          title="Retour au sommaire"
+          @click="emit('back')"
+        >
+          <v-icon icon="mdi-arrow-left"></v-icon>
+        </v-btn>
+      </v-col>
+
       <v-col> <v-card-title>Liste des exercices</v-card-title> </v-col>
 
       <v-col align-self="center" style="text-align: right" cols="4">
@@ -16,34 +28,11 @@
     </v-row>
 
     <v-card-text class="py-1">
-      <v-row>
-        <v-col>
-          <v-text-field
-            label="Rechercher"
-            hint="Rechercher un exercice par nom."
-            variant="outlined"
-            density="compact"
-            v-model="querySearch"
-            @update:model-value="updateQuerySearch"
-            persistent-hint
-            clearable
-          ></v-text-field>
-        </v-col>
-        <v-col>
-          <tag-selector
-            :all-tags="props.tags"
-            v-model="queryTags"
-            @update:model-value="updateQueryTags"
-            @blur="updateQueryTags"
-          ></tag-selector>
-        </v-col>
-        <v-col cols="auto" align-self="center">
-          <origin-select
-            :origin="queryOrigin"
-            @update:origin="updateQueryOrigin"
-          ></origin-select>
-        </v-col>
-      </v-row>
+      <resource-query-row
+        :all-tags="props.tags"
+        :model-value="query"
+        @update:model-value="updateQuery"
+      ></resource-query-row>
       <v-row no-gutters>
         <v-col>
           <v-list style="height: 60vh" class="overflow-y-auto">
@@ -53,7 +42,9 @@
             >
               <i>
                 {{
-                  querySearch == "" && queryTags.length == 0
+                  query.TitleQuery == "" &&
+                  !query.LevelTags?.length &&
+                  !query.ChapterTags?.length
                     ? "Entrer une recherche..."
                     : "Aucun résultat"
                 }}
@@ -68,9 +59,6 @@
                 @duplicate="duplicate(exerciceGroup)"
                 @update-public="updatePublic"
                 @create-review="createReview(exerciceGroup.Group)"
-                @update-tags="
-                  (tags) => updateGroupTags(exerciceGroup.Group, tags)
-                "
               ></exercicegroup-row>
             </div>
           </v-list>
@@ -93,22 +81,25 @@ import {
   ReviewKind,
   type Exercicegroup,
   type ExercicegroupExt,
+  type Query,
+  type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
-import OriginSelect from "../../OriginSelect.vue";
 import ExercicegroupRow from "./ExercicegroupRow.vue";
-import TagSelector from "../TagSelector.vue";
+import ResourceQueryRow from "../ResourceQueryRow.vue";
 
 interface Props {
-  tags: string[]; // queried once for all
+  tags: TagsDB; // queried once for all
+  initialQuery: Query | null;
 }
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "edit", group: ExercicegroupExt): void;
+  (e: "back"): void;
 }>();
 
 const router = useRouter();
@@ -124,33 +115,21 @@ const displayedNbExercices = computed(() => {
   return nb;
 });
 
-let querySearch = $ref("");
-
-let queryTags = $ref<string[]>([]);
-let queryOrigin = $ref(OriginKind.All);
-
-let timerId = 0;
-
+let query = $ref<Query>(
+  props.initialQuery
+    ? props.initialQuery
+    : {
+        TitleQuery: "",
+        LevelTags: [],
+        ChapterTags: [],
+        Origin: OriginKind.All,
+      }
+);
 onMounted(fetchExercices);
 onActivated(fetchExercices);
 
-function updateQuerySearch() {
-  const debounceDelay = 200;
-  // cancel pending call
-  clearTimeout(timerId);
-
-  // delay new call 500ms
-  timerId = setTimeout(() => {
-    fetchExercices();
-  }, debounceDelay);
-}
-
-async function updateQueryTags() {
-  await fetchExercices();
-}
-
-async function updateQueryOrigin(o: OriginKind) {
-  queryOrigin = o;
+async function updateQuery(qu: Query) {
+  query = qu;
   await fetchExercices();
 }
 
@@ -163,11 +142,7 @@ async function duplicate(group: ExercicegroupExt) {
 }
 
 async function fetchExercices() {
-  const result = await controller.EditorSearchExercices({
-    TitleQuery: querySearch,
-    Tags: queryTags,
-    Origin: queryOrigin,
-  });
+  const result = await controller.EditorSearchExercices(query);
   if (result == undefined) {
     return;
   }
@@ -210,17 +185,5 @@ async function createReview(ex: Exercicegroup) {
   if (res == undefined) return;
 
   router.push({ name: "reviews", query: { id: res.Id } });
-}
-
-async function updateGroupTags(group: Exercicegroup, newTags: string[]) {
-  const rep = await controller.EditorUpdateExerciceTags({
-    Id: group.Id,
-    Tags: newTags,
-  });
-  if (rep == undefined) {
-    return;
-  }
-  const index = groups.findIndex((gr) => gr.Group.Id == group.Id);
-  groups[index].Tags = newTags;
 }
 </script>

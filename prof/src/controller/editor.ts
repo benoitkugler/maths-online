@@ -4,6 +4,7 @@ import {
   ComparisonLevel,
   DifficultyTag,
   ProofAssertionKind,
+  Section,
   SignSymbol,
   TextKind,
   VectorPairCriterion,
@@ -29,6 +30,7 @@ import {
   type SignTableFieldBlock,
   type TableBlock,
   type TableFieldBlock,
+  type TagSection,
   type TextBlock,
   type TreeFieldBlock,
   type Variable,
@@ -662,22 +664,26 @@ export function tagString(tag: string) {
     .toUpperCase();
 }
 
-export function tagColor(tag: string) {
+export const LevelColor = "pink";
+export const ChapterColor = "primary-darken-1";
+export const TrivMathColor = "brown";
+
+export function tagColor(tag: TagSection) {
   if (
-    tag == DifficultyTag.Diff1 ||
-    tag == DifficultyTag.Diff2 ||
-    tag == DifficultyTag.Diff3
+    tag.Tag == DifficultyTag.Diff1 ||
+    tag.Tag == DifficultyTag.Diff2 ||
+    tag.Tag == DifficultyTag.Diff3
   ) {
     return "secondary-darken-1";
   }
-  if (
-    tag == LevelTag.Seconde ||
-    tag == LevelTag.Premiere ||
-    tag == LevelTag.Terminale
-  ) {
-    return "pink";
+  switch (tag.Section) {
+    case Section.Level:
+      return LevelColor;
+    case Section.Chapter:
+      return ChapterColor;
+    case Section.TrivMath:
+      return TrivMathColor;
   }
-  return "primary-darken-1";
 }
 
 // returns 0 for question without difficulty

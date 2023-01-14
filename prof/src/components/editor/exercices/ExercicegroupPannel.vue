@@ -102,6 +102,8 @@ import type {
   LoopbackShowExercice,
   QuestionExerciceUses,
   Sheet,
+  TagsDB,
+  TagSection,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -116,7 +118,7 @@ import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
 
 interface Props {
   group: ExercicegroupExt;
-  allTags: string[]; // to provide auto completion
+  allTags: TagsDB; // to provide auto completion
 }
 
 const props = defineProps<Props>();
@@ -197,7 +199,7 @@ async function duplicateVariante(exercice: VariantG) {
   variantIndex = ownVariants.length - 1; // go to the new exercice
 }
 
-async function saveTags(newTags: string[]) {
+async function saveTags(newTags: TagSection[]) {
   const rep = await controller.EditorUpdateExerciceTags({
     Id: group.Group.Id,
     Tags: newTags,

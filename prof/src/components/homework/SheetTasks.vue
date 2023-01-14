@@ -193,12 +193,15 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  ExerciceHeader,
-  Monoquestion,
-  QuestionHeader,
-  SheetExt,
-  TaskExt,
+import {
+  OriginKind,
+  type ExerciceHeader,
+  type Monoquestion,
+  type Query,
+  type QuestionHeader,
+  type SheetExt,
+  type TagsDB,
+  type TaskExt,
 } from "@/controller/api_gen";
 import {
   monoquestionFromTask,
@@ -210,15 +213,13 @@ import {
 import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
 import DropZone from "../DropZone.vue";
-import type { ExerciceQuery } from "../ExerciceSelector.vue";
 import ExerciceSelector from "../ExerciceSelector.vue";
-import type { QuestionQuery } from "../QuestionSelector.vue";
 import QuestionSelector from "../QuestionSelector.vue";
 import MonoquestionDetails from "./MonoquestionDetails.vue";
 
 interface Props {
   sheet: SheetExt;
-  allTags: string[];
+  allTags: TagsDB;
 }
 
 const props = defineProps<Props>();
@@ -236,8 +237,18 @@ let taskToRemove = $ref<TaskExt | null>(null);
 let showMonoquestionSelector = $ref(false);
 
 let showExerciceSelector = $ref(false);
-let exerciceQuery = $ref<ExerciceQuery>({ search: "", tags: [] });
-let questionQuery = $ref<QuestionQuery>({ search: "", tags: [] });
+let exerciceQuery = $ref<Query>({
+  TitleQuery: "",
+  LevelTags: [],
+  ChapterTags: [],
+  Origin: OriginKind.All,
+});
+let questionQuery = $ref<Query>({
+  TitleQuery: "",
+  LevelTags: [],
+  ChapterTags: [],
+  Origin: OriginKind.All,
+});
 
 function addExercice(ex: ExerciceHeader) {
   emit("addExercice", ex);

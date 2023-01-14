@@ -4,6 +4,7 @@
     v-if="viewMode == 'folder'"
     :index="questionsIndex"
     @back="viewMode = 'details'"
+    @go-to="showFolder"
   >
   </folder-view>
   <div class="ma-2" v-else>
@@ -22,6 +23,8 @@
             v-if="viewKind == 'questions'"
             :tags="allKnownTags"
             @edit="editQuestion"
+            @back="viewMode = 'folder'"
+            :initial-query="initialQuery"
           ></QuestiongroupList>
         </keep-alive>
       </v-col>
@@ -35,7 +38,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Index, Question, QuestiongroupExt } from "@/controller/api_gen";
+import {
+  OriginKind,
+  type Index,
+  type LevelTag,
+  type Query,
+  type Question,
+  type QuestiongroupExt,
+  type TagsDB,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -52,7 +63,11 @@ async function fetchIndex() {
   questionsIndex = res || [];
 }
 
-let allKnownTags = $ref<string[]>([]);
+let allKnownTags = $ref<TagsDB>({
+  Levels: [],
+  ChaptersByLevel: {},
+  TrivByChapters: {},
+});
 let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
 
 let viewKind: "questions" | "editor" = $ref("questions");
@@ -66,7 +81,20 @@ onMounted(async () => {
 
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
-  allKnownTags = tags || [];
+  if (tags) {
+    allKnownTags = tags;
+  }
+}
+
+let initialQuery = $ref<Query | null>(null);
+function showFolder(index: [LevelTag, string]) {
+  initialQuery = {
+    TitleQuery: "",
+    LevelTags: index[0] ? [index[0]] : [],
+    ChapterTags: index[1] ? [index[1]] : [],
+    Origin: OriginKind.All,
+  };
+  viewMode = "details";
 }
 
 function backToList() {

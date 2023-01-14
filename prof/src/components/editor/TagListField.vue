@@ -1,26 +1,11 @@
 <template>
   <v-dialog v-model="isEditing" :retain-focus="false" max-width="800">
-    <v-card title="Modifier les étiquettes de la question">
-      <v-card-text>
-        <tag-list-edit
-          v-model="tmpList"
-          :horizontal="false"
-          :all-tags="allTags"
-        ></tag-list-edit>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          class="my-1"
-          color="success"
-          @click="endEdit"
-          :disabled="!saveEnabled"
-          variant="outlined"
-        >
-          Enregistrer
-        </v-btn>
-      </v-card-actions>
-    </v-card>
+    <tag-list-edit
+      v-model="tmpList"
+      :all-tags="allTags"
+      @save="endEdit"
+      :save-enabled="saveEnabled"
+    ></tag-list-edit>
   </v-dialog>
 
   <v-sheet
@@ -47,7 +32,7 @@
     </v-btn>
 
     <v-row no-gutters v-else justify="center" @click.stop="startEdit">
-      <v-col v-for="tag in props.modelValue" :key="tag" cols="auto">
+      <v-col v-for="(tag, index) in props.modelValue" :key="index" cols="auto">
         <tag-chip :tag="tag" :pointer="!props.readonly"> </tag-chip>
       </v-col>
     </v-row>
@@ -55,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import type { TagsDB, TagSection } from "@/controller/api_gen";
 import { tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -62,8 +48,8 @@ import TagListEdit from "./TagListEdit.vue";
 import TagChip from "./utils/TagChip.vue";
 
 interface Props {
-  modelValue: string[];
-  allTags: string[];
+  modelValue: TagSection[];
+  allTags: TagsDB;
   readonly: boolean;
   label?: string;
   yPadding?: boolean;
@@ -72,20 +58,23 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "update:model-value", v: string[]): void;
+  (e: "update:model-value", v: TagSection[]): void;
 }>();
 
 defineExpose({ startEdit });
 
 let isEditing = $ref(false);
-let tmpList = $ref<string[]>([]);
+let tmpList = $ref<TagSection[]>([]);
 
 function startEdit() {
   if (props.readonly) {
     return;
   }
   isEditing = true;
-  tmpList = props.modelValue.map((v) => tagString(v));
+  tmpList = props.modelValue.map((v) => ({
+    Tag: tagString(v.Tag),
+    Section: v.Section,
+  }));
 }
 
 const saveEnabled = computed(() => {

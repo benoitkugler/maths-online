@@ -19,13 +19,14 @@
 </template>
 
 <script setup lang="ts">
+import type { TagsDB } from "@/controller/api_gen";
 import { filterTags } from "@/controller/editor";
 import { watch } from "vue";
 import { $ref } from "vue/macros";
 
 interface Props {
   modelValue: string[];
-  allTags: string[];
+  allTags: TagsDB;
 }
 
 const props = defineProps<Props>();
@@ -34,22 +35,22 @@ const emit = defineEmits<{
   (e: "update:model-value", v: string[]): void;
 }>();
 
-let search = $ref("");
+// let search = $ref("");
 
-function onUpdate(v: any) {
-  emit("update:model-value", v);
-}
+// function onUpdate(v: any) {
+//   emit("update:model-value", v);
+// }
 
-let tagItems = $ref(filterTags(props.allTags, "", []));
+// let tagItems = $ref(filterTags(props.allTags, "", []));
 
-function onSearch(s: string) {
-  search = s;
-  tagItems = filterTags(props.allTags, s, []);
-}
+// function onSearch(s: string) {
+//   search = s;
+//   tagItems = filterTags(props.allTags, s, []);
+// }
 
-watch(props, () => {
-  onSearch("");
-});
+// watch(props, () => {
+//   onSearch("");
+// });
 </script>
 
 <style scoped></style>

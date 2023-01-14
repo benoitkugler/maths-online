@@ -102,6 +102,8 @@ import type {
   QuestionExerciceUses,
   QuestiongroupExt,
   Sheet,
+  TagsDB,
+  TagSection,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -117,7 +119,7 @@ import QuestionVariantPannel from "./QuestionVariantPannel.vue";
 interface Props {
   group: QuestiongroupExt;
   variants: Question[];
-  allTags: string[]; // to provide auto completion
+  allTags: TagsDB; // to provide auto completion
 }
 
 const props = defineProps<Props>();
@@ -186,7 +188,7 @@ async function duplicateVariante(variant: VariantG) {
   variantIndex = ownVariants.length - 1; // go to the new question
 }
 
-async function saveTags(newTags: string[]) {
+async function saveTags(newTags: TagSection[]) {
   const rep = await controller.EditorUpdateQuestionTags({
     Id: group.Group.Id,
     Tags: newTags,

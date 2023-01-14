@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-row class="pa-2">
+    <v-row class="px-2 pt-2">
       <v-col align-self="center">
         <v-card-title> Ressources par chapitres </v-card-title>
       </v-col>

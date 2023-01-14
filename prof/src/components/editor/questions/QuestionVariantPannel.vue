@@ -165,6 +165,7 @@ import type {
   LoopbackShowQuestion,
   Question,
   RandomParameter,
+  TagsDB,
   Variable,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -186,7 +187,7 @@ import DifficultyField from "../utils/DifficultyField.vue";
 interface Props {
   question: Question;
   readonly: boolean;
-  allTags: string[]; // to provide auto completion
+  allTags: TagsDB; // to provide auto completion
   showVariantMeta: boolean;
 }
 

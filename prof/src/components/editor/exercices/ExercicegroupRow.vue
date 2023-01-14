@@ -24,31 +24,24 @@
 
         <VariantList :variants="variants"></VariantList>
       </v-col>
-      <v-col cols="5" align-self="center">
-        <TagListField
-          :readonly="!isEditable"
-          :model-value="props.group.Tags || []"
-          @update:model-value="(l) => emit('updateTags', l)"
-          :all-tags="props.allTags"
-          y-padding
-        >
-        </TagListField>
+      <v-col cols="auto" align-self="center">
+        <TagIndex :tags="props.group.Tags || []"></TagIndex>
       </v-col>
     </v-row>
   </v-list-item>
 </template>
 
 <script setup lang="ts">
-import { Visibility, type ExercicegroupExt } from "@/controller/api_gen";
+import type { ExercicegroupExt, TagsDB } from "@/controller/api_gen";
 import type { VariantG } from "@/controller/editor";
 import { computed } from "vue";
 import OriginButton from "../../OriginButton.vue";
-import TagListField from "../TagListField.vue";
 import VariantList from "../VariantList.vue";
+import TagIndex from "../TagIndex.vue";
 
 interface Props {
   group: ExercicegroupExt;
-  allTags: string[];
+  allTags: TagsDB;
 }
 const props = defineProps<Props>();
 
@@ -57,12 +50,7 @@ const emit = defineEmits<{
   (e: "duplicate"): void;
   (e: "createReview"): void;
   (e: "updatePublic", exercicegroupID: number, isPublic: boolean): void;
-  (e: "updateTags", tags: string[]): void;
 }>();
-
-const isEditable = computed(
-  () => props.group.Origin.Visibility == Visibility.Personnal
-);
 
 const variants = computed<VariantG[]>(() => {
   return props.group.Variants || [];

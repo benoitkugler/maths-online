@@ -1,6 +1,18 @@
 <template>
   <v-card class="pt-2 pb-0">
     <v-row>
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          class="ml-2"
+          size="small"
+          icon
+          title="Retour au sommaire"
+          @click="emit('back')"
+        >
+          <v-icon icon="mdi-arrow-left"></v-icon>
+        </v-btn>
+      </v-col>
+
       <v-col> <v-card-title>Liste des questions</v-card-title> </v-col>
 
       <v-col align-self="center" style="text-align: right" cols="4">
@@ -16,34 +28,12 @@
     </v-row>
 
     <v-card-text class="py-1">
-      <v-row>
-        <v-col>
-          <v-text-field
-            label="Rechercher"
-            hint="Rechercher une question par nom."
-            variant="outlined"
-            density="compact"
-            v-model="querySearch"
-            @update:model-value="updateQuerySearch"
-            persistent-hint
-            clearable
-          ></v-text-field>
-        </v-col>
-        <v-col>
-          <tag-selector
-            :all-tags="props.tags"
-            v-model="queryTags"
-            @update:model-value="updateQueryTags"
-            @blur="updateQueryTags"
-          ></tag-selector>
-        </v-col>
-        <v-col cols="auto" align-self="center">
-          <origin-select
-            :origin="queryOrigin"
-            @update:origin="updateQueryOrigin"
-          ></origin-select>
-        </v-col>
-      </v-row>
+      <resource-query-row
+        :all-tags="props.tags"
+        :model-value="query"
+        @update:model-value="updateQuery"
+      ></resource-query-row>
+
       <v-row no-gutters>
         <v-col>
           <v-list style="height: 60vh" class="overflow-y-auto">
@@ -53,7 +43,9 @@
             >
               <i>
                 {{
-                  querySearch == "" && queryTags.length == 0
+                  query.TitleQuery == "" &&
+                  !query.LevelTags?.length &&
+                  !query.ChapterTags?.length
                     ? "Entrer une recherche..."
                     : "Aucun résultat"
                 }}
@@ -68,9 +60,6 @@
                 @duplicate="duplicate(questionGroup)"
                 @update-public="updatePublic"
                 @create-review="createReview(questionGroup.Group)"
-                @update-tags="
-                  (tags) => updateGroupTags(questionGroup.Group, tags)
-                "
               ></questiongroup-row>
             </div>
           </v-list>
@@ -89,27 +78,31 @@
 
 <script setup lang="ts">
 import {
+  LevelTag,
   OriginKind,
   ReviewKind,
+  type Query,
   type Question,
   type Questiongroup,
   type QuestiongroupExt,
+  type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
-import OriginSelect from "../../OriginSelect.vue";
 import QuestiongroupRow from "./QuestiongroupRow.vue";
-import TagSelector from "../TagSelector.vue";
+import ResourceQueryRow from "../ResourceQueryRow.vue";
 
 interface Props {
-  tags: string[]; // queried once for all
+  tags: TagsDB; // queried once for all
+  initialQuery: Query | null;
 }
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "edit", group: QuestiongroupExt, questions: Question[]): void;
+  (e: "back"): void;
 }>();
 
 const router = useRouter();
@@ -125,43 +118,27 @@ const displayedNbQuestions = computed(() => {
   return nb;
 });
 
-let querySearch = $ref("");
-
-let queryTags = $ref<string[]>([]);
-
-let queryOrigin = $ref(OriginKind.All);
-
-let timerId = 0;
+let query = $ref<Query>(
+  props.initialQuery
+    ? props.initialQuery
+    : {
+        TitleQuery: "",
+        LevelTags: [],
+        ChapterTags: [],
+        Origin: OriginKind.All,
+      }
+);
 
 onMounted(fetchQuestions);
 onActivated(fetchQuestions);
 
-function updateQuerySearch() {
-  const debounceDelay = 200;
-  // cancel pending call
-  clearTimeout(timerId);
-
-  // delay new call 500ms
-  timerId = setTimeout(() => {
-    fetchQuestions();
-  }, debounceDelay);
-}
-
-async function updateQueryTags() {
-  await fetchQuestions();
-}
-
-async function updateQueryOrigin(o: OriginKind) {
-  queryOrigin = o;
+async function updateQuery(qu: Query) {
+  query = qu;
   await fetchQuestions();
 }
 
 async function fetchQuestions() {
-  const result = await controller.EditorSearchQuestions({
-    TitleQuery: querySearch,
-    Tags: queryTags,
-    Origin: queryOrigin,
-  });
+  const result = await controller.EditorSearchQuestions(query);
   if (result == undefined) {
     return;
   }
@@ -215,17 +192,5 @@ async function createReview(ex: Questiongroup) {
   });
   if (res == undefined) return;
   router.push({ name: "reviews", query: { id: res.Id } });
-}
-
-async function updateGroupTags(group: Questiongroup, newTags: string[]) {
-  const rep = await controller.EditorUpdateQuestionTags({
-    Id: group.Id,
-    Tags: newTags,
-  });
-  if (rep == undefined) {
-    return;
-  }
-  const index = groups.findIndex((gr) => gr.Group.Id == group.Id);
-  groups[index].Tags = newTags;
 }
 </script>

@@ -630,7 +630,8 @@ export const OriginKindLabels: { [key in OriginKind]: string } = {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.Query
 export interface Query {
   TitleQuery: string;
-  Tags: string[] | null;
+  LevelTags: string[] | null;
+  ChapterTags: string[] | null;
   Origin: OriginKind;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionExerciceUses
@@ -681,6 +682,14 @@ export interface SaveQuestionAndPreviewOut {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionMetaIn
 export interface SaveQuestionMetaIn {
   Question: Question;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/editor.TagsDB
+export interface TagsDB {
+  Levels: string[] | null;
+  ChaptersByLevel: { [key: string]: string[] | null } | null;
+  TrivByChapters: {
+    [key: string]: { [key: string]: string[] | null } | null;
+  } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TaskDetails
 export interface TaskDetails {
@@ -807,13 +816,13 @@ export interface TargetContent {
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetExercice
 export interface TargetExercice {
   Group: ExercicegroupExt;
-  AllTags: { [key: Section]: string[] | null } | null;
+  AllTags: TagsDB;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetQuestion
 export interface TargetQuestion {
   Group: QuestiongroupExt;
   Variants: Question[] | null;
-  AllTags: { [key: Section]: string[] | null } | null;
+  AllTags: TagsDB;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetTrivial
 export interface TargetTrivial {
@@ -1745,8 +1754,9 @@ export abstract class AbstractAPI {
 
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/api/prof/editor/tags";
-    const rep: AxiosResponse<{ [key: Section]: string[] | null } | null> =
-      await Axios.get(fullUrl, { headers: this.getHeaders() });
+    const rep: AxiosResponse<TagsDB> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
@@ -1762,9 +1772,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetTags(
-    data: { [key: Section]: string[] | null } | null
-  ): void;
+  protected abstract onSuccessEditorGetTags(data: TagsDB): void;
 
   protected async rawEditorGetQuestionsIndex() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
