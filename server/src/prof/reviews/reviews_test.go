@@ -44,7 +44,7 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 	user, err := teacher.Teacher{IsAdmin: false, Mail: userMail}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	qu, err := editor.Questiongroup{IdTeacher: user.Id, Title: "Intervertion série intégrale"}.Insert(db)
+	qu, err := editor.Questiongroup{IdTeacher: user.Id, Title: "Intervertion série intégrale (TEST)"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ex, err := editor.Exercicegroup{IdTeacher: user.Id}.Insert(db)

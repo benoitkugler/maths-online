@@ -158,6 +158,21 @@ func TestGroupTagsEmpty(t *testing.T) {
 	tu.AssertNoErr(t, err)
 }
 
+func TestLoadTags(t *testing.T) {
+	db, err := tu.DB.ConnectPostgres()
+	if err != nil {
+		t.Skip("DB not available")
+	}
+
+	ct := NewController(db, teacher.Teacher{Id: 1})
+	tags, err := LoadTags(ct.db, ct.admin.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(tags.Levels) >= 1)
+	tu.Assert(t, len(tags.ChaptersByLevel) >= 1)
+	// there might be some question with Level but no chapter
+	tu.Assert(t, len(tags.ChaptersByLevel) <= len(tags.Levels))
+}
+
 func TestLoadIndex(t *testing.T) {
 	db, err := tu.DB.ConnectPostgres()
 	if err != nil {

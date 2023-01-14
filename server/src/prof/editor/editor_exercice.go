@@ -186,10 +186,11 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
-		crible := tagsMap[group.Id].Crible()
-		if !crible.HasAll(query.Tags) {
+		tagIndex := tagsMap[group.Id].Tags().BySection()
+		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
 			continue
 		}
+
 		variants := exercicesByGroup[group.Id]
 		if len(variants) == 0 { // ignore empty groupExts
 			continue

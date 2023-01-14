@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
@@ -13,7 +13,7 @@ import (
 // EditorGetTags return all tags currently used by questions.
 // It also add the special level tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	filtred, err := LoadTags(ct.db, user.Id)
 	if err != nil {
@@ -23,60 +23,51 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 	return c.JSON(200, filtred)
 }
 
+type TagsDB struct {
+	Levels          []string
+	ChaptersByLevel map[string][]string            // level -> chapters
+	TrivByChapters  map[string]map[string][]string // level -> chapter -> triv maths
+}
+
 // LoadTags returns all the tags visible by [userID], merging
 // questions and exercices.
-func LoadTags(db ed.DB, userID uID) (map[ed.Section][]string, error) {
-	questionTags, err := ed.SelectAllQuestiongroupTags(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	exerciceTags, err := ed.SelectAllExercicegroupTags(db)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
+func LoadTags(db ed.DB, userID uID) (TagsDB, error) {
 	// only return tags used by visible groups
 	questionGroups, err := ed.SelectAllQuestiongroups(db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return TagsDB{}, utils.SQLError(err)
 	}
 	exerciceGroups, err := ed.SelectAllExercicegroups(db)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return TagsDB{}, utils.SQLError(err)
 	}
 
-	allTags := map[ed.TagSection]bool{}
+	questionGroups.RestrictVisible(userID)
+	exerciceGroups.RestrictVisible(userID)
 
-	for _, tag := range questionTags {
-		if !questionGroups[tag.IdQuestiongroup].IsVisibleBy(userID) {
-			continue
-		}
-		allTags[ed.TagSection{Tag: tag.Tag, Section: tag.Section}] = true
+	questionTags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, questionGroups.IDs()...)
+	if err != nil {
+		return TagsDB{}, utils.SQLError(err)
 	}
-	for _, tag := range exerciceTags {
-		if !exerciceGroups[tag.IdExercicegroup].IsVisibleBy(userID) {
-			continue
-		}
-		allTags[ed.TagSection{Tag: tag.Tag, Section: tag.Section}] = true
+	exerciceTags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, exerciceGroups.IDs()...)
+	if err != nil {
+		return TagsDB{}, utils.SQLError(err)
 	}
 
+	// build the map between level to chapters
+	indexes := append(
+		questionsToTagGroups(questionGroups, questionTags),
+		exercicesToTagGroups(exerciceGroups, exerciceTags)...,
+	)
 	// add common suggestions
-	allTags[ed.TagSection{Tag: string(ed.Seconde), Section: ed.Level}] = true
-	allTags[ed.TagSection{Tag: string(ed.Premiere), Section: ed.Level}] = true
-	allTags[ed.TagSection{Tag: string(ed.Terminale), Section: ed.Level}] = true
-	allTags[ed.TagSection{Tag: string(ed.CPGE), Section: ed.Level}] = true
+	indexes = append(indexes,
+		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.Seconde}},
+		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.Premiere}},
+		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.Terminale}},
+		ed.TagGroup{TagIndex: ed.TagIndex{Level: ed.CPGE}},
+	)
 
-	out := make(map[ed.Section][]string)
-	for tag := range allTags {
-		out[tag.Section] = append(out[tag.Section], tag.Tag)
-	}
-
-	// sort by name
-	for _, l := range out {
-		sort.Strings(l)
-	}
-
-	return out, nil
+	return buildTagsDB(indexes), nil
 }
 
 func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
@@ -93,13 +84,65 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+type Query struct {
+	TitleQuery  string   // empty means all
+	LevelTags   []string // union, empty means all
+	ChapterTags []string // union, empty means all
+	Origin      OriginKind
+}
+
+func (query Query) normalize() {
+	// normalize query
+	for i, t := range query.LevelTags {
+		query.LevelTags[i] = ed.NormalizeTag(t)
+	}
+	for i, t := range query.ChapterTags {
+		query.ChapterTags[i] = ed.NormalizeTag(t)
+	}
+}
+
+func (query Query) matchOrigin(vis tcAPI.Visibility) bool {
+	switch query.Origin {
+	case OnlyPersonnal:
+		return vis == tcAPI.Personnal
+	case OnlyAdmin:
+		return vis == tcAPI.Admin
+	default:
+		return true
+	}
+}
+
+func (query Query) matchLevel(level ed.LevelTag) bool {
+	if len(query.LevelTags) == 0 {
+		return true
+	}
+	for _, tag := range query.LevelTags {
+		if tag == string(level) {
+			return true
+		}
+	}
+	return false
+}
+
+func (query Query) matchChapter(chapter string) bool {
+	if len(query.ChapterTags) == 0 {
+		return true
+	}
+	for _, tag := range query.ChapterTags {
+		if tag == string(chapter) {
+			return true
+		}
+	}
+	return false
+}
+
 type ExerciceUpdateVisiblityIn struct {
 	ID     ed.IdExercicegroup
 	Public bool
 }
 
 func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	// we only accept public question from admin account
 	if user.Id != ct.admin.Id {
@@ -133,7 +176,7 @@ func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
 
 // For non personnal questions, only preview.
 func (ct *Controller) EditorSaveExerciceAndPreview(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	user := tcAPI.JWTTeacher(c)
 
 	var args SaveExerciceAndPreviewIn
 	if err := c.Bind(&args); err != nil {
@@ -168,7 +211,7 @@ func questionsToIndex(questions ed.Questiongroups, tags ed.QuestiongroupTags) []
 	out := make([]ed.TagIndex, 0, len(m))
 	for id := range questions {
 		ls := m[id]
-		out = append(out, ls.Tags().Index())
+		out = append(out, ls.Tags().BySection().TagIndex)
 	}
 	return out
 }
@@ -178,7 +221,7 @@ func exercicesToIndex(exercices ed.Exercicegroups, tags ed.ExercicegroupTags) []
 	out := make([]ed.TagIndex, 0, len(m))
 	for id := range exercices {
 		ls := m[id]
-		out = append(out, ls.Tags().Index())
+		out = append(out, ls.Tags().BySection().TagIndex)
 	}
 	return out
 }
@@ -206,5 +249,77 @@ func buildIndex(tags []ed.TagIndex) Index {
 		out = append(out, items)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Level < out[j].Level })
+	return out
+}
+
+func questionsToTagGroups(questions ed.Questiongroups, tags ed.QuestiongroupTags) []ed.TagGroup {
+	m := tags.ByIdQuestiongroup()
+	out := make([]ed.TagGroup, 0, len(m))
+	for id := range questions {
+		ls := m[id]
+		out = append(out, ls.Tags().BySection())
+	}
+	return out
+}
+
+func exercicesToTagGroups(exercices ed.Exercicegroups, tags ed.ExercicegroupTags) []ed.TagGroup {
+	m := tags.ByIdExercicegroup()
+	out := make([]ed.TagGroup, 0, len(m))
+	for id := range exercices {
+		ls := m[id]
+		out = append(out, ls.Tags().BySection())
+	}
+	return out
+}
+
+func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
+	tmp := make(map[ed.LevelTag]map[string]map[string]bool) // level -> chapter -> trivs (maybe empty)
+	for _, tag := range tags {
+		level, chapter := tag.Level, tag.Chapter
+		m1 := tmp[level]
+		if m1 == nil {
+			m1 = make(map[string]map[string]bool)
+		}
+		m2 := m1[chapter]
+		if m2 == nil {
+			m2 = make(map[string]bool)
+		}
+		for _, triv := range tag.TrivMaths {
+			m2[triv] = true
+		}
+		m1[chapter] = m2
+		tmp[level] = m1
+	}
+	out.ChaptersByLevel = make(map[string][]string)
+	out.TrivByChapters = make(map[string]map[string][]string)
+	for level, m := range tmp {
+		level := string(level)
+		// fill the level
+		if level != "" {
+			out.Levels = append(out.Levels, level)
+		}
+		// fill the chapters
+		trivOut := out.TrivByChapters[level]
+		if trivOut == nil {
+			trivOut = make(map[string][]string)
+		}
+		for chapter, trivs := range m {
+			if chapter != "" {
+				out.ChaptersByLevel[level] = append(out.ChaptersByLevel[level], chapter)
+			}
+
+			// fill the trivMaths
+			for triv := range trivs {
+				trivOut[chapter] = append(trivOut[chapter], triv)
+			}
+
+			sort.Strings(trivOut[chapter])
+		}
+		out.TrivByChapters[level] = trivOut
+
+		sort.Strings(out.ChaptersByLevel[level])
+	}
+	sort.Strings(out.Levels)
+
 	return out
 }

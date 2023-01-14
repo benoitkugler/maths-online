@@ -104,14 +104,29 @@ func (ts Tags) List() []string {
 	return out
 }
 
-// Index extract level and chapter information.
-func (ts Tags) Index() (out TagIndex) {
+// TagIndex summarize the classification induced by tags
+type TagIndex struct {
+	Level   LevelTag
+	Chapter string
+}
+
+// TagGroup groups the tags for one question/exercice,
+// used to resolve the tag hierachy
+type TagGroup struct {
+	TagIndex
+	TrivMaths []string
+}
+
+// BySection classify the tag list according to section
+func (ts Tags) BySection() (out TagGroup) {
 	for _, tag := range ts {
 		switch tag.Section {
 		case Level:
 			out.Level = LevelTag(tag.Tag)
 		case Chapter:
 			out.Chapter = tag.Tag
+		case TrivMath:
+			out.TrivMaths = append(out.TrivMaths, tag.Tag)
 		}
 	}
 	return out
@@ -145,12 +160,6 @@ type TagQuery struct {
 // and in upper case.
 func NormalizeTag(tag string) string {
 	return strings.ToUpper(utils.RemoveAccents(strings.TrimSpace((tag))))
-}
-
-// TagIndex summarize the classification induced by tags
-type TagIndex struct {
-	Level   LevelTag
-	Chapter string
 }
 
 // CommonTags returns the tags found in every list.

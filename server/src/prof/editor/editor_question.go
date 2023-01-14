@@ -77,30 +77,6 @@ func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
 
 type SearchQuestionsIn = Query
 
-type Query struct {
-	TitleQuery string // empty means all
-	Tags       []string
-	Origin     OriginKind
-}
-
-func (query Query) normalize() {
-	// normalize query
-	for i, t := range query.Tags {
-		query.Tags[i] = ed.NormalizeTag(t)
-	}
-}
-
-func (query Query) matchOrigin(vis tcAPI.Visibility) bool {
-	switch query.Origin {
-	case OnlyPersonnal:
-		return vis == tcAPI.Personnal
-	case OnlyAdmin:
-		return vis == tcAPI.Admin
-	default:
-		return true
-	}
-}
-
 func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 	user := tcAPI.JWTTeacher(c)
 
@@ -752,10 +728,11 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
-		crible := tagsMap[group.Id].Crible()
-		if !crible.HasAll(query.Tags) {
+		tagIndex := tagsMap[group.Id].Tags().BySection()
+		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
 			continue
 		}
+
 		questions := questionsByGroup[group.Id]
 		if len(questions) == 0 { // ignore empty groupExts
 			continue
