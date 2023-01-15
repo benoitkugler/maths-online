@@ -60,7 +60,8 @@ CREATE TABLE exercicegroups (
 
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
-    IdExercicegroup integer NOT NULL
+    IdExercicegroup integer NOT NULL,
+    Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -82,7 +83,8 @@ CREATE TABLE questiongroups (
 
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
-    IdQuestiongroup integer NOT NULL
+    IdQuestiongroup integer NOT NULL,
+    Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
 );
 
 -- constraints
@@ -106,6 +108,21 @@ ALTER TABLE questiongroup_tags
     ADD UNIQUE (IdQuestiongroup, Tag);
 
 ALTER TABLE questiongroup_tags
+    ADD CHECK (Tag = upper(Tag));
+
+CREATE UNIQUE INDEX QuestiongroupTag_level ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 1
+    /* Section.Level */
+;
+
+CREATE UNIQUE INDEX QuestiongroupTag_chapter ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 2
+    /* Section.Chapter */
+;
+
+ALTER TABLE questiongroup_tags
     ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
 
 ALTER TABLE exercicegroups
@@ -113,6 +130,21 @@ ALTER TABLE exercicegroups
 
 ALTER TABLE exercicegroup_tags
     ADD UNIQUE (IdExercicegroup, Tag);
+
+ALTER TABLE exercicegroup_tags
+    ADD CHECK (Tag = upper(Tag));
+
+CREATE UNIQUE INDEX ExercicegroupTag_level ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 1
+    /* Section.Level */
+;
+
+CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 2
+    /* Section.Chapter */
+;
 
 ALTER TABLE exercicegroup_tags
     ADD FOREIGN KEY (IdExercicegroup) REFERENCES exercicegroups ON DELETE CASCADE;
@@ -1927,7 +1959,7 @@ CREATE TABLE trivials (
 ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_edit_TagSection (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1936,7 +1968,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_array_array_string (value))
+            bool_and(gomacro_validate_json_array_array_edit_TagSection (value))
         FROM
             jsonb_array_elements(data))
         AND jsonb_array_length(data) = 5;
@@ -1945,7 +1977,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_edit_TagSection (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -1960,7 +1992,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_array_string (value))
+            bool_and(gomacro_validate_json_array_edit_TagSection (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1991,7 +2023,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_TagSection (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -2006,7 +2038,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_string (value))
+            bool_and(gomacro_validate_json_edit_TagSection (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -2024,6 +2056,44 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a edit_DifficultyTag', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_Section (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (2, 1, 3);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_Section', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_TagSection (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Tag', 'Section'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Tag')
+        AND gomacro_validate_json_edit_Section (data -> 'Section');
     RETURN is_valid;
 END;
 $$
@@ -2059,7 +2129,7 @@ BEGIN
             bool_and(key IN ('Tags', 'Difficulties'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_array_5_array_array_string (data -> 'Tags')
+        AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')
         AND gomacro_validate_json_array_edit_DifficultyTag (data -> 'Difficulties');
     RETURN is_valid;
 END;
@@ -2196,12 +2266,15 @@ CREATE TABLE review_trivials (
 );
 
 -- constraints
+ALTER TABLE reviews
+    ADD UNIQUE (Id, Kind);
+
 ALTER TABLE review_questions
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_questions
     ADD CHECK (Kind = 0
-    /* Kind.KQuestion */);
+    /* ReviewKind.KQuestion */);
 
 ALTER TABLE review_questions
     ADD UNIQUE (IdQuestion);
@@ -2216,11 +2289,11 @@ ALTER TABLE review_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questiongroups;
 
 ALTER TABLE review_exercices
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_exercices
     ADD CHECK (Kind = 1
-    /* Kind.KExercice */);
+    /* ReviewKind.KExercice */);
 
 ALTER TABLE review_exercices
     ADD UNIQUE (IdExercice);
@@ -2235,11 +2308,11 @@ ALTER TABLE review_exercices
     ADD FOREIGN KEY (IdExercice) REFERENCES exercicegroups;
 
 ALTER TABLE review_trivials
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_trivials
     ADD CHECK (Kind = 2
-    /* Kind.KTrivial */);
+    /* ReviewKind.KTrivial */);
 
 ALTER TABLE review_trivials
     ADD UNIQUE (IdTrivial);

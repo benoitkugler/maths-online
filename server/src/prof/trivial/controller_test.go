@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
@@ -112,35 +113,35 @@ func TestMissingQuestions(t *testing.T) {
 		Tags: [...]tr.QuestionCriterion{
 			{
 				{
-					"POURCENTAGES",
-					"VIOLET",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "VIOLET"},
 				},
 				{
-					"POURCENTAGES",
-				},
-			},
-			{
-				{
-					"POURCENTAGES",
-					"VERT",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
 				},
 			},
 			{
 				{
-					"POURCENTAGES",
-					"ORANGE",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "VERT"},
 				},
 			},
 			{
 				{
-					"POURCENTAGES",
-					"JAUNE",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "ORANGE"},
 				},
 			},
 			{
 				{
-					"POURCENTAGES",
-					"BLEU",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "JAUNE"},
+				},
+			},
+			{
+				{
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "BLEU"},
 				},
 			},
 		},
@@ -153,44 +154,44 @@ func TestMissingQuestions(t *testing.T) {
 		Tags: [...]tr.QuestionCriterion{
 			{
 				{
-					"Pourcentages",
-					"Valeur finale",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "VALEUR FINALE", Section: editor.TrivMath},
 				},
 			},
 			{
 				{
-					"Pourcentages",
-					"Taux réciproque",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "TAUX RÉCIPROQUE", Section: editor.TrivMath},
 				},
 			},
 			{
 				{
-					"Pourcentages",
-					"Proportion",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "PROPORTION", Section: editor.TrivMath},
 				},
 				{
-					"Pourcentages",
-					"Proportion de proportion",
-				},
-			},
-			{
-				{
-					"Pourcentages",
-					"Evolutions identiques",
-				},
-				{
-					"Pourcentages",
-					"Evolutions successives",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "PROPORTION DE PROPORTION", Section: editor.TrivMath},
 				},
 			},
 			{
 				{
-					"Pourcentages",
-					"Coefficient multiplicateur",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "EVOLUTIONS IDENTIQUES", Section: editor.TrivMath},
 				},
 				{
-					"Pourcentages",
-					"Taux d'évolution",
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "EVOLUTIONS SUCCESSIVES", Section: editor.TrivMath},
+				},
+			},
+			{
+				{
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "COEFFICIENT MULTIPLICATEUR", Section: editor.TrivMath},
+				},
+				{
+					{Tag: "POURCENTAGES", Section: editor.Chapter},
+					{Tag: "TAUX D'ÉVOLUTION", Section: editor.TrivMath},
 				},
 			},
 		},

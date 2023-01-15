@@ -2,8 +2,10 @@ package trivial
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 
+	"github.com/benoitkugler/maths-online/server/src/pass"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
@@ -119,7 +121,7 @@ func TestSelectQuestions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	criterion := tr.QuestionCriterion{{"KEEP"}}
+	criterion := tr.QuestionCriterion{{{Tag: "KEEP", Section: ed.TrivMath}}}
 	cats := tr.CategoriesQuestions{
 		Tags:         [...]tr.QuestionCriterion{criterion, criterion, criterion, criterion, criterion},
 		Difficulties: nil,
@@ -158,7 +160,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 		},
 		{
 			tr.QuestionCriterion{
-				{"TAG1"},
+				{{Tag: "TAG1"}},
 			},
 			ed.QuestiongroupTags{
 				{IdQuestiongroup: 1, Tag: "TAG1"},
@@ -169,7 +171,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 		},
 		{
 			tr.QuestionCriterion{
-				{"TAG1", "TAG2"},
+				{{Tag: "TAG1"}, {Tag: "TAG2"}},
 			},
 			ed.QuestiongroupTags{
 				{IdQuestiongroup: 1, Tag: "TAG1"},
@@ -180,7 +182,7 @@ func TestQuestionCriterion_filter(t *testing.T) {
 		},
 		{
 			tr.QuestionCriterion{
-				{"TAG1", "TAG2"},
+				{{Tag: "TAG1"}, {Tag: "TAG2"}},
 			},
 			ed.QuestiongroupTags{
 				{IdQuestiongroup: 1, Tag: "TAG1"},
@@ -192,8 +194,8 @@ func TestQuestionCriterion_filter(t *testing.T) {
 		},
 		{
 			tr.QuestionCriterion{
-				{"TAG1", "TAG2"},
-				{"TAG3"},
+				{{Tag: "TAG1"}, {Tag: "TAG2"}},
+				{{Tag: "TAG3"}},
 			},
 			ed.QuestiongroupTags{
 				{IdQuestiongroup: 1, Tag: "TAG1"},
@@ -237,4 +239,61 @@ func BenchmarkQuestionSearch(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		sel.search(questions, 0)
 	}
+}
+
+func TestCommonTags(t *testing.T) {
+	tests := []struct {
+		args [][]ed.TagSection
+		want ed.Tags
+	}{
+		{
+			[][]ed.TagSection{
+				{{Tag: "1"}, {Tag: "2"}},
+				{{Tag: "1"}, {Tag: "3"}},
+				{{Tag: "3"}},
+			},
+			nil,
+		},
+		{
+			[][]ed.TagSection{
+				{{Tag: "1"}, {Tag: "2"}},
+				{{Tag: "1"}, {Tag: "3"}},
+				{{Tag: "1"}, {Tag: "3"}},
+			},
+			ed.Tags{{Tag: "1"}},
+		},
+		{
+			[][]ed.TagSection{
+				{{Tag: "1"}, {Tag: "2"}, {Tag: "3"}},
+				{{Tag: "1"}, {Tag: "3"}},
+				{{Tag: "1"}, {Tag: "3"}},
+			},
+			ed.Tags{{Tag: "1"}, {Tag: "3"}},
+		},
+		{
+			[][]ed.TagSection{
+				{{Tag: "1"}, {Tag: "2"}, {Tag: "3", Section: 1}},
+				{{Tag: "1"}, {Tag: "3"}},
+				{{Tag: "1"}, {Tag: "3", Section: 2}},
+			},
+			ed.Tags{{Tag: "1"}},
+		},
+	}
+	for _, tt := range tests {
+		got := CommonTags(tt.args)
+		sort.Sort(got)
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("CommonTags() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func TestDemoQuestions(t *testing.T) {
+	db, err := tu.DB.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", tu.DB, err)
+		return
+	}
+	c := NewController(db, pass.Encrypter{}, "", teacher.Teacher{})
+	tu.AssertNoErr(t, c.CheckDemoQuestions())
 }

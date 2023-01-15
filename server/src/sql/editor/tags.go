@@ -2,6 +2,7 @@ package editor
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -95,15 +96,6 @@ func (ts Tags) normalize() (Tags, error) {
 	return out, nil
 }
 
-// List returns the tags (in the same order).
-func (ts Tags) List() []string {
-	out := make([]string, len(ts))
-	for i, tag := range ts {
-		out[i] = tag.Tag
-	}
-	return out
-}
-
 // TagIndex summarize the classification induced by tags
 type TagIndex struct {
 	Level   LevelTag
@@ -162,45 +154,10 @@ func NormalizeTag(tag string) string {
 	return strings.ToUpper(utils.RemoveAccents(strings.TrimSpace((tag))))
 }
 
-// CommonTags returns the tags found in every list.
-func CommonTags(tags [][]string) []string {
-	L := len(tags)
-	crible := make(map[string][]bool)
+// Crible is a set of tags (and section)
+type Crible map[TagSection]bool
 
-	for index, inter := range tags {
-		for _, tag := range inter {
-			list := crible[tag]
-			if list == nil {
-				list = make([]bool, L)
-			}
-			list[index] = true
-			crible[tag] = list
-		}
-	}
-	var out []string
-	for tag, occurences := range crible {
-		isEverywhere := true
-		for _, b := range occurences {
-			if !b {
-				isEverywhere = false
-				break
-			}
-		}
-		if isEverywhere {
-			out = append(out, tag)
-		}
-	}
-
-	sort.Strings(out)
-
-	return out
-}
-
-// Crible is a set of tags, not using the section.
-// TODO: check that
-type Crible map[string]bool
-
-func NewCrible(tags []string) Crible {
+func (tags Tags) Crible() Crible {
 	out := make(Crible, len(tags))
 	for _, tag := range tags {
 		out[tag] = true
@@ -208,14 +165,8 @@ func NewCrible(tags []string) Crible {
 	return out
 }
 
-// Crible build a set from the tags
-func (qus QuestiongroupTags) Crible() Crible { return NewCrible(qus.Tags().List()) }
-
-// Crible build a set from the tags
-func (qus ExercicegroupTags) Crible() Crible { return NewCrible(qus.Tags().List()) }
-
 // HasAll returns `true` is all the `tags` are present in the crible.
-func (cr Crible) HasAll(tags []string) bool {
+func (cr Crible) HasAll(tags Tags) bool {
 	for _, tag := range tags {
 		if !cr[tag] {
 			return false
@@ -224,36 +175,45 @@ func (cr Crible) HasAll(tags []string) bool {
 	return true
 }
 
-// TagListSet is a map[[]string]bool,
+// TagListSet is a map[[]TagSection]bool,
 // where the order in the key list is ignored.
 // Tags should be normalized before using this set.
 type TagListSet struct {
-	m map[string]bool
+	m map[string]Tags
 }
 
 func NewTagListSet() TagListSet {
-	return TagListSet{m: make(map[string]bool)}
+	return TagListSet{m: make(map[string]Tags)}
 }
 
-const delim = "^-$-^" // some very unlikely pattern for tags
+// compute a hash, order invariant
+func key(tags Tags) string {
+	// some very unlikely pattern for tags, to make sure the key function
+	// is injective
+	const delim = "^-$-^"
 
-func key(tags []string) string {
-	sort.Strings(tags)
-	return strings.Join(tags, delim)
+	sort.Sort(tags)
+	chunks := make([]string, len(tags))
+	for i, tag := range tags {
+		chunks[i] = fmt.Sprintf("%s:%d", tag.Tag, tag.Section)
+	}
+	return strings.Join(chunks, delim)
 }
 
-func (tls TagListSet) Add(tags []string) {
-	tls.m[key(tags)] = true
+func (tls TagListSet) Add(tags Tags) {
+	tls.m[key(tags)] = tags
 }
 
-func (tls TagListSet) Has(tags []string) bool {
-	return tls.m[key(tags)]
+func (tls TagListSet) Has(tags Tags) bool {
+	_, has := tls.m[key(tags)]
+	return has
 }
 
-func (tls TagListSet) List() [][]string {
-	out := make([][]string, 0, len(tls.m))
-	for k := range tls.m {
-		out = append(out, strings.Split(k, delim))
+// List returns the content of the set (in arbitrary order)
+func (tls TagListSet) List() []Tags {
+	out := make([]Tags, 0, len(tls.m))
+	for _, v := range tls.m {
+		out = append(out, v)
 	}
 	return out
 }

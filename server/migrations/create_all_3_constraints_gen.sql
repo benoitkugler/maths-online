@@ -27,6 +27,21 @@ ALTER TABLE questiongroup_tags
     ADD UNIQUE (IdQuestiongroup, Tag);
 
 ALTER TABLE questiongroup_tags
+    ADD CHECK (Tag = upper(Tag));
+
+CREATE UNIQUE INDEX QuestiongroupTag_level ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 1
+    /* Section.Level */
+;
+
+CREATE UNIQUE INDEX QuestiongroupTag_chapter ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 2
+    /* Section.Chapter */
+;
+
+ALTER TABLE questiongroup_tags
     ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
 
 ALTER TABLE exercicegroups
@@ -34,6 +49,21 @@ ALTER TABLE exercicegroups
 
 ALTER TABLE exercicegroup_tags
     ADD UNIQUE (IdExercicegroup, Tag);
+
+ALTER TABLE exercicegroup_tags
+    ADD CHECK (Tag = upper(Tag));
+
+CREATE UNIQUE INDEX ExercicegroupTag_level ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 1
+    /* Section.Level */
+;
+
+CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 2
+    /* Section.Chapter */
+;
 
 ALTER TABLE exercicegroup_tags
     ADD FOREIGN KEY (IdExercicegroup) REFERENCES exercicegroups ON DELETE CASCADE;
@@ -115,12 +145,15 @@ ALTER TABLE sheet_tasks
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
 
+ALTER TABLE reviews
+    ADD UNIQUE (Id, Kind);
+
 ALTER TABLE review_questions
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_questions
     ADD CHECK (Kind = 0
-    /* Kind.KQuestion */);
+    /* ReviewKind.KQuestion */);
 
 ALTER TABLE review_questions
     ADD UNIQUE (IdQuestion);
@@ -135,11 +168,11 @@ ALTER TABLE review_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questiongroups;
 
 ALTER TABLE review_exercices
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_exercices
     ADD CHECK (Kind = 1
-    /* Kind.KExercice */);
+    /* ReviewKind.KExercice */);
 
 ALTER TABLE review_exercices
     ADD UNIQUE (IdExercice);
@@ -154,11 +187,11 @@ ALTER TABLE review_exercices
     ADD FOREIGN KEY (IdExercice) REFERENCES exercicegroups;
 
 ALTER TABLE review_trivials
-    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind);
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
 
 ALTER TABLE review_trivials
     ADD CHECK (Kind = 2
-    /* Kind.KTrivial */);
+    /* ReviewKind.KTrivial */);
 
 ALTER TABLE review_trivials
     ADD UNIQUE (IdTrivial);

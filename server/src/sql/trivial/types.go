@@ -6,13 +6,13 @@ import (
 )
 
 // QuestionCriterion is an union of intersection of tags.
-type QuestionCriterion [][]string
+type QuestionCriterion [][]editor.TagSection
 
 // normalize removes empty intersections and normalizes tags
 func (qc QuestionCriterion) normalize() (out QuestionCriterion) {
 	for _, q := range qc {
 		for i, t := range q {
-			q[i] = editor.NormalizeTag(t)
+			q[i].Tag = editor.NormalizeTag(t.Tag)
 		}
 
 		if len(q) != 0 {

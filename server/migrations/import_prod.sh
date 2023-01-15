@@ -11,7 +11,7 @@ line=$(grep -n "COPY" $1 | cut -d: -f1 | head -1) &&
 line="$((line-1))" && 
 (head -$line > schema.sql; cat > data.sql) < $1 && 
 echo "Resetting DB..." && 
-dropdb --if-exists isyro_prod && createdb isyro_prod && 
+dropdb --if-exists --force isyro_prod && createdb isyro_prod && 
 echo "Importing..." && 
 psql isyro_prod < schema.sql && 
 psql isyro_prod < data.sql && 

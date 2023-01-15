@@ -26,7 +26,7 @@ func newStatement(s string) statement {
 		out.kind = table
 	case strings.HasPrefix(s, "CREATE OR REPLACE FUNCTION"):
 		out.kind = jsonFunc
-	case strings.HasPrefix(s, "ALTER TABLE"):
+	case strings.HasPrefix(s, "ALTER TABLE") || strings.HasPrefix(s, "CREATE UNIQUE INDEX"):
 		out.kind = constraint
 	default:
 		panic(s)

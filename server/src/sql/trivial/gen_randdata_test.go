@@ -29,14 +29,14 @@ func randIdTrivial() IdTrivial {
 }
 
 func randQuestionCriterion() QuestionCriterion {
-	return QuestionCriterion(randSliceSlicestring())
+	return QuestionCriterion(randSliceSliceedi_TagSection())
 }
 
-func randSliceSlicestring() [][]string {
+func randSliceSliceedi_TagSection() [][]editor.TagSection {
 	l := 40 + rand.Intn(10)
-	out := make([][]string, l)
+	out := make([][]editor.TagSection, l)
 	for i := range out {
-		out[i] = randSlicestring()
+		out[i] = randSliceedi_TagSection()
 	}
 	return out
 }
@@ -50,11 +50,11 @@ func randSliceedi_DifficultyTag() []editor.DifficultyTag {
 	return out
 }
 
-func randSlicestring() []string {
+func randSliceedi_TagSection() []editor.TagSection {
 	l := 40 + rand.Intn(10)
-	out := make([]string, l)
+	out := make([]editor.TagSection, l)
 	for i := range out {
-		out[i] = randstring()
+		out[i] = randedi_TagSection()
 	}
 	return out
 }
@@ -84,6 +84,19 @@ func randedi_DifficultyTag() editor.DifficultyTag {
 	choix := [...]editor.DifficultyTag{editor.Diff1, editor.Diff2, editor.Diff3, editor.DiffEmpty}
 	i := rand.Intn(len(choix))
 	return choix[i]
+}
+
+func randedi_Section() editor.Section {
+	choix := [...]editor.Section{editor.Chapter, editor.Level, editor.TrivMath}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
+func randedi_TagSection() editor.TagSection {
+	return editor.TagSection{
+		Tag:     randstring(),
+		Section: randedi_Section(),
+	}
 }
 
 func randint() int {

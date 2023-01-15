@@ -28,11 +28,11 @@ func (id IdQuestiongroup) AsOptional() OptionalIdQuestiongroup {
 
 // selectQuestiongroupsByTag returns the question groups matching the given tag.
 // It is meant to avoid loading the whole tags table.
-func selectQuestiongroupsByTag(db DB, tag string) (Questiongroups, error) {
+func selectQuestiongroupsByTag(db DB, tag TagSection) (Questiongroups, error) {
 	rs, err := db.Query(`SELECT questiongroups.*
 	FROM questiongroups
 	JOIN questiongroup_tags ON questiongroups.id = questiongroup_tags.IdQuestiongroup
-   	WHERE questiongroup_tags.tag = $1`, tag)
+   	WHERE questiongroup_tags.tag = $1 AND questiongroup_tags.section = $2`, tag.Tag, tag.Section)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (qus Exercices) ByGroup() map[IdExercicegroup][]Exercice {
 // SelectQuestiongroupByTags returns the question groups matching the given query,
 // and available to `userID`, returning their tags.
 // It panics if `pattern` is empty.
-func SelectQuestiongroupByTags(db DB, userID teacher.IdTeacher, pattern []string) (map[IdQuestiongroup]QuestiongroupTags, error) {
+func SelectQuestiongroupByTags(db DB, userID teacher.IdTeacher, pattern Tags) (map[IdQuestiongroup]QuestiongroupTags, error) {
 	firstSelection, err := selectQuestiongroupsByTag(db, pattern[0])
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func SelectQuestiongroupByTags(db DB, userID teacher.IdTeacher, pattern []string
 	)
 	// remove questions not matching all the tags
 	for idGroup, cr := range tagsByGroup {
-		hasAll := cr.Crible().HasAll(pattern)
+		hasAll := cr.Tags().Crible().HasAll(pattern)
 		if !hasAll {
 			delete(tagsByGroup, idGroup)
 		} else {

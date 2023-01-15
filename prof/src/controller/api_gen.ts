@@ -891,8 +891,8 @@ export const VisibilityLabels: { [key in Visibility]: string } = {
 
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.CheckMissingQuestionsOut
 export interface CheckMissingQuestionsOut {
-  Pattern: string[] | null;
-  Missing: (string[] | null)[] | null;
+  Pattern: Tags;
+  Missing: Tags[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GamePlayers
 export interface GamePlayers {
@@ -1155,7 +1155,7 @@ export interface CategoriesQuestions {
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.IdTrivial
 export type IdTrivial = number;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.QuestionCriterion
-export type QuestionCriterion = (string[] | null)[] | null;
+export type QuestionCriterion = (TagSection[] | null)[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.Trivial
 export interface Trivial {
   Id: IdTrivial;

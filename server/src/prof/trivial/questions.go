@@ -14,28 +14,29 @@ var demoQuestions = tc.CategoriesQuestions{
 	Difficulties: nil, // all difficulties accepted
 	Tags: [...]tc.QuestionCriterion{
 		{
-			{"EXEMPLE", "COMBINAISONS"},
+			{{Tag: "EXEMPLE", Section: ed.Chapter}, {Tag: "COMBINAISONS", Section: ed.TrivMath}},
 		},
 		{
-			{"EXEMPLE", "ADDITION"},
+			{{Tag: "EXEMPLE", Section: ed.Chapter}, {Tag: "ADDITION", Section: ed.TrivMath}},
 		},
 		{
-			{"EXEMPLE", "SOUSTRACTION"},
+			{{Tag: "EXEMPLE", Section: ed.Chapter}, {Tag: "SOUSTRACTION", Section: ed.TrivMath}},
 		},
 		{
-			{"EXEMPLE", "MULTIPLICATION"},
+			{{Tag: "EXEMPLE", Section: ed.Chapter}, {Tag: "MULTIPLICATION", Section: ed.TrivMath}},
 		},
 		{
-			{"EXEMPLE", "DIVISION"},
+			{{Tag: "EXEMPLE", Section: ed.Chapter}, {Tag: "DIVISION", Section: ed.TrivMath}},
 		},
 	},
 }
 
+// filterTags returns the question in [tags] matching [qc]
 func filterTags(qc tc.QuestionCriterion, tags ed.QuestiongroupTags) (out []ed.IdQuestiongroup) {
 	for idGroup, groupTags := range tags.ByIdQuestiongroup() {
-		questionTags := groupTags.Crible()
+		cr := groupTags.Tags().Crible()
 		for _, intersection := range qc { // at least one intersection must match
-			if questionTags.HasAll(intersection) {
+			if cr.HasAll(intersection) {
 				out = append(out, idGroup)
 				break // no need to check the other unions
 			}
@@ -177,12 +178,48 @@ func weightQuestions(questions ed.Questions) tv.WeigthedQuestions {
 }
 
 // commonTags returns the tags shared by all categories
-func commonTags(cats tc.CategoriesQuestions) []string {
-	var allUnions [][]string
+func commonTags(cats tc.CategoriesQuestions) ed.Tags {
+	var allUnions [][]ed.TagSection
 	for _, cat := range cats.Tags {
 		allUnions = append(allUnions, cat...)
 	}
-	return ed.CommonTags(allUnions)
+	return CommonTags(allUnions)
+}
+
+// CommonTags returns the tags found in every list.
+func CommonTags(tags [][]ed.TagSection) ed.Tags {
+	L := len(tags)
+	crible := make(map[ed.TagSection][]bool) // does the given tag appears in the i-th input list ?
+
+	// build the crible
+	for index, inter := range tags {
+		for _, tag := range inter {
+			list := crible[tag]
+			if list == nil {
+				list = make([]bool, L)
+			}
+			list[index] = true
+			crible[tag] = list
+		}
+	}
+
+	var out ed.Tags
+	for tag, occurences := range crible {
+		isEverywhere := true
+		for _, b := range occurences {
+			if !b {
+				isEverywhere = false
+				break
+			}
+		}
+		if isEverywhere {
+			out = append(out, tag)
+		}
+	}
+
+	sort.Sort(out)
+
+	return out
 }
 
 // returns the union of all the question groups in the pool,

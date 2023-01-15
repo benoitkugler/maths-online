@@ -78,5 +78,43 @@ WHERE
 CREATE UNIQUE INDEX exercicegroup_tags_chapter ON exercicegroup_tags (IdExercicegroup)
 WHERE
     Section = 2;
+--
+-- update the trivial query tags, by adding the matching Section
+--
+
+CREATE OR REPLACE FUNCTION __migration_build_TagSection (inTag text)
+    RETURNS jsonb
+    AS $$
+DECLARE
+BEGIN
+    -- search for the matching section
+    -- we assume there is only one section for a given tag
+    RETURN jsonb_build_object('Tag', upper(inTag), 'Section', (
+            SELECT
+                section FROM questiongroup_tags
+            WHERE
+                questiongroup_tags.tag = upper(inTag)
+        LIMIT 1));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+--
+--
+
+UPDATE
+    trivials
+SET
+    questions = jsonb_set(questions, '{Tags}', (
+            SELECT
+                jsonb_agg((
+                    SELECT
+                        jsonb_agg((
+                            SELECT
+                                jsonb_agg(__migration_build_TagSection (tag #>> '{}'))
+                        FROM jsonb_array_elements(intersection) AS tag))
+            FROM jsonb_array_elements(categorie) AS intersection))
+    FROM jsonb_array_elements(questions -> 'Tags') AS categorie));
+DROP FUNCTION __migration_build_tagsection (text);
 COMMIT;
 

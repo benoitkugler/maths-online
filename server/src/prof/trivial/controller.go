@@ -313,8 +313,8 @@ func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
 }
 
 type CheckMissingQuestionsOut struct {
-	Pattern []string   // empty if no pattern is found
-	Missing [][]string // missing tags, may be empty if OK
+	Pattern editor.Tags   // empty if no pattern is found
+	Missing []editor.Tags // missing tags, may be empty if OK
 }
 
 // CheckMissingQuestions is an hint to avoid forgetting a tag
@@ -378,7 +378,7 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 	for idExisting, question := range questions {
 		if !usedQuestions.Has(idExisting) {
 			tags := existingQuestiongroups[question.IdGroup.ID]
-			hint.Add(tags.Tags().List())
+			hint.Add(tags.Tags())
 		}
 	}
 

@@ -13,7 +13,7 @@ CREATE TABLE trivials (
 ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_edit_TagSection (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -22,7 +22,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_array_array_string (value))
+            bool_and(gomacro_validate_json_array_array_edit_TagSection (value))
         FROM
             jsonb_array_elements(data))
         AND jsonb_array_length(data) = 5;
@@ -31,7 +31,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_edit_TagSection (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -46,7 +46,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_array_string (value))
+            bool_and(gomacro_validate_json_array_edit_TagSection (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -77,7 +77,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_string (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_TagSection (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -92,7 +92,7 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_string (value))
+            bool_and(gomacro_validate_json_edit_TagSection (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -110,6 +110,44 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a edit_DifficultyTag', data;
     END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_Section (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (2, 1, 3);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_Section', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_TagSection (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Tag', 'Section'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Tag')
+        AND gomacro_validate_json_edit_Section (data -> 'Section');
     RETURN is_valid;
 END;
 $$
@@ -145,7 +183,7 @@ BEGIN
             bool_and(key IN ('Tags', 'Difficulties'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_array_5_array_array_string (data -> 'Tags')
+        AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')
         AND gomacro_validate_json_array_edit_DifficultyTag (data -> 'Difficulties');
     RETURN is_valid;
 END;
