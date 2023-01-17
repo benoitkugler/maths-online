@@ -38,20 +38,26 @@
 </template>
 
 <script setup lang="ts">
+import {
+  Section,
+  type Tags,
+  type TagsDB,
+  type TagSection,
+} from "@/controller/api_gen";
 import { nextTick } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListField from "../editor/TagListField.vue";
 
 interface Props {
-  modelValue: (string[] | null)[]; // union of intersection
-  allTags: string[];
-  label?: string;
+  modelValue: Tags[]; // union of intersection
+  lastLevelChapter: { level: string; chapter: string };
+  allTags: TagsDB;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "update:model-value", v: (string[] | null)[]): void;
+  (e: "update:model-value", v: Tags[]): void;
 }>();
 
 type TF = InstanceType<typeof TagListField>;
@@ -59,14 +65,25 @@ type TF = InstanceType<typeof TagListField>;
 let rows = $ref<TF[]>([]);
 
 function addIntersection() {
-  props.modelValue.push([]);
+  // defaut to last level and section, if any
+  const newTags: Tags = [];
+  if (props.lastLevelChapter.level.length) {
+    newTags.push({ Section: Section.Level, Tag: props.lastLevelChapter.level });
+  }
+  if (props.lastLevelChapter.chapter.length) {
+    newTags.push({
+      Section: Section.Chapter,
+      Tag: props.lastLevelChapter.chapter,
+    });
+  }
+  props.modelValue.push(newTags);
   emit("update:model-value", props.modelValue);
   nextTick(() => {
     rows[rows.length - 1].startEdit();
   });
 }
 
-function updateRow(index: number, r: string[]) {
+function updateRow(index: number, r: TagSection[]) {
   props.modelValue[index] = r;
   emit("update:model-value", props.modelValue);
 }

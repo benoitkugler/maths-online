@@ -36,18 +36,6 @@
           </v-list-subheader>
         </v-col>
         <v-spacer></v-spacer>
-        <v-col cols="12" sm="6" md="3">
-          <v-select
-            variant="outlined"
-            density="compact"
-            label="Classe"
-            hide-details
-            :model-value="currentLevel"
-            @update:model-value="onUpdateLevel"
-            :items="levelItems"
-          >
-          </v-select>
-        </v-col>
         <v-col cols="12" md="auto" align-self="center" class="mb-1">
           <v-menu
             offset-y
@@ -70,31 +58,6 @@
               @update:difficulties="onEditDifficulties"
             ></DifficultyChoices>
           </v-menu>
-
-          <v-menu offset-y close-on-content-click>
-            <template v-slot:activator="{ isActive, props }">
-              <v-btn
-                title="Utiliser une configuration de référence"
-                v-on="{ isActive }"
-                v-bind="props"
-                size="small"
-              >
-                <v-icon icon="mdi-plus" color="green"></v-icon>
-                Importer un modèle
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item
-                v-for="prop in propositions"
-                :key="prop.name"
-                rounded
-                class="py-0"
-                @click="importQuestions(prop.Questions)"
-              >
-                {{ prop.name }}
-              </v-list-item>
-            </v-list>
-          </v-menu>
         </v-col>
       </v-row>
       <v-list>
@@ -115,8 +78,8 @@
               <v-list-item v-for="(tags, index) in hint.Missing!" :key="index">
                 <TagChip
                   :tag="tag"
-                  :key="tag"
-                  v-for="tag in tags"
+                  :key="index"
+                  v-for="(tag, index) in tags || []"
                   :pointer="false"
                 ></TagChip>
               </v-list-item>
@@ -127,8 +90,8 @@
             <span>
               <TagChip
                 :tag="tag"
-                :key="tag"
-                v-for="tag in hint.Pattern"
+                :key="index"
+                v-for="(tag, index) in hint.Pattern"
                 :pointer="false"
               ></TagChip
             ></span>
@@ -150,6 +113,7 @@
               <tags-selector
                 :all-tags="allKnownTags"
                 :model-value="categorie || []"
+                :last-level-chapter="lastLevelChapter"
                 @update:model-value="(v) => updateCategorie(index, v)"
               ></tags-selector>
             </v-col>
@@ -189,17 +153,17 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  CategoriesQuestions,
-  CheckMissingQuestionsOut,
-  DifficultyTag,
-  QuestionCriterion,
-  Trivial,
+import {
+  Section,
+  type CategoriesQuestions,
+  type CheckMissingQuestionsOut,
+  type DifficultyTag,
+  type QuestionCriterion,
+  type Tags,
+  type TagsDB,
+  type Trivial,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { commonTags } from "@/controller/editor";
-import { LevelTag, LevelTagLabels } from "@/controller/exercice_gen";
-import { colorsPerCategorie, questionPropositions } from "@/controller/trivial";
 import { computed } from "@vue/reactivity";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
@@ -210,7 +174,7 @@ import CategorieRow from "./CategorieRow.vue";
 
 interface Props {
   edited: Trivial;
-  allKnownTags: string[];
+  allKnownTags: TagsDB;
 }
 
 const props = defineProps<Props>();
@@ -220,11 +184,17 @@ const emit = defineEmits<{
   (e: "update", v: Trivial): void;
 }>();
 
-const colors = colorsPerCategorie;
-
-const propositions = questionPropositions;
-
-const levelItems = Object.keys(LevelTagLabels);
+const lastLevelChapter = computed(() => {
+  const all = allTags(props.edited.Questions.Tags);
+  if (all.length) {
+    const last = all[all.length - 1] || [];
+    return {
+      level: last.find((s) => s.Section == Section.Level)?.Tag || "",
+      chapter: last.find((s) => s.Section == Section.Chapter)?.Tag || "",
+    };
+  }
+  return { level: "", chapter: "" };
+});
 
 let showDifficultyCard = $ref(false);
 
@@ -234,43 +204,14 @@ function onEditDifficulties(difficulties: DifficultyTag[]) {
   fetchHintForMissing();
 }
 
-function onUpdateLevel(level: LevelTag) {
-  const levelTags = Object.values(LevelTag) as string[];
-  console.log(levelTags);
-
-  // remove any level instructions for the current tags ...
-  const newTags = props.edited.Questions.Tags.map(
-    (cat) =>
-      cat?.map((l) => (l || []).filter((tag) => !levelTags.includes(tag))) || []
-  );
-  // ... then add the given one
-  newTags.forEach((cat) => cat.forEach((l) => l.push(level)));
-  props.edited.Questions.Tags = newTags;
-  fetchHintForMissing();
+function allTags(tags: QuestionCriterion[]) {
+  const all: Tags[] = [];
+  tags.forEach((l) => all.push(...(l || []).map((ls) => ls || [])));
+  return all;
 }
-
-const currentLevel = computed(() => {
-  const all: string[][] = [];
-  props.edited.Questions.Tags.forEach((l) =>
-    all.push(...(l || []).map((ls) => ls || []))
-  );
-  const sharedTags = commonTags(all);
-  const presentLevels = Object.values(LevelTag).filter((tag) =>
-    sharedTags.includes(tag)
-  );
-  if (presentLevels.length == 1) {
-    return presentLevels[0] as LevelTag;
-  }
-  return undefined;
-});
 
 function updateCategorie(index: number, cat: QuestionCriterion) {
   props.edited.Questions.Tags[index] = cat;
-  fetchHintForMissing();
-}
-
-function importQuestions(criteria: CategoriesQuestions) {
-  props.edited.Questions = criteria;
   fetchHintForMissing();
 }
 

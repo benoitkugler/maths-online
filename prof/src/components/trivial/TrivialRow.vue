@@ -99,7 +99,6 @@ import {
   type Trivial,
   type TrivialExt,
 } from "@/controller/api_gen";
-import { commonTags } from "@/controller/editor";
 import { colorsPerCategorie } from "@/controller/trivial";
 import OriginButton from "../OriginButton.vue";
 
@@ -125,10 +124,21 @@ function isPersonnal(config: TrivialExt) {
   return config.Origin.Visibility == Visibility.Personnal;
 }
 
+/** return the list of tags shared by all the list */
+function commonTags(tags: string[][]) {
+  const crible: { [key: string]: number } = {};
+  tags.forEach((l) =>
+    l.forEach((tag) => (crible[tag] = (crible[tag] || 0) + 1))
+  );
+  return Object.entries(crible)
+    .filter((entry) => entry[1] == tags.length)
+    .map((entry) => entry[0]);
+}
+
 function formatCategories(config: Trivial) {
   const allUnions: string[][] = [];
   config.Questions.Tags.forEach((cat) =>
-    allUnions.push(...(cat || []).map((s) => s || []))
+    allUnions.push(...(cat || []).map((s) => (s || []).map((ts) => ts.Tag)))
   );
   const common = commonTags(allUnions);
   if (common.length != 0) {

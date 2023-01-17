@@ -45,6 +45,7 @@ import {
   type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { emptyTagsDB } from "@/controller/editor";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
@@ -64,11 +65,7 @@ let currentExercicegroup = $ref<ExercicegroupExt | null>(null);
 
 let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
 
-let allKnownTags = $ref<TagsDB>({
-  Levels: [],
-  ChaptersByLevel: {},
-  TrivByChapters: {},
-});
+let allKnownTags = $ref<TagsDB>(emptyTagsDB());
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
   if (tags) {

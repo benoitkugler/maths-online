@@ -96,9 +96,11 @@ import type {
   QuestionHeader,
   Sheet,
   SheetExt,
+  TagsDB,
   TaskExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { emptyTagsDB } from "@/controller/editor";
 import { computed, onMounted } from "vue";
 import { $ref } from "vue/macros";
 import NotationField from "./NotationField.vue";
@@ -130,9 +132,9 @@ function update() {
 }
 
 onMounted(fetchTags);
-let allTags = $ref<string[]>([]);
+let allTags = $ref<TagsDB>(emptyTagsDB());
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
-  allTags = tags || [];
+  if (tags) allTags = tags;
 }
 </script>

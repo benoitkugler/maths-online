@@ -3,11 +3,14 @@
     <v-row justify="center">
       <v-col cols="auto" align-self="center">Niveau de difficulté :</v-col>
       <v-col cols="auto" align-self="center">
-        <tag-list-field
-          :model-value="props.data.Config.Questions.Difficulties || []"
-          readonly
-          :allTags="[]"
-        ></tag-list-field>
+        <v-row no-gutters>
+          <v-col
+            v-for="(tag, index) in props.data.Config.Questions.Difficulties"
+            :key="index"
+          >
+            <tag-chip :tag="{ Tag: tag, Section: 0 }"></tag-chip>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
     <v-list>
@@ -28,7 +31,7 @@
                 <tag-list-field
                   :model-value="inter || []"
                   readonly
-                  :allTags="[]"
+                  :allTags="emptyTagsDB()"
                 ></tag-list-field>
               </v-col>
             </v-row>
@@ -51,6 +54,8 @@ import type { TargetTrivial } from "@/controller/api_gen";
 import { computed } from "@vue/reactivity";
 import TagListField from "../editor/TagListField.vue";
 import CategorieRow from "../trivial/CategorieRow.vue";
+import TagChip from "../editor/utils/TagChip.vue";
+import { emptyTagsDB } from "@/controller/editor";
 
 interface Props {
   data: TargetTrivial;

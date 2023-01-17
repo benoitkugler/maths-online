@@ -54,6 +54,7 @@ import ClientPreview from "../components/editor/ClientPreview.vue";
 import QuestiongroupList from "../components/editor/questions/QuestiongroupList.vue";
 import QuestiongroupPannel from "../components/editor/questions/QuestiongroupPannel.vue";
 import FolderView from "../components/editor/FolderView.vue";
+import { emptyTagsDB } from "@/controller/editor";
 
 let viewMode = $ref<"details" | "folder">("folder");
 
@@ -63,11 +64,7 @@ async function fetchIndex() {
   questionsIndex = res || [];
 }
 
-let allKnownTags = $ref<TagsDB>({
-  Levels: [],
-  ChaptersByLevel: {},
-  TrivByChapters: {},
-});
+let allKnownTags = $ref<TagsDB>(emptyTagsDB());
 let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
 
 let viewKind: "questions" | "editor" = $ref("questions");

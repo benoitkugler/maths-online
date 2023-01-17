@@ -30,6 +30,7 @@ import {
   type SignTableFieldBlock,
   type TableBlock,
   type TableFieldBlock,
+  type TagsDB,
   type TagSection,
   type TextBlock,
   type TreeFieldBlock,
@@ -700,15 +701,6 @@ export function questionDifficulty(tags: string[]): number {
   return 0;
 }
 
-/** return the list of tags shared by all the list */
-export function commonTags(tags: string[][]) {
-  const crible: { [key: string]: number } = {};
-  tags.forEach(l => l.forEach(tag => (crible[tag] = (crible[tag] || 0) + 1)));
-  return Object.entries(crible)
-    .filter(entry => entry[1] == tags.length)
-    .map(entry => entry[0]);
-}
-
 /** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
 export const visiblityColors: { [key in Visibility]: string } = {
   [Visibility.Hidden]: "",
@@ -778,4 +770,12 @@ export function filterTags(
     }
   }
   return out;
+}
+
+export function emptyTagsDB(): TagsDB {
+  return {
+    Levels: [],
+    ChaptersByLevel: {},
+    TrivByChapters: {}
+  };
 }

@@ -113,6 +113,7 @@
 import {
   ReviewKind,
   type RunningSessionMetaOut,
+  type TagsDB,
   type Trivial,
   type TrivialExt,
 } from "@/controller/api_gen";
@@ -124,10 +125,11 @@ import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import { useRouter } from "vue-router";
+import { emptyTagsDB } from "@/controller/editor";
 
 const router = useRouter();
 
-let allKnownTags = $ref<string[]>([]);
+let allKnownTags = $ref<TagsDB>(emptyTagsDB());
 
 let editedConfig = $ref<Trivial | null>(null);
 
@@ -155,7 +157,9 @@ async function _init() {
   _configs = Object.values(res || {});
 
   const tags = await controller.EditorGetTags();
-  allKnownTags = tags || [];
+  if (tags) {
+    allKnownTags = tags;
+  }
 }
 
 async function createConfig() {

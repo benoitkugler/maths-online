@@ -12,7 +12,7 @@
     density="compact"
     :model-value="props.modelValue"
     @update:model-value="(tag) => emit('update:model-value', tag)"
-    :color="tagColor(props.modelValue)"
+    :color="tagColor({ Tag: props.modelValue, Section: 0 })"
     hide-details
     :disabled="props.readonly"
   >
