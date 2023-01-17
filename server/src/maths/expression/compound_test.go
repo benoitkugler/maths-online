@@ -73,6 +73,9 @@ func TestParseCompound(t *testing.T) {
 			// nested sets
 			"{ {a; b} ; {c; d}}", nil, true,
 		},
+		{ // compatilibity between sets and indices
+			"{ a_{1}; b_{2} }", Set{mustParse(t, "a_{1}"), mustParse(t, "b_{2}")}, false,
+		},
 	}
 	for _, tt := range tests {
 		got, err := ParseCompound(tt.expr)

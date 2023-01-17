@@ -120,6 +120,12 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 			Vars{NewVar('f'): mustParse(t, "h"), NewVar('k'): mustParse(t, "2")},
 			false,
 		},
+		// substitution in indices
+		{
+			map[Variable]string{NewVar('f'): "randChoice(F)", NewVar('u'): "f_{1+2}"},
+			Vars{NewVar('f'): mustParse(t, "F"), NewVar('u'): mustParse(t, "F_{3}")},
+			false,
+		},
 		// zero length cycle through randChoice or choiceFrom is accepted
 		{
 			map[Variable]string{

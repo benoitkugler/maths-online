@@ -73,14 +73,14 @@ func (expr *Expr) equals(other *Expr) bool {
 type atom interface {
 	fmt.Stringer // used to compare atom in equals
 
+	lexicographicOrder() int // smaller is first; unique among concrete types
+
 	// given the serialized form of the left and right terms,
 	// serialize returns plain text, prettified, valid form
 	// of the expression node
 	serialize(left, right *Expr) string
 
-	lexicographicOrder() int // smaller is first; unique among concrete types
-
-	// return a value is possible as rational, so that
+	// return a value if possible as rational, so that
 	// it may be simplified by subsequent operations
 	eval(left, right rat, context varEvaluer) (rat, error)
 
@@ -92,8 +92,9 @@ func (constant) lexicographicOrder() int        { return 1 }
 func (operator) lexicographicOrder() int        { return 2 }
 func (Variable) lexicographicOrder() int        { return 3 }
 func (function) lexicographicOrder() int        { return 4 }
-func (specialFunction) lexicographicOrder() int { return 5 }
-func (roundFn) lexicographicOrder() int         { return 6 }
+func (indice) lexicographicOrder() int          { return 5 }
+func (specialFunction) lexicographicOrder() int { return 6 }
+func (roundFn) lexicographicOrder() int         { return 7 }
 
 // roundFn act as a function, but takes an integer parameter
 // in addition to its regular parameter
@@ -294,6 +295,16 @@ func (v Number) String() string {
 }
 
 func (v Number) serialize(_, _ *Expr) string { return v.String() }
+
+// <left>_{<right>}
+// the parser only accepts a name as left argument
+type indice struct{}
+
+func (indice) String() string { return "_" }
+
+func (indice) serialize(left, right *Expr) string {
+	return fmt.Sprintf("%s_{%s}", left.Serialize(), right.Serialize())
+}
 
 type specialFunction struct {
 	kind specialFunctionKind

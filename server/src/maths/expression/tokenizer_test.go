@@ -84,6 +84,9 @@ func TestTokens(t *testing.T) {
 		{"(3;)", []tokenData{openPar, numberText("3"), semicolon, closePar}},
 		{"{2;4;}", []tokenData{openCurly, numberText("2"), semicolon, numberText("4"), semicolon, closeCurly}},
 		{"]-inf;inf[", []tokenData{closeBracket, minus, numberText("inf"), semicolon, numberText("inf"), openBracket}},
+		// distinction between Variable and indice
+		{"a_1", []tokenData{NewVarI('a', "1")}},
+		{"a_{1}", []tokenData{NewVar('a'), underscore, openCurly, numberText("1"), closeCurly}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

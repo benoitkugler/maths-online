@@ -162,7 +162,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 	ctx.currentVariable = Variable{} // when recursing, set tracker to zero
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, operator, function, roundFn: // no-op, simply recurse
+	case Number, constant, operator, function, roundFn, indice: // no-op, simply recurse
 		left, err := expr.left.instantiate(ctx)
 		if err != nil {
 			return nil, err
@@ -176,7 +176,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 	case Variable:
 		// if the variable is not defined, just returns the free variable as an expression
 		if _, isDefined := ctx.defs[atom]; !isDefined {
-			return expr.Copy(), nil
+			return NewVarExpr(atom), nil
 		}
 		return ctx.instantiate(atom)
 	case specialFunction:

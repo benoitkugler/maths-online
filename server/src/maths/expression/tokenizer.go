@@ -71,6 +71,7 @@ const (
 	closeBracket               // ]
 	openCurly                  // {
 	closeCurly                 // }
+	underscore                 // _
 
 	invalidSymbol
 )
@@ -91,6 +92,8 @@ func (sy symbol) String() string {
 		return "{"
 	case closeCurly:
 		return "}"
+	case underscore:
+		return "_"
 	default:
 		panic(exhaustiveSymbolSwitch)
 	}
@@ -256,6 +259,9 @@ func (tk *tokenizer) readToken() (tok token) {
 		tk.pos++
 	case c == '}':
 		out.data = closeCurly
+		tk.pos++
+	case c == '_':
+		out.data = underscore
 		tk.pos++
 	case isOpRunes != 0:
 		out.data = op
@@ -447,6 +453,12 @@ func (tk *tokenizer) readVariable() Variable {
 	c := tk.src[tk.pos]
 	out := Variable{Name: c}
 	tk.pos++
+
+	// do not read _{...} as variable indice
+	if tk.pos+1 < len(tk.src) && tk.src[tk.pos] == '_' && tk.src[tk.pos+1] == '{' {
+		return out
+	}
+
 	if tk.pos < len(tk.src) && tk.src[tk.pos] == '_' { // indice start
 		tk.pos++
 		start := tk.pos

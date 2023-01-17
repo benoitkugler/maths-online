@@ -67,6 +67,11 @@ func compareNodes(n1, n2 *Expr) int {
 			} else {
 				return compareNodes(n1.right, n2.right)
 			}
+		case indice:
+			if c := compareNodes(n1.left, n2.left); c != 0 {
+				return c
+			}
+			return compareNodes(n1.right, n2.right)
 		case roundFn:
 			a2 := a2.(roundFn)
 			if a1.nbDigits < a2.nbDigits {

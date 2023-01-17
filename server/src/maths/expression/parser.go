@@ -149,6 +149,9 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 				Reason: fmt.Sprintf("symbole %s inattendu", data),
 				Pos:    tok.pos,
 			}
+		case underscore:
+			// we have an indice
+			return pr.parseIndice(tok.pos)
 		default:
 			panic(exhaustiveSymbolSwitch)
 		}
@@ -180,6 +183,47 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 	default:
 		panic(exhaustiveTokenSwitch)
 	}
+}
+
+// accepts <left>_{<right>}, where <left> might only be a one letter name
+// the tokenizer is at _
+func (pr *parser) parseIndice(pos int) (*Expr, error) {
+	// pop the left member
+	left := pr.pop()
+	if left == nil {
+		return nil, ErrInvalidExpr{
+			Reason: "variable manquante avant l'indice _",
+			Pos:    pos,
+		}
+	}
+
+	if v, isVar := left.atom.(Variable); !(isVar && v.Indice == "") {
+		return nil, ErrInvalidExpr{
+			Reason: "seule une variable simple est acceptée avant l'indice _",
+			Pos:    pos,
+		}
+	}
+
+	// check and consume the starting {
+	// the tokenizer made sure it is present
+	pr.tk.Next()
+
+	// read the full indice expression
+	right, err := pr.parseExpression(false)
+	if err != nil {
+		return nil, err
+	}
+
+	// check and consume the closing }
+	tk := pr.tk.Next()
+	if tk.data != closeCurly {
+		return nil, ErrInvalidExpr{
+			Reason: "accolade fermante manquante après _",
+			Pos:    tk.pos,
+		}
+	}
+
+	return &Expr{left: left, atom: indice{}, right: right}, nil
 }
 
 // pr.src[pr.pos] must be an operator

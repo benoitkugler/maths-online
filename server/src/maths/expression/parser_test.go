@@ -481,6 +481,45 @@ var expressions = [...]struct {
 		},
 		false,
 	},
+	// indice node
+	{
+		"_{2+1}", nil, true, // missing name before _
+	},
+	{
+		"a_1 _{2+1}", nil, true, // compound name are not accepted yet
+	},
+	{
+		"a{2+1}", nil, true, // missing _ starter
+	},
+	{
+		"a_{2+1", nil, true, // missing closing }
+	},
+	{
+		"a_{2+}", nil, true, // invalid indice expr
+	},
+	{ // simple indice
+		"a_{n}",
+		&Expr{left: newVarExpr('a'), atom: indice{}, right: newVarExpr('n')},
+		false,
+	},
+	{ // complexe indice
+		"a_{n - k}",
+		&Expr{left: newVarExpr('a'), atom: indice{}, right: &Expr{
+			left:  newVarExpr('n'),
+			atom:  minus,
+			right: newVarExpr('k'),
+		}},
+		false,
+	},
+	{ // nested indice
+		"a_{b_{n}}",
+		&Expr{
+			left:  newVarExpr('a'),
+			atom:  indice{},
+			right: &Expr{left: newVarExpr('b'), atom: indice{}, right: newVarExpr('n')},
+		},
+		false,
+	},
 }
 
 func Test_invalidrandChoice(t *testing.T) {

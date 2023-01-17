@@ -283,6 +283,10 @@ func (c constant) eval(_, _ rat, _ varEvaluer) (rat, error) {
 
 func (v Number) eval(_, _ rat, _ varEvaluer) (rat, error) { return newRat(float64(v)), nil }
 
+func (indice) eval(_, _ rat, _ varEvaluer) (rat, error) {
+	return rat{}, errors.New("Une expression indicée ne peut pas être évaluée.")
+}
+
 func (va Variable) eval(_, _ rat, b varEvaluer) (rat, error) {
 	if b == nil {
 		return rat{}, ErrMissingVariable{Missing: va}

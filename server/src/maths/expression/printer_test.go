@@ -94,6 +94,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"-inf",
 		"inf",
 		"+inf",
+		"u_{2n+1}",
+		"2u_{2n+1}",
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -215,4 +217,11 @@ func TestInstantiateMinusZero(t *testing.T) {
 
 	instance := vs[NewVar('b')]
 	tu.Assert(t, instance.String() == "0")
+}
+
+func TestOmitTimes(t *testing.T) {
+	e := mustParse(t, "2u_{n}")
+	if latex := e.AsLaTeX(); strings.Contains(latex, "\\times") {
+		t.Fatalf("times should ommited, got %s", latex)
+	}
 }
