@@ -117,7 +117,7 @@ func (op operator) asLaTeX(left, right *Expr) string {
 	case mult:
 		// check for implicit multiplication
 		if shouldOmitTimes(rightHasParenthesis, right) {
-			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
+			return fmt.Sprintf(`%s %s`, leftCode, rightCode)
 		}
 		return fmt.Sprintf(`%s \times %s`, leftCode, rightCode)
 	case div:

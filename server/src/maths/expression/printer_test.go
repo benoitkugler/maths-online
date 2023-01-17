@@ -96,6 +96,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"+inf",
 		"u_{2n+1}",
 		"2u_{2n+1}",
+		// bug #157
+		"λx",
 	} {
 		e, err := Parse(expr)
 		if err != nil {
@@ -105,6 +107,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		code := e.AsLaTeX()
 		lines = append(lines, "$$"+code+"$$")
 	}
+	fmt.Println(lines[len(lines)-1])
 
 	generateLatex(t, lines, "formulas.tex")
 }
