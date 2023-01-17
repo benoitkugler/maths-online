@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Modifier les étiquettes de la question">
+  <v-card title="Modifier les étiquettes">
     <v-card-text class="my-1">
       <v-row>
         <v-col cols="6">
