@@ -48,7 +48,7 @@ UPDATE
 SET
     Section = 2
 WHERE
-    tag = ANY (ARRAY['EXEMPLE']);
+    tag = ANY (ARRAY['EXEMPLE', 'SUITES']);
 --
 -- add constraints
 
