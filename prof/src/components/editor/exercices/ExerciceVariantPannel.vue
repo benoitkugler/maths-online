@@ -66,8 +66,10 @@ onMounted(() => {
 });
 
 watch(props, (_) => {
-  fetchExercice();
-  refreshExercicePreview(props.exerciceHeader.Id);
+  if (props.exerciceHeader.Id != exercice?.Exercice.Id) {
+    fetchExercice();
+    refreshExercicePreview(props.exerciceHeader.Id);
+  }
 });
 
 async function refreshExercicePreview(id: IdExercice) {
@@ -76,6 +78,7 @@ async function refreshExercicePreview(id: IdExercice) {
     IdExercice: id,
     Parameters: { Intrinsics: [], Variables: [] }, // ignored
     Questions: [], // ignored
+    CurrentQuestion: -1,
   });
   if (res == undefined) return;
   emit("preview", res.Preview);

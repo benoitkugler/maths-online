@@ -149,6 +149,7 @@ async function updateExercicegroup() {
     IdExercice: ownVariants[variantIndex].Id,
     Parameters: { Intrinsics: [], Variables: [] }, // ignored
     Questions: [], // ignored
+    CurrentQuestion: -1,
   });
   if (res == undefined) return;
   emit("preview", res.Preview);

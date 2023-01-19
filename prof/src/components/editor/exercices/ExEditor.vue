@@ -313,6 +313,7 @@ async function save() {
     IdExercice: props.exercice.Exercice.Id,
     Parameters: props.exercice.Exercice.Parameters,
     Questions: props.exercice.Questions?.map((qu) => qu.Question) || [],
+    CurrentQuestion: questionIndex,
   });
   if (res == undefined) {
     return;

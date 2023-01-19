@@ -703,7 +703,7 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data)
+	preview, err := newExercicePreview(data, -1)
 	if err != nil {
 		return err
 	}
@@ -777,7 +777,7 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data)
+	preview, err := newExercicePreview(data, -1)
 	if err != nil {
 		return err
 	}
@@ -857,7 +857,7 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data)
+	preview, err := newExercicePreview(data, -1)
 	if err != nil {
 		return err
 	}
@@ -942,7 +942,7 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data)
+	preview, err := newExercicePreview(data, -1)
 	if err != nil {
 		return err
 	}
@@ -1079,17 +1079,20 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 }
 
 type SaveExerciceAndPreviewIn struct {
-	OnlyPreview bool // if true, skip the save part (Parameters and Questions are thus ignored)
-	IdExercice  ed.IdExercice
-	Parameters  questions.Parameters // shared parameters
-	Questions   []ed.Question        // questions content
+	OnlyPreview     bool // if true, skip the save part (Parameters and Questions are thus ignored)
+	IdExercice      ed.IdExercice
+	Parameters      questions.Parameters // shared parameters
+	Questions       []ed.Question        // questions content
+	CurrentQuestion int                  // to update the preview accordingly
 }
 
 type SaveExerciceAndPreviewOut struct {
-	Error         questions.ErrQuestionInvalid
-	QuestionIndex int // for the error
-	IsValid       bool
-	Preview       LoopbackShowExercice
+	Error questions.ErrQuestionInvalid
+	// Index of the error, meaningful only if Error is non empty
+	QuestionIndex int
+
+	IsValid bool
+	Preview LoopbackShowExercice
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
@@ -1168,7 +1171,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	preview, err := newExercicePreview(data)
+	preview, err := newExercicePreview(data, params.CurrentQuestion)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
@@ -1177,7 +1180,9 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 }
 
 // newExercicePreview instantiates the exercice and return preview data
-func newExercicePreview(content taAPI.ExerciceData) (LoopbackShowExercice, error) {
+// [nextQuestion] is the index of the question to show in the preview,
+// or -1 for the summary
+func newExercicePreview(content taAPI.ExerciceData, nextQuestion int) (LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
 		return LoopbackShowExercice{}, err
@@ -1189,11 +1194,19 @@ func newExercicePreview(content taAPI.ExerciceData) (LoopbackShowExercice, error
 		questionOrigins[i] = qu.Page
 	}
 
+	if nextQuestion >= len(instance.Questions) {
+		return LoopbackShowExercice{}, fmt.Errorf("internal error: invalid question index %d", nextQuestion)
+	}
+	progression := make([]ta.QuestionHistory, len(instance.Questions))
+	// mark previous question as validated for better consistency on the preview
+	for i := 0; i < nextQuestion; i++ {
+		progression[i] = ta.QuestionHistory{true}
+	}
 	return LoopbackShowExercice{
 		Exercice: instance,
 		Progression: taAPI.ProgressionExt{
-			NextQuestion: 0,
-			Questions:    make([]ta.QuestionHistory, len(instance.Questions)),
+			NextQuestion: nextQuestion,
+			Questions:    progression,
 		},
 		Origin: questionOrigins,
 	}, nil

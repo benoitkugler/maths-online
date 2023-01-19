@@ -660,6 +660,7 @@ export interface SaveExerciceAndPreviewIn {
   IdExercice: IdExercice;
   Parameters: Parameters;
   Questions: Question[] | null;
+  CurrentQuestion: number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewOut
 export interface SaveExerciceAndPreviewOut {

@@ -251,7 +251,8 @@ func (ex ExerciceData) Title() string    { return ex.Group.Title }
 func (ex ExerciceData) Subtitle() string { return ex.Exercice.Subtitle }
 func (ExerciceData) flow() ed.Flow       { return ed.Sequencial }
 
-// QuestionsList resolve the links list using `source`
+// QuestionsList resolve the links list using `source`,
+// returning lists of length `len(Links)`
 func (ex ExerciceData) QuestionsList() ([]ed.Question, TaskBareme) {
 	questions := make([]ed.Question, len(ex.Links))
 	baremes := make([]int, len(ex.Links))
