@@ -74,7 +74,6 @@ func TestTokens(t *testing.T) {
 		{"floor(1)", []tokenData{floorFn, openPar, numberText("1"), closePar}},
 		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
 		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
-		{"@_myVar", []tokenData{Variable{Name: '@', Indice: "myVar"}}},
 		{"2 > 4", []tokenData{numberText("2"), strictlyGreater, numberText("4")}},
 		{"2 < 4", []tokenData{numberText("2"), strictlyLesser, numberText("4")}},
 		{"2 <= 4", []tokenData{numberText("2"), lesser, numberText("4")}},
@@ -87,6 +86,11 @@ func TestTokens(t *testing.T) {
 		// distinction between Variable and indice
 		{"a_1", []tokenData{NewVarI('a', "1")}},
 		{"a_{1}", []tokenData{NewVar('a'), underscore, openCurly, numberText("1"), closeCurly}},
+		// variable and }
+		{"{s_1 }", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
+		{"{s_1}", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
+		// custom symbols
+		{`"\ge + 5"`, []tokenData{Variable{Name: 0, Indice: `\ge + 5`}}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

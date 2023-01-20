@@ -224,8 +224,7 @@ func (fn function) serialize(_, right *Expr) string {
 // such as 'a', 'b' in (a + b)^2 or 'x' in 2x + 3.
 // Indices are also permitted, written in LaTeX format :
 // x_A or x_AB
-// Private Unicode points are also permitted, so that
-// custom compounded symbols may be used.
+// Variable is also used to store a custom symbol.
 type Variable struct {
 	Indice string // optional
 	Name   rune

@@ -53,6 +53,10 @@ func (expr *Expr) String() string {
 
 func (v Variable) String() string {
 	// we have to output valid expression syntax
+	if v.Name == 0 { // custom symbols
+		return fmt.Sprintf(`"%s"`, v.Indice)
+	}
+
 	out := string(v.Name)
 	if v.Indice != "" {
 		return out + "_" + v.Indice + " " // notice the white space to avoid x_Ay_A
@@ -180,8 +184,8 @@ func (r specialFunction) asLaTeX(_, _ *Expr) string {
 }
 
 func (v Variable) asLaTeX(_, _ *Expr) string {
-	// special case for @_variable to allow custom symbols
-	if v.Name == '@' {
+	// special case for "" variable to allow custom symbols
+	if v.Name == 0 {
 		return v.Indice
 	}
 

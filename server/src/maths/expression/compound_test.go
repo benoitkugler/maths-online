@@ -76,6 +76,9 @@ func TestParseCompound(t *testing.T) {
 		{ // compatilibity between sets and indices
 			"{ a_{1}; b_{2} }", Set{mustParse(t, "a_{1}"), mustParse(t, "b_{2}")}, false,
 		},
+		{ // sets and variables without spaces
+			"{a_1;b_2}", Set{mustParse(t, "a_1"), mustParse(t, "b_2")}, false,
+		},
 	}
 	for _, tt := range tests {
 		got, err := ParseCompound(tt.expr)

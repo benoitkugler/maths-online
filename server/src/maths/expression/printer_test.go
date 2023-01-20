@@ -76,7 +76,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"(x^y)^z^t",
 		"\u0393 + \u0398 + \u03B8", // some greek letters
 		"\uE000 +  \uE000 + \uE001 + \u0398 + \u03B8", // custom variables
-		"x_A + y_B", // indices
+		"x_A + y_B", // simple indices
 		"randInt(3;14) + 2",
 		"randPrime(3;14) + 2",
 		"randChoice(A;B) + 2",
@@ -87,9 +87,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"24x^2 - 27x + 18",
 		"round(x; 4)",
 		"floor(x)",
-		"@_acompletetext",
-		"@_\\ge",
-		"a_\\ge",
+		`"acompletetext"`,
+		`"\ge"`,
 		"(1<2)+(3>4)+(5<=6)+(7>=8)+ (4==7)",
 		"-inf",
 		"inf",
@@ -107,7 +106,6 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		code := e.AsLaTeX()
 		lines = append(lines, "$$"+code+"$$")
 	}
-	fmt.Println(lines[len(lines)-1])
 
 	generateLatex(t, lines, "formulas.tex")
 }
@@ -143,7 +141,7 @@ func Test0And1(t *testing.T) {
 		{"-1x", "-x"},
 		{"a -1x - b", "a - x - b"},
 		{"-1x^2", "-{x}^{2}"},
-		{"-1(4x + 3)", "-\\left(4x + 3\\right)"},
+		{"-1(4x + 3)", "-\\left(4 x + 3\\right)"},
 		{"-1sqrt(100)", "-\\sqrt{100}"},
 		{"x + (-y + 2 - 4 + 5)", "x - y + 2 - 4 + 5"},
 	} {

@@ -520,14 +520,20 @@ var expressions = [...]struct {
 		},
 		false,
 	},
-}
-
-func Test_invalidrandChoice(t *testing.T) {
-	expr := "randChoice(U;V"
-	_, err := Parse(expr)
-	if !strings.Contains(err.Error(), "délimiteur manquant") {
-		t.Fatal(err)
-	}
+	{
+		"@_myVar", nil, true, // deprecated syntaxe
+	},
+	{
+		// missing closing quote is accepted
+		`"5+2`, NewVarExpr(NewVarI(0, "5+2")), false, // deprecated syntaxe
+	},
+	{
+		// missing closing quote is accepted
+		`randChoice("\ge"; "\le")`, &Expr{atom: specialFunction{kind: randChoice, args: []*Expr{
+			NewVarExpr(NewVarI(0, `\ge`)),
+			NewVarExpr(NewVarI(0, `\le`)),
+		}}}, false, // deprecated syntaxe
+	},
 }
 
 func Test_parseExpression(t *testing.T) {
@@ -547,6 +553,14 @@ func Test_parseExpression(t *testing.T) {
 			fmt.Printf("%#v \n%#v\n", got, tt.want)
 			t.Fatalf("parseExpression(%s) = %v, want %v", tt.expr, got, tt.want)
 		}
+	}
+}
+
+func Test_invalidrandChoice(t *testing.T) {
+	expr := "randChoice(U;V"
+	_, err := Parse(expr)
+	if !strings.Contains(err.Error(), "délimiteur manquant") {
+		t.Fatal(err)
 	}
 }
 

@@ -163,11 +163,6 @@ func (tk *tokenizer) readTokenImplicitMult() (current, next token) {
 
 // returns false if `r` should stop variable indices read
 func isVariableChar(r rune) bool {
-	// TODO: more robust
-	switch r {
-	case '\\', '{', '}': // accept LaTeX commands
-		return true
-	}
 	return 'A' <= r && r <= 'z' || '0' <= r && r <= '9'
 }
 
@@ -266,7 +261,9 @@ func (tk *tokenizer) readToken() (tok token) {
 	case isOpRunes != 0:
 		out.data = op
 		tk.pos += isOpRunes
-	case unicode.IsLetter(c) || c == '@': // either a function, a variable, Inf/inf or a constant
+	case c == '"': // custom symbol
+		out.data = tk.readCustomSymbol()
+	case unicode.IsLetter(c): // either a function, a variable, Inf/inf or a constant
 		if isInf := tk.tryReadInf(); isInf {
 			out.data = numberText("inf")
 		} else if isRound := tk.tryReadRoundFunction(); isRound {
@@ -447,6 +444,21 @@ func (tk *tokenizer) tryReadConstant() (constant, bool) {
 		_ = exhaustiveConstantSwitch
 		return 0, false
 	}
+}
+
+// assume we are at the starting "
+func (tk *tokenizer) readCustomSymbol() Variable {
+	tk.pos++ // consume the starting "
+	start := tk.pos
+	for ; tk.pos < len(tk.src); tk.pos++ {
+		if tk.src[tk.pos] == '"' {
+			break
+		}
+	}
+	content := string(tk.src[start:tk.pos])
+	tk.pos++ // consume the closing "
+
+	return Variable{Indice: content}
 }
 
 func (tk *tokenizer) readVariable() Variable {
