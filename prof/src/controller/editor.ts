@@ -30,6 +30,7 @@ import {
   type SignTableFieldBlock,
   type TableBlock,
   type TableFieldBlock,
+  type Tags,
   type TagsDB,
   type TagSection,
   type TextBlock,
@@ -778,4 +779,21 @@ export function emptyTagsDB(): TagsDB {
     ChaptersByLevel: {},
     TrivByChapters: {}
   };
+}
+
+/** areTagsEquals compares the tags without taking order in account */
+export function areTagsEquals(tags1: Tags, tags2: Tags) {
+  const l1 = (tags1 || []).map(ts => `${ts.Section}--${ts.Tag}`);
+  l1.sort();
+  const l2 = (tags2 || []).map(ts => `${ts.Section}--${ts.Tag}`);
+  l2.sort();
+  return l1.join(";") == l2.join(";");
+}
+
+/** either a questiongroup or an exercicegroup */
+export interface ResourceGroup {
+  Id: number;
+  Title: string;
+  Variants: VariantG[];
+  Tags: Tags;
 }

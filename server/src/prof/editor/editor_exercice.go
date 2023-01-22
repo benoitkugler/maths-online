@@ -310,6 +310,7 @@ func duplicateExerciceTo(tx *sql.Tx, idExercice ed.IdExercice, group ed.Exercice
 
 	// shallow copy is enough
 	newExercice := ex
+	newExercice.Subtitle += " (2)" // to distinguish
 	newExercice.IdGroup = group.Id // re-direct to the given group
 	newExercice, err = newExercice.Insert(tx)
 	if err != nil {

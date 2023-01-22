@@ -37,7 +37,29 @@
     ></UsesCard>
   </v-dialog>
 
-  <v-card class="mt-3 px-2">
+  <ResourceScafold
+    :resource="resource"
+    :readonly="isReadonly"
+    :all-tags="props.allTags"
+    v-model="variantIndex"
+    @back="backToList"
+    @update-title="updateTitle"
+    @update-tags="saveTags"
+    @update-variant="updateVariant"
+    @duplicate-variant="duplicateVariante"
+    @delete-variant="deleteVariante"
+  >
+    <ExerciceVariantPannel
+      :exercice-header="ownVariants[variantIndex]"
+      :is-readonly="isReadonly"
+      :all-tags="props.allTags"
+      :show-variant-meta="true"
+      @update="(ex) => (ownVariants[variantIndex] = ex)"
+      @preview="(ex) => emit('preview', ex)"
+    ></ExerciceVariantPannel>
+  </ResourceScafold>
+
+  <!-- <v-card class="mt-3 px-2">
     <v-row no-gutters>
       <v-col cols="auto" align-self="center" class="pr-2">
         <v-btn
@@ -92,7 +114,7 @@
       @update="(ex) => (ownVariants[variantIndex] = ex)"
       @preview="(ex) => emit('preview', ex)"
     ></ExerciceVariantPannel>
-  </v-card>
+  </v-card> -->
 </template>
 
 <script setup lang="ts">
@@ -102,19 +124,22 @@ import type {
   LoopbackShowExercice,
   QuestionExerciceUses,
   Sheet,
+  Tags,
   TagsDB,
   TagSection,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type { VariantG } from "@/controller/editor";
+import type { ResourceGroup, VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { $computed, $ref } from "vue/macros";
 import TagListField from "../TagListField.vue";
 import UsesCard from "../UsesCard.vue";
 import VariantsSelector from "../VariantsSelector.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
+import ResourceScafold from "../ResourceScafold.vue";
 
 interface Props {
   group: ExercicegroupExt;
@@ -138,6 +163,18 @@ let variantIndex = $ref(0);
 let isReadonly = $computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
+
+const resource = computed<ResourceGroup>(() => ({
+  Id: group.Group.Id,
+  Title: group.Group.Title,
+  Tags: group.Tags,
+  Variants: ownVariants,
+}));
+
+function updateTitle(t: string) {
+  group.Group.Title = t;
+  updateExercicegroup();
+}
 
 async function updateExercicegroup() {
   if (isReadonly) return;
@@ -200,7 +237,7 @@ async function duplicateVariante(exercice: VariantG) {
   variantIndex = ownVariants.length - 1; // go to the new exercice
 }
 
-async function saveTags(newTags: TagSection[]) {
+async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateExerciceTags({
     Id: group.Group.Id,
     Tags: newTags,
@@ -213,6 +250,16 @@ async function saveTags(newTags: TagSection[]) {
 
 function backToList() {
   emit("back");
+}
+
+async function updateVariant(variant: VariantG) {
+  if (isReadonly) {
+    return;
+  }
+  ownVariants[variantIndex].Subtitle = variant.Subtitle;
+  ownVariants[variantIndex].Difficulty = variant.Difficulty;
+  // TODO: cleanup server API
+  await controller.EditorSaveExerciceMeta(ownVariants[variantIndex]);
 }
 </script>
 

@@ -26,21 +26,7 @@
 
   <v-card class="px-2">
     <v-row no-gutters class="mb-2">
-      <template v-if="props.showVariantMeta">
-        <v-col>
-          <v-text-field
-            class="my-2 input-small"
-            variant="outlined"
-            density="compact"
-            label="Sous-titre de la variante (optionnel)"
-            v-model="props.exercice.Exercice.Subtitle"
-            :readonly="props.isReadonly"
-            hide-details
-            @blur="saveMeta"
-          ></v-text-field
-        ></v-col>
-      </template>
-      <v-spacer v-else></v-spacer>
+      <v-spacer></v-spacer>
 
       <v-col cols="auto" align-self="center" class="pl-2">
         <v-btn

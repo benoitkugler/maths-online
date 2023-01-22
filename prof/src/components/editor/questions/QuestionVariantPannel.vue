@@ -20,30 +20,7 @@
 
   <v-card class="mt-1 px-2">
     <v-row no-gutters class="mb-2">
-      <template v-if="props.showVariantMeta">
-        <v-col>
-          <v-text-field
-            class="my-2 input-small"
-            variant="outlined"
-            density="compact"
-            label="Sous-titre de la variante (optionnel)"
-            v-model="question.Subtitle"
-            :readonly="props.readonly"
-            hide-details
-            @blur="saveMeta"
-          ></v-text-field
-        ></v-col>
-
-        <v-col align-self="center">
-          <DifficultyField
-            class="px-1"
-            v-model="question.Difficulty"
-            @update:model-value="saveMeta"
-            :readonly="props.readonly"
-          ></DifficultyField>
-        </v-col>
-      </template>
-      <v-spacer v-else></v-spacer>
+      <v-spacer></v-spacer>
 
       <v-col cols="auto" align-self="center">
         <v-menu offset-y close-on-content-click>
@@ -124,7 +101,7 @@
 
     <v-row no-gutters>
       <v-col md="4">
-        <div style="height: 66vh; overflow-y: auto" class="py-2 px-2">
+        <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
           <RandomParametersQuestion
             :parameters="question.Page.parameters.Variables"
             :is-loading="isCheckingParameters"
@@ -182,13 +159,10 @@ import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
 import QuestionContent from "../QuestionContent.vue";
 import RandomParametersQuestion from "../RandomParametersQuestion.vue";
 import SnackErrorEnonce from "../SnackErrorEnonce.vue";
-import DifficultyField from "../utils/DifficultyField.vue";
 
 interface Props {
   question: Question;
   readonly: boolean;
-  allTags: TagsDB; // to provide auto completion
-  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();

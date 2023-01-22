@@ -185,6 +185,7 @@ func (ct *Controller) duplicateQuestion(idQuestion ed.IdQuestion, userID uID) (e
 
 	// shallow copy is enough
 	newQuestion := qu
+	newQuestion.Subtitle += " (2)" // to distinguish from origin
 	newQuestion, err = newQuestion.Insert(ct.db)
 	if err != nil {
 		return ed.Question{}, utils.SQLError(err)

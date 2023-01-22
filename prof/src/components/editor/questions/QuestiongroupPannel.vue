@@ -11,88 +11,25 @@
     ></UsesCard>
   </v-dialog>
 
-  <v-dialog
-    :model-value="questionToDelete != null"
-    @update:model-value="questionToDelete = null"
-    max-width="700"
+  <ResourceScafold
+    :resource="resource"
+    :readonly="isReadonly"
+    :all-tags="props.allTags"
+    v-model="variantIndex"
+    @back="backToList"
+    @update-title="updateTitle"
+    @update-tags="saveTags"
+    @update-variant="updateVariant"
+    @duplicate-variant="duplicateVariante"
+    @delete-variant="deleteVariante"
   >
-    <v-card title="Confirmer">
-      <v-card-text
-        >Etes-vous certain de vouloir supprimer la variante
-        <i>{{ questionToDelete?.Id }} - {{ questionToDelete?.Subtitle }}</i> ?
-        <br />
-        Cette opération est irréversible.
-
-        <div v-if="ownVariants.length == 1" class="mt-2">
-          La question associée sera aussi supprimée.
-        </div>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="questionToDelete = null" color="warning">Retour</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteVariante" variant="outlined">
-          Supprimer
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <v-card class="mt-1 px-2">
-    <v-row no-gutters>
-      <v-col cols="auto" align-self="center" class="pr-2">
-        <v-btn
-          size="small"
-          icon
-          title="Retour aux questions"
-          @click="backToList"
-        >
-          <v-icon icon="mdi-arrow-left"></v-icon>
-        </v-btn>
-      </v-col>
-
-      <v-col>
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="compact"
-          label="Nom de la question"
-          v-model="group.Group.Title"
-          :readonly="isReadonly"
-          @blur="updateQuestiongroup"
-          hide-details
-        ></v-text-field>
-      </v-col>
-
-      <v-col cols="3" class="px-1" align-self="center">
-        <TagListField
-          label="Catégories"
-          :all-tags="props.allTags"
-          :model-value="group.Tags || []"
-          @update:model-value="saveTags"
-          :readonly="isReadonly"
-        ></TagListField
-      ></v-col>
-
-      <v-col cols="auto" align-self="center" class="px-1">
-        <VariantsSelector
-          :variants="ownVariants"
-          :readonly="isReadonly"
-          v-model="variantIndex"
-          @delete="(qu) => (questionToDelete = qu)"
-          @duplicate="duplicateVariante"
-        ></VariantsSelector>
-      </v-col>
-    </v-row>
-
     <QuestionVariantPannel
       :question="ownVariants[variantIndex]"
       :readonly="isReadonly"
-      :all-tags="props.allTags"
-      :show-variant-meta="true"
       @update="(qu) => (ownVariants[variantIndex] = qu)"
       @preview="(qu) => emit('preview', qu)"
     ></QuestionVariantPannel>
-  </v-card>
+  </ResourceScafold>
 </template>
 
 <script setup lang="ts">
@@ -102,19 +39,19 @@ import type {
   QuestionExerciceUses,
   QuestiongroupExt,
   Sheet,
+  Tags,
   TagsDB,
-  TagSection,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type { VariantG } from "@/controller/editor";
+import type { ResourceGroup, VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
 import { useRouter } from "vue-router";
 import { $computed, $ref } from "vue/macros";
-import TagListField from "../TagListField.vue";
 import UsesCard from "../UsesCard.vue";
-import VariantsSelector from "../VariantsSelector.vue";
 import QuestionVariantPannel from "./QuestionVariantPannel.vue";
+import ResourceScafold from "../ResourceScafold.vue";
+import { computed } from "vue";
 
 interface Props {
   group: QuestiongroupExt;
@@ -133,12 +70,23 @@ const router = useRouter();
 
 let group = $ref(copy(props.group));
 let ownVariants = $ref(copy(props.variants));
+let resource = computed<ResourceGroup>(() => ({
+  Id: group.Group.Id,
+  Title: group.Group.Title,
+  Tags: group.Tags,
+  Variants: ownVariants,
+}));
 
 let variantIndex = $ref(0);
 
 let isReadonly = $computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
+
+function updateTitle(t: string) {
+  group.Group.Title = t;
+  updateQuestiongroup();
+}
 
 async function updateQuestiongroup() {
   if (isReadonly) return;
@@ -152,13 +100,8 @@ function goToSheet(sh: Sheet) {
   router.push({ name: "homework", query: { idSheet: sh.Id } });
 }
 
-let questionToDelete: VariantG | null = $ref(null);
-async function deleteVariante() {
-  const que = questionToDelete;
-  if (que == null) return;
+async function deleteVariante(que: VariantG) {
   const res = await controller.EditorDeleteQuestion({ id: que.Id });
-  questionToDelete = null;
-
   if (res == undefined) return;
   // check if the question is used
   if (!res.Deleted) {
@@ -188,7 +131,7 @@ async function duplicateVariante(variant: VariantG) {
   variantIndex = ownVariants.length - 1; // go to the new question
 }
 
-async function saveTags(newTags: TagSection[]) {
+async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateQuestionTags({
     Id: group.Group.Id,
     Tags: newTags,
@@ -201,6 +144,17 @@ async function saveTags(newTags: TagSection[]) {
 
 function backToList() {
   emit("back");
+}
+
+async function updateVariant(variant: VariantG) {
+  if (isReadonly) {
+    return;
+  }
+  ownVariants[variantIndex].Subtitle = variant.Subtitle;
+  ownVariants[variantIndex].Difficulty = variant.Difficulty;
+  await controller.EditorSaveQuestionMeta({
+    Question: ownVariants[variantIndex],
+  });
 }
 </script>
 

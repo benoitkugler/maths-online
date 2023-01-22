@@ -1,5 +1,6 @@
 import type { Date_, Monoquestion, SheetExt, TaskExt, Time } from "./api_gen";
 
+/** copy returns a deep copy of `obj` */
 export function copy<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
