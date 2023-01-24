@@ -33,6 +33,7 @@ func scanOneExercice(row scanner) (Exercice, error) {
 		&item.Subtitle,
 		&item.Description,
 		&item.Parameters,
+		&item.Difficulty,
 	)
 	return item, err
 }
@@ -101,22 +102,22 @@ func ScanExercices(rs *sql.Rows) (Exercices, error) {
 // Insert one Exercice in the database and returns the item with id filled.
 func (item Exercice) Insert(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`INSERT INTO exercices (
-		idgroup, subtitle, description, parameters
+		idgroup, subtitle, description, parameters, difficulty
 		) VALUES (
-		$1, $2, $3, $4
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters)
+		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters, item.Difficulty)
 	return ScanExercice(row)
 }
 
 // Update Exercice in the database and returns the new version.
 func (item Exercice) Update(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`UPDATE exercices SET (
-		idgroup, subtitle, description, parameters
+		idgroup, subtitle, description, parameters, difficulty
 		) = (
-		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
-		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.IdGroup, item.Subtitle, item.Description, item.Parameters, item.Difficulty, item.Id)
 	return ScanExercice(row)
 }
 

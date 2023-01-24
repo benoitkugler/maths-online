@@ -61,7 +61,7 @@ func newExerciceHeader(exercice ed.Exercice) ExerciceHeader {
 	return ExerciceHeader{
 		Id:         exercice.Id,
 		Subtitle:   exercice.Subtitle,
-		Difficulty: ed.DiffEmpty, // for now, we don't support difficulty on exercices
+		Difficulty: exercice.Difficulty,
 	}
 }
 
@@ -999,7 +999,7 @@ func (ct *Controller) updateQuestionsEx(args ExerciceUpdateQuestionsIn, userID u
 	return ct.getExercice(args.IdExercice, userID)
 }
 
-type ExerciceUpdateIn = ed.Exercice
+type ExerciceUpdateIn = ExerciceHeader
 
 // EditorSaveExerciceMeta update the exercice metadata.
 func (ct *Controller) EditorSaveExerciceMeta(c echo.Context) error {
@@ -1018,7 +1018,7 @@ func (ct *Controller) EditorSaveExerciceMeta(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateExercice(in ed.Exercice, userID uID) (ed.Exercice, error) {
+func (ct *Controller) updateExercice(in ExerciceHeader, userID uID) (ed.Exercice, error) {
 	if err := ct.checkExerciceOwner(in.Id, userID); err != nil {
 		return ed.Exercice{}, err
 	}
@@ -1029,8 +1029,9 @@ func (ct *Controller) updateExercice(in ed.Exercice, userID uID) (ed.Exercice, e
 	}
 
 	// only update meta data
-	ex.Description = in.Description
+	// ex.Description = in.Description
 	ex.Subtitle = in.Subtitle
+	ex.Difficulty = in.Difficulty
 	ex, err = ex.Update(ct.db)
 	if err != nil {
 		return ed.Exercice{}, utils.SQLError(err)

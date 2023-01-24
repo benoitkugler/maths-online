@@ -95,9 +95,9 @@ func TestExerciceCRUD(t *testing.T) {
 	}, 1)
 	tu.AssertNoErr(t, err)
 
-	exe, err := ct.updateExercice(ed.Exercice{Id: ex.Id, Description: "test", Subtitle: "test2"}, 1)
+	exe, err := ct.updateExercice(ExerciceHeader{Id: ex.Id, Difficulty: ed.Diff3, Subtitle: "test2"}, 1)
 	tu.AssertNoErr(t, err)
-	if exe.Description != "test" {
+	if exe.Difficulty != ed.Diff3 {
 		t.Fatal(exe)
 	}
 

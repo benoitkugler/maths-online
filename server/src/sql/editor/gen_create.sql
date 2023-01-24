@@ -4,7 +4,8 @@ CREATE TABLE exercices (
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
     Description text NOT NULL,
-    Parameters jsonb NOT NULL
+    Parameters jsonb NOT NULL,
+    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL
 );
 
 CREATE TABLE exercice_questions (

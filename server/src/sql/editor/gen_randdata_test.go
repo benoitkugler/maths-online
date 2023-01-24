@@ -25,6 +25,7 @@ func randExercice() Exercice {
 		Subtitle:    randstring(),
 		Description: randstring(),
 		Parameters:  randque_Parameters(),
+		Difficulty:  randDifficultyTag(),
 	}
 }
 

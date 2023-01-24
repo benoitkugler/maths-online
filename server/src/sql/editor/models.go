@@ -83,6 +83,8 @@ type Exercice struct {
 	// which are added to the individual ones.
 	// It will be empty for parallel exercices
 	Parameters questions.Parameters
+
+	Difficulty DifficultyTag
 }
 
 // TODO: check delete question API
