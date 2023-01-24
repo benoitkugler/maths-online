@@ -1,31 +1,5 @@
 <template>
   <v-dialog
-    :model-value="exerciceToDelete != null"
-    @update:model-value="exerciceToDelete = null"
-    max-width="700"
-  >
-    <v-card title="Confirmer">
-      <v-card-text
-        >Etes-vous certain de vouloir supprimer la variante
-        <i>{{ exerciceToDelete?.Id }} - {{ exerciceToDelete?.Subtitle }}</i> ?
-        <br />
-        Cette opération est irréversible.
-
-        <div v-if="ownVariants.length == 1" class="mt-2">
-          L'exercice associé sera aussi supprimé.
-        </div>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn @click="exerciceToDelete = null" color="warning">Retour</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="red" @click="deleteVariante" variant="outlined">
-          Supprimer
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <v-dialog
     :model-value="deletedBlocked != null"
     @update:model-value="deletedBlocked = null"
     max-width="600"
@@ -58,63 +32,6 @@
       @preview="(ex) => emit('preview', ex)"
     ></ExerciceVariantPannel>
   </ResourceScafold>
-
-  <!-- <v-card class="mt-3 px-2">
-    <v-row no-gutters>
-      <v-col cols="auto" align-self="center" class="pr-2">
-        <v-btn
-          size="small"
-          icon
-          title="Retour aux exercices"
-          @click="backToList"
-        >
-          <v-icon icon="mdi-arrow-left"></v-icon>
-        </v-btn>
-      </v-col>
-
-      <v-col>
-        <v-text-field
-          class="my-2 input-small"
-          variant="outlined"
-          density="comfortable"
-          label="Nom de l'exercice"
-          v-model="group.Group.Title"
-          :readonly="isReadonly"
-          @blur="updateExercicegroup"
-          hide-details
-        ></v-text-field>
-      </v-col>
-
-      <v-col cols="3" class="px-1" align-self="center">
-        <TagListField
-          label="Catégories"
-          :all-tags="props.allTags"
-          :model-value="group.Tags || []"
-          @update:model-value="saveTags"
-          :readonly="isReadonly"
-        ></TagListField
-      ></v-col>
-
-      <v-col cols="auto" align-self="center" class="px-1">
-        <VariantsSelector
-          :variants="ownVariants"
-          :readonly="isReadonly"
-          v-model="variantIndex"
-          @delete="(qu) => (exerciceToDelete = qu)"
-          @duplicate="duplicateVariante"
-        ></VariantsSelector>
-      </v-col>
-    </v-row>
-
-    <ExerciceVariantPannel
-      :exercice-header="ownVariants[variantIndex]"
-      :is-readonly="isReadonly"
-      :all-tags="props.allTags"
-      :show-variant-meta="true"
-      @update="(ex) => (ownVariants[variantIndex] = ex)"
-      @preview="(ex) => emit('preview', ex)"
-    ></ExerciceVariantPannel>
-  </v-card> -->
 </template>
 
 <script setup lang="ts">
@@ -126,7 +43,6 @@ import type {
   Sheet,
   Tags,
   TagsDB,
-  TagSection,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -135,9 +51,7 @@ import { copy } from "@/controller/utils";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { $computed, $ref } from "vue/macros";
-import TagListField from "../TagListField.vue";
 import UsesCard from "../UsesCard.vue";
-import VariantsSelector from "../VariantsSelector.vue";
 import ExerciceVariantPannel from "./ExerciceVariantPannel.vue";
 import ResourceScafold from "../ResourceScafold.vue";
 
@@ -258,7 +172,6 @@ async function updateVariant(variant: VariantG) {
   }
   ownVariants[variantIndex].Subtitle = variant.Subtitle;
   ownVariants[variantIndex].Difficulty = variant.Difficulty;
-  // TODO: cleanup server API
   await controller.EditorSaveExerciceMeta(ownVariants[variantIndex]);
 }
 </script>

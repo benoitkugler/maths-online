@@ -81,45 +81,6 @@
         </v-btn>
       </v-col>
 
-      <v-col
-        align-self="center"
-        :cols="titleToEdit == null ? 4 : 8"
-        class="pr-2"
-      >
-        <v-hover
-          v-slot="{ isHovering, props: innerProps }"
-          v-if="titleToEdit == null"
-        >
-          <v-card-subtitle
-            v-bind="innerProps"
-            :style="{
-              'white-space': 'unset',
-              cursor: props.readonly ? 'unset' : 'text',
-              border:
-                isHovering && !props.readonly
-                  ? '1px solid grey'
-                  : '1px solid transparent',
-            }"
-            :class="{ 'text-subtitle-1': true, rounded: true }"
-            @click="props.readonly ? {} : (titleToEdit = props.resource.Title)"
-            >{{ props.resource.Title || "Aucun titre" }}
-          </v-card-subtitle>
-        </v-hover>
-        <v-text-field
-          v-else
-          color="grey"
-          class="mt-1"
-          label="Titre de la ressource"
-          variant="outlined"
-          density="compact"
-          v-model="titleToEdit"
-          autofocus
-          @focus="($event.target as HTMLInputElement)?.select()"
-          hide-details
-          @blur="onDoneEditTitle"
-        ></v-text-field>
-      </v-col>
-
       <v-col cols="auto" align-self="center">
         <v-tooltip content-class="bg-grey-lighten-4">
           <template v-slot:activator="{ props: innerProps }">
@@ -127,6 +88,7 @@
               v-bind="innerProps"
               :content="props.resource.Tags?.length || 0"
               :color="ChapterColor"
+              class="mr-4"
             >
               <v-btn
                 icon
@@ -150,6 +112,45 @@
           </v-row>
           <span v-else>Aucune étiquette</span>
         </v-tooltip>
+      </v-col>
+
+      <v-col
+        align-self="center"
+        :cols="titleToEdit == null ? 4 : 8"
+        class="pr-2"
+      >
+        <v-hover
+          v-slot="{ isHovering, props: innerProps }"
+          v-if="titleToEdit == null"
+        >
+          <v-card-subtitle
+            v-bind="innerProps"
+            :style="{
+              'white-space': 'unset',
+              cursor: props.readonly ? 'unset' : 'text',
+              border:
+                isHovering && !props.readonly
+                  ? '1px solid grey'
+                  : '1px solid transparent',
+            }"
+            :class="{ 'text-subtitle-1': true, rounded: true, 'py-2': true }"
+            @click="props.readonly ? {} : (titleToEdit = props.resource.Title)"
+            >{{ props.resource.Title || "Aucun titre" }}
+          </v-card-subtitle>
+        </v-hover>
+        <v-text-field
+          v-else
+          color="grey"
+          class="mt-1"
+          label="Titre de la ressource"
+          variant="outlined"
+          density="compact"
+          v-model="titleToEdit"
+          autofocus
+          @focus="($event.target as HTMLInputElement)?.select()"
+          hide-details
+          @blur="onDoneEditTitle"
+        ></v-text-field>
       </v-col>
 
       <v-spacer></v-spacer>

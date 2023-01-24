@@ -156,7 +156,7 @@ async function createQuestiongroup() {
 }
 
 async function startEdit(group: QuestiongroupExt) {
-  // load the questions
+  // load the variants
   const out = await controller.EditorGetQuestions({ id: group.Group.Id });
   if (out == undefined) {
     return;

@@ -10,6 +10,15 @@
     @close="errorEnnonce = null"
   ></SnackErrorEnonce>
 
+  <v-dialog max-width="800" v-model="showSkeletonDetails">
+    <SkeletonDetails
+      :exercice="exercice"
+      :is-readonly="props.isReadonly"
+      @update="(ex) => emit('update', ex)"
+      @preview="(qu) => emit('preview', qu)"
+    ></SkeletonDetails>
+  </v-dialog>
+
   <v-dialog v-model="showEditDescription">
     <DescriptionPannel
       :description="question.Question.Description"
@@ -22,30 +31,36 @@
   <v-card class="px-2">
     <v-row no-gutters class="mb-2">
       <v-col cols="auto" align-self="center">
+        <v-pagination
+          :length="(props.exercice.Questions || []).length"
+          :total-visible="(props.exercice.Questions || []).length"
+          :model-value="questionIndex + 1"
+          @update:model-value="(oneBased) => (questionIndex = oneBased - 1)"
+          density="compact"
+        ></v-pagination>
+      </v-col>
+      <v-col cols="auto" align-self="center">
         <v-btn
-          size="small"
           icon
-          :title="
-            questionIndex == 0 ? 'Retour' : 'Aller à la question précédente'
-          "
-          @click="goToPrevious"
+          size="x-small"
+          variant="tonal"
+          color="success"
+          title="Ajouter une question"
+          @click="createQuestion"
         >
-          <v-icon icon="mdi-arrow-left" size="small"></v-icon>
+          <v-icon>mdi-plus</v-icon>
         </v-btn>
-        Question {{ questionIndex + 1 }} /
-        {{ (props.exercice.Questions || []).length }}
         <v-btn
-          size="small"
           icon
-          title="Aller à la question suivante"
-          @click="questionIndex = questionIndex + 1"
-          :disabled="
-            questionIndex >= (props.exercice.Questions || []).length - 1
-          "
+          size="x-small"
+          variant="tonal"
+          title="Ordre et barème des questions"
+          @click="showSkeletonDetails = true"
         >
-          <v-icon icon="mdi-arrow-right" size="small"></v-icon>
+          <v-icon>mdi-cog</v-icon>
         </v-btn>
       </v-col>
+
       <v-spacer></v-spacer>
 
       <v-col cols="auto" align-self="center">
@@ -187,6 +202,7 @@ import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
 import QuestionContent from "../QuestionContent.vue";
 import RandomParametersExercice from "../RandomParametersExercice.vue";
 import SnackErrorEnonce from "../SnackErrorEnonce.vue";
+import SkeletonDetails from "./SkeletonDetails.vue";
 
 interface Props {
   exercice: ExerciceExt;
@@ -221,14 +237,6 @@ onUnmounted(() => {
 
 function restoreHistory(snapshot: ExerciceExt) {
   emit("update", snapshot);
-}
-
-function goToPrevious() {
-  if (questionIndex == 0) {
-    emit("back");
-  } else {
-    questionIndex = questionIndex - 1;
-  }
 }
 
 let showEditDescription = $ref(false);
@@ -353,6 +361,21 @@ async function onImportQuestion(imported: Question) {
 
   emit("update", props.exercice);
 }
+
+async function createQuestion() {
+  const res = await controller.EditorExerciceCreateQuestion({
+    IdExercice: props.exercice.Exercice.Id,
+  });
+  if (res == undefined) {
+    return;
+  }
+  // go to the new question
+  questionIndex = (res.Ex.Questions?.length || 0) - 1;
+  emit("update", res.Ex);
+  emit("preview", res.Preview);
+}
+
+let showSkeletonDetails = $ref(false);
 </script>
 
 <style scoped>

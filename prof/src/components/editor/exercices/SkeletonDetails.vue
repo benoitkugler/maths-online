@@ -1,14 +1,14 @@
 <template>
   <!-- description for the whole exercice, not a particular question -->
-  <v-dialog v-model="showEditDescription" max-width="600px">
+  <!-- <v-dialog v-model="showEditDescription" max-width="600px">
     <description-pannel
       :description="props.exercice.Exercice.Description"
       :readonly="props.isReadonly"
       @save="saveDescription"
     ></description-pannel>
-  </v-dialog>
+  </v-dialog> -->
 
-  <v-dialog v-model="showImportQuestion" :retain-focus="false">
+  <!-- <v-dialog v-model="showImportQuestion" :retain-focus="false">
     <keep-alive>
       <question-selector
         :tags="props.allTags"
@@ -22,74 +22,17 @@
         "
       ></question-selector>
     </keep-alive>
-  </v-dialog>
+  </v-dialog> -->
 
-  <v-card class="px-2">
-    <v-row no-gutters class="mb-2">
-      <v-spacer></v-spacer>
-
-      <v-col cols="auto" align-self="center" class="pl-2">
-        <v-btn
-          title="Créer et ajouter une question"
-          size="small"
-          @click="createQuestion()"
-        >
-          <v-icon icon="mdi-plus" color="green"></v-icon>
-          Créer une question
-        </v-btn>
-        <v-btn
-          title="Importer une question existante"
-          size="small"
-          class="mx-2"
-          @click="showImportQuestion = true"
-        >
-          <v-icon icon="mdi-plus" color="green"></v-icon>
-          Importer
-        </v-btn>
-      </v-col>
-
-      <v-col cols="auto" align-self="center">
-        <v-menu offset-y close-on-content-click>
-          <template v-slot:activator="{ isActive, props }">
-            <v-btn
-              icon
-              title="Plus d'options"
-              v-on="{ isActive }"
-              v-bind="props"
-              size="x-small"
-            >
-              <v-icon icon="mdi-dots-vertical"></v-icon>
-            </v-btn>
-          </template>
-          <v-list>
-            <v-list-item>
-              <v-btn
-                class="my-1"
-                size="small"
-                @click="showEditDescription = true"
-                title="Editer le commentaire"
-              >
-                <v-icon
-                  class="mr-2"
-                  icon="mdi-message-reply-text"
-                  size="small"
-                ></v-icon>
-                Commentaire
-              </v-btn>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-      </v-col>
-    </v-row>
-
-    <v-list @dragstart="onDragStart" @dragend="onDragEnd" style="height: 67vh">
+  <v-card class="px-2" title="Questions et barême">
+    <v-list @dragstart="onDragStart" @dragend="onDragEnd">
       <drop-zone
         v-if="showDropZone"
         @drop="(origin) => swapQuestions(origin, 0)"
       ></drop-zone>
 
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
-        <v-list-item link @click="emit('goToQuestion', index)">
+        <v-list-item>
           <v-row>
             <v-col cols="auto" align-self="center">
               <drag-icon
@@ -198,15 +141,12 @@ import DescriptionPannel from "../DescriptionPannel.vue";
 interface Props {
   exercice: ExerciceExt;
   isReadonly: boolean;
-  allTags: TagsDB; // used to select the question to import
-  showVariantMeta: boolean;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update", exercice: ExerciceExt): void;
   (e: "preview", exercice: LoopbackShowExercice): void;
-  (e: "goToQuestion", questionIndex: number): void;
 }>();
 
 let questionQuery = $ref<Query>({

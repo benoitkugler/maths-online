@@ -121,6 +121,7 @@
         :timeout="4000"
         :color="messageColor"
         location="bottom left"
+        close-on-content-click
       >
         {{ message }}
       </v-snackbar>

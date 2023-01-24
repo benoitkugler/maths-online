@@ -964,6 +964,7 @@ export interface Exercice {
   Subtitle: string;
   Description: string;
   Parameters: Parameters;
+  Difficulty: DifficultyTag;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.ExerciceQuestion
 export interface ExerciceQuestion {
@@ -2270,7 +2271,7 @@ export abstract class AbstractAPI {
     data: DeleteExerciceOut
   ): void;
 
-  protected async rawEditorSaveExerciceMeta(params: Exercice) {
+  protected async rawEditorSaveExerciceMeta(params: ExerciceHeader) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<Exercice> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
@@ -2279,7 +2280,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorSaveExerciceMeta wraps rawEditorSaveExerciceMeta and handles the error */
-  async EditorSaveExerciceMeta(params: Exercice) {
+  async EditorSaveExerciceMeta(params: ExerciceHeader) {
     this.startRequest();
     try {
       const out = await this.rawEditorSaveExerciceMeta(params);
