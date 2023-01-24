@@ -3,9 +3,8 @@ CREATE TABLE exercices (
     Id serial PRIMARY KEY,
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
-    Description text NOT NULL,
-    Parameters jsonb NOT NULL,
-    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL
+    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
+    Parameters jsonb NOT NULL
 );
 
 CREATE TABLE exercice_questions (
@@ -30,9 +29,9 @@ CREATE TABLE exercicegroup_tags (
 
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
-    Page jsonb NOT NULL,
+    Ennonce jsonb NOT NULL,
+    Parameters jsonb NOT NULL,
     Subtitle text NOT NULL,
-    Description text NOT NULL,
     Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
     NeedExercice integer,
     IdGroup integer
@@ -1093,11 +1092,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Variables', 'Intrinsics'))
+            bool_and(key IN ('Variables', 'Intrinsics', 'Description'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_ques_RandomParameter (data -> 'Variables')
-        AND gomacro_validate_json_array_string (data -> 'Intrinsics');
+        AND gomacro_validate_json_array_string (data -> 'Intrinsics')
+        AND gomacro_validate_json_string (data -> 'Description');
     RETURN is_valid;
 END;
 $$
@@ -1250,28 +1250,6 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Content');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_QuestionPage (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('enonce', 'parameters'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_array_ques_Block (data -> 'enonce')
-        AND gomacro_validate_json_ques_Parameters (data -> 'parameters');
     RETURN is_valid;
 END;
 $$
@@ -1901,9 +1879,12 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+ALTER TABLE questions
+    ADD CONSTRAINT Ennonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Ennonce));
+
 ALTER TABLE exercices
     ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_ques_Parameters (Parameters));
 
 ALTER TABLE questions
-    ADD CONSTRAINT Page_gomacro CHECK (gomacro_validate_json_ques_QuestionPage (Page));
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_ques_Parameters (Parameters));
 

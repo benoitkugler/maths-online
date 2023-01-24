@@ -39,8 +39,9 @@ type Block interface {
 }
 
 type Parameters struct {
-	Variables  RandomParameters
-	Intrinsics []string // validated by exercice.ParseIntrinsic
+	Variables   RandomParameters
+	Intrinsics  []string // validated by exercice.ParseIntrinsic
+	Description string   // implementation notes
 }
 
 // ToMap may only be used after `Validate`

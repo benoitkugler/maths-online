@@ -20,12 +20,11 @@ func randDifficultyTag() DifficultyTag {
 
 func randExercice() Exercice {
 	return Exercice{
-		Id:          randIdExercice(),
-		IdGroup:     randIdExercicegroup(),
-		Subtitle:    randstring(),
-		Description: randstring(),
-		Parameters:  randque_Parameters(),
-		Difficulty:  randDifficultyTag(),
+		Id:         randIdExercice(),
+		IdGroup:    randIdExercicegroup(),
+		Subtitle:   randstring(),
+		Difficulty: randDifficultyTag(),
+		Parameters: randque_Parameters(),
 	}
 }
 
@@ -100,9 +99,9 @@ func randOptionalIdQuestiongroup() OptionalIdQuestiongroup {
 func randQuestion() Question {
 	return Question{
 		Id:           randIdQuestion(),
-		Page:         randque_QuestionPage(),
+		Ennonce:      randque_Enonce(),
+		Parameters:   randque_Parameters(),
 		Subtitle:     randstring(),
-		Description:  randstring(),
 		Difficulty:   randDifficultyTag(),
 		NeedExercice: randOptionalIdExercice(),
 		IdGroup:      randOptionalIdQuestiongroup(),
@@ -494,8 +493,9 @@ func randque_OrderedListFieldBlock() questions.OrderedListFieldBlock {
 
 func randque_Parameters() questions.Parameters {
 	return questions.Parameters{
-		Variables:  randque_RandomParameters(),
-		Intrinsics: randSlicestring(),
+		Variables:   randque_RandomParameters(),
+		Intrinsics:  randSlicestring(),
+		Description: randstring(),
 	}
 }
 
@@ -507,13 +507,6 @@ func randque_ProofFieldBlock() questions.ProofFieldBlock {
 
 func randque_ProofSequence() questions.ProofSequence {
 	return questions.ProofSequence{}
-}
-
-func randque_QuestionPage() questions.QuestionPage {
-	return questions.QuestionPage{
-		Enonce:     randque_Enonce(),
-		Parameters: randque_Parameters(),
-	}
 }
 
 func randque_RadioFieldBlock() questions.RadioFieldBlock {
