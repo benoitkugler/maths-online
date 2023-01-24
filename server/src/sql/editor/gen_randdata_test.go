@@ -23,8 +23,8 @@ func randExercice() Exercice {
 		Id:         randIdExercice(),
 		IdGroup:    randIdExercicegroup(),
 		Subtitle:   randstring(),
-		Difficulty: randDifficultyTag(),
 		Parameters: randque_Parameters(),
+		Difficulty: randDifficultyTag(),
 	}
 }
 
@@ -99,12 +99,12 @@ func randOptionalIdQuestiongroup() OptionalIdQuestiongroup {
 func randQuestion() Question {
 	return Question{
 		Id:           randIdQuestion(),
-		Ennonce:      randque_Enonce(),
-		Parameters:   randque_Parameters(),
 		Subtitle:     randstring(),
 		Difficulty:   randDifficultyTag(),
 		NeedExercice: randOptionalIdExercice(),
 		IdGroup:      randOptionalIdQuestiongroup(),
+		Enonce:       randque_Enonce(),
+		Parameters:   randque_Parameters(),
 	}
 }
 
@@ -203,11 +203,11 @@ func randSliceque_Interpolated() []questions.Interpolated {
 	return out
 }
 
-func randSliceque_RandomParameter() []questions.RandomParameter {
+func randSliceque_ParameterEntry() []questions.ParameterEntry {
 	l := 40 + rand.Intn(10)
-	out := make([]questions.RandomParameter, l)
+	out := make([]questions.ParameterEntry, l)
 	for i := range out {
-		out[i] = randque_RandomParameter()
+		out[i] = randque_ParameterEntry()
 	}
 	return out
 }
@@ -353,6 +353,10 @@ func randque_Block() questions.Block {
 	return choix[i]
 }
 
+func randque_Co() questions.Co {
+	return questions.Co(randstring())
+}
+
 func randque_ComparisonLevel() questions.ComparisonLevel {
 	choix := [...]questions.ComparisonLevel{questions.AsLinearEquation, questions.ExpandedSubstitutions, questions.SimpleSubstitutions, questions.Strict}
 	i := rand.Intn(len(choix))
@@ -473,6 +477,10 @@ func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 	}
 }
 
+func randque_In() questions.In {
+	return questions.In(randstring())
+}
+
 func randque_Interpolated() questions.Interpolated {
 	return questions.Interpolated(randstring())
 }
@@ -491,12 +499,18 @@ func randque_OrderedListFieldBlock() questions.OrderedListFieldBlock {
 	}
 }
 
-func randque_Parameters() questions.Parameters {
-	return questions.Parameters{
-		Variables:   randque_RandomParameters(),
-		Intrinsics:  randSlicestring(),
-		Description: randstring(),
+func randque_ParameterEntry() questions.ParameterEntry {
+	choix := [...]questions.ParameterEntry{
+		randque_Co(),
+		randque_In(),
+		randque_Rp(),
 	}
+	i := rand.Intn(3)
+	return choix[i]
+}
+
+func randque_Parameters() questions.Parameters {
+	return questions.Parameters(randSliceque_ParameterEntry())
 }
 
 func randque_ProofFieldBlock() questions.ProofFieldBlock {
@@ -517,15 +531,11 @@ func randque_RadioFieldBlock() questions.RadioFieldBlock {
 	}
 }
 
-func randque_RandomParameter() questions.RandomParameter {
-	return questions.RandomParameter{
+func randque_Rp() questions.Rp {
+	return questions.Rp{
 		Expression: randstring(),
 		Variable:   randexp_Variable(),
 	}
-}
-
-func randque_RandomParameters() questions.RandomParameters {
-	return questions.RandomParameters(randSliceque_RandomParameter())
 }
 
 func randque_SignSymbol() questions.SignSymbol {

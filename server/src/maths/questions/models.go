@@ -6,6 +6,10 @@ import (
 	"errors"
 )
 
+// Parameters stores the definition of the random parameters, in the order
+// used by the user
+type Parameters []ParameterEntry
+
 type Enonce []Block
 
 func loadJSON(out interface{}, src interface{}) error {
@@ -28,8 +32,8 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 }
 
 // Scan implements the driver.Scanner interface using JSON
-func (s *QuestionPage) Scan(src interface{}) error  { return loadJSON(s, src) }
-func (s QuestionPage) Value() (driver.Value, error) { return dumpJSON(s) }
+func (s *Enonce) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Enonce) Value() (driver.Value, error) { return dumpJSON(s) }
 
 // Scan implements the driver.Scanner interface using JSON
 func (s *Parameters) Scan(src interface{}) error  { return loadJSON(s, src) }

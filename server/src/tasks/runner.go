@@ -75,11 +75,11 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 	out := make(InstantiateQuestionsOut, len(ids))
 	for index, id := range ids {
 		qu := questions[id]
-		vars, err := qu.Page.Parameters.ToMap().Instantiate()
+		vars, err := qu.Parameters.ToMap().Instantiate()
 		if err != nil {
 			return nil, err
 		}
-		instance, err := qu.Page.InstantiateWith(vars)
+		instance, err := qu.Enonce.InstantiateWith(vars)
 		if err != nil {
 			return nil, err
 		}
@@ -106,12 +106,12 @@ func (params EvaluateQuestionIn) Evaluate(db ed.DB) (client.QuestionAnswersOut, 
 	if err != nil {
 		return client.QuestionAnswersOut{}, utils.SQLError(err)
 	}
-	return EvaluateQuestion(qu.Page, params.Answer)
+	return EvaluateQuestion(qu.Enonce, params.Answer)
 }
 
 // EvaluateQuestion instantiate [qu] against the given [answer.Params]
 // and evaluate the given [answer.Answer]
-func EvaluateQuestion(qu questions.QuestionPage, answer AnswerP) (client.QuestionAnswersOut, error) {
+func EvaluateQuestion(qu questions.Enonce, answer AnswerP) (client.QuestionAnswersOut, error) {
 	paramsDict, err := answer.Params.ToMap()
 	if err != nil {
 		return client.QuestionAnswersOut{}, err
@@ -182,7 +182,7 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 	out := make([]InstantiatedQuestion, len(questions))
 
 	for index, question := range questions {
-		ownVars, err := question.Page.Parameters.ToMap().Instantiate()
+		ownVars, err := question.Parameters.ToMap().Instantiate()
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +196,7 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 			}
 		}
 
-		instance, err := question.Page.InstantiateWith(ownVars)
+		instance, err := question.Enonce.InstantiateWith(ownVars)
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +396,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 	case ed.Parallel: // all questions
 		for questionIndex, question := range qus {
 			if answer, hasAnswer := args.Answers[questionIndex]; hasAnswer {
-				resp, err := EvaluateQuestion(question.Page, answer)
+				resp, err := EvaluateQuestion(question.Enonce, answer)
 				if err != nil {
 					return EvaluateWorkOut{}, err
 				}
@@ -417,7 +417,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 			return EvaluateWorkOut{}, fmt.Errorf("internal error: missing answer for %d", questionIndex)
 		}
 
-		resp, err := EvaluateQuestion(qus[questionIndex].Page, answer)
+		resp, err := EvaluateQuestion(qus[questionIndex].Enonce, answer)
 		if err != nil {
 			return EvaluateWorkOut{}, err
 		}

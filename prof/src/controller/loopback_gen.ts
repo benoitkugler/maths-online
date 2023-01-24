@@ -62,6 +62,8 @@ export interface Block {
     | VariationTableFieldBlock
     | VectorFieldBlock;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Co
+export type Co = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
 export enum ComparisonLevel {
   AsLinearEquation = 102,
@@ -163,6 +165,8 @@ export interface FunctionsGraphBlock {
   Areas: FunctionArea[] | null;
   Points: FunctionPoint[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.In
+export type In = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Interpolated
 export type Interpolated = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.NumberFieldBlock
@@ -175,11 +179,20 @@ export interface OrderedListFieldBlock {
   Answer: Interpolated[] | null;
   AdditionalProposals: Interpolated[] | null;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
-export interface Parameters {
-  Variables: RandomParameters;
-  Intrinsics: string[] | null;
+
+export enum ParameterEntryKind {
+  Co = "Co",
+  In = "In",
+  Rp = "Rp",
 }
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ParameterEntry
+export interface ParameterEntry {
+  Kind: ParameterEntryKind;
+  Data: Co | In | Rp;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
+export type Parameters = ParameterEntry[] | null;
 
 export enum ProofAssertionKind {
   ProofEquality = "ProofEquality",
@@ -236,13 +249,11 @@ export interface RadioFieldBlock {
   Proposals: Interpolated[] | null;
   AsDropDown: boolean;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.RandomParameter
-export interface RandomParameter {
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Rp
+export interface Rp {
   expression: string;
   variable: Variable;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.RandomParameters
-export type RandomParameters = RandomParameter[] | null;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignSymbol
 export enum SignSymbol {
   Nothing = 0,

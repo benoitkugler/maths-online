@@ -35,10 +35,8 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 
 	qu1, err := ed.Question{
 		NeedExercice: ex.Id.AsOptional(),
-		Page: questions.QuestionPage{
-			Enonce: questions.Enonce{
-				questions.NumberFieldBlock{Expression: "1"},
-			},
+		Enonce: questions.Enonce{
+			questions.NumberFieldBlock{Expression: "1"},
 		},
 	}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -65,10 +63,8 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 	tu.AssertNoErr(t, err)
 	qu4, err := ed.Question{
 		IdGroup: quGroup.Id.AsOptional(),
-		Page: questions.QuestionPage{
-			Enonce: questions.Enonce{
-				questions.NumberFieldBlock{Expression: "1"},
-			},
+		Enonce: questions.Enonce{
+			questions.NumberFieldBlock{Expression: "1"},
 		},
 	}.Insert(tx)
 	tu.AssertNoErr(t, err)

@@ -3,8 +3,8 @@ CREATE TABLE exercices (
     Id serial PRIMARY KEY,
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
-    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
-    Parameters jsonb NOT NULL
+    Parameters jsonb NOT NULL,
+    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL
 );
 
 CREATE TABLE exercice_questions (
@@ -29,12 +29,12 @@ CREATE TABLE exercicegroup_tags (
 
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
-    Ennonce jsonb NOT NULL,
-    Parameters jsonb NOT NULL,
     Subtitle text NOT NULL,
     Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
     NeedExercice integer,
-    IdGroup integer
+    IdGroup integer,
+    Enonce jsonb NOT NULL,
+    Parameters jsonb NOT NULL
 );
 
 CREATE TABLE questiongroups (
@@ -291,6 +291,29 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_ParameterEntry (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_ques_ParameterEntry (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_ProofAssertion (data jsonb)
     RETURNS boolean
     AS $$
@@ -307,29 +330,6 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_ques_ProofAssertion (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_RandomParameter (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_ques_RandomParameter (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -1081,24 +1081,22 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_Parameters (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_ParameterEntry (data jsonb)
     RETURNS boolean
     AS $$
-DECLARE
-    is_valid boolean;
 BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
         RETURN FALSE;
     END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Variables', 'Intrinsics', 'Description'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_array_ques_RandomParameter (data -> 'Variables')
-        AND gomacro_validate_json_array_string (data -> 'Intrinsics')
-        AND gomacro_validate_json_string (data -> 'Description');
-    RETURN is_valid;
+    CASE WHEN data ->> 'Kind' = 'Co' THEN
+        RETURN gomacro_validate_json_string (data -> 'Data');
+    WHEN data ->> 'Kind' = 'In' THEN
+        RETURN gomacro_validate_json_string (data -> 'Data');
+    WHEN data ->> 'Kind' = 'Rp' THEN
+        RETURN gomacro_validate_json_ques_Rp (data -> 'Data');
+    ELSE
+        RETURN FALSE;
+    END CASE;
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -1279,7 +1277,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_RandomParameter (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_Rp (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1880,11 +1878,11 @@ LANGUAGE 'plpgsql'
 IMMUTABLE;
 
 ALTER TABLE questions
-    ADD CONSTRAINT Ennonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Ennonce));
+    ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
 
 ALTER TABLE exercices
-    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_ques_Parameters (Parameters));
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 
 ALTER TABLE questions
-    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_ques_Parameters (Parameters));
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 

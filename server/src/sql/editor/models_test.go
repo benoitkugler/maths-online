@@ -82,7 +82,7 @@ func testInsertSignTable(t *testing.T, db *sql.DB) {
 	qu := randQuestion()
 	qu.IdGroup = group.Id.AsOptional()
 	qu.NeedExercice = OptionalIdExercice{}
-	qu.Page.Enonce = questions.Enonce{randque_SignTableBlock()}
+	qu.Enonce = questions.Enonce{randque_SignTableBlock()}
 	qu, err = qu.Insert(db)
 	tu.AssertNoErr(t, err)
 }

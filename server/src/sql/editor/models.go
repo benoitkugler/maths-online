@@ -20,9 +20,7 @@ type (
 // gomacro:SQL ADD UNIQUE(Id, NeedExercice)
 // TODO: add constraint for empty Parameters for questions in exercices
 type Question struct {
-	Id         IdQuestion
-	Ennonce    questions.Enonce
-	Parameters questions.Parameters
+	Id IdQuestion
 
 	// only used for question in groups (not in exercices)
 	Subtitle   string // used to differentiate questions inside a group
@@ -35,6 +33,9 @@ type Question struct {
 
 	// IdGroup is not null for the standalone questions, accessed by a group
 	IdGroup OptionalIdQuestiongroup `gomacro-sql-foreign:"Questiongroup" gomacro-sql-on-delete:"CASCADE"`
+
+	Enonce     questions.Enonce
+	Parameters questions.Parameters
 }
 
 // Questiongroup groups several variant of the same question
@@ -79,12 +80,13 @@ type Exercice struct {
 	Id      IdExercice
 	IdGroup IdExercicegroup
 
-	Subtitle   string // subtitle, only shown to the teacher
-	Difficulty DifficultyTag
+	Subtitle string // subtitle, only shown to the teacher
 
 	// Parameters are parameters shared by all the questions.
 	// It is used instead of the Question.Parameters field, which is empty
 	Parameters questions.Parameters
+
+	Difficulty DifficultyTag
 }
 
 // TODO: check delete question API

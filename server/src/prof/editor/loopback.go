@@ -14,7 +14,7 @@ func (ct *Controller) LoopackEvaluateQuestion(c echo.Context) error {
 		return err
 	}
 
-	ans, err := taAPI.EvaluateQuestion(args.Question, args.Answer)
+	ans, err := taAPI.EvaluateQuestion(args.Question.Enonce, args.Answer)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (ct *Controller) LoopbackShowQuestionAnswer(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	instance, err := args.Question.InstantiateWith(p)
+	instance, err := args.Question.Enonce.InstantiateWith(p)
 	if err != nil {
 		return err
 	}

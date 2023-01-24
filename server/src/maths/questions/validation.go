@@ -28,39 +28,11 @@ func (err ErrParameters) Error() string {
 // Once called without error, `ToMap` may be safely used.
 func (pr Parameters) Validate() error {
 	params := make(expression.RandomParameters)
-	for _, def := range pr.Variables {
-		origin := fmt.Sprintf("%s : %s", def.Variable, def.Expression)
-		if _, has := params[def.Variable]; has {
-			return ErrParameters{
-				Origin:  origin,
-				Details: expression.ErrDuplicateParameter{Duplicate: def.Variable}.Error(),
-			}
-		}
-
-		expr, err := expression.Parse(def.Expression)
+	for _, item := range pr {
+		err := item.mergeTo(params)
 		if err != nil {
 			return ErrParameters{
-				Origin:  origin,
-				Details: err.Error(),
-			}
-		}
-
-		params[def.Variable] = expr
-	}
-
-	for _, it := range pr.Intrinsics {
-		parsed, err := expression.ParseIntrinsic(it)
-		if err != nil {
-			return ErrParameters{
-				Origin:  it,
-				Details: err.Error(),
-			}
-		}
-
-		err = parsed.MergeTo(params)
-		if err != nil {
-			return ErrParameters{
-				Origin:  it,
+				Origin:  item.String(),
 				Details: err.Error(),
 			}
 		}
@@ -78,7 +50,7 @@ func (pr Parameters) Validate() error {
 	err := params.Validate()
 	if err != nil {
 		return ErrParameters{
-			Origin:  "Liste des paramètres",
+			Origin:  "Paramètres aléatoires",
 			Details: err.Error(),
 		}
 	}

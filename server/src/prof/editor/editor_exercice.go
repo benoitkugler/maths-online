@@ -1066,7 +1066,7 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 
 	for index := range qus {
 		toCheck := params.QuestionParameters[index]
-		toCheck = toCheck.Append(params.SharedParameters)
+		toCheck = append(toCheck, params.SharedParameters...)
 
 		err := toCheck.Validate()
 		if err != nil {
@@ -1121,9 +1121,9 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 			return SaveExerciceAndPreviewOut{}, errors.New("internal error: inconsistent questions length")
 		}
 		for index, question := range qus {
-			toCheck := params.Questions[index].Page
+			toCheck := params.Questions[index].Parameters
 			if question.NeedExercice.Valid { // add the shared parameters
-				toCheck.Parameters = toCheck.Parameters.Append(params.Parameters)
+				toCheck = append(toCheck, params.Parameters...)
 			}
 
 			err = toCheck.Validate()
@@ -1140,8 +1140,8 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		for _, incomming := range params.Questions {
 			qu := data.QuestionsMap[incomming.Id]
 			// update the content
-			qu.Page = incomming.Page
-			qu.Description = incomming.Description
+			qu.Enonce = incomming.Enonce
+			qu.Parameters = incomming.Parameters
 			data.QuestionsMap[incomming.Id] = qu
 		}
 
@@ -1193,7 +1193,7 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int) (LoopbackS
 	qus, _ := content.QuestionsList()
 	questionOrigins := make([]questions.QuestionPage, len(qus))
 	for i, qu := range qus {
-		questionOrigins[i] = qu.Page
+		questionOrigins[i] = questions.QuestionPage{Enonce: qu.Enonce, Parameters: qu.Parameters}
 	}
 
 	if nextQuestion >= len(instance.Questions) {

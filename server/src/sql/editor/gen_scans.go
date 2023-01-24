@@ -31,8 +31,8 @@ func scanOneExercice(row scanner) (Exercice, error) {
 		&item.Id,
 		&item.IdGroup,
 		&item.Subtitle,
-		&item.Difficulty,
 		&item.Parameters,
+		&item.Difficulty,
 	)
 	return item, err
 }
@@ -101,22 +101,22 @@ func ScanExercices(rs *sql.Rows) (Exercices, error) {
 // Insert one Exercice in the database and returns the item with id filled.
 func (item Exercice) Insert(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`INSERT INTO exercices (
-		idgroup, subtitle, difficulty, parameters
+		idgroup, subtitle, parameters, difficulty
 		) VALUES (
 		$1, $2, $3, $4
 		) RETURNING *;
-		`, item.IdGroup, item.Subtitle, item.Difficulty, item.Parameters)
+		`, item.IdGroup, item.Subtitle, item.Parameters, item.Difficulty)
 	return ScanExercice(row)
 }
 
 // Update Exercice in the database and returns the new version.
 func (item Exercice) Update(tx DB) (out Exercice, err error) {
 	row := tx.QueryRow(`UPDATE exercices SET (
-		idgroup, subtitle, difficulty, parameters
+		idgroup, subtitle, parameters, difficulty
 		) = (
 		$1, $2, $3, $4
 		) WHERE id = $5 RETURNING *;
-		`, item.IdGroup, item.Subtitle, item.Difficulty, item.Parameters, item.Id)
+		`, item.IdGroup, item.Subtitle, item.Parameters, item.Difficulty, item.Id)
 	return ScanExercice(row)
 }
 
@@ -650,12 +650,12 @@ func scanOneQuestion(row scanner) (Question, error) {
 	var item Question
 	err := row.Scan(
 		&item.Id,
-		&item.Ennonce,
-		&item.Parameters,
 		&item.Subtitle,
 		&item.Difficulty,
 		&item.NeedExercice,
 		&item.IdGroup,
+		&item.Enonce,
+		&item.Parameters,
 	)
 	return item, err
 }
@@ -724,22 +724,22 @@ func ScanQuestions(rs *sql.Rows) (Questions, error) {
 // Insert one Question in the database and returns the item with id filled.
 func (item Question) Insert(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`INSERT INTO questions (
-		ennonce, parameters, subtitle, difficulty, needexercice, idgroup
+		subtitle, difficulty, needexercice, idgroup, enonce, parameters
 		) VALUES (
 		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.Ennonce, item.Parameters, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup)
+		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters)
 	return ScanQuestion(row)
 }
 
 // Update Question in the database and returns the new version.
 func (item Question) Update(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`UPDATE questions SET (
-		ennonce, parameters, subtitle, difficulty, needexercice, idgroup
+		subtitle, difficulty, needexercice, idgroup, enonce, parameters
 		) = (
 		$1, $2, $3, $4, $5, $6
 		) WHERE id = $7 RETURNING *;
-		`, item.Ennonce, item.Parameters, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Id)
+		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters, item.Id)
 	return ScanQuestion(row)
 }
 

@@ -86,11 +86,14 @@ ALTER TABLE exercice_questions
 ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
 
+ALTER TABLE questions
+    ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
+
 ALTER TABLE exercices
-    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_ques_Parameters (Parameters));
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 
 ALTER TABLE questions
-    ADD CONSTRAINT Page_gomacro CHECK (gomacro_validate_json_ques_QuestionPage (Page));
+    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 
 ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;

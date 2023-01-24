@@ -860,7 +860,6 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 		return errAccessForbidden
 	}
 
-	qu.Description = params.Question.Description
 	qu.Subtitle = params.Question.Subtitle
 	qu.Difficulty = params.Question.Difficulty
 
@@ -922,7 +921,8 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 
 	// if the question is owned : save it, else only preview
 	if group.IdTeacher == userID {
-		qu.Page = params.Page
+		qu.Enonce = params.Page.Enonce
+		qu.Parameters = params.Page.Parameters
 		_, err := qu.Update(ct.db)
 		if err != nil {
 			return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
@@ -933,7 +933,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
-	question, err := params.Page.InstantiateWith(instanceParams)
+	question, err := params.Page.Enonce.InstantiateWith(instanceParams)
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}

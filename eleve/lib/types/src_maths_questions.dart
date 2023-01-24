@@ -146,6 +146,9 @@ Map<String, dynamic> blockToJson(Block item) {
   }
 }
 
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Co
+typedef Co = String;
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
 enum ComparisonLevel {
   asLinearEquation,
@@ -588,6 +591,9 @@ Map<String, dynamic> functionsGraphBlockToJson(FunctionsGraphBlock item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/maths/questions.In
+typedef In = String;
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Interpolated
 typedef Interpolated = String;
 
@@ -643,30 +649,46 @@ Map<String, dynamic> orderedListFieldBlockToJson(OrderedListFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
-class Parameters {
-  final RandomParameters variables;
-  final List<String> intrinsics;
+/// github.com/benoitkugler/maths-online/server/src/maths/questions.ParameterEntry
+abstract class ParameterEntry {}
 
-  const Parameters(this.variables, this.intrinsics);
-
-  @override
-  String toString() {
-    return "Parameters($variables, $intrinsics)";
+ParameterEntry parameterEntryFromJson(dynamic json_) {
+  final json = json_ as Map<String, dynamic>;
+  final kind = json['Kind'] as String;
+  final data = json['Data'];
+  switch (kind) {
+    case "Co":
+      return stringFromJson(data);
+    case "In":
+      return stringFromJson(data);
+    case "Rp":
+      return rpFromJson(data);
+    default:
+      throw ("unexpected type");
   }
 }
 
-Parameters parametersFromJson(dynamic json_) {
-  final json = (json_ as Map<String, dynamic>);
-  return Parameters(randomParametersFromJson(json['Variables']),
-      listStringFromJson(json['Intrinsics']));
+Map<String, dynamic> parameterEntryToJson(ParameterEntry item) {
+  if (item is Co) {
+    return {'Kind': "Co", 'Data': stringToJson(item)};
+  } else if (item is In) {
+    return {'Kind': "In", 'Data': stringToJson(item)};
+  } else if (item is Rp) {
+    return {'Kind': "Rp", 'Data': rpToJson(item)};
+  } else {
+    throw ("unexpected type");
+  }
 }
 
-Map<String, dynamic> parametersToJson(Parameters item) {
-  return {
-    "Variables": randomParametersToJson(item.variables),
-    "Intrinsics": listStringToJson(item.intrinsics)
-  };
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Parameters
+typedef Parameters = List<ParameterEntry>;
+
+Parameters parametersFromJson(dynamic json) {
+  return listParameterEntryFromJson(json);
+}
+
+dynamic parametersToJson(Parameters item) {
+  return listParameterEntryToJson(item);
 }
 
 /// github.com/benoitkugler/maths-online/server/src/maths/questions.ProofAssertion
@@ -904,41 +926,30 @@ Map<String, dynamic> radioFieldBlockToJson(RadioFieldBlock item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions.RandomParameter
-class RandomParameter {
+// github.com/benoitkugler/maths-online/server/src/maths/questions.Rp
+class Rp implements ParameterEntry {
   final String expression;
   final Variable variable;
 
-  const RandomParameter(this.expression, this.variable);
+  const Rp(this.expression, this.variable);
 
   @override
   String toString() {
-    return "RandomParameter($expression, $variable)";
+    return "Rp($expression, $variable)";
   }
 }
 
-RandomParameter randomParameterFromJson(dynamic json_) {
+Rp rpFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return RandomParameter(
+  return Rp(
       stringFromJson(json['expression']), variableFromJson(json['variable']));
 }
 
-Map<String, dynamic> randomParameterToJson(RandomParameter item) {
+Map<String, dynamic> rpToJson(Rp item) {
   return {
     "expression": stringToJson(item.expression),
     "variable": variableToJson(item.variable)
   };
-}
-
-// github.com/benoitkugler/maths-online/server/src/maths/questions.RandomParameters
-typedef RandomParameters = List<RandomParameter>;
-
-RandomParameters randomParametersFromJson(dynamic json) {
-  return listRandomParameterFromJson(json);
-}
-
-dynamic randomParametersToJson(RandomParameters item) {
-  return listRandomParameterToJson(item);
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignSymbol
@@ -1376,6 +1387,17 @@ List<dynamic> listListTextPartToJson(List<List<TextPart>> item) {
   return item.map(listTextPartToJson).toList();
 }
 
+List<ParameterEntry> listParameterEntryFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(parameterEntryFromJson).toList();
+}
+
+List<dynamic> listParameterEntryToJson(List<ParameterEntry> item) {
+  return item.map(parameterEntryToJson).toList();
+}
+
 List<ProofAssertion> listProofAssertionFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -1385,17 +1407,6 @@ List<ProofAssertion> listProofAssertionFromJson(dynamic json) {
 
 List<dynamic> listProofAssertionToJson(List<ProofAssertion> item) {
   return item.map(proofAssertionToJson).toList();
-}
-
-List<RandomParameter> listRandomParameterFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(randomParameterFromJson).toList();
-}
-
-List<dynamic> listRandomParameterToJson(List<RandomParameter> item) {
-  return item.map(randomParameterToJson).toList();
 }
 
 List<SignSymbol> listSignSymbolFromJson(dynamic json) {

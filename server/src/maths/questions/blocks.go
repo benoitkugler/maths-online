@@ -38,51 +38,63 @@ type Block interface {
 	setupValidator(expression.RandomParameters) (validator, error)
 }
 
-type Parameters struct {
-	Variables   RandomParameters
-	Intrinsics  []string // validated by exercice.ParseIntrinsic
-	Description string   // implementation notes
+// ParameterEntry is either a single variable definition,
+// a special function or a (possibly multiline) comment.
+type ParameterEntry interface {
+	// Return a user friendly description
+	String() string
+
+	// mergeTo returns an `ErrDuplicateParameter` error if parameters are already defined
+	mergeTo(vars expression.RandomParameters) error
 }
+
+func (rp Rp) String() string {
+	return fmt.Sprintf("%s = %s", rp.Variable, rp.Expression)
+}
+func (it In) String() string { return string(it) }
+func (cm Co) String() string { return string(cm) }
+
+func (rp Rp) mergeTo(vars expression.RandomParameters) error {
+	expr, err := expression.Parse(rp.Expression)
+	if err != nil {
+		return err
+	}
+	if _, has := vars[rp.Variable]; has {
+		return expression.ErrDuplicateParameter{Duplicate: rp.Variable}
+	}
+	vars[rp.Variable] = expr
+	return nil
+}
+
+func (it In) mergeTo(vars expression.RandomParameters) error {
+	intr, err := expression.ParseIntrinsic(string(it))
+	if err != nil {
+		return err
+	}
+	return intr.MergeTo(vars)
+}
+
+// Comment are ignored
+func (Co) mergeTo(vars expression.RandomParameters) error { return nil }
 
 // ToMap may only be used after `Validate`
 func (pr Parameters) ToMap() expression.RandomParameters {
-	// start with basic variables
-	out := pr.Variables.toMap()
-
-	// add intrinsics
-	for _, intrinsic := range pr.Intrinsics {
-		it, _ := expression.ParseIntrinsic(intrinsic)
-		_ = it.MergeTo(out)
+	out := make(expression.RandomParameters)
+	for _, entry := range pr {
+		_ = entry.mergeTo(out) // error is check in Validate
 	}
-
 	return out
 }
 
-// Append appends `other` slices to `pr` slices
-func (pr Parameters) Append(other Parameters) (out Parameters) {
-	out.Intrinsics = append(pr.Intrinsics, other.Intrinsics...)
-	out.Variables = append(pr.Variables, other.Variables...)
-	return out
-}
-
-// RandomParameters is a serialized form of expression.RandomParameters
-type RandomParameters []RandomParameter
-
-type RandomParameter struct {
+type Rp struct {
 	Expression string              `json:"expression"` // as typed by the user, but validated
 	Variable   expression.Variable `json:"variable"`
 }
 
-// toMap assumes `rp` only contains valid expressions,
-// or it will panic
-// It may only be used after `ValidateParameters`
-func (rp RandomParameters) toMap() expression.RandomParameters {
-	out := make(expression.RandomParameters, len(rp))
-	for _, item := range rp {
-		out[item.Variable] = expression.MustParse(item.Expression)
-	}
-	return out
-}
+// String form on an intrinsic call, validated by expression.ParseIntrinsic
+type In string
+
+type Co string
 
 // QuestionPage is the fundamental object to build exercices.
 // It is mainly consituted of a list of content blocks, which
@@ -119,14 +131,14 @@ func (qu QuestionPage) instantiate() (QuestionInstance, error) {
 	if err != nil {
 		return QuestionInstance{}, err
 	}
-	return qu.InstantiateWith(rp)
+	return qu.Enonce.InstantiateWith(rp)
 }
 
 // InstantiateWith uses the given values to instantiate the general question
-func (qu QuestionPage) InstantiateWith(params expression.Vars) (QuestionInstance, error) {
-	enonce := make(EnonceInstance, len(qu.Enonce))
+func (qu Enonce) InstantiateWith(params expression.Vars) (QuestionInstance, error) {
+	enonce := make(EnonceInstance, len(qu))
 	var currentID int
-	for j, bl := range qu.Enonce {
+	for j, bl := range qu {
 		var err error
 		enonce[j], err = bl.instantiate(params, currentID)
 		if err != nil {

@@ -41,10 +41,8 @@ func setupDB(t *testing.T) (db tu.TestDB, out sample) {
 	out.exe2, err = editor.Exercice{IdGroup: group.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	exe1Qu, err := editor.Question{NeedExercice: out.exe1.Id.AsOptional(), Page: questions.QuestionPage{
-		Enonce: questions.Enonce{
-			questions.NumberFieldBlock{Expression: "1"},
-		},
+	exe1Qu, err := editor.Question{NeedExercice: out.exe1.Id.AsOptional(), Enonce: questions.Enonce{
+		questions.NumberFieldBlock{Expression: "1"},
 	}}.Insert(db)
 	tu.AssertNoErr(t, err)
 	tx, err := db.Begin()

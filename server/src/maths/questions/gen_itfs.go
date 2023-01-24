@@ -215,3 +215,82 @@ func (list *Enonce) UnmarshalJSON(data []byte) error {
 	}
 	return err
 }
+
+// ParameterEntryWrapper may be used as replacements for ParameterEntry
+// when working with JSON
+type ParameterEntryWrapper struct {
+	Data ParameterEntry
+}
+
+func (out *ParameterEntryWrapper) UnmarshalJSON(src []byte) error {
+	var wr struct {
+		Kind string
+		Data json.RawMessage
+	}
+	err := json.Unmarshal(src, &wr)
+	if err != nil {
+		return err
+	}
+	switch wr.Kind {
+	case "Co":
+		var data Co
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "In":
+		var data In
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "Rp":
+		var data Rp
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+
+	default:
+		panic("exhaustive switch")
+	}
+	return err
+}
+
+func (item ParameterEntryWrapper) MarshalJSON() ([]byte, error) {
+	type wrapper struct {
+		Data interface{}
+		Kind string
+	}
+	var wr wrapper
+	switch data := item.Data.(type) {
+	case Co:
+		wr = wrapper{Kind: "Co", Data: data}
+	case In:
+		wr = wrapper{Kind: "In", Data: data}
+	case Rp:
+		wr = wrapper{Kind: "Rp", Data: data}
+
+	default:
+		panic("exhaustive switch")
+	}
+	return json.Marshal(wr)
+}
+
+const (
+	CoPaKind = "Co"
+	InPaKind = "In"
+	RpPaKind = "Rp"
+)
+
+func (list Parameters) MarshalJSON() ([]byte, error) {
+	tmp := make([]ParameterEntryWrapper, len(list))
+	for i, v := range list {
+		tmp[i].Data = v
+	}
+	return json.Marshal(tmp)
+}
+
+func (list *Parameters) UnmarshalJSON(data []byte) error {
+	var tmp []ParameterEntryWrapper
+	err := json.Unmarshal(data, &tmp)
+	*list = make(Parameters, len(tmp))
+	for i, v := range tmp {
+		(*list)[i] = v.Data
+	}
+	return err
+}

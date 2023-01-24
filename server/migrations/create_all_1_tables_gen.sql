@@ -25,8 +25,8 @@ CREATE TABLE exercices (
     Id serial PRIMARY KEY,
     IdGroup integer NOT NULL,
     Subtitle text NOT NULL,
-    Description text NOT NULL,
-    Parameters jsonb NOT NULL
+    Parameters jsonb NOT NULL,
+    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL
 );
 
 CREATE TABLE exercice_questions (
@@ -51,12 +51,12 @@ CREATE TABLE exercicegroup_tags (
 
 CREATE TABLE questions (
     Id serial PRIMARY KEY,
-    Page jsonb NOT NULL,
     Subtitle text NOT NULL,
-    Description text NOT NULL,
     Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
     NeedExercice integer,
-    IdGroup integer
+    IdGroup integer,
+    Enonce jsonb NOT NULL,
+    Parameters jsonb NOT NULL
 );
 
 CREATE TABLE questiongroups (

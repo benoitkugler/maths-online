@@ -484,7 +484,7 @@ func (gs *game) emitQuestion() ShowQuestion {
 	// select the question among the pool...
 	question := gs.options.Questions[cat].sample()
 	// ...and instantiate it
-	instance := question.Page.Instantiate()
+	instance := questions.QuestionPage{Enonce: question.Enonce, Parameters: question.Parameters}.Instantiate()
 
 	gs.question = currentQuestion{
 		categorie: cat,

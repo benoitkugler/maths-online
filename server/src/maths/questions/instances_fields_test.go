@@ -254,23 +254,21 @@ func TestInstantiate01(t *testing.T) {
 			},
 		},
 		Parameters: Parameters{
-			Variables: []RandomParameter{
-				{
-					Expression: "randChoice(f;g;h;k)",
-					Variable:   expression.NewVar('f'),
-				},
-				{
-					Expression: "randChoice(-0,5;-0,25;0,25;0,5;1)",
-					Variable:   expression.NewVar('a'),
-				},
-				{
-					Expression: "randint(1;3)",
-					Variable:   expression.NewVar('b'),
-				},
-				{
-					Expression: "randint(1;2)",
-					Variable:   expression.NewVar('c'),
-				},
+			Rp{
+				Expression: "randChoice(f;g;h;k)",
+				Variable:   expression.NewVar('f'),
+			},
+			Rp{
+				Expression: "randChoice(-0,5;-0,25;0,25;0,5;1)",
+				Variable:   expression.NewVar('a'),
+			},
+			Rp{
+				Expression: "randint(1;3)",
+				Variable:   expression.NewVar('b'),
+			},
+			Rp{
+				Expression: "randint(1;2)",
+				Variable:   expression.NewVar('c'),
 			},
 		},
 	}
