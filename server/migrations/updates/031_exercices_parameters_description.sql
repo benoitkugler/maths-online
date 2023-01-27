@@ -13,7 +13,7 @@ ALTER TABLE questions
 UPDATE
     questions
 SET
-    Enonce = coalesce(page -> 'ennonce', '[]');
+    Enonce = coalesce(page -> 'enonce', '[]');
 --
 UPDATE
     questions
@@ -45,28 +45,6 @@ SET
 ALTER TABLE exercices
     DROP COLUMN Description;
 --
---
--- UPDATE
---     questions
--- SET
---     Parameters = jsonb_set(Parameters, '{tmp}', coalesce((
---             SELECT
---                 jsonb_agg(jsonb_build_object('Kind', 'Rp', 'Data', rp))
---             FROM jsonb_array_elements(
---                 CASE WHEN coalesce(Parameters -> 'Variables', '[]')::text = 'null' THEN
---                     '[]'
---                 ELSE
---                     coalesce(Parameters -> 'Variables', '[]')
---                 END) AS rp) || (
---             SELECT
---                 jsonb_agg(jsonb_build_object('Kind', 'In', 'Data', intr))
---             FROM jsonb_array_elements(
---                 CASE WHEN coalesce(Parameters -> 'Intrinsics', '[]')::text = 'null' THEN
---                     '[]'
---                 ELSE
---                     coalesce(Parameters -> 'Intrinsics', '[]')
---                 END) AS intr), '[]'));
-
 UPDATE
     questions
 SET
