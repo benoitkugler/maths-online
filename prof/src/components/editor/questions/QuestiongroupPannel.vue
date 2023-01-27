@@ -103,7 +103,7 @@ function goToSheet(sh: Sheet) {
 async function deleteVariante(que: VariantG) {
   const res = await controller.EditorDeleteQuestion({ id: que.Id });
   if (res == undefined) return;
-  // check if the question is used
+  // check if the variant is used
   if (!res.Deleted) {
     deletedBlocked = res.BlockedBy;
     return;

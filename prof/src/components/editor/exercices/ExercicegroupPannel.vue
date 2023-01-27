@@ -113,23 +113,18 @@ function goToSheet(sh: Sheet) {
   router.push({ name: "homework", query: { idSheet: sh.Id } });
 }
 
-let exerciceToDelete: ExerciceHeader | null = $ref(null);
-async function deleteVariante() {
-  const exe = exerciceToDelete;
-  if (exe == null) return;
+async function deleteVariante(variant: VariantG) {
   const res = await controller.EditorDeleteExercice({
-    id: exe.Id,
+    id: variant.Id,
   });
-  exerciceToDelete = null;
-
   if (res == undefined) return;
-  // check if the question is used
+  // check if the variant is used
   if (!res.Deleted) {
     deletedBlocked = res.BlockedBy;
     return;
   }
 
-  ownVariants = ownVariants.filter((qu) => qu.Id != exe.Id);
+  ownVariants = ownVariants.filter((qu) => qu.Id != variant.Id);
   if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
