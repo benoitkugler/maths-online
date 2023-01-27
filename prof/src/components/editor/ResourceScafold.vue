@@ -68,27 +68,25 @@
     ></TagListEdit>
   </v-dialog>
 
-  <v-card class="my-2 pl-2">
-    <v-row no-gutters class="py-2">
-      <v-col cols="auto" align-self="center" class="pr-2">
+  <v-card class="my-2">
+    <v-row no-gutters class="pl-2 pt-1">
+      <v-col cols="auto" align-self="center">
         <v-btn
           size="small"
           icon
           title="Retour à la liste"
           @click="emit('back')"
+          class="mr-1"
         >
           <v-icon icon="mdi-arrow-left"></v-icon>
         </v-btn>
-      </v-col>
 
-      <v-col cols="auto" align-self="center">
         <v-tooltip content-class="bg-grey-lighten-4">
           <template v-slot:activator="{ props: innerProps }">
             <v-badge
               v-bind="innerProps"
               :content="props.resource.Tags?.length || 0"
               :color="ChapterColor"
-              class="mr-4"
             >
               <v-btn
                 icon
@@ -114,11 +112,7 @@
         </v-tooltip>
       </v-col>
 
-      <v-col
-        align-self="center"
-        :cols="titleToEdit == null ? 4 : 8"
-        class="pr-2"
-      >
+      <v-col align-self="center" :cols="titleToEdit == null ? 4 : 8">
         <v-hover
           v-slot="{ isHovering, props: innerProps }"
           v-if="titleToEdit == null"
@@ -156,6 +150,7 @@
       <v-spacer></v-spacer>
       <v-col cols="6" align-self="center" v-if="titleToEdit == null">
         <v-tabs
+          style="max-width: 90vh"
           density="compact"
           show-arrows
           color="grey"

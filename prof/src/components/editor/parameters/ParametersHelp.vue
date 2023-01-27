@@ -1,0 +1,221 @@
+<template>
+  <v-dialog
+    :model-value="props.modelValue"
+    @update:model-value="(v) => emit('update:modelValue', v)"
+    width="1000px"
+  >
+    <v-card
+      title="Paramètres aléatoires"
+      subtitle="Description de la syntaxe"
+      style="max-height: 70vh"
+      class="overflow-y-auto"
+    >
+      <v-card-text>
+        Les exercices et questions peuvent dépendre de paramètres aléatoires,
+        qui sont des variables dont les valeurs sont générées à chaque fois
+        qu'une question est posée à l'élève. <br />
+
+        Les paramètres sont définis dans le panneau des Paramètres aléatoires,
+        puis utilisés dans les blocs de contenu d'une question.
+        <v-expansion-panels class="my-2">
+          <v-expansion-panel title="Syntaxe">
+            <v-expansion-panel-text>
+              Chaque variable est définie par une égalité reliant le nom de la
+              variable à une expression, pouvant contenir des nombres, d'autres
+              variables, des opérateurs, des fonctions, ... <br />
+              Un commentaire explicatif peut etre inséré en le préfixant par
+              <C>#</C>.<br />
+              Exemple : <br />
+              <C># Deuxième solution</C><br /><C>y_2 = y_1+randint(3;15)</C>
+              <br /><br />
+
+              Les nombres peuvent utiliser la virgule ou le point comme
+              séparateur décimal. Les constantes
+              <C>e</C>, <C>π</C> , <C>pi</C> sont utilisables. <br /><br />
+              Les variables sont de la forme <C>x</C>, <C>λ</C> ou <C>x_A</C>,
+              <C>x_AB</C> pour ajouter un indice. <br /><br />
+              En plus des opérations usuelles, les opérateurs modulo
+              <C>%</C> et quotient <C>//</C> sont supportés :
+              <C>x % 3</C> renvoie le reste de la division euclidienne de x par
+              3; <C>x // 3</C> renvoie le quotient (entier) de la division
+              euclidienne de x par 3. <br /><br />
+              Un symbole spécial, un mot ou un code LaTeX peuvent être insérés
+              directement en utilisant des guillemets :
+              <C>x = "moyenne"</C> , <C>A = ">"</C> ou <C>B = "\ge"</C>.
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <v-expansion-panel title="Fonctions usuelles">
+            <v-expansion-panel-text>
+              Les fonctions mathématiques usuelles sont supportés, ainsi que des
+              fonctions génératrices de nombre aléatoires : <br />
+
+              <v-list color="info" rounded>
+                <v-list-item
+                  v-for="(content, index) in fonctionsDesc"
+                  :key="index"
+                >
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title>
+                        <C>{{ content[0] }}</C>
+                      </v-list-item-title>
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        {{ content[1] }}
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+              </v-list>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <v-expansion-panel title="Comparaisons">
+            <v-expansion-panel-text>
+              Il est possible de modéliser des affectations conditionnelles
+              grâce aux opérateurs suivants, qui renvoient 1 si la condition est
+              vérifiée, 0 sinon. <br />
+
+              <v-list color="info" rounded>
+                <v-list-item v-for="(content, index) in compsDesc" :key="index">
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title>
+                        <C>{{ content[0] }}</C>
+                      </v-list-item-title>
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        {{ content[1] }}
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+              </v-list>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <v-expansion-panel title="Fonctions spéciales">
+            <v-expansion-panel-text>
+              Les fonctions spéciales permettent de définir des paramètres
+              aléatoires complexes de manière rapide et simple. La syntaxe d'une
+              définition suit le format : <br />
+              <p class="my-2">
+                <i>a,b,c,d,... </i> = <b>fonction</b>(<i
+                  >argument1, argument2, ...</i
+                >)
+              </p>
+              Les fonctions utilisables sont les suivantes :
+              <v-list color="info" rounded>
+                <v-list-item>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title
+                        ><C>a, b, c = pythagorians(bound)</C></v-list-item-title
+                      >
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        Génère trois entiers <i>a</i>,<i>b</i>,<i>c</i>
+                        vérifiant a^2 + b^2 = c^2. <br />
+                        <i>bound</i> est un argument optionnel qui controle le
+                        maximum de <i>a</i> par <i>2 bound^2</i>
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+                <v-list-item>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title
+                        ><C>H = projection(A, B, C)</C></v-list-item-title
+                      >
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        Calcule le projeté orthogonal du point <i>A</i> sur
+                        <i>(BC)</i>, de coordonnées (<C>x_H</C>, <C>y_H</C>)
+                        <br />
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+              </v-list>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+          <v-expansion-panel title="Instanciation et évaluation">
+            <v-expansion-panel-text>
+              La résolution des expressions dépend légèrement de leur contexte
+              de définition. Une expression définie dans le panneau des
+              paramètres aléatoires est systématiquement évaluée. En revanche,
+              une expression apparaissant directement dans le contenu d'une
+              question ne l'est pas : les variables sont simplement substituées.
+              <br />
+
+              Par exemple, si
+              <C>a = 5</C> et <C>b = a + 2</C> sont définies comme paramètres,
+              l'expression <C>bx</C> sera instantiée (pour l'élève) en
+              <C>7x</C>. En revanche, l'expression <C>(a+2)x</C> sera instantiée
+              en <C>(5+2)x</C>.
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script setup lang="ts">
+import C from "./CodeSpan.vue";
+
+interface Props {
+  modelValue: boolean;
+}
+
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: "update:modelValue", v: boolean): void;
+}>();
+
+const fonctionsDesc = [
+  [
+    "randChoice(-4;12;99)",
+    "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
+  ],
+  [
+    "choiceFrom(A; B; C; D; k)",
+    "Renvoie l'expression à l'index k parmi celles proposées (ici, k est entre 1 et 4).",
+  ],
+  ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
+  [
+    "randDecDen()",
+    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)",
+  ],
+  ["round(x; 3)", "Arrondi x à trois chiffres après la virgule"],
+  ["floor(x)", "Renvoie la partie entière de x"],
+  ["isPrime(n)", "Renvoie 1 is n est un nombre premier, 0 sinon"],
+  ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0"],
+  ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs"],
+  ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs"],
+  ["exp(x)", "Fonction exponentielle"],
+  ["ln(x)", "Fonction logarithme"],
+  ["sin(x)", "Fonction sinus"],
+  ["cos(x)", "Fonction cosinus"],
+  ["tan(x)", "Fonction tangente"],
+  ["asin(x)", "Fonction arcsinus"],
+  ["acos(x)", "Fonction arccos"],
+  ["atan(x)", "Fonction arctan"],
+  ["abs(x)", "Fonction valeur absolue"],
+  ["sqrt(x)", "Fonction racine carrée"],
+] as const;
+
+const compsDesc = [
+  ["(a == b)", "a et b sont égaux"],
+  ["(a > b)", "a est strictement supérieur à b"],
+  ["(a >= b)", "a est supérieur ou égal à b"],
+  ["(a < b)", "a est strictement inférieur à b"],
+  ["(a <= b)", "a est inférieur ou égal à b"],
+] as const;
+</script>
+
+<style scoped></style>

@@ -10,16 +10,8 @@
     @close="errorEnnonce = null"
   ></SnackErrorEnonce>
 
-  <v-dialog v-model="showEditDescription">
-    <description-pannel
-      :description="question.Description"
-      :readonly="props.readonly"
-      @save="saveDescription"
-    ></description-pannel>
-  </v-dialog>
-
-  <v-card class="mt-1 px-2">
-    <v-row no-gutters class="mb-2">
+  <v-card class="mt-1 pr-1">
+    <v-row no-gutters>
       <v-spacer></v-spacer>
 
       <v-col cols="auto" align-self="center">
@@ -72,21 +64,6 @@
               <v-btn
                 class="my-1"
                 size="small"
-                @click="showEditDescription = true"
-                title="Editer le commentaire"
-              >
-                <v-icon
-                  class="mr-2"
-                  icon="mdi-message-reply-text"
-                  size="small"
-                ></v-icon>
-                Commentaire
-              </v-btn>
-            </v-list-item>
-            <v-list-item>
-              <v-btn
-                class="my-1"
-                size="small"
                 @click="download"
                 title="Télécharger la question au format .json"
               >
@@ -100,27 +77,18 @@
     </v-row>
 
     <v-row no-gutters>
-      <v-col md="4">
-        <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
-          <RandomParametersQuestion
-            :parameters="question.Page.parameters.Variables"
-            :is-loading="isCheckingParameters"
-            :is-validated="!showErrorParameters"
-            @update="updateRandomParameters"
-            @done="checkParameters"
-          ></RandomParametersQuestion>
-          <IntrinsicsParametersQuestion
-            :parameters="question.Page.parameters.Intrinsics || []"
-            :is-loading="isCheckingParameters"
-            :is-validated="!showErrorParameters"
-            @update="updateIntrinsics"
-            @done="checkParameters"
-          ></IntrinsicsParametersQuestion>
-        </div>
+      <v-col md="5">
+        <ParametersEditor
+          :model-value="question.Parameters"
+          @update:model-value="checkParameters"
+          :is-loading="isCheckingParameters"
+          :is-validated="!showErrorParameters"
+          :show-switch="null"
+        ></ParametersEditor>
       </v-col>
       <v-col class="pr-1">
         <QuestionContent
-          :model-value="question.Page.enonce || []"
+          :model-value="question.Enonce || []"
           @update:model-value="onUpdateEnonce"
           @importQuestion="onImportQuestion"
           :available-parameters="availableParameters"
@@ -140,9 +108,8 @@ import type {
   errEnonce,
   ErrParameters,
   LoopbackShowQuestion,
+  Parameters,
   Question,
-  RandomParameter,
-  TagsDB,
   Variable,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -153,12 +120,10 @@ import { ref } from "@vue/reactivity";
 import { computed, onMounted, onUnmounted, watch } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockBar from "../BlockBar.vue";
-import DescriptionPannel from "../DescriptionPannel.vue";
-import IntrinsicsParametersQuestion from "../IntrinsicsParametersQuestion.vue";
 import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
 import QuestionContent from "../QuestionContent.vue";
-import RandomParametersQuestion from "../RandomParametersQuestion.vue";
 import SnackErrorEnonce from "../SnackErrorEnonce.vue";
+import ParametersEditor from "../parameters/ParametersEditor.vue";
 
 interface Props {
   question: Question;
@@ -209,50 +174,16 @@ function addBlock(kind: BlockKind) {
 }
 
 function onUpdateEnonce(v: Block[]) {
-  question.Page.enonce = v;
-  history.add({ question });
-}
-
-function updateRandomParameters(l: RandomParameter[], shouldCheck: boolean) {
-  question.Page.parameters.Variables = l;
-  if (shouldCheck) {
-    checkParameters();
-  }
-
-  history.add({ question });
-}
-
-function updateIntrinsics(l: string[], shouldCheck: boolean) {
-  question.Page.parameters.Intrinsics = l;
-  if (shouldCheck) {
-    checkParameters();
-  }
-
+  question.Enonce = v;
   history.add({ question });
 }
 
 let errorEnnonce = $ref<errEnonce | null>(null);
 
-async function saveMeta() {
-  if (props.readonly) {
-    return;
-  }
-  await controller.EditorSaveQuestionMeta({
-    Question: question,
-  });
-  emit("update", question);
-}
-
-async function saveDescription(desc: string) {
-  showEditDescription = false;
-  question.Description = desc;
-  saveMeta();
-}
-
 async function save() {
   const res = await controller.EditorSaveQuestionAndPreview({
     Id: question.Id,
-    Page: question.Page,
+    Page: { enonce: question.Enonce, parameters: question.Parameters },
   });
   if (res == undefined) {
     return;
@@ -281,7 +212,8 @@ function download() {
 
 async function onImportQuestion(imported: Question) {
   // only import the data fields
-  question.Page = imported.Page;
+  question.Enonce = imported.Enonce;
+  question.Parameters = imported.Parameters;
 
   history.add({ question });
 }
@@ -291,10 +223,13 @@ const showErrorParameters = computed(() => errorParameters != null);
 const availableParameters = ref<Variable[]>([]);
 let isCheckingParameters = $ref(false);
 
-async function checkParameters() {
+async function checkParameters(params: Parameters) {
+  question.Parameters = params;
+  history.add({ question });
+
   isCheckingParameters = true;
   const out = await controller.EditorCheckQuestionParameters({
-    Parameters: question.Page.parameters,
+    Parameters: params,
   });
   isCheckingParameters = false;
   if (out === undefined) return;
@@ -305,13 +240,6 @@ async function checkParameters() {
   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
   availableParameters.value = out.Variables || [];
 }
-
-let showEditDescription = $ref(false);
 </script>
 
-<style scoped>
-.input-small:deep(input) {
-  font-size: 14px;
-  width: 100%;
-}
-</style>
+<style scoped></style>

@@ -9,7 +9,7 @@
     ></expression-field-doc>
   </v-dialog>
 
-  <v-card class="my-2" elevation="3">
+  <v-card class="mb-2" elevation="3">
     <v-row
       no-gutters
       :class="'rounded ' + colorClass"

@@ -98,7 +98,7 @@ async function updateExercicegroup() {
   const res = await controller.EditorSaveExerciceAndPreview({
     OnlyPreview: true,
     IdExercice: ownVariants[variantIndex].Id,
-    Parameters: { Intrinsics: [], Variables: [] }, // ignored
+    Parameters: [], // ignored
     Questions: [], // ignored
     CurrentQuestion: -1,
   });

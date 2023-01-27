@@ -1,10 +1,12 @@
 import { TextKind, type TextPart } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 
-/** Token generates a span with given style and text content */
+/** Token generates a span with given style and text content.
+ * The content may contain line breaks
+ */
 export interface Token {
   Content: string;
-  Kind: string;
+  Kind: string; // usually a style string
 }
 
 const reLaTeX = /\$([^$]+)\$/g;

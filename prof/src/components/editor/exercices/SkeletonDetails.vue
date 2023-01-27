@@ -1,29 +1,4 @@
 <template>
-  <!-- description for the whole exercice, not a particular question -->
-  <!-- <v-dialog v-model="showEditDescription" max-width="600px">
-    <description-pannel
-      :description="props.exercice.Exercice.Description"
-      :readonly="props.isReadonly"
-      @save="saveDescription"
-    ></description-pannel>
-  </v-dialog> -->
-
-  <!-- <v-dialog v-model="showImportQuestion" :retain-focus="false">
-    <keep-alive>
-      <question-selector
-        :tags="props.allTags"
-        :query="questionQuery"
-        @closed="showImportQuestion = false"
-        @selected="
-          (q) => {
-            showImportQuestion = false;
-            importQuestion(q.Id);
-          }
-        "
-      ></question-selector>
-    </keep-alive>
-  </v-dialog> -->
-
   <v-card class="px-2" title="Questions et barême">
     <v-list @dragstart="onDragStart" @dragend="onDragEnd">
       <drop-zone
@@ -34,7 +9,7 @@
       <div v-for="(question, index) in props.exercice.Questions" :key="index">
         <v-list-item>
           <v-row>
-            <v-col cols="auto" align-self="center">
+            <v-col cols="auto" align-self="center" v-if="!props.isReadonly">
               <drag-icon
                 color="black"
                 @start="(e) => onItemDragStart(e, index)"
@@ -42,6 +17,7 @@
             </v-col>
             <v-col cols="auto" align-self="center" class="my-1">
               <v-btn
+                v-if="!props.isReadonly"
                 class="mx-2 my-1"
                 size="x-small"
                 icon
@@ -76,10 +52,11 @@
               >
                 <template v-slot:activator="{ isActive, props }">
                   <v-chip
+                    class="my-1"
                     elevation="3"
                     v-on="{ isActive }"
                     v-bind="props"
-                    color="primary"
+                    color="primary-darken"
                     @click="
                       questionToEdit = copy(question);
                       questionIndexToEdit = index;
@@ -123,20 +100,15 @@
 
 <script setup lang="ts">
 import DropZone from "@/components/DropZone.vue";
-import {
-  OriginKind,
-  type ExerciceExt,
-  type ExerciceQuestionExt,
-  type LoopbackShowExercice,
-  type Query,
-  type TagsDB,
+import type {
+  ExerciceExt,
+  ExerciceQuestionExt,
+  LoopbackShowExercice,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
-import QuestionSelector from "../../QuestionSelector.vue";
-import DescriptionPannel from "../DescriptionPannel.vue";
 
 interface Props {
   exercice: ExerciceExt;
@@ -149,59 +121,12 @@ const emit = defineEmits<{
   (e: "preview", exercice: LoopbackShowExercice): void;
 }>();
 
-let questionQuery = $ref<Query>({
-  TitleQuery: "",
-  LevelTags: [],
-  ChapterTags: [],
-  Origin: OriginKind.All,
-});
-let showImportQuestion = $ref(false);
-
-let showEditDescription = $ref(false);
-async function saveDescription(description: string) {
-  showEditDescription = false;
-  props.exercice.Exercice.Description = description;
-  saveMeta();
-}
-
-async function saveMeta() {
-  if (props.isReadonly) {
-    return;
-  }
-  const res = await controller.EditorSaveExerciceMeta(props.exercice.Exercice);
-  if (res == undefined) return;
-  emit("update", props.exercice);
-}
-
-async function createQuestion() {
-  const res = await controller.EditorExerciceCreateQuestion({
-    IdExercice: props.exercice.Exercice.Id,
-  });
-  if (res == undefined) {
-    return;
-  }
-  emit("update", res.Ex);
-  emit("preview", res.Preview);
-}
-
 function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
   return questions.map((qu) => ({
     id_exercice: -1,
     id_question: qu.Question.Id,
     bareme: qu.Bareme,
   }));
-}
-
-async function importQuestion(idQuestion: number) {
-  const res = await controller.EditorExerciceImportQuestion({
-    IdExercice: props.exercice.Exercice.Id,
-    IdQuestion: idQuestion,
-  });
-  if (res == undefined) {
-    return;
-  }
-  emit("update", res.Ex);
-  emit("preview", res.Preview);
 }
 
 async function removeQuestion(index: number) {

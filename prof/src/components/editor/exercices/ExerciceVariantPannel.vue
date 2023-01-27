@@ -1,6 +1,6 @@
 <template>
-  <v-card class="px-2">
-    <v-row no-gutters class="mb-2">
+  <v-card class="mt-1 px-2">
+    <v-row no-gutters>
       <v-col cols="auto" align-self="center">
         <v-pagination
           :length="(exercice.Questions || []).length"
@@ -14,17 +14,18 @@
         <v-btn
           icon
           size="x-small"
-          variant="tonal"
-          color="success"
+          variant="elevated"
           title="Ajouter une question"
           @click="createQuestion"
+          class="mr-1"
+          :disabled="props.isReadonly"
         >
-          <v-icon>mdi-plus</v-icon>
+          <v-icon color="success">mdi-plus</v-icon>
         </v-btn>
         <v-btn
           icon
           size="x-small"
-          variant="tonal"
+          variant="elevated"
           title="Ordre et barème des questions"
           @click="showSkeletonDetails = true"
         >
@@ -42,6 +43,7 @@
               v-on="{ isActive }"
               v-bind="props"
               size="small"
+              :disabled="!question"
             >
               <v-icon icon="mdi-plus" color="green"></v-icon>
               Insérer du contenu
@@ -60,6 +62,7 @@
             props.isReadonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
           "
           size="small"
+          :disabled="!question"
         >
           <v-icon
             :icon="props.isReadonly ? 'mdi-eye' : 'mdi-content-save'"
@@ -84,23 +87,8 @@
               <v-btn
                 variant="tonal"
                 class="ma-2"
-                @click="showEditDescription = true"
-                title="Editer le commentaire"
-              >
-                <v-icon
-                  class="mr-2"
-                  icon="mdi-message-reply-text"
-                  size="small"
-                ></v-icon>
-                Commentaire
-              </v-btn>
-            </v-list-item>
-            <v-list-item class="ma-0 pa-0">
-              <v-btn
-                variant="tonal"
-                class="ma-2"
                 @click="download"
-                :disabled="!question.Question.Page.enonce?.length"
+                :disabled="!question?.Question.Enonce?.length"
                 title="Télécharger la question au format .json"
               >
                 <v-icon class="mr-2" icon="mdi-download" size="small"></v-icon>
@@ -114,30 +102,18 @@
 
     <v-row no-gutters v-if="question != null">
       <v-col md="5">
-        <div style="height: 68vh; overflow-y: auto" class="py-2 px-2">
-          <RandomParametersExercice
-            :shared-parameters="exercice.Exercice.Parameters.Variables"
-            :question-parameters="question.Question.Page.parameters.Variables"
-            :is-loading="isCheckingParameters"
-            :is-validated="!showErrorParameters"
-            @update="updateRandomParameters"
-            @done="checkParameters"
-          ></RandomParametersExercice>
-          <IntrinsicsParametersExercice
-            :shared-parameters="exercice.Exercice.Parameters.Intrinsics || []"
-            :question-parameters="
-              question.Question.Page.parameters.Intrinsics || []
-            "
-            :is-loading="isCheckingParameters"
-            :is-validated="!showErrorParameters"
-            @update="updateIntrinsics"
-            @done="checkParameters"
-          ></IntrinsicsParametersExercice>
-        </div>
+        <ParametersEditor
+          :model-value="currentEditedParams"
+          @update:model-value="checkParameters"
+          :is-loading="isCheckingParameters"
+          :is-validated="!showErrorParameters"
+          :show-switch="editSharedParams"
+          @switch="switchParamsMode"
+        ></ParametersEditor>
       </v-col>
       <v-col class="pr-1">
         <QuestionContent
-          :model-value="question.Question.Page.enonce || []"
+          :model-value="question.Question.Enonce || []"
           @update:model-value="updateQuestion"
           @importQuestion="onImportQuestion"
           :available-parameters="[]"
@@ -169,15 +145,6 @@
       @preview="(qu) => emit('preview', qu)"
     ></SkeletonDetails>
   </v-dialog>
-
-  <v-dialog v-model="showEditDescription">
-    <DescriptionPannel
-      :description="question.Question.Description"
-      @save="saveQuestionDescription"
-      :readonly="isReadonly"
-    >
-    </DescriptionPannel>
-  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -189,25 +156,24 @@ import {
   type ErrParameters,
   type ExerciceExt,
   type ExerciceHeader,
+  type ExerciceQuestionExt,
   type IdExercice,
   type LoopbackShowExercice,
+  type Parameters,
   type Question,
-  type RandomParameter,
   type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, isReadonly, onMounted, onUnmounted, watch } from "vue";
+import { computed, onMounted, onUnmounted, watch } from "vue";
 import { $computed, $ref } from "vue/macros";
 import SkeletonDetails from "./SkeletonDetails.vue";
 import SnackErrorEnonce from "../SnackErrorEnonce.vue";
 import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
 import QuestionContent from "../QuestionContent.vue";
-import IntrinsicsParametersExercice from "../IntrinsicsParametersExercice.vue";
-import RandomParametersExercice from "../RandomParametersExercice.vue";
-import DescriptionPannel from "../DescriptionPannel.vue";
 import { History } from "@/controller/editor_history";
 import { saveData } from "@/controller/editor";
 import BlockBar from "../BlockBar.vue";
+import ParametersEditor from "../parameters/ParametersEditor.vue";
 
 interface Props {
   exerciceHeader: ExerciceHeader;
@@ -230,16 +196,16 @@ let exercice = $ref<ExerciceExt>({
     Id: 0,
     IdGroup: 0,
     Subtitle: "",
-    Description: "",
-    Parameters: { Variables: [], Intrinsics: [] },
+    Parameters: [],
     Difficulty: DifficultyTag.DiffEmpty,
   },
   Questions: [],
 });
 
-onMounted(() => {
-  fetchExercice();
+onMounted(async () => {
+  await fetchExercice();
   refreshExercicePreview(props.exerciceHeader.Id);
+  editSharedParams = inferEditSharedParams();
 });
 
 watch(props, async (_) => {
@@ -249,6 +215,8 @@ watch(props, async (_) => {
 
     // reset the question index if needed
     if (questionIndex >= (exercice.Questions?.length || 0)) questionIndex = 0;
+
+    editSharedParams = inferEditSharedParams();
   }
 });
 
@@ -256,7 +224,7 @@ async function refreshExercicePreview(id: IdExercice) {
   const res = await controller.EditorSaveExerciceAndPreview({
     OnlyPreview: true,
     IdExercice: id,
-    Parameters: { Intrinsics: [], Variables: [] }, // ignored
+    Parameters: [], // ignored
     Questions: [], // ignored
     CurrentQuestion: -1,
   });
@@ -283,7 +251,32 @@ function notifieUpdate(ex: ExerciceExt) {
   });
 }
 
-let question = $computed(
+// guess the edit mode, defaulting on shared for empty params
+function inferEditSharedParams() {
+  if (
+    !exercice.Exercice.Parameters?.length &&
+    !question?.Question.Parameters?.length
+  ) {
+    return true;
+  }
+  return !!exercice.Exercice.Parameters?.length;
+}
+
+let editSharedParams = $ref(true);
+
+// either the shared params or the params of the current question
+const currentEditedParams = computed(() =>
+  editSharedParams
+    ? exercice.Exercice.Parameters
+    : question?.Question.Parameters || []
+);
+
+function switchParamsMode(b: boolean) {
+  editSharedParams = b;
+  console.log(currentEditedParams.value);
+}
+
+let question = $computed<ExerciceQuestionExt | null>(
   () => (exercice.Questions || [])[questionIndex] || null
 );
 
@@ -300,43 +293,9 @@ function restoreHistory(snapshot: ExerciceExt) {
   notifieUpdate(snapshot);
 }
 
-let showEditDescription = $ref(false);
-async function saveQuestionDescription(description: string) {
-  showEditDescription = false;
-  question.Question.Description = description;
-  const res = await controller.EditorSaveQuestionMeta({
-    Question: question.Question,
-  });
-}
-
 function updateQuestion(qu: Block[]) {
-  question.Question.Page.enonce = qu;
-  history.add(exercice);
-}
-
-function updateRandomParameters(
-  sharedP: RandomParameter[],
-  questionP: RandomParameter[],
-  shouldCheck: boolean
-) {
-  exercice.Exercice.Parameters.Variables = sharedP;
-  question.Question.Page.parameters.Variables = questionP;
-  if (shouldCheck) {
-    checkParameters();
-  }
-  history.add(exercice);
-}
-
-function updateIntrinsics(
-  sharedP: string[],
-  questionP: string[],
-  shouldCheck: boolean
-) {
-  exercice.Exercice.Parameters.Intrinsics = sharedP;
-  question.Question.Page.parameters.Intrinsics = questionP;
-  if (shouldCheck) {
-    checkParameters();
-  }
+  if (!question) return;
+  question.Question.Enonce = qu;
   history.add(exercice);
 }
 
@@ -354,13 +313,20 @@ const showErrorParameters = computed(() => errorParameters != null);
 
 let errorEnnonce = $ref<errEnonce | null>(null);
 
-async function checkParameters() {
+async function checkParameters(ps: Parameters) {
+  if (editSharedParams) {
+    exercice.Exercice.Parameters = ps;
+  } else {
+    question!.Question.Parameters = ps;
+  }
+  history.add(exercice);
+
   isCheckingParameters = true;
   const out = await controller.EditorCheckExerciceParameters({
     IdExercice: exercice.Exercice.Id,
     SharedParameters: exercice.Exercice.Parameters,
     QuestionParameters:
-      exercice.Questions?.map((q) => q.Question.Page.parameters) || [],
+      exercice.Questions?.map((q) => q.Question.Parameters) || [],
   });
   isCheckingParameters = false;
   if (out === undefined) return;
@@ -408,6 +374,7 @@ async function save() {
 }
 
 function download() {
+  if (!question) return;
   saveData<Question>(
     question.Question,
     `question${questionIndex + 1}.isyro.json`
@@ -415,8 +382,10 @@ function download() {
 }
 
 async function onImportQuestion(imported: Question) {
+  if (!question) return;
   // only import the data fields
-  question.Question.Page = imported.Page;
+  question.Question.Parameters = imported.Parameters;
+  question.Question.Enonce = imported.Enonce;
 
   history.add(exercice);
 
@@ -439,9 +408,4 @@ async function createQuestion() {
 let showSkeletonDetails = $ref(false);
 </script>
 
-<style scoped>
-.input-small:deep(input) {
-  font-size: 14px;
-  width: 100%;
-}
-</style>
+<style scoped></style>
