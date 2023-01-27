@@ -243,11 +243,8 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   @override
   void initState() {
     controller = LoopackQuestionController(
-        LoopbackShowQuestion(
-            questionComplexe,
-            [],
-            const ServerQuestions.QuestionPage(
-                [], ServerQuestions.Parameters([], []))),
+        LoopbackShowQuestion(questionComplexe, [],
+            const ServerQuestions.QuestionPage(null, null)),
         _FieldAPI(),
         onValid);
     super.initState();

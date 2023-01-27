@@ -39,8 +39,7 @@ Question numberQuestion(String title) {
   ]);
 }
 
-const origin =
-    server_questions.QuestionPage([], server_questions.Parameters([], []));
+const origin = server_questions.QuestionPage(null, null);
 
 final qu1 = numberQuestion("Test 1");
 final qu2 = numberQuestion("Test 2");
