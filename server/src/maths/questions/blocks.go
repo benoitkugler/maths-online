@@ -101,8 +101,8 @@ type Co string
 // describes the question (description, question, field answer),
 // and are parametrized by random values.
 type QuestionPage struct {
-	Enonce     Enonce     `json:"enonce"`
-	Parameters Parameters `json:"parameters"` // random parameters shared by the all the blocks
+	Enonce     Enonce     `json:"enonce" gomacro-opaque:"dart"`
+	Parameters Parameters `json:"parameters" gomacro-opaque:"dart"` // random parameters shared by the all the blocks
 }
 
 // Instantiate returns a deep copy of `qu`, where all random parameters
