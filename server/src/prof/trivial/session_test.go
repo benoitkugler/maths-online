@@ -8,6 +8,7 @@ import (
 
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
+	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 var dummyQuestions = tv.QuestionPool{
@@ -46,6 +47,10 @@ func TestSession(t *testing.T) {
 		t.Fatal(L)
 	}
 	session.lock.Unlock()
+
+	for _, s := range session.collectSummaries() {
+		testutils.Assert(t, s.LatestQuestion.ID == 0)
+	}
 
 	// try to remove an inexisting game
 	session.stopGameEvents <- stopGame{ID: "xxx"}

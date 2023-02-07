@@ -34,7 +34,7 @@ var (
 		16: {15: true, 0: true},
 	}
 
-	categories = [nbSquares]categorie{
+	categories = [nbSquares]Categorie{
 		Purple,
 		Blue,
 		Green,

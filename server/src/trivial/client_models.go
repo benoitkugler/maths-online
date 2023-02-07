@@ -159,7 +159,7 @@ type PossibleMoves struct {
 // should answer a question
 type ShowQuestion struct {
 	TimeoutSeconds int
-	Categorie      categorie
+	Categorie      Categorie
 	ID             editor.IdQuestion // to facilitate the tracking of the question results
 	Question       client.Question   // the actual question
 }
@@ -168,7 +168,7 @@ type ShowQuestion struct {
 // if the players have answered correctly to the
 // current question
 type PlayerAnswerResults struct {
-	Categorie categorie
+	Categorie Categorie
 	Results   map[serial]playerAnswerResult
 }
 

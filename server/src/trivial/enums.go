@@ -1,10 +1,10 @@
 package trivial
 
-// a categorie of questions, represented by a color
-type categorie uint8
+// a Categorie of questions, represented by a color
+type Categorie uint8
 
 const (
-	Purple categorie = iota // purple
+	Purple Categorie = iota // purple
 	Green                   // green
 	Orange                  // orange
 	Yellow                  // yellow

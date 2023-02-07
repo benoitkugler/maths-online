@@ -103,7 +103,7 @@
     "maths/questions/client/client_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/questions/types.gen.dart"
+            "Output": ""
         },
         {
             "Mode": "go/unions",
@@ -113,13 +113,13 @@
     "maths/repere/repere.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/questions/repere.gen.dart"
+            "Output": ""
         }
     ],
     "prof/editor/loopback_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/loopback/types.gen.dart"
+            "Output": ""
         },
         {
             "Mode": "typescript/types",
@@ -128,6 +128,12 @@
         {
             "Mode": "go/unions",
             "Output": "prof/editor/gen_itfs.go"
+        }
+    ],
+    "prof/trivial/monitor_preview_types.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
         }
     ],
     "prof/reviews/types.go": [
@@ -139,13 +145,13 @@
     "prof/teacher/classrooms_student_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/shared/students.gen.dart"
+            "Output": ""
         }
     ],
     "trivial/client_models.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/activities/trivialpoursuit/events.gen.dart"
+            "Output": ""
         },
         {
             "Mode": "go/unions",
@@ -155,7 +161,7 @@
     "prof/homework/student_types.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/activities/homework/types.gen.dart"
+            "Output": ""
         }
     ],
     "prof_api.go": [
@@ -167,7 +173,7 @@
     "shared_api.go": [
         {
             "Mode": "dart",
-            "Output": "../../eleve/lib/shared_gen.dart"
+            "Output": ""
         }
     ]
 }

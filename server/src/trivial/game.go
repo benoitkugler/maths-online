@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/utils"
@@ -22,10 +23,12 @@ func (wq WeigthedQuestions) sample() editor.Question {
 
 type QuestionPool [NbCategories]WeigthedQuestions
 
-type currentQuestion struct {
-	Question  questions.QuestionInstance // the instantiated version
-	categorie categorie                  // the origin
+// QuestionContent stores the ID of the question and its instance
+type QuestionContent struct {
 	ID        editor.IdQuestion          // the origin
+	Question  questions.QuestionInstance // the instantiated version
+	Vars      expression.Vars            // the corresponding parameters
+	Categorie Categorie                  // the origin
 }
 
 // phase identifies the current phase of the game
@@ -74,7 +77,9 @@ type game struct {
 
 	// refreshed for each question
 	currentAnswers map[serial]bool
-	question       currentQuestion // the question to answer, or empty
+	// the question to answer, or empty
+	// it is refreshed just when starting a new question
+	question QuestionContent
 
 	// refreshed for each new turn
 	currentWantNextTurn map[serial]bool
@@ -210,7 +215,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 	}
 
 	out := PlayerAnswerResults{
-		Categorie: r.game.question.categorie,
+		Categorie: r.game.question.Categorie,
 		Results:   make(map[serial]playerAnswerResult),
 	}
 
@@ -222,7 +227,7 @@ func (r *Room) tryEndQuestion(force bool) Events {
 
 		isValid := r.game.currentAnswers[player.pl.ID]
 		// update the success
-		player.advance.success[r.game.question.categorie] = isValid // false if not answered
+		player.advance.success[r.game.question.Categorie] = isValid // false if not answered
 		player.advance.review.QuestionHistory = append(player.advance.review.QuestionHistory, QR{
 			IdQuestion: r.game.question.ID,
 			Success:    isValid,
@@ -272,9 +277,6 @@ func (r *Room) tryEndTurn() Events {
 	if areReady, _ := r.arePlayersReadyForNextTurn(); !areReady { // do nothing
 		return nil
 	}
-
-	// reset the question
-	r.game.question = currentQuestion{}
 
 	// check for winners
 	winners := r.winners()
@@ -484,12 +486,13 @@ func (gs *game) emitQuestion() ShowQuestion {
 	// select the question among the pool...
 	question := gs.options.Questions[cat].sample()
 	// ...and instantiate it
-	instance := questions.QuestionPage{Enonce: question.Enonce, Parameters: question.Parameters}.Instantiate()
+	instance, vars := questions.QuestionPage{Enonce: question.Enonce, Parameters: question.Parameters}.Instantiate()
 
-	gs.question = currentQuestion{
-		categorie: cat,
+	gs.question = QuestionContent{
+		Categorie: cat,
 		ID:        question.Id,
 		Question:  instance,
+		Vars:      vars,
 	}
 
 	out := ShowQuestion{

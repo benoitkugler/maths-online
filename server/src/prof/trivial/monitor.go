@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/labstack/echo/v4"
 )
@@ -14,19 +15,24 @@ type GamePlayers struct {
 }
 
 type GameSummary struct {
-	GameID        tv.RoomID
-	CurrentPlayer string // empty when no one is playing
-	Players       []GamePlayers
-	RoomSize      int
+	GameID         tv.RoomID
+	CurrentPlayer  string          // empty when no one is playing
+	LatestQuestion QuestionContent // empty before the first question
+	Players        []GamePlayers
+	RoomSize       int
 }
 
-type MonitorOut struct {
-	Games []GameSummary
-}
 
 func newGameSummary(s tv.Summary) (out GameSummary) {
 	out.GameID = s.ID
 	out.RoomSize = s.RoomSize
+	out.LatestQuestion = QuestionContent{
+		Id:        s.LatestQuestion.ID,
+		Categorie: s.LatestQuestion.Categorie,
+		Question:  s.LatestQuestion.Question.ToClient(),
+		Params:    tasks.NewParams(s.LatestQuestion.Vars),
+	}
+
 	for p, su := range s.Successes {
 		out.Players = append(out.Players, GamePlayers{
 			Player:    p.Pseudo,
@@ -40,6 +46,10 @@ func newGameSummary(s tv.Summary) (out GameSummary) {
 		out.CurrentPlayer = s.PlayerTurn.Pseudo
 	}
 	return out
+}
+
+type MonitorOut struct {
+	Games []GameSummary
 }
 
 func newMonitorOut(summaries map[tv.RoomID]tv.Summary) (out MonitorOut) {

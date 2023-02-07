@@ -273,7 +273,7 @@ func TestInstantiate01(t *testing.T) {
 		},
 	}
 
-	qu, err := bug01.instantiate()
+	qu, _, err := bug01.instantiate()
 	if err != nil {
 		t.Fatal(err)
 	}

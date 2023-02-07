@@ -915,6 +915,7 @@ export interface GamePlayers {
 export interface GameSummary {
   GameID: RoomID;
   CurrentPlayer: string;
+  LatestQuestion: QuestionContent;
   Players: GamePlayers[] | null;
   RoomSize: number;
 }
@@ -930,6 +931,13 @@ export interface LaunchSessionOut {
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.MonitorOut
 export interface MonitorOut {
   Games: GameSummary[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.QuestionContent
+export interface QuestionContent {
+  Id: IdQuestion;
+  Categorie: Categorie;
+  Question: unknown;
+  Params: unknown;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.RunningSessionMetaOut
 export interface RunningSessionMetaOut {
@@ -1185,6 +1193,25 @@ export interface WorkID {
   ID: number;
   IsExercice: boolean;
 }
+// github.com/benoitkugler/maths-online/server/src/trivial.Categorie
+export enum Categorie {
+  Purple = 0,
+  Green = 1,
+  Orange = 2,
+  Yellow = 3,
+  Blue = 4,
+  nbCategories = 5,
+}
+
+export const CategorieLabels: { [key in Categorie]: string } = {
+  [Categorie.Purple]: "purple",
+  [Categorie.Green]: "green",
+  [Categorie.Orange]: "orange",
+  [Categorie.Yellow]: "yellow",
+  [Categorie.Blue]: "blue",
+  [Categorie.nbCategories]: "the number of categories a player should complete",
+};
+
 // github.com/benoitkugler/maths-online/server/src/trivial.RoomID
 export type RoomID = string;
 // github.com/benoitkugler/maths-online/server/src/trivial.Success

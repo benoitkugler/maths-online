@@ -143,9 +143,10 @@ func (r *Room) replay() Replay {
 type Summary struct {
 	PlayerTurn *Player // nil before game start
 	// Successes does not contains disconnected players
-	Successes map[Player]Success
-	ID        RoomID
-	RoomSize  int // Number of player expected
+	Successes      map[Player]Success
+	ID             RoomID
+	RoomSize       int             // Number of player expected
+	LatestQuestion QuestionContent // zero ID before the first question
 }
 
 // Summary locks and returns the current game summary.
@@ -158,9 +159,10 @@ func (r *Room) Summary() Summary {
 		successes[v.pl] = v.advance.success
 	}
 	out := Summary{
-		ID:        r.ID,
-		Successes: successes,
-		RoomSize:  r.game.options.PlayersNumber,
+		ID:             r.ID,
+		Successes:      successes,
+		RoomSize:       r.game.options.PlayersNumber,
+		LatestQuestion: r.game.question,
 	}
 
 	if se := r.game.playerTurn; se != "" {

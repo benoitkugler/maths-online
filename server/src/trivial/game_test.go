@@ -216,7 +216,7 @@ func TestQuestionTimeout(t *testing.T) {
 		t.Fatalf("unexpected phase %v", g.phase)
 	}
 
-	if pl := r.lp(); pl["p1"].advance.success[qu.categorie] {
+	if pl := r.lp(); pl["p1"].advance.success[qu.Categorie] {
 		t.Fatal("success must have been lost")
 	}
 	if pl := r.lp(); len(pl["p1"].advance.review.QuestionHistory) != 1 {

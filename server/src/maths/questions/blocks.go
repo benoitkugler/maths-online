@@ -109,10 +109,10 @@ type QuestionPage struct {
 // have been resolved.
 // It assumes that the expressions and random parameters definitions are valid :
 // if an error is encountered, it is returned as a TextInstance displaying the error.
-func (qu QuestionPage) Instantiate() (out QuestionInstance) {
-	out, err := qu.instantiate()
+func (qu QuestionPage) Instantiate() (out QuestionInstance, vars expression.Vars) {
+	out, vars, err := qu.instantiate()
 	if err != nil {
-		return QuestionInstance{Enonce: EnonceInstance{
+		out = QuestionInstance{Enonce: EnonceInstance{
 			TextInstance{
 				Parts: []client.TextOrMath{
 					{
@@ -122,16 +122,17 @@ func (qu QuestionPage) Instantiate() (out QuestionInstance) {
 			},
 		}}
 	}
-	return out
+	return out, vars
 }
 
-func (qu QuestionPage) instantiate() (QuestionInstance, error) {
+func (qu QuestionPage) instantiate() (QuestionInstance, expression.Vars, error) {
 	// generate random params
 	rp, err := qu.Parameters.ToMap().Instantiate()
 	if err != nil {
-		return QuestionInstance{}, err
+		return QuestionInstance{}, nil, err
 	}
-	return qu.Enonce.InstantiateWith(rp)
+	out, err := qu.Enonce.InstantiateWith(rp)
+	return out, rp, err
 }
 
 // InstantiateWith uses the given values to instantiate the general question

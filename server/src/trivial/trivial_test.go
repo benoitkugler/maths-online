@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestPanics(t *testing.T) {
-	testutils.ShouldPanic(t, func() { _ = (pGameOver + 1).String() })
+	tu.ShouldPanic(t, func() { _ = (pGameOver + 1).String() })
 
-	testutils.ShouldPanic(t, func() {
+	tu.ShouldPanic(t, func() {
 		r := Room{game: game{phase: pGameOver + 1}, players: map[PlayerID]*playerConn{"": {}}}
 		r.removePlayer(Player{})
 	})
@@ -33,9 +33,15 @@ func TestSummary(t *testing.T) {
 
 	r.mustJoin(t, "p3") // trigger a game start
 
-	if sum := r.Summary(); len(sum.Successes) != 3 || sum.PlayerTurn.ID != "p1" {
-		t.Fatal(sum)
-	}
+	sum := r.Summary()
+	tu.Assert(t, len(sum.Successes) == 3 && sum.PlayerTurn.ID == "p1")
+	tu.Assert(t, sum.LatestQuestion.ID == 0)
+
+	r.throwAndMove("p1")
+
+	time.Sleep(10 * time.Millisecond)
+
+	tu.Assert(t, r.Summary().LatestQuestion.ID != 0)
 }
 
 func TestReview(t *testing.T) {

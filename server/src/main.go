@@ -280,6 +280,10 @@ func serveProfLoopbackApp(c echo.Context) error {
 	return c.File("static/prof_loopback/index.html")
 }
 
+func serveProfPreviewApp(c echo.Context) error {
+	return c.File("static/prof_preview/index.html")
+}
+
 func serveEleveApp(c echo.Context) error {
 	return c.File("static/eleve/index.html")
 }
@@ -290,10 +294,6 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	vit *vitrine.Controller, review *reviews.Controller,
 ) {
 	setupProfAPI(e, tvc, edit, tc, home, review)
-	setupQuestionSampleAPI(e)
-
-	// // to sync with the client navigator.sendBeacon
-	// e.POST("/prof/editor/api/end-preview/:sessionID", edit.EditorEndPreview)
 
 	// main page
 	e.GET("", serveVitrineApp)
@@ -310,6 +310,10 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/prof-loopback-app", serveProfLoopbackApp, noCache)
 	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
 	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
+
+	e.GET("/prof-preview-app", serveProfPreviewApp, noCache)
+	e.GET("/prof-preview-app/", serveProfPreviewApp, noCache)
+	e.Group("/prof-preview-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_preview")
 
 	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
 	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)

@@ -19,13 +19,7 @@ type InstantiatedQuestion struct {
 	Id       ed.IdQuestion
 	Question client.Question
 	Params   Params
-
-	// this field is private, not exported as JSON,
-	// and used to simplify the loopback logic
-	instance questions.QuestionInstance
 }
-
-func (iq InstantiatedQuestion) Instance() questions.QuestionInstance { return iq.instance }
 
 type AnswerP struct {
 	Params Params
@@ -39,7 +33,8 @@ type VarEntry struct {
 	Resolved string
 }
 
-// Params is a serialized version of [expression.Vars]
+// Params is a serialized version of [expression.Vars],
+// used by clients.
 type Params []VarEntry
 
 // NewParams serialize the given map.
@@ -87,7 +82,6 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 			Id:       id,
 			Question: instance.ToClient(),
 			Params:   NewParams(vars),
-			instance: instance,
 		}
 	}
 
@@ -205,7 +199,6 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 			Id:       question.Id,
 			Question: instance.ToClient(),
 			Params:   NewParams(ownVars),
-			instance: instance,
 		}
 	}
 
