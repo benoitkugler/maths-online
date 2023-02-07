@@ -259,6 +259,14 @@ func noCache(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// cacheIframe set a short cache time
+func cacheIframe(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "max-age=public,21600")
+		return next(c)
+	}
+}
+
 // cacheStatic adopt a very aggressive caching policy, suitable
 // for immutable content
 func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
@@ -307,12 +315,12 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/test-eleve/", serveEleveApp, noCache)
 	e.Group("/test-eleve/*", middleware.Gzip(), cacheStatic).Static("/*", "static/eleve")
 
-	e.GET("/prof-loopback-app", serveProfLoopbackApp, noCache)
-	e.GET("/prof-loopback-app/", serveProfLoopbackApp, noCache)
+	e.GET("/prof-loopback-app", serveProfLoopbackApp, cacheIframe)
+	e.GET("/prof-loopback-app/", serveProfLoopbackApp, cacheIframe)
 	e.Group("/prof-loopback-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_loopback")
 
-	e.GET("/prof-preview-app", serveProfPreviewApp, noCache)
-	e.GET("/prof-preview-app/", serveProfPreviewApp, noCache)
+	e.GET("/prof-preview-app", serveProfPreviewApp, cacheIframe)
+	e.GET("/prof-preview-app/", serveProfPreviewApp, cacheIframe)
 	e.Group("/prof-preview-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_preview")
 
 	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
