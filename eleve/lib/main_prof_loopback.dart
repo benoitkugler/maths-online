@@ -23,7 +23,7 @@ void main() {
 }
 
 /// [LoopbackApp] show the content of a question or an exercice instance
-/// being edited, as it will be displayed to the student
+/// being edited, as it will be displayed to the student.
 /// It is meant to be embedded in a Web page, not used as a mobile app.
 class LoopbackApp extends StatelessWidget {
   final BuildMode buildMode;

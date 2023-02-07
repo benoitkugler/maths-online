@@ -25,7 +25,7 @@ Map<String, dynamic> answerToJson(Answer item) {
   return {"Answer": questionAnswersInToJson(item.answer)};
 }
 
-// github.com/benoitkugler/maths-online/server/src/trivial.categorie
+// github.com/benoitkugler/maths-online/server/src/trivial.Categorie
 enum Categorie { purple, green, orange, yellow, blue }
 
 extension _CategorieExt on Categorie {
@@ -854,14 +854,14 @@ List<dynamic> listBoolToJson(List<bool> item) {
   return item.map(boolToJson).toList();
 }
 
-List<int> listIntFromJson(dynamic json) {
+List<IdQuestion> listIntFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(intFromJson).toList();
 }
 
-List<dynamic> listIntToJson(List<int> item) {
+List<dynamic> listIntToJson(List<IdQuestion> item) {
   return item.map(intToJson).toList();
 }
 
