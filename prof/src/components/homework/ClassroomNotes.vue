@@ -74,14 +74,18 @@ async function fetchNotes() {
   data = res;
 }
 
-function getMark(sheet: SheetExt, student: StudentHeader) {
+function _getMark(sheet: SheetExt, student: StudentHeader) {
   const sheetMarks = (data?.Marks || {})[sheet.Sheet.Id] || {};
   return sheetMarks[student.Id] || 0;
 }
 
+function getMark(sheet: SheetExt, student: StudentHeader) {
+  return _getMark(sheet, student).toFixed(1);
+}
+
 function getMoyenne(student: StudentHeader) {
   let total = 0;
-  props.sheets.forEach((sh) => (total += getMark(sh, student)));
+  props.sheets.forEach((sh) => (total += _getMark(sh, student)));
   return (total / props.sheets.length).toFixed(2);
 }
 </script>
