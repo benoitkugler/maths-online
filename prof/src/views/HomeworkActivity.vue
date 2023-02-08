@@ -40,7 +40,7 @@
     </v-card>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="80%">
+  <v-card class="my-5 mx-auto" width="90%">
     <v-row>
       <v-col>
         <v-card-title>Travail à la maison</v-card-title>
@@ -50,8 +50,17 @@
       </v-col>
     </v-row>
 
-    <v-row v-for="(classroom, index) in classrooms" :key="index" class="my-1">
-      <v-col>
+    <v-tabs v-model="tab" align-tabs="center">
+      <v-tab v-for="(classroom, index) in classrooms" :key="index">
+        {{ classroom.Classroom.name }}
+      </v-tab>
+    </v-tabs>
+    <v-window v-model="tab">
+      <v-window-item
+        v-for="(classroom, index) in classrooms"
+        :key="index"
+        :value="index"
+      >
         <classroom-sheets-row
           :classroom="classroom"
           :classrooms="classroomList"
@@ -59,9 +68,9 @@
           @delete="(sheet) => (sheetToDelete = sheet)"
           @copy="copySheet"
           @update="(s) => (sheetToUpdate = s)"
-        ></classroom-sheets-row>
-      </v-col>
-    </v-row>
+        ></classroom-sheets-row
+      ></v-window-item>
+    </v-window>
 
     <v-row v-if="!classrooms.length" justify="center">
       <v-col style="text-align: center" class="my-3">
@@ -100,6 +109,8 @@ onActivated(async () => {
   await fetchClassrooms();
   showDetailsFromQuery();
 });
+
+let tab = $ref(-1);
 
 const classroomList = computed(() => classrooms.map((cl) => cl.Classroom));
 

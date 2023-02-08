@@ -1,5 +1,5 @@
 <template>
-  <v-card :title="sheet.Sheet.Title" :color="color">
+  <v-card :subtitle="sheet.Sheet.Title" :color="color">
     <v-card-text>
       <v-row>
         <v-col>

@@ -11,18 +11,21 @@
     ></classroom-notes>
   </v-dialog>
 
-  <v-card class="mx-2 bg-grey-lighten-4">
+  <div class="ma-2">
     <v-row no-gutters>
       <v-col>
-        <v-card-title>{{ classroom.Classroom.name }}</v-card-title>
+        <!-- <v-card-title>{{ classroom.Classroom.name }}</v-card-title> -->
       </v-col>
       <v-col align-self="center" cols="auto">
         <v-btn
           @click="onShowNotes"
           title="Afficher les notes pour les feuilles sélectionnées"
-          :disabled="inSelect && Array.from(selectedSheets).length == 0"
+          :disabled="
+            !classroom.Sheets?.length ||
+            (inSelect && Array.from(selectedSheets).length == 0)
+          "
         >
-          {{ inSelect ? "Afficher" : "Notes" }}
+          {{ inSelect ? "Afficher" : "Voir les notes..." }}
         </v-btn>
         <v-btn
           class="mx-2"
@@ -34,37 +37,34 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-card-text>
-      <v-row>
-        <v-col
-          v-if="!classroom.Sheets?.length"
-          align-self="center"
-          style="text-align: center"
-        >
-          <i>Aucune fiche n'est encore définie.</i>
-        </v-col>
+    <v-row>
+      <v-col
+        v-if="!classroom.Sheets?.length"
+        align-self="center"
+        style="text-align: center"
+      >
+        <i>Aucune fiche n'est encore définie.</i>
+      </v-col>
 
-        <v-col
-          lg="3"
-          md="4"
-          sm="6"
-          xs="12"
-          v-for="(sheet, index) in classroom.Sheets"
-          :key="index"
-        >
-          <sheet-card
-            :sheet="sheet"
-            :classrooms="props.classrooms"
-            :status="sheetStatus(sheet)"
-            @delete="emit('delete', sheet)"
-            @copy="(idClassroom) => emit('copy', sheet.Sheet.Id, idClassroom)"
-            @update="emit('update', sheet)"
-            @[mayClick]="() => onToggle(sheet)"
-          ></sheet-card>
-        </v-col>
-      </v-row>
-    </v-card-text>
-  </v-card>
+      <v-col
+        lg="4"
+        md="6"
+        sm="12"
+        v-for="(sheet, index) in classroom.Sheets"
+        :key="index"
+      >
+        <sheet-card
+          :sheet="sheet"
+          :classrooms="props.classrooms"
+          :status="sheetStatus(sheet)"
+          @delete="emit('delete', sheet)"
+          @copy="(idClassroom) => emit('copy', sheet.Sheet.Id, idClassroom)"
+          @update="emit('update', sheet)"
+          @[mayClick]="() => onToggle(sheet)"
+        ></sheet-card>
+      </v-col>
+    </v-row>
+  </div>
 </template>
 
 <script setup lang="ts">
