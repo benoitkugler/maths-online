@@ -21,7 +21,7 @@
         class="mb-2"
         no-gutters
       >
-        <v-col cols="7">
+        <v-col cols="5" align-self="center">
           <div v-if="props.showID">
             Code :
             <v-chip>
@@ -31,7 +31,22 @@
             </v-chip>
           </div>
         </v-col>
-        <v-col cols="auto" style="text-align: right">
+
+        <v-col
+          cols="3"
+          v-if="props.summary.LatestQuestion.Id != 0"
+          align-self="center"
+        >
+          <v-btn
+            density="comfortable"
+            rounded
+            @click="emit('showQuestion', props.summary.LatestQuestion)"
+            :color="colorsPerCategorie[props.summary.LatestQuestion.Categorie]"
+            >Question {{ props.summary.LatestQuestion.Id }}</v-btn
+          >
+        </v-col>
+
+        <v-col cols="auto" style="text-align: right" align-self="center">
           <v-chip color="info">
             {{ props.summary.RoomSize }} joueur{{
               props.summary.RoomSize > 1 ? "s" : ""
@@ -69,13 +84,17 @@
 </template>
 
 <script setup lang="ts">
-import type { stopGame } from "@/controller/api_gen";
-import type { gameSummary } from "@/controller/trivial_config_socket_gen";
+import type {
+  GameSummary,
+  QuestionContent,
+  stopGame,
+} from "@/controller/api_gen";
+import { colorsPerCategorie } from "@/controller/trivial";
 import { $ref } from "vue/macros";
 import Pie from "./Pie.vue";
 
 interface Props {
-  summary: gameSummary;
+  summary: GameSummary;
   showID: boolean;
 }
 
@@ -83,6 +102,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "stopGame", args: stopGame): void;
+  (e: "showQuestion", args: QuestionContent): void;
 }>();
 
 let showConfirmStopGame = $ref(false);

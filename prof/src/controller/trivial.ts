@@ -1,6 +1,4 @@
-import { Section, type CategoriesQuestions } from "./api_gen";
-import { LevelTag } from "./exercice_gen";
-
+/** map Trivial categories to colors */
 export const colorsPerCategorie = [
   "purple",
   "green",

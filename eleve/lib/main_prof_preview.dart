@@ -66,6 +66,7 @@ class _MonitorState extends State<_Monitor> {
     subs = html.window.onMessage.listen((event) {
       listen(event.data as String);
     });
+    html.window.parent?.postMessage(jsonEncode({"PREVIEW_READY": true}), "*");
     super.initState();
   }
 
@@ -85,7 +86,7 @@ class _MonitorState extends State<_Monitor> {
         event = questionContentFromJson(jsonDecode(jsonEvent));
       });
     } catch (e) {
-      _showError(e);
+      _showError("$e ($jsonEvent)");
       return;
     }
   }

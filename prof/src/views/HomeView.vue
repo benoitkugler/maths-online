@@ -70,8 +70,9 @@
                 <v-btn
                   link
                   block
-                  href="https://isyro.fr/test-eleve"
+                  :href="studentAppLink"
                   color="primary"
+                  target="_blank"
                 >
                   Tester l'application élève
                 </v-btn>
@@ -89,4 +90,12 @@
 
 <script setup lang="ts">
 import cahierImg from "@/assets/cahier-stylo-calc.png";
+import { PreviewMode } from "@/controller/controller";
+import { computed } from "vue";
+
+let studentAppLink = computed(() =>
+  PreviewMode
+    ? "http://localhost:1323/test-eleve?mode=dev"
+    : "https://isyro.fr/test-eleve"
+);
 </script>

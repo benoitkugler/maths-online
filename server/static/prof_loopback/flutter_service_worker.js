@@ -3,10 +3,10 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
-  "manifest.json": "6be06c3ebad0d6a2ecb2cdd71690d463",
+  "manifest.json": "ccdb4d8aefeacd4cd3b632f0fe101d9e",
 "main.dart.js": "1b4e2c35721bfb7f1db54e2cfa0b587d",
-"index.html": "b57c569f8df6fc6ab9af4b582bbc7776",
-"/": "b57c569f8df6fc6ab9af4b582bbc7776",
+"index.html": "f6569b45743de906f6f95e309a04e871",
+"/": "f6569b45743de906f6f95e309a04e871",
 "flutter.js": "f85e6fb278b0fd20c349186fb46ae36d",
 "canvaskit/profiling/canvaskit.js": "38164e5a72bdad0faa4ce740c9b8e564",
 "canvaskit/profiling/canvaskit.wasm": "95a45378b69e77af5ed2bc72b2209b94",
@@ -54,8 +54,8 @@ const RESOURCES = {
 "assets/assets/images/confetti-icon.png": "0f21338db09afd3feb612fd63d8d1789",
 "assets/FontManifest.json": "71a4a82de411f155107da3f8dac64ebd",
 "favicon.png": "93a1403b706d82e643475c1b9d4c4b99",
-"splash/style.css": "c655a58d2c4c609b58cb49be08b534e6",
-"splash/splash.js": "c6a271349a0cd249bdb6d3c4d12f5dcf",
+"splash/style.css": "ad0e321ac44d0aaa3d62c9a52dda1c89",
+"splash/splash.js": "123c400b58bea74c1305ca3ac966748d",
 "splash/img/light-4x.png": "ff7472232b6589a8b30a32ae9611d19e",
 "splash/img/dark-4x.png": "ff7472232b6589a8b30a32ae9611d19e",
 "splash/img/dark-1x.png": "0c6bfc256110d61b9d9d18d589e741c1",

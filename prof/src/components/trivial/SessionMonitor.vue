@@ -1,4 +1,16 @@
 <template>
+  <v-dialog
+    :model-value="questionToMonitor != null"
+    @update:model-value="questionToMonitor = null"
+    fullscreen
+  >
+    <QuestionMonitor
+      v-if="questionToMonitor != null"
+      @close="questionToMonitor = null"
+      :question="questionToMonitor"
+    ></QuestionMonitor>
+  </v-dialog>
+
   <v-card>
     <v-row>
       <v-col>
@@ -13,17 +25,12 @@
 
     <v-card-text>
       <v-row justify="center">
-        <v-col
-          cols="12"
-          md="6"
-          lg="4"
-          v-for="game in summaries"
-          :key="game.GameID"
-        >
+        <v-col md="12" lg="6" v-for="game in summaries" :key="game.GameID">
           <GameMonitor
             :summary="game"
             :show-i-d="true"
             @stop-game="stopTrivGame"
+            @show-question="showQuestion"
           ></GameMonitor>
         </v-col>
       </v-row>
@@ -32,12 +39,16 @@
 </template>
 
 <script setup lang="ts">
-import type { stopGame } from "@/controller/api_gen";
+import type {
+  GameSummary,
+  QuestionContent,
+  stopGame,
+} from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type { gameSummary } from "@/controller/trivial_config_socket_gen";
 import { onMounted } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import GameMonitor from "./GameMonitor.vue";
+import QuestionMonitor from "./QuestionMonitor.vue";
 
 // type Props = {};
 
@@ -47,7 +58,7 @@ const emit = defineEmits<{
   (e: "closed"): void;
 }>();
 
-let summaries = $ref<gameSummary[]>([]);
+let summaries = $ref<GameSummary[]>([]);
 
 let intervalHandle: number;
 onMounted(() => {
@@ -73,6 +84,12 @@ async function stopTrivGame(params: stopGame) {
 function onClose() {
   clearInterval(intervalHandle);
   emit("closed");
+}
+
+let questionToMonitor = $ref<QuestionContent | null>(null);
+
+function showQuestion(question: QuestionContent) {
+  questionToMonitor = question;
 }
 </script>
 
