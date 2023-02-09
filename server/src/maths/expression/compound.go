@@ -24,6 +24,9 @@ type Compound interface {
 
 	// Substitute replaces variables contained in `vars`, updating the math object in place.
 	Substitute(vars Vars)
+
+	// Expressions returns the sub expressions
+	Expressions() []*Expr
 }
 
 // ParseCompound accepts an expression describing a complex math object,
@@ -67,6 +70,8 @@ func (Set) isCompound()      {}
 func (Interval) isCompound() {}
 func (Expr) isCompound()     {}
 
+func (e *Expr) Expressions() []*Expr { return []*Expr{e} }
+
 // Vector is a n-uplet of expressions, such as (1;2;3;4;5)
 type Vector []*Expr
 
@@ -78,6 +83,8 @@ func (pr *parser) parseVector() (Vector, error) {
 	}
 	return args, nil
 }
+
+func (vec Vector) Expressions() []*Expr { return vec }
 
 func (vec Vector) String() string {
 	chunks := make([]string, len(vec))
@@ -125,6 +132,8 @@ func (pr *parser) parseSet() (Set, error) {
 	}
 	return args, nil
 }
+
+func (set Set) Expressions() []*Expr { return set }
 
 func (set Set) String() string {
 	chunks := make([]string, len(set))
@@ -223,6 +232,8 @@ func (inter Interval) AsLaTeX() string {
 	}
 	return fmt.Sprintf("\\left%s %s ; %s \\right%s", leftSymbol, inter.Left.AsLaTeX(), inter.Right.AsLaTeX(), rightSymbol)
 }
+
+func (inter Interval) Expressions() []*Expr { return []*Expr{inter.Left, inter.Right} }
 
 func (inter Interval) Substitute(vars Vars) {
 	inter.Left.Substitute(vars)

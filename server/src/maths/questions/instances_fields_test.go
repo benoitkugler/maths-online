@@ -1,6 +1,7 @@
 package questions
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -274,13 +275,19 @@ func TestInstantiate01(t *testing.T) {
 	}
 
 	qu, _, err := bug01.instantiate()
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	qu.ToClient() // test there is no crash
 
 	if err = bug01.Validate(); err == nil {
 		t.Fatal("expected error because of non integer values")
 	}
+}
+
+func TestSyntaxHint(t *testing.T) {
+	b := ExpressionFieldBlock{Expression: "{2x / 4; -inf; x^4 +9}"}
+	hint, err := b.SyntaxHint(nil)
+	tu.AssertNoErr(t, err)
+
+	fmt.Println(hint.Parts)
 }

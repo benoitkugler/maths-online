@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/utils"
@@ -68,6 +69,29 @@ func LoadTags(db ed.DB, userID uID) (TagsDB, error) {
 	)
 
 	return buildTagsDB(indexes), nil
+}
+
+type GenerateSyntaxHintIn struct {
+	Block              questions.ExpressionFieldBlock
+	SharedParameters   questions.Parameters // empty for standalone questions
+	QuestionParameters questions.Parameters
+}
+
+// EditorGenerateSyntaxHint generate a TextBlock with hints about the command
+// used in the given expression field
+func (ct *Controller) EditorGenerateSyntaxHint(c echo.Context) error {
+	var args GenerateSyntaxHintIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	args.SharedParameters = append(args.SharedParameters, args.QuestionParameters...)
+	out, err := args.Block.SyntaxHint(args.SharedParameters)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {

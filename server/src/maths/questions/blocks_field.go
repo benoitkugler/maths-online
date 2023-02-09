@@ -55,6 +55,39 @@ type ExpressionFieldBlock struct {
 	ShowFractionHelp bool // if true an hint for fraction is displayed when applicable
 }
 
+func (f ExpressionFieldBlock) SyntaxHint(params Parameters) (TextBlock, error) {
+	answer, err := expression.ParseCompound(f.Expression)
+	if err != nil {
+		return TextBlock{}, err
+	}
+	allExprs := answer.Expressions()
+
+	if err := params.Validate(); err != nil {
+		return TextBlock{}, err
+	}
+	m := params.ToMap()
+
+	const nbRepeat = 100
+	allHints := make(expression.SyntaxHints)
+	for i := 0; i < nbRepeat; i++ {
+		params, err := m.Instantiate()
+		if err != nil {
+			return TextBlock{}, err
+		}
+		for _, expr := range allExprs {
+			expr = expr.Copy()
+			expr.Substitute(params)
+			allHints.Append(expr.SyntaxHints())
+		}
+	}
+	out := TextBlock{
+		Italic:  true,
+		Smaller: true,
+		Parts:   Interpolated(allHints.Text()),
+	}
+	return out, nil
+}
+
 func (f ExpressionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
 	answer, err := expression.ParseCompound(f.Expression)
 	if err != nil {

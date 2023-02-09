@@ -50,6 +50,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 
 	// question editor
 	gr.GET("/api/prof/editor/tags", edit.EditorGetTags)
+	gr.POST("/api/prof/editor/syntax-hint", edit.EditorGenerateSyntaxHint)
 
 	gr.GET("/api/prof/editor/questiongroups", edit.EditorGetQuestionsIndex)
 	gr.POST("/api/prof/editor/questiongroups", edit.EditorSearchQuestions)
