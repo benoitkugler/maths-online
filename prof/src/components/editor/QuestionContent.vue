@@ -31,6 +31,7 @@
     >
       <BlockContainer
         @delete="removeBlock(index)"
+        @add-syntax-hint="addSyntaxHint(index)"
         :index="index"
         :kind="row.Props.Kind"
         :hide-content="showDropZone"
@@ -53,7 +54,12 @@
 
 <script setup lang="ts">
 import DropZone from "@/components/DropZone.vue";
-import type { Block, Question, Variable } from "@/controller/api_gen";
+import type {
+  Block,
+  ExpressionFieldBlock,
+  Question,
+  Variable,
+} from "@/controller/api_gen";
 import { BlockKind } from "@/controller/api_gen";
 import { newBlock } from "@/controller/editor";
 import { swapItems } from "@/controller/utils";
@@ -95,6 +101,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update:modelValue", content: Block[]): void;
   (e: "importQuestion", content: Question): void;
+  (e: "addSyntaxHint", expr: ExpressionFieldBlock): void;
 }>();
 
 const rows = computed(() => props.modelValue.map(dataToBlock));
@@ -155,7 +162,7 @@ function dataToBlock(data: Block): block {
   }
 }
 
-defineExpose({ addBlock });
+defineExpose({ addBlock, addExistingBlock });
 
 const blockWidgets = ref<(Element | null)[]>([]);
 
@@ -167,6 +174,18 @@ watch(props, () => {
 
 function addBlock(kind: BlockKind) {
   props.modelValue.push(newBlock(kind));
+  emit("update:modelValue", props.modelValue);
+
+  nextTick(() => {
+    const L = blockWidgets.value?.length;
+    if (L) {
+      blockWidgets.value[L - 1]?.scrollIntoView();
+    }
+  });
+}
+
+function addExistingBlock(block: Block) {
+  props.modelValue.push(block);
   emit("update:modelValue", props.modelValue);
 
   nextTick(() => {
@@ -218,6 +237,11 @@ function onDragoverJSON(ev: DragEvent) {
   if (ev.dataTransfer?.files.length || ev.dataTransfer?.items.length) {
     ev.preventDefault();
   }
+}
+
+async function addSyntaxHint(index: number) {
+  const block = props.modelValue[index].Data as ExpressionFieldBlock;
+  emit("addSyntaxHint", block);
 }
 </script>
 

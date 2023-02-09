@@ -91,6 +91,7 @@
           :model-value="question.Enonce || []"
           @update:model-value="onUpdateEnonce"
           @importQuestion="onImportQuestion"
+          @add-syntax-hint="addSyntaxHint"
           :available-parameters="availableParameters"
           :errorBlockIndex="errorEnnonce?.Block"
           ref="questionContent"
@@ -102,15 +103,16 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Block,
+import {
   BlockKind,
-  errEnonce,
-  ErrParameters,
-  LoopbackShowQuestion,
-  Parameters,
-  Question,
-  Variable,
+  type Block,
+  type errEnonce,
+  type ErrParameters,
+  type ExpressionFieldBlock,
+  type LoopbackShowQuestion,
+  type Parameters,
+  type Question,
+  type Variable,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
@@ -167,9 +169,7 @@ function restoreHistory(snapshot: historyEntry) {
 
 let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
 function addBlock(kind: BlockKind) {
-  if (questionContent == null) {
-    return;
-  }
+  if (questionContent == null) return;
   questionContent.addBlock(kind);
 }
 
@@ -239,6 +239,19 @@ async function checkParameters(params: Parameters) {
 
   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
   availableParameters.value = out.Variables || [];
+}
+
+async function addSyntaxHint(block: ExpressionFieldBlock) {
+  if (questionContent == null) return;
+
+  const res = await controller.EditorGenerateSyntaxHint({
+    Block: block,
+    SharedParameters: [],
+    QuestionParameters: question.Parameters,
+  });
+  if (res == undefined) return;
+
+  questionContent?.addExistingBlock({ Kind: BlockKind.TextBlock, Data: res });
 }
 </script>
 

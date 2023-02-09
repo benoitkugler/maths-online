@@ -594,6 +594,12 @@ export interface ExercicegroupExt {
   Tags: Tags;
   Variants: ExerciceHeader[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/editor.GenerateSyntaxHintIn
+export interface GenerateSyntaxHintIn {
+  Block: ExpressionFieldBlock;
+  SharedParameters: Parameters;
+  QuestionParameters: Parameters;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/editor.Index
 export type Index = LevelItems[] | null;
 // github.com/benoitkugler/maths-online/server/src/prof/editor.LevelItems
@@ -1812,6 +1818,28 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessEditorGetTags(data: TagsDB): void;
+
+  protected async rawEditorGenerateSyntaxHint(params: GenerateSyntaxHintIn) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/syntax-hint";
+    const rep: AxiosResponse<TextBlock> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorGenerateSyntaxHint wraps rawEditorGenerateSyntaxHint and handles the error */
+  async EditorGenerateSyntaxHint(params: GenerateSyntaxHintIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorGenerateSyntaxHint(params);
+      this.onSuccessEditorGenerateSyntaxHint(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorGenerateSyntaxHint(data: TextBlock): void;
 
   protected async rawEditorGetQuestionsIndex() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";

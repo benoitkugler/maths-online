@@ -34,6 +34,7 @@ import type {
   SheetExt,
   Student,
   TaskExt,
+  TextBlock,
   TrivialExt
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
@@ -156,6 +157,13 @@ class Controller extends AbstractAPI {
 
   protected onSuccessEditorGetQuestions(data: Question[] | null): void {
     this.inRequest = false;
+  }
+
+  protected onSuccessEditorGenerateSyntaxHint(data: TextBlock): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Conseils ajoutés avec succès.");
+    }
   }
 
   protected onSuccessHomeworkRemoveTask(): void {

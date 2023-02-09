@@ -116,6 +116,7 @@
           :model-value="question.Question.Enonce || []"
           @update:model-value="updateQuestion"
           @importQuestion="onImportQuestion"
+          @add-syntax-hint="addSyntaxHint"
           :available-parameters="[]"
           :errorBlockIndex="errorEnnonce?.Block"
           ref="questionContent"
@@ -157,6 +158,7 @@ import {
   type ExerciceExt,
   type ExerciceHeader,
   type ExerciceQuestionExt,
+  type ExpressionFieldBlock,
   type IdExercice,
   type LoopbackShowExercice,
   type Parameters,
@@ -406,6 +408,19 @@ async function createQuestion() {
 }
 
 let showSkeletonDetails = $ref(false);
+
+async function addSyntaxHint(block: ExpressionFieldBlock) {
+  if (questionContent == null || question == null) return;
+
+  const res = await controller.EditorGenerateSyntaxHint({
+    Block: block,
+    SharedParameters: exercice.Exercice.Parameters,
+    QuestionParameters: question.Question.Parameters,
+  });
+  if (res == undefined) return;
+
+  questionContent?.addExistingBlock({ Kind: BlockKind.TextBlock, Data: res });
+}
 </script>
 
 <style scoped></style>

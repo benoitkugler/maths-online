@@ -29,6 +29,17 @@
       <v-spacer></v-spacer>
       <v-col cols="auto" style="text-align: right" class="my-1 mr-2">
         <v-btn
+          v-if="props.kind == BlockKind.ExpressionFieldBlock"
+          class="mr-2"
+          icon
+          title="Ajouter un texte avec des conseils de syntaxe."
+          size="x-small"
+        >
+          <v-icon small color="green" @click="emit('addSyntaxHint')"
+            >mdi-tooltip-plus</v-icon
+          >
+        </v-btn>
+        <v-btn
           v-if="showLaTeXDoc"
           class="mr-2"
           icon
@@ -62,6 +73,7 @@ import ExpressionFieldDoc from "./ExpressionFieldDoc.vue";
 
 const emit = defineEmits<{
   (e: "delete"): void;
+  (e: "addSyntaxHint"): void;
 }>();
 
 interface ContainerProps {
