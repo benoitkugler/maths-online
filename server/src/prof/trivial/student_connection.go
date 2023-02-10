@@ -173,7 +173,7 @@ func (ct *Controller) setupStudentDemo(room string, nbPlayers int) (gameConnecti
 		}
 
 		options := tv.Options{
-			PlayersNumber:   nbPlayers,
+			Launch:          tv.LaunchStrategy{Manual: false, Max: nbPlayers},
 			QuestionTimeout: time.Second * 120,
 			ShowDecrassage:  true,
 			Questions:       questionPool,
@@ -209,15 +209,6 @@ func (gs *gameSession) setupStudent(studentID pass.EncryptedID, requestedGameID 
 		StudentID: studentID,
 		GameID:    game.ID,
 	}
-
-	// var studentIDInt int64 = -1
-	// if studentID != "" { // decode ID
-	// 	var err error
-	// 	studentIDInt, err = key.DecryptID(studentID)
-	// 	if err != nil {
-	// 		return out, fmt.Errorf("ID personnel %s invalide (%s).", studentID, err)
-	// 	}
-	// }
 
 	return out, nil
 }

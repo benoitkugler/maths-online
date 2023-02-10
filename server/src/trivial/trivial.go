@@ -5,6 +5,7 @@
 package trivial
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -24,14 +25,33 @@ type Connection interface {
 // to every room object, and will be used by consuming packages.
 type RoomID string
 
+type LaunchStrategy struct {
+	// If manual is [true], the game must be started
+	// with [Room.StartGame]
+	Manual bool
+
+	// Max is the required number of players to start
+	// a game in auto mode.
+	// It is 0 in manual mode, > 0  in auto mode
+	Max int
+}
+
+func (ls LaunchStrategy) String() string {
+	if ls.Manual {
+		return "manual"
+	}
+	return fmt.Sprintf("at %d players", ls.Max)
+}
+
 // Options is the configuration of one game.
 // All fields are required.
 type Options struct {
 	// QuestionPool is the list of the question
 	// being asked, for each category
 	Questions QuestionPool
-	// PlayersNumber iss the required number for the game, used to trigger a game start
-	PlayersNumber int
+
+	Launch LaunchStrategy
+
 	// QuestionTimeout is the time limit for one question
 	QuestionTimeout time.Duration
 
@@ -91,10 +111,11 @@ type Room struct {
 	// by the channels and `lock`
 	game game
 
-	// currentPlayers stores the actual players in the game,
+	// players stores the actual players in the game,
 	// including the inactive (disconnected) ones, for which
 	// `Connection` is nil.
-	// we always have len(currentPlayers) <= expectedPlayers
+	//
+	// In auto mode, we always have len(players) <= game.options.Launch.Max
 	players map[PlayerID]*playerConn
 }
 
@@ -138,6 +159,11 @@ func (r *Room) replay() Replay {
 	return out
 }
 
+type RoomSize struct {
+	Current int
+	Max     int // 0 in manual mode, > 0 in auto mode
+}
+
 // Summary provides an high level overview of the game,
 // and may be emitted back to the teacher monitor.
 type Summary struct {
@@ -145,7 +171,7 @@ type Summary struct {
 	// Successes does not contains disconnected players
 	Successes      map[Player]Success
 	ID             RoomID
-	RoomSize       int             // Number of player expected
+	RoomSize       RoomSize        // Number of players
 	LatestQuestion QuestionContent // zero ID before the first question
 }
 
@@ -161,7 +187,7 @@ func (r *Room) Summary() Summary {
 	out := Summary{
 		ID:             r.ID,
 		Successes:      successes,
-		RoomSize:       r.game.options.PlayersNumber,
+		RoomSize:       RoomSize{Current: len(r.players), Max: r.game.options.Launch.Max},
 		LatestQuestion: r.game.question,
 	}
 

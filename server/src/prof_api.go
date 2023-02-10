@@ -46,6 +46,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	// trivialpoursuit game server
 	gr.GET("/api/trivial/sessions", tvc.GetTrivialRunningSessions)
 	gr.PUT("/api/trivial/sessions", tvc.LaunchSessionTrivialPoursuit)
+	gr.POST("/api/trivial/sessions/start", tvc.StartTrivialGame)
 	gr.POST("/api/trivial/sessions/stop", tvc.StopTrivialGame)
 
 	// question editor

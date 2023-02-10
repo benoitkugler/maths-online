@@ -2,6 +2,7 @@ package trivial
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -35,13 +36,13 @@ type student struct {
 	t *testing.T
 
 	serverBaseURL string
-	gameCode      string
+	gameCode      tv.RoomID
 
 	gameMeta string
 	conn     *websocket.Conn
 }
 
-func newStudent(t *testing.T, serverBaseURL, gameCode string) *student {
+func newStudent(t *testing.T, serverBaseURL string, gameCode tv.RoomID) *student {
 	return &student{t: t, serverBaseURL: serverBaseURL, gameCode: gameCode}
 }
 
@@ -55,7 +56,7 @@ func (st *student) setupRequest() {
 	check(st.t, err)
 
 	query := make(url.Values)
-	query.Set("session-id", st.gameCode)
+	query.Set("session-id", string(st.gameCode))
 	query.Set("game-meta", st.gameMeta)
 	// anonymous connection
 	u.RawQuery = query.Encode()
@@ -76,7 +77,9 @@ func (st *student) connectRequest(deconnect bool) {
 
 	query := make(url.Values)
 	query.Set("game-meta", st.gameMeta)
-	query.Set("client-pseudo", "Benoit")
+	if rand.Intn(2) == 0 {
+		query.Set("client-pseudo", "Benoit")
+	}
 	u.RawQuery = query.Encode()
 
 	st.conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
@@ -188,7 +191,7 @@ func TestSessionPlay(t *testing.T) {
 	groupSize := []int{2, 3, 4}
 	groups, err := ct.launchConfig(LaunchSessionIn{
 		IdConfig: config.Id,
-		Groups:   groupSize,
+		Groups:   GroupsStrategyAuto{groupSize},
 	},
 		ct.admin.Id,
 	)

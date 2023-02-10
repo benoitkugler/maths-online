@@ -8,6 +8,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func init() {
@@ -130,9 +131,12 @@ func (r *Room) lp() map[serial]*playerConn {
 	return r.players
 }
 
-func TestStart(t *testing.T) {
-	r := NewRoom("0", Options{PlayersNumber: 3})
+func TestStartAuto(t *testing.T) {
+	r := NewRoom("0", Options{Launch: LaunchStrategy{Max: 3}})
 	go r.Listen()
+
+	err := r.StartGame()
+	tu.Assert(t, err != nil) // auto mode
 
 	r.mustJoin(t, "0")
 	r.mustJoin(t, "1")
@@ -169,8 +173,38 @@ func TestStart(t *testing.T) {
 	}
 }
 
+func TestStartManual(t *testing.T) {
+	r := NewRoom("0", Options{Launch: LaunchStrategy{Manual: true}})
+	go r.Listen()
+
+	err := r.StartGame()
+	tu.Assert(t, err != nil) // no players
+
+	r.mustJoin(t, "0")
+
+	r.Leave <- "0"
+
+	time.Sleep(time.Millisecond)
+
+	err = r.StartGame()
+	tu.Assert(t, err != nil) // no players
+
+	r.mustJoin(t, "0")
+	r.mustJoin(t, "1")
+	r.mustJoin(t, "2")
+
+	g := r.lg()
+	tu.Assert(t, g.phase == pGameLobby)
+
+	err = r.StartGame()
+	tu.AssertNoErr(t, err)
+
+	g = r.lg()
+	tu.Assert(t, g.phase == pTurnStarted)
+}
+
 func TestEmitQuestion(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 1, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: time.Minute})
 	go r.Listen()
 
 	r.mustJoin(t, "p1")
@@ -196,7 +230,7 @@ func TestEmitQuestion(t *testing.T) {
 }
 
 func TestQuestionTimeout(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 1, Questions: exPool, QuestionTimeout: 5 * time.Millisecond})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: 5 * time.Millisecond})
 
 	r.mustJoin(t, "p1")
 	r.players["p1"].advance.success = Success{true, true, true, true, true}
@@ -225,7 +259,7 @@ func TestQuestionTimeout(t *testing.T) {
 }
 
 func TestDisconnectStartTurn(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 2})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}})
 	go r.Listen()
 
 	p2 := &clientOut{}
@@ -247,7 +281,7 @@ func TestDisconnectStartTurn(t *testing.T) {
 }
 
 func TestDisconnectInQuestion(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
 	go r.Listen()
 
@@ -272,7 +306,7 @@ func TestDisconnectInQuestion(t *testing.T) {
 }
 
 func TestDisconnectInQuestionResult(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute})
 
 	go r.Listen()
 
@@ -304,7 +338,7 @@ func TestDisconnectInQuestionResult(t *testing.T) {
 }
 
 func TestAllDisconnectInQuestionResult(t *testing.T) {
-	r := NewRoom("<test>", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
 	go r.Listen()
 
@@ -339,7 +373,7 @@ func TestAllDisconnectInQuestionResult(t *testing.T) {
 }
 
 func TestReconnectInQuestion(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
 	go r.Listen()
 
@@ -369,7 +403,7 @@ func TestReconnectInQuestion(t *testing.T) {
 }
 
 func TestHandleClientEvent(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
 	fmt.Println("Phase :", r.game.phase)
 
@@ -515,7 +549,7 @@ func TestHandleClientEvent(t *testing.T) {
 }
 
 func TestGameEnd(t *testing.T) {
-	r := NewRoom("<test>", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true})
 
 	var c1 clientOut
 

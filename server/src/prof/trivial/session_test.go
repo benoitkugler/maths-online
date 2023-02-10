@@ -6,9 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/server/src/pass"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 var dummyQuestions = tv.QuestionPool{
@@ -37,8 +40,8 @@ func TestSession(t *testing.T) {
 	defer cancel()
 	go session.mainLoop(ctx)
 
-	session.createGameEvents <- createGame{ID: "g1", Options: tv.Options{PlayersNumber: 2, Questions: dummyQuestions}}
-	session.createGameEvents <- createGame{ID: "g2", Options: tv.Options{PlayersNumber: 2, Questions: dummyQuestions}}
+	session.createGameEvents <- createGame{ID: "g1", Options: tv.Options{Launch: tv.LaunchStrategy{Max: 2}, Questions: dummyQuestions}}
+	session.createGameEvents <- createGame{ID: "g2", Options: tv.Options{Launch: tv.LaunchStrategy{Max: 2}, Questions: dummyQuestions}}
 
 	time.Sleep(time.Millisecond * 10)
 
@@ -80,4 +83,31 @@ func TestSession(t *testing.T) {
 		t.Fatal(L)
 	}
 	session.lock.Unlock()
+}
+
+func TestSessionManual(t *testing.T) {
+	db, err := tu.DB.ConnectPostgres()
+	if err != nil {
+		t.Skipf("DB %v not available : %s", tu.DB, err)
+		return
+	}
+
+	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{Id: 1})
+
+	l, err := ct.getTrivialPoursuits(1)
+	tu.AssertNoErr(t, err)
+
+	config := l[0]
+
+	out, err := ct.launchConfig(LaunchSessionIn{IdConfig: config.Config.Id, Groups: GroupsStrategyManual{4}}, 1)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.GameIDs) == 4)
+
+	session := ct.getSession(1)
+	err = session.startGame(out.GameIDs[0])
+	tu.Assert(t, err != nil) // no players
+
+	out, err = ct.launchConfig(LaunchSessionIn{IdConfig: config.Config.Id, Groups: GroupsStrategyAuto{[]int{1, 2, 3}}}, 1)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.GameIDs) == 3)
 }

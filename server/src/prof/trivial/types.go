@@ -1,6 +1,8 @@
 package trivial
 
 import (
+	"fmt"
+
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	tr "github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	"github.com/benoitkugler/maths-online/server/src/trivial"
@@ -48,10 +50,44 @@ func newTrivialExt(sel questionSelector, config tr.Trivial, inReview tcAPI.Optio
 
 type LaunchSessionIn struct {
 	IdConfig tr.IdTrivial
-	// Size of the groups as chosen by the teacher.
-	Groups []int
+
+	Groups GroupsStrategy
 }
 
 type LaunchSessionOut struct {
-	GameIDs []string
+	GameIDs []trivial.RoomID
+}
+
+type GroupsStrategy interface {
+	// return an error if the sizes are invalid
+	groups() ([]trivial.LaunchStrategy, error)
+}
+
+// GroupsStrategyManual does not fix the number of players
+type GroupsStrategyManual struct {
+	NbGroups int
+}
+
+func (gsm GroupsStrategyManual) groups() ([]trivial.LaunchStrategy, error) {
+	out := make([]trivial.LaunchStrategy, gsm.NbGroups)
+	for i := range out {
+		out[i] = trivial.LaunchStrategy{Manual: true}
+	}
+	return out, nil
+}
+
+// GroupsStrategyAuto starts the game when full
+type GroupsStrategyAuto struct {
+	Groups []int
+}
+
+func (gsa GroupsStrategyAuto) groups() ([]trivial.LaunchStrategy, error) {
+	out := make([]trivial.LaunchStrategy, len(gsa.Groups))
+	for i, max := range gsa.Groups {
+		if max <= 0 {
+			return nil, fmt.Errorf("internal error: invalid room size %d", max)
+		}
+		out[i] = trivial.LaunchStrategy{Manual: false, Max: max}
+	}
+	return out, nil
 }

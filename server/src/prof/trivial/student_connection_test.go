@@ -58,7 +58,7 @@ func TestController_setupStudentClient(t *testing.T) {
 	}
 
 	options := tv.Options{
-		PlayersNumber:   2,
+		Launch:          tv.LaunchStrategy{Max: 2},
 		QuestionTimeout: time.Second * 120,
 		ShowDecrassage:  true,
 		Questions:       questionPool,

@@ -923,16 +923,35 @@ export interface GameSummary {
   CurrentPlayer: string;
   LatestQuestion: QuestionContent;
   Players: GamePlayers[] | null;
-  RoomSize: number;
+  RoomSize: RoomSize;
+}
+
+export enum GroupsStrategyKind {
+  GroupsStrategyAuto = "GroupsStrategyAuto",
+  GroupsStrategyManual = "GroupsStrategyManual",
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategy
+export interface GroupsStrategy {
+  Kind: GroupsStrategyKind;
+  Data: GroupsStrategyAuto | GroupsStrategyManual;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyAuto
+export interface GroupsStrategyAuto {
+  Groups: number[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyManual
+export interface GroupsStrategyManual {
+  NbGroups: number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.LaunchSessionIn
 export interface LaunchSessionIn {
   IdConfig: IdTrivial;
-  Groups: number[] | null;
+  Groups: GroupsStrategy;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.LaunchSessionOut
 export interface LaunchSessionOut {
-  GameIDs: string[] | null;
+  GameIDs: RoomID[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.MonitorOut
 export interface MonitorOut {
@@ -1220,6 +1239,11 @@ export const CategorieLabels: { [key in Categorie]: string } = {
 
 // github.com/benoitkugler/maths-online/server/src/trivial.RoomID
 export type RoomID = string;
+// github.com/benoitkugler/maths-online/server/src/trivial.RoomSize
+export interface RoomSize {
+  Current: number;
+  Max: number;
+}
 // github.com/benoitkugler/maths-online/server/src/trivial.Success
 export type Success = boolean[];
 
@@ -1776,6 +1800,29 @@ export abstract class AbstractAPI {
   protected abstract onSuccessLaunchSessionTrivialPoursuit(
     data: LaunchSessionOut
   ): void;
+
+  protected async rawStartTrivialGame(params: { "game-id": string }) {
+    const fullUrl = this.baseUrl + "/api/trivial/sessions/start";
+    await Axios.post(fullUrl, null, {
+      params: { "game-id": params["game-id"] },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** StartTrivialGame wraps rawStartTrivialGame and handles the error */
+  async StartTrivialGame(params: { "game-id": string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawStartTrivialGame(params);
+      this.onSuccessStartTrivialGame();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessStartTrivialGame(): void;
 
   protected async rawStopTrivialGame(params: stopGame) {
     const fullUrl = this.baseUrl + "/api/trivial/sessions/stop";

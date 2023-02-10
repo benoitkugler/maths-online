@@ -17,8 +17,10 @@ func TestPanics(t *testing.T) {
 }
 
 func TestSummary(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 3, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute})
 	go r.Listen()
+
+	_ = r.Options()
 
 	if sum := r.Summary(); len(sum.Successes) != 0 || sum.PlayerTurn != nil {
 		t.Fatal(sum)
@@ -45,7 +47,7 @@ func TestSummary(t *testing.T) {
 }
 
 func TestReview(t *testing.T) {
-	r := NewRoom("", Options{PlayersNumber: 2, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
 	naturalEnding := make(chan bool)
 	go func() {
@@ -68,12 +70,9 @@ func TestReview(t *testing.T) {
 
 	r.Terminate <- true
 
-	if isNat := <-naturalEnding; isNat {
-		t.Fatal()
-	}
+	isNat := <-naturalEnding
+	tu.Assert(t, !isNat)
 
 	history := r.replay().QuestionHistory[Player{ID: "p1", Pseudo: ""}]
-	if len(history.MarkedQuestions) != 1 || len(history.QuestionHistory) != 1 {
-		t.Fatal(history)
-	}
+	tu.Assert(t, len(history.MarkedQuestions) == 1 && len(history.QuestionHistory) == 1)
 }

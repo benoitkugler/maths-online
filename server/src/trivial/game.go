@@ -133,15 +133,24 @@ func (r *Room) serialsToPseudos(players []serial) []string {
 
 func (r *Room) serialToPseudo(se serial) string { return r.players[se].pl.Pseudo }
 
+func (r *Room) startGame() Events {
+	ProgressLogger.Printf("Game %s : starting...", r.ID)
+
+	// Starts the first turn.
+	eventNewTurn := r.startTurn()
+	return Events{GameStart{}, eventNewTurn}
+}
+
 func (r *Room) tryStartGame() Events {
+	// never start in manual mode
+	if r.game.options.Launch.Manual {
+		return nil
+	}
+
 	// before starting, all players are active since deconnecting
 	// exlude them from the lobby (see `removePlayer`)
-	if len(r.players) >= r.game.options.PlayersNumber {
-		ProgressLogger.Printf("Game %s : starting...", r.ID)
-
-		// also starts the first turn.
-		eventNewTurn := r.startTurn()
-		return Events{GameStart{}, eventNewTurn}
+	if len(r.players) >= r.game.options.Launch.Max {
+		return r.startGame()
 	}
 
 	return nil
