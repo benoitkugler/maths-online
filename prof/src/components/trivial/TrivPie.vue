@@ -5,11 +5,11 @@
         :style="{
           margin: 'auto',
           display: 'block',
-          width: '60px',
-          height: '60px',
+          width: '50px',
+          height: '50px',
           'background-image': gradientSpec,
           border: '1px solid black',
-          'border-radius': '50%'
+          'border-radius': '50%',
         }"
       ></div>
     </v-col>
