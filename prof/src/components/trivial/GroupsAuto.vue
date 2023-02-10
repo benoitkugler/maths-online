@@ -7,7 +7,7 @@
         multiple
         label="Taille des groupes"
         chips
-        :model-value="props.modelValue"
+        :model-value="props.modelValue.Groups || []"
         @update:model-value="onUpdate"
         @update:search-input="onSearch"
         :hide-no-data="true"
@@ -23,15 +23,16 @@
 </template>
 
 <script setup lang="ts">
+import type { GroupsStrategyAuto } from "@/controller/api_gen";
 import { $ref } from "vue/macros";
 import type { VCombobox } from "vuetify/lib/components";
 
 interface Props {
-  modelValue: number[];
+  modelValue: GroupsStrategyAuto;
 }
 
 const emit = defineEmits<{
-  (e: "update:model-value", v: number[]): void;
+  (e: "update:model-value", v: GroupsStrategyAuto): void;
 }>();
 
 const props = defineProps<Props>();
@@ -49,7 +50,7 @@ function onUpdate(v: unknown) {
     }
   });
 
-  emit("update:model-value", final);
+  emit("update:model-value", { Groups: final });
 }
 
 function onSearch(s: string) {
@@ -58,7 +59,8 @@ function onSearch(s: string) {
   s = s.substring(0, s.length - 1);
   const numbers = parseEntry(s);
   if (numbers.length) {
-    emit("update:model-value", props.modelValue.concat(...numbers));
+    const newGroups = (props.modelValue.Groups || []).concat(...numbers);
+    emit("update:model-value", { Groups: newGroups });
     field.search = "";
   }
 }

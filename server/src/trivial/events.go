@@ -35,6 +35,8 @@ func (r *Room) broadcastEvents(events Events) {
 
 // Listen starts the main game loop, listening
 // on the game channels.
+// Note that it does start the game itself : the game state is
+// initially in the lobby.
 // It returns `true` when the game is over, or `false` when it
 // is manually terminated.
 // Care should be taken to make sure no more events are send on the
@@ -123,6 +125,32 @@ func (r *Room) Join(player Player, connection Connection) error {
 
 		r.broadcastEvents(events)
 	}
+
+	return nil
+}
+
+// StartGame launches the game, returning an error if the game
+// is in auto mode, or if no players are in the game yet.
+//
+// It is safe for concurrent use.
+func (r *Room) StartGame() error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	if !r.game.options.Launch.Manual {
+		return errors.New("internal error: manual start of auto room")
+	}
+
+	if len(r.players) == 0 {
+		return errors.New("internal error: no player in room")
+	}
+
+	if r.game.hasStarted() {
+		return errors.New("internal error: game has started")
+	}
+
+	events := r.startGame()
+	r.broadcastEvents(events)
 
 	return nil
 }

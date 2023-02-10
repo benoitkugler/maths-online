@@ -25,10 +25,11 @@
 
     <v-card-text>
       <v-row justify="center">
-        <v-col md="12" lg="6" v-for="game in summaries" :key="game.GameID">
+        <v-col cols="12" lg="6" v-for="game in summaries" :key="game.GameID">
           <GameMonitor
             :summary="game"
             :show-i-d="true"
+            @start-game="startTrivGame"
             @stop-game="stopTrivGame"
             @show-question="showQuestion"
           ></GameMonitor>
@@ -42,6 +43,7 @@
 import type {
   GameSummary,
   QuestionContent,
+  RoomID,
   stopGame,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -60,9 +62,11 @@ const emit = defineEmits<{
 
 let summaries = $ref<GameSummary[]>([]);
 
+const refreshDelay = 5000; // milliseconds
+
 let intervalHandle: number;
 onMounted(() => {
-  intervalHandle = setInterval(fetchMonitorData, 5000);
+  intervalHandle = setInterval(fetchMonitorData, refreshDelay);
   fetchMonitorData();
 });
 
@@ -70,6 +74,12 @@ async function fetchMonitorData() {
   const res = await controller.TrivialTeacherMonitor();
   if (res == undefined) return;
   summaries = res.Games || [];
+}
+
+async function startTrivGame(id: RoomID) {
+  const ok = await controller.StartTrivialGame({ "game-id": id });
+  if (!ok) return;
+  await fetchMonitorData();
 }
 
 async function stopTrivGame(params: stopGame) {

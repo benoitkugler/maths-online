@@ -100,7 +100,7 @@ func (gs *gameSession) createGame(params createGame) {
 		}
 	}()
 
-	ProgressLogger.Printf("Creating game %s for %d players", params.ID, params.Options.PlayersNumber)
+	ProgressLogger.Printf("Creating game %s (launch: %s)", params.ID, params.Options.Launch)
 }
 
 // TODO:
@@ -110,8 +110,20 @@ func (gs *gameSession) exploitReplay(review tv.Replay) {
 
 func (gs *gameSession) afterGameEnd(gameID tv.RoomID) {
 	gs.lock.Lock()
+	defer gs.lock.Unlock()
 	delete(gs.games, gameID)
-	gs.lock.Unlock()
+}
+
+func (gs *gameSession) startGame(gameID tv.RoomID) error {
+	gs.lock.Lock()
+	defer gs.lock.Unlock()
+
+	game, ok := gs.games[gameID]
+	if !ok {
+		return fmt.Errorf("internal error: no game with ID %s", gameID)
+	}
+
+	return game.StartGame()
 }
 
 func (gs *gameSession) stopGame(params stopGame) {

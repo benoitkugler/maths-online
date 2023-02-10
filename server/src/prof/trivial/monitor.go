@@ -19,9 +19,8 @@ type GameSummary struct {
 	CurrentPlayer  string          // empty when no one is playing
 	LatestQuestion QuestionContent // empty before the first question
 	Players        []GamePlayers
-	RoomSize       int
+	RoomSize       tv.RoomSize
 }
-
 
 func newGameSummary(s tv.Summary) (out GameSummary) {
 	out.GameID = s.ID

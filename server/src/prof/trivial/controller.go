@@ -426,10 +426,15 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 		return LaunchSessionOut{}, err
 	}
 
+	groups, err := params.Groups.groups()
+	if err != nil {
+		return LaunchSessionOut{}, err
+	}
+
 	var out LaunchSessionOut
-	for _, nbPlayers := range params.Groups {
+	for _, groupStrategy := range groups {
 		options := tv.Options{
-			PlayersNumber:   nbPlayers,
+			Launch:          groupStrategy,
 			QuestionTimeout: time.Second * time.Duration(config.QuestionTimeout),
 			ShowDecrassage:  config.ShowDecrassage,
 			Questions:       questionPool,
@@ -440,10 +445,29 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 			ID:      gameID,
 			Options: options,
 		})
-		out.GameIDs = append(out.GameIDs, string(gameID))
+		out.GameIDs = append(out.GameIDs, gameID)
 	}
 
 	return out, nil
+}
+
+// StartTtrivialGame starts a game created in manual mode
+func (ct *Controller) StartTrivialGame(c echo.Context) error {
+	user := tcAPI.JWTTeacher(c)
+
+	gameID := c.QueryParam("game-id")
+
+	session := ct.getSession(user.Id)
+	if session == nil {
+		return fmt.Errorf("Aucune session de TrivMaths n'est en cours.")
+	}
+
+	err := session.startGame(tv.RoomID(gameID))
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
 }
 
 // StopTrivialGame stops a game, optionnaly restarting it,

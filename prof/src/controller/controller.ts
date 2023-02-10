@@ -277,6 +277,13 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
   }
 
+  protected onSuccessStartTrivialGame(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Partie lancée avec succés.");
+    }
+  }
+
   protected onSuccessTeacherGenerateClassroomCode(
     data: GenerateClassroomCodeOut
   ): void {

@@ -75,36 +75,31 @@
     </v-row>
 
     <v-alert color="secondary" v-if="sessionMeta.NbGames > 0" class="my-2 mx-4">
-      <v-row>
-        <v-col>
+      <v-row justify="space-evenly">
+        <v-col cols="auto" class="my-2">
           Parties en cours : <v-chip>{{ sessionMeta.NbGames }}</v-chip>
         </v-col>
-        <v-spacer></v-spacer>
-        <v-col>
+        <v-col cols="auto" align-self="center">
           <v-btn @click="showMonitor = true"> Suivre les parties </v-btn>
         </v-col>
       </v-row>
     </v-alert>
 
     <v-list>
-      <v-list-item
+      <trivial-row
         v-for="config in configs"
         :key="config.Config.Id"
-        class="my-3"
-      >
-        <trivial-row
-          :config="config"
-          :disable-launch="
-            isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
-          "
-          @update-public="(b) => updatePublic(config.Config, b)"
-          @create-review="createReview(config.Config)"
-          @duplicate="duplicateConfig(config.Config)"
-          @edit="editedConfig = config.Config"
-          @launch="launchingConfig = config.Config"
-          @delete="trivialToDelete = config.Config"
-        ></trivial-row>
-      </v-list-item>
+        :config="config"
+        :disable-launch="
+          isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
+        "
+        @update-public="(b) => updatePublic(config.Config, b)"
+        @create-review="createReview(config.Config)"
+        @duplicate="duplicateConfig(config.Config)"
+        @edit="editedConfig = config.Config"
+        @launch="launchingConfig = config.Config"
+        @delete="trivialToDelete = config.Config"
+      ></trivial-row>
     </v-list>
   </v-card>
 </template>
@@ -112,6 +107,7 @@
 <script setup lang="ts">
 import {
   ReviewKind,
+  type GroupsStrategy,
   type RunningSessionMetaOut,
   type TagsDB,
   type Trivial,
@@ -227,7 +223,7 @@ async function deleteConfig() {
 }
 
 let launchingConfig = $ref<Trivial | null>(null);
-async function launchSession(groups: number[]) {
+async function launchSession(groups: GroupsStrategy) {
   if (launchingConfig == null) {
     return;
   }

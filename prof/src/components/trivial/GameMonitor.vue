@@ -46,11 +46,21 @@
           >
         </v-col>
 
+        <v-col cols="3" v-if="showStart" align-self="center">
+          <v-btn
+            density="comfortable"
+            rounded
+            @click.once="emit('startGame', props.summary.GameID)"
+            color="green"
+            :disabled="startDisabled"
+          >
+            Démarrer
+          </v-btn>
+        </v-col>
+
         <v-col cols="auto" style="text-align: right" align-self="center">
           <v-chip color="info">
-            {{ props.summary.RoomSize }} joueur{{
-              props.summary.RoomSize > 1 ? "s" : ""
-            }}
+            {{ nbJoueurs }} <v-icon>mdi-account-multiple</v-icon>
           </v-chip>
           <v-btn
             size="x-small"
@@ -63,8 +73,12 @@
           </v-btn>
         </v-col>
       </v-row>
-      <v-row no-gutters class="my-1 px-2">
-        <v-col v-if="!props.summary.Players?.length">
+      <v-row no-gutters class="mt-3 px-2">
+        <v-col
+          v-if="!props.summary.Players?.length"
+          style="text-align: center"
+          class="py-3"
+        >
           <i>En attente de joueurs...</i>
         </v-col>
         <v-col
@@ -72,11 +86,11 @@
           v-for="(player, index) in props.summary.Players"
           :key="index"
         >
-          <pie
+          <triv-pie
             :label="player.Player"
             :success="player.Successes"
             :highlight="player.Player == props.summary.CurrentPlayer"
-          ></pie>
+          ></triv-pie>
         </v-col>
       </v-row>
     </v-card-text>
@@ -87,11 +101,13 @@
 import type {
   GameSummary,
   QuestionContent,
+  RoomID,
   stopGame,
 } from "@/controller/api_gen";
 import { colorsPerCategorie } from "@/controller/trivial";
+import { computed } from "vue";
 import { $ref } from "vue/macros";
-import Pie from "./Pie.vue";
+import TrivPie from "./TrivPie.vue";
 
 interface Props {
   summary: GameSummary;
@@ -101,6 +117,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
+  (e: "startGame", args: RoomID): void;
   (e: "stopGame", args: stopGame): void;
   (e: "showQuestion", args: QuestionContent): void;
 }>();
@@ -110,6 +127,16 @@ function emitStopGame(restart: boolean) {
   emit("stopGame", { ID: props.summary.GameID, Restart: restart });
   showConfirmStopGame = false;
 }
+
+const nbJoueurs = computed(() => {
+  const rm = props.summary.RoomSize;
+  return rm.Max ? `${rm.Current} / ${rm.Max}` : `${rm.Current}`;
+});
+
+const showStart = computed(
+  () => props.summary.RoomSize.Max == 0 && !props.summary.CurrentPlayer
+);
+const startDisabled = computed(() => props.summary.RoomSize.Current == 0);
 </script>
 
 <style scoped></style>
