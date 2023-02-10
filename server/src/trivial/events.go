@@ -138,11 +138,15 @@ func (r *Room) StartGame() error {
 	defer r.lock.Unlock()
 
 	if !r.game.options.Launch.Manual {
-		return errors.New("Une partie en lancement automatique ne peut pas être démarrée manuellement.")
+		return errors.New("internal error: manual start of auto room")
 	}
 
 	if len(r.players) == 0 {
-		return errors.New("Aucun joueur n'est présent dans la partie.")
+		return errors.New("internal error: no player in room")
+	}
+
+	if r.game.hasStarted() {
+		return errors.New("internal error: game has started")
 	}
 
 	events := r.startGame()

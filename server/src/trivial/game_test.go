@@ -201,6 +201,9 @@ func TestStartManual(t *testing.T) {
 
 	g = r.lg()
 	tu.Assert(t, g.phase == pTurnStarted)
+
+	err = r.StartGame()
+	tu.Assert(t, err != nil) // game already started
 }
 
 func TestEmitQuestion(t *testing.T) {

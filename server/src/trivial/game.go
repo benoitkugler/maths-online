@@ -64,9 +64,12 @@ func (p phase) String() string {
 
 // game is the internal state of the game
 type game struct {
-	phase      phase  // phase of the game
-	pawnTile   int    // position of the pawn on the board
-	playerTurn serial // the player currently playing (for instance, choosing where to move)
+	phase    phase // phase of the game
+	pawnTile int   // position of the pawn on the board
+
+	// the player currently playing (for instance, choosing where to move)
+	// it is valid if and only if the game has started
+	playerTurn serial
 
 	options Options
 
