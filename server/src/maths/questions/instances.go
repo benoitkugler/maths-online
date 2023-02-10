@@ -12,6 +12,9 @@ import (
 
 type instance interface {
 	toClient() client.Block
+
+	// returns LaTeX code describing the block as close as possible
+	toLatex() string
 }
 
 var (

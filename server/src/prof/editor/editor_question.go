@@ -945,3 +945,45 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 
 	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil
 }
+
+// EditorExportLateX instantiate the given question and generates a LaTeX version,
+// returning the code as a string
+func (ct *Controller) EditorQuestionExportLateX(c echo.Context) error {
+	var args questions.QuestionPage
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := exportQuestionLatex(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type ExportQuestionLatexOut struct {
+	Error   questions.ErrQuestionInvalid
+	IsValid bool
+	Latex   string
+}
+
+func exportQuestionLatex(question questions.QuestionPage) (ExportQuestionLatexOut, error) {
+	if err := question.Validate(); err != nil {
+		return ExportQuestionLatexOut{Error: err.(questions.ErrQuestionInvalid)}, nil
+	}
+
+	instanceParams, err := question.Parameters.ToMap().Instantiate()
+	if err != nil {
+		return ExportQuestionLatexOut{}, err
+	}
+	instance, err := question.Enonce.InstantiateWith(instanceParams)
+	if err != nil {
+		return ExportQuestionLatexOut{}, err
+	}
+
+	return ExportQuestionLatexOut{
+		IsValid: true,
+		Latex:   instance.ToLatex(),
+	}, nil
+}

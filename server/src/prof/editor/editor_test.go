@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/examples"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
@@ -187,4 +189,24 @@ func TestLoadIndex(t *testing.T) {
 	index, err = ct.loadExercicesIndex(1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(index) >= 1)
+}
+
+func TestExportLatex(t *testing.T) {
+	page := questions.QuestionPage{Enonce: examples.BlockList[:], Parameters: nil}
+	out1, err := exportQuestionLatex(page)
+	tu.AssertNoErr(t, err)
+
+	tu.Assert(t, out1.IsValid)
+	tu.Assert(t, len(out1.Latex) > 0)
+
+	tu.GenerateLatex(t, out1.Latex, "question-test.pdf")
+
+	ex := ExportExerciceLatexIn{Parameters: nil, Questions: []questions.QuestionPage{page, page, page}}
+	out2, err := exportExerciceLatex(ex)
+	tu.AssertNoErr(t, err)
+
+	tu.Assert(t, out2.IsValid)
+	tu.Assert(t, len(out2.Latex) > 0)
+
+	tu.GenerateLatex(t, out2.Latex, "exercice-test.pdf")
 }

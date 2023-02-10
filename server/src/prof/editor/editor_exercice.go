@@ -1213,3 +1213,46 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int) (LoopbackS
 		Origin: questionOrigins,
 	}, nil
 }
+
+type ExportExerciceLatexIn struct {
+	Parameters questions.Parameters     // shared parameters
+	Questions  []questions.QuestionPage // questions content
+}
+
+type ExportExerciceLatexOut struct {
+	Error         questions.ErrQuestionInvalid
+	QuestionIndex int // of the error
+	IsValid       bool
+
+	Latex string
+}
+
+func exportExerciceLatex(exercice ExportExerciceLatexIn) (ExportExerciceLatexOut, error) {
+	ques := make([]questions.QuestionInstance, len(exercice.Questions))
+	for index, question := range exercice.Questions {
+		toCheck := question.Parameters
+		toCheck = append(toCheck, exercice.Parameters...) // add the shared parameters
+
+		err := toCheck.Validate()
+		if err != nil {
+			return ExportExerciceLatexOut{
+				Error:         err.(questions.ErrQuestionInvalid),
+				QuestionIndex: index,
+			}, nil
+		}
+
+		instanceParams, err := toCheck.ToMap().Instantiate()
+		if err != nil {
+			return ExportExerciceLatexOut{}, err
+		}
+		ques[index], err = question.Enonce.InstantiateWith(instanceParams)
+		if err != nil {
+			return ExportExerciceLatexOut{}, err
+		}
+	}
+
+	return ExportExerciceLatexOut{
+		IsValid: true,
+		Latex:   questions.InstancesToLatex(ques),
+	}, nil
+}

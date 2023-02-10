@@ -7,10 +7,10 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
-var blockList = [...]que.Block{
+var BlockList = [...]que.Block{
 	que.ExpressionFieldBlock{
 		Expression:      "x^2 + 2x + 1",
-		Label:           "&(x+1)^2&",
+		Label:           "&(x+1)^2& =",
 		ComparisonLevel: que.SimpleSubstitutions,
 	},
 	que.FigureAffineLineFieldBlock{
@@ -109,7 +109,7 @@ var blockList = [...]que.Block{
 		Criterion: que.VectorColinear,
 	},
 	que.FormulaBlock{
-		Parts: "Soit $f(x) = &2x + 1&$. Quelle est la dérivée de f ?",
+		Parts: "f(x) = &2x + 1&",
 	},
 	que.FunctionsGraphBlock{
 		FunctionExprs: []que.FunctionDefinition{
@@ -180,7 +180,7 @@ var blockList = [...]que.Block{
 		Label: "g",
 		Xs: []string{
 			"-inf",
-			"1/3",
+			"1/2",
 			"3",
 		},
 		FxSymbols: []que.SignSymbol{
@@ -228,7 +228,7 @@ var blockList = [...]que.Block{
 	que.TreeFieldBlock{
 		EventsProposals: []string{"P", "F", "?"},
 		AnswerRoot: que.TreeNodeAnswer{
-			Probabilities: []string{"1/3", "2/3"},
+			Probabilities: []string{"1/5", "4/5"},
 			Children: []que.TreeNodeAnswer{
 				{
 					Value: 0,

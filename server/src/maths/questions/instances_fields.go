@@ -59,8 +59,9 @@ var (
 	_ fieldInstance = FigureVectorPairFieldInstance{}
 	_ fieldInstance = FigureAffineLineFieldInstance{}
 	_ fieldInstance = TreeFieldInstance{}
-	_ fieldInstance = TreeFieldInstance{}
 	_ fieldInstance = ProofFieldInstance{}
+	_ fieldInstance = TableFieldInstance{}
+	_ fieldInstance = VectorFieldInstance{}
 )
 
 // NumberFieldInstance is an answer field where only
@@ -118,11 +119,13 @@ type ExpressionFieldInstance struct {
 
 func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
+func (f ExpressionFieldInstance) sizeHint() int { return len([]rune(f.Answer.String())) }
+
 func (f ExpressionFieldInstance) toClient() client.Block {
 	out := client.ExpressionFieldBlock{
 		ID:               f.ID,
 		Label:            f.LabelLaTeX,
-		SizeHint:         len([]rune(f.Answer.String())),
+		SizeHint:         f.sizeHint(),
 		ShowFractionHelp: f.ShowFractionHelp,
 	}
 	if f.ComparisonLevel == AsLinearEquation {

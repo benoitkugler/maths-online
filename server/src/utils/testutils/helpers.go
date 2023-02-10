@@ -1,8 +1,11 @@
 package testutils
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -48,4 +51,43 @@ func ReadEnv(filename string) map[string]string {
 		fmt.Printf("Env. var. %s=%s\n", k, v)
 	}
 	return out
+}
+
+// GenerateLatex create a document, fill it with [body]
+// and compile the latex code to create [outFile]
+func GenerateLatex(t *testing.T, body string, outFile string) {
+	code := fmt.Sprintf(`
+		\documentclass{article}
+
+		\usepackage{fullpage}
+		\usepackage[utf8]{inputenc}
+		\usepackage{amsmath}
+		\usepackage[inline]{enumitem}
+        \usepackage{amssymb}
+
+		\begin{document}
+		%s
+		\end{document}
+	`, body)
+
+	dir := filepath.Join(os.TempDir(), "go-latex")
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.Mkdir(dir, os.ModePerm)
+		AssertNoErr(t, err)
+	}
+
+	err := os.WriteFile(filepath.Join(dir, outFile+".tex"), []byte(code), os.ModePerm)
+	AssertNoErr(t, err)
+
+	cmd := exec.Command("pdflatex", outFile+".tex")
+	var buf bytes.Buffer
+	cmd.Dir = dir
+	cmd.Stdout = &buf
+	err = cmd.Run()
+	if _, ok := err.(*exec.ExitError); ok {
+		fmt.Println(code)
+		fmt.Println(buf.String())
+	}
+	AssertNoErr(t, err)
 }

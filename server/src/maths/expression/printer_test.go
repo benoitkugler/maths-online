@@ -1,10 +1,6 @@
 package expression
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,36 +8,7 @@ import (
 )
 
 func generateLatex(t *testing.T, lines []string, outFile string) {
-	code := fmt.Sprintf(`
-		\documentclass{article}
-		\usepackage[utf8]{inputenc}
-		\usepackage{amsmath}
-
-		\begin{document}
-		%s
-		\end{document}
-	`, strings.Join(lines, "\n"))
-
-	dir := filepath.Join(os.TempDir(), "go-latex")
-
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.Mkdir(dir, os.ModePerm)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err := os.WriteFile(filepath.Join(dir, outFile), []byte(code), os.ModePerm)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := exec.Command("pdflatex", outFile)
-	cmd.Dir = dir
-	err = cmd.Run()
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.GenerateLatex(t, strings.Join(lines, "\n"), outFile)
 }
 
 // generate formulas.pdf in a temporary directory to perform visual tests
