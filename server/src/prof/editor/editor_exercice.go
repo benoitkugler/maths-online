@@ -1227,6 +1227,22 @@ type ExportExerciceLatexOut struct {
 	Latex string
 }
 
+// EditorExerciceExportLateX instantiate the given exercice and generates a LaTeX version,
+// returning the code as a string
+func (ct *Controller) EditorExerciceExportLateX(c echo.Context) error {
+	var args ExportExerciceLatexIn
+	if err := c.Bind(&args); err != nil {
+		return fmt.Errorf("invalid parameters: %s", err)
+	}
+
+	out, err := exportExerciceLatex(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
 func exportExerciceLatex(exercice ExportExerciceLatexIn) (ExportExerciceLatexOut, error) {
 	ques := make([]questions.QuestionInstance, len(exercice.Questions))
 	for index, question := range exercice.Questions {

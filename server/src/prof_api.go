@@ -66,6 +66,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/editor/question/variant", edit.EditorSaveQuestionMeta)
 	gr.POST("/api/prof/editor/question/check-params", edit.EditorCheckQuestionParameters)
 	gr.POST("/api/prof/editor/question/preview", edit.EditorSaveQuestionAndPreview)
+	gr.POST("/api/prof/editor/question/export/latex", edit.EditorQuestionExportLateX)
 
 	// exercice editor
 	gr.GET("/api/prof/editor/exercicegroups", edit.EditorGetExercicesIndex)
@@ -85,6 +86,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/editor/exercicegroup/visibility", edit.EditorUpdateExercicegroupVis)
 	gr.POST("/api/prof/editor/exercice/check-params", edit.EditorCheckExerciceParameters)
 	gr.POST("/api/prof/editor/exercice/preview", edit.EditorSaveExerciceAndPreview)
+	gr.POST("/api/prof/editor/exercice/export/latex", edit.EditorExerciceExportLateX)
 
 	// homework activity
 	gr.GET("/api/prof/homework", home.HomeworkGetSheets)

@@ -946,7 +946,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil
 }
 
-// EditorExportLateX instantiate the given question and generates a LaTeX version,
+// EditorQuestionExportLateX instantiate the given question and generates a LaTeX version,
 // returning the code as a string
 func (ct *Controller) EditorQuestionExportLateX(c echo.Context) error {
 	var args questions.QuestionPage

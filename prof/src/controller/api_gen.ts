@@ -594,6 +594,24 @@ export interface ExercicegroupExt {
   Tags: Tags;
   Variants: ExerciceHeader[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExportExerciceLatexIn
+export interface ExportExerciceLatexIn {
+  Parameters: Parameters;
+  Questions: QuestionPage[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExportExerciceLatexOut
+export interface ExportExerciceLatexOut {
+  Error: ErrQuestionInvalid;
+  QuestionIndex: number;
+  IsValid: boolean;
+  Latex: string;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/editor.ExportQuestionLatexOut
+export interface ExportQuestionLatexOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
+  Latex: string;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/editor.GenerateSyntaxHintIn
 export interface GenerateSyntaxHintIn {
   Block: ExpressionFieldBlock;
@@ -2196,6 +2214,32 @@ export abstract class AbstractAPI {
     data: SaveQuestionAndPreviewOut
   ): void;
 
+  protected async rawEditorQuestionExportLateX(params: QuestionPage) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/question/export/latex";
+    const rep: AxiosResponse<ExportQuestionLatexOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorQuestionExportLateX wraps rawEditorQuestionExportLateX and handles the error */
+  async EditorQuestionExportLateX(params: QuestionPage) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorQuestionExportLateX(params);
+      this.onSuccessEditorQuestionExportLateX(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorQuestionExportLateX(
+    data: ExportQuestionLatexOut
+  ): void;
+
   protected async rawEditorGetExercicesIndex() {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
     const rep: AxiosResponse<Index> = await Axios.get(fullUrl, {
@@ -2619,6 +2663,32 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEditorSaveExerciceAndPreview(
     data: SaveExerciceAndPreviewOut
+  ): void;
+
+  protected async rawEditorExerciceExportLateX(params: ExportExerciceLatexIn) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercice/export/latex";
+    const rep: AxiosResponse<ExportExerciceLatexOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** EditorExerciceExportLateX wraps rawEditorExerciceExportLateX and handles the error */
+  async EditorExerciceExportLateX(params: ExportExerciceLatexIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorExerciceExportLateX(params);
+      this.onSuccessEditorExerciceExportLateX(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessEditorExerciceExportLateX(
+    data: ExportExerciceLatexOut
   ): void;
 
   protected async rawHomeworkGetSheets() {
