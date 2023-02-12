@@ -75,19 +75,19 @@ func InstancesToLatex(questions []QuestionInstance) string {
 	\end{enumerate}`, latexHeader, strings.Join(latexCodes, "\n"))
 }
 
+func textOrMathToLatex(c client.TextOrMath) string {
+	if c.IsMath {
+		return "$ " + c.Text + " $"
+	}
+	return c.Text
+}
+
 func lineToLatexCode(line client.TextLine) string {
 	chunks := make([]string, len(line))
 	for i, c := range line {
-		if c.IsMath {
-			chunks[i] = "$ " + c.Text + " $"
-		} else {
-			chunks[i] = c.Text
-		}
+		chunks[i] = textOrMathToLatex(c)
 	}
-	out := strings.ReplaceAll(strings.Join(chunks, ""), "\n", `\\`)
-	if strings.HasPrefix(out, `\\`) {
-		out = `~` + out
-	}
+	out := strings.ReplaceAll(strings.Join(chunks, ""), "\n", `~\\`)
 	return out
 }
 
@@ -112,10 +112,62 @@ func (fi FormulaDisplayInstance) toLatex() string {
 	return "$$" + strings.Join(fi, " ") + "$$"
 }
 
+func tableRow(row []client.TextOrMath) string {
+	cells := make([]string, len(row))
+	for j, cell := range row {
+		cells[j] = textOrMathToLatex(cell)
+	}
+	return strings.Join(cells, " & ") + `\\` + "\n"
+}
+
+func (ti TableInstance) toLatex() string {
+	if len(ti.Values) == 0 || len(ti.Values[0]) == 0 {
+		return ""
+	}
+	hasVertHeaders := len(ti.VerticalHeaders) != 0
+	nbRows, nbCols := len(ti.Values), len(ti.Values[0]) // without any header
+
+	if hasVertHeaders {
+		nbCols += 1
+	}
+
+	header := ""
+	if len(ti.HorizontalHeaders) != 0 {
+		row := ti.HorizontalHeaders
+		if hasVertHeaders {
+			row = append([]client.TextOrMath{{}}, row...)
+		}
+
+		header = `\hline
+		\rowcolor{pink} ` + tableRow(row)
+	}
+
+	colDeclaration := "|" + strings.Repeat(" c |", nbCols)
+
+	rows := make([]string, nbRows)
+	for i, row := range ti.Values {
+		rowCode := tableRow(row)
+		if hasVertHeaders {
+			rowCode = fmt.Sprintf(`\cellcolor{cyan} %s & %s`, textOrMathToLatex(ti.VerticalHeaders[i]), rowCode)
+		}
+		rows[i] = rowCode
+	}
+
+	return fmt.Sprintf(`
+	\begin{center}
+		\begin{tabular}{%s}
+			%s
+			\hline
+			%s
+			\hline
+		\end{tabular}
+	\end{center}
+`, colDeclaration, header, strings.Join(rows, `\hline`+"\n"))
+}
+
 func (vi VariationTableInstance) toLatex() string { return "TODO" }
 func (si SignTableInstance) toLatex() string      { return "TODO" }
 func (fi FigureInstance) toLatex() string         { return "TODO" }
-func (ti TableInstance) toLatex() string          { return "TODO" }
 func (fi FunctionsGraphInstance) toLatex() string { return "TODO" }
 
 func (ni NumberFieldInstance) toLatex() string { return `\isyroNumberField` }
@@ -176,6 +228,14 @@ func (oi OrderedListFieldInstance) toLatex() string {
 	`, label, box, strings.Join(choices, " , "))
 }
 
+func (pi VectorFieldInstance) toLatex() string {
+	if pi.DisplayColumn {
+		return `$\begin{pmatrix} \isyroNumberField \\ \isyroNumberField \end{pmatrix}$`
+	} else {
+		return `(\isyroNumberField ; \isyroNumberField)`
+	}
+}
+
 func (fi FigurePointFieldInstance) toLatex() string      { return "TODO" }
 func (fi FigureVectorFieldInstance) toLatex() string     { return "TODO" }
 func (vi VariationTableFieldInstance) toLatex() string   { return "TODO" }
@@ -186,4 +246,3 @@ func (fi FigureAffineLineFieldInstance) toLatex() string { return "TODO" }
 func (ti TreeFieldInstance) toLatex() string             { return "TODO" }
 func (pi ProofFieldInstance) toLatex() string            { return "TODO" }
 func (pi TableFieldInstance) toLatex() string            { return "TODO" }
-func (pi VectorFieldInstance) toLatex() string           { return "TODO" }

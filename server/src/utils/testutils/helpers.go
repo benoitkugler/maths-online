@@ -64,6 +64,7 @@ func GenerateLatex(t *testing.T, body string, outFile string) {
 		\usepackage{amsmath}
 		\usepackage[inline]{enumitem}
         \usepackage{amssymb}
+		\usepackage[table]{xcolor}
 
 		\begin{document}
 		%s

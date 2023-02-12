@@ -6,9 +6,18 @@ import (
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
+func tt(s string) TextPart {
+	return TextPart{Content: s, Kind: Text}
+}
+
+func tm(s string) TextPart {
+	return TextPart{Content: s, Kind: StaticMath}
+}
+
 func TestExportLatex(t *testing.T) {
+	dummyCoord := CoordExpression{X: "1", Y: "1"}
 	enonce := Enonce{
-		TextBlock{Parts: "Consigne de la première question : que vaut N ?", Bold: true},
+		TextBlock{Parts: "Consigne de la première question : que vaut N ?\n\n\n", Bold: true},
 		TextBlock{Parts: "Conseil : considérer $f(x) = x - 8$", Italic: true, Smaller: true},
 		TextBlock{Parts: "Compléter : N = "},
 		NumberFieldBlock{"9"},
@@ -41,6 +50,25 @@ func TestExportLatex(t *testing.T) {
 		TextBlock{Parts: "Quel est la négation de f croissante ?"},
 		OrderedListFieldBlock{Label: ``, Answer: []Interpolated{"A", "$x+2$", "B"}, AdditionalProposals: []Interpolated{"C"}},
 		OrderedListFieldBlock{Label: `$x \in $`, Answer: []Interpolated{"A", "$x+2$", "B"}, AdditionalProposals: []Interpolated{"C"}},
+		VectorFieldBlock{DisplayColumn: true, Answer: dummyCoord},
+		VectorFieldBlock{DisplayColumn: false, Answer: dummyCoord},
+		// tables
+		TableBlock{ // no headers
+			Values: [][]TextPart{
+				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
+				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
+				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
+				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
+			},
+		},
+		TableBlock{ // horizontal and vertical headers
+			HorizontalHeaders: []TextPart{tt("H1"), tm("H2"), tt("H3")},
+			VerticalHeaders:   []TextPart{tt("V1"), tm("V2")},
+			Values: [][]TextPart{
+				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
+				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
+			},
+		},
 	}
 
 	qu, err := enonce.InstantiateWith(nil)
