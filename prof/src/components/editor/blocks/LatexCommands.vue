@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import { controller } from "@/controller/controller";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 
@@ -162,6 +163,8 @@ const commands = [
 
 async function copyAndClose(command: string) {
   await navigator.clipboard.writeText(command);
+  if (controller.showMessage)
+    controller.showMessage("Commande copiée dans le presse-papier.");
   emit("close");
 }
 </script>
