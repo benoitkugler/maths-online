@@ -83,16 +83,31 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item class="ma-0 pa-0">
+            <v-list-item>
               <v-btn
-                variant="tonal"
-                class="ma-2"
+                size="small"
+                class="my-1"
                 @click="download"
                 :disabled="!question?.Question.Enonce?.length"
                 title="Télécharger la question au format .json"
               >
                 <v-icon class="mr-2" icon="mdi-download" size="small"></v-icon>
                 Télécharger
+              </v-btn>
+            </v-list-item>
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
+                @click="exportLatex"
+                title="Exporter l'exercice au format LaTeX (.tex)"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-file-export"
+                  size="small"
+                ></v-icon>
+                Exporter en LaTeX
               </v-btn>
             </v-list-item>
           </v-list>
@@ -155,6 +170,7 @@ import {
   type Block,
   type errEnonce,
   type ErrParameters,
+  type ErrQuestionInvalid,
   type ExerciceExt,
   type ExerciceHeader,
   type ExerciceQuestionExt,
@@ -363,16 +379,20 @@ async function save() {
     notifieUpdate(exercice);
     emit("preview", res.Preview);
   } else {
-    if (res.Error.ParametersInvalid) {
-      errorEnnonce = null;
-      errorParameters = res.Error.ErrParameters;
-    } else {
-      errorEnnonce = res.Error.ErrEnonce;
-      errorParameters = null;
-    }
-    // go to the faulty question
-    questionIndex = res.QuestionIndex;
+    onQuestionError(res.QuestionIndex, res.Error);
   }
+}
+
+function onQuestionError(index: number, err: ErrQuestionInvalid) {
+  if (err.ParametersInvalid) {
+    errorEnnonce = null;
+    errorParameters = err.ErrParameters;
+  } else {
+    errorEnnonce = err.ErrEnonce;
+    errorParameters = null;
+  }
+  // go to the faulty question
+  questionIndex = index;
 }
 
 function download() {
@@ -420,6 +440,34 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
   if (res == undefined) return;
 
   questionContent?.addExistingBlock({ Kind: BlockKind.TextBlock, Data: res });
+}
+
+async function exportLatex() {
+  const res = await controller.EditorExerciceExportLateX({
+    Questions:
+      exercice.Questions?.map((qu) => ({
+        enonce: qu.Question.Enonce,
+        parameters: qu.Question.Parameters,
+      })) || [],
+    Parameters: exercice.Exercice.Parameters,
+  });
+  if (res == undefined) return;
+
+  if (res.IsValid) {
+    try {
+      await navigator.clipboard.writeText(res.Latex);
+      if (controller.showMessage)
+        controller.showMessage("Exercice copié dans le presse-papier");
+    } catch (error) {
+      if (controller.onError)
+        controller.onError(
+          "Presse-papier",
+          "L'accès au presse-papier a échoué."
+        );
+    }
+  } else {
+    onQuestionError(res.QuestionIndex, res.Error);
+  }
 }
 </script>
 

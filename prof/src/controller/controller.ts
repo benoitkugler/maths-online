@@ -14,6 +14,8 @@ import type {
   ExercicegroupExt,
   ExerciceHeader,
   ExerciceWithPreview,
+  ExportExerciceLatexOut,
+  ExportQuestionLatexOut,
   GenerateClassroomCodeOut,
   HomeworkMarksOut,
   Index,
@@ -269,6 +271,18 @@ class Controller extends AbstractAPI {
     if (this.showMessage) {
       this.showMessage("Exercice (et variantes) dupliqué avec succès.");
     }
+  }
+
+  protected onSuccessEditorQuestionExportLateX(
+    data: ExportQuestionLatexOut
+  ): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessEditorExerciceExportLateX(
+    data: ExportExerciceLatexOut
+  ): void {
+    this.inRequest = false;
   }
 
   protected onSuccessGetTrivialRunningSessions(

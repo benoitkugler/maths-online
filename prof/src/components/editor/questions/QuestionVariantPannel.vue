@@ -71,6 +71,21 @@
                 Télécharger
               </v-btn>
             </v-list-item>
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
+                @click="exportLatex"
+                title="Exporter la question au format LaTeX (.tex)"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-file-export"
+                  size="small"
+                ></v-icon>
+                Exporter en LaTeX
+              </v-btn>
+            </v-list-item>
           </v-list>
         </v-menu>
       </v-col>
@@ -108,6 +123,7 @@ import {
   type Block,
   type errEnonce,
   type ErrParameters,
+  type ErrQuestionInvalid,
   type ExpressionFieldBlock,
   type LoopbackShowQuestion,
   type Parameters,
@@ -196,13 +212,17 @@ async function save() {
     emit("update", question);
     emit("preview", res.Question);
   } else {
-    if (res.Error.ParametersInvalid) {
-      errorEnnonce = null;
-      errorParameters = res.Error.ErrParameters;
-    } else {
-      errorEnnonce = res.Error.ErrEnonce;
-      errorParameters = null;
-    }
+    onQuestionError(res.Error);
+  }
+}
+
+function onQuestionError(err: ErrQuestionInvalid) {
+  if (err.ParametersInvalid) {
+    errorEnnonce = null;
+    errorParameters = err.ErrParameters;
+  } else {
+    errorEnnonce = err.ErrEnonce;
+    errorParameters = null;
   }
 }
 
@@ -236,8 +256,8 @@ async function checkParameters(params: Parameters) {
 
   // hide previous error
   errorEnnonce = null;
-
   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
+
   availableParameters.value = out.Variables || [];
 }
 
@@ -252,6 +272,30 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
   if (res == undefined) return;
 
   questionContent?.addExistingBlock({ Kind: BlockKind.TextBlock, Data: res });
+}
+
+async function exportLatex() {
+  const res = await controller.EditorQuestionExportLateX({
+    enonce: question.Enonce,
+    parameters: question.Parameters,
+  });
+  if (res == undefined) return;
+
+  if (res.IsValid) {
+    try {
+      await navigator.clipboard.writeText(res.Latex);
+      if (controller.showMessage)
+        controller.showMessage("Question copiée dans le presse-papier");
+    } catch (error) {
+      if (controller.onError)
+        controller.onError(
+          "Presse-papier",
+          "L'accès au presse-papier a échoué."
+        );
+    }
+  } else {
+    onQuestionError(res.Error);
+  }
 }
 </script>
 
