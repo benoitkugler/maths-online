@@ -7,7 +7,8 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 )
 
-const customLaTeXCommands = `
+const latexHeader = `
+	% Custom commands and settings used by Isyro
 	\newcommand{\isyroFieldHeight}{\phantom{$\sum_{\sum}^{\sum}$}} %% field height
 
 	\newcommand{\isyroNumberField}{
@@ -19,17 +20,41 @@ const customLaTeXCommands = `
 	}
 	
 	\newcommand{\isyroQCMSquare}{\raisebox{-.25\height}{\huge$\square$}}
+	
+	\newcommand{\R}{\mathbb{R}}
+	\newcommand{\Q}{\mathbb{Q}}
+	\newcommand{\D}{\mathbb{D}}
+	\newcommand{\Z}{\mathbb{Z}}
+	\newcommand{\N}{\mathbb{N}}
+
+
 `
 
 func (qu QuestionInstance) toLatex(standalone bool) string {
 	chunks := make([]string, len(qu.Enonce))
+	// we add an extra new line between two text blocks
+	isPreviousText := false
 	for i, p := range qu.Enonce {
-		chunks[i] = p.toLatex()
+		_, isText := p.(TextInstance)
+
+		if isPreviousText && isText {
+			chunks[i] = "\n \\vspace{0.3cm} \n" + p.toLatex()
+		} else {
+			chunks[i] = p.toLatex()
+		}
+
+		isPreviousText = isText
 	}
 	// we add line breaks for clarity, they are ignored by the latex compiler anyway
-	code := strings.Join(chunks, "\n\n")
-	if standalone { // remove indent and add custom defs
-		return customLaTeXCommands + ` \noindent ` + code
+	// we also disable indent inside one question
+	code := fmt.Sprintf(`
+	%% -------------- Question --------------
+	{ \setlength{\parindent}{0pt}
+	%s
+	}`, strings.Join(chunks, "\n"))
+
+	if standalone { // add custom defs
+		return latexHeader + code
 	}
 	return code
 }
@@ -47,7 +72,7 @@ func InstancesToLatex(questions []QuestionInstance) string {
 	
 	\begin{enumerate}
 	%s
-	\end{enumerate}`, customLaTeXCommands, strings.Join(latexCodes, "\n"))
+	\end{enumerate}`, latexHeader, strings.Join(latexCodes, "\n"))
 }
 
 func lineToLatexCode(line client.TextLine) string {
@@ -59,7 +84,11 @@ func lineToLatexCode(line client.TextLine) string {
 			chunks[i] = c.Text
 		}
 	}
-	return strings.ReplaceAll(strings.Join(chunks, ""), "\n", `\\`)
+	out := strings.ReplaceAll(strings.Join(chunks, ""), "\n", `\\`)
+	if strings.HasPrefix(out, `\\`) {
+		out = `~` + out
+	}
+	return out
 }
 
 func (ti TextInstance) toLatex() string {
@@ -67,16 +96,16 @@ func (ti TextInstance) toLatex() string {
 
 	attrs := ""
 	if ti.Bold {
-		attrs += `\bfseries`
+		attrs += `\bfseries `
 	}
 	if ti.Italic {
-		attrs += `\itshape`
+		attrs += `\itshape `
 	}
 	if ti.Smaller {
-		attrs += `\small`
+		attrs += `\small `
 	}
 
-	return fmt.Sprintf("{%s %s}", attrs, text)
+	return fmt.Sprintf("{%s%s}", attrs, text)
 }
 
 func (fi FormulaDisplayInstance) toLatex() string {
@@ -110,6 +139,7 @@ func (ri RadioFieldInstance) toLatex() string {
 	for i, p := range props {
 		choices[i] = `\item ` + lineToLatexCode(p)
 	}
+
 	return fmt.Sprintf(`\begin{itemize}[label={\isyroQCMSquare}] %% vertical align
     %s
 	\end{itemize}
@@ -141,7 +171,7 @@ func (oi OrderedListFieldInstance) toLatex() string {
 	}
 	return fmt.Sprintf(`~\\ \begin{center} %s %s \\ 
 	\vspace{0.5em}
-	\textit{\small Propositions à ordonner:} %s
+	\textit{\small \'Eléments à ordonner:} %s
 	\end{center}
 	`, label, box, strings.Join(choices, " , "))
 }

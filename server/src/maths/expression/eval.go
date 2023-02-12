@@ -17,6 +17,15 @@ var _ varEvaluer = (*evalResolver)(nil)
 // Vars maps variables to a chosen value.
 type Vars map[Variable]*Expr
 
+// CompleteFrom adds entries in [other] not defined in [vs]
+func (vs Vars) CompleteFrom(other Vars) {
+	for c, v := range other {
+		if _, has := vs[c]; !has {
+			vs[c] = v
+		}
+	}
+}
+
 type evalResolver struct {
 	defs Vars // source of the variables expressions
 

@@ -183,11 +183,7 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 
 		if question.NeedExercice.Valid {
 			// merge the parameters, given higher precedence to question
-			for c, v := range sharedVars {
-				if _, has := ownVars[c]; !has {
-					ownVars[c] = v
-				}
-			}
+			ownVars.CompleteFrom(sharedVars)
 		}
 
 		instance, err := question.Enonce.InstantiateWith(ownVars)

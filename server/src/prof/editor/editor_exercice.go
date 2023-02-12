@@ -1256,11 +1256,20 @@ func exportExerciceLatex(exercice ExportExerciceLatexIn) (ExportExerciceLatexOut
 				QuestionIndex: index,
 			}, nil
 		}
+	}
 
-		instanceParams, err := toCheck.ToMap().Instantiate()
+	// instantiate shared params once
+	sharedVars, err := exercice.Parameters.ToMap().Instantiate()
+	if err != nil {
+		return ExportExerciceLatexOut{}, err
+	}
+	for index, question := range exercice.Questions {
+		instanceParams, err := question.Parameters.ToMap().Instantiate()
 		if err != nil {
 			return ExportExerciceLatexOut{}, err
 		}
+		instanceParams.CompleteFrom(sharedVars)
+
 		ques[index], err = question.Enonce.InstantiateWith(instanceParams)
 		if err != nil {
 			return ExportExerciceLatexOut{}, err
