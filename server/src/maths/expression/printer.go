@@ -78,13 +78,10 @@ func (op operator) asLaTeX(left, right *Expr) string {
 	leftHasParenthesis := op.needParenthesis(left, true, true)
 	rightHasParenthesis := op.needParenthesis(right, false, true)
 
-	// the latex syntax allow to spare some redundant parenthesis
-	ignoreParenthesis := op == div || op == rem || op == mod
-
-	if leftHasParenthesis && !ignoreParenthesis {
+	if leftHasParenthesis {
 		leftCode = addParenthesisLatex(leftCode)
 	}
-	if rightHasParenthesis && !ignoreParenthesis {
+	if rightHasParenthesis {
 		rightCode = addParenthesisLatex(rightCode)
 	}
 
@@ -228,6 +225,14 @@ func (v Number) asLaTeX(_, _ *Expr) string {
 // else this is :                  ...  op expr
 func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	if expr == nil {
+		return false
+	}
+
+	// the latex syntax allow to spare some redundant parenthesis
+	if isLaTex && (op == div || op == rem || op == mod) {
+		return false
+	}
+	if isLaTex && !isLeftArg && op == pow {
 		return false
 	}
 

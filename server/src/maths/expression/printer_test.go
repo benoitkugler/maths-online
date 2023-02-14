@@ -40,6 +40,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"2*x*" + string(piRune),
 		"2 + x/y + 3*(4+x)/(2 - y)",
 		"x^y^z",
+		"n^(2n)",
 		"(x^y)^z^t",
 		"n!",
 		"2n!",
@@ -96,6 +97,10 @@ func TestParenthesis(t *testing.T) {
 	if s := expr.String(); strings.ContainsRune(s, '(') {
 		t.Fatal("unexpected parenthesis :", s)
 	}
+
+	expr = mustParse(t, "x ^ (2n)")
+	latex := expr.AsLaTeX()
+	tu.Assert(t, !strings.ContainsRune(latex, '('))
 }
 
 func Test0And1(t *testing.T) {
