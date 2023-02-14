@@ -16,11 +16,11 @@ func TestExpr_isLinearEquation(t *testing.T) {
 		{"2x - 2y +t -4", linearCoefficients{NewVar('x'): 2, NewVar('y'): -2, NewVar('t'): 1, {}: -4}, false},
 		{"2x + y -1 * t -4", linearCoefficients{NewVar('x'): 2, NewVar('y'): 1, NewVar('t'): -1, {}: -4}, false},
 		{"x/2 + (1/2)y", linearCoefficients{NewVar('x'): 0.5, NewVar('y'): 0.5}, false},
-		{"x +0y", linearCoefficients{NewVar('x'): 1}, false}, // 0 handling
+		{"x +0y", linearCoefficients{NewVar('x'): 1}, false},            // 0 handling
+		{"5 -x + 4", linearCoefficients{NewVar('x'): -1, {}: 9}, false}, // duplicate constant term are accepted
 		{"x*y", nil, true},
 		{"x*y + z^2", nil, true},
 		{"x + 2x", nil, true},
-		{"5 -x + 4", nil, true},
 		{"sin(x)", nil, true},
 	}
 
@@ -28,7 +28,7 @@ func TestExpr_isLinearEquation(t *testing.T) {
 		e := mustParse(t, tt.expr)
 		coeffs, err := e.isLinearEquation()
 		if (err != nil) != tt.wantErr {
-			t.Fatal()
+			t.Fatal(tt.expr)
 		}
 		if !reflect.DeepEqual(coeffs, tt.wantCoeffs) {
 			t.Fatal(coeffs, tt.wantCoeffs)

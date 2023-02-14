@@ -124,10 +124,10 @@ func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
 	return value, nil
 }
 
-func (rvv *paramsInstantiater) resolve(v Variable) (rat, error) {
+func (rvv *paramsInstantiater) resolve(v Variable) (real, error) {
 	expr, err := rvv.instantiate(v)
 	if err != nil {
-		return rat{}, err
+		return real{}, err
 	}
 	return expr.evalRat(rvv)
 }

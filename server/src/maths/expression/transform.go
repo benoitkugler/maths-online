@@ -478,6 +478,7 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 
 	// apply each transformation until no one triggers a change
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
+		expr.simplifyNumbers()
 		expr.normalizeNegativeNumbers()
 
 		expr.expandMinus()

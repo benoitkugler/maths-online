@@ -65,7 +65,7 @@ func (expr *Expr) isLinearTerm() (coeff float64, variable Variable, ok bool) {
 	if expr == nil {
 		return 0, Variable{}, false
 	}
-	expr.simplifyNumbers()
+	// expr.simplifyNumbers()
 	switch atom := expr.atom.(type) {
 	case Variable: // x
 		return 1, atom, true

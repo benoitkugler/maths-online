@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestEvalMissingVariable(t *testing.T) {
@@ -299,7 +299,8 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 		{"x ^ 1", "x"},
 		{"1 ^ x", "1"},
 		{"- 2", "-2"},
-		{"3 / 4", "0.75"},
+		{"3 / 4", "3 / 4"},
+		// {"forceDecimal(3 / 4)", "0.75"}, // TODO: implement and test forceDecimal
 		{"1 + 2*(5 - 3 + 4)", "13"},
 		{"1 + x + 2", "1 + x + 2"}, // need commutativity, not handled by simplifyNumbers
 	}
@@ -328,7 +329,7 @@ func Test_isPrime(t *testing.T) {
 func TestIsDecimal(t *testing.T) {
 	atom := specialFunction{kind: randDenominator}
 	for range [200]int{} {
-		n, err := atom.eval(newRat(0), newRat(0), nil)
+		n, err := atom.eval(real{}, real{}, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -428,13 +429,13 @@ func Test_sumRat(t *testing.T) {
 		want rat
 	}{
 		{
-			rat{1, 2}, rat{3, 2}, rat{4, 2},
+			rat{1, 2}, rat{3, 2}, rat{8, 4},
 		},
 		{
-			rat{1.4, 2}, rat{3, 2}, rat{4.4, 2},
+			rat{-2, 2}, rat{5, 2}, rat{6, 4},
 		},
 		{
-			rat{1.4, 2}, rat{3, 1.5}, rat{1.5*1.4 + 6, 3},
+			rat{3, 2}, rat{7, 9}, rat{3*9 + 7*2, 18},
 		},
 	}
 	for _, tt := range tests {
@@ -446,13 +447,13 @@ func Test_sumRat(t *testing.T) {
 
 func Test_rat_reduce(t *testing.T) {
 	tests := []struct {
-		p    float64
-		q    float64
+		p    int
+		q    int
 		want rat
 	}{
 		{8, 4, rat{2, 1}},
 		{12, 8, rat{3, 2}},
-		{45.4, 2, rat{45.4, 2}},
+		{6, -3, rat{-2, 1}},
 	}
 	for _, tt := range tests {
 		r := rat{
@@ -463,6 +464,20 @@ func Test_rat_reduce(t *testing.T) {
 		if r != tt.want {
 			t.Errorf("sumRat() = %v, want %v", r, tt.want)
 		}
+	}
+}
+
+func TestReal_toExpr(t *testing.T) {
+	for _, input := range []struct {
+		rat  real
+		expr string
+	}{
+		{rat: real{rat: rat{3, 49}, isRational: true}, expr: "3 / 49"},
+		{rat: real{rat: rat{6, 49}, isRational: true}, expr: "6 / 49"},
+		{rat: real{rat: rat{2, 8}, isRational: true}, expr: "1 / 4"},
+	} {
+		expected := mustParse(t, input.expr)
+		tu.Assert(t, input.rat.toExpr().equals(expected))
 	}
 }
 
@@ -490,6 +505,6 @@ func TestEvalCycle(t *testing.T) {
 	expr := mustParse(t, "a+1")
 	vars := Vars{NewVar('a'): newVarExpr('a')}
 	_, err := expr.Evaluate(vars)
-	testutils.Assert(t, err != nil)
+	tu.Assert(t, err != nil)
 	_ = err.Error()
 }

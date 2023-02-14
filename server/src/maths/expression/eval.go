@@ -9,7 +9,7 @@ import (
 )
 
 type varEvaluer interface {
-	resolve(v Variable) (rat, error)
+	resolve(v Variable) (real, error)
 }
 
 var _ varEvaluer = (*evalResolver)(nil)
@@ -30,7 +30,7 @@ type evalResolver struct {
 	defs Vars // source of the variables expressions
 
 	seen    map[Variable]bool // variable that we are currently resolving
-	results map[Variable]rat  // resulting values
+	results map[Variable]real // resulting values
 }
 
 // handle cycle
@@ -38,22 +38,22 @@ func (vrs Vars) resolver() *evalResolver {
 	return &evalResolver{
 		defs:    vrs,
 		seen:    make(map[Variable]bool),
-		results: make(map[Variable]rat),
+		results: make(map[Variable]real),
 	}
 }
 
-func (vrs *evalResolver) resolve(v Variable) (rat, error) {
+func (vrs *evalResolver) resolve(v Variable) (real, error) {
 	if value, has := vrs.results[v]; has {
 		return value, nil
 	}
 
 	if vrs.seen[v] {
-		return rat{}, ErrCycleVariable{v}
+		return real{}, ErrCycleVariable{v}
 	}
 
 	expr, ok := vrs.defs[v]
 	if !ok {
-		return rat{}, ErrMissingVariable{v}
+		return real{}, ErrMissingVariable{v}
 	}
 
 	vrs.seen[v] = true
@@ -61,7 +61,7 @@ func (vrs *evalResolver) resolve(v Variable) (rat, error) {
 	// recurse
 	value, err := expr.evalRat(vrs)
 	if err != nil {
-		return rat{}, err
+		return real{}, err
 	}
 
 	vrs.results[v] = value
@@ -116,11 +116,11 @@ type singleVarResolver struct {
 	value float64
 }
 
-func (res singleVarResolver) resolve(v Variable) (rat, error) {
+func (res singleVarResolver) resolve(v Variable) (real, error) {
 	if res.v != v {
-		return rat{}, ErrMissingVariable{v}
+		return real{}, ErrMissingVariable{v}
 	}
-	return newRat(res.value), nil
+	return newReal(res.value), nil
 }
 
 type FunctionExpr struct {
@@ -200,39 +200,39 @@ func (expr *Expr) evalFloat(bindings varEvaluer) (float64, error) {
 	return r.eval(), err
 }
 
-func (expr *Expr) evalRat(bindings varEvaluer) (rat, error) {
+func (expr *Expr) evalRat(bindings varEvaluer) (real, error) {
 	var (
-		left, right = newRat(0), newRat(0) // 0 is a valid default value
+		left, right = newRealInt(0), newRealInt(0) // 0 is a valid default value
 		err         error
 	)
 	if expr.left != nil {
 		left, err = expr.left.evalRat(bindings)
 		if err != nil {
-			return rat{}, err
+			return real{}, err
 		}
 	}
 	if expr.right != nil {
 		right, err = expr.right.evalRat(bindings)
 		if err != nil {
-			return rat{}, err
+			return real{}, err
 		}
 	}
 	return expr.atom.eval(left, right, bindings)
 }
 
-func (op operator) eval(left, right rat, _ varEvaluer) (rat, error) {
+func (op operator) eval(left, right real, _ varEvaluer) (real, error) {
 	return op.evaluate(left, right), nil
 }
 
 // returns 1 if b is true
-func evalBool(b bool) rat {
+func evalBool(b bool) real {
 	if b {
-		return newRat(1)
+		return newRealInt(1)
 	}
-	return newRat(0)
+	return newRealInt(0)
 }
 
-func (op operator) evaluate(left, right rat) rat {
+func (op operator) evaluate(left, right real) real {
 	// 0 is fine as default value for + and -
 	// the other have mandatory left operands
 	switch op {
@@ -247,65 +247,65 @@ func (op operator) evaluate(left, right rat) rat {
 	case strictlyLesser:
 		return evalBool(left.eval() < right.eval())
 	case plus:
-		return sumRat(left, right)
+		return sumReal(left, right)
 	case minus:
-		return minusRat(left, right)
+		return minusReal(left, right)
 	case mult:
-		return multRat(left, right)
+		return multReal(left, right)
 	case div:
-		return divRat(left, right)
+		return divReal(left, right)
 	case mod:
 		leftInt, leftIsInt := IsInt(left.eval())
 		rightInt, rightIsInt := IsInt(right.eval())
 		if !(leftIsInt && rightIsInt) {
-			return newRat(0)
+			return newRealInt(0)
 		}
-		return newRat(float64(leftInt % rightInt))
+		return newRealInt(leftInt % rightInt)
 	case rem:
 		leftInt, leftIsInt := IsInt(left.eval())
 		rightInt, rightIsInt := IsInt(right.eval())
 		if !(leftIsInt && rightIsInt) {
-			return newRat(0)
+			return newRealInt(0)
 		}
-		return newRat(float64(leftInt / rightInt))
+		return newRealInt(leftInt / rightInt)
 	case pow:
-		return powRat(left, right.eval())
+		return powReal(left, right.eval())
 	case factorial:
 		argInt, argIsInt := IsInt(left.eval())
 		if !argIsInt {
-			return newRat(0)
+			return newRealInt(0)
 		}
 		f := evalFactorial(argInt)
-		return newRat(float64(f))
+		return newRealInt(f)
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
 }
 
-func (c constant) evalRat() rat {
+func (c constant) evalRat() real {
 	switch c {
 	case piConstant:
-		return newRat(math.Pi)
+		return newReal(math.Pi)
 	case eConstant:
-		return newRat(math.E)
+		return newReal(math.E)
 	default:
 		panic(exhaustiveConstantSwitch)
 	}
 }
 
-func (c constant) eval(_, _ rat, _ varEvaluer) (rat, error) {
+func (c constant) eval(_, _ real, _ varEvaluer) (real, error) {
 	return c.evalRat(), nil
 }
 
-func (v Number) eval(_, _ rat, _ varEvaluer) (rat, error) { return newRat(float64(v)), nil }
+func (v Number) eval(_, _ real, _ varEvaluer) (real, error) { return newReal(float64(v)), nil }
 
-func (indice) eval(_, _ rat, _ varEvaluer) (rat, error) {
-	return rat{}, errors.New("Une expression indicée ne peut pas être évaluée.")
+func (indice) eval(_, _ real, _ varEvaluer) (real, error) {
+	return real{}, errors.New("Une expression indicée ne peut pas être évaluée.")
 }
 
-func (va Variable) eval(_, _ rat, b varEvaluer) (rat, error) {
+func (va Variable) eval(_, _ real, b varEvaluer) (real, error) {
 	if b == nil {
-		return rat{}, ErrMissingVariable{Missing: va}
+		return real{}, ErrMissingVariable{Missing: va}
 	}
 
 	return b.resolve(va)
@@ -316,51 +316,51 @@ func roundTo(v float64, digits int) float64 {
 	return math.Round(v*exp) / exp
 }
 
-func (round roundFn) eval(_, right rat, _ varEvaluer) (rat, error) {
-	return newRat(roundTo(right.eval(), round.nbDigits)), nil
+func (round roundFn) eval(_, right real, _ varEvaluer) (real, error) {
+	return newReal(roundTo(right.eval(), round.nbDigits)), nil
 }
 
-func (fn function) eval(_, right rat, _ varEvaluer) (rat, error) {
+func (fn function) eval(_, right real, _ varEvaluer) (real, error) {
 	arg := right.eval()
 	switch fn {
 	case logFn:
-		return newRat(math.Log(arg)), nil
+		return newReal(math.Log(arg)), nil
 	case expFn:
-		return newRat(math.Exp(arg)), nil
+		return newReal(math.Exp(arg)), nil
 	case sinFn:
-		return newRat(math.Sin(arg)), nil
+		return newReal(math.Sin(arg)), nil
 	case cosFn:
-		return newRat(math.Cos(arg)), nil
+		return newReal(math.Cos(arg)), nil
 	case tanFn:
-		return newRat(math.Tan(arg)), nil
+		return newReal(math.Tan(arg)), nil
 	case asinFn:
-		return newRat(math.Asin(arg)), nil
+		return newReal(math.Asin(arg)), nil
 	case acosFn:
-		return newRat(math.Acos(arg)), nil
+		return newReal(math.Acos(arg)), nil
 	case atanFn:
-		return newRat(math.Atan(arg)), nil
+		return newReal(math.Atan(arg)), nil
 	case absFn:
-		return newRat(math.Abs(arg)), nil
+		return newReal(math.Abs(arg)), nil
 	case floorFn:
-		return newRat(math.Floor(arg)), nil
+		return newRealInt(int(math.Floor(arg))), nil
 	case sqrtFn:
-		return newRat(math.Sqrt(arg)), nil
+		return newReal(math.Sqrt(arg)), nil
 	case sgnFn:
 		if arg > 0 {
-			return newRat(1), nil
+			return newRealInt(1), nil
 		} else if arg < 0 {
-			return newRat(-1), nil
+			return newRealInt(-1), nil
 		}
-		return newRat(0), nil
+		return newRealInt(0), nil
 	case isPrimeFn:
 		argInt, isInt := IsInt(arg)
 		if !isInt {
-			return newRat(0), nil
+			return newRealInt(0), nil
 		}
 		if isPrime(argInt) {
-			return newRat(1), nil
+			return newRealInt(1), nil
 		}
-		return newRat(0), nil
+		return newRealInt(0), nil
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -425,31 +425,31 @@ func minMax(args []*Expr, res varEvaluer) (float64, float64, error) {
 }
 
 // return a random number
-func (r specialFunction) evalRat(res varEvaluer) (rat, error) {
+func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 	switch r.kind {
 	case randInt:
 		start, end, err := r.startEnd(res)
 		if err != nil {
-			return rat{}, err
+			return real{}, err
 		}
 
 		err = r.validateStartEnd(start, end, 0)
 		if err != nil {
-			return rat{}, err
+			return real{}, err
 		}
-		return newRat(start + float64(rand.Intn(int(end-start)+1))), nil
+		return newRealInt(int(start) + rand.Intn(int(end-start)+1)), nil
 	case randPrime:
 		start, end, err := r.startEnd(res)
 		if err != nil {
-			return newRat(0), err
+			return real{}, err
 		}
 
 		err = r.validateStartEnd(start, end, 0)
 		if err != nil {
-			return newRat(0), err
+			return real{}, err
 		}
 
-		return newRat(float64(generateRandPrime(int(start), int(end)))), nil
+		return newRealInt(generateRandPrime(int(start), int(end))), nil
 	case randChoice:
 		index := rand.Intn(len(r.args))
 		return r.args[index].evalRat(res)
@@ -457,18 +457,18 @@ func (r specialFunction) evalRat(res varEvaluer) (rat, error) {
 		// the parsing step ensure len(r.args) >= 2
 		choice, err := choiceFromSelect(r.args, res)
 		if err != nil {
-			return rat{}, err
+			return real{}, err
 		}
 		return choice.evalRat(res)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
-		return newRat(float64(decimalDividors[index])), nil
+		return newRealInt(decimalDividors[index]), nil
 	case minFn:
 		min, _, err := minMax(r.args, res)
-		return newRat(min), err
+		return newReal(min), err
 	case maxFn:
 		_, max, err := minMax(r.args, res)
-		return newRat(max), err
+		return newReal(max), err
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
@@ -495,7 +495,7 @@ func choiceFromSelect(args []*Expr, res varEvaluer) (choice *Expr, err error) {
 }
 
 // return a random number
-func (r specialFunction) eval(_, _ rat, res varEvaluer) (rat, error) {
+func (r specialFunction) eval(_, _ real, res varEvaluer) (real, error) {
 	return r.evalRat(res)
 }
 
@@ -516,64 +516,27 @@ func lcm(a, b int) int {
 	return a * b / gcd(a, b)
 }
 
-// rat has the form of a rational number p/q,
-// but no assumption is actually made on the nature of p and q
-// a real x (non rational number) is represented by rat{p:x, q:1}
+// rat stores a rational number p/q, with q != 0
 type rat struct {
-	p float64
-	q float64
+	p, q int
 }
 
-func newRat(v float64) rat { return rat{p: v, q: 1} }
+func (r rat) eval() float64 { return float64(r.p) / float64(r.q) }
 
-func (r rat) eval() float64 { return r.p / r.q }
-
-// return the better representation for the "rational", after reducing
-// 8 / 1 -> 8
-// 4 / 3 -> 4/3
-// 3/4 -> 0.75
-// 2.4 / 2 -> 1.2
-func (r rat) toExpr() *Expr {
-	r.reduce()
-
-	if r.q == 1 || r.p == 0 {
-		return newNb(r.p)
-	}
-
-	// test if the evaluation is a decimal number
-	val := r.eval()
-	if !isFloatExceedingPrecision(val) {
-		return newNb(val)
-	}
-
-	// else for integers, return a fraction
-	_, ok1 := IsInt(r.p)
-	_, ok2 := IsInt(r.q)
-	if ok1 && ok2 {
-		return &Expr{atom: div, left: newNb(r.p), right: newNb(r.q)}
-	}
-
-	// general case : evaluate
-	return newNb(val)
-}
-
-// for integers number, update `r` to be in irreductible form
+// update `r` to be in irreductible form
 func (r *rat) reduce() {
 	// special case for 0 / -5 : avoid spurious -0
 	if r.p == 0 {
-		*r = rat{0, 1}
+		r.p = 0
+		r.q = 1
 		return
 	}
 
-	num, ok1 := IsInt(r.p)
-	den, ok2 := IsInt(r.q)
-	if ok1 && ok2 {
-		// simplify integer denominators
-		// commonDen = den1 * den2 / gcd()
-		g := float64(gcd(num, den))
-		r.p /= g
-		r.q /= g
-	}
+	// simplify integer denominators
+	// commonDen = den1 * den2 / gcd()
+	g := gcd(r.p, r.q)
+	r.p /= g
+	r.q /= g
 
 	// simplify the minus
 	if r.q < 0 {
@@ -582,18 +545,29 @@ func (r *rat) reduce() {
 	}
 }
 
-func sumRat(r1, r2 rat) rat {
-	den1, ok1 := IsInt(r1.q)
-	den2, ok2 := IsInt(r2.q)
-	if ok1 && ok2 {
-		// simplify integer denominators
-		// commonDen = den1 * den2 / gcd()
-		commonDen := float64(lcm(den1, den2))
-		factor1 := commonDen / r1.q
-		factor2 := commonDen / r2.q
-		return rat{p: r1.p*factor1 + r2.p*factor2, q: commonDen}
+func (r rat) toExpr() *Expr {
+	r.reduce()
+
+	// avoid useless 4 / 1 or 0 / 1 fractions
+	if r.q == 1 || r.p == 0 {
+		return newNb(float64(r.p))
 	}
-	// general case: do not simplify
+
+	return &Expr{atom: div, left: newNb(float64(r.p)), right: newNb(float64(r.q))}
+}
+
+func sumRat(r1, r2 rat) rat {
+	// den1, ok1 := IsInt(r1.q)
+	// den2, ok2 := IsInt(r2.q)
+	// if ok1 && ok2 {
+	// 	// simplify integer denominators
+	// 	// commonDen = den1 * den2 / gcd()
+	// 	commonDen := float64(lcm(den1, den2))
+	// 	factor1 := commonDen / r1.q
+	// 	factor2 := commonDen / r2.q
+	// 	return real{p: r1.p*factor1 + r2.p*factor2, q: commonDen}
+	// }
+	// // general case: do not simplify
 	return rat{p: r1.p*r2.q + r2.p*r1.q, q: r1.q * r2.q}
 }
 
@@ -611,15 +585,108 @@ func divRat(r1, r2 rat) rat {
 	return rat{p: r1.p * r2.q, q: r1.q * r2.p}
 }
 
-func powRat(r rat, pow float64) rat {
-	return rat{p: math.Pow(r.p, pow), q: math.Pow(r.q, pow)}
+func powRat(r rat, pow int) rat {
+	powF := float64(pow)
+	pF, qF := float64(r.p), float64(r.q)
+	var pPow, qPow float64
+	if powF < 0 { // invert the fraction
+		pPow, qPow = math.Pow(qF, powF), math.Pow(pF, powF)
+	} else {
+		pPow, qPow = math.Pow(pF, powF), math.Pow(qF, powF)
+	}
+
+	return rat{p: int(pPow), q: int(qPow)}
+}
+
+// real store a real number, which may be represented as
+// a rational, or not, depending on the flag isRational
+type real struct {
+	isRational bool
+	rat        rat     // meaningful only if isRational is true
+	val        float64 // meaningful only if isRational is false
+}
+
+func newRealInt(p int) real {
+	return real{isRational: true, rat: rat{p: p, q: 1}}
+}
+
+// returns a rational number if v is an integer
+func newReal(v float64) real {
+	if vInt, isInt := IsInt(v); isInt {
+		return newRealInt(vInt)
+	}
+	return real{val: v, isRational: false}
+}
+
+func (r real) eval() float64 {
+	if r.isRational {
+		return r.rat.eval()
+	}
+	return r.val
+}
+
+// return the better representation for the "rational", after reducing
+// 8 / 1 -> 8
+// 4 / 3 -> 4/3
+// 3/4 -> 0.75
+// 2.4 / 2 -> 1.2
+func (r real) toExpr() *Expr {
+	if r.isRational {
+		return r.rat.toExpr()
+	}
+
+	// general case for real numbers : just returns the value
+	return newNb(r.val)
+}
+
+func sumReal(r1, r2 real) real {
+	if r1.isRational && r2.isRational {
+		return real{isRational: true, rat: sumRat(r1.rat, r2.rat)}
+	}
+	// use eval to handle the case where r1 or r2 is rational
+	return real{isRational: false, val: r1.eval() + r2.eval()}
+}
+
+// return r1 - r2
+func minusReal(r1, r2 real) real {
+	if r1.isRational && r2.isRational {
+		return real{isRational: true, rat: minusRat(r1.rat, r2.rat)}
+	}
+	// use eval to handle the case where r1 or r2 is rational
+	return real{isRational: false, val: r1.eval() - r2.eval()}
+}
+
+func multReal(r1, r2 real) real {
+	if r1.isRational && r2.isRational {
+		return real{isRational: true, rat: multRat(r1.rat, r2.rat)}
+	}
+	// use eval to handle the case where r1 or r2 is rational
+	return real{isRational: false, val: r1.eval() * r2.eval()}
+}
+
+// return r1 / r2
+func divReal(r1, r2 real) real {
+	if r1.isRational && r2.isRational {
+		return real{isRational: true, rat: divRat(r1.rat, r2.rat)}
+	}
+	// use eval to handle the case where r1 or r2 is rational
+	return real{isRational: false, val: r1.eval() / r2.eval()}
+}
+
+func powReal(r real, pow float64) real {
+	if powInt, isPowInt := IsInt(pow); r.isRational && isPowInt {
+		return real{isRational: true, rat: powRat(r.rat, powInt)}
+	}
+	// use eval to handle the case where r is rational
+	return real{isRational: false, val: math.Pow(r.eval(), pow)}
 }
 
 // performs some basic simplifications to convert expressions to numbers
 // examples :
 //
-//		2*3 -> 6
-//	 ln(1) -> 0
+//	2*3 -> 6
+//	ln(1) -> 0
+//	3/2 -> 1.5
 //
 // due to the binary representation, some expressions cannot be simplified, such as
 // (1 + x + 2)
@@ -636,18 +703,22 @@ func (expr *Expr) simplifyNumbers() {
 		return
 	}
 
-	left := expr.left
-	if expr.left == nil { // 0 is a valid default value
-		left = NewNb(0)
-	}
-	right := expr.right
-
 	// general case with two numbers
-	leftNumber, leftOK := left.atom.(Number)
-	rightNumber, rightOK := right.atom.(Number)
+	var (
+		leftNumber, rightNumber Number
+		leftOK, rightOK         = true, true
+	)
+	if expr.left != nil {
+		leftNumber, leftOK = expr.left.atom.(Number)
+	}
+	if expr.right != nil {
+		rightNumber, rightOK = expr.right.atom.(Number)
+	}
+
 	if leftOK && rightOK {
-		res := op.evaluate(newRat(float64(leftNumber)), newRat(float64(rightNumber)))
-		*expr = *res.toExpr()
+		res := op.evaluate(newReal(float64(leftNumber)), newReal(float64(rightNumber)))
+		// ensure fractions are converted
+		*expr = *newNb(res.eval())
 	}
 }
 
