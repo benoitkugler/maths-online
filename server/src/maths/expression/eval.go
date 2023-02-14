@@ -270,6 +270,13 @@ func (op operator) evaluate(left, right rat) rat {
 		return newRat(float64(leftInt / rightInt))
 	case pow:
 		return powRat(left, right.eval())
+	case factorial:
+		argInt, argIsInt := IsInt(left.eval())
+		if !argIsInt {
+			return newRat(0)
+		}
+		f := evalFactorial(argInt)
+		return newRat(float64(f))
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
@@ -647,4 +654,12 @@ func (expr *Expr) simplifyNumbers() {
 // IsFraction returns true for expression of the form (...) / (...)
 func (expr *Expr) IsFraction() bool {
 	return expr.atom == div
+}
+
+func evalFactorial(n int) int {
+	f := 1
+	for k := 2; k <= n; k++ {
+		f *= k
+	}
+	return f
 }

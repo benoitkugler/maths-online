@@ -209,6 +209,8 @@ func isOperator(src []rune) (op operator, n int) {
 		return mod, 1
 	case '^':
 		return pow, 1
+	case '!':
+		return factorial, 1
 	}
 	_ = exhaustiveOperatorSwitch
 	return op, 0

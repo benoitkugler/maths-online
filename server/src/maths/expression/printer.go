@@ -132,6 +132,8 @@ func (op operator) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf(`\text{rem}\left(%s; %s\right)`, leftCode, rightCode)
 	case pow:
 		return fmt.Sprintf(`{%s}^{%s}`, leftCode, rightCode)
+	case factorial:
+		return fmt.Sprintf(`%s!`, leftCode)
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
@@ -231,6 +233,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	case Number, constant, function, Variable, roundFn, specialFunction, indice:
 		return false
 	case operator:
+		_ = exhaustiveOperatorSwitch
 		switch op {
 		case minus:
 			if isLeftArg { // actually rever required
@@ -252,6 +255,9 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 				return true
 			}
 			return op > atom
+		case factorial:
+			// parenthesis are always needed if the argument is an expression
+			return true
 		default:
 			return op > atom //  (1+2)*4, (1-2)*4, 4*(1+2)
 		}
@@ -296,6 +302,8 @@ func (op operator) serialize(left, right *Expr) string {
 			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
 		}
 		return fmt.Sprintf(`%s * %s`, leftCode, rightCode)
+	case factorial:
+		return fmt.Sprintf(`%s!`, leftCode)
 	case equals, greater, strictlyGreater, lesser, strictlyLesser,
 		div, mod, rem, pow:
 		return fmt.Sprintf(`%s %s %s`, leftCode, op.String(), rightCode)

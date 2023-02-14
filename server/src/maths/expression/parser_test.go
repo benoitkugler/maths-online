@@ -359,6 +359,11 @@ var expressions = [...]struct {
 	{"8 % 2", &Expr{atom: mod, left: NewNb(8), right: NewNb(2)}, false},
 	{"//", nil, true},
 	{"8 // 2", &Expr{atom: rem, left: NewNb(8), right: NewNb(2)}, false},
+	// factorial
+	{"n - !", nil, true},
+	{"n!", &Expr{atom: factorial, left: newVarExpr('n'), right: nil}, false},
+	{"(2 + n)!", &Expr{atom: factorial, left: &Expr{atom: plus, left: NewNb(2), right: newVarExpr('n')}, right: nil}, false},
+
 	{"randInt(-a, )", nil, true},
 	{"randInt(1.5; )", nil, true},
 	{"randInt 1.5; )", nil, true},

@@ -41,6 +41,9 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"2 + x/y + 3*(4+x)/(2 - y)",
 		"x^y^z",
 		"(x^y)^z^t",
+		"n!",
+		"2n!",
+		"(n + 4)!",
 		"\u0393 + \u0398 + \u03B8", // some greek letters
 		"\uE000 +  \uE000 + \uE001 + \u0398 + \u03B8", // custom variables
 		"x_A + y_B", // simple indices

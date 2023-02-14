@@ -104,6 +104,7 @@ func TestExpression_String(t *testing.T) {
 		{"(1<2)+(3>4)+(5<=6)+(7>=8)", "(1 < 2) + (3 > 4) + (5 <= 6) + (7 >= 8)"},
 		{"1 + 2<3", "1 + 2 < 3"},
 		{"-inf", "-inf"},
+		{"2*n!", "2n!"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

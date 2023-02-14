@@ -124,9 +124,10 @@ const (
 	minus
 	mult
 	div
-	mod // modulo(a, x) := a % x
-	rem // remainder(a, x) := a // x
-	pow // x^2
+	mod       // modulo(a, x) := a % x
+	rem       // remainder(a, x) := a // x
+	pow       // x^2
+	factorial // n!
 
 	invalidOperator
 )
@@ -153,6 +154,8 @@ func (op operator) String() string {
 		return "/"
 	case pow:
 		return "^"
+	case factorial:
+		return "!"
 	case mod:
 		return "%"
 	case rem:

@@ -91,6 +91,8 @@ func TestTokens(t *testing.T) {
 		{"{s_1}", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
 		// custom symbols
 		{`"\ge + 5"`, []tokenData{Variable{Name: 0, Indice: `\ge + 5`}}},
+		// factorial
+		{`2*n!`, []tokenData{numberText("2"), mult, Variable{Name: 'n'}, factorial}},
 	} {
 		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
 			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)

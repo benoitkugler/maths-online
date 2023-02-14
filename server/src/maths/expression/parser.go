@@ -228,6 +228,8 @@ func (pr *parser) parseIndice(pos int) (*Expr, error) {
 
 // pr.src[pr.pos] must be an operator
 func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Expr, error) {
+	_ = exhaustiveOperatorSwitch
+
 	var leftIsOptional bool
 	switch op {
 	case plus, minus: // an expression before the sign is optional
@@ -243,7 +245,13 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 		}
 	}
 
-	// parse the remaining expression
+	// parse the remaining expression, except for factorial
+	if op == factorial {
+		return &Expr{
+			atom: op,
+			left: left,
+		}, nil
+	}
 
 	// since a^b^c = a^(b^c) and not (a^b)^c
 	// adjust operator precedence

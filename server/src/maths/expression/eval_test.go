@@ -78,6 +78,15 @@ func Test_Expression_eval(t *testing.T) {
 			"3 + exp(0)", nil, 4,
 		},
 		{
+			"1!", nil, 1,
+		},
+		{
+			"5!", nil, 2 * 3 * 4 * 5,
+		},
+		{
+			"(2 * 3)!", nil, 2 * 3 * 4 * 5 * 6,
+		},
+		{
 			"sin(0)", nil, 0,
 		},
 		{
