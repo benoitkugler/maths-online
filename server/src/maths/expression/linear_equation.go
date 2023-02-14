@@ -108,7 +108,7 @@ func (expr *Expr) isLinearTerm() (coeff float64, variable Variable, ok bool) {
 // isConstantTerm returns [true] if [expr] is a constant number,
 // that is evaluable without context
 func (expr *Expr) isConstantTerm() (float64, bool) {
-	res, err := expr.evalRat(nil)
+	res, err := expr.evalReal(nil)
 	if err != nil {
 		return 0, false
 	}

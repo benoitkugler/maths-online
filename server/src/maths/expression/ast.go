@@ -179,9 +179,10 @@ const (
 	absFn
 	floorFn // floor (partie entière)
 	sqrtFn
-	sgnFn     // returns -1 0 or 1
-	isPrimeFn // returns 0 or 1
-	round     // round(<expr>; <digits>) : round(1.1256, 2) = 1.123
+	sgnFn          // returns -1 0 or 1
+	isPrimeFn      // returns 0 or 1
+	round          // round(<expr>; <digits>) : round(1.1256, 2) = 1.123
+	forceDecimalFn // force fractions to be printed as decimal numbers
 
 	invalidFn
 )
@@ -214,6 +215,8 @@ func (fn function) String() string {
 		return "sgn"
 	case isPrimeFn:
 		return "isPrime"
+	case forceDecimalFn:
+		return "forceDecimal"
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}

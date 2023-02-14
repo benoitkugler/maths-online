@@ -59,7 +59,7 @@ func (vrs *evalResolver) resolve(v Variable) (real, error) {
 	vrs.seen[v] = true
 
 	// recurse
-	value, err := expr.evalRat(vrs)
+	value, err := expr.evalReal(vrs)
 	if err != nil {
 		return real{}, err
 	}
@@ -196,23 +196,23 @@ func isFloatExceedingPrecision(v float64) bool {
 }
 
 func (expr *Expr) evalFloat(bindings varEvaluer) (float64, error) {
-	r, err := expr.evalRat(bindings)
+	r, err := expr.evalReal(bindings)
 	return r.eval(), err
 }
 
-func (expr *Expr) evalRat(bindings varEvaluer) (real, error) {
+func (expr *Expr) evalReal(bindings varEvaluer) (real, error) {
 	var (
 		left, right = newRealInt(0), newRealInt(0) // 0 is a valid default value
 		err         error
 	)
 	if expr.left != nil {
-		left, err = expr.left.evalRat(bindings)
+		left, err = expr.left.evalReal(bindings)
 		if err != nil {
 			return real{}, err
 		}
 	}
 	if expr.right != nil {
-		right, err = expr.right.evalRat(bindings)
+		right, err = expr.right.evalReal(bindings)
 		if err != nil {
 			return real{}, err
 		}
@@ -361,6 +361,8 @@ func (fn function) eval(_, right real, _ varEvaluer) (real, error) {
 			return newRealInt(1), nil
 		}
 		return newRealInt(0), nil
+	case forceDecimalFn:
+		return real{val: right.eval(), isRational: false}, nil
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -452,14 +454,14 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 		return newRealInt(generateRandPrime(int(start), int(end))), nil
 	case randChoice:
 		index := rand.Intn(len(r.args))
-		return r.args[index].evalRat(res)
+		return r.args[index].evalReal(res)
 	case choiceFrom:
 		// the parsing step ensure len(r.args) >= 2
 		choice, err := choiceFromSelect(r.args, res)
 		if err != nil {
 			return real{}, err
 		}
-		return choice.evalRat(res)
+		return choice.evalReal(res)
 	case randDenominator:
 		index := rand.Intn(len(decimalDividors))
 		return newRealInt(decimalDividors[index]), nil

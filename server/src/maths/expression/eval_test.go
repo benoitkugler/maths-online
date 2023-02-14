@@ -300,7 +300,6 @@ func Test_Expression_simplifyNumbers(t *testing.T) {
 		{"1 ^ x", "1"},
 		{"- 2", "-2"},
 		{"3 / 4", "3 / 4"},
-		// {"forceDecimal(3 / 4)", "0.75"}, // TODO: implement and test forceDecimal
 		{"1 + 2*(5 - 3 + 4)", "13"},
 		{"1 + x + 2", "1 + x + 2"}, // need commutativity, not handled by simplifyNumbers
 	}

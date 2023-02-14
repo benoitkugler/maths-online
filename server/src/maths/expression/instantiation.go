@@ -129,11 +129,11 @@ func (rvv *paramsInstantiater) resolve(v Variable) (real, error) {
 	if err != nil {
 		return real{}, err
 	}
-	return expr.evalRat(rvv)
+	return expr.evalReal(rvv)
 }
 
 func (expr *Expr) tryEval(ctx *paramsInstantiater) *Expr {
-	v, err := expr.evalRat(ctx)
+	v, err := expr.evalReal(ctx)
 	if err == nil {
 		return v.toExpr()
 	}

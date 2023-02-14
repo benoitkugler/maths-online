@@ -57,6 +57,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"24x^2 - 27x + 18",
 		"round(x; 4)",
 		"floor(x)",
+		"forceDecimal(x)",
 		`"acompletetext"`,
 		`"\ge"`,
 		"(1<2)+(3>4)+(5<=6)+(7>=8)+ (4==7)",
@@ -204,7 +205,7 @@ func TestIssue173(t *testing.T) {
 		"1 / 4",
 	} {
 		e := mustParse(t, expr)
-		v, err := e.evalRat(nil)
+		v, err := e.evalReal(nil)
 		tu.AssertNoErr(t, err)
 		tu.Assert(t, v.toExpr().String() == expr) // should be printed as fraction
 	}
@@ -222,6 +223,7 @@ func TestPrintFractions(t *testing.T) {
 		{"0.25", nil, "0,25"},
 		{"x", RandomParameters{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}, "1 / 3"},
 		{"x", RandomParameters{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}, "1 / 3"},
+		{"x", RandomParameters{NewVar('x'): mustParse(t, "forceDecimal(3 / 4)")}, "0,75"},
 	} {
 		e := mustParse(t, tt.expr)
 		vars, err := tt.Vars.Instantiate()

@@ -168,6 +168,8 @@ func (fn function) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf(`\text{sgn}\left(%s\right)`, arg)
 	case isPrimeFn:
 		return fmt.Sprintf(`\text{isPrime}\left(%s\right)`, arg)
+	case forceDecimalFn:
+		return fmt.Sprintf(`\text{forceDecimal}\left(%s\right)`, arg)
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}

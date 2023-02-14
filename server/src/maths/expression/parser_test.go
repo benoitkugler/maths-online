@@ -349,6 +349,9 @@ var expressions = [...]struct {
 	{
 		"ln(x + y)", &Expr{atom: logFn, left: nil, right: &Expr{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')}}, false,
 	},
+	{
+		"forceDecimal(x)", &Expr{atom: forceDecimalFn, left: nil, right: newVarExpr('x')}, false,
+	},
 	{"3 + ln()", nil, true},
 	{"2 , 5", nil, true},
 	{"isPrime( )", nil, true},

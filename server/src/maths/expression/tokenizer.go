@@ -414,8 +414,10 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = sqrtFn
 	case "sgn":
 		fn = sgnFn
-	case "isPrime":
+	case "isPrime", "isprime":
 		fn = isPrimeFn
+	case "forceDecimal", "forcedecimal":
+		fn = forceDecimalFn
 	default: // no  matching function name
 		_ = exhaustiveFunctionSwitch
 		return 0, false
