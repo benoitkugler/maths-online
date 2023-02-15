@@ -8,6 +8,14 @@ import (
 )
 
 const latexHeader = `
+	% Required packages 
+	% \usepackage{amsmath}
+	% \usepackage[inline]{enumitem}
+	% \usepackage{amssymb}
+	% \usepackage[table]{xcolor}
+
+	\definecolor{isyroPropColor}{gray}{0.9}
+
 	% Custom commands and settings used by Isyro
 	\newcommand{\isyroFieldHeight}{\phantom{$\sum_{\sum}^{\sum}$}} %% field height
 
@@ -214,7 +222,7 @@ func (oi OrderedListFieldInstance) toLatex() string {
 	props := oi.proposals()
 	choices := make([]string, len(props))
 	for i, p := range props {
-		choices[i] = lineToLatexCode(p)
+		choices[i] = fmt.Sprintf(`\colorbox{isyroPropColor}{%s}`, lineToLatexCode(p))
 	}
 	box := fmt.Sprintf(`\isyroExpressionField{13}`)
 	label := ""

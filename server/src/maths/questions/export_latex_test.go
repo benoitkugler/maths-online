@@ -48,7 +48,7 @@ func TestExportLatex(t *testing.T) {
 			"Double line \n HAHAH",
 		}, AsDropDown: true},
 		TextBlock{Parts: "Quel est la négation de f croissante ?"},
-		OrderedListFieldBlock{Label: ``, Answer: []Interpolated{"A", "$x+2$", "B"}, AdditionalProposals: []Interpolated{"C"}},
+		OrderedListFieldBlock{Label: ``, Answer: []Interpolated{"A", "$x+2$", "B"}, AdditionalProposals: []Interpolated{"C", `$ \forall x \in \R,$`}},
 		OrderedListFieldBlock{Label: `$x \in $`, Answer: []Interpolated{"A", "$x+2$", "B"}, AdditionalProposals: []Interpolated{"C"}},
 		VectorFieldBlock{DisplayColumn: true, Answer: dummyCoord},
 		VectorFieldBlock{DisplayColumn: false, Answer: dummyCoord},
