@@ -254,11 +254,12 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 	}
 
 	// since a^b^c = a^(b^c) and not (a^b)^c
-	// adjust operator precedence
+	// adjust operator precedence threshold
 	stopOp := op
 	if op == pow {
-		stopOp = mult
+		stopOp = pow - 1
 	}
+
 	right, err := pr.parseUntil(stopOp, acceptSemiColon)
 	if err != nil {
 		return nil, err
@@ -278,7 +279,8 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 	}, nil
 }
 
-// parse while the operator have strictly higher precedence than `op`
+// parse while the found operator has strictly higher precedence than `op`,
+// that is returns if `found <= op`
 func (pr *parser) parseUntil(op operator, acceptSemiColon bool) (*Expr, error) {
 	for {
 		tok := pr.tk.Peek()

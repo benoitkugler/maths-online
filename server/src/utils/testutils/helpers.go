@@ -92,5 +92,5 @@ func GenerateLatex(t *testing.T, body string, outFile string) {
 	}
 	AssertNoErr(t, err)
 
-	t.Logf("PDF generated at \n %s", filepath.Join(dir, outFile+".pdf"))
+	t.Logf("PDF generated at \n file://%s", filepath.Join(dir, outFile+".pdf"))
 }

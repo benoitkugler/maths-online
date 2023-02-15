@@ -69,6 +69,8 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"2u_{2n+1}",
 		// bug #157
 		"λx",
+		// bug #172
+		"a^n / 2^(2n) ",
 	} {
 		e, err := Parse(expr)
 		if err != nil {

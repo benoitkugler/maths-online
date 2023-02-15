@@ -146,6 +146,19 @@ var expressions = [...]struct {
 	{
 		" x ^ 3 ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(3)}, false,
 	},
+	// operator precedence
+	{ // = (a^n) / c
+		" a ^ n / c ", &Expr{atom: div, left: &Expr{atom: pow, left: newVarExpr('a'), right: newVarExpr('n')}, right: newVarExpr('c')}, false,
+	},
+	{ // = c * (a^n)
+		" c * a ^ n ", &Expr{atom: mult, left: newVarExpr('c'), right: &Expr{atom: pow, left: newVarExpr('a'), right: newVarExpr('n')}}, false,
+	},
+	{ // = a + (n * c)
+		" a + n * c ", &Expr{atom: plus, left: newVarExpr('a'), right: &Expr{atom: mult, left: newVarExpr('n'), right: newVarExpr('c')}}, false,
+	},
+	{ // = (a * n) + c
+		" a * n + c ", &Expr{atom: plus, left: &Expr{atom: mult, left: newVarExpr('a'), right: newVarExpr('n')}, right: newVarExpr('c')}, false,
+	},
 	// ^ is not associative !
 	{
 		" a^b^c ", &Expr{
