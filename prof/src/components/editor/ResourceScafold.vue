@@ -87,6 +87,7 @@
               v-bind="innerProps"
               :content="props.resource.Tags?.length || 0"
               :color="ChapterColor"
+              class="mr-3"
             >
               <v-btn
                 icon
@@ -127,7 +128,7 @@
                   ? '1px solid grey'
                   : '1px solid transparent',
             }"
-            :class="{ 'text-subtitle-1': true, rounded: true, 'py-2': true }"
+            :class="{ 'text-subtitle-1': true, rounded: true, 'py-3': true }"
             @click="props.readonly ? {} : (titleToEdit = props.resource.Title)"
             >{{ props.resource.Title || "Aucun titre" }}
           </v-card-subtitle>
