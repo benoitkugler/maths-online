@@ -65,7 +65,9 @@ func GenerateLatex(t *testing.T, body string, outFile string) {
 		\usepackage[inline]{enumitem}
         \usepackage{amssymb}
 		\usepackage[table]{xcolor}
-
+		\usepackage{tikz}
+		\usepackage{environ}
+		
 		\begin{document}
 		%s
 		\end{document}

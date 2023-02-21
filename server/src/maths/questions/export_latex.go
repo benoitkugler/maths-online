@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
 const latexHeader = `
@@ -13,7 +14,9 @@ const latexHeader = `
 	% \usepackage[inline]{enumitem}
 	% \usepackage{amssymb}
 	% \usepackage[table]{xcolor}
-
+	% \usepackage{tikz}
+	% \usepackage{environ}
+	
 	\definecolor{isyroPropColor}{gray}{0.9}
 
 	% Custom commands and settings used by Isyro
@@ -35,7 +38,20 @@ const latexHeader = `
 	\newcommand{\Z}{\mathbb{Z}}
 	\newcommand{\N}{\mathbb{N}}
 
-
+	% Hack to adjust the figure to the page width
+	% See https://tex.stackexchange.com/questions/6388/how-to-scale-a-tikzpicture-to-textwidth
+	\makeatletter
+	\newsavebox{\measure@tikzpicture}
+	\NewEnviron{scaletikzpicturetowidth}[1]{%
+		\def\tikz@width{#1}%
+		\def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
+			\BODY
+		\end{lrbox}%
+		\pgfmathparse{#1/\wd\measure@tikzpicture}%
+		\edef\tikzscale{\pgfmathresult}%
+		\BODY
+	}
+	\makeatother
 `
 
 func (qu QuestionInstance) toLatex(standalone bool) string {
@@ -175,7 +191,110 @@ func (ti TableInstance) toLatex() string {
 
 func (vi VariationTableInstance) toLatex() string { return "TODO" }
 func (si SignTableInstance) toLatex() string      { return "TODO" }
-func (fi FigureInstance) toLatex() string         { return "TODO" }
+
+// return color and opacity
+func tikzColorArg(c repere.Color) (string, string) {
+	a, r, g, b := c.ToARGB()
+
+	color := fmt.Sprintf("{rgb,255:red,%d;green,%d;blue,%d}", r, g, b)
+	opacity := fmt.Sprintf("%.02f", float64(a)/255.)
+	return color, opacity
+}
+
+func (fi FigureInstance) toLatex() string {
+	dr := fi.Figure.Drawings
+	ox, oy := fi.Figure.Bounds.Origin.X, fi.Figure.Bounds.Origin.Y // all points must be translated
+
+	gridColor := "gray"
+	if !fi.Figure.ShowGrid {
+		gridColor = "gray!0"
+	}
+	origin := ""
+	if fi.Figure.ShowOrigin {
+		origin = fmt.Sprintf(`\filldraw[black] (%.02f,%.02f) circle (3pt) node[anchor=south west] {$O$}; %% origin`,
+			fi.Figure.Bounds.Origin.X, fi.Figure.Bounds.Origin.Y)
+	}
+
+	var drawings []string
+
+	for name, point := range dr.Points {
+		color, opacity := tikzColorArg(point.Color)
+		code := fmt.Sprintf(`
+			\coordinate (%s) at (%.02f,%.02f);
+			\filldraw[color=%s, opacity=%s] (%s) circle (3pt) node[anchor=south west] {$%s$};`,
+			name, point.Point.Point.X+ox, point.Point.Point.Y+oy,
+			color, opacity, name, name)
+		drawings = append(drawings, code)
+	}
+
+	lines := dr.Lines
+
+	for _, segment := range dr.Segments {
+		color, opacity := tikzColorArg(segment.Color)
+		from, to := dr.Points[segment.From].Point.Point, dr.Points[segment.To].Point.Point
+		kind := ""
+		if segment.Kind == repere.SKVector {
+			kind = ", ->"
+		} else if segment.Kind == repere.SKLine {
+			// infer the affine line and draw it later
+			a, b := repere.InferLine(from, to)
+			line := repere.Line{A: a, B: b, Label: segment.LabelName, Color: segment.Color}
+			lines = append(lines, line)
+			continue
+		}
+		code := fmt.Sprintf(`\draw[color=%s, opacity=%s %s] (%.02f,%.02f) -- (%.02f,%.02f) node[anchor=south west] {$%s$};`,
+			color, opacity, kind, from.X+ox, from.Y+oy, to.X+ox, to.Y+oy, segment.LabelName)
+		drawings = append(drawings, code)
+	}
+
+	for _, line := range lines {
+		color, opacity := tikzColorArg(line.Color)
+		from, to := line.Bounds(fi.Figure.Bounds)
+		code := fmt.Sprintf(`\draw[color=%s, opacity=%s] (%.02f,%.02f) -- (%.02f,%.02f) node[anchor=south west] {$%s$};`,
+			color, opacity, from.X+ox, from.Y+oy, to.X+ox, to.Y+oy, line.Label)
+		drawings = append(drawings, code)
+	}
+
+	for _, circle := range dr.Circles {
+		color, opacity := tikzColorArg(circle.LineColor)
+		fillColor, fillOpacity := tikzColorArg(circle.FillColor)
+
+		code := fmt.Sprintf(`\filldraw[color=%s, draw opacity=%s, fill=%s, fill opacity=%s] (%.02f,%.02f) circle (%.02f) node[anchor=south west] {$%s$};`,
+			color, opacity, fillColor, fillOpacity,
+			circle.Center.X+ox, circle.Center.Y+oy, circle.Radius, circle.Legend)
+		drawings = append(drawings, code)
+	}
+
+	for _, area := range dr.Areas {
+		points := make([]string, len(area.Points))
+		for i, p := range area.Points {
+			points[i] = fmt.Sprintf("(%s)", p)
+		}
+		path := strings.Join(points, " -- ")
+		color, opacity := tikzColorArg(area.Color)
+		code := fmt.Sprintf(`\path[fill=%s, fill opacity=%s] %s;`, color, opacity, path)
+		drawings = append(drawings, code)
+	}
+
+	return fmt.Sprintf(`
+	\begin{scaletikzpicturetowidth}{\textwidth}
+	\begin{tikzpicture}[scale=\tikzscale]
+		\draw[%[1]s] (-0.25,-0.25) grid (%[2]d.25,%[3]d.25);
+		\draw[thick, black, ->] (-0.25, %.02[5]f) -- (%[2]d.25,%[5]f) node[anchor=south west] {$x$};
+		\draw[thick, black, ->] (%.02[4]f, -0.25) -- (%.02[4]f, %[3]d.25) node[anchor=south west] {$y$};
+		%[6]s
+
+		%s
+	\end{tikzpicture}
+	\end{scaletikzpicturetowidth}
+	`, gridColor,
+		fi.Figure.Bounds.Width, fi.Figure.Bounds.Height,
+		fi.Figure.Bounds.Origin.X, fi.Figure.Bounds.Origin.Y,
+		origin,
+		strings.Join(drawings, "\n"),
+	)
+}
+
 func (fi FunctionsGraphInstance) toLatex() string { return "TODO" }
 
 func (ni NumberFieldInstance) toLatex() string { return `\isyroNumberField` }

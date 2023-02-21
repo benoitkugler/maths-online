@@ -163,7 +163,7 @@ export interface FunctionArea {
   Top: Interpolated;
   Left: string;
   Right: string;
-  Color: string;
+  Color: Color;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
@@ -177,7 +177,7 @@ export interface FunctionDefinition {
 export interface FunctionPoint {
   Function: Interpolated;
   X: string;
-  Color: string;
+  Color: Color;
   Legend: Interpolated;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionPointsFieldBlock
@@ -405,6 +405,8 @@ export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Or]: "Ou",
 };
 
+// github.com/benoitkugler/maths-online/server/src/maths/repere.Color
+export type Color = string;
 // github.com/benoitkugler/maths-online/server/src/maths/repere.Coord
 export interface Coord {
   X: number;
@@ -442,15 +444,15 @@ export interface NamedRandomLabeledPoint {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RandomArea
 export interface RandomArea {
-  Color: string;
+  Color: Color;
   Points: string[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RandomCircle
 export interface RandomCircle {
   Center: RandomCoord;
   Radius: string;
-  LineColor: string;
-  FillColor: string;
+  LineColor: Color;
+  FillColor: Color;
   Legend: string;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RandomCoord
@@ -468,7 +470,7 @@ export interface RandomDrawings {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RandomLabeledPoint
 export interface RandomLabeledPoint {
-  Color: string;
+  Color: Color;
   Coord: RandomCoord;
   Pos: LabelPos;
 }
@@ -477,14 +479,14 @@ export interface RandomLine {
   Label: string;
   A: string;
   B: string;
-  Color: string;
+  Color: Color;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RandomSegment
 export interface RandomSegment {
   LabelName: string;
   From: string;
   To: string;
-  Color: string;
+  Color: Color;
   LabelPos: LabelPos;
   Kind: SegmentKind;
 }

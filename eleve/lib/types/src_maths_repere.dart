@@ -4,7 +4,7 @@ import 'predefined.dart';
 
 // github.com/benoitkugler/maths-online/server/src/maths/repere.Area
 class Area {
-  final String color;
+  final Color color;
   final List<String> points;
 
   const Area(this.color, this.points);
@@ -32,8 +32,8 @@ Map<String, dynamic> areaToJson(Area item) {
 class Circle {
   final Coord center;
   final double radius;
-  final String lineColor;
-  final String fillColor;
+  final Color lineColor;
+  final Color fillColor;
   final String legend;
 
   const Circle(
@@ -64,6 +64,9 @@ Map<String, dynamic> circleToJson(Circle item) {
     "Legend": stringToJson(item.legend)
   };
 }
+
+// github.com/benoitkugler/maths-online/server/src/maths/repere.Color
+typedef Color = String;
 
 // github.com/benoitkugler/maths-online/server/src/maths/repere.Coord
 class Coord {
@@ -208,7 +211,7 @@ dynamic labelPosToJson(LabelPos item) => item.toValue();
 
 // github.com/benoitkugler/maths-online/server/src/maths/repere.LabeledPoint
 class LabeledPoint {
-  final String color;
+  final Color color;
   final PosPoint point;
 
   const LabeledPoint(this.color, this.point);
@@ -235,7 +238,7 @@ Map<String, dynamic> labeledPointToJson(LabeledPoint item) {
 // github.com/benoitkugler/maths-online/server/src/maths/repere.Line
 class Line {
   final String label;
-  final String color;
+  final Color color;
   final double a;
   final double b;
 
@@ -317,7 +320,7 @@ class Segment {
   final String labelName;
   final String from;
   final String to;
-  final String color;
+  final Color color;
   final LabelPos labelPos;
   final SegmentKind kind;
 

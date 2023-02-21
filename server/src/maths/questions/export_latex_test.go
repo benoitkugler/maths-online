@@ -3,6 +3,7 @@ package questions
 import (
 	"testing"
 
+	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
@@ -68,6 +69,38 @@ func TestExportLatex(t *testing.T) {
 				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
 				{tt("skjkdj"), tm("2x + 8"), tt("AA")},
 			},
+		},
+		FigureBlock{
+			ShowGrid:   true,
+			ShowOrigin: true,
+			Bounds:     repere.RepereBounds{Width: 50, Height: 30, Origin: repere.Coord{X: 10, Y: 5}},
+			Drawings: repere.RandomDrawings{
+				Points: []repere.NamedRandomLabeledPoint{
+					{"A", repere.RandomLabeledPoint{"#FF0000", repere.RandomCoord{"1", "2"}, repere.Bottom}},
+					{"B_xy", repere.RandomLabeledPoint{"#FF00FF", repere.RandomCoord{"1", "8"}, repere.Top}},
+					{"C_1", repere.RandomLabeledPoint{"#FF00FF", repere.RandomCoord{"10", "8"}, repere.Top}},
+				},
+				Segments: []repere.RandomSegment{
+					{"", "A", "B_xy", "#FF0FFF", 0, repere.SKSegment},
+					{"D", "A", "C_1", "#F00FFF", 0, repere.SKLine},
+					{"", "B_xy", "C_1", "#6F00FFFF", 0, repere.SKVector},
+				},
+				Lines: []repere.RandomLine{
+					{"C_f", "0.1", "1", "#F0FF1020"},
+					{"C_g", "inf", "4", "#F0FF1020"},
+				},
+				Circles: []repere.RandomCircle{
+					{repere.RandomCoord{"2", "4"}, "3", "#00FF00", "#8800FFFF", "C"},
+				},
+				Areas: []repere.RandomArea{
+					{Color: "#905F1820", Points: []string{"A", "B_xy", "C_1"}},
+				},
+			},
+		},
+		FigureBlock{
+			ShowGrid:   true,
+			ShowOrigin: false,
+			Bounds:     repere.RepereBounds{Width: 30, Height: 30, Origin: repere.Coord{X: 10, Y: 5}},
 		},
 	}
 

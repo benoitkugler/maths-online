@@ -436,7 +436,7 @@ func randque_FunctionArea() questions.FunctionArea {
 		Top:    randque_Interpolated(),
 		Left:   randstring(),
 		Right:  randstring(),
-		Color:  randstring(),
+		Color:  randrep_Color(),
 	}
 }
 
@@ -454,7 +454,7 @@ func randque_FunctionPoint() questions.FunctionPoint {
 	return questions.FunctionPoint{
 		Function: randque_Interpolated(),
 		X:        randstring(),
-		Color:    randstring(),
+		Color:    randrep_Color(),
 		Legend:   randque_Interpolated(),
 	}
 }
@@ -639,6 +639,10 @@ func randque_VectorPairCriterion() questions.VectorPairCriterion {
 	return choix[i]
 }
 
+func randrep_Color() repere.Color {
+	return repere.Color(randstring())
+}
+
 func randrep_Coord() repere.Coord {
 	return repere.Coord{
 		X: randfloat64(),
@@ -661,7 +665,7 @@ func randrep_NamedRandomLabeledPoint() repere.NamedRandomLabeledPoint {
 
 func randrep_RandomArea() repere.RandomArea {
 	return repere.RandomArea{
-		Color:  randstring(),
+		Color:  randrep_Color(),
 		Points: randSlicestring(),
 	}
 }
@@ -670,8 +674,8 @@ func randrep_RandomCircle() repere.RandomCircle {
 	return repere.RandomCircle{
 		Center:    randrep_RandomCoord(),
 		Radius:    randstring(),
-		LineColor: randstring(),
-		FillColor: randstring(),
+		LineColor: randrep_Color(),
+		FillColor: randrep_Color(),
 		Legend:    randstring(),
 	}
 }
@@ -695,7 +699,7 @@ func randrep_RandomDrawings() repere.RandomDrawings {
 
 func randrep_RandomLabeledPoint() repere.RandomLabeledPoint {
 	return repere.RandomLabeledPoint{
-		Color: randstring(),
+		Color: randrep_Color(),
 		Coord: randrep_RandomCoord(),
 		Pos:   randrep_LabelPos(),
 	}
@@ -706,7 +710,7 @@ func randrep_RandomLine() repere.RandomLine {
 		Label: randstring(),
 		A:     randstring(),
 		B:     randstring(),
-		Color: randstring(),
+		Color: randrep_Color(),
 	}
 }
 
@@ -715,7 +719,7 @@ func randrep_RandomSegment() repere.RandomSegment {
 		LabelName: randstring(),
 		From:      randstring(),
 		To:        randstring(),
-		Color:     randstring(),
+		Color:     randrep_Color(),
 		LabelPos:  randrep_LabelPos(),
 		Kind:      randrep_SegmentKind(),
 	}
