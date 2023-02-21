@@ -4,12 +4,12 @@
       <v-row>
         <v-col>
           <v-select
-            variant="outlined"
-            density="compact"
-            :items="strategyItems"
             label="Type de lancement"
-            :hint="hint"
+            density="compact"
+            variant="outlined"
+            :items="strategyItems"
             v-model="launchOptions.Kind"
+            :hint="hint"
             persistent-hint
           ></v-select>
         </v-col>

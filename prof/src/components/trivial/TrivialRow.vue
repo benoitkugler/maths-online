@@ -76,6 +76,7 @@
           </v-btn>
         </template>
       </v-col>
+
       <v-col
         cols="6"
         sm="5"
@@ -89,6 +90,7 @@
           {{ formatCategories(config.Config) }}
         </small>
       </v-col>
+
       <v-col
         class="d-none d-sm-block"
         cols="3"
@@ -100,6 +102,7 @@
           {{ formatDifficulties(config.Config) }}
         </small>
       </v-col>
+
       <v-col align-self="center" md="4">
         <v-card class="bg-grey-lighten-4">
           <v-card-text class="px-0 py-1">

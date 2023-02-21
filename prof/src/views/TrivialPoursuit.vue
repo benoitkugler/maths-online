@@ -2,7 +2,6 @@
   <v-dialog
     :model-value="editedConfig != null"
     @update:model-value="editedConfig = null"
-    :retain-focus="false"
     max-width="1200"
   >
     <edit-config
@@ -48,7 +47,6 @@
     fullscreen
     :model-value="showMonitor"
     @update:model-value="showMonitorChanged"
-    :retain-focus="false"
   >
     <session-monitor @closed="closeMonitor"></session-monitor>
   </v-dialog>
