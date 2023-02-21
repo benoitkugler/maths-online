@@ -2,7 +2,6 @@
   <v-dialog
     :model-value="sheetToUpdate != null"
     @update:model-value="sheetToUpdate = null"
-    :retain-focus="false"
   >
     <sheet-details
       v-if="sheetToUpdate != null"
@@ -110,7 +109,7 @@ onActivated(async () => {
   showDetailsFromQuery();
 });
 
-let tab = $ref(-1);
+let tab = $ref(0);
 
 const classroomList = computed(() => classrooms.map((cl) => cl.Classroom));
 
@@ -132,10 +131,7 @@ function showDetailsFromQuery() {
 
 async function fetchClassrooms() {
   const res = await controller.HomeworkGetSheets();
-  if (res == undefined) {
-    return;
-  }
-  classrooms = res;
+  classrooms = res || [];
 }
 
 function indexes(idSheet: number, idClassroom: number) {
