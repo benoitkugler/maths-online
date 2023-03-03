@@ -1,5 +1,5 @@
 <template>
-  <v-list style="height: 70vh">
+  <v-list style="max-height: 70vh">
     <v-list-subheader><h3 class="text-purple">Enoncés</h3></v-list-subheader>
     <v-list-item
       rounded
@@ -31,8 +31,14 @@
 </template>
 
 <script setup lang="ts">
-import type { BlockKind } from "@/controller/api_gen";
+import { BlockKind } from "@/controller/api_gen";
 import { BlockKindLabels, sortedBlockKindLabels } from "@/controller/editor";
+
+interface Props {
+  simplified: boolean;
+}
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "add", kind: BlockKind): void;
@@ -40,10 +46,21 @@ const emit = defineEmits<{
 
 const labels = BlockKindLabels;
 
+function isSimplified(k: BlockKind) {
+  return (
+    k == BlockKind.TextBlock ||
+    k == BlockKind.TableBlock ||
+    k == BlockKind.OrderedListFieldBlock ||
+    k == BlockKind.RadioFieldBlock
+  );
+}
+
 const staticKinds = sortedBlockKindLabels
+  .filter((k) => !props.simplified || isSimplified(k[0]))
   .filter((k) => !k[1].isAnswerField)
   .map((k) => k[0]);
 const fieldKinds = sortedBlockKindLabels
+  .filter((k) => !props.simplified || isSimplified(k[0]))
   .filter((k) => k[1].isAnswerField)
   .map((k) => k[0]);
 </script>

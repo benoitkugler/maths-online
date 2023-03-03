@@ -871,6 +871,7 @@ export interface TargetTrivial {
 export interface AskInscriptionIn {
   Mail: string;
   Password: string;
+  HasEditorSimplified: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionOut
 export interface AskInscriptionOut {

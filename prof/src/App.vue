@@ -77,6 +77,12 @@
 
       <v-divider></v-divider>
       <v-list-item>
+        <v-btn class="my-1" link :to="{ name: 'settings' }">
+          <v-icon icon="mdi-cog" class="mr-2"></v-icon>
+          Paramètres</v-btn
+        >
+      </v-list-item>
+      <v-list-item>
         <v-btn class="my-1" @click="logout">
           <v-icon icon="mdi-exit-to-app" class="mr-2"></v-icon>
           Déconnexion</v-btn

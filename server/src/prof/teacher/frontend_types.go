@@ -1,8 +1,9 @@
 package teacher
 
 type AskInscriptionIn struct {
-	Mail     string
-	Password string
+	Mail                string
+	Password            string
+	HasEditorSimplified bool
 }
 
 type AskInscriptionOut struct {

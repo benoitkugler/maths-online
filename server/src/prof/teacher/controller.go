@@ -172,8 +172,9 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 	}
 
 	t := tc.Teacher{
-		Mail:            args.Mail,
-		PasswordCrypted: ct.teacherKey.EncryptPassword(args.Password),
+		Mail:                args.Mail,
+		PasswordCrypted:     ct.teacherKey.EncryptPassword(args.Password),
+		HasSimplifiedEditor: args.HasEditorSimplified,
 	}
 	t, err = t.Insert(ct.db)
 	if err != nil {
