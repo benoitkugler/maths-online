@@ -19,7 +19,8 @@ CREATE TABLE teachers (
     Id serial PRIMARY KEY,
     Mail text NOT NULL,
     PasswordCrypted bytea NOT NULL,
-    IsAdmin boolean NOT NULL
+    IsAdmin boolean NOT NULL,
+    HasSimplifiedEditor boolean NOT NULL
 );
 
 -- constraints

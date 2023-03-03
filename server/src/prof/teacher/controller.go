@@ -10,6 +10,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
@@ -220,6 +221,67 @@ func (ct *Controller) Loggin(c echo.Context) error {
 
 	return c.JSON(200, out)
 }
+
+type TeacherSettings struct {
+	Mail                string
+	HasEditorSimplified bool
+}
+
+// TeacherGetSettings returns the teacher global settings.
+func (ct *Controller) TeacherGetSettings(c echo.Context) error {
+	userID := JWTTeacher(c)
+
+	out, err := ct.getSettings(userID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getSettings(userID teacher.IdTeacher) (TeacherSettings, error) {
+	teach, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return TeacherSettings{}, utils.SQLError(err)
+	}
+
+	return TeacherSettings{Mail: teach.Mail, HasEditorSimplified: teach.HasSimplifiedEditor}, nil
+}
+
+func (ct *Controller) TeacherUpdateSettings(c echo.Context) error {
+	userID := JWTTeacher(c)
+
+	var args TeacherSettings
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.updateSettings(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeacher) error {
+	teach, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	teach.Mail = args.Mail
+	teach.HasSimplifiedEditor = args.HasEditorSimplified
+
+	_, err = teach.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
+// shared types
 
 type Origin struct {
 	AllowPublish bool             // is the ressource allowed to be made public ?

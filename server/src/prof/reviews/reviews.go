@@ -128,14 +128,14 @@ type ReviewExt struct {
 
 // ReviewLoad returns the full content of the given review.
 func (ct *Controller) ReviewLoad(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.loadReview(re.IdReview(id), user.Id)
+	out, err := ct.loadReview(re.IdReview(id), userID)
 	if err != nil {
 		return err
 	}
@@ -199,14 +199,14 @@ type ReviewUpdateCommentsIn struct {
 
 // ReviewUpdateCommnents update all the comments for one review and one teacher.
 func (ct *Controller) ReviewUpdateCommnents(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ReviewUpdateCommentsIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	err := ct.updateReview(args, user.Id)
+	err := ct.updateReview(args, userID)
 	if err != nil {
 		return err
 	}
@@ -236,14 +236,14 @@ type ReviewUpdateApprovalIn struct {
 }
 
 func (ct *Controller) ReviewUpdateApproval(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ReviewUpdateApprovalIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	err := ct.updateApproval(args, user.Id)
+	err := ct.updateApproval(args, userID)
 	if err != nil {
 		return err
 	}
@@ -275,14 +275,14 @@ type ReviewCreateIn struct {
 // ReviewCreate is trigger by a teacher who wants to publish one of his
 // resource.
 func (ct *Controller) ReviewCreate(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ReviewCreateIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.createReview(args, user.Id)
+	out, err := ct.createReview(args, userID)
 	if err != nil {
 		return err
 	}
@@ -338,14 +338,14 @@ func (ct *Controller) createReview(args ReviewCreateIn, userID uID) (re.Review, 
 
 // ReviewDelete completly delete the review and its messages
 func (ct *Controller) ReviewDelete(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteReview(re.IdReview(id), user.Id)
+	err = ct.deleteReview(re.IdReview(id), userID)
 	if err != nil {
 		return err
 	}
@@ -382,14 +382,14 @@ func (ct *Controller) deleteReview(id re.IdReview, userID uID) error {
 // notifying the creator and deleting the review.
 // Only admin account may perform this operation.
 func (ct *Controller) ReviewAccept(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.acceptReview(re.IdReview(id), user.Id)
+	err = ct.acceptReview(re.IdReview(id), userID)
 	if err != nil {
 		return err
 	}
@@ -471,14 +471,14 @@ func (ct *Controller) acceptReview(id re.IdReview, userID uID) error {
 // ReviewLoadTarget return the actual content of the review's target,
 // so that teachers may try it.
 func (ct *Controller) ReviewLoadTarget(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	idReview, err := utils.QueryParamInt64(c, "id-review")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.loadTargetContent(re.IdReview(idReview), user.Id)
+	out, err := ct.loadTargetContent(re.IdReview(idReview), userID)
 	if err != nil {
 		return err
 	}

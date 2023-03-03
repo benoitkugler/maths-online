@@ -79,9 +79,9 @@ func (gs *gameSession) collectSummaries() map[tv.RoomID]tv.Summary {
 
 // TrivialTeacherMonitor returns the summary of games currently playing
 func (ct *Controller) TrivialTeacherMonitor(c echo.Context) error {
-	user := teacher.JWTTeacher(c)
+	userID := teacher.JWTTeacher(c)
 
-	session := ct.getSession(user.Id)
+	session := ct.getSession(userID)
 	if session == nil {
 		return c.JSON(200, MonitorOut{})
 	}

@@ -150,7 +150,7 @@ type server struct {
 func (s server) handle(w http.ResponseWriter, r *http.Request) {
 	var err error
 	context := s.e.NewContext(r, w)
-	context.Set("user", &jwt.Token{Claims: &tcAPI.UserMeta{Teacher: teacher.Teacher{Id: 1}}})
+	context.Set("user", &jwt.Token{Claims: &tcAPI.UserMeta{IdTeacher: 1}})
 
 	switch url := r.URL; url.Path {
 	case studentSetup:
@@ -227,5 +227,5 @@ func TestSessionPlay(t *testing.T) {
 		allStudents = append(allStudents, students)
 	}
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 }

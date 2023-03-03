@@ -10,10 +10,11 @@ type (
 // Teacher stores the data associated to one teacher account
 // gomacro:SQL ADD UNIQUE(Mail)
 type Teacher struct {
-	Id              IdTeacher `json:"id"`
-	Mail            string    `json:"mail"`
-	PasswordCrypted []byte    `json:"password_crypted"` // crypted
-	IsAdmin         bool      `json:"is_admin"`         // almost always false
+	Id                  IdTeacher `json:"id"`
+	Mail                string    `json:"mail"`
+	PasswordCrypted     []byte    `json:"password_crypted"`      // crypted
+	IsAdmin             bool      `json:"is_admin"`              // almost always false
+	HasSimplifiedEditor bool      `json:"has_simplified_editor"` // true will hide maths widgets in editor
 }
 
 // Classroom is one group of student controlled by a teacher

@@ -98,10 +98,10 @@ func (ct *Controller) getSession(userID uID) *gameSession {
 }
 
 func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var out RunningSessionMetaOut
-	if session := ct.getSession(user.Id); session != nil {
+	if session := ct.getSession(userID); session != nil {
 		out = RunningSessionMetaOut{NbGames: len(session.games)}
 	}
 
@@ -149,8 +149,8 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 }
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
-	teacher := tcAPI.JWTTeacher(c)
-	out, err := ct.getTrivialPoursuits(teacher.Id)
+	userID := tcAPI.JWTTeacher(c)
+	out, err := ct.getTrivialPoursuits(userID)
 	if err != nil {
 		return err
 	}
@@ -158,12 +158,12 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	item, err := tc.Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
-		IdTeacher:       user.Id,
+		IdTeacher:       userID,
 	}.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -173,7 +173,7 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, item, tcAPI.OptionalIdReview{}, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, item, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -182,14 +182,14 @@ func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	if err = ct.checkOwner(tc.IdTrivial(id), user.Id); err != nil {
+	if err = ct.checkOwner(tc.IdTrivial(id), userID); err != nil {
 		return err
 	}
 
@@ -202,7 +202,7 @@ func (ct *Controller) DeleteTrivialPoursuit(c echo.Context) error {
 }
 
 func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
@@ -214,14 +214,14 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	vis := tcAPI.NewVisibility(in.IdTeacher, user.Id, ct.admin.Id, in.Public)
+	vis := tcAPI.NewVisibility(in.IdTeacher, userID, ct.admin.Id, in.Public)
 	if vis.Restricted() {
 		return errAccessForbidden
 	}
 
 	// attribute the new copy to the current owner, and make it private
 	config := in
-	config.IdTeacher = user.Id
+	config.IdTeacher = userID
 	config.Public = false
 	config, err = config.Insert(ct.db)
 	if err != nil {
@@ -232,7 +232,7 @@ func (ct *Controller) DuplicateTrivialPoursuit(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := newTrivialExt(sel, config, tcAPI.OptionalIdReview{}, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, config, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -246,14 +246,14 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		return err
 	}
 
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	if err := ct.checkOwner(params.Id, user.Id); err != nil {
+	if err := ct.checkOwner(params.Id, userID); err != nil {
 		return err
 	}
 
 	// ensure correct owner
-	params.IdTeacher = user.Id
+	params.IdTeacher = userID
 
 	config, err := params.Update(ct.db)
 	if err != nil {
@@ -274,7 +274,7 @@ func (ct *Controller) UpdateTrivialPoursuit(c echo.Context) error {
 		inReview = tcAPI.OptionalIdReview{InReview: true, Id: item.IdReview}
 	}
 
-	out, err := newTrivialExt(sel, config, inReview, user.Id, ct.admin.Id)
+	out, err := newTrivialExt(sel, config, inReview, userID, ct.admin.Id)
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ type UpdateTrivialVisiblityIn struct {
 }
 
 func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args UpdateTrivialVisiblityIn
 	if err := c.Bind(&args); err != nil {
@@ -299,7 +299,7 @@ func (ct *Controller) UpdateTrivialVisiblity(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if qu.IdTeacher != user.Id {
+	if qu.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -327,9 +327,9 @@ func (ct *Controller) CheckMissingQuestions(c echo.Context) error {
 		return err
 	}
 
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.checkMissingQuestions(criteria, user.Id)
+	out, err := ct.checkMissingQuestions(criteria, userID)
 	if err != nil {
 		return err
 	}
@@ -396,9 +396,9 @@ func (ct *Controller) LaunchSessionTrivialPoursuit(c echo.Context) error {
 		return fmt.Errorf("invalid parameters format: %s", err)
 	}
 
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.launchConfig(in, user.Id)
+	out, err := ct.launchConfig(in, userID)
 	if err != nil {
 		return err
 	}
@@ -453,11 +453,11 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 
 // StartTtrivialGame starts a game created in manual mode
 func (ct *Controller) StartTrivialGame(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	gameID := c.QueryParam("game-id")
 
-	session := ct.getSession(user.Id)
+	session := ct.getSession(userID)
 	if session == nil {
 		return fmt.Errorf("Aucune session de TrivMaths n'est en cours.")
 	}
@@ -473,14 +473,14 @@ func (ct *Controller) StartTrivialGame(c echo.Context) error {
 // StopTrivialGame stops a game, optionnaly restarting it,
 // interrupting the connection with clients.
 func (ct *Controller) StopTrivialGame(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var in stopGame
 	if err := c.Bind(&in); err != nil {
 		return fmt.Errorf("invalid parameters format: %s", err)
 	}
 
-	session := ct.getSession(user.Id)
+	session := ct.getSession(userID)
 	if session == nil {
 		// gracefully exit
 	} else {

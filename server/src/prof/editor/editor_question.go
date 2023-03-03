@@ -49,9 +49,9 @@ const (
 )
 
 func (ct *Controller) EditorGetQuestionsIndex(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.loadQuestionsIndex(user.Id)
+	out, err := ct.loadQuestionsIndex(userID)
 	if err != nil {
 		return err
 	}
@@ -78,14 +78,14 @@ func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
 type SearchQuestionsIn = Query
 
 func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args SearchQuestionsIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.searchQuestions(args, user.Id)
+	out, err := ct.searchQuestions(args, userID)
 	if err != nil {
 		return err
 	}
@@ -95,9 +95,9 @@ func (ct *Controller) EditorSearchQuestions(c echo.Context) error {
 
 // EditorCreateQuestion creates a group with one question.
 func (ct *Controller) EditorCreateQuestiongroup(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.createQuestion(user.Id)
+	out, err := ct.createQuestion(userID)
 	if err != nil {
 		return err
 	}
@@ -151,14 +151,14 @@ func (ct *Controller) getGroup(qu ed.Question) (ed.Questiongroup, error) {
 
 // EditorDuplicateQuestion duplicate one variant inside a group.
 func (ct *Controller) EditorDuplicateQuestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.duplicateQuestion(ed.IdQuestion(id), user.Id)
+	out, err := ct.duplicateQuestion(ed.IdQuestion(id), userID)
 	if err != nil {
 		return err
 	}
@@ -197,14 +197,14 @@ func (ct *Controller) duplicateQuestion(idQuestion ed.IdQuestion, userID uID) (e
 // EditorDuplicateQuestiongroup duplicates the whole group, deep copying
 // every question, and assigns it to the current user.
 func (ct *Controller) EditorDuplicateQuestiongroup(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.duplicateQuestiongroup(ed.IdQuestiongroup(id), user.Id)
+	err = ct.duplicateQuestiongroup(ed.IdQuestiongroup(id), userID)
 	if err != nil {
 		return err
 	}
@@ -275,14 +275,14 @@ func (ct *Controller) duplicateQuestiongroup(idGroup ed.IdQuestiongroup, userID 
 // also removing the group if needed.
 // An information is returned if the question is used in monoquestions (tasks)
 func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.deleteQuestion(ed.IdQuestion(id), user.Id)
+	out, err := ct.deleteQuestion(ed.IdQuestion(id), userID)
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func LoadQuestionVariants(db ed.DB, id ed.IdQuestiongroup) ([]ed.Question, error
 
 // EditorGetQuestions returns the questions for the given group
 func (ct *Controller) EditorGetQuestions(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	idGroup, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
@@ -428,7 +428,7 @@ func (ct *Controller) EditorGetQuestions(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	if !group.IsVisibleBy(user.Id) {
+	if !group.IsVisibleBy(userID) {
 		return errAccessForbidden
 	}
 
@@ -463,7 +463,7 @@ func (ct *Controller) EditorCheckQuestionParameters(c echo.Context) error {
 }
 
 func (ct *Controller) EditorUpdateQuestiongroup(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ed.Questiongroup
 	if err := c.Bind(&args); err != nil {
@@ -475,7 +475,7 @@ func (ct *Controller) EditorUpdateQuestiongroup(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	if group.IdTeacher != user.Id {
+	if group.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -494,10 +494,10 @@ type QuestionUpdateVisiblityIn struct {
 }
 
 func (ct *Controller) EditorUpdateQuestiongroupVis(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	// we only accept public question from admin account
-	if user.Id != ct.admin.Id {
+	if userID != ct.admin.Id {
 		return errAccessForbidden
 	}
 
@@ -510,7 +510,7 @@ func (ct *Controller) EditorUpdateQuestiongroupVis(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if group.IdTeacher != user.Id {
+	if group.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -530,14 +530,14 @@ type SaveQuestionMetaIn struct {
 // EditorSaveQuestionMeta only save the meta data of the question,
 // not its content.
 func (ct *Controller) EditorSaveQuestionMeta(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args SaveQuestionMetaIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.saveQuestionMeta(args, user.Id)
+	err := ct.saveQuestionMeta(args, userID)
 	if err != nil {
 		return err
 	}
@@ -769,14 +769,14 @@ type UpdateQuestiongroupTagsIn struct {
 }
 
 func (ct *Controller) EditorUpdateQuestionTags(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args UpdateQuestiongroupTagsIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.updateQuestionTags(args, user.Id)
+	err := ct.updateQuestionTags(args, userID)
 	if err != nil {
 		return err
 	}
@@ -879,14 +879,14 @@ type SaveQuestionAndPreviewOut struct {
 
 // For non personnal questions, only preview.
 func (ct *Controller) EditorSaveQuestionAndPreview(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args SaveQuestionAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.saveQuestionAndPreview(args, user.Id)
+	out, err := ct.saveQuestionAndPreview(args, userID)
 	if err != nil {
 		return err
 	}

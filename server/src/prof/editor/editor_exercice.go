@@ -66,9 +66,9 @@ func newExerciceHeader(exercice ed.Exercice) ExerciceHeader {
 }
 
 func (ct *Controller) EditorGetExercicesIndex(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.loadExercicesIndex(user.Id)
+	out, err := ct.loadExercicesIndex(userID)
 	if err != nil {
 		return err
 	}
@@ -105,14 +105,14 @@ type ExerciceExt struct {
 type SearchExercicesIn = Query
 
 func (ct *Controller) EditorSearchExercices(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args SearchExercicesIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.searchExercices(args, user.Id)
+	out, err := ct.searchExercices(args, userID)
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 }
 
 func (ct *Controller) EditorUpdateExercicegroup(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ed.Exercicegroup
 	if err := c.Bind(&args); err != nil {
@@ -233,7 +233,7 @@ func (ct *Controller) EditorUpdateExercicegroup(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	if group.IdTeacher != user.Id {
+	if group.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -248,14 +248,14 @@ func (ct *Controller) EditorUpdateExercicegroup(c echo.Context) error {
 
 // EditorDuplicateExercice duplicate one variant inside a group.
 func (ct *Controller) EditorDuplicateExercice(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.duplicateExercice(ed.IdExercice(id), user.Id)
+	out, err := ct.duplicateExercice(ed.IdExercice(id), userID)
 	if err != nil {
 		return err
 	}
@@ -349,14 +349,14 @@ func duplicateExerciceTo(tx *sql.Tx, idExercice ed.IdExercice, group ed.Exercice
 // EditorDuplicateExercicegroup duplicates the whole group, deep copying
 // every exercice (variant), and assigns it to the current user.
 func (ct *Controller) EditorDuplicateExercicegroup(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.duplicateExercicegroup(ed.IdExercicegroup(id), user.Id)
+	err = ct.duplicateExercicegroup(ed.IdExercicegroup(id), userID)
 	if err != nil {
 		return err
 	}
@@ -432,14 +432,14 @@ func (ct *Controller) getExerciceGroup(qu ed.Exercice) (ed.Exercicegroup, error)
 
 // EditorGetExerciceContent loads the questions associated with the given exercice
 func (ct *Controller) EditorGetExerciceContent(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	idExercice, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.getExercice(ed.IdExercice(idExercice), user.Id)
+	out, err := ct.getExercice(ed.IdExercice(idExercice), userID)
 	if err != nil {
 		return err
 	}
@@ -468,9 +468,9 @@ func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (Exercic
 
 // EditorCreateExercice creates a new exercice group with one exercice
 func (ct *Controller) EditorCreateExercice(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.createExercice(user.Id)
+	out, err := ct.createExercice(userID)
 	if err != nil {
 		return err
 	}
@@ -517,14 +517,14 @@ type UpdateExercicegroupTagsIn struct {
 }
 
 func (ct *Controller) EditorUpdateExerciceTags(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args UpdateExercicegroupTagsIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	err := ct.updateExerciceTags(args, user.Id)
+	err := ct.updateExerciceTags(args, userID)
 	if err != nil {
 		return err
 	}
@@ -560,14 +560,14 @@ func (ct *Controller) updateExerciceTags(params UpdateExercicegroupTagsIn, userI
 // up the exercice group if needed.
 // It returns information if the exercice is used in tasks
 func (ct *Controller) EditorDeleteExercice(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	idExercice, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.deleteExercice(ed.IdExercice(idExercice), user.Id)
+	out, err := ct.deleteExercice(ed.IdExercice(idExercice), userID)
 	if err != nil {
 		return err
 	}
@@ -687,14 +687,14 @@ type ExerciceCreateQuestionIn struct {
 // EditorExerciceCreateQuestion creates a question and appends it
 // to the given exercice.
 func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ExerciceCreateQuestionIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	ex, err := ct.createQuestionEx(args, user.Id)
+	ex, err := ct.createQuestionEx(args, userID)
 	if err != nil {
 		return err
 	}
@@ -761,14 +761,14 @@ type ExerciceImportQuestionIn struct {
 // making a copy and associating it with the given exercice.
 // It also updates the preview
 func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ExerciceImportQuestionIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	ex, err := ct.importQuestionEx(args, user.Id)
+	ex, err := ct.importQuestionEx(args, userID)
 	if err != nil {
 		return err
 	}
@@ -841,14 +841,14 @@ type ExerciceDuplicateQuestionIn struct {
 // EditorExerciceDuplicateQuestion duplicate the question at the given
 // index in the given exercice (variant), also updating the preview
 func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ExerciceDuplicateQuestionIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	ex, err := ct.duplicateQuestionEx(args, user.Id)
+	ex, err := ct.duplicateQuestionEx(args, userID)
 	if err != nil {
 		return err
 	}
@@ -926,14 +926,14 @@ type ExerciceUpdateQuestionsIn struct {
 // EditorExerciceUpdateQuestions updates the question links and
 // the preview
 func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ExerciceUpdateQuestionsIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	ex, err := ct.updateQuestionsEx(args, user.Id)
+	ex, err := ct.updateQuestionsEx(args, userID)
 	if err != nil {
 		return err
 	}
@@ -1003,14 +1003,14 @@ type ExerciceUpdateIn = ExerciceHeader
 
 // EditorSaveExerciceMeta update the exercice metadata.
 func (ct *Controller) EditorSaveExerciceMeta(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ExerciceUpdateIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.updateExercice(args, user.Id)
+	out, err := ct.updateExercice(args, userID)
 	if err != nil {
 		return err
 	}
