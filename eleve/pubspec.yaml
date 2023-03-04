@@ -37,12 +37,13 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_math_fork: ^0.6.3
   web_socket_channel: ^2.1.0
-  audioplayers: ^1.1.1
+  audioplayers: ^3.0.1
   path_provider: ^2.0.9
   logging: ^1.0.2
   http: ^0.13.4
-  package_info_plus: ^1.4.2
-  upgrader: ^4.4.2
+  package_info_plus: ^3.0.3
+  upgrader: ^6.0.1
+  url_launcher: ^6.1.5
 
 flutter_icons:
   android: true
@@ -57,7 +58,7 @@ dev_dependencies:
     sdk: flutter
 
   # flutter pub run flutter_launcher_icons:main
-  flutter_launcher_icons: ^0.10.0
+  flutter_launcher_icons: ^0.12.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -66,9 +67,9 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.1
 
-  test: ^1.19.5
+  test: ^1.22.0
 
-  flutter_native_splash: ^2.2.0+1
+  flutter_native_splash: ^2.2.18
 
 # flutter pub run flutter_native_splash:create
 flutter_native_splash:
