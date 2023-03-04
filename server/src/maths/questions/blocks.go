@@ -740,7 +740,7 @@ type FunctionArea struct {
 	// horizontal line
 	Bottom, Top Interpolated
 	Left, Right string // expression.Expression
-	Color       repere.Color
+	Color       repere.ColorHex
 }
 
 // FunctionPoint draws a point at a given
@@ -748,7 +748,7 @@ type FunctionArea struct {
 type FunctionPoint struct {
 	Function Interpolated // reference to a function [Label]
 	X        string       // expression.Expression
-	Color    repere.Color
+	Color    repere.ColorHex
 	Legend   Interpolated // legend
 }
 

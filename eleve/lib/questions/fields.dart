@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
+import 'package:eleve/shared/hyperlink.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
@@ -130,7 +131,8 @@ List<InlineSpan> buildText(TextLine parts, TextS style, double fontSize,
           null));
       out.add(const TextSpan(text: " "));
     } else {
-      out.add(TextSpan(text: part.text, style: ts));
+      // check for URLs
+      out.addAll(parseURLs(part.text, ts));
     }
   }
   return out;
