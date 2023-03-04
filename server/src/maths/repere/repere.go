@@ -28,16 +28,16 @@ type RepereBounds struct {
 }
 
 type Area struct {
-	Color  Color
+	Color  ColorHex
 	Points []PointName // polyline, refering to the Drawings.Points
 }
 
 type Circle struct {
 	Center    Coord
 	Radius    float64
-	LineColor Color  // optional, default to black
-	FillColor Color  // optional, defaul to transparent
-	Legend    string // LaTeX
+	LineColor ColorHex // optional, default to black
+	FillColor ColorHex // optional, defaul to transparent
+	Legend    string   // LaTeX
 }
 
 type Drawings struct {
@@ -63,7 +63,7 @@ type PosPoint struct {
 }
 
 type LabeledPoint struct {
-	Color Color
+	Color ColorHex
 	Point PosPoint
 }
 
@@ -71,7 +71,7 @@ type LabeledPoint struct {
 type Segment struct {
 	LabelName string // optional
 	From, To  PointName
-	Color     Color
+	Color     ColorHex
 	LabelPos  LabelPos    // used only if LabelName is not zero
 	Kind      SegmentKind // what to actually draw
 }
@@ -91,7 +91,7 @@ func InferLine(from, to Coord) (a, b float64) {
 // Line is an infinite line, defined by an equation y = ax + b
 type Line struct {
 	Label string
-	Color Color
+	Color ColorHex
 	A, B  float64
 }
 

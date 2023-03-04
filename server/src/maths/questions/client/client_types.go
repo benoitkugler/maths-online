@@ -91,12 +91,12 @@ type FigureBlock struct {
 }
 
 type FunctionArea struct {
-	Color repere.Color
+	Color repere.ColorHex
 	Path  []functiongrapher.BezierCurve
 }
 
 type FunctionPoint struct {
-	Color  repere.Color
+	Color  repere.ColorHex
 	Legend string // LaTeX code
 	Coord  repere.Coord
 }

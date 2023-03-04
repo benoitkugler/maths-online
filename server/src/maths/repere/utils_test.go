@@ -4,7 +4,7 @@ import "testing"
 
 func TestColor_ToARGB(t *testing.T) {
 	tests := []struct {
-		c     Color
+		c     ColorHex
 		wantA uint8
 		wantR uint8
 		wantG uint8

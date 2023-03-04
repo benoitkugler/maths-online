@@ -16,11 +16,11 @@ type IntCoord struct {
 	X, Y int
 }
 
-// Color is an hex or ahex color string, with
+// ColorHex is an hex or ahex color string, with
 // #FFFFFF or #AAFFFFFF format
-type Color string
+type ColorHex string
 
-func (c Color) ToARGB() (a, r, g, b uint8) {
+func (c ColorHex) ToARGB() (a, r, g, b uint8) {
 	if c == "" {
 		return
 	}

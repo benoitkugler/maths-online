@@ -193,7 +193,7 @@ func (vi VariationTableInstance) toLatex() string { return "TODO" }
 func (si SignTableInstance) toLatex() string      { return "TODO" }
 
 // return color and opacity
-func tikzColorArg(c repere.Color) (string, string) {
+func tikzColorArg(c repere.ColorHex) (string, string) {
 	a, r, g, b := c.ToARGB()
 
 	color := fmt.Sprintf("{rgb,255:red,%d;green,%d;blue,%d}", r, g, b)

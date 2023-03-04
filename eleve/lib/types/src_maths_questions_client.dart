@@ -609,7 +609,7 @@ Map<String, dynamic> formulaBlockToJson(FormulaBlock item) {
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionArea
 class FunctionArea {
-  final Color color;
+  final ColorHex color;
   final List<BezierCurve> path;
 
   const FunctionArea(this.color, this.path);
@@ -635,7 +635,7 @@ Map<String, dynamic> functionAreaToJson(FunctionArea item) {
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionPoint
 class FunctionPoint {
-  final Color color;
+  final ColorHex color;
   final String legend;
   final Coord coord;
 
