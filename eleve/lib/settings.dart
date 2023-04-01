@@ -13,21 +13,26 @@ import 'package:path_provider/path_provider.dart';
 const studentPseudoKey = "client-pseudo";
 const studentIDKey = "client-id";
 
+/// [UserSettings] store the local parameters persisting
+/// accross app launches.
 class UserSettings {
   String studentPseudo;
   String studentID;
   PlaylistController songs;
+  bool hasBeenLaunched;
 
   UserSettings(
       {this.studentPseudo = "",
       this.studentID = "",
-      this.songs = Audio.DefaultPlaylist});
+      this.songs = Audio.DefaultPlaylist,
+      this.hasBeenLaunched = false});
 
   String toJson() {
     return jsonEncode({
       studentPseudoKey: studentPseudo,
       studentIDKey: studentID,
-      "songs": songs
+      "songs": songs,
+      "hasBeenLaunched": hasBeenLaunched,
     });
   }
 
@@ -41,6 +46,7 @@ class UserSettings {
       studentPseudo: dict[studentPseudoKey] as String,
       studentID: dict[studentIDKey] as String,
       songs: songs,
+      hasBeenLaunched: dict["hasBeenLaunched"] as bool,
     );
   }
 }

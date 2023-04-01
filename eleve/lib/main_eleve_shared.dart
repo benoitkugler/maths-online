@@ -19,21 +19,49 @@ Future<Audio> loadAudioFromSettings() async {
   return audio;
 }
 
-class EleveApp extends StatefulWidget {
+class EleveApp extends StatelessWidget {
   final Audio audioPlayer;
   final BuildMode buildMode;
   final Upgrader? checkUprades;
 
   const EleveApp(this.audioPlayer, this.buildMode,
+      {Key? key, this.checkUprades});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        title: 'Isyro',
+        theme: theme,
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: localizations,
+        supportedLocales: locales,
+        home: _AppScaffold(
+          audioPlayer,
+          buildMode,
+          checkUprades: checkUprades,
+        ));
+  }
+}
+
+class _AppScaffold extends StatefulWidget {
+  final Audio audioPlayer;
+  final BuildMode buildMode;
+  final Upgrader? checkUprades;
+
+  const _AppScaffold(this.audioPlayer, this.buildMode,
       {Key? key, this.checkUprades})
       : super(key: key);
 
   @override
-  State<EleveApp> createState() => _EleveAppState();
+  State<_AppScaffold> createState() => __AppScaffoldState();
 }
 
-class _EleveAppState extends State<EleveApp> {
+class __AppScaffoldState extends State<_AppScaffold> {
   UserSettings settings = UserSettings();
+
+  /// [trivialMetaCache] stores the credentials needed
+  /// to reconnect in game.
+  Map<String, String> trivialMetaCache = {};
 
   @override
   void initState() {
@@ -46,9 +74,13 @@ class _EleveAppState extends State<EleveApp> {
     setState(() {
       settings = set;
     });
+
+    if (!settings.hasBeenLaunched) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showWelcomeScreen());
+    }
   }
 
-  void _showAudioSettings(BuildContext context) {
+  void _showAudioSettings() {
     final ct = widget.audioPlayer.playlist.toList();
     final onPop = Navigator.of(context)
         .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
@@ -64,7 +96,7 @@ class _EleveAppState extends State<EleveApp> {
     });
   }
 
-  void _showAppSettings(BuildContext context) async {
+  void _showAppSettings() async {
     final newSettings = await Navigator.of(context).push(
         MaterialPageRoute<UserSettings>(
             builder: (_) => Settings(widget.buildMode)));
@@ -75,63 +107,20 @@ class _EleveAppState extends State<EleveApp> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final body = _AppBody(widget.audioPlayer, widget.buildMode, settings);
-    return MaterialApp(
-        title: 'Isyro',
-        theme: theme,
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: localizations,
-        supportedLocales: locales,
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text('Isyro'),
-            actions: [
-              Builder(
-                builder: (context) => IconButton(
-                  onPressed: () => _showAudioSettings(context),
-                  icon:
-                      const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
-                  tooltip: "Choisir la musique",
-                ),
-              ),
-              Builder(
-                builder: (context) => IconButton(
-                  onPressed: () => _showAppSettings(context),
-                  icon:
-                      const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
-                  tooltip: "Paramètres",
-                ),
-              )
-            ],
-          ),
-          body: widget.checkUprades == null
-              ? body
-              : UpgradeAlert(
-                  upgrader: widget.checkUprades,
-                  child: body,
-                ),
-        ));
+  void _showWelcomeScreen() async {
+    final goTo = await showDialog<bool>(
+      context: context,
+      builder: (context) => _WelcomeDialog(() {
+        Navigator.of(context).pop(true);
+      }),
+    );
+
+    // in any case, register the screen has been seen
+    settings.hasBeenLaunched = true;
+    saveUserSettings(settings);
+
+    if (goTo != null && goTo) _showAppSettings();
   }
-}
-
-class _AppBody extends StatefulWidget {
-  final Audio audioPlayer;
-  final BuildMode buildMode;
-  final UserSettings settings;
-
-  const _AppBody(this.audioPlayer, this.buildMode, this.settings, {Key? key})
-      : super(key: key);
-
-  @override
-  State<_AppBody> createState() => _AppBodyState();
-}
-
-class _AppBodyState extends State<_AppBody> {
-  /// [trivialMetaCache] stores the credentials needed
-  /// to reconnect in game.
-  Map<String, String> trivialMetaCache = {};
 
   void _launchTrivialPoursuit() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
@@ -145,7 +134,7 @@ class _AppBodyState extends State<_AppBody> {
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
             body: TrivialPoursuitLoggin(
-                widget.buildMode, trivialMetaCache, widget.settings))));
+                widget.buildMode, trivialMetaCache, settings))));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
@@ -158,18 +147,17 @@ class _AppBodyState extends State<_AppBody> {
     }
 
     widget.audioPlayer.run();
-    final isIdentified = widget.settings.studentID.isNotEmpty;
+    final isIdentified = settings.studentID.isNotEmpty;
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => isIdentified
-            ? HomeworkW(
-                ServerHomeworkAPI(widget.buildMode, widget.settings.studentID))
+            ? HomeworkW(ServerHomeworkAPI(widget.buildMode, settings.studentID))
             : const HomeworkDisabled()));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final body = Card(
       child: Center(
         child: Column(
           // crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -207,6 +195,47 @@ class _AppBodyState extends State<_AppBody> {
           ],
         ),
       ),
+    );
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Isyro'),
+        actions: [
+          IconButton(
+            onPressed: () => _showAudioSettings(),
+            icon: const Icon(IconData(0xe378, fontFamily: 'MaterialIcons')),
+            tooltip: "Choisir la musique",
+          ),
+          IconButton(
+            onPressed: () => _showAppSettings(),
+            icon: const Icon(IconData(0xe57f, fontFamily: 'MaterialIcons')),
+            tooltip: "Paramètres",
+          ),
+        ],
+      ),
+      body: widget.checkUprades == null
+          ? body
+          : UpgradeAlert(
+              upgrader: widget.checkUprades,
+              child: body,
+            ),
+    );
+  }
+}
+
+class _WelcomeDialog extends StatelessWidget {
+  final void Function() goToSettings;
+  const _WelcomeDialog(this.goToSettings, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Bienvenue sur Isyro !"),
+      content:
+          const Text("Pour commencer, et si tu personnalisais ton appli ?"),
+      actions: [
+        TextButton(
+            onPressed: goToSettings, child: const Text("Editer mon profil"))
+      ],
     );
   }
 }
