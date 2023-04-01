@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-const Color darkBlue = Color.fromARGB(255, 27, 54, 82);
+const Color darkBlue = Color(0xFF104986);
 
 final theme = ThemeData.dark().copyWith(
   scaffoldBackgroundColor: darkBlue,
   cardTheme:
-      ThemeData.dark().cardTheme.copyWith(color: darkBlue.withOpacity(0.5)),
+      ThemeData.dark().cardTheme.copyWith(color: darkBlue.withOpacity(0.7)),
 );
 
 const localizations = [
