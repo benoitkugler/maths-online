@@ -112,7 +112,12 @@ import {
   type TrivialExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onMounted, onActivated } from "@vue/runtime-core";
+import {
+  computed,
+  onMounted,
+  onActivated,
+  watchEffect,
+} from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TrivialRow from "../components/trivial/TrivialRow.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
@@ -221,6 +226,11 @@ async function deleteConfig() {
 }
 
 let launchingConfig = $ref<Trivial | null>(null);
+// workaround for https://github.com/vuetifyjs/vuetify/issues/16770
+watchEffect(() => {
+  document.documentElement.style.overflow =
+    launchingConfig != null ? "hidden" : "";
+});
 async function launchSession(groups: GroupsStrategy) {
   if (launchingConfig == null) {
     return;
