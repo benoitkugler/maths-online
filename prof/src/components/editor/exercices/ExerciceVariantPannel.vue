@@ -142,6 +142,18 @@
         </QuestionContent>
       </v-col>
     </v-row>
+    <v-row v-else justify="center" style="height: 70vh">
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          title="Ajouter une question"
+          @click="createQuestion"
+          :disabled="props.isReadonly"
+        >
+          <v-icon color="success" class="mr-1">mdi-plus</v-icon>
+          Ajouter une question</v-btn
+        >
+      </v-col>
+    </v-row>
   </v-card>
 
   <SnackErrorParameters

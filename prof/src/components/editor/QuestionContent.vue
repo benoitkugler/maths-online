@@ -2,11 +2,11 @@
   <div
     @drop="onDropJSON"
     @dragover="onDragoverJSON"
-    class="d-flex ma-2 px-2"
+    class="d-flex ma-4"
     style="
-      border: 1px solid blue;
+      border: 2px solid green;
       border-radius: 10px;
-      height: 96%;
+      height: 65vh;
       justify-content: center;
       align-items: center;
     "
@@ -16,7 +16,7 @@
   </div>
   <div
     v-else
-    style="height: 66vh; overflow-y: auto"
+    style="height: 70vh; overflow-y: auto"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
   >

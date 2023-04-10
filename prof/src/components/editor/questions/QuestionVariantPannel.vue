@@ -10,7 +10,7 @@
     @close="errorEnnonce = null"
   ></SnackErrorEnonce>
 
-  <v-card class="mt-1 pr-1">
+  <v-card class="mt-1 px-2 pr-1">
     <v-row no-gutters>
       <v-spacer></v-spacer>
 
