@@ -871,6 +871,7 @@ export interface TargetTrivial {
 export interface AskInscriptionIn {
   Mail: string;
   Password: string;
+  HasEditorSimplified: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionOut
 export interface AskInscriptionOut {
@@ -913,6 +914,11 @@ export interface Origin {
 export interface StudentHeader {
   Id: IdStudent;
   Label: string;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.TeacherSettings
+export interface TeacherSettings {
+  Mail: string;
+  HasEditorSimplified: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
 export enum Visibility {
@@ -1349,6 +1355,48 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessLoggin(data: LogginOut): void;
+
+  protected async rawTeacherGetSettings() {
+    const fullUrl = this.baseUrl + "/api/prof/settings";
+    const rep: AxiosResponse<TeacherSettings> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TeacherGetSettings wraps rawTeacherGetSettings and handles the error */
+  async TeacherGetSettings() {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherGetSettings();
+      this.onSuccessTeacherGetSettings(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherGetSettings(data: TeacherSettings): void;
+
+  protected async rawTeacherUpdateSettings(params: TeacherSettings) {
+    const fullUrl = this.baseUrl + "/api/prof/settings";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** TeacherUpdateSettings wraps rawTeacherUpdateSettings and handles the error */
+  async TeacherUpdateSettings(params: TeacherSettings) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherUpdateSettings(params);
+      this.onSuccessTeacherUpdateSettings();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherUpdateSettings(): void;
 
   protected async rawTeacherGetClassrooms() {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";

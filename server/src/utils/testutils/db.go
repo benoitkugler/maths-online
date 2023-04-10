@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func getUserName() string {
 	if err != nil {
 		panic(err)
 	}
-	return buf.String()
+	return strings.TrimSpace(buf.String())
 }
 
 func runCmd(cmd *exec.Cmd) {
@@ -59,9 +60,6 @@ func NewTestDB(t *testing.T, generateSQLFile ...string) TestDB {
 	name := fmt.Sprintf("tmp_dev_%d_%d", time.Now().UnixNano(), dbCount)
 	dbCount++
 	dbCountMutex.Unlock()
-
-	// cleanup if needed
-	runCmd(exec.Command("dropdb", "--if-exists", name))
 
 	runCmd(exec.Command("createdb", name))
 
@@ -103,7 +101,7 @@ func (db TestDB) Remove() {
 		panic(err)
 	}
 
-	runCmd(exec.Command("dropdb", "--if-exists", "--force", db.name))
+	runCmd(exec.Command("dropdb", "--if-exists", "--force", "--username="+getUserName(), db.name))
 }
 
 // DB is a test DB, usually build from importing the current production DB.

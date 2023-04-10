@@ -36,6 +36,7 @@ import type {
   SheetExt,
   Student,
   TaskExt,
+  TeacherSettings,
   TextBlock,
   TrivialExt
 } from "./api_gen";
@@ -52,6 +53,8 @@ class Controller extends AbstractAPI {
 
   public onError?: (kind: string, htmlError: string) => void;
   public showMessage?: (message: string, color?: string) => void;
+
+  public settings: TeacherSettings = { Mail: "", HasEditorSimplified: false };
 
   logout() {
     this.isLoggedIn = false;
@@ -113,6 +116,17 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  protected onSuccessTeacherGetSettings(data: TeacherSettings): void {
+    this.inRequest = false;
+  }
+
+  protected onSuccessTeacherUpdateSettings(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Paramètres modifiés avec succès.");
+    }
   }
 
   protected onSuccessEditorGetQuestionsIndex(data: Index): void {

@@ -37,9 +37,9 @@ func NewController(db *sql.DB, admin teacher.Teacher, studentKey pass.Encrypter)
 }
 
 func (ct *Controller) HomeworkGetSheets(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.getSheets(user.Id)
+	out, err := ct.getSheets(userID)
 	if err != nil {
 		return err
 	}
@@ -79,14 +79,14 @@ type CreateSheetIn struct {
 }
 
 func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args CreateSheetIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	sheet, err := ct.createSheet(args.IdClassroom, user.Id)
+	sheet, err := ct.createSheet(args.IdClassroom, userID)
 	if err != nil {
 		return err
 	}
@@ -139,14 +139,14 @@ func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
 }
 
 func (ct *Controller) HomeworkUpdateSheet(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ho.Sheet
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	err := ct.updateSheet(args, user.Id)
+	err := ct.updateSheet(args, userID)
 	if err != nil {
 		return err
 	}
@@ -178,14 +178,14 @@ type AddMonoquestionToTaskIn struct {
 }
 
 func (ct *Controller) HomeworkAddExercice(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args AddExerciceToTaskIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	task, err := ct.addExerciceTo(args, user.Id)
+	task, err := ct.addExerciceTo(args, userID)
 	if err != nil {
 		return err
 	}
@@ -194,14 +194,14 @@ func (ct *Controller) HomeworkAddExercice(c echo.Context) error {
 }
 
 func (ct *Controller) HomeworkAddMonoquestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args AddMonoquestionToTaskIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	task, err := ct.addMonoquestionTo(args, user.Id)
+	task, err := ct.addMonoquestionTo(args, userID)
 	if err != nil {
 		return err
 	}
@@ -287,14 +287,14 @@ func (ct *Controller) addTaskTo(sheet ho.IdSheet, task tasks.Task, userID uID) (
 // HomeworkRemoveTask deletes the given tasks, also removing
 // all potential student progressions
 func (ct *Controller) HomeworkRemoveTask(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	id, err := utils.QueryParamInt64(c, "id-task")
 	if err != nil {
 		return err
 	}
 
-	err = ct.removeTask(tasks.IdTask(id), user.Id)
+	err = ct.removeTask(tasks.IdTask(id), userID)
 	if err != nil {
 		return err
 	}
@@ -364,7 +364,7 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 }
 
 func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args tasks.Monoquestion
 	if err := c.Bind(&args); err != nil {
@@ -376,7 +376,7 @@ func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = ct.checkSheetOwner(idSheet, user.Id)
+	err = ct.checkSheetOwner(idSheet, userID)
 	if err != nil {
 		return err
 	}
@@ -409,14 +409,14 @@ type ReorderSheetTasksIn struct {
 }
 
 func (ct *Controller) HomeworkReorderSheetTasks(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args ReorderSheetTasksIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	err := ct.reorderSheetTasks(args, user.Id)
+	err := ct.reorderSheetTasks(args, userID)
 	if err != nil {
 		return err
 	}
@@ -448,14 +448,14 @@ func (ct *Controller) reorderSheetTasks(args ReorderSheetTasksIn, userID uID) er
 }
 
 func (ct *Controller) HomeworkDeleteSheet(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	idSheet, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteSheet(ho.IdSheet(idSheet), user.Id)
+	err = ct.deleteSheet(ho.IdSheet(idSheet), userID)
 	if err != nil {
 		return err
 	}
@@ -533,14 +533,14 @@ type CopySheetIn struct {
 }
 
 func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args CopySheetIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.copySheetTo(args, user.Id)
+	out, err := ct.copySheetTo(args, userID)
 	if err != nil {
 		return err
 	}
@@ -647,14 +647,14 @@ type HomeworkMarksOut struct {
 }
 
 func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args HowemorkMarksIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := ct.getMarks(args, user.Id)
+	out, err := ct.getMarks(args, userID)
 	if err != nil {
 		return err
 	}

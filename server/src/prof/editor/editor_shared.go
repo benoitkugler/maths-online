@@ -14,9 +14,9 @@ import (
 // EditorGetTags return all tags currently used by questions.
 // It also add the special level tags.
 func (ct *Controller) EditorGetTags(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
-	filtred, err := LoadTags(ct.db, user.Id)
+	filtred, err := LoadTags(ct.db, userID)
 	if err != nil {
 		return err
 	}
@@ -166,10 +166,10 @@ type ExerciceUpdateVisiblityIn struct {
 }
 
 func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	// we only accept public question from admin account
-	if user.Id != ct.admin.Id {
+	if userID != ct.admin.Id {
 		return errAccessForbidden
 	}
 
@@ -182,7 +182,7 @@ func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
 	if err != nil {
 		return utils.SQLError(err)
 	}
-	if ex.IdTeacher != user.Id {
+	if ex.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -200,14 +200,14 @@ func (ct *Controller) EditorUpdateExercicegroupVis(c echo.Context) error {
 
 // For non personnal questions, only preview.
 func (ct *Controller) EditorSaveExerciceAndPreview(c echo.Context) error {
-	user := tcAPI.JWTTeacher(c)
+	userID := tcAPI.JWTTeacher(c)
 
 	var args SaveExerciceAndPreviewIn
 	if err := c.Bind(&args); err != nil {
 		return fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	out, err := ct.saveExerciceAndPreview(args, user.Id)
+	out, err := ct.saveExerciceAndPreview(args, userID)
 	if err != nil {
 		return err
 	}

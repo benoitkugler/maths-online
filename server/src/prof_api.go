@@ -19,6 +19,10 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 
 	gr := e.Group("", tc.JWTMiddleware())
 
+	// settings
+	gr.GET("/api/prof/settings", tc.TeacherGetSettings)
+	gr.POST("/api/prof/settings", tc.TeacherUpdateSettings)
+
 	// classrooms
 	gr.GET("/api/prof/classrooms", tc.TeacherGetClassrooms)
 	gr.PUT("/api/prof/classrooms", tc.TeacherCreateClassroom)

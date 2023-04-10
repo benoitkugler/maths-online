@@ -18,7 +18,7 @@ const (
 
 // UserMeta are custom claims extending default ones.
 type UserMeta struct {
-	Teacher tc.Teacher
+	IdTeacher tc.IdTeacher
 	jwt.StandardClaims
 }
 
@@ -36,7 +36,7 @@ func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
 func (ct *Controller) newToken(teacher tc.Teacher) (string, error) {
 	// Set custom claims
 	claims := &UserMeta{
-		Teacher: teacher,
+		IdTeacher: teacher.Id,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(deltaToken).Unix(),
 		},
@@ -51,9 +51,9 @@ func (ct *Controller) newToken(teacher tc.Teacher) (string, error) {
 
 // JWTTeacher expects a JWT authentified request, and must
 // only be used in routes protected by `JWTMiddleware`
-func JWTTeacher(c echo.Context) tc.Teacher {
+func JWTTeacher(c echo.Context) tc.IdTeacher {
 	meta := c.Get("user").(*jwt.Token).Claims.(*UserMeta) // the token is valid here
-	return meta.Teacher
+	return meta.IdTeacher
 }
 
 // GetDevToken creates a new user and returns a valid token,

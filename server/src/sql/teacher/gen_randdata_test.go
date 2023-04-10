@@ -54,10 +54,11 @@ func randStudent() Student {
 
 func randTeacher() Teacher {
 	return Teacher{
-		Id:              randIdTeacher(),
-		Mail:            randstring(),
-		PasswordCrypted: randSliceuint8(),
-		IsAdmin:         randbool(),
+		Id:                  randIdTeacher(),
+		Mail:                randstring(),
+		PasswordCrypted:     randSliceuint8(),
+		IsAdmin:             randbool(),
+		HasSimplifiedEditor: randbool(),
 	}
 }
 

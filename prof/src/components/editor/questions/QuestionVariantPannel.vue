@@ -10,7 +10,7 @@
     @close="errorEnnonce = null"
   ></SnackErrorEnonce>
 
-  <v-card class="mt-1 pr-1">
+  <v-card class="mt-1 px-2 pr-1">
     <v-row no-gutters>
       <v-spacer></v-spacer>
 
@@ -27,7 +27,10 @@
               Insérer du contenu
             </v-btn>
           </template>
-          <block-bar @add="addBlock"></block-bar>
+          <block-bar
+            @add="addBlock"
+            :simplified="hasEditorSimplified"
+          ></block-bar>
         </v-menu>
       </v-col>
 
@@ -92,7 +95,7 @@
     </v-row>
 
     <v-row no-gutters>
-      <v-col md="5">
+      <v-col md="5" v-if="!hasEditorSimplified">
         <ParametersEditor
           :model-value="question.Parameters"
           @update:model-value="checkParameters"
@@ -168,6 +171,10 @@ onMounted(() => {
 onUnmounted(() => {
   history.clearListener();
 });
+
+const hasEditorSimplified = computed(
+  () => controller.settings.HasEditorSimplified
+);
 
 interface historyEntry {
   question: Question;

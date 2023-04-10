@@ -1,5 +1,11 @@
 <template>
-  <iframe :src="src" width="350px" height="100%" ref="iframe"></iframe>
+  <iframe
+    :src="src"
+    width="350px"
+    height="100%"
+    ref="iframe"
+    class="rounded"
+  ></iframe>
 </template>
 
 <script setup lang="ts">

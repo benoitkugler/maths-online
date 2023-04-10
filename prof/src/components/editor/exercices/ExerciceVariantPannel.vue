@@ -49,7 +49,10 @@
               Insérer du contenu
             </v-btn>
           </template>
-          <BlockBar @add="addBlock"></BlockBar>
+          <BlockBar
+            @add="addBlock"
+            :simplified="hasEditorSimplified"
+          ></BlockBar>
         </v-menu>
       </v-col>
 
@@ -116,7 +119,7 @@
     </v-row>
 
     <v-row no-gutters v-if="question != null">
-      <v-col md="5">
+      <v-col md="5" v-if="!hasEditorSimplified">
         <ParametersEditor
           :model-value="currentEditedParams"
           @update:model-value="checkParameters"
@@ -137,6 +140,18 @@
           ref="questionContent"
         >
         </QuestionContent>
+      </v-col>
+    </v-row>
+    <v-row v-else justify="center" style="height: 70vh">
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          title="Ajouter une question"
+          @click="createQuestion"
+          :disabled="props.isReadonly"
+        >
+          <v-icon color="success" class="mr-1">mdi-plus</v-icon>
+          Ajouter une question</v-btn
+        >
       </v-col>
     </v-row>
   </v-card>
@@ -306,6 +321,10 @@ onMounted(() => {
 onUnmounted(() => {
   history.clearListener();
 });
+
+const hasEditorSimplified = computed(
+  () => controller.settings.HasEditorSimplified
+);
 
 function restoreHistory(snapshot: ExerciceExt) {
   notifieUpdate(snapshot);

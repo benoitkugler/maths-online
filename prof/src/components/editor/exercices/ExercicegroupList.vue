@@ -35,7 +35,7 @@
       ></resource-query-row>
       <v-row no-gutters>
         <v-col>
-          <v-list style="height: 60vh" class="overflow-y-auto">
+          <v-list style="height: 62vh" class="overflow-y-auto">
             <div
               v-if="groups.length == 0"
               style="width: 100%; text-align: center"

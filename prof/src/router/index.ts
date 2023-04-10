@@ -3,6 +3,7 @@ import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import HomeworkActivityVue from "@/views/HomeworkActivity.vue";
 import QuestionEditor from "@/views/QuestionEditor.vue";
 import ReviewListVue from "@/views/ReviewList.vue";
+import SettingsPanelVue from "@/views/SettingsPanel.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
@@ -15,6 +16,12 @@ const router = createRouter({
       name: "home",
       component: HomeView,
       meta: { Label: "Accueil" }
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsPanelVue,
+      meta: { Label: "Paramètres" }
     },
     {
       path: "/classrooms",

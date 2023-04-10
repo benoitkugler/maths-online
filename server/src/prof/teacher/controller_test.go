@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestController_mailInscription(t *testing.T) {
@@ -23,6 +25,26 @@ func TestController_mailInscription(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(text)
+}
+
+func TestSettingsAPI(t *testing.T) {
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql")
+	defer db.Remove()
+
+	ct := Controller{db: db.DB}
+	teach := tc.Teacher{
+		Mail: "dummy@free.fr",
+	}
+	teach, err := teach.Insert(ct.db)
+	tu.AssertNoErr(t, err)
+
+	settings, err := ct.getSettings(teach.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, settings.Mail == teach.Mail)
+	tu.Assert(t, settings.HasEditorSimplified == false)
+
+	err = ct.updateSettings(TeacherSettings{Mail: "anoter@free.fr", HasEditorSimplified: true}, teach.Id)
+	tu.AssertNoErr(t, err)
 }
 
 func TestPasswordCrypted(t *testing.T) {

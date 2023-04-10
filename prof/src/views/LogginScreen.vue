@@ -24,10 +24,44 @@
     </v-card>
   </v-dialog>
 
-  <v-row class="my-1 mx-6 pb-3 fill-height">
+  <v-row class="my-1 mx-6 pb-3 fill-height" justify="center">
+    <v-col
+      cols="12"
+      sm="6"
+      align-self="center"
+      class="d-none d-sm-flex"
+      v-if="mode == 'connection'"
+    >
+      <v-card>
+        <v-card-title class="bg-secondary rounded">
+          Bienvenue sur Isyro
+        </v-card-title>
+        <v-card-text class="py-3"
+          >Isyro est une plateforme pédagogique pour concevoir des exercices
+          interactifs, à utiliser en classe comme à la maison.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="secondary"
+            variant="elevated"
+            @click="
+              mode = 'inscription';
+              showPassword = true;
+            "
+          >
+            S'inscrire
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-col>
+
     <v-col cols="12" sm="6" align-self="center">
       <v-card>
-        <v-card-title class="bg-primary rounded"> Se connecter </v-card-title>
+        <v-card-title class="bg-primary rounded">
+          {{ mode == "inscription" ? "S'inscrire" : "  Se connecter" }}
+        </v-card-title>
         <v-progress-linear
           indeterminate
           v-show="isLoading"
@@ -37,11 +71,17 @@
           <v-row>
             <v-col>
               <v-text-field
+                density="comfortable"
                 variant="outlined"
                 label="Mail"
                 v-model="mail"
                 type="email"
                 name="email"
+                :hint="
+                  mode == 'inscription'
+                    ? 'Adresse utiilisée comme identifiant'
+                    : ''
+                "
                 required
                 :error="error.Error != '' && !error.IsPasswordError"
                 :error-messages="
@@ -55,6 +95,7 @@
           <v-row>
             <v-col>
               <v-text-field
+                density="comfortable"
                 variant="outlined"
                 label="Mot de passe"
                 v-model="password"
@@ -68,41 +109,36 @@
                     ? [error.Error]
                     : ''
                 "
+                :hide-details="mode == 'inscription'"
               ></v-text-field>
             </v-col>
           </v-row>
+          <v-row v-if="mode == 'inscription'">
+            <v-col>
+              <v-switch
+                density="compact"
+                v-model="mathMode"
+                color="primary"
+                label="Utilisation scientifique"
+                messages="Décocher pour masquer les fonctions spécifiques aux mathématiques."
+              ></v-switch>
+            </v-col>
+          </v-row>
         </v-form>
-        <v-card-actions>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            :disabled="!areCredencesValid"
-            @click="inscription"
+        <v-card-actions class="mt-2">
+          <v-btn v-if="mode == 'inscription'" @click="mode = 'connection'"
+            >Retour</v-btn
           >
-            S'inscrire
-          </v-btn>
           <v-spacer></v-spacer>
           <v-btn
             color="primary"
             variant="elevated"
             :disabled="!areCredencesValid"
-            @click="connection"
+            @click="mode == 'inscription' ? inscription() : connection()"
           >
-            Entrer
+            {{ mode == "inscription" ? "S'inscrire" : "  Se connecter" }}
           </v-btn>
         </v-card-actions>
-      </v-card>
-    </v-col>
-
-    <v-col cols="12" sm="6" align-self="center" class="d-none d-sm-flex">
-      <v-card>
-        <v-card-title class="bg-secondary rounded">
-          Bienvenue sur Isyro
-        </v-card-title>
-        <v-card-text class="py-3"
-          >Isyro est une plateforme pédagogique pour concevoir des exercices
-          interactifs, à utiliser en classe comme à la maison.
-        </v-card-text>
       </v-card>
     </v-col>
   </v-row>
@@ -123,6 +159,9 @@ function removeInscriptionValidated() {
   window.location.search = "";
 }
 
+let mode = $ref<"inscription" | "connection">("connection");
+let mathMode = $ref(true);
+
 let mail = $ref("");
 let password = $ref("");
 let showPassword = $ref(false);
@@ -139,6 +178,7 @@ async function inscription() {
   const res = await controller.AskInscription({
     Mail: mail,
     Password: password,
+    HasEditorSimplified: !mathMode,
   });
   isLoading = false;
   if (res == undefined) {
@@ -158,10 +198,13 @@ async function connection() {
   if (res == undefined) {
     return;
   }
+
   error = res;
-  if (error.Error == "") {
-    emit("loggin");
-  }
+  if (error.Error) return;
+
+  const settings = await controller.TeacherGetSettings();
+  if (settings) controller.settings = settings;
+  emit("loggin");
 }
 </script>
 
