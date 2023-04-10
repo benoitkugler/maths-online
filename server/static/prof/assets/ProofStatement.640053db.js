@@ -1,1 +1,0 @@
-import{d as n,o as m,c as u,_ as d}from"./index.f0f98b92.js";const r=n({__name:"ProofStatement",props:{modelValue:null},emits:["update:modelValue"],setup(o,{emit:t}){const l=o;return(s,e)=>(m(),u(d,{"model-value":l.modelValue.Content,"onUpdate:modelValue":e[0]||(e[0]=a=>t("update:modelValue",{Content:a}))},null,8,["model-value"]))}});export{r as default};
