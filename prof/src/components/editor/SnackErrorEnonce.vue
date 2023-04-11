@@ -27,7 +27,12 @@
     <v-row v-if="props.error != null">
       <v-col>
         <v-row no-gutters>
-          <v-col> <b>Erreur dans la contenu de la question</b> </v-col>
+          <v-col>
+            <b
+              >Erreur dans la contenu de la
+              {{ props.isCorrection ? "correction" : "question" }}</b
+            >
+          </v-col>
         </v-row>
         <v-row>
           <v-col>
@@ -68,6 +73,7 @@ import { $ref } from "vue/macros";
 
 interface Props {
   error: errEnonce | null;
+  isCorrection: boolean;
 }
 
 const props = defineProps<Props>();

@@ -36,6 +36,14 @@ type Question struct {
 
 	Enonce     questions.Enonce
 	Parameters questions.Parameters
+
+	// Correction an optional content describing the expected solution,
+	// to be instantiated with the same parameters as [Enonce]
+	Correction questions.Enonce
+}
+
+func (qu Question) Page() questions.QuestionPage {
+	return questions.QuestionPage{Enonce: qu.Enonce, Parameters: qu.Parameters, Correction: qu.Correction}
 }
 
 // Questiongroup groups several variant of the same question

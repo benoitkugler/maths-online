@@ -975,22 +975,27 @@ Map<String, dynamic> proofFieldBlockToJson(ProofFieldBlock item) {
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Question
 class Question {
   final Enonce enonce;
+  final Enonce correction;
 
-  const Question(this.enonce);
+  const Question(this.enonce, this.correction);
 
   @override
   String toString() {
-    return "Question($enonce)";
+    return "Question($enonce, $correction)";
   }
 }
 
 Question questionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Question(enonceFromJson(json['Enonce']));
+  return Question(
+      enonceFromJson(json['Enonce']), enonceFromJson(json['Correction']));
 }
 
 Map<String, dynamic> questionToJson(Question item) {
-  return {"Enonce": enonceToJson(item.enonce)};
+  return {
+    "Enonce": enonceToJson(item.enonce),
+    "Correction": enonceToJson(item.correction)
+  };
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.QuestionAnswersIn

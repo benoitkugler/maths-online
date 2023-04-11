@@ -4,20 +4,25 @@
 class QuestionPage {
   final dynamic enonce;
   final dynamic parameters;
+  final dynamic correction;
 
-  const QuestionPage(this.enonce, this.parameters);
+  const QuestionPage(this.enonce, this.parameters, this.correction);
 
   @override
   String toString() {
-    return "QuestionPage($enonce, $parameters)";
+    return "QuestionPage($enonce, $parameters, $correction)";
   }
 }
 
 QuestionPage questionPageFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return QuestionPage(json['enonce'], json['parameters']);
+  return QuestionPage(json['enonce'], json['parameters'], json['correction']);
 }
 
 Map<String, dynamic> questionPageToJson(QuestionPage item) {
-  return {"enonce": item.enonce, "parameters": item.parameters};
+  return {
+    "enonce": item.enonce,
+    "parameters": item.parameters,
+    "correction": item.correction
+  };
 }

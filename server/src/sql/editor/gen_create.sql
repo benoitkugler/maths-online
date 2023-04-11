@@ -34,7 +34,8 @@ CREATE TABLE questions (
     NeedExercice integer,
     IdGroup integer,
     Enonce jsonb NOT NULL,
-    Parameters jsonb NOT NULL
+    Parameters jsonb NOT NULL,
+    Correction jsonb NOT NULL
 );
 
 CREATE TABLE questiongroups (
@@ -1876,6 +1877,9 @@ END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
+
+ALTER TABLE questions
+    ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));
 
 ALTER TABLE questions
     ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));

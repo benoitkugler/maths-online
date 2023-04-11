@@ -6,12 +6,22 @@
   </SnackErrorParameters>
 
   <SnackErrorEnonce
-    :error="errorEnnonce"
-    @close="errorEnnonce = null"
+    :error="errorContent"
+    :is-correction="errorIsCorrection"
+    @close="errorContent = null"
   ></SnackErrorEnonce>
 
   <v-card class="mt-1 px-2 pr-1">
     <v-row no-gutters>
+      <v-col md="5" v-if="!hasEditorSimplified"> </v-col>
+
+      <v-col cols="auto" align-self="center">
+        <v-btn-toggle variant="tonal" class="py-1" density="compact">
+          <v-btn size="small">énoncé</v-btn>
+          <v-btn size="small">Correction</v-btn>
+        </v-btn-toggle>
+      </v-col>
+
       <v-spacer></v-spacer>
 
       <v-col cols="auto" align-self="center">
@@ -111,7 +121,7 @@
           @importQuestion="onImportQuestion"
           @add-syntax-hint="addSyntaxHint"
           :available-parameters="availableParameters"
-          :errorBlockIndex="errorEnnonce?.Block"
+          :errorBlockIndex="errorContent?.Block"
           ref="questionContent"
         >
         </QuestionContent>
@@ -123,6 +133,7 @@
 <script setup lang="ts">
 import {
   BlockKind,
+  ErrorKind,
   type Block,
   type errEnonce,
   type ErrParameters,
@@ -201,20 +212,25 @@ function onUpdateEnonce(v: Block[]) {
   history.add({ question });
 }
 
-let errorEnnonce = $ref<errEnonce | null>(null);
+let errorContent = $ref<errEnonce | null>(null);
+let errorIsCorrection = $ref(false);
 
 async function save() {
   const res = await controller.EditorSaveQuestionAndPreview({
     Id: question.Id,
-    Page: { enonce: question.Enonce, parameters: question.Parameters },
+    Page: {
+      enonce: question.Enonce,
+      parameters: question.Parameters,
+      correction: question.Correction,
+    },
   });
   if (res == undefined) {
     return;
   }
 
   if (res.IsValid) {
-    errorEnnonce = null;
     errorParameters = null;
+    errorContent = null;
     // notifie the parent on success
     emit("update", question);
     emit("preview", res.Question);
@@ -224,12 +240,21 @@ async function save() {
 }
 
 function onQuestionError(err: ErrQuestionInvalid) {
-  if (err.ParametersInvalid) {
-    errorEnnonce = null;
-    errorParameters = err.ErrParameters;
-  } else {
-    errorEnnonce = err.ErrEnonce;
-    errorParameters = null;
+  // reset previous error
+  errorParameters = null;
+  errorContent = null;
+  switch (err.Kind) {
+    case ErrorKind.ErrParameters_:
+      errorParameters = err.ErrParameters;
+      return;
+    case ErrorKind.ErrEnonce:
+      errorContent = err.ErrEnonce;
+      errorIsCorrection = false;
+      return;
+    case ErrorKind.ErrCorrection:
+      errorContent = err.ErrCorrection;
+      errorIsCorrection = true;
+      return;
   }
 }
 
@@ -262,7 +287,7 @@ async function checkParameters(params: Parameters) {
   if (out === undefined) return;
 
   // hide previous error
-  errorEnnonce = null;
+  errorContent = null;
   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
 
   availableParameters.value = out.Variables || [];
@@ -283,8 +308,9 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
 
 async function exportLatex() {
   const res = await controller.EditorQuestionExportLateX({
-    enonce: question.Enonce,
     parameters: question.Parameters,
+    enonce: question.Enonce,
+    correction: question.Correction,
   });
   if (res == undefined) return;
 

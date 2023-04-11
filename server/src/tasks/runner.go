@@ -70,11 +70,7 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 	out := make(InstantiateQuestionsOut, len(ids))
 	for index, id := range ids {
 		qu := questions[id]
-		vars, err := qu.Parameters.ToMap().Instantiate()
-		if err != nil {
-			return nil, err
-		}
-		instance, err := qu.Enonce.InstantiateWith(vars)
+		instance, vars, err := qu.Page().InstantiateErr()
 		if err != nil {
 			return nil, err
 		}
@@ -186,7 +182,7 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 			ownVars.CompleteFrom(sharedVars)
 		}
 
-		instance, err := question.Enonce.InstantiateWith(ownVars)
+		instance, err := question.Page().InstantiateWith(ownVars)
 		if err != nil {
 			return nil, err
 		}

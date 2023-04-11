@@ -13,7 +13,7 @@ import (
 func TestEventsJSON(t *testing.T) {
 	dice := newDiceThrow()
 	moves := Board.choices(0, int(dice.Face)).list()
-	question := client.Question{Enonce: client.Enonce{client.NumberFieldBlock{}}}
+	question := client.Question{Enonce: client.Enonce{client.NumberFieldBlock{}}, Correction: client.Enonce{}}
 	payload := StateUpdate{
 		Events: []ServerEvent{
 			PlayerJoin{},

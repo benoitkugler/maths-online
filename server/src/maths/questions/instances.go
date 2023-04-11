@@ -37,12 +37,13 @@ type ExerciceInstance struct {
 }
 
 type QuestionInstance struct {
-	Enonce EnonceInstance
+	Enonce     EnonceInstance
+	Correction EnonceInstance
 }
 
-func (qu QuestionInstance) fields() map[int]fieldInstance {
+func (qu EnonceInstance) fields() map[int]fieldInstance {
 	out := make(map[int]fieldInstance)
-	for _, block := range qu.Enonce {
+	for _, block := range qu {
 		if field, isField := block.(fieldInstance); isField {
 			out[field.fieldID()] = field
 		}
@@ -51,7 +52,7 @@ func (qu QuestionInstance) fields() map[int]fieldInstance {
 }
 
 // CheckSyntaxe returns an error message if the syntaxe is not
-func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) client.QuestionSyntaxCheckOut {
+func (qu EnonceInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) client.QuestionSyntaxCheckOut {
 	field, ok := qu.fields()[answer.ID]
 	if !ok {
 		return client.QuestionSyntaxCheckOut{
@@ -76,7 +77,7 @@ func (qu QuestionInstance) CheckSyntaxe(answer client.QuestionSyntaxCheckIn) cli
 // EvaluateAnswer check if the given answers are correct, and complete.
 // An empty [answers] is supported, corresponding to the case where the student
 // has left the question.
-func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) client.QuestionAnswersOut {
+func (qu EnonceInstance) EvaluateAnswer(answers client.QuestionAnswersIn) client.QuestionAnswersOut {
 	fields := qu.fields()
 
 	out := client.QuestionAnswersOut{
@@ -106,7 +107,7 @@ func (qu QuestionInstance) EvaluateAnswer(answers client.QuestionAnswersIn) clie
 }
 
 // CorrectAnswer returns the expected answer for the question.
-func (qu QuestionInstance) CorrectAnswer() (out client.QuestionAnswersIn) {
+func (qu EnonceInstance) CorrectAnswer() (out client.QuestionAnswersIn) {
 	fields := qu.fields()
 	out.Data = make(map[int]client.Answer, len(fields))
 	for k, v := range fields {
@@ -119,10 +120,14 @@ func (qu QuestionInstance) CorrectAnswer() (out client.QuestionAnswersIn) {
 // expected answers and converting expressions to LaTeX strings.
 func (qi QuestionInstance) ToClient() client.Question {
 	out := client.Question{
-		Enonce: make(client.Enonce, len(qi.Enonce)),
+		Enonce:     make(client.Enonce, len(qi.Enonce)),
+		Correction: make(client.Enonce, len(qi.Correction)),
 	}
 	for i, c := range qi.Enonce {
 		out.Enonce[i] = c.toClient()
+	}
+	for i, c := range qi.Correction {
+		out.Correction[i] = c.toClient()
 	}
 	return out
 }

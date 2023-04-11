@@ -105,6 +105,7 @@ func randQuestion() Question {
 		IdGroup:      randOptionalIdQuestiongroup(),
 		Enonce:       randque_Enonce(),
 		Parameters:   randque_Parameters(),
+		Correction:   randque_Enonce(),
 	}
 }
 

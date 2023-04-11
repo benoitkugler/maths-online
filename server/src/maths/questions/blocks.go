@@ -103,6 +103,7 @@ type Co string
 type QuestionPage struct {
 	Enonce     Enonce     `json:"enonce" gomacro-opaque:"dart"`
 	Parameters Parameters `json:"parameters" gomacro-opaque:"dart"` // random parameters shared by the all the blocks
+	Correction Enonce     `json:"correction" gomacro-opaque:"dart"`
 }
 
 // Instantiate returns a deep copy of `qu`, where all random parameters
@@ -110,7 +111,7 @@ type QuestionPage struct {
 // It assumes that the expressions and random parameters definitions are valid :
 // if an error is encountered, it is returned as a TextInstance displaying the error.
 func (qu QuestionPage) Instantiate() (out QuestionInstance, vars expression.Vars) {
-	out, vars, err := qu.instantiate()
+	out, vars, err := qu.InstantiateErr()
 	if err != nil {
 		out = QuestionInstance{Enonce: EnonceInstance{
 			TextInstance{
@@ -125,31 +126,47 @@ func (qu QuestionPage) Instantiate() (out QuestionInstance, vars expression.Vars
 	return out, vars
 }
 
-func (qu QuestionPage) instantiate() (QuestionInstance, expression.Vars, error) {
+func (qu QuestionPage) InstantiateWith(params expression.Vars) (QuestionInstance, error) {
+	enonce, err := qu.Enonce.InstantiateWith(params)
+	if err != nil {
+		return QuestionInstance{}, err
+	}
+	correction, err := qu.Correction.InstantiateWith(params)
+	if err != nil {
+		return QuestionInstance{}, err
+	}
+	return QuestionInstance{enonce, correction}, err
+}
+
+// InstantiateErr is a shortcut to :
+// - instantiate [Parameters]
+// - instantiate [Enonce] with these parameters
+// - instantiate [Correction] with these parameters
+func (qu QuestionPage) InstantiateErr() (QuestionInstance, expression.Vars, error) {
 	// generate random params
 	rp, err := qu.Parameters.ToMap().Instantiate()
 	if err != nil {
 		return QuestionInstance{}, nil, err
 	}
-	out, err := qu.Enonce.InstantiateWith(rp)
-	return out, rp, err
+	instance, err := qu.InstantiateWith(rp)
+	return instance, rp, err
 }
 
 // InstantiateWith uses the given values to instantiate the general question
-func (qu Enonce) InstantiateWith(params expression.Vars) (QuestionInstance, error) {
+func (qu Enonce) InstantiateWith(params expression.Vars) (EnonceInstance, error) {
 	enonce := make(EnonceInstance, len(qu))
 	var currentID int
 	for j, bl := range qu {
 		var err error
 		enonce[j], err = bl.instantiate(params, currentID)
 		if err != nil {
-			return QuestionInstance{}, err
+			return nil, err
 		}
 		if _, isField := enonce[j].(fieldInstance); isField {
 			currentID++
 		}
 	}
-	return QuestionInstance{Enonce: enonce}, nil
+	return enonce, nil
 }
 
 // TextPart is either a plain text, a LaTeX code or an expression

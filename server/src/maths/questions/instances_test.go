@@ -54,9 +54,7 @@ func TestQuestionInstance_CompareAnswer(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		qu := QuestionInstance{
-			Enonce: tt.fields,
-		}
+		qu := tt.fields
 		if got := qu.EvaluateAnswer(client.QuestionAnswersIn{Data: tt.args}); !reflect.DeepEqual(got.Results, tt.want) {
 			t.Errorf("QuestionInstance.CompareAnswer(%v) = %v, want %v", tt.args, got.Results, tt.want)
 		}

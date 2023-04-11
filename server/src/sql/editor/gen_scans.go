@@ -656,6 +656,7 @@ func scanOneQuestion(row scanner) (Question, error) {
 		&item.IdGroup,
 		&item.Enonce,
 		&item.Parameters,
+		&item.Correction,
 	)
 	return item, err
 }
@@ -724,22 +725,22 @@ func ScanQuestions(rs *sql.Rows) (Questions, error) {
 // Insert one Question in the database and returns the item with id filled.
 func (item Question) Insert(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`INSERT INTO questions (
-		subtitle, difficulty, needexercice, idgroup, enonce, parameters
+		subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction
 		) VALUES (
-		$1, $2, $3, $4, $5, $6
+		$1, $2, $3, $4, $5, $6, $7
 		) RETURNING *;
-		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters)
+		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters, item.Correction)
 	return ScanQuestion(row)
 }
 
 // Update Question in the database and returns the new version.
 func (item Question) Update(tx DB) (out Question, err error) {
 	row := tx.QueryRow(`UPDATE questions SET (
-		subtitle, difficulty, needexercice, idgroup, enonce, parameters
+		subtitle, difficulty, needexercice, idgroup, enonce, parameters, correction
 		) = (
-		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING *;
-		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters, item.Id)
+		$1, $2, $3, $4, $5, $6, $7
+		) WHERE id = $8 RETURNING *;
+		`, item.Subtitle, item.Difficulty, item.NeedExercice, item.IdGroup, item.Enonce, item.Parameters, item.Correction, item.Id)
 	return ScanQuestion(row)
 }
 

@@ -208,7 +208,7 @@ func (r *Room) removePlayer(player Player) Events {
 
 // isAnswerValid validate `a` against the current question
 func (g *game) isAnswerValid(a Answer) bool {
-	result := g.question.Question.EvaluateAnswer(a.Answer).IsCorrect()
+	result := g.question.Question.Enonce.EvaluateAnswer(a.Answer).IsCorrect()
 	return result
 }
 
@@ -498,7 +498,9 @@ func (gs *game) emitQuestion() ShowQuestion {
 	// select the question among the pool...
 	question := gs.options.Questions[cat].sample()
 	// ...and instantiate it
-	instance, vars := questions.QuestionPage{Enonce: question.Enonce, Parameters: question.Parameters}.Instantiate()
+	instance, vars := question.Page().Instantiate()
+	// Note that we do not use the correction during the game
+	instance.Correction = nil
 
 	gs.question = QuestionContent{
 		Categorie: cat,

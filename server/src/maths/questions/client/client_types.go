@@ -6,7 +6,8 @@ import (
 )
 
 type Question struct {
-	Enonce Enonce
+	Enonce     Enonce
+	Correction Enonce
 }
 
 type Enonce []Block

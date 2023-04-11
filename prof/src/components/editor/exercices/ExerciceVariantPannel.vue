@@ -1,36 +1,47 @@
 <template>
   <v-card class="mt-1 px-2">
     <v-row no-gutters>
-      <v-col cols="auto" align-self="center">
-        <v-pagination
-          :length="(exercice.Questions || []).length"
-          :total-visible="(exercice.Questions || []).length"
-          :model-value="questionIndex + 1"
-          @update:model-value="(oneBased) => (questionIndex = oneBased - 1)"
-          density="compact"
-        ></v-pagination>
+      <v-col md="5" align-self="center">
+        <v-row no-gutters>
+          <v-col cols="auto" align-self="center">
+            <v-pagination
+              :length="(exercice.Questions || []).length"
+              :total-visible="(exercice.Questions || []).length"
+              :model-value="questionIndex + 1"
+              @update:model-value="(oneBased) => (questionIndex = oneBased - 1)"
+              density="compact"
+            ></v-pagination>
+          </v-col>
+          <v-col cols="auto" align-self="center">
+            <v-btn
+              icon
+              size="x-small"
+              variant="elevated"
+              title="Ajouter une question"
+              @click="createQuestion"
+              class="mr-1"
+              :disabled="props.isReadonly"
+            >
+              <v-icon color="success">mdi-plus</v-icon>
+            </v-btn>
+            <v-btn
+              icon
+              size="x-small"
+              variant="elevated"
+              title="Ordre et barème des questions"
+              @click="showSkeletonDetails = true"
+            >
+              <v-icon>mdi-cog</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-col>
+
       <v-col cols="auto" align-self="center">
-        <v-btn
-          icon
-          size="x-small"
-          variant="elevated"
-          title="Ajouter une question"
-          @click="createQuestion"
-          class="mr-1"
-          :disabled="props.isReadonly"
-        >
-          <v-icon color="success">mdi-plus</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          size="x-small"
-          variant="elevated"
-          title="Ordre et barème des questions"
-          @click="showSkeletonDetails = true"
-        >
-          <v-icon>mdi-cog</v-icon>
-        </v-btn>
+        <v-btn-toggle variant="tonal" class="py-1" density="compact">
+          <v-btn size="small">énoncé</v-btn>
+          <v-btn size="small">Correction</v-btn>
+        </v-btn-toggle>
       </v-col>
 
       <v-spacer></v-spacer>
@@ -136,7 +147,7 @@
           @importQuestion="onImportQuestion"
           @add-syntax-hint="addSyntaxHint"
           :available-parameters="[]"
-          :errorBlockIndex="errorEnnonce?.Block"
+          :errorBlockIndex="errorContent?.Block"
           ref="questionContent"
         >
         </QuestionContent>
@@ -163,8 +174,9 @@
   </SnackErrorParameters>
 
   <SnackErrorEnonce
-    :error="errorEnnonce"
-    @close="errorEnnonce = null"
+    :error="errorContent"
+    :is-correction="errorIsCorrection"
+    @close="errorContent = null"
   ></SnackErrorEnonce>
 
   <v-dialog max-width="800" v-model="showSkeletonDetails">
@@ -182,6 +194,7 @@
 import {
   BlockKind,
   DifficultyTag,
+  ErrorKind,
   type Block,
   type errEnonce,
   type ErrParameters,
@@ -348,7 +361,8 @@ let isCheckingParameters = $ref(false);
 let errorParameters = $ref<ErrParameters | null>(null);
 const showErrorParameters = computed(() => errorParameters != null);
 
-let errorEnnonce = $ref<errEnonce | null>(null);
+let errorContent = $ref<errEnonce | null>(null);
+let errorIsCorrection = $ref(false);
 
 async function checkParameters(ps: Parameters) {
   if (editSharedParams) {
@@ -369,7 +383,7 @@ async function checkParameters(ps: Parameters) {
   if (out === undefined) return;
 
   // hide previous error
-  errorEnnonce = null;
+  errorContent = null;
 
   errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
   if (errorParameters != null) {
@@ -392,7 +406,7 @@ async function save() {
   }
 
   if (res.IsValid) {
-    errorEnnonce = null;
+    errorContent = null;
     errorParameters = null;
 
     notifieUpdate(exercice);
@@ -403,13 +417,23 @@ async function save() {
 }
 
 function onQuestionError(index: number, err: ErrQuestionInvalid) {
-  if (err.ParametersInvalid) {
-    errorEnnonce = null;
-    errorParameters = err.ErrParameters;
-  } else {
-    errorEnnonce = err.ErrEnonce;
-    errorParameters = null;
+  // reset previous error
+  errorParameters = null;
+  errorContent = null;
+  switch (err.Kind) {
+    case ErrorKind.ErrParameters_:
+      errorParameters = err.ErrParameters;
+      break;
+    case ErrorKind.ErrEnonce:
+      errorContent = err.ErrEnonce;
+      errorIsCorrection = false;
+      break;
+    case ErrorKind.ErrCorrection:
+      errorContent = err.ErrCorrection;
+      errorIsCorrection = true;
+      break;
   }
+
   // go to the faulty question
   questionIndex = index;
 }
@@ -467,6 +491,7 @@ async function exportLatex() {
       exercice.Questions?.map((qu) => ({
         enonce: qu.Question.Enonce,
         parameters: qu.Question.Parameters,
+        correction: qu.Question.Correction,
       })) || [],
     Parameters: exercice.Exercice.Parameters,
   });

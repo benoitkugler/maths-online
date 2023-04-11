@@ -36,7 +36,7 @@ func ValidateAllQuestions(db ed.DB) error {
 func validateAllQuestions(qus ed.Questions, exercices ed.Exercices) error {
 	var errs []string
 	for id, q := range qus {
-		page := questions.QuestionPage{Enonce: q.Enonce, Parameters: q.Parameters}
+		page := questions.QuestionPage{Enonce: q.Enonce, Parameters: q.Parameters, Correction: q.Correction}
 		if q.NeedExercice.Valid {
 			ex := exercices[q.NeedExercice.ID]
 			page.Parameters = append(page.Parameters, ex.Parameters...)

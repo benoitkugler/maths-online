@@ -929,11 +929,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		}
 	}
 
-	instanceParams, err := params.Page.Parameters.ToMap().Instantiate()
-	if err != nil {
-		return SaveQuestionAndPreviewOut{}, err
-	}
-	question, err := params.Page.Enonce.InstantiateWith(instanceParams)
+	question, instanceParams, err := params.Page.InstantiateErr()
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
@@ -973,17 +969,13 @@ func exportQuestionLatex(question questions.QuestionPage) (ExportQuestionLatexOu
 		return ExportQuestionLatexOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
-	instanceParams, err := question.Parameters.ToMap().Instantiate()
-	if err != nil {
-		return ExportQuestionLatexOut{}, err
-	}
-	instance, err := question.Enonce.InstantiateWith(instanceParams)
+	instance, _, err := question.InstantiateErr()
 	if err != nil {
 		return ExportQuestionLatexOut{}, err
 	}
 
 	return ExportQuestionLatexOut{
 		IsValid: true,
-		Latex:   instance.ToLatex(),
+		Latex:   instance.Enonce.ToLatex(),
 	}, nil
 }

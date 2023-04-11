@@ -54,11 +54,11 @@ const latexHeader = `
 	\makeatother
 `
 
-func (qu QuestionInstance) toLatex(standalone bool) string {
-	chunks := make([]string, len(qu.Enonce))
+func (qu EnonceInstance) toLatex(standalone bool) string {
+	chunks := make([]string, len(qu))
 	// we add an extra new line between two text blocks
 	isPreviousText := false
-	for i, p := range qu.Enonce {
+	for i, p := range qu {
 		_, isText := p.(TextInstance)
 
 		if isPreviousText && isText {
@@ -83,11 +83,11 @@ func (qu QuestionInstance) toLatex(standalone bool) string {
 	return code
 }
 
-func (qu QuestionInstance) ToLatex() string {
+func (qu EnonceInstance) ToLatex() string {
 	return qu.toLatex(true)
 }
 
-func InstancesToLatex(questions []QuestionInstance) string {
+func InstancesToLatex(questions []EnonceInstance) string {
 	latexCodes := make([]string, len(questions))
 	for i, qu := range questions {
 		latexCodes[i] = `\item ` + qu.toLatex(false)

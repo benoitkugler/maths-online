@@ -113,8 +113,22 @@ export interface ErrParameters {
 export interface ErrQuestionInvalid {
   ErrParameters: ErrParameters;
   ErrEnonce: errEnonce;
-  ParametersInvalid: boolean;
+  ErrCorrection: errEnonce;
+  Kind: ErrorKind;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.ErrorKind
+export enum ErrorKind {
+  ErrParameters_ = 0,
+  ErrEnonce = 1,
+  ErrCorrection = 2,
+}
+
+export const ErrorKindLabels: { [key in ErrorKind]: string } = {
+  [ErrorKind.ErrParameters_]: "",
+  [ErrorKind.ErrEnonce]: "",
+  [ErrorKind.ErrCorrection]: "",
+};
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ExpressionFieldBlock
 export interface ExpressionFieldBlock {
   Expression: string;
@@ -271,6 +285,7 @@ export interface ProofStatement {
 export interface QuestionPage {
   enonce: Enonce;
   parameters: Parameters;
+  correction: Enonce;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {
@@ -1092,6 +1107,7 @@ export interface Question {
   IdGroup: OptionalIdQuestiongroup;
   Enonce: Enonce;
   Parameters: Parameters;
+  Correction: Enonce;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Questiongroup
 export interface Questiongroup {

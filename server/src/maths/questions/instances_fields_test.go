@@ -274,7 +274,7 @@ func TestInstantiate01(t *testing.T) {
 		},
 	}
 
-	qu, _, err := bug01.instantiate()
+	qu, _, err := bug01.InstantiateErr()
 	tu.AssertNoErr(t, err)
 
 	qu.ToClient() // test there is no crash

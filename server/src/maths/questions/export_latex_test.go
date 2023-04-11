@@ -111,7 +111,7 @@ func TestExportLatex(t *testing.T) {
 
 	tu.GenerateLatex(t, latexQu, "export-question.pdf")
 
-	ques := []QuestionInstance{qu, qu, qu}
+	ques := []EnonceInstance{qu, qu, qu}
 
 	latexEx := InstancesToLatex(ques)
 	tu.GenerateLatex(t, latexEx, "export-exercice.pdf")

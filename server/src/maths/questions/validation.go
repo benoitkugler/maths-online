@@ -64,37 +64,44 @@ type errEnonce struct {
 	Vars  map[string]string // the actual values used when the error was encountered, or nil
 }
 
+type ErrorKind uint8
+
+const (
+	ErrParameters_ ErrorKind = iota
+	ErrEnonce
+	ErrCorrection
+)
+
 // ErrQuestionInvalid is returned by  Question.Validate()
-// It is either an error about the random parameters, or the blocks content.
+// It is either an error about the random parameters, or the blocks content (enonce or correction).
 type ErrQuestionInvalid struct {
-	ErrParameters     ErrParameters
-	ErrEnonce         errEnonce
-	ParametersInvalid bool
+	ErrParameters ErrParameters
+	ErrEnonce     errEnonce
+	ErrCorrection errEnonce
+	Kind          ErrorKind // indicates which field is valid
 }
 
 func (e ErrQuestionInvalid) Error() string {
-	if e.ParametersInvalid {
+	switch e.Kind {
+	case ErrParameters_:
 		return fmt.Sprintf("invalid question parameters: %v", e.ErrParameters)
+	case ErrEnonce:
+		return fmt.Sprintf("invalid question blocks: %v", e.ErrEnonce)
+	case ErrCorrection:
+		return fmt.Sprintf("invalid correction blocks: %v", e.ErrCorrection)
+	default:
+		panic("exhaustive switch")
 	}
-	return fmt.Sprintf("invalid question blocks: %v", e.ErrEnonce)
 }
 
-// Validate ensure the random parameters and enonce blocks are sound.
-// If not, an `ErrQuestionInvalid` is returned.
-func (qu QuestionPage) Validate() error {
-	if err := qu.Parameters.Validate(); err != nil {
-		return ErrQuestionInvalid{ParametersInvalid: true, ErrParameters: err.(ErrParameters)}
-	}
-
-	params := qu.Parameters.ToMap()
-
+func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) {
 	// setup the validators
 	var err error
-	validators := make([]validator, len(qu.Enonce))
-	for i, block := range qu.Enonce {
+	validators := make([]validator, len(en))
+	for i, block := range en {
 		validators[i], err = block.setupValidator(params)
 		if err != nil {
-			return ErrQuestionInvalid{ErrEnonce: errEnonce{Block: i, Error: err.Error()}}
+			return false, errEnonce{Block: i, Error: err.Error()}
 		}
 	}
 
@@ -113,9 +120,29 @@ func (qu QuestionPage) Validate() error {
 					varsS[k.String()] = v.String()
 				}
 
-				return ErrQuestionInvalid{ErrEnonce: errEnonce{Block: i, Error: err.Error(), Vars: varsS}}
+				return false, errEnonce{Block: i, Error: err.Error(), Vars: varsS}
 			}
 		}
+	}
+
+	return true, errEnonce{}
+}
+
+// Validate ensure the random parameters and enonce blocks are sound.
+// If not, an `ErrQuestionInvalid` is returned.
+func (qu QuestionPage) Validate() error {
+	if err := qu.Parameters.Validate(); err != nil {
+		return ErrQuestionInvalid{Kind: ErrParameters_, ErrParameters: err.(ErrParameters)}
+	}
+
+	params := qu.Parameters.ToMap()
+
+	if ok, err := qu.Enonce.validate(params); !ok {
+		return ErrQuestionInvalid{Kind: ErrEnonce, ErrEnonce: err}
+	}
+
+	if ok, err := qu.Correction.validate(params); !ok {
+		return ErrQuestionInvalid{Kind: ErrCorrection, ErrCorrection: err}
 	}
 
 	return nil

@@ -242,6 +242,7 @@ export interface ProofStatement {
 export interface QuestionPage {
   enonce: Enonce;
   parameters: Parameters;
+  correction: Enonce;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.RadioFieldBlock
 export interface RadioFieldBlock {

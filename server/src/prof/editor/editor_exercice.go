@@ -1244,7 +1244,6 @@ func (ct *Controller) EditorExerciceExportLateX(c echo.Context) error {
 }
 
 func exportExerciceLatex(exercice ExportExerciceLatexIn) (ExportExerciceLatexOut, error) {
-	ques := make([]questions.QuestionInstance, len(exercice.Questions))
 	for index, question := range exercice.Questions {
 		toCheck := question.Parameters
 		toCheck = append(toCheck, exercice.Parameters...) // add the shared parameters
@@ -1263,6 +1262,7 @@ func exportExerciceLatex(exercice ExportExerciceLatexIn) (ExportExerciceLatexOut
 	if err != nil {
 		return ExportExerciceLatexOut{}, err
 	}
+	ques := make([]questions.EnonceInstance, len(exercice.Questions))
 	for index, question := range exercice.Questions {
 		instanceParams, err := question.Parameters.ToMap().Instantiate()
 		if err != nil {

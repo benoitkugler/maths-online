@@ -20,8 +20,8 @@
       <v-row no-gutters>
         <v-col>
           <v-checkbox
+            class="pr-1"
             density="compact"
-            class="pr-2"
             hide-details
             label="Gras"
             :model-value="props.modelValue.Bold"
@@ -30,8 +30,8 @@
         </v-col>
         <v-col>
           <v-checkbox
+            class="pr-0"
             density="compact"
-            class="pr-2"
             hide-details
             label="Italique"
             :model-value="props.modelValue.Italic"
