@@ -7,7 +7,7 @@
       <v-col align-self="center" cols="auto">
         <v-btn variant="flat" @click="emit('back')">
           <v-icon>mdi-format-list-bulleted</v-icon>
-          Détails
+          Afficher la liste
         </v-btn>
       </v-col>
     </v-row>

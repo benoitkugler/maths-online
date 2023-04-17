@@ -16,7 +16,13 @@
       <v-col md="5" v-if="!hasEditorSimplified"> </v-col>
 
       <v-col cols="auto" align-self="center">
-        <v-btn-toggle variant="tonal" class="py-1" density="compact">
+        <v-btn-toggle
+          variant="tonal"
+          class="py-1"
+          density="compact"
+          :model-value="modeEnonce ? 0 : 1"
+          @update:model-value="(i:number) => (modeEnonce = i == 0)"
+        >
           <v-btn size="small">énoncé</v-btn>
           <v-btn size="small">Correction</v-btn>
         </v-btn-toggle>
@@ -40,6 +46,7 @@
           <block-bar
             @add="addBlock"
             :simplified="hasEditorSimplified"
+            :hide-answer-fields="!modeEnonce"
           ></block-bar>
         </v-menu>
       </v-col>
@@ -116,13 +123,24 @@
       </v-col>
       <v-col class="pr-1">
         <QuestionContent
+          v-if="modeEnonce"
           :model-value="question.Enonce || []"
           @update:model-value="onUpdateEnonce"
           @importQuestion="onImportQuestion"
           @add-syntax-hint="addSyntaxHint"
           :available-parameters="availableParameters"
-          :errorBlockIndex="errorContent?.Block"
-          ref="questionContent"
+          :errorBlockIndex="errorIsCorrection ? undefined : errorContent?.Block"
+          ref="questionEnonceNode"
+        >
+        </QuestionContent>
+        <QuestionContent
+          v-else
+          :model-value="question.Correction || []"
+          @update:model-value="onUpdateCorrection"
+          @importQuestion="onImportQuestion"
+          :available-parameters="availableParameters"
+          :errorBlockIndex="errorIsCorrection ? errorContent?.Block : undefined"
+          ref="questionCorrectionNode"
         >
         </QuestionContent>
       </v-col>
@@ -171,6 +189,8 @@ const emit = defineEmits<{
 
 let question = $ref(copy(props.question));
 
+let modeEnonce = $ref(true); // false for correction
+
 watch(props, () => {
   question = copy(props.question);
 });
@@ -201,14 +221,26 @@ function restoreHistory(snapshot: historyEntry) {
   question = snapshot.question;
 }
 
-let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
+let questionEnonceNode = $ref<InstanceType<typeof QuestionContent> | null>(
+  null
+);
+let questionCorrectionNode = $ref<InstanceType<typeof QuestionContent> | null>(
+  null
+);
 function addBlock(kind: BlockKind) {
-  if (questionContent == null) return;
-  questionContent.addBlock(kind);
+  if (modeEnonce) {
+    questionEnonceNode?.addBlock(kind);
+  } else {
+    questionCorrectionNode?.addBlock(kind);
+  }
 }
 
 function onUpdateEnonce(v: Block[]) {
   question.Enonce = v;
+  history.add({ question });
+}
+function onUpdateCorrection(v: Block[]) {
+  question.Correction = v;
   history.add({ question });
 }
 
@@ -250,10 +282,12 @@ function onQuestionError(err: ErrQuestionInvalid) {
     case ErrorKind.ErrEnonce:
       errorContent = err.ErrEnonce;
       errorIsCorrection = false;
+      modeEnonce = true;
       return;
     case ErrorKind.ErrCorrection:
       errorContent = err.ErrCorrection;
       errorIsCorrection = true;
+      modeEnonce = false;
       return;
   }
 }
@@ -265,6 +299,7 @@ function download() {
 async function onImportQuestion(imported: Question) {
   // only import the data fields
   question.Enonce = imported.Enonce;
+  question.Correction = imported.Correction;
   question.Parameters = imported.Parameters;
 
   history.add({ question });
@@ -294,7 +329,7 @@ async function checkParameters(params: Parameters) {
 }
 
 async function addSyntaxHint(block: ExpressionFieldBlock) {
-  if (questionContent == null) return;
+  if (questionEnonceNode == null) return;
 
   const res = await controller.EditorGenerateSyntaxHint({
     Block: block,
@@ -303,7 +338,10 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
   });
   if (res == undefined) return;
 
-  questionContent?.addExistingBlock({ Kind: BlockKind.TextBlock, Data: res });
+  questionEnonceNode?.addExistingBlock({
+    Kind: BlockKind.TextBlock,
+    Data: res,
+  });
 }
 
 async function exportLatex() {

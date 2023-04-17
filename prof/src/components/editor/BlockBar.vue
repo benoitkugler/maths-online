@@ -12,21 +12,24 @@
     >
       {{ labels[kind].label }}
     </v-list-item>
-    <v-divider></v-divider>
-    <v-list-subheader
-      ><h3 class="text-pink">Champs de réponse</h3></v-list-subheader
-    >
-    <v-list-item
-      rounded
-      dense
-      class="py-0 bg-pink-lighten-4 ma-1"
-      v-for="kind in fieldKinds"
-      link
-      :key="kind"
-      @click="emit('add', kind)"
-    >
-      {{ labels[kind].label }}
-    </v-list-item>
+
+    <template v-if="!props.hideAnswerFields">
+      <v-divider></v-divider>
+      <v-list-subheader
+        ><h3 class="text-pink">Champs de réponse</h3></v-list-subheader
+      >
+      <v-list-item
+        rounded
+        dense
+        class="py-0 bg-pink-lighten-4 ma-1"
+        v-for="kind in fieldKinds"
+        link
+        :key="kind"
+        @click="emit('add', kind)"
+      >
+        {{ labels[kind].label }}
+      </v-list-item>
+    </template>
   </v-list>
 </template>
 
@@ -36,6 +39,7 @@ import { BlockKindLabels, sortedBlockKindLabels } from "@/controller/editor";
 
 interface Props {
   simplified: boolean;
+  hideAnswerFields: boolean;
 }
 
 const props = defineProps<Props>();

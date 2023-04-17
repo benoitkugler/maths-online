@@ -38,7 +38,13 @@
       </v-col>
 
       <v-col cols="auto" align-self="center">
-        <v-btn-toggle variant="tonal" class="py-1" density="compact">
+        <v-btn-toggle
+          variant="tonal"
+          class="py-1"
+          density="compact"
+          :model-value="modeEnonce ? 0 : 1"
+          @update:model-value="(i:number) => (modeEnonce = i == 0)"
+        >
           <v-btn size="small">énoncé</v-btn>
           <v-btn size="small">Correction</v-btn>
         </v-btn-toggle>
@@ -63,6 +69,7 @@
           <BlockBar
             @add="addBlock"
             :simplified="hasEditorSimplified"
+            :hide-answer-fields="!modeEnonce"
           ></BlockBar>
         </v-menu>
       </v-col>
@@ -142,13 +149,24 @@
       </v-col>
       <v-col class="pr-1">
         <QuestionContent
+          v-if="modeEnonce"
           :model-value="question.Question.Enonce || []"
-          @update:model-value="updateQuestion"
+          @update:model-value="onUpdateEnonce"
           @importQuestion="onImportQuestion"
           @add-syntax-hint="addSyntaxHint"
           :available-parameters="[]"
-          :errorBlockIndex="errorContent?.Block"
-          ref="questionContent"
+          :errorBlockIndex="errorIsCorrection ? undefined : errorContent?.Block"
+          ref="questionEnonceNode"
+        >
+        </QuestionContent>
+        <QuestionContent
+          v-else
+          :model-value="question.Question.Correction || []"
+          @update:model-value="onUpdateCorrection"
+          @importQuestion="onImportQuestion"
+          :available-parameters="[]"
+          :errorBlockIndex="errorIsCorrection ? errorContent?.Block : undefined"
+          ref="questionCorrectionNode"
         >
         </QuestionContent>
       </v-col>
@@ -248,6 +266,8 @@ let exercice = $ref<ExerciceExt>({
   Questions: [],
 });
 
+let modeEnonce = $ref(true); // false for correction
+
 onMounted(async () => {
   await fetchExercice();
   refreshExercicePreview(props.exerciceHeader.Id);
@@ -343,18 +363,29 @@ function restoreHistory(snapshot: ExerciceExt) {
   notifieUpdate(snapshot);
 }
 
-function updateQuestion(qu: Block[]) {
-  if (!question) return;
-  question.Question.Enonce = qu;
-  history.add(exercice);
+let questionEnonceNode = $ref<InstanceType<typeof QuestionContent> | null>(
+  null
+);
+let questionCorrectionNode = $ref<InstanceType<typeof QuestionContent> | null>(
+  null
+);
+function addBlock(kind: BlockKind) {
+  if (modeEnonce) {
+    questionEnonceNode?.addBlock(kind);
+  } else {
+    questionCorrectionNode?.addBlock(kind);
+  }
 }
 
-let questionContent = $ref<InstanceType<typeof QuestionContent> | null>(null);
-function addBlock(kind: BlockKind) {
-  if (questionContent == null) {
-    return;
-  }
-  questionContent.addBlock(kind);
+function onUpdateEnonce(v: Block[]) {
+  if (!question) return;
+  question.Question.Enonce = v;
+  history.add(exercice);
+}
+function onUpdateCorrection(v: Block[]) {
+  if (!question) return;
+  question.Question.Correction = v;
+  history.add(exercice);
 }
 
 let isCheckingParameters = $ref(false);
@@ -427,10 +458,12 @@ function onQuestionError(index: number, err: ErrQuestionInvalid) {
     case ErrorKind.ErrEnonce:
       errorContent = err.ErrEnonce;
       errorIsCorrection = false;
+      modeEnonce = true;
       break;
     case ErrorKind.ErrCorrection:
       errorContent = err.ErrCorrection;
       errorIsCorrection = true;
+      modeEnonce = false;
       break;
   }
 
@@ -449,8 +482,9 @@ function download() {
 async function onImportQuestion(imported: Question) {
   if (!question) return;
   // only import the data fields
-  question.Question.Parameters = imported.Parameters;
   question.Question.Enonce = imported.Enonce;
+  question.Question.Correction = imported.Correction;
+  question.Question.Parameters = imported.Parameters;
 
   history.add(exercice);
 
@@ -473,7 +507,7 @@ async function createQuestion() {
 let showSkeletonDetails = $ref(false);
 
 async function addSyntaxHint(block: ExpressionFieldBlock) {
-  if (questionContent == null || question == null) return;
+  if (questionEnonceNode == null || question == null) return;
 
   const res = await controller.EditorGenerateSyntaxHint({
     Block: block,
@@ -482,7 +516,10 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
   });
   if (res == undefined) return;
 
-  questionContent?.addExistingBlock({ Kind: BlockKind.TextBlock, Data: res });
+  questionEnonceNode?.addExistingBlock({
+    Kind: BlockKind.TextBlock,
+    Data: res,
+  });
 }
 
 async function exportLatex() {

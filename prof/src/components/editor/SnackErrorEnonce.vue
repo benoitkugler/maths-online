@@ -29,7 +29,7 @@
         <v-row no-gutters>
           <v-col>
             <b
-              >Erreur dans la contenu de la
+              >Erreur dans le contenu de la
               {{ props.isCorrection ? "correction" : "question" }}</b
             >
           </v-col>
