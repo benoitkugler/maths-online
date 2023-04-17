@@ -255,6 +255,7 @@ async function save() {
       parameters: question.Parameters,
       correction: question.Correction,
     },
+    ShowCorrection: !modeEnonce,
   });
   if (res == undefined) {
     return;

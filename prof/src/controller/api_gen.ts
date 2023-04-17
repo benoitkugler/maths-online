@@ -658,12 +658,14 @@ export interface ListQuestionsOut {
 export interface LoopbackShowExercice {
   Exercice: unknown;
   Progression: unknown;
+  ShowCorrection: boolean;
   Origin: QuestionPage[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestion
 export interface LoopbackShowQuestion {
   Question: unknown;
   Params: unknown;
+  ShowCorrection: boolean;
   Origin: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.OriginKind
@@ -713,6 +715,7 @@ export interface SaveExerciceAndPreviewIn {
   Parameters: Parameters;
   Questions: Question[] | null;
   CurrentQuestion: number;
+  ShowCorrection: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewOut
 export interface SaveExerciceAndPreviewOut {
@@ -725,6 +728,7 @@ export interface SaveExerciceAndPreviewOut {
 export interface SaveQuestionAndPreviewIn {
   Id: IdQuestion;
   Page: QuestionPage;
+  ShowCorrection: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionAndPreviewOut
 export interface SaveQuestionAndPreviewOut {

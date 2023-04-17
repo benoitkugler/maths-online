@@ -20,12 +20,20 @@ type LoopbackShowQuestion struct {
 	Question client.Question `gomacro-opaque:"typescript"`
 	Params   tasks.Params    `gomacro-opaque:"typescript"`
 
+	// Set the initial view to display the correction,
+	// instead of the enonce.
+	ShowCorrection bool
+
 	Origin questions.QuestionPage
 }
 
 type LoopbackShowExercice struct {
 	Exercice    tasks.InstantiatedWork `gomacro-opaque:"typescript"`
 	Progression tasks.ProgressionExt   `gomacro-opaque:"typescript"`
+
+	// Set the initial view to display the correction,
+	// instead of the enonce.
+	ShowCorrection bool
 
 	Origin []questions.QuestionPage
 }

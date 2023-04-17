@@ -548,6 +548,10 @@ func (ct *Controller) EditorSaveQuestionMeta(c echo.Context) error {
 type SaveQuestionAndPreviewIn struct {
 	Id   ed.IdQuestion
 	Page questions.QuestionPage
+
+	// Set the initial view to display the correction,
+	// instead of the enonce.
+	ShowCorrection bool
 }
 
 type ListQuestionsOut struct {
@@ -935,9 +939,10 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		return SaveQuestionAndPreviewOut{}, err
 	}
 	questionOut := LoopbackShowQuestion{
-		Question: question.ToClient(),
-		Params:   taAPI.NewParams(instanceParams),
-		Origin:   params.Page,
+		Question:       question.ToClient(),
+		Params:         taAPI.NewParams(instanceParams),
+		Origin:         params.Page,
+		ShowCorrection: params.ShowCorrection,
 	}
 
 	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil

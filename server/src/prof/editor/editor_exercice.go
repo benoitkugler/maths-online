@@ -704,7 +704,7 @@ func (ct *Controller) EditorExerciceCreateQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data, -1)
+	preview, err := newExercicePreview(data, -1, false)
 	if err != nil {
 		return err
 	}
@@ -778,7 +778,7 @@ func (ct *Controller) EditorExerciceImportQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data, -1)
+	preview, err := newExercicePreview(data, -1, false)
 	if err != nil {
 		return err
 	}
@@ -858,7 +858,7 @@ func (ct *Controller) EditorExerciceDuplicateQuestion(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data, -1)
+	preview, err := newExercicePreview(data, -1, false)
 	if err != nil {
 		return err
 	}
@@ -943,7 +943,7 @@ func (ct *Controller) EditorExerciceUpdateQuestions(c echo.Context) error {
 		return err
 	}
 
-	preview, err := newExercicePreview(data, -1)
+	preview, err := newExercicePreview(data, -1, false)
 	if err != nil {
 		return err
 	}
@@ -1086,6 +1086,9 @@ type SaveExerciceAndPreviewIn struct {
 	Parameters      questions.Parameters // shared parameters
 	Questions       []ed.Question        // questions content
 	CurrentQuestion int                  // to update the preview accordingly
+	// Set the initial view to display the correction,
+	// instead of the enonce.
+	ShowCorrection bool
 }
 
 type SaveExerciceAndPreviewOut struct {
@@ -1174,7 +1177,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		}
 	}
 
-	preview, err := newExercicePreview(data, params.CurrentQuestion)
+	preview, err := newExercicePreview(data, params.CurrentQuestion, params.ShowCorrection)
 	if err != nil {
 		return SaveExerciceAndPreviewOut{}, err
 	}
@@ -1185,7 +1188,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 // newExercicePreview instantiates the exercice and return preview data
 // [nextQuestion] is the index of the question to show in the preview,
 // or -1 for the summary
-func newExercicePreview(content taAPI.ExerciceData, nextQuestion int) (LoopbackShowExercice, error) {
+func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrection bool) (LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
 		return LoopbackShowExercice{}, err
@@ -1211,7 +1214,8 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int) (LoopbackS
 			NextQuestion: nextQuestion,
 			Questions:    progression,
 		},
-		Origin: questionOrigins,
+		Origin:         questionOrigins,
+		ShowCorrection: showCorrection,
 	}, nil
 }
 

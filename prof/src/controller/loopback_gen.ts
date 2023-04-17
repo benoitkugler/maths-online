@@ -502,12 +502,14 @@ export interface LoopbackServerEvent {
 export interface LoopbackShowExercice {
   Exercice: unknown;
   Progression: unknown;
+  ShowCorrection: boolean;
   Origin: QuestionPage[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestion
 export interface LoopbackShowQuestion {
   Question: unknown;
   Params: unknown;
+  ShowCorrection: boolean;
   Origin: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestionAnswerIn

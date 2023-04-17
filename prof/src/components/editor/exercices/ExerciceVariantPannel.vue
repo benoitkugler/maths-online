@@ -293,6 +293,7 @@ async function refreshExercicePreview(id: IdExercice) {
     Parameters: [], // ignored
     Questions: [], // ignored
     CurrentQuestion: -1,
+    ShowCorrection: false,
   });
   if (res == undefined) return;
   emit("preview", res.Preview);
@@ -431,6 +432,7 @@ async function save() {
     Parameters: exercice.Exercice.Parameters,
     Questions: exercice.Questions?.map((qu) => qu.Question) || [],
     CurrentQuestion: questionIndex,
+    ShowCorrection: !modeEnonce,
   });
   if (res == undefined) {
     return;
