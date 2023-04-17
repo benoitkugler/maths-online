@@ -23,7 +23,7 @@
           :group="currentExercicegroup"
           :all-tags="allKnownTags"
           @back="backToList"
-          @preview="(ex) => preview?.showExercice(ex)"
+          @preview="(ex: LoopbackShowExercice) => preview?.showExercice(ex)"
         ></exercicegroup-pannel>
       </v-col>
       <v-col cols="auto">
@@ -43,6 +43,7 @@ import {
   type Index,
   type Query,
   type TagsDB,
+  type LoopbackShowExercice,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { emptyTagsDB } from "@/controller/editor";

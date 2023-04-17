@@ -22,7 +22,7 @@
   >
     <drop-zone
       v-if="showDropZone"
-      @drop="(origin) => swapBlocks(origin, 0)"
+      @drop="(origin: number) => swapBlocks(origin, 0)"
     ></drop-zone>
     <div
       v-for="(row, index) in rows"
@@ -46,7 +46,7 @@
       </BlockContainer>
       <drop-zone
         v-if="showDropZone"
-        @drop="(origin) => swapBlocks(origin, index + 1)"
+        @drop="(origin: number) => swapBlocks(origin, index + 1)"
       ></drop-zone>
     </div>
   </div>

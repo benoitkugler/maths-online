@@ -26,8 +26,8 @@
     <QuestionVariantPannel
       :question="ownVariants[variantIndex]"
       :readonly="isReadonly"
-      @update="(qu) => (ownVariants[variantIndex] = qu)"
-      @preview="(qu) => emit('preview', qu)"
+      @update="(qu: Question) => (ownVariants[variantIndex] = qu)"
+      @preview="(qu: LoopbackShowQuestion) => emit('preview', qu)"
     ></QuestionVariantPannel>
   </ResourceScafold>
 </template>

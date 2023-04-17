@@ -8,7 +8,7 @@
               :length="(exercice.Questions || []).length"
               :total-visible="(exercice.Questions || []).length"
               :model-value="questionIndex + 1"
-              @update:model-value="(oneBased) => (questionIndex = oneBased - 1)"
+              @update:model-value="(oneBased: number) => (questionIndex = oneBased - 1)"
               density="compact"
             ></v-pagination>
           </v-col>
@@ -203,7 +203,7 @@
       :exercice="exercice"
       :is-readonly="props.isReadonly"
       @update="notifieUpdate"
-      @preview="(qu) => emit('preview', qu)"
+      @preview="(qu: LoopbackShowExercice) => emit('preview', qu)"
     ></SkeletonDetails>
   </v-dialog>
 </template>

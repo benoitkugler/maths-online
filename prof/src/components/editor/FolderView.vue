@@ -17,7 +17,7 @@
         :key="index"
         class="my-4"
         :level="level"
-        @clicked="(chapter) => emit('goTo', [level.Level, chapter])"
+        @clicked="(chapter: string) => emit('goTo', [level.Level, chapter])"
       ></FolderLevelRow>
     </v-card-text>
   </v-card>

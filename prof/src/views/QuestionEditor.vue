@@ -16,7 +16,7 @@
           :variants="currentVariants"
           :all-tags="allKnownTags"
           @back="backToList"
-          @preview="(qu) => preview?.showQuestion(qu)"
+          @preview="(qu: LoopbackShowQuestion) => preview?.showQuestion(qu)"
         ></QuestiongroupPannel>
         <keep-alive>
           <QuestiongroupList
@@ -46,6 +46,7 @@ import {
   type Question,
   type QuestiongroupExt,
   type TagsDB,
+  type LoopbackShowQuestion,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "@vue/runtime-core";
