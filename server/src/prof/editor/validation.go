@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
@@ -36,7 +35,7 @@ func ValidateAllQuestions(db ed.DB) error {
 func validateAllQuestions(qus ed.Questions, exercices ed.Exercices) error {
 	var errs []string
 	for id, q := range qus {
-		page := questions.QuestionPage{Enonce: q.Enonce, Parameters: q.Parameters, Correction: q.Correction}
+		page := q.Page()
 		if q.NeedExercice.Valid {
 			ex := exercices[q.NeedExercice.ID]
 			page.Parameters = append(page.Parameters, ex.Parameters...)

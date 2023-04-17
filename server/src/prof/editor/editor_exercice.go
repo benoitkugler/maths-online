@@ -1141,6 +1141,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 			qu := data.QuestionsMap[incomming.Id]
 			// update the content
 			qu.Enonce = incomming.Enonce
+			qu.Correction = incomming.Correction
 			qu.Parameters = incomming.Parameters
 			data.QuestionsMap[incomming.Id] = qu
 		}
@@ -1193,7 +1194,7 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int) (LoopbackS
 	qus, _ := content.QuestionsList()
 	questionOrigins := make([]questions.QuestionPage, len(qus))
 	for i, qu := range qus {
-		questionOrigins[i] = questions.QuestionPage{Enonce: qu.Enonce, Parameters: qu.Parameters}
+		questionOrigins[i] = qu.Page()
 	}
 
 	if nextQuestion >= len(instance.Questions) {

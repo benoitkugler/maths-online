@@ -922,6 +922,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	// if the question is owned : save it, else only preview
 	if group.IdTeacher == userID {
 		qu.Enonce = params.Page.Enonce
+		qu.Correction = params.Page.Correction
 		qu.Parameters = params.Page.Parameters
 		_, err := qu.Update(ct.db)
 		if err != nil {
