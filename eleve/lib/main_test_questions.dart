@@ -35,7 +35,7 @@ final questionComplexe = Question([
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
   const FigurePointFieldBlock(
       Figure(Drawings({}, [], [], [], []), bounds, true, true), 3)
-]);
+], []);
 
 const questionComplexeAnswers = {
   0: NumberAnswer(11.5),
@@ -48,7 +48,7 @@ Question numberQuestion(String title) {
   return Question([
     TextBlock([T(title)], false, false, false),
     const NumberFieldBlock(0, 10)
-  ]);
+  ], []);
 }
 
 final qu1 = numberQuestion("Test 1");
@@ -243,8 +243,8 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   @override
   void initState() {
     controller = LoopackQuestionController(
-        LoopbackShowQuestion(questionComplexe, [],
-            const ServerQuestions.QuestionPage(null, null)),
+        LoopbackShowQuestion(questionComplexe, [], false,
+            const ServerQuestions.QuestionPage(null, null, null)),
         _FieldAPI(),
         onValid);
     super.initState();
@@ -266,8 +266,10 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
     await Future<void>.delayed(const Duration(milliseconds: 200));
 
     const rep = {0: true, 1: false, 2: true, 3: true};
-    LoopbackQuestionW.showServerValidation(
-        const QuestionAnswersOut(rep, {}), context);
+
+    final snack = LoopbackQuestionW.serverValidation(
+        const QuestionAnswersOut(rep, {}), () {});
+    ScaffoldMessenger.of(context).showSnackBar(snack);
     setState(() {
       controller.setFeedback(rep);
     });

@@ -19,7 +19,7 @@ const typicalUpdates = [
         DiceThrow(2),
         PossibleMoves("Katia", [1, 3, 7], "0"),
         Move([0, 1, 2, 3, 4, 5], 5),
-        ShowQuestion(60, Categorie.orange, 0, Question([])),
+        ShowQuestion(60, Categorie.orange, 0, Question([], [])),
         PlayerAnswerResults(Categorie.orange, {
           "0": PlayerAnswerResult(false, false),
           "1": PlayerAnswerResult(false, false),

@@ -470,7 +470,6 @@ class _FieldsBuilder {
         _handleTableBlock(element);
 
         // editable widgets
-
       } else if (element is NumberFieldBlock) {
         _handleNumberFieldBlock(element);
       } else if (element is ExpressionFieldBlock) {
@@ -516,7 +515,7 @@ class _ListRows extends StatelessWidget {
   final Map<int, FieldController> fields;
   final Color color;
 
-  final Widget button;
+  final Widget? button;
 
   const _ListRows(this.content, this.fields, this.color, this.button,
       {Key? key})
@@ -533,8 +532,46 @@ class _ListRows extends StatelessWidget {
           )
           .toList(),
       const SizedBox(height: 10.0),
-      button
+      if (button != null) button!
     ], rows.zoomableKeys, shrinkWrap: true);
+  }
+}
+
+/// [CorrectionW] displays the correction of a question
+class CorrectionW extends StatelessWidget {
+  final Enonce correction;
+  final Color color;
+
+  /// If not null, [footerQuote] is displayed at the bottom of the screen.
+  /// An empty QuoteData may be provided to occupy the space but hide
+  /// the text.
+  final QuoteData? footerQuote;
+
+  const CorrectionW(this.correction, this.color, this.footerQuote, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: ColoredTitle("Correction", color),
+          ),
+          Expanded(child: _ListRows(correction, const {}, color, null)),
+          if (footerQuote != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: AnimatedOpacity(
+                  duration: const Duration(seconds: 2),
+                  opacity: footerQuote!.isEmpty ? 0 : 1,
+                  child: Quote(footerQuote!)),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -545,7 +582,7 @@ class QuestionW extends StatefulWidget {
 
   final Color color;
 
-  /// [title] is the tilte of the question
+  /// [title] is the title of the question
   final String title;
 
   const QuestionW(

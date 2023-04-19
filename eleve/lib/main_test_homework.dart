@@ -31,7 +31,7 @@ final questionComplexe = Question([
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
   const FigurePointFieldBlock(
       Figure(Drawings({}, [], [], [], []), bounds, true, true), 3)
-]);
+], []);
 
 const questionComplexeAnswers = {
   0: NumberAnswer(11.5),
@@ -43,7 +43,7 @@ Question numberQuestion(String title) {
   return Question([
     TextBlock([T(title)], false, false, false),
     const NumberFieldBlock(0, 10)
-  ]);
+  ], []);
 }
 
 final qu1 = numberQuestion("Test 1");

@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:math';
+import 'package:eleve/questions/question.dart';
+import 'package:eleve/quotes.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:eleve/build_mode.dart';
@@ -56,6 +59,11 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       questionData =
           LoopackQuestionController(event, widget.api, evaluateQuestionAnswer);
       exerciceData = null;
+
+      if (questionData!.data.showCorrection) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _showQuestionCorrection());
+      }
     } else if (event is LoopbackShowExercice) {
       questionData = null;
       exerciceData = LoopbackExerciceController(event, widget.api);
@@ -73,13 +81,25 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       if (!mounted) {
         return;
       }
-      LoopbackQuestionW.showServerValidation(res.answers, context);
+      final snack = LoopbackQuestionW.serverValidation(
+          res.answers, _showQuestionCorrection);
+      ScaffoldMessenger.of(context).showSnackBar(snack);
       setState(() {
         questionData!.setFeedback(res.answers.results);
       });
     } catch (e) {
       _showError(e);
     }
+  }
+
+  void _showQuestionCorrection() {
+    if (questionData == null) return;
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+              appBar: AppBar(),
+              body: CorrectionW(questionData!.data.question.correction,
+                  randColor(), pickQuote()),
+            )));
   }
 
   void _showCorrectAnswer() async {
@@ -145,8 +165,13 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       case _Mode.question:
         return LoopbackQuestionW(questionData!, _showCorrectAnswer);
       case _Mode.exercice:
-        return ExerciceW(widget.api, exerciceData!.controller,
-            onShowCorrectAnswer: _showCorrectAnswer);
+        return ExerciceW(
+          widget.api,
+          exerciceData!.controller,
+          onShowCorrectAnswer: _showCorrectAnswer,
+          showCorrectionButtonOnFail: true,
+          showCurrentCorrection: exerciceData!.data.showCorrection,
+        );
     }
   }
 }

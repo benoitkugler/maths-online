@@ -44,7 +44,7 @@ enum ExerciceStatus {
   answering,
 
   /// the wrong answers are displayed in red, validation triggers retry
-  displayingFeedback
+  displayingFeedback,
 }
 
 class ParallelAnswerStatus {
@@ -84,6 +84,11 @@ class ExerciceController {
       : _questions = [] {
     _questions = _createControllers(api);
     _refreshStates();
+  }
+
+  Enonce get currentCorrection {
+    if (questionIndex == null) return [];
+    return exeAndProg.exercice.questions[questionIndex!].question.correction;
   }
 
   List<_ExerciceQuestionController> _createControllers(FieldAPI api) {
@@ -263,9 +268,17 @@ class ExerciceW extends StatefulWidget {
 
   final void Function()? onShowCorrectAnswer;
 
-  const ExerciceW(this.api, this.controller,
-      {Key? key, this.onShowCorrectAnswer})
-      : super(key: key);
+  final bool showCorrectionButtonOnFail;
+  final bool showCurrentCorrection;
+
+  const ExerciceW(
+    this.api,
+    this.controller, {
+    Key? key,
+    this.onShowCorrectAnswer,
+    this.showCorrectionButtonOnFail = false,
+    this.showCurrentCorrection = false,
+  }) : super(key: key);
 
   @override
   State<ExerciceW> createState() => _ExerciceWState();
@@ -292,6 +305,10 @@ class _ExerciceWState extends State<ExerciceW> {
     nextQuestions = [];
     widget.controller.reset();
     widget.controller.onValid = onQuestionButtonClick;
+
+    if (widget.showCurrentCorrection) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
+    }
   }
 
   // handle the errors
@@ -347,23 +364,32 @@ class _ExerciceWState extends State<ExerciceW> {
     final isCorrect = resp.results[index]!.isCorrect;
     final hasNextQuestion =
         isCorrect && ct.exeAndProg.progression.nextQuestion != -1;
+
+    final SnackBarAction? action = hasNextQuestion
+        ? SnackBarAction(
+            label: "Continuer l'exercice",
+            textColor: Colors.black,
+            onPressed: () {
+              setState(() {
+                ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
+              });
+            },
+          )
+        : (widget.showCorrectionButtonOnFail && !isCorrect)
+            ? SnackBarAction(
+                textColor: Colors.white,
+                label: "Afficher la correction",
+                onPressed: _showCorrection)
+            : null;
+
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade200,
+      backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade400,
       duration: Duration(
           seconds: hasNextQuestion ? 10000 : 4), // block on correct answer
-      content:
-          Text(isCorrect ? "Bonne réponse ! Bravo." : "Réponse incorrecte"),
-      action: hasNextQuestion
-          ? SnackBarAction(
-              label: "Continuer l'exercice",
-              textColor: Colors.black,
-              onPressed: () {
-                setState(() {
-                  ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
-                });
-              },
-            )
-          : null,
+      content: Text(isCorrect
+          ? "Bonne réponse ! Bravo."
+          : "Dommage, la réponse est incorrecte"),
+      action: action,
     ));
 
     if (ct.exeAndProg.progression.nextQuestion == -1) {
@@ -379,6 +405,16 @@ class _ExerciceWState extends State<ExerciceW> {
         ct.showFeedback({index: resp.results[index]!});
       });
     }
+  }
+
+  void _showCorrection() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => Scaffold(
+        appBar: AppBar(),
+        body: CorrectionW(widget.controller.currentCorrection,
+            Colors.greenAccent, pickQuote()),
+      ),
+    ));
   }
 
   // only validate if all the questions have been completed
