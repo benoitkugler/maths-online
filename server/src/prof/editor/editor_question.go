@@ -592,16 +592,18 @@ func NewQuestiongroupExt(group ed.Questiongroup, variants []ed.Question, tags ed
 
 // QuestionHeader is a summary of the meta data of a question
 type QuestionHeader struct {
-	Id         ed.IdQuestion
-	Subtitle   string
-	Difficulty ed.DifficultyTag
+	Id            ed.IdQuestion
+	Subtitle      string
+	Difficulty    ed.DifficultyTag
+	HasCorrection bool // has the question a non empty [Correction] content
 }
 
 func newQuestionHeader(question ed.Question) QuestionHeader {
 	return QuestionHeader{
-		Id:         question.Id,
-		Subtitle:   question.Subtitle,
-		Difficulty: question.Difficulty,
+		Id:            question.Id,
+		Subtitle:      question.Subtitle,
+		Difficulty:    question.Difficulty,
+		HasCorrection: len(question.Correction) != 0,
 	}
 }
 

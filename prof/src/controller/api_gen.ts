@@ -695,6 +695,7 @@ export interface QuestionHeader {
   Id: IdQuestion;
   Subtitle: string;
   Difficulty: DifficultyTag;
+  HasCorrection: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionUpdateVisiblityIn
 export interface QuestionUpdateVisiblityIn {

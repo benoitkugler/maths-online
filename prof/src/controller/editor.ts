@@ -743,6 +743,7 @@ export interface VariantG {
   Id: number;
   Subtitle: string;
   Difficulty: DifficultyTag;
+  HasCorrection?: boolean;
 }
 
 /** filterTags returns the first tags matching query.

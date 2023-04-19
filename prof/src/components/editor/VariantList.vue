@@ -32,6 +32,16 @@
                   >Aucune</v-chip
                 >
               </v-col>
+              <v-col align-self="center">
+                <v-chip
+                  class="mx-2"
+                  label
+                  v-if="question.HasCorrection"
+                  size="small"
+                  color="green"
+                  >Avec correction</v-chip
+                >
+              </v-col>
             </v-row>
           </v-list-item>
         </v-list>
