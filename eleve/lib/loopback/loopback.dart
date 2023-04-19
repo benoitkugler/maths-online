@@ -59,15 +59,34 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       questionData =
           LoopackQuestionController(event, widget.api, evaluateQuestionAnswer);
       exerciceData = null;
-
-      if (questionData!.data.showCorrection) {
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _showQuestionCorrection());
-      }
     } else if (event is LoopbackShowExercice) {
       questionData = null;
       exerciceData = LoopbackExerciceController(event, widget.api);
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handleCorrection());
+  }
+
+// properly show correction or hide potential old route
+  void _handleCorrection() {
+    switch (mode) {
+      case _Mode.paused:
+        return _popToRoot();
+      case _Mode.exercice:
+        if (!exerciceData!.data.showCorrection) _popToRoot();
+        return;
+      case _Mode.question:
+        if (questionData!.data.showCorrection) {
+          _showQuestionCorrection();
+        } else {
+          _popToRoot();
+        }
+        return;
+    }
+  }
+
+  void _popToRoot() {
+    Navigator.popUntil(context, (Route<dynamic> route) => route.isFirst);
   }
 
   void _showError(dynamic error) {
