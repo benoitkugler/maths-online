@@ -91,10 +91,27 @@ func (Number) lexicographicOrder() int          { return 0 }
 func (constant) lexicographicOrder() int        { return 1 }
 func (operator) lexicographicOrder() int        { return 2 }
 func (Variable) lexicographicOrder() int        { return 3 }
-func (function) lexicographicOrder() int        { return 4 }
-func (indice) lexicographicOrder() int          { return 5 }
-func (specialFunction) lexicographicOrder() int { return 6 }
-func (roundFn) lexicographicOrder() int         { return 7 }
+func (matrix) lexicographicOrder() int          { return 4 }
+func (function) lexicographicOrder() int        { return 5 }
+func (indice) lexicographicOrder() int          { return 6 }
+func (specialFunction) lexicographicOrder() int { return 7 }
+func (roundFn) lexicographicOrder() int         { return 8 }
+
+type matrix [][]*Expr // with regular size, 1-indexed
+
+func (mt matrix) String() string {
+	rows := make([]string, len(mt))
+	for i, row := range mt {
+		cols := make([]string, len(row))
+		for j, col := range row {
+			cols[j] = col.String()
+		}
+		rows[i] = fmt.Sprintf("[%s]", strings.Join(cols, " ; "))
+	}
+	return fmt.Sprintf("[%s]", strings.Join(rows, ";"))
+}
+
+func (mt matrix) serialize(_, _ *Expr) string { return mt.String() }
 
 // roundFn act as a function, but takes an integer parameter
 // in addition to its regular parameter

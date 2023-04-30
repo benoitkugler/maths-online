@@ -117,7 +117,7 @@ func (op operator) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf("%s - %s", leftCode, rightCode)
 	case mult:
 		// check for implicit multiplication
-		if shouldOmitTimes(rightHasParenthesis, right) {
+		if shouldOmitTimes(left, rightHasParenthesis, right) {
 			return fmt.Sprintf(`%s %s`, leftCode, rightCode)
 		}
 		return fmt.Sprintf(`%s \times %s`, leftCode, rightCode)
@@ -197,6 +197,20 @@ func (v Variable) asLaTeX(_, _ *Expr) string {
 	return name
 }
 
+func (mt matrix) asLaTeX(_, _ *Expr) string {
+	rows := make([]string, len(mt))
+	for i, row := range mt {
+		cols := make([]string, len(row))
+		for j, col := range row {
+			cols[j] = col.AsLaTeX()
+		}
+		rows[i] = strings.Join(cols, " & ")
+	}
+	return fmt.Sprintf(`\begin{pmatrix} 
+		%s
+	\end{pmatrix}`, strings.Join(rows, "\\\\\n"))
+}
+
 func (c constant) asLaTeX(_, _ *Expr) string {
 	switch c {
 	case piConstant:
@@ -237,7 +251,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	}
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, Variable, roundFn, specialFunction, indice:
+	case Number, constant, function, Variable, roundFn, specialFunction, indice, matrix:
 		return false
 	case operator:
 		_ = exhaustiveOperatorSwitch
@@ -305,7 +319,7 @@ func (op operator) serialize(left, right *Expr) string {
 		return fmt.Sprintf("%s - %s", leftCode, rightCode)
 	case mult:
 		// check for implicit multiplication
-		if shouldOmitTimes(rightHasParenthesis, right) {
+		if shouldOmitTimes(left, rightHasParenthesis, right) {
 			return fmt.Sprintf(`%s%s`, leftCode, rightCode)
 		}
 		return fmt.Sprintf(`%s * %s`, leftCode, rightCode)
@@ -322,7 +336,7 @@ func (op operator) serialize(left, right *Expr) string {
 // left and right are assumed not to be nil
 // we are conservative here : only omit * when we are
 // certain it results in valid ouput
-func shouldOmitTimes(rightHasParenthesis bool, right *Expr) bool {
+func shouldOmitTimes(left *Expr, rightHasParenthesis bool, right *Expr) bool {
 	// with parenthesis, it is always valid to omit times
 	if rightHasParenthesis {
 		return true
@@ -333,6 +347,9 @@ func shouldOmitTimes(rightHasParenthesis bool, right *Expr) bool {
 		return true
 	case Number:
 		return false
+	case matrix:
+		_, leftIsMatrix := left.atom.(matrix)
+		return !leftIsMatrix
 	case operator:
 		// if the first term is not a number, it is safe to remove the *
 		// but otherwise not : 2 * 4 ^ 2

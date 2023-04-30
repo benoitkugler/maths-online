@@ -98,7 +98,7 @@ func (expr *Expr) isLinearTerm() (coeff float64, variable Variable, ok bool) {
 			}
 		}
 		return 0, Variable{}, false
-	case Number, constant, function, specialFunction, roundFn, indice:
+	case Number, constant, function, specialFunction, roundFn, indice, matrix:
 		return 0, Variable{}, false
 	default:
 		panic(exhaustiveAtomSwitch)

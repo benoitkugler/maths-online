@@ -23,7 +23,7 @@ func TestPanics(t *testing.T) {
 	testutils.ShouldPanic(t, func() { _ = (invalidOperator).serialize(nil, nil) })
 
 	testutils.ShouldPanic(t, func() { plus.needParenthesis(&Expr{}, false, true) })
-	testutils.ShouldPanic(t, func() { shouldOmitTimes(false, &Expr{}) })
+	testutils.ShouldPanic(t, func() { shouldOmitTimes(nil, false, &Expr{}) })
 	testutils.ShouldPanic(t, func() {
 		e := &Expr{atom: invalidOperator}
 		e.simplifyNumbers()

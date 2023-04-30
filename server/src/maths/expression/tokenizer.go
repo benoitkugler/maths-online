@@ -16,7 +16,7 @@ type tokenData interface {
 }
 
 func (symbol) isToken()              {}
-func (numberText) isToken()          {}
+func (nT) isToken()                  {}
 func (constant) isToken()            {}
 func (Variable) isToken()            {}
 func (function) isToken()            {}
@@ -72,6 +72,7 @@ const (
 	openCurly                  // {
 	closeCurly                 // }
 	underscore                 // _
+	openMatrix                 // [[
 
 	invalidSymbol
 )
@@ -94,12 +95,14 @@ func (sy symbol) String() string {
 		return "}"
 	case underscore:
 		return "_"
+	case openMatrix:
+		return "[["
 	default:
 		panic(exhaustiveSymbolSwitch)
 	}
 }
 
-type numberText string
+type nT string
 
 type tokenizer struct {
 	// caches used for peek and to handle implicit multiplication
@@ -146,7 +149,7 @@ func (tk *tokenizer) Next() token {
 // readTokenImplicitMult wraps readToken and handles implicit
 // multiplication.
 // When an implicit multiplication is detected, a corresponding
-// token is returned and `currentToken` and `currentToken` are updated accordingly
+// token is returned and `lastToken` and `currentToken` are updated accordingly
 func (tk *tokenizer) readTokenImplicitMult() (current, next token) {
 	nextToken := tk.readToken()
 	if isImplicitMult(tk.lastToken, nextToken) { // insert a mult
@@ -246,8 +249,15 @@ func (tk *tokenizer) readToken() (tok token) {
 		out.data = semicolon
 		tk.pos++
 	case c == '[':
-		out.data = openBracket
+		// look ahead for [[
 		tk.pos++
+		tk.skipWhitespace()
+		if tk.pos < len(tk.src) && tk.src[tk.pos] == '[' {
+			out.data = openMatrix
+			tk.pos++
+		} else {
+			out.data = openBracket
+		}
 	case c == ']':
 		out.data = closeBracket
 		tk.pos++
@@ -267,7 +277,7 @@ func (tk *tokenizer) readToken() (tok token) {
 		out.data = tk.readCustomSymbol()
 	case unicode.IsLetter(c): // either a function, a variable, Inf/inf or a constant
 		if isInf := tk.tryReadInf(); isInf {
-			out.data = numberText("inf")
+			out.data = nT("inf")
 		} else if isRound := tk.tryReadRoundFunction(); isRound {
 			out.data = roundFn{}
 		} else if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
@@ -296,7 +306,7 @@ func (tk *tokenizer) readToken() (tok token) {
 func isImplicitMultRight(t token) bool {
 	switch t := t.data.(type) {
 	case symbol:
-		return t == openPar // (...)(...)
+		return t == openPar || t == openMatrix // (...)(...) or ... [[ 2 ]]
 	case Variable, constant: // (...)y or ...(pi)
 		return true
 	case function: // (...)log()
@@ -312,7 +322,7 @@ func isImplicitMultRight(t token) bool {
 // the left of an implicit multiplication
 func isImplicitMultLeft(t token) bool {
 	switch t := t.data.(type) {
-	case numberText, constant: // 4x
+	case nT, constant: // 4x
 		return true
 	case symbol:
 		return t == closePar // (...)(...)
@@ -488,7 +498,7 @@ func (tk *tokenizer) readVariable() Variable {
 	return out
 }
 
-func (tk *tokenizer) readNumber() numberText {
+func (tk *tokenizer) readNumber() nT {
 	var buffer []rune
 	L := len(tk.src)
 	for ; tk.pos < L; tk.pos++ {
@@ -502,5 +512,5 @@ func (tk *tokenizer) readNumber() numberText {
 		}
 	}
 
-	return numberText(buffer)
+	return nT(buffer)
 }

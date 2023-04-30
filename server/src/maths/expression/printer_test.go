@@ -71,6 +71,11 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"λx",
 		// bug #172
 		"a^n / 2^(2n) ",
+		// matrix
+		"[[1; 4; x]; [2; y; 4]]",
+		"3[[1; 4; x]; [2; y; 4]]",
+		"[[1; 4; x]; [2; y; 4]] * [[1; 4; x]; [2; y; 4]]",
+		"[[1; 4; x]; [2; y; 4]] * ( [[1; 4; x]; [2; y; 4]] + 1)",
 	} {
 		e, err := Parse(expr)
 		if err != nil {

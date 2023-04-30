@@ -555,6 +555,41 @@ var expressions = [...]struct {
 			NewVarExpr(NewVarI(0, `\le`)),
 		}}}, false, // deprecated syntaxe
 	},
+	// matrix
+	{
+		"[[1]]", &Expr{atom: matrix{{newNb(1)}}}, false,
+	},
+	{
+		"[[1; 2]]", &Expr{atom: matrix{{newNb(1), newNb(2)}}}, false,
+	},
+	{
+		"[[1; 2]; [3; 4]]", &Expr{atom: matrix{{newNb(1), newNb(2)}, {newNb(3), newNb(4)}}}, false,
+	},
+	{
+		"[[ ]]", &Expr{atom: matrix{nil}}, false,
+	},
+	{
+		"[[1 + ]]", nil, true,
+	},
+	{
+		"[[1]; []]", nil, true,
+	},
+	{
+		"[[1]; ]", nil, true,
+	},
+	{
+		"[[1]; []", nil, true,
+	},
+	// matrices operations
+	{
+		"2 * [[1]]", &Expr{atom: mult, left: newNb(2), right: &Expr{atom: matrix{{newNb(1)}}}}, false,
+	},
+	{
+		"2 [[1]]", &Expr{atom: mult, left: newNb(2), right: &Expr{atom: matrix{{newNb(1)}}}}, false,
+	},
+	{
+		"[[1]] * [[3]]", &Expr{atom: mult, left: &Expr{atom: matrix{{newNb(1)}}}, right: &Expr{atom: matrix{{newNb(3)}}}}, false,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {

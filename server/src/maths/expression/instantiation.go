@@ -179,6 +179,21 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 			return NewVarExpr(atom), nil
 		}
 		return ctx.instantiate(atom)
+	case matrix:
+		mt := make(matrix, len(atom))
+		var err error
+		for i, row := range atom {
+			cols := make([]*Expr, len(row))
+			for j, col := range row {
+				cols[j], err = col.instantiate(ctx)
+				if err != nil {
+					return nil, err
+				}
+			}
+			mt[i] = cols
+		}
+		return &Expr{atom: mt}, nil
+
 	case specialFunction:
 		// generate random numbers
 		switch atom.kind {

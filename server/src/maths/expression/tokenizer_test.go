@@ -5,10 +5,67 @@ import (
 	"testing"
 )
 
+func TestTokens(t *testing.T) {
+	for _, test := range []struct {
+		expr   string
+		tokens []tokenData
+	}{
+		{"7x  + 8", []tokenData{nT("7"), mult, Variable{Name: 'x'}, plus, nT("8")}},
+		{"7*x", []tokenData{nT("7"), mult, Variable{Name: 'x'}}},
+		{"(2x + 1)(4x)", []tokenData{openPar, nT("2"), mult, Variable{Name: 'x'}, plus, nT("1"), closePar, mult, openPar, nT("4"), mult, Variable{Name: 'x'}, closePar}},
+		{"(x + 3)(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, nT("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, nT("4"), closePar}},
+		{"(x + 3)*(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, nT("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, nT("4"), closePar}},
+		{" (1+ 2 ) (x + 3) ", []tokenData{openPar, nT("1"), plus, nT("2"), closePar, mult, openPar, Variable{Name: 'x'}, plus, nT("3"), closePar}},
+		{"7log(10)", []tokenData{nT("7"), mult, logFn, openPar, nT("10"), closePar}},
+		{"7randPrime(1;10)", []tokenData{nT("7"), mult, randPrime, openPar, nT("1"), semicolon, nT("10"), closePar}},
+		{"randChoice(1;2)", []tokenData{randChoice, openPar, nT("1"), semicolon, nT("2"), closePar}},
+		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
+		{"choiceFrom()", []tokenData{choiceFrom, openPar, closePar}},
+		{"choiceFrom(x ; 2 )", []tokenData{choiceFrom, openPar, Variable{Name: 'x'}, semicolon, nT("2"), closePar}},
+		{"min(1)", []tokenData{minFn, openPar, nT("1"), closePar}},
+		{"max(1)", []tokenData{maxFn, openPar, nT("1"), closePar}},
+		{"forceDecimal(1/2)", []tokenData{forceDecimalFn, openPar, nT("1"), div, nT("2"), closePar}},
+		{"floor(1)", []tokenData{floorFn, openPar, nT("1"), closePar}},
+		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, nT("2.12"), semicolon, nT("5"), closePar}},
+		{"inf - inf + inf", []tokenData{nT("inf"), minus, nT("inf"), plus, nT("inf")}},
+		{"2 > 4", []tokenData{nT("2"), strictlyGreater, nT("4")}},
+		{"2 < 4", []tokenData{nT("2"), strictlyLesser, nT("4")}},
+		{"2 <= 4", []tokenData{nT("2"), lesser, nT("4")}},
+		{"2 >= 4", []tokenData{nT("2"), greater, nT("4")}},
+		{"2 == 4", []tokenData{nT("2"), equals, nT("4")}},
+		{"2pi^2", []tokenData{nT("2"), mult, piConstant, pow, nT("2")}},
+		{"(3;)", []tokenData{openPar, nT("3"), semicolon, closePar}},
+		{"{2;4;}", []tokenData{openCurly, nT("2"), semicolon, nT("4"), semicolon, closeCurly}},
+		{"]-inf;inf[", []tokenData{closeBracket, minus, nT("inf"), semicolon, nT("inf"), openBracket}},
+		// distinction between Variable and indice
+		{"a_1", []tokenData{NewVarI('a', "1")}},
+		{"a_{1}", []tokenData{NewVar('a'), underscore, openCurly, nT("1"), closeCurly}},
+		// variable and }
+		{"{s_1 }", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
+		{"{s_1}", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
+		// custom symbols
+		{`"\ge + 5"`, []tokenData{Variable{Name: 0, Indice: `\ge + 5`}}},
+		// factorial
+		{`2*n!`, []tokenData{nT("2"), mult, Variable{Name: 'n'}, factorial}},
+		// matrix
+		{`[[1; 4; x]; [2; y; 4]]`, []tokenData{
+			openMatrix, nT("1"), semicolon,
+			nT("4"), semicolon, NewVar('x'), closeBracket, semicolon,
+			openBracket, nT("2"), semicolon, NewVar('y'), semicolon, nT("4"), closeBracket, closeBracket,
+		}},
+		{`[ [ ] ]`, []tokenData{openMatrix, closeBracket, closeBracket}},
+		{`[ 2 ] ]`, []tokenData{openBracket, nT("2"), closeBracket, closeBracket}},
+	} {
+		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
+			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)
+		}
+	}
+}
+
 func TestTokenUnionTags(t *testing.T) {
 	for _, tk := range []tokenData{
 		symbol(0),
-		numberText(""),
+		nT(""),
 		constant(0),
 		Variable{},
 		function(0),
@@ -48,55 +105,6 @@ func TestPeekToken(t *testing.T) {
 		l1, l2 := allTokens(test)
 		if !reflect.DeepEqual(l1, l2) {
 			t.Fatalf("invalid peek tokens for %s: %v != %v", test, l1, l2)
-		}
-	}
-}
-
-func TestTokens(t *testing.T) {
-	for _, test := range []struct {
-		expr   string
-		tokens []tokenData
-	}{
-		{"7x  + 8", []tokenData{numberText("7"), mult, Variable{Name: 'x'}, plus, numberText("8")}},
-		{"7*x", []tokenData{numberText("7"), mult, Variable{Name: 'x'}}},
-		{"(2x + 1)(4x)", []tokenData{openPar, numberText("2"), mult, Variable{Name: 'x'}, plus, numberText("1"), closePar, mult, openPar, numberText("4"), mult, Variable{Name: 'x'}, closePar}},
-		{"(x + 3)(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("4"), closePar}},
-		{"(x + 3)*(x+4)", []tokenData{openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("4"), closePar}},
-		{" (1+ 2 ) (x + 3) ", []tokenData{openPar, numberText("1"), plus, numberText("2"), closePar, mult, openPar, Variable{Name: 'x'}, plus, numberText("3"), closePar}},
-		{"7log(10)", []tokenData{numberText("7"), mult, logFn, openPar, numberText("10"), closePar}},
-		{"7randPrime(1;10)", []tokenData{numberText("7"), mult, randPrime, openPar, numberText("1"), semicolon, numberText("10"), closePar}},
-		{"randChoice(1;2)", []tokenData{randChoice, openPar, numberText("1"), semicolon, numberText("2"), closePar}},
-		{"randDecDen()", []tokenData{randDenominator, openPar, closePar}},
-		{"choiceFrom()", []tokenData{choiceFrom, openPar, closePar}},
-		{"choiceFrom(x ; 2 )", []tokenData{choiceFrom, openPar, Variable{Name: 'x'}, semicolon, numberText("2"), closePar}},
-		{"min(1)", []tokenData{minFn, openPar, numberText("1"), closePar}},
-		{"max(1)", []tokenData{maxFn, openPar, numberText("1"), closePar}},
-		{"forceDecimal(1/2)", []tokenData{forceDecimalFn, openPar, numberText("1"), div, numberText("2"), closePar}},
-		{"floor(1)", []tokenData{floorFn, openPar, numberText("1"), closePar}},
-		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, numberText("2.12"), semicolon, numberText("5"), closePar}},
-		{"inf - inf + inf", []tokenData{numberText("inf"), minus, numberText("inf"), plus, numberText("inf")}},
-		{"2 > 4", []tokenData{numberText("2"), strictlyGreater, numberText("4")}},
-		{"2 < 4", []tokenData{numberText("2"), strictlyLesser, numberText("4")}},
-		{"2 <= 4", []tokenData{numberText("2"), lesser, numberText("4")}},
-		{"2 >= 4", []tokenData{numberText("2"), greater, numberText("4")}},
-		{"2 == 4", []tokenData{numberText("2"), equals, numberText("4")}},
-		{"2pi^2", []tokenData{numberText("2"), mult, piConstant, pow, numberText("2")}},
-		{"(3;)", []tokenData{openPar, numberText("3"), semicolon, closePar}},
-		{"{2;4;}", []tokenData{openCurly, numberText("2"), semicolon, numberText("4"), semicolon, closeCurly}},
-		{"]-inf;inf[", []tokenData{closeBracket, minus, numberText("inf"), semicolon, numberText("inf"), openBracket}},
-		// distinction between Variable and indice
-		{"a_1", []tokenData{NewVarI('a', "1")}},
-		{"a_{1}", []tokenData{NewVar('a'), underscore, openCurly, numberText("1"), closeCurly}},
-		// variable and }
-		{"{s_1 }", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
-		{"{s_1}", []tokenData{openCurly, Variable{Name: 's', Indice: "1"}, closeCurly}},
-		// custom symbols
-		{`"\ge + 5"`, []tokenData{Variable{Name: 0, Indice: `\ge + 5`}}},
-		// factorial
-		{`2*n!`, []tokenData{numberText("2"), mult, Variable{Name: 'n'}, factorial}},
-	} {
-		if got, _ := allTokens(test.expr); !reflect.DeepEqual(got, test.tokens) {
-			t.Fatalf("for %s, expected %v, got %v", test.expr, test.tokens, got)
 		}
 	}
 }

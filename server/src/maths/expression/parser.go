@@ -105,11 +105,12 @@ func (pr *parser) pop() *Expr {
 
 // if `acceptSemiColon` is true, a semi colon at the end
 // of the expression is interpreted as EOF (but not consumed)
+// a single [ is accepted as EOF
 func (pr *parser) parseExpression(acceptSemiColon bool) (*Expr, error) {
 	for {
 		peeked := pr.tk.Peek().data
 		if peeked == nil || peeked == closePar ||
-			peeked == closeCurly || peeked == openBracket || peeked == closeBracket ||
+			peeked == closeCurly || peeked == closeBracket || peeked == openBracket ||
 			(acceptSemiColon && peeked == semicolon) {
 			break
 		}
@@ -144,6 +145,8 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 			return pr.parseParenthesisBlock(tok.pos)
 		case closePar:
 			panic("internal error")
+		case openMatrix: // matrix/vector start
+			return pr.parseMatrix(tok.pos)
 		case semicolon, openBracket, closeBracket, openCurly, closeCurly:
 			return nil, ErrInvalidExpr{
 				Reason: fmt.Sprintf("symbole %s inattendu", data),
@@ -174,7 +177,7 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 		pr.variablePos[tok.pos] = data
 
 		return &Expr{atom: data}, nil
-	case numberText:
+	case nT:
 		nb, err := parseNumber(data, tok.pos)
 		if err != nil {
 			return nil, err
@@ -371,7 +374,7 @@ func (pr *parser) parseFunction(fn function, pos int) (*Expr, error) {
 	}, nil
 }
 
-func parseNumber(v numberText, pos int) (Number, error) {
+func parseNumber(v nT, pos int) (Number, error) {
 	out, err := strconv.ParseFloat(string(v), 64)
 	if err != nil {
 		return 0, ErrInvalidExpr{
@@ -387,7 +390,7 @@ func parseNumber(v numberText, pos int) (Number, error) {
 func (pr *parser) parsePositiveInt() (int, error) {
 	arg := pr.tk.Next()
 
-	v, ok := arg.data.(numberText)
+	v, ok := arg.data.(nT)
 	if !ok {
 		return 0, ErrInvalidExpr{
 			Reason: "nombre attendu",
@@ -470,8 +473,10 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expr, err error) {
 //		<expr>; <expr> [
 //	 <expr>; <expr>)
 //
+// [isCloser] must return [true] for symbol which are valid closing delimiters
+//
 // Note that the oppening symbol must have been read.
-// [isCloser] returns [true] for symbol which are valid closing delimiters
+// The closing delimiter is consumed and returned.
 func (pr *parser) parseExpressionList(isCloser func(symbol) bool) ([]*Expr, symbol, error) {
 	var args []*Expr
 	for {
@@ -526,8 +531,7 @@ func (pr *parser) parseExpressionList(isCloser func(symbol) bool) ([]*Expr, symb
 func (pr *parser) parseSpecialFunction(pos int, fn specialFunctionKind) (rd specialFunction, err error) {
 	// after a function name, their must be a (
 	// with optional whitespaces
-	par := pr.tk.Next()
-	if par.data != openPar {
+	if par := pr.tk.Next(); par.data != openPar {
 		return rd, ErrInvalidExpr{
 			Reason: fmt.Sprintf("parenthèse ouvrante manquante après %s", fn),
 			Pos:    pos,
@@ -590,4 +594,54 @@ func (rd specialFunction) validate(pos int) error {
 	}
 
 	return nil
+}
+
+// assume the first [[ has been read
+func (pr *parser) parseMatrix(pos int) (*Expr, error) {
+	isFirst := true
+	var mt matrix
+	for { // parse each rows
+		if !isFirst {
+			if open := pr.tk.Next(); open.data != openBracket {
+				return nil, ErrInvalidExpr{
+					Reason: fmt.Sprintf("ligne d'une matrice attendue (crochet ouvrant manquant)"),
+					Pos:    open.pos,
+				}
+			}
+		}
+
+		row, _, err := pr.parseExpressionList(func(s symbol) bool { return s == closeBracket })
+		if err != nil {
+			return nil, err
+		}
+
+		mt = append(mt, row)
+		isFirst = false
+
+		// two valid cases here : "]" to end the matrix, ";" to add a new row
+		next := pr.tk.Next()
+		if next.data == semicolon {
+			continue
+		} else if next.data == closeBracket {
+			break
+		} else {
+			return nil, ErrInvalidExpr{
+				Reason: fmt.Sprintf("] ou ; attendu dans une matrice"),
+				Pos:    next.pos,
+			}
+		}
+	}
+
+	// validate rows length : by construction, there is always a row
+	L := len(mt[0])
+	for _, row := range mt {
+		if len(row) != L {
+			return nil, ErrInvalidExpr{
+				Reason: fmt.Sprintf("les lignes d'une matrice doivent être de même taille (%d != %d)", len(row), L),
+				Pos:    pos,
+			}
+		}
+	}
+
+	return &Expr{atom: mt}, nil
 }

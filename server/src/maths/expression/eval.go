@@ -303,6 +303,10 @@ func (indice) eval(_, _ real, _ varEvaluer) (real, error) {
 	return real{}, errors.New("Une expression indicée ne peut pas être évaluée.")
 }
 
+func (matrix) eval(_, _ real, _ varEvaluer) (real, error) {
+	return real{}, errors.New("Une matrice ne peut pas être évaluée.")
+}
+
 func (va Variable) eval(_, _ real, b varEvaluer) (real, error) {
 	if b == nil {
 		return real{}, ErrMissingVariable{Missing: va}
