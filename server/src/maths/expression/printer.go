@@ -12,6 +12,14 @@ import (
 // for usual maths symbols.
 func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 
+func (mt matrix) defaultSimplify() {
+	for i := range mt {
+		for j := range mt[i] {
+			mt[i][j].DefaultSimplify()
+		}
+	}
+}
+
 // DefaultSimplify performs a serie of basic simplifications,
 // removing zero values and -(-...).
 // It is used before printing an expression, and should also be used
@@ -19,6 +27,15 @@ func defaultLatexResolver(v Variable) string { return unicodeToLaTeX[v.Name] }
 // Note that it applies a subset of the simplifications defined by
 // the [SimpleSimplifications] flag.
 func (expr *Expr) DefaultSimplify() {
+	if expr == nil {
+		return
+	}
+
+	if mat, ok := expr.atom.(matrix); ok {
+		mat.defaultSimplify()
+		return
+	}
+
 	for nbPasses := 0; nbPasses < 2; nbPasses++ {
 		expr.normalizeNegativeNumbers()
 		expr.extractNegativeInMults()
@@ -176,7 +193,7 @@ func (i indice) asLaTeX(left, right *Expr) string {
 	return i.serialize(left, right) // the syntaxe actually matches latex
 }
 
-func (r roundFn) asLaTeX(_, right *Expr) string {
+func (r roundFunc) asLaTeX(_, right *Expr) string {
 	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(), r.nbDigits)
 }
 
@@ -251,7 +268,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	}
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, Variable, roundFn, specialFunction, indice, matrix:
+	case Number, constant, function, Variable, roundFunc, specialFunction, indice, matrix:
 		return false
 	case operator:
 		_ = exhaustiveOperatorSwitch
@@ -343,7 +360,7 @@ func shouldOmitTimes(left *Expr, rightHasParenthesis bool, right *Expr) bool {
 	}
 
 	switch right.atom.(type) {
-	case Variable, constant, function, specialFunction, roundFn, indice:
+	case Variable, constant, function, specialFunction, roundFunc, indice:
 		return true
 	case Number:
 		return false

@@ -95,7 +95,7 @@ func (matrix) lexicographicOrder() int          { return 4 }
 func (function) lexicographicOrder() int        { return 5 }
 func (indice) lexicographicOrder() int          { return 6 }
 func (specialFunction) lexicographicOrder() int { return 7 }
-func (roundFn) lexicographicOrder() int         { return 8 }
+func (roundFunc) lexicographicOrder() int       { return 8 }
 
 type matrix [][]*Expr // with regular size, 1-indexed
 
@@ -113,17 +113,17 @@ func (mt matrix) String() string {
 
 func (mt matrix) serialize(_, _ *Expr) string { return mt.String() }
 
-// roundFn act as a function, but takes an integer parameter
+// roundFunc act as a function, but takes an integer parameter
 // in addition to its regular parameter
-type roundFn struct {
+type roundFunc struct {
 	nbDigits int
 }
 
-func (rd roundFn) String() string {
+func (rd roundFunc) String() string {
 	return rd.serialize(nil, nil)
 }
 
-func (rd roundFn) serialize(_, right *Expr) string {
+func (rd roundFunc) serialize(_, right *Expr) string {
 	return fmt.Sprintf("round(%s ; %d)", right.Serialize(), rd.nbDigits)
 }
 
@@ -198,8 +198,12 @@ const (
 	sqrtFn
 	sgnFn          // returns -1 0 or 1
 	isPrimeFn      // returns 0 or 1
-	round          // round(<expr>; <digits>) : round(1.1256, 2) = 1.123
 	forceDecimalFn // force fractions to be printed as decimal numbers
+	coeffFn        // extract a coefficient from a matrix
+	detFn          // determinant of a matrix
+	traceFn        // trace of a matrix
+	invertFn       // inverse of a matrix
+	transposeFn    // tranpose of a matrix
 
 	invalidFn
 )
@@ -234,6 +238,14 @@ func (fn function) String() string {
 		return "isPrime"
 	case forceDecimalFn:
 		return "forceDecimal"
+	case detFn:
+		return "det"
+	case traceFn:
+		return "trace"
+	case invertFn:
+		return "inv"
+	case transposeFn:
+		return "trans"
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}

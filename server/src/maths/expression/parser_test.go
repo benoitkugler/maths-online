@@ -446,9 +446,9 @@ var expressions = [...]struct {
 	{"round(x;2.2.)", nil, true},
 	{"round(x;)", nil, true},
 	{"round(x;2", nil, true},
-	{"round(x;2)", &Expr{atom: roundFn{2}, right: newVarExpr('x')}, false},
+	{"round(x;2)", &Expr{atom: roundFunc{2}, right: newVarExpr('x')}, false},
 	{"round(x + randInt(1;5);2)", &Expr{
-		atom: roundFn{2},
+		atom: roundFunc{2},
 		right: &Expr{
 			atom: plus,
 			left: newVarExpr('x'),

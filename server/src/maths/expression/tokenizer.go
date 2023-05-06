@@ -20,7 +20,7 @@ func (nT) isToken()                  {}
 func (constant) isToken()            {}
 func (Variable) isToken()            {}
 func (function) isToken()            {}
-func (roundFn) isToken()             {}
+func (roundFunc) isToken()           {}
 func (specialFunctionKind) isToken() {}
 func (operator) isToken()            {}
 
@@ -279,7 +279,7 @@ func (tk *tokenizer) readToken() (tok token) {
 		if isInf := tk.tryReadInf(); isInf {
 			out.data = nT("inf")
 		} else if isRound := tk.tryReadRoundFunction(); isRound {
-			out.data = roundFn{}
+			out.data = roundFunc{}
 		} else if fn, isSpecial := tk.tryReadSpecialFunction(); isSpecial {
 			out.data = fn
 		} else if fn, isFunction := tk.tryReadFunction(); isFunction {

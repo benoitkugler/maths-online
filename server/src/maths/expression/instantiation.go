@@ -162,7 +162,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 	ctx.currentVariable = Variable{} // when recursing, set tracker to zero
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, operator, function, roundFn, indice: // no-op, simply recurse
+	case Number, constant, function, roundFunc, indice: // no-op, simply recurse
 		left, err := expr.left.instantiate(ctx)
 		if err != nil {
 			return nil, err
@@ -173,6 +173,21 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		}
 		out := &Expr{atom: atom, left: left, right: right}
 		return out.tryEval(ctx), nil
+	case operator: // we expand matrices calculus
+		// recurse
+		left, err := expr.left.instantiate(ctx)
+		if err != nil {
+			return nil, err
+		}
+		right, err := expr.right.instantiate(ctx)
+		if err != nil {
+			return nil, err
+		}
+		out, err := matricesOperation(atom, left, right, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return out.tryEval(ctx), nil
 	case Variable:
 		// if the variable is not defined, just returns the free variable as an expression
 		if _, isDefined := ctx.defs[atom]; !isDefined {
@@ -180,20 +195,11 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		}
 		return ctx.instantiate(atom)
 	case matrix:
-		mt := make(matrix, len(atom))
-		var err error
-		for i, row := range atom {
-			cols := make([]*Expr, len(row))
-			for j, col := range row {
-				cols[j], err = col.instantiate(ctx)
-				if err != nil {
-					return nil, err
-				}
-			}
-			mt[i] = cols
+		mt, err := atom.instantiate(ctx)
+		if err != nil {
+			return nil, err
 		}
 		return &Expr{atom: mt}, nil
-
 	case specialFunction:
 		// generate random numbers
 		switch atom.kind {

@@ -26,7 +26,7 @@ func TestTokens(t *testing.T) {
 		{"max(1)", []tokenData{maxFn, openPar, nT("1"), closePar}},
 		{"forceDecimal(1/2)", []tokenData{forceDecimalFn, openPar, nT("1"), div, nT("2"), closePar}},
 		{"floor(1)", []tokenData{floorFn, openPar, nT("1"), closePar}},
-		{"round(2.12; 5)", []tokenData{roundFn{}, openPar, nT("2.12"), semicolon, nT("5"), closePar}},
+		{"round(2.12; 5)", []tokenData{roundFunc{}, openPar, nT("2.12"), semicolon, nT("5"), closePar}},
 		{"inf - inf + inf", []tokenData{nT("inf"), minus, nT("inf"), plus, nT("inf")}},
 		{"2 > 4", []tokenData{nT("2"), strictlyGreater, nT("4")}},
 		{"2 < 4", []tokenData{nT("2"), strictlyLesser, nT("4")}},
@@ -69,7 +69,7 @@ func TestTokenUnionTags(t *testing.T) {
 		constant(0),
 		Variable{},
 		function(0),
-		roundFn{},
+		roundFunc{},
 		specialFunctionKind(0),
 		operator(0),
 	} {

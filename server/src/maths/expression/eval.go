@@ -320,7 +320,7 @@ func roundTo(v float64, digits int) float64 {
 	return math.Round(v*exp) / exp
 }
 
-func (round roundFn) eval(_, right real, _ varEvaluer) (real, error) {
+func (round roundFunc) eval(_, right real, _ varEvaluer) (real, error) {
 	return newReal(roundTo(right.eval(), round.nbDigits)), nil
 }
 

@@ -75,8 +75,8 @@ func compareNodes(n1, n2 *Expr) int {
 				return c
 			}
 			return compareNodes(n1.right, n2.right)
-		case roundFn:
-			a2 := a2.(roundFn)
+		case roundFunc:
+			a2 := a2.(roundFunc)
 			if a1.nbDigits < a2.nbDigits {
 				return -1
 			} else if a1.nbDigits > a2.nbDigits {
@@ -592,6 +592,16 @@ func (expr *Expr) Substitute(vars Vars) {
 	if expr == nil {
 		return
 	}
+
+	if mat, ok := expr.atom.(matrix); ok {
+		for i := range mat {
+			for j := range mat {
+				mat[i][j].Substitute(vars)
+			}
+		}
+		return
+	}
+
 	expr.left.Substitute(vars)
 	expr.right.Substitute(vars)
 

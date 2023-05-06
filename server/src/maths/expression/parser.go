@@ -160,7 +160,7 @@ func (pr *parser) parseOneNode(acceptSemiColon bool) (*Expr, error) {
 		}
 	case operator:
 		return pr.parseOperator(data, tok.pos, acceptSemiColon)
-	case roundFn:
+	case roundFunc:
 		return pr.parseRoundFunction(tok.pos)
 	case specialFunctionKind:
 		rd, err := pr.parseSpecialFunction(tok.pos, data)
@@ -463,7 +463,7 @@ func (pr *parser) parseRoundFunction(pos int) (expr *Expr, err error) {
 		}
 	}
 
-	return &Expr{atom: roundFn{nbDigits: nbDigitsI}, right: arg}, nil
+	return &Expr{atom: roundFunc{nbDigits: nbDigitsI}, right: arg}, nil
 }
 
 // parses a semi colon separated list of expressions, followed by a closing delimiter,
