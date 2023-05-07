@@ -367,6 +367,8 @@ func (fn function) eval(_, right real, _ varEvaluer) (real, error) {
 		return newRealInt(0), nil
 	case forceDecimalFn:
 		return real{val: right.eval(), isRational: false}, nil
+	case detFn, traceFn, transposeFn, invertFn:
+		return real{}, errors.New("internal error: matrice functions are not evaluable")
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}
@@ -475,26 +477,52 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 	case maxFn:
 		_, max, err := minMax(r.args, res)
 		return newReal(max), err
+	case matCoeff:
+		mat, i, j := r.args[0], r.args[1], r.args[2]
+		if mat, ok := mat.atom.(matrix); ok {
+			n, m := mat.dims()
+			i, err := evalIntInRange(i, res, 1, n)
+			if err != nil {
+				return real{}, fmt.Errorf("Le deuxième argument de coeff() doit être un indice de ligne : %s", err)
+			}
+			j, err := evalIntInRange(j, res, 1, m)
+			if err != nil {
+				return real{}, fmt.Errorf("Le troisième argument de coeff() doit être un indice de colonne : %s", err)
+			}
+			// human -> computer covention
+			i--
+			j--
+			return mat[i][j].evalReal(res)
+		} else {
+			return real{}, fmt.Errorf("Le premier argument de coeff() doit être une matrice.")
+		}
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
+}
+
+func evalIntInRange(arg *Expr, res varEvaluer, min, max int) (int, error) {
+	i, err := arg.evalFloat(res)
+	if err != nil {
+		return 0, err
+	}
+	i_, ok := IsInt(i)
+	if !ok {
+		return 0, fmt.Errorf("valeur %f non entière", i)
+	}
+	if i_ < min || i_ > max {
+		return 0, fmt.Errorf("valeur %d en dehors de [%d;%d]", i_, min, max)
+	}
+	return i_, nil
 }
 
 // evaluate the selector and return the expression at the index
 // args must have length >= 2
 func choiceFromSelect(args []*Expr, res varEvaluer) (choice *Expr, err error) {
 	choices, selector := args[:len(args)-1], args[len(args)-1]
-	v, err := selector.evalFloat(res)
+	index, err := evalIntInRange(selector, res, 1, len(choices))
 	if err != nil {
-		return nil, err
-	}
-	var ok bool
-	index, ok := IsInt(v)
-	if !ok {
-		return nil, errors.New("Le dernier argument de la fonction choiceFrom doit être un entier.")
-	}
-	if index < 1 || index > len(choices) {
-		return nil, fmt.Errorf("Le dernier argument de la fonction choiceFrom doit être un compris entre 1 et %d.", len(choices))
+		return nil, fmt.Errorf("Le dernier argument de la fonction choiceFrom est invalide : %s", err)
 	}
 	index -= 1 // using "human" convention
 	return choices[index], nil

@@ -6,7 +6,7 @@ import (
 )
 
 // an empty string return nil
-func mustParse(t *testing.T, s string) *Expr {
+func mustParse(t testing.TB, s string) *Expr {
 	t.Helper()
 
 	if s == "" {
@@ -312,6 +312,7 @@ func TestExpression_Substitute(t *testing.T) {
 				NewVar('x'): NewNb(3),
 			}, "A+2+3",
 		},
+		{"[[x; y]; [1; 2]]", Vars{NewVar('x'): newNb(3)}, "[[3; y]; [1; 2]]"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 )
@@ -16,7 +17,7 @@ import (
 // valid regardless of the random value chosen.
 // If not, it returns the first error encountered.
 func (rv RandomParameters) Validate() error {
-	const nbTries = 1_000
+	const nbTries = 200
 	for i := 0; i < nbTries; i++ {
 		_, err := rv.Instantiate()
 		if err != nil {
@@ -133,6 +134,21 @@ func (rvv *paramsInstantiater) resolve(v Variable) (real, error) {
 }
 
 func (expr *Expr) tryEval(ctx *paramsInstantiater) *Expr {
+	if mat, ok := expr.atom.(matrix); ok {
+		out := make(matrix, len(mat))
+		for i, row := range mat {
+			out[i] = make([]*Expr, len(row))
+			for j := range row {
+				v, err := mat[i][j].evalReal(ctx)
+				if err == nil {
+					out[i][j] = v.toExpr()
+				} else {
+					out[i][j] = mat[i][j]
+				}
+			}
+		}
+		return &Expr{atom: out}
+	}
 	v, err := expr.evalReal(ctx)
 	if err == nil {
 		return v.toExpr()
@@ -162,7 +178,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 	ctx.currentVariable = Variable{} // when recursing, set tracker to zero
 
 	switch atom := expr.atom.(type) {
-	case Number, constant, function, roundFunc, indice: // no-op, simply recurse
+	case Number, constant, roundFunc, indice: // no-op, simply recurse
 		left, err := expr.left.instantiate(ctx)
 		if err != nil {
 			return nil, err
@@ -172,6 +188,61 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 			return nil, err
 		}
 		out := &Expr{atom: atom, left: left, right: right}
+		return out.tryEval(ctx), nil
+	case function: // we expand matrices functions
+		right, err := expr.right.instantiate(ctx)
+		if err != nil {
+			return nil, err
+		}
+		var out *Expr
+		switch atom {
+		case traceFn:
+			mat, ok := right.atom.(matrix)
+			if !ok {
+				return nil, errors.New("La fonction trace attend une matrice en argument.")
+			}
+			out, err = mat.trace()
+			if err != nil {
+				return nil, err
+			}
+		case detFn:
+			mat, ok := right.atom.(matrix)
+			if !ok {
+				return nil, errors.New("La fonction trace attend une matrice en argument.")
+			}
+			matN, ok := newNumberMatrixFrom(mat)
+			if !ok {
+				return nil, errors.New("Le déterminant ne supporte pas le calcul symbolique.")
+			}
+			d, err := matN.determinant()
+			if err != nil {
+				return nil, err
+			}
+			return newNb(d), nil
+		case transposeFn:
+			mat, ok := right.atom.(matrix)
+			if !ok {
+				return nil, errors.New("La fonction trace attend une matrice en argument.")
+			}
+			mat = mat.transpose()
+			out = &Expr{atom: mat}
+		case invertFn:
+			mat, ok := right.atom.(matrix)
+			if !ok {
+				return nil, errors.New("La fonction trace attend une matrice en argument.")
+			}
+			matN, ok := newNumberMatrixFrom(mat)
+			if !ok {
+				return nil, errors.New("L'inverse d'une matrice ne supporte pas le calcul symbolique.")
+			}
+			matN, err = matN.invert()
+			if err != nil {
+				return nil, err
+			}
+			out = &Expr{atom: matN.toExprMatrix()}
+		default:
+			out = &Expr{atom: atom, left: nil, right: right}
+		}
 		return out.tryEval(ctx), nil
 	case operator: // we expand matrices calculus
 		// recurse
@@ -225,7 +296,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 				return choice, nil
 			}
 			return choice.instantiate(ctx)
-		case minFn, maxFn: // no-op, simply recurse
+		case minFn, maxFn, matCoeff: // no-op, simply recurse
 			inst := specialFunction{
 				kind: atom.kind,
 				args: make([]*Expr, len(atom.args)),

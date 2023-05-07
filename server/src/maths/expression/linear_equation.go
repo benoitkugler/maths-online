@@ -48,9 +48,7 @@ func (expr *Expr) isLinearEquation() (linearCoefficients, error) {
 			}
 			out[v] = c
 		} else if c, ok := term.isConstantTerm(); ok {
-			if _, alreadyPresent := out[Variable{}]; alreadyPresent {
-				return nil, fmt.Errorf("Le terme constant apparaît plus d'une fois.")
-			}
+			// basicSimplification groups constant terms
 			out[Variable{}] = c
 		} else {
 			return nil, fmt.Errorf("Le terme %s n'est pas linéaire (ou constant).", term)

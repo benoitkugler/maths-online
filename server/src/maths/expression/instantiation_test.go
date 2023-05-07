@@ -138,6 +138,47 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 			},
 			false,
 		},
+		// matrices
+		{map[Variable]string{NewVar('A'): "trace(2)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "det([[1;2]])"}, nil, true},
+		{map[Variable]string{NewVar('A'): "det(2)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "trans(2)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "inv(2)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "coeff([[1; 2];[3;4]]; 2; 2)"}, Vars{NewVar('A'): newNb(4)}, false},
+		{map[Variable]string{
+			NewVar('A'): "coeff([[1; 2];[3;4]]; 2; j)",
+			NewVar('j'): "1",
+		}, Vars{NewVar('A'): newNb(3), NewVar('j'): newNb(1)}, false},
+		{
+			map[Variable]string{
+				NewVar('A'): "[[1;2]; [3;4]]",
+				NewVar('b'): "trace(A)",
+				NewVar('c'): "det(A)",
+				NewVar('d'): "trace(trans(A))",
+				NewVar('e'): "det(trans(A))",
+			},
+			Vars{
+				NewVar('A'): mustParse(t, "[[1;2]; [3;4]]"),
+				NewVar('b'): newNb(5),
+				NewVar('c'): NewNb(-2),
+				NewVar('d'): newNb(5),
+				NewVar('e'): NewNb(-2),
+			},
+			false,
+		},
+		{
+			map[Variable]string{
+				NewVar('A'): "[[1;2]; [3;x]]",
+				NewVar('b'): "trace(A)",
+				NewVar('B'): "trans(A)",
+			},
+			Vars{
+				NewVar('A'): mustParse(t, "[[1;2]; [3;x]]"),
+				NewVar('b'): mustParse(t, "1+x"),
+				NewVar('B'): mustParse(t, "[[1;3]; [2;x]]"),
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		rv := make(RandomParameters)

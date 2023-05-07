@@ -269,6 +269,8 @@ func TestExpression_Evaluate_err(t *testing.T) {
 		{
 			"randPrime(a;9)", Vars{NewVar('a'): NewNb(8)},
 		},
+		{"coeff([[1; 2];[3;4]]; 2; 10)", nil},
+		{"coeff([[1; 2];[3;4]]; 10; 1)", nil},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

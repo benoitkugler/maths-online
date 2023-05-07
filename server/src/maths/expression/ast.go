@@ -199,7 +199,6 @@ const (
 	sgnFn          // returns -1 0 or 1
 	isPrimeFn      // returns 0 or 1
 	forceDecimalFn // force fractions to be printed as decimal numbers
-	coeffFn        // extract a coefficient from a matrix
 	detFn          // determinant of a matrix
 	traceFn        // trace of a matrix
 	invertFn       // inverse of a matrix

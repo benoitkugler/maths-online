@@ -184,6 +184,32 @@ func (fn function) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf(`\text{isPrime}\left(%s\right)`, arg)
 	case forceDecimalFn:
 		return fmt.Sprintf(`\text{forceDecimal}\left(%s\right)`, arg)
+	case detFn:
+		// for explicit matrice, use do not add ()
+		if _, isMat := right.atom.(matrix); isMat {
+			return fmt.Sprintf(`\det %s`, arg)
+		}
+		return fmt.Sprintf(`\det\left(%s\right)`, arg)
+	case traceFn:
+		// for explicit matrice, use do not add ()
+		if _, isMat := right.atom.(matrix); isMat {
+			return fmt.Sprintf(`\text{trace} %s`, arg)
+		}
+		return fmt.Sprintf(`\text{trace}\left(%s\right)`, arg)
+	case invertFn:
+		// add parenthesis on op
+		switch right.atom.(type) {
+		case operator, function:
+			return fmt.Sprintf(`\left(%s\right)^{-1}`, arg)
+		}
+		return fmt.Sprintf(`%s^{-1}`, arg)
+	case transposeFn:
+		// add parenthesis on op
+		switch right.atom.(type) {
+		case operator, function:
+			return fmt.Sprintf(`\left(%s\right)^{T}`, arg)
+		}
+		return fmt.Sprintf(`%s^{T}`, arg)
 	default:
 		panic(exhaustiveFunctionSwitch)
 	}

@@ -589,6 +589,13 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
+	case matCoeff:
+		if len(rd.args) != 3 {
+			return ErrInvalidExpr{
+				Reason: "coeff requiert exactement 3 arguments",
+				Pos:    pos,
+			}
+		}
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}

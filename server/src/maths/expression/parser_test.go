@@ -590,6 +590,25 @@ var expressions = [...]struct {
 	{
 		"[[1]] * [[3]]", &Expr{atom: mult, left: &Expr{atom: matrix{{newNb(1)}}}, right: &Expr{atom: matrix{{newNb(3)}}}}, false,
 	},
+	// matrices functions
+	{
+		"trace(A)", &Expr{atom: traceFn, right: newVarExpr('A')}, false,
+	},
+	{
+		"det(A)", &Expr{atom: detFn, right: newVarExpr('A')}, false,
+	},
+	{
+		"trans(A)", &Expr{atom: transposeFn, right: newVarExpr('A')}, false,
+	},
+	{
+		"inv(A)", &Expr{atom: invertFn, right: newVarExpr('A')}, false,
+	},
+	{
+		"coeff(A; i; j)", &Expr{atom: specialFunction{kind: matCoeff, args: []*Expr{newVarExpr('A'), newVarExpr('i'), newVarExpr('j')}}}, false,
+	},
+	{
+		"coeff(A; i)", nil, true,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {

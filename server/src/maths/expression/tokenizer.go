@@ -36,6 +36,7 @@ const (
 	randDenominator
 	minFn
 	maxFn
+	matCoeff
 
 	invalidSpecialFunction
 )
@@ -56,6 +57,8 @@ func (sf specialFunctionKind) String() string {
 		return "min"
 	case maxFn:
 		return "max"
+	case matCoeff:
+		return "coeff"
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
@@ -373,6 +376,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = minFn
 	case "max":
 		fn = maxFn
+	case "coeff":
+		fn = matCoeff
 	default:
 		_ = exhaustiveSpecialFunctionSwitch
 		return 0, false
@@ -428,6 +433,14 @@ func (tk *tokenizer) tryReadFunction() (function, bool) {
 		fn = isPrimeFn
 	case "forceDecimal", "forcedecimal":
 		fn = forceDecimalFn
+	case "trace":
+		fn = traceFn
+	case "trans", "transpose":
+		fn = transposeFn
+	case "det":
+		fn = detFn
+	case "inv", "inverse":
+		fn = invertFn
 	default: // no  matching function name
 		_ = exhaustiveFunctionSwitch
 		return 0, false

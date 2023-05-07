@@ -76,6 +76,16 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"3[[1; 4; x]; [2; y; 4]]",
 		"[[1; 4; x]; [2; y; 4]] * [[1; 4; x]; [2; y; 4]]",
 		"[[1; 4; x]; [2; y; 4]] * ( [[1; 4; x]; [2; y; 4]] + 1)",
+		"trace([[1; 4; x]; [2; y; 4]])",
+		"det([[1; 4; x]; [2; y; 4]])",
+		"A B trans(A) trans(A + B)",
+		"trans([[1; 4; x]; [2; y; 4]])",
+		"transpose([[1; 4; x]; [2; y; 4]])",
+		"inv([[1; 4; x]; [2; y; 4]])",
+		"inv(trans(A))",
+		"trans(inv(A))",
+		"det(inv(A))",
+		"trace(inv(A))",
 	} {
 		e, err := Parse(expr)
 		if err != nil {
