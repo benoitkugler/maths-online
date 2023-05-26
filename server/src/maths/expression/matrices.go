@@ -70,6 +70,8 @@ func (A matrix) minus(B matrix) (matrix, error) {
 	return A.plus(B)
 }
 
+// numberMatrix is an efficient version of a matrix
+// containing only scalars
 type numberMatrix [][]float64
 
 func (A numberMatrix) dims() (rows, cols int) {
@@ -114,7 +116,7 @@ func (A numberMatrix) toExprMatrix() matrix {
 	return out
 }
 
-// assume A and B are compatible and out has the correct size
+// assume A and B are compatible and [out] has the correct size
 func (A numberMatrix) prodTo(B, out numberMatrix) {
 	for i, row := range out {
 		for j := range row {
