@@ -59,7 +59,7 @@ class VectorField extends StatelessWidget {
       sizeHint: sizeHint,
     );
 
-    final textColor = Theme.of(context).textTheme.bodyText1?.color;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
       child: controller.data.displayColumn

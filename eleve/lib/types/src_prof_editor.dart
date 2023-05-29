@@ -67,7 +67,7 @@ class LoopbackPaused implements LoopbackServerEvent {
 
 LoopbackPaused loopbackPausedFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return LoopbackPaused();
+  return const LoopbackPaused();
 }
 
 Map<String, dynamic> loopbackPausedToJson(LoopbackPaused item) {

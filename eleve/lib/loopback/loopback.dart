@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:http/http.dart' as http;
@@ -168,11 +167,11 @@ class _EditorLoopbackState extends State<EditorLoopback> {
   Widget build(BuildContext context) {
     switch (mode) {
       case _Mode.paused:
-        return Scaffold(
+        return const Scaffold(
           body: Center(
               child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               CircularProgressIndicator(),
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),

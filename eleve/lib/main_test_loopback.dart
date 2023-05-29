@@ -109,7 +109,7 @@ class _LoopbackTestApp extends StatelessWidget {
         builder: (context) => EditorLoopback(
             LoopbackShowExercice(
                 workSequencial,
-                ProgressionExt([[], [], []], 0),
+                const ProgressionExt([[], [], []], 0),
                 true,
                 [origin, origin, origin]),
             _LoopbackAPI())));

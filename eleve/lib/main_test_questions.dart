@@ -156,7 +156,7 @@ class _QuestionTestApp extends StatelessWidget {
 }
 
 class _TrivialInGame extends StatelessWidget {
-  const _TrivialInGame({super.key});
+  const _TrivialInGame();
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +178,7 @@ class _TrivialInGame extends StatelessWidget {
 class _TrivialLast extends StatelessWidget {
   final void Function() onDone;
 
-  const _TrivialLast(this.onDone, {super.key});
+  const _TrivialLast(this.onDone);
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +220,7 @@ class _DecrassageAPI implements DecrassageAPI {
 
 class _Decrassage extends StatelessWidget {
   final void Function() onDone;
-  const _Decrassage(this.onDone, {super.key});
+  const _Decrassage(this.onDone);
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +231,7 @@ class _Decrassage extends StatelessWidget {
 class _LoopbackQuestion extends StatefulWidget {
   final void Function() onDone;
 
-  const _LoopbackQuestion(this.onDone, {super.key});
+  const _LoopbackQuestion(this.onDone);
 
   @override
   State<_LoopbackQuestion> createState() => _LoopbackQuestionState();
@@ -279,13 +279,13 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
 final workParallel = StudentWork(
   InstantiatedWork(const WorkID(0, true), "Identités remarquables (parallèle)",
       Flow.parallel, [quI1, quI2, quI3], [1, 1, 2]),
-  ProgressionExt([[], [], []], 0),
+  const ProgressionExt([[], [], []], 0),
 );
 
 final workSequencial = StudentWork(
   InstantiatedWork(const WorkID(0, true), "Identités remarquables (séquentiel)",
       Flow.sequencial, [quI1, quI2, quI3], [1, 1, 2]),
-  ProgressionExt([[], [], []], 0),
+  const ProgressionExt([[], [], []], 0),
 );
 
 class _ExerciceSequentialAPI implements ExerciceAPI {
@@ -318,7 +318,7 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
 }
 
 class _ExerciceSequential extends StatelessWidget {
-  const _ExerciceSequential({super.key});
+  const _ExerciceSequential();
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +328,7 @@ class _ExerciceSequential extends StatelessWidget {
 }
 
 class _LoopbackExerciceSequential extends StatefulWidget {
-  const _LoopbackExerciceSequential({super.key});
+  const _LoopbackExerciceSequential();
 
   @override
   State<_LoopbackExerciceSequential> createState() =>
@@ -386,7 +386,7 @@ class _ExerciceParallelAPI implements ExerciceAPI {
 }
 
 class _ExerciceParallel extends StatelessWidget {
-  const _ExerciceParallel({super.key});
+  const _ExerciceParallel();
 
   @override
   Widget build(BuildContext context) {
@@ -396,7 +396,7 @@ class _ExerciceParallel extends StatelessWidget {
 }
 
 class _LoopbackExerciceParallel extends StatefulWidget {
-  const _LoopbackExerciceParallel({super.key});
+  const _LoopbackExerciceParallel();
 
   @override
   State<_LoopbackExerciceParallel> createState() =>

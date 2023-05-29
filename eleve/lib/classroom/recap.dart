@@ -85,7 +85,7 @@ class _Loading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: const [
+    return const Column(children: [
       CircularProgressIndicator(value: null),
       SizedBox(height: 20),
       Text("Chargement des données..."),

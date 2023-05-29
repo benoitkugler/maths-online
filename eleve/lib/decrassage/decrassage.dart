@@ -183,10 +183,10 @@ class _DecrassageState extends State<Decrassage> {
       body: Padding(
           padding: const EdgeInsets.all(10),
           child: ct == null
-              ? Center(
+              ? const Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text("Chargement des questions..."),
                       Padding(
                         padding: EdgeInsets.all(12.0),

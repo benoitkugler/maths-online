@@ -133,7 +133,7 @@ class _API extends _FieldAPI implements HomeworkAPI {
 }
 
 class _Homework extends StatelessWidget {
-  const _Homework({super.key});
+  const _Homework();
 
   @override
   Widget build(BuildContext context) {

@@ -116,7 +116,7 @@ class DiceClicked implements ClientEventITF {
 
 DiceClicked diceClickedFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return DiceClicked();
+  return const DiceClicked();
 }
 
 Map<String, dynamic> diceClickedToJson(DiceClicked item) {
@@ -198,7 +198,7 @@ class GameStart implements ServerEvent {
 
 GameStart gameStartFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return GameStart();
+  return const GameStart();
 }
 
 Map<String, dynamic> gameStartToJson(GameStart item) {
@@ -245,7 +245,7 @@ class GameTerminated implements ServerEvent {
 
 GameTerminated gameTerminatedFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return GameTerminated();
+  return const GameTerminated();
 }
 
 Map<String, dynamic> gameTerminatedToJson(GameTerminated item) {
@@ -792,7 +792,7 @@ Map<PlayerID, List<IdQuestion>> dictStringToListIntFromJson(dynamic json) {
     return {};
   }
   return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, listIntFromJson(v)));
+      .map((k, v) => MapEntry(k, listIntFromJson(v)));
 }
 
 Map<String, dynamic> dictStringToListIntToJson(
@@ -807,7 +807,7 @@ Map<PlayerID, PlayerAnswerResult> dictStringToPlayerAnswerResultFromJson(
     return {};
   }
   return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, playerAnswerResultFromJson(v)));
+      .map((k, v) => MapEntry(k, playerAnswerResultFromJson(v)));
 }
 
 Map<String, dynamic> dictStringToPlayerAnswerResultToJson(
@@ -821,7 +821,7 @@ Map<PlayerID, PlayerStatus> dictStringToPlayerStatusFromJson(dynamic json) {
     return {};
   }
   return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, playerStatusFromJson(v)));
+      .map((k, v) => MapEntry(k, playerStatusFromJson(v)));
 }
 
 Map<String, dynamic> dictStringToPlayerStatusToJson(
@@ -835,7 +835,7 @@ Map<PlayerID, String> dictStringToStringFromJson(dynamic json) {
     return {};
   }
   return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as PlayerID, stringFromJson(v)));
+      .map((k, v) => MapEntry(k, stringFromJson(v)));
 }
 
 Map<String, dynamic> dictStringToStringToJson(Map<PlayerID, String> item) {

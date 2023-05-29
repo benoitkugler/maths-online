@@ -11,7 +11,7 @@ class LoopackQuestionController extends BaseQuestionController {
 
   final LoopbackShowQuestion data;
   LoopackQuestionController(this.data, FieldAPI api, this.onValid)
-      : super(data.question, api) {}
+      : super(data.question, api);
 
   @override
   void onPrimaryButtonClick() {

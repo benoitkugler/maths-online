@@ -82,13 +82,13 @@ class _SheetWState extends State<SheetW> {
     showDialog<void>(
         barrierDismissible: false,
         context: context,
-        builder: (context) => Dialog(
+        builder: (context) => const Dialog(
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
+                    EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       "Chargement de l'exercice...",
                       style: TextStyle(fontSize: 16),

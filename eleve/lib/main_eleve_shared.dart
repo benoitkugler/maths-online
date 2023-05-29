@@ -25,7 +25,7 @@ class EleveApp extends StatelessWidget {
   final Upgrader? checkUprades;
 
   const EleveApp(this.audioPlayer, this.buildMode,
-      {Key? key, this.checkUprades});
+      {super.key, this.checkUprades});
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +224,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
 
 class _WelcomeDialog extends StatelessWidget {
   final void Function() goToSettings;
-  const _WelcomeDialog(this.goToSettings, {super.key});
+  const _WelcomeDialog(this.goToSettings);
 
   @override
   Widget build(BuildContext context) {

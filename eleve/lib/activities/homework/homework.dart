@@ -152,9 +152,9 @@ class _Loading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child:
-          Column(mainAxisAlignment: MainAxisAlignment.center, children: const [
+          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         CircularProgressIndicator(value: null),
         SizedBox(height: 20),
         Text("Chargement des fiches de travail..."),

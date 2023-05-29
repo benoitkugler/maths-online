@@ -123,7 +123,7 @@ class _QuestionResultState extends State<QuestionResult> {
                   ElevatedButton(
                       onPressed: _onContinue,
                       child:
-                          Row(mainAxisSize: MainAxisSize.min, children: const [
+                          const Row(mainAxisSize: MainAxisSize.min, children: [
                         Text("Continuer"),
                         Padding(
                           padding:
