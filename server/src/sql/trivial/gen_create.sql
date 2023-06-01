@@ -1,4 +1,9 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+CREATE TABLE selfaccess_trivials (
+    IdClassroom integer NOT NULL,
+    IdTrivial integer NOT NULL
+);
+
 CREATE TABLE trivials (
     Id serial PRIMARY KEY,
     Questions jsonb NOT NULL,
@@ -12,6 +17,12 @@ CREATE TABLE trivials (
 -- constraints
 ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_edit_TagSection (data jsonb)
     RETURNS boolean

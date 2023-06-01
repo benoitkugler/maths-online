@@ -21,22 +21,24 @@ func randNotation() Notation {
 }
 
 func randSheet() Sheet {
-	return Sheet{
-		Id:          randIdSheet(),
-		IdClassroom: randtea_IdClassroom(),
-		Title:       randstring(),
-		Notation:    randNotation(),
-		Activated:   randbool(),
-		Deadline:    randTime(),
-	}
+	var s Sheet
+	s.Id = randIdSheet()
+	s.IdClassroom = randtea_IdClassroom()
+	s.Title = randstring()
+	s.Notation = randNotation()
+	s.Activated = randbool()
+	s.Deadline = randTime()
+
+	return s
 }
 
 func randSheetTask() SheetTask {
-	return SheetTask{
-		IdSheet: randIdSheet(),
-		Index:   randint(),
-		IdTask:  randtas_IdTask(),
-	}
+	var s SheetTask
+	s.IdSheet = randIdSheet()
+	s.Index = randint()
+	s.IdTask = randtas_IdTask()
+
+	return s
 }
 
 func randTime() Time {

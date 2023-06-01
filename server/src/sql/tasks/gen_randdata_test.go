@@ -22,35 +22,39 @@ func randIdTask() IdTask {
 }
 
 func randMonoquestion() Monoquestion {
-	return Monoquestion{
-		Id:         randIdMonoquestion(),
-		IdQuestion: randedi_IdQuestion(),
-		NbRepeat:   randint(),
-		Bareme:     randint(),
-	}
+	var s Monoquestion
+	s.Id = randIdMonoquestion()
+	s.IdQuestion = randedi_IdQuestion()
+	s.NbRepeat = randint()
+	s.Bareme = randint()
+
+	return s
 }
 
 func randOptionalIdMonoquestion() OptionalIdMonoquestion {
-	return OptionalIdMonoquestion{
-		Valid: randbool(),
-		ID:    randIdMonoquestion(),
-	}
+	var s OptionalIdMonoquestion
+	s.Valid = randbool()
+	s.ID = randIdMonoquestion()
+
+	return s
 }
 
 func randProgression() Progression {
-	return Progression{
-		Id:        randIdProgression(),
-		IdStudent: randtea_IdStudent(),
-		IdTask:    randIdTask(),
-	}
+	var s Progression
+	s.Id = randIdProgression()
+	s.IdStudent = randtea_IdStudent()
+	s.IdTask = randIdTask()
+
+	return s
 }
 
 func randProgressionQuestion() ProgressionQuestion {
-	return ProgressionQuestion{
-		IdProgression: randIdProgression(),
-		Index:         randint(),
-		History:       randQuestionHistory(),
-	}
+	var s ProgressionQuestion
+	s.IdProgression = randIdProgression()
+	s.Index = randint()
+	s.History = randQuestionHistory()
+
+	return s
 }
 
 func randQuestionHistory() QuestionHistory {
@@ -67,11 +71,12 @@ func randSlicebool() []bool {
 }
 
 func randTask() Task {
-	return Task{
-		Id:             randIdTask(),
-		IdExercice:     randedi_OptionalIdExercice(),
-		IdMonoquestion: randOptionalIdMonoquestion(),
-	}
+	var s Task
+	s.Id = randIdTask()
+	s.IdExercice = randedi_OptionalIdExercice()
+	s.IdMonoquestion = randOptionalIdMonoquestion()
+
+	return s
 }
 
 func randbool() bool {
@@ -88,10 +93,11 @@ func randedi_IdQuestion() editor.IdQuestion {
 }
 
 func randedi_OptionalIdExercice() editor.OptionalIdExercice {
-	return editor.OptionalIdExercice{
-		Valid: randbool(),
-		ID:    randedi_IdExercice(),
-	}
+	var s editor.OptionalIdExercice
+	s.Valid = randbool()
+	s.ID = randedi_IdExercice()
+
+	return s
 }
 
 func randint() int {

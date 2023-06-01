@@ -18,10 +18,11 @@ func randArray5QuestionCriterion() [5]QuestionCriterion {
 }
 
 func randCategoriesQuestions() CategoriesQuestions {
-	return CategoriesQuestions{
-		Tags:         randArray5QuestionCriterion(),
-		Difficulties: randedi_DifficultyQuery(),
-	}
+	var s CategoriesQuestions
+	s.Tags = randArray5QuestionCriterion()
+	s.Difficulties = randedi_DifficultyQuery()
+
+	return s
 }
 
 func randIdTrivial() IdTrivial {
@@ -30,6 +31,14 @@ func randIdTrivial() IdTrivial {
 
 func randQuestionCriterion() QuestionCriterion {
 	return QuestionCriterion(randSliceSliceedi_TagSection())
+}
+
+func randSelfaccessTrivial() SelfaccessTrivial {
+	var s SelfaccessTrivial
+	s.IdClassroom = randtea_IdClassroom()
+	s.IdTrivial = randIdTrivial()
+
+	return s
 }
 
 func randSliceSliceedi_TagSection() [][]editor.TagSection {
@@ -60,15 +69,16 @@ func randSliceedi_TagSection() []editor.TagSection {
 }
 
 func randTrivial() Trivial {
-	return Trivial{
-		Id:              randIdTrivial(),
-		Questions:       randCategoriesQuestions(),
-		QuestionTimeout: randint(),
-		ShowDecrassage:  randbool(),
-		Public:          randbool(),
-		IdTeacher:       randtea_IdTeacher(),
-		Name:            randstring(),
-	}
+	var s Trivial
+	s.Id = randIdTrivial()
+	s.Questions = randCategoriesQuestions()
+	s.QuestionTimeout = randint()
+	s.ShowDecrassage = randbool()
+	s.Public = randbool()
+	s.IdTeacher = randtea_IdTeacher()
+	s.Name = randstring()
+
+	return s
 }
 
 func randbool() bool {
@@ -93,10 +103,11 @@ func randedi_Section() editor.Section {
 }
 
 func randedi_TagSection() editor.TagSection {
-	return editor.TagSection{
-		Tag:     randstring(),
-		Section: randedi_Section(),
-	}
+	var s editor.TagSection
+	s.Tag = randstring()
+	s.Section = randedi_Section()
+
+	return s
 }
 
 func randint() int {
@@ -116,6 +127,10 @@ func randstring() string {
 		b[i] = letterRunes2[rand.Intn(maxLength)]
 	}
 	return string(b)
+}
+
+func randtea_IdClassroom() teacher.IdClassroom {
+	return teacher.IdClassroom(randint64())
 }
 
 func randtea_IdTeacher() teacher.IdTeacher {

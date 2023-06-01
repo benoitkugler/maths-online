@@ -25,6 +25,166 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
+func scanOneSelfaccessTrivial(row scanner) (SelfaccessTrivial, error) {
+	var item SelfaccessTrivial
+	err := row.Scan(
+		&item.IdClassroom,
+		&item.IdTrivial,
+	)
+	return item, err
+}
+
+func ScanSelfaccessTrivial(row *sql.Row) (SelfaccessTrivial, error) {
+	return scanOneSelfaccessTrivial(row)
+}
+
+// SelectAll returns all the items in the selfaccess_trivials table.
+func SelectAllSelfaccessTrivials(db DB) (SelfaccessTrivials, error) {
+	rows, err := db.Query("SELECT * FROM selfaccess_trivials")
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
+type SelfaccessTrivials []SelfaccessTrivial
+
+func ScanSelfaccessTrivials(rs *sql.Rows) (SelfaccessTrivials, error) {
+	var (
+		item SelfaccessTrivial
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(SelfaccessTrivials, 0, 16)
+	for rs.Next() {
+		item, err = scanOneSelfaccessTrivial(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links SelfaccessTrivial in the database.
+// It is a no-op if 'items' is empty.
+func InsertManySelfaccessTrivials(tx *sql.Tx, items ...SelfaccessTrivial) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("selfaccess_trivials",
+		"idclassroom",
+		"idtrivial",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdClassroom, item.IdTrivial)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link SelfaccessTrivial from the database.
+// Only the foreign keys IdClassroom, IdTrivial fields are used in 'item'.
+func (item SelfaccessTrivial) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM selfaccess_trivials WHERE IdClassroom = $1 AND IdTrivial = $2;`, item.IdClassroom, item.IdTrivial)
+	return err
+}
+
+// ByIdClassroom returns a map with 'IdClassroom' as keys.
+func (items SelfaccessTrivials) ByIdClassroom() map[teacher.IdClassroom]SelfaccessTrivials {
+	out := make(map[teacher.IdClassroom]SelfaccessTrivials)
+	for _, target := range items {
+		out[target.IdClassroom] = append(out[target.IdClassroom], target)
+	}
+	return out
+}
+
+// IdClassrooms returns the list of ids of IdClassroom
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items SelfaccessTrivials) IdClassrooms() []teacher.IdClassroom {
+	out := make([]teacher.IdClassroom, len(items))
+	for index, target := range items {
+		out[index] = target.IdClassroom
+	}
+	return out
+}
+
+func SelectSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
+func DeleteSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idclassroom = ANY($1) RETURNING *", teacher.IdClassroomArrayToPQ(idClassrooms))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
+// ByIdTrivial returns a map with 'IdTrivial' as keys.
+func (items SelfaccessTrivials) ByIdTrivial() map[IdTrivial]SelfaccessTrivials {
+	out := make(map[IdTrivial]SelfaccessTrivials)
+	for _, target := range items {
+		out[target.IdTrivial] = append(out[target.IdTrivial], target)
+	}
+	return out
+}
+
+// IdTrivials returns the list of ids of IdTrivial
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items SelfaccessTrivials) IdTrivials() []IdTrivial {
+	out := make([]IdTrivial, len(items))
+	for index, target := range items {
+		out[index] = target.IdTrivial
+	}
+	return out
+}
+
+func SelectSelfaccessTrivialsByIdTrivials(tx DB, idTrivials ...IdTrivial) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idtrivial = ANY($1)", IdTrivialArrayToPQ(idTrivials))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
+func DeleteSelfaccessTrivialsByIdTrivials(tx DB, idTrivials ...IdTrivial) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idtrivial = ANY($1) RETURNING *", IdTrivialArrayToPQ(idTrivials))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSelfaccessTrivials(rows)
+}
+
 func scanOneTrivial(row scanner) (Trivial, error) {
 	var item Trivial
 	err := row.Scan(

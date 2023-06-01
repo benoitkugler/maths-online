@@ -18,10 +18,11 @@ func randApproval() Approval {
 }
 
 func randComment() Comment {
-	return Comment{
-		Time:    randtTime(),
-		Message: randstring(),
-	}
+	var s Comment
+	s.Time = randtTime()
+	s.Message = randstring()
+
+	return s
 }
 
 func randComments() Comments {
@@ -33,18 +34,20 @@ func randIdReview() IdReview {
 }
 
 func randReview() Review {
-	return Review{
-		Id:   randIdReview(),
-		Kind: randReviewKind(),
-	}
+	var s Review
+	s.Id = randIdReview()
+	s.Kind = randReviewKind()
+
+	return s
 }
 
 func randReviewExercice() ReviewExercice {
-	return ReviewExercice{
-		IdReview:   randIdReview(),
-		IdExercice: randedi_IdExercicegroup(),
-		Kind:       randReviewKind(),
-	}
+	var s ReviewExercice
+	s.IdReview = randIdReview()
+	s.IdExercice = randedi_IdExercicegroup()
+	s.Kind = randReviewKind()
+
+	return s
 }
 
 func randReviewKind() ReviewKind {
@@ -54,28 +57,31 @@ func randReviewKind() ReviewKind {
 }
 
 func randReviewParticipation() ReviewParticipation {
-	return ReviewParticipation{
-		IdReview:  randIdReview(),
-		IdTeacher: randtea_IdTeacher(),
-		Approval:  randApproval(),
-		Comments:  randComments(),
-	}
+	var s ReviewParticipation
+	s.IdReview = randIdReview()
+	s.IdTeacher = randtea_IdTeacher()
+	s.Approval = randApproval()
+	s.Comments = randComments()
+
+	return s
 }
 
 func randReviewQuestion() ReviewQuestion {
-	return ReviewQuestion{
-		IdReview:   randIdReview(),
-		IdQuestion: randedi_IdQuestiongroup(),
-		Kind:       randReviewKind(),
-	}
+	var s ReviewQuestion
+	s.IdReview = randIdReview()
+	s.IdQuestion = randedi_IdQuestiongroup()
+	s.Kind = randReviewKind()
+
+	return s
 }
 
 func randReviewTrivial() ReviewTrivial {
-	return ReviewTrivial{
-		IdReview:  randIdReview(),
-		IdTrivial: randtri_IdTrivial(),
-		Kind:      randReviewKind(),
-	}
+	var s ReviewTrivial
+	s.IdReview = randIdReview()
+	s.IdTrivial = randtri_IdTrivial()
+	s.Kind = randReviewKind()
+
+	return s
 }
 
 func randSliceComment() []Comment {

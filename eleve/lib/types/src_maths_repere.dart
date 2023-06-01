@@ -378,7 +378,7 @@ Map<String, LabeledPoint> dictStringToLabeledPointFromJson(dynamic json) {
     return {};
   }
   return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k, labeledPointFromJson(v)));
+      .map((k, v) => MapEntry(k as String, labeledPointFromJson(v)));
 }
 
 Map<String, dynamic> dictStringToLabeledPointToJson(

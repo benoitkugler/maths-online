@@ -19,39 +19,43 @@ func randDifficultyTag() DifficultyTag {
 }
 
 func randExercice() Exercice {
-	return Exercice{
-		Id:         randIdExercice(),
-		IdGroup:    randIdExercicegroup(),
-		Subtitle:   randstring(),
-		Parameters: randque_Parameters(),
-		Difficulty: randDifficultyTag(),
-	}
+	var s Exercice
+	s.Id = randIdExercice()
+	s.IdGroup = randIdExercicegroup()
+	s.Subtitle = randstring()
+	s.Parameters = randque_Parameters()
+	s.Difficulty = randDifficultyTag()
+
+	return s
 }
 
 func randExerciceQuestion() ExerciceQuestion {
-	return ExerciceQuestion{
-		IdExercice: randIdExercice(),
-		IdQuestion: randIdQuestion(),
-		Bareme:     randint(),
-		Index:      randint(),
-	}
+	var s ExerciceQuestion
+	s.IdExercice = randIdExercice()
+	s.IdQuestion = randIdQuestion()
+	s.Bareme = randint()
+	s.Index = randint()
+
+	return s
 }
 
 func randExercicegroup() Exercicegroup {
-	return Exercicegroup{
-		Id:        randIdExercicegroup(),
-		Title:     randstring(),
-		Public:    randbool(),
-		IdTeacher: randtea_IdTeacher(),
-	}
+	var s Exercicegroup
+	s.Id = randIdExercicegroup()
+	s.Title = randstring()
+	s.Public = randbool()
+	s.IdTeacher = randtea_IdTeacher()
+
+	return s
 }
 
 func randExercicegroupTag() ExercicegroupTag {
-	return ExercicegroupTag{
-		Tag:             randstring(),
-		IdExercicegroup: randIdExercicegroup(),
-		Section:         randSection(),
-	}
+	var s ExercicegroupTag
+	s.Tag = randstring()
+	s.IdExercicegroup = randIdExercicegroup()
+	s.Section = randSection()
+
+	return s
 }
 
 func randFlow() Flow {
@@ -83,47 +87,52 @@ func randLevelTag() LevelTag {
 }
 
 func randOptionalIdExercice() OptionalIdExercice {
-	return OptionalIdExercice{
-		Valid: randbool(),
-		ID:    randIdExercice(),
-	}
+	var s OptionalIdExercice
+	s.Valid = randbool()
+	s.ID = randIdExercice()
+
+	return s
 }
 
 func randOptionalIdQuestiongroup() OptionalIdQuestiongroup {
-	return OptionalIdQuestiongroup{
-		ID:    randIdQuestiongroup(),
-		Valid: randbool(),
-	}
+	var s OptionalIdQuestiongroup
+	s.ID = randIdQuestiongroup()
+	s.Valid = randbool()
+
+	return s
 }
 
 func randQuestion() Question {
-	return Question{
-		Id:           randIdQuestion(),
-		Subtitle:     randstring(),
-		Difficulty:   randDifficultyTag(),
-		NeedExercice: randOptionalIdExercice(),
-		IdGroup:      randOptionalIdQuestiongroup(),
-		Enonce:       randque_Enonce(),
-		Parameters:   randque_Parameters(),
-		Correction:   randque_Enonce(),
-	}
+	var s Question
+	s.Id = randIdQuestion()
+	s.Subtitle = randstring()
+	s.Difficulty = randDifficultyTag()
+	s.NeedExercice = randOptionalIdExercice()
+	s.IdGroup = randOptionalIdQuestiongroup()
+	s.Enonce = randque_Enonce()
+	s.Parameters = randque_Parameters()
+	s.Correction = randque_Enonce()
+
+	return s
 }
 
 func randQuestiongroup() Questiongroup {
-	return Questiongroup{
-		Id:        randIdQuestiongroup(),
-		Title:     randstring(),
-		Public:    randbool(),
-		IdTeacher: randtea_IdTeacher(),
-	}
+	var s Questiongroup
+	s.Id = randIdQuestiongroup()
+	s.Title = randstring()
+	s.Public = randbool()
+	s.IdTeacher = randtea_IdTeacher()
+
+	return s
 }
 
 func randQuestiongroupTag() QuestiongroupTag {
-	return QuestiongroupTag{
-		Tag:             randstring(),
-		IdQuestiongroup: randIdQuestiongroup(),
-		Section:         randSection(),
-	}
+	var s QuestiongroupTag
+	s.Tag = randstring()
+	s.IdQuestiongroup = randIdQuestiongroup()
+	s.Section = randSection()
+
+	return s
 }
 
 func randSection() Section {
@@ -300,10 +309,11 @@ func randbool() bool {
 }
 
 func randexp_Variable() expression.Variable {
-	return expression.Variable{
-		Indice: randstring(),
-		Name:   randrune(),
-	}
+	var s expression.Variable
+	s.Indice = randstring()
+	s.Name = randrune()
+
+	return s
 }
 
 func randfloat64() float64 {
@@ -311,10 +321,11 @@ func randfloat64() float64 {
 }
 
 func randfun_FunctionDecoration() functiongrapher.FunctionDecoration {
-	return functiongrapher.FunctionDecoration{
-		Label: randstring(),
-		Color: randstring(),
-	}
+	var s functiongrapher.FunctionDecoration
+	s.Label = randstring()
+	s.Color = randstring()
+
+	return s
 }
 
 func randint() int {
@@ -365,10 +376,11 @@ func randque_ComparisonLevel() questions.ComparisonLevel {
 }
 
 func randque_CoordExpression() questions.CoordExpression {
-	return questions.CoordExpression{
-		X: randstring(),
-		Y: randstring(),
-	}
+	var s questions.CoordExpression
+	s.X = randstring()
+	s.Y = randstring()
+
+	return s
 }
 
 func randque_Enonce() questions.Enonce {
@@ -376,106 +388,118 @@ func randque_Enonce() questions.Enonce {
 }
 
 func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
-	return questions.ExpressionFieldBlock{
-		Expression:       randstring(),
-		Label:            randque_Interpolated(),
-		ComparisonLevel:  randque_ComparisonLevel(),
-		ShowFractionHelp: randbool(),
-	}
+	var s questions.ExpressionFieldBlock
+	s.Expression = randstring()
+	s.Label = randque_Interpolated()
+	s.ComparisonLevel = randque_ComparisonLevel()
+	s.ShowFractionHelp = randbool()
+
+	return s
 }
 
 func randque_FigureAffineLineFieldBlock() questions.FigureAffineLineFieldBlock {
-	return questions.FigureAffineLineFieldBlock{
-		Label:  randstring(),
-		A:      randstring(),
-		B:      randstring(),
-		Figure: randque_FigureBlock(),
-	}
+	var s questions.FigureAffineLineFieldBlock
+	s.Label = randstring()
+	s.A = randstring()
+	s.B = randstring()
+	s.Figure = randque_FigureBlock()
+
+	return s
 }
 
 func randque_FigureBlock() questions.FigureBlock {
-	return questions.FigureBlock{
-		Drawings:   randrep_RandomDrawings(),
-		Bounds:     randrep_RepereBounds(),
-		ShowGrid:   randbool(),
-		ShowOrigin: randbool(),
-	}
+	var s questions.FigureBlock
+	s.Drawings = randrep_RandomDrawings()
+	s.Bounds = randrep_RepereBounds()
+	s.ShowGrid = randbool()
+	s.ShowOrigin = randbool()
+
+	return s
 }
 
 func randque_FigurePointFieldBlock() questions.FigurePointFieldBlock {
-	return questions.FigurePointFieldBlock{
-		Answer: randque_CoordExpression(),
-		Figure: randque_FigureBlock(),
-	}
+	var s questions.FigurePointFieldBlock
+	s.Answer = randque_CoordExpression()
+	s.Figure = randque_FigureBlock()
+
+	return s
 }
 
 func randque_FigureVectorFieldBlock() questions.FigureVectorFieldBlock {
-	return questions.FigureVectorFieldBlock{
-		Answer:         randque_CoordExpression(),
-		AnswerOrigin:   randque_CoordExpression(),
-		Figure:         randque_FigureBlock(),
-		MustHaveOrigin: randbool(),
-	}
+	var s questions.FigureVectorFieldBlock
+	s.Answer = randque_CoordExpression()
+	s.AnswerOrigin = randque_CoordExpression()
+	s.Figure = randque_FigureBlock()
+	s.MustHaveOrigin = randbool()
+
+	return s
 }
 
 func randque_FigureVectorPairFieldBlock() questions.FigureVectorPairFieldBlock {
-	return questions.FigureVectorPairFieldBlock{
-		Figure:    randque_FigureBlock(),
-		Criterion: randque_VectorPairCriterion(),
-	}
+	var s questions.FigureVectorPairFieldBlock
+	s.Figure = randque_FigureBlock()
+	s.Criterion = randque_VectorPairCriterion()
+
+	return s
 }
 
 func randque_FormulaBlock() questions.FormulaBlock {
-	return questions.FormulaBlock{
-		Parts: randque_Interpolated(),
-	}
+	var s questions.FormulaBlock
+	s.Parts = randque_Interpolated()
+
+	return s
 }
 
 func randque_FunctionArea() questions.FunctionArea {
-	return questions.FunctionArea{
-		Bottom: randque_Interpolated(),
-		Top:    randque_Interpolated(),
-		Left:   randstring(),
-		Right:  randstring(),
-		Color:  randrep_ColorHex(),
-	}
+	var s questions.FunctionArea
+	s.Bottom = randque_Interpolated()
+	s.Top = randque_Interpolated()
+	s.Left = randstring()
+	s.Right = randstring()
+	s.Color = randrep_ColorHex()
+
+	return s
 }
 
 func randque_FunctionDefinition() questions.FunctionDefinition {
-	return questions.FunctionDefinition{
-		Function:   randstring(),
-		Decoration: randfun_FunctionDecoration(),
-		Variable:   randexp_Variable(),
-		From:       randstring(),
-		To:         randstring(),
-	}
+	var s questions.FunctionDefinition
+	s.Function = randstring()
+	s.Decoration = randfun_FunctionDecoration()
+	s.Variable = randexp_Variable()
+	s.From = randstring()
+	s.To = randstring()
+
+	return s
 }
 
 func randque_FunctionPoint() questions.FunctionPoint {
-	return questions.FunctionPoint{
-		Function: randque_Interpolated(),
-		X:        randstring(),
-		Color:    randrep_ColorHex(),
-		Legend:   randque_Interpolated(),
-	}
+	var s questions.FunctionPoint
+	s.Function = randque_Interpolated()
+	s.X = randstring()
+	s.Color = randrep_ColorHex()
+	s.Legend = randque_Interpolated()
+
+	return s
 }
 
 func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
-	return questions.FunctionPointsFieldBlock{
-		Function: randstring(),
-		Label:    randstring(),
-		Variable: randexp_Variable(),
-		XGrid:    randSlicestring(),
-	}
+	var s questions.FunctionPointsFieldBlock
+	s.Function = randstring()
+	s.Label = randstring()
+	s.Variable = randexp_Variable()
+	s.XGrid = randSlicestring()
+
+	return s
 }
 
 func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
-	return questions.FunctionsGraphBlock{
-		FunctionExprs:      randSliceque_FunctionDefinition(),
-		FunctionVariations: randSliceque_VariationTableBlock(),
-		Areas:              randSliceque_FunctionArea(),
-		Points:             randSliceque_FunctionPoint(),
-	}
+	var s questions.FunctionsGraphBlock
+	s.FunctionExprs = randSliceque_FunctionDefinition()
+	s.FunctionVariations = randSliceque_VariationTableBlock()
+	s.Areas = randSliceque_FunctionArea()
+	s.Points = randSliceque_FunctionPoint()
+
+	return s
 }
 
 func randque_In() questions.In {
@@ -487,17 +511,19 @@ func randque_Interpolated() questions.Interpolated {
 }
 
 func randque_NumberFieldBlock() questions.NumberFieldBlock {
-	return questions.NumberFieldBlock{
-		Expression: randstring(),
-	}
+	var s questions.NumberFieldBlock
+	s.Expression = randstring()
+
+	return s
 }
 
 func randque_OrderedListFieldBlock() questions.OrderedListFieldBlock {
-	return questions.OrderedListFieldBlock{
-		Label:               randque_Interpolated(),
-		Answer:              randSliceque_Interpolated(),
-		AdditionalProposals: randSliceque_Interpolated(),
-	}
+	var s questions.OrderedListFieldBlock
+	s.Label = randque_Interpolated()
+	s.Answer = randSliceque_Interpolated()
+	s.AdditionalProposals = randSliceque_Interpolated()
+
+	return s
 }
 
 func randque_ParameterEntry() questions.ParameterEntry {
@@ -515,28 +541,33 @@ func randque_Parameters() questions.Parameters {
 }
 
 func randque_ProofFieldBlock() questions.ProofFieldBlock {
-	return questions.ProofFieldBlock{
-		Answer: randque_ProofSequence(),
-	}
+	var s questions.ProofFieldBlock
+	s.Answer = randque_ProofSequence()
+
+	return s
 }
 
 func randque_ProofSequence() questions.ProofSequence {
-	return questions.ProofSequence{}
+	var s questions.ProofSequence
+
+	return s
 }
 
 func randque_RadioFieldBlock() questions.RadioFieldBlock {
-	return questions.RadioFieldBlock{
-		Answer:     randstring(),
-		Proposals:  randSliceque_Interpolated(),
-		AsDropDown: randbool(),
-	}
+	var s questions.RadioFieldBlock
+	s.Answer = randstring()
+	s.Proposals = randSliceque_Interpolated()
+	s.AsDropDown = randbool()
+
+	return s
 }
 
 func randque_Rp() questions.Rp {
-	return questions.Rp{
-		Expression: randstring(),
-		Variable:   randexp_Variable(),
-	}
+	var s questions.Rp
+	s.Expression = randstring()
+	s.Variable = randexp_Variable()
+
+	return s
 }
 
 func randque_SignSymbol() questions.SignSymbol {
@@ -546,43 +577,48 @@ func randque_SignSymbol() questions.SignSymbol {
 }
 
 func randque_SignTableBlock() questions.SignTableBlock {
-	return questions.SignTableBlock{
-		Label:     randstring(),
-		FxSymbols: randSliceque_SignSymbol(),
-		Xs:        randSlicestring(),
-		Signs:     randSlicebool(),
-	}
+	var s questions.SignTableBlock
+	s.Label = randstring()
+	s.FxSymbols = randSliceque_SignSymbol()
+	s.Xs = randSlicestring()
+	s.Signs = randSlicebool()
+
+	return s
 }
 
 func randque_SignTableFieldBlock() questions.SignTableFieldBlock {
-	return questions.SignTableFieldBlock{
-		Answer: randque_SignTableBlock(),
-	}
+	var s questions.SignTableFieldBlock
+	s.Answer = randque_SignTableBlock()
+
+	return s
 }
 
 func randque_TableBlock() questions.TableBlock {
-	return questions.TableBlock{
-		HorizontalHeaders: randSliceque_TextPart(),
-		VerticalHeaders:   randSliceque_TextPart(),
-		Values:            randSliceSliceque_TextPart(),
-	}
+	var s questions.TableBlock
+	s.HorizontalHeaders = randSliceque_TextPart()
+	s.VerticalHeaders = randSliceque_TextPart()
+	s.Values = randSliceSliceque_TextPart()
+
+	return s
 }
 
 func randque_TableFieldBlock() questions.TableFieldBlock {
-	return questions.TableFieldBlock{
-		HorizontalHeaders: randSliceque_TextPart(),
-		VerticalHeaders:   randSliceque_TextPart(),
-		Answer:            randSliceSlicestring(),
-	}
+	var s questions.TableFieldBlock
+	s.HorizontalHeaders = randSliceque_TextPart()
+	s.VerticalHeaders = randSliceque_TextPart()
+	s.Answer = randSliceSlicestring()
+
+	return s
 }
 
 func randque_TextBlock() questions.TextBlock {
-	return questions.TextBlock{
-		Parts:   randque_Interpolated(),
-		Bold:    randbool(),
-		Italic:  randbool(),
-		Smaller: randbool(),
-	}
+	var s questions.TextBlock
+	s.Parts = randque_Interpolated()
+	s.Bold = randbool()
+	s.Italic = randbool()
+	s.Smaller = randbool()
+
+	return s
 }
 
 func randque_TextKind() questions.TextKind {
@@ -592,46 +628,52 @@ func randque_TextKind() questions.TextKind {
 }
 
 func randque_TextPart() questions.TextPart {
-	return questions.TextPart{
-		Content: randstring(),
-		Kind:    randque_TextKind(),
-	}
+	var s questions.TextPart
+	s.Content = randstring()
+	s.Kind = randque_TextKind()
+
+	return s
 }
 
 func randque_TreeFieldBlock() questions.TreeFieldBlock {
-	return questions.TreeFieldBlock{
-		EventsProposals: randSlicestring(),
-		AnswerRoot:      randque_TreeNodeAnswer(),
-	}
+	var s questions.TreeFieldBlock
+	s.EventsProposals = randSlicestring()
+	s.AnswerRoot = randque_TreeNodeAnswer()
+
+	return s
 }
 
 func randque_TreeNodeAnswer() questions.TreeNodeAnswer {
-	return questions.TreeNodeAnswer{
-		Probabilities: randSlicestring(),
-		Value:         randint(),
-	}
+	var s questions.TreeNodeAnswer
+	s.Probabilities = randSlicestring()
+	s.Value = randint()
+
+	return s
 }
 
 func randque_VariationTableBlock() questions.VariationTableBlock {
-	return questions.VariationTableBlock{
-		Label: randque_Interpolated(),
-		Xs:    randSlicestring(),
-		Fxs:   randSlicestring(),
-	}
+	var s questions.VariationTableBlock
+	s.Label = randque_Interpolated()
+	s.Xs = randSlicestring()
+	s.Fxs = randSlicestring()
+
+	return s
 }
 
 func randque_VariationTableFieldBlock() questions.VariationTableFieldBlock {
-	return questions.VariationTableFieldBlock{
-		Answer: randque_VariationTableBlock(),
-	}
+	var s questions.VariationTableFieldBlock
+	s.Answer = randque_VariationTableBlock()
+
+	return s
 }
 
 func randque_VectorFieldBlock() questions.VectorFieldBlock {
-	return questions.VectorFieldBlock{
-		Answer:         randque_CoordExpression(),
-		AcceptColinear: randbool(),
-		DisplayColumn:  randbool(),
-	}
+	var s questions.VectorFieldBlock
+	s.Answer = randque_CoordExpression()
+	s.AcceptColinear = randbool()
+	s.DisplayColumn = randbool()
+
+	return s
 }
 
 func randque_VectorPairCriterion() questions.VectorPairCriterion {
@@ -645,10 +687,11 @@ func randrep_ColorHex() repere.ColorHex {
 }
 
 func randrep_Coord() repere.Coord {
-	return repere.Coord{
-		X: randfloat64(),
-		Y: randfloat64(),
-	}
+	var s repere.Coord
+	s.X = randfloat64()
+	s.Y = randfloat64()
+
+	return s
 }
 
 func randrep_LabelPos() repere.LabelPos {
@@ -658,80 +701,89 @@ func randrep_LabelPos() repere.LabelPos {
 }
 
 func randrep_NamedRandomLabeledPoint() repere.NamedRandomLabeledPoint {
-	return repere.NamedRandomLabeledPoint{
-		Name:  randstring(),
-		Point: randrep_RandomLabeledPoint(),
-	}
+	var s repere.NamedRandomLabeledPoint
+	s.Name = randstring()
+	s.Point = randrep_RandomLabeledPoint()
+
+	return s
 }
 
 func randrep_RandomArea() repere.RandomArea {
-	return repere.RandomArea{
-		Color:  randrep_ColorHex(),
-		Points: randSlicestring(),
-	}
+	var s repere.RandomArea
+	s.Color = randrep_ColorHex()
+	s.Points = randSlicestring()
+
+	return s
 }
 
 func randrep_RandomCircle() repere.RandomCircle {
-	return repere.RandomCircle{
-		Center:    randrep_RandomCoord(),
-		Radius:    randstring(),
-		LineColor: randrep_ColorHex(),
-		FillColor: randrep_ColorHex(),
-		Legend:    randstring(),
-	}
+	var s repere.RandomCircle
+	s.Center = randrep_RandomCoord()
+	s.Radius = randstring()
+	s.LineColor = randrep_ColorHex()
+	s.FillColor = randrep_ColorHex()
+	s.Legend = randstring()
+
+	return s
 }
 
 func randrep_RandomCoord() repere.RandomCoord {
-	return repere.RandomCoord{
-		X: randstring(),
-		Y: randstring(),
-	}
+	var s repere.RandomCoord
+	s.X = randstring()
+	s.Y = randstring()
+
+	return s
 }
 
 func randrep_RandomDrawings() repere.RandomDrawings {
-	return repere.RandomDrawings{
-		Points:   randSlicerep_NamedRandomLabeledPoint(),
-		Segments: randSlicerep_RandomSegment(),
-		Lines:    randSlicerep_RandomLine(),
-		Circles:  randSlicerep_RandomCircle(),
-		Areas:    randSlicerep_RandomArea(),
-	}
+	var s repere.RandomDrawings
+	s.Points = randSlicerep_NamedRandomLabeledPoint()
+	s.Segments = randSlicerep_RandomSegment()
+	s.Lines = randSlicerep_RandomLine()
+	s.Circles = randSlicerep_RandomCircle()
+	s.Areas = randSlicerep_RandomArea()
+
+	return s
 }
 
 func randrep_RandomLabeledPoint() repere.RandomLabeledPoint {
-	return repere.RandomLabeledPoint{
-		Color: randrep_ColorHex(),
-		Coord: randrep_RandomCoord(),
-		Pos:   randrep_LabelPos(),
-	}
+	var s repere.RandomLabeledPoint
+	s.Color = randrep_ColorHex()
+	s.Coord = randrep_RandomCoord()
+	s.Pos = randrep_LabelPos()
+
+	return s
 }
 
 func randrep_RandomLine() repere.RandomLine {
-	return repere.RandomLine{
-		Label: randstring(),
-		A:     randstring(),
-		B:     randstring(),
-		Color: randrep_ColorHex(),
-	}
+	var s repere.RandomLine
+	s.Label = randstring()
+	s.A = randstring()
+	s.B = randstring()
+	s.Color = randrep_ColorHex()
+
+	return s
 }
 
 func randrep_RandomSegment() repere.RandomSegment {
-	return repere.RandomSegment{
-		LabelName: randstring(),
-		From:      randstring(),
-		To:        randstring(),
-		Color:     randrep_ColorHex(),
-		LabelPos:  randrep_LabelPos(),
-		Kind:      randrep_SegmentKind(),
-	}
+	var s repere.RandomSegment
+	s.LabelName = randstring()
+	s.From = randstring()
+	s.To = randstring()
+	s.Color = randrep_ColorHex()
+	s.LabelPos = randrep_LabelPos()
+	s.Kind = randrep_SegmentKind()
+
+	return s
 }
 
 func randrep_RepereBounds() repere.RepereBounds {
-	return repere.RepereBounds{
-		Width:  randint(),
-		Height: randint(),
-		Origin: randrep_Coord(),
-	}
+	var s repere.RepereBounds
+	s.Width = randint()
+	s.Height = randint()
+	s.Origin = randrep_Coord()
+
+	return s
 }
 
 func randrep_SegmentKind() repere.SegmentKind {
