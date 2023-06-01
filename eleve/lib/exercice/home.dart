@@ -127,8 +127,6 @@ class _QuestionList extends StatelessWidget {
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
-                    if (st == QuestionStatus.waitingCorrection)
-                      const Text("Tentative en attente de correction"),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Wrap(
@@ -185,7 +183,7 @@ class _QuestionList extends StatelessWidget {
   }
 }
 
-enum QuestionStatus { locked, checked, toDo, waitingCorrection, incorrect }
+enum QuestionStatus { locked, checked, toDo, incorrect }
 
 extension _Icon on QuestionStatus {
   Icon get icon {
@@ -203,9 +201,6 @@ extension _Icon on QuestionStatus {
           assignementIcon,
           color: Colors.purpleAccent,
         );
-      case QuestionStatus.waitingCorrection:
-        return const Icon(IconData(0xf51a, fontFamily: 'MaterialIcons'),
-            color: Colors.orange);
       case QuestionStatus.incorrect:
         return const Icon(IconData(0xf647, fontFamily: 'MaterialIcons'),
             color: Colors.red);

@@ -47,12 +47,6 @@ enum ExerciceStatus {
   displayingFeedback,
 }
 
-class ParallelAnswerStatus {
-  final int? questionToDo;
-  final Map<int, AnswerP> answersToSend;
-  const ParallelAnswerStatus(this.questionToDo, this.answersToSend);
-}
-
 /// [ExerciceController] exposes the state
 /// which will change during an exercice,
 /// so that parent widget may react properly.
@@ -71,9 +65,6 @@ class ExerciceController {
 
   List<_ExerciceQuestionController> _questions;
 
-  // questions validated but not submitted
-  final Set<int> _waitingQuestions = {};
-
   /// onValid is the callback triggered when validatin a question
   /// and is filled by the widget using the controller
   void Function()? onValid;
@@ -89,6 +80,12 @@ class ExerciceController {
   Enonce get currentCorrection {
     if (questionIndex == null) return [];
     return exeAndProg.exercice.questions[questionIndex!].question.correction;
+  }
+
+  /// checks if the student as already try at least once the current question
+  bool get isCurrentCorrectionEnabled {
+    if (questionIndex == null) return false;
+    return exeAndProg.progression.questions[questionIndex!].isNotEmpty;
   }
 
   List<_ExerciceQuestionController> _createControllers(FieldAPI api) {
@@ -109,7 +106,6 @@ class ExerciceController {
         _questions[questionIndex!].state.buttonLabel = "Valider...";
         break;
     }
-    _waitingQuestions.add(questionIndex!);
     _refreshStates();
     if (onValid != null) onValid!();
   }
@@ -138,7 +134,6 @@ class ExerciceController {
   void resetWithNextQuestions(List<InstantiatedQuestion> nextQuestions) {
     exeAndProg = exeAndProg.copyWithQuestions(nextQuestions);
     _questions = _createControllers(api);
-    _waitingQuestions.clear();
     reset();
   }
 
@@ -156,7 +151,6 @@ class ExerciceController {
   /// answer. It removes waiting questions and update the questions status.
   void updateProgression(ProgressionExt progression) {
     exeAndProg = StudentWork(exeAndProg.exercice, progression);
-    _waitingQuestions.clear();
     _refreshStates();
   }
 
@@ -173,13 +167,9 @@ class ExerciceController {
         return QuestionStatus.locked;
       }
 
-      // after validating, a question may be both incorrect and waiting submit:
-      // give the priority to incorrectQuestions
       final qu = _questions[questionIndex];
       if (qu.feedback().values.any((error) => error)) {
         return QuestionStatus.incorrect;
-      } else if (_waitingQuestions.contains(questionIndex)) {
-        return QuestionStatus.waitingCorrection;
       }
       return QuestionStatus.toDo;
     });
@@ -191,27 +181,6 @@ class ExerciceController {
     _questions[questionIndex!].setAnswers(answers);
     _questions[questionIndex!].state.buttonEnabled = true;
     _questions[questionIndex!].state.buttonLabel = "Valider";
-    _waitingQuestions.add(questionIndex!);
-  }
-
-  /// [hasAnsweredAll] check if all the questions are done
-  ParallelAnswerStatus hasAnsweredAll() {
-    final toSend = <int, AnswerP>{};
-    for (var index = 0; index < _questions.length; index++) {
-      final history = exeAndProg.progression.getQuestion(index);
-      if (history.isEmpty || !history.last) {
-        // the question must be answered
-        if (!_waitingQuestions.contains(index)) {
-          // go to this question
-          return ParallelAnswerStatus(index, {});
-        } else {
-          // add it to the send answsers
-          toSend[index] = AnswerP(exeAndProg.exercice.questions[index].params,
-              _questions[index].answers());
-        }
-      }
-    }
-    return ParallelAnswerStatus(null, toSend);
   }
 
   bool isExerciceOver() => exeAndProg.progression.nextQuestion == -1;
@@ -229,7 +198,7 @@ class ExerciceController {
     }
     switch (exeAndProg.exercice.flow) {
       case Flow
-          .sequencial: // do not show locked questions when exercice is not over
+            .sequencial: // do not show locked questions when exercice is not over
         return currentIndex == null ||
             (isExerciceOver() && hasNextQuestion) ||
             currentIndex < exeAndProg.progression.nextQuestion;
@@ -268,16 +237,22 @@ class ExerciceW extends StatefulWidget {
 
   final void Function()? onShowCorrectAnswer;
 
+  /// if true, and if the exercice has a correction,
+  /// show a button to access the correction after on try
   final bool showCorrectionButtonOnFail;
-  final bool showCurrentCorrection;
+
+  /// if true, displays the correction root instead of
+  /// the enonce
+  /// Only used in loopback
+  final bool instantShowCorrection;
 
   const ExerciceW(
     this.api,
     this.controller, {
     Key? key,
     this.onShowCorrectAnswer,
-    this.showCorrectionButtonOnFail = false,
-    this.showCurrentCorrection = false,
+    this.showCorrectionButtonOnFail = true,
+    this.instantShowCorrection = false,
   }) : super(key: key);
 
   @override
@@ -306,9 +281,45 @@ class _ExerciceWState extends State<ExerciceW> {
     widget.controller.reset();
     widget.controller.onValid = onQuestionButtonClick;
 
-    if (widget.showCurrentCorrection) {
+    if (widget.instantShowCorrection) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ct = widget.controller;
+    final exP = widget.controller.exeAndProg;
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Exercice"),
+          actions: [
+            if (widget.onShowCorrectAnswer != null && ct.questionIndex != null)
+              TextButton(
+                  onPressed: widget.onShowCorrectAnswer,
+                  child: const Text("Afficher la réponse")),
+            IconButton(
+                onPressed: ct.goToPreviousEnabled ? goToPrevious : null,
+                icon: const Icon(IconData(0xf572,
+                    fontFamily: 'MaterialIcons', matchTextDirection: true))),
+            IconButton(
+                onPressed: ct.goToNextEnabled ? goToNext : null,
+                icon: const Icon(IconData(0xf57a,
+                    fontFamily: 'MaterialIcons', matchTextDirection: true))),
+          ],
+        ),
+        body: ct.questionIndex == null
+            ? ExerciceHome(
+                exP,
+                ct.questionStates,
+                (index) => setState(() {
+                      ct.questionIndex = index;
+                    }))
+            : QuestionW(
+                widget.controller._questions[widget.controller.questionIndex!],
+                Colors.purpleAccent,
+                title: "Question ${widget.controller.questionIndex! + 1}",
+              ));
   }
 
   // handle the errors
@@ -334,12 +345,14 @@ class _ExerciceWState extends State<ExerciceW> {
     NotificationExerciceDone().dispatch(context);
   }
 
-  void onValidQuestionSequential() async {
+  void _onValideQuestion() async {
     final ct = widget.controller;
     final index = ct.questionIndex!;
-    // if we are not at the current question, just go to it
+
+    // for sequencial exercices, if we are not at the current question, just go to it
     // and return
-    if (index != ct.exeAndProg.progression.nextQuestion) {
+    if (ct.exeAndProg.exercice.flow == Flow.sequencial &&
+        index != ct.exeAndProg.progression.nextQuestion) {
       setState(() {
         ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
       });
@@ -364,6 +377,9 @@ class _ExerciceWState extends State<ExerciceW> {
     final isCorrect = resp.results[index]!.isCorrect;
     final hasNextQuestion =
         isCorrect && ct.exeAndProg.progression.nextQuestion != -1;
+    final showButtonCorrection = widget.showCorrectionButtonOnFail &&
+        ct.currentCorrection.isNotEmpty &&
+        !isCorrect;
 
     final SnackBarAction? action = hasNextQuestion
         ? SnackBarAction(
@@ -375,21 +391,22 @@ class _ExerciceWState extends State<ExerciceW> {
               });
             },
           )
-        : (widget.showCorrectionButtonOnFail && !isCorrect)
+        : (showButtonCorrection)
             ? SnackBarAction(
-                textColor: Colors.white,
-                label: "Afficher la correction",
+                backgroundColor: Colors.white,
+                label: "Correction",
                 onPressed: _showCorrection)
             : null;
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade400,
+      backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade200,
       duration: Duration(
-          seconds: hasNextQuestion ? 10000 : 4), // block on correct answer
+          seconds: hasNextQuestion ? 20 : 4), // block on correct answer
       content: Text(isCorrect
           ? "Bonne réponse ! Bravo."
           : "Dommage, la réponse est incorrecte"),
       action: action,
+      actionOverflowThreshold: 0.5,
     ));
 
     if (ct.exeAndProg.progression.nextQuestion == -1) {
@@ -417,57 +434,6 @@ class _ExerciceWState extends State<ExerciceW> {
     ));
   }
 
-  // only validate if all the questions have been completed
-  void onValidQuestionParallel() async {
-    final ct = widget.controller;
-
-    // check if all the questions are done
-    final bilan = ct.hasAnsweredAll();
-
-    if (bilan.questionToDo != null) {
-      // there are still some questions to to
-      setState(() {
-        widget.controller.questionIndex = bilan.questionToDo;
-      });
-      return;
-    }
-
-    // all good, lets send the results
-    final resp = await _evaluate(EvaluateWorkIn(ct.exeAndProg.exercice.iD,
-        bilan.answersToSend, ct.exeAndProg.progression));
-    if (resp == null) {
-      return;
-    }
-
-    ct.updateProgression(resp.progression); // update the progression
-    nextQuestions = resp.newQuestions; // buffer until retry
-
-    if (ct.isExerciceOver()) {
-      onExerciceOver();
-      return;
-    }
-
-    // display the incorrect answers
-    final wrongAnswersPlus1 = resp.results.keys
-        .where((index) => !resp.results[index]!.isCorrect)
-        .map((e) => e + 1);
-    final text = (wrongAnswersPlus1.length > 1)
-        ? "Les questions ${wrongAnswersPlus1.join(', ')} sont incorrectes."
-        : "La question ${wrongAnswersPlus1.first} est incorrecte.";
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Colors.red.shade200,
-      duration: const Duration(seconds: 4),
-      content: Text(text),
-    ));
-
-    // display the errors and go to the menu
-    setState(() {
-      ct.showFeedback(resp.results);
-      widget.controller.questionIndex = null;
-    });
-  }
-
   void onQuestionButtonClick() {
     switch (widget.controller.status) {
       case ExerciceStatus.answering:
@@ -482,15 +448,6 @@ class _ExerciceWState extends State<ExerciceW> {
     setState(() {
       ct.resetWithNextQuestions(nextQuestions);
     });
-  }
-
-  void _onValideQuestion() async {
-    switch (widget.controller.exeAndProg.exercice.flow) {
-      case Flow.sequencial:
-        return onValidQuestionSequential();
-      case Flow.parallel:
-        return onValidQuestionParallel();
-    }
   }
 
   void goToPrevious() {
@@ -515,73 +472,5 @@ class _ExerciceWState extends State<ExerciceW> {
     setState(() {
       widget.controller.questionIndex = newIndex;
     });
-  }
-
-  Future<bool> confirmeLeave() async {
-    final res = await showDialog<bool?>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text("Abandonner l'exercice"),
-            content: const Text(
-                "Es-tu sûr d'abandonner l'exercice ? \nTes réponses en attente de correction seront effacées."),
-            actions: [
-              TextButton(
-                  child: const Text("Abandonner"),
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  })
-            ],
-          );
-        });
-    return res ?? false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ct = widget.controller;
-    final exP = widget.controller.exeAndProg;
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text("Exercice"),
-          actions: [
-            if (widget.onShowCorrectAnswer != null && ct.questionIndex != null)
-              TextButton(
-                  onPressed: widget.onShowCorrectAnswer,
-                  child: const Text("Afficher la réponse")),
-            IconButton(
-                onPressed: ct.goToPreviousEnabled ? goToPrevious : null,
-                icon: const Icon(IconData(0xf572,
-                    fontFamily: 'MaterialIcons', matchTextDirection: true))),
-            IconButton(
-                onPressed: ct.goToNextEnabled ? goToNext : null,
-                icon: const Icon(IconData(0xf57a,
-                    fontFamily: 'MaterialIcons', matchTextDirection: true))),
-          ],
-        ),
-        body: WillPopScope(
-          onWillPop: () async {
-            final isDirty = ct.questionStates
-                .any((st) => st == QuestionStatus.waitingCorrection);
-            if (isDirty) {
-              final ok = await confirmeLeave();
-              return ok;
-            }
-            return true; // nothing to loose
-          },
-          child: ct.questionIndex == null
-              ? ExerciceHome(
-                  exP,
-                  ct.questionStates,
-                  (index) => setState(() {
-                        ct.questionIndex = index;
-                      }))
-              : QuestionW(
-                  widget
-                      .controller._questions[widget.controller.questionIndex!],
-                  Colors.purpleAccent,
-                  title: "Question ${widget.controller.questionIndex! + 1}",
-                ),
-        ));
   }
 }

@@ -156,6 +156,7 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       case _Mode.exercice:
         setState(() {
           exerciceData!.controller.setQuestionAnswers(ans.data);
+          exerciceData!.instantShowCorrection = false;
         });
         return;
       case _Mode.paused:
@@ -183,13 +184,10 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       case _Mode.question:
         return LoopbackQuestionW(questionData!, _showCorrectAnswer);
       case _Mode.exercice:
-        return ExerciceW(
-          widget.api,
-          exerciceData!.controller,
-          onShowCorrectAnswer: _showCorrectAnswer,
-          showCorrectionButtonOnFail: true,
-          showCurrentCorrection: exerciceData!.data.showCorrection,
-        );
+        return ExerciceW(widget.api, exerciceData!.controller,
+            onShowCorrectAnswer: _showCorrectAnswer,
+            showCorrectionButtonOnFail: true,
+            instantShowCorrection: exerciceData!.instantShowCorrection);
     }
   }
 }

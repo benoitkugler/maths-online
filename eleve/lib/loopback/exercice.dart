@@ -8,12 +8,15 @@ class LoopbackExerciceController {
   final ExerciceController controller;
   final LoopbackShowExercice data;
 
+  bool instantShowCorrection = false;
+
   LoopbackExerciceController(this.data, FieldAPI api)
       : controller = ExerciceController(
             StudentWork(
                 data.exercice, data.progression.tryStartFirstQuestion()),
             data.progression.startQuestion,
-            api);
+            api),
+        instantShowCorrection = data.showCorrection;
 }
 
 extension _AdjustStart on ProgressionExt {

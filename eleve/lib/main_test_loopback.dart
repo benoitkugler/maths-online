@@ -1,5 +1,6 @@
 import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/main_shared.dart';
+import 'package:eleve/main_test_questions.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions.dart' as server_questions;
@@ -44,22 +45,6 @@ Question numberQuestion(String title) {
 }
 
 const origin = server_questions.QuestionPage(null, null, null);
-
-final qu1 = numberQuestion("Test 1");
-final qu2 = numberQuestion("Test 2");
-final qu3 = numberQuestion("Test 3");
-
-final quI1 = InstantiatedQuestion(1, qu1, []);
-final quI2 = InstantiatedQuestion(2, qu2, []);
-final quI3 = InstantiatedQuestion(3, qu3, []);
-
-final quI1bis = InstantiatedQuestion(1, numberQuestion("Variante 1"), []);
-final quI2bis = InstantiatedQuestion(2, numberQuestion("Variante 2"), []);
-final quI3bis = InstantiatedQuestion(3, numberQuestion("Variante 3"), []);
-
-const qu1Answer = {0: NumberAnswer(0)};
-const qu2Answer = {0: NumberAnswer(1)};
-const qu3Answer = {0: NumberAnswer(2)};
 
 class _LoopbackTestApp extends StatelessWidget {
   const _LoopbackTestApp({Key? key}) : super(key: key);
@@ -109,7 +94,7 @@ class _LoopbackTestApp extends StatelessWidget {
         builder: (context) => EditorLoopback(
             LoopbackShowExercice(
                 workSequencial,
-                const ProgressionExt([[], [], []], 0),
+                ProgressionExt([[], [], []], 0),
                 true,
                 [origin, origin, origin]),
             _LoopbackAPI())));

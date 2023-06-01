@@ -84,8 +84,7 @@ class _SheetWState extends State<SheetW> {
         context: context,
         builder: (context) => const Dialog(
               child: Padding(
-                padding:
-                    EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
+                padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -105,8 +104,15 @@ class _SheetWState extends State<SheetW> {
     final exeAPI = _ExerciceAPI(widget.api, task.id);
     final exController = ExerciceController(studentEx, null, exeAPI);
     // actually launch the exercice
+
+    // TODO: for now we always show a correction (when available)
+    // we might want a setting to let the teacher choose to display it or not
     await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => ExerciceW(exeAPI, exController)));
+        builder: (context) => ExerciceW(
+              exeAPI,
+              exController,
+              showCorrectionButtonOnFail: true,
+            )));
 
     if (exeAPI.lastState != null) {
       final state = exeAPI.lastState!;

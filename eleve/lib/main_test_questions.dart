@@ -48,7 +48,9 @@ Question numberQuestion(String title) {
   return Question([
     TextBlock([T(title)], false, false, false),
     const NumberFieldBlock(0, 10)
-  ], []);
+  ], [
+    TextBlock([T("Une très belle correction : $title")], false, true, true)
+  ]);
 }
 
 final qu1 = numberQuestion("Test 1");
@@ -279,13 +281,13 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
 final workParallel = StudentWork(
   InstantiatedWork(const WorkID(0, true), "Identités remarquables (parallèle)",
       Flow.parallel, [quI1, quI2, quI3], [1, 1, 2]),
-  const ProgressionExt([[], [], []], 0),
+  ProgressionExt([[], [], []], 0),
 );
 
 final workSequencial = StudentWork(
   InstantiatedWork(const WorkID(0, true), "Identités remarquables (séquentiel)",
       Flow.sequencial, [quI1, quI2, quI3], [1, 1, 2]),
-  const ProgressionExt([[], [], []], 0),
+  ProgressionExt([[], [], []], 0),
 );
 
 class _ExerciceSequentialAPI implements ExerciceAPI {
