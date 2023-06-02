@@ -22,8 +22,6 @@ ALTER TABLE trivials
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher);
 
-_DELETE KEY (IdTrivial, IdTeacher);
-
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
 

@@ -28,6 +28,9 @@ ALTER TABLE teachers
     ADD UNIQUE (Mail);
 
 ALTER TABLE classrooms
+    ADD UNIQUE (Id, IdTeacher);
+
+ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
 ALTER TABLE students

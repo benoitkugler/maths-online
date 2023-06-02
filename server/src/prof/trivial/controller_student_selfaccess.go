@@ -15,7 +15,7 @@ import (
 
 type TrivialSelfaccess struct {
 	Classrooms []teacher.Classroom
-	Actives    teacher.IdClassroomSet
+	Actives    []teacher.IdClassroom
 }
 
 // [TrivialGetSelfaccess] returns the classroom which may launch
@@ -53,7 +53,7 @@ func (ct *Controller) selfaccess(id trivial.IdTrivial, userID uID) (TrivialSelfa
 		return TrivialSelfaccess{}, utils.SQLError(err)
 	}
 
-	actives := teacher.NewIdClassroomSetFrom(links.ByIdTeacher()[userID].IdClassrooms())
+	actives := links.ByIdTeacher()[userID].IdClassrooms()
 	return TrivialSelfaccess{Classrooms: cls, Actives: actives}, nil
 }
 

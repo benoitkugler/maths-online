@@ -412,7 +412,8 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 		return LaunchSessionOut{}, utils.SQLError(err)
 	}
 
-	if config.IdTeacher != userID {
+	// admin config may be launched, since it is a readonly operation
+	if config.IdTeacher != userID && config.IdTeacher != ct.admin.Id {
 		return LaunchSessionOut{}, errAccessForbidden
 	}
 

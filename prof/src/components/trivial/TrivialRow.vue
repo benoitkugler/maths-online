@@ -7,7 +7,7 @@
       <v-col cols="6" sm="4" md="3" align-self="center" class="pr-0 pl-1 my-3">
         <v-btn
           v-if="config.Origin.Visibility == Visibility.Admin"
-          class="ml-3 my-1"
+          class="ml-3 mr-1 my-1"
           size="x-small"
           icon
           @click="emit('duplicate')"
@@ -15,7 +15,6 @@
         >
           <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
         </v-btn>
-
         <template v-else>
           <v-menu offset-y close-on-content-click>
             <template v-slot:activator="{ isActive, props }">
@@ -63,18 +62,30 @@
             @update-public="(b) => emit('update-public', b)"
             @create-review="emit('create-review')"
           ></OriginButton>
-
-          <v-btn
-            v-if="isPersonnal(config)"
-            title="Lancer"
-            size="small"
-            @click="emit('launch')"
-            :disabled="props.disableLaunch"
-          >
-            <v-icon icon="mdi-play" color="green"></v-icon>
-            Lancer
-          </v-btn>
         </template>
+        <v-btn
+          title="Lancer"
+          size="small"
+          @click="emit('launch')"
+          :disabled="props.disableLaunch"
+        >
+          <v-icon icon="mdi-play" color="green"></v-icon>
+          Lancer
+        </v-btn>
+
+        <v-tooltip text="Paramétrer l'accès libre...">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon
+              size="x-small"
+              class="ml-2"
+              @click="emit('show-selfaccess')"
+            >
+              <v-icon icon="mdi-account-multiple"></v-icon>
+            </v-btn>
+          </template>
+        </v-tooltip>
       </v-col>
 
       <v-col
@@ -161,6 +172,7 @@ const emit = defineEmits<{
   (e: "edit"): void;
   (e: "launch"): void;
   (e: "delete"): void;
+  (e: "show-selfaccess"): void;
 }>();
 
 const colors = colorsPerCategorie;

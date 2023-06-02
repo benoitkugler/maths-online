@@ -1023,7 +1023,7 @@ export interface TrivialExt {
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialSelfaccess
 export interface TrivialSelfaccess {
   Classrooms: Classroom[] | null;
-  Actives: IdClassroomSet;
+  Actives: IdClassroom[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.UpdateSelfaccessIn
 export interface UpdateSelfaccessIn {
@@ -1235,8 +1235,6 @@ export interface Classroom {
 export type Date = Date_;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
 export type IdClassroom = number;
-// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroomSet
-export type IdClassroomSet = { [key: IdClassroom]: boolean } | null;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
 export type IdStudent = number;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher

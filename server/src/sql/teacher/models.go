@@ -18,6 +18,7 @@ type Teacher struct {
 }
 
 // Classroom is one group of student controlled by a teacher
+// gomacro:SQL ADD UNIQUE(Id, IdTeacher)
 type Classroom struct {
 	Id        IdClassroom `json:"id"`
 	IdTeacher IdTeacher   `json:"id_teacher" gomacro-sql-on-delete:"CASCADE"`

@@ -51,6 +51,18 @@
     <session-monitor @closed="closeMonitor"></session-monitor>
   </v-dialog>
 
+  <v-dialog
+    :model-value="selfaccessConfig != null"
+    @update:model-value="selfaccessConfig = null"
+    max-width="870px"
+  >
+    <selfaccess-config
+      v-if="selfaccessConfig != null"
+      :config="selfaccessConfig"
+      @close="selfaccessConfig = null"
+    ></selfaccess-config>
+  </v-dialog>
+
   <v-card class="my-5 mx-auto" width="90%">
     <v-row class="mx-0">
       <v-col cols="9">
@@ -91,12 +103,13 @@
         :disable-launch="
           isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
         "
-        @update-public="(b) => updatePublic(config.Config, b)"
+        @update-public="(b:boolean) => updatePublic(config.Config, b)"
         @create-review="createReview(config.Config)"
         @duplicate="duplicateConfig(config.Config)"
         @edit="editedConfig = config.Config"
         @launch="launchingConfig = config.Config"
         @delete="trivialToDelete = config.Config"
+        @show-selfaccess="selfaccessConfig = config.Config"
       ></trivial-row>
     </v-list>
   </v-card>
@@ -125,6 +138,7 @@ import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import { useRouter } from "vue-router";
 import { emptyTagsDB } from "@/controller/editor";
+import SelfaccessConfig from "../components/trivial/SelfaccessConfig.vue";
 
 const router = useRouter();
 
@@ -224,6 +238,8 @@ async function deleteConfig() {
   trivialToDelete = null;
   _configs = _configs.filter((c) => c.Config.Id != id);
 }
+
+let selfaccessConfig = $ref<Trivial | null>(null);
 
 let launchingConfig = $ref<Trivial | null>(null);
 // workaround for https://github.com/vuetifyjs/vuetify/issues/16770

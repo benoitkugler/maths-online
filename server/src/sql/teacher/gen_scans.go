@@ -172,6 +172,16 @@ func DeleteClassroomsByIdTeachers(tx DB, idTeachers ...IdTeacher) ([]IdClassroom
 	return ScanIdClassroomArray(rows)
 }
 
+// SelectClassroomByIdAndIdTeacher return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectClassroomByIdAndIdTeacher(tx DB, id IdClassroom, idTeacher IdTeacher) (item Classroom, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM classrooms WHERE Id = $1 AND IdTeacher = $2", id, idTeacher)
+	item, err = ScanClassroom(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneStudent(row scanner) (Student, error) {
 	var item Student
 	err := row.Scan(
