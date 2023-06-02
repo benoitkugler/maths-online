@@ -1020,6 +1020,16 @@ export interface TrivialExt {
   Origin: Origin;
   NbQuestionsByCategories: number[];
 }
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialSelfaccess
+export interface TrivialSelfaccess {
+  Classrooms: Classroom[] | null;
+  Actives: IdClassroomSet;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/trivial.UpdateSelfaccessIn
+export interface UpdateSelfaccessIn {
+  IdTrivial: IdTrivial;
+  IdClassrooms: IdClassroom[] | null;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.UpdateTrivialVisiblityIn
 export interface UpdateTrivialVisiblityIn {
   ConfigID: IdTrivial;
@@ -1225,6 +1235,8 @@ export interface Classroom {
 export type Date = Date_;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
 export type IdClassroom = number;
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroomSet
+export type IdClassroomSet = { [key: IdClassroom]: boolean } | null;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
 export type IdStudent = number;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
@@ -1839,6 +1851,51 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessTrivialTeacherMonitor(data: MonitorOut): void;
+
+  protected async rawTrivialGetSelfaccess(params: { "id-trivial": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
+    const rep: AxiosResponse<TrivialSelfaccess> = await Axios.get(fullUrl, {
+      params: { "id-trivial": String(params["id-trivial"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** TrivialGetSelfaccess wraps rawTrivialGetSelfaccess and handles the error */
+  async TrivialGetSelfaccess(params: { "id-trivial": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTrivialGetSelfaccess(params);
+      this.onSuccessTrivialGetSelfaccess(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTrivialGetSelfaccess(
+    data: TrivialSelfaccess
+  ): void;
+
+  protected async rawTrivialUpdateSelfaccess(params: UpdateSelfaccessIn) {
+    const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** TrivialUpdateSelfaccess wraps rawTrivialUpdateSelfaccess and handles the error */
+  async TrivialUpdateSelfaccess(params: UpdateSelfaccessIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawTrivialUpdateSelfaccess(params);
+      this.onSuccessTrivialUpdateSelfaccess();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTrivialUpdateSelfaccess(): void;
 
   protected async rawGetTrivialRunningSessions() {
     const fullUrl = this.baseUrl + "/api/trivial/sessions";

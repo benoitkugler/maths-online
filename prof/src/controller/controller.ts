@@ -38,7 +38,8 @@ import type {
   TaskExt,
   TeacherSettings,
   TextBlock,
-  TrivialExt
+  TrivialExt,
+  TrivialSelfaccess
 } from "./api_gen";
 import { AbstractAPI } from "./api_gen";
 
@@ -451,6 +452,16 @@ class Controller extends AbstractAPI {
 
   protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {
     this.inRequest = false;
+  }
+
+  protected onSuccessTrivialGetSelfaccess(data: TrivialSelfaccess): void {
+    this.inRequest = false;
+  }
+  protected onSuccessTrivialUpdateSelfaccess(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage(`Accès aux parties modifié avec succès.`);
+    }
   }
 
   protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {

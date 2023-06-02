@@ -1,7 +1,8 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE selfaccess_trivials (
     IdClassroom integer NOT NULL,
-    IdTrivial integer NOT NULL
+    IdTrivial integer NOT NULL,
+    IdTeacher integer NOT NULL
 );
 
 CREATE TABLE trivials (
@@ -19,10 +20,18 @@ ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher);
+
+_DELETE KEY (IdTrivial, IdTeacher);
+
+ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
 
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_edit_TagSection (data jsonb)
     RETURNS boolean

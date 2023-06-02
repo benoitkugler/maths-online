@@ -37,6 +37,7 @@ func randSelfaccessTrivial() SelfaccessTrivial {
 	var s SelfaccessTrivial
 	s.IdClassroom = randtea_IdClassroom()
 	s.IdTrivial = randIdTrivial()
+	s.IdTeacher = randtea_IdTeacher()
 
 	return s
 }

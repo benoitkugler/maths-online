@@ -15,3 +15,14 @@ type Trivial struct {
 	IdTeacher       teacher.IdTeacher
 	Name            string
 }
+
+// SelfaccessTrivial is a link table enabling a teacher
+// to publish (or hide) a [Trivial] for the students of a
+// classroom.
+// gomacro:SQL ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher)
+// gomacro:SQL _DELETE KEY (IdTrivial, IdTeacher)
+type SelfaccessTrivial struct {
+	IdClassroom teacher.IdClassroom
+	IdTrivial   IdTrivial
+	IdTeacher   teacher.IdTeacher
+}

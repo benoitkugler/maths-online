@@ -45,7 +45,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.GET("/api/prof/trivial/config/duplicate", tvc.DuplicateTrivialPoursuit)
 	gr.POST("/api/prof/trivial/config/check-missing-questions", tvc.CheckMissingQuestions)
 	gr.GET("/api/prof/trivial/monitor", tvc.TrivialTeacherMonitor)
-	// e.GET("/prof/trivial/monitor", tvc.TrivialTeacherMonitor, tc.JWTMiddlewareForQuery())
+	gr.GET("/api/prof/trivial/selfaccess", tvc.TrivialGetSelfaccess)     // trivial self-access
+	gr.POST("/api/prof/trivial/selfaccess", tvc.TrivialUpdateSelfaccess) // trivial self-access
 
 	// trivialpoursuit game server
 	gr.GET("/api/trivial/sessions", tvc.GetTrivialRunningSessions)

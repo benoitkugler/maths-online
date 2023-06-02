@@ -24,9 +24,7 @@ func TestCreateConfig(t *testing.T) {
 		ShowDecrassage:  true,
 		IdTeacher:       tc.Id,
 	}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	if _, err := tr.DeleteTrivialById(db, out.Id); err != nil {
 		t.Fatal(err)
@@ -39,29 +37,19 @@ func TestGetConfig(t *testing.T) {
 	defer db.Remove()
 
 	user1, err := teacher.Teacher{Mail: "1"}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 	user2, err := teacher.Teacher{Mail: "2"}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	c1, err := tr.Trivial{IdTeacher: user1.Id}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	_, err = tr.Trivial{IdTeacher: user2.Id}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, pass.Encrypter{}, "", user1)
 	l, err := ct.getTrivialPoursuits(user1.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 	if len(l) != 1 {
 		t.Fatal(l)
 	}
@@ -72,9 +60,7 @@ func TestGetConfig(t *testing.T) {
 	}
 
 	l, err = ct.getTrivialPoursuits(user2.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 	if len(l) != 2 {
 		t.Fatal(l)
 	}
@@ -197,9 +183,7 @@ func TestMissingQuestions(t *testing.T) {
 		},
 	}
 	out, err = ct.checkMissingQuestions(criteria, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 	if len(out.Missing) == 0 {
 		t.Fatal("categories should be missing")
 	}
@@ -246,4 +230,50 @@ func TestController_isDemoSessionID(t *testing.T) {
 			t.Errorf("Controller.isDemoSessionID() = %v, want %v", gotNbPlayers, tt.wantNbPlayers)
 		}
 	}
+}
+
+func TestCRUDSelfaccess(t *testing.T) {
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
+	defer db.Remove()
+
+	tc, err := teacher.Teacher{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	tr1, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	tr2, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	cl1, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	cl2, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	cl3, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := NewController(db.DB, pass.Encrypter{}, "", tc)
+
+	l, err := ct.selfaccess(tr1.Id, tc.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Classrooms) == 3)
+	tu.Assert(t, len(l.Actives) == 0)
+
+	err = ct.updateSelfaccess(UpdateSelfaccessIn{IdTrivial: tr1.Id, IdClassrooms: []teacher.IdClassroom{cl1.Id}}, tc.Id)
+	tu.AssertNoErr(t, err)
+
+	err = ct.updateSelfaccess(UpdateSelfaccessIn{IdTrivial: tr2.Id, IdClassrooms: []teacher.IdClassroom{cl1.Id, cl3.Id}}, tc.Id)
+	tu.AssertNoErr(t, err)
+
+	err = ct.updateSelfaccess(UpdateSelfaccessIn{IdTrivial: tr1.Id, IdClassrooms: []teacher.IdClassroom{cl1.Id, cl2.Id, cl3.Id}}, tc.Id)
+	tu.AssertNoErr(t, err)
+
+	l, err = ct.selfaccess(tr1.Id, tc.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Classrooms) == 3)
+	tu.Assert(t, len(l.Actives) == 3)
+
+	l, err = ct.selfaccess(tr2.Id, tc.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Classrooms) == 3)
+	tu.Assert(t, len(l.Actives) == 2)
 }
