@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
@@ -24,8 +23,8 @@ import (
 )
 
 var (
-	WarningLogger  = log.New(os.Stdout, "tv-session:ERROR:", 0)
-	ProgressLogger = log.New(os.Stdout, "tv-session:INFO:", 0)
+	WarningLogger  = log.New(os.Stdout, "tv-store:ERROR:", 0)
+	ProgressLogger = log.New(os.Stdout, "tv-store:INFO:", 0)
 )
 
 var sessionTimeout = 12 * time.Hour
@@ -45,25 +44,23 @@ type uID = teacher.IdTeacher
 // It delegates to trivial-poursuit.GameController for the
 // actual game logic handling.
 type Controller struct {
-	db       *sql.DB
-	key      pass.Encrypter
-	lock     sync.Mutex
-	sessions map[SessionID]*gameSession
+	db         *sql.DB
+	studentKey pass.Encrypter
 
-	// demoPin is used to create testing games on the fly
-	demoPin string
+	store gameStore
 
 	admin teacher.Teacher
 }
 
 func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher.Teacher) *Controller {
-	return &Controller{
-		db:       db,
-		key:      key,
-		demoPin:  demoPin,
-		admin:    admin,
-		sessions: make(map[string]*gameSession),
+	out := &Controller{
+		db:         db,
+		studentKey: key,
+		store:      newGameStore(demoPin),
+		admin:      admin,
 	}
+
+	return out
 }
 
 func (ct *Controller) checkOwner(configID tc.IdTrivial, userID uID) error {
@@ -83,27 +80,13 @@ type RunningSessionMetaOut struct {
 	NbGames int
 }
 
-// getSession locks and may return nil if no games has started yet
-func (ct *Controller) getSession(userID uID) *gameSession {
-	ct.lock.Lock()
-	defer ct.lock.Unlock()
-
-	for _, session := range ct.sessions {
-		if session.idTeacher == userID {
-			return session
-		}
-	}
-
-	return nil
-}
-
 func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	var out RunningSessionMetaOut
-	if session := ct.getSession(userID); session != nil {
-		out = RunningSessionMetaOut{NbGames: len(session.games)}
-	}
+	session := ct.store.getSessionID(userID)
+	ct.store.lock.Lock()
+	out := RunningSessionMetaOut{NbGames: len(ct.store.getSession(session))}
+	ct.store.lock.Unlock()
 
 	return c.JSON(200, out)
 }
@@ -417,7 +400,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 		return LaunchSessionOut{}, errAccessForbidden
 	}
 
-	session := ct.getOrCreateSession(userID)
+	session := ct.store.getOrCreateSession(userID)
 
 	// populate the session with the required games :
 
@@ -441,15 +424,36 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 			Questions:       questionPool,
 		}
 
-		gameID := session.newGameID()
-		session.createGame(createGame{
+		gameID := ct.store.newTeacherGameID(session)
+		ct.store.createGame(createGame{
 			ID:      gameID,
 			Options: options,
 		})
-		out.GameIDs = append(out.GameIDs, gameID)
+		out.GameIDs = append(out.GameIDs, gameID.roomID())
 	}
 
 	return out, nil
+}
+
+// check the code refers to a session actually owned by the teacher [userID]
+func (ct *Controller) parseTeacherCode(gameID string, userID uID) (teacherCode, error) {
+	parsed, err := ct.store.parseCode(gameID)
+	if err != nil {
+		return teacherCode{}, err
+	}
+	tc, ok := parsed.(teacherCode)
+	if !ok {
+		return teacherCode{}, errors.New("internal error: expected teacher code")
+	}
+
+	ct.store.lock.Lock()
+	idTeacher := ct.store.teacherSessions[tc.sessionID]
+	ct.store.lock.Unlock()
+	if userID != idTeacher {
+		return teacherCode{}, errAccessForbidden
+	}
+
+	return tc, nil
 }
 
 // StartTtrivialGame starts a game created in manual mode
@@ -458,17 +462,21 @@ func (ct *Controller) StartTrivialGame(c echo.Context) error {
 
 	gameID := c.QueryParam("game-id")
 
-	session := ct.getSession(userID)
-	if session == nil {
-		return fmt.Errorf("Aucune session de TrivMaths n'est en cours.")
+	parsed, err := ct.parseTeacherCode(gameID, userID)
+	if err != nil {
+		return err
 	}
-
-	err := session.startGame(tv.RoomID(gameID))
+	err = ct.store.startGame(parsed)
 	if err != nil {
 		return err
 	}
 
 	return c.NoContent(200)
+}
+
+type stopGame struct {
+	ID      string
+	Restart bool // if false, definitively close the game
 }
 
 // StopTrivialGame stops a game, optionnaly restarting it,
@@ -481,12 +489,12 @@ func (ct *Controller) StopTrivialGame(c echo.Context) error {
 		return fmt.Errorf("invalid parameters format: %s", err)
 	}
 
-	session := ct.getSession(userID)
-	if session == nil {
-		// gracefully exit
-	} else {
-		session.stopGameEvents <- in
+	parsed, err := ct.parseTeacherCode(in.ID, userID)
+	if err != nil {
+		return err
 	}
+
+	ct.store.stopGame(parsed, in.Restart)
 
 	return c.NoContent(200)
 }

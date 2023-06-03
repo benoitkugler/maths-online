@@ -64,12 +64,13 @@ func newMonitorOut(summaries map[tv.RoomID]tv.Summary) (out MonitorOut) {
 }
 
 // lock and fetch summaries
-func (gs *gameSession) collectSummaries() map[tv.RoomID]tv.Summary {
+func (gs *gameStore) collectSummaries(sessionID sessionID) map[tv.RoomID]tv.Summary {
 	gs.lock.Lock()
-	defer gs.lock.Unlock()
+	games := gs.getSession(sessionID)
+	gs.lock.Unlock()
 
 	out := make(map[tv.RoomID]tv.Summary)
-	for _, ga := range gs.games {
+	for _, ga := range games {
 		su := ga.Summary()
 		out[su.ID] = su
 	}
@@ -81,12 +82,12 @@ func (gs *gameSession) collectSummaries() map[tv.RoomID]tv.Summary {
 func (ct *Controller) TrivialTeacherMonitor(c echo.Context) error {
 	userID := teacher.JWTTeacher(c)
 
-	session := ct.getSession(userID)
-	if session == nil {
+	session := ct.store.getSessionID(userID)
+	if session == "" {
 		return c.JSON(200, MonitorOut{})
 	}
 
-	out := newMonitorOut(session.collectSummaries())
+	out := newMonitorOut(ct.store.collectSummaries(session))
 
 	return c.JSON(200, out)
 }

@@ -23,16 +23,14 @@ import (
 // (or an error)
 // the client then connect on an websocket with this payload.
 
-// SessionID is a 4 digit identifier internaly used
-// to access one activity
-// It is usually contained in a larger tv.RoomID
-type SessionID = string
+// sessionID is a 4 digit identifier internaly used
+// to map from teacher permanent ID to active game sessions
+type sessionID = string
 
 // gameConnection stores the information needed to access
 // the proper game room and to reconnect in an already started game.
 type gameConnection struct {
-	SessionID SessionID
-	GameID    tv.RoomID
+	GameID tv.RoomID
 
 	// PlayerID is a generated UID used to
 	// link incomming connections to internal game players,
@@ -61,7 +59,7 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 		return err
 	}
 
-	gameMeta, err := ct.key.EncryptJSON(out)
+	gameMeta, err := ct.studentKey.EncryptJSON(out)
 	if err != nil {
 		return fmt.Errorf("Erreur interne (%s)", err)
 	}
@@ -69,47 +67,134 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 	return c.JSON(200, SetupStudentClientOut{GameMeta: gameMeta})
 }
 
-// expects <demoPin>.<number>
-// or return 0
-func (ct *Controller) isDemoSessionID(completeID string) (room string, nbPlayers int) {
-	cuts := strings.Split(completeID, ".")
-	if len(cuts) != 3 {
-		return "", 0
+type gameID interface {
+	roomID() tv.RoomID
+	setupStudentClient(ct *Controller, studentID pass.EncryptedID) (gameConnection, error)
+}
+
+// <demoPin>.<room>.<number>
+type demoCode struct {
+	demoPin   string
+	room      string
+	nbPlayers int
+}
+
+func (code demoCode) roomID() tv.RoomID {
+	return tv.RoomID(fmt.Sprintf("%s.%s.%d", code.demoPin, code.room, code.nbPlayers))
+}
+
+func (code demoCode) setupStudentClient(ct *Controller, _ pass.EncryptedID) (gameConnection, error) {
+	// check if the game is running and waiting for players
+	ct.store.lock.Lock()
+	_, ok := ct.store.games[code]
+	ct.store.lock.Unlock()
+
+	if !ok {
+		// create a game on the fly
+		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
+		if err != nil {
+			return gameConnection{}, err
+		}
+
+		options := tv.Options{
+			Launch:          tv.LaunchStrategy{Manual: false, Max: code.nbPlayers},
+			QuestionTimeout: time.Second * 120,
+			ShowDecrassage:  true,
+			Questions:       questionPool,
+		}
+
+		ct.store.createGame(createGame{
+			ID:      code,
+			Options: options,
+		})
 	}
-	if ct.demoPin != cuts[0] {
-		return "", 0
+
+	ProgressLogger.Printf("Setting up student at (demo) %s", code.roomID())
+
+	return ct.store.setupStudent("", code, ct.studentKey)
+}
+
+// <sessionID>.<gameID>, where sessionID is 4 digits
+type teacherCode struct {
+	sessionID sessionID
+	gameID    string
+}
+
+func (code teacherCode) roomID() tv.RoomID {
+	return tv.RoomID(fmt.Sprintf("%s.%s", code.sessionID, code.gameID))
+}
+
+func (tc teacherCode) setupStudentClient(ct *Controller, studentID pass.EncryptedID) (gameConnection, error) {
+	return ct.store.setupStudent(studentID, tc, ct.studentKey)
+}
+
+// <gameID> (5 digits)
+type selfaccessCode string
+
+func (code selfaccessCode) roomID() tv.RoomID { return tv.RoomID(code) }
+
+func (code selfaccessCode) setupStudentClient(ct *Controller, clientID pass.EncryptedID) (gameConnection, error) {
+	// TODO:
+	return gameConnection{GameID: code.roomID()}, nil
+}
+
+// parse a client game code, returning an error on invalid/malicious inputs
+func (gs *gameStore) parseCode(clientGameCode string) (gameID, error) {
+	cuts := strings.Split(clientGameCode, ".")
+	switch len(cuts) {
+	case 3: // demo
+		if gs.demoPin != cuts[0] {
+			return nil, fmt.Errorf("Code pin de démonstration %s invalide", cuts[0])
+		}
+		var out demoCode
+		out.demoPin = cuts[0]
+		out.room = cuts[1]
+		if len(out.room) < 2 {
+			return nil, fmt.Errorf("Code de partie de démonstration %s invalide", cuts[1])
+		}
+		var err error
+		out.nbPlayers, err = strconv.Atoi(cuts[2])
+		if err != nil {
+			return nil, fmt.Errorf("Numéro de partie de démonstration %s invalide: %s", cuts[2], err)
+		}
+		return out, nil
+	case 2: // teacher
+		sessionID, gameID := cuts[0], cuts[1]
+		if len(sessionID) < 4 || len(gameID) < 2 {
+			return nil, fmt.Errorf("Code (type classe) %s invalide", clientGameCode)
+		}
+		return teacherCode{sessionID: sessionID, gameID: gameID}, nil
+	case 1: // selfaccess
+		if len(clientGameCode) != 5 {
+			return nil, fmt.Errorf("Code (type perso.) %s invalide", clientGameCode)
+		}
+		return selfaccessCode(clientGameCode), nil
+	default:
+		return nil, fmt.Errorf("Code <%s> invalide", clientGameCode)
 	}
-	room = cuts[1]
-	if len(room) < 2 {
-		return "", 0
-	}
-	nbPlayers, _ = strconv.Atoi(cuts[2])
-	return room, nbPlayers
 }
 
 // checkGameConnection checks if the given `meta` corresponds to a currently valid game.
 // Clients may cache the returned connections so that expired data may be send back.
-func (ct *Controller) checkGameConnection(meta gameConnection) bool {
+func (ct *gameStore) checkGameConnection(meta gameConnection) bool {
+	gID, err := ct.parseCode(string(meta.GameID))
+	if err != nil {
+		return false
+	}
+
 	ct.lock.Lock()
 	defer ct.lock.Unlock()
-	session, ok := ct.sessions[meta.SessionID]
-	if !ok {
+
+	if _, has := ct.games[gID]; !has {
 		return false
 	}
 
-	session.lock.Lock()
-	defer session.lock.Unlock()
-
-	if _, has := session.games[meta.GameID]; !has {
-		return false
-	}
-
-	gameID, has := session.playerIDs[meta.PlayerID]
+	gameID2, has := ct.playerIDs[meta.PlayerID]
 	if !has {
 		return false
 	}
 	// check that it is the correct game
-	if gameID != meta.GameID {
+	if gID != gameID2 {
 		return false
 	}
 
@@ -119,92 +204,38 @@ func (ct *Controller) checkGameConnection(meta gameConnection) bool {
 func (ct *Controller) setupStudentClient(clientGameCode, clientID, gameMetaString string) (gameConnection, error) {
 	if gameMetaString != "" {
 		var incomingGameMeta gameConnection
-		err := ct.key.DecryptJSON(gameMetaString, &incomingGameMeta)
+		err := ct.studentKey.DecryptJSON(gameMetaString, &incomingGameMeta)
 		if err != nil {
 			return gameConnection{}, err
 		}
 
-		if ct.checkGameConnection(incomingGameMeta) {
+		if ct.store.checkGameConnection(incomingGameMeta) {
 			// simply the return the valid information
 			return incomingGameMeta, nil
 		}
 	}
 
-	// special case for demonstration sessions
-	if room, nbPlayers := ct.isDemoSessionID(clientGameCode); nbPlayers != 0 {
-		return ct.setupStudentDemo(room, nbPlayers)
+	// connect student according to the connection mode
+	codeKind, err := ct.store.parseCode(clientGameCode)
+	if err != nil {
+		return gameConnection{}, err
 	}
 
-	if len(clientGameCode) < 4 {
-		return gameConnection{}, fmt.Errorf("Code %s invalide", clientGameCode)
-	}
-	sessionID := clientGameCode[:4]
-	gameID := tv.RoomID(clientGameCode)
-
-	ct.lock.Lock()
-	session, ok := ct.sessions[sessionID]
-	ct.lock.Unlock()
-	if !ok {
-		WarningLogger.Printf("invalid session ID %s", sessionID)
-		return gameConnection{}, fmt.Errorf("L'activité n'existe pas ou est déjà terminée.")
-	}
-
-	studentID := pass.EncryptedID(clientID)
-
-	return session.setupStudent(studentID, gameID, ct.key)
-}
-
-func (ct *Controller) setupStudentDemo(room string, nbPlayers int) (gameConnection, error) {
-	sessionID := fmt.Sprintf("%s.%s.%d", ct.demoPin, room, nbPlayers)
-
-	// check if the session is running and waiting for players
-	ct.lock.Lock()
-	session, ok := ct.sessions[sessionID]
-	ct.lock.Unlock()
-
-	if !ok {
-		// create and launch the session ...
-		session = ct.createSession(sessionID, -1)
-
-		// ... and add one game on the fly
-		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
-		if err != nil {
-			return gameConnection{}, err
-		}
-
-		options := tv.Options{
-			Launch:          tv.LaunchStrategy{Manual: false, Max: nbPlayers},
-			QuestionTimeout: time.Second * 120,
-			ShowDecrassage:  true,
-			Questions:       questionPool,
-		}
-
-		// we only build one game per session, so use the sessionID
-		// as gameID for simplicity
-		session.createGame(createGame{
-			ID:      tv.RoomID(sessionID),
-			Options: options,
-		})
-	}
-
-	ProgressLogger.Printf("Setting up student at (demo) %s", sessionID)
-
-	return session.setupStudent("", tv.RoomID(sessionID), ct.key)
+	return codeKind.setupStudentClient(ct, pass.EncryptedID(clientID))
 }
 
 // setupStudent returns the game room meta data.
-func (gs *gameSession) setupStudent(studentID pass.EncryptedID, requestedGameID tv.RoomID, key pass.Encrypter) (gameConnection, error) {
+func (gs *gameStore) setupStudent(studentID pass.EncryptedID, requestedGameID gameID, key pass.Encrypter) (gameConnection, error) {
 	gs.lock.Lock()
 	game := gs.games[requestedGameID]
 	gs.lock.Unlock()
 
 	if game == nil {
-		return gameConnection{}, fmt.Errorf("Code de salle %s invalide.", requestedGameID)
+		return gameConnection{}, fmt.Errorf("Code de salle %s invalide.", requestedGameID.roomID())
 	}
 
-	playerID := gs.registerPlayer(game.ID)
+	playerID := gs.registerPlayer(requestedGameID)
 	out := gameConnection{
-		SessionID: gs.id,
 		PlayerID:  playerID,
 		StudentID: studentID,
 		GameID:    game.ID,
@@ -220,22 +251,14 @@ func (ct *Controller) ConnectStudentSession(c echo.Context) error {
 	clientPseudo := c.QueryParam("client-pseudo")
 
 	var meta gameConnection
-	err := ct.key.DecryptJSON(cryptedMeta, &meta)
+	err := ct.studentKey.DecryptJSON(cryptedMeta, &meta)
 	if err != nil {
 		return err
 	}
 
-	ct.lock.Lock()
-	session, ok := ct.sessions[meta.SessionID]
-	ct.lock.Unlock()
-	if !ok {
-		WarningLogger.Printf("unused session ID: %s", meta.SessionID)
-		return fmt.Errorf("L'activité n'existe pas ou est déjà terminée.")
-	}
-
 	ProgressLogger.Printf("Connecting student %v", meta)
 
-	err = ct.connectStudentTo(session, c, meta, clientPseudo)
+	err = ct.connectStudentTo(c, meta, clientPseudo)
 	if err != nil {
 		WarningLogger.Printf("connecting student: %s", err)
 	}
@@ -286,17 +309,21 @@ func (cl *studentClient) listen() {
 	}
 }
 
-func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, student gameConnection, pseudo string) error {
+func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, pseudo string) error {
+	gameID, err := ct.store.parseCode(string(student.GameID))
+	if err != nil {
+		return err
+	}
+
 	player := tv.Player{ID: student.PlayerID}
 	var studentID int64 = -1
 	if student.StudentID == "" { // anonymous connection
 		player.Pseudo = pseudo
 		if player.Pseudo == "" {
-			player.Pseudo = session.generateName() // finally generate a random pseudo
+			player.Pseudo = ct.store.generateName() // finally generate a random pseudo
 		}
 	} else { // fetch name from DB
-		var err error
-		studentID, err = ct.key.DecryptID(student.StudentID)
+		studentID, err = ct.studentKey.DecryptID(student.StudentID)
 		if err != nil {
 			return fmt.Errorf("invalid student ID: %s", err)
 		}
@@ -310,12 +337,12 @@ func (ct *Controller) connectStudentTo(session *gameSession, c echo.Context, stu
 	}
 
 	// then add the player
-	session.lock.Lock()
-	game := session.games[student.GameID]
-	session.lock.Unlock()
+	ct.store.lock.Lock()
+	game := ct.store.games[gameID]
+	ct.store.lock.Unlock()
 
 	if game == nil {
-		return fmt.Errorf("invalid game ID %s", student.StudentID)
+		return fmt.Errorf("internal error: invalid game ID %s", student.GameID)
 	}
 
 	// upgrade this connection to a WebSocket connection

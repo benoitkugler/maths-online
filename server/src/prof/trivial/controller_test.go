@@ -69,14 +69,14 @@ func TestGetConfig(t *testing.T) {
 func TestGameTermination(t *testing.T) {
 	tv.ProgressLogger.SetOutput(os.Stdout)
 
-	ct := newGameSession("test", -1)
+	ct := newGameStore("test")
 
-	ct.createGame(createGame{ID: "Game1"})
+	ct.createGame(createGame{ID: selfaccessCode("Game1")})
 
 	if len(ct.games) != 1 {
 		t.Fatal("expected one game")
 	}
-	ct.stopGame(stopGame{ID: "Game1"})
+	ct.stopGame(selfaccessCode("Game1"), false)
 
 	time.Sleep(20 * time.Millisecond)
 
@@ -208,30 +208,6 @@ func TestGetTrivials(t *testing.T) {
 	}
 }
 
-func TestController_isDemoSessionID(t *testing.T) {
-	const demoPin = "1234"
-	tests := []struct {
-		args          string
-		wantRoom      string
-		wantNbPlayers int
-	}{
-		{"1234.abc.4", "abc", 4},
-		{"1234.12.1", "12", 1},
-		{"1234.1.1", "", 0},
-		{"", "", 0},
-		{"789456qsd", "", 0},
-		{"1234.a", "", 0},
-	}
-	for _, tt := range tests {
-		ct := &Controller{
-			demoPin: demoPin,
-		}
-		if gotRoom, gotNbPlayers := ct.isDemoSessionID(tt.args); gotRoom != tt.wantRoom || gotNbPlayers != tt.wantNbPlayers {
-			t.Errorf("Controller.isDemoSessionID() = %v, want %v", gotNbPlayers, tt.wantNbPlayers)
-		}
-	}
-}
-
 func TestCRUDSelfaccess(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
 	defer db.Remove()
@@ -276,4 +252,35 @@ func TestCRUDSelfaccess(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Classrooms) == 3)
 	tu.Assert(t, len(l.Actives) == 2)
+}
+
+func TestStudentSelfaccess(t *testing.T) {
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
+	defer db.Remove()
+
+	tc, err := teacher.Teacher{}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	tr1, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	tr2, err := tr.Trivial{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	_, err = tr.Trivial{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	cl1, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	st1, err := teacher.Student{IdClassroom: cl1.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	ct := NewController(db.DB, pass.Encrypter{}, "", tc)
+
+	err = ct.updateSelfaccess(UpdateSelfaccessIn{IdTrivial: tr1.Id, IdClassrooms: []teacher.IdClassroom{cl1.Id}}, tc.Id)
+	tu.AssertNoErr(t, err)
+	err = ct.updateSelfaccess(UpdateSelfaccessIn{IdTrivial: tr2.Id, IdClassrooms: []teacher.IdClassroom{cl1.Id}}, tc.Id)
+	tu.AssertNoErr(t, err)
+
+	ls, err := ct.studentGetSelfaccess(st1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(ls) == 2)
 }

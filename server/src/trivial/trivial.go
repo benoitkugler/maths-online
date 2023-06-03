@@ -20,7 +20,7 @@ type Connection interface {
 }
 
 // RoomID is the public, full identifier of a game room,
-// usually of the form <sessionID><gameID> (excepted for demonstration games).
+// whose extact form varies according to the launch mode of the game.
 // It is not used internally by this package but associated
 // to every room object, and will be used by consuming packages.
 type RoomID string

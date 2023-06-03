@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/benoitkugler/maths-online/server/src/pass"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
+	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -107,5 +109,51 @@ func (ct *Controller) updateSelfaccess(args UpdateSelfaccessIn, userID uID) erro
 		return utils.SQLError(err)
 	}
 
+	return nil
+}
+
+// ----------------------- Student API -----------------------
+
+func (ct *Controller) StudentGetSelfaccess(c echo.Context) error {
+	idC := pass.EncryptedID(c.QueryParam("student-id"))
+	idStudent, err := ct.studentKey.DecryptID(idC)
+	if err != nil {
+		return err
+	}
+	out, err := ct.studentGetSelfaccess(teacher.IdStudent(idStudent))
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) studentGetSelfaccess(idStudent teacher.IdStudent) ([]trivial.Trivial, error) {
+	student, err := teacher.SelectStudent(ct.db, idStudent)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	links, err := trivial.SelectSelfaccessTrivialsByIdClassrooms(ct.db, student.IdClassroom)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	trivsM, err := trivial.SelectTrivials(ct.db, links.IdTrivials()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	trivs := make([]trivial.Trivial, 0, len(trivsM))
+	for _, triv := range trivsM {
+		trivs = append(trivs, triv)
+	}
+	sort.Slice(trivs, func(i, j int) bool { return trivs[i].Name < trivs[j].Name })
+
+	return trivs, nil
+}
+
+// StudentLaunchSelfaccess creates a game for the given config,
+// and returns the public game code, which may be joined with the regular API.
+func (ct *Controller) StudentLaunchSelfaccess(c echo.Context) error {
+	gameID := ct.store.newSelfaccessGameID()
+	// TODO:
+	ct.store.createGame(createGame{ID: gameID, Options: tv.Options{}})
 	return nil
 }
