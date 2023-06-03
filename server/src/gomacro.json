@@ -142,6 +142,12 @@
             "Output": "prof/trivial/gen_itfs.go"
         }
     ],
+    "prof/trivial/types_client.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
+        }
+    ],
     "prof/reviews/types.go": [
         {
             "Mode": "go/unions",

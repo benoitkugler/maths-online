@@ -27,7 +27,7 @@ var (
 	ProgressLogger = log.New(os.Stdout, "tv-store:INFO:", 0)
 )
 
-var sessionTimeout = 12 * time.Hour
+var gameTimeout = 6 * time.Hour
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,

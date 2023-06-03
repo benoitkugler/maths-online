@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -18,7 +19,7 @@ func TestPanics(t *testing.T) {
 
 func TestSummary(t *testing.T) {
 	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute})
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	_ = r.Options()
 
@@ -51,7 +52,7 @@ func TestReview(t *testing.T) {
 
 	naturalEnding := make(chan bool)
 	go func() {
-		_, isNaturalEnd := r.Listen()
+		_, isNaturalEnd := r.Listen(context.Background())
 		naturalEnding <- isNaturalEnd
 	}()
 

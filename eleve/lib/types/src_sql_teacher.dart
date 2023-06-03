@@ -11,6 +11,9 @@ typedef IdClassroom = int;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
 typedef IdStudent = int;
 
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
+typedef IdTeacher = int;
+
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Student
 class Student {
   final IdStudent id;

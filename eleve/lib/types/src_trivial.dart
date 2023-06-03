@@ -614,6 +614,9 @@ Map<String, dynamic> questionReviewToJson(QuestionReview item) {
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/trivial.RoomID
+typedef RoomID = String;
+
 /// github.com/benoitkugler/maths-online/server/src/trivial.ServerEvent
 abstract class ServerEvent {}
 
@@ -854,14 +857,14 @@ List<dynamic> listBoolToJson(List<bool> item) {
   return item.map(boolToJson).toList();
 }
 
-List<IdQuestion> listIntFromJson(dynamic json) {
+List<int> listIntFromJson(dynamic json) {
   if (json == null) {
     return [];
   }
   return (json as List<dynamic>).map(intFromJson).toList();
 }
 
-List<dynamic> listIntToJson(List<IdQuestion> item) {
+List<dynamic> listIntToJson(List<int> item) {
   return item.map(intToJson).toList();
 }
 

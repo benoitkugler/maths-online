@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -117,7 +118,7 @@ type createGame struct {
 	Options tv.Options
 }
 
-// createGame locks, creates, register and starts the eveng loop of new game
+// createGame locks, creates, registers and starts the eveng loop of new game
 func (gs *gameStore) createGame(params createGame) {
 	game := tv.NewRoom(params.ID.roomID(), params.Options)
 
@@ -127,8 +128,10 @@ func (gs *gameStore) createGame(params createGame) {
 	gs.lock.Unlock()
 
 	// ...and starts it
+	ctx, cancelFunc := context.WithTimeout(context.Background(), gameTimeout)
 	go func() {
-		replay, naturalEnding := game.Listen()
+		replay, naturalEnding := game.Listen(ctx)
+		cancelFunc()
 		if naturalEnding { // exploit the review
 			gs.exploitReplay(replay)
 		}
@@ -235,103 +238,3 @@ func (gs *gameStore) generateName() string {
 
 	return nameFromID(id)
 }
-
-// // gameSession is the list of the current active games
-// // for one teacher
-// // it is created at the first game launch and either explicitly shut down
-// // or timed out
-// type gameSession struct {
-// 	id sessionID
-// 	// optional (-1) for demonstration games or selfaccess
-// 	idTeacher uID
-
-// 	lock sync.Mutex
-
-// 	// active games
-// 	games map[tv.RoomID]*tv.Room
-
-// 	// map registred players to their game room
-// 	playerIDs map[tv.PlayerID]tv.RoomID
-
-// 	// stopGameEvents and createGameEvents are used by the teacher to control
-// 	// the current session
-// 	stopGameEvents     chan stopGame  // calls stopGame()
-// 	afterGameEndEvents chan tv.RoomID // calls afterGameEnd()
-// }
-
-// func newGameSession(id sessionID, idTeacher uID) *gameSession {
-// 	return &gameSession{
-// 		id:                 id,
-// 		idTeacher:          idTeacher,
-// 		games:              make(map[tv.RoomID]*tv.Room),
-// 		playerIDs:          make(map[tv.PlayerID]tv.RoomID),
-// 		stopGameEvents:     make(chan stopGame),
-// 		afterGameEndEvents: make(chan tv.RoomID),
-// 	}
-// }
-
-// // mainLoop blocks until all games are terminated or `ctx` is Done
-// func (gs *gameSession) mainLoop(ctx context.Context) {
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			for _, game := range gs.games {
-// 				game.Terminate <- true
-// 			}
-// 			return
-// 		case sg := <-gs.stopGameEvents:
-// 			gs.stopGame(sg)
-// 			// terminate the session if there is no more games and no restart it asked for
-// 			if !sg.Restart && len(gs.games) == 0 {
-// 				return
-// 			}
-// 		case gameID := <-gs.afterGameEndEvents:
-// 			gs.afterGameEnd(gameID)
-// 		}
-// 	}
-// }
-
-// // create and start the main lopp of a [gameSession]
-// // pass -1 as userID for anonymous sessions
-// // if timeout is false, the session is never terminated
-// func (ct *Controller) createSession(id sessionID, userID uID, timeout bool) *gameSession {
-// 	// init the session for this teacher
-// 	session := newGameSession(id, userID)
-
-// 	ct.lock.Lock()
-// 	// register the controller...
-// 	ct.sessions[id] = session
-// 	ct.lock.Unlock()
-
-// 	ProgressLogger.Printf("Launching session %s", id)
-// 	// ...and start it
-// 	go func() {
-// 		ctx := context.Background()
-// 		cancelFunc := func() {}
-// 		if timeout {
-// 			ctx, cancelFunc = context.WithTimeout(context.Background(), sessionTimeout)
-// 		}
-// 		session.mainLoop(ctx)
-
-// 		cancelFunc()
-
-// 		// remove the session when all the games are over
-// 		ct.lock.Lock()
-// 		defer ct.lock.Unlock()
-// 		delete(ct.sessions, id)
-
-// 		ProgressLogger.Printf("Removing session %s", id)
-// 	}()
-
-// 	return session
-// }
-
-// // getSession locks and may return nil if no games has started yet
-// func (ct *gameStore) getSession(userID uID) *gameSession {
-// 	ct.lock.Lock()
-// 	defer ct.lock.Unlock()
-
-// 	idSession := ct.teacherSessions[userID]
-
-// 	return nil
-// }

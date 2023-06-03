@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,7 +32,7 @@ func TestConcurrentEvents(t *testing.T) {
 	ProgressLogger.SetOutput(io.Discard) // hide verbose log
 
 	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 4}}) // do not start a game to simplify
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	var client1, client2, client3 clientOut
 	if err := r.Join(Player{ID: "<p1>"}, &client1); err != nil {
@@ -63,7 +64,7 @@ func TestTerminate(t *testing.T) {
 
 	isNaturalEnd := make(chan bool)
 	go func() {
-		_, ok := r.Listen()
+		_, ok := r.Listen(context.Background())
 		isNaturalEnd <- ok
 	}()
 
@@ -102,7 +103,7 @@ func (r *Room) decoReco(player PlayerID, errC chan<- error) {
 
 func TestReconnection(t *testing.T) {
 	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}})
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")

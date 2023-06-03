@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -133,7 +134,7 @@ func (r *Room) lp() map[serial]*playerConn {
 
 func TestStartAuto(t *testing.T) {
 	r := NewRoom("0", Options{Launch: LaunchStrategy{Max: 3}})
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	err := r.StartGame()
 	tu.Assert(t, err != nil) // auto mode
@@ -175,7 +176,7 @@ func TestStartAuto(t *testing.T) {
 
 func TestStartManual(t *testing.T) {
 	r := NewRoom("0", Options{Launch: LaunchStrategy{Manual: true}})
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	err := r.StartGame()
 	tu.Assert(t, err != nil) // no players
@@ -208,7 +209,7 @@ func TestStartManual(t *testing.T) {
 
 func TestEmitQuestion(t *testing.T) {
 	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: time.Minute})
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
 
@@ -238,7 +239,7 @@ func TestQuestionTimeout(t *testing.T) {
 	r.mustJoin(t, "p1")
 	r.players["p1"].advance.success = Success{true, true, true, true, true}
 
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.throwAndMove("p1")
 
@@ -263,7 +264,7 @@ func TestQuestionTimeout(t *testing.T) {
 
 func TestDisconnectStartTurn(t *testing.T) {
 	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}})
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	p2 := &clientOut{}
 
@@ -286,7 +287,7 @@ func TestDisconnectStartTurn(t *testing.T) {
 func TestDisconnectInQuestion(t *testing.T) {
 	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
@@ -311,7 +312,7 @@ func TestDisconnectInQuestion(t *testing.T) {
 func TestDisconnectInQuestionResult(t *testing.T) {
 	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute})
 
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
@@ -343,7 +344,7 @@ func TestDisconnectInQuestionResult(t *testing.T) {
 func TestAllDisconnectInQuestionResult(t *testing.T) {
 	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
@@ -378,7 +379,7 @@ func TestAllDisconnectInQuestionResult(t *testing.T) {
 func TestReconnectInQuestion(t *testing.T) {
 	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
 
-	go r.Listen()
+	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
 	r.mustJoin(t, "p2")
@@ -571,7 +572,7 @@ func TestGameEnd(t *testing.T) {
 
 	rep := make(chan Replay)
 	go func() {
-		replay, _ := r.Listen()
+		replay, _ := r.Listen(context.Background())
 		rep <- replay
 	}()
 
@@ -616,4 +617,24 @@ func TestGameEnd(t *testing.T) {
 	if len(replay.QuestionHistory) != 3 {
 		t.Fatal()
 	}
+}
+
+func TestGameTimeout(t *testing.T) {
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true})
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Millisecond*200)
+	defer cancelFunc()
+
+	done := make(chan bool)
+	go func() {
+		_, _ = r.Listen(ctx)
+		done <- true
+	}()
+
+	r.mustJoin(t, "p1")
+	r.mustJoin(t, "p2")
+
+	// wait for timeout
+	isDone := <-done
+	tu.Assert(t, isDone)
 }

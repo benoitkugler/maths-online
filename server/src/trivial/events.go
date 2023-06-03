@@ -1,6 +1,7 @@
 package trivial
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
@@ -34,16 +35,19 @@ func (r *Room) broadcastEvents(events Events) {
 }
 
 // Listen starts the main game loop, listening
-// on the game channels.
-// Note that it does start the game itself : the game state is
+// on the game channels and blocking.
+// Note that it does not start the game itself : the game state is
 // initially in the lobby.
 // It returns `true` when the game is over, or `false` when it
-// is manually terminated.
+// was manually terminated.
 // Care should be taken to make sure no more events are send on the
 // channels when this method has returned.
-func (r *Room) Listen() (replay Replay, naturalEnding bool) {
+func (r *Room) Listen(ctx context.Context) (replay Replay, naturalEnding bool) {
 	for {
 		select {
+		case <-ctx.Done():
+			r.onTerminate()
+			return Replay{}, false
 		case <-r.Terminate:
 			r.onTerminate()
 			return Replay{}, false

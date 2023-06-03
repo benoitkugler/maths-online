@@ -1037,7 +1037,7 @@ export interface UpdateTrivialVisiblityIn {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.stopGame
 export interface stopGame {
-  ID: RoomID;
+  ID: string;
   Restart: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery

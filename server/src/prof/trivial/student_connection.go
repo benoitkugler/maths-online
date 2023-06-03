@@ -69,7 +69,6 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 
 type gameID interface {
 	roomID() tv.RoomID
-	setupStudentClient(ct *Controller, studentID pass.EncryptedID) (gameConnection, error)
 }
 
 // <demoPin>.<room>.<number>
@@ -83,7 +82,7 @@ func (code demoCode) roomID() tv.RoomID {
 	return tv.RoomID(fmt.Sprintf("%s.%s.%d", code.demoPin, code.room, code.nbPlayers))
 }
 
-func (code demoCode) setupStudentClient(ct *Controller, _ pass.EncryptedID) (gameConnection, error) {
+func (ct *Controller) createDemoGame(code demoCode) error {
 	// check if the game is running and waiting for players
 	ct.store.lock.Lock()
 	_, ok := ct.store.games[code]
@@ -93,7 +92,7 @@ func (code demoCode) setupStudentClient(ct *Controller, _ pass.EncryptedID) (gam
 		// create a game on the fly
 		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
 		if err != nil {
-			return gameConnection{}, err
+			return err
 		}
 
 		options := tv.Options{
@@ -111,7 +110,7 @@ func (code demoCode) setupStudentClient(ct *Controller, _ pass.EncryptedID) (gam
 
 	ProgressLogger.Printf("Setting up student at (demo) %s", code.roomID())
 
-	return ct.store.setupStudent("", code, ct.studentKey)
+	return nil
 }
 
 // <sessionID>.<gameID>, where sessionID is 4 digits
@@ -124,19 +123,10 @@ func (code teacherCode) roomID() tv.RoomID {
 	return tv.RoomID(fmt.Sprintf("%s.%s", code.sessionID, code.gameID))
 }
 
-func (tc teacherCode) setupStudentClient(ct *Controller, studentID pass.EncryptedID) (gameConnection, error) {
-	return ct.store.setupStudent(studentID, tc, ct.studentKey)
-}
-
 // <gameID> (5 digits)
 type selfaccessCode string
 
 func (code selfaccessCode) roomID() tv.RoomID { return tv.RoomID(code) }
-
-func (code selfaccessCode) setupStudentClient(ct *Controller, clientID pass.EncryptedID) (gameConnection, error) {
-	// TODO:
-	return gameConnection{GameID: code.roomID()}, nil
-}
 
 // parse a client game code, returning an error on invalid/malicious inputs
 func (gs *gameStore) parseCode(clientGameCode string) (gameID, error) {
@@ -159,11 +149,11 @@ func (gs *gameStore) parseCode(clientGameCode string) (gameID, error) {
 		}
 		return out, nil
 	case 2: // teacher
-		sessionID, gameID := cuts[0], cuts[1]
-		if len(sessionID) < 4 || len(gameID) < 2 {
+		sID, gameID := cuts[0], cuts[1]
+		if len(sID) < 4 || len(gameID) < 2 {
 			return nil, fmt.Errorf("Code (type classe) %s invalide", clientGameCode)
 		}
-		return teacherCode{sessionID: sessionID, gameID: gameID}, nil
+		return teacherCode{sessionID: sID, gameID: gameID}, nil
 	case 1: // selfaccess
 		if len(clientGameCode) != 5 {
 			return nil, fmt.Errorf("Code (type perso.) %s invalide", clientGameCode)
@@ -221,7 +211,17 @@ func (ct *Controller) setupStudentClient(clientGameCode, clientID, gameMetaStrin
 		return gameConnection{}, err
 	}
 
-	return codeKind.setupStudentClient(ct, pass.EncryptedID(clientID))
+	clientID_ := pass.EncryptedID(clientID)
+	// special case for demo
+	if demo, isDemo := codeKind.(demoCode); isDemo {
+		err = ct.createDemoGame(demo)
+		if err != nil {
+			return gameConnection{}, err
+		}
+		clientID_ = ""
+	}
+
+	return ct.store.setupStudent(clientID_, codeKind, ct.studentKey)
 }
 
 // setupStudent returns the game room meta data.

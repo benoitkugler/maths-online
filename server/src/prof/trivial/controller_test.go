@@ -255,7 +255,7 @@ func TestCRUDSelfaccess(t *testing.T) {
 }
 
 func TestStudentSelfaccess(t *testing.T) {
-	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/trivial/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
 	tc, err := teacher.Teacher{}.Insert(db)
@@ -283,4 +283,8 @@ func TestStudentSelfaccess(t *testing.T) {
 	ls, err := ct.studentGetSelfaccess(st1.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(ls) == 2)
+
+	out, err := ct.launchSelfaccess(tr1.Id, st1.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.GameID != "")
 }

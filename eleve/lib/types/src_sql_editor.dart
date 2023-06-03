@@ -2,6 +2,36 @@
 
 import 'predefined.dart';
 
+// github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
+typedef DifficultyQuery = List<DifficultyTag>;
+
+DifficultyQuery difficultyQueryFromJson(dynamic json) {
+  return listDifficultyTagFromJson(json);
+}
+
+dynamic difficultyQueryToJson(DifficultyQuery item) {
+  return listDifficultyTagToJson(item);
+}
+
+// github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyTag
+enum DifficultyTag { diff1, diff2, diff3, diffEmpty }
+
+extension _DifficultyTagExt on DifficultyTag {
+  static const _values = ["★", "★★", "★★★", ""];
+  static DifficultyTag fromValue(String s) {
+    return DifficultyTag.values[_values.indexOf(s)];
+  }
+
+  String toValue() {
+    return _values[index];
+  }
+}
+
+DifficultyTag difficultyTagFromJson(dynamic json) =>
+    _DifficultyTagExt.fromValue(json as String);
+
+dynamic difficultyTagToJson(DifficultyTag item) => item.toValue();
+
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Flow
 enum Flow { parallel, sequencial }
 
@@ -21,3 +51,58 @@ dynamic flowToJson(Flow item) => item.toValue();
 
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestion
 typedef IdQuestion = int;
+
+// github.com/benoitkugler/maths-online/server/src/sql/editor.Section
+enum Section { chapter, level, trivMath }
+
+extension _SectionExt on Section {
+  static const _values = [2, 1, 3];
+  static Section fromValue(int s) {
+    return Section.values[_values.indexOf(s)];
+  }
+
+  int toValue() {
+    return _values[index];
+  }
+}
+
+Section sectionFromJson(dynamic json) => _SectionExt.fromValue(json as int);
+
+dynamic sectionToJson(Section item) => item.toValue();
+
+// github.com/benoitkugler/maths-online/server/src/sql/editor.TagSection
+class TagSection {
+  final String tag;
+  final Section section;
+
+  const TagSection(this.tag, this.section);
+
+  @override
+  String toString() {
+    return "TagSection($tag, $section)";
+  }
+}
+
+TagSection tagSectionFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return TagSection(
+      stringFromJson(json['Tag']), sectionFromJson(json['Section']));
+}
+
+Map<String, dynamic> tagSectionToJson(TagSection item) {
+  return {
+    "Tag": stringToJson(item.tag),
+    "Section": sectionToJson(item.section)
+  };
+}
+
+List<DifficultyTag> listDifficultyTagFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(difficultyTagFromJson).toList();
+}
+
+List<dynamic> listDifficultyTagToJson(List<DifficultyTag> item) {
+  return item.map(difficultyTagToJson).toList();
+}

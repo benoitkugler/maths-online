@@ -1,8 +1,10 @@
 package trivial
 
 import (
+	"errors"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
@@ -124,7 +126,7 @@ func (ct *Controller) StudentGetSelfaccess(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, out)
+	return c.JSON(200, GetSelfaccessOut{out})
 }
 
 func (ct *Controller) studentGetSelfaccess(idStudent teacher.IdStudent) ([]trivial.Trivial, error) {
@@ -152,8 +154,81 @@ func (ct *Controller) studentGetSelfaccess(idStudent teacher.IdStudent) ([]trivi
 // StudentLaunchSelfaccess creates a game for the given config,
 // and returns the public game code, which may be joined with the regular API.
 func (ct *Controller) StudentLaunchSelfaccess(c echo.Context) error {
+	idC := pass.EncryptedID(c.QueryParam("student-id"))
+	idStudent, err := ct.studentKey.DecryptID(idC)
+	if err != nil {
+		return err
+	}
+	id, err := utils.QueryParamInt64(c, "trivial-id")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.launchSelfaccess(trivial.IdTrivial(id), teacher.IdStudent(idStudent))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent teacher.IdStudent) (LaunchSelfaccessOut, error) {
+	student, err := teacher.SelectStudent(ct.db, idStudent)
+	if err != nil {
+		return LaunchSelfaccessOut{}, utils.SQLError(err)
+	}
+	classroom, err := teacher.SelectClassroom(ct.db, student.IdClassroom)
+	if err != nil {
+		return LaunchSelfaccessOut{}, utils.SQLError(err)
+	}
+
+	config, err := trivial.SelectTrivial(ct.db, idTrivial)
+	if err != nil {
+		return LaunchSelfaccessOut{}, utils.SQLError(err)
+	}
+
+	userID := classroom.IdTeacher
+	// admin config may be launched, since it is a readonly operation
+	if config.IdTeacher != userID && config.IdTeacher != ct.admin.Id {
+		return LaunchSelfaccessOut{}, errAccessForbidden
+	}
+
+	// select the questions
+	questionPool, err := selectQuestions(ct.db, config.Questions, userID)
+	if err != nil {
+		return LaunchSelfaccessOut{}, err
+	}
+
+	options := tv.Options{
+		Launch:          tv.LaunchStrategy{Manual: true},
+		QuestionTimeout: time.Second * time.Duration(config.QuestionTimeout),
+		ShowDecrassage:  config.ShowDecrassage,
+		Questions:       questionPool,
+	}
+
 	gameID := ct.store.newSelfaccessGameID()
-	// TODO:
-	ct.store.createGame(createGame{ID: gameID, Options: tv.Options{}})
+	ct.store.createGame(createGame{ID: gameID, Options: options})
+
+	return LaunchSelfaccessOut{gameID.roomID()}, nil
+}
+
+// StartSelfaccess starts a game previously created by [StudentLaunchSelfaccess]
+// TODO: secure this access
+func (ct *Controller) StudentStartSelfaccess(c echo.Context) error {
+	gameID := c.QueryParam("game-id")
+	parsed, err := ct.store.parseCode(gameID)
+	if err != nil {
+		return err
+	}
+	selfID, ok := parsed.(selfaccessCode)
+	if !ok {
+		return errors.New("internal error: invalid game code")
+	}
+
+	err = ct.store.startGame(selfID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
