@@ -133,7 +133,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-            body: TrivialPoursuitLoggin(
+            body: TrivialGameSelect(
                 widget.buildMode, trivialMetaCache, settings))));
     onPop.then((value) => widget.audioPlayer.pause());
   }

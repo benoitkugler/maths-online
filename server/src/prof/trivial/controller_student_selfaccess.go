@@ -117,7 +117,7 @@ func (ct *Controller) updateSelfaccess(args UpdateSelfaccessIn, userID uID) erro
 // ----------------------- Student API -----------------------
 
 func (ct *Controller) StudentGetSelfaccess(c echo.Context) error {
-	idC := pass.EncryptedID(c.QueryParam("student-id"))
+	idC := pass.EncryptedID(c.QueryParam("client-id"))
 	idStudent, err := ct.studentKey.DecryptID(idC)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (ct *Controller) studentGetSelfaccess(idStudent teacher.IdStudent) ([]trivi
 // StudentLaunchSelfaccess creates a game for the given config,
 // and returns the public game code, which may be joined with the regular API.
 func (ct *Controller) StudentLaunchSelfaccess(c echo.Context) error {
-	idC := pass.EncryptedID(c.QueryParam("student-id"))
+	idC := pass.EncryptedID(c.QueryParam("client-id"))
 	idStudent, err := ct.studentKey.DecryptID(idC)
 	if err != nil {
 		return err

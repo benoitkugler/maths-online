@@ -6,25 +6,239 @@ import 'package:eleve/settings.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
 import 'package:eleve/shared/students.gen.dart';
+import 'package:eleve/types/src_prof_trivial.dart';
+import 'package:eleve/types/src_sql_editor.dart';
+import 'package:eleve/types/src_sql_trivial.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-/// Loggin is an introduction screen to access
-/// a TrivialPoursuit game
-class TrivialPoursuitLoggin extends StatefulWidget {
+/// [TrivialGameSelect] is a home screen allowing the
+/// user to choose between in classroom/self access games
+class TrivialGameSelect extends StatelessWidget {
   final BuildMode buildMode;
   final Map<String, String> gameMetaCache;
   final UserSettings settings;
 
-  const TrivialPoursuitLoggin(this.buildMode, this.gameMetaCache, this.settings,
-      {Key? key})
+  const TrivialGameSelect(this.buildMode, this.gameMetaCache, this.settings,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Jouer à TrivMaths"),
+      ),
+      body: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        _LaunchCard(
+            "Accéder à une partie",
+            "J'ai un code et je veux rejoindre une partie existante.",
+            const Icon(Icons.login_outlined), () {
+          Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) =>
+                  Scaffold(body: _Loggin(buildMode, gameMetaCache, settings))));
+        }),
+        const Divider(thickness: 4),
+        _LaunchCard(
+            "Créer une partie",
+            "Je veux démarrer une partie et partager le code avec des amis.",
+            const Icon(Icons.add_box_outlined),
+            settings.studentID.isEmpty
+                ? null
+                : () {
+                    Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) => Scaffold(
+                            appBar: AppBar(
+                                title: const Text("Démarrer une partie")),
+                            body: _SelfaccessList(
+                                buildMode, settings.studentID))));
+                  }),
+      ]),
+    );
+  }
+}
+
+class _LaunchCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Icon icon;
+  final void Function()? onPressed;
+  const _LaunchCard(this.title, this.subtitle, this.icon, this.onPressed,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          ElevatedButton.icon(
+              onPressed: onPressed, icon: icon, label: Text(title)),
+          const SizedBox(height: 20),
+          Text(subtitle),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelfaccessList extends StatefulWidget {
+  final BuildMode buildMode;
+  final String studentID;
+  const _SelfaccessList(this.buildMode, this.studentID, {super.key});
+
+  @override
+  State<_SelfaccessList> createState() => __SelfaccessListState();
+}
+
+class __SelfaccessListState extends State<_SelfaccessList> {
+  List<Trivial>? trivials;
+
+  @override
+  void initState() {
+    _fetchTrivials();
+    super.initState();
+  }
+
+  void _fetchTrivials() async {
+    final uri = Uri.parse(
+        widget.buildMode.serverURL("/api/student/trivial/selfaccess", query: {
+      studentIDKey: widget.studentID,
+    }));
+
+    try {
+      final resp = await http.get(uri);
+      final body = checkServerError(resp.body);
+      final data = getSelfaccessOutFromJson(body);
+      setState(() {
+        trivials = data.trivials;
+      });
+    } catch (e) {
+      showError("Erreur", e, context);
+    }
+  }
+
+  void _launchTrivial(Trivial trivial) async {
+    final uri = Uri.parse(widget.buildMode
+        .serverURL("/api/student/trivial/selfaccess/launch", query: {
+      studentIDKey: widget.studentID,
+      "trivial-id": trivial.id.toString(),
+    }));
+
+    final LaunchSelfaccessOut data;
+    try {
+      final resp = await http.get(uri);
+      final body = checkServerError(resp.body);
+      data = launchSelfaccessOutFromJson(body);
+    } catch (e) {
+      showError("Erreur", e, context);
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => Scaffold(
+        appBar: AppBar(title: const Text("Rejoindre la partie")),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const Text(
+                "La partie a bien été lancée ! Voici le code d'accès à partager :"),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: data.gameID));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      backgroundColor: Colors.lightGreen,
+                      content: Text("Code copié dans le presse-papier.")));
+                },
+                icon: const Icon(Icons.copy),
+                label: Text(
+                  data.gameID,
+                  style: const TextStyle(fontSize: 16),
+                )),
+            const SizedBox(height: 40),
+            ElevatedButton(
+                onPressed: () {}, child: const Text("Rejoindre la partie"))
+          ]),
+        ),
+      ),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return trivials == null
+        ? const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text("Chargement..."),
+              ],
+            ),
+          )
+        : trivials!.isEmpty
+            ? const Center(child: Text("Aucune partie n'est disponible."))
+            : ListView(
+                children: trivials!
+                    .map((e) => _TrivialRow(e, () => _launchTrivial(e)))
+                    .toList(),
+              );
+  }
+}
+
+class _TrivialRow extends StatelessWidget {
+  final Trivial trivial;
+  final void Function() onTap;
+  const _TrivialRow(this.trivial, this.onTap, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(trivial.name),
+      subtitle: Text(_categories),
+    );
+  }
+
+  String get _categories {
+    final cats = trivial.questions.tags;
+    final allChapters = <String>{};
+    for (var element in cats) {
+      for (var element in element) {
+        for (var element in element) {
+          if (element.section == Section.chapter ||
+              element.section == Section.level) {
+            allChapters.add(element.tag);
+          }
+        }
+      }
+    }
+    // restrict to the chapters found in every questions
+    return allChapters
+        .where((ch) => cats
+            .every((l) => l.every((inter) => inter.any((ts) => ts.tag == ch))))
+        .join(", ");
+  }
+}
+
+/// Loggin is an introduction screen to access
+/// a TrivialPoursuit game
+class _Loggin extends StatefulWidget {
+  final BuildMode buildMode;
+  final Map<String, String> gameMetaCache;
+  final UserSettings settings;
+
+  const _Loggin(this.buildMode, this.gameMetaCache, this.settings, {Key? key})
       : super(key: key);
 
   @override
-  _TrivialPoursuitLogginState createState() => _TrivialPoursuitLogginState();
+  _LogginState createState() => _LogginState();
 }
 
-class _TrivialPoursuitLogginState extends State<TrivialPoursuitLoggin> {
+class _LogginState extends State<_Loggin> {
   final pinController = TextEditingController();
 
   @override
