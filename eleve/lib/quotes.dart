@@ -34,12 +34,10 @@ const _quotes = [
   ),
   QuoteData(
       "On ne peut faire saigner un cœur sans en être éclaboussé.",
-      "Ne crois pas que le mal fait à l'autre ne t'atteint pas aussi !",
+      "Ne crois pas que les crasses faites à l'autre ne t'atteignent pas aussi !",
       "Paul Masson"),
-  QuoteData(
-      "Apprendre par cœur est bien, apprendre par le cœur est mieux.",
-      "Apprendre les maths c'est bien, comprendre les maths c'est mieux ",
-      "Paul Masson"),
+  QuoteData("Apprendre par cœur est bien, apprendre par le cœur est mieux.",
+      "Apprendre par cœur c'est bien, comprendre c'est mieux !", "Paul Masson"),
   QuoteData(
       "Que de sottises du cœur viennent de sa fatigue !",
       "Il vaut donc mieux se taire que de penser ou dire dans ces conditions !",
@@ -185,11 +183,47 @@ const _quotes = [
       "",
       "Margaret Lee Runbeck"),
   QuoteData("Les mots sont plus forts que les armes.", "", "Laurent Jacqua"),
-  QuoteData("Prendre conscience de son ignorance est un grand pas vers la connaissance.", "", "Benjamin Disraeli"),
-  QuoteData("On aide plus un être en lui donnant de lui-même une image favorable qu'en le mettant sans cesse en face de ses défauts.", "", "Albert Camus"),
-  QuoteData("La valeur d'un homme tient dans sa capacité à donner et non dans sa capacité à recevoir.", "", "Albert Einstein"),
-  QuoteData("Il n'est jamais trop tard pour devenir ce que vous auriez toujours dû être.", "", "George Eliot"),
-  QuoteData("Les grands changements viennent des petites choses.", "", "Paulo Coelho"),
+  QuoteData(
+      "Prendre conscience de son ignorance est un grand pas vers la connaissance.",
+      "",
+      "Benjamin Disraeli"),
+  QuoteData(
+      "On aide plus un être en lui donnant de lui-même une image favorable qu'en le mettant sans cesse en face de ses défauts.",
+      "",
+      "Albert Camus"),
+  QuoteData(
+      "La valeur d'un homme tient dans sa capacité à donner et non dans sa capacité à recevoir.",
+      "",
+      "Albert Einstein"),
+  QuoteData(
+      "Il n'est jamais trop tard pour devenir ce que vous auriez toujours dû être.",
+      "",
+      "George Eliot"),
+  QuoteData("Les grands changements viennent des petites choses.", "",
+      "Paulo Coelho"),
+  QuoteData(
+      "Ne dites pas tout ce que vous pensez, mais pensez à tout ce que vous dites.",
+      "",
+      "Carlos Martinez Vazquez"),
+  QuoteData(
+      "Quand un homme dit 'Je suis heureux', il veut tout bonnement dire 'J'ai des ennuis qui ne m'atteignent pas'.",
+      "",
+      "Jules Renard"),
+  QuoteData(
+      "Tu ne peux pas empêcher un oiseau de voler au-dessus de ta tête. Par contre, tu peux l'empêcher d'y établir son nid.",
+      "",
+      "Auteur inconnu"),
+  QuoteData(
+      "Le succès, c'est d'aller d'échec en échec sans perdre son enthousiasme.",
+      "",
+      "Winston Churchill"),
+  QuoteData(
+      "Saviez-vous que le lion, lorsqu'il sort pour chasser, échoue 7 à 10 fois avant de réussir à capturer une proie ? 85% de sa vie est un échec. Alors qu'est-ce qui fait de lui un roi ? Sa persévérance.",
+      "",
+      ""),
+  QuoteData("Aucun de nous, en agissant seul, ne peut atteindre le succès.", "",
+      "Nelson Mandela"),
+  QuoteData("On est pas ici-bas pour se faire du tracas", "", ""),
 ];
 
 QuoteData pickQuote() {
