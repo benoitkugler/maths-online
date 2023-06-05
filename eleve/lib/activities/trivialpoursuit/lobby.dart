@@ -6,7 +6,11 @@ class GameLobby extends StatelessWidget {
   final Map<PlayerID, String> players;
   final PlayerID player;
 
-  const GameLobby(this.players, this.player, {Key? key}) : super(key: key);
+  /// if [onStart] is not null, shows "start game" button
+  final void Function()? onStart;
+
+  const GameLobby(this.players, this.player, this.onStart, {Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +18,22 @@ class GameLobby extends StatelessWidget {
     sorted.sort();
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            "En attente d'autres joueurs...",
-            style: TextStyle(fontSize: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Text(
+                  "En attente d'autres joueurs...",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
           ),
-          const CircularProgressIndicator(),
-          Quote(pickQuote()),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Wrap(
@@ -33,6 +45,12 @@ class GameLobby extends StatelessWidget {
                   .toList(),
             ),
           ),
+          if (onStart != null)
+            ElevatedButton(
+                onPressed: onStart,
+                child: const Text("Lancer la partie !",
+                    style: TextStyle(fontSize: 18))),
+          Quote(pickQuote()),
         ],
       ),
     );

@@ -230,5 +230,5 @@ func (ct *Controller) StudentStartSelfaccess(c echo.Context) error {
 		return err
 	}
 
-	return nil
+	return c.JSON(200, struct{}{})
 }

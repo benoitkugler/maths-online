@@ -13,10 +13,12 @@ import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_maths_questions_client.dart' hide Answer;
 import 'package:eleve/types/src_trivial.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:http/http.dart' as http;
 
 class _LastQuestion {
   final ShowQuestion question;
@@ -25,10 +27,11 @@ class _LastQuestion {
 }
 
 class GameAcces {
-  final String pseudo;
-  final String id;
+  final String code;
+  final String studentPseudo;
+  final String studentID;
   final String gameMeta;
-  const GameAcces(this.id, this.pseudo, this.gameMeta);
+  const GameAcces(this.code, this.studentID, this.studentPseudo, this.gameMeta);
 }
 
 const _infiniteDuration = Duration(days: 1000);
@@ -39,14 +42,19 @@ class GameTerminatedNotification extends Notification {}
 
 class TrivialPoursuitController extends StatefulWidget {
   final BuildMode buildMode;
-  final GameAcces student;
+  final GameAcces gameMeta;
+  final bool isSelfLaunched;
 
   static const gameMetaKey = "game-meta";
 
-  String get apiURL => buildMode.websocketURL('/trivial/game/connect',
-      query: {studentPseudoKey: student.pseudo, gameMetaKey: student.gameMeta});
+  String get apiURL => buildMode.websocketURL('/trivial/game/connect', query: {
+        studentPseudoKey: gameMeta.studentPseudo,
+        gameMetaKey: gameMeta.gameMeta
+      });
 
-  const TrivialPoursuitController(this.buildMode, this.student, {Key? key})
+  const TrivialPoursuitController(
+      this.buildMode, this.gameMeta, this.isSelfLaunched,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -517,6 +525,22 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     });
   }
 
+  // for self launched games, perform an http call to make the server start the game
+  void _startGame() async {
+    final uri = Uri.parse(widget.buildMode
+        .serverURL("/api/student/trivial/selfaccess/start", query: {
+      "game-id": widget.gameMeta.code,
+    }));
+
+    try {
+      final resp = await http.get(uri);
+      checkServerError(resp.body);
+    } catch (e) {
+      showError("Impossible de démarrer la partie.", e, context);
+      return;
+    }
+  }
+
   Widget get _game {
     if (gameEnd != null) {
       return GameEndPannel(widget.buildMode, gameEnd!, state.players, playerID);
@@ -539,7 +563,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
             onTapTile,
             highligthedTiles,
             state.pawnTile)
-        : GameLobby(lobby, playerID);
+        : GameLobby(lobby, playerID, widget.isSelfLaunched ? _startGame : null);
   }
 
   @override
