@@ -69,7 +69,7 @@ class VectorField extends StatelessWidget {
                   text: "(",
                   style: TextStyle(
                       fontSize: 60,
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w200,
                       color: textColor)),
               WidgetSpan(
                   alignment: PlaceholderAlignment.bottom,
@@ -84,7 +84,7 @@ class VectorField extends StatelessWidget {
                   text: ")",
                   style: TextStyle(
                       fontSize: 60,
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w200,
                       color: textColor)),
             ]))
           : Row(
