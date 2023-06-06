@@ -105,13 +105,13 @@ ALTER TABLE trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE selfaccess_trivials
-    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher);
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher) ON DELETE CASCADE;
 
 ALTER TABLE selfaccess_trivials
-    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
 ALTER TABLE selfaccess_trivials
-    ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+    ADD FOREIGN KEY (IdTrivial) REFERENCES trivials ON DELETE CASCADE;
 
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;

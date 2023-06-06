@@ -19,10 +19,10 @@ type Trivial struct {
 // SelfaccessTrivial is a link table enabling a teacher
 // to publish (or hide) a [Trivial] for the students of a
 // classroom.
-// gomacro:SQL ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher)
+// gomacro:SQL ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher) ON DELETE CASCADE;
 // gomacro:SQL _DELETE KEY (IdTrivial, IdTeacher)
 type SelfaccessTrivial struct {
-	IdClassroom teacher.IdClassroom
-	IdTrivial   IdTrivial
+	IdClassroom teacher.IdClassroom `gomacro-sql-on-delete:"CASCADE"`
+	IdTrivial   IdTrivial           `gomacro-sql-on-delete:"CASCADE"`
 	IdTeacher   teacher.IdTeacher
 }
