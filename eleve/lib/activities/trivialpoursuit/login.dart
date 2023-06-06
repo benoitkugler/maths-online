@@ -186,34 +186,8 @@ class __SelfaccessListState extends State<_SelfaccessList> {
 
     if (!mounted) return;
     Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (context) => Scaffold(
-        appBar: AppBar(title: const Text("Rejoindre la partie")),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Text(
-                "La partie a bien été lancée ! Voici le code d'accès à partager :"),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: data.gameID));
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      backgroundColor: Colors.lightGreen,
-                      content: Text("Code copié dans le presse-papier.")));
-                },
-                icon: const Icon(Icons.copy),
-                label: Text(
-                  data.gameID,
-                  style: const TextStyle(fontSize: 16),
-                )),
-            const SizedBox(height: 40),
-            ElevatedButton(
-                onPressed: () => _joinGame(data.gameID),
-                child: const Text("Rejoindre la partie"))
-          ]),
-        ),
-      ),
-    ));
+        builder: (context) =>
+            _GameLaunchedScreen(data.gameID, () => _joinGame(data.gameID))));
   }
 
   void _joinGame(String code) async {
@@ -247,6 +221,45 @@ class __SelfaccessListState extends State<_SelfaccessList> {
                     .map((e) => _TrivialRow(e, () => _launchTrivial(e)))
                     .toList(),
               );
+  }
+}
+
+class _GameLaunchedScreen extends StatelessWidget {
+  final String gameCode;
+  final void Function() onJoin;
+
+  const _GameLaunchedScreen(this.gameCode, this.onJoin, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Rejoindre la partie")),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Center(
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const Text(
+                "La partie a bien été lancée ! Voici le code d'accès à partager :"),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: gameCode));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      backgroundColor: Colors.lightGreen,
+                      content: Text("Code copié dans le presse-papier.")));
+                },
+                icon: const Icon(Icons.copy),
+                label: Text(
+                  gameCode,
+                  style: const TextStyle(fontSize: 16),
+                )),
+            const SizedBox(height: 40),
+            ElevatedButton(
+                onPressed: onJoin, child: const Text("Rejoindre la partie"))
+          ]),
+        ),
+      ),
+    );
   }
 }
 

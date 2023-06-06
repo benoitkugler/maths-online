@@ -63,9 +63,13 @@ class ActivityStart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset(
-            "assets/images/cahier-stylo-calc.png",
+          Flexible(
+            flex: 2,
+            child: Image.asset(
+              "assets/images/cahier-stylo-calc.png",
+            ),
           ),
           Expanded(
             child: Center(
