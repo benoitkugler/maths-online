@@ -2,6 +2,9 @@ ALTER TABLE teachers
     ADD UNIQUE (Mail);
 
 ALTER TABLE classrooms
+    ADD UNIQUE (Id, IdTeacher);
+
+ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
 ALTER TABLE students
@@ -87,6 +90,9 @@ ALTER TABLE exercice_questions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
 
 ALTER TABLE questions
+    ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));
+
+ALTER TABLE questions
     ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
 
 ALTER TABLE exercices
@@ -96,6 +102,18 @@ ALTER TABLE questions
     ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
 
 ALTER TABLE trivials
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher);
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 ALTER TABLE trivials

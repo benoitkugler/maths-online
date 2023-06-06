@@ -18,7 +18,8 @@ CREATE TABLE teachers (
     Id serial PRIMARY KEY,
     Mail text NOT NULL,
     PasswordCrypted bytea NOT NULL,
-    IsAdmin boolean NOT NULL
+    IsAdmin boolean NOT NULL,
+    HasSimplifiedEditor boolean NOT NULL
 );
 
 CREATE TABLE exercices (
@@ -56,7 +57,8 @@ CREATE TABLE questions (
     NeedExercice integer,
     IdGroup integer,
     Enonce jsonb NOT NULL,
-    Parameters jsonb NOT NULL
+    Parameters jsonb NOT NULL,
+    Correction jsonb NOT NULL
 );
 
 CREATE TABLE questiongroups (
@@ -70,6 +72,12 @@ CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
     Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
+);
+
+CREATE TABLE selfaccess_trivials (
+    IdClassroom integer NOT NULL,
+    IdTrivial integer NOT NULL,
+    IdTeacher integer NOT NULL
 );
 
 CREATE TABLE trivials (

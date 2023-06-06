@@ -21,12 +21,16 @@ CREATE TABLE teachers (
     Id serial PRIMARY KEY,
     Mail text NOT NULL,
     PasswordCrypted bytea NOT NULL,
-    IsAdmin boolean NOT NULL
+    IsAdmin boolean NOT NULL,
+    HasSimplifiedEditor boolean NOT NULL
 );
 
 -- constraints
 ALTER TABLE teachers
     ADD UNIQUE (Mail);
+
+ALTER TABLE classrooms
+    ADD UNIQUE (Id, IdTeacher);
 
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
@@ -71,7 +75,8 @@ CREATE TABLE questions (
     NeedExercice integer,
     IdGroup integer,
     Enonce jsonb NOT NULL,
-    Parameters jsonb NOT NULL
+    Parameters jsonb NOT NULL,
+    Correction jsonb NOT NULL
 );
 
 CREATE TABLE questiongroups (
@@ -1915,6 +1920,9 @@ LANGUAGE 'plpgsql'
 IMMUTABLE;
 
 ALTER TABLE questions
+    ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));
+
+ALTER TABLE questions
     ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
 
 ALTER TABLE exercices
@@ -1925,6 +1933,12 @@ ALTER TABLE questions
 
 -- sql/trivial/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
+CREATE TABLE selfaccess_trivials (
+    IdClassroom integer NOT NULL,
+    IdTrivial integer NOT NULL,
+    IdTeacher integer NOT NULL
+);
+
 CREATE TABLE trivials (
     Id serial PRIMARY KEY,
     Questions jsonb NOT NULL,
@@ -1937,6 +1951,18 @@ CREATE TABLE trivials (
 
 -- constraints
 ALTER TABLE trivials
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher);
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms;
+
+ALTER TABLE selfaccess_trivials
+    ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_edit_TagSection (data jsonb)
