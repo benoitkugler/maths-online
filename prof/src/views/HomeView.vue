@@ -94,7 +94,7 @@ import { PreviewMode } from "@/controller/controller";
 import { computed } from "vue";
 
 let studentAppLink = computed(() =>
-  PreviewMode
+  PreviewMode == "dev"
     ? "http://localhost:1323/test-eleve?mode=dev"
     : "https://isyro.fr/test-eleve"
 );
