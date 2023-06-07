@@ -56,12 +56,13 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 
 	out, err := ct.setupStudentClient(completeID, clientID, gameMetaString)
 	if err != nil {
+		WarningLogger.Printf("setting up student: %s", err)
 		return err
 	}
 
 	gameMeta, err := ct.studentKey.EncryptJSON(out)
 	if err != nil {
-		return fmt.Errorf("Erreur interne (%s)", err)
+		return fmt.Errorf("interal error: %s", err)
 	}
 
 	return c.JSON(200, SetupStudentClientOut{GameMeta: gameMeta})
