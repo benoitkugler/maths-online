@@ -377,7 +377,7 @@ func TestAllDisconnectInQuestionResult(t *testing.T) {
 }
 
 func TestReconnectInQuestion(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: 3 * time.Second})
 
 	go r.Listen(context.Background())
 
@@ -389,12 +389,18 @@ func TestReconnectInQuestion(t *testing.T) {
 	// disconnect p2 ...
 	r.Leave <- "p2"
 
-	time.Sleep(time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// ...and reconnect it before p1 has answered
-	r.mustJoin(t, "p2")
+	p2 := &clientOut{}
+	r.mustJoinConn(t, "p2", p2)
+	question2 := p2.lastU(&r.lock).Events[0].(ShowQuestion)
+	if question2.TimeoutSeconds != 2 {
+		t.Fatal(question2)
+	}
 
 	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p2"}
 
 	time.Sleep(time.Millisecond)
 

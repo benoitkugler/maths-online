@@ -125,9 +125,7 @@ func (r *Room) Join(player Player, connection Connection) error {
 	} else { // reconnection
 		ProgressLogger.Printf("Game %s : reconnecting player %s...", r.ID, player.ID)
 
-		events := r.reconnectPlayer(player, connection)
-
-		r.broadcastEvents(events)
+		r.reconnectPlayer(player, connection)
 	}
 
 	return nil

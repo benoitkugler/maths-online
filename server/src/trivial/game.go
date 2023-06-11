@@ -76,7 +76,8 @@ type game struct {
 	// questionTimer is started when emitting a new question
 	// and cleared early if all players have answered
 	// If reached, it should trigger QuestionTimeoutAction.
-	questionTimer *time.Timer
+	questionTimer    *time.Timer
+	questionTimerEnd time.Time // end of the current question
 
 	// refreshed for each question
 	currentAnswers map[serial]bool
@@ -309,7 +310,7 @@ func (r *Room) tryEndTurn() Events {
 	return Events{v}
 }
 
-func (r *Room) reconnectPlayer(player Player, connection Connection) Events {
+func (r *Room) reconnectPlayer(player Player, connection Connection) {
 	// if the game was started then temporary left by all players, trigger a new turn
 	triggerNewTurn := r.game.hasStarted() && r.nbActivePlayers() == 0
 
@@ -326,17 +327,28 @@ func (r *Room) reconnectPlayer(player Player, connection Connection) Events {
 
 		eventTurn := r.startTurn()
 		events = append(events, eventTurn)
+		r.broadcastEvents(events)
 	} else {
-		// when in question, mark the reconnected player as having answered
-		// if it has not yet
+		r.broadcastEvents(events)
+		// when in question, show the question to the reconnected player only
 		if r.game.phase == pDoingQuestion {
-			if _, has := r.game.currentAnswers[player.ID]; !has {
-				r.game.currentAnswers[player.ID] = false
-			}
+			out := r.game.joinQuestion()
+			state := r.state()
+			pc.send(StateUpdate{State: state, Events: Events{out}})
 		}
 	}
+}
 
-	return events
+// assuming we are in question, return a [ShowQuestion] event
+// adjusted with the correct timeout
+func (gs *game) joinQuestion() ShowQuestion {
+	remaining := gs.questionTimerEnd.Sub(time.Now())
+	return ShowQuestion{
+		TimeoutSeconds: int(remaining.Seconds()),
+		ID:             gs.question.ID,
+		Categorie:      gs.question.Categorie,
+		Question:       gs.question.Question.ToClient(),
+	}
 }
 
 // winners returns the players who win, or an empty slice
@@ -397,8 +409,8 @@ func (r *Room) nextPlayer() serial {
 	return serial(sortedIds[0])
 }
 
-// startTurn starts a new turn, updating the state
-// if will panic if no active players are present
+// startTurn starts a new turn, updating the state.
+// It will panic if no active players are present.
 func (r *Room) startTurn() PlayerTurn {
 	for k := range r.game.currentWantNextTurn { // reset the "ready for next turn" map
 		delete(r.game.currentWantNextTurn, k)
@@ -511,12 +523,13 @@ func (gs *game) emitQuestion() ShowQuestion {
 
 	out := ShowQuestion{
 		TimeoutSeconds: int(gs.options.QuestionTimeout.Seconds()),
-		ID:             question.Id,
 		Categorie:      cat,
+		ID:             question.Id,
 		Question:       instance.ToClient(),
 	}
 
 	gs.questionTimer.Reset(gs.options.QuestionTimeout)
+	gs.questionTimerEnd = time.Now().Add(gs.options.QuestionTimeout)
 
 	return out
 }
