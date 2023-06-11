@@ -54,11 +54,15 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 	clientID := c.QueryParam("client-id")
 	gameMetaString := c.QueryParam("game-meta") // optional, used to reconnect
 
+	ProgressLogger.Printf("Setup client <%s> for code %s", clientID, completeID)
+
 	out, err := ct.setupStudentClient(completeID, clientID, gameMetaString)
 	if err != nil {
 		WarningLogger.Printf("setting up student: %s", err)
 		return err
 	}
+
+	ProgressLogger.Printf("Setup done : %v", out)
 
 	gameMeta, err := ct.studentKey.EncryptJSON(out)
 	if err != nil {
@@ -197,7 +201,7 @@ func (ct *Controller) setupStudentClient(clientGameCode, clientID, gameMetaStrin
 		var incomingGameMeta gameConnection
 		err := ct.studentKey.DecryptJSON(gameMetaString, &incomingGameMeta)
 		if err != nil {
-			return gameConnection{}, err
+			return gameConnection{}, fmt.Errorf("internal error: %s", err)
 		}
 
 		if ct.store.checkGameConnection(incomingGameMeta) {
@@ -237,9 +241,9 @@ func (gs *gameStore) setupStudent(studentID pass.EncryptedID, requestedGameID ga
 
 	playerID := gs.registerPlayer(requestedGameID)
 	out := gameConnection{
+		GameID:    game.ID,
 		PlayerID:  playerID,
 		StudentID: studentID,
-		GameID:    game.ID,
 	}
 
 	return out, nil
