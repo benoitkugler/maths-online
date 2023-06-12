@@ -22,6 +22,7 @@
   <v-snackbar
     :model-value="showError"
     @update:model-value="emit('close')"
+    :timeout="timeout"
     color="warning"
   >
     <v-row v-if="props.error != null">
@@ -48,9 +49,7 @@
         align-self="center"
         class="px-1"
       >
-        <v-btn variant="outlined" @click="showErrVarsDetails = true">
-          Détails
-        </v-btn>
+        <v-btn variant="outlined" @click="onShowDetails"> Détails </v-btn>
       </v-col>
       <v-col
         cols="2"
@@ -68,6 +67,7 @@
 
 <script setup lang="ts">
 import type { errEnonce } from "@/controller/api_gen";
+import { watch } from "vue";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
 
@@ -91,6 +91,15 @@ const errVars = computed(() => {
 });
 
 let showErrVarsDetails = $ref(false);
+let timeout = 5000;
+
+watch(props, () => (timeout = 5000));
+
+function onShowDetails() {
+  showErrVarsDetails = true;
+  // remove the snackbar timeout so that the error stays on screen
+  timeout = -1;
+}
 </script>
 
 <style scoped></style>
