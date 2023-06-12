@@ -82,8 +82,8 @@ export function parseParameters(text: string): {
         currentComment = "";
       }
 
-      const chunks = line.split("=", 2);
-      if (chunks.length != 2) {
+      const i = line.indexOf("=");
+      if (i == -1) {
         return {
           params: [],
           error: {
@@ -92,8 +92,8 @@ export function parseParameters(text: string): {
           }
         };
       }
-      const vars = chunks[0].trim();
-      const expression = chunks[1].trim();
+      const vars = line.substring(0, i).trim();
+      const expression = line.substring(i + 1).trim();
       // differentiate between regular var and intrisic
       // by finding the number of variables
       if (vars.split(",").length > 1) {
