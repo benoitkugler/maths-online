@@ -159,6 +159,14 @@ const commands = [
     description: "Barre (moyenne, contraire)",
     command: `\\bar{x}`,
   },
+  {
+    description: "Symbole parallèle",
+    command: `\\parallel`,
+  },
+  {
+    description: "Symbole non parallèle",
+    command: `\\nparallel`,
+  },
 ];
 
 async function copyAndClose(command: string) {
