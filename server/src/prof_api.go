@@ -16,6 +16,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	e.POST("/prof/inscription", tc.AskInscription)
 	e.GET(teacher.ValidateInscriptionEndPoint, tc.ValidateInscription)
 	e.POST("/prof/loggin", tc.Loggin)
+	e.GET("/api/prof/reset", tc.TeacherResetPassword)
 
 	gr := e.Group("", tc.JWTMiddleware())
 

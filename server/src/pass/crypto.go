@@ -73,7 +73,7 @@ func (key Encrypter) EncryptPassword(pass string) []byte {
 func (key Encrypter) DecryptPassword(crypted []byte) string {
 	out, err := key.decrypt(crypted)
 	if err != nil {
-		log.Println("internal error when decrypting password", err)
+		log.Println("internal error when decrypting password:", err)
 	}
 	return string(out)
 }

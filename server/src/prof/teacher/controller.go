@@ -223,8 +223,62 @@ func (ct *Controller) Loggin(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// TeacherResetPassword generates a new password for the given account
+// and sends it by email.
+func (ct *Controller) TeacherResetPassword(c echo.Context) error {
+	mail := c.QueryParam("mail")
+	err := ct.resetPassword(mail)
+	if err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+func (ct *Controller) emailResetPassword(newPassword string) string {
+	url := utils.BuildUrl(ct.host, "prof", nil)
+	return fmt.Sprintf(`
+	Bonjour, <br/><br/>
+
+	Vous avez demandé la ré-initialisation de votre mot de passe Isyro. Votre nouveau mot de passe est : <br/>
+	<b>%s</b> <br/><br/>
+
+	Après vous être <a href="%s">connecté</a>, vous pourrez le modifier dans vos réglages.<br/><br/>
+
+	Bonne création pédagogique ! <br/><br/>
+
+	L'équipe Isyro`, newPassword, url)
+}
+
+func (ct *Controller) resetPassword(mail string) error {
+	row := ct.db.QueryRow("SELECT * FROM teachers WHERE mail = $1", mail)
+	teacher, err := tc.ScanTeacher(row)
+	if err == sql.ErrNoRows {
+		return errors.New("Cette adresse mail n'est pas utilisée.")
+	}
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	// generate a new password
+	newPassword := utils.RandomString(true, 16)
+	teacher.PasswordCrypted = ct.teacherKey.EncryptPassword(newPassword)
+	_, err = teacher.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// send it by email
+	mailText := ct.emailResetPassword(newPassword)
+	err = mailer.SendMail(ct.smtp, []string{mail}, "Changement de mot de passe", mailText)
+	if err != nil {
+		return fmt.Errorf("Erreur interne (%s)", err)
+	}
+
+	return nil
+}
+
 type TeacherSettings struct {
 	Mail                string
+	Password            string
 	HasEditorSimplified bool
 }
 
@@ -246,7 +300,13 @@ func (ct *Controller) getSettings(userID teacher.IdTeacher) (TeacherSettings, er
 		return TeacherSettings{}, utils.SQLError(err)
 	}
 
-	return TeacherSettings{Mail: teach.Mail, HasEditorSimplified: teach.HasSimplifiedEditor}, nil
+	password := ct.teacherKey.DecryptPassword(teach.PasswordCrypted)
+
+	return TeacherSettings{
+		Mail:                teach.Mail,
+		Password:            password,
+		HasEditorSimplified: teach.HasSimplifiedEditor,
+	}, nil
 }
 
 func (ct *Controller) TeacherUpdateSettings(c echo.Context) error {
@@ -271,7 +331,12 @@ func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeac
 		return utils.SQLError(err)
 	}
 
+	if len(args.Password) < 3 {
+		return errors.New("internal error: password too short")
+	}
+
 	teach.Mail = args.Mail
+	teach.PasswordCrypted = ct.teacherKey.EncryptPassword(args.Password)
 	teach.HasSimplifiedEditor = args.HasEditorSimplified
 
 	_, err = teach.Update(ct.db)

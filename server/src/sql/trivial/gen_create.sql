@@ -22,6 +22,8 @@ ALTER TABLE trivials
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom, IdTeacher) REFERENCES Classrooms (Id, IdTeacher) ON DELETE CASCADE;
 
+;
+
 ALTER TABLE selfaccess_trivials
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
@@ -161,7 +163,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Tag', 'Section'))
+            bool_and(key IN ('Tag', 'Section'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Tag')
@@ -198,7 +200,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Tags', 'Difficulties'))
+            bool_and(key IN ('Tags', 'Difficulties'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')

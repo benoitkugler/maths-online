@@ -938,6 +938,7 @@ export interface StudentHeader {
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.TeacherSettings
 export interface TeacherSettings {
   Mail: string;
+  Password: string;
   HasEditorSimplified: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
@@ -1386,6 +1387,29 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessLoggin(data: LogginOut): void;
+
+  protected async rawTeacherResetPassword(params: { mail: string }) {
+    const fullUrl = this.baseUrl + "/api/prof/reset";
+    await Axios.get(fullUrl, {
+      params: { mail: params["mail"] },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** TeacherResetPassword wraps rawTeacherResetPassword and handles the error */
+  async TeacherResetPassword(params: { mail: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawTeacherResetPassword(params);
+      this.onSuccessTeacherResetPassword();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessTeacherResetPassword(): void;
 
   protected async rawTeacherGetSettings() {
     const fullUrl = this.baseUrl + "/api/prof/settings";
