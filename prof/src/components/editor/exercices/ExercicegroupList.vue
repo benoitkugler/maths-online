@@ -102,6 +102,8 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
+defineExpose({ createExercicegroup });
+
 const router = useRouter();
 
 let groups = $ref<ExercicegroupExt[]>([]);

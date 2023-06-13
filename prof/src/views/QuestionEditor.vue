@@ -6,6 +6,10 @@
     @back="viewMode = 'details'"
     @go-to="showFolder"
   >
+    <v-btn class="mx-1" @click="goAndCreateQuestiongroup">
+      <v-icon color="green">mdi-plus</v-icon>
+      Créer une question
+    </v-btn>
   </folder-view>
   <div class="ma-2" v-else>
     <v-row>
@@ -25,6 +29,7 @@
             @edit="editQuestion"
             @back="viewMode = 'folder'"
             :initial-query="initialQuery"
+            ref="list"
           ></QuestiongroupList>
         </keep-alive>
       </v-col>
@@ -56,6 +61,8 @@ import QuestiongroupList from "../components/editor/questions/QuestiongroupList.
 import QuestiongroupPannel from "../components/editor/questions/QuestiongroupPannel.vue";
 import FolderView from "../components/editor/FolderView.vue";
 import { emptyTagsDB } from "@/controller/editor";
+import { ref } from "vue";
+import { nextTick } from "vue";
 
 let viewMode = $ref<"details" | "folder">("folder");
 
@@ -109,6 +116,15 @@ function editQuestion(group: QuestiongroupExt, variants: Question[]) {
   currentGroup = group;
   currentVariants = variants;
   viewKind = "editor";
+}
+
+const list = ref<InstanceType<typeof QuestiongroupList> | null>(null);
+function goAndCreateQuestiongroup() {
+  viewMode = "details";
+  nextTick(() => {
+    if (list.value == null) return;
+    list.value.createQuestiongroup();
+  });
 }
 </script>
 

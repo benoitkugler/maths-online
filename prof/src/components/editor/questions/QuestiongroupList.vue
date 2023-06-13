@@ -78,7 +78,6 @@
 
 <script setup lang="ts">
 import {
-  LevelTag,
   OriginKind,
   ReviewKind,
   type Query,
@@ -104,6 +103,8 @@ const emit = defineEmits<{
   (e: "edit", group: QuestiongroupExt, questions: Question[]): void;
   (e: "back"): void;
 }>();
+
+defineExpose({ createQuestiongroup });
 
 const router = useRouter();
 

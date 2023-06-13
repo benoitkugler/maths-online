@@ -5,7 +5,8 @@
         <v-card-title> Ressources par chapitres </v-card-title>
       </v-col>
       <v-col align-self="center" cols="auto">
-        <v-btn variant="flat" @click="emit('back')">
+        <slot></slot>
+        <v-btn class="mx-1" variant="flat" @click="emit('back')">
           <v-icon>mdi-format-list-bulleted</v-icon>
           Afficher la liste
         </v-btn>

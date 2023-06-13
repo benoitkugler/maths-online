@@ -5,6 +5,10 @@
     @back="viewMode = 'details'"
     @go-to="showFolder"
   >
+    <v-btn class="mx-1" @click="goAndCreateExercicegroup">
+      <v-icon color="green">mdi-plus</v-icon>
+      Créer un exercice
+    </v-btn>
   </folder-view>
   <div class="ma-2" v-else>
     <v-row>
@@ -16,6 +20,7 @@
             :tags="allKnownTags"
             @back="viewMode = 'folder'"
             :initial-query="initialQuery"
+            ref="list"
           ></exercicegroup-list>
         </keep-alive>
         <exercicegroup-pannel
@@ -53,6 +58,8 @@ import ClientPreview from "../components/editor/ClientPreview.vue";
 import ExercicegroupList from "../components/editor/exercices/ExercicegroupList.vue";
 import ExercicegroupPannel from "../components/editor/exercices/ExercicegroupPannel.vue";
 import FolderView from "../components/editor/FolderView.vue";
+import { ref } from "vue";
+import { nextTick } from "vue";
 
 let viewMode = $ref<"details" | "folder">("folder");
 
@@ -92,6 +99,15 @@ function showFolder(index: [LevelTag, string]) {
 
 async function editExercice(ex: ExercicegroupExt) {
   currentExercicegroup = ex;
+}
+
+const list = ref<InstanceType<typeof ExercicegroupList> | null>(null);
+function goAndCreateExercicegroup() {
+  viewMode = "details";
+  nextTick(() => {
+    if (list.value == null) return;
+    list.value.createExercicegroup();
+  });
 }
 
 async function backToList() {
