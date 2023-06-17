@@ -969,6 +969,7 @@ export interface GameSummary {
   LatestQuestion: QuestionContent;
   Players: GamePlayers[] | null;
   RoomSize: RoomSize;
+  InQuestionStudents: string[] | null;
 }
 
 export enum GroupsStrategyKind {

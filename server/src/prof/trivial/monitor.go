@@ -15,11 +15,12 @@ type GamePlayers struct {
 }
 
 type GameSummary struct {
-	GameID         tv.RoomID
-	CurrentPlayer  string          // empty when no one is playing
-	LatestQuestion QuestionContent // empty before the first question
-	Players        []GamePlayers
-	RoomSize       tv.RoomSize
+	GameID             tv.RoomID
+	CurrentPlayer      string          // empty when no one is playing
+	LatestQuestion     QuestionContent // empty before the first question
+	Players            []GamePlayers
+	RoomSize           tv.RoomSize
+	InQuestionStudents []string
 }
 
 func newGameSummary(s tv.Summary) (out GameSummary) {
@@ -31,6 +32,7 @@ func newGameSummary(s tv.Summary) (out GameSummary) {
 		Question:  s.LatestQuestion.Question.ToClient(),
 		Params:    tasks.NewParams(s.LatestQuestion.Vars),
 	}
+	out.InQuestionStudents = s.InQuestionStudents
 
 	for p, su := range s.Successes {
 		out.Players = append(out.Players, GamePlayers{

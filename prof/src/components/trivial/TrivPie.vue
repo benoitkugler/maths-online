@@ -13,12 +13,27 @@
         }"
       ></div>
     </v-col>
-    <v-col cols="12" style="text-align: center" class="mt-1">
+    <v-col
+      cols="12"
+      style="text-align: center"
+      align-self="center"
+      class="mt-2"
+    >
       <v-chip
         size="small"
         :color="props.highlight ? 'yellow-darken-3' : 'grey'"
         >{{ props.label }}</v-chip
       >
+      <v-tooltip
+        v-if="props.isWaiting"
+        text="Ce joueur est occupé par la question"
+      >
+        <template v-slot:activator="{ props }">
+          <v-icon v-bind="props" size="24" color="info" class="mx-1"
+            >mdi-square-edit-outline</v-icon
+          >
+        </template>
+      </v-tooltip>
     </v-col>
   </v-row>
 </template>
@@ -31,6 +46,7 @@ interface Props {
   success: boolean[];
   label: string;
   highlight: boolean;
+  isWaiting: boolean;
 }
 
 const props = defineProps<Props>();

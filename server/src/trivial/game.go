@@ -126,6 +126,7 @@ func (r *Room) playerPseudos() map[serial]string {
 	return out
 }
 
+// serialsToPseudos convert from interal PlayedID to public pseudo
 func (r *Room) serialsToPseudos(players []serial) []string {
 	dict := r.playerPseudos()
 	out := make([]string, len(players))
@@ -213,16 +214,21 @@ func (g *game) isAnswerValid(a Answer) bool {
 	return result
 }
 
+// answeringPlayers returns the ACTIVE players not having send an answer yet
+func (r *Room) answeringPlayers() (out []serial) {
+	for _, pl := range r.players {
+		if _, has := r.game.currentAnswers[pl.pl.ID]; !has && pl.conn != nil {
+			out = append(out, pl.pl.ID)
+		}
+	}
+	return out
+}
+
 // tryEndQuestion close the current question
 // if `force` is false, it only does so if every player have answered
 func (r *Room) tryEndQuestion(force bool) Events {
-	hasAllAnswered := true
-	for _, pl := range r.players {
-		if _, has := r.game.currentAnswers[pl.pl.ID]; !has && pl.conn != nil {
-			hasAllAnswered = false
-			break
-		}
-	}
+	hasAllAnswered := len(r.answeringPlayers()) == 0
+
 	if !hasAllAnswered && !force { // abort closing
 		return nil
 	}

@@ -90,6 +90,7 @@
             :label="player.Player"
             :success="player.Successes"
             :highlight="player.Player == props.summary.CurrentPlayer"
+            :is-waiting="isPlayerWorking(player.Player)"
           ></triv-pie>
         </v-col>
       </v-row>
@@ -137,6 +138,10 @@ const showStart = computed(
   () => props.summary.RoomSize.Max == 0 && !props.summary.CurrentPlayer
 );
 const startDisabled = computed(() => props.summary.RoomSize.Current == 0);
+
+function isPlayerWorking(player: string) {
+  return (props.summary.InQuestionStudents || []).includes(player);
+}
 </script>
 
 <style scoped></style>

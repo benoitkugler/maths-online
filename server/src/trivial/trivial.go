@@ -6,6 +6,7 @@ package trivial
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 )
@@ -173,6 +174,12 @@ type Summary struct {
 	ID             RoomID
 	RoomSize       RoomSize        // Number of players
 	LatestQuestion QuestionContent // zero ID before the first question
+
+	// During question phase, it is the list
+	// of players still answering a question.
+	// After a question, is is the list of players still not ready for the next turn.
+	// Empty otherwise
+	InQuestionStudents []string
 }
 
 // Summary locks and returns the current game summary.
@@ -196,6 +203,18 @@ func (r *Room) Summary() Summary {
 			out.PlayerTurn = &pl.pl
 		}
 	}
+
+	switch r.game.phase {
+	case pDoingQuestion:
+		waiting := r.answeringPlayers()
+		out.InQuestionStudents = r.serialsToPseudos(waiting)
+	case pQuestionResult:
+		_, waiting := r.arePlayersReadyForNextTurn()
+		out.InQuestionStudents = r.serialsToPseudos(waiting)
+	default: // nothing to do
+	}
+
+	sort.Strings(out.InQuestionStudents)
 
 	return out
 }

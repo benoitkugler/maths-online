@@ -39,12 +39,27 @@ func TestSummary(t *testing.T) {
 	sum := r.Summary()
 	tu.Assert(t, len(sum.Successes) == 3 && sum.PlayerTurn.ID == "p1")
 	tu.Assert(t, sum.LatestQuestion.ID == 0)
+	tu.Assert(t, len(r.Summary().InQuestionStudents) == 0)
 
 	r.throwAndMove("p1")
 
 	time.Sleep(10 * time.Millisecond)
 
 	tu.Assert(t, r.Summary().LatestQuestion.ID != 0)
+	tu.Assert(t, len(r.Summary().InQuestionStudents) == 3)
+
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p1"}
+
+	time.Sleep(10 * time.Millisecond)
+
+	tu.Assert(t, len(r.Summary().InQuestionStudents) == 2)
+
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p2"}
+	r.Event <- ClientEvent{Event: Answer{}, Player: "p3"}
+
+	time.Sleep(10 * time.Millisecond)
+
+	tu.Assert(t, len(r.Summary().InQuestionStudents) == 3)
 }
 
 func TestReview(t *testing.T) {
