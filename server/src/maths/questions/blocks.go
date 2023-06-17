@@ -427,10 +427,11 @@ func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (valid
 }
 
 type SignTableBlock struct {
-	Label     string
-	FxSymbols []SignSymbol
-	Xs        []string // valid expression
-	Signs     []bool   // is positive, with length len(Xs) - 1
+	Label string
+	Xs    []string // valid expression
+
+	FxSymbols []SignSymbol // with length len(Xs)
+	Signs     []bool       // is positive, with length len(Xs) - 1
 }
 
 func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
