@@ -645,13 +645,11 @@ export interface LevelItems {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListExercicesOut
 export interface ListExercicesOut {
   Groups: ExercicegroupExt[] | null;
-  NbGroups: number;
   NbExercices: number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
   Groups: QuestiongroupExt[] | null;
-  NbGroups: number;
   NbQuestions: number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowExercice

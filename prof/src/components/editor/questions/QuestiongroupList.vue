@@ -52,7 +52,7 @@
               </i>
             </div>
 
-            <div v-for="questionGroup in groups" :key="questionGroup.Group.Id">
+            <div v-for="(questionGroup, index) in displayedGroups" :key="index">
               <questiongroup-row
                 :group="questionGroup"
                 :all-tags="props.tags"
@@ -63,13 +63,20 @@
               ></questiongroup-row>
             </div>
           </v-list>
-          <div class="my-2">
-            {{ groups.length }} / {{ serverNbGroups }} questions affichées. ({{
-              displayedNbQuestions
-            }}
-            / {{ serverNbQuestions }}
-            variantes)
-          </div>
+          <v-row no-gutters>
+            <v-col align-self="center" cols="4">
+              {{ groups.length || 0 }} questions ({{ serverNbQuestions }}
+              variantes)
+            </v-col>
+            <v-col align-self="center">
+              <v-pagination
+                density="comfortable"
+                rounded="circle"
+                v-model="currentPage"
+                :length="groups.length / pagination"
+              ></v-pagination>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
     </v-card-text>
@@ -108,16 +115,16 @@ defineExpose({ createQuestiongroup });
 
 const router = useRouter();
 
+// groups are cut in slice of `pagination` length,
+// and currentPage is the index of the page
+const pagination = 6;
+let currentPage = $ref(1);
+const displayedGroups = computed(() =>
+  groups.slice((currentPage - 1) * pagination, currentPage * pagination)
+);
+
 let groups = $ref<QuestiongroupExt[]>([]);
-let serverNbGroups = $ref(0);
 let serverNbQuestions = $ref(0);
-const displayedNbQuestions = computed(() => {
-  let nb = 0;
-  groups.forEach((group) => {
-    nb += group.Variants?.length || 0;
-  });
-  return nb;
-});
 
 let query = $ref<Query>(
   props.initialQuery
@@ -144,7 +151,6 @@ async function fetchQuestions() {
     return;
   }
   groups = result.Groups || [];
-  serverNbGroups = result.NbGroups;
   serverNbQuestions = result.NbQuestions;
 }
 

@@ -555,9 +555,8 @@ type SaveQuestionAndPreviewIn struct {
 }
 
 type ListQuestionsOut struct {
-	Groups      []QuestiongroupExt // limited by `pagination`
-	NbGroups    int                // total number of groups (passing the given filter)
-	NbQuestions int                // total number of questions
+	Groups      []QuestiongroupExt
+	NbQuestions int // Numver of variants in [Groups]
 }
 
 // QuestiongroupExt adds the question and tags to a QuestionGroup
@@ -670,8 +669,6 @@ func normalizeTitle(title string) string {
 }
 
 func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
-	const pagination = 10 // number of groups
-
 	query.normalize()
 
 	var groups ed.Questiongroups
@@ -758,13 +755,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 		out.Groups = append(out.Groups, groupExt)
 	}
 
-	// sort before pagination
 	sort.Slice(out.Groups, func(i, j int) bool { return out.Groups[i].Group.Title < out.Groups[j].Group.Title })
-
-	out.NbGroups = len(out.Groups)
-	if len(out.Groups) > pagination {
-		out.Groups = out.Groups[:pagination]
-	}
 
 	return out, nil
 }

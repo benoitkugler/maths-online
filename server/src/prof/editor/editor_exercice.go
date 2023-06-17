@@ -134,14 +134,11 @@ func exerciceOrigin(ex ed.Exercicegroup, inReview tcAPI.OptionalIdReview, userID
 }
 
 type ListExercicesOut struct {
-	Groups      []ExercicegroupExt // limited by `pagination`
-	NbGroups    int                // total number of groups (passing the given filter)
-	NbExercices int                // total number of exercices contained in the groups
+	Groups      []ExercicegroupExt
+	NbExercices int // Number of variants in [Groups]
 }
 
 func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercicesOut, err error) {
-	const pagination = 10 // number of groups
-
 	groups, err := ed.SelectAllExercicegroups(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -209,13 +206,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 		out.Groups = append(out.Groups, groupExt)
 	}
 
-	// sort before pagination
 	sort.Slice(out.Groups, func(i, j int) bool { return out.Groups[i].Group.Title < out.Groups[j].Group.Title })
-
-	out.NbGroups = len(out.Groups)
-	if len(out.Groups) > pagination {
-		out.Groups = out.Groups[:pagination]
-	}
 
 	return out, nil
 }

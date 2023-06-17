@@ -51,7 +51,7 @@
               </i>
             </div>
 
-            <div v-for="exerciceGroup in groups" :key="exerciceGroup.Group.Id">
+            <div v-for="(exerciceGroup, index) in displayedGroups" :key="index">
               <exercicegroup-row
                 :group="exerciceGroup"
                 :all-tags="props.tags"
@@ -62,13 +62,20 @@
               ></exercicegroup-row>
             </div>
           </v-list>
-          <div class="my-2">
-            {{ groups.length }} / {{ serverNbGroups }} exercices affichés. ({{
-              displayedNbExercices
-            }}
-            / {{ serverNbExercices }}
-            variantes)
-          </div>
+          <v-row no-gutters>
+            <v-col align-self="center" cols="4">
+              {{ groups.length || 0 }} exercices ({{ serverNbExercices }}
+              variantes)
+            </v-col>
+            <v-col align-self="center">
+              <v-pagination
+                density="comfortable"
+                rounded="circle"
+                v-model="currentPage"
+                :length="Math.ceil(groups.length / pagination)"
+              ></v-pagination>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
     </v-card-text>
@@ -106,16 +113,16 @@ defineExpose({ createExercicegroup });
 
 const router = useRouter();
 
+// groups are cut in slice of `pagination` length,
+// and currentPage is the index of the page
+const pagination = 6;
+let currentPage = $ref(1);
+const displayedGroups = computed(() =>
+  groups.slice((currentPage - 1) * pagination, currentPage * pagination)
+);
+
 let groups = $ref<ExercicegroupExt[]>([]);
-let serverNbGroups = $ref(0);
 let serverNbExercices = $ref(0);
-const displayedNbExercices = computed(() => {
-  let nb = 0;
-  groups.forEach((group) => {
-    nb += group.Variants?.length || 0;
-  });
-  return nb;
-});
 
 let query = $ref<Query>(
   props.initialQuery
@@ -149,7 +156,6 @@ async function fetchExercices() {
     return;
   }
   groups = result.Groups || [];
-  serverNbGroups = result.NbGroups;
   serverNbExercices = result.NbExercices;
 }
 
