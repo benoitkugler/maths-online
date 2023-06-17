@@ -12,6 +12,21 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog v-model="showResetDone" max-width="600px">
+    <v-card>
+      <v-card-title class="bg-info"
+        >Réinitialisation du mot de passe</v-card-title
+      >
+      <v-card-text>
+        Un mail contenant votre nouveau mot de passe a été envoyé à l'adresse
+        <div style="text-align: center">
+          <i>{{ mail }}</i>
+        </div>
+        Vous pourrez le modifier via le pannel de réglages de votre compte.
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
   <v-dialog v-model="showSuccessInscription" max-width="600px">
     <v-card title="Inscription enregistrée" color="success">
       <v-card-text>
@@ -129,6 +144,14 @@
           <v-btn v-if="mode == 'inscription'" @click="mode = 'connection'"
             >Retour</v-btn
           >
+          <v-btn
+            v-else
+            v-show="error.Error != ''"
+            :disabled="!isEmailValid"
+            @click="resetPassword"
+          >
+            Mot de passe oublié ?
+          </v-btn>
           <v-spacer></v-spacer>
           <v-btn
             color="primary"
@@ -170,8 +193,10 @@ let showSuccessInscription = $ref(false);
 let isLoading = $ref(false);
 
 const areCredencesValid = computed(
-  () => !isLoading && mail != "" && password != ""
+  () => !isLoading && isEmailValid && password != ""
 );
+
+const isEmailValid = computed(() => mail.includes("@") && mail.includes("."));
 
 async function inscription() {
   isLoading = true;
@@ -205,6 +230,13 @@ async function connection() {
   const settings = await controller.TeacherGetSettings();
   if (settings) controller.settings = settings;
   emit("loggin");
+}
+
+let showResetDone = $ref(false);
+async function resetPassword() {
+  const res = await controller.TeacherResetPassword({ mail: mail });
+  if (res == undefined) return;
+  showResetDone = true;
 }
 </script>
 

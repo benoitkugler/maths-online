@@ -259,7 +259,7 @@ func (ct *Controller) resetPassword(mail string) error {
 		return utils.SQLError(err)
 	}
 	// generate a new password
-	newPassword := utils.RandomString(true, 16)
+	newPassword := utils.RandomString(true, 8)
 	teacher.PasswordCrypted = ct.teacherKey.EncryptPassword(newPassword)
 	_, err = teacher.Update(ct.db)
 	if err != nil {

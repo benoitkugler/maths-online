@@ -8,7 +8,7 @@
     <v-card-text class="ma-2">
       <v-form v-if="settings != null">
         <v-row>
-          <v-col>
+          <v-col cols="12" md="6">
             <v-text-field
               variant="outlined"
               density="compact"
@@ -16,6 +16,21 @@
               label="Adresse email"
               persistent-hint
               hint="Adresse utilisée comme identifiant de connection"
+            ></v-text-field>
+          </v-col>
+
+          <v-col cols="12" md="6">
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              v-model="settings.Password"
+              label="Mot de passe"
+              :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+              :rules="[(v) => v.length >= 4 || 'Au moins 4 charactères']"
+              :type="showPassword ? 'text' : 'password'"
+              hint="Le mot de passe doit contenir au moins 4 charactères."
+              counter=""
+              @click:append="showPassword = !showPassword"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -33,7 +48,9 @@
         <v-row>
           <v-spacer></v-spacer>
           <v-col cols="auto">
-            <v-btn color="success" @click="save">Enregistrer</v-btn>
+            <v-btn color="success" @click="save" :disabled="!isFormValid"
+              >Enregistrer</v-btn
+            >
           </v-col>
         </v-row>
       </v-form>
@@ -52,10 +69,20 @@
 <script setup lang="ts">
 import type { TeacherSettings } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
+import { computed } from "vue";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 
 let settings = $ref<TeacherSettings | null>(null);
+
+let showPassword = $ref(false);
+
+const isFormValid = computed(
+  () =>
+    settings?.Mail.includes("@") &&
+    settings?.Mail.includes(".") &&
+    settings.Password.length >= 4
+);
 
 onMounted(() => fetchSettings());
 

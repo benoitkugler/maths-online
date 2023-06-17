@@ -55,7 +55,11 @@ class Controller extends AbstractAPI {
   public onError?: (kind: string, htmlError: string) => void;
   public showMessage?: (message: string, color?: string) => void;
 
-  public settings: TeacherSettings = { Mail: "", HasEditorSimplified: false };
+  public settings: TeacherSettings = {
+    Mail: "",
+    HasEditorSimplified: false,
+    Password: ""
+  };
 
   logout() {
     this.isLoggedIn = false;
@@ -128,6 +132,10 @@ class Controller extends AbstractAPI {
     if (this.showMessage) {
       this.showMessage("Paramètres modifiés avec succès.");
     }
+  }
+
+  protected onSuccessTeacherResetPassword(): void {
+    this.inRequest = false;
   }
 
   protected onSuccessEditorGetQuestionsIndex(data: Index): void {
