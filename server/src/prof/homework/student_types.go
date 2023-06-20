@@ -22,6 +22,7 @@ type StudentEvaluateTaskIn struct {
 	StudentID pass.EncryptedID
 	IdTask    sql.IdTask
 	Ex        taAPI.EvaluateWorkIn
+	IdTravail ho.IdTravail
 }
 
 type StudentEvaluateTaskOut struct {

@@ -29,11 +29,9 @@ func scanOneSheet(row scanner) (Sheet, error) {
 	var item Sheet
 	err := row.Scan(
 		&item.Id,
-		&item.IdClassroom,
+		&item.IdTeacher,
 		&item.Title,
-		&item.Notation,
-		&item.Activated,
-		&item.Deadline,
+		&item.Level,
 	)
 	return item, err
 }
@@ -102,22 +100,22 @@ func ScanSheets(rs *sql.Rows) (Sheets, error) {
 // Insert one Sheet in the database and returns the item with id filled.
 func (item Sheet) Insert(tx DB) (out Sheet, err error) {
 	row := tx.QueryRow(`INSERT INTO sheets (
-		idclassroom, title, notation, activated, deadline
+		idteacher, title, level
 		) VALUES (
-		$1, $2, $3, $4, $5
+		$1, $2, $3
 		) RETURNING *;
-		`, item.IdClassroom, item.Title, item.Notation, item.Activated, item.Deadline)
+		`, item.IdTeacher, item.Title, item.Level)
 	return ScanSheet(row)
 }
 
 // Update Sheet in the database and returns the new version.
 func (item Sheet) Update(tx DB) (out Sheet, err error) {
 	row := tx.QueryRow(`UPDATE sheets SET (
-		idclassroom, title, notation, activated, deadline
+		idteacher, title, level
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
-		`, item.IdClassroom, item.Title, item.Notation, item.Activated, item.Deadline, item.Id)
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.IdTeacher, item.Title, item.Level, item.Id)
 	return ScanSheet(row)
 }
 
@@ -136,41 +134,41 @@ func DeleteSheetsByIDs(tx DB, ids ...IdSheet) ([]IdSheet, error) {
 	return ScanIdSheetArray(rows)
 }
 
-// ByIdClassroom returns a map with 'IdClassroom' as keys.
-func (items Sheets) ByIdClassroom() map[teacher.IdClassroom]Sheets {
-	out := make(map[teacher.IdClassroom]Sheets)
+// ByIdTeacher returns a map with 'IdTeacher' as keys.
+func (items Sheets) ByIdTeacher() map[teacher.IdTeacher]Sheets {
+	out := make(map[teacher.IdTeacher]Sheets)
 	for _, target := range items {
-		dict := out[target.IdClassroom]
+		dict := out[target.IdTeacher]
 		if dict == nil {
 			dict = make(Sheets)
 		}
 		dict[target.Id] = target
-		out[target.IdClassroom] = dict
+		out[target.IdTeacher] = dict
 	}
 	return out
 }
 
-// IdClassrooms returns the list of ids of IdClassroom
+// IdTeachers returns the list of ids of IdTeacher
 // contained in this table.
 // They are not garanteed to be distinct.
-func (items Sheets) IdClassrooms() []teacher.IdClassroom {
-	out := make([]teacher.IdClassroom, 0, len(items))
+func (items Sheets) IdTeachers() []teacher.IdTeacher {
+	out := make([]teacher.IdTeacher, 0, len(items))
 	for _, target := range items {
-		out = append(out, target.IdClassroom)
+		out = append(out, target.IdTeacher)
 	}
 	return out
 }
 
-func SelectSheetsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (Sheets, error) {
-	rows, err := tx.Query("SELECT * FROM sheets WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms))
+func SelectSheetsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Sheets, error) {
+	rows, err := tx.Query("SELECT * FROM sheets WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSheets(rows)
 }
 
-func DeleteSheetsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) ([]IdSheet, error) {
-	rows, err := tx.Query("DELETE FROM sheets WHERE idclassroom = ANY($1) RETURNING id", teacher.IdClassroomArrayToPQ(idClassrooms))
+func DeleteSheetsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdSheet, error) {
+	rows, err := tx.Query("DELETE FROM sheets WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
 	if err != nil {
 		return nil, err
 	}
@@ -357,6 +355,198 @@ func SelectSheetTaskByIdSheetAndIndex(tx DB, idSheet IdSheet, index int) (item S
 	return item, true, err
 }
 
+func scanOneTravail(row scanner) (Travail, error) {
+	var item Travail
+	err := row.Scan(
+		&item.Id,
+		&item.IdClassroom,
+		&item.IdSheet,
+		&item.Noted,
+		&item.Deadline,
+	)
+	return item, err
+}
+
+func ScanTravail(row *sql.Row) (Travail, error) { return scanOneTravail(row) }
+
+// SelectAll returns all the items in the travails table.
+func SelectAllTravails(db DB) (Travails, error) {
+	rows, err := db.Query("SELECT * FROM travails")
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravails(rows)
+}
+
+// SelectTravail returns the entry matching 'id'.
+func SelectTravail(tx DB, id IdTravail) (Travail, error) {
+	row := tx.QueryRow("SELECT * FROM travails WHERE id = $1", id)
+	return ScanTravail(row)
+}
+
+// SelectTravails returns the entry matching the given 'ids'.
+func SelectTravails(tx DB, ids ...IdTravail) (Travails, error) {
+	rows, err := tx.Query("SELECT * FROM travails WHERE id = ANY($1)", IdTravailArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravails(rows)
+}
+
+type Travails map[IdTravail]Travail
+
+func (m Travails) IDs() []IdTravail {
+	out := make([]IdTravail, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanTravails(rs *sql.Rows) (Travails, error) {
+	var (
+		s   Travail
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(Travails, 16)
+	for rs.Next() {
+		s, err = scanOneTravail(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert one Travail in the database and returns the item with id filled.
+func (item Travail) Insert(tx DB) (out Travail, err error) {
+	row := tx.QueryRow(`INSERT INTO travails (
+		idclassroom, idsheet, noted, deadline
+		) VALUES (
+		$1, $2, $3, $4
+		) RETURNING *;
+		`, item.IdClassroom, item.IdSheet, item.Noted, item.Deadline)
+	return ScanTravail(row)
+}
+
+// Update Travail in the database and returns the new version.
+func (item Travail) Update(tx DB) (out Travail, err error) {
+	row := tx.QueryRow(`UPDATE travails SET (
+		idclassroom, idsheet, noted, deadline
+		) = (
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING *;
+		`, item.IdClassroom, item.IdSheet, item.Noted, item.Deadline, item.Id)
+	return ScanTravail(row)
+}
+
+// Deletes the Travail and returns the item
+func DeleteTravailById(tx DB, id IdTravail) (Travail, error) {
+	row := tx.QueryRow("DELETE FROM travails WHERE id = $1 RETURNING *;", id)
+	return ScanTravail(row)
+}
+
+// Deletes the Travail in the database and returns the ids.
+func DeleteTravailsByIDs(tx DB, ids ...IdTravail) ([]IdTravail, error) {
+	rows, err := tx.Query("DELETE FROM travails WHERE id = ANY($1) RETURNING id", IdTravailArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdTravailArray(rows)
+}
+
+// ByIdClassroom returns a map with 'IdClassroom' as keys.
+func (items Travails) ByIdClassroom() map[teacher.IdClassroom]Travails {
+	out := make(map[teacher.IdClassroom]Travails)
+	for _, target := range items {
+		dict := out[target.IdClassroom]
+		if dict == nil {
+			dict = make(Travails)
+		}
+		dict[target.Id] = target
+		out[target.IdClassroom] = dict
+	}
+	return out
+}
+
+// IdClassrooms returns the list of ids of IdClassroom
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Travails) IdClassrooms() []teacher.IdClassroom {
+	out := make([]teacher.IdClassroom, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdClassroom)
+	}
+	return out
+}
+
+func SelectTravailsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (Travails, error) {
+	rows, err := tx.Query("SELECT * FROM travails WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravails(rows)
+}
+
+func DeleteTravailsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) ([]IdTravail, error) {
+	rows, err := tx.Query("DELETE FROM travails WHERE idclassroom = ANY($1) RETURNING id", teacher.IdClassroomArrayToPQ(idClassrooms))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdTravailArray(rows)
+}
+
+// ByIdSheet returns a map with 'IdSheet' as keys.
+func (items Travails) ByIdSheet() map[IdSheet]Travails {
+	out := make(map[IdSheet]Travails)
+	for _, target := range items {
+		dict := out[target.IdSheet]
+		if dict == nil {
+			dict = make(Travails)
+		}
+		dict[target.Id] = target
+		out[target.IdSheet] = dict
+	}
+	return out
+}
+
+// IdSheets returns the list of ids of IdSheet
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Travails) IdSheets() []IdSheet {
+	out := make([]IdSheet, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.IdSheet)
+	}
+	return out
+}
+
+func SelectTravailsByIdSheets(tx DB, idSheets ...IdSheet) (Travails, error) {
+	rows, err := tx.Query("SELECT * FROM travails WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravails(rows)
+}
+
+func DeleteTravailsByIdSheets(tx DB, idSheets ...IdSheet) ([]IdTravail, error) {
+	rows, err := tx.Query("DELETE FROM travails WHERE idsheet = ANY($1) RETURNING id", IdSheetArrayToPQ(idSheets))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdTravailArray(rows)
+}
+
 func (s *Time) Scan(src interface{}) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)
@@ -414,6 +604,55 @@ func (s IdSheetSet) Has(id IdSheet) bool { return s[id] }
 
 func (s IdSheetSet) Keys() []IdSheet {
 	out := make([]IdSheet, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	return out
+}
+
+func IdTravailArrayToPQ(ids []IdTravail) pq.Int64Array {
+	out := make(pq.Int64Array, len(ids))
+	for i, v := range ids {
+		out[i] = int64(v)
+	}
+	return out
+}
+
+// ScanIdTravailArray scans the result of a query returning a
+// list of ID's.
+func ScanIdTravailArray(rs *sql.Rows) ([]IdTravail, error) {
+	defer rs.Close()
+	ints := make([]IdTravail, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IdTravail
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
+type IdTravailSet map[IdTravail]bool
+
+func NewIdTravailSetFrom(ids []IdTravail) IdTravailSet {
+	out := make(IdTravailSet, len(ids))
+	for _, key := range ids {
+		out[key] = true
+	}
+	return out
+}
+
+func (s IdTravailSet) Add(id IdTravail) { s[id] = true }
+
+func (s IdTravailSet) Has(id IdTravail) bool { return s[id] }
+
+func (s IdTravailSet) Keys() []IdTravail {
+	out := make([]IdTravail, 0, len(s))
 	for k := range s {
 		out = append(out, k)
 	}

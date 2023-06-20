@@ -14,20 +14,16 @@ func randIdSheet() IdSheet {
 	return IdSheet(randint64())
 }
 
-func randNotation() Notation {
-	choix := [...]Notation{NoNotation, SuccessNotation}
-	i := rand.Intn(len(choix))
-	return choix[i]
+func randIdTravail() IdTravail {
+	return IdTravail(randint64())
 }
 
 func randSheet() Sheet {
 	var s Sheet
 	s.Id = randIdSheet()
-	s.IdClassroom = randtea_IdClassroom()
+	s.IdTeacher = randtea_IdTeacher()
 	s.Title = randstring()
-	s.Notation = randNotation()
-	s.Activated = randbool()
-	s.Deadline = randTime()
+	s.Level = randstring()
 
 	return s
 }
@@ -43,6 +39,17 @@ func randSheetTask() SheetTask {
 
 func randTime() Time {
 	return Time(randtTime())
+}
+
+func randTravail() Travail {
+	var s Travail
+	s.Id = randIdTravail()
+	s.IdClassroom = randtea_IdClassroom()
+	s.IdSheet = randIdSheet()
+	s.Noted = randbool()
+	s.Deadline = randTime()
+
+	return s
 }
 
 func randbool() bool {
@@ -79,4 +86,8 @@ func randtas_IdTask() tasks.IdTask {
 
 func randtea_IdClassroom() teacher.IdClassroom {
 	return teacher.IdClassroom(randint64())
+}
+
+func randtea_IdTeacher() teacher.IdTeacher {
+	return teacher.IdTeacher(randint64())
 }

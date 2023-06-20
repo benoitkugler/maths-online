@@ -27,6 +27,6 @@ func LoadMonoquestionSheet(db DB, idMono tasks.IdMonoquestion) (tasks.IdTask, Id
 }
 
 // IsExpired returns true if the [Deadline] is before the present time.
-func (sh Sheet) IsExpired() bool {
+func (sh Travail) IsExpired() bool {
 	return time.Time(sh.Deadline).Before(time.Now())
 }

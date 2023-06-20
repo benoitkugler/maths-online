@@ -836,12 +836,14 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 		return StudentEvaluateTaskOut{}, err
 	}
 
-	sheet, err := sheetFromTask(ct.db, args.IdTask)
+	travail, err := ho.SelectTravail(ct.db, args.IdTravail)
 	if err != nil {
-		return StudentEvaluateTaskOut{}, err
+		return StudentEvaluateTaskOut{}, utils.SQLError(err)
 	}
 
-	registerProgression := !sheet.IsExpired()
+	// Always register progression for free travail
+	registerProgression := !travail.Noted || !travail.IsExpired()
+
 	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex, registerProgression)
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
