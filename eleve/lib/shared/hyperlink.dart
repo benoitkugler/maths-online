@@ -4,7 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 TextSpan _hyperlink(String text, Uri url, TextStyle style) {
   return TextSpan(
-    style: style,
+    style: style.copyWith(
+        color: Colors.lightBlue.shade200, decoration: TextDecoration.underline),
     text: text,
     recognizer: TapGestureRecognizer()
       ..onTap = () async {
@@ -13,6 +14,18 @@ TextSpan _hyperlink(String text, Uri url, TextStyle style) {
         }
       },
   );
+}
+
+/// [hyperlink] return a [Text] widget displaying [text] and
+/// pointing to [urlText]
+Text hyperlink(String text, String urlText, {TextStyle? style}) {
+  final uri = Uri.tryParse(urlText);
+  if (uri == null) {
+    // invalid url
+    return Text(text, style: style);
+  }
+
+  return Text.rich(_hyperlink(text, uri, style ?? const TextStyle()));
 }
 
 List<TextSpan> parseURLs(String text, TextStyle style) {
@@ -32,12 +45,7 @@ List<TextSpan> parseURLs(String text, TextStyle style) {
       // invalid url
       out.add(TextSpan(text: urlText, style: style));
     } else {
-      out.add(_hyperlink(
-          match.group(1)!,
-          uri,
-          style.copyWith(
-              color: Colors.lightBlue.shade200,
-              decoration: TextDecoration.underline)));
+      out.add(_hyperlink(match.group(1)!, uri, style));
     }
     currentIndex = match.end;
   }
