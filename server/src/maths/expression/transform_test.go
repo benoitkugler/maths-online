@@ -266,6 +266,8 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"round(2.2; 4) + round(2.2; 5)", "round(2.2; 5) + round(2.2; 4)", ExpandedSubstitutions, true},
 		{"-0.25x+1", "-0,25x+1", SimpleSubstitutions, true},
 		{"1.5x + 1", "(3/2)x+1", ExpandedSubstitutions, true},
+		{"2(x+1)(x+3)", "(2x+2)(x+3)", ExpandedSubstitutions, true},
+		{"2(x+1)(x+3)", "(x+3)(2x+2)", ExpandedSubstitutions, true},
 	}
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
