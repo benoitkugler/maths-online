@@ -35,7 +35,10 @@
       </v-col>
       <v-col cols="auto">
         <keep-alive>
-          <ClientPreview ref="preview"></ClientPreview>
+          <ClientPreview
+            ref="preview"
+            :hide="viewKind == 'questions'"
+          ></ClientPreview>
         </keep-alive>
       </v-col>
     </v-row>

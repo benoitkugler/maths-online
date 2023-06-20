@@ -1,10 +1,14 @@
 <template>
   <iframe
     :src="src"
-    width="350px"
     height="100%"
     ref="iframe"
     class="rounded"
+    :style="
+      props.hide
+        ? 'position: absolute;width:0;height:0;border:0;'
+        : 'width:350px'
+    "
   ></iframe>
 </template>
 
@@ -20,6 +24,12 @@ import type {
   LoopbackShowExercice,
   LoopbackShowQuestion,
 } from "@/controller/api_gen";
+
+interface Props {
+  hide?: boolean;
+}
+
+const props = defineProps<Props>();
 
 defineExpose({ pause, showQuestion, showExercice });
 
