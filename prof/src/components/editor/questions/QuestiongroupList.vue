@@ -68,12 +68,12 @@
               {{ groups.length || 0 }} questions ({{ serverNbQuestions }}
               variantes)
             </v-col>
-            <v-col align-self="center">
+            <v-col align-self="center" cols="8">
               <v-pagination
                 density="comfortable"
                 rounded="circle"
                 v-model="currentPage"
-                :length="groups.length / pagination"
+                :length="pageLength"
               ></v-pagination>
             </v-col>
           </v-row>
@@ -119,6 +119,7 @@ const router = useRouter();
 // and currentPage is the index of the page
 const pagination = 6;
 let currentPage = $ref(1);
+const pageLength = computed(() => Math.ceil(groups.length / pagination));
 const displayedGroups = computed(() =>
   groups.slice((currentPage - 1) * pagination, currentPage * pagination)
 );

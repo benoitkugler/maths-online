@@ -192,7 +192,7 @@
                       >
                       </v-badge>
                     </template>
-                    L'élève a reliée son application.
+                    L'élève a relié son application.
                   </v-tooltip>
                 </v-col>
               </v-row>

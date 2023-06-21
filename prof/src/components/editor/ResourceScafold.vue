@@ -68,7 +68,7 @@
     ></TagListEdit>
   </v-dialog>
 
-  <v-card class="my-2">
+  <v-card class="mt-2">
     <v-row no-gutters class="pl-2 pt-1">
       <v-col cols="auto" align-self="center">
         <v-btn
