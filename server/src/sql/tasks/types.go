@@ -3,6 +3,13 @@
 // and to track the progression of the students.
 package tasks
 
+import "github.com/benoitkugler/maths-online/server/src/sql/editor"
+
+type OptionalIdQuestion struct {
+	Valid bool
+	ID    editor.IdQuestion
+}
+
 type OptionalIdMonoquestion struct {
 	Valid bool
 	ID    IdMonoquestion
@@ -10,6 +17,15 @@ type OptionalIdMonoquestion struct {
 
 func (id IdMonoquestion) AsOptional() OptionalIdMonoquestion {
 	return OptionalIdMonoquestion{ID: id, Valid: true}
+}
+
+type OptionalIdRandomMonoquestion struct {
+	Valid bool
+	ID    IdRandomMonoquestion
+}
+
+func (id IdRandomMonoquestion) AsOptional() OptionalIdRandomMonoquestion {
+	return OptionalIdRandomMonoquestion{ID: id, Valid: true}
 }
 
 // QuestionHistory stores the successes for one question,
