@@ -104,7 +104,7 @@ class _LoadedClassroom extends StatelessWidget {
       children: [
         _FormRow("Nom", "${meta.student.surname} ${meta.student.name}"),
         _FormRow("Classe", meta.classroomName),
-        _FormRow("Mail du prof.", meta.teacherMail),
+        _FormRow("Contact", meta.teacherMail),
       ],
     );
   }

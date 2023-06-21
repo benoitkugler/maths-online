@@ -11,7 +11,7 @@ class ExpressionController extends FieldController {
   bool _isDirty = false;
 
   ExpressionController(this.api, void Function() onEditDone,
-      {bool showFractionHelp = true})
+      {bool showFractionHelp = false})
       : textController = TextEditingController(),
         super(onEditDone) {
     if (showFractionHelp) {

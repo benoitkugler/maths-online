@@ -33,7 +33,10 @@
       </v-col>
       <v-col cols="auto">
         <keep-alive>
-          <client-preview ref="preview"></client-preview>
+          <client-preview
+            ref="preview"
+            :hide="currentExercicegroup == null"
+          ></client-preview>
         </keep-alive>
       </v-col>
     </v-row>

@@ -67,7 +67,7 @@
               {{ groups.length || 0 }} exercices ({{ serverNbExercices }}
               variantes)
             </v-col>
-            <v-col align-self="center">
+            <v-col align-self="center" cols="8">
               <v-pagination
                 density="comfortable"
                 rounded="circle"
