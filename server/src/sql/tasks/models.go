@@ -43,10 +43,18 @@ type Task struct {
 	IdRandomMonoquestion OptionalIdRandomMonoquestion `gomacro-sql-foreign:"RandomMonoquestion"`
 }
 
+// RandomMonoquestionVariant is a lin table storing which variants is attributed to a given student
+// gomacro:SQL ADD UNIQUE(IdStudent, IdRandomMonoquestion, Index)
+type RandomMonoquestionVariant struct {
+	IdStudent            teacher.IdStudent
+	IdRandomMonoquestion IdRandomMonoquestion
+	Index                int `json:"index"`
+	IdQuestion           editor.IdQuestion
+}
+
 // Progression is a link table storing the student progressions
 // on tasks.
 // gomacro:SQL ADD UNIQUE(IdStudent, IdTask, Index)
-// gomacro:SQL ADD CHECK((IdQuestionVariant IS NOT NULL)::int + (IdExerciceVariant IS NOT NULL)::int = 1)
 // gomacro:SQL _SELECT KEY (IdStudent, IdTask)
 type Progression struct {
 	IdStudent teacher.IdStudent `gomacro-sql-on-delete:"CASCADE"`
@@ -58,10 +66,4 @@ type Progression struct {
 	Index int `json:"index"`
 
 	History QuestionHistory `json:"history"`
-
-	// The following fields are mainly used when the task is random.
-	// Otherwise, they are just copied from the task.
-
-	IdQuestionVariant OptionalIdQuestion        `gomacro-sql-foreign:"Question"`
-	IdExerciceVariant editor.OptionalIdExercice `gomacro-sql-foreign:"Exercice"`
 }

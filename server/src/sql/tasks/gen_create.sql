@@ -10,9 +10,7 @@ CREATE TABLE progressions (
     IdStudent integer NOT NULL,
     IdTask integer NOT NULL,
     Index integer NOT NULL,
-    History boolean[],
-    IdQuestionVariant integer,
-    IdExerciceVariant integer
+    History boolean[]
 );
 
 CREATE TABLE random_monoquestions (
@@ -21,6 +19,13 @@ CREATE TABLE random_monoquestions (
     NbRepeat integer NOT NULL,
     Bareme integer NOT NULL,
     Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL
+);
+
+CREATE TABLE random_monoquestion_variants (
+    IdStudent integer NOT NULL,
+    IdRandomMonoquestion integer NOT NULL,
+    Index integer NOT NULL,
+    IdQuestion integer NOT NULL
 );
 
 CREATE TABLE tasks (
@@ -52,21 +57,24 @@ ALTER TABLE tasks
 ALTER TABLE tasks
     ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
 
-ALTER TABLE progressions
-    ADD UNIQUE (IdStudent, IdTask, INDEX);
+ALTER TABLE random_monoquestion_variants
+    ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
 
 ALTER TABLE progressions
-    ADD CHECK ((IdQuestionVariant IS NOT NULL)::int + (IdExerciceVariant IS NOT NULL)::int = 1);
+    ADD UNIQUE (IdStudent, IdTask, INDEX);
 
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdTask) REFERENCES tasks ON DELETE CASCADE;
-
-ALTER TABLE progressions
-    ADD FOREIGN KEY (IdQuestionVariant) REFERENCES questions;
-
-ALTER TABLE progressions
-    ADD FOREIGN KEY (IdExerciceVariant) REFERENCES exercices;
 

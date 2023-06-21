@@ -36,10 +36,12 @@ type TasksContents struct {
 	exercices      ed.Exercices
 	exToQuestions  map[ed.IdExercice]ed.ExerciceQuestions
 
-	monoquestions  ta.Monoquestions
-	questiongroups ed.Questiongroups // for questions in monoquestions
+	monoquestions       ta.Monoquestions
+	randomMonoquestions ta.RandomMonoquestions
 
-	questions ed.Questions // provide both exercices and monoquestions contents
+	questiongroups ed.Questiongroups // for questions in [monoquestions] and [randomMonoquestions]
+
+	questions ed.Questions // provide exercices and monoquestions contents
 }
 
 func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) {
@@ -49,12 +51,14 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 	}
 
 	// fetch the associated exerciceIDs or monoquestionIDs
-	exerciceIDs, monoquestionIDs := make(ed.IdExerciceSet), make(ta.IdMonoquestionSet)
+	exerciceIDs, monoquestionIDs, randomMonoquestionIDs := make(ed.IdExerciceSet), make(ta.IdMonoquestionSet), make(ta.IdRandomMonoquestionSet)
 	for _, task := range out.Tasks {
 		if task.IdExercice.Valid {
 			exerciceIDs.Add(task.IdExercice.ID)
-		} else {
+		} else if task.IdMonoquestion.Valid {
 			monoquestionIDs.Add(task.IdMonoquestion.ID)
+		} else if task.IdRandomMonoquestion.Valid {
+			randomMonoquestionIDs.Add(task.IdRandomMonoquestion.ID)
 		}
 	}
 
@@ -78,6 +82,20 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		return out, utils.SQLError(err)
 	}
 
+	out.randomMonoquestions, err = ta.SelectRandomMonoquestions(db, randomMonoquestionIDs.Keys()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	groupsFromRandom, err := ed.SelectQuestiongroups(db, out.randomMonoquestions.IdQuestiongroups()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	questionsFromRandom, err := ed.SelectQuestionsByIdGroups(db, groupsFromRandom.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	questionsIds := append(out.monoquestions.IdQuestions(), links.IdQuestions()...)
 	out.questions, err = ed.SelectQuestions(db, questionsIds...)
 	if err != nil {
@@ -96,12 +114,21 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		return out, utils.SQLError(err)
 	}
 
+	// merge from random
+	for k, v := range groupsFromRandom {
+		out.questiongroups[k] = v
+	}
+	for k, v := range questionsFromRandom {
+		out.questions[k] = v
+	}
+
 	return out, nil
 }
 
 // GetWork returns the task content for `task`.
 func (contents TasksContents) GetWork(task ta.Task) Work {
-	if task.IdExercice.Valid {
+	switch {
+	case task.IdExercice.Valid:
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
 		return ExerciceData{
@@ -110,14 +137,18 @@ func (contents TasksContents) GetWork(task ta.Task) Work {
 			Links:        questions,
 			QuestionsMap: contents.questions,
 		}
-	}
+	case task.IdMonoquestion.Valid:
+		monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
+		question := contents.questions[monoquestion.IdQuestion]
+		return monoquestionData{
+			params:        monoquestion,
+			question:      question,
+			questiongroup: contents.questiongroups[question.IdGroup.ID],
+		}
+	case task.IdRandomMonoquestion.Valid:
 
-	monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
-	question := contents.questions[monoquestion.IdQuestion]
-	return MonoquestionData{
-		params:        monoquestion,
-		question:      question,
-		questiongroup: contents.questiongroups[question.IdGroup.ID],
+	default: // should not happen (enforced by SQL constraint)
+		return nil
 	}
 }
 

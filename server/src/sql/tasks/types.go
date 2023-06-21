@@ -3,7 +3,11 @@
 // and to track the progression of the students.
 package tasks
 
-import "github.com/benoitkugler/maths-online/server/src/sql/editor"
+import (
+	"sort"
+
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+)
 
 type OptionalIdQuestion struct {
 	Valid bool
@@ -41,4 +45,11 @@ func (qh QuestionHistory) Success() bool {
 		}
 	}
 	return false
+}
+
+// EnsureOrder must be call on the questions of one exercice,
+// to make sure the order in the slice is consistent with the one
+// indicated by `Index`
+func (l RandomMonoquestionVariants) EnsureOrder() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }

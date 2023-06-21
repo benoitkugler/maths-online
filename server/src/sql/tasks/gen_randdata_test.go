@@ -43,14 +43,6 @@ func randOptionalIdMonoquestion() OptionalIdMonoquestion {
 	return s
 }
 
-func randOptionalIdQuestion() OptionalIdQuestion {
-	var s OptionalIdQuestion
-	s.Valid = randbool()
-	s.ID = randedi_IdQuestion()
-
-	return s
-}
-
 func randOptionalIdRandomMonoquestion() OptionalIdRandomMonoquestion {
 	var s OptionalIdRandomMonoquestion
 	s.Valid = randbool()
@@ -65,8 +57,6 @@ func randProgression() Progression {
 	s.IdTask = randIdTask()
 	s.Index = randint()
 	s.History = randQuestionHistory()
-	s.IdQuestionVariant = randOptionalIdQuestion()
-	s.IdExerciceVariant = randedi_OptionalIdExercice()
 
 	return s
 }
@@ -82,6 +72,16 @@ func randRandomMonoquestion() RandomMonoquestion {
 	s.NbRepeat = randint()
 	s.Bareme = randint()
 	s.Difficulty = randedi_DifficultyTag()
+
+	return s
+}
+
+func randRandomMonoquestionVariant() RandomMonoquestionVariant {
+	var s RandomMonoquestionVariant
+	s.IdStudent = randtea_IdStudent()
+	s.IdRandomMonoquestion = randIdRandomMonoquestion()
+	s.Index = randint()
+	s.IdQuestion = randedi_IdQuestion()
 
 	return s
 }
