@@ -1,8 +1,8 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE sheets (
     Id serial PRIMARY KEY,
-    IdTeacher integer NOT NULL,
     Title text NOT NULL,
+    IdTeacher integer NOT NULL,
     Level text NOT NULL
 );
 

@@ -50,7 +50,7 @@ func TestTaskConstraint(t *testing.T) {
 
 	ex, questions := createEx(t, db.DB, tc.Id)
 
-	mono, err := Monoquestion{IdQuestion: questions[0].IdQuestion}.Insert(db)
+	mono, err := Monoquestion{IdQuestion: questions[0].IdQuestion, NbRepeat: 1}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	// exactly one target must be given

@@ -314,8 +314,8 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableBlock
 export interface SignTableBlock {
   Label: string;
-  FxSymbols: SignSymbol[] | null;
   Xs: string[] | null;
+  FxSymbols: SignSymbol[] | null;
   Signs: boolean[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableFieldBlock
@@ -751,7 +751,6 @@ export interface TagsDB {
 export interface TaskDetails {
   Id: IdTask;
   Sheet: Sheet;
-  Classroom: Classroom;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupTagsIn
 export interface UpdateExercicegroupTagsIn {
@@ -773,29 +772,44 @@ export interface AddMonoquestionToTaskIn {
   IdSheet: IdSheet;
   IdQuestion: IdQuestion;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/homework.ClassroomSheets
-export interface ClassroomSheets {
+// github.com/benoitkugler/maths-online/server/src/prof/homework.AddRandomMonoquestionToTaskIn
+export interface AddRandomMonoquestionToTaskIn {
+  IdSheet: IdSheet;
+  IdQuestiongroup: IdQuestiongroup;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.ClassroomTravaux
+export interface ClassroomTravaux {
   Classroom: Classroom;
-  Sheets: SheetExt[] | null;
+  Travaux: Travail[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.CopySheetIn
 export interface CopySheetIn {
   IdSheet: IdSheet;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CopyTravailIn
+export interface CopyTravailIn {
+  IdTravail: IdTravail;
   IdClassroom: IdClassroom;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/homework.CreateSheetIn
-export interface CreateSheetIn {
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CreateTravailIn
+export interface CreateTravailIn {
+  IdSheet: IdSheet;
   IdClassroom: IdClassroom;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
-  Marks: { [key: IdSheet]: { [key: IdStudent]: number } | null } | null;
+  Marks: { [key: IdTravail]: { [key: IdStudent]: number } | null } | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.Homeworks
+export interface Homeworks {
+  Sheets: { [key: IdSheet]: SheetExt } | null;
+  Travaux: ClassroomTravaux[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HowemorkMarksIn
 export interface HowemorkMarksIn {
   IdClassroom: IdClassroom;
-  IdSheets: IdSheet[] | null;
+  IdTravaux: IdTravail[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.ReorderSheetTasksIn
 export interface ReorderSheetTasksIn {
@@ -812,9 +826,8 @@ export interface TaskExt {
   Id: IdTask;
   IdWork: WorkID;
   Title: string;
-  Subtitle: string;
+  Bareme: TaskBareme;
   NbProgressions: number;
-  Baremes: TaskBareme;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
 export interface LoadTargetOut {
@@ -1153,25 +1166,21 @@ export interface TagSection {
 export type Tags = TagSection[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
 export type IdSheet = number;
-// github.com/benoitkugler/maths-online/server/src/sql/homework.Notation
-export enum Notation {
-  NoNotation = 0,
-  SuccessNotation = 1,
-}
-
-export const NotationLabels: { [key in Notation]: string } = {
-  [Notation.NoNotation]: "no notation",
-  [Notation.SuccessNotation]:
-    "a question gives point if it has been successfully completed (at least) once",
-};
-
+// github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
+export type IdTravail = number;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Sheet
 export interface Sheet {
   Id: IdSheet;
-  IdClassroom: IdClassroom;
   Title: string;
-  Notation: Notation;
-  Activated: boolean;
+  IdTeacher: IdTeacher;
+  Level: string;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/homework.Travail
+export interface Travail {
+  Id: IdTravail;
+  IdClassroom: IdClassroom;
+  IdSheet: IdSheet;
+  Noted: boolean;
   Deadline: Time;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Approval
@@ -1216,6 +1225,8 @@ export const ReviewKindLabels: { [key in ReviewKind]: string } = {
 
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdMonoquestion
 export type IdMonoquestion = number;
+// github.com/benoitkugler/maths-online/server/src/sql/tasks.IdRandomMonoquestion
+export type IdRandomMonoquestion = number;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdTask
 export type IdTask = number;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.Monoquestion
@@ -1224,6 +1235,14 @@ export interface Monoquestion {
   IdQuestion: IdQuestion;
   NbRepeat: number;
   Bareme: number;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/tasks.RandomMonoquestion
+export interface RandomMonoquestion {
+  Id: IdRandomMonoquestion;
+  IdQuestiongroup: IdQuestiongroup;
+  NbRepeat: number;
+  Bareme: number;
+  Difficulty: DifficultyQuery;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Classroom
 export interface Classroom {
@@ -1274,6 +1293,7 @@ export type TaskBareme = number[] | null;
 export interface WorkID {
   ID: number;
   IsExercice: boolean;
+  Kind: number;
 }
 // github.com/benoitkugler/maths-online/server/src/trivial.Categorie
 export enum Categorie {
@@ -2842,10 +2862,9 @@ export abstract class AbstractAPI {
 
   protected async rawHomeworkGetSheets() {
     const fullUrl = this.baseUrl + "/api/prof/homework";
-    const rep: AxiosResponse<ClassroomSheets[] | null> = await Axios.get(
-      fullUrl,
-      { headers: this.getHeaders() }
-    );
+    const rep: AxiosResponse<Homeworks> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
@@ -2861,23 +2880,21 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkGetSheets(
-    data: ClassroomSheets[] | null
-  ): void;
+  protected abstract onSuccessHomeworkGetSheets(data: Homeworks): void;
 
-  protected async rawHomeworkCreateSheet(params: CreateSheetIn) {
+  protected async rawHomeworkCreateSheet() {
     const fullUrl = this.baseUrl + "/api/prof/homework";
-    const rep: AxiosResponse<SheetExt> = await Axios.put(fullUrl, params, {
+    const rep: AxiosResponse<SheetExt> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** HomeworkCreateSheet wraps rawHomeworkCreateSheet and handles the error */
-  async HomeworkCreateSheet(params: CreateSheetIn) {
+  async HomeworkCreateSheet() {
     this.startRequest();
     try {
-      const out = await this.rawHomeworkCreateSheet(params);
+      const out = await this.rawHomeworkCreateSheet();
       this.onSuccessHomeworkCreateSheet(out);
       return out;
     } catch (error) {
@@ -2931,7 +2948,7 @@ export abstract class AbstractAPI {
   protected abstract onSuccessHomeworkDeleteSheet(): void;
 
   protected async rawHomeworkCopySheet(params: CopySheetIn) {
-    const fullUrl = this.baseUrl + "/api/prof/homework/copy-sheet";
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/copy";
     const rep: AxiosResponse<SheetExt> = await Axios.post(fullUrl, params, {
       headers: this.getHeaders(),
     });
@@ -2951,6 +2968,93 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkCopySheet(data: SheetExt): void;
+
+  protected async rawHomeworkCreateTravail(params: CreateTravailIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/travail";
+    const rep: AxiosResponse<Travail> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkCreateTravail wraps rawHomeworkCreateTravail and handles the error */
+  async HomeworkCreateTravail(params: CreateTravailIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkCreateTravail(params);
+      this.onSuccessHomeworkCreateTravail(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkCreateTravail(data: Travail): void;
+
+  protected async rawHomeworkUpdateTravail(params: Travail) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/travail";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** HomeworkUpdateTravail wraps rawHomeworkUpdateTravail and handles the error */
+  async HomeworkUpdateTravail(params: Travail) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkUpdateTravail(params);
+      this.onSuccessHomeworkUpdateTravail();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkUpdateTravail(): void;
+
+  protected async rawHomeworkDeleteTravail(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/travail";
+    await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** HomeworkDeleteTravail wraps rawHomeworkDeleteTravail and handles the error */
+  async HomeworkDeleteTravail(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkDeleteTravail(params);
+      this.onSuccessHomeworkDeleteTravail();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkDeleteTravail(): void;
+
+  protected async rawHomeworkCopyTravail(params: CopyTravailIn) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/travail/copy";
+    const rep: AxiosResponse<Travail> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkCopyTravail wraps rawHomeworkCopyTravail and handles the error */
+  async HomeworkCopyTravail(params: CopyTravailIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkCopyTravail(params);
+      this.onSuccessHomeworkCopyTravail(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkCopyTravail(data: Travail): void;
 
   protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
@@ -3019,6 +3123,33 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkAddMonoquestion(data: TaskExt): void;
 
+  protected async rawHomeworkAddRandomMonoquestion(
+    params: AddRandomMonoquestionToTaskIn
+  ) {
+    const fullUrl =
+      this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
+    const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkAddRandomMonoquestion wraps rawHomeworkAddRandomMonoquestion and handles the error */
+  async HomeworkAddRandomMonoquestion(params: AddRandomMonoquestionToTaskIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkAddRandomMonoquestion(params);
+      this.onSuccessHomeworkAddRandomMonoquestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkAddRandomMonoquestion(
+    data: TaskExt
+  ): void;
+
   protected async rawHomeworkUpdateMonoquestion(params: Monoquestion) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
     const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
@@ -3040,6 +3171,33 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void;
+
+  protected async rawHomeworkUpdateRandomMonoquestion(
+    params: RandomMonoquestion
+  ) {
+    const fullUrl =
+      this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
+    const rep: AxiosResponse<TaskExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkUpdateRandomMonoquestion wraps rawHomeworkUpdateRandomMonoquestion and handles the error */
+  async HomeworkUpdateRandomMonoquestion(params: RandomMonoquestion) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkUpdateRandomMonoquestion(params);
+      this.onSuccessHomeworkUpdateRandomMonoquestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkUpdateRandomMonoquestion(
+    data: TaskExt
+  ): void;
 
   protected async rawHomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";

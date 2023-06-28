@@ -5,8 +5,10 @@
 package tasks
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	"math/rand"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -118,15 +120,16 @@ func EvaluateQuestion(qu questions.Enonce, answer AnswerP) (client.QuestionAnswe
 }
 
 const (
-	WorkExercice uint8 = iota
+	WorkExercice uint8 = iota + 1
 	WorkMonoquestion
 	WorkRandomMonoquestion
 )
 
 // WorkID identifies either an exercice or a (possibly random) monoquestion
 type WorkID struct {
-	ID   int64
-	Kind uint8
+	ID         int64
+	IsExercice bool // deprecated in version 1.5
+	Kind       uint8
 }
 
 func NewWorkID(task ta.Task) WorkID {
@@ -142,7 +145,9 @@ func NewWorkID(task ta.Task) WorkID {
 	}
 }
 
-func newWorkIDFromEx(id ed.IdExercice) WorkID { return WorkID{ID: int64(id), Kind: WorkExercice} }
+func newWorkIDFromEx(id ed.IdExercice) WorkID {
+	return WorkID{ID: int64(id), IsExercice: true, Kind: WorkExercice}
+}
 
 func newWorkIDFromMono(id ta.IdMonoquestion) WorkID {
 	return WorkID{ID: int64(id), Kind: WorkMonoquestion}
@@ -153,15 +158,28 @@ func newWorkIDFromRandomMono(id ta.IdRandomMonoquestion) WorkID {
 }
 
 // Work is the common interface for exercices and mono-questions.
-type Work interface {
+type WorkMeta interface {
 	Title() string // as presented to the student
 	flow() ed.Flow
-	QuestionsList() ([]ed.Question, TaskBareme)
+	Bareme() TaskBareme
+}
+
+type Work interface {
+	WorkMeta
+	Questions() []ed.Question
 	Instantiate() (InstantiatedWork, error)
 }
 
 // student is only required for RandomMonoquestion
 func newWorkLoader(db ed.DB, work WorkID, student tc.IdStudent) (Work, error) {
+	if work.Kind == 0 { // backward compatiblity
+		if work.IsExercice {
+			work.Kind = WorkExercice
+		} else {
+			work.Kind = WorkMonoquestion
+		}
+	}
+
 	switch work.Kind {
 	case WorkExercice:
 		return NewExerciceData(db, ed.IdExercice(work.ID))
@@ -186,11 +204,20 @@ type InstantiatedWork struct {
 }
 
 // InstantiateWork load an exercice (or a monoquestion) and its questions.
-func InstantiateWork(db ed.DB, work WorkID, student tc.IdStudent) (InstantiatedWork, error) {
+// For new RandomMonoquestions, the actual list of questions is also generated and saved.
+func InstantiateWork(db *sql.DB, work WorkID, student tc.IdStudent) (InstantiatedWork, error) {
 	loader, err := newWorkLoader(db, work, student)
 	if err != nil {
 		return InstantiatedWork{}, err
 	}
+
+	if random, ok := loader.(randomMonoquestionData); ok && len(random.selectedQuestions) == 0 {
+		loader, err = random.selectQuestions(db, student)
+		if err != nil {
+			return InstantiatedWork{}, err
+		}
+	}
+
 	return loader.Instantiate()
 }
 
@@ -261,29 +288,33 @@ func NewExerciceData(db ed.DB, id ed.IdExercice) (ExerciceData, error) {
 func (ex ExerciceData) Title() string { return ex.Group.Title }
 func (ExerciceData) flow() ed.Flow    { return ed.Sequencial }
 
-// QuestionsList resolve the links list using `source`,
-// returning lists of length `len(Links)`
-func (ex ExerciceData) QuestionsList() ([]ed.Question, TaskBareme) {
+func (ex ExerciceData) Questions() []ed.Question {
 	questions := make([]ed.Question, len(ex.Links))
-	baremes := make([]int, len(ex.Links))
 	for i, link := range ex.Links {
 		questions[i] = ex.QuestionsMap[link.IdQuestion]
-		baremes[i] = ex.Links[i].Bareme
 	}
-	return questions, baremes
+	return questions
+}
+
+func (ex ExerciceData) Bareme() TaskBareme {
+	baremes := make([]int, len(ex.Links))
+	for i, link := range ex.Links {
+		baremes[i] = link.Bareme
+	}
+	return baremes
 }
 
 // Instantiate instantiates the questions, using a fixed shared instance of the exercice parameters
 // for each question
 func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 	ex := data.Exercice
-	questions, baremes := data.QuestionsList()
+	questions := data.Questions()
 
 	out := InstantiatedWork{
 		ID:      newWorkIDFromEx(ex.Id),
 		Title:   data.Title(),
 		Flow:    data.flow(),
-		Baremes: baremes,
+		Baremes: data.Bareme(),
 	}
 
 	// instantiate the questions :
@@ -330,25 +361,32 @@ func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, 
 func (data monoquestionData) Title() string { return data.questiongroup.Title }
 func (monoquestionData) flow() ed.Flow      { return ed.Parallel }
 
-// QuestionsList returns the generated list of questions
-func (data monoquestionData) QuestionsList() ([]ed.Question, TaskBareme) {
+// Questions returns the generated list of questions
+func (data monoquestionData) Questions() []ed.Question {
 	questions := make([]ed.Question, data.params.NbRepeat)
-	baremes := make([]int, data.params.NbRepeat)
 	// repeat the question
 	for i := range questions {
 		questions[i] = data.question
+	}
+	return questions
+}
+
+func (data monoquestionData) Bareme() TaskBareme {
+	baremes := make([]int, data.params.NbRepeat)
+	// repeat the question
+	for i := range baremes {
 		baremes[i] = data.params.Bareme
 	}
-	return questions, baremes
+	return baremes
 }
 
 func (data monoquestionData) Instantiate() (InstantiatedWork, error) {
-	questions, baremes := data.QuestionsList()
+	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromMono(data.params.Id),
 		Title:   data.Title(),
-		Flow:    ed.Parallel,
-		Baremes: baremes,
+		Flow:    data.flow(),
+		Baremes: data.Bareme(),
 	}
 
 	var err error
@@ -365,7 +403,8 @@ type randomMonoquestionData struct {
 	selectedQuestions []ed.Question // with length params.NbRepeat
 }
 
-// assume a progression is registred for this student
+// `selectedQuestions` may be empty if the student has not instanciated this task yet
+// See also [selectQuestions]
 func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.IdStudent) (out randomMonoquestionData, err error) {
 	out.params, err = ta.SelectRandomMonoquestion(db, id)
 	if err != nil {
@@ -384,10 +423,6 @@ func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.
 	variants = variants.ByIdStudent()[student]
 	variants.EnsureOrder()
 
-	if len(variants) != out.params.NbRepeat {
-		return out, errors.New("internal error: inconsitent length of variant for RandomMonoquestion")
-	}
-
 	dict, err := ed.SelectQuestions(db, variants.IdQuestions()...)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -401,26 +436,95 @@ func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.
 	return out, nil
 }
 
+// selectQuestions chooses the variants (with respect to the teacher settings), update the DB,
+// and returns the updated struct
+func (data randomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdStudent) (randomMonoquestionData, error) {
+	// load all the variants
+	questions, err := ed.SelectQuestionsByIdGroups(db, data.params.IdQuestiongroup)
+	if err != nil {
+		return data, utils.SQLError(err)
+	}
+
+	var filtered []ed.Question
+	for _, qu := range questions {
+		if data.params.Difficulty.Match(qu.Difficulty) {
+			filtered = append(filtered, qu)
+		}
+	}
+
+	if len(filtered) == 0 {
+		// this should not happen, since the prof. API has a check for it
+		return data, errors.New("Aucune question n'est disponible pour ce travail !")
+	}
+
+	data.selectedQuestions = selectVariants(data.params.NbRepeat, filtered)
+
+	links := make(ta.RandomMonoquestionVariants, len(data.selectedQuestions))
+	for i, qu := range data.selectedQuestions {
+		links[i] = ta.RandomMonoquestionVariant{
+			IdStudent:            idStudent,
+			IdRandomMonoquestion: data.params.Id,
+			Index:                i,
+			IdQuestion:           qu.Id,
+		}
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return data, utils.SQLError(err)
+	}
+	err = ta.InsertManyRandomMonoquestionVariants(tx, links...)
+	if err != nil {
+		_ = tx.Rollback()
+		return data, utils.SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return data, utils.SQLError(err)
+	}
+
+	return data, nil
+}
+
+// assume len(among) > 0
+func selectVariants(nbToSelect int, among []ed.Question) []ed.Question {
+	selected := make([]ed.Question, 0, nbToSelect)
+
+	nbAvail := len(among)
+	// we prioritize diversity
+	quotient, remainder := nbToSelect/nbAvail, nbToSelect%nbAvail
+	for i := 0; i < quotient; i++ {
+		selected = append(selected, among...) // repeat all questions
+	}
+
+	perm := rand.Perm(nbAvail)[:remainder]
+	for _, index := range perm {
+		selected = append(selected, among[index])
+	}
+	return selected
+}
+
 func (data randomMonoquestionData) Title() string { return data.questiongroup.Title }
 func (randomMonoquestionData) flow() ed.Flow      { return ed.Parallel }
 
-// QuestionsList returns the generated list of questions
-func (data randomMonoquestionData) QuestionsList() ([]ed.Question, TaskBareme) {
-	baremes := make([]int, len(data.selectedQuestions))
+// Questions is only valid when the student specific variants have been loaded
+func (data randomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }
+
+func (data randomMonoquestionData) Bareme() TaskBareme {
+	baremes := make([]int, data.params.NbRepeat)
 	// repeat the bareme
 	for i := range baremes {
 		baremes[i] = data.params.Bareme
 	}
-	return data.selectedQuestions, baremes
+	return baremes
 }
 
 func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
-	questions, baremes := data.QuestionsList()
+	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromRandomMono(data.params.Id),
 		Title:   data.Title(),
-		Flow:    ed.Parallel,
-		Baremes: baremes,
+		Flow:    data.flow(),
+		Baremes: data.Bareme(),
 	}
 
 	var err error
@@ -437,8 +541,6 @@ func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
 
 type EvaluateWorkIn struct {
 	ID WorkID
-
-	IdStudent tc.IdStudent
 
 	Answers map[int]AnswerP // by question index (not ID)
 
@@ -457,13 +559,14 @@ type EvaluateWorkOut struct {
 // update the in-memory progression.
 // The given progression must either be empty or have same length
 // as the exercice.
-func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
-	data, err := newWorkLoader(db, args.ID, args.IdStudent)
+// [idStudent] is only used to handle RandomMonoquestions
+func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateWorkOut, error) {
+	data, err := newWorkLoader(db, args.ID, idStudent)
 	if err != nil {
 		return EvaluateWorkOut{}, utils.SQLError(err)
 	}
 
-	qus, _ := data.QuestionsList()
+	qus := data.Questions()
 
 	// handle initial empty progressions
 	if len(args.Progression.Questions) == 0 {
@@ -515,7 +618,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 		*l = append(*l, resp.IsCorrect())
 	}
 
-	updatedProgression.InferNextQuestion() // update in case of success
+	updatedProgression.inferNextQuestion() // update in case of success
 
 	newVersion, err := data.Instantiate()
 	if err != nil {

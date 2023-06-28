@@ -14,6 +14,7 @@ type (
 
 // Monoquestion is a shortcut for an exercice composed of only one question.
 // It is used to avoid creating cumbersome exercice wrappers around questions.
+// gomacro:SQL ADD CHECK(NbRepeat > 0)
 type Monoquestion struct {
 	Id         IdMonoquestion
 	IdQuestion editor.IdQuestion
@@ -24,12 +25,13 @@ type Monoquestion struct {
 // RandomMonoquestion allows the teacher to specify a whole [Questiongroup],
 // with questions chosen randomly for each student, according to an (optional)
 // difficulty tag.
+// gomacro:SQL ADD CHECK(NbRepeat > 0)
 type RandomMonoquestion struct {
 	Id              IdRandomMonoquestion
 	IdQuestiongroup editor.IdQuestiongroup
 	NbRepeat        int
-	Bareme          int                  // for one question
-	Difficulty      editor.DifficultyTag // optional, empty for all questions
+	Bareme          int                    // for one question
+	Difficulty      editor.DifficultyQuery // optional, empty for all questions
 }
 
 // Task is a pointer to an assignement to one exercice, either
@@ -43,7 +45,7 @@ type Task struct {
 	IdRandomMonoquestion OptionalIdRandomMonoquestion `gomacro-sql-foreign:"RandomMonoquestion"`
 }
 
-// RandomMonoquestionVariant is a lin table storing which variants is attributed to a given student
+// RandomMonoquestionVariant is a link table storing which variants is attributed to a given student
 // gomacro:SQL ADD UNIQUE(IdStudent, IdRandomMonoquestion, Index)
 type RandomMonoquestionVariant struct {
 	IdStudent            teacher.IdStudent

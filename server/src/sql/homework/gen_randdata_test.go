@@ -21,8 +21,8 @@ func randIdTravail() IdTravail {
 func randSheet() Sheet {
 	var s Sheet
 	s.Id = randIdSheet()
-	s.IdTeacher = randtea_IdTeacher()
 	s.Title = randstring()
+	s.IdTeacher = randtea_IdTeacher()
 	s.Level = randstring()
 
 	return s

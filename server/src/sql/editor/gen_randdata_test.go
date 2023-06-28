@@ -579,8 +579,8 @@ func randque_SignSymbol() questions.SignSymbol {
 func randque_SignTableBlock() questions.SignTableBlock {
 	var s questions.SignTableBlock
 	s.Label = randstring()
-	s.FxSymbols = randSliceque_SignSymbol()
 	s.Xs = randSlicestring()
+	s.FxSymbols = randSliceque_SignSymbol()
 	s.Signs = randSlicebool()
 
 	return s

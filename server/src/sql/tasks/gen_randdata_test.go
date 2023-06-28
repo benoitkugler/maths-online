@@ -71,7 +71,7 @@ func randRandomMonoquestion() RandomMonoquestion {
 	s.IdQuestiongroup = randedi_IdQuestiongroup()
 	s.NbRepeat = randint()
 	s.Bareme = randint()
-	s.Difficulty = randedi_DifficultyTag()
+	s.Difficulty = randedi_DifficultyQuery()
 
 	return s
 }
@@ -95,6 +95,15 @@ func randSlicebool() []bool {
 	return out
 }
 
+func randSliceedi_DifficultyTag() []editor.DifficultyTag {
+	l := 40 + rand.Intn(10)
+	out := make([]editor.DifficultyTag, l)
+	for i := range out {
+		out[i] = randedi_DifficultyTag()
+	}
+	return out
+}
+
 func randTask() Task {
 	var s Task
 	s.Id = randIdTask()
@@ -108,6 +117,10 @@ func randTask() Task {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
+}
+
+func randedi_DifficultyQuery() editor.DifficultyQuery {
+	return editor.DifficultyQuery(randSliceedi_DifficultyTag())
 }
 
 func randedi_DifficultyTag() editor.DifficultyTag {

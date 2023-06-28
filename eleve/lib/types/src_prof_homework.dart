@@ -6,27 +6,59 @@ import 'src_sql_homework.dart';
 import 'src_sql_tasks.dart';
 import 'src_tasks.dart';
 
-// github.com/benoitkugler/maths-online/server/src/prof/homework.SheetProgression
-class SheetProgression {
-  final Sheet sheet;
-  final List<TaskProgressionHeader> tasks;
+// github.com/benoitkugler/maths-online/server/src/prof/homework.Sheet
+class Sheet {
+  final IdSheet id;
+  final String title;
+  final Time deadline;
 
-  const SheetProgression(this.sheet, this.tasks);
+  const Sheet(this.id, this.title, this.deadline);
 
   @override
   String toString() {
-    return "SheetProgression($sheet, $tasks)";
+    return "Sheet($id, $title, $deadline)";
+  }
+}
+
+Sheet sheetFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return Sheet(intFromJson(json['Id']), stringFromJson(json['Title']),
+      dateTimeFromJson(json['Deadline']));
+}
+
+Map<String, dynamic> sheetToJson(Sheet item) {
+  return {
+    "Id": intToJson(item.id),
+    "Title": stringToJson(item.title),
+    "Deadline": dateTimeToJson(item.deadline)
+  };
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/homework.SheetProgression
+class SheetProgression {
+  final IdTravail idTravail;
+  final Sheet sheet;
+  final List<TaskProgressionHeader> tasks;
+
+  const SheetProgression(this.idTravail, this.sheet, this.tasks);
+
+  @override
+  String toString() {
+    return "SheetProgression($idTravail, $sheet, $tasks)";
   }
 }
 
 SheetProgression sheetProgressionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return SheetProgression(sheetFromJson(json['Sheet']),
+  return SheetProgression(
+      intFromJson(json['IdTravail']),
+      sheetFromJson(json['Sheet']),
       listTaskProgressionHeaderFromJson(json['Tasks']));
 }
 
 Map<String, dynamic> sheetProgressionToJson(SheetProgression item) {
   return {
+    "IdTravail": intToJson(item.idTravail),
     "Sheet": sheetToJson(item.sheet),
     "Tasks": listTaskProgressionHeaderToJson(item.tasks)
   };
@@ -37,26 +69,32 @@ class StudentEvaluateTaskIn {
   final EncryptedID studentID;
   final IdTask idTask;
   final EvaluateWorkIn ex;
+  final IdTravail idTravail;
 
-  const StudentEvaluateTaskIn(this.studentID, this.idTask, this.ex);
+  const StudentEvaluateTaskIn(
+      this.studentID, this.idTask, this.ex, this.idTravail);
 
   @override
   String toString() {
-    return "StudentEvaluateTaskIn($studentID, $idTask, $ex)";
+    return "StudentEvaluateTaskIn($studentID, $idTask, $ex, $idTravail)";
   }
 }
 
 StudentEvaluateTaskIn studentEvaluateTaskInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return StudentEvaluateTaskIn(stringFromJson(json['StudentID']),
-      intFromJson(json['IdTask']), evaluateWorkInFromJson(json['Ex']));
+  return StudentEvaluateTaskIn(
+      stringFromJson(json['StudentID']),
+      intFromJson(json['IdTask']),
+      evaluateWorkInFromJson(json['Ex']),
+      intFromJson(json['IdTravail']));
 }
 
 Map<String, dynamic> studentEvaluateTaskInToJson(StudentEvaluateTaskIn item) {
   return {
     "StudentID": stringToJson(item.studentID),
     "IdTask": intToJson(item.idTask),
-    "Ex": evaluateWorkInToJson(item.ex)
+    "Ex": evaluateWorkInToJson(item.ex),
+    "IdTravail": intToJson(item.idTravail)
   };
 }
 

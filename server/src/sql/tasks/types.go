@@ -53,3 +53,10 @@ func (qh QuestionHistory) Success() bool {
 func (l RandomMonoquestionVariants) EnsureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }
+
+// EnsureOrder must be call on the questions of one exercice,
+// to make sure the order in the slice is consistent with the one
+// indicated by `Index`
+func (l Progressions) EnsureOrder() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}

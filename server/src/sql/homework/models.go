@@ -28,7 +28,7 @@ type Travail struct {
 
 	// When 'true', the [Sheet] is evaluated, and may only
 	// be done once.
-	// Notation : a question gives point if it has been successfully completed (at least) once
+	// Notation : a question gives point if it has been successfully completed (at least) once.
 	// When 'false' the sheet is always available as free training.
 	Noted bool
 

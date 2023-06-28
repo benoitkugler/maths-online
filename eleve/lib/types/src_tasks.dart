@@ -301,22 +301,28 @@ Map<String, dynamic> varEntryToJson(VarEntry item) {
 class WorkID {
   final int iD;
   final bool isExercice;
+  final int kind;
 
-  const WorkID(this.iD, this.isExercice);
+  const WorkID(this.iD, this.isExercice, this.kind);
 
   @override
   String toString() {
-    return "WorkID($iD, $isExercice)";
+    return "WorkID($iD, $isExercice, $kind)";
   }
 }
 
 WorkID workIDFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return WorkID(intFromJson(json['ID']), boolFromJson(json['IsExercice']));
+  return WorkID(intFromJson(json['ID']), boolFromJson(json['IsExercice']),
+      intFromJson(json['Kind']));
 }
 
 Map<String, dynamic> workIDToJson(WorkID item) {
-  return {"ID": intToJson(item.iD), "IsExercice": boolToJson(item.isExercice)};
+  return {
+    "ID": intToJson(item.iD),
+    "IsExercice": boolToJson(item.isExercice),
+    "Kind": intToJson(item.kind)
+  };
 }
 
 Map<int, AnswerP> dictIntToAnswerPFromJson(dynamic json) {

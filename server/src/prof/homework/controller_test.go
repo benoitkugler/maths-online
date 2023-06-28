@@ -72,15 +72,17 @@ func TestCRUDSheet(t *testing.T) {
 
 	l, err := ct.getSheets(userID)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(l) == 1)
-	tu.Assert(t, len(l[0].Sheets) == 0)
+	tu.Assert(t, len(l.Sheets) == 0)
+	tu.Assert(t, len(l.Travaux) == 1) // one per classroom
+	tu.Assert(t, len(l.Travaux[0].Travaux) == 0)
 
-	sh, err := ct.createSheet(class.Id, userID)
+	sh, err := ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
 
 	updated := ho.Sheet{}
 	updated.Id = sh.Id
-	updated.IdClassroom = class.Id
+	updated.IdTeacher = userID
+	updated.Level = string(editor.Seconde)
 	err = ct.updateSheet(updated, userID)
 	tu.AssertNoErr(t, err)
 
@@ -96,12 +98,29 @@ func TestCRUDSheet(t *testing.T) {
 
 	l, err = ct.getSheets(userID)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(l) == 1)
-	tu.Assert(t, len(l[0].Sheets) == 1)
+	tu.Assert(t, len(l.Sheets) == 1)
+	tu.Assert(t, len(l.Travaux) == 1)
+	tu.Assert(t, len(l.Travaux[0].Travaux) == 0)
 
-	out, err := ct.copySheetTo(CopySheetIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
+	tr, err := ct.assignSheetTo(CreateTravailIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
+	tu.AssertNoErr(t, err)
+
+	l, err = ct.getSheets(userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Travaux[0].Travaux) == 1)
+
+	out, err := ct.duplicateSheet(CopySheetIn{IdSheet: sh.Id}, userID)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Sheet.Id != sh.Id)
+
+	l, err = ct.getSheets(userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Sheets) == 2)
+
+	_, err = ct.copyTravailTo(CopyTravailIn{IdTravail: tr.Id, IdClassroom: class.Id}, userID)
+	l, err = ct.getSheets(userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Travaux[0].Travaux) == 2)
 
 	err = ct.deleteSheet(sh.Id, userID)
 	tu.AssertNoErr(t, err)
@@ -121,20 +140,13 @@ func TestStudentSheets(t *testing.T) {
 	tu.Assert(t, len(sheets) == 0)
 
 	// create sheets with exercices...
-	sh1, err := ct.createSheet(class.Id, userID)
+	sh1, err := ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
-	sh2, err := ct.createSheet(class.Id, userID)
+	sh2, err := ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
-	_, err = ct.createSheet(class.Id, userID)
+	_, err = ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
 
-	// open sheet 1 and 2 ...
-	sh1.Activated, sh2.Activated = true, true
-	err = ct.updateSheet(sh1, userID)
-	tu.AssertNoErr(t, err)
-	err = ct.updateSheet(sh2, userID)
-	tu.AssertNoErr(t, err)
-	// ... and add exercices
 	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
 	tu.AssertNoErr(t, err)
 	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe1.Id}, userID)
@@ -142,6 +154,12 @@ func TestStudentSheets(t *testing.T) {
 	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh1.Id, IdExercice: exe2.Id}, userID)
 	tu.AssertNoErr(t, err)
 	_, err = ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh2.Id, IdExercice: exe1.Id}, userID)
+	tu.AssertNoErr(t, err)
+
+	// open sheet 1 and 2 ...
+	_, err = ct.assignSheetTo(CreateTravailIn{IdSheet: sh1.Id, IdClassroom: class.Id}, userID)
+	tu.AssertNoErr(t, err)
+	_, err = ct.assignSheetTo(CreateTravailIn{IdSheet: sh2.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
 
 	sheets, err = ct.getStudentSheets(student.Id)
@@ -171,13 +189,17 @@ func TestEvaluateTask(t *testing.T) {
 	ct := NewController(db.DB, teacher.Teacher{Id: sp.userID}, studentKey)
 
 	// setup the sheet and exercices
-	sh, err := ct.createSheet(class.Id, sp.userID)
-	tu.AssertNoErr(t, err)
-	sh.Activated = true
-	sh.Deadline = ho.Time(time.Now().Add(time.Hour))
-	err = ct.updateSheet(sh, sp.userID)
+	sh, err := ct.createSheet(sp.userID)
 	tu.AssertNoErr(t, err)
 	task, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
+	tu.AssertNoErr(t, err)
+
+	tr, err := ct.assignSheetTo(CreateTravailIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
+	tu.AssertNoErr(t, err)
+
+	tr.Noted = true
+	tr.Deadline = ho.Time(time.Now().Add(time.Hour))
+	err = ct.updateTravail(tr, sp.userID)
 	tu.AssertNoErr(t, err)
 
 	// setup a student
@@ -193,6 +215,7 @@ func TestEvaluateTask(t *testing.T) {
 				0: {},
 			},
 		},
+		IdTravail: tr.Id,
 	})
 	tu.AssertNoErr(t, err)
 
@@ -206,8 +229,8 @@ func TestEvaluateTask(t *testing.T) {
 	}
 
 	// now expire the sheet ...
-	sh.Deadline = ho.Time(time.Now().Add(-time.Hour))
-	err = ct.updateSheet(sh, sp.userID)
+	tr.Deadline = ho.Time(time.Now().Add(-time.Hour))
+	err = ct.updateTravail(tr, sp.userID)
 	tu.AssertNoErr(t, err)
 
 	out, err = ct.studentEvaluateTask(StudentEvaluateTaskIn{
@@ -220,6 +243,7 @@ func TestEvaluateTask(t *testing.T) {
 			},
 			Progression: out.Ex.Progression,
 		},
+		IdTravail: tr.Id,
 	})
 	tu.AssertNoErr(t, err)
 
@@ -234,20 +258,16 @@ func TestEvaluateTask(t *testing.T) {
 	}
 }
 
-func createProgressionWith(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, questions []ta.QuestionHistory) error {
-	prog, err := ta.Progression{IdStudent: idStudent, IdTask: idTask}.Insert(db)
-	if err != nil {
-		return err
+func insertProgression(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, questions []ta.QuestionHistory) error {
+	links := make(ta.Progressions, len(questions))
+	for i, qu := range questions {
+		links[i] = ta.Progression{IdStudent: idStudent, IdTask: idTask, Index: i, History: qu}
 	}
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	links := make(ta.ProgressionQuestions, len(questions))
-	for i, qu := range questions {
-		links[i] = ta.ProgressionQuestion{IdProgression: prog.Id, Index: i, History: qu}
-	}
-	err = ta.InsertManyProgressionQuestions(tx, links...)
+	err = ta.InsertManyProgressions(tx, links...)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -264,20 +284,23 @@ func TestGetMarks(t *testing.T) {
 	ct := NewController(db.DB, teacher.Teacher{Id: sp.userID}, studentKey)
 
 	// setup the sheet and exercices
-	sh, err := ct.createSheet(class.Id, sp.userID)
-	tu.AssertNoErr(t, err)
-	sh.Activated = true
-	sh.Deadline = ho.Time(time.Now().Add(time.Hour))
-	err = ct.updateSheet(sh, sp.userID)
+	sh, err := ct.createSheet(sp.userID)
 	tu.AssertNoErr(t, err)
 	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 	task2, err := ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: sp.question.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 
+	tr, err := ct.assignSheetTo(CreateTravailIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
+	tu.AssertNoErr(t, err)
+	tr.Noted = true
+	tr.Deadline = ho.Time(time.Now().Add(time.Hour))
+	err = ct.updateTravail(tr, sp.userID)
+	tu.AssertNoErr(t, err)
+
 	out, err := ct.getMarks(HowemorkMarksIn{
 		IdClassroom: class.Id,
-		IdSheets:    []ho.IdSheet{sh.Id},
+		IdTravaux:   []ho.IdTravail{tr.Id},
 	}, sp.userID)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Students) == 0)
@@ -289,20 +312,20 @@ func TestGetMarks(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	// task1 has one question
-	err = createProgressionWith(ct.db, task1.Id, student1.Id, []ta.QuestionHistory{
+	err = insertProgression(ct.db, task1.Id, student1.Id, []ta.QuestionHistory{
 		{false, false, true},
 	})
 	tu.AssertNoErr(t, err)
 	// do not create progression for student 2
 
 	// task2 has 3 questions
-	err = createProgressionWith(ct.db, task2.Id, student1.Id, []ta.QuestionHistory{
+	err = insertProgression(ct.db, task2.Id, student1.Id, []ta.QuestionHistory{
 		{false, false, true},
 		{true},
 		{},
 	})
 	tu.AssertNoErr(t, err)
-	err = createProgressionWith(ct.db, task2.Id, student2.Id, []ta.QuestionHistory{
+	err = insertProgression(ct.db, task2.Id, student2.Id, []ta.QuestionHistory{
 		{false, false, false},
 		{false, false, true},
 		{false, true, false},
@@ -311,13 +334,13 @@ func TestGetMarks(t *testing.T) {
 
 	out, err = ct.getMarks(HowemorkMarksIn{
 		IdClassroom: class.Id,
-		IdSheets:    []ho.IdSheet{sh.Id},
+		IdTravaux:   []ho.IdTravail{tr.Id},
 	}, sp.userID)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Students) == 2)
 	// student1 : 4/5 => 16/20
 	// student2 : 2/5 => 8 /20
-	ma := out.Marks[sh.Id]
+	ma := out.Marks[tr.Id]
 	tu.Assert(t, ma[student1.Id] == 16)
 	tu.Assert(t, ma[student2.Id] == 8)
 }

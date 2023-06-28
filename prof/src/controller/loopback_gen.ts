@@ -271,8 +271,8 @@ export const SignSymbolLabels: { [key in SignSymbol]: string } = {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableBlock
 export interface SignTableBlock {
   Label: string;
-  FxSymbols: SignSymbol[] | null;
   Xs: string[] | null;
+  FxSymbols: SignSymbol[] | null;
   Signs: boolean[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableFieldBlock

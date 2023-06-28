@@ -444,7 +444,7 @@ func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (Exercic
 		return ExerciceExt{}, err
 	}
 
-	questions, baremes := data.QuestionsList()
+	questions, baremes := data.Questions(), data.Bareme()
 	l := make([]ExerciceQuestionExt, len(questions))
 	for i := range questions {
 		l[i] = ExerciceQuestionExt{Question: questions[i], Bareme: baremes[i]}
@@ -1049,7 +1049,7 @@ func (ct *Controller) checkExerciceParameters(params CheckExerciceParametersIn) 
 	if err != nil {
 		return CheckExerciceParametersOut{}, err
 	}
-	qus, _ := data.QuestionsList()
+	qus := data.Questions()
 
 	if L1, L2 := len(params.QuestionParameters), len(qus); L1 != L2 {
 		return CheckExerciceParametersOut{}, fmt.Errorf("internal error: mismatched question length (%d != %d)", L1, L2)
@@ -1108,7 +1108,7 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 		return SaveExerciceAndPreviewOut{}, errAccessForbidden
 	}
 
-	qus, _ := data.QuestionsList()
+	qus := data.Questions()
 	// validate all the questions, using shared parameters if needed
 	if !params.OnlyPreview {
 		if len(params.Questions) != len(qus) {
@@ -1185,7 +1185,7 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrec
 		return LoopbackShowExercice{}, err
 	}
 
-	qus, _ := content.QuestionsList()
+	qus := content.Questions()
 	questionOrigins := make([]questions.QuestionPage, len(qus))
 	for i, qu := range qus {
 		questionOrigins[i] = qu.Page()

@@ -26,6 +26,24 @@ func LoadMonoquestionSheet(db DB, idMono tasks.IdMonoquestion) (tasks.IdTask, Id
 	return link.IdTask, link.IdSheet, nil
 }
 
+func LoadRandomMonoquestionSheet(db DB, idMono tasks.IdRandomMonoquestion) (tasks.IdTask, IdSheet, error) {
+	ts, err := tasks.SelectTasksByIdRandomMonoquestions(db, idMono)
+	if err != nil {
+		return 0, 0, utils.SQLError(err)
+	}
+	if len(ts) != 1 {
+		return 0, 0, errors.New("internal error: expected one task for a monoquestion")
+	}
+	link, found, err := SelectSheetTaskByIdTask(db, ts.IDs()[0])
+	if err != nil {
+		return 0, 0, err
+	}
+	if !found {
+		return 0, 0, errors.New("internal error: task without sheet")
+	}
+	return link.IdTask, link.IdSheet, nil
+}
+
 // IsExpired returns true if the [Deadline] is before the present time.
 func (sh Travail) IsExpired() bool {
 	return time.Time(sh.Deadline).Before(time.Now())

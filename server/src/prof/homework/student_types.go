@@ -11,9 +11,17 @@ import (
 
 // SheetProgression is the summary of the progression
 // of one student for one sheet
+
+type Sheet struct {
+	Id       ho.IdSheet
+	Title    string
+	Deadline ho.Time
+}
+
 type SheetProgression struct {
-	Sheet ho.Sheet
-	Tasks []taAPI.TaskProgressionHeader
+	IdTravail ho.IdTravail // new in version 1.5
+	Sheet     Sheet
+	Tasks     []taAPI.TaskProgressionHeader
 }
 
 type StudentSheets []SheetProgression
