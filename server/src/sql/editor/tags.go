@@ -132,8 +132,9 @@ func (s *DifficultyQuery) Scan(src interface{}) error  { return loadJSON(s, src)
 func (s DifficultyQuery) Value() (driver.Value, error) { return dumpJSON(s) }
 
 // Match returns `true` if the query accepts `diff`.
+// Questions with no difficulty always match
 func (dq DifficultyQuery) Match(diff DifficultyTag) bool {
-	if len(dq) == 0 {
+	if len(dq) == 0 || diff == "" {
 		return true
 	}
 	for _, query := range dq {

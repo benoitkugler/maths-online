@@ -119,17 +119,20 @@ func EvaluateQuestion(qu questions.Enonce, answer AnswerP) (client.QuestionAnswe
 	return instance.EvaluateAnswer(answer.Answer), nil
 }
 
+type WorkKind uint8
+
 const (
-	WorkExercice uint8 = iota + 1
+	WorkExercice WorkKind = iota + 1
 	WorkMonoquestion
 	WorkRandomMonoquestion
 )
 
 // WorkID identifies either an exercice or a (possibly random) monoquestion
 type WorkID struct {
-	ID         int64
+	ID   int64
+	Kind WorkKind
+
 	IsExercice bool // deprecated in version 1.5
-	Kind       uint8
 }
 
 func NewWorkID(task ta.Task) WorkID {

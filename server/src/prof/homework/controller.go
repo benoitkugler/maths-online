@@ -8,6 +8,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
@@ -83,6 +84,8 @@ func (ct *Controller) getSheets(userID uID) (out Homeworks, err error) {
 	for _, class := range classrooms {
 		out.Travaux = append(out.Travaux, newClassroomTravaux(class, travauxDict))
 	}
+
+	// sort by classrooms
 	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Classroom.Id < out.Travaux[j].Classroom.Id })
 
 	return out, nil
@@ -554,6 +557,24 @@ func (ct *Controller) HomeworkUpdateRandomMonoquestion(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
+	// check that the question group has questions matching the difficulty
+	// to avoid future errors
+	variants, err := editor.SelectQuestionsByIdGroups(ct.db, mono.IdQuestiongroup)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	hasOne := false
+	for _, qu := range variants {
+		if args.Difficulty.Match(qu.Difficulty) {
+			hasOne = true
+			break
+		}
+	}
+	if !hasOne {
+		return errors.New("Aucune variante n'est disponible pour cette difficulté.")
+	}
+
 	mono.Bareme = args.Bareme
 	mono.NbRepeat = args.NbRepeat
 	mono.Difficulty = args.Difficulty
@@ -566,6 +587,34 @@ func (ct *Controller) HomeworkUpdateRandomMonoquestion(c echo.Context) error {
 	out, err := loadTaskExt(ct.db, idTask)
 	if err != nil {
 		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) HomeworkGetMonoquestion(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id-monoquestion")
+	if err != nil {
+		return err
+	}
+
+	out, err := tasks.SelectMonoquestion(ct.db, tasks.IdMonoquestion(id))
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) HomeworkGetRandomMonoquestion(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id-randommonoquestion")
+	if err != nil {
+		return err
+	}
+
+	out, err := tasks.SelectRandomMonoquestion(ct.db, tasks.IdRandomMonoquestion(id))
+	if err != nil {
+		return utils.SQLError(err)
 	}
 
 	return c.JSON(200, out)

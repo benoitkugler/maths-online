@@ -1,14 +1,13 @@
 <template>
   <v-row>
-    <v-col>
+    <v-col align-self="center">
       <v-text-field
-        label="Rechercher"
-        hint="Rechercher une ressource par son titre."
+        label="Rechercher une ressource par son titre"
         variant="outlined"
         density="compact"
         v-model="props.modelValue.TitleQuery"
         @update:model-value="updateQuerySearch"
-        persistent-hint
+        hide-details
         clearable
       ></v-text-field>
     </v-col>
@@ -29,10 +28,12 @@
         :color="LevelColor"
         chips
         closable-chips
+        hide-details
       ></v-select>
     </v-col>
     <v-col cols="4">
       <v-select
+        hide-details
         multiple
         :items="chapterTags"
         :model-value="props.modelValue.ChapterTags || []"

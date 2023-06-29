@@ -1,27 +1,25 @@
 <template>
-  <div class="my-1">
-    <v-row class="px-1">
-      <v-col cols="12" sm="6" md="9">
-        <DateField
-          label="Date de rendu"
-          :model-value="date"
-          @update:model-value="updateDate"
-        ></DateField>
-      </v-col>
-      <v-col cols="12" sm="6" md="3" align-self="center">
-        <v-select
-          variant="outlined"
-          density="compact"
-          label="Heure de rendu"
-          :items="hours"
-          hide-details
-          v-model="hour"
-          @update:model-value="updateHour"
-        >
-        </v-select>
-      </v-col>
-    </v-row>
-  </div>
+  <v-row class="my-1 px-1">
+    <v-col cols="12">
+      <DateField
+        label="Date de rendu"
+        :model-value="date"
+        @update:model-value="updateDate"
+      ></DateField>
+    </v-col>
+    <v-col cols="12" align-self="center">
+      <v-select
+        variant="outlined"
+        density="compact"
+        label="Heure de rendu"
+        :items="hours"
+        hide-details
+        v-model="hour"
+        @update:model-value="updateHour"
+      >
+      </v-select>
+    </v-col>
+  </v-row>
 </template>
 
 <script setup lang="ts">

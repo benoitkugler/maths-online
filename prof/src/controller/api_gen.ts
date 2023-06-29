@@ -1292,9 +1292,22 @@ export type TaskBareme = number[] | null;
 // github.com/benoitkugler/maths-online/server/src/tasks.WorkID
 export interface WorkID {
   ID: number;
+  Kind: WorkKind;
   IsExercice: boolean;
-  Kind: number;
 }
+// github.com/benoitkugler/maths-online/server/src/tasks.WorkKind
+export enum WorkKind {
+  WorkExercice = 1,
+  WorkMonoquestion = 2,
+  WorkRandomMonoquestion = 3,
+}
+
+export const WorkKindLabels: { [key in WorkKind]: string } = {
+  [WorkKind.WorkExercice]: "",
+  [WorkKind.WorkMonoquestion]: "",
+  [WorkKind.WorkRandomMonoquestion]: "",
+};
+
 // github.com/benoitkugler/maths-online/server/src/trivial.Categorie
 export enum Categorie {
   Purple = 0,
@@ -3101,6 +3114,31 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkAddExercice(data: TaskExt): void;
 
+  protected async rawHomeworkGetMonoquestion(params: {
+    "id-monoquestion": number;
+  }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
+    const rep: AxiosResponse<Monoquestion> = await Axios.get(fullUrl, {
+      params: { "id-monoquestion": String(params["id-monoquestion"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkGetMonoquestion wraps rawHomeworkGetMonoquestion and handles the error */
+  async HomeworkGetMonoquestion(params: { "id-monoquestion": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkGetMonoquestion(params);
+      this.onSuccessHomeworkGetMonoquestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkGetMonoquestion(data: Monoquestion): void;
+
   protected async rawHomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
     const rep: AxiosResponse<TaskExt> = await Axios.put(fullUrl, params, {
@@ -3122,6 +3160,38 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessHomeworkAddMonoquestion(data: TaskExt): void;
+
+  protected async rawHomeworkGetRandomMonoquestion(params: {
+    "id-randommonoquestion": number;
+  }) {
+    const fullUrl =
+      this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
+    const rep: AxiosResponse<RandomMonoquestion> = await Axios.get(fullUrl, {
+      params: {
+        "id-randommonoquestion": String(params["id-randommonoquestion"]),
+      },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkGetRandomMonoquestion wraps rawHomeworkGetRandomMonoquestion and handles the error */
+  async HomeworkGetRandomMonoquestion(params: {
+    "id-randommonoquestion": number;
+  }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkGetRandomMonoquestion(params);
+      this.onSuccessHomeworkGetRandomMonoquestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkGetRandomMonoquestion(
+    data: RandomMonoquestion
+  ): void;
 
   protected async rawHomeworkAddRandomMonoquestion(
     params: AddRandomMonoquestionToTaskIn

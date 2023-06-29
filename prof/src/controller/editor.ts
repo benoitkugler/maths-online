@@ -669,16 +669,10 @@ export function tagString(tag: string) {
 export const LevelColor = "pink";
 export const ChapterColor = "primary-darken-1";
 export const TrivMathColor = "brown";
+export const DifficultyColor = "secondary-darken-1";
 
-export function tagColor(tag: TagSection) {
-  if (
-    tag.Tag == DifficultyTag.Diff1 ||
-    tag.Tag == DifficultyTag.Diff2 ||
-    tag.Tag == DifficultyTag.Diff3
-  ) {
-    return "secondary-darken-1";
-  }
-  switch (tag.Section) {
+export function tagColor(tag: Section | undefined) {
+  switch (tag) {
     case Section.Level:
       return LevelColor;
     case Section.Chapter:
@@ -686,6 +680,8 @@ export function tagColor(tag: TagSection) {
     case Section.TrivMath:
       return TrivMathColor;
   }
+  // difficulty
+  return DifficultyColor;
 }
 
 // returns 0 for question without difficulty
