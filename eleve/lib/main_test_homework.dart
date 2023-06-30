@@ -94,12 +94,37 @@ class _HomeworkTestApp extends StatelessWidget {
 
 class _API extends _FieldAPI implements HomeworkAPI {
   @override
-  Future<Sheets> loadSheets() async {
+  Future<Sheets> loadSheets(bool loadNonNoted) async {
     await Future<void>.delayed(const Duration(seconds: 1));
     return [
       SheetProgression(
-          Sheet(1, 1, "Feuille en cours", Notation.successNotation, true,
-              DateTime.now().add(const Duration(days: 3))),
+          1,
+          Sheet(1, "Feuille en cours", !loadNonNoted,
+              DateTime.now().add(const Duration(days: 3)), 0, true, 1),
+          [
+            const TaskProgressionHeader(
+                1,
+                "Ex 1",
+                true,
+                ProgressionExt([
+                  [true]
+                ], 0),
+                0,
+                6),
+            const TaskProgressionHeader(
+                2,
+                "Ex 2",
+                true,
+                ProgressionExt([
+                  [false]
+                ], 0),
+                0,
+                5),
+          ]),
+      SheetProgression(
+          3,
+          Sheet(3, "Autre feuille en cours", !loadNonNoted,
+              DateTime.now().add(const Duration(days: 4)), 0, true, 1),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
@@ -107,20 +132,61 @@ class _API extends _FieldAPI implements HomeworkAPI {
                 2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
           ]),
       SheetProgression(
-          Sheet(2, 1, "Feuille périmée", Notation.successNotation, true,
-              DateTime.now().subtract(const Duration(days: 3))),
+          2,
+          Sheet(2, "Feuille périmée", !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
             const TaskProgressionHeader(
                 2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
-          ])
+          ]),
+      SheetProgression(
+          2,
+          Sheet(4, "Feuille périmée", !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          [
+            const TaskProgressionHeader(
+                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+            const TaskProgressionHeader(
+                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+          ]),
+      SheetProgression(
+          2,
+          Sheet(5, "Feuille périmée", !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          [
+            const TaskProgressionHeader(
+                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+            const TaskProgressionHeader(
+                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+          ]),
+      SheetProgression(
+          2,
+          Sheet(6, "Feuille périmée", !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          [
+            const TaskProgressionHeader(
+                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+            const TaskProgressionHeader(
+                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+          ]),
+      SheetProgression(
+          2,
+          Sheet(7, "Feuille périmée", !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          [
+            const TaskProgressionHeader(
+                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+            const TaskProgressionHeader(
+                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+          ]),
     ];
   }
 
   @override
   Future<StudentEvaluateTaskOut> evaluateExercice(
-      IdTask idTask, EvaluateWorkIn ex) {
+      IdTask idTask, IdTravail idTravail, EvaluateWorkIn ex) {
     // TODO: implement evaluateExercice
     throw UnimplementedError();
   }
@@ -130,6 +196,11 @@ class _API extends _FieldAPI implements HomeworkAPI {
     // TODO: implement loadWork
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> resetTask(IdTravail idTravail, IdTask idTask) async {
+    return;
+  }
 }
 
 class _Homework extends StatelessWidget {
@@ -137,6 +208,6 @@ class _Homework extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return HomeworkW(_API());
+    return HomeworkStart(_API());
   }
 }

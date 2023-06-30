@@ -4,33 +4,49 @@ import 'predefined.dart';
 import 'src_pass.dart';
 import 'src_sql_homework.dart';
 import 'src_sql_tasks.dart';
+import 'src_sql_teacher.dart';
 import 'src_tasks.dart';
 
 // github.com/benoitkugler/maths-online/server/src/prof/homework.Sheet
 class Sheet {
   final IdSheet id;
   final String title;
+  final bool noted;
   final Time deadline;
+  final int notation;
+  final bool activated;
+  final IdClassroom idClassroom;
 
-  const Sheet(this.id, this.title, this.deadline);
+  const Sheet(this.id, this.title, this.noted, this.deadline, this.notation,
+      this.activated, this.idClassroom);
 
   @override
   String toString() {
-    return "Sheet($id, $title, $deadline)";
+    return "Sheet($id, $title, $noted, $deadline, $notation, $activated, $idClassroom)";
   }
 }
 
 Sheet sheetFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Sheet(intFromJson(json['Id']), stringFromJson(json['Title']),
-      dateTimeFromJson(json['Deadline']));
+  return Sheet(
+      intFromJson(json['Id']),
+      stringFromJson(json['Title']),
+      boolFromJson(json['Noted']),
+      dateTimeFromJson(json['Deadline']),
+      intFromJson(json['Notation']),
+      boolFromJson(json['Activated']),
+      intFromJson(json['IdClassroom']));
 }
 
 Map<String, dynamic> sheetToJson(Sheet item) {
   return {
     "Id": intToJson(item.id),
     "Title": stringToJson(item.title),
-    "Deadline": dateTimeToJson(item.deadline)
+    "Noted": boolToJson(item.noted),
+    "Deadline": dateTimeToJson(item.deadline),
+    "Notation": intToJson(item.notation),
+    "Activated": boolToJson(item.activated),
+    "IdClassroom": intToJson(item.idClassroom)
   };
 }
 
@@ -119,6 +135,34 @@ StudentEvaluateTaskOut studentEvaluateTaskOutFromJson(dynamic json_) {
 
 Map<String, dynamic> studentEvaluateTaskOutToJson(StudentEvaluateTaskOut item) {
   return {"Ex": evaluateWorkOutToJson(item.ex), "Mark": intToJson(item.mark)};
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/homework.StudentResetTaskIn
+class StudentResetTaskIn {
+  final EncryptedID studentID;
+  final IdTravail idTravail;
+  final IdTask idTask;
+
+  const StudentResetTaskIn(this.studentID, this.idTravail, this.idTask);
+
+  @override
+  String toString() {
+    return "StudentResetTaskIn($studentID, $idTravail, $idTask)";
+  }
+}
+
+StudentResetTaskIn studentResetTaskInFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return StudentResetTaskIn(stringFromJson(json['StudentID']),
+      intFromJson(json['IdTravail']), intFromJson(json['IdTask']));
+}
+
+Map<String, dynamic> studentResetTaskInToJson(StudentResetTaskIn item) {
+  return {
+    "StudentID": stringToJson(item.studentID),
+    "IdTravail": intToJson(item.idTravail),
+    "IdTask": intToJson(item.idTask)
+  };
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/homework.StudentSheets

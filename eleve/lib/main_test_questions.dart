@@ -279,14 +279,22 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
 }
 
 final workParallel = StudentWork(
-  InstantiatedWork(const WorkID(0, true), "Identités remarquables (parallèle)",
-      Flow.parallel, [quI1, quI2, quI3], [1, 1, 2]),
+  InstantiatedWork(
+      const WorkID(0, WorkKind.workExercice, true),
+      "Identités remarquables (parallèle)",
+      Flow.parallel,
+      [quI1, quI2, quI3],
+      [1, 1, 2]),
   ProgressionExt([[], [], []], 0),
 );
 
 final workSequencial = StudentWork(
-  InstantiatedWork(const WorkID(0, true), "Identités remarquables (séquentiel)",
-      Flow.sequencial, [quI1, quI2, quI3], [1, 1, 2]),
+  InstantiatedWork(
+      const WorkID(0, WorkKind.workExercice, true),
+      "Identités remarquables (séquentiel)",
+      Flow.sequencial,
+      [quI1, quI2, quI3],
+      [1, 1, 2]),
   ProgressionExt([[], [], []], 0),
 );
 

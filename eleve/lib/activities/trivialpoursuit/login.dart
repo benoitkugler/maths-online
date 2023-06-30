@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
 import 'package:eleve/shared/students.gen.dart';
@@ -82,7 +83,7 @@ class TrivialGameSelect extends StatelessWidget {
         title: const Text("Jouer à TrivMaths"),
       ),
       body: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        _LaunchCard(
+        LaunchCard(
             "Accéder à une partie",
             "J'ai un code et je veux rejoindre une partie existante.",
             const Icon(Icons.login_outlined), () {
@@ -90,7 +91,7 @@ class TrivialGameSelect extends StatelessWidget {
               builder: (_) => Scaffold(body: _Loggin(settings))));
         }),
         const Divider(thickness: 4),
-        _LaunchCard(
+        LaunchCard(
             "Créer une partie",
             "Je veux démarrer une partie et partager le code avec des amis.",
             const Icon(Icons.add_box_outlined),
@@ -104,30 +105,6 @@ class TrivialGameSelect extends StatelessWidget {
                             body: _SelfaccessList(settings))));
                   }),
       ]),
-    );
-  }
-}
-
-class _LaunchCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Icon icon;
-  final void Function()? onPressed;
-  const _LaunchCard(this.title, this.subtitle, this.icon, this.onPressed,
-      {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          ElevatedButton.icon(
-              onPressed: onPressed, icon: icon, label: Text(title)),
-          const SizedBox(height: 20),
-          Text(subtitle),
-        ],
-      ),
     );
   }
 }

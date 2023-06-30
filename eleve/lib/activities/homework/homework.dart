@@ -7,6 +7,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
@@ -19,16 +20,16 @@ import 'package:http/http.dart' as http;
 typedef Sheets = List<SheetProgression>;
 
 abstract class HomeworkAPI extends FieldAPI {
-  Future<Sheets> loadSheets();
+  Future<Sheets> loadSheets(bool loadNonNoted);
   Future<InstantiatedWork> loadWork(IdTask id);
   Future<StudentEvaluateTaskOut> evaluateExercice(
-      IdTask idTask, EvaluateWorkIn ex);
+      IdTask idTask, IdTravail idTravail, EvaluateWorkIn ex);
+  Future<void> resetTask(IdTravail idTravail, IdTask idTask);
 }
 
 class ServerHomeworkAPI implements HomeworkAPI {
   final BuildMode buildMode;
   final String studentID;
-
   const ServerHomeworkAPI(this.buildMode, this.studentID);
 
   @override
@@ -37,8 +38,10 @@ class ServerHomeworkAPI implements HomeworkAPI {
   }
 
   @override
-  Future<Sheets> loadSheets() async {
-    const serverEndpoint = "/api/student/homework/sheets";
+  Future<Sheets> loadSheets(loadNonNoted) async {
+    final serverEndpoint = loadNonNoted
+        ? "/api/student/homework/sheets/free"
+        : "/api/student/homework/sheets";
     final uri = Uri.parse(
         buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID}));
     final resp = await http.get(uri);
@@ -56,16 +59,29 @@ class ServerHomeworkAPI implements HomeworkAPI {
 
   @override
   Future<StudentEvaluateTaskOut> evaluateExercice(
-      IdTask idTask, EvaluateWorkIn ex) async {
+      IdTask idTask, IdTravail idTravail, EvaluateWorkIn ex) async {
     const serverEndpoint = "/api/student/homework/task/evaluate";
     final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
     final resp = await http.post(uri,
         body: jsonEncode(studentEvaluateTaskInToJson(
-            StudentEvaluateTaskIn(studentID, idTask, ex))),
+            StudentEvaluateTaskIn(studentID, idTask, ex, idTravail))),
         headers: {
           'Content-type': 'application/json',
         });
     return studentEvaluateTaskOutFromJson(checkServerError(resp.body));
+  }
+
+  @override
+  Future<void> resetTask(IdTravail idTravail, IdTask idTask) async {
+    const serverEndpoint = "/api/student/homework/task/reset";
+    final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
+    final resp = await http.post(uri,
+        body: jsonEncode(studentResetTaskInToJson(
+            StudentResetTaskIn(studentID, idTravail, idTask))),
+        headers: {
+          'Content-type': 'application/json',
+        });
+    checkServerError(resp.body);
   }
 }
 
@@ -92,31 +108,65 @@ class HomeworkDisabled extends StatelessWidget {
   }
 }
 
-/// [HomeworkW] is the entry point widget for the homework
-/// activity.
-class HomeworkW extends StatefulWidget {
+/// [HomeworkStart] is the entry point widget for the homework
+/// activity, and diplays a home screen allowing the
+/// user to choose between noted, limited vs free exercices.
+///
+/// See [HomeworkDisabled] is the student is not registred.
+class HomeworkStart extends StatelessWidget {
   final HomeworkAPI api;
 
-  /// Creates a new [HomeworkW] widget
-  const HomeworkW(this.api, {Key? key}) : super(key: key);
+  const HomeworkStart(this.api, {super.key});
 
   @override
-  State<HomeworkW> createState() => _HomeworkWState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Démarrer un exercice"),
+      ),
+      body: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        LaunchCard("Devoirs", "Je veux faire le travail prévu pour la classe.",
+            const Icon(Icons.pending_actions), () {
+          Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => Scaffold(body: _HomeworkW(api, false))));
+        }),
+        const Divider(thickness: 4),
+        LaunchCard("Entrainement", "Je veux réviser ou m'entrainer librement.",
+            const Icon(Icons.person), () {
+          Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => Scaffold(body: _HomeworkW(api, true))));
+        }),
+      ]),
+    );
+  }
 }
 
-class _HomeworkWState extends State<HomeworkW> {
+/// [_HomeworkW] is the entry point widget for the homework
+/// activity.
+class _HomeworkW extends StatefulWidget {
+  final HomeworkAPI api;
+  final bool isNonNoted;
+
+  /// Creates a new [_HomeworkW] widget
+  const _HomeworkW(this.api, this.isNonNoted, {Key? key}) : super(key: key);
+
+  @override
+  State<_HomeworkW> createState() => _HomeworkWState();
+}
+
+class _HomeworkWState extends State<_HomeworkW> {
   late Future<Sheets> sheets;
 
   @override
   void initState() {
-    sheets = widget.api.loadSheets();
+    sheets = widget.api.loadSheets(widget.isNonNoted);
 
     super.initState();
   }
 
   @override
-  void didUpdateWidget(covariant HomeworkW oldWidget) {
-    sheets = widget.api.loadSheets();
+  void didUpdateWidget(covariant _HomeworkW oldWidget) {
+    sheets = widget.api.loadSheets(widget.isNonNoted);
     super.didUpdateWidget(oldWidget);
   }
 
@@ -124,7 +174,9 @@ class _HomeworkWState extends State<HomeworkW> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Travail à la maison"),
+        title: Text(widget.isNonNoted
+            ? "Travaux d'entrainement"
+            : "Devoirs à la maison"),
       ),
       body: FutureBuilder<Sheets>(
         future: sheets,
@@ -137,7 +189,7 @@ class _HomeworkWState extends State<HomeworkW> {
                   "Impossible de charger le travail à faire.", snapshot.error!),
             ));
           } else if (snapshot.hasData) {
-            return _SheetList(widget.api, snapshot.data!);
+            return _SheetList(widget.api, widget.isNonNoted, snapshot.data!);
           } else {
             return const _Loading();
           }
@@ -153,8 +205,7 @@ class _Loading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child:
-          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         CircularProgressIndicator(value: null),
         SizedBox(height: 20),
         Text("Chargement des fiches de travail..."),
@@ -165,8 +216,11 @@ class _Loading extends StatelessWidget {
 
 class _SheetList extends StatefulWidget {
   final HomeworkAPI api;
+  final bool isNotNoted;
   final Sheets initialSheets;
-  const _SheetList(this.api, this.initialSheets, {Key? key}) : super(key: key);
+
+  const _SheetList(this.api, this.isNotNoted, this.initialSheets, {Key? key})
+      : super(key: key);
 
   @override
   State<_SheetList> createState() => _SheetListState();
@@ -187,7 +241,8 @@ class _SheetListState extends State<_SheetList> {
     final actual = sheets[index];
     notif.applyTo(actual.tasks);
     setState(() {
-      sheets[index] = SheetProgression(actual.sheet, actual.tasks);
+      sheets[index] =
+          SheetProgression(actual.idTravail, actual.sheet, actual.tasks);
     });
     return true;
   }
@@ -200,20 +255,26 @@ class _SheetListState extends State<_SheetList> {
   }
 
   // assume a one at a time sheet to do and emphasize it
-  int selectMainSheetID() {
+  int? _selectMainSheetID() {
     // select the most recent one
-    final shs = sheets.map((e) => e).toList();
+    final now = DateTime.now();
+    final shs = sheets
+        .where((e) => e.sheet.noted && !e.sheet.deadline.isBefore(now))
+        .toList();
+    if (shs.isEmpty) return null;
     shs.sort(((a, b) => a.sheet.deadline.isAfter(b.sheet.deadline) ? 1 : -1));
-    return sheets[0].sheet.id;
+    return shs[0].sheet.id;
   }
 
   @override
   Widget build(BuildContext context) {
     if (sheets.isEmpty) {
-      return const Center(
-          child: Text("Aucun travail à la maison n'est planifié."));
+      return Center(
+          child: Text(widget.isNotNoted
+              ? "Aucun exercice n'est disponible en accès libre."
+              : "Aucun travail à la maison n'est planifié."));
     }
-    final bestSheet = selectMainSheetID();
+    final bestSheet = _selectMainSheetID();
     final now = DateTime.now();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2),
@@ -223,7 +284,7 @@ class _SheetListState extends State<_SheetList> {
                 onTap: () => onSelectSheet(e),
                 child: _SheetSummary(
                   e,
-                  status: e.sheet.deadline.isBefore(now)
+                  status: e.sheet.noted && e.sheet.deadline.isBefore(now)
                       ? SheetStatus.expired
                       : (e.sheet.id == bestSheet
                           ? SheetStatus.suggested
@@ -245,7 +306,7 @@ extension SheetStatusUI on SheetStatus {
       case SheetStatus.suggested:
         return Colors.blueAccent;
       case SheetStatus.expired:
-        return Colors.orange.shade300;
+        return Colors.red.shade300;
     }
   }
 }
@@ -259,15 +320,19 @@ class _SheetSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ma = sheetMark(sheet.tasks);
-    final hasNotation = sheet.sheet.notation != Notation.noNotation;
+    final hasNotation = sheet.sheet.noted;
     final started = sheet.tasks.where((ex) => ex.hasProgression).length;
     final completed = sheet.tasks
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
         .length;
+    final highlight = status == SheetStatus.suggested;
     return Card(
-      elevation: status == SheetStatus.suggested ? 3 : null,
-      shadowColor: status.color,
-      color: status.color?.withOpacity(0.3),
+      shape: highlight
+          ? RoundedRectangleBorder(
+              side: BorderSide(color: status.color!, width: 2.0),
+              borderRadius: BorderRadius.circular(4.0))
+          : null,
+      elevation: highlight ? 3 : null,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -282,15 +347,23 @@ class _SheetSummary extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(hasNotation ? "Travail noté" : "Travail non noté"),
+                  Text(hasNotation ? "Travail noté" : "Travail libre"),
                   if (hasNotation)
-                    RichText(
-                        text: TextSpan(children: [
-                      const TextSpan(text: "A rendre avant le\n"),
-                      TextSpan(
-                          text: formatTime(sheet.sheet.deadline),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ]))
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                          color: status.color,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(4))),
+                      child: RichText(
+                          text: TextSpan(children: [
+                        const TextSpan(text: "A rendre avant le\n"),
+                        TextSpan(
+                            text: formatTime(sheet.sheet.deadline),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                      ])),
+                    )
                 ],
               ),
             ),
@@ -305,11 +378,11 @@ class _SheetSummary extends StatelessWidget {
                         started: started),
                   ),
                 ),
-                if (hasNotation)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Text("Note : ${ma.mark} / ${ma.bareme}"),
-                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Text(
+                      "${hasNotation ? 'Note' : 'Score'} : ${ma.mark} / ${ma.bareme}"),
+                ),
               ])
           ],
         ),
