@@ -93,7 +93,7 @@ function updateDiffs(l: number[]) {
 }
 
 const subtitle = computed(
-  () => `Groupe de question ${props.randomMonoquestion.IdQuestiongroup}`
+  () => `Groupe de questions ${props.randomMonoquestion.IdQuestiongroup}`
 );
 </script>
 
