@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Paramètres de la question">
+  <v-card title="Paramètres de la question" :subtitle="subtitle">
     <v-card-text class="mt-2">
       <v-row>
         <v-col>
@@ -91,6 +91,10 @@ function updateDiffs(l: number[]) {
   if (l.length == diffChoices.length) l = [];
   props.randomMonoquestion.Difficulty = l.map((i) => diffChoices[i]);
 }
+
+const subtitle = computed(
+  () => `Groupe de question ${props.randomMonoquestion.IdQuestiongroup}`
+);
 </script>
 
 <style scoped></style>

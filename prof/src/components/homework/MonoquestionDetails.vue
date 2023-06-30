@@ -1,5 +1,5 @@
 <template>
-  <v-card title="Paramètres de la question">
+  <v-card title="Paramètres de la question" :subtitle="subtitle">
     <v-card-text class="mt-2">
       <v-row>
         <v-col>
@@ -40,6 +40,7 @@
 
 <script setup lang="ts">
 import type { Monoquestion } from "@/controller/api_gen";
+import { computed } from "vue";
 
 interface Props {
   monoquestion: Monoquestion;
@@ -50,6 +51,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update", monoquestion: Monoquestion): void;
 }>();
+
+const subtitle = computed(() => `Variante ${props.monoquestion.IdQuestion}`);
 </script>
 
 <style scoped></style>

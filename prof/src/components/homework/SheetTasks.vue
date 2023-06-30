@@ -182,7 +182,6 @@ import {
   onDragListItemStart,
   sheetBareme,
   swapItems,
-  taskBareme,
 } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
@@ -236,9 +235,6 @@ watch(props.sheet, () => {
     : [];
 });
 
-let monoquestionToEditIndex = $ref<number | null>(null);
-let monoquestionToEdit = $ref<Monoquestion | null>(null);
-
 function removeExercice(index: number) {
   const task = props.sheet.Tasks![index];
   // ask confirmation if progression has started
@@ -270,9 +266,9 @@ function taskTooltip(task: TaskExt) {
     case WorkKind.WorkExercice:
       return `Exercice ${task.IdWork.ID}`;
     case WorkKind.WorkMonoquestion:
-      return `Question ${task.IdWork.ID} (répétée ${task.Bareme?.length} fois)`;
+      return `Variante d'une question (répétée ${task.Bareme?.length} fois)`;
     case WorkKind.WorkRandomMonoquestion:
-      return `Groupe de questions ${task.IdWork.ID} (${task.Bareme?.length} variantes aléatoires)`;
+      return `Groupe de questions (${task.Bareme?.length} variantes aléatoires)`;
   }
 }
 </script>
