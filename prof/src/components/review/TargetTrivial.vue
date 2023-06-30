@@ -8,7 +8,7 @@
             v-for="(tag, index) in props.data.Config.Questions.Difficulties"
             :key="index"
           >
-            <tag-chip :tag="{ Tag: tag, Section: 0 }"></tag-chip>
+            <tag-chip :tag="{ Tag: tag }"></tag-chip>
           </v-col>
         </v-row>
       </v-col>

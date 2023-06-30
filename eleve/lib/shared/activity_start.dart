@@ -106,3 +106,28 @@ class ActivityStart extends StatelessWidget {
     );
   }
 }
+
+/// [LaunchCard] display a button, with an helper subtitle.
+class LaunchCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Icon icon;
+  final void Function()? onPressed;
+  const LaunchCard(this.title, this.subtitle, this.icon, this.onPressed,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          ElevatedButton.icon(
+              onPressed: onPressed, icon: icon, label: Text(title)),
+          const SizedBox(height: 20),
+          Text(subtitle),
+        ],
+      ),
+    );
+  }
+}

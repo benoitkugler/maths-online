@@ -8,6 +8,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
@@ -47,46 +48,53 @@ func (ct *Controller) HomeworkGetSheets(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getSheets(userID uID) (out []ClassroomSheets, err error) {
+// Homeworks stores the [Travail]s and [Sheet]s available to
+// one teacher
+type Homeworks struct {
+	Sheets  map[ho.IdSheet]SheetExt
+	Travaux []ClassroomTravaux // one per classroom
+}
+
+func (ct *Controller) getSheets(userID uID) (out Homeworks, err error) {
 	// load the classrooms
 	classrooms, err := teacher.SelectClassroomsByIdTeachers(ct.db, userID)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
-	// load all the sheets required
-	sheetsDict, err := ho.SelectSheetsByIdClassrooms(ct.db, classrooms.IDs()...)
+	// load all the available [Sheets] ...
+	sheetsDict, err := ho.SelectSheetsByIdTeachers(ct.db, userID)
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return out, utils.SQLError(err)
+	}
+
+	// .. and all the [Travail]s
+	travauxDict, err := ho.SelectTravailsByIdClassrooms(ct.db, classrooms.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
 	}
 
 	loader, err := newSheetsLoader(ct.db, sheetsDict.IDs())
 	if err != nil {
-		return nil, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	// finally agregate the results
-	sheets := loader.buildSheetExts(sheetsDict)
+	out.Sheets = loader.buildSheetExts(sheetsDict)
 	for _, class := range classrooms {
-		out = append(out, newClassroomSheets(class, sheets))
+		out.Travaux = append(out.Travaux, newClassroomTravaux(class, travauxDict))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Classroom.Id < out[j].Classroom.Id })
-	return out, nil
-}
 
-type CreateSheetIn struct {
-	IdClassroom teacher.IdClassroom
+	// sort by classrooms
+	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Classroom.Id < out.Travaux[j].Classroom.Id })
+
+	return out, nil
 }
 
 func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	var args CreateSheetIn
-	if err := c.Bind(&args); err != nil {
-		return err
-	}
-
-	sheet, err := ct.createSheet(args.IdClassroom, userID)
+	sheet, err := ct.createSheet(userID)
 	if err != nil {
 		return err
 	}
@@ -95,22 +103,10 @@ func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (ho.Sheet, error) {
-	class, err := teacher.SelectClassroom(ct.db, idClassroom)
-	if err != nil {
-		return ho.Sheet{}, utils.SQLError(err)
-	}
-
-	if class.IdTeacher != userID {
-		return ho.Sheet{}, errAccessForbidden
-	}
-
+func (ct *Controller) createSheet(userID uID) (ho.Sheet, error) {
 	sheet, err := ho.Sheet{
-		IdClassroom: class.Id,
-		Title:       "Feuille d'exercices",
-		Notation:    ho.SuccessNotation,
-		Activated:   false,
-		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 14).Round(time.Hour)), // two weeks
+		IdTeacher: userID,
+		Title:     "Feuille d'exercices",
 	}.Insert(ct.db)
 	if err != nil {
 		return ho.Sheet{}, utils.SQLError(err)
@@ -119,19 +115,79 @@ func (ct *Controller) createSheet(idClassroom teacher.IdClassroom, userID uID) (
 	return sheet, nil
 }
 
+type CreateTravailIn struct {
+	IdSheet     ho.IdSheet
+	IdClassroom teacher.IdClassroom
+}
+
+// [HomeworkCreateTravail] creates a new [Travail] entry for the
+// given classroom, with the given [Sheet]
+func (ct *Controller) HomeworkCreateTravail(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args CreateTravailIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.assignSheetTo(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) assignSheetTo(args CreateTravailIn, userID uID) (ho.Travail, error) {
+	// check classroom owner
+	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	if err != nil {
+		return ho.Travail{}, utils.SQLError(err)
+	}
+	if classroom.IdTeacher != userID {
+		return ho.Travail{}, errAccessForbidden
+	}
+
+	tr := ho.Travail{
+		IdSheet:     args.IdSheet,
+		IdClassroom: args.IdClassroom,
+		Noted:       true,
+		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 14).Round(time.Hour)), // two weeks
+	}
+	tr, err = tr.Insert(ct.db)
+	if err != nil {
+		return ho.Travail{}, utils.SQLError(err)
+	}
+	return tr, nil
+}
+
 func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
 	sheet, err := ho.SelectSheet(ct.db, idSheet)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	// check the classroom is owned by the user
-	class, err := teacher.SelectClassroom(ct.db, sheet.IdClassroom)
+	// check if the sheet is owned by the user
+	if sheet.IdTeacher != userID {
+		return errAccessForbidden
+	}
+
+	return nil
+}
+
+func (ct *Controller) checkTravailOwner(idTravail ho.IdTravail, userID uID) error {
+	travail, err := ho.SelectTravail(ct.db, idTravail)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	if class.IdTeacher != userID {
+	classroom, err := teacher.SelectClassroom(ct.db, travail.IdClassroom)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// check if the travail is owned by the user
+	if classroom.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -167,6 +223,35 @@ func (ct *Controller) updateSheet(sheet ho.Sheet, userID uID) error {
 	return nil
 }
 
+func (ct *Controller) HomeworkUpdateTravail(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args ho.Travail
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.updateTravail(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateTravail(travail ho.Travail, userID uID) error {
+	if err := ct.checkTravailOwner(travail.Id, userID); err != nil {
+		return err
+	}
+
+	_, err := travail.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
+}
+
 type AddExerciceToTaskIn struct {
 	IdSheet    ho.IdSheet
 	IdExercice ed.IdExercice
@@ -175,6 +260,11 @@ type AddExerciceToTaskIn struct {
 type AddMonoquestionToTaskIn struct {
 	IdSheet    ho.IdSheet
 	IdQuestion ed.IdQuestion
+}
+
+type AddRandomMonoquestionToTaskIn struct {
+	IdSheet         ho.IdSheet
+	IdQuestiongroup ed.IdQuestiongroup
 }
 
 func (ct *Controller) HomeworkAddExercice(c echo.Context) error {
@@ -209,6 +299,22 @@ func (ct *Controller) HomeworkAddMonoquestion(c echo.Context) error {
 	return c.JSON(200, task)
 }
 
+func (ct *Controller) HomeworkAddRandomMonoquestion(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args AddRandomMonoquestionToTaskIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	task, err := ct.addRandomMonoquestionTo(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, task)
+}
+
 func (ct *Controller) addExerciceTo(args AddExerciceToTaskIn, userID uID) (TaskExt, error) {
 	task := tasks.Task{IdExercice: args.IdExercice.AsOptional()}
 	return ct.addTaskTo(args.IdSheet, task, userID)
@@ -235,6 +341,23 @@ func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID
 	if err != nil {
 		// cleanup the monoquestion
 		_, _ = tasks.DeleteMonoquestionById(ct.db, mono.Id)
+		return TaskExt{}, err
+	}
+
+	return out, nil
+}
+
+// used defaut value of Bareme: 1, NbRepeat: 3
+func (ct *Controller) addRandomMonoquestionTo(args AddRandomMonoquestionToTaskIn, userID uID) (TaskExt, error) {
+	mono, err := tasks.RandomMonoquestion{IdQuestiongroup: args.IdQuestiongroup, Bareme: 1, NbRepeat: 3}.Insert(ct.db)
+	if err != nil {
+		return TaskExt{}, utils.SQLError(err)
+	}
+	task := tasks.Task{IdRandomMonoquestion: mono.Id.AsOptional()}
+	out, err := ct.addTaskTo(args.IdSheet, task, userID)
+	if err != nil {
+		// cleanup the monoquestion
+		_, _ = tasks.DeleteRandomMonoquestionById(ct.db, mono.Id)
 		return TaskExt{}, err
 	}
 
@@ -348,12 +471,19 @@ func (ct *Controller) removeTask(idTask tasks.IdTask, userID uID) error {
 	}
 
 	// delete the potential associated monoquestion
-	if removedTask.IdMonoquestion.Valid {
-		_, err = tasks.DeleteMonoquestionById(tx, removedTask.IdMonoquestion.ID)
+	if id := removedTask.IdMonoquestion; id.Valid {
+		_, err = tasks.DeleteMonoquestionById(tx, id.ID)
 		if err != nil {
 			_ = tx.Rollback()
 			return utils.SQLError(err)
 		}
+	} else if id := removedTask.IdRandomMonoquestion; id.Valid {
+		_, err = tasks.DeleteRandomMonoquestionById(tx, id.ID)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+
 	}
 
 	err = tx.Commit()
@@ -398,6 +528,93 @@ func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
 	out, err := loadTaskExt(ct.db, idTask)
 	if err != nil {
 		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) HomeworkUpdateRandomMonoquestion(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args tasks.RandomMonoquestion
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	// check that the monoquestion is in a sheet owner by user
+	idTask, idSheet, err := ho.LoadRandomMonoquestionSheet(ct.db, args.Id)
+	if err != nil {
+		return err
+	}
+	err = ct.checkSheetOwner(idSheet, userID)
+	if err != nil {
+		return err
+	}
+
+	// only update bareme and repetitions
+	mono, err := tasks.SelectRandomMonoquestion(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// check that the question group has questions matching the difficulty
+	// to avoid future errors
+	variants, err := editor.SelectQuestionsByIdGroups(ct.db, mono.IdQuestiongroup)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	hasOne := false
+	for _, qu := range variants {
+		if args.Difficulty.Match(qu.Difficulty) {
+			hasOne = true
+			break
+		}
+	}
+	if !hasOne {
+		return errors.New("Aucune variante n'est disponible pour cette difficulté.")
+	}
+
+	mono.Bareme = args.Bareme
+	mono.NbRepeat = args.NbRepeat
+	mono.Difficulty = args.Difficulty
+	_, err = mono.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// reload the task to properly update the UI
+	out, err := loadTaskExt(ct.db, idTask)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) HomeworkGetMonoquestion(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id-monoquestion")
+	if err != nil {
+		return err
+	}
+
+	out, err := tasks.SelectMonoquestion(ct.db, tasks.IdMonoquestion(id))
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) HomeworkGetRandomMonoquestion(c echo.Context) error {
+	id, err := utils.QueryParamInt64(c, "id-randommonoquestion")
+	if err != nil {
+		return err
+	}
+
+	out, err := tasks.SelectRandomMonoquestion(ct.db, tasks.IdRandomMonoquestion(id))
+	if err != nil {
+		return utils.SQLError(err)
 	}
 
 	return c.JSON(200, out)
@@ -469,12 +686,7 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 		return utils.SQLError(err)
 	}
 
-	cl, err := teacher.SelectClassroom(ct.db, sheet.IdClassroom)
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	if cl.IdTeacher != userID {
+	if sheet.IdTeacher != userID {
 		return errAccessForbidden
 	}
 
@@ -485,7 +697,7 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 		return utils.SQLError(err)
 	}
 
-	// we also need to remove the monoquestions associated
+	// we also need to remove the monoquestions and randommonoquestion associated
 	tasksMap, err := tasks.SelectTasks(ct.db, ts.IdTasks()...)
 	if err != nil {
 		return utils.SQLError(err)
@@ -510,8 +722,14 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 
 	// delete the potential associated monoquestion
 	for _, removedTask := range tasksMap {
-		if removedTask.IdMonoquestion.Valid {
-			_, err = tasks.DeleteMonoquestionById(tx, removedTask.IdMonoquestion.ID)
+		if id := removedTask.IdMonoquestion; id.Valid {
+			_, err = tasks.DeleteMonoquestionById(tx, id.ID)
+			if err != nil {
+				_ = tx.Rollback()
+				return utils.SQLError(err)
+			}
+		} else if id := removedTask.IdRandomMonoquestion; id.Valid {
+			_, err = tasks.DeleteRandomMonoquestionById(tx, id.ID)
 			if err != nil {
 				_ = tx.Rollback()
 				return utils.SQLError(err)
@@ -527,9 +745,33 @@ func (ct *Controller) deleteSheet(idSheet ho.IdSheet, userID uID) error {
 	return nil
 }
 
+func (ct *Controller) HomeworkDeleteTravail(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	idSheet, err := utils.QueryParamInt64(c, "id")
+	if err != nil {
+		return err
+	}
+
+	err = ct.deleteTravail(ho.IdTravail(idSheet), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+// remove the travail entry, but not the sheet neither the progressions
+func (ct *Controller) deleteTravail(id ho.IdTravail, userID uID) error {
+	_, err := ho.DeleteTravailById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
 type CopySheetIn struct {
-	IdSheet     ho.IdSheet
-	IdClassroom teacher.IdClassroom
+	IdSheet ho.IdSheet
 }
 
 func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
@@ -540,7 +782,7 @@ func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.copySheetTo(args, userID)
+	out, err := ct.duplicateSheet(args, userID)
 	if err != nil {
 		return err
 	}
@@ -548,14 +790,9 @@ func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error) {
-	cl, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
-	if err != nil {
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	if cl.IdTeacher != userID {
-		return SheetExt{}, errAccessForbidden
+func (ct *Controller) duplicateSheet(args CopySheetIn, userID uID) (SheetExt, error) {
+	if err := ct.checkSheetOwner(args.IdSheet, userID); err != nil {
+		return SheetExt{}, err
 	}
 
 	sheet, err := ho.SelectSheet(ct.db, args.IdSheet)
@@ -579,7 +816,6 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	sheet.IdClassroom = args.IdClassroom
 	newSheet, err := sheet.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
@@ -592,8 +828,8 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 		task := taskMap[link.IdTask]
 		newTask := task
 		// for monoquestion, also copy the monoquestion
-		if task.IdMonoquestion.Valid {
-			monoquestion, err := tasks.SelectMonoquestion(tx, task.IdMonoquestion.ID)
+		if id := task.IdMonoquestion; id.Valid {
+			monoquestion, err := tasks.SelectMonoquestion(tx, id.ID)
 			if err != nil {
 				_ = tx.Rollback()
 				return SheetExt{}, utils.SQLError(err)
@@ -604,6 +840,18 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 				return SheetExt{}, utils.SQLError(err)
 			}
 			newTask.IdMonoquestion = monoquestion.Id.AsOptional()
+		} else if id := task.IdRandomMonoquestion; id.Valid {
+			monoquestion, err := tasks.SelectRandomMonoquestion(tx, id.ID)
+			if err != nil {
+				_ = tx.Rollback()
+				return SheetExt{}, utils.SQLError(err)
+			}
+			monoquestion, err = monoquestion.Insert(tx)
+			if err != nil {
+				_ = tx.Rollback()
+				return SheetExt{}, utils.SQLError(err)
+			}
+			newTask.IdRandomMonoquestion = monoquestion.Id.AsOptional()
 		}
 
 		newTask, err = newTask.Insert(tx)
@@ -636,14 +884,60 @@ func (ct *Controller) copySheetTo(args CopySheetIn, userID uID) (SheetExt, error
 	return out, nil
 }
 
+type CopyTravailIn struct {
+	IdTravail   ho.IdTravail
+	IdClassroom teacher.IdClassroom
+}
+
+func (ct *Controller) HomeworkCopyTravail(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args CopyTravailIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.copyTravailTo(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (ho.Travail, error) {
+	cl, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	if err != nil {
+		return ho.Travail{}, utils.SQLError(err)
+	}
+
+	if cl.IdTeacher != userID {
+		return ho.Travail{}, errAccessForbidden
+	}
+
+	travail, err := ho.SelectTravail(ct.db, args.IdTravail)
+	if err != nil {
+		return ho.Travail{}, utils.SQLError(err)
+	}
+
+	// shallow copy is enough
+	travail.IdClassroom = args.IdClassroom
+	travail, err = travail.Insert(ct.db)
+	if err != nil {
+		return ho.Travail{}, utils.SQLError(err)
+	}
+
+	return travail, nil
+}
+
 type HowemorkMarksIn struct {
 	IdClassroom teacher.IdClassroom
-	IdSheets    []ho.IdSheet
+	IdTravaux   []ho.IdTravail
 }
 
 type HomeworkMarksOut struct {
-	Students []tcAPI.StudentHeader                        // the students of the classroom
-	Marks    map[ho.IdSheet]map[teacher.IdStudent]float64 // the notes for each sheet and student, /20
+	Students []tcAPI.StudentHeader                          // the students of the classroom
+	Marks    map[ho.IdTravail]map[teacher.IdStudent]float64 // the notes for each travail and student, /20
 }
 
 func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
@@ -675,49 +969,48 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 	if err != nil {
 		return HomeworkMarksOut{}, err
 	}
-	sheets, err := ho.SelectSheets(ct.db, args.IdSheets...)
+	travaux, err := ho.SelectTravails(ct.db, args.IdTravaux...)
 	if err != nil {
 		return HomeworkMarksOut{}, utils.SQLError(err)
 	}
 
 	out := HomeworkMarksOut{
 		Students: make([]tcAPI.StudentHeader, len(students)),
-		Marks:    make(map[ho.IdSheet]map[teacher.IdStudent]float64),
+		Marks:    make(map[ho.IdTravail]map[teacher.IdStudent]float64),
 	}
 	// student list
 	for i, s := range students {
 		out.Students[i] = tcAPI.NewStudentHeader(s)
 	}
 	// compute the sheets marks :
-	loader, err := newSheetsLoader(ct.db, args.IdSheets)
+	loader, err := newSheetsLoader(ct.db, travaux.IdSheets())
 	if err != nil {
 		return HomeworkMarksOut{}, err
 	}
 	// load all the progressions : for each task and student
-	progressions, err := loader.tasks.LoadProgressions(ct.db, loader.allProgressions())
+	progressions, err := loader.tasks.LoadProgressions(ct.db)
 	if err != nil {
 		return HomeworkMarksOut{}, err
 	}
 
-	for id, sheet := range sheets {
-		if sheet.IdClassroom != classroom.Id {
+	for id, travail := range travaux {
+		if travail.IdClassroom != classroom.Id {
 			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
 		}
 
 		markByStudent := make(map[teacher.IdStudent]float64)
 		var sheetTotal int
 		// for each student, get its progression for each task
-		tasks := loader.taskForSheet(id)
+		tasks := loader.tasksForSheet(travail.IdSheet)
 		for _, link := range tasks {
 			work := loader.tasks.GetWork(loader.tasks.Tasks[link.IdTask])
-			_, bareme := work.QuestionsList()
+			bareme := work.Bareme()
 			taskTotal := bareme.Total()
 			sheetTotal += taskTotal
+			byStudent := progressions[link.IdTask]
 			// add each progression to the student note
-			for _, prog := range loader.progressions[link.IdTask] {
-				idStudent := prog.IdStudent
-				extentedProg := progressions[prog.Id]
-				studentMark := bareme.ComputeMark(extentedProg.Questions)
+			for idStudent, prog := range byStudent {
+				studentMark := bareme.ComputeMark(prog.Questions)
 				markByStudent[idStudent] = markByStudent[idStudent] + float64(studentMark)
 			}
 		}
@@ -731,10 +1024,13 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 	return out, nil
 }
 
+//
 // Student API
+//
 
-// StudentGetSheets returns the sheet for the given student
-func (ct *Controller) StudentGetSheets(c echo.Context) error {
+// StudentGetTravaux returns the sheets for the given student
+// Only the mandatory, noted one are returned.
+func (ct *Controller) StudentGetTravaux(c echo.Context) error {
 	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
 
 	idStudent, err := ct.studentKey.DecryptID(idCrypted)
@@ -742,7 +1038,7 @@ func (ct *Controller) StudentGetSheets(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent))
+	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent), true)
 	if err != nil {
 		return err
 	}
@@ -750,13 +1046,36 @@ func (ct *Controller) StudentGetSheets(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out StudentSheets, err error) {
+// StudentGetFreeTravaux returns the sheets for the given student
+// Only the optional, non noted are returned.
+func (ct *Controller) StudentGetFreeTravaux(c echo.Context) error {
+	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
+
+	idStudent, err := ct.studentKey.DecryptID(idCrypted)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent), false)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) (out StudentSheets, err error) {
 	student, err := teacher.SelectStudent(ct.db, idStudent)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	sheets, err := ho.SelectSheetsByIdClassrooms(ct.db, student.IdClassroom)
+	travaux, err := ho.SelectTravailsByIdClassrooms(ct.db, student.IdClassroom)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	sheets, err := ho.SelectSheets(ct.db, travaux.IdSheets()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -773,18 +1092,34 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 		return nil, utils.SQLError(err)
 	}
 
-	for _, sheet := range sheets {
-		if !sheet.Activated { // ignore hidden sheets
+	for _, travail := range travaux {
+		if travail.Noted != noted { // select noted / free travaux
 			continue
 		}
 
+		sheet := sheets[travail.IdSheet]
 		tasksForSheet := sheetToTasks[sheet.Id] // defined exercices
 		taskList := make([]taAPI.TaskProgressionHeader, len(tasksForSheet))
 		for i, exLink := range tasksForSheet {
 			taskList[i] = progMap[exLink.IdTask]
 		}
+		// compatiblity mode
+		notation := 0
+		if travail.Noted {
+			notation = 1
+		}
 		out = append(out, SheetProgression{
-			Sheet: sheet,
+			IdTravail: travail.Id,
+			Sheet: Sheet{
+				Id:       sheet.Id,
+				Title:    sheet.Title,
+				Deadline: travail.Deadline,
+				Noted:    travail.Noted,
+
+				Notation:    notation, // TODO: cleanup
+				Activated:   true,
+				IdClassroom: travail.IdClassroom,
+			},
 			Tasks: taskList,
 		})
 	}
@@ -795,6 +1130,12 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 }
 
 func (ct *Controller) StudentInstantiateTask(c echo.Context) error {
+	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
+	idStudent, err := ct.studentKey.DecryptID(idCrypted)
+	if err != nil {
+		return err
+	}
+
 	idTask, err := utils.QueryParamInt64(c, "id")
 	if err != nil {
 		return err
@@ -805,7 +1146,7 @@ func (ct *Controller) StudentInstantiateTask(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out, err := taAPI.InstantiateWork(ct.db, taAPI.NewWorkID(task))
+	out, err := taAPI.InstantiateWork(ct.db, taAPI.NewWorkID(task), teacher.IdStudent(idStudent))
 	if err != nil {
 		return err
 	}
@@ -836,15 +1177,87 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 		return StudentEvaluateTaskOut{}, err
 	}
 
-	sheet, err := sheetFromTask(ct.db, args.IdTask)
-	if err != nil {
-		return StudentEvaluateTaskOut{}, err
+	registerProgression := true
+
+	// to preserve compatibily, we accept empty [travail] field
+	if args.IdTravail != 0 {
+		travail, err := ho.SelectTravail(ct.db, args.IdTravail)
+		if err != nil {
+			return StudentEvaluateTaskOut{}, utils.SQLError(err)
+		}
+		// Always register progression for free travail
+		registerProgression = !travail.Noted || !travail.IsExpired()
 	}
 
-	registerProgression := !sheet.IsExpired()
 	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex, registerProgression)
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
 	}
 	return StudentEvaluateTaskOut{Ex: ex, Mark: mark}, nil
+}
+
+// StudentResetTask remove the progression for the given student
+// and task. It is only allowed for free travaux.
+func (ct *Controller) StudentResetTask(c echo.Context) error {
+	var args StudentResetTaskIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.studentResetTask(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, true)
+}
+
+func (ct *Controller) studentResetTask(args StudentResetTaskIn) error {
+	idStudent_, err := ct.studentKey.DecryptID(args.StudentID)
+	if err != nil {
+		return err
+	}
+	idStudent := teacher.IdStudent(idStudent_)
+
+	travail, err := ho.SelectTravail(ct.db, args.IdTravail)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if travail.Noted {
+		return errors.New("internal error: travail noted may not be reset")
+	}
+
+	task, err := tasks.SelectTask(ct.db, args.IdTask)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// remove any progression
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	_, err = tasks.DeleteProgressionsByIdStudentAndIdTask(ct.db, idStudent, task.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	// for random monoquestion, remove the selected variants
+	if id := task.IdRandomMonoquestion; id.Valid {
+		_, err = tasks.DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(ct.db, idStudent, id.ID)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
 }

@@ -98,36 +98,53 @@ CREATE TABLE monoquestions (
 );
 
 CREATE TABLE progressions (
-    Id serial PRIMARY KEY,
     IdStudent integer NOT NULL,
-    IdTask integer NOT NULL
-);
-
-CREATE TABLE progression_questions (
-    IdProgression integer NOT NULL,
+    IdTask integer NOT NULL,
     Index integer NOT NULL,
     History boolean[]
+);
+
+CREATE TABLE random_monoquestions (
+    Id serial PRIMARY KEY,
+    IdQuestiongroup integer NOT NULL,
+    NbRepeat integer NOT NULL,
+    Bareme integer NOT NULL,
+    Difficulty jsonb NOT NULL
+);
+
+CREATE TABLE random_monoquestion_variants (
+    IdStudent integer NOT NULL,
+    IdRandomMonoquestion integer NOT NULL,
+    Index integer NOT NULL,
+    IdQuestion integer NOT NULL
 );
 
 CREATE TABLE tasks (
     Id serial PRIMARY KEY,
     IdExercice integer,
-    IdMonoquestion integer
+    IdMonoquestion integer,
+    IdRandomMonoquestion integer
 );
 
 CREATE TABLE sheets (
     Id serial PRIMARY KEY,
-    IdClassroom integer NOT NULL,
     Title text NOT NULL,
-    Notation integer CHECK (Notation IN (0, 1)) NOT NULL,
-    Activated boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    IdTeacher integer NOT NULL,
+    Level text NOT NULL
 );
 
 CREATE TABLE sheet_tasks (
     IdSheet integer NOT NULL,
     Index integer NOT NULL,
     IdTask integer NOT NULL
+);
+
+CREATE TABLE travails (
+    Id serial PRIMARY KEY,
+    IdClassroom integer NOT NULL,
+    IdSheet integer NOT NULL,
+    Noted boolean NOT NULL,
+    Deadline timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE reviews (

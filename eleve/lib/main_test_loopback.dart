@@ -108,7 +108,7 @@ class _LoopbackTestApp extends StatelessWidget {
 // );
 
 final workSequencial = InstantiatedWork(
-    const WorkID(0, true),
+    const WorkID(0, WorkKind.workExercice, true),
     "Identités remarquables (séquentiel)",
     Flow.sequencial,
     [quI1, quI2, quI3],

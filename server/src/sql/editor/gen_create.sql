@@ -1327,12 +1327,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'FxSymbols', 'Xs', 'Signs'))
+            bool_and(key IN ('Label', 'Xs', 'FxSymbols', 'Signs'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
         AND gomacro_validate_json_array_string (data -> 'Xs')
+        AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
         AND gomacro_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
 END;

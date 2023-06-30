@@ -366,7 +366,9 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	})
 
 	// student homework API
-	e.GET("/api/student/homework/sheets", home.StudentGetSheets)
+	e.GET("/api/student/homework/sheets", home.StudentGetTravaux)
+	e.GET("/api/student/homework/sheets/free", home.StudentGetFreeTravaux)
 	e.GET("/api/student/homework/task/instantiate", home.StudentInstantiateTask)
 	e.POST("/api/student/homework/task/evaluate", home.StudentEvaluateTask)
+	e.POST("/api/student/homework/task/reset", home.StudentResetTask)
 }

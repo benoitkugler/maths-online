@@ -120,18 +120,22 @@ ALTER TABLE trivials
     ADD CONSTRAINT Questions_gomacro CHECK (gomacro_validate_json_triv_CategoriesQuestions (Questions));
 
 ALTER TABLE monoquestions
+    ADD CHECK (NbRepeat > 0);
+
+ALTER TABLE monoquestions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
+
+ALTER TABLE random_monoquestions
+    ADD CHECK (NbRepeat > 0);
+
+ALTER TABLE random_monoquestions
+    ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups;
 
 ALTER TABLE tasks
     ADD UNIQUE (Id, IdExercice);
 
 ALTER TABLE tasks
-    ADD CHECK (IdExercice IS NOT NULL
-        OR IdMonoquestion IS NOT NULL);
-
-ALTER TABLE tasks
-    ADD CHECK (IdExercice IS NULL
-        OR IdMonoquestion IS NULL);
+    ADD CHECK ((IdExercice IS NOT NULL)::int + (IdMonoquestion IS NOT NULL)::int + (IdRandomMonoquestion IS NOT NULL)::int = 1);
 
 ALTER TABLE tasks
     ADD FOREIGN KEY (IdExercice) REFERENCES exercices;
@@ -139,8 +143,23 @@ ALTER TABLE tasks
 ALTER TABLE tasks
     ADD FOREIGN KEY (IdMonoquestion) REFERENCES monoquestions;
 
+ALTER TABLE tasks
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+
+ALTER TABLE random_monoquestion_variants
+    ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
+
 ALTER TABLE progressions
-    ADD UNIQUE (IdStudent, IdTask);
+    ADD UNIQUE (IdStudent, IdTask, INDEX);
 
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
@@ -148,11 +167,17 @@ ALTER TABLE progressions
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdTask) REFERENCES tasks ON DELETE CASCADE;
 
-ALTER TABLE progression_questions
-    ADD FOREIGN KEY (IdProgression) REFERENCES progressions ON DELETE CASCADE;
+ALTER TABLE random_monoquestions
+    ADD CONSTRAINT Difficulty_gomacro CHECK (gomacro_validate_json_array_edit_DifficultyTag (Difficulty));
+
+ALTER TABLE travails
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
+ALTER TABLE travails
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets ON DELETE CASCADE;
 
 ALTER TABLE sheets
-    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
 ALTER TABLE sheet_tasks
     ADD PRIMARY KEY (IdSheet, INDEX);

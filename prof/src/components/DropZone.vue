@@ -24,14 +24,10 @@ function onDrop(ev: DragEvent) {
   const eventData: { index: number } = JSON.parse(
     ev.dataTransfer?.getData("text/json") || ""
   );
-  console.log("drop");
-
   emit("drop", eventData.index);
 }
 
 function onDragOver(ev: DragEvent) {
-  console.log("drag over");
-
   ev.preventDefault();
   isActive = true;
 }

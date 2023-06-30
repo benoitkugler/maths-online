@@ -1194,12 +1194,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'FxSymbols', 'Xs', 'Signs'))
+            bool_and(key IN ('Label', 'Xs', 'FxSymbols', 'Signs'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
         AND gomacro_validate_json_array_string (data -> 'Xs')
+        AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
         AND gomacro_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
 END;
@@ -1917,6 +1917,45 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')
         AND gomacro_validate_json_array_edit_DifficultyTag (data -> 'Difficulties');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_edit_DifficultyTag (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string'
+    AND data #>> '{}' IN ('★', '★★', '★★★', '');
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_DifficultyTag', data;
+    END IF;
     RETURN is_valid;
 END;
 $$

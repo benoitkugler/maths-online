@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"database/sql"
+	"reflect"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -26,7 +27,7 @@ func TestInstantiateQuestions(t *testing.T) {
 	// fmt.Println(string(s)) // may be used as reference for client tests
 }
 
-func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercice, ed.ExerciceQuestions, ta.Monoquestion) {
+func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercice, ed.ExerciceQuestions, ta.Monoquestion, ta.RandomMonoquestion) {
 	group, err := ed.Exercicegroup{IdTeacher: idTeacher}.Insert(db)
 	tu.AssertNoErr(t, err)
 
@@ -69,13 +70,28 @@ func createEx(t *testing.T, db *sql.DB, idTeacher teacher.IdTeacher) (ed.Exercic
 	}.Insert(tx)
 	tu.AssertNoErr(t, err)
 
+	_, err = ed.Question{IdGroup: quGroup.Id.AsOptional()}.Insert(tx)
+	tu.AssertNoErr(t, err)
+	_, err = ed.Question{IdGroup: quGroup.Id.AsOptional()}.Insert(tx)
+	tu.AssertNoErr(t, err)
+	_, err = ed.Question{IdGroup: quGroup.Id.AsOptional()}.Insert(tx)
+	tu.AssertNoErr(t, err)
+	_, err = ed.Question{IdGroup: quGroup.Id.AsOptional()}.Insert(tx)
+	tu.AssertNoErr(t, err)
+	_, err = ed.Question{IdGroup: quGroup.Id.AsOptional()}.Insert(tx)
+	tu.AssertNoErr(t, err)
+
 	mono, err := ta.Monoquestion{IdQuestion: qu4.Id, NbRepeat: 3, Bareme: 2}.Insert(tx)
+	tu.AssertNoErr(t, err)
+
+	// randommonoquestion
+	randomMono, err := ta.RandomMonoquestion{IdQuestiongroup: quGroup.Id, NbRepeat: 4, Bareme: 2}.Insert(tx)
 	tu.AssertNoErr(t, err)
 
 	err = tx.Commit()
 	tu.AssertNoErr(t, err)
 
-	return ex, qus, mono
+	return ex, qus, mono, randomMono
 }
 
 func TestEvaluateExercice(t *testing.T) {
@@ -85,7 +101,7 @@ func TestEvaluateExercice(t *testing.T) {
 	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ex, questions, monoquestion := createEx(t, db.DB, tc.Id)
+	ex, questions, monoquestion, _ := createEx(t, db.DB, tc.Id)
 
 	progExt := ProgressionExt{
 		Questions: make([]ta.QuestionHistory, len(questions)),
@@ -96,7 +112,7 @@ func TestEvaluateExercice(t *testing.T) {
 		ID:          newWorkIDFromMono(monoquestion.Id),
 		Progression: progExt,
 		Answers:     map[int]AnswerP{},
-	}.Evaluate(db)
+	}.Evaluate(db, -1)
 	tu.AssertNoErr(t, err)
 
 	out, err := EvaluateWorkIn{
@@ -105,7 +121,7 @@ func TestEvaluateExercice(t *testing.T) {
 		Answers: map[int]AnswerP{
 			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 22}}}},
 		},
-	}.Evaluate(db)
+	}.Evaluate(db, -1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Progression.NextQuestion == 0) // wrong answer
 
@@ -115,7 +131,7 @@ func TestEvaluateExercice(t *testing.T) {
 		Answers: map[int]AnswerP{
 			0: {Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
 		},
-	}.Evaluate(db)
+	}.Evaluate(db, -1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Progression.NextQuestion == 1) // correct answer
 }
@@ -134,53 +150,132 @@ func TestProgression(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	// test with exercice
-	ex, questions, _ := createEx(t, db.DB, tc.Id)
+	ex, _, monoquestion, randomMono := createEx(t, db.DB, tc.Id)
 
 	task, err := ta.Task{IdExercice: ex.Id.AsOptional()}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	prog, err := ta.Progression{IdTask: task.Id, IdStudent: student.Id}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	err = updateProgression(db.DB, prog, []ta.QuestionHistory{
+	err = updateProgression(db.DB, student.Id, task.Id, []ta.QuestionHistory{
 		{false, true},
 		{},
 	})
 	tu.Assert(t, err != nil) // invalid number of questions
-	err = updateProgression(db.DB, prog, []ta.QuestionHistory{
+
+	err = updateProgression(db.DB, student.Id, task.Id, []ta.QuestionHistory{
 		{false, true},
 		{},
 		{},
 	})
 	tu.AssertNoErr(t, err)
 
-	out, err := loadProgressions(db, ta.Progressions{prog.Id: prog})
+	out, err := LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, out[prog.Id].NextQuestion == 1)
+	tu.Assert(t, out[task.Id].HasProgression)
+	tu.Assert(t, out[task.Id].Progression.NextQuestion == 1)
 
 	// test with monoquestion
-	monoquestion, err := ta.Monoquestion{IdQuestion: questions[0].IdQuestion, NbRepeat: 3}.Insert(db)
+	task, err = ta.Task{IdMonoquestion: monoquestion.Id.AsOptional()}.Insert(db.DB)
 	tu.AssertNoErr(t, err)
 
-	task, err = ta.Task{IdMonoquestion: monoquestion.Id.AsOptional()}.Insert(db)
-	tu.AssertNoErr(t, err)
-
-	prog, err = loadOrCreateProgressionFor(db, task.Id, student.Id)
-	tu.AssertNoErr(t, err)
-
-	err = updateProgression(db.DB, prog, []ta.QuestionHistory{
+	err = updateProgression(db.DB, student.Id, task.Id, []ta.QuestionHistory{
 		{false, true},
 		{},
 	})
 	tu.Assert(t, err != nil) // invalid number of questions
-	err = updateProgression(db.DB, prog, []ta.QuestionHistory{
+	err = updateProgression(db.DB, student.Id, task.Id, []ta.QuestionHistory{
 		{false, true},
 		{},
 		{},
 	})
 	tu.AssertNoErr(t, err)
 
-	out, err = loadProgressions(db, ta.Progressions{prog.Id: prog})
+	out, err = LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, out[prog.Id].NextQuestion == 1)
+	tu.Assert(t, out[task.Id].HasProgression)
+	tu.Assert(t, out[task.Id].Progression.NextQuestion == 1)
+
+	// test with random mono
+	task, err = ta.Task{IdRandomMonoquestion: randomMono.Id.AsOptional()}.Insert(db.DB)
+	tu.AssertNoErr(t, err)
+
+	rd, err := newRandomMonoquestionData(db, randomMono.Id, student.Id)
+	tu.AssertNoErr(t, err)
+	rd, err = rd.selectQuestions(db.DB, student.Id)
+	tu.AssertNoErr(t, err)
+
+	out, err = LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !out[task.Id].HasProgression)
+
+	err = updateProgression(db.DB, student.Id, task.Id, []ta.QuestionHistory{
+		{false, true},
+		{},
+		{},
+		{false, true},
+	})
+	tu.AssertNoErr(t, err)
+
+	out, err = LoadTasksProgression(db, student.Id, []ta.IdTask{task.Id})
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out[task.Id].HasProgression)
+	tu.Assert(t, out[task.Id].Progression.NextQuestion == 1)
+}
+
+func Test_selectVariants(t *testing.T) {
+	among := []ed.Question{
+		{},
+		{},
+		{},
+		{},
+	}
+
+	tests := []struct {
+		nbToSelect int
+		want       []ed.Question
+	}{
+		{0, []ed.Question{}},
+		{2, []ed.Question{{}, {}}},
+		{4, []ed.Question{{}, {}, {}, {}}},
+		{5, []ed.Question{{}, {}, {}, {}, {}}},
+	}
+	for _, tt := range tests {
+		if got := selectVariants(tt.nbToSelect, among); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("selectVariants() = %v, want %v", got, tt.want)
+		}
+	}
+}
+
+func TestRandomMonoquestion(t *testing.T) {
+	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
+	defer db.Remove()
+
+	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	student, err := teacher.Student{IdClassroom: cl.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	_, _, _, randomMono := createEx(t, db.DB, tc.Id)
+
+	task, err := ta.Task{IdRandomMonoquestion: randomMono.Id.AsOptional()}.Insert(db.DB)
+	tu.AssertNoErr(t, err)
+
+	_, err = InstantiateWork(db.DB, NewWorkID(task), student.Id)
+	tu.AssertNoErr(t, err)
+
+	out, err := newRandomMonoquestionData(db.DB, randomMono.Id, student.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.selectedQuestions) == 4)
+	selected := out.selectedQuestions
+
+	// make sure InstantiateWork preserve already chosen questions
+	_, err = InstantiateWork(db.DB, NewWorkID(task), student.Id)
+	tu.AssertNoErr(t, err)
+
+	out, err = newRandomMonoquestionData(db.DB, randomMono.Id, student.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, reflect.DeepEqual(selected, out.selectedQuestions))
 }

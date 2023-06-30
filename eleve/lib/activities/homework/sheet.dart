@@ -2,6 +2,7 @@ import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/exercice/home.dart';
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/title.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
@@ -23,14 +24,15 @@ MarkBareme sheetMark(List<TaskProgressionHeader> tasks) {
 class _ExerciceAPI implements ExerciceAPI {
   final HomeworkAPI api;
   final IdTask idTask;
+  final IdTravail idTravail;
 
   StudentEvaluateTaskOut? lastState;
 
-  _ExerciceAPI(this.api, this.idTask);
+  _ExerciceAPI(this.api, this.idTask, this.idTravail);
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final res = await api.evaluateExercice(idTask, params);
+    final res = await api.evaluateExercice(idTask, idTravail, params);
     lastState = res;
     return res.ex;
   }
@@ -44,7 +46,7 @@ class _ExerciceAPI implements ExerciceAPI {
 class SheetMarkNotification extends Notification {
   final IdSheet idSheet;
   final IdTask idTask;
-  final ProgressionExt newProgression;
+  final ProgressionExt? newProgression;
   final int newMark;
 
   const SheetMarkNotification(
@@ -54,8 +56,13 @@ class SheetMarkNotification extends Notification {
   void applyTo(List<TaskProgressionHeader> tasks) {
     final index = tasks.indexWhere((element) => element.id == idTask);
     final current = tasks[index];
-    tasks[index] = TaskProgressionHeader(current.id, current.title, true,
-        newProgression, newMark, current.bareme);
+    tasks[index] = TaskProgressionHeader(
+        current.id,
+        current.title,
+        newProgression != null,
+        newProgression ?? const ProgressionExt([], 0),
+        newMark,
+        current.bareme);
   }
 }
 
@@ -78,7 +85,7 @@ class _SheetWState extends State<SheetW> {
     super.initState();
   }
 
-  void _startExercice(TaskProgressionHeader task, BuildContext context) async {
+  void _startExercice(TaskProgressionHeader task) async {
     showDialog<void>(
         barrierDismissible: false,
         context: context,
@@ -101,7 +108,7 @@ class _SheetWState extends State<SheetW> {
     Navigator.of(context).pop(); // remove the dialog
 
     final studentEx = StudentWork(instantiatedExercice, task.progression);
-    final exeAPI = _ExerciceAPI(widget.api, task.id);
+    final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
     final exController = ExerciceController(studentEx, null, exeAPI);
     // actually launch the exercice
 
@@ -129,12 +136,30 @@ class _SheetWState extends State<SheetW> {
     }
   }
 
+  void _resetTask(TaskProgressionHeader task) async {
+    try {
+      await widget.api.resetTask(widget.sheet.idTravail, task.id);
+    } catch (e) {
+      showError("Impossible de recommencer la taĉhe.", e, context);
+      return;
+    }
+    final notif =
+        SheetMarkNotification(widget.sheet.sheet.id, task.id, null, 0);
+    // locally update the task mark
+    setState(() {
+      notif.applyTo(tasks);
+    });
+    // inform the top level sheet widget of the modification
+    notif.dispatch(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasNotation = widget.sheet.sheet.notation != Notation.noNotation;
-    final isExpired = widget.sheet.sheet.deadline.isBefore(DateTime.now());
+    final hasNotation = widget.sheet.sheet.noted;
+    final isExpired =
+        hasNotation && widget.sheet.sheet.deadline.isBefore(DateTime.now());
     return Scaffold(
-      appBar: AppBar(title: const Text("Fiche de travail")),
+      appBar: AppBar(title: const Text("Feuille de travail")),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -167,9 +192,9 @@ class _SheetWState extends State<SheetW> {
                 ),
               ),
               if (isExpired)
-                const Card(
-                  color: Colors.orange,
-                  child: Padding(
+                Card(
+                  color: SheetStatus.expired.color,
+                  child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                         "La progression et les notes de cette fiche sont verrouillées, car sa date de rendu est dépassée."),
@@ -177,8 +202,12 @@ class _SheetWState extends State<SheetW> {
                 )
             ],
             Expanded(
-                child: _TaskList(widget.sheet.tasks, hasNotation,
-                    (ex) => _startExercice(ex, context))),
+                child: _TaskList(
+              widget.sheet.tasks,
+              hasNotation,
+              (ex) => _startExercice(ex),
+              _resetTask,
+            )),
           ],
         ),
       ),
@@ -190,30 +219,61 @@ class _TaskList extends StatelessWidget {
   final List<TaskProgressionHeader> tasks;
   final bool hasNotation;
   final void Function(TaskProgressionHeader) onStart;
+  final void Function(TaskProgressionHeader) onReset;
 
-  const _TaskList(this.tasks, this.hasNotation, this.onStart, {Key? key})
+  const _TaskList(this.tasks, this.hasNotation, this.onStart, this.onReset,
+      {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final children = tasks
-        .map((task) => ListTile(
-              onTap: () => onStart(task),
-              leading: getCompletion(task).icon,
-              title: Text(task.title),
-              trailing:
-                  hasNotation ? Text("${task.mark} / ${task.bareme}") : null,
-            ))
+        .map((task) => Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4.0),
+                border: Border.all(color: Colors.lightBlue),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    dense: true,
+                    onTap: () => onStart(task),
+                    leading: getCompletion(task).icon,
+                    title: Text(task.title),
+                    trailing: Text("${task.mark} / ${task.bareme}"),
+                  ),
+                  if (!hasNotation &&
+                      getCompletion(task) == ExerciceCompletion.completed)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: ElevatedButton.icon(
+                              onPressed: () => onReset(task),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text("Recommencer")),
+                        )
+                      ],
+                    )
+                ],
+              ),
+            )))
         .toList();
-    if (hasNotation) {
-      // add the total score of the sheet
-      final total = sheetMark(tasks);
-      children.add(ListTile(
-        title: const Text("Total"),
-        trailing: Text("${total.mark} / ${total.bareme}"),
-      ));
-    }
-    return ListView(children: children);
+
+    final total = sheetMark(tasks);
+    return ListView(children: [
+      ...children,
+      if (hasNotation)
+        // add the total score of the sheet
+        ListTile(
+          title: const Text("Total"),
+          trailing: Text("${total.mark} / ${total.bareme}"),
+        )
+    ]);
   }
 }
 

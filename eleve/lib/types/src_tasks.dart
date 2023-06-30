@@ -300,24 +300,48 @@ Map<String, dynamic> varEntryToJson(VarEntry item) {
 // github.com/benoitkugler/maths-online/server/src/tasks.WorkID
 class WorkID {
   final int iD;
+  final WorkKind kind;
   final bool isExercice;
 
-  const WorkID(this.iD, this.isExercice);
+  const WorkID(this.iD, this.kind, this.isExercice);
 
   @override
   String toString() {
-    return "WorkID($iD, $isExercice)";
+    return "WorkID($iD, $kind, $isExercice)";
   }
 }
 
 WorkID workIDFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return WorkID(intFromJson(json['ID']), boolFromJson(json['IsExercice']));
+  return WorkID(intFromJson(json['ID']), workKindFromJson(json['Kind']),
+      boolFromJson(json['IsExercice']));
 }
 
 Map<String, dynamic> workIDToJson(WorkID item) {
-  return {"ID": intToJson(item.iD), "IsExercice": boolToJson(item.isExercice)};
+  return {
+    "ID": intToJson(item.iD),
+    "Kind": workKindToJson(item.kind),
+    "IsExercice": boolToJson(item.isExercice)
+  };
 }
+
+// github.com/benoitkugler/maths-online/server/src/tasks.WorkKind
+enum WorkKind { workExercice, workMonoquestion, workRandomMonoquestion }
+
+extension _WorkKindExt on WorkKind {
+  static const _values = [1, 2, 3];
+  static WorkKind fromValue(int s) {
+    return WorkKind.values[_values.indexOf(s)];
+  }
+
+  int toValue() {
+    return _values[index];
+  }
+}
+
+WorkKind workKindFromJson(dynamic json) => _WorkKindExt.fromValue(json as int);
+
+dynamic workKindToJson(WorkKind item) => item.toValue();
 
 Map<int, AnswerP> dictIntToAnswerPFromJson(dynamic json) {
   if (json == null) {

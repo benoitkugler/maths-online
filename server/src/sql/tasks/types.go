@@ -3,6 +3,17 @@
 // and to track the progression of the students.
 package tasks
 
+import (
+	"sort"
+
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+)
+
+type OptionalIdQuestion struct {
+	Valid bool
+	ID    editor.IdQuestion
+}
+
 type OptionalIdMonoquestion struct {
 	Valid bool
 	ID    IdMonoquestion
@@ -10,6 +21,15 @@ type OptionalIdMonoquestion struct {
 
 func (id IdMonoquestion) AsOptional() OptionalIdMonoquestion {
 	return OptionalIdMonoquestion{ID: id, Valid: true}
+}
+
+type OptionalIdRandomMonoquestion struct {
+	Valid bool
+	ID    IdRandomMonoquestion
+}
+
+func (id IdRandomMonoquestion) AsOptional() OptionalIdRandomMonoquestion {
+	return OptionalIdRandomMonoquestion{ID: id, Valid: true}
 }
 
 // QuestionHistory stores the successes for one question,
@@ -25,4 +45,18 @@ func (qh QuestionHistory) Success() bool {
 		}
 	}
 	return false
+}
+
+// EnsureOrder must be call on the questions of one exercice,
+// to make sure the order in the slice is consistent with the one
+// indicated by `Index`
+func (l RandomMonoquestionVariants) EnsureOrder() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+// EnsureOrder must be call on the questions of one exercice,
+// to make sure the order in the slice is consistent with the one
+// indicated by `Index`
+func (l Progressions) EnsureOrder() {
+	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
 }

@@ -16,10 +16,19 @@ type ProgressionExt struct {
 	NextQuestion int
 }
 
-// InferNextQuestion stores into `NextQuestion` the first question not passed by the student,
+func NewProgressionExt(progressions ta.Progressions, nbQuestions int) (out ProgressionExt) {
+	out.Questions = make([]ta.QuestionHistory, nbQuestions)
+	for _, link := range progressions {
+		out.Questions[link.Index] = link.History
+	}
+	out.inferNextQuestion()
+	return out
+}
+
+// inferNextQuestion stores into `NextQuestion` the first question not passed by the student,
 // according to `QuestionHistory.Success`.
 // If all the questions are successul, it sets it to -1
-func (qh *ProgressionExt) InferNextQuestion() {
+func (qh *ProgressionExt) inferNextQuestion() {
 	for i, question := range qh.Questions {
 		if !question.Success() {
 			qh.NextQuestion = i
@@ -36,10 +45,12 @@ type TasksContents struct {
 	exercices      ed.Exercices
 	exToQuestions  map[ed.IdExercice]ed.ExerciceQuestions
 
-	monoquestions  ta.Monoquestions
-	questiongroups ed.Questiongroups // for questions in monoquestions
+	monoquestions       ta.Monoquestions
+	randomMonoquestions ta.RandomMonoquestions
 
-	questions ed.Questions // provide both exercices and monoquestions contents
+	questiongroups ed.Questiongroups // for questions in [monoquestions] and [randomMonoquestions]
+
+	questions ed.Questions // provide exercices and monoquestions contents
 }
 
 func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) {
@@ -49,12 +60,14 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 	}
 
 	// fetch the associated exerciceIDs or monoquestionIDs
-	exerciceIDs, monoquestionIDs := make(ed.IdExerciceSet), make(ta.IdMonoquestionSet)
+	exerciceIDs, monoquestionIDs, randomMonoquestionIDs := make(ed.IdExerciceSet), make(ta.IdMonoquestionSet), make(ta.IdRandomMonoquestionSet)
 	for _, task := range out.Tasks {
 		if task.IdExercice.Valid {
 			exerciceIDs.Add(task.IdExercice.ID)
-		} else {
+		} else if task.IdMonoquestion.Valid {
 			monoquestionIDs.Add(task.IdMonoquestion.ID)
+		} else if task.IdRandomMonoquestion.Valid {
+			randomMonoquestionIDs.Add(task.IdRandomMonoquestion.ID)
 		}
 	}
 
@@ -78,6 +91,20 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		return out, utils.SQLError(err)
 	}
 
+	out.randomMonoquestions, err = ta.SelectRandomMonoquestions(db, randomMonoquestionIDs.Keys()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	groupsFromRandom, err := ed.SelectQuestiongroups(db, out.randomMonoquestions.IdQuestiongroups()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	questionsFromRandom, err := ed.SelectQuestionsByIdGroups(db, groupsFromRandom.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	questionsIds := append(out.monoquestions.IdQuestions(), links.IdQuestions()...)
 	out.questions, err = ed.SelectQuestions(db, questionsIds...)
 	if err != nil {
@@ -96,12 +123,21 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		return out, utils.SQLError(err)
 	}
 
+	// merge from random
+	for k, v := range groupsFromRandom {
+		out.questiongroups[k] = v
+	}
+	for k, v := range questionsFromRandom {
+		out.questions[k] = v
+	}
+
 	return out, nil
 }
 
 // GetWork returns the task content for `task`.
-func (contents TasksContents) GetWork(task ta.Task) Work {
-	if task.IdExercice.Valid {
+func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
+	switch {
+	case task.IdExercice.Valid:
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
 		return ExerciceData{
@@ -110,85 +146,70 @@ func (contents TasksContents) GetWork(task ta.Task) Work {
 			Links:        questions,
 			QuestionsMap: contents.questions,
 		}
-	}
-
-	monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
-	question := contents.questions[monoquestion.IdQuestion]
-	return MonoquestionData{
-		params:        monoquestion,
-		question:      question,
-		questiongroup: contents.questiongroups[question.IdGroup.ID],
+	case task.IdMonoquestion.Valid:
+		monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
+		question := contents.questions[monoquestion.IdQuestion]
+		return monoquestionData{
+			params:        monoquestion,
+			question:      question,
+			questiongroup: contents.questiongroups[question.IdGroup.ID],
+		}
+	case task.IdRandomMonoquestion.Valid:
+		mono := contents.randomMonoquestions[task.IdRandomMonoquestion.ID]
+		// for this use case, leaving [selectedQuestions] is OK
+		return randomMonoquestionData{
+			params:        mono,
+			questiongroup: contents.questiongroups[mono.IdQuestiongroup],
+		}
+	default: // should not happen (enforced by SQL constraint)
+		return nil
 	}
 }
 
 // LoadProgressions load the question progression related to the tasks
-// in [contents] and [prs].
-// Note that [prs] must be only concern tasks present in [contents].
-func (contents TasksContents) LoadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]ProgressionExt, error) {
-	links2, err := ta.SelectProgressionQuestionsByIdProgressions(db, prs.IDs()...)
+// in [contents].
+func (contents TasksContents) LoadProgressions(db ta.DB) (map[ta.IdTask]map[teacher.IdStudent]ProgressionExt, error) {
+	tmp, err := ta.SelectProgressionsByIdTasks(db, contents.Tasks.IDs()...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	questionsProgMap := links2.ByIdProgression() // (incomplete) progression of the student
+	byTask := tmp.ByIdTask() // (incomplete) progression of the students
 
-	out := make(map[ta.IdProgression]ProgressionExt, len(prs))
-	for _, pr := range prs {
-		task := contents.Tasks[pr.IdTask]
+	out := make(map[ta.IdTask]map[teacher.IdStudent]ProgressionExt)
+	for _, task := range contents.Tasks {
+		taskMap := make(map[teacher.IdStudent]ProgressionExt)
 		work := contents.GetWork(task)
 		// get the questions length
-		tmp, _ := work.QuestionsList()
-		L := len(tmp)
+		L := len(work.Bareme())
 
-		// beware that some questions may not have a link item for the student yet
-		// so that we take L as reference
-		progExt := ProgressionExt{
-			Questions: make([]ta.QuestionHistory, L),
+		byStudent := byTask[task.Id].ByIdStudent() // for one task
+		for idStudent, progressions := range byStudent {
+			// beware that some questions may not have a link item for the student yet
+			// so that we take L as reference
+			progExt := NewProgressionExt(progressions, L)
+			taskMap[idStudent] = progExt
 		}
-		prog := questionsProgMap[pr.Id]
-		for _, link := range prog {
-			progExt.Questions[link.Index] = link.History
-		}
-		progExt.InferNextQuestion()
 
-		out[pr.Id] = progExt
+		out[task.Id] = taskMap
 	}
 
 	return out, nil
 }
 
-// loadProgressions loads the progression contents
-func loadProgressions(db ta.DB, prs ta.Progressions) (map[ta.IdProgression]ProgressionExt, error) {
-	// fetch the associated tasks
-	tasks, err := NewTasksContents(db, prs.IdTasks())
-	if err != nil {
-		return nil, err
-	}
-
-	return tasks.LoadProgressions(db, prs)
-}
-
 // updateProgression write the question results for the given progression.
-func updateProgression(db *sql.DB, prog ta.Progression, questions []ta.QuestionHistory) error {
+func updateProgression(db *sql.DB, idStudent teacher.IdStudent, idTask ta.IdTask, questions []ta.QuestionHistory) error {
 	// sanity checks
-	task, err := ta.SelectTask(db, prog.IdTask)
+	task, err := ta.SelectTask(db, idTask)
 	if err != nil {
 		return utils.SQLError(err)
 	}
 
-	var expectedLength int
-	if task.IdExercice.Valid {
-		reference, err := ed.SelectExerciceQuestionsByIdExercices(db, task.IdExercice.ID)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-		expectedLength = len(reference)
-	} else {
-		monoquestion, err := ta.SelectMonoquestion(db, task.IdMonoquestion.ID)
-		if err != nil {
-			return utils.SQLError(err)
-		}
-		expectedLength = monoquestion.NbRepeat
+	work, err := newWorkLoader(db, NewWorkID(task), idStudent)
+	if err != nil {
+		return err
 	}
+
+	expectedLength := len(work.Bareme())
 
 	if len(questions) != expectedLength {
 		return fmt.Errorf("internal error: inconsistent questions length %d != %d", len(questions), expectedLength)
@@ -199,21 +220,24 @@ func updateProgression(db *sql.DB, prog ta.Progression, questions []ta.QuestionH
 		return utils.SQLError(err)
 	}
 
-	_, err = ta.DeleteProgressionQuestionsByIdProgressions(tx, prog.Id)
+	_, err = ta.DeleteProgressionsByIdStudentAndIdTask(tx, idStudent, idTask)
 	if err != nil {
+		_ = tx.Rollback()
 		return utils.SQLError(err)
 	}
 
-	links := make(ta.ProgressionQuestions, len(questions))
+	links := make(ta.Progressions, len(questions))
 	for i, qu := range questions {
-		links[i] = ta.ProgressionQuestion{
-			IdProgression: prog.Id,
-			Index:         i,
-			History:       qu,
+		links[i] = ta.Progression{
+			IdStudent: idStudent,
+			IdTask:    idTask,
+			Index:     i,
+			History:   qu,
 		}
 	}
-	err = ta.InsertManyProgressionQuestions(tx, links...)
+	err = ta.InsertManyProgressions(tx, links...)
 	if err != nil {
+		_ = tx.Rollback()
 		return utils.SQLError(err)
 	}
 
@@ -223,26 +247,6 @@ func updateProgression(db *sql.DB, prog ta.Progression, questions []ta.QuestionH
 	}
 
 	return nil
-}
-
-// loadOrCreateProgressionFor ensures a progression item exists for
-// the given task and student, and returns it.
-func loadOrCreateProgressionFor(db ta.DB, idTask ta.IdTask, idStudent teacher.IdStudent) (ta.Progression, error) {
-	prog, has, err := ta.SelectProgressionByIdStudentAndIdTask(db, idStudent, idTask)
-	if err != nil {
-		return ta.Progression{}, utils.SQLError(err)
-	}
-	if has {
-		return prog, nil
-	}
-
-	// else, create an entry
-	prog, err = ta.Progression{IdStudent: idStudent, IdTask: idTask}.Insert(db)
-	if err != nil {
-		return ta.Progression{}, utils.SQLError(err)
-	}
-
-	return prog, nil
 }
 
 // Student API
@@ -269,34 +273,20 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-
-	// collect the student progressions (we load all the student progression)
-	extendedProgressions, err := loadProgressions(db, links1)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	progressionsByTask := links1.ByIdTask()
+	progressionsByTask := links1.ByIdTask() // for one student
 
 	out := make(map[ta.IdTask]TaskProgressionHeader, len(contents.Tasks))
 	for _, task := range contents.Tasks {
-		// select the right progression, which may be empty
-		// before the student starts the exercice,
-		// that is progs has either length one or zero
-		progs, hasProg := progressionsByTask[task.Id]
-		var idProg ta.IdProgression
-		if hasProg {
-			idProg = progs.IDs()[0]
-		}
-		progression := extendedProgressions[idProg] // may be empty
-
 		work := contents.GetWork(task)
-		_, baremes := work.QuestionsList()
-		title := work.Title()
+		baremes := work.Bareme()
+		progs := progressionsByTask[task.Id]
+		// the progression may be empty if the student has not started it
+		hasProg := len(progs) != 0
+		progression := NewProgressionExt(progs, len(baremes))
 
 		out[task.Id] = TaskProgressionHeader{
 			Id:    task.Id,
-			Title: title,
+			Title: work.Title(),
 
 			HasProgression: hasProg,
 			Progression:    progression,
@@ -313,20 +303,14 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 // If needed, a new progression item is created.
 // If [registerProgression] is false, no progression is created.
 func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, ex EvaluateWorkIn, registerProgression bool) (out EvaluateWorkOut, mark int, err error) {
-	out, err = ex.Evaluate(db)
+	out, err = ex.Evaluate(db, idStudent)
 	if err != nil {
 		return
 	}
 
 	if registerProgression {
-		// persists the progression on DB ...
-		prog, err := loadOrCreateProgressionFor(db, idTask, idStudent)
-		if err != nil {
-			return out, 0, err
-		}
-
-		// ... update the progression questions
-		err = updateProgression(db, prog, out.Progression.Questions)
+		// persists the progression on DB
+		err = updateProgression(db, idStudent, idTask, out.Progression.Questions)
 		if err != nil {
 			return out, 0, err
 		}
@@ -338,11 +322,11 @@ func EvaluateTaskExercice(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStud
 		return out, mark, utils.SQLError(err)
 	}
 
-	loader, err := newWorkLoader(db, NewWorkID(task))
+	loader, err := newWorkLoader(db, NewWorkID(task), idStudent)
 	if err != nil {
 		return
 	}
-	_, baremes := loader.QuestionsList()
+	baremes := loader.Bareme()
 	mark = baremes.ComputeMark(out.Progression.Questions)
 
 	return out, mark, nil

@@ -1,4 +1,11 @@
-import type { Date_, Monoquestion, SheetExt, TaskExt, Time } from "./api_gen";
+import type {
+  ClassroomTravaux,
+  Date_,
+  Monoquestion,
+  SheetExt,
+  TaskExt,
+  Time
+} from "./api_gen";
 
 /** copy returns a deep copy of `obj` */
 export function copy<T>(obj: T): T {
@@ -57,18 +64,15 @@ export function swapItems<T>(origin: number, target: number, list: T[]) {
 }
 
 export function taskBareme(task: TaskExt) {
-  return task.Baremes?.reduce((v, qu) => v + qu, 0) || 0;
+  return task.Bareme?.reduce((v, qu) => v + qu, 0) || 0;
 }
 
 export function sheetBareme(sheet: SheetExt) {
   return sheet.Tasks?.reduce((v, task) => v + taskBareme(task), 0) || 0;
 }
 
-export function monoquestionFromTask(task: TaskExt): Monoquestion {
-  return {
-    Id: task.IdWork.ID,
-    IdQuestion: -1,
-    Bareme: (task.Baremes || [])[0],
-    NbRepeat: task.Baremes?.length || 0
-  };
+// safer and easier access
+export interface HomeworksT {
+  Sheets: Map<number, SheetExt>;
+  Travaux: ClassroomTravaux[];
 }

@@ -35,7 +35,8 @@ func TestSettingsAPI(t *testing.T) {
 
 	ct := Controller{db: db.DB}
 	teach := tc.Teacher{
-		Mail: "dummy@free.fr",
+		Mail:            "dummy@free.fr",
+		PasswordCrypted: ct.teacherKey.EncryptPassword(""),
 	}
 	teach, err := teach.Insert(ct.db)
 	tu.AssertNoErr(t, err)
@@ -45,7 +46,7 @@ func TestSettingsAPI(t *testing.T) {
 	tu.Assert(t, settings.Mail == teach.Mail)
 	tu.Assert(t, settings.HasEditorSimplified == false)
 
-	err = ct.updateSettings(TeacherSettings{Mail: "anoter@free.fr", HasEditorSimplified: true}, teach.Id)
+	err = ct.updateSettings(TeacherSettings{Mail: "anoter@free.fr", HasEditorSimplified: true, Password: "123458"}, teach.Id)
 	tu.AssertNoErr(t, err)
 }
 

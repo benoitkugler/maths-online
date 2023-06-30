@@ -9,7 +9,9 @@
       @update="updateSheet"
       @addExercice="addExerciceToSheet"
       @addMonoquestion="addMonoquestionToSheet"
+      @add-random-monoquestion="addRandomMonoquestionToSheet"
       @udpate-monoquestion="updateMonoquestion"
+      @udpate-random-monoquestion="updateRandomMonoquestion"
       @removeTask="removeTaskFromSheet"
       @reorderTasks="reorderSheetTasks"
       @close="sheetToUpdate = null"
@@ -44,36 +46,30 @@
       <v-col>
         <v-card-title>Travail à la maison</v-card-title>
         <v-card-subtitle
-          >Configurer les exercices à faire à la maison</v-card-subtitle
+          >Configurer les exercices à faire à la maison, en assignant à chaque
+          classe une ou plusieurs feuilles.</v-card-subtitle
         >
       </v-col>
     </v-row>
 
-    <v-tabs v-model="tab" align-tabs="center">
-      <v-tab v-for="(classroom, index) in classrooms" :key="index">
-        {{ classroom.Classroom.name }}
-      </v-tab>
-    </v-tabs>
-    <v-window v-model="tab">
-      <v-window-item
-        v-for="(classroom, index) in classrooms"
-        :key="index"
-        :value="index"
-      >
-        <classroom-sheets-row
-          :classroom="classroom"
-          :classrooms="classroomList"
-          @add="createSheet(classroom.Classroom.id)"
-          @delete="(sheet) => (sheetToDelete = sheet)"
-          @copy="copySheet"
-          @update="(s) => (sheetToUpdate = s)"
-        ></classroom-sheets-row
-      ></v-window-item>
-    </v-window>
-
-    <v-row v-if="!classrooms.length" justify="center">
-      <v-col style="text-align: center" class="my-3">
-        <i>Aucune classe n'est enregistrée.</i>
+    <v-row class="mx-0 mb-1">
+      <v-col cols="6">
+        <sheet-folder
+          :sheets="homeworks.Sheets"
+          @create="createSheet"
+          @duplicate="(sh) => duplicateSheet(sh.Sheet.Id)"
+          @delete="(sh) => (sheetToDelete = sh)"
+          @edit="(sh) => (sheetToUpdate = sh)"
+        ></sheet-folder>
+      </v-col>
+      <v-col cols="6">
+        <travaux-pannel
+          :homeworks="homeworks"
+          @create="createTravail"
+          @update="updateTravail"
+          @copy="copyTravailTo"
+          @delete="deleteTravail"
+        ></travaux-pannel>
       </v-col>
     </v-row>
   </v-card>
@@ -81,80 +77,86 @@
 
 <script setup lang="ts">
 import type {
-  ClassroomSheets,
-  ExerciceHeader,
   Monoquestion,
-  QuestionHeader,
+  RandomMonoquestion,
   Sheet,
   SheetExt,
   TaskExt,
+  Travail,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onActivated, onMounted } from "vue";
+import { onActivated, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { $ref } from "vue/macros";
-import ClassroomSheetsRow from "../components/homework/ClassroomSheetsRow.vue";
 import SheetDetails from "../components/homework/SheetDetails.vue";
+import SheetFolder from "@/components/homework/SheetFolder.vue";
+import type { ResourceGroup, VariantG } from "@/controller/editor";
+import TravauxPannel from "@/components/homework/TravauxPannel.vue";
+import type { HomeworksT } from "@/controller/utils";
 
-let classrooms = $ref<ClassroomSheets[]>([]);
+let homeworks = $ref<HomeworksT>({ Sheets: new Map(), Travaux: [] });
 
 const route = useRoute();
 
 onMounted(() => {
-  fetchClassrooms();
+  fetchHomeworks();
 });
 
 onActivated(async () => {
-  await fetchClassrooms();
-  showDetailsFromQuery();
+  await fetchHomeworks();
+  showDetailsFromRouteQuery();
 });
-
-let tab = $ref(0);
-
-const classroomList = computed(() => classrooms.map((cl) => cl.Classroom));
 
 let sheetToUpdate = $ref<SheetExt | null>(null);
 let sheetToDelete = $ref<SheetExt | null>(null);
 
-function showDetailsFromQuery() {
+function showDetailsFromRouteQuery() {
   const idSheet = Number(route.query["idSheet"]);
   if (isNaN(idSheet)) return;
-  classrooms.forEach((cl) =>
-    cl.Sheets?.forEach((sh) => {
-      if (sh.Sheet.Id == idSheet) {
-        sheetToUpdate = sh;
-        return;
-      }
-    })
-  );
+
+  const sh = homeworks.Sheets.get(idSheet);
+  if (sh === undefined) return;
+  sheetToUpdate = sh;
 }
 
-async function fetchClassrooms() {
+async function fetchHomeworks() {
   const res = await controller.HomeworkGetSheets();
-  classrooms = res || [];
+  if (res == undefined) return;
+  homeworks = {
+    Sheets: new Map(
+      Object.entries(res.Sheets || {}).map((v) => [Number(v[0]), v[1]])
+    ),
+    Travaux: res.Travaux || [],
+  };
 }
 
-function indexes(idSheet: number, idClassroom: number) {
-  const clIndex = classrooms.findIndex((cl) => cl.Classroom.id == idClassroom)!;
-  const sheetIndex = (classrooms[clIndex].Sheets || []).findIndex(
-    (s) => s.Sheet.Id == idSheet
-  );
-  return { clIndex, sheetIndex };
+/** return the place of the given classroom in the Travaux list */
+function travauxByClassroom(idClassroom: number) {
+  return (homeworks.Travaux || []).find((cl) => cl.Classroom.id == idClassroom);
 }
 
-async function createSheet(idClassroom: number) {
-  const res = await controller.HomeworkCreateSheet({
+async function createSheet() {
+  const res = await controller.HomeworkCreateSheet();
+  if (res == undefined) {
+    return;
+  }
+
+  homeworks.Sheets.set(res.Sheet.Id, res);
+
+  sheetToUpdate = res;
+}
+
+async function createTravail(idSheet: number, idClassroom: number) {
+  const res = await controller.HomeworkCreateTravail({
     IdClassroom: idClassroom,
+    IdSheet: idSheet,
   });
   if (res == undefined) {
     return;
   }
 
-  const { clIndex } = indexes(-1, idClassroom);
-  const cl = classrooms[clIndex];
-  console.log(clIndex, cl);
-
-  cl.Sheets = (cl.Sheets || []).concat(res);
+  const cl = travauxByClassroom(idClassroom)!;
+  cl.Travaux = (cl.Travaux || []).concat(res);
 }
 
 async function deleteSheet() {
@@ -169,35 +171,32 @@ async function deleteSheet() {
     return;
   }
 
-  const { clIndex } = indexes(-1, sheetToDelete?.Sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets = (cl.Sheets || []).filter((sh) => sh.Sheet.Id != id);
+  homeworks.Sheets.delete(id);
+  homeworks.Travaux?.forEach((cl) => {
+    cl.Travaux = (cl.Travaux || []).filter((tr) => tr.IdSheet != id);
+  });
   sheetToDelete = null;
 }
 
-async function copySheet(idSheet: number, idClassroom: number) {
+async function duplicateSheet(idSheet: number) {
   const res = await controller.HomeworkCopySheet({
     IdSheet: idSheet,
-    IdClassroom: idClassroom,
   });
   if (res == undefined) {
     return;
   }
 
-  const { clIndex } = indexes(idSheet, idClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets = (cl.Sheets || []).concat(res);
+  homeworks.Sheets.set(res.Sheet.Id, res);
 }
 
 async function updateSheet(sheet: Sheet) {
-  await controller.HomeworkUpdateSheet(sheet);
+  const ok = await controller.HomeworkUpdateSheet(sheet);
+  if (ok == undefined) return;
 
-  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets![sheetIndex].Sheet = sheet;
+  homeworks.Sheets.get(sheet.Id)!.Sheet = sheet;
 }
 
-async function addExerciceToSheet(sheet: Sheet, exercice: ExerciceHeader) {
+async function addExerciceToSheet(sheet: Sheet, exercice: VariantG) {
   const newTask = await controller.HomeworkAddExercice({
     IdExercice: exercice.Id,
     IdSheet: sheet.Id,
@@ -206,14 +205,11 @@ async function addExerciceToSheet(sheet: Sheet, exercice: ExerciceHeader) {
     return;
   }
 
-  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).concat(
-    newTask
-  );
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  sh.Tasks = (sh.Tasks || []).concat(newTask);
 }
 
-async function addMonoquestionToSheet(sheet: Sheet, question: QuestionHeader) {
+async function addMonoquestionToSheet(sheet: Sheet, question: VariantG) {
   const newTask = await controller.HomeworkAddMonoquestion({
     IdQuestion: question.Id,
     IdSheet: sheet.Id,
@@ -222,31 +218,52 @@ async function addMonoquestionToSheet(sheet: Sheet, question: QuestionHeader) {
     return;
   }
 
-  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).concat(
-    newTask
-  );
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  sh.Tasks = (sh.Tasks || []).concat(newTask);
+}
+
+async function addRandomMonoquestionToSheet(
+  sheet: Sheet,
+  group: ResourceGroup
+) {
+  const newTask = await controller.HomeworkAddRandomMonoquestion({
+    IdQuestiongroup: group.Id,
+    IdSheet: sheet.Id,
+  });
+  if (newTask == undefined) {
+    return;
+  }
+
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  sh.Tasks = (sh.Tasks || []).concat(newTask);
 }
 
 async function updateMonoquestion(sheet: Sheet, qu: Monoquestion) {
   const task = await controller.HomeworkUpdateMonoquestion(qu);
   if (task == undefined) return;
-  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  const tasks = cl.Sheets![sheetIndex].Tasks || [];
+
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  const tasks = sh.Tasks || [];
+  const index = tasks.findIndex((v) => v.Id == task.Id);
+  tasks[index] = task;
+}
+
+async function updateRandomMonoquestion(sheet: Sheet, qu: RandomMonoquestion) {
+  const task = await controller.HomeworkUpdateRandomMonoquestion(qu);
+  if (task == undefined) return;
+
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  const tasks = sh.Tasks || [];
   const index = tasks.findIndex((v) => v.Id == task.Id);
   tasks[index] = task;
 }
 
 async function removeTaskFromSheet(sheet: Sheet, task: TaskExt) {
-  await controller.HomeworkRemoveTask({ "id-task": task.Id });
+  const res = await controller.HomeworkRemoveTask({ "id-task": task.Id });
+  if (res === undefined) return;
 
-  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets![sheetIndex].Tasks = (cl.Sheets![sheetIndex].Tasks || []).filter(
-    (ta) => ta.Id != task.Id
-  );
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  sh.Tasks = (sh.Tasks || []).filter((ta) => ta.Id != task.Id);
 }
 
 async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
@@ -255,9 +272,34 @@ async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
     Tasks: tasks.map((t) => t.Id),
   });
 
-  const { clIndex, sheetIndex } = indexes(sheet.Id, sheet.IdClassroom);
-  const cl = classrooms[clIndex];
-  cl.Sheets![sheetIndex].Tasks = tasks;
+  const sh = homeworks.Sheets.get(sheet.Id)!;
+  sh.Tasks = tasks;
+}
+
+async function updateTravail(travail: Travail) {
+  const ok = await controller.HomeworkUpdateTravail(travail);
+  if (ok == undefined) return;
+
+  const cl = travauxByClassroom(travail.IdClassroom)!;
+  const index = cl.Travaux!.findIndex((tr) => tr.Id == travail.Id);
+  cl.Travaux![index] = travail;
+}
+
+async function copyTravailTo(tr: Travail, idClassroom: number) {
+  const res = await controller.HomeworkCopyTravail({
+    IdTravail: tr.Id,
+    IdClassroom: idClassroom,
+  });
+  if (res === undefined) return;
+  const cl = travauxByClassroom(idClassroom)!;
+  cl.Travaux = (cl.Travaux || []).concat(res);
+}
+
+async function deleteTravail(tr: Travail) {
+  const res = await controller.HomeworkDeleteTravail({ id: tr.Id });
+  if (res === undefined) return;
+  const cl = travauxByClassroom(tr.IdClassroom)!;
+  cl.Travaux = (cl.Travaux || []).filter((t) => t.Id != tr.Id);
 }
 </script>
 

@@ -1,11 +1,9 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE sheets (
     Id serial PRIMARY KEY,
-    IdClassroom integer NOT NULL,
     Title text NOT NULL,
-    Notation integer CHECK (Notation IN (0, 1)) NOT NULL,
-    Activated boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    IdTeacher integer NOT NULL,
+    Level text NOT NULL
 );
 
 CREATE TABLE sheet_tasks (
@@ -14,9 +12,23 @@ CREATE TABLE sheet_tasks (
     IdTask integer NOT NULL
 );
 
+CREATE TABLE travails (
+    Id serial PRIMARY KEY,
+    IdClassroom integer NOT NULL,
+    IdSheet integer NOT NULL,
+    Noted boolean NOT NULL,
+    Deadline timestamp(0) with time zone NOT NULL
+);
+
 -- constraints
-ALTER TABLE sheets
+ALTER TABLE travails
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
+ALTER TABLE travails
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets ON DELETE CASCADE;
+
+ALTER TABLE sheets
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
 ALTER TABLE sheet_tasks
     ADD PRIMARY KEY (IdSheet, INDEX);

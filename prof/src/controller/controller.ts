@@ -6,7 +6,6 @@ import type {
   CheckQuestionParametersOut,
   Classroom,
   ClassroomExt,
-  ClassroomSheets,
   DeleteExerciceOut,
   DeleteQuestionOut,
   Exercice,
@@ -18,6 +17,7 @@ import type {
   ExportQuestionLatexOut,
   GenerateClassroomCodeOut,
   HomeworkMarksOut,
+  Homeworks,
   Index,
   LaunchSessionOut,
   ListExercicesOut,
@@ -25,8 +25,10 @@ import type {
   LoadTargetOut,
   LogginOut,
   MonitorOut,
+  Monoquestion,
   Question,
   QuestiongroupExt,
+  RandomMonoquestion,
   Review,
   ReviewExt,
   ReviewHeader,
@@ -38,6 +40,7 @@ import type {
   TaskExt,
   TeacherSettings,
   TextBlock,
+  Travail,
   TrivialExt,
   TrivialSelfaccess
 } from "./api_gen";
@@ -211,10 +214,35 @@ class Controller extends AbstractAPI {
     }
   }
 
+  protected onSuccessHomeworkAddRandomMonoquestion(data: TaskExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Groupe de questions ajouté avec succès.");
+    }
+  }
+
+  protected onSuccessHomeworkGetMonoquestion(data: Monoquestion): void {
+    this.inRequest = false;
+  }
+  protected onSuccessHomeworkGetRandomMonoquestion(
+    data: RandomMonoquestion
+  ): void {
+    this.inRequest = false;
+  }
+
   protected onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Paramètres de la question modifiés avec succès.");
+    }
+  }
+
+  protected onSuccessHomeworkUpdateRandomMonoquestion(data: TaskExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage(
+        "Paramètres du groupe de questions modifiés avec succès."
+      );
     }
   }
 
@@ -225,7 +253,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessHomeworkGetSheets(data: ClassroomSheets[] | null): void {
+  protected onSuccessHomeworkGetSheets(data: Homeworks): void {
     this.inRequest = false;
   }
   protected onSuccessHomeworkCreateSheet(data: SheetExt): void {
@@ -257,6 +285,31 @@ class Controller extends AbstractAPI {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Notes chargées avec succès.");
+    }
+  }
+
+  protected onSuccessHomeworkCreateTravail(data: Travail): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Feuille de travail ajoutée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkUpdateTravail(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Feuille de travail modifiée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkDeleteTravail(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Feuille de travail supprimée avec succès.");
+    }
+  }
+  protected onSuccessHomeworkCopyTravail(data: Travail): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Feuille de travail copiée avec succès.");
     }
   }
 
