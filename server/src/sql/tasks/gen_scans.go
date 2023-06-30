@@ -720,6 +720,25 @@ func DeleteRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions ...editor.
 	return ScanRandomMonoquestionVariants(rows)
 }
 
+// SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion selects the items matching the given fields.
+func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item []RandomMonoquestionVariant, err error) {
+	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2", idStudent, idRandomMonoquestion)
+	if err != nil {
+		return nil, err
+	}
+	return ScanRandomMonoquestionVariants(rows)
+}
+
+// DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item []RandomMonoquestionVariant, err error) {
+	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 RETURNING *", idStudent, idRandomMonoquestion)
+	if err != nil {
+		return nil, err
+	}
+	return ScanRandomMonoquestionVariants(rows)
+}
+
 // SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion, index int) (item RandomMonoquestionVariant, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 AND Index = $3", idStudent, idRandomMonoquestion, index)

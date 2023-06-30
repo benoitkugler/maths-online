@@ -4,6 +4,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	sql "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
 )
 
@@ -15,7 +16,12 @@ import (
 type Sheet struct {
 	Id       ho.IdSheet
 	Title    string
+	Noted    bool // new in version 1.5
 	Deadline ho.Time
+
+	Notation    int                 // Deprecated
+	Activated   bool                // Deprecated
+	IdClassroom teacher.IdClassroom // Deprecated
 }
 
 type SheetProgression struct {
@@ -36,4 +42,10 @@ type StudentEvaluateTaskIn struct {
 type StudentEvaluateTaskOut struct {
 	Ex   taAPI.EvaluateWorkOut
 	Mark int // updated mark
+}
+
+type StudentResetTaskIn struct {
+	StudentID pass.EncryptedID
+	IdTravail ho.IdTravail
+	IdTask    sql.IdTask
 }

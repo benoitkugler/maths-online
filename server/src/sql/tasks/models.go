@@ -47,6 +47,7 @@ type Task struct {
 
 // RandomMonoquestionVariant is a link table storing which variants is attributed to a given student
 // gomacro:SQL ADD UNIQUE(IdStudent, IdRandomMonoquestion, Index)
+// gomacro:SQL _SELECT KEY (IdStudent, IdRandomMonoquestion)
 type RandomMonoquestionVariant struct {
 	IdStudent            teacher.IdStudent
 	IdRandomMonoquestion IdRandomMonoquestion

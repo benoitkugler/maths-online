@@ -1024,7 +1024,9 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 	return out, nil
 }
 
+//
 // Student API
+//
 
 // StudentGetTravaux returns the sheets for the given student
 // Only the mandatory, noted one are returned.
@@ -1036,7 +1038,7 @@ func (ct *Controller) StudentGetTravaux(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent))
+	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent), true)
 	if err != nil {
 		return err
 	}
@@ -1044,7 +1046,25 @@ func (ct *Controller) StudentGetTravaux(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out StudentSheets, err error) {
+// StudentGetFreeTravaux returns the sheets for the given student
+// Only the optional, non noted are returned.
+func (ct *Controller) StudentGetFreeTravaux(c echo.Context) error {
+	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
+
+	idStudent, err := ct.studentKey.DecryptID(idCrypted)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.getStudentSheets(teacher.IdStudent(idStudent), false)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) (out StudentSheets, err error) {
 	student, err := teacher.SelectStudent(ct.db, idStudent)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -1073,7 +1093,7 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 	}
 
 	for _, travail := range travaux {
-		if !travail.Noted { // ignore free sheets
+		if travail.Noted != noted { // select noted / free travaux
 			continue
 		}
 
@@ -1083,12 +1103,22 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent) (out Student
 		for i, exLink := range tasksForSheet {
 			taskList[i] = progMap[exLink.IdTask]
 		}
+		// compatiblity mode
+		notation := 0
+		if travail.Noted {
+			notation = 1
+		}
 		out = append(out, SheetProgression{
 			IdTravail: travail.Id,
 			Sheet: Sheet{
 				Id:       sheet.Id,
 				Title:    sheet.Title,
 				Deadline: travail.Deadline,
+				Noted:    travail.Noted,
+
+				Notation:    notation, // TODO: cleanup
+				Activated:   true,
+				IdClassroom: travail.IdClassroom,
 			},
 			Tasks: taskList,
 		})
@@ -1164,4 +1194,70 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 		return StudentEvaluateTaskOut{}, err
 	}
 	return StudentEvaluateTaskOut{Ex: ex, Mark: mark}, nil
+}
+
+// StudentResetTask remove the progression for the given student
+// and task. It is only allowed for free travaux.
+func (ct *Controller) StudentResetTask(c echo.Context) error {
+	var args StudentResetTaskIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.studentResetTask(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, true)
+}
+
+func (ct *Controller) studentResetTask(args StudentResetTaskIn) error {
+	idStudent_, err := ct.studentKey.DecryptID(args.StudentID)
+	if err != nil {
+		return err
+	}
+	idStudent := teacher.IdStudent(idStudent_)
+
+	travail, err := ho.SelectTravail(ct.db, args.IdTravail)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if travail.Noted {
+		return errors.New("internal error: travail noted may not be reset")
+	}
+
+	task, err := tasks.SelectTask(ct.db, args.IdTask)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// remove any progression
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	_, err = tasks.DeleteProgressionsByIdStudentAndIdTask(ct.db, idStudent, task.Id)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	// for random monoquestion, remove the selected variants
+	if id := task.IdRandomMonoquestion; id.Valid {
+		_, err = tasks.DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(ct.db, idStudent, id.ID)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return nil
 }

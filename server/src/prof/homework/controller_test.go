@@ -135,7 +135,7 @@ func TestStudentSheets(t *testing.T) {
 	student, err := teacher.Student{IdClassroom: class.Id}.Insert(ct.db)
 	tu.AssertNoErr(t, err)
 
-	sheets, err := ct.getStudentSheets(student.Id)
+	sheets, err := ct.getStudentSheets(student.Id, true)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(sheets) == 0)
 
@@ -162,11 +162,16 @@ func TestStudentSheets(t *testing.T) {
 	_, err = ct.assignSheetTo(CreateTravailIn{IdSheet: sh2.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
 
-	sheets, err = ct.getStudentSheets(student.Id)
+	sheets, err = ct.getStudentSheets(student.Id, true)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(sheets) == 2)
 	tu.Assert(t, len(sheets[0].Tasks) == 3)
 	tu.Assert(t, len(sheets[1].Tasks) == 1)
+
+	// travaux are noted by default
+	sheets, err = ct.getStudentSheets(student.Id, false)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(sheets) == 0)
 
 	err = ct.removeTask(task1.Id, userID)
 	tu.AssertNoErr(t, err)

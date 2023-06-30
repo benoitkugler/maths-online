@@ -31,8 +31,6 @@ ALTER TABLE tasks
 ALTER TABLE tasks
     DROP CONSTRAINT "tasks_check1";
 ALTER TABLE tasks
-    DROP CONSTRAINT "tasks_check2";
-ALTER TABLE tasks
     ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
 ALTER TABLE tasks
     ADD CHECK ((IdExercice IS NOT NULL)::int + (IdMonoquestion IS NOT NULL)::int + (IdRandomMonoquestion IS NOT NULL)::int = 1);
