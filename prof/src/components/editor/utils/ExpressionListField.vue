@@ -8,7 +8,7 @@
         :label="label"
         chips
         :model-value="props.modelValue.map((v, i) => ({ value: i, title: v }))"
-        @update:model-value="onDelete"
+        @update:model-value="(val) => onDelete(val)"
         hide-no-data
         closable-chips
         readonly

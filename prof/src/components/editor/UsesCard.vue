@@ -15,7 +15,7 @@
             Feuille : <b>{{ use.Sheet.Title }}</b>
           </v-list-item-title>
           <v-list-item-subtitle>
-            {{ use.Classroom.name }}
+            Niveau {{ use.Sheet.Level }}
           </v-list-item-subtitle>
         </v-list-item>
       </v-list>
