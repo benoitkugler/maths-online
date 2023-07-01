@@ -49,7 +49,8 @@ Question numberQuestion(String title) {
     TextBlock([T(title)], false, false, false),
     const NumberFieldBlock(0, 10)
   ], [
-    TextBlock([T("Une très belle correction : $title")], false, true, true)
+    TextBlock(List.filled(40, T("Une très belle correction : $title")), false,
+        true, true)
   ]);
 }
 
