@@ -3,6 +3,18 @@
 import 'predefined.dart';
 import 'src_sql_teacher.dart';
 
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.AttachStudentToClassroom1Out
+typedef AttachStudentToClassroom1Out = List<StudentHeader>;
+
+AttachStudentToClassroom1Out attachStudentToClassroom1OutFromJson(
+    dynamic json) {
+  return listStudentHeaderFromJson(json);
+}
+
+dynamic attachStudentToClassroom1OutToJson(AttachStudentToClassroom1Out item) {
+  return listStudentHeaderToJson(item);
+}
+
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AttachStudentToClassroom2In
 class AttachStudentToClassroom2In {
   final String classroomCode;
@@ -98,13 +110,14 @@ class StudentClassroomHeader {
   final Student student;
   final String classroomName;
   final String teacherMail;
+  final String teacherContactURL;
 
-  const StudentClassroomHeader(
-      this.student, this.classroomName, this.teacherMail);
+  const StudentClassroomHeader(this.student, this.classroomName,
+      this.teacherMail, this.teacherContactURL);
 
   @override
   String toString() {
-    return "StudentClassroomHeader($student, $classroomName, $teacherMail)";
+    return "StudentClassroomHeader($student, $classroomName, $teacherMail, $teacherContactURL)";
   }
 }
 
@@ -113,14 +126,16 @@ StudentClassroomHeader studentClassroomHeaderFromJson(dynamic json_) {
   return StudentClassroomHeader(
       studentFromJson(json['Student']),
       stringFromJson(json['ClassroomName']),
-      stringFromJson(json['TeacherMail']));
+      stringFromJson(json['TeacherMail']),
+      stringFromJson(json['TeacherContactURL']));
 }
 
 Map<String, dynamic> studentClassroomHeaderToJson(StudentClassroomHeader item) {
   return {
     "Student": studentToJson(item.student),
     "ClassroomName": stringToJson(item.classroomName),
-    "TeacherMail": stringToJson(item.teacherMail)
+    "TeacherMail": stringToJson(item.teacherMail),
+    "TeacherContactURL": stringToJson(item.teacherContactURL)
   };
 }
 
@@ -144,4 +159,15 @@ StudentHeader studentHeaderFromJson(dynamic json_) {
 
 Map<String, dynamic> studentHeaderToJson(StudentHeader item) {
   return {"Id": intToJson(item.id), "Label": stringToJson(item.label)};
+}
+
+List<StudentHeader> listStudentHeaderFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(studentHeaderFromJson).toList();
+}
+
+List<dynamic> listStudentHeaderToJson(List<StudentHeader> item) {
+  return item.map(studentHeaderToJson).toList();
 }

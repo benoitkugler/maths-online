@@ -5,7 +5,8 @@ import 'dart:convert';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/shared/students.gen.dart';
+import 'package:eleve/shared/hyperlink.dart';
+import 'package:eleve/types/src_prof_teacher.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -72,7 +73,7 @@ class _ClassroomCardState extends State<ClassroomCard> {
             }
 
             if (snapshot.hasData) {
-              return _LoadedClassroom(snapshot.data!);
+              return LoadedClassroom(snapshot.data!);
             }
             return const _Loading();
           }),
@@ -93,18 +94,21 @@ class _Loading extends StatelessWidget {
   }
 }
 
-class _LoadedClassroom extends StatelessWidget {
+class LoadedClassroom extends StatelessWidget {
   final StudentClassroomHeader meta;
 
-  const _LoadedClassroom(this.meta, {Key? key}) : super(key: key);
+  const LoadedClassroom(this.meta, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    const style = TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
     return Column(
       children: [
-        _FormRow("Nom", "${meta.student.surname} ${meta.student.name}"),
-        _FormRow("Classe", meta.classroomName),
-        _FormRow("Contact", meta.teacherMail),
+        _FormRow("Nom",
+            Text("${meta.student.surname} ${meta.student.name}", style: style)),
+        _FormRow("Classe", Text(meta.classroomName, style: style)),
+        _FormRow("Contact",
+            hyperlink(meta.teacherMail, meta.teacherContactURL, style: style)),
       ],
     );
   }
@@ -112,7 +116,7 @@ class _LoadedClassroom extends StatelessWidget {
 
 class _FormRow extends StatelessWidget {
   final String left;
-  final String right;
+  final Widget right;
   const _FormRow(this.left, this.right, {Key? key}) : super(key: key);
 
   @override
@@ -126,10 +130,7 @@ class _FormRow extends StatelessWidget {
             left,
             style: const TextStyle(fontSize: 18),
           ),
-          Text(
-            right,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+          right
         ],
       ),
     );

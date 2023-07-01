@@ -6,7 +6,6 @@ import 'package:eleve/settings.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
-import 'package:eleve/shared/students.gen.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_trivial.dart';
@@ -41,7 +40,7 @@ class TrivialSettings {
     }));
 
     final resp = await http.get(uri);
-    final body = jsonDecode(resp.body) as JSON;
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
     // body is either the expect GameMeta or an error
     if (body.containsKey("GameMeta")) {
       final gameMeta = body["GameMeta"] as String;
