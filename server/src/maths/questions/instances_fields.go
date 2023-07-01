@@ -286,13 +286,6 @@ func (olf OrderedListFieldInstance) validateAnswerSyntax(answer client.Answer) e
 		}
 	}
 
-	if len(list.Indices) != len(olf.Answer) {
-		return InvalidFieldAnswer{
-			ID:     olf.ID,
-			Reason: fmt.Sprintf("invalid answer length %d", len(list.Indices)),
-		}
-	}
-
 	props := olf.proposals()
 	for _, v := range list.Indices {
 		if v >= len(props) {
@@ -324,7 +317,11 @@ func areLineEquals(l1, l2 client.TextLine) bool {
 func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	list := answer.(client.OrderedListAnswer).Indices
 
-	// reference and answer have the same length, as checked in `validateAnswerSyntax`
+	if len(list) != len(olf.Answer) {
+		return false
+	}
+
+	// reference and student answer have now the same length
 	proposals := olf.proposals()
 	for i, ref := range olf.Answer {
 		got := proposals[list[i]] // check in `validateAnswerSyntax`
