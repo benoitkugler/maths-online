@@ -46,6 +46,13 @@ type SetupStudentClientOut struct {
 	GameMeta string
 }
 
+func firstBytes(s string, n int) string {
+	if len(s) < n {
+		return s
+	}
+	return s[:n]
+}
+
 // SetupStudentClient handles the connection of one student to the activity
 // It is responsible for checking the credentials, creating games if needed,
 // and returning the resolved game URL param used by `ConnectStudentSession`.
@@ -54,7 +61,7 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 	clientID := c.QueryParam("client-id")
 	gameMetaString := c.QueryParam("game-meta") // optional, used to reconnect
 
-	ProgressLogger.Printf("Setup client <%s> for code %s", clientID, completeID)
+	ProgressLogger.Printf("Setup client <%s> for code %s (incomming meta: %s)", clientID, completeID, firstBytes(gameMetaString, 20))
 
 	out, err := ct.setupStudentClient(completeID, clientID, gameMetaString)
 	if err != nil {
@@ -204,6 +211,8 @@ func (ct *Controller) setupStudentClient(clientGameCode, clientID, gameMetaStrin
 			return gameConnection{}, fmt.Errorf("internal error: %s", err)
 		}
 
+		ProgressLogger.Printf("checking client provided game meta: %v", incomingGameMeta)
+
 		if ct.store.checkGameConnection(incomingGameMeta) {
 			// simply the return the valid information
 			return incomingGameMeta, nil
@@ -237,6 +246,11 @@ func (gs *gameStore) setupStudent(studentID pass.EncryptedID, requestedGameID ga
 
 	if game == nil {
 		return gameConnection{}, fmt.Errorf("Code de salle %s invalide.", requestedGameID.roomID())
+	}
+
+	// if the game has already started, return an error early
+	if game.HasStarted() {
+		return gameConnection{}, fmt.Errorf("La partie %s a déjà commencée.", requestedGameID.roomID())
 	}
 
 	playerID := gs.registerPlayer(requestedGameID)
@@ -353,18 +367,18 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 	if err != nil {
-		WarningLogger.Println("Failed to init websocket: ", err)
+		WarningLogger.Println("internal error: failed to upgrade websocket: ", err)
 		return nil
 	}
 
 	err = game.Join(player, ws) // check the access
 	if err != nil {
-		ProgressLogger.Printf("Rejecting connection to game %s", game.ID)
+		ProgressLogger.Printf("Rejecting connection for playerID %s to game %s: %s", student.PlayerID, game.ID, err)
 		// the game at this end point is not usable: close the connection with an error
 		utils.WebsocketError(ws, errors.New("game is closed"))
 		ws.Close()
 
-		return err
+		return nil
 	}
 
 	client := &studentClient{

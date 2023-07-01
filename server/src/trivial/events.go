@@ -78,6 +78,14 @@ func (r *Room) onTerminate() {
 	)
 }
 
+// HasStarted locks and returns `true` if the game has already started
+func (r *Room) HasStarted() bool {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	return r.game.hasStarted()
+}
+
 // ErrGameStarted is returned from `Join` when the game
 // has already started
 var ErrGameStarted = errors.New("game already started")
