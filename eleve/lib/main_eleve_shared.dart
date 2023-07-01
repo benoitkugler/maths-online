@@ -59,10 +59,6 @@ class _AppScaffold extends StatefulWidget {
 class __AppScaffoldState extends State<_AppScaffold> {
   UserSettings settings = UserSettings();
 
-  /// [trivialMetaCache] stores the credentials needed
-  /// to reconnect in game.
-  Map<String, String> trivialMetaCache = {};
-
   @override
   void initState() {
     _loadSettings();
@@ -122,6 +118,11 @@ class __AppScaffoldState extends State<_AppScaffold> {
     if (goTo != null && goTo) _showAppSettings();
   }
 
+  void _saveTrivialMeta(String gameCode, String gameMeta) async {
+    settings.trivialGameMetas[gameCode] = gameMeta;
+    await saveUserSettings(settings);
+  }
+
   void _launchTrivialPoursuit() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
         builder: (context) =>
@@ -133,8 +134,8 @@ class __AppScaffoldState extends State<_AppScaffold> {
     widget.audioPlayer.run();
     final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
-            body: TrivialGameSelect(TrivialSettings(
-                widget.buildMode, trivialMetaCache, settings)))));
+            body: TrivialGameSelect(TrivialSettings(widget.buildMode, settings),
+                _saveTrivialMeta))));
     onPop.then((value) => widget.audioPlayer.pause());
   }
 
