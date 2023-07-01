@@ -176,8 +176,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       content: Text("Une erreur est survenue : $error"),
     ));
     popRouteToHome();
-    // clean the cache on error
-    GameTerminatedNotification().dispatch(context);
   }
 
   void _sendEvent(ClientEventITF event) {
