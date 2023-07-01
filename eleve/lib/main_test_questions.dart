@@ -163,12 +163,10 @@ class _TrivialInGame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: InGameQuestionRoute(
-          _FieldAPI(),
-          ShowQuestion(60, Categorie.blue, 0, questionComplexe),
-          (a) => onValid(a, context)),
-    );
+    return InGameQuestionRoute(
+        _FieldAPI(),
+        ShowQuestion(60, Categorie.blue, 0, questionComplexe),
+        (a) => onValid(a, context));
   }
 
   void onValid(QuestionAnswersIn answers, BuildContext context) {
