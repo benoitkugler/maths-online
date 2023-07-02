@@ -348,6 +348,10 @@ func (r *Room) reconnectPlayer(player Player, connection Connection) {
 			out := r.game.joinQuestion()
 			state := r.state()
 			pc.send(StateUpdate{State: state, Events: Events{out}})
+		} else if r.game.phase == pQuestionResult {
+			// make sure the reconnected player is ready for next turn
+			events, _ = r.handleWantNextTurn(WantNextTurn{MarkQuestion: false}, player)
+			r.broadcastEvents(events)
 		}
 	}
 }
@@ -560,6 +564,8 @@ func (r *Room) handleAnswer(a Answer, player serial) (Events, error) {
 	return r.tryEndQuestion(false), nil // wait for other players if needed
 }
 
+// may also be trigerred on reconnection
+// the only possible error is when the phase is not at [pQuestionResult]
 func (r *Room) handleWantNextTurn(event WantNextTurn, player Player) (Events, error) {
 	g := &r.game
 	if g.phase != pQuestionResult {
