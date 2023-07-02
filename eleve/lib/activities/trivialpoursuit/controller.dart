@@ -429,6 +429,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   void _onGameEnd(GameEnd event) {
+    // remove potential dialog
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
+
     setState(() {
       hasGameStarted = false;
       gameEnd = event;
