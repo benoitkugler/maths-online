@@ -209,7 +209,7 @@ func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent te
 	gameID := ct.store.newSelfaccessGameID()
 	ct.store.createGame(createGame{ID: gameID, Options: options})
 
-	return LaunchSelfaccessOut{gameID.roomID()}, nil
+	return LaunchSelfaccessOut{tv.RoomID(gameID.String())}, nil
 }
 
 // StartSelfaccess starts a game previously created by [StudentLaunchSelfaccess]

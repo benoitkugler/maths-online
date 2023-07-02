@@ -19,7 +19,7 @@ func TestController_parseCode(t *testing.T) {
 		expected gameID
 		wantErr  bool
 	}{
-		{"1234.12.2", demoCode{demoPin, "12", 2}, false},
+		{"1234.12.2", demoCode{demoPin, 12, 2}, false},
 		{"1234.12.ax", nil, true},
 		{"1238.12.4", nil, true},
 		{"1235.12", teacherCode{"1235", "12"}, false},
@@ -27,8 +27,8 @@ func TestController_parseCode(t *testing.T) {
 		{"7896.1", nil, true},
 		{"12312", selfaccessCode("12312"), false},
 		{"1238.12.4.8", nil, true},
-		{"1234.abc.4", demoCode{demoPin, "abc", 4}, false},
-		{"1234.12.1", demoCode{demoPin, "12", 1}, false},
+		{"1234.02.4", demoCode{demoPin, 2, 4}, false},
+		{"1234.12.1", demoCode{demoPin, 12, 1}, false},
 		{"1234.1.1", nil, true},
 		{"", nil, true},
 		{"789456qsd", nil, true},
@@ -52,9 +52,9 @@ func TestController_setupStudentClientDemo(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, len(ct.store.games) == 1)
-	_, ok := ct.store.games[demoCode{"1234", "12", 2}]
+	_, ok := ct.store.games[demoCode{"1234", 12, 2}]
 	tu.Assert(t, ok)
-	tu.Assert(t, ct.store.playerIDs[out.PlayerID] == demoCode{"1234", "12", 2})
+	tu.Assert(t, ct.store.playerIDs[out.PlayerID] == demoCode{"1234", 12, 2})
 }
 
 func TestController_setupStudentClient(t *testing.T) {
@@ -86,7 +86,7 @@ func TestController_setupStudentClient(t *testing.T) {
 
 	time.Sleep(time.Millisecond)
 
-	out, err := ct.setupStudentClient(string(gameID.roomID()), "", "")
+	out, err := ct.setupStudentClient(string(gameID.String()), "", "")
 	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, len(ct.store.games) == 1)

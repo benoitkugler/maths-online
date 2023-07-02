@@ -141,6 +141,13 @@ func (r *Room) serialToPseudo(se serial) string { return r.players[se].pl.Pseudo
 func (r *Room) startGame() Events {
 	ProgressLogger.Printf("Game %s : starting...", r.ID)
 
+	// Every player start with [options.StartNbSuccess] success
+	for _, pl := range r.players {
+		for i := 0; i < r.game.options.StartNbSuccess && i < NbCategories; i++ {
+			pl.advance.success[i] = true
+		}
+	}
+
 	// Starts the first turn.
 	eventNewTurn := r.startTurn()
 	return Events{GameStart{}, eventNewTurn}

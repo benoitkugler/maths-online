@@ -120,7 +120,7 @@ type createGame struct {
 
 // createGame locks, creates, registers and starts the eveng loop of new game
 func (gs *gameStore) createGame(params createGame) {
-	game := tv.NewRoom(params.ID.roomID(), params.Options)
+	game := tv.NewRoom(tv.RoomID(params.ID.String()), params.Options)
 
 	// register the controller...
 	gs.lock.Lock()
@@ -144,7 +144,7 @@ func (gs *gameStore) createGame(params createGame) {
 		}
 	}()
 
-	ProgressLogger.Printf("Creating game %s (launch: %s)", params.ID.roomID(), params.Options.Launch)
+	ProgressLogger.Printf("Creating game %s (launch: %s)", params.ID, params.Options.Launch)
 }
 
 // TODO:
