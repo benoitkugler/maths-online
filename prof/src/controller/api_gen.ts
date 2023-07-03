@@ -298,25 +298,10 @@ export interface Rp {
   expression: string;
   variable: Variable;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.SignSymbol
-export enum SignSymbol {
-  Nothing = 0,
-  Zero = 1,
-  ForbiddenValue = 2,
-}
-
-export const SignSymbolLabels: { [key in SignSymbol]: string } = {
-  [SignSymbol.Nothing]: "",
-  [SignSymbol.Zero]: "0",
-  [SignSymbol.ForbiddenValue]: "||",
-};
-
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableBlock
 export interface SignTableBlock {
-  Label: string;
   Xs: string[] | null;
-  FxSymbols: SignSymbol[] | null;
-  Signs: boolean[] | null;
+  Functions: FunctionSign[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.SignTableFieldBlock
 export interface SignTableFieldBlock {
@@ -418,6 +403,25 @@ export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Invalid]: "Invalide",
   [Binary.And]: "Et",
   [Binary.Or]: "Ou",
+};
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionSign
+export interface FunctionSign {
+  Label: string;
+  FxSymbols: SignSymbol[] | null;
+  Signs: boolean[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
+export enum SignSymbol {
+  Nothing = 0,
+  Zero = 1,
+  ForbiddenValue = 2,
+}
+
+export const SignSymbolLabels: { [key in SignSymbol]: string } = {
+  [SignSymbol.Nothing]: "",
+  [SignSymbol.Zero]: "0",
+  [SignSymbol.ForbiddenValue]: "||",
 };
 
 // github.com/benoitkugler/maths-online/server/src/maths/repere.ColorHex

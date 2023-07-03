@@ -68,7 +68,7 @@ func randint64() int64 {
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
 
 func randstring() string {
-	b := make([]rune, 50)
+	b := make([]rune, 10)
 	maxLength := len(letterRunes2)
 	for i := range b {
 		b[i] = letterRunes2[rand.Intn(maxLength)]

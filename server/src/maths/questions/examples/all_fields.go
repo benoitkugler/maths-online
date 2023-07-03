@@ -4,6 +4,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	que "github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
 
@@ -177,18 +178,31 @@ var BlockList = [...]que.Block{
 		AsDropDown: false,
 	},
 	que.SignTableBlock{
-		Label: "g",
 		Xs: []string{
 			"-inf",
 			"1/2",
 			"3",
 		},
-		FxSymbols: []que.SignSymbol{
-			que.Nothing,
-			que.Zero,
-			que.ForbiddenValue,
+		Functions: []client.FunctionSign{
+			{
+				Label: "g",
+				FxSymbols: []client.SignSymbol{
+					client.Nothing,
+					client.Zero,
+					client.ForbiddenValue,
+				},
+				Signs: []bool{true, false},
+			},
+			{
+				Label: "h",
+				FxSymbols: []client.SignSymbol{
+					client.Nothing,
+					client.Zero,
+					client.ForbiddenValue,
+				},
+				Signs: []bool{false, true},
+			},
 		},
-		Signs: []bool{true, false},
 	},
 	que.TableBlock{
 		VerticalHeaders: []que.TextPart{

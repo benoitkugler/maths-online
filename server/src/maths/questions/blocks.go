@@ -426,12 +426,15 @@ func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (valid
 	return out, nil
 }
 
-type SignTableBlock struct {
-	Label string
-	Xs    []string // valid expression
+// type FunctionSign struct {
+// 	Label     string       // function name (as LaTeX)
+// 	FxSymbols []SignSymbol // with length len([SignTableBlock.Xs])
+// 	Signs     []bool       // is positive, with length len([SignTableBlock.Xs]) - 1
+// }
 
-	FxSymbols []SignSymbol // with length len(Xs)
-	Signs     []bool       // is positive, with length len(Xs) - 1
+type SignTableBlock struct {
+	Xs        []string // valid expression
+	Functions []client.FunctionSign
 }
 
 func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, error) {
@@ -440,8 +443,8 @@ func (st SignTableBlock) instantiate(params expression.Vars, _ int) (instance, e
 
 func (st SignTableBlock) instantiateST(params expression.Vars) (SignTableInstance, error) {
 	out := SignTableInstance{
-		Label: st.Label,
-		Xs:    make([]*expression.Expr, len(st.Xs)),
+		Xs:        make([]*expression.Expr, len(st.Xs)),
+		Functions: append([]client.FunctionSign(nil), st.Functions...),
 	}
 	var err error
 	for i, c := range st.Xs {
@@ -451,8 +454,6 @@ func (st SignTableBlock) instantiateST(params expression.Vars) (SignTableInstanc
 		}
 		out.Xs[i].Substitute(params)
 	}
-	out.FxSymbols = append([]SignSymbol(nil), st.FxSymbols...)
-	out.Signs = append([]bool(nil), st.Signs...)
 	return out, nil
 }
 
@@ -461,8 +462,10 @@ func (st SignTableBlock) setupValidator(expression.RandomParameters) (validator,
 		return nil, errors.New("Au moins deux colonnes sont attendues.")
 	}
 
-	if len(st.Xs) != len(st.FxSymbols) || len(st.Signs) != len(st.Xs)-1 {
-		return nil, errors.New("internal error: unexpected length for X and Fx")
+	for _, function := range st.Functions {
+		if len(st.Xs) != len(function.FxSymbols) || len(function.Signs) != len(st.Xs)-1 {
+			return nil, errors.New("internal error: unexpected length for X and Fx")
+		}
 	}
 
 	for _, c := range st.Xs {

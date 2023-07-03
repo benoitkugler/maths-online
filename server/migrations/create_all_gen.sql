@@ -241,6 +241,52 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_clie_FunctionSign (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_clie_FunctionSign (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_clie_SignSymbol (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_clie_SignSymbol (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_Block (data jsonb)
     RETURNS boolean
     AS $$
@@ -372,29 +418,6 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_ques_ProofAssertion (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_SignSymbol (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_ques_SignSymbol (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -633,6 +656,45 @@ DECLARE
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a clie_Binary', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_clie_FunctionSign (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Label', 'FxSymbols', 'Signs'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_array_clie_SignSymbol (data -> 'FxSymbols')
+        AND gomacro_validate_json_array_boolean (data -> 'Signs');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_clie_SignSymbol (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1, 2);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a clie_SignSymbol', data;
     END IF;
     RETURN is_valid;
 END;
@@ -1341,22 +1403,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_SignSymbol (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a ques_SignSymbol', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_SignTableBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -1368,13 +1414,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'Xs', 'FxSymbols', 'Signs'))
+            bool_and(key IN ('Xs', 'Functions'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_array_string (data -> 'Xs')
-        AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
-        AND gomacro_validate_json_array_boolean (data -> 'Signs');
+        AND gomacro_validate_json_array_clie_FunctionSign (data -> 'Functions');
     RETURN is_valid;
 END;
 $$
@@ -2095,7 +2139,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Tag', 'Section'))
+            bool_and(key IN ('Tag', 'Section'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Tag')
@@ -2132,7 +2176,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Tags', 'Difficulties'))
+            bool_and(key IN ('Tags', 'Difficulties'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')

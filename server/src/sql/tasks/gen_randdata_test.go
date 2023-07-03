@@ -87,7 +87,7 @@ func randRandomMonoquestionVariant() RandomMonoquestionVariant {
 }
 
 func randSlicebool() []bool {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]bool, l)
 	for i := range out {
 		out[i] = randbool()
@@ -96,7 +96,7 @@ func randSlicebool() []bool {
 }
 
 func randSliceedi_DifficultyTag() []editor.DifficultyTag {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]editor.DifficultyTag, l)
 	for i := range out {
 		out[i] = randedi_DifficultyTag()

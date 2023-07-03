@@ -24,6 +24,9 @@ func TestFieldInstance_validateAnswerSyntax(t *testing.T) {
 		{ExpressionFieldInstance{}, client.RadioAnswer{}, true},
 		{ExpressionFieldInstance{}, client.ExpressionAnswer{Expression: ""}, true},
 		{ExpressionFieldInstance{}, client.ExpressionAnswer{Expression: "2+4"}, false},
+		{SignTableFieldInstance{
+			Answer: SignTableInstance{Xs: mustParseMany([]string{"1"}), Functions: []client.FunctionSign{{}}},
+		}, client.SignTableAnswer{Xs: []string{"1"}, Functions: []client.FunctionSign{{FxSymbols: []client.SignSymbol{client.Zero}}}}, false},
 	}
 	for _, tt := range tests {
 		err := tt.field.validateAnswerSyntax(tt.args)
@@ -290,4 +293,32 @@ func TestSyntaxHint(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	fmt.Println(hint.Parts)
+}
+
+func TestSignTableField(t *testing.T) {
+	field := SignTableFieldInstance{
+		Answer: SignTableInstance{
+			Xs: mustParseMany([]string{"-2", "1", "inf"}),
+			Functions: []client.FunctionSign{
+				{
+					FxSymbols: []client.SignSymbol{client.ForbiddenValue, client.Zero, client.Nothing},
+					Signs:     []bool{true, false},
+				},
+				{
+					FxSymbols: []client.SignSymbol{client.ForbiddenValue, client.Zero, client.Nothing},
+					Signs:     []bool{false, true},
+				},
+			},
+		},
+	}
+
+	_ = field.toClient()
+	_ = field.correctAnswer()
+
+	ans := client.SignTableAnswer{
+		Xs:        []string{"-2", "1", "inf"},
+		Functions: field.Answer.Functions,
+	}
+
+	tu.Assert(t, field.evaluateAnswer(ans))
 }

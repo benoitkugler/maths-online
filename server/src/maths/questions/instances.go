@@ -220,39 +220,19 @@ func (vt VariationTableInstance) toClient() client.Block {
 }
 
 type SignTableInstance struct {
-	Label     string
 	Xs        []*expression.Expr
-	FxSymbols []SignSymbol
-	Signs     []bool // with length len(Xs) - 1
+	Functions []client.FunctionSign
 }
 
 func (st SignTableInstance) toClient() client.Block {
-	var columns []client.SignColumn
+	out := client.SignTableBlock{
+		Xs:        make([]string, len(st.Xs)),
+		Functions: append([]client.FunctionSign(nil), st.Functions...),
+	}
 	for i, x := range st.Xs {
-		col := client.SignColumn{
-			X:      x.AsLaTeX(),
-			IsSign: false,
-		}
-		switch st.FxSymbols[i] {
-		case Nothing:
-		case Zero:
-			col.IsPositive = true
-		case ForbiddenValue:
-			col.IsYForbiddenValue = true
-		}
-		columns = append(columns, col)
-
-		if i != len(st.Xs)-1 {
-			columns = append(columns, client.SignColumn{
-				IsSign:     true,
-				IsPositive: st.Signs[i],
-			})
-		}
+		out.Xs[i] = x.AsLaTeX()
 	}
-	return client.SignTableBlock{
-		Label:   st.Label,
-		Columns: columns,
-	}
+	return out
 }
 
 type FigureInstance client.FigureBlock
