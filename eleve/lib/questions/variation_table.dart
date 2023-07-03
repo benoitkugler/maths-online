@@ -31,7 +31,7 @@ class VariationTable extends StatelessWidget {
       }
     }
 
-    return BaseFunctionTable(data.label, xRow, fxRow);
+    return BaseFunctionTable(xRow, [MapEntry(data.label, fxRow)]);
   }
 }
 
