@@ -49,5 +49,5 @@ SET
 --
 
 DROP FUNCTION __migration_sign_table (jsonb);
-ROLLBACK;
+COMMIT;
 
