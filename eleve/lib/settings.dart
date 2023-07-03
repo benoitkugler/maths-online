@@ -19,19 +19,23 @@ class UserSettings {
   String studentPseudo;
   String studentID;
   PlaylistController songs;
+  Map<String, String> trivialGameMetas;
   bool hasBeenLaunched;
 
   UserSettings(
       {this.studentPseudo = "",
       this.studentID = "",
       this.songs = Audio.DefaultPlaylist,
-      this.hasBeenLaunched = false});
+      Map<String, String>? trivialGameMetas,
+      this.hasBeenLaunched = false})
+      : trivialGameMetas = trivialGameMetas ?? {};
 
   String toJson() {
     return jsonEncode({
       studentPseudoKey: studentPseudo,
       studentIDKey: studentID,
       "songs": songs,
+      "trivialGameMetas": trivialGameMetas,
       "hasBeenLaunched": hasBeenLaunched,
     });
   }
@@ -42,10 +46,14 @@ class UserSettings {
     if (dict["songs"] is List) {
       songs = (dict["songs"] as List<dynamic>).map((e) => e as int).toList();
     }
+    final gameMetas = (dict["trivialGameMetas"] ?? <String, dynamic>{})
+        as Map<String, dynamic>;
     return UserSettings(
       studentPseudo: dict[studentPseudoKey] as String,
       studentID: dict[studentIDKey] as String,
       songs: songs,
+      trivialGameMetas:
+          gameMetas.map((key, value) => MapEntry(key, value as String)),
       hasBeenLaunched: dict["hasBeenLaunched"] as bool,
     );
   }
@@ -71,8 +79,10 @@ class _SettingsState extends State<Settings> {
   }
 
   void _loadUserSettings() async {
-    settings = await loadUserSettings();
-    setState(() {});
+    final newSettings = await loadUserSettings();
+    setState(() {
+      settings = newSettings;
+    });
   }
 
   void _loadVersion() async {

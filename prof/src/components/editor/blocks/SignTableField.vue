@@ -1,6 +1,6 @@
 <template>
   <base-sign-table
-    :model-value="props.modelValue.Answer"
+    v-model="props.modelValue.Answer"
     @update:model-value="emit('update:modelValue', props.modelValue)"
   ></base-sign-table>
 </template>

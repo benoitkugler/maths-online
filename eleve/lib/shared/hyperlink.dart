@@ -18,9 +18,10 @@ TextSpan _hyperlink(String text, Uri url, TextStyle style) {
 
 /// [hyperlink] return a [Text] widget displaying [text] and
 /// pointing to [urlText]
+/// If [urlText] is empty (or invalid), a regular Text widget is returned.
 Text hyperlink(String text, String urlText, {TextStyle? style}) {
   final uri = Uri.tryParse(urlText);
-  if (uri == null) {
+  if (urlText.isEmpty || uri == null) {
     // invalid url
     return Text(text, style: style);
   }

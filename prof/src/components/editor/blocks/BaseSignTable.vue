@@ -3,88 +3,106 @@
     Les cases de la ligne <b>x</b> sont des expressions. Utiliser inf (ou -inf)
     pour l'infini.
   </small>
-  <v-row>
-    <v-col md="10" align-self="center">
-      <v-table style="overflow-x: auto; max-width: 70vh">
-        <tr>
-          <th style="min-width: 100px"></th>
-          <template v-for="(x, index) in props.modelValue.Xs" :key="index">
-            <td v-if="index" style="min-width: 60px"></td>
-            <td style="text-align: center; min-width: 60px">
-              <v-btn
-                icon
-                size="x-small"
-                flat
-                @click="removeColumn(index)"
-                title="Supprimer la colonne"
-              >
-                <v-icon icon="mdi-close" color="red"></v-icon>
-              </v-btn>
-            </td>
-          </template>
-        </tr>
-        <tr>
-          <th>x</th>
-          <template v-for="(x, index) in props.modelValue.Xs" :key="index">
-            <td v-if="index"></td>
-            <td style="text-align: center">
-              <expression-field
-                :model-value="x"
-                @update:model-value="s => props.modelValue.Xs![index] = s"
-                center
-                width="50px"
-              >
-              </expression-field>
-            </td>
-          </template>
-        </tr>
-        <tr>
-          <td class="px-2">
-            <v-text-field
-              variant="outlined"
-              density="compact"
-              v-model="props.modelValue.Label"
-              label="Légende"
-              hide-details
-              class="label-input"
-            ></v-text-field>
-          </td>
-          <template
-            v-for="(fx, index) in props.modelValue.FxSymbols"
-            :key="index"
+  <v-table style="overflow-x: auto; max-width: 75vh">
+    <!-- header -->
+    <tr>
+      <th style="min-width: 120px" colspan="2">
+        <v-btn
+          icon
+          @click="addColumn"
+          title="Ajouter une colonne"
+          size="x-small"
+          class="mr-2 my-2"
+        >
+          <v-icon icon="mdi-plus" color="green"></v-icon>
+        </v-btn>
+      </th>
+      <template v-for="(x, index) in props.modelValue.Xs" :key="index">
+        <td v-if="index" style="min-width: 60px"></td>
+        <td style="text-align: center; min-width: 60px">
+          <v-btn
+            icon
+            size="x-small"
+            flat
+            @click="removeColumn(index)"
+            title="Supprimer la colonne"
           >
-            <td v-if="index" style="text-align: center">
-              <v-btn
-                size="small"
-                rounded
-                @click="
-                  props.modelValue.Signs![index - 1] =
-                    !props.modelValue.Signs![index - 1]
-                "
-              >
-                {{ props.modelValue.Signs![index - 1] ? "+" : "-" }}
-              </v-btn>
-            </td>
-            <td style="text-align: center">
-              <sign-symbol-field
-                :model-value="props.modelValue.FxSymbols![index]"
-                @update:model-value="v => props.modelValue.FxSymbols![index]=v"
-              >
-              </sign-symbol-field>
-            </td>
-          </template>
-        </tr>
-      </v-table>
-    </v-col>
-    <v-col md="2" align-self="center">
+            <v-icon icon="mdi-close" color="red"></v-icon>
+          </v-btn>
+        </td>
+      </template>
+    </tr>
+    <!-- X values -->
+    <tr>
+      <th></th>
+      <th>x</th>
+      <template v-for="(x, index) in props.modelValue.Xs" :key="index">
+        <td v-if="index"></td>
+        <td style="text-align: center">
+          <expression-field
+            :model-value="x"
+            @update:model-value="s => props.modelValue.Xs![index] = s"
+            center
+            width="50px"
+          >
+          </expression-field>
+        </td>
+      </template>
+    </tr>
+    <!-- Functions -->
+    <tr v-for="(fn, index) in props.modelValue.Functions" :key="index">
+      <td style="text-align: center; width: 20px">
+        <v-btn
+          icon
+          size="x-small"
+          flat
+          @click="removeRow(index)"
+          title="Supprimer la fonction"
+        >
+          <v-icon icon="mdi-close" color="red"></v-icon>
+        </v-btn>
+      </td>
+      <td class="px-2">
+        <v-text-field
+          variant="outlined"
+          density="compact"
+          v-model="fn.Label"
+          hide-details
+          class="label-input"
+        ></v-text-field>
+      </td>
+      <template v-for="(fx, j) in fn.FxSymbols" :key="j">
+        <td v-if="j" style="text-align: center">
+          <v-btn
+            size="small"
+            rounded
+            @click="fn.Signs![j - 1] = !fn.Signs![j - 1]"
+          >
+            <b>
+              {{ fn.Signs![j - 1] ? "+" : "-" }}
+            </b>
+          </v-btn>
+        </td>
+        <td style="text-align: center">
+          <sign-symbol-field
+            :model-value="fn.FxSymbols![j]"
+            @update:model-value="v => fn.FxSymbols![j]=v"
+          >
+          </sign-symbol-field>
+        </td>
+      </template>
+    </tr>
+  </v-table>
+  <v-row>
+    <v-col align-self="center">
       <v-btn
-        icon
-        @click="addColumn"
-        title="Ajouter une colonne"
-        size="x-small"
+        @click="addRow"
+        title="Ajouter une fonction"
+        size="small"
         class="mr-2 my-2"
       >
         <v-icon icon="mdi-plus" color="green"></v-icon>
+        Nouvelle fonction
       </v-btn>
     </v-col>
   </v-row>
@@ -107,16 +125,37 @@ const emit = defineEmits<{
 
 function addColumn() {
   props.modelValue.Xs?.push("5");
-  props.modelValue.FxSymbols?.push(SignSymbol.Zero);
-  props.modelValue.Signs?.push(true);
+  props.modelValue.Functions?.forEach((fn) => {
+    if (fn.FxSymbols?.length) {
+      // do not add sign if there is only on x
+      fn.Signs?.push(true);
+    }
+    fn.FxSymbols?.push(SignSymbol.Nothing);
+  });
   emit("update:modelValue", props.modelValue);
 }
 
 function removeColumn(index: number) {
   props.modelValue.Xs?.splice(index, 1);
-  props.modelValue.FxSymbols?.splice(index, 1);
-  props.modelValue.Signs?.splice(index == 0 ? 0 : index - 1, 1);
+  props.modelValue.Functions?.forEach((fn) => {
+    fn.FxSymbols?.splice(index, 1);
+    fn.Signs?.splice(index == 0 ? 0 : index - 1, 1);
+  });
   emit("update:modelValue", props.modelValue);
+}
+
+function addRow() {
+  const L = props.modelValue.Xs?.length || 0;
+  props.modelValue.Functions = (props.modelValue.Functions || []).concat({
+    Label: "f(x)",
+    FxSymbols: Array.from(new Array(L), () => SignSymbol.Nothing),
+    Signs: L == 0 ? [] : Array.from(new Array(L - 1), () => true),
+  });
+  emit("update:modelValue", props.modelValue);
+}
+
+function removeRow(index: number) {
+  props.modelValue.Functions?.splice(index, 1);
 }
 </script>
 

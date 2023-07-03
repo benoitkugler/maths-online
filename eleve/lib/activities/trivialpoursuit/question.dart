@@ -14,8 +14,7 @@ class InGameQuestionController extends BaseQuestionController {
       : super(question.question, api) {
     state.timeout =
         Duration(seconds: question.timeoutSeconds); // show the timeout bar
-    state.footerQuote =
-        const QuoteData("", "", ""); // reserve space but don't show any text
+    state.footerQuote = null;
   }
 
   @override

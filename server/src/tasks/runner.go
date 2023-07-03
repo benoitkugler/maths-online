@@ -5,13 +5,17 @@
 package tasks
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
+	"math/rand"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
@@ -115,37 +119,80 @@ func EvaluateQuestion(qu questions.Enonce, answer AnswerP) (client.QuestionAnswe
 	return instance.EvaluateAnswer(answer.Answer), nil
 }
 
-// WorkID identifies either an exercice or a monoquestion
+type WorkKind uint8
+
+const (
+	WorkExercice WorkKind = iota + 1
+	WorkMonoquestion
+	WorkRandomMonoquestion
+)
+
+// WorkID identifies either an exercice or a (possibly random) monoquestion
 type WorkID struct {
-	ID         int64
-	IsExercice bool
+	ID   int64
+	Kind WorkKind
+
+	IsExercice bool // deprecated in version 1.5
 }
 
 func NewWorkID(task ta.Task) WorkID {
-	if task.IdExercice.Valid {
+	switch {
+	case task.IdExercice.Valid:
 		return newWorkIDFromEx(task.IdExercice.ID)
+	case task.IdMonoquestion.Valid:
+		return newWorkIDFromMono(task.IdMonoquestion.ID)
+	case task.IdRandomMonoquestion.Valid:
+		return newWorkIDFromRandomMono(task.IdRandomMonoquestion.ID)
+	default:
+		panic("unexpected task target")
 	}
-	return newWorkIDFromMono(task.IdMonoquestion.ID)
 }
 
-func newWorkIDFromEx(id ed.IdExercice) WorkID { return WorkID{ID: int64(id), IsExercice: true} }
+func newWorkIDFromEx(id ed.IdExercice) WorkID {
+	return WorkID{ID: int64(id), IsExercice: true, Kind: WorkExercice}
+}
 
-func newWorkIDFromMono(id ta.IdMonoquestion) WorkID { return WorkID{ID: int64(id), IsExercice: false} }
+func newWorkIDFromMono(id ta.IdMonoquestion) WorkID {
+	return WorkID{ID: int64(id), Kind: WorkMonoquestion}
+}
 
-// Work is the common interface for exerices and mono-questions.
-type Work interface {
-	Title() string    // as presented to the student
-	Subtitle() string // used by the teacher
+func newWorkIDFromRandomMono(id ta.IdRandomMonoquestion) WorkID {
+	return WorkID{ID: int64(id), Kind: WorkRandomMonoquestion}
+}
+
+// Work is the common interface for exercices and mono-questions.
+type WorkMeta interface {
+	Title() string // as presented to the student
 	flow() ed.Flow
-	QuestionsList() ([]ed.Question, TaskBareme)
+	Bareme() TaskBareme
+}
+
+type Work interface {
+	WorkMeta
+	Questions() []ed.Question
 	Instantiate() (InstantiatedWork, error)
 }
 
-func newWorkLoader(db ed.DB, work WorkID) (Work, error) {
-	if work.IsExercice {
-		return NewExerciceData(db, ed.IdExercice(work.ID))
+// student is only required for RandomMonoquestion
+func newWorkLoader(db ed.DB, work WorkID, student tc.IdStudent) (Work, error) {
+	if work.Kind == 0 { // backward compatiblity
+		if work.IsExercice {
+			work.Kind = WorkExercice
+		} else {
+			work.Kind = WorkMonoquestion
+		}
 	}
-	return NewMonoquestionData(db, ta.IdMonoquestion(work.ID))
+
+	switch work.Kind {
+	case WorkExercice:
+		return NewExerciceData(db, ed.IdExercice(work.ID))
+	case WorkMonoquestion:
+		return newMonoquestionData(db, ta.IdMonoquestion(work.ID))
+	case WorkRandomMonoquestion:
+		return newRandomMonoquestionData(db, ta.IdRandomMonoquestion(work.ID), student)
+	default:
+		return nil, errors.New("internal error: unexpected Work kind")
+	}
 }
 
 // InstantiatedWork is an instance of an exercice, more precisely
@@ -160,11 +207,20 @@ type InstantiatedWork struct {
 }
 
 // InstantiateWork load an exercice (or a monoquestion) and its questions.
-func InstantiateWork(db ed.DB, work WorkID) (InstantiatedWork, error) {
-	loader, err := newWorkLoader(db, work)
+// For new RandomMonoquestions, the actual list of questions is also generated and saved.
+func InstantiateWork(db *sql.DB, work WorkID, student tc.IdStudent) (InstantiatedWork, error) {
+	loader, err := newWorkLoader(db, work, student)
 	if err != nil {
 		return InstantiatedWork{}, err
 	}
+
+	if random, ok := loader.(randomMonoquestionData); ok && len(random.selectedQuestions) == 0 {
+		loader, err = random.selectQuestions(db, student)
+		if err != nil {
+			return InstantiatedWork{}, err
+		}
+	}
+
 	return loader.Instantiate()
 }
 
@@ -232,33 +288,36 @@ func NewExerciceData(db ed.DB, id ed.IdExercice) (ExerciceData, error) {
 	return ExerciceData{Group: group, Exercice: ex, Links: links, QuestionsMap: dict}, nil
 }
 
-func (ex ExerciceData) Title() string    { return ex.Group.Title }
-func (ex ExerciceData) Subtitle() string { return ex.Exercice.Subtitle }
-func (ExerciceData) flow() ed.Flow       { return ed.Sequencial }
+func (ex ExerciceData) Title() string { return ex.Group.Title }
+func (ExerciceData) flow() ed.Flow    { return ed.Sequencial }
 
-// QuestionsList resolve the links list using `source`,
-// returning lists of length `len(Links)`
-func (ex ExerciceData) QuestionsList() ([]ed.Question, TaskBareme) {
+func (ex ExerciceData) Questions() []ed.Question {
 	questions := make([]ed.Question, len(ex.Links))
-	baremes := make([]int, len(ex.Links))
 	for i, link := range ex.Links {
 		questions[i] = ex.QuestionsMap[link.IdQuestion]
-		baremes[i] = ex.Links[i].Bareme
 	}
-	return questions, baremes
+	return questions
+}
+
+func (ex ExerciceData) Bareme() TaskBareme {
+	baremes := make([]int, len(ex.Links))
+	for i, link := range ex.Links {
+		baremes[i] = link.Bareme
+	}
+	return baremes
 }
 
 // Instantiate instantiates the questions, using a fixed shared instance of the exercice parameters
 // for each question
 func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 	ex := data.Exercice
-	questions, baremes := data.QuestionsList()
+	questions := data.Questions()
 
 	out := InstantiatedWork{
 		ID:      newWorkIDFromEx(ex.Id),
 		Title:   data.Title(),
 		Flow:    data.flow(),
-		Baremes: baremes,
+		Baremes: data.Bareme(),
 	}
 
 	// instantiate the questions :
@@ -276,14 +335,14 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 	return out, nil
 }
 
-type MonoquestionData struct {
+type monoquestionData struct {
 	params        ta.Monoquestion
 	questiongroup ed.Questiongroup
 	question      ed.Question
 }
 
-// NewMonoquestionData loads the given Monoquestion and the associated question
-func NewMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out MonoquestionData, err error) {
+// newMonoquestionData loads the given Monoquestion and the associated question
+func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, err error) {
 	out.params, err = ta.SelectMonoquestion(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -302,29 +361,35 @@ func NewMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out MonoquestionData, 
 	return out, nil
 }
 
-func (data MonoquestionData) Title() string    { return data.questiongroup.Title }
-func (data MonoquestionData) Subtitle() string { return data.question.Subtitle }
-func (MonoquestionData) flow() ed.Flow         { return ed.Parallel }
+func (data monoquestionData) Title() string { return data.questiongroup.Title }
+func (monoquestionData) flow() ed.Flow      { return ed.Parallel }
 
-// QuestionsList returns the generated list of questions
-func (data MonoquestionData) QuestionsList() ([]ed.Question, TaskBareme) {
+// Questions returns the generated list of questions
+func (data monoquestionData) Questions() []ed.Question {
 	questions := make([]ed.Question, data.params.NbRepeat)
-	baremes := make([]int, data.params.NbRepeat)
 	// repeat the question
 	for i := range questions {
 		questions[i] = data.question
-		baremes[i] = data.params.Bareme
 	}
-	return questions, baremes
+	return questions
 }
 
-func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
-	questions, baremes := data.QuestionsList()
+func (data monoquestionData) Bareme() TaskBareme {
+	baremes := make([]int, data.params.NbRepeat)
+	// repeat the question
+	for i := range baremes {
+		baremes[i] = data.params.Bareme
+	}
+	return baremes
+}
+
+func (data monoquestionData) Instantiate() (InstantiatedWork, error) {
+	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromMono(data.params.Id),
 		Title:   data.Title(),
-		Flow:    ed.Parallel,
-		Baremes: baremes,
+		Flow:    data.flow(),
+		Baremes: data.Bareme(),
 	}
 
 	var err error
@@ -335,10 +400,153 @@ func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
 	return out, nil
 }
 
+type randomMonoquestionData struct {
+	params            ta.RandomMonoquestion
+	questiongroup     ed.Questiongroup
+	selectedQuestions []ed.Question // with length params.NbRepeat
+}
+
+// `selectedQuestions` may be empty if the student has not instanciated this task yet
+// See also [selectQuestions]
+func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.IdStudent) (out randomMonoquestionData, err error) {
+	out.params, err = ta.SelectRandomMonoquestion(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	out.questiongroup, err = ed.SelectQuestiongroup(db, out.params.IdQuestiongroup)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	variants, err := ta.SelectRandomMonoquestionVariantsByIdRandomMonoquestions(db, id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	variants = variants.ByIdStudent()[student]
+	variants.EnsureOrder()
+
+	dict, err := ed.SelectQuestions(db, variants.IdQuestions()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	out.selectedQuestions = make([]ed.Question, len(variants))
+	for i, v := range variants {
+		out.selectedQuestions[i] = dict[v.IdQuestion]
+	}
+
+	return out, nil
+}
+
+// selectQuestions chooses the variants (with respect to the teacher settings), update the DB,
+// and returns the updated struct
+func (data randomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdStudent) (randomMonoquestionData, error) {
+	// load all the variants
+	questions, err := ed.SelectQuestionsByIdGroups(db, data.params.IdQuestiongroup)
+	if err != nil {
+		return data, utils.SQLError(err)
+	}
+
+	var filtered []ed.Question
+	for _, qu := range questions {
+		if data.params.Difficulty.Match(qu.Difficulty) {
+			filtered = append(filtered, qu)
+		}
+	}
+
+	if len(filtered) == 0 {
+		// this should not happen, since the prof. API has a check for it
+		return data, errors.New("Aucune question n'est disponible pour ce travail !")
+	}
+
+	data.selectedQuestions = selectVariants(data.params.NbRepeat, filtered)
+
+	links := make(ta.RandomMonoquestionVariants, len(data.selectedQuestions))
+	for i, qu := range data.selectedQuestions {
+		links[i] = ta.RandomMonoquestionVariant{
+			IdStudent:            idStudent,
+			IdRandomMonoquestion: data.params.Id,
+			Index:                i,
+			IdQuestion:           qu.Id,
+		}
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return data, utils.SQLError(err)
+	}
+	err = ta.InsertManyRandomMonoquestionVariants(tx, links...)
+	if err != nil {
+		_ = tx.Rollback()
+		return data, utils.SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return data, utils.SQLError(err)
+	}
+
+	return data, nil
+}
+
+// assume len(among) > 0
+func selectVariants(nbToSelect int, among []ed.Question) []ed.Question {
+	selected := make([]ed.Question, 0, nbToSelect)
+
+	nbAvail := len(among)
+	// we prioritize diversity
+	quotient, remainder := nbToSelect/nbAvail, nbToSelect%nbAvail
+	for i := 0; i < quotient; i++ {
+		selected = append(selected, among...) // repeat all questions
+	}
+
+	perm := rand.Perm(nbAvail)[:remainder]
+	for _, index := range perm {
+		selected = append(selected, among[index])
+	}
+	return selected
+}
+
+func (data randomMonoquestionData) Title() string { return data.questiongroup.Title }
+func (randomMonoquestionData) flow() ed.Flow      { return ed.Parallel }
+
+// Questions is only valid when the student specific variants have been loaded
+func (data randomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }
+
+func (data randomMonoquestionData) Bareme() TaskBareme {
+	baremes := make([]int, data.params.NbRepeat)
+	// repeat the bareme
+	for i := range baremes {
+		baremes[i] = data.params.Bareme
+	}
+	return baremes
+}
+
+func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
+	questions := data.Questions()
+	out := InstantiatedWork{
+		ID:      newWorkIDFromRandomMono(data.params.Id),
+		Title:   data.Title(),
+		Flow:    data.flow(),
+		Baremes: data.Bareme(),
+	}
+
+	var err error
+	out.Questions, err = instantiateQuestions(questions, nil)
+	if err != nil {
+		return InstantiatedWork{}, err
+	}
+	return out, nil
+}
+
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+
 type EvaluateWorkIn struct {
 	ID WorkID
 
 	Answers map[int]AnswerP // by question index (not ID)
+
 	// the current progression, as send by the server,
 	// to update with the given answers
 	Progression ProgressionExt
@@ -354,13 +562,14 @@ type EvaluateWorkOut struct {
 // update the in-memory progression.
 // The given progression must either be empty or have same length
 // as the exercice.
-func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
-	data, err := newWorkLoader(db, args.ID)
+// [idStudent] is only used to handle RandomMonoquestions
+func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateWorkOut, error) {
+	data, err := newWorkLoader(db, args.ID, idStudent)
 	if err != nil {
 		return EvaluateWorkOut{}, utils.SQLError(err)
 	}
 
-	qus, _ := data.QuestionsList()
+	qus := data.Questions()
 
 	// handle initial empty progressions
 	if len(args.Progression.Questions) == 0 {
@@ -412,7 +621,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB) (EvaluateWorkOut, error) {
 		*l = append(*l, resp.IsCorrect())
 	}
 
-	updatedProgression.InferNextQuestion() // update in case of success
+	updatedProgression.inferNextQuestion() // update in case of success
 
 	newVersion, err := data.Instantiate()
 	if err != nil {

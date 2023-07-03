@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-row class="mt-2 mx-2">
+    <v-row class="mt-0 mb-0 mx-1">
       <v-col>
         <v-card-title>Paramètres de la feuille</v-card-title>
       </v-col>
@@ -15,13 +15,13 @@
     <v-card-text>
       <v-row>
         <!-- fields -->
-        <v-col cols="6">
+        <v-col cols="4" align-self="center">
           <v-row>
             <v-col>
               <v-text-field
                 variant="outlined"
                 density="compact"
-                label="Titre de la fiche"
+                label="Titre de la feuille"
                 v-model="props.sheet.Sheet.Title"
                 @blur="update"
                 hide-details
@@ -29,46 +29,23 @@
               </v-text-field> </v-col
           ></v-row>
 
-          <v-row class="mt-2"
-            ><v-col>
-              <NotationField
-                v-model="props.sheet.Sheet.Notation"
-                @update:model-value="update"
-              ></NotationField> </v-col
-          ></v-row>
-
           <v-row>
             <v-col>
-              <TimeField
-                v-model="props.sheet.Sheet.Deadline"
-                @update:model-value="update"
-              ></TimeField>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col>
-              <v-checkbox
-                :color="color"
-                class="mt-3"
+              <v-combobox
+                variant="outlined"
                 density="compact"
-                v-model="props.sheet.Sheet.Activated"
-                label="Feuille active"
-                :messages="
-                  props.sheet.Sheet.Activated
-                    ? `Désactiver la feuille, la rendant invisible aux élèves. 
-        Pour empêcher la modification des notes, modifier plutôt la date de cloture.`
-                    : `Activer la feuille, la rendant visible aux élèves. Pour une feuille notée, la date de cloture décide si les notes sont modifiables ou non.`
-                "
-                @update:model-value="update"
-              >
-              </v-checkbox>
+                label="Niveau (classe)"
+                v-model="props.sheet.Sheet.Level"
+                :items="allTags.Levels || []"
+                :color="LevelColor"
+                @blur="update"
+              ></v-combobox>
             </v-col>
           </v-row>
         </v-col>
 
         <!-- exercice list -->
-        <v-col cols="6">
+        <v-col cols="8">
           <SheetTasks
             :sheet="props.sheet"
             :all-tags="allTags"
@@ -76,8 +53,14 @@
             @add-monoquestion="
               (v) => emit('addMonoquestion', props.sheet.Sheet, v)
             "
+            @add-random-monoquestion="
+              (v) => emit('addRandomMonoquestion', props.sheet.Sheet, v)
+            "
             @update-monoquestion="
               (v) => emit('udpateMonoquestion', props.sheet.Sheet, v)
+            "
+            @update-random-monoquestion="
+              (v) => emit('udpateRandomMonoquestion', props.sheet.Sheet, v)
             "
             @remove="(v) => emit('removeTask', props.sheet.Sheet, v)"
             @reorder="(v) => emit('reorderTasks', props.sheet.Sheet, v)"
@@ -91,21 +74,23 @@
 
 <script setup lang="ts">
 import type {
-  ExerciceHeader,
   Monoquestion,
-  QuestionHeader,
+  RandomMonoquestion,
   Sheet,
   SheetExt,
   TagsDB,
   TaskExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { emptyTagsDB } from "@/controller/editor";
-import { computed, onMounted } from "vue";
+import {
+  LevelColor,
+  emptyTagsDB,
+  type VariantG,
+  type ResourceGroup,
+} from "@/controller/editor";
+import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import NotationField from "./NotationField.vue";
 import SheetTasks from "./SheetTasks.vue";
-import TimeField from "./TimeField.vue";
 
 interface Props {
   sheet: SheetExt;
@@ -116,16 +101,14 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "update", sheet: Sheet): void;
-  (e: "addExercice", sheet: Sheet, ex: ExerciceHeader): void;
-  (e: "addMonoquestion", sheet: Sheet, ex: QuestionHeader): void;
+  (e: "addExercice", sheet: Sheet, ex: VariantG): void;
+  (e: "addMonoquestion", sheet: Sheet, ex: VariantG): void;
+  (e: "addRandomMonoquestion", sheet: Sheet, ex: ResourceGroup): void;
   (e: "udpateMonoquestion", sheet: Sheet, qu: Monoquestion): void;
+  (e: "udpateRandomMonoquestion", sheet: Sheet, qu: RandomMonoquestion): void;
   (e: "removeTask", sheet: Sheet, task: TaskExt): void;
   (e: "reorderTasks", sheet: Sheet, tasks: TaskExt[]): void;
 }>();
-
-const color = computed(() =>
-  props.sheet.Sheet.Activated ? "blue-lighten-4" : "grey-lighten-4"
-);
 
 function update() {
   emit("update", props.sheet.Sheet);

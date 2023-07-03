@@ -4,9 +4,9 @@
       <v-table>
         <tr>
           <th class="py-2">Elève</th>
-          <th v-for="sheet in props.sheets" :key="sheet.Sheet.Id">
+          <th v-for="tr in props.travaux" :key="tr.Id">
             <div class="bg-blue-lighten-4 rounded mx-2 py-1">
-              {{ sheet.Sheet.Title }} ( /20)
+              {{ props.sheets.get(tr.IdSheet)!.Sheet.Title }} ( /20)
             </div>
           </th>
           <th>
@@ -23,10 +23,10 @@
             <th style="text-align: left" class="px-2">{{ student.Label }}</th>
             <td
               style="text-align: center"
-              v-for="sheet in props.sheets"
-              :key="sheet.Sheet.Id"
+              v-for="tr in props.travaux"
+              :key="tr.Id"
             >
-              {{ getMark(sheet, student) }}
+              {{ getMark(tr, student) }}
             </td>
             <td style="text-align: right" class="pa-1">
               {{ getMoyenne(student) }}
@@ -42,8 +42,10 @@
 import type {
   Classroom,
   HomeworkMarksOut,
+  Sheet,
   SheetExt,
   StudentHeader,
+  Travail,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed } from "@vue/reactivity";
@@ -52,7 +54,8 @@ import { $ref } from "vue/macros";
 
 interface Props {
   classroom: Classroom;
-  sheets: SheetExt[];
+  travaux: Travail[];
+  sheets: Map<number, SheetExt>;
 }
 
 const props = defineProps<Props>();
@@ -68,24 +71,24 @@ async function fetchNotes() {
   data = null;
   const res = await controller.HomeworkGetMarks({
     IdClassroom: props.classroom.id,
-    IdSheets: props.sheets.map((sh) => sh.Sheet.Id),
+    IdTravaux: props.travaux.map((tr) => tr.Id),
   });
   if (res == undefined) return;
   data = res;
 }
 
-function _getMark(sheet: SheetExt, student: StudentHeader) {
-  const sheetMarks = (data?.Marks || {})[sheet.Sheet.Id] || {};
+function _getMark(tr: Travail, student: StudentHeader) {
+  const sheetMarks = (data?.Marks || {})[tr.Id] || {};
   return sheetMarks[student.Id] || 0;
 }
 
-function getMark(sheet: SheetExt, student: StudentHeader) {
-  return _getMark(sheet, student).toFixed(1);
+function getMark(tr: Travail, student: StudentHeader) {
+  return _getMark(tr, student).toFixed(1);
 }
 
 function getMoyenne(student: StudentHeader) {
   let total = 0;
-  props.sheets.forEach((sh) => (total += _getMark(sh, student)));
-  return (total / props.sheets.length).toFixed(2);
+  props.travaux.forEach((tr) => (total += _getMark(tr, student)));
+  return (total / props.travaux.length).toFixed(2);
 }
 </script>

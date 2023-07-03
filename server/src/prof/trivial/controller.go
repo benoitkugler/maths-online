@@ -429,7 +429,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 			ID:      gameID,
 			Options: options,
 		})
-		out.GameIDs = append(out.GameIDs, gameID.roomID())
+		out.GameIDs = append(out.GameIDs, tv.RoomID(gameID.String()))
 	}
 
 	return out, nil

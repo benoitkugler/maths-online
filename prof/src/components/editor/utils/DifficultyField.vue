@@ -12,7 +12,7 @@
     density="compact"
     :model-value="props.modelValue"
     @update:model-value="(tag) => emit('update:model-value', tag)"
-    :color="tagColor({ Tag: props.modelValue, Section: 0 })"
+    :color="tagColor(undefined)"
     :disabled="props.readonly"
     hint="Permet de selectionner les ressources par difficulté dans les activités."
     persistent-hint

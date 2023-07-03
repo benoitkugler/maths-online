@@ -46,6 +46,13 @@ type SetupStudentClientOut struct {
 	GameMeta string
 }
 
+func firstBytes(s string, n int) string {
+	if len(s) < n {
+		return s
+	}
+	return s[:n]
+}
+
 // SetupStudentClient handles the connection of one student to the activity
 // It is responsible for checking the credentials, creating games if needed,
 // and returning the resolved game URL param used by `ConnectStudentSession`.
@@ -54,7 +61,7 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 	clientID := c.QueryParam("client-id")
 	gameMetaString := c.QueryParam("game-meta") // optional, used to reconnect
 
-	ProgressLogger.Printf("Setup client <%s> for code %s", clientID, completeID)
+	ProgressLogger.Printf("Setup client <%s> for code %s (incomming meta: %s)", clientID, completeID, firstBytes(gameMetaString, 20))
 
 	out, err := ct.setupStudentClient(completeID, clientID, gameMetaString)
 	if err != nil {
@@ -73,18 +80,23 @@ func (ct *Controller) SetupStudentClient(c echo.Context) error {
 }
 
 type gameID interface {
-	roomID() tv.RoomID
+	isGameID()
+	String() string
 }
+
+func (demoCode) isGameID()       {}
+func (teacherCode) isGameID()    {}
+func (selfaccessCode) isGameID() {}
 
 // <demoPin>.<room>.<number>
 type demoCode struct {
 	demoPin   string
-	room      string
+	room      int // printed with 0 padding
 	nbPlayers int
 }
 
-func (code demoCode) roomID() tv.RoomID {
-	return tv.RoomID(fmt.Sprintf("%s.%s.%d", code.demoPin, code.room, code.nbPlayers))
+func (code demoCode) String() string {
+	return fmt.Sprintf("%s.%02d.%d", code.demoPin, code.room, code.nbPlayers)
 }
 
 func (ct *Controller) createDemoGame(code demoCode) error {
@@ -100,11 +112,14 @@ func (ct *Controller) createDemoGame(code demoCode) error {
 			return err
 		}
 
+		nbSuccess := code.room % (tv.NbCategories + 1)
+
 		options := tv.Options{
 			Launch:          tv.LaunchStrategy{Manual: false, Max: code.nbPlayers},
 			QuestionTimeout: time.Second * 120,
 			ShowDecrassage:  true,
 			Questions:       questionPool,
+			StartNbSuccess:  nbSuccess,
 		}
 
 		ct.store.createGame(createGame{
@@ -113,7 +128,7 @@ func (ct *Controller) createDemoGame(code demoCode) error {
 		})
 	}
 
-	ProgressLogger.Printf("Setting up student at (demo) %s", code.roomID())
+	ProgressLogger.Printf("Setting up student at (demo) %s", code.String())
 
 	return nil
 }
@@ -124,14 +139,14 @@ type teacherCode struct {
 	gameID    string
 }
 
-func (code teacherCode) roomID() tv.RoomID {
-	return tv.RoomID(fmt.Sprintf("%s.%s", code.sessionID, code.gameID))
+func (code teacherCode) String() string {
+	return fmt.Sprintf("%s.%s", code.sessionID, code.gameID)
 }
 
 // <gameID> (5 digits)
 type selfaccessCode string
 
-func (code selfaccessCode) roomID() tv.RoomID { return tv.RoomID(code) }
+func (code selfaccessCode) String() string { return string(code) }
 
 // parse a client game code, returning an error on invalid/malicious inputs
 func (gs *gameStore) parseCode(clientGameCode string) (gameID, error) {
@@ -143,14 +158,17 @@ func (gs *gameStore) parseCode(clientGameCode string) (gameID, error) {
 		}
 		var out demoCode
 		out.demoPin = cuts[0]
-		out.room = cuts[1]
-		if len(out.room) < 2 {
+		if len(cuts[1]) < 2 {
 			return nil, fmt.Errorf("Code de partie de démonstration %s invalide", cuts[1])
 		}
 		var err error
+		out.room, err = strconv.Atoi(cuts[1])
+		if err != nil {
+			return nil, fmt.Errorf("Numéro de partie de démonstration %s invalide: %s", cuts[1], err)
+		}
 		out.nbPlayers, err = strconv.Atoi(cuts[2])
 		if err != nil {
-			return nil, fmt.Errorf("Numéro de partie de démonstration %s invalide: %s", cuts[2], err)
+			return nil, fmt.Errorf("Nombre de joueurs %s invalide: %s", cuts[2], err)
 		}
 		return out, nil
 	case 2: // teacher
@@ -204,6 +222,8 @@ func (ct *Controller) setupStudentClient(clientGameCode, clientID, gameMetaStrin
 			return gameConnection{}, fmt.Errorf("internal error: %s", err)
 		}
 
+		ProgressLogger.Printf("checking client provided game meta: %v", incomingGameMeta)
+
 		if ct.store.checkGameConnection(incomingGameMeta) {
 			// simply the return the valid information
 			return incomingGameMeta, nil
@@ -236,7 +256,12 @@ func (gs *gameStore) setupStudent(studentID pass.EncryptedID, requestedGameID ga
 	gs.lock.Unlock()
 
 	if game == nil {
-		return gameConnection{}, fmt.Errorf("Code de salle %s invalide.", requestedGameID.roomID())
+		return gameConnection{}, fmt.Errorf("Code de salle %s invalide.", requestedGameID.String())
+	}
+
+	// if the game has already started, return an error early
+	if game.HasStarted() {
+		return gameConnection{}, fmt.Errorf("La partie %s a déjà commencée.", requestedGameID.String())
 	}
 
 	playerID := gs.registerPlayer(requestedGameID)
@@ -353,18 +378,18 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 	// upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 	if err != nil {
-		WarningLogger.Println("Failed to init websocket: ", err)
+		WarningLogger.Println("internal error: failed to upgrade websocket: ", err)
 		return nil
 	}
 
 	err = game.Join(player, ws) // check the access
 	if err != nil {
-		ProgressLogger.Printf("Rejecting connection to game %s", game.ID)
+		ProgressLogger.Printf("Rejecting connection for playerID %s to game %s: %s", student.PlayerID, game.ID, err)
 		// the game at this end point is not usable: close the connection with an error
 		utils.WebsocketError(ws, errors.New("game is closed"))
 		ws.Close()
 
-		return err
+		return nil
 	}
 
 	client := &studentClient{

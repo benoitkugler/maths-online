@@ -1,6 +1,7 @@
 package editor
 
 import (
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"sort"
@@ -127,9 +128,13 @@ func (ts Tags) BySection() (out TagGroup) {
 // DifficultyQuery is an union of tags. An empty slice means no selection : all variants are accepted.
 type DifficultyQuery []DifficultyTag
 
+func (s *DifficultyQuery) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s DifficultyQuery) Value() (driver.Value, error) { return dumpJSON(s) }
+
 // Match returns `true` if the query accepts `diff`.
+// Questions with no difficulty always match
 func (dq DifficultyQuery) Match(diff DifficultyTag) bool {
-	if len(dq) == 0 {
+	if len(dq) == 0 || diff == "" {
 		return true
 	}
 	for _, query := range dq {

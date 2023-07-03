@@ -49,7 +49,8 @@ Question numberQuestion(String title) {
     TextBlock([T(title)], false, false, false),
     const NumberFieldBlock(0, 10)
   ], [
-    TextBlock([T("Une très belle correction : $title")], false, true, true)
+    TextBlock(List.filled(40, T("Une très belle correction : $title")), false,
+        true, true)
   ]);
 }
 
@@ -162,12 +163,10 @@ class _TrivialInGame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: InGameQuestionRoute(
-          _FieldAPI(),
-          ShowQuestion(60, Categorie.blue, 0, questionComplexe),
-          (a) => onValid(a, context)),
-    );
+    return InGameQuestionRoute(
+        _FieldAPI(),
+        ShowQuestion(60, Categorie.blue, 0, questionComplexe),
+        (a) => onValid(a, context));
   }
 
   void onValid(QuestionAnswersIn answers, BuildContext context) {
@@ -279,14 +278,22 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
 }
 
 final workParallel = StudentWork(
-  InstantiatedWork(const WorkID(0, true), "Identités remarquables (parallèle)",
-      Flow.parallel, [quI1, quI2, quI3], [1, 1, 2]),
+  InstantiatedWork(
+      const WorkID(0, WorkKind.workExercice, true),
+      "Identités remarquables (parallèle)",
+      Flow.parallel,
+      [quI1, quI2, quI3],
+      [1, 1, 2]),
   ProgressionExt([[], [], []], 0),
 );
 
 final workSequencial = StudentWork(
-  InstantiatedWork(const WorkID(0, true), "Identités remarquables (séquentiel)",
-      Flow.sequencial, [quI1, quI2, quI3], [1, 1, 2]),
+  InstantiatedWork(
+      const WorkID(0, WorkKind.workExercice, true),
+      "Identités remarquables (séquentiel)",
+      Flow.sequencial,
+      [quI1, quI2, quI3],
+      [1, 1, 2]),
   ProgressionExt([[], [], []], 0),
 );
 

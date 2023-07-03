@@ -21,8 +21,12 @@ class ProgressionBar extends StatelessWidget {
       return Stack(
         children: [
           _Layer(Colors.grey, width),
-          _Layer(Colors.orange.shade200, startedWidth),
-          _Layer(Colors.green, completedWidth),
+          _Layer(
+            Colors.yellow.shade200,
+            startedWidth,
+            stripe: true,
+          ),
+          _Layer(Colors.lightGreenAccent, completedWidth),
         ],
       );
     });
@@ -32,7 +36,9 @@ class ProgressionBar extends StatelessWidget {
 class _Layer extends StatelessWidget {
   final Color color;
   final double width;
-  const _Layer(this.color, this.width, {Key? key}) : super(key: key);
+  final bool stripe;
+  const _Layer(this.color, this.width, {Key? key, this.stripe = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +46,20 @@ class _Layer extends StatelessWidget {
       width: width,
       height: 12,
       decoration: BoxDecoration(
+          gradient: stripe
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: const Alignment(-0.95, 0),
+                  stops: const [0.0, 0.5, 0.5, 1],
+                  colors: [
+                    color,
+                    color,
+                    Colors.transparent,
+                    Colors.transparent,
+                  ],
+                  tileMode: TileMode.repeated,
+                )
+              : null,
           color: color,
           border: Border.all(width: 2, color: Colors.transparent),
           borderRadius: const BorderRadius.all(Radius.circular(4))),

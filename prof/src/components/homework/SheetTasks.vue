@@ -1,22 +1,25 @@
 <template>
-  <v-dialog v-model="showExerciceSelector" max-width="1000">
-    <exercice-selector
+  <v-dialog v-model="showExerciceSelector" max-width="1200">
+    <resource-selector
       :query="exerciceQuery"
       :tags="props.allTags"
+      :mode="'exercices'"
       @closed="showExerciceSelector = false"
-      @selected="addExercice"
+      @selected-variant="(v) => emit('addExercice', v)"
       @update:query="(q) => (exerciceQuery = q)"
-    ></exercice-selector>
+    ></resource-selector>
   </v-dialog>
 
-  <v-dialog v-model="showMonoquestionSelector" max-width="1000">
-    <question-selector
-      :query="questionQuery"
+  <v-dialog v-model="showMonoquestionSelector" max-width="1200">
+    <resource-selector
+      :query="exerciceQuery"
       :tags="props.allTags"
+      :mode="'questions'"
       @closed="showMonoquestionSelector = false"
-      @selected="addMonoquestion"
+      @selected-variant="(v) => emit('addMonoquestion', v)"
+      @selected-group="(gr) => emit('addRandomMonoquestion', gr)"
       @update:query="(q) => (questionQuery = q)"
-    ></question-selector>
+    ></resource-selector>
   </v-dialog>
 
   <v-dialog
@@ -133,42 +136,14 @@
                 style="text-align: right"
                 class="pl-2"
               >
-                <v-menu
-                  v-if="!task.IdWork.IsExercice"
-                  offset-y
-                  :close-on-content-click="false"
-                  :model-value="monoquestionToEditIndex == index"
-                  @update:model-value="
-                    monoquestionToEdit = null;
-                    monoquestionToEditIndex = null;
+                <task-details-chip
+                  :task="task"
+                  @update-monoquestion="(qu) => emit('updateMonoquestion', qu)"
+                  @update-random-monoquestion="
+                    (qu) => emit('updateRandomMonoquestion', qu)
                   "
                 >
-                  <template v-slot:activator="{ isActive, props }">
-                    <v-chip
-                      elevation="2"
-                      v-on="{ isActive }"
-                      v-bind="props"
-                      @click="
-                        monoquestionToEditIndex = index;
-                        monoquestionToEdit = monoquestionFromTask(task);
-                      "
-                    >
-                      / {{ taskBareme(task) }}
-                    </v-chip>
-                  </template>
-                  <monoquestion-details
-                    v-if="monoquestionToEdit != null"
-                    :monoquestion="monoquestionToEdit!"
-                    @update="
-                      (qu) => {
-                        monoquestionToEdit = null;
-                        monoquestionToEditIndex = null;
-                        emit('updateMonoquestion', qu);
-                      }
-                    "
-                  ></monoquestion-details>
-                </v-menu>
-                <v-chip v-else> / {{ taskBareme(task) }} </v-chip>
+                </task-details-chip>
               </v-col>
             </v-row>
           </v-list-item>
@@ -195,27 +170,26 @@
 <script setup lang="ts">
 import {
   OriginKind,
-  type ExerciceHeader,
+  WorkKind,
   type Monoquestion,
   type Query,
-  type QuestionHeader,
   type SheetExt,
   type TagsDB,
   type TaskExt,
+  type RandomMonoquestion,
 } from "@/controller/api_gen";
 import {
-  monoquestionFromTask,
   onDragListItemStart,
   sheetBareme,
   swapItems,
-  taskBareme,
 } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
 import DropZone from "../DropZone.vue";
-import ExerciceSelector from "../ExerciceSelector.vue";
-import QuestionSelector from "../QuestionSelector.vue";
-import MonoquestionDetails from "./MonoquestionDetails.vue";
+import { watch } from "vue";
+import ResourceSelector from "../ResourceSelector.vue";
+import type { ResourceGroup, VariantG } from "@/controller/editor";
+import TaskDetailsChip from "./TaskDetailsChip.vue";
 
 interface Props {
   sheet: SheetExt;
@@ -225,9 +199,11 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "addExercice", ex: ExerciceHeader): void;
-  (e: "addMonoquestion", qu: QuestionHeader): void;
+  (e: "addExercice", ex: VariantG): void;
+  (e: "addMonoquestion", qu: VariantG): void;
+  (e: "addRandomMonoquestion", qu: ResourceGroup): void;
   (e: "updateMonoquestion", qu: Monoquestion): void;
+  (e: "updateRandomMonoquestion", qu: RandomMonoquestion): void;
   (e: "remove", task: TaskExt): void;
   (e: "reorder", tasks: TaskExt[]): void;
 }>();
@@ -239,27 +215,25 @@ let showMonoquestionSelector = $ref(false);
 let showExerciceSelector = $ref(false);
 let exerciceQuery = $ref<Query>({
   TitleQuery: "",
-  LevelTags: [],
+  LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
   Origin: OriginKind.All,
 });
 let questionQuery = $ref<Query>({
   TitleQuery: "",
-  LevelTags: [],
+  LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
   Origin: OriginKind.All,
 });
 
-function addExercice(ex: ExerciceHeader) {
-  emit("addExercice", ex);
-}
-
-function addMonoquestion(qu: QuestionHeader) {
-  emit("addMonoquestion", qu);
-}
-
-let monoquestionToEditIndex = $ref<number | null>(null);
-let monoquestionToEdit = $ref<Monoquestion | null>(null);
+watch(props.sheet, () => {
+  exerciceQuery.LevelTags = props.sheet.Sheet.Level
+    ? [props.sheet.Sheet.Level]
+    : [];
+  questionQuery.LevelTags = props.sheet.Sheet.Level
+    ? [props.sheet.Sheet.Level]
+    : [];
+});
 
 function removeExercice(index: number) {
   const task = props.sheet.Tasks![index];
@@ -288,12 +262,13 @@ function swap(origin: number, target: number) {
 }
 
 function taskTooltip(task: TaskExt) {
-  const out = `${task.IdWork.IsExercice ? "Exercice" : "Question"} ${
-    task.IdWork.ID
-  }`;
-  if (!task.IdWork.IsExercice) {
-    return out + ` (répétée ${task.Baremes?.length} fois)`;
+  switch (task.IdWork.Kind) {
+    case WorkKind.WorkExercice:
+      return `Exercice ${task.IdWork.ID}`;
+    case WorkKind.WorkMonoquestion:
+      return `Variante d'une question (répétée ${task.Bareme?.length} fois)`;
+    case WorkKind.WorkRandomMonoquestion:
+      return `Groupe de questions (${task.Bareme?.length} variantes aléatoires)`;
   }
-  return out;
 }
 </script>

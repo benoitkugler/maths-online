@@ -57,6 +57,11 @@ type Options struct {
 	QuestionTimeout time.Duration
 
 	ShowDecrassage bool
+
+	// Every player start with [StartNbSuccess] success, which
+	// should be zero in regular use, but may be higher for
+	// testing purposes.
+	StartNbSuccess int
 }
 
 // PlayerID is a unique identifier of each player,

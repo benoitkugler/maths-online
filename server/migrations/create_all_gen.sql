@@ -241,6 +241,52 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_clie_FunctionSign (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_clie_FunctionSign (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_clie_SignSymbol (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_clie_SignSymbol (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_Block (data jsonb)
     RETURNS boolean
     AS $$
@@ -372,29 +418,6 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_ques_ProofAssertion (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_SignSymbol (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_ques_SignSymbol (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -633,6 +656,45 @@ DECLARE
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a clie_Binary', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_clie_FunctionSign (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Label', 'FxSymbols', 'Signs'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_array_clie_SignSymbol (data -> 'FxSymbols')
+        AND gomacro_validate_json_array_boolean (data -> 'Signs');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_clie_SignSymbol (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (0, 1, 2);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a clie_SignSymbol', data;
     END IF;
     RETURN is_valid;
 END;
@@ -1341,22 +1403,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_SignSymbol (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2);
-BEGIN
-    IF NOT is_valid THEN
-        RAISE WARNING '% is not a ques_SignSymbol', data;
-    END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_SignTableBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -1368,13 +1414,11 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Label', 'FxSymbols', 'Xs', 'Signs'))
+            bool_and(key IN ('Xs', 'Functions'))
         FROM
             jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_array_ques_SignSymbol (data -> 'FxSymbols')
         AND gomacro_validate_json_array_string (data -> 'Xs')
-        AND gomacro_validate_json_array_boolean (data -> 'Signs');
+        AND gomacro_validate_json_array_clie_FunctionSign (data -> 'Functions');
     RETURN is_valid;
 END;
 $$
@@ -2095,7 +2139,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Tag', 'Section'))
+            bool_and(key IN ('Tag', 'Section'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Tag')
@@ -2132,7 +2176,7 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(KEY IN ('Tags', 'Difficulties'))
+            bool_and(key IN ('Tags', 'Difficulties'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')
@@ -2156,37 +2200,52 @@ CREATE TABLE monoquestions (
 );
 
 CREATE TABLE progressions (
-    Id serial PRIMARY KEY,
     IdStudent integer NOT NULL,
-    IdTask integer NOT NULL
-);
-
-CREATE TABLE progression_questions (
-    IdProgression integer NOT NULL,
+    IdTask integer NOT NULL,
     Index integer NOT NULL,
     History boolean[]
+);
+
+CREATE TABLE random_monoquestions (
+    Id serial PRIMARY KEY,
+    IdQuestiongroup integer NOT NULL,
+    NbRepeat integer NOT NULL,
+    Bareme integer NOT NULL,
+    Difficulty jsonb NOT NULL
+);
+
+CREATE TABLE random_monoquestion_variants (
+    IdStudent integer NOT NULL,
+    IdRandomMonoquestion integer NOT NULL,
+    Index integer NOT NULL,
+    IdQuestion integer NOT NULL
 );
 
 CREATE TABLE tasks (
     Id serial PRIMARY KEY,
     IdExercice integer,
-    IdMonoquestion integer
+    IdMonoquestion integer,
+    IdRandomMonoquestion integer
 );
 
 -- constraints
 ALTER TABLE monoquestions
+    ADD CHECK (NbRepeat > 0);
+
+ALTER TABLE monoquestions
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
+
+ALTER TABLE random_monoquestions
+    ADD CHECK (NbRepeat > 0);
+
+ALTER TABLE random_monoquestions
+    ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups;
 
 ALTER TABLE tasks
     ADD UNIQUE (Id, IdExercice);
 
 ALTER TABLE tasks
-    ADD CHECK (IdExercice IS NOT NULL
-        OR IdMonoquestion IS NOT NULL);
-
-ALTER TABLE tasks
-    ADD CHECK (IdExercice IS NULL
-        OR IdMonoquestion IS NULL);
+    ADD CHECK ((IdExercice IS NOT NULL)::int + (IdMonoquestion IS NOT NULL)::int + (IdRandomMonoquestion IS NOT NULL)::int = 1);
 
 ALTER TABLE tasks
     ADD FOREIGN KEY (IdExercice) REFERENCES exercices;
@@ -2194,8 +2253,23 @@ ALTER TABLE tasks
 ALTER TABLE tasks
     ADD FOREIGN KEY (IdMonoquestion) REFERENCES monoquestions;
 
+ALTER TABLE tasks
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+
+ALTER TABLE random_monoquestion_variants
+    ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+
+ALTER TABLE random_monoquestion_variants
+    ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
+
 ALTER TABLE progressions
-    ADD UNIQUE (IdStudent, IdTask);
+    ADD UNIQUE (IdStudent, IdTask, INDEX);
 
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
@@ -2203,18 +2277,55 @@ ALTER TABLE progressions
 ALTER TABLE progressions
     ADD FOREIGN KEY (IdTask) REFERENCES tasks ON DELETE CASCADE;
 
-ALTER TABLE progression_questions
-    ADD FOREIGN KEY (IdProgression) REFERENCES progressions ON DELETE CASCADE;
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_edit_DifficultyTag (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string'
+    AND data #>> '{}' IN ('★', '★★', '★★★', '');
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_DifficultyTag', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+ALTER TABLE random_monoquestions
+    ADD CONSTRAINT Difficulty_gomacro CHECK (gomacro_validate_json_array_edit_DifficultyTag (Difficulty));
 
 -- sql/homework/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE sheets (
     Id serial PRIMARY KEY,
-    IdClassroom integer NOT NULL,
     Title text NOT NULL,
-    Notation integer CHECK (Notation IN (0, 1)) NOT NULL,
-    Activated boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    IdTeacher integer NOT NULL,
+    Level text NOT NULL
 );
 
 CREATE TABLE sheet_tasks (
@@ -2223,9 +2334,23 @@ CREATE TABLE sheet_tasks (
     IdTask integer NOT NULL
 );
 
+CREATE TABLE travails (
+    Id serial PRIMARY KEY,
+    IdClassroom integer NOT NULL,
+    IdSheet integer NOT NULL,
+    Noted boolean NOT NULL,
+    Deadline timestamp(0) with time zone NOT NULL
+);
+
 -- constraints
-ALTER TABLE sheets
+ALTER TABLE travails
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
+ALTER TABLE travails
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets ON DELETE CASCADE;
+
+ALTER TABLE sheets
+    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
 ALTER TABLE sheet_tasks
     ADD PRIMARY KEY (IdSheet, INDEX);

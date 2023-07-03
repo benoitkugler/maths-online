@@ -241,8 +241,17 @@ class Quote extends StatelessWidget {
       BoxShadow(color: Colors.white, blurRadius: 6, spreadRadius: 3)
     ];
     const fontSize = 16.0;
-    return Padding(
-      padding: const EdgeInsets.all(15.0),
+    return Container(
+      decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
+          border: Border.all(color: Colors.lightBlueAccent),
+          color: Theme.of(context).scaffoldBackgroundColor,
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.lightBlueAccent, blurRadius: 3, spreadRadius: 2)
+          ]),
+      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      padding: const EdgeInsets.all(8),
       child: Column(
         children: data.author.isEmpty
             ? [

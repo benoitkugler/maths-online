@@ -32,7 +32,6 @@ import {
   type TableFieldBlock,
   type Tags,
   type TagsDB,
-  type TagSection,
   type TextBlock,
   type TreeFieldBlock,
   type Variable,
@@ -40,7 +39,7 @@ import {
   type VariationTableFieldBlock,
   type VectorFieldBlock
 } from "./api_gen";
-import { LevelTag } from "./exercice_gen";
+import { copy } from "./utils";
 
 export const ExpressionColor = "orange";
 
@@ -226,15 +225,29 @@ export function saveData<T>(data: T, fileName: string) {
 }
 
 const signTableExample: SignTableBlock = {
-  Label: "f(x)",
-  FxSymbols: [
-    SignSymbol.Nothing,
-    SignSymbol.Zero,
-    SignSymbol.ForbiddenValue,
-    SignSymbol.Nothing
-  ],
   Xs: ["-inf", "3", "5", "+inf"],
-  Signs: [true, false, true]
+  Functions: [
+    {
+      Label: "f(x)",
+      FxSymbols: [
+        SignSymbol.Nothing,
+        SignSymbol.Zero,
+        SignSymbol.ForbiddenValue,
+        SignSymbol.Nothing
+      ],
+      Signs: [true, false, true]
+    },
+    {
+      Label: "g(x)",
+      FxSymbols: [
+        SignSymbol.ForbiddenValue,
+        SignSymbol.Nothing,
+        SignSymbol.Zero,
+        SignSymbol.Nothing
+      ],
+      Signs: [false, false, true]
+    }
+  ]
 };
 
 export function newBlock(kind: BlockKind): Block {
@@ -319,7 +332,7 @@ export function newBlock(kind: BlockKind): Block {
     case BlockKind.SignTableBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: signTableExample
+        Data: copy(signTableExample)
       };
       return out;
     }
@@ -467,7 +480,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Answer: signTableExample
+          Answer: copy(signTableExample)
         }
       };
       return out;
@@ -669,16 +682,10 @@ export function tagString(tag: string) {
 export const LevelColor = "pink";
 export const ChapterColor = "primary-darken-1";
 export const TrivMathColor = "brown";
+export const DifficultyColor = "secondary-darken-1";
 
-export function tagColor(tag: TagSection) {
-  if (
-    tag.Tag == DifficultyTag.Diff1 ||
-    tag.Tag == DifficultyTag.Diff2 ||
-    tag.Tag == DifficultyTag.Diff3
-  ) {
-    return "secondary-darken-1";
-  }
-  switch (tag.Section) {
+export function tagColor(tag: Section | undefined) {
+  switch (tag) {
     case Section.Level:
       return LevelColor;
     case Section.Chapter:
@@ -686,6 +693,8 @@ export function tagColor(tag: TagSection) {
     case Section.TrivMath:
       return TrivMathColor;
   }
+  // difficulty
+  return DifficultyColor;
 }
 
 // returns 0 for question without difficulty

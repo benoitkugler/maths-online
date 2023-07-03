@@ -177,16 +177,14 @@ class _TableFieldState extends State<TableField> {
   }
 }
 
-/// [BaseFunctionTable] serves a container for
+/// [BaseFunctionTable] serves as container for
 /// variation and sign tables, editable or not.
 class BaseFunctionTable extends StatelessWidget {
-  final String label;
   final List<Widget> xRow;
-  final List<Widget> fxRow;
+  final List<MapEntry<String, List<Widget>>> fxRows; // (label, row) pairs
   final Color? headerColor;
 
-  const BaseFunctionTable(this.label, this.xRow, this.fxRow,
-      {Key? key, this.headerColor})
+  const BaseFunctionTable(this.xRow, this.fxRows, {Key? key, this.headerColor})
       : super(key: key);
 
   @override
@@ -208,11 +206,11 @@ class BaseFunctionTable extends StatelessWidget {
               const MathTableCell(TableCellVerticalAlignment.middle, "x"),
               ...xRow
             ]),
-            TableRow(children: [
-              MathTableCell(TableCellVerticalAlignment.middle, label,
-                  width: 70),
-              ...fxRow,
-            ])
+            ...fxRows.map((e) => TableRow(children: [
+                  MathTableCell(TableCellVerticalAlignment.middle, e.key,
+                      width: 70),
+                  ...e.value,
+                ]))
           ]),
     );
   }

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	que "github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
@@ -24,6 +24,7 @@ func TestRoot(t *testing.T) {
 	defer db.Remove()
 
 	t.Run("CRUD for Question", func(t *testing.T) { testQuestion(t, db.DB) })
+	t.Run("Insert many Questions", func(t *testing.T) { testInsertQuestions(t, db.DB) })
 	t.Run("Insert SignTable", func(t *testing.T) { testInsertSignTable(t, db.DB) })
 	t.Run("CRUD for Exercice", func(t *testing.T) { testCRUDExercice(t, db.DB) })
 }
@@ -44,6 +45,7 @@ func testQuestion(t *testing.T, db *sql.DB) {
 
 	qu := randQuestion()
 	qu.IdGroup = group.Id.AsOptional()
+	qu.NeedExercice = OptionalIdExercice{}
 	qu, err = qu.Insert(db)
 	tu.AssertNoErr(t, err)
 
@@ -82,7 +84,7 @@ func testInsertSignTable(t *testing.T, db *sql.DB) {
 	qu := randQuestion()
 	qu.IdGroup = group.Id.AsOptional()
 	qu.NeedExercice = OptionalIdExercice{}
-	qu.Enonce = questions.Enonce{randque_SignTableBlock()}
+	qu.Enonce = que.Enonce{randque_SignTableBlock()}
 	qu, err = qu.Insert(db)
 	tu.AssertNoErr(t, err)
 }
@@ -128,7 +130,28 @@ func testCRUDExercice(t *testing.T, db *sql.DB) {
 	)
 	tu.AssertNoErr(t, err)
 
-	if err = tx.Commit(); err != nil {
-		t.Fatal(err)
+	err = tx.Commit()
+	tu.AssertNoErr(t, err)
+}
+
+func testInsertQuestions(t *testing.T, db *sql.DB) {
+	user := selectOneTeacher(t, db)
+
+	group, err := Questiongroup{IdTeacher: user.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	tx, err := db.Begin()
+	tu.AssertNoErr(t, err)
+
+	for i := 0; i < 50; i++ {
+		qu := randQuestion()
+		qu.IdGroup = group.Id.AsOptional()
+		qu.NeedExercice = OptionalIdExercice{}
+
+		_, err = qu.Insert(tx)
+		tu.AssertNoErr(t, err)
 	}
+
+	err = tx.Commit()
+	tu.AssertNoErr(t, err)
 }

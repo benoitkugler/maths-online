@@ -291,9 +291,8 @@ func (ct *Controller) EditorDeleteQuestion(c echo.Context) error {
 }
 
 type TaskDetails struct {
-	Id        tasks.IdTask
-	Sheet     homework.Sheet
-	Classroom teacher.Classroom
+	Id    tasks.IdTask
+	Sheet homework.Sheet
 }
 
 type QuestionExerciceUses []TaskDetails // the task containing the [Monoquestions]
@@ -309,18 +308,12 @@ func newQuestionExericeUses(db ed.DB, idTasks []tasks.IdTask) ([]TaskDetails, er
 	}
 	taskToSheet := links.ByIdTask()
 
-	classrooms, err := teacher.SelectClassrooms(db, sheets.IdClassrooms()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
 	out := make([]TaskDetails, len(idTasks))
 	for i, id := range idTasks {
 		sheet := sheets[taskToSheet[id].IdSheet]
 		out[i] = TaskDetails{
-			Id:        id,
-			Sheet:     sheet,
-			Classroom: classrooms[sheet.IdClassroom],
+			Id:    id,
+			Sheet: sheet,
 		}
 	}
 

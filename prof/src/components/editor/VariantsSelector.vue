@@ -67,7 +67,7 @@
               <v-col align-self="center" style="text-align: right">
                 <TagChip
                   v-if="variant.Difficulty"
-                  :tag="{ Tag: variant.Difficulty, Section: 0 }"
+                  :tag="{ Tag: variant.Difficulty }"
                 ></TagChip>
                 <v-chip v-else size="small" label title="Difficulté"
                   >Aucune</v-chip

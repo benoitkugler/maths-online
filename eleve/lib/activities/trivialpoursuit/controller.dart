@@ -176,8 +176,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
       content: Text("Une erreur est survenue : $error"),
     ));
     popRouteToHome();
-    // clean the cache on error
-    GameTerminatedNotification().dispatch(context);
   }
 
   void _sendEvent(ClientEventITF event) {
@@ -431,6 +429,9 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   void _onGameEnd(GameEnd event) {
+    // remove potential dialog
+    Navigator.of(context).popUntil(ModalRoute.withName("/board"));
+
     setState(() {
       hasGameStarted = false;
       gameEnd = event;

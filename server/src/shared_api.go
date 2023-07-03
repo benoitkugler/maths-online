@@ -70,14 +70,15 @@ type StudentWork struct {
 }
 
 // standalone endpoint to check if an exercice answer is correct
-// note that this API does not handle progression persistence
+// note that this API does not handle progression persistence,
+// and do not support RandomMonoquestion either
 func evaluateExercice(db ed.DB, c echo.Context) error {
 	var args EvaluateWorkIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	out, err := args.Evaluate(db)
+	out, err := args.Evaluate(db, -1)
 	if err != nil {
 		return err
 	}

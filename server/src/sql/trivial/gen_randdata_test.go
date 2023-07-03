@@ -43,7 +43,7 @@ func randSelfaccessTrivial() SelfaccessTrivial {
 }
 
 func randSliceSliceedi_TagSection() [][]editor.TagSection {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([][]editor.TagSection, l)
 	for i := range out {
 		out[i] = randSliceedi_TagSection()
@@ -52,7 +52,7 @@ func randSliceSliceedi_TagSection() [][]editor.TagSection {
 }
 
 func randSliceedi_DifficultyTag() []editor.DifficultyTag {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]editor.DifficultyTag, l)
 	for i := range out {
 		out[i] = randedi_DifficultyTag()
@@ -61,7 +61,7 @@ func randSliceedi_DifficultyTag() []editor.DifficultyTag {
 }
 
 func randSliceedi_TagSection() []editor.TagSection {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]editor.TagSection, l)
 	for i := range out {
 		out[i] = randedi_TagSection()
@@ -122,7 +122,7 @@ func randint64() int64 {
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
 
 func randstring() string {
-	b := make([]rune, 50)
+	b := make([]rune, 10)
 	maxLength := len(letterRunes2)
 	for i := range b {
 		b[i] = letterRunes2[rand.Intn(maxLength)]

@@ -720,6 +720,36 @@ Map<String, dynamic> functionPointsFieldBlockToJson(
   };
 }
 
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionSign
+class FunctionSign {
+  final String label;
+  final List<SignSymbol> fxSymbols;
+  final List<bool> signs;
+
+  const FunctionSign(this.label, this.fxSymbols, this.signs);
+
+  @override
+  String toString() {
+    return "FunctionSign($label, $fxSymbols, $signs)";
+  }
+}
+
+FunctionSign functionSignFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return FunctionSign(
+      stringFromJson(json['Label']),
+      listSignSymbolFromJson(json['FxSymbols']),
+      listBoolFromJson(json['Signs']));
+}
+
+Map<String, dynamic> functionSignToJson(FunctionSign item) {
+  return {
+    "Label": stringToJson(item.label),
+    "FxSymbols": listSignSymbolToJson(item.fxSymbols),
+    "Signs": listBoolToJson(item.signs)
+  };
+}
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionsGraphBlock
 class FunctionsGraphBlock implements Block {
   final List<FunctionGraph> functions;
@@ -1164,40 +1194,6 @@ Map<String, dynamic> sequenceToJson(Sequence item) {
   return {"Parts": assertionsToJson(item.parts)};
 }
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignColumn
-class SignColumn {
-  final String x;
-  final bool isYForbiddenValue;
-  final bool isSign;
-  final bool isPositive;
-
-  const SignColumn(
-      this.x, this.isYForbiddenValue, this.isSign, this.isPositive);
-
-  @override
-  String toString() {
-    return "SignColumn($x, $isYForbiddenValue, $isSign, $isPositive)";
-  }
-}
-
-SignColumn signColumnFromJson(dynamic json_) {
-  final json = (json_ as Map<String, dynamic>);
-  return SignColumn(
-      stringFromJson(json['X']),
-      boolFromJson(json['IsYForbiddenValue']),
-      boolFromJson(json['IsSign']),
-      boolFromJson(json['IsPositive']));
-}
-
-Map<String, dynamic> signColumnToJson(SignColumn item) {
-  return {
-    "X": stringToJson(item.x),
-    "IsYForbiddenValue": boolToJson(item.isYForbiddenValue),
-    "IsSign": boolToJson(item.isSign),
-    "IsPositive": boolToJson(item.isPositive)
-  };
-}
-
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
 enum SignSymbol { nothing, zero, forbiddenValue }
 
@@ -1219,83 +1215,79 @@ dynamic signSymbolToJson(SignSymbol item) => item.toValue();
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignTableAnswer
 class SignTableAnswer implements Answer {
   final List<String> xs;
-  final List<SignSymbol> fxSymbols;
-  final List<bool> signs;
+  final List<FunctionSign> functions;
 
-  const SignTableAnswer(this.xs, this.fxSymbols, this.signs);
+  const SignTableAnswer(this.xs, this.functions);
 
   @override
   String toString() {
-    return "SignTableAnswer($xs, $fxSymbols, $signs)";
+    return "SignTableAnswer($xs, $functions)";
   }
 }
 
 SignTableAnswer signTableAnswerFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return SignTableAnswer(
-      listStringFromJson(json['Xs']),
-      listSignSymbolFromJson(json['FxSymbols']),
-      listBoolFromJson(json['Signs']));
+  return SignTableAnswer(listStringFromJson(json['Xs']),
+      listFunctionSignFromJson(json['Functions']));
 }
 
 Map<String, dynamic> signTableAnswerToJson(SignTableAnswer item) {
   return {
     "Xs": listStringToJson(item.xs),
-    "FxSymbols": listSignSymbolToJson(item.fxSymbols),
-    "Signs": listBoolToJson(item.signs)
+    "Functions": listFunctionSignToJson(item.functions)
   };
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignTableBlock
 class SignTableBlock implements Block {
-  final String label;
-  final List<SignColumn> columns;
+  final List<String> xs;
+  final List<FunctionSign> functions;
 
-  const SignTableBlock(this.label, this.columns);
+  const SignTableBlock(this.xs, this.functions);
 
   @override
   String toString() {
-    return "SignTableBlock($label, $columns)";
+    return "SignTableBlock($xs, $functions)";
   }
 }
 
 SignTableBlock signTableBlockFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return SignTableBlock(
-      stringFromJson(json['Label']), listSignColumnFromJson(json['Columns']));
+  return SignTableBlock(listStringFromJson(json['Xs']),
+      listFunctionSignFromJson(json['Functions']));
 }
 
 Map<String, dynamic> signTableBlockToJson(SignTableBlock item) {
   return {
-    "Label": stringToJson(item.label),
-    "Columns": listSignColumnToJson(item.columns)
+    "Xs": listStringToJson(item.xs),
+    "Functions": listFunctionSignToJson(item.functions)
   };
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignTableFieldBlock
 class SignTableFieldBlock implements Block {
-  final String label;
   final List<int> lengthProposals;
+  final List<String> labels;
   final int iD;
 
-  const SignTableFieldBlock(this.label, this.lengthProposals, this.iD);
+  const SignTableFieldBlock(this.lengthProposals, this.labels, this.iD);
 
   @override
   String toString() {
-    return "SignTableFieldBlock($label, $lengthProposals, $iD)";
+    return "SignTableFieldBlock($lengthProposals, $labels, $iD)";
   }
 }
 
 SignTableFieldBlock signTableFieldBlockFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return SignTableFieldBlock(stringFromJson(json['Label']),
-      listIntFromJson(json['LengthProposals']), intFromJson(json['ID']));
+  return SignTableFieldBlock(listIntFromJson(json['LengthProposals']),
+      listStringFromJson(json['Labels']), intFromJson(json['ID']));
 }
 
 Map<String, dynamic> signTableFieldBlockToJson(SignTableFieldBlock item) {
   return {
-    "Label": stringToJson(item.label),
     "LengthProposals": listIntToJson(item.lengthProposals),
+    "Labels": listStringToJson(item.labels),
     "ID": intToJson(item.iD)
   };
 }
@@ -1835,6 +1827,17 @@ List<dynamic> listFunctionPointToJson(List<FunctionPoint> item) {
   return item.map(functionPointToJson).toList();
 }
 
+List<FunctionSign> listFunctionSignFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(functionSignFromJson).toList();
+}
+
+List<dynamic> listFunctionSignToJson(List<FunctionSign> item) {
+  return item.map(functionSignToJson).toList();
+}
+
 List<int> listIntFromJson(dynamic json) {
   if (json == null) {
     return [];
@@ -1866,17 +1869,6 @@ List<List<TextOrMath>> listListTextOrMathFromJson(dynamic json) {
 
 List<dynamic> listListTextOrMathToJson(List<List<TextOrMath>> item) {
   return item.map(listTextOrMathToJson).toList();
-}
-
-List<SignColumn> listSignColumnFromJson(dynamic json) {
-  if (json == null) {
-    return [];
-  }
-  return (json as List<dynamic>).map(signColumnFromJson).toList();
-}
-
-List<dynamic> listSignColumnToJson(List<SignColumn> item) {
-  return item.map(signColumnToJson).toList();
 }
 
 List<SignSymbol> listSignSymbolFromJson(dynamic json) {

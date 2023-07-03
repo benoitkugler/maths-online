@@ -515,9 +515,9 @@ class _ListRows extends StatelessWidget {
   final Map<int, FieldController> fields;
   final Color color;
 
-  final Widget? button;
+  final Widget? bottom;
 
-  const _ListRows(this.content, this.fields, this.color, this.button,
+  const _ListRows(this.content, this.fields, this.color, this.bottom,
       {Key? key})
       : super(key: key);
 
@@ -528,11 +528,11 @@ class _ListRows extends StatelessWidget {
       ...rows.rows
           .map(
             (e) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0), child: e),
+                padding: const EdgeInsets.symmetric(vertical: 4.0), child: e),
           )
           .toList(),
       const SizedBox(height: 10.0),
-      if (button != null) button!
+      if (bottom != null) bottom!
     ], rows.zoomableKeys, shrinkWrap: true);
   }
 }
@@ -543,8 +543,6 @@ class CorrectionW extends StatelessWidget {
   final Color color;
 
   /// If not null, [footerQuote] is displayed at the bottom of the screen.
-  /// An empty QuoteData may be provided to occupy the space but hide
-  /// the text.
   final QuoteData? footerQuote;
 
   const CorrectionW(this.correction, this.color, this.footerQuote, {super.key});
@@ -560,15 +558,18 @@ class CorrectionW extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ColoredTitle("Correction", color),
           ),
-          Expanded(child: _ListRows(correction, const {}, color, null)),
-          if (footerQuote != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: AnimatedOpacity(
-                  duration: const Duration(seconds: 2),
-                  opacity: footerQuote!.isEmpty ? 0 : 1,
-                  child: Quote(footerQuote!)),
-            ),
+          Expanded(
+              child: _ListRows(
+            correction,
+            const {},
+            color,
+            footerQuote == null
+                ? null
+                : AnimatedOpacity(
+                    duration: const Duration(seconds: 2),
+                    opacity: footerQuote!.isEmpty ? 0 : 1,
+                    child: Quote(footerQuote!)),
+          )),
         ],
       ),
     );
@@ -634,8 +635,6 @@ class _QuestionWState extends State<QuestionW> {
   @override
   Widget build(BuildContext context) {
     final state = widget.controller.state;
-    const spacing = SizedBox(height: 20.0);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: Column(
@@ -645,6 +644,10 @@ class _QuestionWState extends State<QuestionW> {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ColoredTitle(widget.title, widget.color),
           ),
+          if (state.timeout != null) ...[
+            TimeoutBar(state.timeout!, widget.color),
+            const SizedBox(height: 10.0),
+          ],
           Expanded(
               child: _ListRows(
             widget.controller.state.question.enonce,
@@ -659,10 +662,6 @@ class _QuestionWState extends State<QuestionW> {
               ),
             ),
           )),
-          if (state.timeout != null) ...[
-            spacing,
-            TimeoutBar(state.timeout!, widget.color),
-          ],
           if (state.footerQuote != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),

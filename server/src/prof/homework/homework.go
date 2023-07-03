@@ -15,19 +15,22 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
-type ClassroomSheets struct {
+type ClassroomTravaux struct {
 	Classroom teacher.Classroom
-	Sheets    []SheetExt
+	Travaux   []ho.Travail
 }
 
-func newClassroomSheets(cl teacher.Classroom, sheepMap map[ho.IdSheet]SheetExt) ClassroomSheets {
-	out := ClassroomSheets{Classroom: cl}
-	for _, sheet := range sheepMap {
-		if sheet.Sheet.IdClassroom == cl.Id {
-			out.Sheets = append(out.Sheets, sheet)
+func newClassroomTravaux(cl teacher.Classroom, travailMap ho.Travails) ClassroomTravaux {
+	out := ClassroomTravaux{Classroom: cl}
+	for _, tr := range travailMap {
+		if tr.IdClassroom == cl.Id {
+			out.Travaux = append(out.Travaux, tr)
 		}
 	}
-	sort.Slice(out.Sheets, func(i, j int) bool { return out.Sheets[i].Sheet.Id < out.Sheets[j].Sheet.Id })
+
+	// show Noted first
+	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Id < out.Travaux[j].Id })
+	sort.SliceStable(out.Travaux, func(i, j int) bool { return out.Travaux[i].Noted && !out.Travaux[j].Noted })
 	return out
 }
 
@@ -35,20 +38,19 @@ type TaskExt struct {
 	Id             tasks.IdTask
 	IdWork         taAPI.WorkID
 	Title          string // title of the underlying exercice or question
-	Subtitle       string // subtitle of the underlying exercice or question
-	NbProgressions int    // the number of student having started this task
-	Baremes        taAPI.TaskBareme
+	Bareme         taAPI.TaskBareme
+	NbProgressions int // the number of student having started this task
 }
 
-func newTaskExt(task tasks.Task, work taAPI.Work, progressions tasks.Progressions) TaskExt {
-	_, baremes := work.QuestionsList()
+// [progressions] is the list of all links item related to [task]
+func newTaskExt(task tasks.Task, work taAPI.WorkMeta, progressions tasks.Progressions) TaskExt {
+	baremes := work.Bareme()
 	return TaskExt{
 		Id:             task.Id,
 		IdWork:         taAPI.NewWorkID(task),
 		Title:          work.Title(),
-		Subtitle:       work.Subtitle(),
-		NbProgressions: len(progressions),
-		Baremes:        baremes,
+		NbProgressions: len(progressions.ByIdStudent()),
+		Bareme:         baremes,
 	}
 }
 
@@ -107,17 +109,7 @@ func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err erro
 	return out, nil
 }
 
-func (loader sheetLoader) allProgressions() (out tasks.Progressions) {
-	out = make(tasks.Progressions)
-	for _, progressionForTask := range loader.progressions {
-		for _, prog := range progressionForTask {
-			out[prog.Id] = prog
-		}
-	}
-	return out
-}
-
-func (loader sheetLoader) taskForSheet(id ho.IdSheet) ho.SheetTasks {
+func (loader sheetLoader) tasksForSheet(id ho.IdSheet) ho.SheetTasks {
 	links := loader.links[id]
 	links.EnsureOrder()
 	return links
@@ -125,7 +117,7 @@ func (loader sheetLoader) taskForSheet(id ho.IdSheet) ho.SheetTasks {
 
 func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
 	out := SheetExt{Sheet: sheet}
-	links := loader.taskForSheet(sheet.Id)
+	links := loader.tasksForSheet(sheet.Id)
 	for _, link := range links {
 		task := loader.tasks.Tasks[link.IdTask]
 		work := loader.tasks.GetWork(task)

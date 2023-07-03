@@ -5,26 +5,35 @@ import 'package:eleve/questions/table.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 
-/// [_STController] is the controller for one table (the length is known)
-class _STController {
-  bool enabled = true;
-
-  final List<ExpressionController> xs; // with length [signsLength+1]
+class _FunctionSign {
   final List<SignSymbol> fxs; // with length [signsLength+1]
   final List<bool?>
       signs; // is positive ? or not set, with length [signsLength]
 
-  final void Function() onChange;
-
-  // zerosLength exclude edges
-  _STController(FieldAPI api, int signsLength, this.onChange)
-      : xs = List<ExpressionController>.generate(
-            signsLength + 1, (index) => ExpressionController(api, onChange)),
-        fxs = List<SignSymbol>.generate(
+  _FunctionSign(int signsLength)
+      : fxs = List<SignSymbol>.generate(
             signsLength + 1, (index) => SignSymbol.nothing),
         signs = List<bool?>.filled(signsLength, null);
+}
 
-  void toggleSign(int index) {
+/// [_STController] is the controller for one table (the length and number of functions are fixed)
+class _STController {
+  bool enabled = true;
+
+  final List<ExpressionController> xs; // with length [signsLength+1]
+  final List<_FunctionSign> functions;
+
+  final void Function() onChange;
+
+  _STController(
+      FieldAPI api, int signsLength, int functionsLength, this.onChange)
+      : xs = List<ExpressionController>.generate(
+            signsLength + 1, (index) => ExpressionController(api, onChange)),
+        functions = List<_FunctionSign>.generate(
+            functionsLength, (index) => _FunctionSign(signsLength));
+
+  void toggleSign(int row, int index) {
+    final signs = functions[row].signs;
     if (signs[index] == null) {
       signs[index] = true;
     } else {
@@ -33,7 +42,8 @@ class _STController {
     onChange();
   }
 
-  void onSymbolClick(int index) {
+  void onSymbolClick(int row, int index) {
+    final fxs = functions[row].fxs;
     final newIndex = (fxs[index].index + 1) % SignSymbol.values.length;
     fxs[index] = SignSymbol.values[newIndex];
     onChange();
@@ -48,14 +58,15 @@ class _STController {
 
   bool hasValidData() {
     return xs.every((element) => element.hasValidData()) &&
-        signs.every((element) => element != null);
+        functions.every((row) => row.signs.every((element) => element != null));
   }
 
   Answer getData() {
     return SignTableAnswer(
       xs.map((e) => e.getExpression()).toList(),
-      fxs,
-      signs.map((e) => e!).toList(),
+      functions
+          .map((e) => FunctionSign("", e.fxs, e.signs.map((e) => e!).toList()))
+          .toList(),
     );
   }
 
@@ -63,11 +74,16 @@ class _STController {
     for (var i = 0; i < xs.length; i++) {
       xs[i].setExpression(answer.xs[i]);
     }
-    for (var i = 0; i < fxs.length; i++) {
-      fxs[i] = answer.fxSymbols[i];
-    }
-    for (var i = 0; i < signs.length; i++) {
-      signs[i] = answer.signs[i];
+    for (var i = 0; i < functions.length; i++) {
+      final inFunction = answer.functions[i];
+      final fxs = functions[i].fxs;
+      final signs = functions[i].signs;
+      for (var j = 0; j < fxs.length; j++) {
+        fxs[j] = inFunction.fxSymbols[j];
+      }
+      for (var j = 0; j < signs.length; j++) {
+        signs[j] = inFunction.signs[j];
+      }
     }
   }
 }
@@ -77,38 +93,40 @@ class SignTableController extends FieldController {
   final SignTableFieldBlock data;
 
   // setup when selecting a length
-  _STController? ct;
+  _STController? _ct;
 
-  int? get selectedSignsLength => ct == null ? null : ct!.signs.length;
+  int? get selectedSignsLength => _ct == null ? null : _ct!.xs.length - 1;
 
   SignTableController(this.api, this.data, void Function() onChange)
       : super(onChange);
 
   void setSignsLength(int? length) {
-    ct = length == null ? null : _STController(api, length, onChange);
+    _ct = length == null
+        ? null
+        : _STController(api, length, data.labels.length, onChange);
   }
 
   @override
   void setEnabled(bool enabled) {
     super.setEnabled(enabled);
-    ct?.setEnabled(enabled);
+    _ct?.setEnabled(enabled);
   }
 
   @override
   bool hasValidData() {
-    return ct != null && ct!.hasValidData();
+    return _ct != null && _ct!.hasValidData();
   }
 
   @override
   Answer getData() {
-    return ct!.getData();
+    return _ct!.getData();
   }
 
   @override
   void setData(Answer answer) {
     final ans = answer as SignTableAnswer;
-    setSignsLength(ans.signs.length);
-    ct!.setData(ans);
+    setSignsLength(ans.xs.length - 1);
+    _ct!.setData(ans);
   }
 }
 
@@ -126,7 +144,7 @@ class SignTableField extends StatefulWidget {
 class SignTableFieldState extends State<SignTableField> {
   void _resetArrowLength() {
     setState(() {
-      widget.controller.ct = null;
+      widget.controller._ct = null;
     });
   }
 
@@ -166,18 +184,18 @@ class SignTableFieldState extends State<SignTableField> {
               ],
             ),
           )
-        : _OneTable(ct.hasError ? Colors.red : widget.color, ct.ct!,
-            ct.data.label, ct.isEnabled ? _resetArrowLength : null);
+        : _OneTable(ct.hasError ? Colors.red : widget.color, ct._ct!,
+            ct.data.labels, ct.isEnabled ? _resetArrowLength : null);
   }
 }
 
 class _OneTable extends StatefulWidget {
   final Color color;
   final _STController controller;
-  final String functionLabel;
+  final List<String> functionLabels;
   final void Function()? onBack;
 
-  const _OneTable(this.color, this.controller, this.functionLabel, this.onBack,
+  const _OneTable(this.color, this.controller, this.functionLabels, this.onBack,
       {Key? key})
       : super(key: key);
 
@@ -190,51 +208,65 @@ class __OneTableState extends State<_OneTable> {
   Widget build(BuildContext context) {
     final ct = widget.controller;
     final List<Widget> xRow = [];
-    final List<Widget> fxRow = [];
     for (var i = 0; i < ct.xs.length; i++) {
-      // number column
+      // alternate
       xRow.add(ExpressionCell(widget.color, widget.controller.xs[i],
           TableCellVerticalAlignment.middle));
-
-      fxRow.add(
-        SignSymbolButton(
-            ct.fxs[i],
-            ct.enabled
-                ? () => setState(() {
-                      ct.onSymbolClick(i);
-                    })
-                : null),
-      );
-
-      // sign columns
-      if (i < ct.xs.length - 1) {
-        final isUp = widget.controller.signs[i];
-        xRow.add(const SizedBox());
-        fxRow.add(isUp == null
-            ? TableCell(
-                verticalAlignment: TableCellVerticalAlignment.middle,
-                child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      height: 20,
-                      width: 80,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    onTap: () => setState(() {
-                          ct.toggleSign(i);
-                        })),
-              )
-            : SignButton(isUp,
-                onTap: ct.enabled
-                    ? () => setState(() {
-                          ct.toggleSign(i);
-                        })
-                    : null));
-      }
+      xRow.add(const SizedBox());
     }
+    xRow.removeLast();
+
+    final fxRows = List.generate(ct.functions.length, (i) {
+      final List<Widget> fxRow = [];
+      final fxs = ct.functions[i].fxs;
+      final signs = ct.functions[i].signs;
+      for (var j = 0; j < fxs.length; j++) {
+        // alternate
+        fxRow.add(
+          _SignSymbolButton(
+              fxs[j],
+              ct.enabled
+                  ? () => setState(() {
+                        ct.onSymbolClick(i, j);
+                      })
+                  : null),
+        );
+        // sign columns
+        if (j < fxs.length - 1) {
+          final isUp = signs[j];
+
+          fxRow.add(isUp == null
+              ? TableCell(
+                  verticalAlignment: TableCellVerticalAlignment.middle,
+                  child: Container(
+                      padding: const EdgeInsets.all(10),
+                      width: 80,
+                      child: Ink(
+                        height: 30,
+                        decoration: const ShapeDecoration(
+                          color: Colors.lightBlue,
+                          shape: CircleBorder(),
+                        ),
+                        child: IconButton(
+                          splashRadius: 24,
+                          padding: EdgeInsets.zero,
+                          color: Colors.white,
+                          icon: const Icon(Icons.question_mark),
+                          onPressed: () => setState(() {
+                            ct.toggleSign(i, j);
+                          }),
+                        ),
+                      )))
+              : _SignButton(isUp,
+                  onTap: ct.enabled
+                      ? () => setState(() {
+                            ct.toggleSign(i, j);
+                          })
+                      : null));
+        }
+      }
+      return MapEntry(widget.functionLabels[i], fxRow);
+    }).toList();
 
     return Column(children: [
       Row(children: [
@@ -243,17 +275,16 @@ class __OneTableState extends State<_OneTable> {
             icon: const Icon(IconData(0xe092,
                 fontFamily: 'MaterialIcons', matchTextDirection: true)))
       ]),
-      BaseFunctionTable(widget.functionLabel, xRow, fxRow,
-          headerColor: Colors.red.shade200)
+      BaseFunctionTable(xRow, fxRows, headerColor: Colors.red.shade200)
     ]);
   }
 }
 
-class SignButton extends StatelessWidget {
+class _SignButton extends StatelessWidget {
   final bool isPositive;
   final void Function()? onTap;
 
-  const SignButton(this.isPositive, {Key? key, this.onTap}) : super(key: key);
+  const _SignButton(this.isPositive, {Key? key, this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -261,22 +292,26 @@ class SignButton extends StatelessWidget {
         verticalAlignment: TableCellVerticalAlignment.middle,
         child: SizedBox(
           width: 80,
-          child: TextButton(
-            onPressed: onTap,
-            child: Text(
-              isPositive ? "+" : "-",
-              style: const TextStyle(fontSize: 18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: OutlinedButton(
+              onPressed: onTap,
+              child: Text(
+                isPositive ? "+" : "-",
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ));
   }
 }
 
-class SignSymbolButton extends StatelessWidget {
+class _SignSymbolButton extends StatelessWidget {
   final SignSymbol symbol;
   final void Function()? onTap;
 
-  const SignSymbolButton(
+  const _SignSymbolButton(
     this.symbol,
     this.onTap, {
     Key? key,
@@ -291,7 +326,8 @@ class SignSymbolButton extends StatelessWidget {
         text = const Text("");
         break;
       case SignSymbol.zero:
-        text = const Text("0");
+        text = const Text("0",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
         break;
       case SignSymbol.forbiddenValue:
         text = ForbiddenValueW(color: color);

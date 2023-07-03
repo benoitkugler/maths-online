@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/settings.dart';
+import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
-import 'package:eleve/shared/students.gen.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_trivial.dart';
@@ -13,38 +13,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
+class SaveGameMetaNotification extends Notification {
+  final String gameCode;
+  final String gameMeta;
+
+  const SaveGameMetaNotification(this.gameCode, this.gameMeta);
+}
+
 class TrivialSettings {
   final BuildMode buildMode;
-  final Map<String, String> gameMetaCache;
   final UserSettings settings;
 
-  const TrivialSettings(this.buildMode, this.gameMetaCache, this.settings);
+  const TrivialSettings(this.buildMode, this.settings);
 
-  Future<GameAcces> _login(String code) async {
+  // dispatch is called to trigger game meta on-disk save
+  Future<GameAcces> _login(
+      String code, void Function(String, String) saveGameMeta) async {
     const sessionIDKey = "session-id";
     // we assume that the time to type the code is enough to load the settings
     final uri = Uri.parse(buildMode.serverURL("/trivial/game/setup", query: {
       sessionIDKey: code,
       studentIDKey: settings.studentID,
       // send (optional) meta so that we may reconnect
-      TrivialPoursuitController.gameMetaKey: gameMetaCache[code] ?? "",
+      TrivialPoursuitController.gameMetaKey:
+          settings.trivialGameMetas[code] ?? "",
     }));
 
-    try {
-      final resp = await http.get(uri);
-      final body = jsonDecode(resp.body) as JSON;
-      // body is either the expect GameMeta or an error
-      if (body.containsKey("GameMeta")) {
-        final gameMeta = body["GameMeta"] as String;
-        gameMetaCache[code] = gameMeta;
-        return GameAcces(
-            code, settings.studentID, settings.studentPseudo, gameMeta);
-      }
-      throw body["message"] as String;
-    } catch (e) {
-      gameMetaCache.remove(code);
-      rethrow;
+    final resp = await http.get(uri);
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    // body is either the expect GameMeta or an error
+    if (body.containsKey("GameMeta")) {
+      final gameMeta = body["GameMeta"] as String;
+      // save in memory...
+      settings.trivialGameMetas[code] = gameMeta;
+      // ... and trigger on disk save as well, so
+      // that reconnection is possible accross app restart
+      saveGameMeta(code, gameMeta);
+
+      return GameAcces(
+          code, settings.studentID, settings.studentPseudo, gameMeta);
     }
+
+    throw body["message"] as String;
   }
 
 // the returned Future completes when the route is popped
@@ -57,7 +67,7 @@ class TrivialSettings {
               automaticallyImplyLeading: true, title: const Text("Triv'Maths")),
           body: NotificationListener<GameTerminatedNotification>(
               onNotification: (n) {
-                gameMetaCache.remove(data.code);
+                settings.trivialGameMetas.remove(data.code);
                 return true;
               },
               child:
@@ -72,8 +82,9 @@ class TrivialSettings {
 /// user to choose between in classroom/self access games
 class TrivialGameSelect extends StatelessWidget {
   final TrivialSettings settings;
+  final void Function(String gameCode, String gameMeta) saveMeta;
 
-  const TrivialGameSelect(this.settings, {super.key});
+  const TrivialGameSelect(this.settings, this.saveMeta, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -82,15 +93,15 @@ class TrivialGameSelect extends StatelessWidget {
         title: const Text("Jouer à TrivMaths"),
       ),
       body: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        _LaunchCard(
+        LaunchCard(
             "Accéder à une partie",
             "J'ai un code et je veux rejoindre une partie existante.",
             const Icon(Icons.login_outlined), () {
           Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => Scaffold(body: _Loggin(settings))));
+              builder: (_) => Scaffold(body: _Loggin(settings, saveMeta))));
         }),
         const Divider(thickness: 4),
-        _LaunchCard(
+        LaunchCard(
             "Créer une partie",
             "Je veux démarrer une partie et partager le code avec des amis.",
             const Icon(Icons.add_box_outlined),
@@ -101,40 +112,18 @@ class TrivialGameSelect extends StatelessWidget {
                         builder: (_) => Scaffold(
                             appBar: AppBar(
                                 title: const Text("Démarrer une partie")),
-                            body: _SelfaccessList(settings))));
+                            body: _SelfaccessList(settings, saveMeta))));
                   }),
       ]),
     );
   }
 }
 
-class _LaunchCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Icon icon;
-  final void Function()? onPressed;
-  const _LaunchCard(this.title, this.subtitle, this.icon, this.onPressed,
-      {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          ElevatedButton.icon(
-              onPressed: onPressed, icon: icon, label: Text(title)),
-          const SizedBox(height: 20),
-          Text(subtitle),
-        ],
-      ),
-    );
-  }
-}
-
 class _SelfaccessList extends StatefulWidget {
   final TrivialSettings settings;
-  const _SelfaccessList(this.settings, {super.key});
+  final void Function(String gameCode, String gameMeta) saveMeta;
+
+  const _SelfaccessList(this.settings, this.saveMeta, {super.key});
 
   @override
   State<_SelfaccessList> createState() => __SelfaccessListState();
@@ -192,7 +181,7 @@ class __SelfaccessListState extends State<_SelfaccessList> {
 
   void _joinGame(String code) async {
     try {
-      final data = await widget.settings._login(code);
+      final data = await widget.settings._login(code, widget.saveMeta);
       if (!mounted) return;
       widget.settings._showGameBoard(data, context, true);
     } catch (e) {
@@ -302,7 +291,9 @@ class _TrivialRow extends StatelessWidget {
 /// a TrivialPoursuit game
 class _Loggin extends StatefulWidget {
   final TrivialSettings settings;
-  const _Loggin(this.settings, {Key? key}) : super(key: key);
+  final void Function(String gameCode, String gameMeta) saveMeta;
+
+  const _Loggin(this.settings, this.saveMeta, {Key? key}) : super(key: key);
 
   @override
   _LogginState createState() => _LogginState();
@@ -342,7 +333,7 @@ class _LogginState extends State<_Loggin> {
 
   void _launchTrivialPoursuit(String code) async {
     try {
-      final data = await widget.settings._login(code);
+      final data = await widget.settings._login(code, widget.saveMeta);
       if (!mounted) return;
       final route = widget.settings._showGameBoard(data, context, false);
       route.then((value) {

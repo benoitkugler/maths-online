@@ -286,13 +286,6 @@ func (olf OrderedListFieldInstance) validateAnswerSyntax(answer client.Answer) e
 		}
 	}
 
-	if len(list.Indices) != len(olf.Answer) {
-		return InvalidFieldAnswer{
-			ID:     olf.ID,
-			Reason: fmt.Sprintf("invalid answer length %d", len(list.Indices)),
-		}
-	}
-
 	props := olf.proposals()
 	for _, v := range list.Indices {
 		if v >= len(props) {
@@ -324,7 +317,11 @@ func areLineEquals(l1, l2 client.TextLine) bool {
 func (olf OrderedListFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	list := answer.(client.OrderedListAnswer).Indices
 
-	// reference and answer have the same length, as checked in `validateAnswerSyntax`
+	if len(list) != len(olf.Answer) {
+		return false
+	}
+
+	// reference and student answer have now the same length
 	proposals := olf.proposals()
 	for i, ref := range olf.Answer {
 		got := proposals[list[i]] // check in `validateAnswerSyntax`
@@ -731,16 +728,20 @@ func (f SignTableFieldInstance) fieldID() int { return f.ID }
 
 // lengthProposals returns proposals for the number of signs to fill
 func (vtf SignTableFieldInstance) lengthProposals() []int {
-	L := len(vtf.Answer.Signs)
+	L := len(vtf.Answer.Xs) - 1
 	return lengthProposals(L)
 }
 
 func (f SignTableFieldInstance) toClient() client.Block {
-	return client.SignTableFieldBlock{
-		Label:           f.Answer.Label,
+	out := client.SignTableFieldBlock{
+		Labels:          make([]string, len(f.Answer.Functions)),
 		LengthProposals: f.lengthProposals(),
 		ID:              f.ID,
 	}
+	for i, fo := range f.Answer.Functions {
+		out.Labels[i] = fo.Label
+	}
+	return out
 }
 
 func parseSignTableAnswer(answer client.SignTableAnswer) (xs []*expression.Expr, err error) {
@@ -763,10 +764,20 @@ func (f SignTableFieldInstance) validateAnswerSyntax(answer client.Answer) error
 		}
 	}
 
-	if L := len(ans.Xs); len(ans.FxSymbols) != L || len(ans.Signs) != L-1 {
+	if len(ans.Functions) != len(f.Answer.Functions) {
 		return InvalidFieldAnswer{
 			ID:     f.ID,
-			Reason: fmt.Sprintf("invalid lengths Xs: %d Fxs: %d Arrows: %d", len(ans.Xs), len(ans.FxSymbols), len(ans.Signs)),
+			Reason: fmt.Sprintf("invalid lengths for Functions: %d != %d", len(ans.Functions), len(f.Answer.Functions)),
+		}
+	}
+
+	L := len(ans.Xs)
+	for _, function := range ans.Functions {
+		if len(function.FxSymbols) != L || len(function.Signs) != L-1 {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("invalid lengths : Xs = %d Fxs = %d Arrows = %d", len(ans.Xs), len(function.FxSymbols), len(function.Signs)),
+			}
 		}
 	}
 
@@ -781,16 +792,20 @@ func (f SignTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect 
 		return false
 	}
 
-	// here we know the length are corrects
-	for i, symbol := range ans.FxSymbols {
-		if SignSymbol(symbol) != f.Answer.FxSymbols[i] {
-			return false
+	// here we know the lengths are corrects (areExpressionsEquals validating Xs length)
+	for i, exp := range f.Answer.Functions {
+		got := ans.Functions[i]
+		for j, symbol := range got.FxSymbols {
+			if symbol != exp.FxSymbols[j] {
+				return false
+			}
 		}
-	}
-	for i, sign := range ans.Signs {
-		if sign != f.Answer.Signs[i] {
-			return false
+		for j, sign := range got.Signs {
+			if sign != exp.Signs[j] {
+				return false
+			}
 		}
+
 	}
 
 	return true
@@ -799,14 +814,10 @@ func (f SignTableFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect 
 func (f SignTableFieldInstance) correctAnswer() client.Answer {
 	out := client.SignTableAnswer{
 		Xs:        make([]string, len(f.Answer.Xs)),
-		FxSymbols: make([]client.SignSymbol, len(f.Answer.FxSymbols)),
-		Signs:     f.Answer.Signs,
+		Functions: append([]client.FunctionSign(nil), f.Answer.Functions...),
 	}
 	for i, x := range f.Answer.Xs {
 		out.Xs[i] = x.String()
-	}
-	for i, x := range f.Answer.FxSymbols {
-		out.FxSymbols[i] = client.SignSymbol(x)
 	}
 
 	return out

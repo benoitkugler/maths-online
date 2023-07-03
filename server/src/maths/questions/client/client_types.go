@@ -74,17 +74,15 @@ type VariationTableBlock struct {
 	Arrows []bool
 }
 
-// SignColumn is a column in a sign table.
-type SignColumn struct {
-	X                 string // as LaTeX code
-	IsYForbiddenValue bool   // if true, a double bar is displayed
-	IsSign            bool
-	IsPositive        bool // for signs, displays a +, for numbers displays a 0 (else nothing)
+type FunctionSign struct {
+	Label     string
+	FxSymbols []SignSymbol // one for each X, alternate with [Signs]
+	Signs     []bool       // is positive, with length len(Xs) - 1
 }
 
 type SignTableBlock struct {
-	Label   string
-	Columns []SignColumn
+	Xs        []string // as LaTeX code, includes empty cells
+	Functions []FunctionSign
 }
 
 type FigureBlock struct {
@@ -202,8 +200,8 @@ type VariationTableFieldBlock struct {
 // SignTableFieldBlock asks to complete a
 // sign table (with fixed length)
 type SignTableFieldBlock struct {
-	Label           string // LaTeX code
-	LengthProposals []int  // propositions of the number of zeros (excluding potential edges)
+	LengthProposals []int    // propositions of the number of signs to fill
+	Labels          []string // LaTeX code, for each function
 	ID              int
 }
 
@@ -340,9 +338,8 @@ type VariationTableAnswer struct {
 }
 
 type SignTableAnswer struct {
-	Xs        []string // expressions
-	FxSymbols []SignSymbol
-	Signs     []bool // is positive, with length len(Xs) - 1
+	Xs        []string       // expressions
+	Functions []FunctionSign // each label is ignored
 }
 
 type FunctionPointsAnswer struct {

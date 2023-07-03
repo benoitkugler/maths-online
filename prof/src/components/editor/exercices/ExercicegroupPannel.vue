@@ -101,6 +101,7 @@ async function updateExercicegroup() {
     Parameters: [], // ignored
     Questions: [], // ignored
     CurrentQuestion: -1,
+    ShowCorrection: false,
   });
   if (res == undefined) return;
   emit("preview", res.Preview);

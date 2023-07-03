@@ -6,6 +6,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 )
@@ -142,7 +143,7 @@ func randSection() Section {
 }
 
 func randSliceSliceque_TextPart() [][]questions.TextPart {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([][]questions.TextPart, l)
 	for i := range out {
 		out[i] = randSliceque_TextPart()
@@ -151,7 +152,7 @@ func randSliceSliceque_TextPart() [][]questions.TextPart {
 }
 
 func randSliceSlicestring() [][]string {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([][]string, l)
 	for i := range out {
 		out[i] = randSlicestring()
@@ -160,7 +161,7 @@ func randSliceSlicestring() [][]string {
 }
 
 func randSlicebool() []bool {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]bool, l)
 	for i := range out {
 		out[i] = randbool()
@@ -168,8 +169,26 @@ func randSlicebool() []bool {
 	return out
 }
 
+func randSlicecli_FunctionSign() []client.FunctionSign {
+	l := 3 + rand.Intn(5)
+	out := make([]client.FunctionSign, l)
+	for i := range out {
+		out[i] = randcli_FunctionSign()
+	}
+	return out
+}
+
+func randSlicecli_SignSymbol() []client.SignSymbol {
+	l := 3 + rand.Intn(5)
+	out := make([]client.SignSymbol, l)
+	for i := range out {
+		out[i] = randcli_SignSymbol()
+	}
+	return out
+}
+
 func randSliceque_Block() []questions.Block {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.Block, l)
 	for i := range out {
 		out[i] = randque_Block()
@@ -178,7 +197,7 @@ func randSliceque_Block() []questions.Block {
 }
 
 func randSliceque_FunctionArea() []questions.FunctionArea {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.FunctionArea, l)
 	for i := range out {
 		out[i] = randque_FunctionArea()
@@ -187,7 +206,7 @@ func randSliceque_FunctionArea() []questions.FunctionArea {
 }
 
 func randSliceque_FunctionDefinition() []questions.FunctionDefinition {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.FunctionDefinition, l)
 	for i := range out {
 		out[i] = randque_FunctionDefinition()
@@ -196,7 +215,7 @@ func randSliceque_FunctionDefinition() []questions.FunctionDefinition {
 }
 
 func randSliceque_FunctionPoint() []questions.FunctionPoint {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.FunctionPoint, l)
 	for i := range out {
 		out[i] = randque_FunctionPoint()
@@ -205,7 +224,7 @@ func randSliceque_FunctionPoint() []questions.FunctionPoint {
 }
 
 func randSliceque_Interpolated() []questions.Interpolated {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.Interpolated, l)
 	for i := range out {
 		out[i] = randque_Interpolated()
@@ -214,7 +233,7 @@ func randSliceque_Interpolated() []questions.Interpolated {
 }
 
 func randSliceque_ParameterEntry() []questions.ParameterEntry {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.ParameterEntry, l)
 	for i := range out {
 		out[i] = randque_ParameterEntry()
@@ -222,17 +241,8 @@ func randSliceque_ParameterEntry() []questions.ParameterEntry {
 	return out
 }
 
-func randSliceque_SignSymbol() []questions.SignSymbol {
-	l := 40 + rand.Intn(10)
-	out := make([]questions.SignSymbol, l)
-	for i := range out {
-		out[i] = randque_SignSymbol()
-	}
-	return out
-}
-
 func randSliceque_TextPart() []questions.TextPart {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.TextPart, l)
 	for i := range out {
 		out[i] = randque_TextPart()
@@ -241,7 +251,7 @@ func randSliceque_TextPart() []questions.TextPart {
 }
 
 func randSliceque_VariationTableBlock() []questions.VariationTableBlock {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]questions.VariationTableBlock, l)
 	for i := range out {
 		out[i] = randque_VariationTableBlock()
@@ -250,7 +260,7 @@ func randSliceque_VariationTableBlock() []questions.VariationTableBlock {
 }
 
 func randSlicerep_NamedRandomLabeledPoint() []repere.NamedRandomLabeledPoint {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]repere.NamedRandomLabeledPoint, l)
 	for i := range out {
 		out[i] = randrep_NamedRandomLabeledPoint()
@@ -259,7 +269,7 @@ func randSlicerep_NamedRandomLabeledPoint() []repere.NamedRandomLabeledPoint {
 }
 
 func randSlicerep_RandomArea() []repere.RandomArea {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]repere.RandomArea, l)
 	for i := range out {
 		out[i] = randrep_RandomArea()
@@ -268,7 +278,7 @@ func randSlicerep_RandomArea() []repere.RandomArea {
 }
 
 func randSlicerep_RandomCircle() []repere.RandomCircle {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]repere.RandomCircle, l)
 	for i := range out {
 		out[i] = randrep_RandomCircle()
@@ -277,7 +287,7 @@ func randSlicerep_RandomCircle() []repere.RandomCircle {
 }
 
 func randSlicerep_RandomLine() []repere.RandomLine {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]repere.RandomLine, l)
 	for i := range out {
 		out[i] = randrep_RandomLine()
@@ -286,7 +296,7 @@ func randSlicerep_RandomLine() []repere.RandomLine {
 }
 
 func randSlicerep_RandomSegment() []repere.RandomSegment {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]repere.RandomSegment, l)
 	for i := range out {
 		out[i] = randrep_RandomSegment()
@@ -295,7 +305,7 @@ func randSlicerep_RandomSegment() []repere.RandomSegment {
 }
 
 func randSlicestring() []string {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]string, l)
 	for i := range out {
 		out[i] = randstring()
@@ -306,6 +316,21 @@ func randSlicestring() []string {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
+}
+
+func randcli_FunctionSign() client.FunctionSign {
+	var s client.FunctionSign
+	s.Label = randstring()
+	s.FxSymbols = randSlicecli_SignSymbol()
+	s.Signs = randSlicebool()
+
+	return s
+}
+
+func randcli_SignSymbol() client.SignSymbol {
+	choix := [...]client.SignSymbol{client.Nothing, client.Zero, client.ForbiddenValue}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randexp_Variable() expression.Variable {
@@ -570,18 +595,10 @@ func randque_Rp() questions.Rp {
 	return s
 }
 
-func randque_SignSymbol() questions.SignSymbol {
-	choix := [...]questions.SignSymbol{questions.Nothing, questions.Zero, questions.ForbiddenValue}
-	i := rand.Intn(len(choix))
-	return choix[i]
-}
-
 func randque_SignTableBlock() questions.SignTableBlock {
 	var s questions.SignTableBlock
-	s.Label = randstring()
-	s.FxSymbols = randSliceque_SignSymbol()
 	s.Xs = randSlicestring()
-	s.Signs = randSlicebool()
+	s.Functions = randSlicecli_FunctionSign()
 
 	return s
 }
@@ -799,7 +816,7 @@ func randrune() rune {
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
 
 func randstring() string {
-	b := make([]rune, 50)
+	b := make([]rune, 10)
 	maxLength := len(letterRunes2)
 	for i := range b {
 		b[i] = letterRunes2[rand.Intn(maxLength)]

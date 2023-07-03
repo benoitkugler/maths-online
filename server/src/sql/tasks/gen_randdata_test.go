@@ -17,6 +17,10 @@ func randIdProgression() IdProgression {
 	return IdProgression(randint64())
 }
 
+func randIdRandomMonoquestion() IdRandomMonoquestion {
+	return IdRandomMonoquestion(randint64())
+}
+
 func randIdTask() IdTask {
 	return IdTask(randint64())
 }
@@ -39,18 +43,18 @@ func randOptionalIdMonoquestion() OptionalIdMonoquestion {
 	return s
 }
 
-func randProgression() Progression {
-	var s Progression
-	s.Id = randIdProgression()
-	s.IdStudent = randtea_IdStudent()
-	s.IdTask = randIdTask()
+func randOptionalIdRandomMonoquestion() OptionalIdRandomMonoquestion {
+	var s OptionalIdRandomMonoquestion
+	s.Valid = randbool()
+	s.ID = randIdRandomMonoquestion()
 
 	return s
 }
 
-func randProgressionQuestion() ProgressionQuestion {
-	var s ProgressionQuestion
-	s.IdProgression = randIdProgression()
+func randProgression() Progression {
+	var s Progression
+	s.IdStudent = randtea_IdStudent()
+	s.IdTask = randIdTask()
 	s.Index = randint()
 	s.History = randQuestionHistory()
 
@@ -61,11 +65,41 @@ func randQuestionHistory() QuestionHistory {
 	return QuestionHistory(randSlicebool())
 }
 
+func randRandomMonoquestion() RandomMonoquestion {
+	var s RandomMonoquestion
+	s.Id = randIdRandomMonoquestion()
+	s.IdQuestiongroup = randedi_IdQuestiongroup()
+	s.NbRepeat = randint()
+	s.Bareme = randint()
+	s.Difficulty = randedi_DifficultyQuery()
+
+	return s
+}
+
+func randRandomMonoquestionVariant() RandomMonoquestionVariant {
+	var s RandomMonoquestionVariant
+	s.IdStudent = randtea_IdStudent()
+	s.IdRandomMonoquestion = randIdRandomMonoquestion()
+	s.Index = randint()
+	s.IdQuestion = randedi_IdQuestion()
+
+	return s
+}
+
 func randSlicebool() []bool {
-	l := 40 + rand.Intn(10)
+	l := 3 + rand.Intn(5)
 	out := make([]bool, l)
 	for i := range out {
 		out[i] = randbool()
+	}
+	return out
+}
+
+func randSliceedi_DifficultyTag() []editor.DifficultyTag {
+	l := 3 + rand.Intn(5)
+	out := make([]editor.DifficultyTag, l)
+	for i := range out {
+		out[i] = randedi_DifficultyTag()
 	}
 	return out
 }
@@ -75,6 +109,7 @@ func randTask() Task {
 	s.Id = randIdTask()
 	s.IdExercice = randedi_OptionalIdExercice()
 	s.IdMonoquestion = randOptionalIdMonoquestion()
+	s.IdRandomMonoquestion = randOptionalIdRandomMonoquestion()
 
 	return s
 }
@@ -84,12 +119,26 @@ func randbool() bool {
 	return i == 1
 }
 
+func randedi_DifficultyQuery() editor.DifficultyQuery {
+	return editor.DifficultyQuery(randSliceedi_DifficultyTag())
+}
+
+func randedi_DifficultyTag() editor.DifficultyTag {
+	choix := [...]editor.DifficultyTag{editor.Diff1, editor.Diff2, editor.Diff3, editor.DiffEmpty}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randedi_IdExercice() editor.IdExercice {
 	return editor.IdExercice(randint64())
 }
 
 func randedi_IdQuestion() editor.IdQuestion {
 	return editor.IdQuestion(randint64())
+}
+
+func randedi_IdQuestiongroup() editor.IdQuestiongroup {
+	return editor.IdQuestiongroup(randint64())
 }
 
 func randedi_OptionalIdExercice() editor.OptionalIdExercice {

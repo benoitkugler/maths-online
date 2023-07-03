@@ -25,7 +25,7 @@ func TestGameID(t *testing.T) {
 	var gs gameStore
 	s := make([]string, 20)
 	for i := range s {
-		s[i] = string(gs.newTeacherGameID("test").roomID())
+		s[i] = string(gs.newTeacherGameID("test").String())
 	}
 
 	if !sort.StringsAreSorted(s) {

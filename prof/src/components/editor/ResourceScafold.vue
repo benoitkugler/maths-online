@@ -172,7 +172,7 @@
                 {{ tabTitle(index) }}
                 <TagChip
                   v-if="variant.Difficulty && index == props.modelValue"
-                  :tag="{ Tag: variant.Difficulty, Section: 0 }"
+                  :tag="{ Tag: variant.Difficulty }"
                 ></TagChip>
                 <v-menu
                   offset-y

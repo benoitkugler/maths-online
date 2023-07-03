@@ -3,26 +3,14 @@ import 'package:eleve/questions/table.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 
-class _WidgetPair {
-  final Widget x;
-  final Widget fx;
-  _WidgetPair(this.x, this.fx);
-
-  factory _WidgetPair.fromData(SignColumn data) {
-    if (data.isSign) {
-      return _WidgetPair(
-          const SizedBox(),
-          MathTableCell(
-              TableCellVerticalAlignment.middle, data.isPositive ? "+" : "-"));
-    }
-
-    return _WidgetPair(
-      MathTableCell(TableCellVerticalAlignment.middle, data.x),
-      data.isYForbiddenValue
-          ? const _ForbiddenValue()
-          : MathTableCell(
-              TableCellVerticalAlignment.middle, data.isPositive ? "0" : ""),
-    );
+Widget _forSymbol(SignSymbol symbol) {
+  switch (symbol) {
+    case SignSymbol.forbiddenValue:
+      return const _ForbiddenValue();
+    case SignSymbol.zero:
+      return const MathTableCell(TableCellVerticalAlignment.middle, "0");
+    case SignSymbol.nothing:
+      return const SizedBox();
   }
 }
 
@@ -34,15 +22,29 @@ class SignTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final xRow = <Widget>[];
-    final fxRow = <Widget>[];
-    for (var element in data.columns) {
-      final pair = _WidgetPair.fromData(element);
-      xRow.add(pair.x);
-      fxRow.add(pair.fx);
+    // alternate value and void
+    for (var x in data.xs) {
+      xRow.add(MathTableCell(TableCellVerticalAlignment.middle, x));
+      xRow.add(const SizedBox());
     }
+    // remove trailing void
+    xRow.removeLast();
 
-    return BaseFunctionTable(data.label, xRow, fxRow,
-        headerColor: Colors.red.shade200);
+    final fxRows = data.functions.map((function) {
+      final fxRow = <Widget>[];
+      // alternate symbols and signs
+      for (var i = 0; i < function.fxSymbols.length; i++) {
+        fxRow.add(_forSymbol(function.fxSymbols[i]));
+        if (i != function.fxSymbols.length - 1) {
+          final signIsPositive = function.signs[i];
+          fxRow.add(MathTableCell(
+              TableCellVerticalAlignment.middle, signIsPositive ? "+" : "-"));
+        }
+      }
+      return MapEntry(function.label, fxRow);
+    }).toList();
+
+    return BaseFunctionTable(xRow, fxRows, headerColor: Colors.red.shade200);
   }
 }
 
