@@ -71,8 +71,9 @@ func loadTaskExt(db ho.DB, idTask tasks.IdTask) (TaskExt, error) {
 }
 
 type SheetExt struct {
-	Sheet ho.Sheet
-	Tasks []TaskExt
+	Sheet     ho.Sheet
+	Tasks     []TaskExt
+	NbTravaux int
 }
 
 // sheetLoader is an helper type to
@@ -83,9 +84,17 @@ type sheetLoader struct {
 	tasks taAPI.TasksContents
 
 	progressions map[tasks.IdTask]tasks.Progressions
+
+	travaux map[ho.IdSheet]ho.Travails
 }
 
 func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error) {
+	travaux, err := ho.SelectTravailsByIdSheets(db, idSheets...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.travaux = travaux.ByIdSheet()
+
 	// load all the tasks and exercices required...
 	links1, err := ho.SelectSheetTasksByIdSheets(db, idSheets...)
 	if err != nil {
@@ -116,7 +125,10 @@ func (loader sheetLoader) tasksForSheet(id ho.IdSheet) ho.SheetTasks {
 }
 
 func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
-	out := SheetExt{Sheet: sheet}
+	out := SheetExt{
+		Sheet:     sheet,
+		NbTravaux: len(loader.travaux[sheet.Id]),
+	}
 	links := loader.tasksForSheet(sheet.Id)
 	for _, link := range links {
 		task := loader.tasks.Tasks[link.IdTask]

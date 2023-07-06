@@ -18,9 +18,10 @@
       </v-col>
       <v-col align-self="center" cols="auto">
         <v-btn
-          density="compact"
-          @click="onShowNotes"
+          density="comfortable"
           title="Afficher les notes pour les feuilles sélectionnées"
+          class="mx-1"
+          @click="onShowNotes"
           :disabled="
             !classroom.Travaux?.length ||
             (inSelect && Array.from(selectedTravaux).length == 0)
@@ -28,14 +29,18 @@
         >
           {{ inSelect ? "Afficher" : "Voir les notes..." }}
         </v-btn>
+        <v-btn density="comfortable" class="mx-1" @click="emit('create')">
+          <v-icon color="green">mdi-plus</v-icon>
+          Ajouter
+        </v-btn>
       </v-col>
     </v-row>
-    <v-row v-if="!classroom.Travaux?.length" class="mt-6">
+    <v-row v-if="!classroom.Travaux?.length" class="mt-6 mb-3">
       <v-col align-self="center" style="text-align: center">
-        <i
-          >Déplacer et déposer une feuille ici pour définir un nouveau
-          travail...</i
-        >
+        <i>
+          Aucun travail. <br />
+          Vous pouvez ajouter un nouveau travail depuis les favoris.
+        </i>
       </v-col>
     </v-row>
     <v-row class="mt-1">
@@ -53,6 +58,8 @@
           @update="(tr) => emit('update', tr)"
           @delete="emit('delete', travail)"
           @copy="(idClassroom) => emit('copy', travail, idClassroom)"
+          @set-favorite="(s) => emit('setFavorite', s)"
+          @edit-sheet="(s) => emit('editSheet', s)"
         ></travail-card>
         <v-card
           v-else
@@ -83,13 +90,13 @@
 import type {
   Classroom,
   ClassroomTravaux,
+  Sheet,
   SheetExt,
   Travail,
 } from "@/controller/api_gen";
-import { $computed, $ref } from "vue/macros";
+import { $ref } from "vue/macros";
 import ClassroomNotes from "./ClassroomNotes.vue";
 import TravailCard from "./TravailCard.vue";
-import { computed } from "vue";
 
 interface Props {
   classroom: ClassroomTravaux;
@@ -100,9 +107,12 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
+  (e: "create"): void;
   (e: "update", travail: Travail): void;
   (e: "delete", travail: Travail): void;
   (e: "copy", travail: Travail, idClassroom: number): void;
+  (e: "setFavorite", sheet: Sheet): void;
+  (e: "editSheet", sheet: SheetExt): void;
 }>();
 
 let inSelect = $ref(false);

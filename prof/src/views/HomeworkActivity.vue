@@ -41,6 +41,18 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog v-model="showFavorites">
+    <sheet-folder
+      :sheets="homeworks.Sheets"
+      :classrooms="homeworks.Travaux.map((t) => t.Classroom)"
+      @create="createSheet"
+      @duplicate="(sh) => duplicateSheet(sh.Sheet.Id)"
+      @assign="createTravailWith"
+      @delete="(sh) => (sheetToDelete = sh)"
+      @edit="(sh) => (sheetToUpdate = sh)"
+    ></sheet-folder>
+  </v-dialog>
+
   <v-card class="my-5 mx-auto" width="90%">
     <v-row>
       <v-col>
@@ -50,28 +62,32 @@
           classe une ou plusieurs feuilles.</v-card-subtitle
         >
       </v-col>
+      <v-col cols="auto" align-self="center">
+        <v-btn
+          class="mr-3"
+          title="Afficher les feuilles favorites..."
+          @click="
+            fetchHomeworks();
+            showFavorites = true;
+          "
+        >
+          <v-icon class="mr-2" color="secondary">mdi-heart</v-icon>
+          Favoris
+        </v-btn>
+      </v-col>
     </v-row>
 
-    <v-row class="mx-0 mb-1">
-      <v-col cols="6">
-        <sheet-folder
-          :sheets="homeworks.Sheets"
-          @create="createSheet"
-          @duplicate="(sh) => duplicateSheet(sh.Sheet.Id)"
-          @delete="(sh) => (sheetToDelete = sh)"
-          @edit="(sh) => (sheetToUpdate = sh)"
-        ></sheet-folder>
-      </v-col>
-      <v-col cols="6">
-        <travaux-pannel
-          :homeworks="homeworks"
-          @create="createTravail"
-          @update="updateTravail"
-          @copy="copyTravailTo"
-          @delete="deleteTravail"
-        ></travaux-pannel>
-      </v-col>
-    </v-row>
+    <travaux-pannel
+      :homeworks="homeworks"
+      @create="createTravail"
+      @create-with="createTravailWith"
+      @set-favorite="setSheetFavorite"
+      @update="updateTravail"
+      @copy="copyTravailTo"
+      @delete="deleteTravail"
+      @edit-sheet="(sh) => (sheetToUpdate = sh)"
+      ref="travauxPannel"
+    ></travaux-pannel>
   </v-card>
 </template>
 
@@ -93,6 +109,7 @@ import SheetFolder from "@/components/homework/SheetFolder.vue";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TravauxPannel from "@/components/homework/TravauxPannel.vue";
 import type { HomeworksT } from "@/controller/utils";
+import { ref } from "vue";
 
 let homeworks = $ref<HomeworksT>({ Sheets: new Map(), Travaux: [] });
 
@@ -106,6 +123,10 @@ onActivated(async () => {
   await fetchHomeworks();
   showDetailsFromRouteQuery();
 });
+
+let travauxPannel = $ref<InstanceType<typeof TravauxPannel> | null>(null);
+
+let showFavorites = $ref(false);
 
 let sheetToUpdate = $ref<SheetExt | null>(null);
 let sheetToDelete = $ref<SheetExt | null>(null);
@@ -146,8 +167,23 @@ async function createSheet() {
   sheetToUpdate = res;
 }
 
-async function createTravail(idSheet: number, idClassroom: number) {
+async function createTravail(idClassroom: number) {
   const res = await controller.HomeworkCreateTravail({
+    "id-classroom": idClassroom,
+  });
+  if (res == undefined) {
+    return;
+  }
+
+  homeworks.Sheets.set(res.Sheet.Sheet.Id, res.Sheet);
+  const cl = travauxByClassroom(idClassroom)!;
+  cl.Travaux = (cl.Travaux || []).concat(res.Travail);
+
+  sheetToUpdate = res.Sheet;
+}
+
+async function createTravailWith(idSheet: number, idClassroom: number) {
+  const res = await controller.HomeworkCreateTravailWith({
     IdClassroom: idClassroom,
     IdSheet: idSheet,
   });
@@ -157,6 +193,9 @@ async function createTravail(idSheet: number, idClassroom: number) {
 
   const cl = travauxByClassroom(idClassroom)!;
   cl.Travaux = (cl.Travaux || []).concat(res);
+
+  showFavorites = false;
+  if (travauxPannel != null) travauxPannel.showClassroom(idClassroom);
 }
 
 async function deleteSheet() {
@@ -276,6 +315,14 @@ async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
   sh.Tasks = tasks;
 }
 
+async function setSheetFavorite(sheet: Sheet) {
+  sheet.Anonymous = { Valid: false, ID: 0 };
+  const res = await controller.HomeworkUpdateSheet(sheet);
+  if (res === undefined) return;
+
+  homeworks.Sheets.get(sheet.Id)!.Sheet = sheet;
+}
+
 async function updateTravail(travail: Travail) {
   const ok = await controller.HomeworkUpdateTravail(travail);
   if (ok == undefined) return;
@@ -291,8 +338,12 @@ async function copyTravailTo(tr: Travail, idClassroom: number) {
     IdClassroom: idClassroom,
   });
   if (res === undefined) return;
+
+  if (res.HasNewSheet) {
+    homeworks.Sheets.set(res.NewSheet.Sheet.Id, res.NewSheet);
+  }
   const cl = travauxByClassroom(idClassroom)!;
-  cl.Travaux = (cl.Travaux || []).concat(res);
+  cl.Travaux = (cl.Travaux || []).concat(res.Travail);
 }
 
 async function deleteTravail(tr: Travail) {

@@ -115,17 +115,17 @@ func (ct *Controller) createSheet(userID uID) (ho.Sheet, error) {
 	return sheet, nil
 }
 
-type CreateTravailIn struct {
+type CreateTravailWithIn struct {
 	IdSheet     ho.IdSheet
 	IdClassroom teacher.IdClassroom
 }
 
-// [HomeworkCreateTravail] creates a new [Travail] entry for the
+// [HomeworkCreateTravailWith] creates a new [Travail] entry for the
 // given classroom, with the given [Sheet]
-func (ct *Controller) HomeworkCreateTravail(c echo.Context) error {
+func (ct *Controller) HomeworkCreateTravailWith(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	var args CreateTravailIn
+	var args CreateTravailWithIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (ct *Controller) HomeworkCreateTravail(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) assignSheetTo(args CreateTravailIn, userID uID) (ho.Travail, error) {
+func (ct *Controller) assignSheetTo(args CreateTravailWithIn, userID uID) (ho.Travail, error) {
 	// check classroom owner
 	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
 	if err != nil {
@@ -152,7 +152,7 @@ func (ct *Controller) assignSheetTo(args CreateTravailIn, userID uID) (ho.Travai
 		IdSheet:     args.IdSheet,
 		IdClassroom: args.IdClassroom,
 		Noted:       true,
-		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 14).Round(time.Hour)), // two weeks
+		Deadline:    ho.Time(time.Now().Add(time.Hour * 7 * 14).Round(time.Hour)), // one week
 	}
 	tr, err = tr.Insert(ct.db)
 	if err != nil {
@@ -161,8 +161,79 @@ func (ct *Controller) assignSheetTo(args CreateTravailIn, userID uID) (ho.Travai
 	return tr, nil
 }
 
-func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
-	sheet, err := ho.SelectSheet(ct.db, idSheet)
+// [HomeworkCreateTravail] creates a [Travail] for the given classroom,
+// linked to an anonymous [Sheet]
+func (ct *Controller) HomeworkCreateTravail(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	id_, err := utils.QueryParamInt64(c, "id-classroom")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.createTravail(teacher.IdClassroom(id_), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type CreateTravailOut struct {
+	Sheet   SheetExt
+	Travail ho.Travail
+}
+
+func (ct *Controller) createTravail(idClassroom teacher.IdClassroom, userID uID) (CreateTravailOut, error) {
+	// check classroom owner
+	classroom, err := teacher.SelectClassroom(ct.db, idClassroom)
+	if err != nil {
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+	if classroom.IdTeacher != userID {
+		return CreateTravailOut{}, errAccessForbidden
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+	// create anonymous Sheet
+	sheet, err := ho.Sheet{IdTeacher: userID, Title: "Feuille d'exercices"}.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+	// create Travail with this sheet
+	tr := ho.Travail{
+		IdSheet:     sheet.Id,
+		IdClassroom: idClassroom,
+		Noted:       true,
+		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 7).Round(time.Hour)), // one week
+	}
+	tr, err = tr.Insert(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+	// mark the sheet as anonymous
+	sheet.Anonymous = tr.Id.AsOptional()
+	sheet, err = sheet.Update(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+
+	return CreateTravailOut{Sheet: SheetExt{Sheet: sheet}, Travail: tr}, nil
+}
+
+func checkSheetOwner(db ho.DB, idSheet ho.IdSheet, userID uID) error {
+	sheet, err := ho.SelectSheet(db, idSheet)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -173,6 +244,10 @@ func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
 	}
 
 	return nil
+}
+
+func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
+	return checkSheetOwner(ct.db, idSheet, userID)
 }
 
 func (ct *Controller) checkTravailOwner(idTravail ho.IdTravail, userID uID) error {
@@ -782,7 +857,7 @@ func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.duplicateSheet(args, userID)
+	out, err := ct.duplicateSheet(args.IdSheet, userID)
 	if err != nil {
 		return err
 	}
@@ -790,36 +865,58 @@ func (ct *Controller) HomeworkCopySheet(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) duplicateSheet(args CopySheetIn, userID uID) (SheetExt, error) {
-	if err := ct.checkSheetOwner(args.IdSheet, userID); err != nil {
-		return SheetExt{}, err
-	}
-
-	sheet, err := ho.SelectSheet(ct.db, args.IdSheet)
-	if err != nil {
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	links, err := ho.SelectSheetTasksByIdSheets(ct.db, sheet.Id)
-	if err != nil {
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	taskMap, err := tasks.SelectTasks(ct.db, links.IdTasks()...)
-	if err != nil {
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	// shallow copy of the item ...
+func (ct *Controller) duplicateSheet(idSheet ho.IdSheet, userID uID) (SheetExt, error) {
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	newSheet, err := sheet.Insert(tx)
+	newSheet, err := duplicateSheetTx(tx, idSheet, userID)
 	if err != nil {
 		_ = tx.Rollback()
+		return SheetExt{}, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
 		return SheetExt{}, utils.SQLError(err)
+	}
+
+	loader, err := newSheetsLoader(ct.db, []ho.IdSheet{newSheet.Id})
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	out := loader.newSheetExt(newSheet)
+	return out, nil
+}
+
+// DO NOT COMMIT, DO NOT ROLLBACK
+func duplicateSheetTx(tx *sql.Tx, idSheet ho.IdSheet, userID uID) (ho.Sheet, error) {
+	if err := checkSheetOwner(tx, idSheet, userID); err != nil {
+		return ho.Sheet{}, err
+	}
+
+	sheet, err := ho.SelectSheet(tx, idSheet)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
+	}
+
+	links, err := ho.SelectSheetTasksByIdSheets(tx, sheet.Id)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
+	}
+
+	taskMap, err := tasks.SelectTasks(tx, links.IdTasks()...)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
+	}
+
+	// shallow copy of the item ...
+	sheet.Anonymous = ho.OptionalIdTravail{} // new sheet can't have the right travail id, since it does not exists
+	newSheet, err := sheet.Insert(tx)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
 	}
 
 	// create new tasks : a task can't be be shared
@@ -831,57 +928,38 @@ func (ct *Controller) duplicateSheet(args CopySheetIn, userID uID) (SheetExt, er
 		if id := task.IdMonoquestion; id.Valid {
 			monoquestion, err := tasks.SelectMonoquestion(tx, id.ID)
 			if err != nil {
-				_ = tx.Rollback()
-				return SheetExt{}, utils.SQLError(err)
+				return ho.Sheet{}, utils.SQLError(err)
 			}
 			monoquestion, err = monoquestion.Insert(tx)
 			if err != nil {
-				_ = tx.Rollback()
-				return SheetExt{}, utils.SQLError(err)
+				return ho.Sheet{}, utils.SQLError(err)
 			}
 			newTask.IdMonoquestion = monoquestion.Id.AsOptional()
 		} else if id := task.IdRandomMonoquestion; id.Valid {
 			monoquestion, err := tasks.SelectRandomMonoquestion(tx, id.ID)
 			if err != nil {
-				_ = tx.Rollback()
-				return SheetExt{}, utils.SQLError(err)
+				return ho.Sheet{}, utils.SQLError(err)
 			}
 			monoquestion, err = monoquestion.Insert(tx)
 			if err != nil {
-				_ = tx.Rollback()
-				return SheetExt{}, utils.SQLError(err)
+				return ho.Sheet{}, utils.SQLError(err)
 			}
 			newTask.IdRandomMonoquestion = monoquestion.Id.AsOptional()
 		}
 
 		newTask, err = newTask.Insert(tx)
 		if err != nil {
-			_ = tx.Rollback()
-			return SheetExt{}, utils.SQLError(err)
+			return ho.Sheet{}, utils.SQLError(err)
 		}
 		newLinks[i] = ho.SheetTask{IdSheet: newSheet.Id, IdTask: newTask.Id, Index: i}
 	}
 
 	err = ho.InsertManySheetTasks(tx, newLinks...)
 	if err != nil {
-		_ = tx.Rollback()
-		return SheetExt{}, utils.SQLError(err)
+		return ho.Sheet{}, utils.SQLError(err)
 	}
 
-	loader, err := newSheetsLoader(tx, []ho.IdSheet{newSheet.Id})
-	if err != nil {
-		_ = tx.Rollback()
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	out := loader.newSheetExt(newSheet)
-
-	return out, nil
+	return newSheet, nil
 }
 
 type CopyTravailIn struct {
@@ -889,6 +967,9 @@ type CopyTravailIn struct {
 	IdClassroom teacher.IdClassroom
 }
 
+// HomeworkCopyTravail duplicate the given [Travail] entry,
+// updating its Classroom.
+// Anonymous [Sheet] are also duplicated.
 func (ct *Controller) HomeworkCopyTravail(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
@@ -905,29 +986,87 @@ func (ct *Controller) HomeworkCopyTravail(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (ho.Travail, error) {
+type CopyTravailToOut struct {
+	Travail     ho.Travail
+	HasNewSheet bool
+	NewSheet    SheetExt // valid if and only if HasNewSheet is true
+}
+
+func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (CopyTravailToOut, error) {
 	cl, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
 	if err != nil {
-		return ho.Travail{}, utils.SQLError(err)
+		return CopyTravailToOut{}, utils.SQLError(err)
 	}
 
 	if cl.IdTeacher != userID {
-		return ho.Travail{}, errAccessForbidden
+		return CopyTravailToOut{}, errAccessForbidden
 	}
 
 	travail, err := ho.SelectTravail(ct.db, args.IdTravail)
 	if err != nil {
-		return ho.Travail{}, utils.SQLError(err)
+		return CopyTravailToOut{}, utils.SQLError(err)
+	}
+
+	sheet, err := ho.SelectSheet(ct.db, travail.IdSheet)
+	if err != nil {
+		return CopyTravailToOut{}, utils.SQLError(err)
+	}
+
+	isAnonymous := sheet.Anonymous.Valid
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return CopyTravailToOut{}, utils.SQLError(err)
+	}
+
+	var newSheet SheetExt
+	if isAnonymous {
+		// also duplicate the underlying sheet
+		newSheet.Sheet, err = duplicateSheetTx(tx, sheet.Id, userID)
+		if err != nil {
+			_ = tx.Rollback()
+			return CopyTravailToOut{}, utils.SQLError(err)
+		}
+		travail.IdSheet = newSheet.Sheet.Id
 	}
 
 	// shallow copy is enough
 	travail.IdClassroom = args.IdClassroom
-	travail, err = travail.Insert(ct.db)
+	travail, err = travail.Insert(tx)
 	if err != nil {
-		return ho.Travail{}, utils.SQLError(err)
+		_ = tx.Rollback()
+		return CopyTravailToOut{}, utils.SQLError(err)
 	}
 
-	return travail, nil
+	if isAnonymous {
+		// map the new sheet to its new travail
+		newSheet.Sheet.Anonymous = travail.Id.AsOptional()
+		_, err = newSheet.Sheet.Update(tx)
+		if err != nil {
+			_ = tx.Rollback()
+			return CopyTravailToOut{}, utils.SQLError(err)
+		}
+
+		loader, err := newSheetsLoader(ct.db, []ho.IdSheet{newSheet.Sheet.Id})
+		if err != nil {
+			_ = tx.Rollback()
+			return CopyTravailToOut{}, utils.SQLError(err)
+		}
+
+		newSheet = loader.newSheetExt(newSheet.Sheet)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return CopyTravailToOut{}, utils.SQLError(err)
+	}
+
+	out := CopyTravailToOut{Travail: travail}
+	if isAnonymous {
+		out.HasNewSheet = true
+		out.NewSheet = newSheet
+	}
+	return out, nil
 }
 
 type HowemorkMarksIn struct {

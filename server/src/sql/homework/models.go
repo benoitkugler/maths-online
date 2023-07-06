@@ -21,6 +21,7 @@ func (d *Time) UnmarshalJSON(data []byte) error { return (*time.Time)(d).Unmarsh
 
 // Travail associates a [Sheet] to a classroom, with
 // an optional deadline
+// gomacro:SQL ADD UNIQUE(Id, IdSheet)
 type Travail struct {
 	Id          IdTravail
 	IdClassroom teacher.IdClassroom `gomacro-sql-on-delete:"CASCADE"`
@@ -39,6 +40,7 @@ type Travail struct {
 }
 
 // Sheet is a list of exercices.
+// gomacro:SQL ADD FOREIGN KEY (Id, Anonymous) REFERENCES Travail(IdSheet, Id) ON DELETE CASCADE
 type Sheet struct {
 	Id IdSheet
 
@@ -47,7 +49,13 @@ type Sheet struct {
 	// IdTeacher is the creator of the [Sheet]
 	IdTeacher teacher.IdTeacher `gomacro-sql-on-delete:"CASCADE"`
 
-	Level string // tag to classify by expected level
+	Level string // tag to classify by expected level, ignored on anonymous sheets
+
+	// Anonymous is not null when the sheet is only
+	// link to one [Travail].
+	// Anonymous [Sheet]s are deleted when the [Travail] is,
+	// and are not shown in the favorites sheets panel.
+	Anonymous OptionalIdTravail `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Travail"`
 }
 
 // gomacro:SQL ADD PRIMARY KEY (IdSheet, Index)

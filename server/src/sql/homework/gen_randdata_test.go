@@ -18,12 +18,21 @@ func randIdTravail() IdTravail {
 	return IdTravail(randint64())
 }
 
+func randOptionalIdTravail() OptionalIdTravail {
+	var s OptionalIdTravail
+	s.Valid = randbool()
+	s.ID = randIdTravail()
+
+	return s
+}
+
 func randSheet() Sheet {
 	var s Sheet
 	s.Id = randIdSheet()
 	s.Title = randstring()
 	s.IdTeacher = randtea_IdTeacher()
 	s.Level = randstring()
+	s.Anonymous = randOptionalIdTravail()
 
 	return s
 }

@@ -5,6 +5,8 @@ package homework
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
@@ -32,6 +34,7 @@ func scanOneSheet(row scanner) (Sheet, error) {
 		&item.Title,
 		&item.IdTeacher,
 		&item.Level,
+		&item.Anonymous,
 	)
 	return item, err
 }
@@ -100,22 +103,22 @@ func ScanSheets(rs *sql.Rows) (Sheets, error) {
 // Insert one Sheet in the database and returns the item with id filled.
 func (item Sheet) Insert(tx DB) (out Sheet, err error) {
 	row := tx.QueryRow(`INSERT INTO sheets (
-		title, idteacher, level
+		title, idteacher, level, anonymous
 		) VALUES (
-		$1, $2, $3
+		$1, $2, $3, $4
 		) RETURNING *;
-		`, item.Title, item.IdTeacher, item.Level)
+		`, item.Title, item.IdTeacher, item.Level, item.Anonymous)
 	return ScanSheet(row)
 }
 
 // Update Sheet in the database and returns the new version.
 func (item Sheet) Update(tx DB) (out Sheet, err error) {
 	row := tx.QueryRow(`UPDATE sheets SET (
-		title, idteacher, level
+		title, idteacher, level, anonymous
 		) = (
-		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
-		`, item.Title, item.IdTeacher, item.Level, item.Id)
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING *;
+		`, item.Title, item.IdTeacher, item.Level, item.Anonymous, item.Id)
 	return ScanSheet(row)
 }
 
@@ -169,6 +172,22 @@ func SelectSheetsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Sheets, e
 
 func DeleteSheetsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdSheet, error) {
 	rows, err := tx.Query("DELETE FROM sheets WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdSheetArray(rows)
+}
+
+func SelectSheetsByAnonymouss(tx DB, anonymouss ...IdTravail) (Sheets, error) {
+	rows, err := tx.Query("SELECT * FROM sheets WHERE anonymous = ANY($1)", IdTravailArrayToPQ(anonymouss))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSheets(rows)
+}
+
+func DeleteSheetsByAnonymouss(tx DB, anonymouss ...IdTravail) ([]IdSheet, error) {
+	rows, err := tx.Query("DELETE FROM sheets WHERE anonymous = ANY($1) RETURNING id", IdTravailArrayToPQ(anonymouss))
 	if err != nil {
 		return nil, err
 	}
@@ -547,6 +566,35 @@ func DeleteTravailsByIdSheets(tx DB, idSheets ...IdSheet) ([]IdTravail, error) {
 	return ScanIdTravailArray(rows)
 }
 
+// SelectTravailByIdAndIdSheet return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectTravailByIdAndIdSheet(tx DB, id IdTravail, idSheet IdSheet) (item Travail, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM travails WHERE Id = $1 AND IdSheet = $2", id, idSheet)
+	item, err = ScanTravail(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func loadJSON(out interface{}, src interface{}) error {
+	if src == nil {
+		return nil //zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, out)
+}
+
+func dumpJSON(s interface{}) (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
+}
+
 func (s *Time) Scan(src interface{}) error {
 	var tmp pq.NullTime
 	err := tmp.Scan(src)
@@ -657,4 +705,23 @@ func (s IdTravailSet) Keys() []IdTravail {
 		out = append(out, k)
 	}
 	return out
+}
+
+func (s *OptionalIdTravail) Scan(src interface{}) error {
+	var tmp sql.NullInt64
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = OptionalIdTravail{
+		Valid: tmp.Valid,
+		ID:    IdTravail(tmp.Int64),
+	}
+	return nil
+}
+
+func (s OptionalIdTravail) Value() (driver.Value, error) {
+	return sql.NullInt64{
+		Int64: int64(s.ID),
+		Valid: s.Valid}.Value()
 }

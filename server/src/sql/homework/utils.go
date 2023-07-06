@@ -8,6 +8,15 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
+type OptionalIdTravail struct {
+	Valid bool
+	ID    IdTravail
+}
+
+func (id IdTravail) AsOptional() OptionalIdTravail {
+	return OptionalIdTravail{ID: id, Valid: true}
+}
+
 func LoadMonoquestionSheet(db DB, idMono tasks.IdMonoquestion) (tasks.IdTask, IdSheet, error) {
 	ts, err := tasks.SelectTasksByIdMonoquestions(db, idMono)
 	if err != nil {

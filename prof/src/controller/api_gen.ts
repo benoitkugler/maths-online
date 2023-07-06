@@ -795,8 +795,19 @@ export interface CopyTravailIn {
   IdTravail: IdTravail;
   IdClassroom: IdClassroom;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/homework.CreateTravailIn
-export interface CreateTravailIn {
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CopyTravailToOut
+export interface CopyTravailToOut {
+  Travail: Travail;
+  HasNewSheet: boolean;
+  NewSheet: SheetExt;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CreateTravailOut
+export interface CreateTravailOut {
+  Sheet: SheetExt;
+  Travail: Travail;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.CreateTravailWithIn
+export interface CreateTravailWithIn {
   IdSheet: IdSheet;
   IdClassroom: IdClassroom;
 }
@@ -824,6 +835,7 @@ export interface ReorderSheetTasksIn {
 export interface SheetExt {
   Sheet: Sheet;
   Tasks: TaskExt[] | null;
+  NbTravaux: number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TaskExt
 export interface TaskExt {
@@ -1172,12 +1184,18 @@ export type Tags = TagSection[] | null;
 export type IdSheet = number;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
 export type IdTravail = number;
+// github.com/benoitkugler/maths-online/server/src/sql/homework.OptionalIdTravail
+export interface OptionalIdTravail {
+  Valid: boolean;
+  ID: IdTravail;
+}
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Sheet
 export interface Sheet {
   Id: IdSheet;
   Title: string;
   IdTeacher: IdTeacher;
   Level: string;
+  Anonymous: OptionalIdTravail;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Travail
 export interface Travail {
@@ -2986,7 +3004,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessHomeworkCopySheet(data: SheetExt): void;
 
-  protected async rawHomeworkCreateTravail(params: CreateTravailIn) {
+  protected async rawHomeworkCreateTravailWith(params: CreateTravailWithIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
     const rep: AxiosResponse<Travail> = await Axios.put(fullUrl, params, {
       headers: this.getHeaders(),
@@ -2994,8 +3012,35 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
+  /** HomeworkCreateTravailWith wraps rawHomeworkCreateTravailWith and handles the error */
+  async HomeworkCreateTravailWith(params: CreateTravailWithIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkCreateTravailWith(params);
+      this.onSuccessHomeworkCreateTravailWith(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessHomeworkCreateTravailWith(data: Travail): void;
+
+  protected async rawHomeworkCreateTravail(params: { "id-classroom": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/travail/anonymous";
+    const rep: AxiosResponse<CreateTravailOut> = await Axios.put(
+      fullUrl,
+      null,
+      {
+        params: { "id-classroom": String(params["id-classroom"]) },
+        headers: this.getHeaders(),
+      }
+    );
+    return rep.data;
+  }
+
   /** HomeworkCreateTravail wraps rawHomeworkCreateTravail and handles the error */
-  async HomeworkCreateTravail(params: CreateTravailIn) {
+  async HomeworkCreateTravail(params: { "id-classroom": number }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkCreateTravail(params);
@@ -3006,7 +3051,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCreateTravail(data: Travail): void;
+  protected abstract onSuccessHomeworkCreateTravail(
+    data: CreateTravailOut
+  ): void;
 
   protected async rawHomeworkUpdateTravail(params: Travail) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
@@ -3053,9 +3100,11 @@ export abstract class AbstractAPI {
 
   protected async rawHomeworkCopyTravail(params: CopyTravailIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail/copy";
-    const rep: AxiosResponse<Travail> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<CopyTravailToOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
@@ -3071,7 +3120,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCopyTravail(data: Travail): void;
+  protected abstract onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void;
 
   protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";

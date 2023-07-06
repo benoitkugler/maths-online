@@ -3,7 +3,8 @@ CREATE TABLE sheets (
     Id serial PRIMARY KEY,
     Title text NOT NULL,
     IdTeacher integer NOT NULL,
-    Level text NOT NULL
+    Level text NOT NULL,
+    Anonymous integer
 );
 
 CREATE TABLE sheet_tasks (
@@ -22,13 +23,22 @@ CREATE TABLE travails (
 
 -- constraints
 ALTER TABLE travails
+    ADD UNIQUE (Id, IdSheet);
+
+ALTER TABLE travails
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
 ALTER TABLE travails
     ADD FOREIGN KEY (IdSheet) REFERENCES sheets ON DELETE CASCADE;
 
 ALTER TABLE sheets
+    ADD FOREIGN KEY (Id, Anonymous) REFERENCES travails (IdSheet, Id) ON DELETE CASCADE;
+
+ALTER TABLE sheets
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+
+ALTER TABLE sheets
+    ADD FOREIGN KEY (Anonymous) REFERENCES travails ON DELETE CASCADE;
 
 ALTER TABLE sheet_tasks
     ADD PRIMARY KEY (IdSheet, INDEX);

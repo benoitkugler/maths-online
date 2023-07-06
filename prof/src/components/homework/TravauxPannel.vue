@@ -15,18 +15,15 @@
       v-for="(classroom, index) in props.homeworks.Travaux"
       :key="index"
       :value="index"
-      :class="
-        (isDraggedOver ? 'bg-blue-lighten-3' : '') +
-        ' fill-height rounded pt-0 mx-1'
-      "
-      @dragover="onDragOver"
-      @dragleave="isDraggedOver = false"
-      @drop="onDrop"
+      class="fill-height rounded pt-0 mx-1"
     >
       <classroom-travaux
         :classroom="classroom"
         :sheets="props.homeworks.Sheets"
         :classrooms="props.homeworks.Travaux.map((i) => i.Classroom)"
+        @create="emit('create', classroom.Classroom.id)"
+        @set-favorite="(s) => emit('setFavorite', s)"
+        @edit-sheet="(s) => emit('editSheet', s)"
         @update="(tr) => emit('update', tr)"
         @copy="(tr, cl) => emit('copy', tr, cl)"
         @delete="(tr) => emit('delete', tr)"
@@ -39,7 +36,7 @@
 import type { HomeworksT } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import ClassroomTravaux from "./ClassroomTravaux.vue";
-import type { SheetExt, Travail } from "@/controller/api_gen";
+import type { Sheet, SheetExt, Travail } from "@/controller/api_gen";
 
 interface Props {
   homeworks: HomeworksT;
@@ -48,27 +45,23 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "create", idSheet: number, idClassroom: number): void;
+  (e: "create", idClassroom: number): void;
+  (e: "createWith", idSheet: number, idClassroom: number): void;
+  (e: "setFavorite", sheet: Sheet): void;
   (e: "delete", travail: Travail): void;
   (e: "copy", travail: Travail, target: number): void;
   (e: "update", travail: Travail): void;
+  (e: "editSheet", sheet: SheetExt): void;
 }>();
 
 let tab = $ref(0);
 
-let isDraggedOver = $ref(false);
-function onDrop(ev: DragEvent) {
-  const eventData: { sheet?: SheetExt } = JSON.parse(
-    ev.dataTransfer?.getData("text/json") || ""
-  );
-  isDraggedOver = false;
-  if (!eventData.sheet) return;
-  const classroom = props.homeworks.Travaux[tab].Classroom;
-  emit("create", eventData.sheet.Sheet.Id, classroom.id);
-}
+defineExpose({ showClassroom });
 
-function onDragOver(ev: DragEvent) {
-  ev.preventDefault();
-  isDraggedOver = true;
+function showClassroom(id: number) {
+  const index = props.homeworks.Travaux.findIndex(
+    (cl) => cl.Classroom.id == id
+  );
+  if (index != -1) tab = index;
 }
 </script>

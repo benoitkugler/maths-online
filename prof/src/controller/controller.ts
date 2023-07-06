@@ -6,6 +6,7 @@ import type {
   CheckQuestionParametersOut,
   Classroom,
   ClassroomExt,
+  CreateTravailOut,
   DeleteExerciceOut,
   DeleteQuestionOut,
   Exercice,
@@ -288,12 +289,20 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessHomeworkCreateTravail(data: Travail): void {
+  protected onSuccessHomeworkCreateTravailWith(data: Travail): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Feuille de travail ajoutée avec succès.");
     }
   }
+
+  protected onSuccessHomeworkCreateTravail(data: CreateTravailOut): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Feuille de travail ajoutée avec succès.");
+    }
+  }
+
   protected onSuccessHomeworkUpdateTravail(): void {
     this.inRequest = false;
     if (this.showMessage) {

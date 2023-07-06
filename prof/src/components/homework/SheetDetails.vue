@@ -19,11 +19,13 @@
           <v-row>
             <v-col>
               <v-text-field
+                autofocus
+                @focus="$event.target.select()"
                 variant="outlined"
                 density="compact"
                 label="Titre de la feuille"
-                v-model="props.sheet.Sheet.Title"
-                @blur="update"
+                v-model="title"
+                @blur="updateTitle"
                 hide-details
               >
               </v-text-field> </v-col
@@ -91,6 +93,7 @@ import {
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
 import SheetTasks from "./SheetTasks.vue";
+import { watch } from "vue";
 
 interface Props {
   sheet: SheetExt;
@@ -109,6 +112,16 @@ const emit = defineEmits<{
   (e: "removeTask", sheet: Sheet, task: TaskExt): void;
   (e: "reorderTasks", sheet: Sheet, tasks: TaskExt[]): void;
 }>();
+
+let title = $ref(props.sheet.Sheet.Title);
+
+watch(props, () => (title = props.sheet.Sheet.Title));
+
+function updateTitle() {
+  if (title == props.sheet.Sheet.Title) return;
+  props.sheet.Sheet.Title = title;
+  update();
+}
 
 function update() {
   emit("update", props.sheet.Sheet);

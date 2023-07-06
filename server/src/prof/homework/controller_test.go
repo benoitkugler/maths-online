@@ -102,14 +102,14 @@ func TestCRUDSheet(t *testing.T) {
 	tu.Assert(t, len(l.Travaux) == 1)
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 0)
 
-	tr, err := ct.assignSheetTo(CreateTravailIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
+	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
 
 	l, err = ct.getSheets(userID)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 1)
 
-	out, err := ct.duplicateSheet(CopySheetIn{IdSheet: sh.Id}, userID)
+	out, err := ct.duplicateSheet(sh.Id, userID)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Sheet.Id != sh.Id)
 
@@ -124,6 +124,27 @@ func TestCRUDSheet(t *testing.T) {
 
 	err = ct.deleteSheet(sh.Id, userID)
 	tu.AssertNoErr(t, err)
+
+	out2, err := ct.createTravail(class.Id, userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out2.Sheet.Sheet.Anonymous.ID == out2.Travail.Id)
+
+	l, err = ct.getSheets(userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Sheets) == 2)
+
+	_, err = ct.copyTravailTo(CopyTravailIn{out2.Travail.Id, class.Id}, userID)
+	tu.AssertNoErr(t, err)
+	l, err = ct.getSheets(userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Sheets) == 3) // anonymous sheet is duplicated
+
+	err = ct.deleteTravail(out2.Travail.Id, userID)
+	tu.AssertNoErr(t, err)
+
+	l, err = ct.getSheets(userID)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Sheets) == 2) // anonymous sheet deleted by cascade
 }
 
 func TestStudentSheets(t *testing.T) {
@@ -157,9 +178,9 @@ func TestStudentSheets(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	// open sheet 1 and 2 ...
-	_, err = ct.assignSheetTo(CreateTravailIn{IdSheet: sh1.Id, IdClassroom: class.Id}, userID)
+	_, err = ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh1.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
-	_, err = ct.assignSheetTo(CreateTravailIn{IdSheet: sh2.Id, IdClassroom: class.Id}, userID)
+	_, err = ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh2.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
 
 	sheets, err = ct.getStudentSheets(student.Id, true)
@@ -199,7 +220,7 @@ func TestEvaluateTask(t *testing.T) {
 	task, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 
-	tr, err := ct.assignSheetTo(CreateTravailIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
+	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 
 	tr.Noted = true
@@ -296,7 +317,7 @@ func TestGetMarks(t *testing.T) {
 	task2, err := ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: sp.question.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 
-	tr, err := ct.assignSheetTo(CreateTravailIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
+	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 	tr.Noted = true
 	tr.Deadline = ho.Time(time.Now().Add(time.Hour))
