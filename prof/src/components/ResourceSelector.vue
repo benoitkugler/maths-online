@@ -5,7 +5,7 @@
         <v-card-title>Choisir une ressource</v-card-title>
       </v-col>
       <v-col cols="auto">
-        <v-btn icon="mdi-close" flat> </v-btn>
+        <v-btn icon="mdi-close" flat @click="emit('closed')"> </v-btn>
       </v-col>
     </v-row>
     <v-card-text class="pt-1">
