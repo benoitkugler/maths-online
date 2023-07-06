@@ -45,13 +45,12 @@
           icon
           title="Documentation de la syntaxe LaTeX"
           size="x-small"
+          @click="showDocumentation()"
         >
-          <v-icon small color="info" @click="showDocumentation()"
-            >mdi-help</v-icon
-          >
+          <v-icon small color="info">mdi-help</v-icon>
         </v-btn>
-        <v-btn icon title="Supprimer" size="x-small">
-          <v-icon small color="red" @click="emit('delete')">mdi-close</v-icon>
+        <v-btn icon title="Supprimer" size="x-small" @click="emit('delete')">
+          <v-icon small color="red">mdi-close</v-icon>
         </v-btn>
       </v-col>
     </v-row>
