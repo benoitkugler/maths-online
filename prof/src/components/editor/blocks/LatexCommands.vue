@@ -21,12 +21,14 @@
               <div v-html="command.command.replace('\n', '<br />')"></div>
             </v-col>
             <v-col cols="1" align-self="center">
-              <v-btn icon size="x-small" title="Copier" class="my-1">
-                <v-icon
-                  icon="mdi-content-copy"
-                  size="x-small"
-                  @click="copyAndClose(command.command)"
-                ></v-icon>
+              <v-btn
+                icon
+                size="x-small"
+                title="Copier"
+                class="my-1"
+                @click="copyAndClose(command.command)"
+              >
+                <v-icon icon="mdi-content-copy" size="x-small"></v-icon>
               </v-btn>
             </v-col>
           </v-row>
@@ -166,6 +168,14 @@ const commands = [
   {
     description: "Symbole non parallèle",
     command: `\\nparallel`,
+  },
+  {
+    description: "Symbole équivalent",
+    command: `\\iff`,
+  },
+  {
+    description: "Système de deux équations",
+    command: `\\begin{cases}  x+y &=2 \\\\   x-3y &=4 \\\\ \\end{cases}`,
   },
 ];
 
