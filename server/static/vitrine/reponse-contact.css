@@ -5,7 +5,7 @@
 .primary-yellow-button-button {
   color: var(--dl-color-gray-white);
   outline: none;
-  background:  linear-gradient( 310deg ,#6EC9AF, #ffe32a);
+  background: linear-gradient( 310deg ,#6EC9AF, #ffe32a);
   box-shadow: 0 4px 7px -1px rgb(0 0 0 / 11%), 0 2px 4px -1px rgb(0 0 0 / 7%);
   text-align: center;
   transition: all .15s ease-in;
