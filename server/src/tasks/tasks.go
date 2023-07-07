@@ -143,7 +143,7 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 		return ExerciceData{
 			Group:        contents.exercicegroups[ex.IdGroup],
 			Exercice:     ex,
-			Links:        questions,
+			links:        questions,
 			QuestionsMap: contents.questions,
 		}
 	case task.IdMonoquestion.Valid:
@@ -255,6 +255,10 @@ type TaskProgressionHeader struct {
 	Id    ta.IdTask
 	Title string
 
+	// The chapter of the task content,
+	// maybe empty
+	Chapter string
+
 	HasProgression bool
 	// empty if HasProgression is false
 	Progression  ProgressionExt
@@ -285,8 +289,9 @@ func LoadTasksProgression(db ta.DB, idStudent teacher.IdStudent, idTasks []ta.Id
 		progression := NewProgressionExt(progs, len(baremes))
 
 		out[task.Id] = TaskProgressionHeader{
-			Id:    task.Id,
-			Title: work.Title(),
+			Id:      task.Id,
+			Title:   work.Title(),
+			Chapter: work.Chapter(),
 
 			HasProgression: hasProg,
 			Progression:    progression,

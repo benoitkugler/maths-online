@@ -40,8 +40,7 @@ func (qus QuestiongroupTags) Tags() Tags {
 	return out
 }
 
-// Tags returns the tags for the given [IdQuestiongroup]
-// sorted by section then tag
+// Tags returns the tags, sorted by section then tag
 func (exes ExercicegroupTags) Tags() Tags {
 	out := make(Tags, len(exes))
 	for i, tag := range exes {
