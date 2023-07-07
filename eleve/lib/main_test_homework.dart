@@ -95,7 +95,7 @@ class _HomeworkTestApp extends StatelessWidget {
 class _API extends _FieldAPI implements HomeworkAPI {
   @override
   Future<Sheets> loadSheets(bool loadNonNoted) async {
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     return [
       SheetProgression(
           1,
@@ -105,6 +105,7 @@ class _API extends _FieldAPI implements HomeworkAPI {
             const TaskProgressionHeader(
                 1,
                 "Ex 1",
+                "Nombres complexes",
                 true,
                 ProgressionExt([
                   [true]
@@ -114,6 +115,7 @@ class _API extends _FieldAPI implements HomeworkAPI {
             const TaskProgressionHeader(
                 2,
                 "Ex 2",
+                "Nombres complexes",
                 true,
                 ProgressionExt([
                   [false]
@@ -126,10 +128,10 @@ class _API extends _FieldAPI implements HomeworkAPI {
           Sheet(3, "Autre feuille en cours", !loadNonNoted,
               DateTime.now().add(const Duration(days: 4)), 0, true, 1),
           [
+            const TaskProgressionHeader(1, "Ex 1", "Nombres complexes", false,
+                ProgressionExt([], 0), 0, 6),
             const TaskProgressionHeader(
-                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
-            const TaskProgressionHeader(
-                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "Entiers", false, ProgressionExt([], 0), 0, 5),
           ]),
       SheetProgression(
           2,
@@ -137,9 +139,15 @@ class _API extends _FieldAPI implements HomeworkAPI {
               DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+                1,
+                "Ex 1",
+                "Patholoigcal loooooooonggggg tittllle .. ..",
+                false,
+                ProgressionExt([], 0),
+                0,
+                6),
             const TaskProgressionHeader(
-                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
           ]),
       SheetProgression(
           2,
@@ -147,9 +155,9 @@ class _API extends _FieldAPI implements HomeworkAPI {
               DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
             const TaskProgressionHeader(
-                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
           ]),
       SheetProgression(
           2,
@@ -157,9 +165,9 @@ class _API extends _FieldAPI implements HomeworkAPI {
               DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
             const TaskProgressionHeader(
-                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
           ]),
       SheetProgression(
           2,
@@ -167,9 +175,9 @@ class _API extends _FieldAPI implements HomeworkAPI {
               DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
             const TaskProgressionHeader(
-                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
           ]),
       SheetProgression(
           2,
@@ -177,9 +185,9 @@ class _API extends _FieldAPI implements HomeworkAPI {
               DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", false, ProgressionExt([], 0), 0, 6),
+                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
             const TaskProgressionHeader(
-                2, "Ex 2", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
           ]),
     ];
   }

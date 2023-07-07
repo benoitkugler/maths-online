@@ -59,6 +59,7 @@ class SheetMarkNotification extends Notification {
     tasks[index] = TaskProgressionHeader(
         current.id,
         current.title,
+        current.chapter,
         newProgression != null,
         newProgression ?? const ProgressionExt([], 0),
         newMark,
@@ -243,6 +244,7 @@ class _TaskList extends StatelessWidget {
                     onTap: () => onStart(task),
                     leading: getCompletion(task).icon,
                     title: Text(task.title),
+                    subtitle: task.chapter.isEmpty ? null : Text(task.chapter),
                     trailing: Text("${task.mark} / ${task.bareme}"),
                   ),
                   if (!hasNotation &&

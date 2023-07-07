@@ -19,6 +19,10 @@ import 'package:http/http.dart' as http;
 
 typedef Sheets = List<SheetProgression>;
 
+extension on SheetProgression {
+  Set<String> chapters() => tasks.map((e) => e.chapter).toSet();
+}
+
 abstract class HomeworkAPI extends FieldAPI {
   Future<Sheets> loadSheets(bool loadNonNoted);
   Future<InstantiatedWork> loadWork(IdTask id);
@@ -254,6 +258,29 @@ class _SheetListState extends State<_SheetList> {
     }));
   }
 
+  @override
+  Widget build(BuildContext context) {
+    if (sheets.isEmpty) {
+      return Center(
+          child: Text(widget.isNotNoted
+              ? "Aucun exercice n'est disponible en accès libre."
+              : "Aucun travail à la maison n'est planifié."));
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4),
+      child: widget.isNotNoted
+          ? _FreeSheetList(sheets, onSelectSheet)
+          : _NotedSheetList(sheets, onSelectSheet),
+    );
+  }
+}
+
+class _NotedSheetList extends StatelessWidget {
+  final Sheets sheets;
+  final void Function(SheetProgression) onTap;
+
+  const _NotedSheetList(this.sheets, this.onTap, {super.key});
+
   // assume a one at a time sheet to do and emphasize it
   int? _selectMainSheetID() {
     // select the most recent one
@@ -268,30 +295,122 @@ class _SheetListState extends State<_SheetList> {
 
   @override
   Widget build(BuildContext context) {
-    if (sheets.isEmpty) {
-      return Center(
-          child: Text(widget.isNotNoted
-              ? "Aucun exercice n'est disponible en accès libre."
-              : "Aucun travail à la maison n'est planifié."));
-    }
     final bestSheet = _selectMainSheetID();
     final now = DateTime.now();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 2),
-      child: ListView(
+    return ListView(
         children: sheets
             .map((e) => InkWell(
-                onTap: () => onSelectSheet(e),
+                onTap: () => onTap(e),
                 child: _SheetSummary(
                   e,
-                  status: e.sheet.noted && e.sheet.deadline.isBefore(now)
+                  status: e.sheet.deadline.isBefore(now)
                       ? SheetStatus.expired
                       : (e.sheet.id == bestSheet
                           ? SheetStatus.suggested
                           : SheetStatus.normal),
                 )))
-            .toList(),
-      ),
+            .toList());
+  }
+}
+
+class _FreeSheetList extends StatefulWidget {
+  final Sheets sheets;
+  final void Function(SheetProgression) onTap;
+
+  const _FreeSheetList(this.sheets, this.onTap, {super.key});
+
+  List<MapEntry<String, List<SheetProgression>>> get _groups {
+    final tmp = <String, List<SheetProgression>>{};
+    for (var sheet in sheets) {
+      final thisChapters = sheet.chapters();
+      for (var chapter in thisChapters) {
+        final l = tmp.putIfAbsent(chapter, () => []);
+        l.add(sheet);
+      }
+    }
+    final out = tmp.entries.toList();
+    out.sort((a, b) => a.key.compareTo(b.key));
+    return out;
+  }
+
+  @override
+  State<_FreeSheetList> createState() => __FreeSheetListState();
+}
+
+class __FreeSheetListState extends State<_FreeSheetList> {
+  List<bool> _expanded = [];
+
+  @override
+  void initState() {
+    _initExpanded();
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FreeSheetList oldWidget) {
+    _initExpanded();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _initExpanded() {
+    _expanded = List.filled(widget._groups.length, false);
+    if (_expanded.isNotEmpty) _expanded[0] = true;
+  }
+
+  void _expand(int index) {
+    final isExpanded = _expanded[index];
+    setState(() {
+      // reset other panels
+      for (var i = 0; i < _expanded.length; i++) {
+        _expanded[i] = false;
+      }
+      _expanded[index] = !isExpanded;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: ExpansionPanelList(
+          expansionCallback: (panelIndex, isExpanded) => _expand(panelIndex),
+          dividerColor: Colors.lightBlue.withOpacity(0.8),
+          expandedHeaderPadding: const EdgeInsets.all(6),
+          children: List.generate(widget._groups.length, (index) {
+            final e = widget._groups[index];
+            return ExpansionPanel(
+                backgroundColor: Colors.transparent,
+                canTapOnHeader: true,
+                isExpanded: _expanded[index],
+                headerBuilder: (context, isExpanded) => Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(e.key.isEmpty ? "Non classé" : e.key,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium),
+                            ),
+                            Chip(
+                              label: Text("${e.value.length}"),
+                              visualDensity: const VisualDensity(vertical: -2),
+                            ),
+                          ],
+                        ))),
+                body: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: e.value
+                      .map((e) => InkWell(
+                            onTap: () => widget.onTap(e),
+                            child: _SheetSummary(
+                              e,
+                              status: SheetStatus.normal,
+                            ),
+                          ))
+                      .toList(),
+                ));
+          })),
     );
   }
 }
@@ -344,28 +463,28 @@ class _SheetSummary extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(hasNotation ? "Travail noté" : "Travail libre"),
-                  if (hasNotation)
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                          color: status.color,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(4))),
-                      child: RichText(
-                          text: TextSpan(children: [
-                        const TextSpan(text: "A rendre avant le\n"),
-                        TextSpan(
-                            text: formatTime(sheet.sheet.deadline),
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                      ])),
-                    )
-                ],
-              ),
+              child: hasNotation
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                          const Text("Travail noté"),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                                color: status.color,
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(4))),
+                            child: RichText(
+                                text: TextSpan(children: [
+                              const TextSpan(text: "A rendre avant le\n"),
+                              TextSpan(
+                                  text: formatTime(sheet.sheet.deadline),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                            ])),
+                          )
+                        ])
+                  : const SizedBox(),
             ),
             if (sheet.tasks.isNotEmpty)
               Row(mainAxisSize: MainAxisSize.min, children: [
