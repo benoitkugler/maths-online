@@ -2,6 +2,7 @@ package trivial
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
@@ -16,10 +17,42 @@ type WeigthedQuestions struct {
 	Weights   []float64 // same length as `Questions`
 }
 
-func (wq WeigthedQuestions) sample() editor.Question {
-	index := utils.SampleIndex(wq.Weights)
+func (wq WeigthedQuestions) sample(alreadySelected questionHistory) editor.Question {
+	// adjust the weights to remove the questions already seen
+	mini := math.MaxInt
+	for _, qu := range wq.Questions {
+		occurences := alreadySelected[qu.Id]
+		if occurences < mini {
+			mini = occurences
+		}
+	}
+	newWeights := append([]float64(nil), wq.Weights...)
+	sum := 0.
+	for i, w := range newWeights {
+		question := wq.Questions[i]
+		occurences := alreadySelected[question.Id]
+		if occurences > mini { // already selected, remove the question
+			newWeights[i] = 0
+		} else {
+			sum += w
+		}
+	}
+
+	if sum == 0 {
+		// should never happen
+		newWeights = wq.Weights
+	}
+
+	for i, w := range newWeights {
+		newWeights[i] = w / sum
+	}
+
+	index := utils.SampleIndex(newWeights)
 	return wq.Questions[index]
 }
+
+// track the number of selections for each question
+type questionHistory map[editor.IdQuestion]int
 
 type QuestionPool [NbCategories]WeigthedQuestions
 
@@ -85,6 +118,8 @@ type game struct {
 	// it is refreshed just when starting a new question
 	question QuestionContent
 
+	questionHistory questionHistory
+
 	// refreshed for each new turn
 	currentWantNextTurn map[serial]bool
 
@@ -100,6 +135,7 @@ func newGame(options Options) game {
 		playerTurn:          "",
 		currentAnswers:      make(map[serial]bool),
 		currentWantNextTurn: make(map[serial]bool),
+		questionHistory:     make(questionHistory),
 		questionTimer:       timer,
 	}
 }
@@ -525,7 +561,10 @@ func (gs *game) emitQuestion() ShowQuestion {
 	// select the category
 	cat := categories[gs.pawnTile]
 	// select the question among the pool...
-	question := gs.options.Questions[cat].sample()
+	question := gs.options.Questions[cat].sample(gs.questionHistory)
+	// ... tracking it ...
+	gs.questionHistory[question.Id] += 1
+
 	// ...and instantiate it
 	instance, vars := question.Page().Instantiate()
 	// Note that we do not use the correction during the game

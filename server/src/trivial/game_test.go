@@ -644,3 +644,38 @@ func TestGameTimeout(t *testing.T) {
 	isDone := <-done
 	tu.Assert(t, isDone)
 }
+
+func TestSampleQuestion(t *testing.T) {
+	wq := WeigthedQuestions{
+		Questions: []editor.Question{
+			{Id: 0},
+			{Id: 1},
+			{Id: 2},
+			{Id: 3},
+			{Id: 4},
+		},
+		Weights: []float64{
+			0.2,
+			0.2,
+			0.2,
+			0.2,
+			0.2,
+		},
+	}
+
+	for range [1000]int{} {
+		qu := wq.sample(questionHistory{0: 1})
+		tu.Assert(t, qu.Id != 0)
+	}
+	for range [1000]int{} {
+		qu := wq.sample(questionHistory{0: 1, 1: 1})
+		tu.Assert(t, qu.Id != 0 && qu.Id != 1)
+	}
+	for range [1000]int{} {
+		_ = wq.sample(questionHistory{0: 1, 1: 1, 2: 1, 3: 1, 4: 1})
+	}
+	for range [1000]int{} {
+		qu := wq.sample(questionHistory{0: 1, 1: 1, 2: 1, 3: 1, 4: 2})
+		tu.Assert(t, qu.Id != 4)
+	}
+}
