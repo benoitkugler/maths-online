@@ -179,22 +179,15 @@ class _SheetWState extends State<SheetW> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
-                    RichText(
-                        text: TextSpan(
-                            style: const TextStyle(fontSize: 16),
-                            children: [
-                          const TextSpan(text: "A rendre avant le\n"),
-                          TextSpan(
-                              text: formatTime(widget.sheet.sheet.deadline),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                        ]))
+                    DeadlineCard(
+                        isExpired: isExpired,
+                        deadline: widget.sheet.sheet.deadline),
                   ],
                 ),
               ),
               if (isExpired)
                 Card(
-                  color: SheetStatus.expired.color,
+                  color: sheetExpiredColor,
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(

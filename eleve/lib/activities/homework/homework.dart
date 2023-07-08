@@ -164,7 +164,6 @@ class _HomeworkWState extends State<_HomeworkW> {
   @override
   void initState() {
     sheets = widget.api.loadSheets(widget.isNonNoted);
-
     super.initState();
   }
 
@@ -323,6 +322,10 @@ class _FreeSheetList extends StatefulWidget {
     final tmp = <String, List<SheetProgression>>{};
     for (var sheet in sheets) {
       final thisChapters = sheet.chapters();
+      // if the sheet is empty, it has no chapters
+      // still show it
+      if (thisChapters.isEmpty) thisChapters.add("");
+
       for (var chapter in thisChapters) {
         final l = tmp.putIfAbsent(chapter, () => []);
         l.add(sheet);
@@ -417,18 +420,8 @@ class __FreeSheetListState extends State<_FreeSheetList> {
 
 enum SheetStatus { normal, suggested, expired }
 
-extension SheetStatusUI on SheetStatus {
-  Color? get color {
-    switch (this) {
-      case SheetStatus.normal:
-        return null;
-      case SheetStatus.suggested:
-        return Colors.blueAccent;
-      case SheetStatus.expired:
-        return Colors.red.shade300;
-    }
-  }
-}
+const sheetSuggestedColor = Colors.blueAccent;
+final sheetExpiredColor = Colors.red.shade300;
 
 class _SheetSummary extends StatelessWidget {
   final SheetProgression sheet;
@@ -445,10 +438,11 @@ class _SheetSummary extends StatelessWidget {
         .where((ex) => ex.hasProgression && ex.progression.isCompleted())
         .length;
     final highlight = status == SheetStatus.suggested;
+    final isExpired = status == SheetStatus.expired;
     return Card(
       shape: highlight
           ? RoundedRectangleBorder(
-              side: BorderSide(color: status.color!, width: 2.0),
+              side: const BorderSide(color: sheetSuggestedColor, width: 2.0),
               borderRadius: BorderRadius.circular(4.0))
           : null,
       elevation: highlight ? 3 : null,
@@ -468,21 +462,9 @@ class _SheetSummary extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                           const Text("Travail noté"),
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                                color: status.color,
-                                borderRadius:
-                                    const BorderRadius.all(Radius.circular(4))),
-                            child: RichText(
-                                text: TextSpan(children: [
-                              const TextSpan(text: "A rendre avant le\n"),
-                              TextSpan(
-                                  text: formatTime(sheet.sheet.deadline),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                            ])),
-                          )
+                          DeadlineCard(
+                              isExpired: isExpired,
+                              deadline: sheet.sheet.deadline)
                         ])
                   : const SizedBox(),
             ),
@@ -506,6 +488,34 @@ class _SheetSummary extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class DeadlineCard extends StatelessWidget {
+  const DeadlineCard({
+    super.key,
+    required this.isExpired,
+    required this.deadline,
+  });
+
+  final bool isExpired;
+  final DateTime deadline;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+          color: isExpired ? sheetExpiredColor : sheetSuggestedColor,
+          borderRadius: const BorderRadius.all(Radius.circular(4))),
+      child: RichText(
+          text: TextSpan(children: [
+        const TextSpan(text: "A rendre avant le\n"),
+        TextSpan(
+            text: formatTime(deadline),
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+      ])),
     );
   }
 }
