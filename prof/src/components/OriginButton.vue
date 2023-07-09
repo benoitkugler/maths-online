@@ -5,7 +5,7 @@
         Merci pour votre participation ! <br /><br />
         Le contenu officiel est vérifié par l'équipe Isyro, en tenant compte de
         l'avis de la communauté. <br />
-        En continuant, vous ajouterez votre resource à la liste des demandes de
+        En continuant, vous ajouterez votre ressource à la liste des demandes de
         publications, et nous en prendrons connaissance au plus vite.
       </v-card-text>
       <v-card-actions>
@@ -24,18 +24,24 @@
   </v-dialog>
 
   <v-menu offset-y close-on-content-click>
-    <template v-slot:activator="{ isActive, props }">
+    <template v-slot:activator="{ isActive, props: innerProps }">
       <v-btn
         v-on="{ isActive }"
-        v-bind="props"
+        v-bind="innerProps"
         class="mx-1"
-        size="x-small"
-        icon
+        :size="props.variant == 'icon' ? 'x-small' : 'small'"
+        :icon="props.variant == 'icon'"
+        :variant="props.variant == 'text' ? 'flat' : undefined"
         title="Options de partage"
         @click.stop
         :color="isPersonnalAndShared ? 'blue' : undefined"
       >
-        <v-icon icon="mdi-share-variant" size="small"></v-icon>
+        <v-icon
+          icon="mdi-share-variant"
+          size="small"
+          :class="props.variant == 'text' ? 'mr-2' : ''"
+        ></v-icon>
+        <template v-if="props.variant == 'text'">Publier</template>
       </v-btn>
     </template>
     <OriginCard
@@ -56,6 +62,7 @@ import OriginCard from "./OriginCard.vue";
 
 interface Props {
   origin: Origin;
+  variant: "icon" | "text";
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{

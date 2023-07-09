@@ -3,6 +3,7 @@
     <v-row no-gutters justify="space-between">
       <v-col cols="auto" align-self="center">
         <OriginButton
+          variant="icon"
           :origin="props.group.Origin"
           @update-public="(b) => emit('updatePublic', props.group.Group.Id, b)"
           @create-review="emit('createReview')"

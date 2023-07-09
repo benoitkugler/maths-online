@@ -6,6 +6,7 @@ import type {
   CheckQuestionParametersOut,
   Classroom,
   ClassroomExt,
+  CopyTravailToOut,
   CreateTravailOut,
   DeleteExerciceOut,
   DeleteQuestionOut,
@@ -315,7 +316,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Feuille de travail supprimée avec succès.");
     }
   }
-  protected onSuccessHomeworkCopyTravail(data: Travail): void {
+  protected onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Feuille de travail copiée avec succès.");

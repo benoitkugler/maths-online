@@ -95,23 +95,30 @@
       </v-row>
     </v-alert>
 
-    <v-list>
-      <trivial-row
-        v-for="config in configs"
-        :key="config.Config.Id"
-        :config="config"
-        :disable-launch="
-          isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
-        "
-        @update-public="(b:boolean) => updatePublic(config.Config, b)"
-        @create-review="createReview(config.Config)"
-        @duplicate="duplicateConfig(config.Config)"
-        @edit="editedConfig = config.Config"
-        @launch="launchingConfig = config.Config"
-        @delete="trivialToDelete = config.Config"
-        @show-selfaccess="selfaccessConfig = config.Config"
-      ></trivial-row>
-    </v-list>
+    <v-card v-for="level in configsByLevels" :key="level[0]" class="ma-2">
+      <v-card-title class="bg-pink-lighten-3">
+        {{ level[0] || "Non classé" }}
+      </v-card-title>
+      <v-card-text class="mt-3">
+        <v-row no-gutters>
+          <trivial-row
+            v-for="config in level[1]"
+            :key="config.Config.Id"
+            :config="config"
+            :disable-launch="
+              isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
+            "
+            @update-public="(b:boolean) => updatePublic(config.Config, b)"
+            @create-review="createReview(config.Config)"
+            @duplicate="duplicateConfig(config.Config)"
+            @edit="editedConfig = config.Config"
+            @launch="launchingConfig = config.Config"
+            @delete="trivialToDelete = config.Config"
+            @show-selfaccess="selfaccessConfig = config.Config"
+          ></trivial-row>
+        </v-row>
+      </v-card-text>
+    </v-card>
   </v-card>
 </template>
 
@@ -148,10 +155,31 @@ let editedConfig = $ref<Trivial | null>(null);
 
 let _configs = $ref<TrivialExt[]>([]);
 
-const configs = computed(() => {
-  const a = _configs.map((v) => v);
-  a.sort((u, v) => u.Config.Id - v.Config.Id);
-  return a;
+const configsByLevels = computed(() => {
+  const byLevel = new Map<string, TrivialExt[]>();
+  _configs.forEach((cf) => {
+    if (!cf.Levels?.length) {
+      // add to unclassified
+      const l = byLevel.get("") || [];
+      l.push(cf);
+      byLevel.set("", l);
+    } else {
+      cf.Levels.forEach((level) => {
+        const l = byLevel.get(level) || [];
+        l.push(cf);
+        byLevel.set(level, l);
+      });
+    }
+  });
+  // inside each level, sort by id
+  for (const list of byLevel.values()) {
+    list.sort((u, v) => u.Config.Id - v.Config.Id);
+  }
+
+  const out = Array.from(byLevel.entries());
+  out.sort((a, b) => -a[0].localeCompare(b[0]));
+
+  return out;
 });
 
 let isLaunching = $ref(false);

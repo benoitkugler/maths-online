@@ -1,22 +1,70 @@
 <template>
-  <v-list-item
-    :class="{ 'my-3': true, 'mx-4': true, [colorClass]: true }"
-    rounded
-  >
-    <v-row>
-      <v-col cols="6" sm="4" md="3" align-self="center" class="pr-0 pl-1 my-3">
-        <v-btn
-          v-if="config.Origin.Visibility == Visibility.Admin"
-          class="ml-3 mr-1 my-1"
-          size="x-small"
-          icon
-          @click="emit('duplicate')"
-          title="Dupliquer cette session"
-        >
-          <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
-        </v-btn>
-        <template v-else>
-          <v-menu offset-y close-on-content-click>
+  <v-col cols="12" md="6" class="my-1">
+    <v-list-item
+      :class="{ [colorClass]: true, 'px-0': true, 'mx-1': true }"
+      rounded
+    >
+      <v-row no-gutters>
+        <v-col align-self="center">
+          <v-menu width="600px">
+            <template v-slot:activator="{ isActive, props: slotProps }">
+              <v-card
+                density="compact"
+                v-on="{ isActive }"
+                v-bind="slotProps"
+                variant="tonal"
+                class="ml-2 py-2"
+              >
+                <h4 class="ml-4">
+                  {{ config.Config.Name || "Sans titre" }}
+                </h4>
+                <v-card-subtitle>
+                  {{ formatDifficulties(config.Config) }}
+                </v-card-subtitle>
+              </v-card>
+            </template>
+
+            <QuestionsRecap :config="props.config"></QuestionsRecap>
+          </v-menu>
+        </v-col>
+
+        <v-col cols="auto" align-self="center" class="my-3">
+          <v-btn
+            class="ml-2"
+            title="Lancer"
+            size="small"
+            @click="emit('launch')"
+            :disabled="props.disableLaunch"
+          >
+            <v-icon icon="mdi-play" color="green"></v-icon>
+            Lancer
+          </v-btn>
+
+          <v-tooltip text="Paramétrer l'accès libre...">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon
+                size="x-small"
+                class="ml-2"
+                @click="emit('show-selfaccess')"
+              >
+                <v-icon icon="mdi-account-multiple"></v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
+
+          <v-btn
+            v-if="config.Origin.Visibility == Visibility.Admin"
+            class="ml-3 mr-2 my-1"
+            size="x-small"
+            icon
+            @click="emit('duplicate')"
+            title="Dupliquer cette session"
+          >
+            <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
+          </v-btn>
+          <v-menu offset-y close-on-content-click v-else>
             <template v-slot:activator="{ isActive, props }">
               <v-btn
                 icon
@@ -24,7 +72,7 @@
                 v-on="{ isActive }"
                 v-bind="props"
                 size="x-small"
-                class="ml-3"
+                class="ml-3 mr-2 my-1"
               >
                 <v-icon icon="mdi-dots-vertical"></v-icon>
               </v-btn>
@@ -54,97 +102,20 @@
                   Supprimer
                 </v-btn></v-list-item
               >
+              <v-list-item>
+                <OriginButton
+                  variant="text"
+                  :origin="config.Origin"
+                  @update-public="(b) => emit('update-public', b)"
+                  @create-review="emit('create-review')"
+                ></OriginButton>
+              </v-list-item>
             </v-list>
           </v-menu>
-
-          <OriginButton
-            :origin="config.Origin"
-            @update-public="(b) => emit('update-public', b)"
-            @create-review="emit('create-review')"
-          ></OriginButton>
-        </template>
-        <v-btn
-          title="Lancer"
-          size="small"
-          @click="emit('launch')"
-          :disabled="props.disableLaunch"
-        >
-          <v-icon icon="mdi-play" color="green"></v-icon>
-          Lancer
-        </v-btn>
-
-        <v-tooltip text="Paramétrer l'accès libre...">
-          <template v-slot:activator="{ props }">
-            <v-btn
-              v-bind="props"
-              icon
-              size="x-small"
-              class="ml-2"
-              @click="emit('show-selfaccess')"
-            >
-              <v-icon icon="mdi-account-multiple"></v-icon>
-            </v-btn>
-          </template>
-        </v-tooltip>
-      </v-col>
-
-      <v-col
-        cols="6"
-        sm="5"
-        md="3"
-        class="px-1"
-        align-self="center"
-        style="text-align: center"
-      >
-        {{ config.Config.Name }}
-        <small class="text-grey">
-          {{ formatCategories(config.Config) }}
-        </small>
-      </v-col>
-
-      <v-col
-        class="d-none d-sm-block"
-        cols="3"
-        md="2"
-        align-self="center"
-        style="text-align: center"
-      >
-        <small class="text-primary">
-          {{ formatDifficulties(config.Config) }}
-        </small>
-      </v-col>
-
-      <v-col align-self="center" md="4">
-        <v-card class="bg-grey-lighten-4">
-          <v-card-text class="px-0 py-1">
-            <v-row justify="center">
-              <v-col
-                cols="6"
-                align-self="center"
-                style="text-align: center"
-                v-if="config.Config.Questions.Tags.every((v) => !v)"
-              >
-                <i>Aucune question configurée.</i>
-              </v-col>
-              <v-col
-                class="my-1 px-0"
-                cols="2"
-                align-self="center"
-                style="text-align: center"
-                v-for="(categorie, index) in config.Config.Questions.Tags || []"
-                :key="index"
-                v-show="categorie && categorie.length != 0"
-              >
-                <v-chip :color="colors[index]" variant="outlined">
-                  {{ config.NbQuestionsByCategories[index] }}
-                </v-chip>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-list-item>
+        </v-col>
+      </v-row>
+    </v-list-item>
+  </v-col>
 </template>
 
 <script setup lang="ts">
@@ -157,6 +128,7 @@ import { visiblityColors } from "@/controller/editor";
 import { colorsPerCategorie } from "@/controller/trivial";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
+import QuestionsRecap from "./QuestionsRecap.vue";
 
 interface Props {
   config: TrivialExt;
@@ -175,39 +147,14 @@ const emit = defineEmits<{
   (e: "show-selfaccess"): void;
 }>();
 
-const colors = colorsPerCategorie;
-
 const colorClass = computed(() =>
   props.config.Origin.Visibility == Visibility.Admin
     ? "bg-" + visiblityColors[Visibility.Admin]
-    : ""
+    : "bg-grey-lighten-4"
 );
 
 function isPersonnal(config: TrivialExt) {
   return config.Origin.Visibility == Visibility.Personnal;
-}
-
-/** return the list of tags shared by all the list */
-function commonTags(tags: string[][]) {
-  const crible: { [key: string]: number } = {};
-  tags.forEach((l) =>
-    l.forEach((tag) => (crible[tag] = (crible[tag] || 0) + 1))
-  );
-  return Object.entries(crible)
-    .filter((entry) => entry[1] == tags.length)
-    .map((entry) => entry[0]);
-}
-
-function formatCategories(config: Trivial) {
-  const allUnions: string[][] = [];
-  config.Questions.Tags.forEach((cat) =>
-    allUnions.push(...(cat || []).map((s) => (s || []).map((ts) => ts.Tag)))
-  );
-  const common = commonTags(allUnions);
-  if (common.length != 0) {
-    return "(" + common.join(", ") + ")";
-  }
-  return "";
 }
 
 function formatDifficulties(config: Trivial) {
@@ -219,4 +166,4 @@ function formatDifficulties(config: Trivial) {
 }
 </script>
 
-<style scoped></style>
+<style></style>

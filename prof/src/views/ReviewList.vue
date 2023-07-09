@@ -11,7 +11,7 @@
       </v-row>
 
       <v-alert color="info" class="my-2 mx-6" density="compact" closable>
-        La base officielle contient des resources dont le contenu est vérifié,
+        La base officielle contient des ressources dont le contenu est vérifié,
         afin de garantir une qualité optimale. Vous pouvez participer à
         l'évalution des contenus suivants.
       </v-alert>
