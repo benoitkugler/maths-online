@@ -26,6 +26,9 @@ type TrivialExt struct {
 	Origin tcAPI.Origin
 
 	NbQuestionsByCategories [trivial.NbCategories]int
+	// Levels stores the Level tags for this trivial,
+	// usually with length one.
+	Levels []string
 }
 
 func newTrivialExt(sel questionSelector, config tr.Trivial, inReview tcAPI.OptionalIdReview, userID, adminID uID) (TrivialExt, error) {
@@ -37,7 +40,7 @@ func newTrivialExt(sel questionSelector, config tr.Trivial, inReview tcAPI.Optio
 		IsInReview:   inReview,
 	}
 
-	out := TrivialExt{Config: config, Origin: origin}
+	out := TrivialExt{Config: config, Origin: origin, Levels: config.Questions.Levels()}
 	questions, err := sel.search(config.Questions, userID)
 	if err != nil {
 		return out, err

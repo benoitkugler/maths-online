@@ -1,6 +1,8 @@
 package trivial
 
 import (
+	"sort"
+
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/trivial"
 )
@@ -36,4 +38,25 @@ func (query *CategoriesQuestions) Normalize() {
 	for i := range query.Tags {
 		query.Tags[i] = query.Tags[i].normalize()
 	}
+}
+
+// Levels returns all the levels targetted.
+// It may return an empty slice.
+func (cat CategoriesQuestions) Levels() []string {
+	tmp := map[string]bool{}
+	for _, qc := range cat.Tags {
+		for _, l := range qc {
+			for _, tag := range l {
+				if tag.Section == editor.Level {
+					tmp[tag.Tag] = true
+				}
+			}
+		}
+	}
+	var out []string
+	for k := range tmp {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }

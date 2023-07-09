@@ -1048,6 +1048,7 @@ export interface TrivialExt {
   Config: Trivial;
   Origin: Origin;
   NbQuestionsByCategories: number[];
+  Levels: string[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialSelfaccess
 export interface TrivialSelfaccess {
