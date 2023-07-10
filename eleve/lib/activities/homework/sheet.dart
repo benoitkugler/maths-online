@@ -1,5 +1,4 @@
 import 'package:eleve/activities/homework/homework.dart';
-import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/shared/errors.dart';

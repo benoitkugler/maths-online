@@ -2,6 +2,7 @@ import 'dart:js' as js;
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_eleve_shared.dart';
+import 'package:eleve/shared/settings_web.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -10,7 +11,8 @@ void main() async {
   final mode = uri.queryParameters["mode"];
   final bm = APISetting.fromString(mode ?? "");
 
-  final audio = await loadAudioFromSettings();
+  final handler = LocalStorageSettings();
+  final audio = await loadAudioFromSettings(handler);
 
-  runApp(EleveApp(audio, bm));
+  runApp(EleveApp(audio, handler, bm));
 }

@@ -112,7 +112,6 @@ class _QuestionList extends StatelessWidget {
   }
 
   void _showProgressionDetails(BuildContext context, int questionIndex) {
-    final st = states[questionIndex];
     showDialog<void>(
         context: context,
         builder: (context) => Dialog(

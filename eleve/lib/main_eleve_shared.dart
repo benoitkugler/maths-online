@@ -1,30 +1,32 @@
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/activities/trivialpoursuit/login.dart';
-import 'package:eleve/audio.dart';
+import 'package:eleve/shared/audio.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/activity_start.dart';
+import 'package:eleve/shared/settings_shared.dart';
 import 'package:flutter/material.dart' hide Flow;
 import 'package:upgrader/upgrader.dart';
 
-Future<Audio> loadAudioFromSettings() async {
+Future<Audio> loadAudioFromSettings(SettingsStorage handler) async {
   WidgetsFlutterBinding
       .ensureInitialized(); // required to load the settings path
 
   final audio = Audio();
-  final settings = await loadUserSettings();
+  final settings = await handler.load();
   audio.setSongs(settings.songs);
   return audio;
 }
 
 class EleveApp extends StatelessWidget {
   final Audio audioPlayer;
+  final SettingsStorage settingsHandler;
   final BuildMode buildMode;
   final Upgrader? checkUprades;
 
-  const EleveApp(this.audioPlayer, this.buildMode,
+  const EleveApp(this.audioPlayer, this.settingsHandler, this.buildMode,
       {super.key, this.checkUprades});
 
   @override
@@ -37,6 +39,7 @@ class EleveApp extends StatelessWidget {
         supportedLocales: locales,
         home: _AppScaffold(
           audioPlayer,
+          settingsHandler,
           buildMode,
           checkUprades: checkUprades,
         ));
@@ -45,10 +48,11 @@ class EleveApp extends StatelessWidget {
 
 class _AppScaffold extends StatefulWidget {
   final Audio audioPlayer;
+  final SettingsStorage handler;
   final BuildMode buildMode;
   final Upgrader? checkUprades;
 
-  const _AppScaffold(this.audioPlayer, this.buildMode,
+  const _AppScaffold(this.audioPlayer, this.handler, this.buildMode,
       {Key? key, this.checkUprades})
       : super(key: key);
 
@@ -66,7 +70,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _loadSettings() async {
-    final set = await loadUserSettings();
+    final set = await widget.handler.load();
     setState(() {
       settings = set;
     });
@@ -83,7 +87,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
     onPop.then((_) async {
       widget.audioPlayer.setSongs(ct);
       settings.songs = ct;
-      await saveUserSettings(settings); // commit on disk
+      await widget.handler.save(settings); // commit on disk
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -95,7 +99,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
   void _showAppSettings() async {
     final newSettings = await Navigator.of(context).push(
         MaterialPageRoute<UserSettings>(
-            builder: (_) => Settings(widget.buildMode)));
+            builder: (_) => Settings(widget.buildMode, widget.handler)));
     if (newSettings != null) {
       setState(() {
         settings = newSettings;
@@ -113,14 +117,14 @@ class __AppScaffoldState extends State<_AppScaffold> {
 
     // in any case, register the screen has been seen
     settings.hasBeenLaunched = true;
-    saveUserSettings(settings);
+    widget.handler.save(settings);
 
     if (goTo != null && goTo) _showAppSettings();
   }
 
   void _saveTrivialMeta(String gameCode, String gameMeta) async {
     settings.trivialGameMetas[gameCode] = gameMeta;
-    await saveUserSettings(settings);
+    await widget.handler.save(settings);
   }
 
   void _launchTrivialPoursuit() async {

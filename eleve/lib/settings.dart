@@ -1,67 +1,15 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:eleve/audio.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/classroom/join_classroom.dart';
 import 'package:eleve/classroom/recap.dart';
+import 'package:eleve/shared/settings_shared.dart';
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
-
-const studentPseudoKey = "client-pseudo";
-const studentIDKey = "client-id";
-
-/// [UserSettings] store the local parameters persisting
-/// accross app launches.
-class UserSettings {
-  String studentPseudo;
-  String studentID;
-  PlaylistController songs;
-  Map<String, String> trivialGameMetas;
-  bool hasBeenLaunched;
-
-  UserSettings(
-      {this.studentPseudo = "",
-      this.studentID = "",
-      this.songs = Audio.DefaultPlaylist,
-      Map<String, String>? trivialGameMetas,
-      this.hasBeenLaunched = false})
-      : trivialGameMetas = trivialGameMetas ?? {};
-
-  String toJson() {
-    return jsonEncode({
-      studentPseudoKey: studentPseudo,
-      studentIDKey: studentID,
-      "songs": songs,
-      "trivialGameMetas": trivialGameMetas,
-      "hasBeenLaunched": hasBeenLaunched,
-    });
-  }
-
-  factory UserSettings.fromJson(String source) {
-    final dict = jsonDecode(source) as Map<String, dynamic>;
-    var songs = [0, 1];
-    if (dict["songs"] is List) {
-      songs = (dict["songs"] as List<dynamic>).map((e) => e as int).toList();
-    }
-    final gameMetas = (dict["trivialGameMetas"] ?? <String, dynamic>{})
-        as Map<String, dynamic>;
-    return UserSettings(
-      studentPseudo: dict[studentPseudoKey] as String,
-      studentID: dict[studentIDKey] as String,
-      songs: songs,
-      trivialGameMetas:
-          gameMetas.map((key, value) => MapEntry(key, value as String)),
-      hasBeenLaunched: dict["hasBeenLaunched"] as bool,
-    );
-  }
-}
 
 class Settings extends StatefulWidget {
   final BuildMode buildMode;
-  const Settings(this.buildMode, {Key? key}) : super(key: key);
+  final SettingsStorage handler;
+
+  const Settings(this.buildMode, this.handler, {Key? key}) : super(key: key);
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -79,7 +27,7 @@ class _SettingsState extends State<Settings> {
   }
 
   void _loadUserSettings() async {
-    final newSettings = await loadUserSettings();
+    final newSettings = await widget.handler.load();
     setState(() {
       settings = newSettings;
     });
@@ -96,7 +44,7 @@ class _SettingsState extends State<Settings> {
     setState(() {
       settings.studentPseudo = pseudo;
     });
-    await saveUserSettings(settings);
+    await widget.handler.save(settings);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: Theme.of(context).colorScheme.secondary,
       content: const Text("Paramètres enregistrés"),
@@ -115,7 +63,7 @@ class _SettingsState extends State<Settings> {
     setState(() {
       settings.studentID = idCrypted;
     });
-    await saveUserSettings(settings);
+    await widget.handler.save(settings);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: Theme.of(context).colorScheme.secondary,
       content: const Text("Classe rejointe avec succès."),
@@ -127,7 +75,7 @@ class _SettingsState extends State<Settings> {
     setState(() {
       settings.studentID = "";
     });
-    await saveUserSettings(settings);
+    await widget.handler.save(settings);
   }
 
   @override
@@ -175,33 +123,6 @@ class _SettingsState extends State<Settings> {
       ),
     );
   }
-}
-
-Future<File> _settingFile() async {
-  final directory = await getApplicationDocumentsDirectory();
-  return File('${directory.path}/.isyro_settings.json');
-}
-
-Future<UserSettings> loadUserSettings() async {
-  try {
-    final file = await _settingFile();
-    final content = await file.readAsString();
-    return UserSettings.fromJson(content);
-  } catch (e) {
-    Logger.root.info("loading settings: $e");
-    return UserSettings();
-  }
-}
-
-Future<void> saveUserSettings(UserSettings settings) async {
-  try {
-    final file = await _settingFile();
-    await file.writeAsString(settings.toJson());
-    Logger.root.info("settings saved in ${file.path}");
-  } catch (e) {
-    Logger.root.info("saving settings: $e");
-  }
-  return;
 }
 
 class _NotRegistred extends StatefulWidget {

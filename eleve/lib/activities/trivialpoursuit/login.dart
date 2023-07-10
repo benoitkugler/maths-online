@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/settings.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/pin.dart';
+import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_trivial.dart';
