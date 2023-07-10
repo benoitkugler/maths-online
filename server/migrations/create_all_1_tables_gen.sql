@@ -19,7 +19,8 @@ CREATE TABLE teachers (
     Mail text NOT NULL,
     PasswordCrypted bytea NOT NULL,
     IsAdmin boolean NOT NULL,
-    HasSimplifiedEditor boolean NOT NULL
+    HasSimplifiedEditor boolean NOT NULL,
+    Contact jsonb NOT NULL
 );
 
 CREATE TABLE exercices (
@@ -130,7 +131,8 @@ CREATE TABLE sheets (
     Id serial PRIMARY KEY,
     Title text NOT NULL,
     IdTeacher integer NOT NULL,
-    Level text NOT NULL
+    Level text NOT NULL,
+    Anonymous integer
 );
 
 CREATE TABLE sheet_tasks (

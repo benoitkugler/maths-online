@@ -10,6 +10,9 @@ ALTER TABLE classrooms
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
+ALTER TABLE teachers
+    ADD CONSTRAINT Contact_gomacro CHECK (gomacro_validate_json_teac_Contact (Contact));
+
 ALTER TABLE questions
     ADD CHECK (NeedExercice IS NOT NULL
         OR IdGroup IS NOT NULL);
@@ -171,13 +174,22 @@ ALTER TABLE random_monoquestions
     ADD CONSTRAINT Difficulty_gomacro CHECK (gomacro_validate_json_array_edit_DifficultyTag (Difficulty));
 
 ALTER TABLE travails
+    ADD UNIQUE (Id, IdSheet);
+
+ALTER TABLE travails
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
 ALTER TABLE travails
     ADD FOREIGN KEY (IdSheet) REFERENCES sheets ON DELETE CASCADE;
 
 ALTER TABLE sheets
+    ADD FOREIGN KEY (Id, Anonymous) REFERENCES travails (IdSheet, Id) ON DELETE CASCADE;
+
+ALTER TABLE sheets
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+
+ALTER TABLE sheets
+    ADD FOREIGN KEY (Anonymous) REFERENCES travails ON DELETE CASCADE;
 
 ALTER TABLE sheet_tasks
     ADD PRIMARY KEY (IdSheet, INDEX);

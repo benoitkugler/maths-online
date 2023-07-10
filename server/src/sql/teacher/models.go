@@ -15,6 +15,7 @@ type Teacher struct {
 	PasswordCrypted     []byte    `json:"password_crypted"`      // crypted
 	IsAdmin             bool      `json:"is_admin"`              // almost always false
 	HasSimplifiedEditor bool      `json:"has_simplified_editor"` // true will hide maths widgets in editor
+	Contact             Contact   `json:"contact"`               // if empty, [Mail] is used
 }
 
 // Classroom is one group of student controlled by a teacher

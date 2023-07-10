@@ -16,6 +16,14 @@ func randClassroom() Classroom {
 	return s
 }
 
+func randContact() Contact {
+	var s Contact
+	s.Name = randstring()
+	s.URL = randstring()
+
+	return s
+}
+
 func randDate() Date {
 	return Date(randtTime())
 }
@@ -61,6 +69,7 @@ func randTeacher() Teacher {
 	s.PasswordCrypted = randSliceuint8()
 	s.IsAdmin = randbool()
 	s.HasSimplifiedEditor = randbool()
+	s.Contact = randContact()
 
 	return s
 }

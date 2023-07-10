@@ -15,7 +15,7 @@
               v-model="settings.Mail"
               label="Adresse email"
               persistent-hint
-              hint="Adresse utilisée comme identifiant de connection"
+              hint="Adresse utilisée comme identifiant de connection."
             ></v-text-field>
           </v-col>
 
@@ -31,6 +31,30 @@
               hint="Le mot de passe doit contenir au moins 4 charactères."
               counter=""
               @click:append="showPassword = !showPassword"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col>
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              label="Contact"
+              v-model="settings.Contact.Name"
+              hint="Affiché aux élèves. Laisser vide pour utiliser l'adresse mail."
+              persistent-hint
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              label="URL"
+              v-model="settings.Contact.URL"
+              placeholder="https://"
+              hint="Optionnelle. La fournir pour afficher un lien."
+              persistent-hint
             ></v-text-field>
           </v-col>
         </v-row>

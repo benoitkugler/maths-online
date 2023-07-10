@@ -5,6 +5,8 @@ package teacher
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
@@ -343,6 +345,7 @@ func scanOneTeacher(row scanner) (Teacher, error) {
 		&item.PasswordCrypted,
 		&item.IsAdmin,
 		&item.HasSimplifiedEditor,
+		&item.Contact,
 	)
 	return item, err
 }
@@ -411,22 +414,22 @@ func ScanTeachers(rs *sql.Rows) (Teachers, error) {
 // Insert one Teacher in the database and returns the item with id filled.
 func (item Teacher) Insert(tx DB) (out Teacher, err error) {
 	row := tx.QueryRow(`INSERT INTO teachers (
-		mail, passwordcrypted, isadmin, hassimplifiededitor
+		mail, passwordcrypted, isadmin, hassimplifiededitor, contact
 		) VALUES (
-		$1, $2, $3, $4
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.Mail, item.PasswordCrypted, item.IsAdmin, item.HasSimplifiedEditor)
+		`, item.Mail, item.PasswordCrypted, item.IsAdmin, item.HasSimplifiedEditor, item.Contact)
 	return ScanTeacher(row)
 }
 
 // Update Teacher in the database and returns the new version.
 func (item Teacher) Update(tx DB) (out Teacher, err error) {
 	row := tx.QueryRow(`UPDATE teachers SET (
-		mail, passwordcrypted, isadmin, hassimplifiededitor
+		mail, passwordcrypted, isadmin, hassimplifiededitor, contact
 		) = (
-		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
-		`, item.Mail, item.PasswordCrypted, item.IsAdmin, item.HasSimplifiedEditor, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.Mail, item.PasswordCrypted, item.IsAdmin, item.HasSimplifiedEditor, item.Contact, item.Id)
 	return ScanTeacher(row)
 }
 
@@ -453,6 +456,25 @@ func SelectTeacherByMail(tx DB, mail string) (item Teacher, found bool, err erro
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+func loadJSON(out interface{}, src interface{}) error {
+	if src == nil {
+		return nil //zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, out)
+}
+
+func dumpJSON(s interface{}) (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
 }
 
 func (s *Date) Scan(src interface{}) error {
@@ -615,3 +637,6 @@ func (s IdTeacherSet) Keys() []IdTeacher {
 	}
 	return out
 }
+
+func (s *Contact) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Contact) Value() (driver.Value, error) { return dumpJSON(s) }

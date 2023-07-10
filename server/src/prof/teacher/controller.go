@@ -280,6 +280,7 @@ type TeacherSettings struct {
 	Mail                string
 	Password            string
 	HasEditorSimplified bool
+	Contact             tc.Contact
 }
 
 // TeacherGetSettings returns the teacher global settings.
@@ -306,6 +307,7 @@ func (ct *Controller) getSettings(userID teacher.IdTeacher) (TeacherSettings, er
 		Mail:                teach.Mail,
 		Password:            password,
 		HasEditorSimplified: teach.HasSimplifiedEditor,
+		Contact:             teach.Contact,
 	}, nil
 }
 
@@ -338,6 +340,7 @@ func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeac
 	teach.Mail = args.Mail
 	teach.PasswordCrypted = ct.teacherKey.EncryptPassword(args.Password)
 	teach.HasSimplifiedEditor = args.HasEditorSimplified
+	teach.Contact = args.Contact
 
 	_, err = teach.Update(ct.db)
 	if err != nil {

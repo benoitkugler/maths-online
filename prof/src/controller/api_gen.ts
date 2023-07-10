@@ -967,6 +967,7 @@ export interface TeacherSettings {
   Mail: string;
   Password: string;
   HasEditorSimplified: boolean;
+  Contact: Contact;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
 export enum Visibility {
@@ -1272,6 +1273,11 @@ export interface Classroom {
   id: IdClassroom;
   id_teacher: IdTeacher;
   name: string;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Contact
+export interface Contact {
+  Name: string;
+  URL: string;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Date
 export type Date = Date_;

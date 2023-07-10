@@ -531,12 +531,18 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 		return out, utils.SQLError(err)
 	}
 
+	// display the teacher coordinates
+	mail, url := teacher.Contact.Name, teacher.Contact.URL
+	if mail == "" {
+		mail, url = teacher.Mail, ""
+	}
 	return CheckStudentClassroomOut{
 		IsOK: true,
 		Meta: StudentClassroomHeader{
-			Student:       student,
-			ClassroomName: classroom.Name,
-			TeacherMail:   teacher.Mail,
+			Student:           student,
+			ClassroomName:     classroom.Name,
+			TeacherMail:       mail,
+			TeacherContactURL: url,
 		},
 	}, nil
 }
