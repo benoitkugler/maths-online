@@ -93,8 +93,8 @@ let initialQuery = $ref<Query | null>(null);
 function showFolder(index: [LevelTag, string]) {
   initialQuery = {
     TitleQuery: "",
-    LevelTags: index[0] ? [index[0]] : [],
-    ChapterTags: index[1] ? [index[1]] : [],
+    LevelTags: [index[0]],
+    ChapterTags: [index[1]],
     Origin: OriginKind.All,
   };
   viewMode = "details";

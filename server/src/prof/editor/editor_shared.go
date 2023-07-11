@@ -110,8 +110,8 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 
 type Query struct {
 	TitleQuery  string   // empty means all
-	LevelTags   []string // union, empty means all
-	ChapterTags []string // union, empty means all
+	LevelTags   []string // union, empty means all; an empty tag means "with no level"
+	ChapterTags []string // union, empty means all; an empty tag means "with no chapter"
 	Origin      OriginKind
 }
 
