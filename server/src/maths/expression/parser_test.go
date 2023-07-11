@@ -243,6 +243,21 @@ var expressions = [...]struct {
 			},
 		}, false,
 	},
+	// exponents
+	{
+		"x¹ + x²", &Expr{
+			atom: plus, left: &Expr{
+				atom:  pow,
+				left:  newVarExpr('x'),
+				right: newNb(1),
+			},
+			right: &Expr{
+				atom:  pow,
+				left:  newVarExpr('x'),
+				right: newNb(2),
+			},
+		}, false,
+	},
 	{
 		"24x^2 - 27x + 18", &Expr{
 			atom: plus,
