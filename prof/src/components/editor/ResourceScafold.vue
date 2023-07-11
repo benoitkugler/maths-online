@@ -280,6 +280,12 @@ const emit = defineEmits<{
   (e: "deleteVariant", v: VariantG): void;
 }>();
 
+defineExpose({ showEditVariant });
+
+function showEditVariant(variant: VariantG) {
+  variantToEdit = copy(variant);
+}
+
 function tabTitle(index: number) {
   if (index == props.modelValue)
     return props.resource.Variants[index].Subtitle || `Variante ${index + 1}`;
