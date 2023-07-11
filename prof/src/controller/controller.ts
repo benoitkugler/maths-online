@@ -63,7 +63,8 @@ class Controller extends AbstractAPI {
   public settings: TeacherSettings = {
     Mail: "",
     HasEditorSimplified: false,
-    Password: ""
+    Password: "",
+    Contact: { Name: "", URL: "" }
   };
 
   logout() {
