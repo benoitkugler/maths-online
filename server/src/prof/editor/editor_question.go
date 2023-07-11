@@ -117,7 +117,10 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
-	qu, err := ed.Question{IdGroup: group.Id.AsOptional()}.Insert(tx)
+	qu, err := ed.Question{
+		IdGroup: group.Id.AsOptional(),
+		Enonce:  questions.Enonce{questions.TextBlock{}}, // add a text block, very common in practice
+	}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return QuestiongroupExt{}, utils.SQLError(err)
