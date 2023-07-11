@@ -2,6 +2,7 @@ package expression
 
 import (
 	"bytes"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -105,6 +106,7 @@ func (sy symbol) String() string {
 	}
 }
 
+// number token
 type nT string
 
 type tokenizer struct {
@@ -126,7 +128,7 @@ func (tk *tokenizer) Peek() token {
 	}
 
 	// trigger a new read
-	current, next := tk.readTokenImplicitMult()
+	current, next := tk.readToken()
 	// save both tokens
 	tk.currentToken = current
 	tk.nextToken = next
@@ -144,18 +146,26 @@ func (tk *tokenizer) Next() token {
 	}
 
 	// trigger a new read
-	current, next := tk.readTokenImplicitMult()
+	current, next := tk.readToken()
 	tk.currentToken = next // only save the potential next token, not current
 	return current
 }
 
-// readTokenImplicitMult wraps readToken and handles implicit
-// multiplication.
+// readToken wraps readRawToken and handles implicit
+// multiplication, and special exponents
+//
 // When an implicit multiplication is detected, a corresponding
 // token is returned and `lastToken` and `currentToken` are updated accordingly
-func (tk *tokenizer) readTokenImplicitMult() (current, next token) {
-	nextToken := tk.readToken()
-	if isImplicitMult(tk.lastToken, nextToken) { // insert a mult
+//
+// Similarly, when an exponent is detected, a ^ token is returned
+// and `lastToken` and `currentToken` are updated accordingly
+func (tk *tokenizer) readToken() (current, next token) {
+	nextToken := tk.readRawToken()
+
+	if va, isVar := nextToken.data.(Variable); isVar && va.Name == runeIsExponent { // insert a ^
+		current = token{data: pow, pos: nextToken.pos}
+		next = token{data: nT(va.Indice), pos: nextToken.pos}
+	} else if isImplicitMult(tk.lastToken, nextToken) { // insert a mult
 		current = token{data: mult, pos: nextToken.pos}
 		next = nextToken
 	} else {
@@ -222,6 +232,32 @@ func isOperator(src []rune) (op operator, n int) {
 	return op, 0
 }
 
+// match the special runes x¹, x², etc..
+func isExponent(c rune) int {
+	switch c {
+	case 0x00b9:
+		return 1
+	case 0x00b2:
+		return 2
+	case 0x00b3:
+		return 3
+	case 0x2074:
+		return 4
+	case 0x2075:
+		return 5
+	case 0x2076:
+		return 6
+	case 0x2077:
+		return 7
+	case 0x2078:
+		return 8
+	case 0x2079:
+		return 9
+	default:
+		return -1
+	}
+}
+
 // advance pos to the next non whitespace char
 func (tk *tokenizer) skipWhitespace() {
 	for tk.pos < len(tk.src) && isWhiteSpace(tk.src[tk.pos]) {
@@ -229,16 +265,24 @@ func (tk *tokenizer) skipWhitespace() {
 	}
 }
 
+const runeIsExponent rune = -2
+
 // advance the position
-func (tk *tokenizer) readToken() (tok token) {
+func (tk *tokenizer) readRawToken() (out token) {
 	tk.skipWhitespace()
 
 	if tk.pos >= len(tk.src) {
-		return token{pos: tk.pos}
+		return token{pos: tk.pos} // nil data for EOF
 	}
 
-	out := token{pos: tk.pos}
+	out = token{pos: tk.pos}
 	c := tk.src[tk.pos]
+
+	if exp := isExponent(c); exp >= 0 {
+		tk.pos++
+		out.data = Variable{Name: runeIsExponent, Indice: strconv.Itoa(exp)}
+		return
+	}
 
 	op, isOpRunes := isOperator(tk.src[tk.pos:])
 	switch {
@@ -276,6 +320,7 @@ func (tk *tokenizer) readToken() (tok token) {
 	case isOpRunes != 0:
 		out.data = op
 		tk.pos += isOpRunes
+
 	case c == '"': // custom symbol
 		out.data = tk.readCustomSymbol()
 	case unicode.IsLetter(c): // either a function, a variable, Inf/inf or a constant
@@ -298,7 +343,11 @@ func (tk *tokenizer) readToken() (tok token) {
 		v := tk.readVariable()
 		out.data = v
 	default: // number start
+		currentPos := tk.pos
 		out.data = tk.readNumber()
+		if tk.pos == currentPos { // invalid input, avoid infinite loop
+			tk.pos++
+		}
 	}
 
 	return out
