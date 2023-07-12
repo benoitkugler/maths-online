@@ -349,7 +349,7 @@ type FunctionPointsAnswer struct {
 type TreeNodeAnswer struct {
 	Children      []TreeNodeAnswer
 	Probabilities []float64 // edges, same length as Children
-	Value         int       // index into the proposals
+	Value         int       // index into the proposals, ignored for the root
 }
 
 type TreeAnswer struct {

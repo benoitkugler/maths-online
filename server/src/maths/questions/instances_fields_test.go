@@ -322,3 +322,83 @@ func TestSignTableField(t *testing.T) {
 
 	tu.Assert(t, field.evaluateAnswer(ans))
 }
+
+func TestTree(t *testing.T) {
+	level := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.2, 0.8},
+		Children: []client.TreeNodeAnswer{
+			{Value: 1},
+			{Value: 2},
+		},
+	}
+	levelRev := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.8, 0.2},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 1},
+		},
+	}
+
+	level3 := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.2, 0.7, 0.1},
+		Children: []client.TreeNodeAnswer{
+			{Value: 1},
+			{Value: 2},
+			{Value: 3},
+		},
+	}
+	level3Rev := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.7, 0.2, 0.1},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 1},
+			{Value: 3},
+		},
+	}
+
+	levelOther := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.8, 0.2},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 4},
+		},
+	}
+	levelOtherOther := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.7, 0.2, 0.1},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 4},
+			{Value: 4},
+		},
+	}
+
+	tu.Assert(t, !areTreeEquivalent(level, levelOther))
+	tu.Assert(t, !areTreeEquivalent(levelOther, levelOtherOther))
+	tu.Assert(t, areTreeEquivalent(level, levelRev))
+	tu.Assert(t, areTreeEquivalent(level3, level3Rev))
+
+	// test for nested invertion
+	level2 := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.2, 0.8},
+		Children: []client.TreeNodeAnswer{
+			levelOther,
+			level,
+		},
+	}
+	level2bis := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []float64{0.2, 0.8},
+		Children: []client.TreeNodeAnswer{
+			levelOther,
+			levelRev,
+		},
+	}
+	tu.Assert(t, areTreeEquivalent(level2, level2bis))
+}

@@ -542,6 +542,7 @@ func (fa FigureAffineLineFieldBlock) setupValidator(params expression.RandomPara
 	return figureAffineLineValidator{figure: figure, a: a, b: b}, nil
 }
 
+// TreeNodeAnswer is an event, with (optional) children
 type TreeNodeAnswer struct {
 	Children      []TreeNodeAnswer `gomacro-data:"ignore"`
 	Probabilities []string         // edges, same length as Children, valid expression.Expression

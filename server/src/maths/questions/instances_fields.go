@@ -925,7 +925,7 @@ func (f TreeFieldInstance) toClient() client.Block {
 }
 
 func (f TreeFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.TreeAnswer)
+	ans, ok := answer.(client.TreeAnswer)
 	if !ok {
 		return InvalidFieldAnswer{
 			ID:     f.ID,
@@ -933,32 +933,99 @@ func (f TreeFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 		}
 	}
 
-	return nil
-}
-
-func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	ans := answer.(client.TreeAnswer)
-
-	var isNodeCorrect func(exp, got client.TreeNodeAnswer) bool
-	isNodeCorrect = func(exp, got client.TreeNodeAnswer) bool {
-		if exp.Value != got.Value {
+	var isCorrect func(node client.TreeNodeAnswer) bool
+	isCorrect = func(node client.TreeNodeAnswer) bool {
+		if len(node.Children) != len(node.Probabilities) {
 			return false
 		}
-		if !areNumbersEqual(exp.Probabilities, got.Probabilities) {
-			return false
-		}
-		if len(exp.Children) != len(got.Children) {
-			return false
-		}
-		for i := range exp.Children {
-			if !isNodeCorrect(exp.Children[i], got.Children[i]) {
+		// recurse
+		for _, child := range node.Children {
+			if !isCorrect(child) {
 				return false
 			}
 		}
 		return true
 	}
 
-	return isNodeCorrect(f.Answer.Root, ans.Root)
+	if !isCorrect(ans.Root) {
+		return InvalidFieldAnswer{
+			ID:     f.ID,
+			Reason: "inconsistent Children and Probabilites length",
+		}
+	}
+
+	return nil
+}
+
+type treeItem struct {
+	proba float64
+	child client.TreeNodeAnswer
+}
+
+func sliceFromNode(node client.TreeNodeAnswer) []treeItem {
+	out := make([]treeItem, len(node.Children))
+	for i := range out {
+		out[i] = treeItem{node.Probabilities[i], node.Children[i]}
+	}
+	return out
+}
+
+// Permute the values at index i to len(a)-1.
+//
+// perm(a, f, 0) calls f with each permutation of a.
+func perm(a []treeItem, f func([]treeItem), i int) {
+	if i > len(a) {
+		f(a)
+		return
+	}
+	perm(a, f, i+1)
+	for j := i + 1; j < len(a); j++ {
+		a[i], a[j] = a[j], a[i]
+		perm(a, f, i+1)
+		a[i], a[j] = a[j], a[i]
+	}
+}
+
+func areTreeEquivalent(exp, got client.TreeNodeAnswer) bool {
+	if exp.Value != got.Value {
+		return false
+	}
+
+	if len(exp.Children) != len(got.Children) {
+		return false
+	}
+
+	// compare the probabilities and the associated subtree, up
+	// to permutations
+	expL := sliceFromNode(exp)
+	gotL := sliceFromNode(got)
+	onePermCorrect := false
+	perm(gotL, func(gotPermutedL []treeItem) {
+		allCorrect := true
+		// check if expL gotPermutedL match
+		for i := range expL {
+			expI, gotI := expL[i], gotPermutedL[i]
+			if !expression.AreFloatEqual(expI.proba, gotI.proba) {
+				allCorrect = false
+				break
+			}
+			// recurse on children (also accepting permutations)
+			if !areTreeEquivalent(expI.child, gotI.child) {
+				allCorrect = false
+				break
+			}
+		}
+		if allCorrect { // we found at least one correct permutation
+			onePermCorrect = true
+		}
+	}, 0)
+
+	return onePermCorrect
+}
+
+func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	ans := answer.(client.TreeAnswer)
+	return areTreeEquivalent(f.Answer.Root, ans.Root)
 }
 
 func (f TreeFieldInstance) correctAnswer() client.Answer {
