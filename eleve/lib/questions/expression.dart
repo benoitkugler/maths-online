@@ -99,9 +99,6 @@ class ExpressionField extends StatefulWidget {
       "arctan",
       "abs",
       "sqrt",
-      "sgn",
-      "isZero",
-      "isPrime",
     ];
     return functions.any((element) =>
         newValue.text.endsWith(element) &&
@@ -221,6 +218,273 @@ class ExpressionCell extends StatelessWidget {
           controller,
           maxWidthFactor: 0.2,
         ),
+      ),
+    );
+  }
+}
+
+abstract class _ExprPart {
+  String toExpr();
+}
+
+class RegularExpr implements _ExprPart {
+  final String expr;
+  RegularExpr(this.expr);
+
+  @override
+  String toExpr() => expr;
+}
+
+class FractionExpr implements _ExprPart {
+  final String num;
+  final String den;
+  FractionExpr(this.num, this.den);
+
+  @override
+  String toExpr() => "($num) / ($den)";
+}
+
+class PowerExpr implements _ExprPart {
+  final String base;
+  final String exp;
+
+  PowerExpr(this.base, this.exp);
+
+  @override
+  String toExpr() => "$base^($exp)";
+}
+
+class ExpressionController2 {
+  List<_ExprPart> parts = [];
+
+  ExpressionController2(this.parts);
+
+  String getExpression() {
+    return parts.map((e) => e.toExpr()).join().trim();
+  }
+}
+
+class _RegularStatic extends StatelessWidget {
+  final RegularExpr data;
+  const _RegularStatic(this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(data.toExpr(), style: TextStyle(letterSpacing: 1.5));
+  }
+}
+
+class _RegularEdit extends StatelessWidget {
+  final Color color;
+  final Color textColor;
+  final RegularExpr data;
+
+  const _RegularEdit(this.color, this.textColor, this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _PartExprField(color, textColor, data.toExpr());
+  }
+}
+
+class _PartExprField extends StatefulWidget {
+  final Color color;
+  final Color textColor;
+  final String data;
+
+  const _PartExprField(this.color, this.textColor, this.data, {super.key});
+
+  @override
+  State<_PartExprField> createState() => _PartExprFieldState();
+}
+
+class _PartExprFieldState extends State<_PartExprField> {
+  late TextEditingController controller;
+
+  @override
+  void initState() {
+    controller = TextEditingController(text: widget.data);
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PartExprField oldWidget) {
+    controller = TextEditingController(text: widget.data);
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 4 + controller.text.length * 10,
+      child: TextField(
+        onChanged: (_) => setState(() {}),
+        controller: controller,
+        inputFormatters: [
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            if (ExpressionField.isTypingFunc(oldValue, newValue)) {
+              final sel = newValue.selection;
+              return newValue.copyWith(
+                  text: "${newValue.text}()",
+                  selection: sel.copyWith(
+                      baseOffset: sel.baseOffset + 1,
+                      extentOffset: sel.extentOffset + 1));
+            }
+            return newValue;
+          })
+        ],
+        keyboardType: TextInputType.visiblePassword,
+        decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 4),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: widget.color,
+              ),
+            ),
+            enabledBorder: InputBorder.none
+            // enabledBorder: UnderlineInputBorder(
+            //   borderSide: BorderSide(
+            //     color: color,
+            //   ),
+            // ),
+            ),
+        cursorColor: widget.color,
+        style: TextStyle(color: widget.textColor, letterSpacing: 1.5),
+        textAlign: TextAlign.center,
+        textAlignVertical: TextAlignVertical.center,
+      ),
+    );
+  }
+}
+
+class _FracLayout extends StatelessWidget {
+  final Widget num;
+  final Widget den;
+
+  const _FracLayout(this.num, this.den, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.white))),
+              padding: const EdgeInsets.only(bottom: 2),
+              child: num,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: den,
+            ),
+          ],
+        ));
+  }
+}
+
+class _FractionStatic extends StatelessWidget {
+  final FractionExpr data;
+
+  const _FractionStatic(this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _FracLayout(Text(data.num, style: TextStyle(letterSpacing: 1.5)),
+        Text(data.den, style: TextStyle(letterSpacing: 1.5)));
+  }
+}
+
+class _FractionEdit extends StatelessWidget {
+  final Color color;
+  final Color textColor;
+  final FractionExpr data;
+
+  const _FractionEdit(this.color, this.textColor, this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _FracLayout(_PartExprField(color, textColor, data.num),
+        _PartExprField(color, textColor, data.den));
+  }
+}
+
+class _PowerLayout extends StatelessWidget {
+  final Widget base;
+  final Widget exp;
+  const _PowerLayout(this.base, this.exp, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [base, const SizedBox(height: 8)],
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [exp, const SizedBox(height: 16)],
+        ),
+      ],
+    );
+  }
+}
+
+class _PowerStatic extends StatelessWidget {
+  final PowerExpr data;
+
+  const _PowerStatic(this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _PowerLayout(Text(data.base, style: TextStyle(letterSpacing: 1.5)),
+        Text(data.exp, style: TextStyle(letterSpacing: 1.5)));
+  }
+}
+
+class _PowerEdit extends StatelessWidget {
+  final Color color;
+  final Color textColor;
+  final PowerExpr data;
+
+  const _PowerEdit(this.color, this.textColor, this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _PowerLayout(_PartExprField(color, textColor, data.base),
+        _PartExprField(color, textColor, data.exp));
+  }
+}
+
+class ExpressionField2 extends StatelessWidget {
+  final ExpressionController2 data;
+
+  const ExpressionField2(this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Colors.green;
+    final textColor = Colors.yellow.shade100;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: data.parts.map((e) {
+          if (e is RegularExpr) {
+            return _RegularEdit(color, textColor, e);
+          } else if (e is PowerExpr) {
+            return _PowerEdit(color, textColor, e);
+          } else if (e is FractionExpr) {
+            return _FractionEdit(color, textColor, e);
+          }
+          throw "not reachable";
+        }).toList(),
       ),
     );
   }
