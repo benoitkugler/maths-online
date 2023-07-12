@@ -886,7 +886,8 @@ type TreeFieldInstance struct {
 }
 
 // compute the shape of the given tree
-// it assumes the tree is regular
+// it assumes the tree is regular, that is the number of branches
+// is constant on a given level, but may changes over levels.
 func shape(tree client.TreeNodeAnswer) (out client.TreeShape) {
 	if len(tree.Children) == 0 {
 		return nil
