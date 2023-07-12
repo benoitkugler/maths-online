@@ -22,6 +22,7 @@
     @update-variant="updateVariant"
     @duplicate-variant="duplicateVariante"
     @delete-variant="deleteVariante"
+    ref="scafold"
   >
     <QuestionVariantPannel
       :question="ownVariants[variantIndex]"
@@ -120,6 +121,8 @@ async function deleteVariante(que: VariantG) {
   }
 }
 
+let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
+
 async function duplicateVariante(variant: VariantG) {
   const newQuestion = await controller.EditorDuplicateQuestion({
     id: variant.Id,
@@ -129,6 +132,8 @@ async function duplicateVariante(variant: VariantG) {
   }
   ownVariants.push(newQuestion);
   variantIndex = ownVariants.length - 1; // go to the new question
+
+  if (scafold) scafold.showEditVariant(newQuestion);
 }
 
 async function saveTags(newTags: Tags) {

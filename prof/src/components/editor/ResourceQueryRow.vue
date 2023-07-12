@@ -49,7 +49,7 @@
         :color="ChapterColor"
         chips
         closable-chips
-        hide-no-data
+        :no-data-text="noChaptersText"
       ></v-select>
     </v-col>
     <v-col cols="auto" align-self="center">
@@ -84,8 +84,14 @@ const emit = defineEmits<{
 }>();
 
 const levelTags = computed(() => {
-  return props.allTags.Levels || [];
+  return (props.allTags.Levels || [])
+    .map((tag) => ({
+      title: tag,
+      value: tag,
+    }))
+    .concat({ title: "Non classé", value: "" });
 });
+
 const chapterTags = computed(() => {
   const all = new Set<string>();
   props.modelValue.LevelTags?.forEach((levelTag) => {
@@ -94,7 +100,18 @@ const chapterTags = computed(() => {
   });
   const out = Array.from(all.values());
   out.sort();
-  return out;
+  return out
+    .map((tag) => ({
+      title: tag,
+      value: tag,
+    }))
+    .concat({ title: "Non classé", value: "" });
+});
+
+const noChaptersText = computed(() => {
+  return props.modelValue.LevelTags?.length
+    ? "Aucun chapitre n'est disponible"
+    : "Selectionnez d'abord un niveau.";
 });
 
 // debounce feature for text field

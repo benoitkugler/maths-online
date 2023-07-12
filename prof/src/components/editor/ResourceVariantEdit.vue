@@ -4,6 +4,8 @@
       <v-row>
         <v-col>
           <v-text-field
+            autofocus
+            @focus="($event.target as HTMLInputElement)?.select()"
             class="my-2"
             variant="outlined"
             density="compact"

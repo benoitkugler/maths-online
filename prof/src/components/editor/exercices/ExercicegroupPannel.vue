@@ -22,6 +22,7 @@
     @update-variant="updateVariant"
     @duplicate-variant="duplicateVariante"
     @delete-variant="deleteVariante"
+    ref="scafold"
   >
     <ExerciceVariantPannel
       :exercice-header="ownVariants[variantIndex]"
@@ -136,6 +137,8 @@ async function deleteVariante(variant: VariantG) {
   }
 }
 
+let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
+
 async function duplicateVariante(exercice: VariantG) {
   const newExercice = await controller.EditorDuplicateExercice({
     id: exercice.Id,
@@ -145,6 +148,8 @@ async function duplicateVariante(exercice: VariantG) {
   }
   ownVariants.push(newExercice);
   variantIndex = ownVariants.length - 1; // go to the new exercice
+
+  if (scafold) scafold.showEditVariant(newExercice);
 }
 
 async function saveTags(newTags: Tags) {

@@ -82,7 +82,10 @@
           v-show="isLoading"
           color="primary"
         ></v-progress-linear>
-        <v-form class="px-3 mt-4">
+        <v-form
+          class="px-3 mt-4"
+          @keyup.enter="mode == 'inscription' ? inscription() : connection()"
+        >
           <v-row>
             <v-col>
               <v-text-field
@@ -199,6 +202,8 @@ const areCredencesValid = computed(
 const isEmailValid = computed(() => mail.includes("@") && mail.includes("."));
 
 async function inscription() {
+  if (!areCredencesValid.value) return;
+
   isLoading = true;
   const res = await controller.AskInscription({
     Mail: mail,
@@ -216,6 +221,8 @@ async function inscription() {
 }
 
 async function connection() {
+  if (!areCredencesValid.value) return;
+
   const res = await controller.Loggin({
     Mail: mail,
     Password: password,

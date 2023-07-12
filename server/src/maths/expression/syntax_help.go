@@ -30,7 +30,7 @@ func (sh SyntaxHints) Text() string {
 	return "\n\nNotation : " + strings.Join(chunks[:len(chunks)-1], " ; ") + " et " + chunks[len(chunks)-1]
 }
 
-// SyntaxHint refers to a hint for peculiar expression,
+// SyntaxHint refers to a hint for a peculiar expression,
 // among :
 //
 //	inf : \infty s'écrit inf
