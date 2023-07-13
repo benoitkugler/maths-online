@@ -89,6 +89,7 @@ import TreeFieldVue from "./blocks/TreeField.vue";
 import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import VectorFieldVue from "./blocks/VectorField.vue";
+import TreeB from "./blocks/TreeB.vue";
 
 interface Props {
   modelValue: Block[];
@@ -149,6 +150,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(FigureVectorPairFieldVue) };
     case BlockKind.FigureAffineLineFieldBlock:
       return { Props: data, Component: markRaw(FigureAffineLineFieldVue) };
+    case BlockKind.TreeBlock:
+      return { Props: data, Component: markRaw(TreeB) };
     case BlockKind.TreeFieldBlock:
       return { Props: data, Component: markRaw(TreeFieldVue) };
     case BlockKind.TableFieldBlock:

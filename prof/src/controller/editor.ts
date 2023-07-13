@@ -37,7 +37,9 @@ import {
   type Variable,
   type VariationTableBlock,
   type VariationTableFieldBlock,
-  type VectorFieldBlock
+  type VectorFieldBlock,
+  type TreeNodeAnswer,
+  type TreeBlock
 } from "./api_gen";
 import { copy } from "./utils";
 
@@ -72,6 +74,13 @@ export const sortedBlockKindLabels = [
     BlockKind.VariationTableBlock,
     {
       label: "Tableau de variations",
+      isAnswerField: false
+    }
+  ],
+  [
+    BlockKind.TreeBlock,
+    {
+      label: "Arbre (de probas)",
       isAnswerField: false
     }
   ],
@@ -176,6 +185,7 @@ interface BlockKindTypes {
   [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
   [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
   [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
+  [BlockKind.TreeBlock]: TreeBlock;
   [BlockKind.TreeFieldBlock]: TreeFieldBlock;
   [BlockKind.TableFieldBlock]: TableFieldBlock;
   [BlockKind.VectorFieldBlock]: VectorFieldBlock;
@@ -249,6 +259,36 @@ const signTableExample: SignTableBlock = {
     }
   ]
 };
+
+function newTreeNode(value: number): TreeNodeAnswer {
+  return {
+    Value: value,
+    Children: [],
+    Probabilities: []
+  };
+}
+
+function newTree() {
+  return {
+    EventsProposals: ["P", "F", "?"],
+    AnswerRoot: {
+      Children: [
+        {
+          Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
+          Probabilities: ["0.7", "0.2", "0.1"],
+          Value: 0
+        },
+        {
+          Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
+          Probabilities: ["0.7", "0.2", "0.1"],
+          Value: 1
+        }
+      ],
+      Probabilities: ["0.7", "0.3"],
+      Value: 0
+    }
+  };
+}
 
 export function newBlock(kind: BlockKind): Block {
   switch (kind) {
@@ -552,31 +592,14 @@ export function newBlock(kind: BlockKind): Block {
     case BlockKind.TreeFieldBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: {
-          EventsProposals: ["P", "F", "?"],
-          AnswerRoot: {
-            Children: [
-              {
-                Children: [
-                  { Value: 0, Children: [], Probabilities: [] },
-                  { Value: 1, Children: [], Probabilities: [] }
-                ],
-                Probabilities: ["0.7", "0.3"],
-                Value: 0
-              },
-              {
-                Children: [
-                  { Value: 0, Children: [], Probabilities: [] },
-                  { Value: 1, Children: [], Probabilities: [] }
-                ],
-                Probabilities: ["0.7", "0.3"],
-                Value: 1
-              }
-            ],
-            Probabilities: ["0.7", "0.3"],
-            Value: 0
-          }
-        }
+        Data: { Answer: newTree() }
+      };
+      return out;
+    }
+    case BlockKind.TreeBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: newTree()
       };
       return out;
     }
