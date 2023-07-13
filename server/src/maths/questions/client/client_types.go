@@ -23,6 +23,7 @@ func (SignTableBlock) isBlock()      {}
 func (FigureBlock) isBlock()         {}
 func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
+func (TreeBlock) isBlock()           {}
 
 func (NumberFieldBlock) isBlock()           {}
 func (ExpressionFieldBlock) isBlock()       {}
@@ -213,6 +214,11 @@ type FunctionPointsFieldBlock struct {
 	Dfxs   []float64 // the derivatives of the function, to plot a nice curve
 	Bounds repere.RepereBounds
 	ID     int
+}
+
+type TreeBlock struct {
+	EventsProposals []TextOrMath
+	Root            TreeNodeAnswer
 }
 
 // TreeShape defines the shape of a "regular" tree,

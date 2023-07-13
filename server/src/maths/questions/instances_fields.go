@@ -880,9 +880,8 @@ func (f FunctionPointsFieldInstance) correctAnswer() client.Answer {
 }
 
 type TreeFieldInstance struct {
-	EventsProposals []client.TextOrMath
-	Answer          client.TreeAnswer
-	ID              int
+	Answer TreeInstance
+	ID     int
 }
 
 // compute the shape of the given tree
@@ -897,7 +896,7 @@ func shape(tree client.TreeNodeAnswer) (out client.TreeShape) {
 }
 
 func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
-	realShape := shape(f.Answer.Root)
+	realShape := shape(f.Answer.Answer.Root)
 	alternative1 := append(client.TreeShape(nil), realShape...)
 	alternative1[0] += 1
 	alternative2 := append(client.TreeShape(nil), realShape...)
@@ -909,7 +908,7 @@ func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
 		alternative2,
 	}
 
-	rd := utils.NewDeterministicShuffler([]byte(textLineToString(f.EventsProposals)), len(tmp))
+	rd := utils.NewDeterministicShuffler([]byte(textLineToString(f.Answer.EventsProposals)), len(tmp))
 	out := make([]client.TreeShape, len(tmp))
 	rd.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
 	return tmp
@@ -921,7 +920,7 @@ func (f TreeFieldInstance) toClient() client.Block {
 	return client.TreeFieldBlock{
 		ID:              f.ID,
 		ShapeProposals:  f.shapeProposals(),
-		EventsProposals: f.EventsProposals,
+		EventsProposals: f.Answer.EventsProposals,
 	}
 }
 
@@ -1026,11 +1025,11 @@ func areTreeEquivalent(exp, got client.TreeNodeAnswer) bool {
 
 func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.TreeAnswer)
-	return areTreeEquivalent(f.Answer.Root, ans.Root)
+	return areTreeEquivalent(f.Answer.Answer.Root, ans.Root)
 }
 
 func (f TreeFieldInstance) correctAnswer() client.Answer {
-	return f.Answer
+	return f.Answer.Answer
 }
 
 type TableFieldInstance struct {

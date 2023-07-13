@@ -426,12 +426,6 @@ func (vt VariationTableBlock) setupValidator(expression.RandomParameters) (valid
 	return out, nil
 }
 
-// type FunctionSign struct {
-// 	Label     string       // function name (as LaTeX)
-// 	FxSymbols []SignSymbol // with length len([SignTableBlock.Xs])
-// 	Signs     []bool       // is positive, with length len([SignTableBlock.Xs]) - 1
-// }
-
 type SignTableBlock struct {
 	Xs        []string // valid expression
 	Functions []client.FunctionSign
@@ -1057,4 +1051,60 @@ func (t TableBlock) setupValidator(expression.RandomParameters) (validator, erro
 	}
 
 	return noOpValidator{}, nil
+}
+
+// TreeNodeAnswer is an event, with (optional) children
+type TreeNodeAnswer struct {
+	Children      []TreeNodeAnswer `gomacro-data:"ignore"`
+	Probabilities []string         // edges, same length as Children, valid expression.Expression
+	Value         int              // index into the proposals, 0 for the root
+}
+
+type TreeBlock struct {
+	EventsProposals []string
+	AnswerRoot      TreeNodeAnswer
+}
+
+func (tf TreeBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+	return tf.instantiateT(params)
+}
+
+func (tf TreeBlock) instantiateT(params expression.Vars) (TreeInstance, error) {
+	out := TreeInstance{
+		EventsProposals: make([]client.TextOrMath, len(tf.EventsProposals)),
+	}
+	for i, p := range tf.EventsProposals {
+		out.EventsProposals[i] = client.TextOrMath{Text: p}
+	}
+
+	var buildTree func(node TreeNodeAnswer) (client.TreeNodeAnswer, error)
+	buildTree = func(node TreeNodeAnswer) (client.TreeNodeAnswer, error) {
+		out := client.TreeNodeAnswer{
+			Value:         node.Value,
+			Probabilities: make([]float64, len(node.Probabilities)),
+			Children:      make([]client.TreeNodeAnswer, len(node.Children)),
+		}
+		var err error
+		for i, c := range node.Probabilities {
+			out.Probabilities[i], err = evaluateExpr(c, params)
+			if err != nil {
+				return out, err
+			}
+		}
+		for i, c := range node.Children {
+			out.Children[i], err = buildTree(c)
+			if err != nil {
+				return out, err
+			}
+		}
+		return out, nil
+	}
+
+	root, err := buildTree(tf.AnswerRoot)
+	out.Answer = client.TreeAnswer{Root: root}
+	return out, err
+}
+
+func (tf TreeBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	return treeValidator{data: tf}, nil
 }

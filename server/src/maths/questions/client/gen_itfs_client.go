@@ -338,6 +338,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data TextBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "TreeBlock":
+		var data TreeBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "TreeFieldBlock":
 		var data TreeFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
@@ -404,6 +408,8 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "TableFieldBlock", Data: data}
 	case TextBlock:
 		wr = wrapper{Kind: "TextBlock", Data: data}
+	case TreeBlock:
+		wr = wrapper{Kind: "TreeBlock", Data: data}
 	case TreeFieldBlock:
 		wr = wrapper{Kind: "TreeFieldBlock", Data: data}
 	case VariationTableBlock:
@@ -438,6 +444,7 @@ const (
 	TableBlockBlKind                 = "TableBlock"
 	TableFieldBlockBlKind            = "TableFieldBlock"
 	TextBlockBlKind                  = "TextBlock"
+	TreeBlockBlKind                  = "TreeBlock"
 	TreeFieldBlockBlKind             = "TreeFieldBlock"
 	VariationTableBlockBlKind        = "VariationTableBlock"
 	VariationTableFieldBlockBlKind   = "VariationTableFieldBlock"

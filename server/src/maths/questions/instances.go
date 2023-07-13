@@ -264,3 +264,15 @@ type TableInstance client.TableBlock
 func (ti TableInstance) toClient() client.Block {
 	return client.TableBlock(ti)
 }
+
+type TreeInstance struct {
+	EventsProposals []client.TextOrMath
+	Answer          client.TreeAnswer
+}
+
+func (ti TreeInstance) toClient() client.Block {
+	return client.TreeBlock{
+		EventsProposals: ti.EventsProposals,
+		Root:            ti.Answer.Root,
+	}
+}

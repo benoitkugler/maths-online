@@ -845,6 +845,8 @@ BEGIN
         RETURN gomacro_validate_json_ques_TableFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'TextBlock' THEN
         RETURN gomacro_validate_json_ques_TextBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'TreeBlock' THEN
+        RETURN gomacro_validate_json_ques_TreeBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'TreeFieldBlock' THEN
         RETURN gomacro_validate_json_ques_TreeFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'VariationTableBlock' THEN
@@ -1595,7 +1597,7 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_TreeFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_TreeBlock (data jsonb)
     RETURNS boolean
     AS $$
 DECLARE
@@ -1611,6 +1613,27 @@ BEGIN
             jsonb_each(data))
         AND gomacro_validate_json_array_string (data -> 'EventsProposals')
         AND gomacro_validate_json_ques_TreeNodeAnswer (data -> 'AnswerRoot');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_TreeFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_TreeBlock (data -> 'Answer');
     RETURN is_valid;
 END;
 $$

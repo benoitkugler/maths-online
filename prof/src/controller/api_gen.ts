@@ -47,6 +47,7 @@ export enum BlockKind {
   TableBlock = "TableBlock",
   TableFieldBlock = "TableFieldBlock",
   TextBlock = "TextBlock",
+  TreeBlock = "TreeBlock",
   TreeFieldBlock = "TreeFieldBlock",
   VariationTableBlock = "VariationTableBlock",
   VariationTableFieldBlock = "VariationTableFieldBlock",
@@ -75,6 +76,7 @@ export interface Block {
     | TableBlock
     | TableFieldBlock
     | TextBlock
+    | TreeBlock
     | TreeFieldBlock
     | VariationTableBlock
     | VariationTableFieldBlock
@@ -344,10 +346,14 @@ export interface TextPart {
   Content: string;
   Kind: TextKind;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.TreeFieldBlock
-export interface TreeFieldBlock {
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TreeBlock
+export interface TreeBlock {
   EventsProposals: string[] | null;
   AnswerRoot: TreeNodeAnswer;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TreeFieldBlock
+export interface TreeFieldBlock {
+  Answer: TreeBlock;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TreeNodeAnswer
 export interface TreeNodeAnswer {
