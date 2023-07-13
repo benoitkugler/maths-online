@@ -386,7 +386,7 @@ class _NodeEditableState extends State<_NodeEditable> {
     final ecs = widget.data.edgesController;
     final edges = ecs == null
         ? widget.data.children.map((e) => "")
-        : ecs.map((ct) => ct.hasValidData() ? "${ct.getNumber()}" : "?");
+        : ecs.map((ct) => ct.hasValidData() ? "${ct.getNumber()}" : " ? ");
     return _NodeLayout(
         color: widget.color,
         isRoot: isRoot,
@@ -424,14 +424,14 @@ class _NodeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const marginX = 25.0;
+    const marginX = 12.0;
 
     final painter = _EdgesPainter(color, edges,
         isRoot ? 0 : _NodeLayout.valueHeight, _NodeLayout.edgesHeight);
     final hasChildren = children.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: GestureDetector(
         onTapUp: onTapEdge == null
             ? null
@@ -451,17 +451,26 @@ class _NodeLayout extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: marginX),
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.4),
-                      borderRadius: BorderRadius.all(Radius.circular(6))),
-                  child: Center(child: value),
+                      border: Border.all(color: color),
+                      borderRadius: const BorderRadius.all(Radius.circular(6))),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      value,
+                    ],
+                  ),
                 ),
               if (hasChildren) ...[
                 // make room for edges, drawn by CustomPaint
                 const SizedBox(height: _NodeLayout.edgesHeight),
                 // children row
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: children),
+                IntrinsicWidth(
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children:
+                          children.map((e) => Expanded(child: e)).toList()),
+                ),
               ],
             ],
           ),
@@ -597,7 +606,10 @@ class _NodeStatic extends StatelessWidget {
         edges: node.probabilities.map((e) => "$e").toList(),
         value: isRoot
             ? const SizedBox()
-            : TextRow(buildText([eventProposals[node.value]], TextS(), 14)),
+            : TextRow(
+                buildText([eventProposals[node.value]], TextS(), 14),
+                lineHeight: 1.2,
+              ),
         children: node.children
             .map((e) => _NodeStatic(eventProposals, color, false, e))
             .toList());
