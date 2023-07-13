@@ -204,7 +204,78 @@ class _TreeFieldState extends State<TreeField> {
             ),
           )
         : _OneTree(false, ct.hasError ? Colors.red : widget.color,
-            _showShapeSelection, ct.controllers!);
+            _showShapeSelection, null, ct.controllers!);
+  }
+}
+
+class _TreeView extends StatefulWidget {
+  final Color color;
+  final int nbLevels;
+  final bool isSelected;
+  final Positioned? backButton;
+  final Widget root;
+  final void Function()? onTap;
+
+  const _TreeView(
+      {super.key,
+      required this.color,
+      required this.nbLevels,
+      required this.isSelected,
+      required this.backButton,
+      required this.root,
+      required this.onTap});
+
+  @override
+  State<_TreeView> createState() => _TreeViewState();
+}
+
+class _TreeViewState extends State<_TreeView> {
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const boxPadding = 5.0;
+    const levelHeightHint =
+        _NodeLayout.edgesHeight + _NodeLayout.valueHeight + 2 * boxPadding + 2;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Scrollbar(
+        controller: _controller,
+        radius: const Radius.circular(4),
+        thumbVisibility: kIsWeb ? true : null,
+        child: SingleChildScrollView(
+          controller: _controller,
+          scrollDirection: Axis.horizontal,
+          child: InkWell(
+            onTap: widget.onTap,
+            child: SizedBox(
+              height: widget.nbLevels * levelHeightHint,
+              child: Stack(
+                children: [
+                  Container(
+                      padding: const EdgeInsets.symmetric(vertical: boxPadding),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: widget.color),
+                          borderRadius: BorderRadius.circular(5),
+                          color: widget.isSelected
+                              ? Colors.white.withOpacity(0.3)
+                              : null),
+                      child: widget.root),
+                  if (widget.backButton != null) widget.backButton!
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -212,59 +283,39 @@ class _OneTree extends StatelessWidget {
   final bool isSelected;
   final Color color;
   final void Function()? onBack;
+  final void Function()? onTap;
   final _NodeController controller;
 
-  const _OneTree(this.isSelected, this.color, this.onBack, this.controller,
+  const _OneTree(
+      this.isSelected, this.color, this.onBack, this.onTap, this.controller,
       {Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    const boxPadding = 5.0;
-    const levelHeightHint =
-        _Node.edgesHeight + _Node.valueHeight + 2 * boxPadding;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: SizedBox(
-        height: controller.levels() * levelHeightHint,
-        child: ListView(
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            children: [
-              Stack(
-                children: [
-                  Container(
-                      padding: const EdgeInsets.symmetric(vertical: boxPadding),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: color),
-                          borderRadius: BorderRadius.circular(5),
-                          color: isSelected
-                              ? Colors.white.withOpacity(0.3)
-                              : null),
-                      child: _Node(color, controller)),
-                  if (onBack != null)
-                    Positioned(
-                      top: 3,
-                      left: 3,
-                      child: FloatingActionButton(
-                          mini: true,
-                          onPressed:
-                              controller.valueController?.isEnabled == true
-                                  ? onBack
-                                  : null,
-                          tooltip: "Changer de forme",
-                          child: const Icon(
-                            IconData(0xe092,
-                                fontFamily: 'MaterialIcons',
-                                matchTextDirection: true),
-                          )),
-                    ),
-                ],
-              )
-            ]),
-      ),
-    );
+    return _TreeView(
+        color: color,
+        nbLevels: controller.levels(),
+        isSelected: isSelected,
+        onTap: onTap,
+        backButton: onBack == null
+            ? null
+            : Positioned(
+                top: 3,
+                left: 3,
+                child: FloatingActionButton(
+                    mini: true,
+                    onPressed: controller.valueController?.isEnabled == true
+                        ? onBack
+                        : null,
+                    tooltip: "Changer de forme",
+                    child: const Icon(
+                      IconData(0xe092,
+                          fontFamily: 'MaterialIcons',
+                          matchTextDirection: true),
+                    )),
+              ),
+        root: _NodeEditable(color, controller));
   }
 }
 
@@ -289,11 +340,8 @@ class _ShapeSelection extends StatelessWidget {
           (index) {
             final shapeI = proposals[index];
             final isSelected = listEquals(selected, shapeI);
-            return InkWell(
-              onTap: () => onSelect(index),
-              child: _OneTree(isSelected, color, null,
-                  _NodeController.staticFromShape(shapeI, true)),
-            );
+            return _OneTree(isSelected, color, null, () => onSelect(index),
+                _NodeController.staticFromShape(shapeI, true));
           },
         ),
       ),
@@ -301,20 +349,17 @@ class _ShapeSelection extends StatelessWidget {
   }
 }
 
-class _Node extends StatefulWidget {
+class _NodeEditable extends StatefulWidget {
   final Color color;
 
   final _NodeController data;
-  const _Node(this.color, this.data, {Key? key}) : super(key: key);
-
-  static const edgesHeight = 50.0;
-  static const valueHeight = 30.0;
+  const _NodeEditable(this.color, this.data, {Key? key}) : super(key: key);
 
   @override
-  _NodeState createState() => _NodeState();
+  _NodeEditableState createState() => _NodeEditableState();
 }
 
-class _NodeState extends State<_Node> {
+class _NodeEditableState extends State<_NodeEditable> {
   void editEdge(int index) {
     final cts = widget.data.edgesController;
     if (cts == null) {
@@ -328,7 +373,7 @@ class _NodeState extends State<_Node> {
               heightFactor: 2,
               child: NumberField(widget.color, cts[index], autofocus: true,
                   onSubmitted: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).maybePop();
                 setState(() {});
               }),
             )));
@@ -337,47 +382,86 @@ class _NodeState extends State<_Node> {
   @override
   Widget build(BuildContext context) {
     final isRoot = widget.data.isRoot;
-    const marginX = 25.0;
     final valueCt = widget.data.valueController;
-    final painter = _EdgesPainter(
-        widget.data, isRoot ? 0 : _Node.valueHeight, _Node.edgesHeight);
-    final hasChildren = widget.data.children.isNotEmpty;
+    final ecs = widget.data.edgesController;
+    final edges = ecs == null
+        ? widget.data.children.map((e) => "")
+        : ecs.map((ct) => ct.hasValidData() ? "${ct.getNumber()}" : "?");
+    return _NodeLayout(
+        color: widget.color,
+        isRoot: isRoot,
+        edges: edges.toList(),
+        onTapEdge: valueCt?.isEnabled == true ? editEdge : null,
+        value: valueCt == null
+            ? const Text("?")
+            : DropDownField(widget.color, valueCt),
+        children: widget.data.children
+            .map((e) => _NodeEditable(widget.color, e))
+            .toList());
+  }
+}
+
+class _NodeLayout extends StatelessWidget {
+  static const edgesHeight = 50.0;
+  static const valueHeight = 30.0;
+
+  final Color color;
+  final bool isRoot;
+  final void Function(int)? onTapEdge;
+
+  final List<String> edges;
+  final Widget value;
+  final List<Widget> children;
+
+  const _NodeLayout(
+      {super.key,
+      required this.color,
+      required this.isRoot,
+      required this.onTapEdge,
+      required this.edges,
+      required this.value,
+      required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    const marginX = 25.0;
+
+    final painter = _EdgesPainter(color, edges,
+        isRoot ? 0 : _NodeLayout.valueHeight, _NodeLayout.edgesHeight);
+    final hasChildren = children.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: GestureDetector(
-        onTapUp: valueCt?.isEnabled == true
-            ? (details) {
+        onTapUp: onTapEdge == null
+            ? null
+            : (details) {
                 final index = painter.onHit(details.localPosition);
                 if (index != null) {
-                  editEdge(index);
+                  onTapEdge!(index);
                 }
-              }
-            : null,
+              },
         child: CustomPaint(
           painter: painter,
           child: Column(
             children: [
               if (!isRoot)
                 Container(
-                  height: _Node.valueHeight,
+                  height: _NodeLayout.valueHeight,
                   margin: const EdgeInsets.symmetric(horizontal: marginX),
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  color: widget.color.withOpacity(0.4),
-                  child: Center(
-                      child: valueCt == null
-                          ? const Text("?")
-                          : DropDownField(widget.color, valueCt)),
+                  decoration: BoxDecoration(
+                      color: color.withOpacity(0.4),
+                      borderRadius: BorderRadius.all(Radius.circular(6))),
+                  child: Center(child: value),
                 ),
               if (hasChildren) ...[
                 // make room for edges, drawn by CustomPaint
-                const SizedBox(height: _Node.edgesHeight),
+                const SizedBox(height: _NodeLayout.edgesHeight),
                 // children row
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: widget.data.children
-                        .map((e) => _Node(widget.color, e))
-                        .toList()),
+                    children: children),
               ],
             ],
           ),
@@ -388,25 +472,24 @@ class _NodeState extends State<_Node> {
 }
 
 class _EdgesPainter extends CustomPainter {
-  final _NodeController controller;
+  final Color color;
+  final List<String> edges;
   final double startY;
   final double height;
 
-  _EdgesPainter(this.controller, this.startY, this.height);
+  _EdgesPainter(this.color, this.edges, this.startY, this.height);
 
   List<Offset> _middles = []; // cached during paint
 
-  static const color = Colors.amberAccent;
-
   @override
   void paint(Canvas canvas, Size size) {
-    final nbEdges = controller.children.length;
-    final childWidth = size.width / nbEdges;
+    final N = edges.length;
+    final childWidth = size.width / N;
     final start = Offset(size.width / 2, startY);
     final ends = List<Offset>.generate(
-        nbEdges, (i) => Offset((i + 0.5) * childWidth, startY + height));
+        N, (i) => Offset((i + 0.5) * childWidth, startY + height));
 
-    _middles = List<Offset>.generate(nbEdges, (i) {
+    _middles = List<Offset>.generate(N, (i) {
       final end = ends[i];
       return Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
     });
@@ -420,12 +503,13 @@ class _EdgesPainter extends CustomPainter {
             ..strokeWidth = 2);
     }
 
-    for (var i = 0; i < nbEdges; i++) {
-      final ct = controller.edgesController?[i];
-      final text =
-          (ct != null && ct.hasValidData()) ? "${ct.getNumber()}" : "?";
+    for (var i = 0; i < N; i++) {
+      final text = edges[i];
       final painter = TextPainter(
-        text: TextSpan(text: text, style: const TextStyle(color: color)),
+        text: TextSpan(
+            text: text,
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold)),
         textDirection: TextDirection.ltr,
       );
       painter.layout();
@@ -464,5 +548,58 @@ class _EdgesPainter extends CustomPainter {
       }
     }
     return null;
+  }
+}
+
+extension on TreeNodeAnswer {
+  int levels() {
+    if (children.isEmpty) {
+      return 0;
+    }
+    return 1 + children[0].levels();
+  }
+}
+
+class Tree extends StatelessWidget {
+  final Color color;
+  final TreeBlock data;
+
+  const Tree(this.color, this.data, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _TreeView(
+        onTap: null,
+        color: color,
+        nbLevels: data.root.levels(),
+        isSelected: false,
+        backButton: null,
+        root: _NodeStatic(data.eventsProposals, color, true, data.root));
+  }
+}
+
+class _NodeStatic extends StatelessWidget {
+  final List<TextOrMath> eventProposals;
+
+  final Color color;
+  final bool isRoot;
+  final TreeNodeAnswer node;
+
+  const _NodeStatic(this.eventProposals, this.color, this.isRoot, this.node,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _NodeLayout(
+        color: color,
+        isRoot: isRoot,
+        onTapEdge: null,
+        edges: node.probabilities.map((e) => "$e").toList(),
+        value: isRoot
+            ? const SizedBox()
+            : TextRow(buildText([eventProposals[node.value]], TextS(), 14)),
+        children: node.children
+            .map((e) => _NodeStatic(eventProposals, color, false, e))
+            .toList());
   }
 }
