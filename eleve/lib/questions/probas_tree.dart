@@ -425,6 +425,7 @@ class _NodeLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const marginX = 12.0;
+    const minWidth = 40.0;
 
     final painter = _EdgesPainter(color, edges,
         isRoot ? 0 : _NodeLayout.valueHeight, _NodeLayout.edgesHeight);
@@ -456,6 +457,7 @@ class _NodeLayout extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const SizedBox(height: 0, width: minWidth),
                       value,
                     ],
                   ),
