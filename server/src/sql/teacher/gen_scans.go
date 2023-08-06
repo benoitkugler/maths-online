@@ -158,16 +158,16 @@ func (items Classrooms) IdTeachers() []IdTeacher {
 	return out
 }
 
-func SelectClassroomsByIdTeachers(tx DB, idTeachers ...IdTeacher) (Classrooms, error) {
-	rows, err := tx.Query("SELECT * FROM classrooms WHERE idteacher = ANY($1)", IdTeacherArrayToPQ(idTeachers))
+func SelectClassroomsByIdTeachers(tx DB, idTeachers_ ...IdTeacher) (Classrooms, error) {
+	rows, err := tx.Query("SELECT * FROM classrooms WHERE idteacher = ANY($1)", IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanClassrooms(rows)
 }
 
-func DeleteClassroomsByIdTeachers(tx DB, idTeachers ...IdTeacher) ([]IdClassroom, error) {
-	rows, err := tx.Query("DELETE FROM classrooms WHERE idteacher = ANY($1) RETURNING id", IdTeacherArrayToPQ(idTeachers))
+func DeleteClassroomsByIdTeachers(tx DB, idTeachers_ ...IdTeacher) ([]IdClassroom, error) {
+	rows, err := tx.Query("DELETE FROM classrooms WHERE idteacher = ANY($1) RETURNING id", IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -321,16 +321,16 @@ func (items Students) IdClassrooms() []IdClassroom {
 	return out
 }
 
-func SelectStudentsByIdClassrooms(tx DB, idClassrooms ...IdClassroom) (Students, error) {
-	rows, err := tx.Query("SELECT * FROM students WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms))
+func SelectStudentsByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (Students, error) {
+	rows, err := tx.Query("SELECT * FROM students WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanStudents(rows)
 }
 
-func DeleteStudentsByIdClassrooms(tx DB, idClassrooms ...IdClassroom) ([]IdStudent, error) {
-	rows, err := tx.Query("DELETE FROM students WHERE idclassroom = ANY($1) RETURNING id", IdClassroomArrayToPQ(idClassrooms))
+func DeleteStudentsByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) ([]IdStudent, error) {
+	rows, err := tx.Query("DELETE FROM students WHERE idclassroom = ANY($1) RETURNING id", IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}

@@ -252,16 +252,16 @@ func SelectReviewExerciceByIdReview(tx DB, idReview IdReview) (item ReviewExerci
 	return item, true, err
 }
 
-func SelectReviewExercicesByIdReviews(tx DB, idReviews ...IdReview) (ReviewExercices, error) {
-	rows, err := tx.Query("SELECT * FROM review_exercices WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews))
+func SelectReviewExercicesByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewExercices, error) {
+	rows, err := tx.Query("SELECT * FROM review_exercices WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewExercices(rows)
 }
 
-func DeleteReviewExercicesByIdReviews(tx DB, idReviews ...IdReview) (ReviewExercices, error) {
-	rows, err := tx.Query("DELETE FROM review_exercices WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews))
+func DeleteReviewExercicesByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewExercices, error) {
+	rows, err := tx.Query("DELETE FROM review_exercices WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -298,16 +298,16 @@ func SelectReviewExerciceByIdExercice(tx DB, idExercice editor.IdExercicegroup) 
 	return item, true, err
 }
 
-func SelectReviewExercicesByIdExercices(tx DB, idExercices ...editor.IdExercicegroup) (ReviewExercices, error) {
-	rows, err := tx.Query("SELECT * FROM review_exercices WHERE idexercice = ANY($1)", editor.IdExercicegroupArrayToPQ(idExercices))
+func SelectReviewExercicesByIdExercices(tx DB, idExercices_ ...editor.IdExercicegroup) (ReviewExercices, error) {
+	rows, err := tx.Query("SELECT * FROM review_exercices WHERE idexercice = ANY($1)", editor.IdExercicegroupArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewExercices(rows)
 }
 
-func DeleteReviewExercicesByIdExercices(tx DB, idExercices ...editor.IdExercicegroup) (ReviewExercices, error) {
-	rows, err := tx.Query("DELETE FROM review_exercices WHERE idexercice = ANY($1) RETURNING *", editor.IdExercicegroupArrayToPQ(idExercices))
+func DeleteReviewExercicesByIdExercices(tx DB, idExercices_ ...editor.IdExercicegroup) (ReviewExercices, error) {
+	rows, err := tx.Query("DELETE FROM review_exercices WHERE idexercice = ANY($1) RETURNING *", editor.IdExercicegroupArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -426,16 +426,16 @@ func (items ReviewParticipations) IdReviews() []IdReview {
 	return out
 }
 
-func SelectReviewParticipationsByIdReviews(tx DB, idReviews ...IdReview) (ReviewParticipations, error) {
-	rows, err := tx.Query("SELECT * FROM review_participations WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews))
+func SelectReviewParticipationsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewParticipations, error) {
+	rows, err := tx.Query("SELECT * FROM review_participations WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewParticipations(rows)
 }
 
-func DeleteReviewParticipationsByIdReviews(tx DB, idReviews ...IdReview) (ReviewParticipations, error) {
-	rows, err := tx.Query("DELETE FROM review_participations WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews))
+func DeleteReviewParticipationsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewParticipations, error) {
+	rows, err := tx.Query("DELETE FROM review_participations WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -462,16 +462,16 @@ func (items ReviewParticipations) IdTeachers() []teacher.IdTeacher {
 	return out
 }
 
-func SelectReviewParticipationsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (ReviewParticipations, error) {
-	rows, err := tx.Query("SELECT * FROM review_participations WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+func SelectReviewParticipationsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (ReviewParticipations, error) {
+	rows, err := tx.Query("SELECT * FROM review_participations WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewParticipations(rows)
 }
 
-func DeleteReviewParticipationsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (ReviewParticipations, error) {
-	rows, err := tx.Query("DELETE FROM review_participations WHERE idteacher = ANY($1) RETURNING *", teacher.IdTeacherArrayToPQ(idTeachers))
+func DeleteReviewParticipationsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (ReviewParticipations, error) {
+	rows, err := tx.Query("DELETE FROM review_participations WHERE idteacher = ANY($1) RETURNING *", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -606,16 +606,16 @@ func SelectReviewQuestionByIdReview(tx DB, idReview IdReview) (item ReviewQuesti
 	return item, true, err
 }
 
-func SelectReviewQuestionsByIdReviews(tx DB, idReviews ...IdReview) (ReviewQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM review_questions WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews))
+func SelectReviewQuestionsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM review_questions WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewQuestions(rows)
 }
 
-func DeleteReviewQuestionsByIdReviews(tx DB, idReviews ...IdReview) (ReviewQuestions, error) {
-	rows, err := tx.Query("DELETE FROM review_questions WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews))
+func DeleteReviewQuestionsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewQuestions, error) {
+	rows, err := tx.Query("DELETE FROM review_questions WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -652,16 +652,16 @@ func SelectReviewQuestionByIdQuestion(tx DB, idQuestion editor.IdQuestiongroup) 
 	return item, true, err
 }
 
-func SelectReviewQuestionsByIdQuestions(tx DB, idQuestions ...editor.IdQuestiongroup) (ReviewQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM review_questions WHERE idquestion = ANY($1)", editor.IdQuestiongroupArrayToPQ(idQuestions))
+func SelectReviewQuestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestiongroup) (ReviewQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM review_questions WHERE idquestion = ANY($1)", editor.IdQuestiongroupArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewQuestions(rows)
 }
 
-func DeleteReviewQuestionsByIdQuestions(tx DB, idQuestions ...editor.IdQuestiongroup) (ReviewQuestions, error) {
-	rows, err := tx.Query("DELETE FROM review_questions WHERE idquestion = ANY($1) RETURNING *", editor.IdQuestiongroupArrayToPQ(idQuestions))
+func DeleteReviewQuestionsByIdQuestions(tx DB, idQuestions_ ...editor.IdQuestiongroup) (ReviewQuestions, error) {
+	rows, err := tx.Query("DELETE FROM review_questions WHERE idquestion = ANY($1) RETURNING *", editor.IdQuestiongroupArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -786,16 +786,16 @@ func SelectReviewTrivialByIdReview(tx DB, idReview IdReview) (item ReviewTrivial
 	return item, true, err
 }
 
-func SelectReviewTrivialsByIdReviews(tx DB, idReviews ...IdReview) (ReviewTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM review_trivials WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews))
+func SelectReviewTrivialsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM review_trivials WHERE idreview = ANY($1)", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewTrivials(rows)
 }
 
-func DeleteReviewTrivialsByIdReviews(tx DB, idReviews ...IdReview) (ReviewTrivials, error) {
-	rows, err := tx.Query("DELETE FROM review_trivials WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews))
+func DeleteReviewTrivialsByIdReviews(tx DB, idReviews_ ...IdReview) (ReviewTrivials, error) {
+	rows, err := tx.Query("DELETE FROM review_trivials WHERE idreview = ANY($1) RETURNING *", IdReviewArrayToPQ(idReviews_))
 	if err != nil {
 		return nil, err
 	}
@@ -832,16 +832,16 @@ func SelectReviewTrivialByIdTrivial(tx DB, idTrivial trivial.IdTrivial) (item Re
 	return item, true, err
 }
 
-func SelectReviewTrivialsByIdTrivials(tx DB, idTrivials ...trivial.IdTrivial) (ReviewTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM review_trivials WHERE idtrivial = ANY($1)", trivial.IdTrivialArrayToPQ(idTrivials))
+func SelectReviewTrivialsByIdTrivials(tx DB, idTrivials_ ...trivial.IdTrivial) (ReviewTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM review_trivials WHERE idtrivial = ANY($1)", trivial.IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanReviewTrivials(rows)
 }
 
-func DeleteReviewTrivialsByIdTrivials(tx DB, idTrivials ...trivial.IdTrivial) (ReviewTrivials, error) {
-	rows, err := tx.Query("DELETE FROM review_trivials WHERE idtrivial = ANY($1) RETURNING *", trivial.IdTrivialArrayToPQ(idTrivials))
+func DeleteReviewTrivialsByIdTrivials(tx DB, idTrivials_ ...trivial.IdTrivial) (ReviewTrivials, error) {
+	rows, err := tx.Query("DELETE FROM review_trivials WHERE idtrivial = ANY($1) RETURNING *", trivial.IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}

@@ -135,16 +135,16 @@ func (items SelfaccessTrivials) IdClassrooms() []teacher.IdClassroom {
 	return out
 }
 
-func SelectSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms))
+func SelectSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdClassroom) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSelfaccessTrivials(rows)
 }
 
-func DeleteSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idclassroom = ANY($1) RETURNING *", teacher.IdClassroomArrayToPQ(idClassrooms))
+func DeleteSelfaccessTrivialsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdClassroom) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idclassroom = ANY($1) RETURNING *", teacher.IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -171,16 +171,16 @@ func (items SelfaccessTrivials) IdTrivials() []IdTrivial {
 	return out
 }
 
-func SelectSelfaccessTrivialsByIdTrivials(tx DB, idTrivials ...IdTrivial) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idtrivial = ANY($1)", IdTrivialArrayToPQ(idTrivials))
+func SelectSelfaccessTrivialsByIdTrivials(tx DB, idTrivials_ ...IdTrivial) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idtrivial = ANY($1)", IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSelfaccessTrivials(rows)
 }
 
-func DeleteSelfaccessTrivialsByIdTrivials(tx DB, idTrivials ...IdTrivial) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idtrivial = ANY($1) RETURNING *", IdTrivialArrayToPQ(idTrivials))
+func DeleteSelfaccessTrivialsByIdTrivials(tx DB, idTrivials_ ...IdTrivial) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idtrivial = ANY($1) RETURNING *", IdTrivialArrayToPQ(idTrivials_))
 	if err != nil {
 		return nil, err
 	}
@@ -207,16 +207,16 @@ func (items SelfaccessTrivials) IdTeachers() []teacher.IdTeacher {
 	return out
 }
 
-func SelectSelfaccessTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+func SelectSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSelfaccessTrivials(rows)
 }
 
-func DeleteSelfaccessTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (SelfaccessTrivials, error) {
-	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idteacher = ANY($1) RETURNING *", teacher.IdTeacherArrayToPQ(idTeachers))
+func DeleteSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (SelfaccessTrivials, error) {
+	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE idteacher = ANY($1) RETURNING *", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -379,16 +379,16 @@ func (items Trivials) IdTeachers() []teacher.IdTeacher {
 	return out
 }
 
-func SelectTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Trivials, error) {
-	rows, err := tx.Query("SELECT * FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+func SelectTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Trivials, error) {
+	rows, err := tx.Query("SELECT * FROM trivials WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanTrivials(rows)
 }
 
-func DeleteTrivialsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdTrivial, error) {
-	rows, err := tx.Query("DELETE FROM trivials WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
+func DeleteTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdTrivial, error) {
+	rows, err := tx.Query("DELETE FROM trivials WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}

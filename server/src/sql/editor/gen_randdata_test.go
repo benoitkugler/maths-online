@@ -655,7 +655,7 @@ func randque_TextPart() questions.TextPart {
 
 func randque_TreeBlock() questions.TreeBlock {
 	var s questions.TreeBlock
-	s.EventsProposals = randSlicestring()
+	s.EventsProposals = randSliceque_Interpolated()
 	s.AnswerRoot = randque_TreeNodeAnswer()
 
 	return s
