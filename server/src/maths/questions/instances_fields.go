@@ -887,7 +887,7 @@ type TreeFieldInstance struct {
 // compute the shape of the given tree
 // it assumes the tree is regular, that is the number of branches
 // is constant on a given level, but may changes over levels.
-func shape(tree client.TreeNodeAnswer) (out client.TreeShape) {
+func shape(tree TreeNodeInstance) (out client.TreeShape) {
 	if len(tree.Children) == 0 {
 		return nil
 	}
@@ -896,7 +896,7 @@ func shape(tree client.TreeNodeAnswer) (out client.TreeShape) {
 }
 
 func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
-	realShape := shape(f.Answer.Answer.Root)
+	realShape := shape(f.Answer.AnswerRoot)
 	alternative1 := append(client.TreeShape(nil), realShape...)
 	alternative1[0] += 1
 	alternative2 := append(client.TreeShape(nil), realShape...)
@@ -908,7 +908,12 @@ func (f TreeFieldInstance) shapeProposals() []client.TreeShape {
 		alternative2,
 	}
 
-	rd := utils.NewDeterministicShuffler([]byte(textLineToString(f.Answer.EventsProposals)), len(tmp))
+	var content strings.Builder
+	for _, event := range f.Answer.EventsProposals {
+		content.WriteString(textLineToString(event))
+	}
+
+	rd := utils.NewDeterministicShuffler([]byte(content.String()), len(tmp))
 	out := make([]client.TreeShape, len(tmp))
 	rd.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
 	return tmp
@@ -933,36 +938,41 @@ func (f TreeFieldInstance) validateAnswerSyntax(answer client.Answer) error {
 		}
 	}
 
-	var isCorrect func(node client.TreeNodeAnswer) bool
-	isCorrect = func(node client.TreeNodeAnswer) bool {
+	var isCorrect func(node client.TreeNodeAnswer) error
+	isCorrect = func(node client.TreeNodeAnswer) error {
 		if len(node.Children) != len(node.Probabilities) {
-			return false
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: "mismatch between Children and Probabilities length",
+			}
+		}
+		for _, expr := range node.Probabilities {
+			_, err := expression.Parse(expr)
+			if err != nil {
+				return InvalidFieldAnswer{
+					ID:     f.ID,
+					Reason: fmt.Sprintf("invalid Tree probability expression: %s", err),
+				}
+			}
 		}
 		// recurse
 		for _, child := range node.Children {
-			if !isCorrect(child) {
-				return false
+			if err := isCorrect(child); err != nil {
+				return err
 			}
 		}
-		return true
+		return nil
 	}
 
-	if !isCorrect(ans.Root) {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: "inconsistent Children and Probabilites length",
-		}
-	}
-
-	return nil
+	return isCorrect(ans.Root)
 }
 
 type treeItem struct {
-	proba float64
-	child client.TreeNodeAnswer
+	proba *expression.Expr
+	child TreeNodeInstance
 }
 
-func sliceFromNode(node client.TreeNodeAnswer) []treeItem {
+func sliceFromNode(node TreeNodeInstance) []treeItem {
 	out := make([]treeItem, len(node.Children))
 	for i := range out {
 		out[i] = treeItem{node.Probabilities[i], node.Children[i]}
@@ -986,7 +996,7 @@ func perm(a []treeItem, f func([]treeItem), i int) {
 	}
 }
 
-func areTreeEquivalent(exp, got client.TreeNodeAnswer) bool {
+func areTreeEquivalent(exp, got TreeNodeInstance) bool {
 	if exp.Value != got.Value {
 		return false
 	}
@@ -1005,7 +1015,7 @@ func areTreeEquivalent(exp, got client.TreeNodeAnswer) bool {
 		// check if expL gotPermutedL match
 		for i := range expL {
 			expI, gotI := expL[i], gotPermutedL[i]
-			if !expression.AreFloatEqual(expI.proba, gotI.proba) {
+			if !expression.AreExpressionsEquivalent(expI.proba, gotI.proba, expression.SimpleSubstitutions) {
 				allCorrect = false
 				break
 			}
@@ -1023,13 +1033,30 @@ func areTreeEquivalent(exp, got client.TreeNodeAnswer) bool {
 	return onePermCorrect
 }
 
+// parse the client exprs
+func treeNodeAnswerToInstance(tna client.TreeNodeAnswer) TreeNodeInstance {
+	out := TreeNodeInstance{
+		Value:         tna.Value,
+		Probabilities: make([]*expression.Expr, len(tna.Probabilities)),
+		Children:      make([]TreeNodeInstance, len(tna.Children)),
+	}
+	for i, expr := range tna.Probabilities {
+		out.Probabilities[i], _ = expression.Parse(expr) // checked in validateAnswerSyntax
+	}
+	for i, child := range tna.Children {
+		out.Children[i] = treeNodeAnswerToInstance(child)
+	}
+	return out
+}
+
 func (f TreeFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.TreeAnswer)
-	return areTreeEquivalent(f.Answer.Answer.Root, ans.Root)
+	asInstance := treeNodeAnswerToInstance(ans.Root)
+	return areTreeEquivalent(f.Answer.AnswerRoot, asInstance)
 }
 
 func (f TreeFieldInstance) correctAnswer() client.Answer {
-	return f.Answer.Answer
+	return client.TreeAnswer{Root: f.Answer.AnswerRoot.toClient()}
 }
 
 type TableFieldInstance struct {

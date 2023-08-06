@@ -70,6 +70,9 @@ class ExpressionField extends StatefulWidget {
   /// have lower width than its normal full width.
   final int hintWidth;
 
+  final bool autofocus;
+  final void Function()? onSubmitted;
+
   // returns a float ratio between 0 and 1
   double get hintWidthRatio {
     // add some additional padding
@@ -78,7 +81,11 @@ class ExpressionField extends StatefulWidget {
   }
 
   const ExpressionField(this.color, this._controller,
-      {Key? key, this.maxWidthFactor = 0.9, this.hintWidth = 30})
+      {Key? key,
+      this.maxWidthFactor = 0.9,
+      this.hintWidth = 30,
+      this.autofocus = false,
+      this.onSubmitted})
       : super(key: key);
 
   static bool isTypingFunc(
@@ -129,6 +136,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
     if (widget._controller.getExpression().isEmpty) {
       // return early
       widget._controller.submit();
+      if (widget.onSubmitted != null) widget.onSubmitted!();
       return;
     }
     final rep = await widget._controller._checkExpressionSyntax();
@@ -141,6 +149,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
     }
 
     widget._controller.submit();
+    if (widget.onSubmitted != null) widget.onSubmitted!();
   }
 
   @override
@@ -158,6 +167,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
       child: SubmitOnLeave(
         submit: _submit,
         child: TextField(
+          autofocus: widget.autofocus,
           enabled: widget._controller.isEnabled,
           onSubmitted: (_) {
             _submit();

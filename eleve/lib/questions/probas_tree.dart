@@ -1,6 +1,8 @@
 import 'package:eleve/questions/dropdown.dart';
+import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/number.dart';
+import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -62,11 +64,18 @@ class TreeController extends FieldController {
   }
 }
 
+class _NoOpFieldApi implements FieldAPI {
+  @override
+  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
+    return const CheckExpressionOut("", true);
+  }
+}
+
 class _NodeController {
   final bool isRoot;
   final DropDownController? valueController;
   final List<_NodeController> children; // empty for the leafs
-  final List<NumberController>? edgesController; // same length as children
+  final List<ExpressionController>? edgesController; // same length as children
 
   _NodeController(
       this.isRoot, this.valueController, this.children, this.edgesController);
@@ -88,9 +97,8 @@ class _NodeController {
   }
 
   factory _NodeController.editableFromShape(void Function() onChange,
-      TreeShape shape, bool isRoot, List<TextOrMath> proposals, bool enabled) {
-    final controller =
-        DropDownController(onChange, proposals.map((e) => [e]).toList());
+      TreeShape shape, bool isRoot, List<TextLine> proposals, bool enabled) {
+    final controller = DropDownController(onChange, proposals);
 
     if (shape.isEmpty) {
       return _NodeController(isRoot, controller, [], []);
@@ -101,9 +109,10 @@ class _NodeController {
         (index) => _NodeController.editableFromShape(
             onChange, shape.sublist(1), false, proposals, enabled));
 
-    final edgesControllers = List<NumberController>.generate(
-        children.length, (index) => NumberController(onChange));
-    final dd = DropDownController(onChange, proposals.map((e) => [e]).toList());
+    final edgesControllers = List<ExpressionController>.generate(
+        children.length,
+        (index) => ExpressionController(_NoOpFieldApi(), onChange));
+    final dd = DropDownController(onChange, proposals);
     return _NodeController(isRoot, dd, children, edgesControllers);
   }
 
@@ -131,7 +140,8 @@ class _NodeController {
   // by convention, the root is expected to has 0 as value
   TreeNodeAnswer getData() {
     final childrenAnswers = children.map((e) => e.getData()).toList();
-    final edgesAnswers = edgesController!.map((e) => e.getNumber()).toList();
+    final edgesAnswers =
+        edgesController!.map((e) => e.getExpression()).toList();
     return TreeNodeAnswer(
         childrenAnswers, edgesAnswers, isRoot ? 0 : valueController!.index!);
   }
@@ -142,7 +152,7 @@ class _NodeController {
     }
 
     for (var i = 0; i < edgesController!.length; i++) {
-      edgesController![i].setNumber(answer.probabilities[i]);
+      edgesController![i].setExpression(answer.probabilities[i]);
     }
 
     // recurse
@@ -368,10 +378,10 @@ class _NodeEditableState extends State<_NodeEditable> {
     showDialog<void>(
         context: context,
         builder: (context) => Dialog(
-            insetPadding: const EdgeInsets.all(20),
+            insetPadding: const EdgeInsets.all(16),
             child: Center(
               heightFactor: 2,
-              child: NumberField(widget.color, cts[index], autofocus: true,
+              child: ExpressionField(widget.color, cts[index], autofocus: true,
                   onSubmitted: () {
                 Navigator.of(context).maybePop();
                 setState(() {});
@@ -386,7 +396,7 @@ class _NodeEditableState extends State<_NodeEditable> {
     final ecs = widget.data.edgesController;
     final edges = ecs == null
         ? widget.data.children.map((e) => "")
-        : ecs.map((ct) => ct.hasValidData() ? "${ct.getNumber()}" : " ? ");
+        : ecs.map((ct) => ct.hasValidData() ? ct.getExpression() : " ? ");
     return _NodeLayout(
         color: widget.color,
         isRoot: isRoot,
@@ -394,7 +404,7 @@ class _NodeEditableState extends State<_NodeEditable> {
         onTapEdge: valueCt?.isEnabled == true ? editEdge : null,
         value: valueCt == null
             ? const Text("?")
-            : DropDownField(widget.color, valueCt),
+            : SizedBox(width: 50, child: DropDownField(widget.color, valueCt)),
         children: widget.data.children
             .map((e) => _NodeEditable(widget.color, e))
             .toList());
@@ -607,7 +617,7 @@ class Tree extends StatelessWidget {
 }
 
 class _NodeStatic extends StatelessWidget {
-  final List<TextOrMath> eventProposals;
+  final List<TextLine> eventProposals;
 
   final Color color;
   final bool isRoot;
@@ -622,11 +632,12 @@ class _NodeStatic extends StatelessWidget {
         color: color,
         isRoot: isRoot,
         onTapEdge: null,
-        edges: node.probabilities.map((e) => "$e").toList(),
+        edges: node.probabilities,
         value: isRoot
             ? const SizedBox()
             : TextRow(
-                buildText([eventProposals[node.value]], TextS(), 14),
+                buildText(eventProposals[node.value], TextS(), 14,
+                    baselineMiddle: true),
                 lineHeight: 1.2,
               ),
         children: node.children

@@ -305,7 +305,7 @@ export interface TextPart {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TreeBlock
 export interface TreeBlock {
-  EventsProposals: string[] | null;
+  EventsProposals: Interpolated[] | null;
   AnswerRoot: TreeNodeAnswer;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TreeFieldBlock

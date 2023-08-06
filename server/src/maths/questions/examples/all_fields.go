@@ -241,7 +241,7 @@ var BlockList = [...]que.Block{
 	},
 	que.TreeFieldBlock{
 		Answer: que.TreeBlock{
-			EventsProposals: []string{"P", "F", "?"},
+			EventsProposals: []que.Interpolated{"P", "$x$", "?"},
 			AnswerRoot: que.TreeNodeAnswer{
 				Probabilities: []string{"1/5", "4/5"},
 				Children: []que.TreeNodeAnswer{

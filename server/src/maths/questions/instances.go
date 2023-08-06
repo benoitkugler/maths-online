@@ -265,14 +265,35 @@ func (ti TableInstance) toClient() client.Block {
 	return client.TableBlock(ti)
 }
 
+type TreeNodeInstance struct {
+	Children      []TreeNodeInstance
+	Probabilities []*expression.Expr // expression for edges, same length as Children
+	Value         int                // index into the proposals, ignored for the root
+}
+
+func (node TreeNodeInstance) toClient() client.TreeNodeAnswer {
+	out := client.TreeNodeAnswer{
+		Value:         node.Value,
+		Probabilities: make([]string, len(node.Probabilities)),
+		Children:      make([]client.TreeNodeAnswer, len(node.Children)),
+	}
+	for i, expr := range node.Probabilities {
+		out.Probabilities[i] = expr.String() // the client does not support latex in edges
+	}
+	for i, child := range node.Children { // recurse
+		out.Children[i] = child.toClient()
+	}
+	return out
+}
+
 type TreeInstance struct {
-	EventsProposals []client.TextOrMath
-	Answer          client.TreeAnswer
+	EventsProposals []client.TextLine
+	AnswerRoot      TreeNodeInstance
 }
 
 func (ti TreeInstance) toClient() client.Block {
 	return client.TreeBlock{
 		EventsProposals: ti.EventsProposals,
-		Root:            ti.Answer.Root,
+		Root:            ti.AnswerRoot.toClient(),
 	}
 }

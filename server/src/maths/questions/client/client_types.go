@@ -217,7 +217,7 @@ type FunctionPointsFieldBlock struct {
 }
 
 type TreeBlock struct {
-	EventsProposals []TextOrMath
+	EventsProposals []TextLine
 	Root            TreeNodeAnswer
 }
 
@@ -229,7 +229,7 @@ type TreeShape []int
 // probability tree
 type TreeFieldBlock struct {
 	ShapeProposals  []TreeShape
-	EventsProposals []TextOrMath
+	EventsProposals []TextLine
 	ID              int
 }
 
@@ -354,8 +354,8 @@ type FunctionPointsAnswer struct {
 
 type TreeNodeAnswer struct {
 	Children      []TreeNodeAnswer
-	Probabilities []float64 // edges, same length as Children
-	Value         int       // index into the proposals, ignored for the root
+	Probabilities []string // expression for edges, same length as Children
+	Value         int      // index into the proposals, ignored for the root
 }
 
 type TreeAnswer struct {

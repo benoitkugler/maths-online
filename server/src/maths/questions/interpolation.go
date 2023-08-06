@@ -7,9 +7,9 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 )
 
-// Interpolated is a string with $<static math>$ or #{<expression>}
+// Interpolated is a string with $<static math>$ or &<expression>&
 // delimiters.
-// #{} are allowed in $$.
+// && are allowed in $$.
 type Interpolated string
 
 // parse extracts each parts of the interpolated string,
