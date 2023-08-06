@@ -1,6 +1,6 @@
 <template>
   <div
-    class="editor elevation-2"
+    class="editor elevation-1"
     contenteditable="true"
     spellcheck="false"
     ref="editor"
@@ -47,17 +47,17 @@ function textToHTML(input: string) {
   const withNewLines = splitNewLines(tokens);
 
   const rows = withNewLines
-    .map((tokens) => {
-      const fullText = tokens.map((tok) => tok.Content).join("");
+    .map(tokens => {
+      const fullText = tokens.map(tok => tok.Content).join("");
       if (!fullText.length) {
         // avoid empty lines which are not show
         return "<br/>";
       }
       return tokens
-        .map((token) => `<span style="${token.Kind}">${token.Content}</span>`)
+        .map(token => `<span style="${token.Kind}">${token.Content}</span>`)
         .join("");
     })
-    .map((line) => `<div>${line}</div>`);
+    .map(line => `<div>${line}</div>`);
 
   return rows.join("");
 }
@@ -66,7 +66,7 @@ function HTMLToText() {
   if (editor == null) return "";
   const rows = Array.from(editor.children);
   const text = rows
-    .map((row) =>
+    .map(row =>
       // empty div have innerText as "\n"
       (row as HTMLElement).innerText == "\n"
         ? ""
@@ -167,6 +167,11 @@ const borderColor = computed(() =>
   padding: 4px;
   border-radius: 4px;
   border: 2px solid v-bind("borderColor");
+
+  -webkit-transition: border 200ms ease-out;
+  -moz-transition: border 200ms ease-out;
+  -o-transition: border 200ms ease-out;
+  transition: border 200ms ease-out;
 }
 
 .editor:hover {
