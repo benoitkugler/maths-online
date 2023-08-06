@@ -28,13 +28,9 @@
       >
         <v-row no-gutters>
           <v-col>
-            <v-text-field
-              variant="outlined"
-              density="compact"
+            <interpolated-text
               v-model="props.modelValue.EventsProposals![index]"
-              hide-details
-            >
-            </v-text-field>
+            ></interpolated-text>
           </v-col>
           <v-col cols="auto">
             <v-btn
@@ -116,6 +112,7 @@
 import type { TreeBlock, TreeNodeAnswer, Variable } from "@/controller/api_gen";
 import TreeNode from "./TreeNode.vue";
 import { copy } from "@/controller/utils";
+import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {
   modelValue: TreeBlock;
@@ -168,7 +165,7 @@ const defaultProbas = [
   ["1"],
   ["0.5", "0.5"],
   ["0.3", "0.3", "0.4"],
-  ["0.25", "0.25", "0.25", "0.25"],
+  ["0.25", "0.25", "0.25", "0.25"]
 ];
 
 function addLevel(branchesCount: number) {
@@ -182,7 +179,7 @@ function addLevel(branchesCount: number) {
       node.Children = node.Probabilities.map(() => ({
         Value: 0,
         Probabilities: [],
-        Children: [],
+        Children: []
       }));
     }
   };

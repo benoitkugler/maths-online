@@ -44,6 +44,8 @@ class ExpressionController extends FieldController {
 
   void setExpression(String expr) {
     textController.text = expr;
+    // cleanup the _isDirty flag
+    _isDirty = false;
   }
 
   @override

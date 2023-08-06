@@ -176,7 +176,7 @@ func TestPlusMinus(t *testing.T) {
 func TestMinusMinus(t *testing.T) {
 	expr := mustParse(t, "(-a/b)")
 	expr.Substitute(Vars{NewVar('a'): newNb(-2), NewVar('b'): newNb(4)})
-	if s := expr.String(); s != "2 / 4" {
+	if s := expr.String(); s != "2/4" {
 		t.Fatalf("%#v: %s", expr.right, s)
 	}
 
@@ -222,9 +222,9 @@ func TestOmitTimes(t *testing.T) {
 
 func TestIssue173(t *testing.T) {
 	for _, expr := range []string{
-		"6 / 49",
-		"3 / 49",
-		"1 / 4",
+		"6/49",
+		"3/49",
+		"1/4",
 	} {
 		e := mustParse(t, expr)
 		v, err := e.evalReal(nil)
@@ -239,12 +239,12 @@ func TestPrintFractions(t *testing.T) {
 		Vars RandomParameters
 		want string
 	}{
-		{"6 / 49", nil, "6 / 49"},
-		{"3 / 49", nil, "3 / 49"},
-		{"1 / 4", nil, "1 / 4"},
+		{"6 / 49", nil, "6/49"},
+		{"3 / 49", nil, "3/49"},
+		{"1 / 4", nil, "1/4"},
 		{"0.25", nil, "0,25"},
-		{"x", RandomParameters{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}, "1 / 3"},
-		{"x", RandomParameters{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}, "1 / 3"},
+		{"x", RandomParameters{NewVar('a'): newNb(1), NewVar('b'): newNb(3), NewVar('x'): mustParse(t, "a / b")}, "1/3"},
+		{"x", RandomParameters{NewVar('a'): newNb(2), NewVar('b'): newNb(6), NewVar('x'): mustParse(t, "a / b")}, "1/3"},
 		{"x", RandomParameters{NewVar('x'): mustParse(t, "forceDecimal(3 / 4)")}, "0,75"},
 	} {
 		e := mustParse(t, tt.expr)

@@ -529,12 +529,8 @@ func (v treeValidator) validate(vars expression.Vars) error {
 		}
 
 		for _, c := range node.Probabilities {
-			expr, err := expression.Parse(c)
+			_, err := expression.Parse(c) // we accept any valid expression to allow for instance "x"
 			if err != nil {
-				return err
-			}
-
-			if err := expr.IsValidProba(vars); err != nil {
 				return err
 			}
 		}

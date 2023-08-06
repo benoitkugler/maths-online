@@ -78,7 +78,7 @@ func TestExpression_String(t *testing.T) {
 		want string
 	}{
 		{"2 + x", "2 + x"},
-		{"2 / x", "2 / x"},
+		{"2 / x", "2/x"},
 		{"2 * x", "2x"},
 		{"a * x", "ax"},
 		{"2 * 3", "2 * 3"},

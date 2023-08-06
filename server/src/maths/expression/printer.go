@@ -368,8 +368,11 @@ func (op operator) serialize(left, right *Expr) string {
 		return fmt.Sprintf(`%s * %s`, leftCode, rightCode)
 	case factorial:
 		return fmt.Sprintf(`%s!`, leftCode)
+	case div:
+		// compact fractions
+		return leftCode + op.String() + rightCode
 	case equals, greater, strictlyGreater, lesser, strictlyLesser,
-		div, mod, rem, pow:
+		mod, rem, pow:
 		return fmt.Sprintf(`%s %s %s`, leftCode, op.String(), rightCode)
 	default:
 		panic(exhaustiveOperatorSwitch)
