@@ -424,15 +424,19 @@ class _NodeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const marginX = 12.0;
+    const marginX = 6.0;
     const minWidth = 40.0;
 
-    final painter = _EdgesPainter(color, edges,
-        isRoot ? 0 : _NodeLayout.valueHeight, _NodeLayout.edgesHeight);
+    final painter = _EdgesPainter(
+        color,
+        edges,
+        isRoot ? 0 : _NodeLayout.valueHeight,
+        _NodeLayout.edgesHeight,
+        onTapEdge != null);
     final hasChildren = children.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 2.0),
       child: GestureDetector(
         onTapUp: onTapEdge == null
             ? null
@@ -487,32 +491,35 @@ class _EdgesPainter extends CustomPainter {
   final List<String> edges;
   final double startY;
   final double height;
+  final bool withShadow;
 
-  _EdgesPainter(this.color, this.edges, this.startY, this.height);
+  _EdgesPainter(
+      this.color, this.edges, this.startY, this.height, this.withShadow);
 
-  List<Offset> _middles = []; // cached during paint
+  List<Offset> _edgesMiddles = []; // cached during paint
 
   @override
   void paint(Canvas canvas, Size size) {
     final N = edges.length;
     final childWidth = size.width / N;
-    final start = Offset(size.width / 2, startY);
-    final ends = List<Offset>.generate(
+    final edgeStart =
+        Offset(size.width / 2, startY); // middle of the parent block
+    final edgeEnds = List<Offset>.generate(
         N, (i) => Offset((i + 0.5) * childWidth, startY + height));
 
-    _middles = List<Offset>.generate(N, (i) {
-      final end = ends[i];
-      return Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
-    });
-
-    for (var end in ends) {
+    for (var end in edgeEnds) {
       canvas.drawLine(
-          start,
+          edgeStart,
           end,
           Paint()
             ..color = color
             ..strokeWidth = 2);
     }
+
+    _edgesMiddles = List<Offset>.generate(N, (i) {
+      final end = edgeEnds[i];
+      return Offset((edgeStart.dx + end.dx) / 2, (edgeStart.dy + end.dy) / 2);
+    });
 
     for (var i = 0; i < N; i++) {
       final text = edges[i];
@@ -525,18 +532,28 @@ class _EdgesPainter extends CustomPainter {
       );
       painter.layout();
 
+      const egdePaddingX = 7;
+      const edgePaddingY = 5;
+      final rrect = RRect.fromRectAndRadius(
+          Rect.fromCenter(
+              center: _edgesMiddles[i],
+              width: painter.width + 2 * egdePaddingX,
+              height: painter.height + 2 * edgePaddingY),
+          const Radius.circular(10));
+
+      if (withShadow) {
+        final path = Path();
+        path.addRRect(rrect.inflate(2));
+        canvas.drawShadow(path, Colors.white, 0.5, true);
+      }
+
       canvas.drawRRect(
-          RRect.fromRectAndRadius(
-              Rect.fromCenter(
-                  center: _middles[i],
-                  width: painter.width + 15,
-                  height: painter.height + 10),
-              const Radius.circular(10)),
+          rrect,
           Paint()
             ..style = PaintingStyle.fill
             ..color = Colors.white);
-      painter.paint(
-          canvas, _middles[i] - Offset(painter.width / 2, painter.height / 2));
+      painter.paint(canvas,
+          _edgesMiddles[i] - Offset(painter.width / 2, painter.height / 2));
     }
   }
 
@@ -552,8 +569,8 @@ class _EdgesPainter extends CustomPainter {
 
   int? onHit(Offset position) {
     const fieldRadius = 20.0;
-    for (var i = 0; i < _middles.length; i++) {
-      final m = position - _middles[i];
+    for (var i = 0; i < _edgesMiddles.length; i++) {
+      final m = position - _edgesMiddles[i];
       if (m.distanceSquared <= fieldRadius * fieldRadius) {
         return i;
       }
