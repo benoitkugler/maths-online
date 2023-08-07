@@ -381,12 +381,13 @@ func randque_Block() questions.Block {
 		randque_TableBlock(),
 		randque_TableFieldBlock(),
 		randque_TextBlock(),
+		randque_TreeBlock(),
 		randque_TreeFieldBlock(),
 		randque_VariationTableBlock(),
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(22)
+	i := rand.Intn(23)
 	return choix[i]
 }
 
@@ -652,10 +653,17 @@ func randque_TextPart() questions.TextPart {
 	return s
 }
 
+func randque_TreeBlock() questions.TreeBlock {
+	var s questions.TreeBlock
+	s.EventsProposals = randSliceque_Interpolated()
+	s.AnswerRoot = randque_TreeNodeAnswer()
+
+	return s
+}
+
 func randque_TreeFieldBlock() questions.TreeFieldBlock {
 	var s questions.TreeFieldBlock
-	s.EventsProposals = randSlicestring()
-	s.AnswerRoot = randque_TreeNodeAnswer()
+	s.Answer = randque_TreeBlock()
 
 	return s
 }

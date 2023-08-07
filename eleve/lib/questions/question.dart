@@ -413,6 +413,13 @@ class _FieldsBuilder {
     rows.add(Center(child: Zoomable(zoom, FunctionPoints(ct, zoom), key)));
   }
 
+  void _handleTreeBlock(TreeBlock element) {
+    // start a new line
+    _flushCurrentRow();
+
+    rows.add(Center(child: Tree(_color, element)));
+  }
+
   void _handleTreeFieldBlock(TreeFieldBlock element) {
     final ct = fields[element.iD] as TreeController;
 
@@ -492,6 +499,8 @@ class _FieldsBuilder {
         _handleSignTableFieldBlock(element);
       } else if (element is FunctionPointsFieldBlock) {
         _handleFunctionPointsFieldBlock(element);
+      } else if (element is TreeBlock) {
+        _handleTreeBlock(element);
       } else if (element is TreeFieldBlock) {
         _handleTreeFieldBlock(element);
       } else if (element is TableFieldBlock) {

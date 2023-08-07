@@ -162,32 +162,32 @@ func (items Sheets) IdTeachers() []teacher.IdTeacher {
 	return out
 }
 
-func SelectSheetsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Sheets, error) {
-	rows, err := tx.Query("SELECT * FROM sheets WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+func SelectSheetsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Sheets, error) {
+	rows, err := tx.Query("SELECT * FROM sheets WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSheets(rows)
 }
 
-func DeleteSheetsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdSheet, error) {
-	rows, err := tx.Query("DELETE FROM sheets WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
+func DeleteSheetsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdSheet, error) {
+	rows, err := tx.Query("DELETE FROM sheets WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanIdSheetArray(rows)
 }
 
-func SelectSheetsByAnonymouss(tx DB, anonymouss ...IdTravail) (Sheets, error) {
-	rows, err := tx.Query("SELECT * FROM sheets WHERE anonymous = ANY($1)", IdTravailArrayToPQ(anonymouss))
+func SelectSheetsByAnonymouss(tx DB, anonymouss_ ...IdTravail) (Sheets, error) {
+	rows, err := tx.Query("SELECT * FROM sheets WHERE anonymous = ANY($1)", IdTravailArrayToPQ(anonymouss_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSheets(rows)
 }
 
-func DeleteSheetsByAnonymouss(tx DB, anonymouss ...IdTravail) ([]IdSheet, error) {
-	rows, err := tx.Query("DELETE FROM sheets WHERE anonymous = ANY($1) RETURNING id", IdTravailArrayToPQ(anonymouss))
+func DeleteSheetsByAnonymouss(tx DB, anonymouss_ ...IdTravail) ([]IdSheet, error) {
+	rows, err := tx.Query("DELETE FROM sheets WHERE anonymous = ANY($1) RETURNING id", IdTravailArrayToPQ(anonymouss_))
 	if err != nil {
 		return nil, err
 	}
@@ -302,16 +302,16 @@ func (items SheetTasks) IdSheets() []IdSheet {
 	return out
 }
 
-func SelectSheetTasksByIdSheets(tx DB, idSheets ...IdSheet) (SheetTasks, error) {
-	rows, err := tx.Query("SELECT * FROM sheet_tasks WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets))
+func SelectSheetTasksByIdSheets(tx DB, idSheets_ ...IdSheet) (SheetTasks, error) {
+	rows, err := tx.Query("SELECT * FROM sheet_tasks WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSheetTasks(rows)
 }
 
-func DeleteSheetTasksByIdSheets(tx DB, idSheets ...IdSheet) (SheetTasks, error) {
-	rows, err := tx.Query("DELETE FROM sheet_tasks WHERE idsheet = ANY($1) RETURNING *", IdSheetArrayToPQ(idSheets))
+func DeleteSheetTasksByIdSheets(tx DB, idSheets_ ...IdSheet) (SheetTasks, error) {
+	rows, err := tx.Query("DELETE FROM sheet_tasks WHERE idsheet = ANY($1) RETURNING *", IdSheetArrayToPQ(idSheets_))
 	if err != nil {
 		return nil, err
 	}
@@ -348,16 +348,16 @@ func SelectSheetTaskByIdTask(tx DB, idTask tasks.IdTask) (item SheetTask, found 
 	return item, true, err
 }
 
-func SelectSheetTasksByIdTasks(tx DB, idTasks ...tasks.IdTask) (SheetTasks, error) {
-	rows, err := tx.Query("SELECT * FROM sheet_tasks WHERE idtask = ANY($1)", tasks.IdTaskArrayToPQ(idTasks))
+func SelectSheetTasksByIdTasks(tx DB, idTasks_ ...tasks.IdTask) (SheetTasks, error) {
+	rows, err := tx.Query("SELECT * FROM sheet_tasks WHERE idtask = ANY($1)", tasks.IdTaskArrayToPQ(idTasks_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanSheetTasks(rows)
 }
 
-func DeleteSheetTasksByIdTasks(tx DB, idTasks ...tasks.IdTask) (SheetTasks, error) {
-	rows, err := tx.Query("DELETE FROM sheet_tasks WHERE idtask = ANY($1) RETURNING *", tasks.IdTaskArrayToPQ(idTasks))
+func DeleteSheetTasksByIdTasks(tx DB, idTasks_ ...tasks.IdTask) (SheetTasks, error) {
+	rows, err := tx.Query("DELETE FROM sheet_tasks WHERE idtask = ANY($1) RETURNING *", tasks.IdTaskArrayToPQ(idTasks_))
 	if err != nil {
 		return nil, err
 	}
@@ -509,16 +509,16 @@ func (items Travails) IdClassrooms() []teacher.IdClassroom {
 	return out
 }
 
-func SelectTravailsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) (Travails, error) {
-	rows, err := tx.Query("SELECT * FROM travails WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms))
+func SelectTravailsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdClassroom) (Travails, error) {
+	rows, err := tx.Query("SELECT * FROM travails WHERE idclassroom = ANY($1)", teacher.IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanTravails(rows)
 }
 
-func DeleteTravailsByIdClassrooms(tx DB, idClassrooms ...teacher.IdClassroom) ([]IdTravail, error) {
-	rows, err := tx.Query("DELETE FROM travails WHERE idclassroom = ANY($1) RETURNING id", teacher.IdClassroomArrayToPQ(idClassrooms))
+func DeleteTravailsByIdClassrooms(tx DB, idClassrooms_ ...teacher.IdClassroom) ([]IdTravail, error) {
+	rows, err := tx.Query("DELETE FROM travails WHERE idclassroom = ANY($1) RETURNING id", teacher.IdClassroomArrayToPQ(idClassrooms_))
 	if err != nil {
 		return nil, err
 	}
@@ -550,16 +550,16 @@ func (items Travails) IdSheets() []IdSheet {
 	return out
 }
 
-func SelectTravailsByIdSheets(tx DB, idSheets ...IdSheet) (Travails, error) {
-	rows, err := tx.Query("SELECT * FROM travails WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets))
+func SelectTravailsByIdSheets(tx DB, idSheets_ ...IdSheet) (Travails, error) {
+	rows, err := tx.Query("SELECT * FROM travails WHERE idsheet = ANY($1)", IdSheetArrayToPQ(idSheets_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanTravails(rows)
 }
 
-func DeleteTravailsByIdSheets(tx DB, idSheets ...IdSheet) ([]IdTravail, error) {
-	rows, err := tx.Query("DELETE FROM travails WHERE idsheet = ANY($1) RETURNING id", IdSheetArrayToPQ(idSheets))
+func DeleteTravailsByIdSheets(tx DB, idSheets_ ...IdSheet) ([]IdTravail, error) {
+	rows, err := tx.Query("DELETE FROM travails WHERE idsheet = ANY($1) RETURNING id", IdSheetArrayToPQ(idSheets_))
 	if err != nil {
 		return nil, err
 	}

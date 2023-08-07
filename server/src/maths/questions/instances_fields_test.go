@@ -322,3 +322,92 @@ func TestSignTableField(t *testing.T) {
 
 	tu.Assert(t, field.evaluateAnswer(ans))
 }
+
+func TestTree(t *testing.T) {
+	level := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.2", "0.8"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 1},
+			{Value: 2},
+		},
+	}
+	levelSameWithExpr := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"1/5", "0.8"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 1},
+			{Value: 2},
+		},
+	}
+	levelRev := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.8", "0.2"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 1},
+		},
+	}
+
+	level3 := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.2", "0.7", "0.1"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 1},
+			{Value: 2},
+			{Value: 3},
+		},
+	}
+	level3Rev := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.7", "0.2", "0.1"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 1},
+			{Value: 3},
+		},
+	}
+
+	levelOther := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.8", "0.2"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 4},
+		},
+	}
+	levelOtherOther := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.7", "0.2", "0.1"},
+		Children: []client.TreeNodeAnswer{
+			{Value: 2},
+			{Value: 4},
+			{Value: 4},
+		},
+	}
+
+	tu.Assert(t, areTreeEquivalent(treeNodeAnswerToInstance(level), treeNodeAnswerToInstance(levelSameWithExpr)))
+	tu.Assert(t, !areTreeEquivalent(treeNodeAnswerToInstance(level), treeNodeAnswerToInstance(levelOther)))
+	tu.Assert(t, !areTreeEquivalent(treeNodeAnswerToInstance(levelOther), treeNodeAnswerToInstance(levelOtherOther)))
+	tu.Assert(t, areTreeEquivalent(treeNodeAnswerToInstance(level), treeNodeAnswerToInstance(levelRev)))
+	tu.Assert(t, areTreeEquivalent(treeNodeAnswerToInstance(level3), treeNodeAnswerToInstance(level3Rev)))
+
+	// test for nested invertion
+	level2 := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.2", "0.8"},
+		Children: []client.TreeNodeAnswer{
+			levelOther,
+			level,
+		},
+	}
+	level2bis := client.TreeNodeAnswer{
+		Value:         0,
+		Probabilities: []string{"0.2", "0.8"},
+		Children: []client.TreeNodeAnswer{
+			levelOther,
+			levelRev,
+		},
+	}
+	tu.Assert(t, areTreeEquivalent(treeNodeAnswerToInstance(level2), treeNodeAnswerToInstance(level2bis)))
+}

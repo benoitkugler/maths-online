@@ -23,6 +23,7 @@ func (SignTableBlock) isBlock()      {}
 func (FigureBlock) isBlock()         {}
 func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
+func (TreeBlock) isBlock()           {}
 
 func (NumberFieldBlock) isBlock()           {}
 func (ExpressionFieldBlock) isBlock()       {}
@@ -215,6 +216,11 @@ type FunctionPointsFieldBlock struct {
 	ID     int
 }
 
+type TreeBlock struct {
+	EventsProposals []TextLine
+	Root            TreeNodeAnswer
+}
+
 // TreeShape defines the shape of a "regular" tree,
 // specifying the number of children for each level
 type TreeShape []int
@@ -223,7 +229,7 @@ type TreeShape []int
 // probability tree
 type TreeFieldBlock struct {
 	ShapeProposals  []TreeShape
-	EventsProposals []TextOrMath
+	EventsProposals []TextLine
 	ID              int
 }
 
@@ -348,8 +354,8 @@ type FunctionPointsAnswer struct {
 
 type TreeNodeAnswer struct {
 	Children      []TreeNodeAnswer
-	Probabilities []float64 // edges, same length as Children
-	Value         int       // index into the proposals
+	Probabilities []string // expression for edges, same length as Children
+	Value         int      // index into the proposals, ignored for the root
 }
 
 type TreeAnswer struct {

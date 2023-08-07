@@ -47,6 +47,7 @@ export enum BlockKind {
   TableBlock = "TableBlock",
   TableFieldBlock = "TableFieldBlock",
   TextBlock = "TextBlock",
+  TreeBlock = "TreeBlock",
   TreeFieldBlock = "TreeFieldBlock",
   VariationTableBlock = "VariationTableBlock",
   VariationTableFieldBlock = "VariationTableFieldBlock",
@@ -75,6 +76,7 @@ export interface Block {
     | TableBlock
     | TableFieldBlock
     | TextBlock
+    | TreeBlock
     | TreeFieldBlock
     | VariationTableBlock
     | VariationTableFieldBlock
@@ -344,10 +346,14 @@ export interface TextPart {
   Content: string;
   Kind: TextKind;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.TreeBlock
+export interface TreeBlock {
+  EventsProposals: Interpolated[] | null;
+  AnswerRoot: TreeNodeAnswer;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TreeFieldBlock
 export interface TreeFieldBlock {
-  EventsProposals: string[] | null;
-  AnswerRoot: TreeNodeAnswer;
+  Answer: TreeBlock;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TreeNodeAnswer
 export interface TreeNodeAnswer {
@@ -1370,11 +1376,14 @@ export type Success = boolean[];
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseUrl: string, protected authToken: string) {}
+  constructor(
+    protected baseUrl: string,
+    protected authToken: string,
+  ) {}
 
-  abstract handleError(error: any): void;
+  protected abstract handleError(error: any): void;
 
-  abstract startRequest(): void;
+  protected abstract startRequest(): void;
 
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
@@ -1385,7 +1394,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1402,7 +1411,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessAskInscription(data: AskInscriptionOut): void;
+  protected onSuccessAskInscription(data: AskInscriptionOut): void {}
 
   protected async rawValidateInscription(params: { data: string }) {
     const fullUrl = this.baseUrl + "inscription";
@@ -1425,7 +1434,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessValidateInscription(): void;
+  protected onSuccessValidateInscription(): void {}
 
   protected async rawLoggin(params: LogginIn) {
     const fullUrl = this.baseUrl + "/prof/loggin";
@@ -1447,7 +1456,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessLoggin(data: LogginOut): void;
+  protected onSuccessLoggin(data: LogginOut): void {}
 
   protected async rawTeacherResetPassword(params: { mail: string }) {
     const fullUrl = this.baseUrl + "/api/prof/reset";
@@ -1470,7 +1479,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherResetPassword(): void;
+  protected onSuccessTeacherResetPassword(): void {}
 
   protected async rawTeacherGetSettings() {
     const fullUrl = this.baseUrl + "/api/prof/settings";
@@ -1492,7 +1501,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherGetSettings(data: TeacherSettings): void;
+  protected onSuccessTeacherGetSettings(data: TeacherSettings): void {}
 
   protected async rawTeacherUpdateSettings(params: TeacherSettings) {
     const fullUrl = this.baseUrl + "/api/prof/settings";
@@ -1512,7 +1521,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherUpdateSettings(): void;
+  protected onSuccessTeacherUpdateSettings(): void {}
 
   protected async rawTeacherGetClassrooms() {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
@@ -1534,9 +1543,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherGetClassrooms(
-    data: ClassroomExt[] | null
-  ): void;
+  protected onSuccessTeacherGetClassrooms(data: ClassroomExt[] | null): void {}
 
   protected async rawTeacherCreateClassroom() {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
@@ -1556,7 +1563,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherCreateClassroom(): void;
+  protected onSuccessTeacherCreateClassroom(): void {}
 
   protected async rawTeacherUpdateClassroom(params: Classroom) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
@@ -1578,7 +1585,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherUpdateClassroom(data: Classroom): void;
+  protected onSuccessTeacherUpdateClassroom(data: Classroom): void {}
 
   protected async rawTeacherDeleteClassroom(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
@@ -1601,7 +1608,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherDeleteClassroom(): void;
+  protected onSuccessTeacherDeleteClassroom(): void {}
 
   protected async rawTeacherGetClassroomStudents(params: {
     "id-classroom": number;
@@ -1626,9 +1633,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherGetClassroomStudents(
-    data: Student[] | null
-  ): void;
+  protected onSuccessTeacherGetClassroomStudents(
+    data: Student[] | null,
+  ): void {}
 
   protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
@@ -1651,7 +1658,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherAddStudent(data: Student): void;
+  protected onSuccessTeacherAddStudent(data: Student): void {}
 
   protected async rawTeacherUpdateStudent(params: Student) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
@@ -1671,7 +1678,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherUpdateStudent(): void;
+  protected onSuccessTeacherUpdateStudent(): void {}
 
   protected async rawTeacherDeleteStudent(params: { "id-student": number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
@@ -1694,11 +1701,11 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherDeleteStudent(): void;
+  protected onSuccessTeacherDeleteStudent(): void {}
 
   protected async rawTeacherImportStudents(
     params: { "id-classroom": string },
-    file: File
+    file: File,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students/import";
     const formData = new FormData();
@@ -1720,7 +1727,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherImportStudents(): void;
+  protected onSuccessTeacherImportStudents(): void {}
 
   protected async rawTeacherGenerateClassroomCode(params: {
     "id-classroom": number;
@@ -1731,7 +1738,7 @@ export abstract class AbstractAPI {
       {
         params: { "id-classroom": String(params["id-classroom"]) },
         headers: this.getHeaders(),
-      }
+      },
     );
     return rep.data;
   }
@@ -1748,9 +1755,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTeacherGenerateClassroomCode(
-    data: GenerateClassroomCodeOut
-  ): void;
+  protected onSuccessTeacherGenerateClassroomCode(
+    data: GenerateClassroomCodeOut,
+  ): void {}
 
   protected async rawGetTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
@@ -1772,9 +1779,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessGetTrivialPoursuit(
-    data: TrivialExt[] | null
-  ): void;
+  protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {}
 
   protected async rawCreateTrivialPoursuit() {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
@@ -1796,7 +1801,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessCreateTrivialPoursuit(data: TrivialExt): void;
+  protected onSuccessCreateTrivialPoursuit(data: TrivialExt): void {}
 
   protected async rawUpdateTrivialPoursuit(params: Trivial) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
@@ -1818,7 +1823,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessUpdateTrivialPoursuit(data: TrivialExt): void;
+  protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {}
 
   protected async rawDeleteTrivialPoursuit(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
@@ -1841,7 +1846,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessDeleteTrivialPoursuit(): void;
+  protected onSuccessDeleteTrivialPoursuit(): void {}
 
   protected async rawUpdateTrivialVisiblity(params: UpdateTrivialVisiblityIn) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config/visibility";
@@ -1861,7 +1866,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessUpdateTrivialVisiblity(): void;
+  protected onSuccessUpdateTrivialVisiblity(): void {}
 
   protected async rawDuplicateTrivialPoursuit(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config/duplicate";
@@ -1884,7 +1889,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void;
+  protected onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void {}
 
   protected async rawCheckMissingQuestions(params: CategoriesQuestions) {
     const fullUrl =
@@ -1892,7 +1897,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<CheckMissingQuestionsOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1909,9 +1914,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessCheckMissingQuestions(
-    data: CheckMissingQuestionsOut
-  ): void;
+  protected onSuccessCheckMissingQuestions(
+    data: CheckMissingQuestionsOut,
+  ): void {}
 
   protected async rawTrivialTeacherMonitor() {
     const fullUrl = this.baseUrl + "/api/prof/trivial/monitor";
@@ -1933,7 +1938,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTrivialTeacherMonitor(data: MonitorOut): void;
+  protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {}
 
   protected async rawTrivialGetSelfaccess(params: { "id-trivial": number }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
@@ -1956,9 +1961,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTrivialGetSelfaccess(
-    data: TrivialSelfaccess
-  ): void;
+  protected onSuccessTrivialGetSelfaccess(data: TrivialSelfaccess): void {}
 
   protected async rawTrivialUpdateSelfaccess(params: UpdateSelfaccessIn) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
@@ -1978,7 +1981,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessTrivialUpdateSelfaccess(): void;
+  protected onSuccessTrivialUpdateSelfaccess(): void {}
 
   protected async rawGetTrivialRunningSessions() {
     const fullUrl = this.baseUrl + "/api/trivial/sessions";
@@ -2000,16 +2003,16 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessGetTrivialRunningSessions(
-    data: RunningSessionMetaOut
-  ): void;
+  protected onSuccessGetTrivialRunningSessions(
+    data: RunningSessionMetaOut,
+  ): void {}
 
   protected async rawLaunchSessionTrivialPoursuit(params: LaunchSessionIn) {
     const fullUrl = this.baseUrl + "/api/trivial/sessions";
     const rep: AxiosResponse<LaunchSessionOut> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2026,9 +2029,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessLaunchSessionTrivialPoursuit(
-    data: LaunchSessionOut
-  ): void;
+  protected onSuccessLaunchSessionTrivialPoursuit(
+    data: LaunchSessionOut,
+  ): void {}
 
   protected async rawStartTrivialGame(params: { "game-id": string }) {
     const fullUrl = this.baseUrl + "/api/trivial/sessions/start";
@@ -2051,7 +2054,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessStartTrivialGame(): void;
+  protected onSuccessStartTrivialGame(): void {}
 
   protected async rawStopTrivialGame(params: stopGame) {
     const fullUrl = this.baseUrl + "/api/trivial/sessions/stop";
@@ -2071,7 +2074,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessStopTrivialGame(): void;
+  protected onSuccessStopTrivialGame(): void {}
 
   protected async rawEditorGetTags() {
     const fullUrl = this.baseUrl + "/api/prof/editor/tags";
@@ -2093,7 +2096,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetTags(data: TagsDB): void;
+  protected onSuccessEditorGetTags(data: TagsDB): void {}
 
   protected async rawEditorGenerateSyntaxHint(params: GenerateSyntaxHintIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/syntax-hint";
@@ -2115,7 +2118,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGenerateSyntaxHint(data: TextBlock): void;
+  protected onSuccessEditorGenerateSyntaxHint(data: TextBlock): void {}
 
   protected async rawEditorGetQuestionsIndex() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
@@ -2137,14 +2140,14 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetQuestionsIndex(data: Index): void;
+  protected onSuccessEditorGetQuestionsIndex(data: Index): void {}
 
   protected async rawEditorSearchQuestions(params: Query) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroups";
     const rep: AxiosResponse<ListQuestionsOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2161,9 +2164,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSearchQuestions(
-    data: ListQuestionsOut
-  ): void;
+  protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {}
 
   protected async rawEditorDuplicateQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/duplicate";
@@ -2186,7 +2187,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDuplicateQuestion(data: Question): void;
+  protected onSuccessEditorDuplicateQuestion(data: Question): void {}
 
   protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
@@ -2209,14 +2210,14 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDuplicateQuestiongroup(): void;
+  protected onSuccessEditorDuplicateQuestiongroup(): void {}
 
   protected async rawEditorCreateQuestiongroup() {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
     const rep: AxiosResponse<QuestiongroupExt> = await Axios.put(
       fullUrl,
       null,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2233,9 +2234,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorCreateQuestiongroup(
-    data: QuestiongroupExt
-  ): void;
+  protected onSuccessEditorCreateQuestiongroup(data: QuestiongroupExt): void {}
 
   protected async rawEditorUpdateQuestiongroup(params: Questiongroup) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
@@ -2255,10 +2254,10 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorUpdateQuestiongroup(): void;
+  protected onSuccessEditorUpdateQuestiongroup(): void {}
 
   protected async rawEditorUpdateQuestionTags(
-    params: UpdateQuestiongroupTagsIn
+    params: UpdateQuestiongroupTagsIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/tags";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -2277,10 +2276,10 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorUpdateQuestionTags(): void;
+  protected onSuccessEditorUpdateQuestionTags(): void {}
 
   protected async rawEditorUpdateQuestiongroupVis(
-    params: QuestionUpdateVisiblityIn
+    params: QuestionUpdateVisiblityIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/visibility";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -2299,7 +2298,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorUpdateQuestiongroupVis(): void;
+  protected onSuccessEditorUpdateQuestiongroupVis(): void {}
 
   protected async rawEditorGetQuestions(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
@@ -2322,7 +2321,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetQuestions(data: Question[] | null): void;
+  protected onSuccessEditorGetQuestions(data: Question[] | null): void {}
 
   protected async rawEditorDeleteQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
@@ -2345,9 +2344,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDeleteQuestion(
-    data: DeleteQuestionOut
-  ): void;
+  protected onSuccessEditorDeleteQuestion(data: DeleteQuestionOut): void {}
 
   protected async rawEditorSaveQuestionMeta(params: SaveQuestionMetaIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/variant";
@@ -2367,16 +2364,16 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSaveQuestionMeta(): void;
+  protected onSuccessEditorSaveQuestionMeta(): void {}
 
   protected async rawEditorCheckQuestionParameters(
-    params: CheckQuestionParametersIn
+    params: CheckQuestionParametersIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/check-params";
     const rep: AxiosResponse<CheckQuestionParametersOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2393,18 +2390,18 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorCheckQuestionParameters(
-    data: CheckQuestionParametersOut
-  ): void;
+  protected onSuccessEditorCheckQuestionParameters(
+    data: CheckQuestionParametersOut,
+  ): void {}
 
   protected async rawEditorSaveQuestionAndPreview(
-    params: SaveQuestionAndPreviewIn
+    params: SaveQuestionAndPreviewIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/preview";
     const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2421,16 +2418,16 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSaveQuestionAndPreview(
-    data: SaveQuestionAndPreviewOut
-  ): void;
+  protected onSuccessEditorSaveQuestionAndPreview(
+    data: SaveQuestionAndPreviewOut,
+  ): void {}
 
   protected async rawEditorQuestionExportLateX(params: QuestionPage) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/export/latex";
     const rep: AxiosResponse<ExportQuestionLatexOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2447,9 +2444,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorQuestionExportLateX(
-    data: ExportQuestionLatexOut
-  ): void;
+  protected onSuccessEditorQuestionExportLateX(
+    data: ExportQuestionLatexOut,
+  ): void {}
 
   protected async rawEditorGetExercicesIndex() {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
@@ -2471,14 +2468,14 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetExercicesIndex(data: Index): void;
+  protected onSuccessEditorGetExercicesIndex(data: Index): void {}
 
   protected async rawEditorSearchExercices(params: Query) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroups";
     const rep: AxiosResponse<ListExercicesOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2495,9 +2492,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSearchExercices(
-    data: ListExercicesOut
-  ): void;
+  protected onSuccessEditorSearchExercices(data: ListExercicesOut): void {}
 
   protected async rawEditorUpdateExercicegroup(params: Exercicegroup) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
@@ -2517,10 +2512,10 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorUpdateExercicegroup(): void;
+  protected onSuccessEditorUpdateExercicegroup(): void {}
 
   protected async rawEditorUpdateExerciceTags(
-    params: UpdateExercicegroupTagsIn
+    params: UpdateExercicegroupTagsIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/tags";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -2539,7 +2534,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorUpdateExerciceTags(): void;
+  protected onSuccessEditorUpdateExerciceTags(): void {}
 
   protected async rawEditorDuplicateExercicegroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
@@ -2562,7 +2557,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDuplicateExercicegroup(): void;
+  protected onSuccessEditorDuplicateExercicegroup(): void {}
 
   protected async rawEditorGetExerciceContent(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
@@ -2585,14 +2580,14 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorGetExerciceContent(data: ExerciceExt): void;
+  protected onSuccessEditorGetExerciceContent(data: ExerciceExt): void {}
 
   protected async rawEditorCreateExercice() {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExercicegroupExt> = await Axios.put(
       fullUrl,
       null,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2609,9 +2604,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorCreateExercice(
-    data: ExercicegroupExt
-  ): void;
+  protected onSuccessEditorCreateExercice(data: ExercicegroupExt): void {}
 
   protected async rawEditorDeleteExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
@@ -2634,9 +2627,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDeleteExercice(
-    data: DeleteExerciceOut
-  ): void;
+  protected onSuccessEditorDeleteExercice(data: DeleteExerciceOut): void {}
 
   protected async rawEditorSaveExerciceMeta(params: ExerciceHeader) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
@@ -2658,7 +2649,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSaveExerciceMeta(data: Exercice): void;
+  protected onSuccessEditorSaveExerciceMeta(data: Exercice): void {}
 
   protected async rawEditorDuplicateExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";
@@ -2681,18 +2672,16 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorDuplicateExercice(
-    data: ExerciceHeader
-  ): void;
+  protected onSuccessEditorDuplicateExercice(data: ExerciceHeader): void {}
 
   protected async rawEditorExerciceCreateQuestion(
-    params: ExerciceCreateQuestionIn
+    params: ExerciceCreateQuestionIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
     const rep: AxiosResponse<ExerciceWithPreview> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2709,18 +2698,18 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorExerciceCreateQuestion(
-    data: ExerciceWithPreview
-  ): void;
+  protected onSuccessEditorExerciceCreateQuestion(
+    data: ExerciceWithPreview,
+  ): void {}
 
   protected async rawEditorExerciceImportQuestion(
-    params: ExerciceImportQuestionIn
+    params: ExerciceImportQuestionIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions/import";
     const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2737,19 +2726,19 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorExerciceImportQuestion(
-    data: ExerciceWithPreview
-  ): void;
+  protected onSuccessEditorExerciceImportQuestion(
+    data: ExerciceWithPreview,
+  ): void {}
 
   protected async rawEditorExerciceDuplicateQuestion(
-    params: ExerciceDuplicateQuestionIn
+    params: ExerciceDuplicateQuestionIn,
   ) {
     const fullUrl =
       this.baseUrl + "/api/prof/editor/exercice/questions/duplicate";
     const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2766,18 +2755,18 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorExerciceDuplicateQuestion(
-    data: ExerciceWithPreview
-  ): void;
+  protected onSuccessEditorExerciceDuplicateQuestion(
+    data: ExerciceWithPreview,
+  ): void {}
 
   protected async rawEditorExerciceUpdateQuestions(
-    params: ExerciceUpdateQuestionsIn
+    params: ExerciceUpdateQuestionsIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/questions";
     const rep: AxiosResponse<ExerciceWithPreview> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2794,12 +2783,12 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorExerciceUpdateQuestions(
-    data: ExerciceWithPreview
-  ): void;
+  protected onSuccessEditorExerciceUpdateQuestions(
+    data: ExerciceWithPreview,
+  ): void {}
 
   protected async rawEditorUpdateExercicegroupVis(
-    params: ExerciceUpdateVisiblityIn
+    params: ExerciceUpdateVisiblityIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/visibility";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
@@ -2818,16 +2807,16 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorUpdateExercicegroupVis(): void;
+  protected onSuccessEditorUpdateExercicegroupVis(): void {}
 
   protected async rawEditorCheckExerciceParameters(
-    params: CheckExerciceParametersIn
+    params: CheckExerciceParametersIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/check-params";
     const rep: AxiosResponse<CheckExerciceParametersOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2844,18 +2833,18 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorCheckExerciceParameters(
-    data: CheckExerciceParametersOut
-  ): void;
+  protected onSuccessEditorCheckExerciceParameters(
+    data: CheckExerciceParametersOut,
+  ): void {}
 
   protected async rawEditorSaveExerciceAndPreview(
-    params: SaveExerciceAndPreviewIn
+    params: SaveExerciceAndPreviewIn,
   ) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/preview";
     const rep: AxiosResponse<SaveExerciceAndPreviewOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2872,16 +2861,16 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorSaveExerciceAndPreview(
-    data: SaveExerciceAndPreviewOut
-  ): void;
+  protected onSuccessEditorSaveExerciceAndPreview(
+    data: SaveExerciceAndPreviewOut,
+  ): void {}
 
   protected async rawEditorExerciceExportLateX(params: ExportExerciceLatexIn) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/export/latex";
     const rep: AxiosResponse<ExportExerciceLatexOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -2898,9 +2887,9 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessEditorExerciceExportLateX(
-    data: ExportExerciceLatexOut
-  ): void;
+  protected onSuccessEditorExerciceExportLateX(
+    data: ExportExerciceLatexOut,
+  ): void {}
 
   protected async rawHomeworkGetSheets() {
     const fullUrl = this.baseUrl + "/api/prof/homework";
@@ -2922,7 +2911,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkGetSheets(data: Homeworks): void;
+  protected onSuccessHomeworkGetSheets(data: Homeworks): void {}
 
   protected async rawHomeworkCreateSheet() {
     const fullUrl = this.baseUrl + "/api/prof/homework";
@@ -2944,7 +2933,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCreateSheet(data: SheetExt): void;
+  protected onSuccessHomeworkCreateSheet(data: SheetExt): void {}
 
   protected async rawHomeworkUpdateSheet(params: Sheet) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
@@ -2964,7 +2953,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkUpdateSheet(): void;
+  protected onSuccessHomeworkUpdateSheet(): void {}
 
   protected async rawHomeworkDeleteSheet(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
@@ -2987,7 +2976,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkDeleteSheet(): void;
+  protected onSuccessHomeworkDeleteSheet(): void {}
 
   protected async rawHomeworkCopySheet(params: CopySheetIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/copy";
@@ -3009,7 +2998,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCopySheet(data: SheetExt): void;
+  protected onSuccessHomeworkCopySheet(data: SheetExt): void {}
 
   protected async rawHomeworkCreateTravailWith(params: CreateTravailWithIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
@@ -3031,7 +3020,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCreateTravailWith(data: Travail): void;
+  protected onSuccessHomeworkCreateTravailWith(data: Travail): void {}
 
   protected async rawHomeworkCreateTravail(params: { "id-classroom": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail/anonymous";
@@ -3041,7 +3030,7 @@ export abstract class AbstractAPI {
       {
         params: { "id-classroom": String(params["id-classroom"]) },
         headers: this.getHeaders(),
-      }
+      },
     );
     return rep.data;
   }
@@ -3058,9 +3047,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCreateTravail(
-    data: CreateTravailOut
-  ): void;
+  protected onSuccessHomeworkCreateTravail(data: CreateTravailOut): void {}
 
   protected async rawHomeworkUpdateTravail(params: Travail) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
@@ -3080,7 +3067,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkUpdateTravail(): void;
+  protected onSuccessHomeworkUpdateTravail(): void {}
 
   protected async rawHomeworkDeleteTravail(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
@@ -3103,14 +3090,14 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkDeleteTravail(): void;
+  protected onSuccessHomeworkDeleteTravail(): void {}
 
   protected async rawHomeworkCopyTravail(params: CopyTravailIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail/copy";
     const rep: AxiosResponse<CopyTravailToOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -3127,7 +3114,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void;
+  protected onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void {}
 
   protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
@@ -3150,7 +3137,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkRemoveTask(): void;
+  protected onSuccessHomeworkRemoveTask(): void {}
 
   protected async rawHomeworkAddExercice(params: AddExerciceToTaskIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/exercice";
@@ -3172,7 +3159,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkAddExercice(data: TaskExt): void;
+  protected onSuccessHomeworkAddExercice(data: TaskExt): void {}
 
   protected async rawHomeworkGetMonoquestion(params: {
     "id-monoquestion": number;
@@ -3197,7 +3184,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkGetMonoquestion(data: Monoquestion): void;
+  protected onSuccessHomeworkGetMonoquestion(data: Monoquestion): void {}
 
   protected async rawHomeworkAddMonoquestion(params: AddMonoquestionToTaskIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
@@ -3219,7 +3206,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkAddMonoquestion(data: TaskExt): void;
+  protected onSuccessHomeworkAddMonoquestion(data: TaskExt): void {}
 
   protected async rawHomeworkGetRandomMonoquestion(params: {
     "id-randommonoquestion": number;
@@ -3249,12 +3236,12 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkGetRandomMonoquestion(
-    data: RandomMonoquestion
-  ): void;
+  protected onSuccessHomeworkGetRandomMonoquestion(
+    data: RandomMonoquestion,
+  ): void {}
 
   protected async rawHomeworkAddRandomMonoquestion(
-    params: AddRandomMonoquestionToTaskIn
+    params: AddRandomMonoquestionToTaskIn,
   ) {
     const fullUrl =
       this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
@@ -3276,9 +3263,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkAddRandomMonoquestion(
-    data: TaskExt
-  ): void;
+  protected onSuccessHomeworkAddRandomMonoquestion(data: TaskExt): void {}
 
   protected async rawHomeworkUpdateMonoquestion(params: Monoquestion) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
@@ -3300,10 +3285,10 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void;
+  protected onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void {}
 
   protected async rawHomeworkUpdateRandomMonoquestion(
-    params: RandomMonoquestion
+    params: RandomMonoquestion,
   ) {
     const fullUrl =
       this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
@@ -3325,9 +3310,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkUpdateRandomMonoquestion(
-    data: TaskExt
-  ): void;
+  protected onSuccessHomeworkUpdateRandomMonoquestion(data: TaskExt): void {}
 
   protected async rawHomeworkReorderSheetTasks(params: ReorderSheetTasksIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
@@ -3347,14 +3330,14 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkReorderSheetTasks(): void;
+  protected onSuccessHomeworkReorderSheetTasks(): void {}
 
   protected async rawHomeworkGetMarks(params: HowemorkMarksIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/marks";
     const rep: AxiosResponse<HomeworkMarksOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -3371,7 +3354,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void;
+  protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";
@@ -3393,7 +3376,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewCreate(data: Review): void;
+  protected onSuccessReviewCreate(data: Review): void {}
 
   protected async rawReviewsList() {
     const fullUrl = this.baseUrl + "/api/prof/reviews";
@@ -3415,7 +3398,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewsList(data: ReviewHeader[] | null): void;
+  protected onSuccessReviewsList(data: ReviewHeader[] | null): void {}
 
   protected async rawReviewLoad(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
@@ -3438,7 +3421,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewLoad(data: ReviewExt): void;
+  protected onSuccessReviewLoad(data: ReviewExt): void {}
 
   protected async rawReviewLoadTarget(params: { "id-review": number }) {
     const fullUrl = this.baseUrl + "/api/prof/review/target";
@@ -3461,7 +3444,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewLoadTarget(data: LoadTargetOut): void;
+  protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {}
 
   protected async rawReviewDelete(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
@@ -3484,7 +3467,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewDelete(): void;
+  protected onSuccessReviewDelete(): void {}
 
   protected async rawReviewUpdateApproval(params: ReviewUpdateApprovalIn) {
     const fullUrl = this.baseUrl + "/api/prof/review/approval";
@@ -3504,7 +3487,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewUpdateApproval(): void;
+  protected onSuccessReviewUpdateApproval(): void {}
 
   protected async rawReviewUpdateCommnents(params: ReviewUpdateCommentsIn) {
     const fullUrl = this.baseUrl + "/api/prof/review/comments";
@@ -3524,7 +3507,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewUpdateCommnents(): void;
+  protected onSuccessReviewUpdateCommnents(): void {}
 
   protected async rawReviewAccept(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review/accept";
@@ -3547,5 +3530,5 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected abstract onSuccessReviewAccept(): void;
+  protected onSuccessReviewAccept(): void {}
 }

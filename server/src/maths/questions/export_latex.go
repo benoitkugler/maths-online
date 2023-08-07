@@ -370,6 +370,7 @@ func (si SignTableFieldInstance) toLatex() string        { return "TODO" }
 func (fi FunctionPointsFieldInstance) toLatex() string   { return "TODO" }
 func (fi FigureVectorPairFieldInstance) toLatex() string { return "TODO" }
 func (fi FigureAffineLineFieldInstance) toLatex() string { return "TODO" }
+func (ti TreeInstance) toLatex() string                  { return "TODO" }
 func (ti TreeFieldInstance) toLatex() string             { return "TODO" }
 func (pi ProofFieldInstance) toLatex() string            { return "TODO" }
 func (pi TableFieldInstance) toLatex() string            { return "TODO" }

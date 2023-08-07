@@ -518,7 +518,7 @@ func (v figureAffineLineValidator) validate(vars expression.Vars) error {
 // NOTE: as an optimisation, we could parse
 // earlier the expression
 type treeValidator struct {
-	data TreeFieldBlock
+	data TreeBlock
 }
 
 func (v treeValidator) validate(vars expression.Vars) error {
@@ -529,12 +529,8 @@ func (v treeValidator) validate(vars expression.Vars) error {
 		}
 
 		for _, c := range node.Probabilities {
-			expr, err := expression.Parse(c)
+			_, err := expression.Parse(c) // we accept any valid expression to allow for instance "x"
 			if err != nil {
-				return err
-			}
-
-			if err := expr.IsValidProba(vars); err != nil {
 				return err
 			}
 		}

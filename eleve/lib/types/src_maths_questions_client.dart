@@ -209,6 +209,8 @@ Block blockFromJson(dynamic json_) {
       return tableFieldBlockFromJson(data);
     case "TextBlock":
       return textBlockFromJson(data);
+    case "TreeBlock":
+      return treeBlockFromJson(data);
     case "TreeFieldBlock":
       return treeFieldBlockFromJson(data);
     case "VariationTableBlock":
@@ -286,6 +288,8 @@ Map<String, dynamic> blockToJson(Block item) {
     return {'Kind': "TableFieldBlock", 'Data': tableFieldBlockToJson(item)};
   } else if (item is TextBlock) {
     return {'Kind': "TextBlock", 'Data': textBlockToJson(item)};
+  } else if (item is TreeBlock) {
+    return {'Kind': "TreeBlock", 'Data': treeBlockToJson(item)};
   } else if (item is TreeFieldBlock) {
     return {'Kind': "TreeFieldBlock", 'Data': treeFieldBlockToJson(item)};
   } else if (item is VariationTableBlock) {
@@ -1476,10 +1480,36 @@ Map<String, dynamic> treeAnswerToJson(TreeAnswer item) {
   return {"Root": treeNodeAnswerToJson(item.root)};
 }
 
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.TreeBlock
+class TreeBlock implements Block {
+  final List<TextLine> eventsProposals;
+  final TreeNodeAnswer root;
+
+  const TreeBlock(this.eventsProposals, this.root);
+
+  @override
+  String toString() {
+    return "TreeBlock($eventsProposals, $root)";
+  }
+}
+
+TreeBlock treeBlockFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return TreeBlock(listTextLineFromJson(json['EventsProposals']),
+      treeNodeAnswerFromJson(json['Root']));
+}
+
+Map<String, dynamic> treeBlockToJson(TreeBlock item) {
+  return {
+    "EventsProposals": listTextLineToJson(item.eventsProposals),
+    "Root": treeNodeAnswerToJson(item.root)
+  };
+}
+
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.TreeFieldBlock
 class TreeFieldBlock implements Block {
   final List<TreeShape> shapeProposals;
-  final List<TextOrMath> eventsProposals;
+  final List<TextLine> eventsProposals;
   final int iD;
 
   const TreeFieldBlock(this.shapeProposals, this.eventsProposals, this.iD);
@@ -1493,13 +1523,13 @@ class TreeFieldBlock implements Block {
 TreeFieldBlock treeFieldBlockFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return TreeFieldBlock(listTreeShapeFromJson(json['ShapeProposals']),
-      listTextOrMathFromJson(json['EventsProposals']), intFromJson(json['ID']));
+      listTextLineFromJson(json['EventsProposals']), intFromJson(json['ID']));
 }
 
 Map<String, dynamic> treeFieldBlockToJson(TreeFieldBlock item) {
   return {
     "ShapeProposals": listTreeShapeToJson(item.shapeProposals),
-    "EventsProposals": listTextOrMathToJson(item.eventsProposals),
+    "EventsProposals": listTextLineToJson(item.eventsProposals),
     "ID": intToJson(item.iD)
   };
 }
@@ -1507,7 +1537,7 @@ Map<String, dynamic> treeFieldBlockToJson(TreeFieldBlock item) {
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.TreeNodeAnswer
 class TreeNodeAnswer {
   final List<TreeNodeAnswer> children;
-  final List<double> probabilities;
+  final List<String> probabilities;
   final int value;
 
   const TreeNodeAnswer(this.children, this.probabilities, this.value);
@@ -1521,13 +1551,13 @@ class TreeNodeAnswer {
 TreeNodeAnswer treeNodeAnswerFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return TreeNodeAnswer(listTreeNodeAnswerFromJson(json['Children']),
-      listDoubleFromJson(json['Probabilities']), intFromJson(json['Value']));
+      listStringFromJson(json['Probabilities']), intFromJson(json['Value']));
 }
 
 Map<String, dynamic> treeNodeAnswerToJson(TreeNodeAnswer item) {
   return {
     "Children": listTreeNodeAnswerToJson(item.children),
-    "Probabilities": listDoubleToJson(item.probabilities),
+    "Probabilities": listStringToJson(item.probabilities),
     "Value": intToJson(item.value)
   };
 }

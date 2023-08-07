@@ -542,56 +542,20 @@ func (fa FigureAffineLineFieldBlock) setupValidator(params expression.RandomPara
 	return figureAffineLineValidator{figure: figure, a: a, b: b}, nil
 }
 
-type TreeNodeAnswer struct {
-	Children      []TreeNodeAnswer `gomacro-data:"ignore"`
-	Probabilities []string         // edges, same length as Children, valid expression.Expression
-	Value         int              // index into the proposals, 0 for the root
-}
-
 type TreeFieldBlock struct {
-	EventsProposals []string
-	AnswerRoot      TreeNodeAnswer
+	Answer TreeBlock
 }
 
 func (tf TreeFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	out := TreeFieldInstance{
-		ID:              ID,
-		EventsProposals: make([]client.TextOrMath, len(tf.EventsProposals)),
-	}
-	for i, p := range tf.EventsProposals {
-		out.EventsProposals[i] = client.TextOrMath{Text: p}
-	}
-
-	var buildTree func(node TreeNodeAnswer) (client.TreeNodeAnswer, error)
-	buildTree = func(node TreeNodeAnswer) (client.TreeNodeAnswer, error) {
-		out := client.TreeNodeAnswer{
-			Value:         node.Value,
-			Probabilities: make([]float64, len(node.Probabilities)),
-			Children:      make([]client.TreeNodeAnswer, len(node.Children)),
-		}
-		var err error
-		for i, c := range node.Probabilities {
-			out.Probabilities[i], err = evaluateExpr(c, params)
-			if err != nil {
-				return out, err
-			}
-		}
-		for i, c := range node.Children {
-			out.Children[i], err = buildTree(c)
-			if err != nil {
-				return out, err
-			}
-		}
-		return out, nil
-	}
-
-	root, err := buildTree(tf.AnswerRoot)
-	out.Answer = client.TreeAnswer{Root: root}
-	return out, err
+	answer, err := tf.Answer.instantiateT(params)
+	return TreeFieldInstance{
+		ID:     ID,
+		Answer: answer,
+	}, err
 }
 
 func (tf TreeFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	return treeValidator{data: tf}, nil
+	return tf.Answer.setupValidator(params)
 }
 
 type TableFieldBlock struct {

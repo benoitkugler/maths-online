@@ -160,16 +160,16 @@ func (items Exercices) IdGroups() []IdExercicegroup {
 	return out
 }
 
-func SelectExercicesByIdGroups(tx DB, idGroups ...IdExercicegroup) (Exercices, error) {
-	rows, err := tx.Query("SELECT * FROM exercices WHERE idgroup = ANY($1)", IdExercicegroupArrayToPQ(idGroups))
+func SelectExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) (Exercices, error) {
+	rows, err := tx.Query("SELECT * FROM exercices WHERE idgroup = ANY($1)", IdExercicegroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanExercices(rows)
 }
 
-func DeleteExercicesByIdGroups(tx DB, idGroups ...IdExercicegroup) ([]IdExercice, error) {
-	rows, err := tx.Query("DELETE FROM exercices WHERE idgroup = ANY($1) RETURNING id", IdExercicegroupArrayToPQ(idGroups))
+func DeleteExercicesByIdGroups(tx DB, idGroups_ ...IdExercicegroup) ([]IdExercice, error) {
+	rows, err := tx.Query("DELETE FROM exercices WHERE idgroup = ANY($1) RETURNING id", IdExercicegroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -288,16 +288,16 @@ func (items ExerciceQuestions) IdExercices() []IdExercice {
 	return out
 }
 
-func SelectExerciceQuestionsByIdExercices(tx DB, idExercices ...IdExercice) (ExerciceQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE idexercice = ANY($1)", IdExerciceArrayToPQ(idExercices))
+func SelectExerciceQuestionsByIdExercices(tx DB, idExercices_ ...IdExercice) (ExerciceQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE idexercice = ANY($1)", IdExerciceArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanExerciceQuestions(rows)
 }
 
-func DeleteExerciceQuestionsByIdExercices(tx DB, idExercices ...IdExercice) (ExerciceQuestions, error) {
-	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idexercice = ANY($1) RETURNING *", IdExerciceArrayToPQ(idExercices))
+func DeleteExerciceQuestionsByIdExercices(tx DB, idExercices_ ...IdExercice) (ExerciceQuestions, error) {
+	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idexercice = ANY($1) RETURNING *", IdExerciceArrayToPQ(idExercices_))
 	if err != nil {
 		return nil, err
 	}
@@ -334,16 +334,16 @@ func SelectExerciceQuestionByIdQuestion(tx DB, idQuestion IdQuestion) (item Exer
 	return item, true, err
 }
 
-func SelectExerciceQuestionsByIdQuestions(tx DB, idQuestions ...IdQuestion) (ExerciceQuestions, error) {
-	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE idquestion = ANY($1)", IdQuestionArrayToPQ(idQuestions))
+func SelectExerciceQuestionsByIdQuestions(tx DB, idQuestions_ ...IdQuestion) (ExerciceQuestions, error) {
+	rows, err := tx.Query("SELECT * FROM exercice_questions WHERE idquestion = ANY($1)", IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanExerciceQuestions(rows)
 }
 
-func DeleteExerciceQuestionsByIdQuestions(tx DB, idQuestions ...IdQuestion) (ExerciceQuestions, error) {
-	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idquestion = ANY($1) RETURNING *", IdQuestionArrayToPQ(idQuestions))
+func DeleteExerciceQuestionsByIdQuestions(tx DB, idQuestions_ ...IdQuestion) (ExerciceQuestions, error) {
+	rows, err := tx.Query("DELETE FROM exercice_questions WHERE idquestion = ANY($1) RETURNING *", IdQuestionArrayToPQ(idQuestions_))
 	if err != nil {
 		return nil, err
 	}
@@ -494,16 +494,16 @@ func (items Exercicegroups) IdTeachers() []teacher.IdTeacher {
 	return out
 }
 
-func SelectExercicegroupsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Exercicegroups, error) {
-	rows, err := tx.Query("SELECT * FROM exercicegroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+func SelectExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Exercicegroups, error) {
+	rows, err := tx.Query("SELECT * FROM exercicegroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanExercicegroups(rows)
 }
 
-func DeleteExercicegroupsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdExercicegroup, error) {
-	rows, err := tx.Query("DELETE FROM exercicegroups WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
+func DeleteExercicegroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdExercicegroup, error) {
+	rows, err := tx.Query("DELETE FROM exercicegroups WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -620,16 +620,16 @@ func (items ExercicegroupTags) IdExercicegroups() []IdExercicegroup {
 	return out
 }
 
-func SelectExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups ...IdExercicegroup) (ExercicegroupTags, error) {
-	rows, err := tx.Query("SELECT * FROM exercicegroup_tags WHERE idexercicegroup = ANY($1)", IdExercicegroupArrayToPQ(idExercicegroups))
+func SelectExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups_ ...IdExercicegroup) (ExercicegroupTags, error) {
+	rows, err := tx.Query("SELECT * FROM exercicegroup_tags WHERE idexercicegroup = ANY($1)", IdExercicegroupArrayToPQ(idExercicegroups_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanExercicegroupTags(rows)
 }
 
-func DeleteExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups ...IdExercicegroup) (ExercicegroupTags, error) {
-	rows, err := tx.Query("DELETE FROM exercicegroup_tags WHERE idexercicegroup = ANY($1) RETURNING *", IdExercicegroupArrayToPQ(idExercicegroups))
+func DeleteExercicegroupTagsByIdExercicegroups(tx DB, idExercicegroups_ ...IdExercicegroup) (ExercicegroupTags, error) {
+	rows, err := tx.Query("DELETE FROM exercicegroup_tags WHERE idexercicegroup = ANY($1) RETURNING *", IdExercicegroupArrayToPQ(idExercicegroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -759,32 +759,32 @@ func DeleteQuestionsByIDs(tx DB, ids ...IdQuestion) ([]IdQuestion, error) {
 	return ScanIdQuestionArray(rows)
 }
 
-func SelectQuestionsByNeedExercices(tx DB, needExercices ...IdExercice) (Questions, error) {
-	rows, err := tx.Query("SELECT * FROM questions WHERE needexercice = ANY($1)", IdExerciceArrayToPQ(needExercices))
+func SelectQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions WHERE needexercice = ANY($1)", IdExerciceArrayToPQ(needExercices_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanQuestions(rows)
 }
 
-func DeleteQuestionsByNeedExercices(tx DB, needExercices ...IdExercice) ([]IdQuestion, error) {
-	rows, err := tx.Query("DELETE FROM questions WHERE needexercice = ANY($1) RETURNING id", IdExerciceArrayToPQ(needExercices))
+func DeleteQuestionsByNeedExercices(tx DB, needExercices_ ...IdExercice) ([]IdQuestion, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE needexercice = ANY($1) RETURNING id", IdExerciceArrayToPQ(needExercices_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanIdQuestionArray(rows)
 }
 
-func SelectQuestionsByIdGroups(tx DB, idGroups ...IdQuestiongroup) (Questions, error) {
-	rows, err := tx.Query("SELECT * FROM questions WHERE idgroup = ANY($1)", IdQuestiongroupArrayToPQ(idGroups))
+func SelectQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) (Questions, error) {
+	rows, err := tx.Query("SELECT * FROM questions WHERE idgroup = ANY($1)", IdQuestiongroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanQuestions(rows)
 }
 
-func DeleteQuestionsByIdGroups(tx DB, idGroups ...IdQuestiongroup) ([]IdQuestion, error) {
-	rows, err := tx.Query("DELETE FROM questions WHERE idgroup = ANY($1) RETURNING id", IdQuestiongroupArrayToPQ(idGroups))
+func DeleteQuestionsByIdGroups(tx DB, idGroups_ ...IdQuestiongroup) ([]IdQuestion, error) {
+	rows, err := tx.Query("DELETE FROM questions WHERE idgroup = ANY($1) RETURNING id", IdQuestiongroupArrayToPQ(idGroups_))
 	if err != nil {
 		return nil, err
 	}
@@ -935,16 +935,16 @@ func (items Questiongroups) IdTeachers() []teacher.IdTeacher {
 	return out
 }
 
-func SelectQuestiongroupsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) (Questiongroups, error) {
-	rows, err := tx.Query("SELECT * FROM questiongroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers))
+func SelectQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) (Questiongroups, error) {
+	rows, err := tx.Query("SELECT * FROM questiongroups WHERE idteacher = ANY($1)", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanQuestiongroups(rows)
 }
 
-func DeleteQuestiongroupsByIdTeachers(tx DB, idTeachers ...teacher.IdTeacher) ([]IdQuestiongroup, error) {
-	rows, err := tx.Query("DELETE FROM questiongroups WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers))
+func DeleteQuestiongroupsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeacher) ([]IdQuestiongroup, error) {
+	rows, err := tx.Query("DELETE FROM questiongroups WHERE idteacher = ANY($1) RETURNING id", teacher.IdTeacherArrayToPQ(idTeachers_))
 	if err != nil {
 		return nil, err
 	}
@@ -1061,16 +1061,16 @@ func (items QuestiongroupTags) IdQuestiongroups() []IdQuestiongroup {
 	return out
 }
 
-func SelectQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups ...IdQuestiongroup) (QuestiongroupTags, error) {
-	rows, err := tx.Query("SELECT * FROM questiongroup_tags WHERE idquestiongroup = ANY($1)", IdQuestiongroupArrayToPQ(idQuestiongroups))
+func SelectQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups_ ...IdQuestiongroup) (QuestiongroupTags, error) {
+	rows, err := tx.Query("SELECT * FROM questiongroup_tags WHERE idquestiongroup = ANY($1)", IdQuestiongroupArrayToPQ(idQuestiongroups_))
 	if err != nil {
 		return nil, err
 	}
 	return ScanQuestiongroupTags(rows)
 }
 
-func DeleteQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups ...IdQuestiongroup) (QuestiongroupTags, error) {
-	rows, err := tx.Query("DELETE FROM questiongroup_tags WHERE idquestiongroup = ANY($1) RETURNING *", IdQuestiongroupArrayToPQ(idQuestiongroups))
+func DeleteQuestiongroupTagsByIdQuestiongroups(tx DB, idQuestiongroups_ ...IdQuestiongroup) (QuestiongroupTags, error) {
+	rows, err := tx.Query("DELETE FROM questiongroup_tags WHERE idquestiongroup = ANY($1) RETURNING *", IdQuestiongroupArrayToPQ(idQuestiongroups_))
 	if err != nil {
 		return nil, err
 	}
