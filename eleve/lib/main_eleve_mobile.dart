@@ -1,5 +1,6 @@
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_eleve_shared.dart';
+import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/settings_mobile.dart';
 import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
@@ -8,6 +9,8 @@ final bm = buildModeFromEnv();
 // final bm = BuildMode.dev;
 
 void main() async {
+  initQuotes();
+
   final settingsHandler = FileSettings();
 
   final audio = await loadAudioFromSettings(settingsHandler);
