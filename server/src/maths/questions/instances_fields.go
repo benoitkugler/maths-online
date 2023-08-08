@@ -824,6 +824,7 @@ func (f SignTableFieldInstance) correctAnswer() client.Answer {
 }
 
 type FunctionPointsFieldInstance struct {
+	IsDiscrete   bool
 	Function     expression.FunctionExpr
 	Label        string
 	XGrid        []int
@@ -834,11 +835,12 @@ type FunctionPointsFieldInstance struct {
 func (f FunctionPointsFieldInstance) fieldID() int { return f.ID }
 
 func (f FunctionPointsFieldInstance) toClient() client.Block {
-	bounds, _, dfxs := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	bounds, _, dfxs := functiongrapher.PointsFromExpression(f.Function, f.XGrid)
 	bounds.Height += f.offsetHeight
 	return client.FunctionPointsFieldBlock{
-		Label: f.Label,
-		Xs:    f.XGrid, ID: f.ID,
+		IsDiscrete: f.IsDiscrete,
+		Label:      f.Label,
+		Xs:         f.XGrid, ID: f.ID,
 		Bounds: bounds,
 		Dfxs:   dfxs,
 	}
@@ -865,7 +867,7 @@ func (f FunctionPointsFieldInstance) validateAnswerSyntax(answer client.Answer) 
 
 func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.FunctionPointsAnswer).Fxs
-	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	_, ys, _ := functiongrapher.PointsFromExpression(f.Function, f.XGrid)
 	for i := range ys {
 		if ans[i] != ys[i] {
 			return false
@@ -875,7 +877,7 @@ func (f FunctionPointsFieldInstance) evaluateAnswer(answer client.Answer) (isCor
 }
 
 func (f FunctionPointsFieldInstance) correctAnswer() client.Answer {
-	_, ys, _ := functiongrapher.BoundsFromExpression(f.Function, f.XGrid)
+	_, ys, _ := functiongrapher.PointsFromExpression(f.Function, f.XGrid)
 	return client.FunctionPointsAnswer{Fxs: ys}
 }
 

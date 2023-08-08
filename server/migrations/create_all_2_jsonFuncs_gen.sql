@@ -969,9 +969,10 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Function', 'Label', 'Variable', 'XGrid'))
+            bool_and(key IN ('IsDiscrete', 'Function', 'Label', 'Variable', 'XGrid'))
         FROM
             jsonb_each(data))
+        AND gomacro_validate_json_boolean (data -> 'IsDiscrete')
         AND gomacro_validate_json_string (data -> 'Function')
         AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_expr_Variable (data -> 'Variable')

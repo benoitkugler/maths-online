@@ -167,7 +167,7 @@ func TestBoundsFromExpression(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		gotBounds, gotFxs, gotDfxs := BoundsFromExpression(expression.FunctionExpr{Function: expr, Variable: expression.NewVar('x')}, tt.grid)
+		gotBounds, gotFxs, gotDfxs := PointsFromExpression(expression.FunctionExpr{Function: expr, Variable: expression.NewVar('x')}, tt.grid)
 		if !reflect.DeepEqual(gotBounds, tt.wantBounds) {
 			t.Errorf("BoundsFromExpression() gotBounds = %v, want %v", gotBounds, tt.wantBounds)
 		}

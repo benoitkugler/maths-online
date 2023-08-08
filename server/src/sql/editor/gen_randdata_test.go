@@ -510,6 +510,7 @@ func randque_FunctionPoint() questions.FunctionPoint {
 
 func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
 	var s questions.FunctionPointsFieldBlock
+	s.IsDiscrete = randbool()
 	s.Function = randstring()
 	s.Label = randstring()
 	s.Variable = randexp_Variable()

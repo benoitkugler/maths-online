@@ -411,10 +411,11 @@ func (fp SignTableFieldBlock) setupValidator(params expression.RandomParameters)
 }
 
 type FunctionPointsFieldBlock struct {
-	Function string // valid expression.Expression
-	Label    string
-	Variable expression.Variable
-	XGrid    []string // valid expression.Expression
+	IsDiscrete bool
+	Function   string // function or sequence, valid expression.Expression
+	Label      string
+	Variable   expression.Variable
+	XGrid      []string // valid expression.Expression
 }
 
 func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
@@ -435,6 +436,7 @@ func (fp FunctionPointsFieldBlock) instantiate(params expression.Vars, ID int) (
 	sort.Ints(xGrid)
 
 	return FunctionPointsFieldInstance{
+		IsDiscrete: fp.IsDiscrete,
 		Function: expression.FunctionExpr{
 			Function: fn,
 			Variable: fp.Variable,

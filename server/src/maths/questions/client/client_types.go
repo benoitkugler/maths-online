@@ -209,9 +209,12 @@ type SignTableFieldBlock struct {
 // FunctionPointsFieldBlock asks to place points
 // to draw the graph of a function
 type FunctionPointsFieldBlock struct {
-	Label  string    // name of the function
-	Xs     []int     // the grid
-	Dfxs   []float64 // the derivatives of the function, to plot a nice curve
+	IsDiscrete bool   // true for sequences, removing the curve between points
+	Label      string // name of the function
+	Xs         []int  // the grid
+	// the derivatives of the function, to plot a nice curve
+	// empty if [IsDiscrete] is true
+	Dfxs   []float64
 	Bounds repere.RepereBounds
 	ID     int
 }

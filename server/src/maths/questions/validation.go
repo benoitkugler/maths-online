@@ -479,7 +479,7 @@ func (v functionPointsValidator) validate(vars expression.Vars) error {
 
 		y := f(xValue)
 		if _, ok = expression.IsInt(y); !ok {
-			return fmt.Errorf("La fonction %s ne définit pas des images <b>entières</b> (%g)", fnExpr.Function, expression.RoundFloat(y))
+			return fmt.Errorf("L'expression %s ne définit pas des images <b>entières</b> (%g)", fnExpr.Function, expression.RoundFloat(y))
 		}
 	}
 

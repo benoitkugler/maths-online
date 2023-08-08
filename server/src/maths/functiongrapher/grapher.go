@@ -147,8 +147,8 @@ func NewFunctionGraphFromVariations(xs []float64, ys []float64) []BezierCurve {
 	return curves
 }
 
-// BoundsFromExpression returns the f(x) and f'(x) values for x in the grid
-func BoundsFromExpression(fn expression.FunctionExpr, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
+// PointsFromExpression returns the f(x) and f'(x) values for x in the grid
+func PointsFromExpression(fn expression.FunctionExpr, grid []int) (bounds repere.RepereBounds, fxs []int, dfxs []float64) {
 	f := fn.Closure()
 
 	fxs = make([]int, len(grid))

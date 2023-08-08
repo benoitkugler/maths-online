@@ -121,7 +121,7 @@ export const sortedBlockKindLabels = [
   [
     BlockKind.FunctionPointsFieldBlock,
     {
-      label: "Construction de fonction",
+      label: "Graphe de fonction (ou suite)",
       isAnswerField: true
     }
   ],
@@ -529,6 +529,7 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
+          IsDiscrete: false,
           Function: "(x/2)^2",
           Label: "C_f",
           Variable: { Name: xRune, Indice: "" },

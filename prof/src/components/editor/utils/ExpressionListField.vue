@@ -8,7 +8,7 @@
         :label="label"
         chips
         :model-value="props.modelValue.map((v, i) => ({ value: i, title: v }))"
-        @update:model-value="(val) => onDelete(val)"
+        @update:model-value="val => onDelete(val)"
         hide-no-data
         closable-chips
         readonly
@@ -23,7 +23,7 @@
       <v-text-field
         class="fix-input-width"
         variant="outlined"
-        density="compact"
+        density="comfortable"
         label="Ajouter"
         :color="color"
         v-model="entry"
@@ -63,7 +63,7 @@ const color = ExpressionColor;
 function onDelete(indices: number[]) {
   emit(
     "update:model-value",
-    indices.map((index) => props.modelValue[index])
+    indices.map(index => props.modelValue[index])
   );
 }
 

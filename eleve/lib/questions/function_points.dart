@@ -73,7 +73,21 @@ class _FunctionPointsState extends State<FunctionPoints> {
     return Coord(xIntersec, yIntersec);
   }
 
-  List<BezierCurve> get segments {
+  Coord? get labelPosition {
+    final ct = widget.controller;
+    for (var index = 0; index < ct.fxs.length - 1; index++) {
+      final from = ct.fxs[index];
+      final to = ct.fxs[index + 1];
+      if (from == null || to == null) {
+        continue;
+      }
+      final start = Coord(ct.data.xs[index].toDouble(), from.toDouble());
+      final end = Coord(ct.data.xs[index + 1].toDouble(), to.toDouble());
+      return Coord((start.x + end.x) / 2, (start.y + end.y) / 2);
+    }
+  }
+
+  List<BezierCurve> segments() {
     final ct = widget.controller;
     final derivatives = ct.data.dfxs;
     final List<BezierCurve> out = [];
@@ -96,10 +110,21 @@ class _FunctionPointsState extends State<FunctionPoints> {
   Widget build(BuildContext context) {
     final ct = widget.controller;
     final metrics = RepereMetrics(ct.data.bounds, context);
-    final painter = BezierCurvesPainter(metrics,
-        [FunctionGraph(FunctionDecoration(ct.data.label, ""), segments)]);
+    final painter = BezierCurvesPainter(
+        metrics,
+        ct.data.isDiscrete
+            ? []
+            : [
+                FunctionGraph(FunctionDecoration(ct.data.label, ""), segments())
+              ]);
     final texts = painter.extractTexts();
-    final color = widget.controller.hasError ? Colors.red : null;
+    if (ct.data.isDiscrete && labelPosition != null) {
+      // draw the label, since it is not included in the function
+      texts.add(PositionnedText(
+          ct.data.label, PosPoint(labelPosition!, LabelPos.right),
+          color: Colors.purple));
+    }
+    final color = widget.controller.hasError ? Colors.red : Colors.purple;
     return NotificationListener<PointMovedNotification<_PointID>>(
       onNotification: (notification) {
         setState(() {

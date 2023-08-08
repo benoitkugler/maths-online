@@ -688,6 +688,7 @@ Map<String, dynamic> functionPointsAnswerToJson(FunctionPointsAnswer item) {
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionPointsFieldBlock
 class FunctionPointsFieldBlock implements Block {
+  final bool isDiscrete;
   final String label;
   final List<int> xs;
   final List<double> dfxs;
@@ -695,17 +696,18 @@ class FunctionPointsFieldBlock implements Block {
   final int iD;
 
   const FunctionPointsFieldBlock(
-      this.label, this.xs, this.dfxs, this.bounds, this.iD);
+      this.isDiscrete, this.label, this.xs, this.dfxs, this.bounds, this.iD);
 
   @override
   String toString() {
-    return "FunctionPointsFieldBlock($label, $xs, $dfxs, $bounds, $iD)";
+    return "FunctionPointsFieldBlock($isDiscrete, $label, $xs, $dfxs, $bounds, $iD)";
   }
 }
 
 FunctionPointsFieldBlock functionPointsFieldBlockFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return FunctionPointsFieldBlock(
+      boolFromJson(json['IsDiscrete']),
       stringFromJson(json['Label']),
       listIntFromJson(json['Xs']),
       listDoubleFromJson(json['Dfxs']),
@@ -716,6 +718,7 @@ FunctionPointsFieldBlock functionPointsFieldBlockFromJson(dynamic json_) {
 Map<String, dynamic> functionPointsFieldBlockToJson(
     FunctionPointsFieldBlock item) {
   return {
+    "IsDiscrete": boolToJson(item.isDiscrete),
     "Label": stringToJson(item.label),
     "Xs": listIntToJson(item.xs),
     "Dfxs": listDoubleToJson(item.dfxs),

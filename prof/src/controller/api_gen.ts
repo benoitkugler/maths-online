@@ -198,6 +198,7 @@ export interface FunctionPoint {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionPointsFieldBlock
 export interface FunctionPointsFieldBlock {
+  IsDiscrete: boolean;
   Function: string;
   Label: string;
   Variable: Variable;
