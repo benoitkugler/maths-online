@@ -104,7 +104,7 @@ class HomeworkDisabled extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(8.0),
             child: Text(
-              "Cette activité n'est pas disponible, car tu n'es pas inscris sur une classe.",
+              "Cette activité n'est pas disponible car tu n'es pas inscrit dans une classe.",
               style: TextStyle(fontSize: 16),
             ),
           ),
