@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
+import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
 
 TextOrMath T(String s) {
@@ -15,7 +16,8 @@ const bounds = RepereBounds(20, 20, Coord(4, 4));
 const emptyFigure = Figure(Drawings({}, [], [], [], []), bounds, true, true);
 
 final questionList = [
-  const InstantiatedQuestion(0, Question([NumberFieldBlock(0, 10)], []), []),
+  const InstantiatedQuestion(
+      0, Question([NumberFieldBlock(0, 10)], []), DifficultyTag.diff1, []),
   InstantiatedQuestion(
       0,
       Question([
@@ -29,8 +31,10 @@ final questionList = [
           T("sdsd"),
         ], 1)
       ], []),
+      DifficultyTag.diffEmpty,
       []),
-  const InstantiatedQuestion(0, Question([NumberFieldBlock(0, 10)], []), []),
+  const InstantiatedQuestion(
+      0, Question([NumberFieldBlock(0, 10)], []), DifficultyTag.diff3, []),
 ];
 
 final proofB = proofFieldBlockFromJson(jsonDecode("""

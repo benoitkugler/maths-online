@@ -20,9 +20,10 @@ import (
 )
 
 type InstantiatedQuestion struct {
-	Id       ed.IdQuestion
-	Question client.Question
-	Params   Params
+	Id         ed.IdQuestion
+	Question   client.Question
+	Difficulty ed.DifficultyTag
+	Params     Params
 }
 
 type AnswerP struct {
@@ -79,9 +80,10 @@ func InstantiateQuestions(db ed.DB, ids []ed.IdQuestion) (InstantiateQuestionsOu
 			return nil, err
 		}
 		out[index] = InstantiatedQuestion{
-			Id:       id,
-			Question: instance.ToClient(),
-			Params:   NewParams(vars),
+			Id:         id,
+			Question:   instance.ToClient(),
+			Difficulty: qu.Difficulty,
+			Params:     NewParams(vars),
 		}
 	}
 
@@ -245,9 +247,10 @@ func instantiateQuestions(questions []ed.Question, sharedVars expression.Vars) (
 		}
 
 		out[index] = InstantiatedQuestion{
-			Id:       question.Id,
-			Question: instance.ToClient(),
-			Params:   NewParams(ownVars),
+			Id:         question.Id,
+			Question:   instance.ToClient(),
+			Difficulty: question.Difficulty,
+			Params:     NewParams(ownVars),
 		}
 	}
 
@@ -311,6 +314,8 @@ func (ex ExerciceData) Questions() []ed.Question {
 	questions := make([]ed.Question, len(ex.links))
 	for i, link := range ex.links {
 		questions[i] = ex.QuestionsMap[link.IdQuestion]
+		// copy the exercice difficulty
+		questions[i].Difficulty = ex.Exercice.Difficulty
 	}
 	return questions
 }

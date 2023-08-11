@@ -133,26 +133,32 @@ dynamic instantiateQuestionsOutToJson(InstantiateQuestionsOut item) {
 class InstantiatedQuestion {
   final IdQuestion id;
   final Question question;
+  final DifficultyTag difficulty;
   final Params params;
 
-  const InstantiatedQuestion(this.id, this.question, this.params);
+  const InstantiatedQuestion(
+      this.id, this.question, this.difficulty, this.params);
 
   @override
   String toString() {
-    return "InstantiatedQuestion($id, $question, $params)";
+    return "InstantiatedQuestion($id, $question, $difficulty, $params)";
   }
 }
 
 InstantiatedQuestion instantiatedQuestionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return InstantiatedQuestion(intFromJson(json['Id']),
-      questionFromJson(json['Question']), paramsFromJson(json['Params']));
+  return InstantiatedQuestion(
+      intFromJson(json['Id']),
+      questionFromJson(json['Question']),
+      difficultyTagFromJson(json['Difficulty']),
+      paramsFromJson(json['Params']));
 }
 
 Map<String, dynamic> instantiatedQuestionToJson(InstantiatedQuestion item) {
   return {
     "Id": intToJson(item.id),
     "Question": questionToJson(item.question),
+    "Difficulty": difficultyTagToJson(item.difficulty),
     "Params": paramsToJson(item.params)
   };
 }

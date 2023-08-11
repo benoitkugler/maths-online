@@ -6,6 +6,7 @@ import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_prof_homework.dart';
+import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
 import 'package:eleve/types/src_tasks.dart';
@@ -50,13 +51,16 @@ final qu1 = numberQuestion("Test 1");
 final qu2 = numberQuestion("Test 2");
 final qu3 = numberQuestion("Test 3");
 
-final quI1 = InstantiatedQuestion(1, qu1, []);
-final quI2 = InstantiatedQuestion(2, qu2, []);
-final quI3 = InstantiatedQuestion(3, qu3, []);
+final quI1 = InstantiatedQuestion(1, qu1, DifficultyTag.diff1, []);
+final quI2 = InstantiatedQuestion(2, qu2, DifficultyTag.diff2, []);
+final quI3 = InstantiatedQuestion(3, qu3, DifficultyTag.diffEmpty, []);
 
-final quI1bis = InstantiatedQuestion(1, numberQuestion("Variante 1"), []);
-final quI2bis = InstantiatedQuestion(2, numberQuestion("Variante 2"), []);
-final quI3bis = InstantiatedQuestion(3, numberQuestion("Variante 3"), []);
+final quI1bis = InstantiatedQuestion(
+    1, numberQuestion("Variante 1"), DifficultyTag.diff1, []);
+final quI2bis = InstantiatedQuestion(
+    2, numberQuestion("Variante 2"), DifficultyTag.diff2, []);
+final quI3bis = InstantiatedQuestion(
+    3, numberQuestion("Variante 3"), DifficultyTag.diffEmpty, []);
 
 const qu1Answer = {0: NumberAnswer(0)};
 const qu2Answer = {0: NumberAnswer(1)};
