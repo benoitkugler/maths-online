@@ -36,22 +36,22 @@ var (
 
 	categories = [nbSquares]Categorie{
 		Purple,
-		Blue,
-		Green,
-		Blue, // cross
-		Green,
-		Orange,
-		Purple,
 		Yellow,
-		Orange,
-		Yellow, // cross
+		Blue,
+		Purple, // cross
+		Green,
+		Blue,
 		Orange,
 		Yellow,
 		Purple,
+		Green, // cross
+		Blue,
+		Orange,
+		Yellow,
+		Blue,
+		Orange,
 		Orange,
 		Green,
-		Blue,
-		Yellow,
 	}
 )
 
