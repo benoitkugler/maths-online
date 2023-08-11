@@ -35,7 +35,7 @@ class FunctionsGraphW extends StatelessWidget {
   }
 }
 
-class BezierCurvesPainter extends CustomPainter {
+class BezierCurvesPainter extends CustomPainterText {
   final RepereMetrics metrics;
   final List<FunctionGraph> functions;
   final List<SequenceGraph> sequences;
@@ -51,6 +51,7 @@ class BezierCurvesPainter extends CustomPainter {
 
   /// [extractTexts] returns the positionned text that
   /// must be diplayed, to be handled in a separate widget.
+  @override
   List<PositionnedText> extractTexts() {
     final out = <PositionnedText>[];
     for (var fn in functions) {

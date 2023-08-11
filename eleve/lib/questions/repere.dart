@@ -500,7 +500,11 @@ Color fromHex(String color, {Color onEmpty = Colors.purple}) {
   return c == null ? onEmpty : Color(c);
 }
 
-class DrawingsPainter extends CustomPainter {
+abstract class CustomPainterText extends CustomPainter {
+  List<PositionnedText> extractTexts();
+}
+
+class DrawingsPainter extends CustomPainterText {
   final RepereMetrics metrics;
   final Drawings drawings;
 
@@ -510,6 +514,7 @@ class DrawingsPainter extends CustomPainter {
   /// various items of [drawings], so that they can be rendered
   /// as LaTeX
   /// The painter itself then ignore text information.
+  @override
   List<PositionnedText> extractTexts() {
     final List<PositionnedText> out = [];
 

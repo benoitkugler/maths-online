@@ -246,7 +246,9 @@ type FunctionsGraphInstance struct {
 	Points    []client.FunctionPoint
 }
 
-func (fg FunctionsGraphInstance) toClient() client.Block {
+func (fg FunctionsGraphInstance) toClient() client.Block { return fg.toClientG() }
+
+func (fg FunctionsGraphInstance) toClientG() client.FunctionsGraphBlock {
 	// compute the required bounding box for all drawings
 	var allSegments []functiongrapher.BezierCurve
 	for _, fn := range fg.Functions {

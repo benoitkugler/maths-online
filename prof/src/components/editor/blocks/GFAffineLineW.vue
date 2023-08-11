@@ -10,24 +10,24 @@
       </v-card-text>
     </v-card>
   </v-dialog>
-  <v-card class="my-1">
-    <v-row no-gutters class="bg-secondary py-2">
-      <v-col align-self="center">
-        <v-card-subtitle>Définition de la réponse</v-card-subtitle>
-      </v-col>
-      <v-col align-self="center" cols="auto">
-        <v-btn
-          class="mr-2"
-          icon
-          title="Documentation de la syntaxe"
-          size="x-small"
-        >
-          <v-icon small color="info" @click="showDocumentation = true"
-            >mdi-help</v-icon
+  <v-card class="my-2">
+    <v-card-subtitle class="bg-secondary">
+      <v-row no-gutters class="py-2">
+        <v-col align-self="center"> Coordonnées de la réponse </v-col>
+        <v-col align-self="center" cols="auto">
+          <v-btn
+            class="mr-2"
+            icon
+            title="Documentation de la syntaxe"
+            size="x-small"
           >
-        </v-btn>
-      </v-col>
-    </v-row>
+            <v-icon small color="info" @click="showDocumentation = true"
+              >mdi-help</v-icon
+            >
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-card-subtitle>
 
     <v-card-text>
       <v-row class="fix-input-width">
@@ -70,32 +70,22 @@
       </v-row>
     </v-card-text>
   </v-card>
-  <figure-block-vue
-    v-model="props.modelValue.Figure"
-    @update:model-value="emitUpdate"
-    :available-parameters="props.availableParameters"
-  ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
-import type {
-  FigureAffineLineFieldBlock,
-  Variable,
-} from "@/controller/api_gen";
+import type { GFAffineLine } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
 import { $ref } from "vue/macros";
-import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
-  modelValue: FigureAffineLineFieldBlock;
-  availableParameters: Variable[];
+  modelValue: GFAffineLine;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: FigureAffineLineFieldBlock): void;
+  (event: "update:modelValue", value: GFAffineLine): void;
 }>();
 
 function emitUpdate() {

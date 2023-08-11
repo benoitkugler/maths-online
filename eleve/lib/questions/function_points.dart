@@ -33,20 +33,20 @@ class FunctionPointsController extends FieldController {
   }
 }
 
-class FunctionPoints extends StatefulWidget {
+class FunctionPointsW extends StatefulWidget {
   final FunctionPointsController controller;
   final TransformationController zoom;
 
-  const FunctionPoints(this.controller, this.zoom, {Key? key})
+  const FunctionPointsW(this.controller, this.zoom, {Key? key})
       : super(key: key);
 
   @override
-  State<FunctionPoints> createState() => _FunctionPointsState();
+  State<FunctionPointsW> createState() => _FunctionPointsWState();
 }
 
 typedef _PointID = int;
 
-class _FunctionPointsState extends State<FunctionPoints> {
+class _FunctionPointsWState extends State<FunctionPointsW> {
   @override
   void initState() {
     widget.zoom.addListener(onZoomUpdate);

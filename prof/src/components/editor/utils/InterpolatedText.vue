@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { colorByKind } from "@/controller/editor";
-import { TextKind } from "@/controller/loopback_gen";
+import { TextKind } from "@/controller/api_gen";
 import { computed } from "vue";
 import { defautTokenize, type Token } from "./interpolated_text";
 import HiglightedText from "./HiglightedText.vue";

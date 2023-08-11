@@ -22,8 +22,8 @@ final questionComplexe = Question([
   const NumberFieldBlock(0, 10),
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
-  const FigurePointFieldBlock(
-      Figure(Drawings({}, [], [], [], []), bounds, true, true), 3)
+  const GeometricConstructionFieldBlock(3, GFPoint(),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
 ], []);
 
 const questionComplexeAnswers = {

@@ -12,14 +12,11 @@ export interface FunctionDecoration {
 
 export enum BlockKind {
   ExpressionFieldBlock = "ExpressionFieldBlock",
-  FigureAffineLineFieldBlock = "FigureAffineLineFieldBlock",
   FigureBlock = "FigureBlock",
-  FigurePointFieldBlock = "FigurePointFieldBlock",
-  FigureVectorFieldBlock = "FigureVectorFieldBlock",
-  FigureVectorPairFieldBlock = "FigureVectorPairFieldBlock",
   FormulaBlock = "FormulaBlock",
   FunctionPointsFieldBlock = "FunctionPointsFieldBlock",
   FunctionsGraphBlock = "FunctionsGraphBlock",
+  GeometricConstructionFieldBlock = "GeometricConstructionFieldBlock",
   NumberFieldBlock = "NumberFieldBlock",
   OrderedListFieldBlock = "OrderedListFieldBlock",
   ProofFieldBlock = "ProofFieldBlock",
@@ -41,14 +38,11 @@ export interface Block {
   Kind: BlockKind;
   Data:
     | ExpressionFieldBlock
-    | FigureAffineLineFieldBlock
     | FigureBlock
-    | FigurePointFieldBlock
-    | FigureVectorFieldBlock
-    | FigureVectorPairFieldBlock
     | FormulaBlock
     | FunctionPointsFieldBlock
     | FunctionsGraphBlock
+    | GeometricConstructionFieldBlock
     | NumberFieldBlock
     | OrderedListFieldBlock
     | ProofFieldBlock
@@ -95,13 +89,6 @@ export interface ExpressionFieldBlock {
   ComparisonLevel: ComparisonLevel;
   ShowFractionHelp: boolean;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureAffineLineFieldBlock
-export interface FigureAffineLineFieldBlock {
-  Label: string;
-  A: string;
-  B: string;
-  Figure: FigureBlock;
-}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FigureBlock
 export interface FigureBlock {
   Drawings: RandomDrawings;
@@ -109,22 +96,16 @@ export interface FigureBlock {
   ShowGrid: boolean;
   ShowOrigin: boolean;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigurePointFieldBlock
-export interface FigurePointFieldBlock {
-  Answer: CoordExpression;
-  Figure: FigureBlock;
+
+export enum FiguresOrGraphsKind {
+  FigureBlock = "FigureBlock",
+  FunctionsGraphBlock = "FunctionsGraphBlock",
 }
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureVectorFieldBlock
-export interface FigureVectorFieldBlock {
-  Answer: CoordExpression;
-  AnswerOrigin: CoordExpression;
-  Figure: FigureBlock;
-  MustHaveOrigin: boolean;
-}
-// github.com/benoitkugler/maths-online/server/src/maths/questions.FigureVectorPairFieldBlock
-export interface FigureVectorPairFieldBlock {
-  Figure: FigureBlock;
-  Criterion: VectorPairCriterion;
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FiguresOrGraphs
+export interface FiguresOrGraphs {
+  Kind: FiguresOrGraphsKind;
+  Data: FigureBlock | FunctionsGraphBlock;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FormulaBlock
 export interface FormulaBlock {
@@ -168,6 +149,44 @@ export interface FunctionsGraphBlock {
   SequenceExprs: FunctionDefinition[] | null;
   Areas: FunctionArea[] | null;
   Points: FunctionPoint[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFAffineLine
+export interface GFAffineLine {
+  Label: string;
+  A: string;
+  B: string;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFPoint
+export interface GFPoint {
+  Answer: CoordExpression;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFVector
+export interface GFVector {
+  Answer: CoordExpression;
+  AnswerOrigin: CoordExpression;
+  MustHaveOrigin: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GFVectorPair
+export interface GFVectorPair {
+  Criterion: VectorPairCriterion;
+}
+
+export enum GeoFieldKind {
+  GFAffineLine = "GFAffineLine",
+  GFPoint = "GFPoint",
+  GFVector = "GFVector",
+  GFVectorPair = "GFVectorPair",
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GeoField
+export interface GeoField {
+  Kind: GeoFieldKind;
+  Data: GFAffineLine | GFPoint | GFVector | GFVectorPair;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.GeometricConstructionFieldBlock
+export interface GeometricConstructionFieldBlock {
+  Field: GeoField;
+  Background: FiguresOrGraphs;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.In
 export type In = string;

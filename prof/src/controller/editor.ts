@@ -7,16 +7,11 @@ import {
   Section,
   SignSymbol,
   TextKind,
-  VectorPairCriterion,
   Visibility,
   type Block,
   type CoordExpression,
   type ExpressionFieldBlock,
-  type FigureAffineLineFieldBlock,
   type FigureBlock,
-  type FigurePointFieldBlock,
-  type FigureVectorFieldBlock,
-  type FigureVectorPairFieldBlock,
   type FormulaBlock,
   type FunctionPointsFieldBlock,
   type FunctionsGraphBlock,
@@ -39,7 +34,10 @@ import {
   type VariationTableFieldBlock,
   type VectorFieldBlock,
   type TreeNodeAnswer,
-  type TreeBlock
+  type TreeBlock,
+  type GeometricConstructionFieldBlock,
+  GeoFieldKind,
+  FiguresOrGraphsKind
 } from "./api_gen";
 import { copy } from "./utils";
 
@@ -104,16 +102,9 @@ export const sortedBlockKindLabels = [
   ],
   [BlockKind.RadioFieldBlock, { label: "QCM", isAnswerField: true }],
   [
-    BlockKind.FigurePointFieldBlock,
+    BlockKind.GeometricConstructionFieldBlock,
     {
-      label: "Point (sur une figure)",
-      isAnswerField: true
-    }
-  ],
-  [
-    BlockKind.FigureVectorFieldBlock,
-    {
-      label: "Vecteur (sur une figure)",
+      label: "Constructions (point, vecteur, droite)",
       isAnswerField: true
     }
   ],
@@ -143,21 +134,6 @@ export const sortedBlockKindLabels = [
     }
   ],
   [
-    BlockKind.FigureAffineLineFieldBlock,
-    {
-      label: "Droite (affine)",
-      isAnswerField: true
-    }
-  ],
-
-  [
-    BlockKind.FigureVectorPairFieldBlock,
-    {
-      label: "Construction de vecteurs",
-      isAnswerField: true
-    }
-  ],
-  [
     BlockKind.ProofFieldBlock,
     { label: "Preuve (à compléter)", isAnswerField: true }
   ],
@@ -181,13 +157,10 @@ interface BlockKindTypes {
   [BlockKind.TextBlock]: TextBlock;
   [BlockKind.VariationTableBlock]: VariationTableBlock;
   [BlockKind.OrderedListFieldBlock]: OrderedListFieldBlock;
-  [BlockKind.FigurePointFieldBlock]: FigurePointFieldBlock;
-  [BlockKind.FigureVectorFieldBlock]: FigureVectorFieldBlock;
+  [BlockKind.GeometricConstructionFieldBlock]: GeometricConstructionFieldBlock;
   [BlockKind.VariationTableFieldBlock]: VariationTableFieldBlock;
   [BlockKind.SignTableFieldBlock]: SignTableFieldBlock;
   [BlockKind.FunctionPointsFieldBlock]: FunctionPointsFieldBlock;
-  [BlockKind.FigureAffineLineFieldBlock]: FigureAffineLineFieldBlock;
-  [BlockKind.FigureVectorPairFieldBlock]: FigureVectorPairFieldBlock;
   [BlockKind.TreeBlock]: TreeBlock;
   [BlockKind.TreeFieldBlock]: TreeFieldBlock;
   [BlockKind.TableFieldBlock]: TableFieldBlock;
@@ -461,60 +434,38 @@ export function newBlock(kind: BlockKind): Block {
       };
       return out;
     }
-    case BlockKind.FigurePointFieldBlock: {
+    case BlockKind.GeometricConstructionFieldBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Lines: [],
-              Points: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
+          Field: {
+            Kind: GeoFieldKind.GFPoint,
+            Data: {
+              Answer: {
+                X: "3",
+                Y: "4"
+              }
             }
           },
-          Answer: {
-            X: "3",
-            Y: "4"
+          Background: {
+            Kind: FiguresOrGraphsKind.FigureBlock,
+            Data: {
+              ShowGrid: true,
+              ShowOrigin: true,
+              Bounds: {
+                Width: 10,
+                Height: 10,
+                Origin: { X: 3, Y: 3 }
+              },
+              Drawings: {
+                Lines: [],
+                Points: [],
+                Segments: [],
+                Circles: [],
+                Areas: []
+              }
+            }
           }
-        }
-      };
-      return out;
-    }
-    case BlockKind.FigureVectorFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Lines: [],
-              Points: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
-          },
-          Answer: {
-            X: "3",
-            Y: "4"
-          },
-          MustHaveOrigin: false,
-          AnswerOrigin: { X: "", Y: "" }
         }
       };
       return out;
@@ -550,58 +501,6 @@ export function newBlock(kind: BlockKind): Block {
           Label: "C_f",
           Variable: { Name: xRune, Indice: "" },
           XGrid: ["-4", "-2", "0", "2", "4"]
-        }
-      };
-      return out;
-    }
-    case BlockKind.FigureVectorPairFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Points: [],
-              Lines: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
-          },
-          Criterion: VectorPairCriterion.VectorColinear
-        }
-      };
-      return out;
-    }
-    case BlockKind.FigureAffineLineFieldBlock: {
-      const out: TypedBlock<typeof kind> = {
-        Kind: kind,
-        Data: {
-          Figure: {
-            ShowGrid: true,
-            ShowOrigin: true,
-            Bounds: {
-              Width: 10,
-              Height: 10,
-              Origin: { X: 3, Y: 3 }
-            },
-            Drawings: {
-              Points: [],
-              Lines: [],
-              Segments: [],
-              Circles: [],
-              Areas: []
-            }
-          },
-          Label: "f",
-          A: "1",
-          B: "3"
         }
       };
       return out;

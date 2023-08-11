@@ -130,18 +130,18 @@ class SignTableController extends FieldController {
   }
 }
 
-class SignTableField extends StatefulWidget {
+class SignTableFieldW extends StatefulWidget {
   final Color color;
   final SignTableController controller;
 
-  const SignTableField(this.color, this.controller, {Key? key})
+  const SignTableFieldW(this.color, this.controller, {Key? key})
       : super(key: key);
 
   @override
-  SignTableFieldState createState() => SignTableFieldState();
+  SignTableFieldWState createState() => SignTableFieldWState();
 }
 
-class SignTableFieldState extends State<SignTableField> {
+class SignTableFieldWState extends State<SignTableFieldW> {
   void _resetArrowLength() {
     setState(() {
       widget.controller._ct = null;

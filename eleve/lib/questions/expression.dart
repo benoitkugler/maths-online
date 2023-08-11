@@ -59,7 +59,7 @@ class ExpressionController extends FieldController {
   }
 }
 
-class ExpressionField extends StatefulWidget {
+class ExpressionFieldW extends StatefulWidget {
   final Color color;
   final ExpressionController _controller;
 
@@ -82,7 +82,7 @@ class ExpressionField extends StatefulWidget {
     return clamped.toDouble() / 30.0;
   }
 
-  const ExpressionField(this.color, this._controller,
+  const ExpressionFieldW(this.color, this._controller,
       {Key? key,
       this.maxWidthFactor = 0.9,
       this.hintWidth = 30,
@@ -118,10 +118,10 @@ class ExpressionField extends StatefulWidget {
   }
 
   @override
-  State<ExpressionField> createState() => _ExpressionFieldState();
+  State<ExpressionFieldW> createState() => _ExpressionFieldWState();
 }
 
-class _ExpressionFieldState extends State<ExpressionField> {
+class _ExpressionFieldWState extends State<ExpressionFieldW> {
   void _showSyntaxError(String reason) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -176,7 +176,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
           },
           inputFormatters: [
             TextInputFormatter.withFunction((oldValue, newValue) {
-              if (ExpressionField.isTypingFunc(oldValue, newValue)) {
+              if (ExpressionFieldW.isTypingFunc(oldValue, newValue)) {
                 final sel = newValue.selection;
                 return newValue.copyWith(
                     text: "${newValue.text}()",
@@ -213,7 +213,7 @@ class _ExpressionFieldState extends State<ExpressionField> {
   }
 }
 
-/// [ExpressionCell] wraps an [ExpressionField] in a [TableCell]
+/// [ExpressionCell] wraps an [ExpressionFieldW] in a [TableCell]
 class ExpressionCell extends StatelessWidget {
   final Color color;
   final ExpressionController controller;
@@ -228,7 +228,7 @@ class ExpressionCell extends StatelessWidget {
       verticalAlignment: align,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: ExpressionField(
+        child: ExpressionFieldW(
           color,
           controller,
           maxWidthFactor: 0.2,

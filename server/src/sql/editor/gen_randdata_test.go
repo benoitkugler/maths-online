@@ -364,14 +364,11 @@ func randint64() int64 {
 func randque_Block() questions.Block {
 	choix := [...]questions.Block{
 		randque_ExpressionFieldBlock(),
-		randque_FigureAffineLineFieldBlock(),
 		randque_FigureBlock(),
-		randque_FigurePointFieldBlock(),
-		randque_FigureVectorFieldBlock(),
-		randque_FigureVectorPairFieldBlock(),
 		randque_FormulaBlock(),
 		randque_FunctionPointsFieldBlock(),
 		randque_FunctionsGraphBlock(),
+		randque_GeometricConstructionFieldBlock(),
 		randque_NumberFieldBlock(),
 		randque_OrderedListFieldBlock(),
 		randque_ProofFieldBlock(),
@@ -387,7 +384,7 @@ func randque_Block() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(23)
+	i := rand.Intn(20)
 	return choix[i]
 }
 
@@ -423,16 +420,6 @@ func randque_ExpressionFieldBlock() questions.ExpressionFieldBlock {
 	return s
 }
 
-func randque_FigureAffineLineFieldBlock() questions.FigureAffineLineFieldBlock {
-	var s questions.FigureAffineLineFieldBlock
-	s.Label = randstring()
-	s.A = randstring()
-	s.B = randstring()
-	s.Figure = randque_FigureBlock()
-
-	return s
-}
-
 func randque_FigureBlock() questions.FigureBlock {
 	var s questions.FigureBlock
 	s.Drawings = randrep_RandomDrawings()
@@ -443,30 +430,13 @@ func randque_FigureBlock() questions.FigureBlock {
 	return s
 }
 
-func randque_FigurePointFieldBlock() questions.FigurePointFieldBlock {
-	var s questions.FigurePointFieldBlock
-	s.Answer = randque_CoordExpression()
-	s.Figure = randque_FigureBlock()
-
-	return s
-}
-
-func randque_FigureVectorFieldBlock() questions.FigureVectorFieldBlock {
-	var s questions.FigureVectorFieldBlock
-	s.Answer = randque_CoordExpression()
-	s.AnswerOrigin = randque_CoordExpression()
-	s.Figure = randque_FigureBlock()
-	s.MustHaveOrigin = randbool()
-
-	return s
-}
-
-func randque_FigureVectorPairFieldBlock() questions.FigureVectorPairFieldBlock {
-	var s questions.FigureVectorPairFieldBlock
-	s.Figure = randque_FigureBlock()
-	s.Criterion = randque_VectorPairCriterion()
-
-	return s
+func randque_FiguresOrGraphs() questions.FiguresOrGraphs {
+	choix := [...]questions.FiguresOrGraphs{
+		randque_FigureBlock(),
+		randque_FunctionsGraphBlock(),
+	}
+	i := rand.Intn(2)
+	return choix[i]
 }
 
 func randque_FormulaBlock() questions.FormulaBlock {
@@ -526,6 +496,57 @@ func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 	s.SequenceExprs = randSliceque_FunctionDefinition()
 	s.Areas = randSliceque_FunctionArea()
 	s.Points = randSliceque_FunctionPoint()
+
+	return s
+}
+
+func randque_GFAffineLine() questions.GFAffineLine {
+	var s questions.GFAffineLine
+	s.Label = randstring()
+	s.A = randstring()
+	s.B = randstring()
+
+	return s
+}
+
+func randque_GFPoint() questions.GFPoint {
+	var s questions.GFPoint
+	s.Answer = randque_CoordExpression()
+
+	return s
+}
+
+func randque_GFVector() questions.GFVector {
+	var s questions.GFVector
+	s.Answer = randque_CoordExpression()
+	s.AnswerOrigin = randque_CoordExpression()
+	s.MustHaveOrigin = randbool()
+
+	return s
+}
+
+func randque_GFVectorPair() questions.GFVectorPair {
+	var s questions.GFVectorPair
+	s.Criterion = randque_VectorPairCriterion()
+
+	return s
+}
+
+func randque_GeoField() questions.GeoField {
+	choix := [...]questions.GeoField{
+		randque_GFAffineLine(),
+		randque_GFPoint(),
+		randque_GFVector(),
+		randque_GFVectorPair(),
+	}
+	i := rand.Intn(4)
+	return choix[i]
+}
+
+func randque_GeometricConstructionFieldBlock() questions.GeometricConstructionFieldBlock {
+	var s questions.GeometricConstructionFieldBlock
+	s.Field = randque_GeoField()
+	s.Background = randque_FiguresOrGraphs()
 
 	return s
 }

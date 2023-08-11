@@ -104,18 +104,18 @@ class _PositionnedItem {
   _PositionnedItem(this.item, this.position);
 }
 
-class OrderedListField extends StatefulWidget {
+class OrderedListFieldW extends StatefulWidget {
   final Color _color;
   final OrderedListController _controller;
 
-  const OrderedListField(this._color, this._controller, {Key? key})
+  const OrderedListFieldW(this._color, this._controller, {Key? key})
       : super(key: key);
 
   @override
-  _OrderedListFieldState createState() => _OrderedListFieldState();
+  _OrderedListFieldWState createState() => _OrderedListFieldWState();
 }
 
-class _OrderedListFieldState extends State<OrderedListField> {
+class _OrderedListFieldWState extends State<OrderedListFieldW> {
   @override
   Widget build(BuildContext context) {
     final ct = widget._controller;

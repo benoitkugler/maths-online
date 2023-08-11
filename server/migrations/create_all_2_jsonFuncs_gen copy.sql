@@ -1,135 +1,39 @@
--- Code genererated by gomacro/generator/sql. DO NOT EDIT.
-CREATE TABLE exercices (
-    Id serial PRIMARY KEY,
-    IdGroup integer NOT NULL,
-    Subtitle text NOT NULL,
-    Parameters jsonb NOT NULL,
-    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL
-);
+CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a string', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 
-CREATE TABLE exercice_questions (
-    IdExercice integer NOT NULL,
-    IdQuestion integer NOT NULL,
-    Bareme integer NOT NULL,
-    Index integer NOT NULL
-);
-
-CREATE TABLE exercicegroups (
-    Id serial PRIMARY KEY,
-    Title text NOT NULL,
-    Public boolean NOT NULL,
-    IdTeacher integer NOT NULL
-);
-
-CREATE TABLE exercicegroup_tags (
-    Tag text NOT NULL,
-    IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
-);
-
-CREATE TABLE questions (
-    Id serial PRIMARY KEY,
-    Subtitle text NOT NULL,
-    Difficulty text CHECK (Difficulty IN ('★', '★★', '★★★', '')) NOT NULL,
-    NeedExercice integer,
-    IdGroup integer,
-    Enonce jsonb NOT NULL,
-    Parameters jsonb NOT NULL,
-    Correction jsonb NOT NULL
-);
-
-CREATE TABLE questiongroups (
-    Id serial PRIMARY KEY,
-    Title text NOT NULL,
-    Public boolean NOT NULL,
-    IdTeacher integer NOT NULL
-);
-
-CREATE TABLE questiongroup_tags (
-    Tag text NOT NULL,
-    IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
-);
-
--- constraints
-ALTER TABLE questions
-    ADD CHECK (NeedExercice IS NOT NULL
-        OR IdGroup IS NOT NULL);
-
-ALTER TABLE questions
-    ADD UNIQUE (Id, NeedExercice);
-
-ALTER TABLE questions
-    ADD FOREIGN KEY (NeedExercice) REFERENCES exercices;
-
-ALTER TABLE questions
-    ADD FOREIGN KEY (IdGroup) REFERENCES questiongroups ON DELETE CASCADE;
-
-ALTER TABLE questiongroups
-    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
-
-ALTER TABLE questiongroup_tags
-    ADD UNIQUE (IdQuestiongroup, Tag);
-
-ALTER TABLE questiongroup_tags
-    ADD CHECK (Tag = upper(Tag));
-
-CREATE UNIQUE INDEX QuestiongroupTag_level ON questiongroup_tags (IdQuestiongroup)
-WHERE
-    Section = 1
-    /* Section.Level */
-;
-
-CREATE UNIQUE INDEX QuestiongroupTag_chapter ON questiongroup_tags (IdQuestiongroup)
-WHERE
-    Section = 2
-    /* Section.Chapter */
-;
-
-ALTER TABLE questiongroup_tags
-    ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
-
-ALTER TABLE exercicegroups
-    ADD FOREIGN KEY (IdTeacher) REFERENCES teachers;
-
-ALTER TABLE exercicegroup_tags
-    ADD UNIQUE (IdExercicegroup, Tag);
-
-ALTER TABLE exercicegroup_tags
-    ADD CHECK (Tag = upper(Tag));
-
-CREATE UNIQUE INDEX ExercicegroupTag_level ON exercicegroup_tags (IdExercicegroup)
-WHERE
-    Section = 1
-    /* Section.Level */
-;
-
-CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegroup)
-WHERE
-    Section = 2
-    /* Section.Chapter */
-;
-
-ALTER TABLE exercicegroup_tags
-    ADD FOREIGN KEY (IdExercicegroup) REFERENCES exercicegroups ON DELETE CASCADE;
-
-ALTER TABLE exercices
-    ADD FOREIGN KEY (IdGroup) REFERENCES exercicegroups;
-
-ALTER TABLE exercice_questions
-    ADD PRIMARY KEY (IdExercice, INDEX);
-
-ALTER TABLE exercice_questions
-    ADD FOREIGN KEY (IdExercice, IdQuestion) REFERENCES Questions (NeedExercice, Id);
-
-ALTER TABLE exercice_questions
-    ADD UNIQUE (IdQuestion);
-
-ALTER TABLE exercice_questions
-    ADD FOREIGN KEY (IdExercice) REFERENCES exercices ON DELETE CASCADE;
-
-ALTER TABLE exercice_questions
-    ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
+CREATE OR REPLACE FUNCTION gomacro_validate_json_teac_Contact (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Name', 'URL'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Name')
+        AND gomacro_validate_json_string (data -> 'URL');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_ques_TextPart (data jsonb)
     RETURNS boolean
@@ -729,16 +633,22 @@ BEGIN
     END IF;
     CASE WHEN data ->> 'Kind' = 'ExpressionFieldBlock' THEN
         RETURN gomacro_validate_json_ques_ExpressionFieldBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'FigureAffineLineFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_FigureAffineLineFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FigureBlock' THEN
         RETURN gomacro_validate_json_ques_FigureBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'FigurePointFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_FigurePointFieldBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'FigureVectorFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_FigureVectorFieldBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'FigureVectorPairFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_FigureVectorPairFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FormulaBlock' THEN
         RETURN gomacro_validate_json_ques_FormulaBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FunctionPointsFieldBlock' THEN
         RETURN gomacro_validate_json_ques_FunctionPointsFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FunctionsGraphBlock' THEN
         RETURN gomacro_validate_json_ques_FunctionsGraphBlock (data -> 'Data');
-    WHEN data ->> 'Kind' = 'GeometricConstructionFieldBlock' THEN
-        RETURN gomacro_validate_json_ques_GeometricConstructionFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'NumberFieldBlock' THEN
         RETURN gomacro_validate_json_ques_NumberFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'OrderedListFieldBlock' THEN
@@ -837,6 +747,30 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureAffineLineFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Label', 'A', 'B', 'Figure'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_string (data -> 'A')
+        AND gomacro_validate_json_string (data -> 'B')
+        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -861,20 +795,69 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FiguresOrGraphs (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigurePointFieldBlock (data jsonb)
     RETURNS boolean
     AS $$
+DECLARE
+    is_valid boolean;
 BEGIN
-    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+    IF jsonb_typeof(data) != 'object' THEN
         RETURN FALSE;
     END IF;
-    CASE WHEN data ->> 'Kind' = 'FigureBlock' THEN
-        RETURN gomacro_validate_json_ques_FigureBlock (data -> 'Data');
-    WHEN data ->> 'Kind' = 'FunctionsGraphBlock' THEN
-        RETURN gomacro_validate_json_ques_FunctionsGraphBlock (data -> 'Data');
-    ELSE
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer', 'Figure'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
+        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureVectorFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
         RETURN FALSE;
-    END CASE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer', 'AnswerOrigin', 'Figure', 'MustHaveOrigin'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
+        AND gomacro_validate_json_ques_CoordExpression (data -> 'AnswerOrigin')
+        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure')
+        AND gomacro_validate_json_boolean (data -> 'MustHaveOrigin');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureVectorPairFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Figure', 'Criterion'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure')
+        AND gomacro_validate_json_ques_VectorPairCriterion (data -> 'Criterion');
+    RETURN is_valid;
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -1019,139 +1002,6 @@ BEGIN
         AND gomacro_validate_json_array_ques_FunctionDefinition (data -> 'SequenceExprs')
         AND gomacro_validate_json_array_ques_FunctionArea (data -> 'Areas')
         AND gomacro_validate_json_array_ques_FunctionPoint (data -> 'Points');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFAffineLine (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Label', 'A', 'B'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_string (data -> 'A')
-        AND gomacro_validate_json_string (data -> 'B');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFPoint (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Answer'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFVector (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Answer', 'AnswerOrigin', 'MustHaveOrigin'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
-        AND gomacro_validate_json_ques_CoordExpression (data -> 'AnswerOrigin')
-        AND gomacro_validate_json_boolean (data -> 'MustHaveOrigin');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFVectorPair (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Criterion'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_VectorPairCriterion (data -> 'Criterion');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GeoField (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
-        RETURN FALSE;
-    END IF;
-    CASE WHEN data ->> 'Kind' = 'GFAffineLine' THEN
-        RETURN gomacro_validate_json_ques_GFAffineLine (data -> 'Data');
-    WHEN data ->> 'Kind' = 'GFPoint' THEN
-        RETURN gomacro_validate_json_ques_GFPoint (data -> 'Data');
-    WHEN data ->> 'Kind' = 'GFVector' THEN
-        RETURN gomacro_validate_json_ques_GFVector (data -> 'Data');
-    WHEN data ->> 'Kind' = 'GFVectorPair' THEN
-        RETURN gomacro_validate_json_ques_GFVectorPair (data -> 'Data');
-    ELSE
-        RETURN FALSE;
-    END CASE;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GeometricConstructionFieldBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Field', 'Background'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_GeoField (data -> 'Field')
-        AND gomacro_validate_json_ques_FiguresOrGraphs (data -> 'Background');
     RETURN is_valid;
 END;
 $$
@@ -2001,15 +1851,280 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-ALTER TABLE questions
-    ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_5_array_array_edit_TagSection (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_array_array_edit_TagSection (value))
+        FROM
+            jsonb_array_elements(data))
+        AND jsonb_array_length(data) = 5;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 
-ALTER TABLE questions
-    ADD CONSTRAINT Enonce_gomacro CHECK (gomacro_validate_json_array_ques_Block (Enonce));
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_array_edit_TagSection (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_array_edit_TagSection (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 
-ALTER TABLE exercices
-    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_edit_DifficultyTag (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 
-ALTER TABLE questions
-    ADD CONSTRAINT Parameters_gomacro CHECK (gomacro_validate_json_array_ques_ParameterEntry (Parameters));
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_TagSection (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_edit_TagSection (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string'
+    AND data #>> '{}' IN ('★', '★★', '★★★', '');
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_DifficultyTag', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_Section (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'number'
+    AND data::int IN (2, 1, 3);
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_Section', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_TagSection (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Tag', 'Section'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Tag')
+        AND gomacro_validate_json_edit_Section (data -> 'Section');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a string', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_triv_CategoriesQuestions (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Tags', 'Difficulties'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_array_5_array_array_edit_TagSection (data -> 'Tags')
+        AND gomacro_validate_json_array_edit_DifficultyTag (data -> 'Difficulties');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_edit_DifficultyTag (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_DifficultyTag (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string'
+    AND data #>> '{}' IN ('★', '★★', '★★★', '');
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a edit_DifficultyTag', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_revi_Comment (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_revi_Comment (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_revi_Comment (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Time', 'Message'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Time')
+        AND gomacro_validate_json_string (data -> 'Message');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_string (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean := jsonb_typeof(data) = 'string';
+BEGIN
+    IF NOT is_valid THEN
+        RAISE WARNING '% is not a string', data;
+    END IF;
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
 

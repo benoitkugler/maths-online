@@ -179,18 +179,14 @@ Block blockFromJson(dynamic json_) {
       return expressionFieldBlockFromJson(data);
     case "FigureBlock":
       return figureBlockFromJson(data);
-    case "FigurePointFieldBlock":
-      return figurePointFieldBlockFromJson(data);
-    case "FigureVectorFieldBlock":
-      return figureVectorFieldBlockFromJson(data);
-    case "FigureVectorPairFieldBlock":
-      return figureVectorPairFieldBlockFromJson(data);
     case "FormulaBlock":
       return formulaBlockFromJson(data);
     case "FunctionPointsFieldBlock":
       return functionPointsFieldBlockFromJson(data);
     case "FunctionsGraphBlock":
       return functionsGraphBlockFromJson(data);
+    case "GeometricConstructionFieldBlock":
+      return geometricConstructionFieldBlockFromJson(data);
     case "NumberFieldBlock":
       return numberFieldBlockFromJson(data);
     case "OrderedListFieldBlock":
@@ -237,21 +233,6 @@ Map<String, dynamic> blockToJson(Block item) {
     };
   } else if (item is FigureBlock) {
     return {'Kind': "FigureBlock", 'Data': figureBlockToJson(item)};
-  } else if (item is FigurePointFieldBlock) {
-    return {
-      'Kind': "FigurePointFieldBlock",
-      'Data': figurePointFieldBlockToJson(item)
-    };
-  } else if (item is FigureVectorFieldBlock) {
-    return {
-      'Kind': "FigureVectorFieldBlock",
-      'Data': figureVectorFieldBlockToJson(item)
-    };
-  } else if (item is FigureVectorPairFieldBlock) {
-    return {
-      'Kind': "FigureVectorPairFieldBlock",
-      'Data': figureVectorPairFieldBlockToJson(item)
-    };
   } else if (item is FormulaBlock) {
     return {'Kind': "FormulaBlock", 'Data': formulaBlockToJson(item)};
   } else if (item is FunctionPointsFieldBlock) {
@@ -263,6 +244,11 @@ Map<String, dynamic> blockToJson(Block item) {
     return {
       'Kind': "FunctionsGraphBlock",
       'Data': functionsGraphBlockToJson(item)
+    };
+  } else if (item is GeometricConstructionFieldBlock) {
+    return {
+      'Kind': "GeometricConstructionFieldBlock",
+      'Data': geometricConstructionFieldBlockToJson(item)
     };
   } else if (item is NumberFieldBlock) {
     return {'Kind': "NumberFieldBlock", 'Data': numberFieldBlockToJson(item)};
@@ -489,7 +475,7 @@ Map<String, dynamic> expressionFieldBlockToJson(ExpressionFieldBlock item) {
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FigureBlock
-class FigureBlock implements Block {
+class FigureBlock implements Block, FigureOrGraph {
   final Figure figure;
 
   const FigureBlock(this.figure);
@@ -509,85 +495,34 @@ Map<String, dynamic> figureBlockToJson(FigureBlock item) {
   return {"Figure": figureToJson(item.figure)};
 }
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FigurePointFieldBlock
-class FigurePointFieldBlock implements Block {
-  final Figure figure;
-  final int iD;
+/// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FigureOrGraph
+abstract class FigureOrGraph {}
 
-  const FigurePointFieldBlock(this.figure, this.iD);
-
-  @override
-  String toString() {
-    return "FigurePointFieldBlock($figure, $iD)";
+FigureOrGraph figureOrGraphFromJson(dynamic json_) {
+  final json = json_ as Map<String, dynamic>;
+  final kind = json['Kind'] as String;
+  final data = json['Data'];
+  switch (kind) {
+    case "FigureBlock":
+      return figureBlockFromJson(data);
+    case "FunctionsGraphBlock":
+      return functionsGraphBlockFromJson(data);
+    default:
+      throw ("unexpected type");
   }
 }
 
-FigurePointFieldBlock figurePointFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as Map<String, dynamic>);
-  return FigurePointFieldBlock(
-      figureFromJson(json['Figure']), intFromJson(json['ID']));
-}
-
-Map<String, dynamic> figurePointFieldBlockToJson(FigurePointFieldBlock item) {
-  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
-}
-
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FigureVectorFieldBlock
-class FigureVectorFieldBlock implements Block {
-  final String lineLabel;
-  final Figure figure;
-  final int iD;
-  final bool asLine;
-
-  const FigureVectorFieldBlock(
-      this.lineLabel, this.figure, this.iD, this.asLine);
-
-  @override
-  String toString() {
-    return "FigureVectorFieldBlock($lineLabel, $figure, $iD, $asLine)";
+Map<String, dynamic> figureOrGraphToJson(FigureOrGraph item) {
+  if (item is FigureBlock) {
+    return {'Kind': "FigureBlock", 'Data': figureBlockToJson(item)};
+  } else if (item is FunctionsGraphBlock) {
+    return {
+      'Kind': "FunctionsGraphBlock",
+      'Data': functionsGraphBlockToJson(item)
+    };
+  } else {
+    throw ("unexpected type");
   }
-}
-
-FigureVectorFieldBlock figureVectorFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as Map<String, dynamic>);
-  return FigureVectorFieldBlock(
-      stringFromJson(json['LineLabel']),
-      figureFromJson(json['Figure']),
-      intFromJson(json['ID']),
-      boolFromJson(json['AsLine']));
-}
-
-Map<String, dynamic> figureVectorFieldBlockToJson(FigureVectorFieldBlock item) {
-  return {
-    "LineLabel": stringToJson(item.lineLabel),
-    "Figure": figureToJson(item.figure),
-    "ID": intToJson(item.iD),
-    "AsLine": boolToJson(item.asLine)
-  };
-}
-
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FigureVectorPairFieldBlock
-class FigureVectorPairFieldBlock implements Block {
-  final Figure figure;
-  final int iD;
-
-  const FigureVectorPairFieldBlock(this.figure, this.iD);
-
-  @override
-  String toString() {
-    return "FigureVectorPairFieldBlock($figure, $iD)";
-  }
-}
-
-FigureVectorPairFieldBlock figureVectorPairFieldBlockFromJson(dynamic json_) {
-  final json = (json_ as Map<String, dynamic>);
-  return FigureVectorPairFieldBlock(
-      figureFromJson(json['Figure']), intFromJson(json['ID']));
-}
-
-Map<String, dynamic> figureVectorPairFieldBlockToJson(
-    FigureVectorPairFieldBlock item) {
-  return {"Figure": figureToJson(item.figure), "ID": intToJson(item.iD)};
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FormulaBlock
@@ -758,7 +693,7 @@ Map<String, dynamic> functionSignToJson(FunctionSign item) {
 }
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionsGraphBlock
-class FunctionsGraphBlock implements Block {
+class FunctionsGraphBlock implements Block, FigureOrGraph {
   final List<FunctionGraph> functions;
   final List<SequenceGraph> sequences;
   final List<FunctionArea> areas;
@@ -791,6 +726,133 @@ Map<String, dynamic> functionsGraphBlockToJson(FunctionsGraphBlock item) {
     "Areas": listFunctionAreaToJson(item.areas),
     "Points": listFunctionPointToJson(item.points),
     "Bounds": repereBoundsToJson(item.bounds)
+  };
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.GFPoint
+class GFPoint implements GeoField {
+  const GFPoint();
+
+  @override
+  String toString() {
+    return "GFPoint()";
+  }
+}
+
+GFPoint gFPointFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return GFPoint();
+}
+
+Map<String, dynamic> gFPointToJson(GFPoint item) {
+  return {};
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.GFVector
+class GFVector implements GeoField {
+  final String lineLabel;
+  final bool asLine;
+
+  const GFVector(this.lineLabel, this.asLine);
+
+  @override
+  String toString() {
+    return "GFVector($lineLabel, $asLine)";
+  }
+}
+
+GFVector gFVectorFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return GFVector(
+      stringFromJson(json['LineLabel']), boolFromJson(json['AsLine']));
+}
+
+Map<String, dynamic> gFVectorToJson(GFVector item) {
+  return {
+    "LineLabel": stringToJson(item.lineLabel),
+    "AsLine": boolToJson(item.asLine)
+  };
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.GFVectorPair
+class GFVectorPair implements GeoField {
+  const GFVectorPair();
+
+  @override
+  String toString() {
+    return "GFVectorPair()";
+  }
+}
+
+GFVectorPair gFVectorPairFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return GFVectorPair();
+}
+
+Map<String, dynamic> gFVectorPairToJson(GFVectorPair item) {
+  return {};
+}
+
+/// github.com/benoitkugler/maths-online/server/src/maths/questions/client.GeoField
+abstract class GeoField {}
+
+GeoField geoFieldFromJson(dynamic json_) {
+  final json = json_ as Map<String, dynamic>;
+  final kind = json['Kind'] as String;
+  final data = json['Data'];
+  switch (kind) {
+    case "GFPoint":
+      return gFPointFromJson(data);
+    case "GFVector":
+      return gFVectorFromJson(data);
+    case "GFVectorPair":
+      return gFVectorPairFromJson(data);
+    default:
+      throw ("unexpected type");
+  }
+}
+
+Map<String, dynamic> geoFieldToJson(GeoField item) {
+  if (item is GFPoint) {
+    return {'Kind': "GFPoint", 'Data': gFPointToJson(item)};
+  } else if (item is GFVector) {
+    return {'Kind': "GFVector", 'Data': gFVectorToJson(item)};
+  } else if (item is GFVectorPair) {
+    return {'Kind': "GFVectorPair", 'Data': gFVectorPairToJson(item)};
+  } else {
+    throw ("unexpected type");
+  }
+}
+
+// github.com/benoitkugler/maths-online/server/src/maths/questions/client.GeometricConstructionFieldBlock
+class GeometricConstructionFieldBlock implements Block {
+  final int iD;
+  final GeoField field;
+  final FigureOrGraph background;
+
+  const GeometricConstructionFieldBlock(this.iD, this.field, this.background);
+
+  @override
+  String toString() {
+    return "GeometricConstructionFieldBlock($iD, $field, $background)";
+  }
+}
+
+GeometricConstructionFieldBlock geometricConstructionFieldBlockFromJson(
+    dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return GeometricConstructionFieldBlock(
+      intFromJson(json['ID']),
+      geoFieldFromJson(json['Field']),
+      figureOrGraphFromJson(json['Background']));
+}
+
+Map<String, dynamic> geometricConstructionFieldBlockToJson(
+    GeometricConstructionFieldBlock item) {
+  return {
+    "ID": intToJson(item.iD),
+    "Field": geoFieldToJson(item.field),
+    "Background": figureOrGraphToJson(item.background)
   };
 }
 

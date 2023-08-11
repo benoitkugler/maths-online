@@ -29,12 +29,6 @@ type fieldInstance interface {
 
 	fieldID() int
 
-	// validateAnswerSyntax is called during editing for complex fields,
-	// to catch syntax mistake before validating the answer
-	// an error may also be returned against malicious query
-	// if non nil, the error is of type InvalidFieldAnswer
-	validateAnswerSyntax(answer client.Answer) error
-
 	// evaluateAnswer evaluate the given answer against the reference
 	// validateAnswerSyntax is assumed to have already been called on `answer`
 	// so that is has a valid format.
@@ -44,6 +38,12 @@ type fieldInstance interface {
 	// it may not always be unique, in such case the returned value
 	// is one of the possible solutions
 	correctAnswer() client.Answer
+
+	// validateAnswerSyntax is called during editing for complex fields,
+	// to catch syntax mistake before validating the answer
+	// an error may also be returned against malicious query
+	// if non nil, the error is of type InvalidFieldAnswer
+	validateAnswerSyntax(answer client.Answer) error
 }
 
 var (
@@ -52,13 +52,10 @@ var (
 	_ fieldInstance = RadioFieldInstance{}
 	_ fieldInstance = DropDownFieldInstance{}
 	_ fieldInstance = OrderedListFieldInstance{}
-	_ fieldInstance = FigurePointFieldInstance{}
-	_ fieldInstance = FigureVectorFieldInstance{}
+	_ fieldInstance = GeometricConstructionFieldInstance{}
 	_ fieldInstance = VariationTableFieldInstance{}
 	_ fieldInstance = SignTableFieldInstance{}
 	_ fieldInstance = FunctionPointsFieldInstance{}
-	_ fieldInstance = FigureVectorPairFieldInstance{}
-	_ fieldInstance = FigureAffineLineFieldInstance{}
 	_ fieldInstance = TreeFieldInstance{}
 	_ fieldInstance = ProofFieldInstance{}
 	_ fieldInstance = TableFieldInstance{}
@@ -357,64 +354,97 @@ func (olf OrderedListFieldInstance) correctAnswer() client.Answer {
 	return client.OrderedListAnswer{Indices: answer}
 }
 
-type FigurePointFieldInstance struct {
-	Figure repere.Figure
-	Answer repere.IntCoord
-	ID     int
+type GeometricConstructionFieldInstance struct {
+	ID         int
+	Field      geoFieldInstance
+	Background client.FigureOrGraph
 }
 
-func (f FigurePointFieldInstance) fieldID() int { return f.ID }
+func (f GeometricConstructionFieldInstance) fieldID() int { return f.ID }
 
-func (f FigurePointFieldInstance) toClient() client.Block {
-	return client.FigurePointFieldBlock{Figure: f.Figure, ID: f.ID}
+func (f GeometricConstructionFieldInstance) toClient() client.Block {
+	return client.GeometricConstructionFieldBlock{
+		ID:         f.ID,
+		Field:      f.Field.toClient(),
+		Background: f.Background,
+	}
 }
 
-func (f FigurePointFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.PointAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected PointAnswer, got %T", answer),
+func (f GeometricConstructionFieldInstance) validateAnswerSyntax(answer client.Answer) error {
+	switch f.Field.(type) {
+	case gfPoint:
+		_, ok := answer.(client.PointAnswer)
+		if !ok {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("expected PointAnswer, got %T", answer),
+			}
+		}
+	case gfVector, gfAffineLine:
+		_, ok := answer.(client.DoublePointAnswer)
+		if !ok {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
+			}
+		}
+	case gfVectorPair:
+		_, ok := answer.(client.DoublePointPairAnswer)
+		if !ok {
+			return InvalidFieldAnswer{
+				ID:     f.ID,
+				Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
+			}
 		}
 	}
 	return nil
 }
 
-func (f FigurePointFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
-	return f.Answer == answer.(client.PointAnswer).Point
+func (f GeometricConstructionFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return f.Field.evaluateAnswer(answer)
 }
 
-func (f FigurePointFieldInstance) correctAnswer() client.Answer {
-	return client.PointAnswer{Point: f.Answer}
+func (f GeometricConstructionFieldInstance) correctAnswer() client.Answer {
+	bounds := f.Background.FigBounds()
+	return f.Field.correctAnswer(bounds)
 }
 
-type FigureVectorFieldInstance struct {
-	Figure repere.Figure
+type geoFieldInstance interface {
+	// evaluateAnswer evaluate the given answer against the reference
+	// validateAnswerSyntax is assumed to have already been called on `answer`
+	// so that is has a valid format.
+	evaluateAnswer(answer client.Answer) (isCorrect bool)
+
+	// correctAnswer returns the expected answer for this field
+	// it may not always be unique, in such case the returned value
+	// is one of the possible solutions
+	correctAnswer(repere.RepereBounds) client.Answer
+
+	toClient() client.GeoField
+}
+
+type gfPoint repere.IntCoord
+
+func (f gfPoint) toClient() client.GeoField { return client.GFPoint{} }
+
+func (f gfPoint) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+	return repere.IntCoord(f) == answer.(client.PointAnswer).Point
+}
+
+func (f gfPoint) correctAnswer(repere.RepereBounds) client.Answer {
+	return client.PointAnswer{Point: repere.IntCoord(f)}
+}
+
+type gfVector struct {
 	Answer repere.IntCoord
 	// It true, the vector must be anchored at `AnswerOrigin`
 	MustHaveOrigin bool
 	AnswerOrigin   repere.IntCoord
-	ID             int
 }
 
-func (f FigureVectorFieldInstance) fieldID() int { return f.ID }
+func (f gfVector) toClient() client.GeoField { return client.GFVector{} }
 
-func (f FigureVectorFieldInstance) toClient() client.Block {
-	return client.FigureVectorFieldBlock{Figure: f.Figure, ID: f.ID}
-}
-
-func (f FigureVectorFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.DoublePointAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
-		}
-	}
-	return nil
-}
-
-func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+func (f gfVector) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointAnswer)
 	vector := repere.IntCoord{
 		X: ans.To.X - ans.From.X,
@@ -427,7 +457,7 @@ func (f FigureVectorFieldInstance) evaluateAnswer(answer client.Answer) (isCorre
 	return f.Answer == vector
 }
 
-func (f FigureVectorFieldInstance) correctAnswer() client.Answer {
+func (f gfVector) correctAnswer(repere.RepereBounds) client.Answer {
 	to := repere.IntCoord{
 		X: f.AnswerOrigin.X + f.Answer.X,
 		Y: f.AnswerOrigin.Y + f.Answer.Y,
@@ -435,34 +465,19 @@ func (f FigureVectorFieldInstance) correctAnswer() client.Answer {
 	return client.DoublePointAnswer{From: f.AnswerOrigin, To: to}
 }
 
-type FigureAffineLineFieldInstance struct {
-	Label   string        // of the expected affine function
-	Figure  repere.Figure // usually empty, but set width and height
-	ID      int
+type gfAffineLine struct {
+	Label   string // of the expected affine function
 	AnswerA float64
 	AnswerB int
 }
 
-func (f FigureAffineLineFieldInstance) fieldID() int { return f.ID }
-
-func (f FigureAffineLineFieldInstance) toClient() client.Block {
-	return client.FigureVectorFieldBlock{Figure: f.Figure, ID: f.ID, AsLine: true, LineLabel: f.Label}
+func (f gfAffineLine) toClient() client.GeoField {
+	return client.GFVector{AsLine: true, LineLabel: f.Label}
 }
 
-func (f FigureAffineLineFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.DoublePointAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected DoublePointAnswer, got %T", answer),
-		}
-	}
-	return nil
-}
+func (f gfAffineLine) isAnswerVertical() bool { return math.IsInf(f.AnswerA, 0) }
 
-func (f FigureAffineLineFieldInstance) isAnswerVertical() bool { return math.IsInf(f.AnswerA, 0) }
-
-func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+func (f gfAffineLine) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointAnswer)
 
 	if f.isAnswerVertical() {
@@ -474,8 +489,8 @@ func (f FigureAffineLineFieldInstance) evaluateAnswer(answer client.Answer) (isC
 	return f.AnswerA == a && f.AnswerB == b
 }
 
-func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
-	origin := f.Figure.Bounds.Origin.Round()
+func (f gfAffineLine) correctAnswer(bounds repere.RepereBounds) client.Answer {
+	origin := bounds.Origin.Round()
 
 	if f.isAnswerVertical() { // vertical line
 		return client.DoublePointAnswer{
@@ -486,7 +501,7 @@ func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
 
 	// try to get an integer point
 	x := -origin.X
-	for ; x < f.Figure.Bounds.Width-origin.X; x++ {
+	for ; x < bounds.Width-origin.X; x++ {
 		y := f.AnswerA * float64(x)
 		if math.Trunc(y) == y {
 			break
@@ -498,30 +513,11 @@ func (f FigureAffineLineFieldInstance) correctAnswer() client.Answer {
 	}
 }
 
-type FigureVectorPairFieldInstance struct {
-	Figure    repere.Figure
-	ID        int
-	Criterion VectorPairCriterion
-}
+type gfVectorPair VectorPairCriterion
 
-func (f FigureVectorPairFieldInstance) fieldID() int { return f.ID }
+func (f gfVectorPair) toClient() client.GeoField { return client.GFVectorPair{} }
 
-func (f FigureVectorPairFieldInstance) toClient() client.Block {
-	return client.FigureVectorPairFieldBlock{Figure: f.Figure, ID: f.ID}
-}
-
-func (f FigureVectorPairFieldInstance) validateAnswerSyntax(answer client.Answer) error {
-	_, ok := answer.(client.DoublePointPairAnswer)
-	if !ok {
-		return InvalidFieldAnswer{
-			ID:     f.ID,
-			Reason: fmt.Sprintf("expected DoublePointPairAnswer, got %T", answer),
-		}
-	}
-	return nil
-}
-
-func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isCorrect bool) {
+func (f gfVectorPair) evaluateAnswer(answer client.Answer) (isCorrect bool) {
 	ans := answer.(client.DoublePointPairAnswer)
 	vector1 := repere.IntCoord{
 		X: ans.To1.X - ans.From1.X,
@@ -531,7 +527,7 @@ func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isC
 		X: ans.To2.X - ans.From2.X,
 		Y: ans.To2.Y - ans.From2.Y,
 	}
-	switch f.Criterion {
+	switch VectorPairCriterion(f) {
 	case VectorEquals:
 		return vector1 == vector2
 	case VectorColinear: // check if det(v1, v2) = 0
@@ -543,8 +539,8 @@ func (f FigureVectorPairFieldInstance) evaluateAnswer(answer client.Answer) (isC
 	}
 }
 
-func (f FigureVectorPairFieldInstance) correctAnswer() client.Answer {
-	switch f.Criterion {
+func (f gfVectorPair) correctAnswer(repere.RepereBounds) client.Answer {
+	switch VectorPairCriterion(f) {
 	case VectorEquals:
 		return client.DoublePointPairAnswer{
 			From1: repere.IntCoord{X: 0, Y: 0},

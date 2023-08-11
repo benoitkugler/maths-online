@@ -162,17 +162,17 @@ class _NodeController {
   }
 }
 
-class TreeField extends StatefulWidget {
+class TreeFieldW extends StatefulWidget {
   final Color color;
   final TreeController controller;
 
-  const TreeField(this.color, this.controller, {Key? key}) : super(key: key);
+  const TreeFieldW(this.color, this.controller, {Key? key}) : super(key: key);
 
   @override
-  _TreeFieldState createState() => _TreeFieldState();
+  _TreeFieldWState createState() => _TreeFieldWState();
 }
 
-class _TreeFieldState extends State<TreeField> {
+class _TreeFieldWState extends State<TreeFieldW> {
   void _onSelectShape(int? shapeIndex) {
     setState(() {
       widget.controller.setShapeIndex(shapeIndex);
@@ -381,7 +381,7 @@ class _NodeEditableState extends State<_NodeEditable> {
             insetPadding: const EdgeInsets.all(16),
             child: Center(
               heightFactor: 2,
-              child: ExpressionField(widget.color, cts[index], autofocus: true,
+              child: ExpressionFieldW(widget.color, cts[index], autofocus: true,
                   onSubmitted: () {
                 Navigator.of(context).maybePop();
                 setState(() {});
@@ -404,7 +404,7 @@ class _NodeEditableState extends State<_NodeEditable> {
         onTapEdge: valueCt?.isEnabled == true ? editEdge : null,
         value: valueCt == null
             ? const Text("?")
-            : SizedBox(width: 50, child: DropDownField(widget.color, valueCt)),
+            : SizedBox(width: 50, child: DropDownFieldW(widget.color, valueCt)),
         children: widget.data.children
             .map((e) => _NodeEditable(widget.color, e))
             .toList());
@@ -598,11 +598,11 @@ extension on TreeNodeAnswer {
   }
 }
 
-class Tree extends StatelessWidget {
+class TreeW extends StatelessWidget {
   final Color color;
   final TreeBlock data;
 
-  const Tree(this.color, this.data, {super.key});
+  const TreeW(this.color, this.data, {super.key});
 
   @override
   Widget build(BuildContext context) {

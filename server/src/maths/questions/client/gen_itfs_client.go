@@ -278,18 +278,6 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		var data FigureBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
-	case "FigurePointFieldBlock":
-		var data FigurePointFieldBlock
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case "FigureVectorFieldBlock":
-		var data FigureVectorFieldBlock
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
-	case "FigureVectorPairFieldBlock":
-		var data FigureVectorPairFieldBlock
-		err = json.Unmarshal(wr.Data, &data)
-		out.Data = data
 	case "FormulaBlock":
 		var data FormulaBlock
 		err = json.Unmarshal(wr.Data, &data)
@@ -300,6 +288,10 @@ func (out *BlockWrapper) UnmarshalJSON(src []byte) error {
 		out.Data = data
 	case "FunctionsGraphBlock":
 		var data FunctionsGraphBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "GeometricConstructionFieldBlock":
+		var data GeometricConstructionFieldBlock
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case "NumberFieldBlock":
@@ -378,18 +370,14 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "ExpressionFieldBlock", Data: data}
 	case FigureBlock:
 		wr = wrapper{Kind: "FigureBlock", Data: data}
-	case FigurePointFieldBlock:
-		wr = wrapper{Kind: "FigurePointFieldBlock", Data: data}
-	case FigureVectorFieldBlock:
-		wr = wrapper{Kind: "FigureVectorFieldBlock", Data: data}
-	case FigureVectorPairFieldBlock:
-		wr = wrapper{Kind: "FigureVectorPairFieldBlock", Data: data}
 	case FormulaBlock:
 		wr = wrapper{Kind: "FormulaBlock", Data: data}
 	case FunctionPointsFieldBlock:
 		wr = wrapper{Kind: "FunctionPointsFieldBlock", Data: data}
 	case FunctionsGraphBlock:
 		wr = wrapper{Kind: "FunctionsGraphBlock", Data: data}
+	case GeometricConstructionFieldBlock:
+		wr = wrapper{Kind: "GeometricConstructionFieldBlock", Data: data}
 	case NumberFieldBlock:
 		wr = wrapper{Kind: "NumberFieldBlock", Data: data}
 	case OrderedListFieldBlock:
@@ -426,29 +414,27 @@ func (item BlockWrapper) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	DropDownFieldBlockBlKind         = "DropDownFieldBlock"
-	ExpressionFieldBlockBlKind       = "ExpressionFieldBlock"
-	FigureBlockBlKind                = "FigureBlock"
-	FigurePointFieldBlockBlKind      = "FigurePointFieldBlock"
-	FigureVectorFieldBlockBlKind     = "FigureVectorFieldBlock"
-	FigureVectorPairFieldBlockBlKind = "FigureVectorPairFieldBlock"
-	FormulaBlockBlKind               = "FormulaBlock"
-	FunctionPointsFieldBlockBlKind   = "FunctionPointsFieldBlock"
-	FunctionsGraphBlockBlKind        = "FunctionsGraphBlock"
-	NumberFieldBlockBlKind           = "NumberFieldBlock"
-	OrderedListFieldBlockBlKind      = "OrderedListFieldBlock"
-	ProofFieldBlockBlKind            = "ProofFieldBlock"
-	RadioFieldBlockBlKind            = "RadioFieldBlock"
-	SignTableBlockBlKind             = "SignTableBlock"
-	SignTableFieldBlockBlKind        = "SignTableFieldBlock"
-	TableBlockBlKind                 = "TableBlock"
-	TableFieldBlockBlKind            = "TableFieldBlock"
-	TextBlockBlKind                  = "TextBlock"
-	TreeBlockBlKind                  = "TreeBlock"
-	TreeFieldBlockBlKind             = "TreeFieldBlock"
-	VariationTableBlockBlKind        = "VariationTableBlock"
-	VariationTableFieldBlockBlKind   = "VariationTableFieldBlock"
-	VectorFieldBlockBlKind           = "VectorFieldBlock"
+	DropDownFieldBlockBlKind              = "DropDownFieldBlock"
+	ExpressionFieldBlockBlKind            = "ExpressionFieldBlock"
+	FigureBlockBlKind                     = "FigureBlock"
+	FormulaBlockBlKind                    = "FormulaBlock"
+	FunctionPointsFieldBlockBlKind        = "FunctionPointsFieldBlock"
+	FunctionsGraphBlockBlKind             = "FunctionsGraphBlock"
+	GeometricConstructionFieldBlockBlKind = "GeometricConstructionFieldBlock"
+	NumberFieldBlockBlKind                = "NumberFieldBlock"
+	OrderedListFieldBlockBlKind           = "OrderedListFieldBlock"
+	ProofFieldBlockBlKind                 = "ProofFieldBlock"
+	RadioFieldBlockBlKind                 = "RadioFieldBlock"
+	SignTableBlockBlKind                  = "SignTableBlock"
+	SignTableFieldBlockBlKind             = "SignTableFieldBlock"
+	TableBlockBlKind                      = "TableBlock"
+	TableFieldBlockBlKind                 = "TableFieldBlock"
+	TextBlockBlKind                       = "TextBlock"
+	TreeBlockBlKind                       = "TreeBlock"
+	TreeFieldBlockBlKind                  = "TreeFieldBlock"
+	VariationTableBlockBlKind             = "VariationTableBlock"
+	VariationTableFieldBlockBlKind        = "VariationTableFieldBlock"
+	VectorFieldBlockBlKind                = "VectorFieldBlock"
 )
 
 func (list Enonce) MarshalJSON() ([]byte, error) {
@@ -467,6 +453,152 @@ func (list *Enonce) UnmarshalJSON(data []byte) error {
 		(*list)[i] = v.Data
 	}
 	return err
+}
+
+// FigureOrGraphWrapper may be used as replacements for FigureOrGraph
+// when working with JSON
+type FigureOrGraphWrapper struct {
+	Data FigureOrGraph
+}
+
+func (out *FigureOrGraphWrapper) UnmarshalJSON(src []byte) error {
+	var wr struct {
+		Kind string
+		Data json.RawMessage
+	}
+	err := json.Unmarshal(src, &wr)
+	if err != nil {
+		return err
+	}
+	switch wr.Kind {
+	case "FigureBlock":
+		var data FigureBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "FunctionsGraphBlock":
+		var data FunctionsGraphBlock
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+
+	default:
+		panic("exhaustive switch")
+	}
+	return err
+}
+
+func (item FigureOrGraphWrapper) MarshalJSON() ([]byte, error) {
+	type wrapper struct {
+		Data interface{}
+		Kind string
+	}
+	var wr wrapper
+	switch data := item.Data.(type) {
+	case FigureBlock:
+		wr = wrapper{Kind: "FigureBlock", Data: data}
+	case FunctionsGraphBlock:
+		wr = wrapper{Kind: "FunctionsGraphBlock", Data: data}
+
+	default:
+		panic("exhaustive switch")
+	}
+	return json.Marshal(wr)
+}
+
+const (
+	FigureBlockFiKind         = "FigureBlock"
+	FunctionsGraphBlockFiKind = "FunctionsGraphBlock"
+)
+
+// GeoFieldWrapper may be used as replacements for GeoField
+// when working with JSON
+type GeoFieldWrapper struct {
+	Data GeoField
+}
+
+func (out *GeoFieldWrapper) UnmarshalJSON(src []byte) error {
+	var wr struct {
+		Kind string
+		Data json.RawMessage
+	}
+	err := json.Unmarshal(src, &wr)
+	if err != nil {
+		return err
+	}
+	switch wr.Kind {
+	case "GFPoint":
+		var data GFPoint
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "GFVector":
+		var data GFVector
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "GFVectorPair":
+		var data GFVectorPair
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+
+	default:
+		panic("exhaustive switch")
+	}
+	return err
+}
+
+func (item GeoFieldWrapper) MarshalJSON() ([]byte, error) {
+	type wrapper struct {
+		Data interface{}
+		Kind string
+	}
+	var wr wrapper
+	switch data := item.Data.(type) {
+	case GFPoint:
+		wr = wrapper{Kind: "GFPoint", Data: data}
+	case GFVector:
+		wr = wrapper{Kind: "GFVector", Data: data}
+	case GFVectorPair:
+		wr = wrapper{Kind: "GFVectorPair", Data: data}
+
+	default:
+		panic("exhaustive switch")
+	}
+	return json.Marshal(wr)
+}
+
+const (
+	GFPointGeKind      = "GFPoint"
+	GFVectorGeKind     = "GFVector"
+	GFVectorPairGeKind = "GFVectorPair"
+)
+
+func (item GeometricConstructionFieldBlock) MarshalJSON() ([]byte, error) {
+	type wrapper struct {
+		ID         int
+		Field      GeoFieldWrapper
+		Background FigureOrGraphWrapper
+	}
+	wr := wrapper{
+		ID:         item.ID,
+		Field:      GeoFieldWrapper{item.Field},
+		Background: FigureOrGraphWrapper{item.Background},
+	}
+	return json.Marshal(wr)
+}
+
+func (item *GeometricConstructionFieldBlock) UnmarshalJSON(src []byte) error {
+	type wrapper struct {
+		ID         int
+		Field      GeoFieldWrapper
+		Background FigureOrGraphWrapper
+	}
+	var wr wrapper
+	err := json.Unmarshal(src, &wr)
+	if err != nil {
+		return err
+	}
+	item.ID = wr.ID
+	item.Field = wr.Field.Data
+	item.Background = wr.Background.Data
+	return nil
 }
 
 func (item Node) MarshalJSON() ([]byte, error) {

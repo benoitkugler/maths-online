@@ -633,22 +633,16 @@ BEGIN
     END IF;
     CASE WHEN data ->> 'Kind' = 'ExpressionFieldBlock' THEN
         RETURN gomacro_validate_json_ques_ExpressionFieldBlock (data -> 'Data');
-    WHEN data ->> 'Kind' = 'FigureAffineLineFieldBlock' THEN
-        RETURN gomacro_validate_json_ques_FigureAffineLineFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FigureBlock' THEN
         RETURN gomacro_validate_json_ques_FigureBlock (data -> 'Data');
-    WHEN data ->> 'Kind' = 'FigurePointFieldBlock' THEN
-        RETURN gomacro_validate_json_ques_FigurePointFieldBlock (data -> 'Data');
-    WHEN data ->> 'Kind' = 'FigureVectorFieldBlock' THEN
-        RETURN gomacro_validate_json_ques_FigureVectorFieldBlock (data -> 'Data');
-    WHEN data ->> 'Kind' = 'FigureVectorPairFieldBlock' THEN
-        RETURN gomacro_validate_json_ques_FigureVectorPairFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FormulaBlock' THEN
         RETURN gomacro_validate_json_ques_FormulaBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FunctionPointsFieldBlock' THEN
         RETURN gomacro_validate_json_ques_FunctionPointsFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'FunctionsGraphBlock' THEN
         RETURN gomacro_validate_json_ques_FunctionsGraphBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'GeometricConstructionFieldBlock' THEN
+        RETURN gomacro_validate_json_ques_GeometricConstructionFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'NumberFieldBlock' THEN
         RETURN gomacro_validate_json_ques_NumberFieldBlock (data -> 'Data');
     WHEN data ->> 'Kind' = 'OrderedListFieldBlock' THEN
@@ -747,30 +741,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureAffineLineFieldBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Label', 'A', 'B', 'Figure'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_string (data -> 'A')
-        AND gomacro_validate_json_string (data -> 'B')
-        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureBlock (data jsonb)
     RETURNS boolean
     AS $$
@@ -795,69 +765,20 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigurePointFieldBlock (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FiguresOrGraphs (data jsonb)
     RETURNS boolean
     AS $$
-DECLARE
-    is_valid boolean;
 BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
         RETURN FALSE;
     END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Answer', 'Figure'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
-        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureVectorFieldBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
+    CASE WHEN data ->> 'Kind' = 'FigureBlock' THEN
+        RETURN gomacro_validate_json_ques_FigureBlock (data -> 'Data');
+    WHEN data ->> 'Kind' = 'FunctionsGraphBlock' THEN
+        RETURN gomacro_validate_json_ques_FunctionsGraphBlock (data -> 'Data');
+    ELSE
         RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Answer', 'AnswerOrigin', 'Figure', 'MustHaveOrigin'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
-        AND gomacro_validate_json_ques_CoordExpression (data -> 'AnswerOrigin')
-        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure')
-        AND gomacro_validate_json_boolean (data -> 'MustHaveOrigin');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FigureVectorPairFieldBlock (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Figure', 'Criterion'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_ques_FigureBlock (data -> 'Figure')
-        AND gomacro_validate_json_ques_VectorPairCriterion (data -> 'Criterion');
-    RETURN is_valid;
+    END CASE;
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -1002,6 +923,139 @@ BEGIN
         AND gomacro_validate_json_array_ques_FunctionDefinition (data -> 'SequenceExprs')
         AND gomacro_validate_json_array_ques_FunctionArea (data -> 'Areas')
         AND gomacro_validate_json_array_ques_FunctionPoint (data -> 'Points');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFAffineLine (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Label', 'A', 'B'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_string (data -> 'A')
+        AND gomacro_validate_json_string (data -> 'B');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFPoint (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFVector (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Answer', 'AnswerOrigin', 'MustHaveOrigin'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_CoordExpression (data -> 'Answer')
+        AND gomacro_validate_json_ques_CoordExpression (data -> 'AnswerOrigin')
+        AND gomacro_validate_json_boolean (data -> 'MustHaveOrigin');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GFVectorPair (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Criterion'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_VectorPairCriterion (data -> 'Criterion');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GeoField (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) != 'object' OR jsonb_typeof(data -> 'Kind') != 'string' OR jsonb_typeof(data -> 'Data') = 'null' THEN
+        RETURN FALSE;
+    END IF;
+    CASE WHEN data ->> 'Kind' = 'GFAffineLine' THEN
+        RETURN gomacro_validate_json_ques_GFAffineLine (data -> 'Data');
+    WHEN data ->> 'Kind' = 'GFPoint' THEN
+        RETURN gomacro_validate_json_ques_GFPoint (data -> 'Data');
+    WHEN data ->> 'Kind' = 'GFVector' THEN
+        RETURN gomacro_validate_json_ques_GFVector (data -> 'Data');
+    WHEN data ->> 'Kind' = 'GFVectorPair' THEN
+        RETURN gomacro_validate_json_ques_GFVectorPair (data -> 'Data');
+    ELSE
+        RETURN FALSE;
+    END CASE;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_GeometricConstructionFieldBlock (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Field', 'Background'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_ques_GeoField (data -> 'Field')
+        AND gomacro_validate_json_ques_FiguresOrGraphs (data -> 'Background');
     RETURN is_valid;
 END;
 $$

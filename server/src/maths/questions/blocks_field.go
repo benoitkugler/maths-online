@@ -15,13 +15,10 @@ var (
 	_ Block = ExpressionFieldBlock{}
 	_ Block = RadioFieldBlock{}
 	_ Block = OrderedListFieldBlock{}
-	_ Block = FigurePointFieldBlock{}
-	_ Block = FigureVectorFieldBlock{}
+	_ Block = GeometricConstructionFieldBlock{}
 	_ Block = VariationTableFieldBlock{}
 	_ Block = SignTableFieldBlock{}
 	_ Block = FunctionPointsFieldBlock{}
-	_ Block = FigureVectorPairFieldBlock{}
-	_ Block = FigureAffineLineFieldBlock{}
 	_ Block = TreeFieldBlock{}
 	_ Block = TableFieldBlock{}
 	_ Block = VectorFieldBlock{}
@@ -283,64 +280,95 @@ func (c CoordExpression) parse() (out parsedCoord, err error) {
 	return out, nil
 }
 
-type FigurePointFieldBlock struct {
-	Answer CoordExpression
-	Figure FigureBlock
-}
-
-func (fp FigurePointFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fp.Figure.instantiateF(params)
+func (fv GeometricConstructionFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
+	background, err := fv.Background.setupValidator(params)
 	if err != nil {
 		return nil, err
 	}
+
+	field, err := fv.Field.setupValidator(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return geometricConstructionValidator{field: field, background: background}, nil
+}
+
+func (fv GeometricConstructionFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
+	var (
+		out GeometricConstructionFieldInstance
+		err error
+	)
+
+	out.ID = ID
+
+	out.Field, err = fv.Field.instantiate(params)
+	if err != nil {
+		return nil, err
+	}
+
+	out.Background, err = fv.Background.instantiateFG(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+type GFPoint struct {
+	Answer CoordExpression
+}
+
+type GFVector struct {
+	Answer         CoordExpression
+	AnswerOrigin   CoordExpression // optionnal, used when MustHaveOrigin is true
+	MustHaveOrigin bool
+}
+
+type GFVectorPair struct {
+	Criterion VectorPairCriterion
+}
+
+type GFAffineLine struct {
+	Label string
+	A     string // valid expression.Expression
+	B     string // valid expression.Expression
+}
+
+func (f FigureBlock) instantiateFG(params expression.Vars) (client.FigureOrGraph, error) {
+	fig, err := f.instantiateF(params)
+	return client.FigureBlock(fig), err
+}
+
+func (f FunctionsGraphBlock) instantiateFG(params expression.Vars) (client.FigureOrGraph, error) {
+	graphs, err := f.instantiateG(params)
+	return graphs.toClientG(), err
+}
+
+func (fp GFPoint) instantiate(params expression.Vars) (geoFieldInstance, error) {
 	ans, err := fp.Answer.instantiate(params)
 	if err != nil {
 		return nil, err
 	}
-	return FigurePointFieldInstance{
-		Figure: fig.Figure,
-		Answer: ans,
-		ID:     ID,
-	}, nil
+	return gfPoint(ans), nil
 }
 
-func (fp FigurePointFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	figure, err := fp.Figure.setupValidator(params)
-	if err != nil {
-		return nil, err
-	}
-
+func (fp GFPoint) setupValidator(params expression.RandomParameters) (validator, error) {
 	answer, err := fp.Answer.parse()
 	if err != nil {
 		return nil, err
 	}
 
-	return figurePointValidator{figure: figure, answer: answer}, nil
+	return gfPointValidator(answer), nil
 }
 
-type FigureVectorFieldBlock struct {
-	Answer CoordExpression
-
-	AnswerOrigin CoordExpression // optionnal, used when MustHaveOrigin is true
-
-	Figure FigureBlock
-
-	MustHaveOrigin bool
-}
-
-func (fv FigureVectorFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fv.Figure.instantiateF(params)
-	if err != nil {
-		return nil, err
-	}
+func (fv GFVector) instantiate(params expression.Vars) (geoFieldInstance, error) {
 	ans, err := fv.Answer.instantiate(params)
 	if err != nil {
 		return nil, err
 	}
 
-	out := FigureVectorFieldInstance{
-		ID:             ID,
-		Figure:         fig.Figure,
+	out := gfVector{
 		Answer:         ans,
 		MustHaveOrigin: fv.MustHaveOrigin,
 	}
@@ -354,18 +382,13 @@ func (fv FigureVectorFieldBlock) instantiate(params expression.Vars, ID int) (in
 	return out, nil
 }
 
-func (fp FigureVectorFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	figure, err := fp.Figure.setupValidator(params)
-	if err != nil {
-		return nil, err
-	}
-
+func (fp GFVector) setupValidator(params expression.RandomParameters) (validator, error) {
 	answer, err := fp.Answer.parse()
 	if err != nil {
 		return nil, err
 	}
 
-	out := figureVectorValidator{figure: figure, answer: answer}
+	out := gfVectorValidator{answer: answer}
 
 	if fp.MustHaveOrigin {
 		origin, err := fp.AnswerOrigin.parse()
@@ -376,6 +399,42 @@ func (fp FigureVectorFieldBlock) setupValidator(params expression.RandomParamete
 	}
 
 	return out, nil
+}
+
+func (fv GFVectorPair) instantiate(params expression.Vars) (geoFieldInstance, error) {
+	return gfVectorPair(fv.Criterion), nil
+}
+
+func (fp GFVectorPair) setupValidator(params expression.RandomParameters) (validator, error) {
+	return noOpValidator{}, nil
+}
+
+func (fa GFAffineLine) instantiate(params expression.Vars) (geoFieldInstance, error) {
+	ansA, err := evaluateExpr(fa.A, params)
+	if err != nil {
+		return nil, err
+	}
+	ansB, err := evaluateExpr(fa.B, params)
+	if err != nil {
+		return nil, err
+	}
+	return gfAffineLine{
+		Label:   fa.Label,
+		AnswerA: ansA,
+		AnswerB: int(ansB),
+	}, nil
+}
+
+func (fa GFAffineLine) setupValidator(params expression.RandomParameters) (validator, error) {
+	a, err := expression.Parse(fa.A)
+	if err != nil {
+		return nil, err
+	}
+	b, err := expression.Parse(fa.B)
+	if err != nil {
+		return nil, err
+	}
+	return gfAffineLineValidator{a: a, b: b}, nil
 }
 
 type VariationTableFieldBlock struct {
@@ -478,70 +537,6 @@ func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParame
 	}
 
 	return out, nil
-}
-
-type FigureVectorPairFieldBlock struct {
-	Figure    FigureBlock
-	Criterion VectorPairCriterion
-}
-
-func (fv FigureVectorPairFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fv.Figure.instantiateF(params)
-	return FigureVectorPairFieldInstance{
-		ID:        ID,
-		Figure:    fig.Figure,
-		Criterion: fv.Criterion,
-	}, err
-}
-
-func (fp FigureVectorPairFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	return fp.Figure.setupValidator(params)
-}
-
-type FigureAffineLineFieldBlock struct {
-	Label  string
-	A      string // valid expression.Expression
-	B      string // valid expression.Expression
-	Figure FigureBlock
-}
-
-func (fa FigureAffineLineFieldBlock) instantiate(params expression.Vars, ID int) (instance, error) {
-	fig, err := fa.Figure.instantiateF(params)
-	if err != nil {
-		return nil, err
-	}
-	ansA, err := evaluateExpr(fa.A, params)
-	if err != nil {
-		return nil, err
-	}
-	ansB, err := evaluateExpr(fa.B, params)
-	if err != nil {
-		return nil, err
-	}
-	return FigureAffineLineFieldInstance{
-		ID:      ID,
-		Label:   fa.Label,
-		Figure:  fig.Figure,
-		AnswerA: ansA,
-		AnswerB: int(ansB),
-	}, nil
-}
-
-func (fa FigureAffineLineFieldBlock) setupValidator(params expression.RandomParameters) (validator, error) {
-	figure, err := fa.Figure.setupValidator(params)
-	if err != nil {
-		return nil, err
-	}
-
-	a, err := expression.Parse(fa.A)
-	if err != nil {
-		return nil, err
-	}
-	b, err := expression.Parse(fa.B)
-	if err != nil {
-		return nil, err
-	}
-	return figureAffineLineValidator{figure: figure, a: a, b: b}, nil
 }
 
 type TreeFieldBlock struct {

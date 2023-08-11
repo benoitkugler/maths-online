@@ -33,8 +33,17 @@ final questionComplexe = Question([
   const NumberFieldBlock(0, 10),
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
-  const FigurePointFieldBlock(
-      Figure(Drawings({}, [], [], [], []), bounds, true, true), 3)
+  const GeometricConstructionFieldBlock(
+      3,
+      GFPoint(),
+      FunctionsGraphBlock([], [], [],
+          [FunctionPoint("#FF0000", "A point", Coord(5, 5))], bounds)),
+  const GeometricConstructionFieldBlock(4, GFPoint(),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+  const GeometricConstructionFieldBlock(5, GFVector("test", true),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
+  const GeometricConstructionFieldBlock(6, GFVectorPair(),
+      FigureBlock(Figure(Drawings({}, [], [], [], []), bounds, true, true))),
 ], []);
 
 const questionComplexeAnswers = {

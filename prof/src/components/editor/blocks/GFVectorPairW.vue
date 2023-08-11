@@ -1,5 +1,5 @@
 <template>
-  <v-card class="my-1">
+  <v-card class="my-2">
     <v-card-subtitle class="bg-secondary py-3"
       >Type de vecteurs</v-card-subtitle
     >
@@ -12,7 +12,7 @@
             hint="Caractéristique attendue pour les deux vecteurs à construire"
             variant="outlined"
             density="compact"
-            :items="selectItems.map((e) => e.text)"
+            :items="selectItems.map(e => e.text)"
             :model-value="selectItems.find(e => e.value == props.modelValue.Criterion)!.text"
             @update:model-value="onCriterionUpdate"
           >
@@ -21,43 +21,37 @@
       </v-row>
     </v-card-text>
   </v-card>
-  <figure-block-vue
-    v-model="props.modelValue.Figure"
-    @update:model-value="emit('update:modelValue', props.modelValue)"
-    :available-parameters="props.availableParameters"
-  ></figure-block-vue>
 </template>
 
 <script setup lang="ts">
-import type {
-  FigureVectorPairFieldBlock,
-  Variable,
-} from "@/controller/api_gen";
+import type { GFVectorPair } from "@/controller/api_gen";
 import {
   VectorPairCriterion,
-  VectorPairCriterionLabels,
+  VectorPairCriterionLabels
 } from "@/controller/api_gen";
-import FigureBlockVue from "./FigureBlock.vue";
 
 interface Props {
-  modelValue: FigureVectorPairFieldBlock;
-  availableParameters: Variable[];
+  modelValue: GFVectorPair;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: FigureVectorPairFieldBlock): void;
+  (event: "update:modelValue", value: GFVectorPair): void;
 }>();
 
-const selectItems = Object.entries(VectorPairCriterionLabels).map((e) => ({
+function emitUpdate() {
+  emit("update:modelValue", props.modelValue);
+}
+
+const selectItems = Object.entries(VectorPairCriterionLabels).map(e => ({
   text: e[1],
-  value: Number(e[0]) as VectorPairCriterion,
+  value: Number(e[0]) as VectorPairCriterion
 }));
 
 function onCriterionUpdate(s: string) {
-  props.modelValue.Criterion = selectItems.find((e) => e.text == s)!.value;
-  emit("update:modelValue", props.modelValue);
+  props.modelValue.Criterion = selectItems.find(e => e.text == s)!.value;
+  emitUpdate();
 }
 </script>
 

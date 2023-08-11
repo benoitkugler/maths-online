@@ -25,21 +25,19 @@ func (FunctionsGraphBlock) isBlock() {}
 func (TableBlock) isBlock()          {}
 func (TreeBlock) isBlock()           {}
 
-func (NumberFieldBlock) isBlock()           {}
-func (ExpressionFieldBlock) isBlock()       {}
-func (RadioFieldBlock) isBlock()            {}
-func (DropDownFieldBlock) isBlock()         {}
-func (OrderedListFieldBlock) isBlock()      {}
-func (FigurePointFieldBlock) isBlock()      {}
-func (FigureVectorFieldBlock) isBlock()     {}
-func (FigureVectorPairFieldBlock) isBlock() {}
-func (VariationTableFieldBlock) isBlock()   {}
-func (SignTableFieldBlock) isBlock()        {}
-func (FunctionPointsFieldBlock) isBlock()   {}
-func (TreeFieldBlock) isBlock()             {}
-func (TableFieldBlock) isBlock()            {}
-func (VectorFieldBlock) isBlock()           {}
-func (ProofFieldBlock) isBlock()            {}
+func (NumberFieldBlock) isBlock()                {}
+func (ExpressionFieldBlock) isBlock()            {}
+func (RadioFieldBlock) isBlock()                 {}
+func (DropDownFieldBlock) isBlock()              {}
+func (OrderedListFieldBlock) isBlock()           {}
+func (GeometricConstructionFieldBlock) isBlock() {}
+func (VariationTableFieldBlock) isBlock()        {}
+func (SignTableFieldBlock) isBlock()             {}
+func (FunctionPointsFieldBlock) isBlock()        {}
+func (TreeFieldBlock) isBlock()                  {}
+func (TableFieldBlock) isBlock()                 {}
+func (VectorFieldBlock) isBlock()                {}
+func (ProofFieldBlock) isBlock()                 {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -163,20 +161,39 @@ type OrderedListFieldBlock struct {
 	ID           int
 }
 
-// FigurePointFieldBlock asks for one 2D point
-type FigurePointFieldBlock struct {
-	Figure repere.Figure
-	ID     int
+type GeometricConstructionFieldBlock struct {
+	ID         int
+	Field      GeoField
+	Background FigureOrGraph
 }
+
+type FigureOrGraph interface {
+	isFigureOrGraph()
+	FigBounds() repere.RepereBounds
+}
+
+func (FigureBlock) isFigureOrGraph()         {}
+func (FunctionsGraphBlock) isFigureOrGraph() {}
+
+func (fg FigureBlock) FigBounds() repere.RepereBounds         { return fg.Figure.Bounds }
+func (fg FunctionsGraphBlock) FigBounds() repere.RepereBounds { return fg.Bounds }
+
+type GeoField interface {
+	isGF()
+}
+
+func (GFPoint) isGF()      {}
+func (GFVector) isGF()     {}
+func (GFVectorPair) isGF() {}
+
+// FigurePointFieldBlock asks for one 2D point
+type GFPoint struct{}
 
 // FigureVectorFieldBlock asks for a vector,
 // represented by start and end.
 // It may be used for vectors and affine functions
-
-type FigureVectorFieldBlock struct {
+type GFVector struct {
 	LineLabel string // ignored if AsLine is false
-	Figure    repere.Figure
-	ID        int
 	AsLine    bool
 }
 
@@ -185,11 +202,7 @@ type FigureVectorFieldBlock struct {
 // as vector.
 // The trivial case where the two pair of points are equals
 // is not allowed
-
-type FigureVectorPairFieldBlock struct {
-	Figure repere.Figure
-	ID     int
-}
+type GFVectorPair struct{}
 
 // VariationTableFieldBlock asks to complete a
 // variation table (with fixed length)

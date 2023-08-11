@@ -5,10 +5,10 @@ import 'package:eleve/questions/table.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 
-class VariationTable extends StatelessWidget {
+class VariationTableW extends StatelessWidget {
   final VariationTableBlock data;
 
-  const VariationTable(this.data, {Key? key}) : super(key: key);
+  const VariationTableW(this.data, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

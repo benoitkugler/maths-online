@@ -415,37 +415,60 @@ func (v radioValidator) validate(vars expression.Vars) error {
 	return v.expr.IsValidIndex(vars, v.proposalsLength)
 }
 
-type figurePointValidator struct {
-	figure validator
-	answer parsedCoord
+type geometricConstructionValidator struct {
+	field      validator
+	background validator
 }
 
-func (v figurePointValidator) validate(vars expression.Vars) error {
-	if err := v.figure.validate(vars); err != nil {
+func (v geometricConstructionValidator) validate(vars expression.Vars) error {
+	if err := v.field.validate(vars); err != nil {
 		return err
 	}
-	if err := v.answer.validate(vars, false); err != nil {
-		return err
-	}
-	return nil
+	return v.background.validate(vars)
 }
 
-type figureVectorValidator struct {
-	figure       validator
+type gfPointValidator parsedCoord
+
+func (v gfPointValidator) validate(vars expression.Vars) error {
+	return parsedCoord(v).validate(vars, false)
+}
+
+type gfVectorValidator struct {
 	answer       parsedCoord
 	answerOrigin *parsedCoord // optional
 }
 
-func (v figureVectorValidator) validate(vars expression.Vars) error {
-	if err := v.figure.validate(vars); err != nil {
-		return err
-	}
+func (v gfVectorValidator) validate(vars expression.Vars) error {
 	if err := v.answer.validate(vars, false); err != nil {
 		return err
 	}
 	if v.answerOrigin != nil {
 		return v.answerOrigin.validate(vars, false)
 	}
+	return nil
+}
+
+type gfAffineLineValidator struct {
+	a, b *expression.Expr
+}
+
+func (v gfAffineLineValidator) validate(vars expression.Vars) error {
+	if err := v.a.IsValidNumber(vars, false, false); err != nil {
+		return err
+	}
+	if err := v.b.IsValidNumber(vars, false, true); err != nil {
+		return err
+	}
+
+	b, err := v.b.Evaluate(vars)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := expression.IsInt(b); !ok {
+		return fmt.Errorf("L'expression %s de B n'est pas un nombre entier (%f).", v.b, b)
+	}
+
 	return nil
 }
 
@@ -487,35 +510,6 @@ func (v functionPointsValidator) validate(vars expression.Vars) error {
 		if _, ok = expression.IsInt(y); !ok {
 			return fmt.Errorf("L'expression %s ne définit pas des images <b>entières</b> (%g)", fnExpr.Function, expression.RoundFloat(y))
 		}
-	}
-
-	return nil
-}
-
-type figureAffineLineValidator struct {
-	figure validator
-	a, b   *expression.Expr
-}
-
-func (v figureAffineLineValidator) validate(vars expression.Vars) error {
-	if err := v.figure.validate(vars); err != nil {
-		return err
-	}
-
-	if err := v.a.IsValidNumber(vars, false, false); err != nil {
-		return err
-	}
-	if err := v.b.IsValidNumber(vars, false, true); err != nil {
-		return err
-	}
-
-	b, err := v.b.Evaluate(vars)
-	if err != nil {
-		return err
-	}
-
-	if _, ok := expression.IsInt(b); !ok {
-		return fmt.Errorf("L'expression %s de B n'est pas un nombre entier (%f).", v.b, b)
 	}
 
 	return nil

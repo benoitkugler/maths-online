@@ -58,7 +58,7 @@ import type {
   Block,
   ExpressionFieldBlock,
   Question,
-  Variable,
+  Variable
 } from "@/controller/api_gen";
 import { BlockKind } from "@/controller/api_gen";
 import { newBlock } from "@/controller/editor";
@@ -70,12 +70,10 @@ import BlockContainer from "./blocks/BlockContainer.vue";
 import ExpressionFieldVue from "./blocks/ExpressionField.vue";
 import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
 import FigureBlockVue from "./blocks/FigureBlock.vue";
-import FigurePointFieldVue from "./blocks/FigurePointField.vue";
-import FigureVectorFieldVue from "./blocks/FigureVectorField.vue";
-import FigureVectorPairFieldVue from "./blocks/FigureVectorPairField.vue";
 import FormulaBVue from "./blocks/FormulaB.vue";
 import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
 import FunctionsGraphVue from "./blocks/FunctionsGraph.vue";
+import GeometricConstructionFieldVue from "./blocks/GeometricConstructionField.vue";
 import NumberFieldVue from "./blocks/NumberField.vue";
 import OrderedListFieldVue from "./blocks/OrderedListField.vue";
 import ProofFieldVue from "./blocks/ProofField.vue";
@@ -136,20 +134,14 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(RadioFieldVue) };
     case BlockKind.OrderedListFieldBlock:
       return { Props: data, Component: markRaw(OrderedListFieldVue) };
-    case BlockKind.FigurePointFieldBlock:
-      return { Props: data, Component: markRaw(FigurePointFieldVue) };
-    case BlockKind.FigureVectorFieldBlock:
-      return { Props: data, Component: markRaw(FigureVectorFieldVue) };
+    case BlockKind.GeometricConstructionFieldBlock:
+      return { Props: data, Component: markRaw(GeometricConstructionFieldVue) };
     case BlockKind.VariationTableFieldBlock:
       return { Props: data, Component: markRaw(VariationTableFieldVue) };
     case BlockKind.SignTableFieldBlock:
       return { Props: data, Component: markRaw(SignTableFieldVue) };
     case BlockKind.FunctionPointsFieldBlock:
       return { Props: data, Component: markRaw(FunctionPointsFieldVue) };
-    case BlockKind.FigureVectorPairFieldBlock:
-      return { Props: data, Component: markRaw(FigureVectorPairFieldVue) };
-    case BlockKind.FigureAffineLineFieldBlock:
-      return { Props: data, Component: markRaw(FigureAffineLineFieldVue) };
     case BlockKind.TreeBlock:
       return { Props: data, Component: markRaw(TreeB) };
     case BlockKind.TreeFieldBlock:

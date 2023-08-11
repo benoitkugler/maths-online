@@ -124,18 +124,18 @@ class VariationTableController extends FieldController {
   }
 }
 
-class VariationTableField extends StatefulWidget {
+class VariationTableFieldW extends StatefulWidget {
   final Color color;
   final VariationTableController controller;
 
-  const VariationTableField(this.color, this.controller, {Key? key})
+  const VariationTableFieldW(this.color, this.controller, {Key? key})
       : super(key: key);
 
   @override
-  _VariationTableFieldState createState() => _VariationTableFieldState();
+  _VariationTableFieldWState createState() => _VariationTableFieldWState();
 }
 
-class _VariationTableFieldState extends State<VariationTableField> {
+class _VariationTableFieldWState extends State<VariationTableFieldW> {
   void _resetArrowLength() {
     setState(() {
       widget.controller.ct = null;

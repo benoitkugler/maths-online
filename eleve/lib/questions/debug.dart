@@ -21,8 +21,10 @@ final questionList = [
   InstantiatedQuestion(
       0,
       Question([
-        const FigureVectorFieldBlock("test", emptyFigure, 0, true),
-        const FigureVectorFieldBlock("test", emptyFigure, 0, true),
+        const GeometricConstructionFieldBlock(
+            0, GFVector("test", true), FigureBlock(emptyFigure)),
+        const GeometricConstructionFieldBlock(
+            0, GFVector("test", false), FigureBlock(emptyFigure)),
         TableFieldBlock([
           T("sdsd"),
           T("sdsd"),

@@ -876,6 +876,10 @@ func selectByDomain(candidates []domainCurves, left, right float64) (domainCurve
 }
 
 func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, error) {
+	return fg.instantiateG(params)
+}
+
+func (fg FunctionsGraphBlock) instantiateG(params ex.Vars) (FunctionsGraphInstance, error) {
 	out := FunctionsGraphInstance{}
 
 	byNames := make(map[string][]domainCurves)
@@ -884,7 +888,7 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 	for _, f := range fg.FunctionExprs {
 		fd, err := f.instantiate(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		fg := functiongrapher.FunctionGraph{
 			Segments:   functiongrapher.NewFunctionGraph(fd),
@@ -899,7 +903,7 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 	for _, f := range fg.SequenceExprs {
 		fd, err := f.instantiate(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		fg := functiongrapher.SequenceGraph{
 			Points:     functiongrapher.NewSequenceGraph(fd),
@@ -912,7 +916,7 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 	for _, f := range fg.FunctionVariations {
 		vt, err := f.instantiateVT(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		xs, fxs := extractValues(vt)
 		fg := functiongrapher.FunctionGraph{
@@ -930,20 +934,20 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 	for _, area := range fg.Areas {
 		topLabel, err := area.Top.instantiateAndMerge(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		bottomLabel, err := area.Bottom.instantiateAndMerge(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 
 		left, err := evaluateExpr(area.Left, params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		right, err := evaluateExpr(area.Right, params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 
 		// select the curve containing [left, right] (guarded by the validation)
@@ -953,7 +957,7 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 		}
 		top, err := selectByDomain(topCandidates, left, right)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		bottomCandidates := byNames[bottomLabel]
 		if bottomLabel == "" { // use the abscisse axis
@@ -961,7 +965,7 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 		}
 		bottom, err := selectByDomain(bottomCandidates, left, right)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 
 		path := functiongrapher.NewAreaBetween(top.curves, bottom.curves, left, right)
@@ -975,17 +979,17 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 	for _, point := range fg.Points {
 		legend, err := point.Legend.instantiateAndMerge(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 
 		x, err := evaluateExpr(point.X, params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		// select the curve containing x (guarded by the validation)
 		fnLabel, err := point.Function.instantiateAndMerge(params)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		candidates := byNames[fnLabel]
 		if fnLabel == "" { // use the abscisse axis
@@ -994,11 +998,11 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 
 		domain, err := selectByDomain(candidates, x, x)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		y, err := functiongrapher.OrdinateAt(domain.curves, x)
 		if err != nil {
-			return nil, err
+			return out, err
 		}
 		out.Points = append(out.Points, client.FunctionPoint{
 			Color:  point.Color,
