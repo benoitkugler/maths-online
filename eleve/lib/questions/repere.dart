@@ -216,9 +216,14 @@ class _PositionnedTextW extends StatelessWidget {
       child: CustomSingleChildLayout(
         delegate: _PosSingleChildLayoutDelegate(metrics, text.pos.pos),
         child: Container(
-          color: Colors.white.withOpacity(0.85),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+            border: Border.all(width: 1.0, color: Colors.white),
+            color: Colors.white.withOpacity(0.8),
+          ),
           padding: const EdgeInsets.all(1),
-          child: textMath(text.text, TextStyle(color: text.color)),
+          child:
+              textMath(text.text, TextStyle(color: text.color, fontSize: 16)),
         ),
       ),
     );
@@ -319,7 +324,7 @@ class _AxisPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black
+      ..color = Colors.black87
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

@@ -178,6 +178,19 @@ func TestBoundsFromExpression(t *testing.T) {
 	}
 }
 
+func TestBezierPoint_bbox(t *testing.T) {
+	be := BezierCurve{
+		P0: repere.Coord{X: 1, Y: 1},
+		P1: repere.Coord{X: 1, Y: 1},
+		P2: repere.Coord{X: 1, Y: 1},
+	}
+	minx, maxx, miny, maxy := be.boundingBox()
+	assertApprox(t, minx, 1)
+	assertApprox(t, maxx, 1)
+	assertApprox(t, miny, 1)
+	assertApprox(t, maxy, 1)
+}
+
 func TestBezierCurve_toPolynomial(t *testing.T) {
 	tests := []struct {
 		P0 repere.Coord

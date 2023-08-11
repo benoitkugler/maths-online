@@ -345,22 +345,26 @@ func TestIsDecimal(t *testing.T) {
 
 func TestExpression_Extrema(t *testing.T) {
 	tests := []struct {
-		expr string
-		from float64
-		to   float64
-		want float64
+		expr       string
+		from       float64
+		to         float64
+		want       float64
+		isDiscrete bool
 	}{
 		{
-			"x", -2, 2, 2,
+			"x", -2, 2, 2, false,
 		},
 		{
-			"cos(x)", -2, 2, 1,
+			"cos(x)", -2, 2, 1, false,
 		},
 		{
-			"exp(x)", -2, 10, math.Exp(10),
+			"exp(x)", -2, 10, math.Exp(10), false,
 		},
 		{
-			"sqrt(x)", -2, 2, -1,
+			"sqrt(x)", -2, 2, -1, false,
+		},
+		{
+			"(-1)^x + (x/2)^2", -2, 2, 2, true,
 		},
 	}
 	for _, tt := range tests {
@@ -369,7 +373,7 @@ func TestExpression_Extrema(t *testing.T) {
 			FunctionExpr: FunctionExpr{Function: expr, Variable: NewVar('x')},
 			From:         tt.from, To: tt.to,
 		}
-		if got := fn.extrema(); got != tt.want {
+		if got := fn.extrema(tt.isDiscrete); got != tt.want {
 			t.Errorf("Expression.Extrema() = %v, want %v", got, tt.want)
 		}
 	}

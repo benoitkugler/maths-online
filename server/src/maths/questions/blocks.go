@@ -774,6 +774,7 @@ type FunctionPoint struct {
 type FunctionsGraphBlock struct {
 	FunctionExprs      []FunctionDefinition
 	FunctionVariations []VariationTableBlock
+	SequenceExprs      []FunctionDefinition // displayed as discrete sequences
 	Areas              []FunctionArea
 	Points             []FunctionPoint
 }
@@ -782,6 +783,7 @@ func (fg FunctionsGraphBlock) setupValidator(params ex.RandomParameters) (valida
 	out := functionsGraphValidator{
 		functions:          make([]function, len(fg.FunctionExprs)),
 		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
+		sequences:          make([]function, len(fg.SequenceExprs)),
 		areas:              make([]areaVData, len(fg.Areas)),
 		points:             make([]functionPointVData, len(fg.Points)),
 	}
@@ -795,6 +797,13 @@ func (fg FunctionsGraphBlock) setupValidator(params ex.RandomParameters) (valida
 	for i, vt := range fg.FunctionVariations {
 		var err error
 		out.variationValidator[i], err = vt.setupValidatorVT()
+		if err != nil {
+			return nil, err
+		}
+	}
+	for i, f := range fg.SequenceExprs {
+		var err error
+		out.sequences[i], err = newFunction(f, params)
 		if err != nil {
 			return nil, err
 		}
@@ -886,6 +895,17 @@ func (fg FunctionsGraphBlock) instantiate(params ex.Vars, _ int) (instance, erro
 			curves: fg.Segments,
 			domain: [2]float64{fd.From, fd.To},
 		})
+	}
+	for _, f := range fg.SequenceExprs {
+		fd, err := f.instantiate(params)
+		if err != nil {
+			return nil, err
+		}
+		fg := functiongrapher.SequenceGraph{
+			Points:     functiongrapher.NewSequenceGraph(fd),
+			Decoration: f.Decoration,
+		}
+		out.Sequences = append(out.Sequences, fg)
 	}
 
 	// instantiate variations

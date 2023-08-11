@@ -73,18 +73,17 @@ class _FunctionPointsState extends State<FunctionPoints> {
     return Coord(xIntersec, yIntersec);
   }
 
-  Coord? get labelPosition {
+  List<Coord> points() {
     final ct = widget.controller;
-    for (var index = 0; index < ct.fxs.length - 1; index++) {
-      final from = ct.fxs[index];
-      final to = ct.fxs[index + 1];
-      if (from == null || to == null) {
+    final out = <Coord>[];
+    for (var index = 0; index < ct.fxs.length; index++) {
+      final y = ct.fxs[index];
+      if (y == null) {
         continue;
       }
-      final start = Coord(ct.data.xs[index].toDouble(), from.toDouble());
-      final end = Coord(ct.data.xs[index + 1].toDouble(), to.toDouble());
-      return Coord((start.x + end.x) / 2, (start.y + end.y) / 2);
+      out.add(Coord(ct.data.xs[index].toDouble(), y.toDouble()));
     }
+    return out;
   }
 
   List<BezierCurve> segments() {
@@ -110,20 +109,15 @@ class _FunctionPointsState extends State<FunctionPoints> {
   Widget build(BuildContext context) {
     final ct = widget.controller;
     final metrics = RepereMetrics(ct.data.bounds, context);
+    final decoration = FunctionDecoration(ct.data.label, "");
     final painter = BezierCurvesPainter(
-        metrics,
-        ct.data.isDiscrete
-            ? []
-            : [
-                FunctionGraph(FunctionDecoration(ct.data.label, ""), segments())
-              ]);
+      metrics,
+      functions:
+          ct.data.isDiscrete ? [] : [FunctionGraph(decoration, segments())],
+      sequences:
+          ct.data.isDiscrete ? [SequenceGraph(decoration, points())] : [],
+    );
     final texts = painter.extractTexts();
-    if (ct.data.isDiscrete && labelPosition != null) {
-      // draw the label, since it is not included in the function
-      texts.add(PositionnedText(
-          ct.data.label, PosPoint(labelPosition!, LabelPos.right),
-          color: Colors.purple));
-    }
     final color = widget.controller.hasError ? Colors.red : Colors.purple;
     return NotificationListener<PointMovedNotification<_PointID>>(
       onNotification: (notification) {

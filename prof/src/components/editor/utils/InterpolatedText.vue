@@ -3,11 +3,11 @@
     <small v-if="props.label" class="ml-2 text-grey">{{ props.label }} </small>
     <HiglightedText
       :model-value="props.modelValue"
-      @update:model-value="(s) => emit('update:modelValue', s)"
+      @update:model-value="s => emit('update:modelValue', s)"
       :tokenizer="props.customTokenize ? props.customTokenize : defautTokenize"
       :focus-color="activeColor"
       :center="!!props.center"
-      class="mb-2"
+      class="mb-3"
     ></HiglightedText>
     <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
   </div>

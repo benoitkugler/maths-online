@@ -54,11 +54,14 @@ export const colorByKind: { [key in TextKind]: string } = {
 export const sortedBlockKindLabels = [
   [BlockKind.TextBlock, { label: "Texte", isAnswerField: false }],
   [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
-  [BlockKind.FigureBlock, { label: "Figure", isAnswerField: false }],
+  [
+    BlockKind.FigureBlock,
+    { label: "Figure (droites, cercles)", isAnswerField: false }
+  ],
   [
     BlockKind.FunctionsGraphBlock,
     {
-      label: "Graphes de fonctions",
+      label: "Graphes (fonctions, suites)",
       isAnswerField: false
     }
   ],
@@ -199,6 +202,7 @@ export interface TypedBlock<K extends BlockKind> {
 
 export const xRune = "x".codePointAt(0)!;
 export const yRune = "y".codePointAt(0)!;
+export const nRune = "n".codePointAt(0)!;
 
 /** extractPoints returns the names of indices A for which 'x_A' and 'y_A' are defined */
 export function extractPoints(vars: Variable[]) {
@@ -349,6 +353,18 @@ export function newBlock(kind: BlockKind): Block {
               Variable: { Name: xRune, Indice: "" },
               From: "-5",
               To: "5"
+            }
+          ],
+          SequenceExprs: [
+            {
+              Function: "(-1)^n * (n/2)^2",
+              Decoration: {
+                Label: "u_n",
+                Color: "#00FF00"
+              },
+              Variable: { Name: nRune, Indice: "" },
+              From: "-6",
+              To: "6"
             }
           ],
           FunctionVariations: [],

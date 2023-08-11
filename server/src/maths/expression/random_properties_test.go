@@ -241,7 +241,7 @@ func TestFunctionDefinition_IsValid(t *testing.T) {
 			Function: expr,
 			Variable: NewVar(tt.variable),
 		}
-		err := fn.IsValid(Domain{mustParse(t, tt.from), mustParse(t, tt.to)}, tt.vars, tt.bound)
+		err := fn.IsValidAsFunction(Domain{mustParse(t, tt.from), mustParse(t, tt.to)}, tt.vars, tt.bound)
 		if (err == nil) != tt.want {
 			t.Errorf("Expression.AreFxsIntegers() got = %v, want %v", err, tt.want)
 		}

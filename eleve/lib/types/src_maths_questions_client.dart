@@ -760,16 +760,17 @@ Map<String, dynamic> functionSignToJson(FunctionSign item) {
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionsGraphBlock
 class FunctionsGraphBlock implements Block {
   final List<FunctionGraph> functions;
+  final List<SequenceGraph> sequences;
   final List<FunctionArea> areas;
   final List<FunctionPoint> points;
   final RepereBounds bounds;
 
   const FunctionsGraphBlock(
-      this.functions, this.areas, this.points, this.bounds);
+      this.functions, this.sequences, this.areas, this.points, this.bounds);
 
   @override
   String toString() {
-    return "FunctionsGraphBlock($functions, $areas, $points, $bounds)";
+    return "FunctionsGraphBlock($functions, $sequences, $areas, $points, $bounds)";
   }
 }
 
@@ -777,6 +778,7 @@ FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return FunctionsGraphBlock(
       listFunctionGraphFromJson(json['Functions']),
+      listSequenceGraphFromJson(json['Sequences']),
       listFunctionAreaFromJson(json['Areas']),
       listFunctionPointFromJson(json['Points']),
       repereBoundsFromJson(json['Bounds']));
@@ -785,6 +787,7 @@ FunctionsGraphBlock functionsGraphBlockFromJson(dynamic json_) {
 Map<String, dynamic> functionsGraphBlockToJson(FunctionsGraphBlock item) {
   return {
     "Functions": listFunctionGraphToJson(item.functions),
+    "Sequences": listSequenceGraphToJson(item.sequences),
     "Areas": listFunctionAreaToJson(item.areas),
     "Points": listFunctionPointToJson(item.points),
     "Bounds": repereBoundsToJson(item.bounds)
@@ -1902,6 +1905,17 @@ List<List<TextOrMath>> listListTextOrMathFromJson(dynamic json) {
 
 List<dynamic> listListTextOrMathToJson(List<List<TextOrMath>> item) {
   return item.map(listTextOrMathToJson).toList();
+}
+
+List<SequenceGraph> listSequenceGraphFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(sequenceGraphFromJson).toList();
+}
+
+List<dynamic> listSequenceGraphToJson(List<SequenceGraph> item) {
+  return item.map(sequenceGraphToJson).toList();
 }
 
 List<SignSymbol> listSignSymbolFromJson(dynamic json) {

@@ -208,6 +208,7 @@ export interface FunctionPointsFieldBlock {
 export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
   FunctionVariations: VariationTableBlock[] | null;
+  SequenceExprs: FunctionDefinition[] | null;
   Areas: FunctionArea[] | null;
   Points: FunctionPoint[] | null;
 }

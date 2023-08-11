@@ -183,9 +183,9 @@ func (expr *Expr) IsValidIndex(vars Vars, length int) error {
 	return fmt.Errorf("L'expression %s ne définit pas un index valide dans une liste de longueur %d.", expr, length)
 }
 
-// IsValid evaluates the function expression using `vars`, and checks
+// IsValidAsFunction evaluates the function expression using `vars`, and checks
 // if the (estimated) extrema of |f| is less than `bound`, returning an error if not.
-func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
+func (fn FunctionExpr) IsValidAsFunction(domain Domain, vars Vars, bound float64) error {
 	fnExpr := fn.Function.Copy()
 	fnExpr.Substitute(vars)
 
@@ -203,9 +203,39 @@ func (fn FunctionExpr) IsValid(domain Domain, vars Vars, bound float64) error {
 		From:         fromV,
 		To:           toV,
 	}
-	ext := def.extrema()
+	ext := def.extrema(false)
 	if ext == -1 {
 		return fmt.Errorf("L'expression %s ne définit pas une fonction valide.", fnExpr)
+	} else if ext > bound {
+		return fmt.Errorf("L'expression %s prend des valeurs trop importantes (%f)", fnExpr, ext)
+	}
+
+	return nil
+}
+
+// IsValidAsSequence evaluates the sequence expression using `vars`, and checks
+// if the (estimated) extrema of |f| is less than `bound`, returning an error if not.
+func (fn FunctionExpr) IsValidAsSequence(domain Domain, vars Vars, bound float64) error {
+	fnExpr := fn.Function.Copy()
+	fnExpr.Substitute(vars)
+
+	fromV, toV, err := domain.eval(vars)
+	if err != nil {
+		return err
+	}
+
+	if fromV >= toV {
+		return fmt.Errorf("Les expressions %s ne définissent pas un intervalle valide (%f, %f).", domain, fromV, toV)
+	}
+
+	def := FunctionDefinition{
+		FunctionExpr: FunctionExpr{Function: fnExpr, Variable: fn.Variable},
+		From:         fromV,
+		To:           toV,
+	}
+	ext := def.extrema(true)
+	if ext == -1 {
+		return fmt.Errorf("L'expression %s ne définit pas une suite valide.", fnExpr)
 	} else if ext > bound {
 		return fmt.Errorf("L'expression %s prend des valeurs trop importantes (%f)", fnExpr, ext)
 	}
@@ -296,7 +326,7 @@ func (d Domain) IsIncludedIntoOne(domains []Domain, vars Vars) error {
 }
 
 // AreDisjointsDomains returns an error if the given intervals [from, to] are not disjoints.
-// Domains must be valid, as defined by `FunctionExpr.IsValid`.
+// Domains must be valid, as defined by `FunctionExpr.IsValidAsFunction`.
 func AreDisjointsDomains(domains []Domain, vars Vars) error {
 	intervals := make([][2]float64, len(domains))
 	for i, ds := range domains {

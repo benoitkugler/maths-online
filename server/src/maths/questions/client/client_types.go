@@ -102,6 +102,7 @@ type FunctionPoint struct {
 }
 type FunctionsGraphBlock struct {
 	Functions []functiongrapher.FunctionGraph
+	Sequences []functiongrapher.SequenceGraph
 	Areas     []FunctionArea
 	Points    []FunctionPoint
 	Bounds    repere.RepereBounds

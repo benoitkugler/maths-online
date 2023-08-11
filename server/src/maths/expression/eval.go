@@ -151,19 +151,33 @@ func (f FunctionExpr) Closure() func(float64) float64 {
 // The approximation is exact for monotonous functions.
 // `extrema` returns -1 if one of the values is not a finite number, or
 // if the expression is invalid
-func (f FunctionDefinition) extrema() float64 {
+func (f FunctionDefinition) extrema(isDiscrete bool) float64 {
 	const nbSteps = 100
 	fn := f.Closure()
-	step := (f.To - f.From) / nbSteps
 	var max float64
-	for i := 0; i <= nbSteps; i++ {
-		fx := math.Abs(fn(f.From + float64(i)*step))
-		if math.IsInf(fx, 0) || math.IsNaN(fx) {
-			return -1
-		}
+	if isDiscrete {
+		for x := math.Ceil(f.From); x <= math.Floor(f.To); x++ {
+			fx := math.Abs(fn(x))
+			if math.IsInf(fx, 0) || math.IsNaN(fx) {
+				return -1
+			}
 
-		if fx > max {
-			max = fx
+			if fx > max {
+				max = fx
+			}
+		}
+	} else {
+		step := (f.To - f.From) / nbSteps
+		for i := 0; i <= nbSteps; i++ {
+			x := f.From + float64(i)*step
+			fx := math.Abs(fn(x))
+			if math.IsInf(fx, 0) || math.IsNaN(fx) {
+				return -1
+			}
+
+			if fx > max {
+				max = fx
+			}
 		}
 	}
 	return max

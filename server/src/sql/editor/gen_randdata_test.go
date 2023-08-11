@@ -523,6 +523,7 @@ func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 	var s questions.FunctionsGraphBlock
 	s.FunctionExprs = randSliceque_FunctionDefinition()
 	s.FunctionVariations = randSliceque_VariationTableBlock()
+	s.SequenceExprs = randSliceque_FunctionDefinition()
 	s.Areas = randSliceque_FunctionArea()
 	s.Points = randSliceque_FunctionPoint()
 

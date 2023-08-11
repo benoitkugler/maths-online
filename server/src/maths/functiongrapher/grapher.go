@@ -75,6 +75,22 @@ func newSegment(fn expression.FunctionExpr, from, to float64) segment {
 	}
 }
 
+// SequenceGraph is a discrete version of [FunctionGraph]
+type SequenceGraph struct {
+	Decoration FunctionDecoration
+	Points     []repere.Coord
+}
+
+func NewSequenceGraph(fn expression.FunctionDefinition) []repere.Coord {
+	f := fn.Closure()
+	var out []repere.Coord
+	for x := math.Ceil(fn.From); x <= math.Floor(fn.To); x++ {
+		y := f(x)
+		out = append(out, repere.Coord{X: x, Y: y})
+	}
+	return out
+}
+
 type FunctionGraph struct {
 	Decoration FunctionDecoration
 	Segments   []BezierCurve

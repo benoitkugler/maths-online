@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	ex "github.com/benoitkugler/maths-online/server/src/maths/expression"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func mustParseMany(exprs []string) []*ex.Expr {
@@ -113,4 +114,16 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 		}
 		testAllValid(t, tt.parameters, v, tt.want)
 	}
+}
+
+func TestSequences(t *testing.T) {
+	bl := FunctionsGraphBlock{
+		SequenceExprs: []FunctionDefinition{
+			{Function: "(-1)^n + (n/2)^2", Variable: ex.NewVar('n'), From: "-4", To: "4"},
+		},
+	}
+	v, err := bl.setupValidator(ex.RandomParameters{})
+	tu.AssertNoErr(t, err)
+	err = v.validate(nil)
+	tu.AssertNoErr(t, err)
 }

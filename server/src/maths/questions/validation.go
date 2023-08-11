@@ -293,18 +293,24 @@ type functionPointVData struct {
 type functionsGraphValidator struct {
 	functions          []function
 	variationValidator []variationTableValidator
+	sequences          []function
 	areas              []areaVData
 	points             []functionPointVData
 }
 
 func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	for _, f := range v.functions {
-		if err := f.FunctionExpr.IsValid(f.domain, vars, maxFunctionBound); err != nil {
+		if err := f.FunctionExpr.IsValidAsFunction(f.domain, vars, maxFunctionBound); err != nil {
 			return err
 		}
 	}
 	for _, varTable := range v.variationValidator {
 		if err := varTable.validate(vars); err != nil {
+			return err
+		}
+	}
+	for _, f := range v.sequences {
+		if err := f.FunctionExpr.IsValidAsSequence(f.domain, vars, maxFunctionBound); err != nil {
 			return err
 		}
 	}
