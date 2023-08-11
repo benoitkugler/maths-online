@@ -3,6 +3,7 @@ package questions
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
@@ -119,7 +120,9 @@ type ExpressionFieldInstance struct {
 
 func (f ExpressionFieldInstance) fieldID() int { return f.ID }
 
-func (f ExpressionFieldInstance) sizeHint() int { return len([]rune(f.Answer.String())) }
+// add some random padding to avoid leaking to much info about
+// the correct answer
+func (f ExpressionFieldInstance) sizeHint() int { return len([]rune(f.Answer.String())) + rand.Intn(3) }
 
 func (f ExpressionFieldInstance) toClient() client.Block {
 	out := client.ExpressionFieldBlock{
