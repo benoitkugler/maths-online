@@ -68,7 +68,6 @@ import { computed, nextTick, watch, type Component } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import BlockContainer from "./blocks/BlockContainer.vue";
 import ExpressionFieldVue from "./blocks/ExpressionField.vue";
-import FigureAffineLineFieldVue from "./blocks/FigureAffineLineField.vue";
 import FigureBlockVue from "./blocks/FigureBlock.vue";
 import FormulaBVue from "./blocks/FormulaB.vue";
 import FunctionPointsFieldVue from "./blocks/FunctionPointsField.vue";
