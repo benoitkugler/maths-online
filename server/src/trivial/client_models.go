@@ -135,7 +135,7 @@ type DiceThrow struct {
 }
 
 func newDiceThrow() DiceThrow {
-	const maxFaceNumber = 3
+	const maxFaceNumber = 6
 	return DiceThrow{uint8(rand.Int31n(maxFaceNumber) + 1)}
 }
 

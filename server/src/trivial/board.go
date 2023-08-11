@@ -97,7 +97,7 @@ func (tp tilePath) origin() int {
 
 // choices returns the square indices where the player located at `currentPos`
 // may advances with `nbMoves`.
-// In this game, you can go back when you have made one step.
+// In this game, you can't go back when you have made one step.
 func (b board) choices(currentPos, nbMoves int) tileSet {
 	// start with the current pos, with no constraint
 	var (
