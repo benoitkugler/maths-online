@@ -64,7 +64,7 @@ class TrivialSettings {
       settings: const RouteSettings(name: "/board"),
       builder: (_) => Scaffold(
           appBar: AppBar(
-              automaticallyImplyLeading: true, title: const Text("Triv'Maths")),
+              automaticallyImplyLeading: true, title: const Text("Isy'Triv")),
           body: NotificationListener<GameTerminatedNotification>(
               onNotification: (n) {
                 settings.trivialGameMetas.remove(data.code);
@@ -90,7 +90,7 @@ class TrivialGameSelect extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Jouer à TrivMaths"),
+        title: const Text("Jouer à Isy'Triv"),
       ),
       body: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
         LaunchCard(

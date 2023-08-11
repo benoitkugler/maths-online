@@ -762,7 +762,7 @@ class TrivialActivityIcon extends StatelessWidget {
         Pie.asButton(onTap, 5, Categorie.values.map((e) => true).toList()),
         const Padding(
           padding: EdgeInsets.only(top: 6, bottom: 6),
-          child: Text("Triv'Maths"),
+          child: Text("Isy'Triv"),
         ),
       ],
     );

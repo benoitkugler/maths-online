@@ -26,7 +26,7 @@ void main() {
   runApp(MonitorApp(bm));
 }
 
-/// [MonitorApp] show the content of a question (used in a TrivMath game).
+/// [MonitorApp] show the content of a question (used in a IsyTriv game).
 /// It is meant to be embedded in a Web page, not used as a mobile app.
 class MonitorApp extends StatelessWidget {
   final BuildMode buildMode;
