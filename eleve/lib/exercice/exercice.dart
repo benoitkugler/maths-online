@@ -246,14 +246,16 @@ class ExerciceW extends StatefulWidget {
   /// Only used in loopback
   final bool instantShowCorrection;
 
-  const ExerciceW(
-    this.api,
-    this.controller, {
-    Key? key,
-    this.onShowCorrectAnswer,
-    this.showCorrectionButtonOnFail = true,
-    this.instantShowCorrection = false,
-  }) : super(key: key);
+  /// if true, show an alter about progression not being updated
+  final bool noticeSandbox;
+
+  const ExerciceW(this.api, this.controller,
+      {Key? key,
+      this.onShowCorrectAnswer,
+      this.showCorrectionButtonOnFail = true,
+      this.instantShowCorrection = false,
+      this.noticeSandbox = false})
+      : super(key: key);
 
   @override
   State<ExerciceW> createState() => _ExerciceWState();
@@ -314,7 +316,8 @@ class _ExerciceWState extends State<ExerciceW> {
                 ct.questionStates,
                 (index) => setState(() {
                       ct.questionIndex = index;
-                    }))
+                    }),
+                widget.noticeSandbox)
             : QuestionW(
                 widget.controller._questions[widget.controller.questionIndex!],
                 Colors.purpleAccent,
@@ -342,6 +345,7 @@ class _ExerciceWState extends State<ExerciceW> {
     await showDialog<void>(
         context: context,
         builder: (context) => const Dialog(child: Congrats()));
+    if (!mounted) return;
     NotificationExerciceDone().dispatch(context);
   }
 
@@ -367,7 +371,7 @@ class _ExerciceWState extends State<ExerciceW> {
               ct._questions[index].answers())
         },
         ct.exeAndProg.progression));
-    if (resp == null) {
+    if (resp == null || !mounted) {
       return;
     }
 

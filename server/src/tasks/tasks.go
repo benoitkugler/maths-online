@@ -25,6 +25,8 @@ func NewProgressionExt(progressions ta.Progressions, nbQuestions int) (out Progr
 	return out
 }
 
+func (qh ProgressionExt) IsComplete() bool { return qh.NextQuestion == -1 }
+
 // inferNextQuestion stores into `NextQuestion` the first question not passed by the student,
 // according to `QuestionHistory.Success`.
 // If all the questions are successul, it sets it to -1
@@ -259,10 +261,20 @@ type TaskProgressionHeader struct {
 	// maybe empty
 	Chapter string
 
+	// HasProgression is false if [Progression] is invalid
 	HasProgression bool
 	// empty if HasProgression is false
 	Progression  ProgressionExt
 	Mark, Bareme int // student mark / exercice total
+}
+
+// LoadTaskProgression is a convenience wrapper around [LoadTasksProgression]
+func LoadTaskProgression(db ta.DB, idStudent teacher.IdStudent, idTask ta.IdTask) (TaskProgressionHeader, error) {
+	pr, err := LoadTasksProgression(db, idStudent, []ta.IdTask{idTask})
+	if err != nil {
+		return TaskProgressionHeader{}, err
+	}
+	return pr[idTask], nil
 }
 
 // LoadTasksProgression fetches the progression of one student against

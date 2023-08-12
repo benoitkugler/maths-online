@@ -112,9 +112,11 @@ class _API extends _FieldAPI implements HomeworkAPI {
                 "Nombres complexes",
                 true,
                 ProgressionExt([
-                  [true]
+                  [true],
+                  [true],
+                  [true],
                 ], 0),
-                0,
+                2,
                 6),
             const TaskProgressionHeader(
                 2,
@@ -204,9 +206,9 @@ class _API extends _FieldAPI implements HomeworkAPI {
   }
 
   @override
-  Future<InstantiatedWork> loadWork(IdTask id) {
-    // TODO: implement loadWork
-    throw UnimplementedError();
+  Future<InstantiatedWork> loadWork(IdTask id) async {
+    return InstantiatedWork(WorkID(0, WorkKind.workExercice, false),
+        "Exo de Test", Flow.sequencial, [quI1, quI2, quI3], [2, 3, 1]);
   }
 
   @override

@@ -47,8 +47,11 @@ class ExerciceHome extends StatelessWidget {
   final StudentWork data;
   final List<QuestionStatus> states;
   final void Function(int index) onSelectQuestion;
+  final bool noticeSandbox;
 
-  const ExerciceHome(this.data, this.states, this.onSelectQuestion, {Key? key})
+  const ExerciceHome(
+      this.data, this.states, this.onSelectQuestion, this.noticeSandbox,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -59,6 +62,14 @@ class ExerciceHome extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 10),
           child: ColoredTitle(data.exercice.title, Colors.purple),
         ),
+        if (noticeSandbox)
+          const Card(
+            margin: EdgeInsets.only(bottom: 10),
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("Ta progression n'est pas enregistrée."),
+            ),
+          ),
         Expanded(
           child: _QuestionList(data, states, onSelectQuestion),
         )

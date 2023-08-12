@@ -1311,24 +1311,37 @@ func (ct *Controller) StudentEvaluateTask(c echo.Context) error {
 }
 
 func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEvaluateTaskOut, error) {
-	idStudent, err := ct.studentKey.DecryptID(args.StudentID)
+	idStudent_, err := ct.studentKey.DecryptID(args.StudentID)
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
 	}
+	idStudent := teacher.IdStudent(idStudent_)
 
-	registerProgression := true
+	pr, err := taAPI.LoadTaskProgression(ct.db, idStudent, args.IdTask)
+	if err != nil {
+		return StudentEvaluateTaskOut{}, err
+	}
+	isTaskComplete := pr.HasProgression && pr.Progression.IsComplete()
 
-	// to preserve compatibily, we accept empty [travail] field
-	if args.IdTravail != 0 {
+	var registerProgression bool
+	// to preserve compatibily, we accept empty [IdTravail] field
+	if args.IdTravail == 0 {
+		registerProgression = !isTaskComplete
+	} else {
 		travail, err := ho.SelectTravail(ct.db, args.IdTravail)
 		if err != nil {
 			return StudentEvaluateTaskOut{}, utils.SQLError(err)
 		}
-		// Always register progression for free travail
-		registerProgression = !travail.Noted || !travail.IsExpired()
+		if travail.Noted {
+			// only register progression for non expired, non completed
+			registerProgression = !isTaskComplete && !travail.IsExpired()
+		} else {
+			// Always register progression for free travail
+			registerProgression = true
+		}
 	}
 
-	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, teacher.IdStudent(idStudent), args.Ex, registerProgression)
+	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, idStudent, args.Ex, registerProgression)
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
 	}
