@@ -101,7 +101,7 @@ class LoadedClassroom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const style = TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
+    const style = TextStyle(fontSize: 14, fontWeight: FontWeight.bold);
     return Column(
       children: [
         _FormRow("Nom",
@@ -128,7 +128,7 @@ class _FormRow extends StatelessWidget {
         children: [
           Text(
             left,
-            style: const TextStyle(fontSize: 18),
+            style: const TextStyle(fontSize: 10),
           ),
           right
         ],
