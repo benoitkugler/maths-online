@@ -6,7 +6,7 @@ import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/types/src.dart';
-import 'package:eleve/types/src_maths_questions.dart' as ServerQuestions;
+import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_prof_editor.dart';
@@ -257,7 +257,7 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
   void initState() {
     controller = LoopackQuestionController(
         LoopbackShowQuestion(questionComplexe, [], false,
-            const ServerQuestions.QuestionPage(null, null, null)),
+            const server_questions.QuestionPage(null, null, null)),
         _FieldAPI(),
         onValid);
     super.initState();

@@ -17,7 +17,7 @@ class UserSettings {
   UserSettings(
       {this.studentPseudo = "",
       this.studentID = "",
-      this.songs = Audio.DefaultPlaylist,
+      this.songs = Audio.defaultPlaylist,
       Map<String, String>? trivialGameMetas,
       this.hasBeenLaunched = false})
       : trivialGameMetas = trivialGameMetas ?? {};

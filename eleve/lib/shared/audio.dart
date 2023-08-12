@@ -29,7 +29,7 @@ class Song {
 
 class Audio {
   /// GrooveBow, Forgive, EntreCielEtTerre
-  static const PlaylistController DefaultPlaylist = [0, 1, 2];
+  static const PlaylistController defaultPlaylist = [0, 1, 2];
 
   /// [availableSongs] is the list of soundtracks available
   /// in the app.

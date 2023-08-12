@@ -1,7 +1,6 @@
 import 'package:eleve/questions/dropdown.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/questions/number.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/foundation.dart';
@@ -57,10 +56,10 @@ class TreeController extends FieldController {
   }
 
   @override
-  void setEnabled(bool b) {
+  void setEnabled(bool enabled) {
     // also disable children controllers
-    super.setEnabled(b);
-    controllers?.setEnabled(b);
+    super.setEnabled(enabled);
+    controllers?.setEnabled(enabled);
   }
 }
 
