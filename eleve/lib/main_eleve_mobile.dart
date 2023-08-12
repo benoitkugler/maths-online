@@ -5,8 +5,8 @@ import 'package:eleve/shared/settings_mobile.dart';
 import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
 
-// final bm = buildModeFromEnv();
-final bm = BuildMode.dev;
+final bm = buildModeFromEnv();
+// final bm = BuildMode.dev;
 
 void main() async {
   initQuotes();
