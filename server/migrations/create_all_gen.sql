@@ -106,7 +106,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
     IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -130,7 +130,7 @@ CREATE TABLE questiongroups (
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
 );
 
 -- constraints
@@ -2237,7 +2237,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_Section (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (2, 1, 3);
+    AND data::int IN (2, 1, 4, 3);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a edit_Section', data;

@@ -53,10 +53,10 @@ dynamic flowToJson(Flow item) => item.toValue();
 typedef IdQuestion = int;
 
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Section
-enum Section { chapter, level, trivMath }
+enum Section { chapter, level, subLevel, trivMath }
 
 extension _SectionExt on Section {
-  static const _values = [2, 1, 3];
+  static const _values = [2, 1, 4, 3];
   static Section fromValue(int s) {
     return Section.values[_values.indexOf(s)];
   }

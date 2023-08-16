@@ -118,6 +118,7 @@ const (
 	Level            // Niveau
 	Chapter          // Chapitre
 	TrivMath         // Triv'Math
+	SubLevel         // Filière
 )
 
 // DifficultyTag are special question tags used to indicate the

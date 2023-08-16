@@ -139,7 +139,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_Section (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (2, 1, 3);
+    AND data::int IN (2, 1, 4, 3);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a edit_Section', data;

@@ -107,6 +107,7 @@ type TagIndex struct {
 type TagGroup struct {
 	TagIndex
 	TrivMaths []string
+	SubLevels []string
 }
 
 // BySection classify the tag list according to section
@@ -119,6 +120,8 @@ func (ts Tags) BySection() (out TagGroup) {
 			out.Chapter = tag.Tag
 		case TrivMath:
 			out.TrivMaths = append(out.TrivMaths, tag.Tag)
+		case SubLevel:
+			out.SubLevels = append(out.SubLevels, tag.Tag)
 		}
 	}
 	return out

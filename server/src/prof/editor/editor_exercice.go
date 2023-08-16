@@ -183,7 +183,8 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
-		tagIndex := tagsMap[group.Id].Tags().BySection()
+		tags := tagsMap[group.Id].Tags()
+		tagIndex := tags.BySection()
 		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
 			continue
 		}
@@ -199,7 +200,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
 
-		groupExt := NewExercicegroupExt(group, variants, tagsMap[group.Id].Tags(), inReview, userID, ct.admin.Id)
+		groupExt := NewExercicegroupExt(group, variants, tags, inReview, userID, ct.admin.Id)
 
 		out.NbExercices += len(groupExt.Variants)
 

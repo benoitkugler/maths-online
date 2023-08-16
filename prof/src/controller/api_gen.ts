@@ -1193,12 +1193,14 @@ export interface Questiongroup {
 export enum Section {
   Chapter = 2,
   Level = 1,
+  SubLevel = 4,
   TrivMath = 3,
 }
 
 export const SectionLabels: { [key in Section]: string } = {
   [Section.Chapter]: "Chapitre",
   [Section.Level]: "Niveau",
+  [Section.SubLevel]: "Filière",
   [Section.TrivMath]: "Triv'Math",
 };
 

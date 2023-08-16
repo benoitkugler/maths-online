@@ -552,7 +552,7 @@ type SaveQuestionAndPreviewIn struct {
 
 type ListQuestionsOut struct {
 	Groups      []QuestiongroupExt
-	NbQuestions int // Numver of variants in [Groups]
+	NbQuestions int // Number of variants in [Groups]
 }
 
 // QuestiongroupExt adds the question and tags to a QuestionGroup
@@ -728,7 +728,8 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 
 	// .. and build the groups, restricting to the ones matching the given tags
 	for _, group := range groups {
-		tagIndex := tagsMap[group.Id].Tags().BySection()
+		tags := tagsMap[group.Id].Tags()
+		tagIndex := tags.BySection()
 		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
 			continue
 		}
@@ -744,7 +745,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 			inReview = tcAPI.OptionalIdReview{InReview: true, Id: link.IdReview}
 		}
 
-		groupExt := NewQuestiongroupExt(group, questions, tagsMap[group.Id].Tags(), inReview, userID, ct.admin.Id)
+		groupExt := NewQuestiongroupExt(group, questions, tags, inReview, userID, ct.admin.Id)
 
 		out.NbQuestions += len(groupExt.Variants)
 
