@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
@@ -575,12 +576,18 @@ type VariationTableFieldInstance struct {
 func (f VariationTableFieldInstance) fieldID() int { return f.ID }
 
 // lengthProposals returns randomized proposals around the correct value `L`
+// the returned value is truely random, but contains L
 func lengthProposals(L int) []int {
 	var tmp []int
 
-	rd := utils.NewDeterministicRand([]byte{byte(L)})
+	seed := time.Now().Unix()
+	rd := rand.New(rand.NewSource(seed))
 	if L <= 1 {
-		tmp = []int{L, L + 1}
+		if rd.Intn(2) == 1 {
+			tmp = []int{L, L + 1}
+		} else {
+			tmp = []int{L, L + 1, L + 2}
+		}
 	} else {
 		tmp = []int{L - 1, L, L + 1}
 		// add some random noise to prevent the
@@ -592,7 +599,7 @@ func lengthProposals(L int) []int {
 		}
 	}
 
-	suffler := utils.NewDeterministicShuffler([]byte{byte(L)}, len(tmp))
+	suffler := utils.NewDeterministicShuffler([]byte{byte(seed & 0xff)}, len(tmp))
 	out := make([]int, len(tmp))
 	suffler.Shuffle(func(dst, src int) { out[dst] = tmp[src] })
 	return tmp
