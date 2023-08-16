@@ -269,33 +269,33 @@ type ExerciceData struct {
 }
 
 // NewExerciceData loads the given exercice and the associated questions
-func NewExerciceData(db ed.DB, id ed.IdExercice) (ExerciceData, error) {
+func NewExerciceData(db ed.DB, id ed.IdExercice) (out ExerciceData, _ error) {
 	ex, err := ed.SelectExercice(db, id)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	group, err := ed.SelectExercicegroup(db, ex.IdGroup)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	tags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, group.Id)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	chapter := tags.Tags().BySection().Chapter
 
 	links, err := ed.SelectExerciceQuestionsByIdExercices(db, id)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	links.EnsureOrder()
 
 	// load the question contents
 	dict, err := ed.SelectQuestions(db, links.IdQuestions()...)
 	if err != nil {
-		return ExerciceData{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	return ExerciceData{
 		Group:        group,

@@ -53,6 +53,9 @@ type TasksContents struct {
 	questiongroups ed.Questiongroups // for questions in [monoquestions] and [randomMonoquestions]
 
 	questions ed.Questions // provide exercices and monoquestions contents
+
+	exerciceTags map[ed.IdExercicegroup]ed.ExercicegroupTags
+	questionTags map[ed.IdQuestiongroup]ed.QuestiongroupTags // for [monoquestions] and [randomMonoquestions]
 }
 
 func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) {
@@ -133,6 +136,18 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 		out.questions[k] = v
 	}
 
+	// load tags
+	eTags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, out.exercicegroups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.exerciceTags = eTags.ByIdExercicegroup()
+	qTags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroups.IDs()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.questionTags = qTags.ByIdQuestiongroup()
+
 	return out, nil
 }
 
@@ -142,26 +157,32 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 	case task.IdExercice.Valid:
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
+		tags := contents.exerciceTags[ex.IdGroup]
 		return ExerciceData{
 			Group:        contents.exercicegroups[ex.IdGroup],
 			Exercice:     ex,
 			links:        questions,
 			QuestionsMap: contents.questions,
+			chapter:      tags.Tags().BySection().Chapter,
 		}
 	case task.IdMonoquestion.Valid:
 		monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
 		question := contents.questions[monoquestion.IdQuestion]
+		tags := contents.questionTags[question.IdGroup.ID]
 		return monoquestionData{
 			params:        monoquestion,
 			question:      question,
 			questiongroup: contents.questiongroups[question.IdGroup.ID],
+			chapter:       tags.Tags().BySection().Chapter,
 		}
 	case task.IdRandomMonoquestion.Valid:
 		mono := contents.randomMonoquestions[task.IdRandomMonoquestion.ID]
+		tags := contents.questionTags[mono.IdQuestiongroup]
 		// for this use case, leaving [selectedQuestions] is OK
 		return randomMonoquestionData{
 			params:        mono,
 			questiongroup: contents.questiongroups[mono.IdQuestiongroup],
+			chapter:       tags.Tags().BySection().Chapter,
 		}
 	default: // should not happen (enforced by SQL constraint)
 		return nil
