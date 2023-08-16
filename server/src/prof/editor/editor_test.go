@@ -173,6 +173,8 @@ func TestLoadTags(t *testing.T) {
 	tu.Assert(t, len(tags.ChaptersByLevel) >= 1)
 	// there might be some question with Level but no chapter
 	tu.Assert(t, len(tags.ChaptersByLevel) <= len(tags.Levels))
+
+	tu.Assert(t, len(tags.SubLevelsByLevel["1ERE"]) > 0)
 }
 
 func TestLoadIndex(t *testing.T) {

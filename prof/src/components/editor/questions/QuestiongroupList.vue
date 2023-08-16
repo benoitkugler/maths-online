@@ -91,7 +91,7 @@ import {
   type Question,
   type Questiongroup,
   type QuestiongroupExt,
-  type TagsDB,
+  type TagsDB
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
@@ -134,7 +134,8 @@ let query = $ref<Query>(
         TitleQuery: "",
         LevelTags: [],
         ChapterTags: [],
-        Origin: OriginKind.All,
+        SubLevelTags: [],
+        Origin: OriginKind.All
       }
 );
 
@@ -174,7 +175,7 @@ async function startEdit(group: QuestiongroupExt) {
 
 async function duplicate(group: QuestiongroupExt) {
   const ok = await controller.EditorDuplicateQuestiongroup({
-    id: group.Group.Id,
+    id: group.Group.Id
   });
   if (!ok) return;
   await fetchQuestions();
@@ -183,20 +184,20 @@ async function duplicate(group: QuestiongroupExt) {
 async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
-    Public: isPublic,
+    Public: isPublic
   });
   if (res === undefined) {
     return;
   }
 
-  const index = groups.findIndex((gr) => gr.Group.Id == id);
+  const index = groups.findIndex(gr => gr.Group.Id == id);
   groups[index].Origin.IsPublic = isPublic;
 }
 
 async function createReview(ex: Questiongroup) {
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KQuestion,
-    Id: ex.Id,
+    Id: ex.Id
   });
   if (res == undefined) return;
   router.push({ name: "reviews", query: { id: res.Id } });

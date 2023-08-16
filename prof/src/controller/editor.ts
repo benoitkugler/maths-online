@@ -619,6 +619,7 @@ export function tagString(tag: string) {
 }
 
 export const LevelColor = "pink";
+export const SubLevelColor = "purple";
 export const ChapterColor = "primary-darken-1";
 export const TrivMathColor = "brown";
 export const DifficultyColor = "secondary-darken-1";
@@ -631,6 +632,8 @@ export function tagColor(tag: Section | undefined) {
       return ChapterColor;
     case Section.TrivMath:
       return TrivMathColor;
+    case Section.SubLevel:
+      return SubLevelColor;
   }
   // difficulty
   return DifficultyColor;
@@ -726,7 +729,8 @@ export function emptyTagsDB(): TagsDB {
   return {
     Levels: [],
     ChaptersByLevel: {},
-    TrivByChapters: {}
+    TrivByChapters: {},
+    SubLevelsByLevel: {}
   };
 }
 

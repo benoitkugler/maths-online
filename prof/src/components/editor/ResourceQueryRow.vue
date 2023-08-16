@@ -11,13 +11,13 @@
         clearable
       ></v-text-field>
     </v-col>
-    <v-col cols="3">
+    <v-col cols="2">
       <v-select
         multiple
         :items="levelTags"
         :model-value="props.modelValue.LevelTags || []"
         @update:model-value="
-          (v) => {
+          v => {
             props.modelValue.LevelTags = v;
             emit('update:model-value', props.modelValue);
           }
@@ -31,14 +31,35 @@
         hide-details
       ></v-select>
     </v-col>
-    <v-col cols="4">
+    <v-col cols="2">
+      <v-select
+        label="Filière"
+        variant="outlined"
+        density="compact"
+        multiple
+        :items="subLevelTags"
+        :model-value="props.modelValue.SubLevelTags || []"
+        @update:model-value="
+          v => {
+            props.modelValue.SubLevelTags = v;
+            emit('update:model-value', props.modelValue);
+          }
+        "
+        :color="SubLevelColor"
+        chips
+        closable-chips
+        hide-details
+        no-data-text="Aucune filière pour le niveau choisi."
+      ></v-select>
+    </v-col>
+    <v-col cols="3">
       <v-select
         hide-details
         multiple
         :items="chapterTags"
         :model-value="props.modelValue.ChapterTags || []"
         @update:model-value="
-          (v) => {
+          v => {
             props.modelValue.ChapterTags = v;
             emit('update:model-value', props.modelValue);
           }
@@ -56,7 +77,7 @@
       <OriginSelect
         :origin="props.modelValue.Origin"
         @update:origin="
-          (o) => {
+          o => {
             props.modelValue.Origin = o;
             emit('update:model-value', props.modelValue);
           }
@@ -68,7 +89,7 @@
 
 <script setup lang="ts">
 import type { Query, TagsDB } from "@/controller/api_gen";
-import { ChapterColor, LevelColor } from "@/controller/editor";
+import { ChapterColor, LevelColor, SubLevelColor } from "@/controller/editor";
 import { computed } from "vue";
 import OriginSelect from "../OriginSelect.vue";
 
@@ -85,27 +106,42 @@ const emit = defineEmits<{
 
 const levelTags = computed(() => {
   return (props.allTags.Levels || [])
-    .map((tag) => ({
+    .map(tag => ({
       title: tag,
-      value: tag,
+      value: tag
     }))
     .concat({ title: "Non classé", value: "" });
 });
 
 const chapterTags = computed(() => {
   const all = new Set<string>();
-  props.modelValue.LevelTags?.forEach((levelTag) => {
+  props.modelValue.LevelTags?.forEach(levelTag => {
     const l = (props.allTags.ChaptersByLevel || {})[levelTag];
-    l?.forEach((v) => all.add(v));
+    l?.forEach(v => all.add(v));
   });
   const out = Array.from(all.values());
   out.sort();
   return out
-    .map((tag) => ({
+    .map(tag => ({
       title: tag,
-      value: tag,
+      value: tag
     }))
     .concat({ title: "Non classé", value: "" });
+});
+
+const subLevelTags = computed(() => {
+  const all = new Set<string>();
+  props.modelValue.LevelTags?.forEach(levelTag => {
+    const l = (props.allTags.SubLevelsByLevel || {})[levelTag];
+    l?.forEach(v => all.add(v));
+  });
+  const out = Array.from(all.values());
+  out.sort();
+  return out.map(tag => ({
+    title: tag,
+    value: tag
+  }));
+  // .concat({ title: "Non classé", value: "" });
 });
 
 const noChaptersText = computed(() => {

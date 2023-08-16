@@ -5,8 +5,8 @@
       :tags="props.allTags"
       :mode="'exercices'"
       @closed="showExerciceSelector = false"
-      @selected-variant="(v) => emit('addExercice', v)"
-      @update:query="(q) => (exerciceQuery = q)"
+      @selected-variant="v => emit('addExercice', v)"
+      @update:query="q => (exerciceQuery = q)"
     ></resource-selector>
   </v-dialog>
 
@@ -16,9 +16,9 @@
       :tags="props.allTags"
       :mode="'questions'"
       @closed="showMonoquestionSelector = false"
-      @selected-variant="(v) => emit('addMonoquestion', v)"
-      @selected-group="(gr) => emit('addRandomMonoquestion', gr)"
-      @update:query="(q) => (questionQuery = q)"
+      @selected-variant="v => emit('addMonoquestion', v)"
+      @selected-group="gr => emit('addRandomMonoquestion', gr)"
+      @update:query="q => (questionQuery = q)"
     ></resource-selector>
   </v-dialog>
 
@@ -89,7 +89,7 @@
 
         <drop-zone
           v-if="showDropZone"
-          @drop="(origin) => swap(origin, 0)"
+          @drop="origin => swap(origin, 0)"
         ></drop-zone>
 
         <div v-for="(task, index) in sheet.Tasks" :key="index">
@@ -98,7 +98,7 @@
               <v-col cols="auto" align-self="center">
                 <drag-icon
                   color="black"
-                  @start="(e) => onItemDragStart(e, index)"
+                  @start="e => onItemDragStart(e, index)"
                 ></drag-icon>
               </v-col>
               <v-col cols="auto" align-self="center">
@@ -138,9 +138,9 @@
               >
                 <task-details-chip
                   :task="task"
-                  @update-monoquestion="(qu) => emit('updateMonoquestion', qu)"
+                  @update-monoquestion="qu => emit('updateMonoquestion', qu)"
                   @update-random-monoquestion="
-                    (qu) => emit('updateRandomMonoquestion', qu)
+                    qu => emit('updateRandomMonoquestion', qu)
                   "
                 >
                 </task-details-chip>
@@ -149,7 +149,7 @@
           </v-list-item>
           <drop-zone
             v-if="showDropZone"
-            @drop="(origin) => swap(origin, index + 1)"
+            @drop="origin => swap(origin, index + 1)"
           ></drop-zone>
         </div>
 
@@ -176,12 +176,12 @@ import {
   type SheetExt,
   type TagsDB,
   type TaskExt,
-  type RandomMonoquestion,
+  type RandomMonoquestion
 } from "@/controller/api_gen";
 import {
   onDragListItemStart,
   sheetBareme,
-  swapItems,
+  swapItems
 } from "@/controller/utils";
 import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
@@ -217,13 +217,15 @@ let exerciceQuery = $ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
-  Origin: OriginKind.All,
+  SubLevelTags: [],
+  Origin: OriginKind.All
 });
 let questionQuery = $ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
-  Origin: OriginKind.All,
+  SubLevelTags: [],
+  Origin: OriginKind.All
 });
 
 watch(props.sheet, () => {

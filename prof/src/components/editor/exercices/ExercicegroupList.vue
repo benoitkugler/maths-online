@@ -89,7 +89,7 @@ import {
   type Exercicegroup,
   type ExercicegroupExt,
   type Query,
-  type TagsDB,
+  type TagsDB
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
@@ -132,7 +132,8 @@ let query = $ref<Query>(
         TitleQuery: "",
         LevelTags: [],
         ChapterTags: [],
-        Origin: OriginKind.All,
+        SubLevelTags: [],
+        Origin: OriginKind.All
       }
 );
 onMounted(fetchExercices);
@@ -145,7 +146,7 @@ async function updateQuery(qu: Query) {
 
 async function duplicate(group: ExercicegroupExt) {
   const ok = await controller.EditorDuplicateExercicegroup({
-    id: group.Group.Id,
+    id: group.Group.Id
   });
   if (!ok) return;
   await fetchExercices();
@@ -176,20 +177,20 @@ async function startEdit(group: ExercicegroupExt) {
 async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.EditorUpdateExercicegroupVis({
     ID: id,
-    Public: isPublic,
+    Public: isPublic
   });
   if (res === undefined) {
     return;
   }
 
-  const index = groups.findIndex((gr) => gr.Group.Id == id);
+  const index = groups.findIndex(gr => gr.Group.Id == id);
   groups[index].Origin.IsPublic = isPublic;
 }
 
 async function createReview(ex: Exercicegroup) {
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KExercice,
-    Id: ex.Id,
+    Id: ex.Id
   });
   if (res == undefined) return;
 

@@ -25,22 +25,23 @@ func (ct *Controller) EditorGetTags(c echo.Context) error {
 }
 
 type TagsDB struct {
-	Levels          []string
-	ChaptersByLevel map[string][]string            // level -> chapters
-	TrivByChapters  map[string]map[string][]string // level -> chapter -> triv maths
+	Levels           []string
+	ChaptersByLevel  map[string][]string            // level -> chapters
+	TrivByChapters   map[string]map[string][]string // level -> chapter -> triv maths
+	SubLevelsByLevel map[string][]string            // level -> sublevels
 }
 
 // LoadTags returns all the tags visible by [userID], merging
 // questions and exercices.
-func LoadTags(db ed.DB, userID uID) (TagsDB, error) {
+func LoadTags(db ed.DB, userID uID) (out TagsDB, _ error) {
 	// only return tags used by visible groups
 	questionGroups, err := ed.SelectAllQuestiongroups(db)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	exerciceGroups, err := ed.SelectAllExercicegroups(db)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	questionGroups.RestrictVisible(userID)
@@ -48,11 +49,11 @@ func LoadTags(db ed.DB, userID uID) (TagsDB, error) {
 
 	questionTags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, questionGroups.IDs()...)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 	exerciceTags, err := ed.SelectExercicegroupTagsByIdExercicegroups(db, exerciceGroups.IDs()...)
 	if err != nil {
-		return TagsDB{}, utils.SQLError(err)
+		return out, utils.SQLError(err)
 	}
 
 	// build the map between level to chapters
@@ -109,10 +110,11 @@ func (ct *Controller) EditorCheckExerciceParameters(c echo.Context) error {
 }
 
 type Query struct {
-	TitleQuery  string   // empty means all
-	LevelTags   []string // union, empty means all; an empty tag means "with no level"
-	ChapterTags []string // union, empty means all; an empty tag means "with no chapter"
-	Origin      OriginKind
+	TitleQuery   string   // empty means all
+	LevelTags    []string // union, empty means all; an empty tag means "with no level"
+	ChapterTags  []string // union, empty means all; an empty tag means "with no chapter"
+	SubLevelTags []string // union, empty means all
+	Origin       OriginKind
 }
 
 func (query Query) normalize() {
@@ -122,6 +124,9 @@ func (query Query) normalize() {
 	}
 	for i, t := range query.ChapterTags {
 		query.ChapterTags[i] = ed.NormalizeTag(t)
+	}
+	for i, t := range query.SubLevelTags {
+		query.SubLevelTags[i] = ed.NormalizeTag(t)
 	}
 }
 
@@ -155,6 +160,20 @@ func (query Query) matchChapter(chapter string) bool {
 	for _, tag := range query.ChapterTags {
 		if tag == string(chapter) {
 			return true
+		}
+	}
+	return false
+}
+
+func (query Query) matchSubLevel(subLevels []string) bool {
+	if len(query.SubLevelTags) == 0 {
+		return true
+	}
+	for _, tag := range query.SubLevelTags {
+		for _, resourceTag := range subLevels {
+			if tag == resourceTag {
+				return true
+			}
 		}
 	}
 	return false
@@ -298,6 +317,7 @@ func exercicesToTagGroups(exercices ed.Exercicegroups, tags ed.ExercicegroupTags
 
 func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 	tmp := make(map[ed.LevelTag]map[string]map[string]bool) // level -> chapter -> trivs (maybe empty)
+	tmp2 := make(map[ed.LevelTag]map[string]bool)           // level -> sublevels
 	for _, tag := range tags {
 		level, chapter := tag.Level, tag.Chapter
 		m1 := tmp[level]
@@ -313,6 +333,15 @@ func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 		}
 		m1[chapter] = m2
 		tmp[level] = m1
+
+		mSub := tmp2[level]
+		if mSub == nil {
+			mSub = make(map[string]bool)
+		}
+		for _, sub := range tag.SubLevels {
+			mSub[sub] = true
+		}
+		tmp2[level] = mSub
 	}
 	out.ChaptersByLevel = make(map[string][]string)
 	out.TrivByChapters = make(map[string]map[string][]string)
@@ -344,6 +373,16 @@ func buildTagsDB(tags []ed.TagGroup) (out TagsDB) {
 		sort.Strings(out.ChaptersByLevel[level])
 	}
 	sort.Strings(out.Levels)
+
+	out.SubLevelsByLevel = make(map[string][]string)
+	for level, subs := range tmp2 {
+		l := make([]string, 0, len(subs))
+		for sub := range subs {
+			l = append(l, sub)
+		}
+		sort.Strings(l)
+		out.SubLevelsByLevel[string(level)] = l
+	}
 
 	return out
 }

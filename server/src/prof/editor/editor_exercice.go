@@ -185,7 +185,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 	for _, group := range groups {
 		tags := tagsMap[group.Id].Tags()
 		tagIndex := tags.BySection()
-		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter)) {
+		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter) && query.matchSubLevel(tagIndex.SubLevels)) {
 			continue
 		}
 
