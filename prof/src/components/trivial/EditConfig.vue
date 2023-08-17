@@ -2,7 +2,7 @@
   <v-card max-height="80vh" class="overflow-y-auto py-2">
     <v-row>
       <v-col>
-        <v-card-title>Modifier la session de Triv'Maths</v-card-title>
+        <v-card-title>Modifier les réglages Isy'Triv</v-card-title>
       </v-col>
       <v-col style="text-align: right">
         <v-btn icon flat class="mx-2" @click="emit('closed')">
@@ -114,7 +114,7 @@
                 :all-tags="allKnownTags"
                 :model-value="categorie || []"
                 :last-level-chapter="lastLevelChapter"
-                @update:model-value="(v) => updateCategorie(index, v)"
+                @update:model-value="v => updateCategorie(index, v)"
               ></tags-selector>
             </v-col>
           </v-row>
@@ -161,7 +161,7 @@ import {
   type QuestionCriterion,
   type Tags,
   type TagsDB,
-  type Trivial,
+  type Trivial
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed } from "@vue/reactivity";
@@ -189,8 +189,8 @@ const lastLevelChapter = computed(() => {
   if (all.length) {
     const last = all[all.length - 1] || [];
     return {
-      level: last.find((s) => s.Section == Section.Level)?.Tag || "",
-      chapter: last.find((s) => s.Section == Section.Chapter)?.Tag || "",
+      level: last.find(s => s.Section == Section.Level)?.Tag || "",
+      chapter: last.find(s => s.Section == Section.Chapter)?.Tag || ""
     };
   }
   return { level: "", chapter: "" };
@@ -206,7 +206,7 @@ function onEditDifficulties(difficulties: DifficultyTag[]) {
 
 function allTags(tags: QuestionCriterion[]) {
   const all: Tags[] = [];
-  tags.forEach((l) => all.push(...(l || []).map((ls) => ls || [])));
+  tags.forEach(l => all.push(...(l || []).map(ls => ls || [])));
   return all;
 }
 
@@ -222,7 +222,7 @@ async function fetchHintForMissing() {
   const criteria = props.edited.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
-  if (!criteria.Tags.every((qu) => qu?.length)) {
+  if (!criteria.Tags.every(qu => qu?.length)) {
     hint = { Pattern: [], Missing: [] };
     return;
   }

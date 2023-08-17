@@ -48,7 +48,7 @@
                   :to="{ name: 'trivial' }"
                   color="pink-lighten-3"
                 >
-                  Lancer une partie de Triv'Maths
+                  Lancer une partie Isy'Triv
                 </v-btn>
               </v-col>
               <v-col>

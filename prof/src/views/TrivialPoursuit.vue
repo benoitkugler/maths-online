@@ -66,9 +66,9 @@
   <v-card class="my-5 mx-auto" width="90%">
     <v-row class="mx-0">
       <v-col cols="9">
-        <v-card-title>Triv'Maths</v-card-title>
+        <v-card-title>Isy'Triv</v-card-title>
         <v-card-subtitle
-          >Configurer et lancer une partie de Triv'Maths</v-card-subtitle
+          >Configurer et lancer une partie Isy'Triv</v-card-subtitle
         >
       </v-col>
 
@@ -106,7 +106,7 @@
             :key="config.Config.Id"
             :config="config"
             :disable-launch="
-              isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
+              isLaunching || !config.NbQuestionsByCategories.every(v => v > 0)
             "
             @update-public="(b:boolean) => updatePublic(config.Config, b)"
             @create-review="createReview(config.Config)"
@@ -129,14 +129,14 @@ import {
   type RunningSessionMetaOut,
   type TagsDB,
   type Trivial,
-  type TrivialExt,
+  type TrivialExt
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import {
   computed,
   onMounted,
   onActivated,
-  watchEffect,
+  watchEffect
 } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TrivialRow from "../components/trivial/TrivialRow.vue";
@@ -157,14 +157,14 @@ let _configs = $ref<TrivialExt[]>([]);
 
 const configsByLevels = computed(() => {
   const byLevel = new Map<string, TrivialExt[]>();
-  _configs.forEach((cf) => {
+  _configs.forEach(cf => {
     if (!cf.Levels?.length) {
       // add to unclassified
       const l = byLevel.get("") || [];
       l.push(cf);
       byLevel.set("", l);
     } else {
-      cf.Levels.forEach((level) => {
+      cf.Levels.forEach(level => {
         const l = byLevel.get(level) || [];
         l.push(cf);
         byLevel.set(level, l);
@@ -213,14 +213,14 @@ async function createConfig() {
 
 async function updateConfig(config: Trivial) {
   // remove empty categories
-  config.Questions.Tags = config.Questions.Tags.map((q) =>
-    (q || []).filter((v) => v && v.length != 0)
+  config.Questions.Tags = config.Questions.Tags.map(q =>
+    (q || []).filter(v => v && v.length != 0)
   );
   const res = await controller.UpdateTrivialPoursuit(config);
   if (res === undefined) {
     return;
   }
-  const index = _configs.findIndex((v) => v.Config.Id == config.Id);
+  const index = _configs.findIndex(v => v.Config.Id == config.Id);
   _configs[index] = res;
   editedConfig = null;
 }
@@ -228,19 +228,19 @@ async function updateConfig(config: Trivial) {
 async function updatePublic(config: Trivial, isPublic: boolean) {
   const res = await controller.UpdateTrivialVisiblity({
     ConfigID: config.Id,
-    Public: isPublic,
+    Public: isPublic
   });
   if (res === undefined) {
     return;
   }
-  const index = _configs.findIndex((v) => v.Config.Id == config.Id);
+  const index = _configs.findIndex(v => v.Config.Id == config.Id);
   _configs[index].Origin.IsPublic = isPublic;
 }
 
 async function createReview(config: Trivial) {
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KTrivial,
-    Id: config.Id,
+    Id: config.Id
   });
   if (res == undefined) return;
 
@@ -264,7 +264,7 @@ async function deleteConfig() {
   const id = trivialToDelete.Id;
   await controller.DeleteTrivialPoursuit({ id: id });
   trivialToDelete = null;
-  _configs = _configs.filter((c) => c.Config.Id != id);
+  _configs = _configs.filter(c => c.Config.Id != id);
 }
 
 let selfaccessConfig = $ref<Trivial | null>(null);
@@ -283,7 +283,7 @@ async function launchSession(groups: GroupsStrategy) {
   isLaunching = true;
   const res = await controller.LaunchSessionTrivialPoursuit({
     IdConfig: configID,
-    Groups: groups,
+    Groups: groups
   });
   launchingConfig = null;
   isLaunching = false;

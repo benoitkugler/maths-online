@@ -14,7 +14,7 @@
   <v-card>
     <v-row>
       <v-col>
-        <v-card-title>Suivre la session de Triv'Maths</v-card-title>
+        <v-card-title>Suivre les parties Isy'Triv</v-card-title>
       </v-col>
       <v-col style="text-align: right">
         <v-btn icon flat class="mx-2" @click="onClose">
@@ -44,7 +44,7 @@ import type {
   GameSummary,
   QuestionContent,
   RoomID,
-  stopGame,
+  stopGame
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "@vue/runtime-core";

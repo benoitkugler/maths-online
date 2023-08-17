@@ -54,7 +54,7 @@
           class="my-1"
           :to="{ name: 'trivial' }"
           color="pink-lighten-3"
-          >Triv'Maths</v-btn
+          >Isy'Triv</v-btn
         >
       </v-list-item>
 

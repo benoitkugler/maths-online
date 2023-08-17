@@ -45,7 +45,7 @@ const router = createRouter({
       path: "/trivial",
       name: "trivial",
       component: TrivialPoursuit,
-      meta: { Label: "Triv'Maths" }
+      meta: { Label: "Isy'Triv" }
     },
     {
       path: "/homework",
