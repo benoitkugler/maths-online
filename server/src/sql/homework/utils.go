@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
@@ -56,4 +57,19 @@ func LoadRandomMonoquestionSheet(db DB, idMono tasks.IdRandomMonoquestion) (task
 // IsExpired returns true if the [Deadline] is before the present time.
 func (sh Travail) IsExpired() bool {
 	return time.Time(sh.Deadline).Before(time.Now())
+}
+
+// IsVisibleBy returns `true` if the Sheet is public or
+// owned by `userID`
+func (qu Sheet) IsVisibleBy(userID teacher.IdTeacher) bool {
+	return qu.Public || qu.IdTeacher == userID
+}
+
+// RestrictVisible remove the sheets not visible by `userID`
+func (qus Sheets) RestrictVisible(userID teacher.IdTeacher) {
+	for id, qu := range qus {
+		if !qu.IsVisibleBy(userID) {
+			delete(qus, id)
+		}
+	}
 }

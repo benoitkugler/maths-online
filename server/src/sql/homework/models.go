@@ -56,6 +56,8 @@ type Sheet struct {
 	// Anonymous [Sheet]s are deleted when the [Travail] is,
 	// and are not shown in the favorites sheets panel.
 	Anonymous OptionalIdTravail `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Travail"`
+
+	Public bool // only true for admin account
 }
 
 // gomacro:SQL ADD PRIMARY KEY (IdSheet, Index)

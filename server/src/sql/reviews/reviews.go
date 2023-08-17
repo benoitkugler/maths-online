@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils"
@@ -37,7 +38,8 @@ type ReviewKind uint8
 const (
 	KQuestion ReviewKind = iota // Question
 	KExercice                   // Exercice
-	KTrivial                    // Trivial
+	KTrivial                    // Isy'Triv
+	KSheet                      // Feuille d'exercice
 )
 
 func (k ReviewKind) String() string {
@@ -47,7 +49,9 @@ func (k ReviewKind) String() string {
 	case KExercice:
 		return "Exercice"
 	case KTrivial:
-		return "Triv'Maths"
+		return "Isy'Triv"
+	case KSheet:
+		return "Feuille d'exercice"
 	default:
 		return fmt.Sprintf("<invalid reviews.Kind %d>", k)
 	}
@@ -77,14 +81,17 @@ type Target interface {
 func (tr ReviewQuestion) Review() IdReview { return tr.IdReview }
 func (tr ReviewExercice) Review() IdReview { return tr.IdReview }
 func (tr ReviewTrivial) Review() IdReview  { return tr.IdReview }
+func (tr ReviewSheet) Review() IdReview    { return tr.IdReview }
 
 func (tr ReviewQuestion) WithIdReview(r IdReview) Target { tr.IdReview = r; return tr }
 func (tr ReviewExercice) WithIdReview(r IdReview) Target { tr.IdReview = r; return tr }
 func (tr ReviewTrivial) WithIdReview(r IdReview) Target  { tr.IdReview = r; return tr }
+func (tr ReviewSheet) WithIdReview(r IdReview) Target    { tr.IdReview = r; return tr }
 
 func (tr ReviewQuestion) Insert(tx *sql.Tx) error { return InsertManyReviewQuestions(tx, tr) }
 func (tr ReviewExercice) Insert(tx *sql.Tx) error { return InsertManyReviewExercices(tx, tr) }
 func (tr ReviewTrivial) Insert(tx *sql.Tx) error  { return InsertManyReviewTrivials(tx, tr) }
+func (tr ReviewSheet) Insert(tx *sql.Tx) error    { return InsertManyReviewSheets(tx, tr) }
 
 func (tr ReviewQuestion) Load(db DB) (TargetHeader, error) {
 	item, err := editor.SelectQuestiongroup(db, tr.IdQuestion)
@@ -108,6 +115,18 @@ func (tr ReviewTrivial) Load(db DB) (TargetHeader, error) {
 		return TargetHeader{}, err
 	}
 	return TargetHeader{Title: item.Name, Owner: item.IdTeacher}, nil
+}
+
+func (tr ReviewSheet) Load(db DB) (TargetHeader, error) {
+	item, err := homework.SelectSheet(db, tr.IdSheet)
+	if err != nil {
+		return TargetHeader{}, err
+	}
+	title := item.Title
+	if item.Level != "" {
+		title = fmt.Sprintf("%s (%s)", item.Title, item.Level)
+	}
+	return TargetHeader{Title: title, Owner: item.IdTeacher}, nil
 }
 
 func (tr ReviewQuestion) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
@@ -143,6 +162,17 @@ func (tr ReviewTrivial) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
 	return err
 }
 
+func (tr ReviewSheet) MoveToAdmin(db DB, adminID teacher.IdTeacher) error {
+	item, err := homework.SelectSheet(db, tr.IdSheet)
+	if err != nil {
+		return err
+	}
+	item.IdTeacher = adminID
+	item.Public = true
+	_, err = item.Update(db)
+	return err
+}
+
 // LoadTarget load all the target associated to the given review
 // Errors are wrapped with [utils.SQLError]
 func LoadTarget(db DB, id IdReview) (Target, error) {
@@ -158,6 +188,10 @@ func LoadTarget(db DB, id IdReview) (Target, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
+	sheet, isSheet, err := SelectReviewSheetByIdReview(db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
 
 	switch {
 	case isQuestion:
@@ -166,6 +200,8 @@ func LoadTarget(db DB, id IdReview) (Target, error) {
 		return exercice, nil
 	case isTrivial:
 		return trivial, nil
+	case isSheet:
+		return sheet, nil
 	default:
 		return nil, errors.New("internal error: review without target")
 	}
@@ -177,13 +213,15 @@ func LoadTargets(db DB) (map[IdReview]Target, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-
 	exercices, err := SelectAllReviewExercices(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-
 	trivials, err := SelectAllReviewTrivials(db)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	sheets, err := SelectAllReviewSheets(db)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
@@ -196,6 +234,9 @@ func LoadTargets(db DB) (map[IdReview]Target, error) {
 		out[target.IdReview] = target
 	}
 	for _, target := range trivials {
+		out[target.IdReview] = target
+	}
+	for _, target := range sheets {
 		out[target.IdReview] = target
 	}
 	return out, nil

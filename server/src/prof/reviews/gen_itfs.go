@@ -51,6 +51,10 @@ func (out *TargetContentWrapper) UnmarshalJSON(src []byte) error {
 		var data TargetQuestion
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
+	case "TargetSheet":
+		var data TargetSheet
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
 	case "TargetTrivial":
 		var data TargetTrivial
 		err = json.Unmarshal(wr.Data, &data)
@@ -73,6 +77,8 @@ func (item TargetContentWrapper) MarshalJSON() ([]byte, error) {
 		wr = wrapper{Kind: "TargetExercice", Data: data}
 	case TargetQuestion:
 		wr = wrapper{Kind: "TargetQuestion", Data: data}
+	case TargetSheet:
+		wr = wrapper{Kind: "TargetSheet", Data: data}
 	case TargetTrivial:
 		wr = wrapper{Kind: "TargetTrivial", Data: data}
 
@@ -85,5 +91,6 @@ func (item TargetContentWrapper) MarshalJSON() ([]byte, error) {
 const (
 	TargetExerciceTaKind = "TargetExercice"
 	TargetQuestionTaKind = "TargetQuestion"
+	TargetSheetTaKind    = "TargetSheet"
 	TargetTrivialTaKind  = "TargetTrivial"
 )

@@ -35,6 +35,7 @@ func scanOneSheet(row scanner) (Sheet, error) {
 		&item.IdTeacher,
 		&item.Level,
 		&item.Anonymous,
+		&item.Public,
 	)
 	return item, err
 }
@@ -103,22 +104,22 @@ func ScanSheets(rs *sql.Rows) (Sheets, error) {
 // Insert one Sheet in the database and returns the item with id filled.
 func (item Sheet) Insert(tx DB) (out Sheet, err error) {
 	row := tx.QueryRow(`INSERT INTO sheets (
-		title, idteacher, level, anonymous
+		title, idteacher, level, anonymous, public
 		) VALUES (
-		$1, $2, $3, $4
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.Title, item.IdTeacher, item.Level, item.Anonymous)
+		`, item.Title, item.IdTeacher, item.Level, item.Anonymous, item.Public)
 	return ScanSheet(row)
 }
 
 // Update Sheet in the database and returns the new version.
 func (item Sheet) Update(tx DB) (out Sheet, err error) {
 	row := tx.QueryRow(`UPDATE sheets SET (
-		title, idteacher, level, anonymous
+		title, idteacher, level, anonymous, public
 		) = (
-		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
-		`, item.Title, item.IdTeacher, item.Level, item.Anonymous, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.Title, item.IdTeacher, item.Level, item.Anonymous, item.Public, item.Id)
 	return ScanSheet(row)
 }
 

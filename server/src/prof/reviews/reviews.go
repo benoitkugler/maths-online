@@ -11,10 +11,12 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	edAPI "github.com/benoitkugler/maths-online/server/src/prof/editor"
+	hoAPI "github.com/benoitkugler/maths-online/server/src/prof/homework"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	trAPI "github.com/benoitkugler/maths-online/server/src/prof/trivial"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	re "github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -269,7 +271,7 @@ func (ct *Controller) updateApproval(args ReviewUpdateApprovalIn, userID uID) er
 
 type ReviewCreateIn struct {
 	Kind re.ReviewKind
-	Id   int64 // either IdQuestion, IdExercice, IdTrivial
+	Id   int64 // either IdQuestion, IdExercice, IdTrivial, IdSheet
 }
 
 // ReviewCreate is trigger by a teacher who wants to publish one of his
@@ -299,6 +301,8 @@ func (ct *Controller) createReview(args ReviewCreateIn, userID uID) (re.Review, 
 		target = re.ReviewExercice{IdExercice: editor.IdExercicegroup(args.Id), Kind: args.Kind}
 	case re.KTrivial:
 		target = re.ReviewTrivial{IdTrivial: trivial.IdTrivial(args.Id), Kind: args.Kind}
+	case re.KSheet:
+		target = re.ReviewSheet{IdSheet: homework.IdSheet(args.Id), Kind: args.Kind}
 	default:
 		return re.Review{}, fmt.Errorf("internal error: unknown target kind %d", args.Kind)
 	}
@@ -499,6 +503,8 @@ func (ct *Controller) loadTargetContent(id re.IdReview, userID uID) (TargetConte
 		return ct.loadExercice(target, userID)
 	case re.ReviewTrivial:
 		return ct.loadTrivial(target, userID)
+	case re.ReviewSheet:
+		return ct.loadSheet(target, userID)
 	default:
 		panic("exhaustive switch")
 	}
@@ -578,4 +584,12 @@ func (ct *Controller) loadTrivial(target re.ReviewTrivial, userID uID) (TargetTr
 	}
 
 	return TargetTrivial{Config: triv, NbQuestionsByCategories: nbs}, nil
+}
+
+func (ct *Controller) loadSheet(target re.ReviewSheet, userID uID) (TargetSheet, error) {
+	sheet, err := hoAPI.LoadSheet(ct.db, target.IdSheet, userID, ct.admin.Id)
+	if err != nil {
+		return TargetSheet{}, err
+	}
+	return TargetSheet{Sheet: sheet}, nil
 }

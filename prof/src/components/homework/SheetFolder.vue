@@ -24,17 +24,30 @@
           <v-expansion-panel-text>
             <v-list density="comfortable" class="py-0" style="column-count: 2">
               <v-list-item
-                class="bg-grey-lighten-3 py-2 mb-1"
+                class="bg-grey-lighten-3 py-2 mb-1 px-2"
                 v-for="sheet in level[1]"
                 :key="sheet.Sheet.Id"
                 style="break-inside: avoid-column"
                 color="grey"
                 rounded
               >
-                <v-list-item-title>{{ sheet.Sheet.Title }}</v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ subtitle(sheet) }}
-                </v-list-item-subtitle>
+                <v-menu>
+                  <template v-slot:activator="{ isActive, props }">
+                    <v-card
+                      v-on="{ isActive }"
+                      v-bind="props"
+                      class="pa-2 mr-2"
+                    >
+                      <v-list-item-title>
+                        {{ sheet.Sheet.Title }}
+                      </v-list-item-title>
+                      <v-list-item-subtitle>
+                        {{ subtitle(sheet) }}
+                      </v-list-item-subtitle>
+                    </v-card>
+                  </template>
+                  <PreviewSheet :sheet="sheet"></PreviewSheet>
+                </v-menu>
                 <template v-slot:append="{}">
                   <v-list-item-action>
                     <v-menu offset-y close-on-content-click>
@@ -50,7 +63,10 @@
                         </v-btn>
                       </template>
                       <v-list>
-                        <v-list-subheader
+                        <v-list-subheader v-if="!props.classrooms.length">
+                          Aucune classe.
+                        </v-list-subheader>
+                        <v-list-subheader v-else
                           >Assigner cette feuille à...</v-list-subheader
                         >
                         <v-list-item
@@ -64,14 +80,25 @@
                       </v-list>
                     </v-menu>
                     <!--  -->
-                    <v-menu offset-y close-on-content-click>
+                    <v-btn
+                      v-if="sheet.Origin.Visibility == Visibility.Admin"
+                      @click="emit('duplicate', sheet)"
+                      title="Dupliquer"
+                      icon
+                      class="ml-4"
+                      size="small"
+                    >
+                      <v-icon color="secondary"> mdi-content-copy </v-icon>
+                    </v-btn>
+
+                    <v-menu v-else offset-y close-on-content-click>
                       <template v-slot:activator="{ isActive, props }">
                         <v-btn
                           v-on="{ isActive }"
                           v-bind="props"
-                          size="small"
                           icon
-                          class="ml-2"
+                          class="ml-4"
+                          size="small"
                         >
                           <v-icon>mdi-dots-vertical</v-icon>
                         </v-btn>
@@ -80,34 +107,56 @@
                         <v-list-item>
                           <v-btn
                             variant="flat"
-                            class="mx-1"
+                            class="mr-2"
+                            size="small"
                             @click="emit('edit', sheet)"
                           >
-                            <v-icon icon="mdi-pencil" class="mr-4"></v-icon>
+                            <template v-slot:prepend>
+                              <v-icon icon="mdi-pencil" class="mr-4"></v-icon>
+                            </template>
                             Editer
                           </v-btn>
                         </v-list-item>
                         <v-list-item>
                           <v-btn
                             variant="flat"
-                            class="mx-1"
+                            class="mr-2"
+                            size="small"
                             @click="emit('duplicate', sheet)"
                           >
-                            <v-icon color="secondary" class="mr-4">
-                              mdi-content-copy
-                            </v-icon>
+                            <template v-slot:prepend>
+                              <v-icon color="secondary" class="mr-4">
+                                mdi-content-copy
+                              </v-icon>
+                            </template>
                             Dupliquer
                           </v-btn>
                         </v-list-item>
                         <v-list-item>
                           <v-btn
                             variant="flat"
-                            class="mx-1"
+                            class="mr-2"
+                            size="small"
                             @click="emit('delete', sheet)"
                           >
-                            <v-icon color="red" class="mr-4">mdi-delete</v-icon>
+                            <template v-slot:prepend>
+                              <v-icon color="red" class="mr-4"
+                                >mdi-delete</v-icon
+                              >
+                            </template>
                             Supprimer
                           </v-btn>
+                        </v-list-item>
+
+                        <v-list-item>
+                          <OriginButton
+                            variant="text"
+                            :origin="sheet.Origin"
+                            @update-public="
+                              b => emit('updatePublic', sheet.Sheet, b)
+                            "
+                            @create-review="emit('createReview', sheet.Sheet)"
+                          ></OriginButton>
                         </v-list-item>
                       </v-list>
                     </v-menu>
@@ -123,8 +172,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Classroom, SheetExt } from "@/controller/api_gen";
+import {
+  Visibility,
+  type Classroom,
+  type SheetExt,
+  type Sheet
+} from "@/controller/api_gen";
 import { computed } from "vue";
+import OriginButton from "../OriginButton.vue";
+import PreviewSheet from "./PreviewSheet.vue";
 
 interface Props {
   sheets: Map<number, SheetExt>;
@@ -139,6 +195,8 @@ const emit = defineEmits<{
   (e: "edit", sheet: SheetExt): void;
   (e: "duplicate", sheet: SheetExt): void;
   (e: "delete", sheet: SheetExt): void;
+  (e: "updatePublic", sheet: Sheet, pub: boolean): void;
+  (e: "createReview", sheet: Sheet): void;
 }>();
 
 const byLevels = computed(() => {
@@ -150,7 +208,7 @@ const byLevels = computed(() => {
   }
   const out = Array.from(tmp.entries());
   out.sort((a, b) => a[0].localeCompare(b[0]));
-  out.forEach((v) =>
+  out.forEach(v =>
     v[1].sort((a, b) => a.Sheet.Title.localeCompare(b.Sheet.Title))
   );
   return out;

@@ -3,15 +3,28 @@
     <v-card-text>
       <v-row justify="space-between">
         <v-col align-self="center" cols="auto">
+          <v-menu v-if="sheet.Origin.Visibility == Visibility.Admin">
+            <template v-slot:activator="{ isActive, props }">
+              <v-card
+                v-on="{ isActive }"
+                v-bind="props"
+                variant="elevated"
+                :title="sheet.Sheet.Title"
+                :subtitle="subtitle"
+                color="yellow"
+              >
+              </v-card>
+            </template>
+            <PreviewSheet :sheet="sheet"></PreviewSheet>
+          </v-menu>
           <v-card
-            class="pb-2"
-            variant="outlined"
+            v-else
+            variant="elevated"
             @click="emit('editSheet', props.sheet)"
+            :title="sheet.Sheet.Title"
+            :subtitle="subtitle"
+            color="grey-lighten-3"
           >
-            <v-card-title>{{ sheet.Sheet.Title }} </v-card-title>
-            <v-card-subtitle>
-              {{ subtitle }}
-            </v-card-subtitle>
           </v-card>
         </v-col>
         <v-col cols="auto" align-self="center">
@@ -94,7 +107,7 @@
           >
             <template v-slot:activator="{ isActive, props }">
               <v-chip
-                v-on="isActive"
+                v-on="{ isActive }"
                 v-bind="props"
                 style="text-align: right"
                 class="ml-1"
@@ -133,17 +146,19 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Classroom,
-  Sheet,
-  SheetExt,
-  Time,
-  Travail,
+import {
+  Visibility,
+  type Classroom,
+  type Sheet,
+  type SheetExt,
+  type Time,
+  type Travail
 } from "@/controller/api_gen";
 import { formatTime } from "@/controller/utils";
 import { computed } from "vue";
 import TimeField from "./TimeField.vue";
 import { $ref } from "vue/macros";
+import PreviewSheet from "./PreviewSheet.vue";
 
 interface Props {
   travail: Travail;

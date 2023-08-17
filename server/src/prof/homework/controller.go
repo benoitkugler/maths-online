@@ -62,11 +62,12 @@ func (ct *Controller) getSheets(userID uID) (out Homeworks, err error) {
 		return out, utils.SQLError(err)
 	}
 
-	// load all the available [Sheets] ...
-	sheetsDict, err := ho.SelectSheetsByIdTeachers(ct.db, userID)
+	// load all the available [Sheets] (including admin) ...
+	sheetsDict, err := ho.SelectSheetsByIdTeachers(ct.db, userID, ct.admin.Id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
+	sheetsDict.RestrictVisible(userID)
 
 	// .. and all the [Travail]s
 	travauxDict, err := ho.SelectTravailsByIdClassrooms(ct.db, classrooms.IDs()...)
@@ -80,7 +81,7 @@ func (ct *Controller) getSheets(userID uID) (out Homeworks, err error) {
 	}
 
 	// finally agregate the results
-	out.Sheets = loader.buildSheetExts(sheetsDict)
+	out.Sheets = loader.buildSheetExts(sheetsDict, userID, ct.admin.Id)
 	for _, class := range classrooms {
 		out.Travaux = append(out.Travaux, newClassroomTravaux(class, travauxDict))
 	}
@@ -99,7 +100,7 @@ func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
 		return err
 	}
 
-	out := SheetExt{Sheet: sheet}
+	out := SheetExt{Sheet: sheet, Origin: tcAPI.Origin{Visibility: tcAPI.Personnal}}
 	return c.JSON(200, out)
 }
 
@@ -229,7 +230,7 @@ func (ct *Controller) createTravail(idClassroom teacher.IdClassroom, userID uID)
 		return CreateTravailOut{}, utils.SQLError(err)
 	}
 
-	return CreateTravailOut{Sheet: SheetExt{Sheet: sheet}, Travail: tr}, nil
+	return CreateTravailOut{Sheet: SheetExt{Sheet: sheet, Origin: tcAPI.Origin{Visibility: tcAPI.Personnal}}, Travail: tr}, nil
 }
 
 func checkSheetOwner(db ho.DB, idSheet ho.IdSheet, userID uID) error {
@@ -871,7 +872,7 @@ func (ct *Controller) duplicateSheet(idSheet ho.IdSheet, userID uID) (SheetExt, 
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	newSheet, err := duplicateSheetTx(tx, idSheet, userID)
+	newSheet, err := duplicateSheetTx(tx, idSheet, userID, ct.admin.Id)
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, err
@@ -882,24 +883,19 @@ func (ct *Controller) duplicateSheet(idSheet ho.IdSheet, userID uID) (SheetExt, 
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	loader, err := newSheetsLoader(ct.db, []ho.IdSheet{newSheet.Id})
-	if err != nil {
-		return SheetExt{}, utils.SQLError(err)
-	}
-
-	out := loader.newSheetExt(newSheet)
-	return out, nil
+	return LoadSheet(ct.db, newSheet.Id, userID, ct.admin.Id)
 }
 
 // DO NOT COMMIT, DO NOT ROLLBACK
-func duplicateSheetTx(tx *sql.Tx, idSheet ho.IdSheet, userID uID) (ho.Sheet, error) {
-	if err := checkSheetOwner(tx, idSheet, userID); err != nil {
-		return ho.Sheet{}, err
-	}
-
+func duplicateSheetTx(tx *sql.Tx, idSheet ho.IdSheet, userID, adminID uID) (ho.Sheet, error) {
 	sheet, err := ho.SelectSheet(tx, idSheet)
 	if err != nil {
 		return ho.Sheet{}, utils.SQLError(err)
+	}
+
+	// duplicate is allowed for public sheet or personnal ones
+	if !sheet.IsVisibleBy(userID) {
+		return ho.Sheet{}, errAccessForbidden
 	}
 
 	links, err := ho.SelectSheetTasksByIdSheets(tx, sheet.Id)
@@ -914,6 +910,9 @@ func duplicateSheetTx(tx *sql.Tx, idSheet ho.IdSheet, userID uID) (ho.Sheet, err
 
 	// shallow copy of the item ...
 	sheet.Anonymous = ho.OptionalIdTravail{} // new sheet can't have the right travail id, since it does not exists
+	// attribute the new copy to the current user, and make it private
+	sheet.IdTeacher = userID
+	sheet.Public = false
 	newSheet, err := sheet.Insert(tx)
 	if err != nil {
 		return ho.Sheet{}, utils.SQLError(err)
@@ -1022,7 +1021,7 @@ func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (CopyTravail
 	var newSheet SheetExt
 	if isAnonymous {
 		// also duplicate the underlying sheet
-		newSheet.Sheet, err = duplicateSheetTx(tx, sheet.Id, userID)
+		newSheet.Sheet, err = duplicateSheetTx(tx, sheet.Id, userID, ct.admin.Id)
 		if err != nil {
 			_ = tx.Rollback()
 			return CopyTravailToOut{}, utils.SQLError(err)
@@ -1047,13 +1046,11 @@ func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (CopyTravail
 			return CopyTravailToOut{}, utils.SQLError(err)
 		}
 
-		loader, err := newSheetsLoader(ct.db, []ho.IdSheet{newSheet.Sheet.Id})
+		newSheet, err = LoadSheet(tx, newSheet.Sheet.Id, userID, ct.admin.Id)
 		if err != nil {
 			_ = tx.Rollback()
-			return CopyTravailToOut{}, utils.SQLError(err)
+			return CopyTravailToOut{}, err
 		}
-
-		newSheet = loader.newSheetExt(newSheet.Sheet)
 	}
 
 	err = tx.Commit()

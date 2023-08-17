@@ -2,6 +2,7 @@ package reviews
 
 import (
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
 )
@@ -11,7 +12,7 @@ type IdReview int64
 // Review stores the messages and evaluation about publishing a user
 // created content in the admin account.
 // An implicit invariant is that each [Review] is mapped to exactly one item
-// from the tables [ReviewTrivial], [ReviewQuestion], [ReviewExercice].
+// from the tables [ReviewTrivial], [ReviewQuestion], [ReviewExercice], [ReviewSheet].
 // gomacro:SQL ADD UNIQUE (Id, Kind)
 type Review struct {
 	Id   IdReview
@@ -46,6 +47,16 @@ type ReviewTrivial struct {
 	IdReview  IdReview `gomacro-sql-on-delete:"CASCADE"`
 	IdTrivial trivial.IdTrivial
 	Kind      ReviewKind // used for integrity
+}
+
+// gomacro:SQL ADD FOREIGN KEY (IdReview, Kind) REFERENCES Review (ID, Kind) ON DELETE CASCADE
+// gomacro:SQL ADD CHECK (Kind = #[ReviewKind.KSheet])
+// gomacro:SQL ADD UNIQUE (IdSheet)
+// gomacro:SQL ADD UNIQUE (IdReview)
+type ReviewSheet struct {
+	IdReview IdReview `gomacro-sql-on-delete:"CASCADE"`
+	IdSheet  homework.IdSheet
+	Kind     ReviewKind // used for integrity
 }
 
 type Comments []Comment

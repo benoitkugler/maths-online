@@ -33,6 +33,7 @@ func randSheet() Sheet {
 	s.IdTeacher = randtea_IdTeacher()
 	s.Level = randstring()
 	s.Anonymous = randOptionalIdTravail()
+	s.Public = randbool()
 
 	return s
 }

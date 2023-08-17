@@ -1,13 +1,13 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE reviews (
     Id serial PRIMARY KEY,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_exercices (
     IdReview integer NOT NULL,
     IdExercice integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_participations (
@@ -20,13 +20,19 @@ CREATE TABLE review_participations (
 CREATE TABLE review_questions (
     IdReview integer NOT NULL,
     IdQuestion integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+);
+
+CREATE TABLE review_sheets (
+    IdReview integer NOT NULL,
+    IdSheet integer NOT NULL,
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_trivials (
     IdReview integer NOT NULL,
     IdTrivial integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 -- constraints
@@ -89,6 +95,25 @@ ALTER TABLE review_trivials
 
 ALTER TABLE review_trivials
     ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD CHECK (Kind = 3
+    /* ReviewKind.KSheet */);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdSheet);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets;
 
 ALTER TABLE review_participations
     ADD UNIQUE (IdReview, IdTeacher);

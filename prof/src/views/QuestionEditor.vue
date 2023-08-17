@@ -54,7 +54,7 @@ import {
   type Question,
   type QuestiongroupExt,
   type TagsDB,
-  type LoopbackShowQuestion,
+  type LoopbackShowQuestion
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "@vue/runtime-core";
@@ -100,7 +100,8 @@ function showFolder(index: [LevelTag, string]) {
     TitleQuery: "",
     LevelTags: [index[0]],
     ChapterTags: [index[1]],
-    Origin: OriginKind.All,
+    SubLevelTags: [],
+    Origin: OriginKind.All
   };
   viewMode = "details";
 }

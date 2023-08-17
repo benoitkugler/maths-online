@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"sort"
 
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
+	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
@@ -74,6 +76,7 @@ type SheetExt struct {
 	Sheet     ho.Sheet
 	Tasks     []TaskExt
 	NbTravaux int
+	Origin    tcAPI.Origin
 }
 
 // sheetLoader is an helper type to
@@ -86,6 +89,8 @@ type sheetLoader struct {
 	progressions map[tasks.IdTask]tasks.Progressions
 
 	travaux map[ho.IdSheet]ho.Travails
+
+	reviews map[ho.IdSheet]reviews.ReviewSheet
 }
 
 func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err error) {
@@ -112,8 +117,14 @@ func newSheetsLoader(db ho.DB, idSheets []ho.IdSheet) (out sheetLoader, err erro
 		return out, utils.SQLError(err)
 	}
 
+	links3, err := reviews.SelectReviewSheetsByIdSheets(db, idSheets...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	out.links = links1.ByIdSheet()
 	out.progressions = links2.ByIdTask()
+	out.reviews = links3.ByIdSheet()
 
 	return out, nil
 }
@@ -124,10 +135,20 @@ func (loader sheetLoader) tasksForSheet(id ho.IdSheet) ho.SheetTasks {
 	return links
 }
 
-func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
+func (loader sheetLoader) newSheetExt(sheet ho.Sheet, userID, adminID uID) SheetExt {
+	var inReview tcAPI.OptionalIdReview
+	if rev, has := loader.reviews[sheet.Id]; has {
+		inReview = tcAPI.OptionalIdReview{InReview: true, Id: rev.IdReview}
+	}
 	out := SheetExt{
 		Sheet:     sheet,
 		NbTravaux: len(loader.travaux[sheet.Id]),
+		Origin: tcAPI.Origin{
+			Visibility:   tcAPI.NewVisibility(sheet.IdTeacher, userID, adminID, sheet.Public),
+			IsPublic:     sheet.Public,
+			AllowPublish: userID == adminID,
+			IsInReview:   inReview,
+		},
 	}
 	links := loader.tasksForSheet(sheet.Id)
 	for _, link := range links {
@@ -138,12 +159,27 @@ func (loader sheetLoader) newSheetExt(sheet ho.Sheet) SheetExt {
 	return out
 }
 
-func (loader sheetLoader) buildSheetExts(sheets ho.Sheets) map[ho.IdSheet]SheetExt {
+func (loader sheetLoader) buildSheetExts(sheets ho.Sheets, userID, adminID uID) map[ho.IdSheet]SheetExt {
 	out := make(map[ho.IdSheet]SheetExt, len(sheets))
 	for idSheet, v := range sheets {
-		out[idSheet] = loader.newSheetExt(v)
+		out[idSheet] = loader.newSheetExt(v, userID, adminID)
 	}
 	return out
+}
+
+func LoadSheet(db ho.DB, id ho.IdSheet, userID, adminID uID) (SheetExt, error) {
+	sheet, err := ho.SelectSheet(db, id)
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	loader, err := newSheetsLoader(db, []ho.IdSheet{id})
+	if err != nil {
+		return SheetExt{}, utils.SQLError(err)
+	}
+
+	out := loader.newSheetExt(sheet, userID, adminID)
+	return out, nil
 }
 
 func updateSheetTasksOrder(tx *sql.Tx, idSheet ho.IdSheet, l []tasks.IdTask) error {

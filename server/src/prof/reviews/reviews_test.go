@@ -8,6 +8,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	re "github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
@@ -20,6 +21,7 @@ type sample struct {
 	question editor.Questiongroup
 	exercice editor.Exercicegroup
 	trivial  trivial.Trivial
+	sheet    homework.Sheet
 }
 
 var envs map[string]string
@@ -37,7 +39,7 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 	tu.Assert(t, userMail != "")
 
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql",
-		"../../sql/trivial/gen_create.sql", "../../sql/reviews/gen_create.sql")
+		"../../sql/trivial/gen_create.sql", "../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql")
 
 	admin, err := teacher.Teacher{IsAdmin: true, Mail: " "}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -53,12 +55,16 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 	tr, err := trivial.Trivial{IdTeacher: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
+	sheet, err := homework.Sheet{IdTeacher: user.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
 	return db, sample{
 		adminID:  admin.Id,
 		userID:   user.Id,
 		question: qu,
 		exercice: ex,
 		trivial:  tr,
+		sheet:    sheet,
 	}
 }
 
@@ -73,14 +79,16 @@ func TestCRUDReviews(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	r3, err := ct.createReview(ReviewCreateIn{Kind: re.KTrivial, Id: int64(sample.trivial.Id)}, sample.userID)
 	tu.AssertNoErr(t, err)
+	r4, err := ct.createReview(ReviewCreateIn{Kind: re.KSheet, Id: int64(sample.sheet.Id)}, sample.userID)
+	tu.AssertNoErr(t, err)
 
 	ls, err := ct.listReviews()
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(ls) == 3)
+	tu.Assert(t, len(ls) == 4)
 
 	targets, err := re.LoadTargets(db)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(targets) == 3)
+	tu.Assert(t, len(targets) == 4)
 
 	err = ct.deleteReview(r1.Id, sample.userID)
 	tu.AssertNoErr(t, err)
@@ -89,9 +97,11 @@ func TestCRUDReviews(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	targets, err = re.LoadTargets(db)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(targets) == 1)
+	tu.Assert(t, len(targets) == 2)
 
 	err = ct.deleteReview(r3.Id, sample.userID)
+	tu.AssertNoErr(t, err)
+	err = ct.deleteReview(r4.Id, sample.userID)
 	tu.AssertNoErr(t, err)
 }
 

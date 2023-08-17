@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
 )
@@ -51,7 +52,7 @@ func randReviewExercice() ReviewExercice {
 }
 
 func randReviewKind() ReviewKind {
-	choix := [...]ReviewKind{KQuestion, KExercice, KTrivial}
+	choix := [...]ReviewKind{KQuestion, KExercice, KTrivial, KSheet}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -70,6 +71,15 @@ func randReviewQuestion() ReviewQuestion {
 	var s ReviewQuestion
 	s.IdReview = randIdReview()
 	s.IdQuestion = randedi_IdQuestiongroup()
+	s.Kind = randReviewKind()
+
+	return s
+}
+
+func randReviewSheet() ReviewSheet {
+	var s ReviewSheet
+	s.IdReview = randIdReview()
+	s.IdSheet = randhom_IdSheet()
 	s.Kind = randReviewKind()
 
 	return s
@@ -99,6 +109,10 @@ func randedi_IdExercicegroup() editor.IdExercicegroup {
 
 func randedi_IdQuestiongroup() editor.IdQuestiongroup {
 	return editor.IdQuestiongroup(randint64())
+}
+
+func randhom_IdSheet() homework.IdSheet {
+	return homework.IdSheet(randint64())
 }
 
 func randint64() int64 {

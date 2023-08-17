@@ -51,7 +51,7 @@ import {
   type Index,
   type Query,
   type TagsDB,
-  type LoopbackShowExercice,
+  type LoopbackShowExercice
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { emptyTagsDB } from "@/controller/editor";
@@ -95,7 +95,8 @@ function showFolder(index: [LevelTag, string]) {
     TitleQuery: "",
     LevelTags: [index[0]],
     ChapterTags: [index[1]],
-    Origin: OriginKind.All,
+    SubLevelTags: [],
+    Origin: OriginKind.All
   };
   viewMode = "details";
 }

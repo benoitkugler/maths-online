@@ -4,7 +4,8 @@ CREATE TABLE sheets (
     Title text NOT NULL,
     IdTeacher integer NOT NULL,
     Level text NOT NULL,
-    Anonymous integer
+    Anonymous integer,
+    Public boolean NOT NULL
 );
 
 CREATE TABLE sheet_tasks (

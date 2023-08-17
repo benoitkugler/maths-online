@@ -44,12 +44,14 @@
   <v-dialog v-model="showFavorites">
     <sheet-folder
       :sheets="homeworks.Sheets"
-      :classrooms="homeworks.Travaux.map((t) => t.Classroom)"
+      :classrooms="homeworks.Travaux.map(t => t.Classroom)"
       @create="createSheet"
-      @duplicate="(sh) => duplicateSheet(sh.Sheet.Id)"
+      @duplicate="sh => duplicateSheet(sh.Sheet.Id)"
       @assign="createTravailWith"
-      @delete="(sh) => (sheetToDelete = sh)"
-      @edit="(sh) => (sheetToUpdate = sh)"
+      @delete="sh => (sheetToDelete = sh)"
+      @edit="sh => (sheetToUpdate = sh)"
+      @update-public="updatePublic"
+      @create-review="createReview"
     ></sheet-folder>
   </v-dialog>
 
@@ -85,24 +87,25 @@
       @update="updateTravail"
       @copy="copyTravailTo"
       @delete="deleteTravail"
-      @edit-sheet="(sh) => (sheetToUpdate = sh)"
+      @edit-sheet="sh => (sheetToUpdate = sh)"
       ref="travauxPannel"
     ></travaux-pannel>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type {
-  Monoquestion,
-  RandomMonoquestion,
-  Sheet,
-  SheetExt,
-  TaskExt,
-  Travail,
+import {
+  ReviewKind,
+  type Monoquestion,
+  type RandomMonoquestion,
+  type Sheet,
+  type SheetExt,
+  type TaskExt,
+  type Travail
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onActivated, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { $ref } from "vue/macros";
 import SheetDetails from "../components/homework/SheetDetails.vue";
 import SheetFolder from "@/components/homework/SheetFolder.vue";
@@ -114,6 +117,7 @@ import { ref } from "vue";
 let homeworks = $ref<HomeworksT>({ Sheets: new Map(), Travaux: [] });
 
 const route = useRoute();
+const router = useRouter();
 
 onMounted(() => {
   fetchHomeworks();
@@ -145,15 +149,15 @@ async function fetchHomeworks() {
   if (res == undefined) return;
   homeworks = {
     Sheets: new Map(
-      Object.entries(res.Sheets || {}).map((v) => [Number(v[0]), v[1]])
+      Object.entries(res.Sheets || {}).map(v => [Number(v[0]), v[1]])
     ),
-    Travaux: res.Travaux || [],
+    Travaux: res.Travaux || []
   };
 }
 
 /** return the place of the given classroom in the Travaux list */
 function travauxByClassroom(idClassroom: number) {
-  return (homeworks.Travaux || []).find((cl) => cl.Classroom.id == idClassroom);
+  return (homeworks.Travaux || []).find(cl => cl.Classroom.id == idClassroom);
 }
 
 async function createSheet() {
@@ -169,7 +173,7 @@ async function createSheet() {
 
 async function createTravail(idClassroom: number) {
   const res = await controller.HomeworkCreateTravail({
-    "id-classroom": idClassroom,
+    "id-classroom": idClassroom
   });
   if (res == undefined) {
     return;
@@ -185,7 +189,7 @@ async function createTravail(idClassroom: number) {
 async function createTravailWith(idSheet: number, idClassroom: number) {
   const res = await controller.HomeworkCreateTravailWith({
     IdClassroom: idClassroom,
-    IdSheet: idSheet,
+    IdSheet: idSheet
   });
   if (res == undefined) {
     return;
@@ -204,22 +208,22 @@ async function deleteSheet() {
   }
   const id = sheetToDelete.Sheet.Id;
   const res = await controller.HomeworkDeleteSheet({
-    id: id,
+    id: id
   });
   if (res == undefined) {
     return;
   }
 
   homeworks.Sheets.delete(id);
-  homeworks.Travaux?.forEach((cl) => {
-    cl.Travaux = (cl.Travaux || []).filter((tr) => tr.IdSheet != id);
+  homeworks.Travaux?.forEach(cl => {
+    cl.Travaux = (cl.Travaux || []).filter(tr => tr.IdSheet != id);
   });
   sheetToDelete = null;
 }
 
 async function duplicateSheet(idSheet: number) {
   const res = await controller.HomeworkCopySheet({
-    IdSheet: idSheet,
+    IdSheet: idSheet
   });
   if (res == undefined) {
     return;
@@ -235,10 +239,31 @@ async function updateSheet(sheet: Sheet) {
   homeworks.Sheets.get(sheet.Id)!.Sheet = sheet;
 }
 
+async function updatePublic(sheet: Sheet, pub: boolean) {
+  sheet.Public = pub;
+  const ok = await controller.HomeworkUpdateSheet(sheet);
+  if (ok == undefined) return;
+
+  const sheetExt = homeworks.Sheets.get(sheet.Id)!;
+  sheetExt.Origin.IsPublic = pub;
+  sheetExt.Sheet = sheet;
+  homeworks.Sheets.set(sheet.Id, sheetExt);
+}
+
+async function createReview(sheet: Sheet) {
+  const res = await controller.ReviewCreate({
+    Kind: ReviewKind.KSheet,
+    Id: sheet.Id
+  });
+  if (res == undefined) return;
+
+  router.push({ name: "reviews", query: { id: res.Id } });
+}
+
 async function addExerciceToSheet(sheet: Sheet, exercice: VariantG) {
   const newTask = await controller.HomeworkAddExercice({
     IdExercice: exercice.Id,
-    IdSheet: sheet.Id,
+    IdSheet: sheet.Id
   });
   if (newTask == undefined) {
     return;
@@ -251,7 +276,7 @@ async function addExerciceToSheet(sheet: Sheet, exercice: VariantG) {
 async function addMonoquestionToSheet(sheet: Sheet, question: VariantG) {
   const newTask = await controller.HomeworkAddMonoquestion({
     IdQuestion: question.Id,
-    IdSheet: sheet.Id,
+    IdSheet: sheet.Id
   });
   if (newTask == undefined) {
     return;
@@ -267,7 +292,7 @@ async function addRandomMonoquestionToSheet(
 ) {
   const newTask = await controller.HomeworkAddRandomMonoquestion({
     IdQuestiongroup: group.Id,
-    IdSheet: sheet.Id,
+    IdSheet: sheet.Id
   });
   if (newTask == undefined) {
     return;
@@ -283,7 +308,7 @@ async function updateMonoquestion(sheet: Sheet, qu: Monoquestion) {
 
   const sh = homeworks.Sheets.get(sheet.Id)!;
   const tasks = sh.Tasks || [];
-  const index = tasks.findIndex((v) => v.Id == task.Id);
+  const index = tasks.findIndex(v => v.Id == task.Id);
   tasks[index] = task;
 }
 
@@ -293,7 +318,7 @@ async function updateRandomMonoquestion(sheet: Sheet, qu: RandomMonoquestion) {
 
   const sh = homeworks.Sheets.get(sheet.Id)!;
   const tasks = sh.Tasks || [];
-  const index = tasks.findIndex((v) => v.Id == task.Id);
+  const index = tasks.findIndex(v => v.Id == task.Id);
   tasks[index] = task;
 }
 
@@ -302,13 +327,13 @@ async function removeTaskFromSheet(sheet: Sheet, task: TaskExt) {
   if (res === undefined) return;
 
   const sh = homeworks.Sheets.get(sheet.Id)!;
-  sh.Tasks = (sh.Tasks || []).filter((ta) => ta.Id != task.Id);
+  sh.Tasks = (sh.Tasks || []).filter(ta => ta.Id != task.Id);
 }
 
 async function reorderSheetTasks(sheet: Sheet, tasks: TaskExt[]) {
   await controller.HomeworkReorderSheetTasks({
     IdSheet: sheet.Id,
-    Tasks: tasks.map((t) => t.Id),
+    Tasks: tasks.map(t => t.Id)
   });
 
   const sh = homeworks.Sheets.get(sheet.Id)!;
@@ -328,14 +353,14 @@ async function updateTravail(travail: Travail) {
   if (ok == undefined) return;
 
   const cl = travauxByClassroom(travail.IdClassroom)!;
-  const index = cl.Travaux!.findIndex((tr) => tr.Id == travail.Id);
+  const index = cl.Travaux!.findIndex(tr => tr.Id == travail.Id);
   cl.Travaux![index] = travail;
 }
 
 async function copyTravailTo(tr: Travail, idClassroom: number) {
   const res = await controller.HomeworkCopyTravail({
     IdTravail: tr.Id,
-    IdClassroom: idClassroom,
+    IdClassroom: idClassroom
   });
   if (res === undefined) return;
 
@@ -350,7 +375,7 @@ async function deleteTravail(tr: Travail) {
   const res = await controller.HomeworkDeleteTravail({ id: tr.Id });
   if (res === undefined) return;
   const cl = travauxByClassroom(tr.IdClassroom)!;
-  cl.Travaux = (cl.Travaux || []).filter((t) => t.Id != tr.Id);
+  cl.Travaux = (cl.Travaux || []).filter(t => t.Id != tr.Id);
 }
 </script>
 

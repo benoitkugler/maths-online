@@ -36,17 +36,22 @@
         @click.stop
         :color="isPersonnalAndShared ? 'blue' : undefined"
       >
-        <v-icon
-          icon="mdi-share-variant"
-          size="small"
-          :class="props.variant == 'text' ? 'mr-2' : ''"
-        ></v-icon>
+        <template v-slot:prepend>
+          <v-icon
+            icon="mdi-share-variant"
+            size="small"
+            :class="props.variant == 'text' ? 'mr-4' : ''"
+            v-if="props.variant == 'text'"
+          ></v-icon>
+        </template>
+
         <template v-if="props.variant == 'text'">Publier</template>
+        <v-icon v-else icon="mdi-share-variant" size="small"></v-icon>
       </v-btn>
     </template>
     <OriginCard
       :origin="props.origin"
-      @update="(b) => emit('updatePublic', b)"
+      @update="b => emit('updatePublic', b)"
       @create-review="confirmeCreate = true"
       @go-to-review="goToReview"
     ></OriginCard>
