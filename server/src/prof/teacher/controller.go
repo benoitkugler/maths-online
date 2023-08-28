@@ -353,10 +353,9 @@ func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeac
 // shared types
 
 type Origin struct {
-	AllowPublish bool             // is the ressource allowed to be made public ?
-	IsPublic     bool             // used, for Personnal visibility
-	IsInReview   OptionalIdReview // true if the owner has already stared a review for the resource
 	Visibility   Visibility
+	PublicStatus PublicStatus
+	IsInReview   OptionalIdReview // true if the owner has already started a review for the resource
 }
 
 type OptionalIdReview struct {

@@ -37,11 +37,11 @@
 import type {
   LoopbackShowQuestion,
   Question,
-  QuestionExerciceUses,
   QuestiongroupExt,
   Sheet,
   Tags,
   TagsDB,
+  TaskUses
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -76,6 +76,7 @@ let resource = computed<ResourceGroup>(() => ({
   Title: group.Group.Title,
   Tags: group.Tags,
   Variants: ownVariants,
+  Origin: group.Origin
 }));
 
 let variantIndex = $ref(0);
@@ -94,7 +95,7 @@ async function updateQuestiongroup() {
   await controller.EditorUpdateQuestiongroup(group.Group);
 }
 
-let deletedBlocked = $ref<QuestionExerciceUses>(null);
+let deletedBlocked = $ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
   deletedBlocked = null;
 
@@ -110,7 +111,7 @@ async function deleteVariante(que: VariantG) {
     return;
   }
 
-  ownVariants = ownVariants.filter((qu) => qu.Id != que.Id);
+  ownVariants = ownVariants.filter(qu => qu.Id != que.Id);
   if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
@@ -125,7 +126,7 @@ let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
 
 async function duplicateVariante(variant: VariantG) {
   const newQuestion = await controller.EditorDuplicateQuestion({
-    id: variant.Id,
+    id: variant.Id
   });
   if (newQuestion == undefined) {
     return;
@@ -139,7 +140,7 @@ async function duplicateVariante(variant: VariantG) {
 async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateQuestionTags({
     Id: group.Group.Id,
-    Tags: newTags,
+    Tags: newTags
   });
   if (rep === undefined) {
     return;
@@ -158,7 +159,7 @@ async function updateVariant(variant: VariantG) {
   ownVariants[variantIndex].Subtitle = variant.Subtitle;
   ownVariants[variantIndex].Difficulty = variant.Difficulty;
   await controller.EditorSaveQuestionMeta({
-    Question: ownVariants[variantIndex],
+    Question: ownVariants[variantIndex]
   });
 }
 </script>

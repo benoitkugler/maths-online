@@ -129,26 +129,11 @@ class Controller extends AbstractAPI {
     this.inRequest = true;
   }
 
-  protected onSuccessTeacherGetSettings(data: TeacherSettings): void {
-    this.inRequest = false;
-  }
-
   protected onSuccessTeacherUpdateSettings(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Paramètres modifiés avec succès.");
     }
-  }
-
-  protected onSuccessTeacherResetPassword(): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessEditorGetQuestionsIndex(data: Index): void {
-    this.inRequest = false;
-  }
-  protected onSuccessEditorGetExercicesIndex(data: Index): void {
-    this.inRequest = false;
   }
 
   protected onSuccessEditorDuplicateQuestiongroup(): void {
@@ -186,10 +171,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessEditorGetQuestions(data: Question[] | null): void {
-    this.inRequest = false;
-  }
-
   protected onSuccessEditorGenerateSyntaxHint(data: TextBlock): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -224,15 +205,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessHomeworkGetMonoquestion(data: Monoquestion): void {
-    this.inRequest = false;
-  }
-  protected onSuccessHomeworkGetRandomMonoquestion(
-    data: RandomMonoquestion
-  ): void {
-    this.inRequest = false;
-  }
-
   protected onSuccessHomeworkUpdateMonoquestion(data: TaskExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -256,9 +228,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessHomeworkGetSheets(data: Homeworks): void {
-    this.inRequest = false;
-  }
   protected onSuccessHomeworkCreateSheet(data: SheetExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -324,15 +293,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessExerciceGetContent(data: ExerciceExt): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessEditorCheckQuestionParameters(
-    data: CheckQuestionParametersOut
-  ): void {
-    this.inRequest = false;
-  }
   protected onSuccessEditorSaveQuestionAndPreview(
     data: SaveQuestionAndPreviewOut
   ): void {
@@ -342,17 +302,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessEditorCheckExerciceParameters(
-    data: CheckExerciceParametersOut
-  ): void {
-    this.inRequest = false;
-  }
-  protected onSuccessEditorSaveExerciceAndPreview(
-    data: SaveExerciceAndPreviewOut
-  ): void {
-    this.inRequest = false;
-  }
-
   protected onSuccessEditorDuplicateExercicegroup(): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -360,35 +309,11 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessEditorQuestionExportLateX(
-    data: ExportQuestionLatexOut
-  ): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessEditorExerciceExportLateX(
-    data: ExportExerciceLatexOut
-  ): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessGetTrivialRunningSessions(
-    data: RunningSessionMetaOut
-  ): void {
-    this.inRequest = false;
-  }
-
   protected onSuccessStartTrivialGame(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Partie lancée avec succés.");
     }
-  }
-
-  protected onSuccessTeacherGenerateClassroomCode(
-    data: GenerateClassroomCodeOut
-  ): void {
-    this.inRequest = false;
   }
 
   protected onSuccessTeacherAddStudent(data: Student): void {
@@ -417,13 +342,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessTeacherGetClassroomStudents(data: Student[] | null): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessTeacherGetClassrooms(data: ClassroomExt[] | null): void {
-    this.inRequest = false;
-  }
   protected onSuccessTeacherCreateClassroom(): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -457,13 +375,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessAskInscription(data: AskInscriptionOut): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessValidateInscription(): void {
-    this.inRequest = false;
-  }
   protected onSuccessLoggin(data: LogginOut): void {
     this.inRequest = false;
     if (data.Error == "") {
@@ -481,11 +392,6 @@ class Controller extends AbstractAPI {
       this.showMessage("Session dupliquée.");
     }
   }
-  protected onSuccessCheckMissingQuestions(
-    data: CheckMissingQuestionsOut
-  ): void {
-    this.inRequest = false;
-  }
 
   protected onSuccessEditorDuplicateQuestion(): void {
     this.inRequest = false;
@@ -494,12 +400,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {
-    this.inRequest = false;
-  }
-  protected onSuccessCreateTrivialPoursuit(data: TrivialExt): void {
-    this.inRequest = false;
-  }
   protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -522,13 +422,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessTrivialGetSelfaccess(data: TrivialSelfaccess): void {
-    this.inRequest = false;
-  }
   protected onSuccessTrivialUpdateSelfaccess(): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -536,32 +429,18 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {
-    this.inRequest = false;
-  }
-  protected onSuccessEditorCreateQuestion(data: Question): void {
-    this.inRequest = false;
-  }
   protected onSuccessEditorUpdateTags(): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage(`Etiquettes modifiées avec succès.`);
     }
   }
-  protected onSuccessEditorGetTags(): void {
-    this.inRequest = false;
-  }
 
   protected onSuccessEditorDeleteQuestion(data: DeleteQuestionOut): void {
     this.inRequest = false;
-    console.log(data);
-
     if (this.showMessage && data.Deleted) {
       this.showMessage("Question supprimée avec succès.");
     }
-  }
-  protected onSuccessEditorPausePreview(): void {
-    this.inRequest = false;
   }
 
   protected onSuccessEditorUpdateQuestionTags(): void {
@@ -570,9 +449,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Etiquettes modifiées avec succès.");
     }
   }
-  protected onSuccessEditorSearchExercices(data: ListExercicesOut): void {
-    this.inRequest = false;
-  }
+
   protected onSuccessEditorUpdateExercicegroup(): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -585,9 +462,7 @@ class Controller extends AbstractAPI {
       this.showMessage("Etiquettes modifiées avec succès.");
     }
   }
-  protected onSuccessEditorGetExerciceContent(data: ExerciceExt): void {
-    this.inRequest = false;
-  }
+
   protected onSuccessEditorCreateExercice(data: ExercicegroupExt): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -665,16 +540,6 @@ class Controller extends AbstractAPI {
       this.showMessage("Demande de publication créée avec succès.");
     }
   }
-  protected onSuccessReviewsList(data: ReviewHeader[] | null): void {
-    this.inRequest = false;
-  }
-  protected onSuccessReviewLoad(data: ReviewExt): void {
-    this.inRequest = false;
-  }
-
-  protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {
-    this.inRequest = false;
-  }
 
   protected onSuccessReviewDelete(): void {
     this.inRequest = false;
@@ -700,6 +565,15 @@ class Controller extends AbstractAPI {
     if (this.showMessage) {
       this.showMessage("Demande de publication acceptée avec succès.");
     }
+  }
+
+  protected onSuccessEditorDeleteQuestiongroup(data: DeleteQuestionOut): void {
+    if (this.showMessage && data.Deleted)
+      this.showMessage("Question (et ses variantes) supprimée avec succès.");
+  }
+  protected onSuccessEditorDeleteExercicegroup(data: DeleteExerciceOut): void {
+    if (this.showMessage && data.Deleted)
+      this.showMessage("Exercice (et ses variantes) supprimé avec succès.");
   }
 }
 

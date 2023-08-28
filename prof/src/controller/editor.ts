@@ -37,7 +37,10 @@ import {
   type TreeBlock,
   type GeometricConstructionFieldBlock,
   GeoFieldKind,
-  FiguresOrGraphsKind
+  FiguresOrGraphsKind,
+  PublicStatus,
+  type QuestiongroupExt,
+  type ExercicegroupExt
 } from "./api_gen";
 import { copy } from "./utils";
 
@@ -654,11 +657,16 @@ export function questionDifficulty(tags: string[]): number {
 }
 
 /** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
-export const visiblityColors: { [key in Visibility]: string } = {
-  [Visibility.Hidden]: "",
-  [Visibility.Admin]: "yellow-lighten-3",
-  [Visibility.Personnal]: "white"
-};
+export const ColorAdmin = "yellow-lighten-4";
+export const ColorPersonnal = "light-blue-lighten-5";
+export const ColorPublic = "blue-lighten-4";
+
+export function colorForOrigin(origin: Origin) {
+  if (origin.PublicStatus == PublicStatus.AdminPublic) return ColorPublic;
+  return origin.Visibility == Visibility.Personnal
+    ? ColorPersonnal
+    : ColorAdmin;
+}
 
 export function removeDuplicates(tags: string[][]) {
   const unique: string[][] = [];
@@ -673,8 +681,7 @@ export function removeDuplicates(tags: string[][]) {
 
 export function personnalOrigin(): Origin {
   return {
-    IsPublic: false,
-    AllowPublish: false,
+    PublicStatus: PublicStatus.NotAdmin,
     Visibility: Visibility.Personnal,
     IsInReview: { InReview: false, Id: -1 }
   };
@@ -749,4 +756,25 @@ export interface ResourceGroup {
   Title: string;
   Variants: VariantG[];
   Tags: Tags;
+  Origin: Origin;
+}
+
+export function questionToResource(group: QuestiongroupExt): ResourceGroup {
+  return {
+    Id: group.Group.Id,
+    Title: group.Group.Title,
+    Tags: group.Tags,
+    Variants: group.Variants || [],
+    Origin: group.Origin
+  };
+}
+
+export function exerciceToResource(group: ExercicegroupExt): ResourceGroup {
+  return {
+    Id: group.Group.Id,
+    Title: group.Group.Title,
+    Tags: group.Tags,
+    Variants: group.Variants || [],
+    Origin: group.Origin
+  };
 }

@@ -583,12 +583,12 @@ export interface CheckQuestionParametersOut {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.DeleteExerciceOut
 export interface DeleteExerciceOut {
   Deleted: boolean;
-  BlockedBy: QuestionExerciceUses;
+  BlockedBy: TaskUses;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.DeleteQuestionOut
 export interface DeleteQuestionOut {
   Deleted: boolean;
-  BlockedBy: QuestionExerciceUses;
+  BlockedBy: TaskUses;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceCreateQuestionIn
 export interface ExerciceCreateQuestionIn {
@@ -718,8 +718,6 @@ export interface Query {
   SubLevelTags: string[] | null;
   Origin: OriginKind;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionExerciceUses
-export type QuestionExerciceUses = TaskDetails[] | null;
 // github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionHeader
 export interface QuestionHeader {
   Id: IdQuestion;
@@ -785,6 +783,8 @@ export interface TaskDetails {
   Id: IdTask;
   Sheet: Sheet;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/editor.TaskUses
+export type TaskUses = TaskDetails[] | null;
 // github.com/benoitkugler/maths-online/server/src/prof/editor.UpdateExercicegroupTagsIn
 export interface UpdateExercicegroupTagsIn {
   Id: IdExercicegroup;
@@ -987,11 +987,23 @@ export interface OptionalIdReview {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Origin
 export interface Origin {
-  AllowPublish: boolean;
-  IsPublic: boolean;
-  IsInReview: OptionalIdReview;
   Visibility: Visibility;
+  PublicStatus: PublicStatus;
+  IsInReview: OptionalIdReview;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.PublicStatus
+export enum PublicStatus {
+  NotAdmin = 0,
+  AdminPublic = 1,
+  AdminNotPublic = 2,
+}
+
+export const PublicStatusLabels: { [key in PublicStatus]: string } = {
+  [PublicStatus.NotAdmin]: "",
+  [PublicStatus.AdminPublic]: "",
+  [PublicStatus.AdminNotPublic]: "",
+};
+
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentHeader
 export interface StudentHeader {
   Id: IdStudent;
@@ -2290,6 +2302,29 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateQuestiongroup(): void {}
 
+  protected async rawEditorDeleteQuestiongroup(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
+    const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorDeleteQuestiongroup wraps rawEditorDeleteQuestiongroup and handles the error */
+  async EditorDeleteQuestiongroup(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDeleteQuestiongroup(params);
+      this.onSuccessEditorDeleteQuestiongroup(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessEditorDeleteQuestiongroup(data: DeleteQuestionOut): void {}
+
   protected async rawEditorUpdateQuestionTags(
     params: UpdateQuestiongroupTagsIn,
   ) {
@@ -2547,6 +2582,29 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessEditorUpdateExercicegroup(): void {}
+
+  protected async rawEditorDeleteExercicegroup(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
+    const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** EditorDeleteExercicegroup wraps rawEditorDeleteExercicegroup and handles the error */
+  async EditorDeleteExercicegroup(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawEditorDeleteExercicegroup(params);
+      this.onSuccessEditorDeleteExercicegroup(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessEditorDeleteExercicegroup(data: DeleteExerciceOut): void {}
 
   protected async rawEditorUpdateExerciceTags(
     params: UpdateExercicegroupTagsIn,

@@ -129,7 +129,8 @@ import {
   type RunningSessionMetaOut,
   type TagsDB,
   type Trivial,
-  type TrivialExt
+  type TrivialExt,
+  PublicStatus
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import {
@@ -234,7 +235,9 @@ async function updatePublic(config: Trivial, isPublic: boolean) {
     return;
   }
   const index = _configs.findIndex(v => v.Config.Id == config.Id);
-  _configs[index].Origin.IsPublic = isPublic;
+  _configs[index].Origin.PublicStatus = isPublic
+    ? PublicStatus.AdminPublic
+    : PublicStatus.AdminNotPublic;
 }
 
 async function createReview(config: Trivial) {

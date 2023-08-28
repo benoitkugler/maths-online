@@ -145,8 +145,7 @@ func (loader sheetLoader) newSheetExt(sheet ho.Sheet, userID, adminID uID) Sheet
 		NbTravaux: len(loader.travaux[sheet.Id]),
 		Origin: tcAPI.Origin{
 			Visibility:   tcAPI.NewVisibility(sheet.IdTeacher, userID, adminID, sheet.Public),
-			IsPublic:     sheet.Public,
-			AllowPublish: userID == adminID,
+			PublicStatus: tcAPI.NewPublicStatus(sheet.IdTeacher, userID, adminID, sheet.Public),
 			IsInReview:   inReview,
 		},
 	}

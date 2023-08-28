@@ -58,7 +58,7 @@
                   <v-col cols="auto" align-self="center">
                     <tag-chip
                       :tag="{
-                        Tag: variant.Difficulty || 'Aucune difficulté',
+                        Tag: variant.Difficulty || 'Aucune difficulté'
                       }"
                     ></tag-chip>
                   </v-col>
@@ -97,7 +97,12 @@ import { controller } from "../controller/controller";
 import TagChip from "./editor/utils/TagChip.vue";
 import ResourceQueryRow from "./editor/ResourceQueryRow.vue";
 import { computed } from "vue";
-import type { ResourceGroup, VariantG } from "@/controller/editor";
+import {
+  exerciceToResource,
+  questionToResource,
+  type ResourceGroup,
+  type VariantG
+} from "@/controller/editor";
 
 interface Props {
   tags: TagsDB;
@@ -144,12 +149,7 @@ async function fetchResources() {
       {
         const result = await controller.EditorSearchExercices(props.query);
         if (result == undefined) return;
-        groups = (result.Groups || []).map((group) => ({
-          Id: group.Group.Id,
-          Title: group.Group.Title,
-          Tags: group.Tags,
-          Variants: group.Variants || [],
-        }));
+        groups = (result.Groups || []).map(exerciceToResource);
         serverNbVariants = result.NbExercices;
       }
       break;
@@ -157,12 +157,7 @@ async function fetchResources() {
       {
         const result = await controller.EditorSearchQuestions(props.query);
         if (result == undefined) return;
-        groups = (result.Groups || []).map((group) => ({
-          Id: group.Group.Id,
-          Title: group.Group.Title,
-          Tags: group.Tags,
-          Variants: group.Variants || [],
-        }));
+        groups = (result.Groups || []).map(questionToResource);
         serverNbVariants = result.NbQuestions;
       }
       break;

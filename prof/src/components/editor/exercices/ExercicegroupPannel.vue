@@ -29,8 +29,8 @@
       :is-readonly="isReadonly"
       :all-tags="props.allTags"
       :show-variant-meta="true"
-      @update="(ex) => (ownVariants[variantIndex] = ex)"
-      @preview="(ex) => emit('preview', ex)"
+      @update="ex => (ownVariants[variantIndex] = ex)"
+      @preview="ex => emit('preview', ex)"
     ></ExerciceVariantPannel>
   </ResourceScafold>
 </template>
@@ -43,7 +43,7 @@ import type {
   QuestionExerciceUses,
   Sheet,
   Tags,
-  TagsDB,
+  TagsDB
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -84,6 +84,7 @@ const resource = computed<ResourceGroup>(() => ({
   Title: group.Group.Title,
   Tags: group.Tags,
   Variants: ownVariants,
+  Origin: group.Origin
 }));
 
 function updateTitle(t: string) {
@@ -102,7 +103,7 @@ async function updateExercicegroup() {
     Parameters: [], // ignored
     Questions: [], // ignored
     CurrentQuestion: -1,
-    ShowCorrection: false,
+    ShowCorrection: false
   });
   if (res == undefined) return;
   emit("preview", res.Preview);
@@ -117,7 +118,7 @@ function goToSheet(sh: Sheet) {
 
 async function deleteVariante(variant: VariantG) {
   const res = await controller.EditorDeleteExercice({
-    id: variant.Id,
+    id: variant.Id
   });
   if (res == undefined) return;
   // check if the variant is used
@@ -126,7 +127,7 @@ async function deleteVariante(variant: VariantG) {
     return;
   }
 
-  ownVariants = ownVariants.filter((qu) => qu.Id != variant.Id);
+  ownVariants = ownVariants.filter(qu => qu.Id != variant.Id);
   if (ownVariants.length && variantIndex >= ownVariants.length) {
     variantIndex = 0;
   }
@@ -141,7 +142,7 @@ let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
 
 async function duplicateVariante(exercice: VariantG) {
   const newExercice = await controller.EditorDuplicateExercice({
-    id: exercice.Id,
+    id: exercice.Id
   });
   if (newExercice == undefined) {
     return;
@@ -155,7 +156,7 @@ async function duplicateVariante(exercice: VariantG) {
 async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateExerciceTags({
     Id: group.Group.Id,
-    Tags: newTags,
+    Tags: newTags
   });
   if (rep === undefined) {
     return;

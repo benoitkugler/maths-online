@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="confirmeCreate" max-width="800px">
+  <v-dialog v-model="confirmeCreate" max-width="800px" :eager="false">
     <v-card title="Confirmer la demande de publication">
       <v-card-text>
         Merci pour votre participation ! <br /><br />
@@ -23,51 +23,22 @@
     </v-card>
   </v-dialog>
 
-  <v-menu offset-y close-on-content-click>
-    <template v-slot:activator="{ isActive, props: innerProps }">
-      <v-btn
-        v-on="{ isActive }"
-        v-bind="innerProps"
-        class="mx-1"
-        :size="props.variant == 'icon' ? 'x-small' : 'small'"
-        :icon="props.variant == 'icon'"
-        :variant="props.variant == 'text' ? 'flat' : undefined"
-        title="Options de partage"
-        @click.stop
-        :color="isPersonnalAndShared ? 'blue' : undefined"
-      >
-        <template v-slot:prepend>
-          <v-icon
-            icon="mdi-share-variant"
-            size="small"
-            :class="props.variant == 'text' ? 'mr-4' : ''"
-            v-if="props.variant == 'text'"
-          ></v-icon>
-        </template>
-
-        <template v-if="props.variant == 'text'">Publier</template>
-        <v-icon v-else icon="mdi-share-variant" size="small"></v-icon>
-      </v-btn>
+  <v-btn class="mx-1" size="small" variant="flat" @click.stop="onClick">
+    <template v-slot:prepend>
+      <v-icon icon="mdi-share-variant" size="small" class="mr-4"></v-icon>
     </template>
-    <OriginCard
-      :origin="props.origin"
-      @update="b => emit('updatePublic', b)"
-      @create-review="confirmeCreate = true"
-      @go-to-review="goToReview"
-    ></OriginCard>
-  </v-menu>
+
+    {{ title }}
+  </v-btn>
 </template>
 
 <script setup lang="ts">
-import { Visibility, type Origin } from "@/controller/api_gen";
-import { computed } from "vue";
+import { type Origin, PublicStatus } from "@/controller/api_gen";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { $ref } from "vue/macros";
-import OriginCard from "./OriginCard.vue";
 
 interface Props {
   origin: Origin;
-  variant: "icon" | "text";
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -77,13 +48,44 @@ const emit = defineEmits<{
 
 const router = useRouter();
 
-let confirmeCreate = $ref(false);
+const confirmeCreate = ref(false);
 
-const isPersonnalAndShared = computed(
-  () => props.origin.Visibility == Visibility.Personnal && props.origin.IsPublic
-);
-
-function goToReview(id: number) {
+function goToReview() {
+  const id = props.origin.IsInReview.Id;
   router.push({ name: "reviews", query: { id: id } });
+}
+
+const title = computed(() => {
+  // do we have an active review
+  if (props.origin.IsInReview.InReview) {
+    return "Aller à la demande en cours";
+  }
+  switch (props.origin.PublicStatus) {
+    case PublicStatus.NotAdmin:
+      return "Publier...";
+    case PublicStatus.AdminPublic:
+      return "Masquer à la communauté";
+    case PublicStatus.AdminNotPublic:
+      return "Partager à la communauté";
+  }
+  return "";
+});
+
+function onClick() {
+  if (props.origin.IsInReview.InReview) {
+    goToReview();
+  } else {
+    switch (props.origin.PublicStatus) {
+      case PublicStatus.NotAdmin:
+        confirmeCreate.value = true;
+        return;
+      case PublicStatus.AdminPublic:
+        emit("updatePublic", false);
+        return;
+      case PublicStatus.AdminNotPublic:
+        emit("updatePublic", true);
+        return;
+    }
+  }
 }
 </script>

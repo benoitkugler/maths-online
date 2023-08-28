@@ -1,12 +1,14 @@
 <template>
-  <v-chip
-    size="x-small"
-    label
-    class="mx-1"
-    :color="tagColor(tag.Section)"
-    :style="{ cursor: props.pointer ? 'pointer' : '' }"
-    >{{ tagString(tag.Tag) }}</v-chip
-  >
+  <div class="bg-white pa-1 rounded mx-1">
+    <v-chip
+      elevation="0"
+      size="x-small"
+      label
+      :color="tagColor(tag.Section)"
+      :style="{ cursor: props.pointer ? 'pointer' : '' }"
+      >{{ tagString(tag.Tag) }}</v-chip
+    >
+  </div>
 </template>
 
 <script setup lang="ts">

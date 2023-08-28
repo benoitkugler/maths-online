@@ -1,5 +1,41 @@
 <template>
   <v-card class="pt-2 pb-0">
+    <v-dialog
+      :model-value="groupToDelete != null"
+      @update:model-value="groupToDelete = null"
+      max-width="700"
+    >
+      <v-card title="Confirmer" v-if="groupToDelete != null">
+        <v-card-text
+          >Etes-vous certain de vouloir supprimer la question
+          <i>{{ groupToDelete.Group.Title }}</i>
+          ?
+          <br />
+          <br />
+          Cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="groupToDelete = null">Retour</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="red" @click="deleteGroup" variant="outlined">
+            Supprimer
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="deletedBlocked != null"
+      @update:model-value="deletedBlocked = null"
+      max-width="600"
+    >
+      <uses-card
+        :uses="deletedBlocked || []"
+        @back="deletedBlocked = null"
+        @go-to="goToSheet"
+      ></uses-card>
+    </v-dialog>
+
     <v-row>
       <v-col cols="auto" align-self="center">
         <v-btn
@@ -53,14 +89,16 @@
             </div>
 
             <div v-for="(questionGroup, index) in displayedGroups" :key="index">
-              <questiongroup-row
-                :group="questionGroup"
+              <resource-group-row
+                :group="questionToResource(questionGroup)"
                 :all-tags="props.tags"
+                :is-question="true"
                 @clicked="startEdit(questionGroup)"
                 @duplicate="duplicate(questionGroup)"
-                @update-public="updatePublic"
+                @delete="groupToDelete = questionGroup"
                 @create-review="createReview(questionGroup.Group)"
-              ></questiongroup-row>
+                @update-public="b => updatePublic(questionGroup.Group.Id, b)"
+              ></resource-group-row>
             </div>
           </v-list>
           <v-row no-gutters>
@@ -91,14 +129,20 @@ import {
   type Question,
   type Questiongroup,
   type QuestiongroupExt,
-  type TagsDB
+  type TagsDB,
+  PublicStatus,
+  type TaskUses,
+  type Sheet
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
 import { $ref } from "vue/macros";
-import QuestiongroupRow from "./QuestiongroupRow.vue";
 import ResourceQueryRow from "../ResourceQueryRow.vue";
+import ResourceGroupRow from "../ResourceGroupRow.vue";
+import { questionToResource } from "@/controller/editor";
+import { ref } from "vue";
+import UsesCard from "../UsesCard.vue";
 
 interface Props {
   tags: TagsDB; // queried once for all
@@ -181,6 +225,29 @@ async function duplicate(group: QuestiongroupExt) {
   await fetchQuestions();
 }
 
+const groupToDelete = ref<QuestiongroupExt | null>(null);
+async function deleteGroup() {
+  if (groupToDelete.value == null) return;
+  const res = await controller.EditorDeleteQuestiongroup({
+    id: groupToDelete.value.Group.Id
+  });
+  groupToDelete.value = null;
+  if (res === undefined) return;
+
+  if (!res.Deleted) {
+    deletedBlocked.value = res.BlockedBy;
+    return;
+  }
+  await fetchQuestions();
+}
+
+const deletedBlocked = ref<TaskUses>(null);
+function goToSheet(sh: Sheet) {
+  deletedBlocked.value = null;
+
+  router.push({ name: "homework", query: { idSheet: sh.Id } });
+}
+
 async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
@@ -191,7 +258,9 @@ async function updatePublic(id: number, isPublic: boolean) {
   }
 
   const index = groups.findIndex(gr => gr.Group.Id == id);
-  groups[index].Origin.IsPublic = isPublic;
+  groups[index].Origin.PublicStatus = isPublic
+    ? PublicStatus.AdminPublic
+    : PublicStatus.AdminNotPublic;
 }
 
 async function createReview(ex: Questiongroup) {

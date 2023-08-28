@@ -28,3 +28,22 @@ func NewVisibility(ownerID, userID, adminID teacher.IdTeacher, public bool) Visi
 
 // Restricted returns true if the item access if forbidden.
 func (vis Visibility) Restricted() bool { return vis == Hidden }
+
+// PublicStatus exposes the status of an admin resource
+type PublicStatus uint8
+
+const (
+	NotAdmin PublicStatus = iota
+	AdminPublic
+	AdminNotPublic
+)
+
+func NewPublicStatus(ownerID, userID, adminID teacher.IdTeacher, public bool) PublicStatus {
+	if userID != adminID || ownerID != userID {
+		return NotAdmin
+	}
+	if public {
+		return AdminPublic
+	}
+	return AdminNotPublic
+}

@@ -101,7 +101,8 @@ import {
   type Sheet,
   type SheetExt,
   type TaskExt,
-  type Travail
+  type Travail,
+  PublicStatus
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onActivated, onMounted } from "vue";
@@ -245,7 +246,9 @@ async function updatePublic(sheet: Sheet, pub: boolean) {
   if (ok == undefined) return;
 
   const sheetExt = homeworks.Sheets.get(sheet.Id)!;
-  sheetExt.Origin.IsPublic = pub;
+  sheetExt.Origin.PublicStatus = pub
+    ? PublicStatus.AdminPublic
+    : PublicStatus.AdminNotPublic;
   sheetExt.Sheet = sheet;
   homeworks.Sheets.set(sheet.Id, sheetExt);
 }

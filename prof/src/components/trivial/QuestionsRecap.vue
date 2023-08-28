@@ -19,7 +19,7 @@
         </v-col>
       </v-row>
 
-      <i v-if="props.config.Config.Questions.Tags.every((v) => !v?.length)">
+      <i v-if="props.config.Config.Questions.Tags.every(v => !v?.length)">
         Aucun question configurée
       </i>
       <div v-else>
@@ -30,7 +30,7 @@
           :style="{
             'border-color': colorsPerCategorie[index],
             borderWidth: '2px',
-            borderStyle: 'solid',
+            borderStyle: 'solid'
           }"
           class="my-2"
         >
@@ -83,8 +83,8 @@ function formatDifficulties(config: Trivial) {
 
 const commonT = computed(() => {
   const allUnions: TagSection[][] = [];
-  props.config.Config.Questions.Tags.forEach((cat) =>
-    allUnions.push(...(cat || []).map((s) => s || []))
+  props.config.Config.Questions.Tags.forEach(cat =>
+    allUnions.push(...(cat || []).map(s => s || []))
   );
   return commonTags(allUnions);
 });
@@ -92,8 +92,8 @@ const commonT = computed(() => {
 /** return the list of tags shared by all the list */
 function commonTags(tags: TagSection[][]) {
   const crible = new Map<string, number>();
-  tags.forEach((l) =>
-    l.forEach((tag) =>
+  tags.forEach(l =>
+    l.forEach(tag =>
       crible.set(
         JSON.stringify(tag),
         (crible.get(JSON.stringify(tag)) || 0) + 1
@@ -101,16 +101,16 @@ function commonTags(tags: TagSection[][]) {
     )
   );
   return Array.from(crible.entries())
-    .filter((entry) => entry[1] == tags.length)
-    .map((entry) => JSON.parse(entry[0]) as TagSection);
+    .filter(entry => entry[1] == tags.length)
+    .map(entry => JSON.parse(entry[0]) as TagSection);
 }
 
 // do not return shared tags
 function ownTagsFor(categorie: number) {
   const out = props.config.Config.Questions.Tags[categorie] || [];
-  return out.map((l) =>
+  return out.map(l =>
     (l || []).filter(
-      (tag) => commonT.value.findIndex((other) => other.Tag == tag.Tag) == -1
+      tag => commonT.value.findIndex(other => other.Tag == tag.Tag) == -1
     )
   );
 }
