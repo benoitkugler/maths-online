@@ -29,6 +29,13 @@
       <v-spacer></v-spacer>
       <v-col cols="auto" style="text-align: right" class="my-1 mr-2">
         <v-btn
+          :icon="props.hideContent ? 'mdi-chevron-down' : 'mdi-chevron-up'"
+          size="x-small"
+          variant="tonal"
+          class="mx-2"
+          @click="emit('toggleContent')"
+        ></v-btn>
+        <v-btn
           v-if="props.kind == BlockKind.ExpressionFieldBlock"
           class="mr-2"
           icon
@@ -55,7 +62,7 @@
       </v-col>
     </v-row>
 
-    <v-card-text class="pt-1 pb-2" :hidden="hideContent">
+    <v-card-text class="pt-1 pb-2" :hidden="props.hideContent">
       <slot></slot>
     </v-card-text>
   </v-card>
@@ -72,6 +79,7 @@ import ExpressionFieldDoc from "./ExpressionFieldDoc.vue";
 
 const emit = defineEmits<{
   (e: "delete"): void;
+  (e: "toggleContent"): void;
   (e: "addSyntaxHint"): void;
 }>();
 

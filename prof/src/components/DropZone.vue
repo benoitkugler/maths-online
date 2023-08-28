@@ -1,14 +1,18 @@
 <template>
-  <v-sheet
-    :class="
-      (isActive ? 'bg-blue-lighten-2' : 'bg-blue-lighten-4') +
-      '  rounded pt-0 mx-1'
-    "
-    :style="{ height: isActive ? '20px' : '20px' }"
+  <div
     @dragover="onDragOver"
     @dragleave="isActive = false"
     @drop="onDrop"
-  ></v-sheet>
+    class="py-3"
+  >
+    <v-sheet
+      :class="
+        (isActive ? 'bg-blue-lighten-2' : 'bg-blue-lighten-5') +
+        '  rounded mx-1'
+      "
+      style="height: 8px"
+    ></v-sheet>
+  </div>
 </template>
 
 <script setup lang="ts">

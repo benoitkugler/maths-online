@@ -34,8 +34,9 @@
         @add-syntax-hint="addSyntaxHint(index)"
         :index="index"
         :kind="row.Props.Kind"
-        :hide-content="showDropZone"
+        :hide-content="showDropZone || !areExpanded[index]"
         :has-error="errorBlockIndex == index"
+        @toggle-content="areExpanded[index] = !areExpanded[index]"
       >
         <component
           :model-value="row.Props.Data"
@@ -103,6 +104,7 @@ const emit = defineEmits<{
 }>();
 
 const rows = computed(() => props.modelValue.map(dataToBlock));
+const areExpanded = ref(props.modelValue.map(() => true));
 
 interface block {
   Props: Block;
@@ -168,6 +170,7 @@ watch(props, () => {
 
 function addBlock(kind: BlockKind) {
   props.modelValue.push(newBlock(kind));
+  areExpanded.value.push(true);
   emit("update:modelValue", props.modelValue);
 
   nextTick(() => {
@@ -180,6 +183,7 @@ function addBlock(kind: BlockKind) {
 
 function addExistingBlock(block: Block) {
   props.modelValue.push(block);
+  areExpanded.value.push(true);
   emit("update:modelValue", props.modelValue);
 
   nextTick(() => {
@@ -197,6 +201,7 @@ function updateBlock(index: number, data: Block["Data"]) {
 
 function removeBlock(index: number) {
   props.modelValue.splice(index, 1);
+  areExpanded.value.splice(index, 1);
   emit("update:modelValue", props.modelValue);
 }
 
@@ -205,6 +210,7 @@ the block at index `target` (which is between 0 and nbBlocks)
  */
 function swapBlocks(origin: number, target: number) {
   const out = swapItems(origin, target, props.modelValue);
+  areExpanded.value = swapItems(origin, target, areExpanded.value);
   emit("update:modelValue", out);
 }
 
