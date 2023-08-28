@@ -28,22 +28,24 @@
           </v-text-field>
         </v-col>
       </v-row>
-      <v-row justify="center">
-        <v-col cols="auto">
-          <label class="text-grey">Choix de la difficulté : </label>
-          <v-btn-toggle
-            density="compact"
+      <v-row>
+        <v-col cols="12">
+          <v-select
+            label="Choix de la difficulté"
             :color="DifficultyColor"
-            multiple
             variant="outlined"
-            rounded
-            :model-value="difficultiesIndices"
-            @update:model-value="updateDiffs"
+            density="compact"
+            chips
+            multiple
+            :items="[
+              DifficultyTag.Diff1,
+              DifficultyTag.Diff2,
+              DifficultyTag.Diff3
+            ]"
+            :model-value="actualTags"
+            @update:model-value="updateTags"
           >
-            <v-btn>{{ DifficultyTag.Diff1 }}</v-btn>
-            <v-btn>{{ DifficultyTag.Diff2 }}</v-btn>
-            <v-btn>{{ DifficultyTag.Diff3 }}</v-btn>
-          </v-btn-toggle>
+          </v-select>
         </v-col>
       </v-row>
     </v-card-text>
@@ -59,6 +61,7 @@
 <script setup lang="ts">
 import { DifficultyTag, type RandomMonoquestion } from "@/controller/api_gen";
 import { DifficultyColor } from "@/controller/editor";
+import { copy } from "@/controller/utils";
 import { computed } from "vue";
 
 interface Props {
@@ -74,22 +77,22 @@ const emit = defineEmits<{
 const diffChoices = [
   DifficultyTag.Diff1,
   DifficultyTag.Diff2,
-  DifficultyTag.Diff3,
+  DifficultyTag.Diff3
 ];
 
-const difficultiesIndices = computed(() => {
+const actualTags = computed(() => {
+  // replace empty list by all tags
   const isEmpty = !props.randomMonoquestion.Difficulty?.length;
-  const out: number[] = [];
-  diffChoices.forEach((v, i) => {
-    if (isEmpty || props.randomMonoquestion.Difficulty?.includes(v))
-      out.push(i);
-  });
+  if (isEmpty) return diffChoices;
+  const out = copy(props.randomMonoquestion.Difficulty || []);
+  out.sort();
   return out;
 });
 
-function updateDiffs(l: number[]) {
+function updateTags(l: DifficultyTag[]) {
+  // replace all tags by empty list
   if (l.length == diffChoices.length) l = [];
-  props.randomMonoquestion.Difficulty = l.map((i) => diffChoices[i]);
+  props.randomMonoquestion.Difficulty = l;
 }
 
 const subtitle = computed(
