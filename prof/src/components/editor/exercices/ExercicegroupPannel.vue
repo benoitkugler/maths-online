@@ -40,10 +40,10 @@ import type {
   ExercicegroupExt,
   ExerciceHeader,
   LoopbackShowExercice,
-  QuestionExerciceUses,
   Sheet,
   Tags,
-  TagsDB
+  TagsDB,
+  TaskUses
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -109,7 +109,7 @@ async function updateExercicegroup() {
   emit("preview", res.Preview);
 }
 
-let deletedBlocked = $ref<QuestionExerciceUses>(null);
+let deletedBlocked = $ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
   deletedBlocked = null;
 
