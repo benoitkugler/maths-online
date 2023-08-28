@@ -36,6 +36,14 @@
       ></uses-card>
     </v-dialog>
 
+    <v-dialog
+      :model-value="reviewToCreate != null"
+      @update:model-value="reviewToCreate = null"
+      max-width="700"
+    >
+      <confirm-publish @create-review="createReview"></confirm-publish>
+    </v-dialog>
+
     <v-row>
       <v-col cols="auto" align-self="center">
         <v-btn
@@ -95,7 +103,7 @@
                 @clicked="startEdit(exerciceGroup)"
                 @duplicate="duplicate(exerciceGroup)"
                 @delete="groupToDelete = exerciceGroup"
-                @create-review="createReview(exerciceGroup.Group)"
+                @create-review="reviewToCreate = exerciceGroup.Group"
                 @update-public="b => updatePublic(exerciceGroup.Group.Id, b)"
               ></resource-group-row>
             </div>
@@ -141,6 +149,7 @@ import { exerciceToResource } from "@/controller/editor";
 import { ref } from "vue";
 import ResourceGroupRow from "../ResourceGroupRow.vue";
 import UsesCard from "../UsesCard.vue";
+import ConfirmPublish from "@/components/ConfirmPublish.vue";
 
 interface Props {
   tags: TagsDB; // queried once for all
@@ -254,13 +263,15 @@ async function updatePublic(id: number, isPublic: boolean) {
     : PublicStatus.AdminNotPublic;
 }
 
-async function createReview(ex: Exercicegroup) {
+const reviewToCreate = ref<Exercicegroup | null>(null);
+async function createReview() {
+  if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KExercice,
-    Id: ex.Id
+    Id: reviewToCreate.value.Id
   });
+  reviewToCreate.value = null;
   if (res == undefined) return;
-
   router.push({ name: "reviews", query: { id: res.Id } });
 }
 </script>

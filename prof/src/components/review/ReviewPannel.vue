@@ -65,6 +65,7 @@
         style="text-align: right"
       >
         <v-btn
+          size="small"
           icon
           class="mr-2"
           title="Visualiser"
@@ -73,6 +74,7 @@
           <v-icon>mdi-eye</v-icon>
         </v-btn>
         <v-btn
+          size="small"
           v-if="reviewExt.IsAcceptable"
           variant="outlined"
           color="success"
@@ -82,6 +84,7 @@
           Accepter la publication
         </v-btn>
         <v-btn
+          size="small"
           icon
           v-if="reviewExt.IsDeletable"
           @click="showConfirmDelete = true"
@@ -108,7 +111,7 @@
           v-for="(comment, index) in reviewExt.Comments"
           :key="index"
           :comment="comment"
-          @update="(m) => updateComment(m, index)"
+          @update="m => updateComment(m, index)"
           @delete="deleteComment(index)"
         ></CommentRow>
 
@@ -126,7 +129,7 @@ import {
   type Comments,
   type ReviewExt,
   type ReviewHeader,
-  type Time,
+  type Time
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onActivated, onMounted } from "vue";
@@ -162,7 +165,7 @@ async function fetchData() {
 function ownComments() {
   if (reviewExt == null) return [];
   return (
-    reviewExt.Comments?.filter((cm) => cm.IsOwned).map((cm) => cm.Comment) || []
+    reviewExt.Comments?.filter(cm => cm.IsOwned).map(cm => cm.Comment) || []
   );
 }
 
@@ -172,7 +175,7 @@ async function _updateComments(comments: Comments) {
   isSending = true;
   const res = await controller.ReviewUpdateCommnents({
     IdReview: props.review.Id,
-    Comments: comments,
+    Comments: comments
   });
   isSending = false;
   if (res == undefined) return;
@@ -184,7 +187,7 @@ function sendComment(comment: string) {
   const cms = ownComments();
   cms.push({
     Time: new Date(Date.now()).toISOString() as Time,
-    Message: comment,
+    Message: comment
   });
   _updateComments(cms);
 }
@@ -205,7 +208,7 @@ async function deleteComment(index: number) {
 async function updateApproval(appro: Approval) {
   const res = await controller.ReviewUpdateApproval({
     IdReview: props.review.Id,
-    Approval: appro,
+    Approval: appro
   });
   if (res == undefined) return;
   fetchData();

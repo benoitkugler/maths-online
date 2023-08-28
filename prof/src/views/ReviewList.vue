@@ -4,13 +4,16 @@
       <v-row class="mx-0">
         <v-col cols="9">
           <v-card-title>Publications</v-card-title>
-          <v-card-subtitle>
-            Discuter des demandes de publications dans la base officielle
-          </v-card-subtitle>
         </v-col>
       </v-row>
 
-      <v-alert color="info" class="my-2 mx-6" density="compact" closable>
+      <v-alert
+        variant="tonal"
+        color="info"
+        class="my-2 mx-6"
+        density="compact"
+        closable
+      >
         La base officielle contient des ressources dont le contenu est vérifié,
         afin de garantir une qualité optimale. Vous pouvez participer à
         l'évalution des contenus suivants.
@@ -70,7 +73,7 @@ function goToReview(review: ReviewHeader) {
 function parseQuery() {
   const id = Number(route.query["id"]);
   if (isNaN(id)) return;
-  const review = reviews.find((re) => re.Id == id);
+  const review = reviews.find(re => re.Id == id);
   if (review == undefined) return;
   goToReview(review);
 }

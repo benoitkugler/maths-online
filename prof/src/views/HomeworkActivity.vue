@@ -51,8 +51,16 @@
       @delete="sh => (sheetToDelete = sh)"
       @edit="sh => (sheetToUpdate = sh)"
       @update-public="updatePublic"
-      @create-review="createReview"
+      @create-review="sh => (reviewToCreate = sh)"
     ></sheet-folder>
+  </v-dialog>
+
+  <v-dialog
+    :model-value="reviewToCreate != null"
+    @update:model-value="reviewToCreate = null"
+    max-width="700"
+  >
+    <confirm-publish @create-review="createReview"></confirm-publish>
   </v-dialog>
 
   <v-card class="my-5 mx-auto" width="90%">
@@ -114,6 +122,7 @@ import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TravauxPannel from "@/components/homework/TravauxPannel.vue";
 import type { HomeworksT } from "@/controller/utils";
 import { ref } from "vue";
+import ConfirmPublish from "@/components/ConfirmPublish.vue";
 
 let homeworks = $ref<HomeworksT>({ Sheets: new Map(), Travaux: [] });
 
@@ -253,13 +262,17 @@ async function updatePublic(sheet: Sheet, pub: boolean) {
   homeworks.Sheets.set(sheet.Id, sheetExt);
 }
 
-async function createReview(sheet: Sheet) {
+const reviewToCreate = ref<Sheet | null>(null);
+async function createReview() {
+  if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KSheet,
-    Id: sheet.Id
+    Id: reviewToCreate.value.Id
   });
+  reviewToCreate.value = null;
   if (res == undefined) return;
 
+  showFavorites = false;
   router.push({ name: "reviews", query: { id: res.Id } });
 }
 

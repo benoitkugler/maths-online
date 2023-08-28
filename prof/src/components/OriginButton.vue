@@ -1,29 +1,5 @@
 <template>
-  <v-dialog v-model="confirmeCreate" max-width="800px" :eager="false">
-    <v-card title="Confirmer la demande de publication">
-      <v-card-text>
-        Merci pour votre participation ! <br /><br />
-        Le contenu officiel est vérifié par l'équipe Isyro, en tenant compte de
-        l'avis de la communauté. <br />
-        En continuant, vous ajouterez votre ressource à la liste des demandes de
-        publications, et nous en prendrons connaissance au plus vite.
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="green"
-          @click="
-            emit('createReview');
-            confirmeCreate = false;
-          "
-        >
-          Créer une demande de publication
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <v-btn class="mx-1" size="small" variant="flat" @click.stop="onClick">
+  <v-btn class="mx-1" size="small" variant="flat" @click="onClick">
     <template v-slot:prepend>
       <v-icon icon="mdi-share-variant" size="small" class="mr-4"></v-icon>
     </template>
@@ -34,7 +10,7 @@
 
 <script setup lang="ts">
 import { type Origin, PublicStatus } from "@/controller/api_gen";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 interface Props {
@@ -47,8 +23,6 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-
-const confirmeCreate = ref(false);
 
 function goToReview() {
   const id = props.origin.IsInReview.Id;
@@ -77,7 +51,7 @@ function onClick() {
   } else {
     switch (props.origin.PublicStatus) {
       case PublicStatus.NotAdmin:
-        confirmeCreate.value = true;
+        emit("createReview");
         return;
       case PublicStatus.AdminPublic:
         emit("updatePublic", false);

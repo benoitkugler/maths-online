@@ -63,6 +63,14 @@
     ></selfaccess-config>
   </v-dialog>
 
+  <v-dialog
+    :model-value="reviewToCreate != null"
+    @update:model-value="reviewToCreate = null"
+    max-width="700"
+  >
+    <confirm-publish @create-review="createReview"></confirm-publish>
+  </v-dialog>
+
   <v-card class="my-5 mx-auto" width="90%">
     <v-row class="mx-0">
       <v-col cols="9">
@@ -109,7 +117,7 @@
               isLaunching || !config.NbQuestionsByCategories.every(v => v > 0)
             "
             @update-public="(b:boolean) => updatePublic(config.Config, b)"
-            @create-review="createReview(config.Config)"
+            @create-review="reviewToCreate = config.Config"
             @duplicate="duplicateConfig(config.Config)"
             @edit="editedConfig = config.Config"
             @launch="launchingConfig = config.Config"
@@ -147,6 +155,8 @@ import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import { useRouter } from "vue-router";
 import { emptyTagsDB } from "@/controller/editor";
 import SelfaccessConfig from "../components/trivial/SelfaccessConfig.vue";
+import ConfirmPublish from "@/components/ConfirmPublish.vue";
+import { ref } from "vue";
 
 const router = useRouter();
 
@@ -240,11 +250,14 @@ async function updatePublic(config: Trivial, isPublic: boolean) {
     : PublicStatus.AdminNotPublic;
 }
 
-async function createReview(config: Trivial) {
+const reviewToCreate = ref<Trivial | null>(null);
+async function createReview() {
+  if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KTrivial,
-    Id: config.Id
+    Id: reviewToCreate.value.Id
   });
+  reviewToCreate.value = null;
   if (res == undefined) return;
 
   router.push({ name: "reviews", query: { id: res.Id } });

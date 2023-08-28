@@ -47,11 +47,7 @@
                     color="secondary"
                   ></v-icon>
                 </template>
-                {{
-                  props.isQuestion
-                    ? "Dupliquer cette question"
-                    : "Dupliquer cet exercice"
-                }}
+                Dupliquer
               </v-btn>
             </v-list-item>
 
@@ -68,11 +64,7 @@
                 <template v-slot:prepend>
                   <v-icon class="mr-4" icon="mdi-delete" color="red"></v-icon>
                 </template>
-                {{
-                  props.isQuestion
-                    ? "Supprimer cette question"
-                    : "Supprimer cet exercice"
-                }}
+                Supprimer
               </v-btn>
             </v-list-item>
           </v-list>
