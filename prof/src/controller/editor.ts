@@ -621,7 +621,7 @@ export function tagString(tag: string) {
 export const LevelColor = "pink";
 export const SubLevelColor = "purple";
 export const ChapterColor = "primary-darken-1";
-export const TrivMathColor = "brown";
+export const IsyTrivColor = "brown";
 export const DifficultyColor = "secondary-darken-1";
 
 export function tagColor(tag: Section | undefined) {
@@ -631,7 +631,7 @@ export function tagColor(tag: Section | undefined) {
     case Section.Chapter:
       return ChapterColor;
     case Section.TrivMath:
-      return TrivMathColor;
+      return IsyTrivColor;
     case Section.SubLevel:
       return SubLevelColor;
   }

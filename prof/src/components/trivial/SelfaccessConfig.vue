@@ -1,7 +1,7 @@
 <template>
   <v-card
     title="Accès en autonomie"
-    subtitle="Les élèves des classes sélectionnées peuvent lancer une partie de ce TrivMaths en autonomie."
+    subtitle="Les élèves des classes sélectionnées peuvent lancer la partie d'IsyTriv en autonomie."
   >
     <v-card-text>
       <v-list
@@ -59,7 +59,7 @@ let data = $ref<TrivialSelfaccess | null>(null);
 
 async function fetch() {
   const res = await controller.TrivialGetSelfaccess({
-    "id-trivial": props.config.Id,
+    "id-trivial": props.config.Id
   });
   if (res == undefined) return;
   data = res;
@@ -69,7 +69,7 @@ async function fetch() {
 async function save() {
   await controller.TrivialUpdateSelfaccess({
     IdTrivial: props.config.Id,
-    IdClassrooms: selected,
+    IdClassrooms: selected
   });
   emit("close");
 }

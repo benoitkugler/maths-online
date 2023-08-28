@@ -54,7 +54,7 @@
             :items="trivMathTags"
             variant="outlined"
             density="compact"
-            :color="TrivMathColor"
+            :color="IsyTrivColor"
             multiple
             hint="Etiquettes supplémentaires permettant de définir les catégories de questions dans l'activité Isy'Triv."
             persistent-hint
@@ -84,7 +84,7 @@ import {
   ChapterColor,
   LevelColor,
   SubLevelColor,
-  TrivMathColor
+  IsyTrivColor
 } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
