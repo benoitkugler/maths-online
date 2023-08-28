@@ -26,7 +26,7 @@
               v-model="settings.Password"
               label="Mot de passe"
               :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              :rules="[(v) => v.length >= 4 || 'Au moins 4 charactères']"
+              :rules="[v => v.length >= 4 || 'Au moins 4 charactères']"
               :type="showPassword ? 'text' : 'password'"
               hint="Le mot de passe doit contenir au moins 4 charactères."
               counter=""
@@ -60,13 +60,18 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-switch
+            <v-checkbox
               density="compact"
-              v-model="settings.HasEditorSimplified"
-              label="Mode simplifié"
+              :model-value="!settings.HasEditorSimplified"
+              @update:model-value="
+                (b: boolean) => {
+                  if (settings) settings.HasEditorSimplified = !b;
+                }
+              "
+              label="Mode scientifique"
               color="primary"
-              messages="Simplifie la présentation de l'éditeur en masquant les champs spécifiques aux mathématiques."
-            ></v-switch>
+              messages="Décocher pour masquer les champs spécifiques aux mathématiques dans l'éditeur."
+            ></v-checkbox>
           </v-col>
         </v-row>
         <v-row>

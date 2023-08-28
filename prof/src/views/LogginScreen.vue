@@ -137,7 +137,7 @@
                 density="compact"
                 v-model="mathMode"
                 color="primary"
-                label="Utilisation scientifique"
+                label="Mode scientifique"
                 messages="Décocher pour masquer les fonctions spécifiques aux mathématiques."
               ></v-switch>
             </v-col>
@@ -208,7 +208,7 @@ async function inscription() {
   const res = await controller.AskInscription({
     Mail: mail,
     Password: password,
-    HasEditorSimplified: !mathMode,
+    HasEditorSimplified: !mathMode
   });
   isLoading = false;
   if (res == undefined) {
@@ -225,7 +225,7 @@ async function connection() {
 
   const res = await controller.Loggin({
     Mail: mail,
-    Password: password,
+    Password: password
   });
   if (res == undefined) {
     return;
