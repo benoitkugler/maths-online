@@ -288,7 +288,7 @@ func buildIndex(tags []ed.TagIndex) Index {
 		for chapter, count := range byLevel {
 			items.Chapters = append(items.Chapters, ChapterItems{Chapter: chapter, GroupCount: count})
 		}
-		sort.Slice(items.Chapters, func(i, j int) bool { return items.Chapters[i].Chapter > items.Chapters[j].Chapter })
+		sort.Slice(items.Chapters, func(i, j int) bool { return items.Chapters[i].Chapter < items.Chapters[j].Chapter })
 		out = append(out, items)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Level > out[j].Level })
