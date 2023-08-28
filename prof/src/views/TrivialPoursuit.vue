@@ -187,10 +187,12 @@ const configsByLevels = computed(() => {
     list.sort((u, v) => u.Config.Id - v.Config.Id);
   }
 
-  const out = Array.from(byLevel.entries());
-  out.sort((a, b) => -a[0].localeCompare(b[0]));
-
-  return out;
+  // show unclassified first
+  const unclassified = byLevel.get("");
+  const others = Array.from(byLevel.entries()).filter(v => v[0] != "");
+  others.sort((a, b) => -a[0].localeCompare(b[0]));
+  const head: typeof others = [["", unclassified || []]];
+  return unclassified?.length ? head.concat(others) : others;
 });
 
 let isLaunching = $ref(false);
@@ -220,6 +222,8 @@ async function createConfig() {
     return;
   }
   _configs.push(res);
+  // launch the edition
+  editedConfig = res.Config;
 }
 
 async function updateConfig(config: Trivial) {
@@ -278,8 +282,9 @@ let trivialToDelete = $ref<Trivial | null>(null);
 async function deleteConfig() {
   if (trivialToDelete == null) return;
   const id = trivialToDelete.Id;
-  await controller.DeleteTrivialPoursuit({ id: id });
+  const res = await controller.DeleteTrivialPoursuit({ id: id });
   trivialToDelete = null;
+  if (res === undefined) return;
   _configs = _configs.filter(c => c.Config.Id != id);
 }
 

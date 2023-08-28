@@ -386,13 +386,6 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void {
-    this.inRequest = false;
-    if (this.showMessage) {
-      this.showMessage("Session dupliquée.");
-    }
-  }
-
   protected onSuccessEditorDuplicateQuestion(): void {
     this.inRequest = false;
     if (this.showMessage) {
@@ -400,16 +393,30 @@ class Controller extends AbstractAPI {
     }
   }
 
+  protected onSuccessCreateTrivialPoursuit(data: TrivialExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Partie d'Isy'Triv créée avec succés..");
+    }
+  }
+
+  protected onSuccessDuplicateTrivialPoursuit(data: TrivialExt): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Session dupliquée.");
+    }
+  }
+
   protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {
     this.inRequest = false;
     if (this.showMessage) {
-      this.showMessage("Configuration mise à jour.");
+      this.showMessage("Partie mise à jour.");
     }
   }
   protected onSuccessDeleteTrivialPoursuit(): void {
     this.inRequest = false;
     if (this.showMessage) {
-      this.showMessage("Configuration supprimée.");
+      this.showMessage("Partie supprimée.");
     }
   }
 
