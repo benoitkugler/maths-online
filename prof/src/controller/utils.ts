@@ -1,8 +1,8 @@
 import type {
   ClassroomTravaux,
   Date_,
-  Monoquestion,
   SheetExt,
+  Tags,
   TaskExt,
   Time
 } from "./api_gen";
@@ -75,4 +75,11 @@ export function sheetBareme(sheet: SheetExt) {
 export interface HomeworksT {
   Sheets: Map<number, SheetExt>;
   Travaux: ClassroomTravaux[];
+}
+
+export interface PrefillTrivialCategorie {
+  matiere: string;
+  level: string;
+  chapter: string;
+  sublevels: Tags;
 }

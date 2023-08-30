@@ -46,7 +46,7 @@ import type {
   TrivialExt,
   TrivialSelfaccess
 } from "./api_gen";
-import { AbstractAPI } from "./api_gen";
+import { AbstractAPI, MatiereTag } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -64,7 +64,8 @@ class Controller extends AbstractAPI {
     Mail: "",
     HasEditorSimplified: false,
     Password: "",
-    Contact: { Name: "", URL: "" }
+    Contact: { Name: "", URL: "" },
+    FavoriteMatiere: MatiereTag.Autre
   };
 
   logout() {
@@ -127,6 +128,12 @@ class Controller extends AbstractAPI {
   startRequest(): void {
     console.log("launching request");
     this.inRequest = true;
+  }
+
+  async ensureSettings() {
+    const res = await this.TeacherGetSettings();
+    if (res == undefined) return;
+    this.settings = res;
   }
 
   protected onSuccessTeacherUpdateSettings(): void {

@@ -34,6 +34,7 @@ func randSheet() Sheet {
 	s.Level = randstring()
 	s.Anonymous = randOptionalIdTravail()
 	s.Public = randbool()
+	s.Matiere = randtea_MatiereTag()
 
 	return s
 }
@@ -100,4 +101,10 @@ func randtea_IdClassroom() teacher.IdClassroom {
 
 func randtea_IdTeacher() teacher.IdTeacher {
 	return teacher.IdTeacher(randint64())
+}
+
+func randtea_MatiereTag() teacher.MatiereTag {
+	choix := [...]teacher.MatiereTag{teacher.Allemand, teacher.Anglais, teacher.Autre, teacher.Espagnol, teacher.Francais, teacher.HistoireGeo, teacher.Italien, teacher.Mathematiques, teacher.PhysiqueChimie, teacher.SES, teacher.SVT}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }

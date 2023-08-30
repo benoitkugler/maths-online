@@ -24,7 +24,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
     IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -48,7 +48,7 @@ CREATE TABLE questiongroups (
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 -- constraints
@@ -86,6 +86,12 @@ WHERE
     /* Section.Chapter */
 ;
 
+CREATE UNIQUE INDEX QuestiongroupTag_matiere ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
+;
+
 ALTER TABLE questiongroup_tags
     ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
 
@@ -108,6 +114,12 @@ CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegr
 WHERE
     Section = 2
     /* Section.Chapter */
+;
+
+CREATE UNIQUE INDEX ExercicegroupTag_matiere ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
 ;
 
 ALTER TABLE exercicegroup_tags

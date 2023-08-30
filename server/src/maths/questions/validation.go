@@ -105,10 +105,13 @@ func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) 
 		}
 	}
 
+	// reuse memory
+	inst := expression.NewInstantiater(params)
 	const nbTries = 1_000
 	for try := 0; try < nbTries; try++ {
 		// instantiate the parameters for this try
-		vars, _ := params.Instantiate()
+		inst.Reset()
+		vars, _ := inst.Instantiate()
 
 		// run through the blocks
 		for i, v := range validators {

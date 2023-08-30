@@ -83,6 +83,7 @@ let currentGroup: QuestiongroupExt | null = $ref(null);
 let currentVariants: Question[] = $ref([]);
 
 onMounted(async () => {
+  controller.ensureSettings();
   fetchIndex();
   fetchTags();
 });
@@ -101,7 +102,8 @@ function showFolder(index: [LevelTag, string]) {
     LevelTags: [index[0]],
     ChapterTags: [index[1]],
     SubLevelTags: [],
-    Origin: OriginKind.All
+    Origin: OriginKind.All,
+    Matiere: controller.settings.FavoriteMatiere
   };
   viewMode = "details";
 }

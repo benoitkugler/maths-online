@@ -43,6 +43,8 @@
 
   <v-dialog v-model="showFavorites">
     <sheet-folder
+      v-model:matiere="matiere"
+      @update:matiere="fetchHomeworks"
       :sheets="homeworks.Sheets"
       :classrooms="homeworks.Travaux.map(t => t.Classroom)"
       @create="createSheet"
@@ -129,7 +131,9 @@ let homeworks = $ref<HomeworksT>({ Sheets: new Map(), Travaux: [] });
 const route = useRoute();
 const router = useRouter();
 
-onMounted(() => {
+onMounted(async () => {
+  await controller.ensureSettings();
+  matiere.value = controller.settings.FavoriteMatiere;
   fetchHomeworks();
 });
 
@@ -141,6 +145,7 @@ onActivated(async () => {
 let travauxPannel = $ref<InstanceType<typeof TravauxPannel> | null>(null);
 
 let showFavorites = $ref(false);
+const matiere = ref(controller.settings.FavoriteMatiere);
 
 let sheetToUpdate = $ref<SheetExt | null>(null);
 let sheetToDelete = $ref<SheetExt | null>(null);
@@ -155,7 +160,7 @@ function showDetailsFromRouteQuery() {
 }
 
 async function fetchHomeworks() {
-  const res = await controller.HomeworkGetSheets();
+  const res = await controller.HomeworkGetSheets({ matiere: matiere.value });
   if (res == undefined) return;
   homeworks = {
     Sheets: new Map(

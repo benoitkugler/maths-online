@@ -58,6 +58,8 @@ type Sheet struct {
 	Anonymous OptionalIdTravail `gomacro-sql-on-delete:"CASCADE" gomacro-sql-foreign:"Travail"`
 
 	Public bool // only true for admin account
+
+	Matiere teacher.MatiereTag // tag to classify by expected topic, ignored on anonymous sheets
 }
 
 // gomacro:SQL ADD PRIMARY KEY (IdSheet, Index)

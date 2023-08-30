@@ -7,6 +7,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -115,6 +116,7 @@ type Query struct {
 	ChapterTags  []string // union, empty means all; an empty tag means "with no chapter"
 	SubLevelTags []string // union, empty means all
 	Origin       OriginKind
+	Matiere      teacher.MatiereTag
 }
 
 func (query Query) normalize() {
@@ -139,6 +141,10 @@ func (query Query) matchOrigin(vis tcAPI.Visibility) bool {
 	default:
 		return true
 	}
+}
+
+func (query Query) matchTags(tags ed.TagGroup) bool {
+	return query.matchLevel(tags.Level) && query.matchChapter(tags.Chapter) && query.matchSubLevel(tags.SubLevels) && query.Matiere == tags.Matiere
 }
 
 func (query Query) matchLevel(level ed.LevelTag) bool {
@@ -269,9 +275,12 @@ func exercicesToIndex(exercices ed.Exercicegroups, tags ed.ExercicegroupTags) []
 	return out
 }
 
-func buildIndex(tags []ed.TagIndex) Index {
+func buildIndexFor(tags []ed.TagIndex, topic teacher.MatiereTag) Index {
 	tmp := map[ed.LevelTag]map[string]int{}
 	for _, item := range tags {
+		if item.Matiere != topic {
+			continue
+		}
 		byLevel := tmp[item.Level]
 		if byLevel == nil {
 			byLevel = make(map[string]int)

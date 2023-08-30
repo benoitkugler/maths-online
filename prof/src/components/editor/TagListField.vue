@@ -15,7 +15,7 @@
     :style="{
       'border-width': '2px',
       cursor: props.readonly ? '' : 'pointer',
-      'text-align': 'center',
+      'text-align': 'center'
     }"
     :class="props.yPadding ? 'py-1' : ''"
   >
@@ -32,7 +32,7 @@
     </v-btn>
 
     <v-row no-gutters v-else justify="center" @click.stop="startEdit">
-      <v-col v-for="(tag, index) in props.modelValue" :key="index" cols="auto">
+      <v-col v-for="(tag, index) in sorted" :key="index" cols="auto">
         <tag-chip :tag="tag" :pointer="!props.readonly"> </tag-chip>
       </v-col>
     </v-row>
@@ -40,12 +40,13 @@
 </template>
 
 <script setup lang="ts">
-import type { TagsDB, TagSection } from "@/controller/api_gen";
+import { Section, type TagsDB, type TagSection } from "@/controller/api_gen";
 import { tagString } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $ref } from "vue/macros";
 import TagListEdit from "./TagListEdit.vue";
 import TagChip from "./utils/TagChip.vue";
+import { copy } from "@/controller/utils";
 
 interface Props {
   modelValue: TagSection[];
@@ -71,9 +72,9 @@ function startEdit() {
     return;
   }
   isEditing = true;
-  tmpList = props.modelValue.map((v) => ({
+  tmpList = props.modelValue.map(v => ({
     Tag: tagString(v.Tag),
-    Section: v.Section,
+    Section: v.Section
   }));
 }
 
@@ -84,9 +85,32 @@ const saveEnabled = computed(() => {
   return !tmpList.every((tag, index) => props.modelValue[index] == tag);
 });
 
+const sorted = computed(() => {
+  const out = copy(props.modelValue);
+  out.sort((a, b) => sectionOrder(a.Section) - sectionOrder(b.Section));
+  return out;
+});
+
 function endEdit() {
   isEditing = false;
   emit("update:model-value", tmpList);
+}
+
+function sectionOrder(s: Section) {
+  switch (s) {
+    case Section.Level:
+      return 1;
+    case Section.Chapter:
+      return 3;
+    case Section.TrivMath:
+      return 4;
+    case Section.SubLevel:
+      return 2;
+    case Section.Matiere:
+      return 0;
+    default:
+      return 5;
+  }
 }
 </script>
 

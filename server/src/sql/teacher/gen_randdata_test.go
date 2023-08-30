@@ -40,6 +40,12 @@ func randIdTeacher() IdTeacher {
 	return IdTeacher(randint64())
 }
 
+func randMatiereTag() MatiereTag {
+	choix := [...]MatiereTag{Allemand, Anglais, Autre, Espagnol, Francais, HistoireGeo, Italien, Mathematiques, PhysiqueChimie, SES, SVT}
+	i := rand.Intn(len(choix))
+	return choix[i]
+}
+
 func randSliceuint8() []byte {
 	l := 3 + rand.Intn(5)
 	out := make([]byte, l)
@@ -70,6 +76,7 @@ func randTeacher() Teacher {
 	s.IsAdmin = randbool()
 	s.HasSimplifiedEditor = randbool()
 	s.Contact = randContact()
+	s.FavoriteMatiere = randMatiereTag()
 
 	return s
 }

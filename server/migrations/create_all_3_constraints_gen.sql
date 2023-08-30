@@ -47,6 +47,12 @@ WHERE
     /* Section.Chapter */
 ;
 
+CREATE UNIQUE INDEX QuestiongroupTag_matiere ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
+;
+
 ALTER TABLE questiongroup_tags
     ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
 
@@ -69,6 +75,12 @@ CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegr
 WHERE
     Section = 2
     /* Section.Chapter */
+;
+
+CREATE UNIQUE INDEX ExercicegroupTag_matiere ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
 ;
 
 ALTER TABLE exercicegroup_tags
@@ -262,6 +274,25 @@ ALTER TABLE review_trivials
 
 ALTER TABLE review_trivials
     ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD CHECK (Kind = 3
+    /* ReviewKind.KSheet */);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdSheet);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets;
 
 ALTER TABLE review_participations
     ADD UNIQUE (IdReview, IdTeacher);

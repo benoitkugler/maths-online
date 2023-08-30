@@ -71,26 +71,26 @@
     <confirm-publish @create-review="createReview"></confirm-publish>
   </v-dialog>
 
-  <v-card class="my-5 mx-auto" width="90%">
-    <v-row class="mx-0">
-      <v-col cols="9">
-        <v-card-title>Isy'Triv</v-card-title>
-        <v-card-subtitle
-          >Configurer et lancer une partie Isy'Triv</v-card-subtitle
-        >
-      </v-col>
-
-      <v-col align-self="center" style="text-align: right" cols="3">
-        <v-btn
-          size="small"
-          @click="createConfig"
-          title="Créer une nouvelle partie"
-        >
-          <v-icon icon="mdi-plus" color="success"></v-icon>
-          Créer
-        </v-btn>
-      </v-col>
-    </v-row>
+  <v-card
+    class="my-5 mx-auto"
+    width="90%"
+    title="Isy'Triv"
+    subtitle="Configurer et lancer une partie Isy'Triv"
+  >
+    <template v-slot:append>
+      <v-btn
+        size="small"
+        @click="createConfig"
+        title="Créer une nouvelle partie"
+      >
+        <v-icon icon="mdi-plus" color="success"></v-icon>
+        Créer
+      </v-btn>
+      <matiere-select
+        v-model:matiere="matiere"
+        @update:matiere="_init"
+      ></matiere-select>
+    </template>
 
     <v-alert color="secondary" v-if="sessionMeta.NbGames > 0" class="my-2 mx-4">
       <v-row justify="space-evenly">
@@ -154,15 +154,18 @@ import LaunchOptions from "../components/trivial/LaunchOptions.vue";
 import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import { useRouter } from "vue-router";
 import { emptyTagsDB } from "@/controller/editor";
-import SelfaccessConfig from "../components/trivial/SelfaccessConfig.vue";
 import ConfirmPublish from "@/components/ConfirmPublish.vue";
 import { ref } from "vue";
+import MatiereSelect from "@/components/MatiereSelect.vue";
+import SelfaccessConfig from "@/components/trivial/SelfaccessConfig.vue";
 
 const router = useRouter();
 
 let allKnownTags = $ref<TagsDB>(emptyTagsDB());
 
 let editedConfig = $ref<Trivial | null>(null);
+
+const matiere = ref(controller.settings.FavoriteMatiere);
 
 let _configs = $ref<TrivialExt[]>([]);
 
@@ -203,11 +206,12 @@ onActivated(_init);
 async function _init() {
   fetchSessionMeta();
 
-  const res = await controller.GetTrivialPoursuit();
+  await controller.ensureSettings();
+  matiere.value = controller.settings.FavoriteMatiere;
 
-  if (res === undefined) {
-    return;
-  }
+  const res = await controller.GetTrivialPoursuit({ matiere: matiere.value });
+
+  if (res === undefined) return;
   _configs = Object.values(res || {});
 
   const tags = await controller.EditorGetTags();
@@ -217,7 +221,9 @@ async function _init() {
 }
 
 async function createConfig() {
-  const res = await controller.CreateTrivialPoursuit();
+  const res = await controller.CreateTrivialPoursuit({
+    matiere: matiere.value
+  });
   if (res === undefined) {
     return;
   }

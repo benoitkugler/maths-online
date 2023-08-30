@@ -98,7 +98,7 @@ func TestEvaluateExercice(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ex, questions, monoquestion, _ := createEx(t, db.DB, tc.Id)
@@ -140,7 +140,7 @@ func TestProgression(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
@@ -249,7 +249,7 @@ func TestRandomMonoquestion(t *testing.T) {
 	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/editor/gen_create.sql", "../sql/tasks/gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)

@@ -7,7 +7,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
-	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func Test_parsePronoteName(t *testing.T) {
@@ -53,9 +53,9 @@ func Test_importPronoteFile(t *testing.T) {
 		t.Skipf("Sample not available: %s", err)
 	}
 
-	db, err := testutils.DB.ConnectPostgres()
+	db, err := tu.DB.ConnectPostgres()
 	if err != nil {
-		t.Skipf("DB %v not available : %s", testutils.DB, err)
+		t.Skipf("DB %v not available : %s", tu.DB, err)
 	}
 
 	ct := Controller{db: db}
@@ -83,10 +83,10 @@ func Test_importPronoteFile(t *testing.T) {
 }
 
 func TestStudentCRUD(t *testing.T) {
-	db := testutils.NewTestDB(t, "../../sql/teacher/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql")
 	defer db.Remove()
 
-	teacher, err := tc.Teacher{Id: 1}.Insert(db)
+	teacher, err := tc.Teacher{Id: 1, FavoriteMatiere: tc.Mathematiques}.Insert(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,28 +119,28 @@ func TestStudentCRUD(t *testing.T) {
 
 func TestDemoStudent(t *testing.T) {
 	const DEMO_CODE = "1234"
-	db := testutils.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../../migrations/create_manual.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../../migrations/create_manual.sql")
 	defer db.Remove()
 
 	ct := NewController(db.DB, pass.SMTP{}, pass.Encrypter{}, pass.Encrypter{}, "localhost:1323", DEMO_CODE)
 
 	_, err := ct.LoadAdminTeacher()
-	testutils.AssertNoErr(t, err)
+	tu.AssertNoErr(t, err)
 	_, err = ct.LoadDemoClassroom()
-	testutils.AssertNoErr(t, err)
+	tu.AssertNoErr(t, err)
 
 	_, err = ct.attachStudentCandidates("invalid code")
-	testutils.Assert(t, err != nil)
+	tu.Assert(t, err != nil)
 
 	l, err := ct.attachStudentCandidates(DEMO_CODE + ".1")
-	testutils.AssertNoErr(t, err)
-	testutils.Assert(t, len(l) == 1)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l) == 1)
 
 	out, err := ct.validAttachStudent(AttachStudentToClassroom2In{
 		ClassroomCode: DEMO_CODE + ".1",
 		IdStudent:     l[0].Id,
 		Birthday:      "2000-01-01",
 	})
-	testutils.AssertNoErr(t, err)
-	testutils.Assert(t, !out.ErrAlreadyAttached && !out.ErrInvalidBirthday)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, !out.ErrAlreadyAttached && !out.ErrInvalidBirthday)
 }

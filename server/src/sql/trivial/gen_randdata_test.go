@@ -98,7 +98,7 @@ func randedi_DifficultyTag() editor.DifficultyTag {
 }
 
 func randedi_Section() editor.Section {
-	choix := [...]editor.Section{editor.Chapter, editor.Level, editor.SubLevel, editor.TrivMath}
+	choix := [...]editor.Section{editor.Chapter, editor.Level, editor.Matiere, editor.SubLevel, editor.TrivMath}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

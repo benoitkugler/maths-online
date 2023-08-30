@@ -186,7 +186,8 @@ let query = $ref<Query>(
         LevelTags: [],
         ChapterTags: [],
         SubLevelTags: [],
-        Origin: OriginKind.All
+        Origin: OriginKind.All,
+        Matiere: controller.settings.FavoriteMatiere
       }
 );
 onMounted(fetchExercices);

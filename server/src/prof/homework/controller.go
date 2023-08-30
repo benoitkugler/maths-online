@@ -40,7 +40,8 @@ func NewController(db *sql.DB, admin teacher.Teacher, studentKey pass.Encrypter)
 func (ct *Controller) HomeworkGetSheets(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.getSheets(userID)
+	mat_ := c.QueryParam("matiere")
+	out, err := ct.getSheets(userID, teacher.MatiereTag(mat_))
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ type Homeworks struct {
 	Travaux []ClassroomTravaux // one per classroom
 }
 
-func (ct *Controller) getSheets(userID uID) (out Homeworks, err error) {
+func (ct *Controller) getSheets(userID uID, matiere teacher.MatiereTag) (out Homeworks, err error) {
 	// load the classrooms
 	classrooms, err := teacher.SelectClassroomsByIdTeachers(ct.db, userID)
 	if err != nil {
@@ -81,7 +82,19 @@ func (ct *Controller) getSheets(userID uID) (out Homeworks, err error) {
 	}
 
 	// finally agregate the results
-	out.Sheets = loader.buildSheetExts(sheetsDict, userID, ct.admin.Id)
+	tmp := loader.buildSheetExts(sheetsDict, userID, ct.admin.Id)
+
+	// only keep the sheets needed by travaux and the ones with the given topic
+	out.Sheets = make(map[ho.IdSheet]SheetExt)
+	for _, travail := range travauxDict {
+		out.Sheets[travail.IdSheet] = tmp[travail.IdSheet]
+	}
+	for _, sheet := range tmp {
+		if sheet.Sheet.Matiere == matiere {
+			out.Sheets[sheet.Sheet.Id] = sheet
+		}
+	}
+
 	for _, class := range classrooms {
 		out.Travaux = append(out.Travaux, newClassroomTravaux(class, travauxDict))
 	}
@@ -105,9 +118,15 @@ func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
 }
 
 func (ct *Controller) createSheet(userID uID) (ho.Sheet, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return ho.Sheet{}, utils.SQLError(err)
+	}
+
 	sheet, err := ho.Sheet{
 		IdTeacher: userID,
 		Title:     "Feuille d'exercices",
+		Matiere:   user.FavoriteMatiere,
 	}.Insert(ct.db)
 	if err != nil {
 		return ho.Sheet{}, utils.SQLError(err)
@@ -195,12 +214,17 @@ func (ct *Controller) createTravail(idClassroom teacher.IdClassroom, userID uID)
 		return CreateTravailOut{}, errAccessForbidden
 	}
 
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return CreateTravailOut{}, utils.SQLError(err)
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return CreateTravailOut{}, utils.SQLError(err)
 	}
 	// create anonymous Sheet
-	sheet, err := ho.Sheet{IdTeacher: userID, Title: "Feuille d'exercices"}.Insert(tx)
+	sheet, err := ho.Sheet{IdTeacher: userID, Title: "Feuille d'exercices", Matiere: user.FavoriteMatiere}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return CreateTravailOut{}, utils.SQLError(err)

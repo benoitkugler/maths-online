@@ -27,7 +27,7 @@ func TestSQLTime(t *testing.T) {
 	db := tu.NewTestDB(t, "gen_create.sql")
 	defer db.Remove()
 
-	teacher, _ := Teacher{}.Insert(db)
+	teacher, _ := Teacher{FavoriteMatiere: Mathematiques}.Insert(db)
 	classromm, _ := Classroom{IdTeacher: teacher.Id}.Insert(db)
 
 	st, err := Student{Birthday: Date(time.Now()), IdClassroom: classromm.Id}.Insert(db)

@@ -91,7 +91,7 @@ func TestSessionManual(t *testing.T) {
 
 	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{Id: 1})
 
-	l, err := ct.getTrivialPoursuits(1)
+	l, err := ct.getTrivialPoursuits(1, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 
 	config := l[0]
@@ -120,7 +120,7 @@ func TestMonitor(t *testing.T) {
 
 	ct := NewController(db, pass.Encrypter{}, "", teacher.Teacher{Id: 1})
 
-	l, err := ct.getTrivialPoursuits(1)
+	l, err := ct.getTrivialPoursuits(1, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 
 	config := l[0]

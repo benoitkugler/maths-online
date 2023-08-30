@@ -60,6 +60,17 @@
         </v-row>
         <v-row>
           <v-col>
+            <v-select
+              density="compact"
+              variant="outlined"
+              label="Matière principale"
+              hint="Les ressources sont filtrées par défaut en utilisant cette matière."
+              persistent-hint
+              :items="Object.keys(MatiereTagLabels)"
+              v-model="settings.FavoriteMatiere"
+            ></v-select>
+          </v-col>
+          <v-col>
             <v-checkbox
               density="compact"
               :model-value="!settings.HasEditorSimplified"
@@ -96,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TeacherSettings } from "@/controller/api_gen";
+import { MatiereTagLabels, type TeacherSettings } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed } from "vue";
 import { onMounted } from "vue";

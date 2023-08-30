@@ -91,7 +91,7 @@ func (ct *Controller) GetTrivialRunningSessions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
+func (ct *Controller) getTrivialPoursuits(userID uID, matiere teacher.MatiereTag) ([]TrivialExt, error) {
 	configs, err := tc.SelectAllTrivials(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -110,6 +110,10 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 
 	var out []TrivialExt
 	for _, config := range configs {
+		if !config.Questions.MatchMatiere(matiere) {
+			continue
+		}
+
 		var inReview tcAPI.OptionalIdReview
 		link, isInReview := revsMap[config.Id]
 		if isInReview {
@@ -123,6 +127,7 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 		if item.Origin.Visibility.Restricted() {
 			continue // do not expose
 		}
+
 		out = append(out, item)
 	}
 
@@ -133,7 +138,8 @@ func (ct *Controller) getTrivialPoursuits(userID uID) ([]TrivialExt, error) {
 
 func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
-	out, err := ct.getTrivialPoursuits(userID)
+	mat_ := c.QueryParam("matiere")
+	out, err := ct.getTrivialPoursuits(userID, teacher.MatiereTag(mat_))
 	if err != nil {
 		return err
 	}
@@ -143,10 +149,17 @@ func (ct *Controller) GetTrivialPoursuit(c echo.Context) error {
 func (ct *Controller) CreateTrivialPoursuit(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
+	matiere_ := c.QueryParam("matiere")
+
 	item, err := tc.Trivial{
 		QuestionTimeout: 120,
 		ShowDecrassage:  true,
 		IdTeacher:       userID,
+		Questions: tc.CategoriesQuestions{
+			Tags: [5]tc.QuestionCriterion{
+				{{editor.TagSection{Section: editor.Matiere, Tag: matiere_}}},
+			},
+		},
 	}.Insert(ct.db)
 	if err != nil {
 		return utils.SQLError(err)

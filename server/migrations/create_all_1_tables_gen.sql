@@ -20,7 +20,8 @@ CREATE TABLE teachers (
     PasswordCrypted bytea NOT NULL,
     IsAdmin boolean NOT NULL,
     HasSimplifiedEditor boolean NOT NULL,
-    Contact jsonb NOT NULL
+    Contact jsonb NOT NULL,
+    FavoriteMatiere text CHECK (FavoriteMatiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 CREATE TABLE exercices (
@@ -48,7 +49,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
     IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -72,7 +73,7 @@ CREATE TABLE questiongroups (
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 CREATE TABLE selfaccess_trivials (
@@ -132,7 +133,9 @@ CREATE TABLE sheets (
     Title text NOT NULL,
     IdTeacher integer NOT NULL,
     Level text NOT NULL,
-    Anonymous integer
+    Anonymous integer,
+    Public boolean NOT NULL,
+    Matiere text CHECK (Matiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 CREATE TABLE sheet_tasks (
@@ -151,13 +154,13 @@ CREATE TABLE travails (
 
 CREATE TABLE reviews (
     Id serial PRIMARY KEY,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_exercices (
     IdReview integer NOT NULL,
     IdExercice integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_participations (
@@ -170,12 +173,18 @@ CREATE TABLE review_participations (
 CREATE TABLE review_questions (
     IdReview integer NOT NULL,
     IdQuestion integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+);
+
+CREATE TABLE review_sheets (
+    IdReview integer NOT NULL,
+    IdSheet integer NOT NULL,
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_trivials (
     IdReview integer NOT NULL,
     IdTrivial integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 

@@ -45,7 +45,7 @@ func TestTaskConstraint(t *testing.T) {
 	db := tu.NewTestDB(t, "../teacher/gen_create.sql", "../editor/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
-	tc, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	tc, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ex, questions := createEx(t, db.DB, tc.Id)

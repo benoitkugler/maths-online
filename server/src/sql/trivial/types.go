@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/trivial"
 )
 
@@ -59,4 +60,19 @@ func (cat CategoriesQuestions) Levels() []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// MatchMatiere returns true if [matiere] is in one of the
+// categories.
+func (cat CategoriesQuestions) MatchMatiere(matiere teacher.MatiereTag) bool {
+	for _, qc := range cat.Tags {
+		for _, l := range qc {
+			for _, tag := range l {
+				if tag.Section == editor.Matiere && tag.Tag == string(matiere) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

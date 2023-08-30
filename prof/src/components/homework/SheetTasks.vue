@@ -190,6 +190,7 @@ import { watch } from "vue";
 import ResourceSelector from "../ResourceSelector.vue";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TaskDetailsChip from "./TaskDetailsChip.vue";
+import { controller } from "@/controller/controller";
 
 interface Props {
   sheet: SheetExt;
@@ -218,14 +219,16 @@ let exerciceQuery = $ref<Query>({
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
   SubLevelTags: [],
-  Origin: OriginKind.All
+  Origin: OriginKind.All,
+  Matiere: controller.settings.FavoriteMatiere
 });
 let questionQuery = $ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
   SubLevelTags: [],
-  Origin: OriginKind.All
+  Origin: OriginKind.All,
+  Matiere: controller.settings.FavoriteMatiere
 });
 
 watch(props.sheet, () => {

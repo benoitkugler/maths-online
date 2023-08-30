@@ -717,6 +717,7 @@ export interface Query {
   ChapterTags: string[] | null;
   SubLevelTags: string[] | null;
   Origin: OriginKind;
+  Matiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.QuestionHeader
 export interface QuestionHeader {
@@ -953,7 +954,7 @@ export interface TargetTrivial {
 export interface AskInscriptionIn {
   Mail: string;
   Password: string;
-  HasEditorSimplified: boolean;
+  FavoriteMatiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionOut
 export interface AskInscriptionOut {
@@ -1015,6 +1016,7 @@ export interface TeacherSettings {
   Password: string;
   HasEditorSimplified: boolean;
   Contact: Contact;
+  FavoriteMatiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
 export enum Visibility {
@@ -1213,6 +1215,7 @@ export interface Questiongroup {
 export enum Section {
   Chapter = 2,
   Level = 1,
+  Matiere = 5,
   SubLevel = 4,
   TrivMath = 3,
 }
@@ -1220,6 +1223,7 @@ export enum Section {
 export const SectionLabels: { [key in Section]: string } = {
   [Section.Chapter]: "Chapitre",
   [Section.Level]: "Niveau",
+  [Section.Matiere]: "Matière",
   [Section.SubLevel]: "Filière",
   [Section.TrivMath]: "Triv'Math",
 };
@@ -1248,6 +1252,7 @@ export interface Sheet {
   Level: string;
   Anonymous: OptionalIdTravail;
   Public: boolean;
+  Matiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.Travail
 export interface Travail {
@@ -1339,6 +1344,35 @@ export type IdClassroom = number;
 export type IdStudent = number;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
 export type IdTeacher = number;
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.MatiereTag
+export enum MatiereTag {
+  Allemand = "ALLEMAND",
+  Anglais = "ANGLAIS",
+  Autre = "AUTRE",
+  Espagnol = "ESPAGNOL",
+  Francais = "FRANCAIS",
+  HistoireGeo = "HISTOIRE-GEO",
+  Italien = "ITALIEN",
+  Mathematiques = "MATHS",
+  PhysiqueChimie = "PHYSIQUE",
+  SES = "SES",
+  SVT = "SVT",
+}
+
+export const MatiereTagLabels: { [key in MatiereTag]: string } = {
+  [MatiereTag.Allemand]: "",
+  [MatiereTag.Anglais]: "",
+  [MatiereTag.Autre]: "",
+  [MatiereTag.Espagnol]: "",
+  [MatiereTag.Francais]: "",
+  [MatiereTag.HistoireGeo]: "",
+  [MatiereTag.Italien]: "",
+  [MatiereTag.Mathematiques]: "",
+  [MatiereTag.PhysiqueChimie]: "",
+  [MatiereTag.SES]: "",
+  [MatiereTag.SVT]: "",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Student
 export interface Student {
   Id: IdStudent;
@@ -1805,19 +1839,20 @@ export abstract class AbstractAPI {
     data: GenerateClassroomCodeOut,
   ): void {}
 
-  protected async rawGetTrivialPoursuit() {
+  protected async rawGetTrivialPoursuit(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     const rep: AxiosResponse<TrivialExt[] | null> = await Axios.get(fullUrl, {
+      params: { matiere: params["matiere"] },
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** GetTrivialPoursuit wraps rawGetTrivialPoursuit and handles the error */
-  async GetTrivialPoursuit() {
+  async GetTrivialPoursuit(params: { matiere: string }) {
     this.startRequest();
     try {
-      const out = await this.rawGetTrivialPoursuit();
+      const out = await this.rawGetTrivialPoursuit(params);
       this.onSuccessGetTrivialPoursuit(out);
       return out;
     } catch (error) {
@@ -1827,19 +1862,20 @@ export abstract class AbstractAPI {
 
   protected onSuccessGetTrivialPoursuit(data: TrivialExt[] | null): void {}
 
-  protected async rawCreateTrivialPoursuit() {
+  protected async rawCreateTrivialPoursuit(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     const rep: AxiosResponse<TrivialExt> = await Axios.put(fullUrl, null, {
+      params: { matiere: params["matiere"] },
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** CreateTrivialPoursuit wraps rawCreateTrivialPoursuit and handles the error */
-  async CreateTrivialPoursuit() {
+  async CreateTrivialPoursuit(params: { matiere: string }) {
     this.startRequest();
     try {
-      const out = await this.rawCreateTrivialPoursuit();
+      const out = await this.rawCreateTrivialPoursuit(params);
       this.onSuccessCreateTrivialPoursuit(out);
       return out;
     } catch (error) {
@@ -2983,19 +3019,20 @@ export abstract class AbstractAPI {
     data: ExportExerciceLatexOut,
   ): void {}
 
-  protected async rawHomeworkGetSheets() {
+  protected async rawHomeworkGetSheets(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     const rep: AxiosResponse<Homeworks> = await Axios.get(fullUrl, {
+      params: { matiere: params["matiere"] },
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
   /** HomeworkGetSheets wraps rawHomeworkGetSheets and handles the error */
-  async HomeworkGetSheets() {
+  async HomeworkGetSheets(params: { matiere: string }) {
     this.startRequest();
     try {
-      const out = await this.rawHomeworkGetSheets();
+      const out = await this.rawHomeworkGetSheets(params);
       this.onSuccessHomeworkGetSheets(out);
       return out;
     } catch (error) {

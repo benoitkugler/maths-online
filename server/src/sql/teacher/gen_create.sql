@@ -21,7 +21,8 @@ CREATE TABLE teachers (
     PasswordCrypted bytea NOT NULL,
     IsAdmin boolean NOT NULL,
     HasSimplifiedEditor boolean NOT NULL,
-    Contact jsonb NOT NULL
+    Contact jsonb NOT NULL,
+    FavoriteMatiere text CHECK (FavoriteMatiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 -- constraints

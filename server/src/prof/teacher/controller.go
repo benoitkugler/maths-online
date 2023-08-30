@@ -162,6 +162,15 @@ func (ct *Controller) askInscription(args AskInscriptionIn) (AskInscriptionOut, 
 	return AskInscriptionOut{}, nil
 }
 
+func hasEditorSimplified(topic tc.MatiereTag) bool {
+	switch topic {
+	case tc.Mathematiques, tc.PhysiqueChimie, tc.SVT, tc.SES:
+		return false
+	default:
+		return true
+	}
+}
+
 func (ct *Controller) ValidateInscription(c echo.Context) error {
 	payload := c.QueryParam("data")
 
@@ -174,7 +183,8 @@ func (ct *Controller) ValidateInscription(c echo.Context) error {
 	t := tc.Teacher{
 		Mail:                args.Mail,
 		PasswordCrypted:     ct.teacherKey.EncryptPassword(args.Password),
-		HasSimplifiedEditor: args.HasEditorSimplified,
+		FavoriteMatiere:     args.FavoriteMatiere,
+		HasSimplifiedEditor: hasEditorSimplified(args.FavoriteMatiere),
 	}
 	t, err = t.Insert(ct.db)
 	if err != nil {
@@ -281,6 +291,7 @@ type TeacherSettings struct {
 	Password            string
 	HasEditorSimplified bool
 	Contact             tc.Contact
+	FavoriteMatiere     teacher.MatiereTag
 }
 
 // TeacherGetSettings returns the teacher global settings.
@@ -308,6 +319,7 @@ func (ct *Controller) getSettings(userID teacher.IdTeacher) (TeacherSettings, er
 		Password:            password,
 		HasEditorSimplified: teach.HasSimplifiedEditor,
 		Contact:             teach.Contact,
+		FavoriteMatiere:     teach.FavoriteMatiere,
 	}, nil
 }
 
@@ -341,6 +353,7 @@ func (ct *Controller) updateSettings(args TeacherSettings, userID teacher.IdTeac
 	teach.PasswordCrypted = ct.teacherKey.EncryptPassword(args.Password)
 	teach.HasSimplifiedEditor = args.HasEditorSimplified
 	teach.Contact = args.Contact
+	teach.FavoriteMatiere = args.FavoriteMatiere
 
 	_, err = teach.Update(ct.db)
 	if err != nil {

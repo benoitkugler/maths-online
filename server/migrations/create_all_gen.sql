@@ -23,7 +23,8 @@ CREATE TABLE teachers (
     PasswordCrypted bytea NOT NULL,
     IsAdmin boolean NOT NULL,
     HasSimplifiedEditor boolean NOT NULL,
-    Contact jsonb NOT NULL
+    Contact jsonb NOT NULL,
+    FavoriteMatiere text CHECK (FavoriteMatiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 -- constraints
@@ -106,7 +107,7 @@ CREATE TABLE exercicegroups (
 CREATE TABLE exercicegroup_tags (
     Tag text NOT NULL,
     IdExercicegroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 CREATE TABLE questions (
@@ -130,7 +131,7 @@ CREATE TABLE questiongroups (
 CREATE TABLE questiongroup_tags (
     Tag text NOT NULL,
     IdQuestiongroup integer NOT NULL,
-    Section integer CHECK (Section IN (2, 1, 4, 3)) NOT NULL
+    Section integer CHECK (Section IN (2, 1, 5, 4, 3)) NOT NULL
 );
 
 -- constraints
@@ -168,6 +169,12 @@ WHERE
     /* Section.Chapter */
 ;
 
+CREATE UNIQUE INDEX QuestiongroupTag_matiere ON questiongroup_tags (IdQuestiongroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
+;
+
 ALTER TABLE questiongroup_tags
     ADD FOREIGN KEY (IdQuestiongroup) REFERENCES questiongroups ON DELETE CASCADE;
 
@@ -190,6 +197,12 @@ CREATE UNIQUE INDEX ExercicegroupTag_chapter ON exercicegroup_tags (IdExercicegr
 WHERE
     Section = 2
     /* Section.Chapter */
+;
+
+CREATE UNIQUE INDEX ExercicegroupTag_matiere ON exercicegroup_tags (IdExercicegroup)
+WHERE
+    Section = 5
+    /* Section.Matiere */
 ;
 
 ALTER TABLE exercicegroup_tags
@@ -2237,7 +2250,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_edit_Section (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (2, 1, 4, 3);
+    AND data::int IN (2, 1, 5, 4, 3);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a edit_Section', data;
@@ -2446,7 +2459,9 @@ CREATE TABLE sheets (
     Title text NOT NULL,
     IdTeacher integer NOT NULL,
     Level text NOT NULL,
-    Anonymous integer
+    Anonymous integer,
+    Public boolean NOT NULL,
+    Matiere text CHECK (Matiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 CREATE TABLE sheet_tasks (
@@ -2498,13 +2513,13 @@ ALTER TABLE sheet_tasks
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE reviews (
     Id serial PRIMARY KEY,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_exercices (
     IdReview integer NOT NULL,
     IdExercice integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_participations (
@@ -2517,13 +2532,19 @@ CREATE TABLE review_participations (
 CREATE TABLE review_questions (
     IdReview integer NOT NULL,
     IdQuestion integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+);
+
+CREATE TABLE review_sheets (
+    IdReview integer NOT NULL,
+    IdSheet integer NOT NULL,
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 CREATE TABLE review_trivials (
     IdReview integer NOT NULL,
     IdTrivial integer NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
 );
 
 -- constraints
@@ -2586,6 +2607,25 @@ ALTER TABLE review_trivials
 
 ALTER TABLE review_trivials
     ADD FOREIGN KEY (IdTrivial) REFERENCES trivials;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview, Kind) REFERENCES reviews (ID, Kind) ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD CHECK (Kind = 3
+    /* ReviewKind.KSheet */);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdSheet);
+
+ALTER TABLE review_sheets
+    ADD UNIQUE (IdReview);
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdReview) REFERENCES reviews ON DELETE CASCADE;
+
+ALTER TABLE review_sheets
+    ADD FOREIGN KEY (IdSheet) REFERENCES sheets;
 
 ALTER TABLE review_participations
     ADD UNIQUE (IdReview, IdTeacher);

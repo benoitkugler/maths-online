@@ -1,9 +1,11 @@
 package teacher
 
+import tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
+
 type AskInscriptionIn struct {
-	Mail                string
-	Password            string
-	HasEditorSimplified bool
+	Mail            string
+	Password        string
+	FavoriteMatiere tc.MatiereTag
 }
 
 type AskInscriptionOut struct {

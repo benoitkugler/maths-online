@@ -1,20 +1,20 @@
 <template>
-  <v-card>
-    <v-row class="pa-2">
-      <v-col>
-        <v-card-title>Feuilles d'exercices</v-card-title>
-        <v-card-subtitle>
-          Les feuilles ci-dessous peuvent être partagées entre plusieurs classes
-          et sont conservées si une classe est supprimée.
-        </v-card-subtitle>
-      </v-col>
-      <v-col cols="auto" align-self="center">
-        <v-btn class="mx-2" @click="emit('create')">
-          <v-icon color="green">mdi-plus</v-icon>
-          Créer une feuille</v-btn
-        >
-      </v-col>
-    </v-row>
+  <v-card
+    title="Feuilles d'exercices"
+    subtitle="Les feuilles ci-dessous peuvent être partagées entre plusieurs classes
+          et sont conservées si une classe est supprimée."
+  >
+    <template v-slot:append>
+      <v-btn class="mx-2" @click="emit('create')">
+        <v-icon color="green">mdi-plus</v-icon>
+        Créer une feuille
+      </v-btn>
+      <MatiereSelect
+        :matiere="props.matiere"
+        @update:matiere="v => emit('update:matiere', v)"
+      ></MatiereSelect>
+    </template>
+
     <v-card-text>
       <v-expansion-panels>
         <v-expansion-panel v-for="level in byLevels" :key="level[0]">
@@ -44,13 +44,20 @@
 </template>
 
 <script setup lang="ts">
-import type { Classroom, SheetExt, Sheet } from "@/controller/api_gen";
+import type {
+  Classroom,
+  SheetExt,
+  Sheet,
+  MatiereTag
+} from "@/controller/api_gen";
 import { computed } from "vue";
 import SheetCard from "./SheetCard.vue";
+import MatiereSelect from "../MatiereSelect.vue";
 
 interface Props {
   sheets: Map<number, SheetExt>;
   classrooms: Classroom[];
+  matiere: MatiereTag;
 }
 
 const props = defineProps<Props>();
@@ -63,6 +70,7 @@ const emit = defineEmits<{
   (e: "delete", sheet: SheetExt): void;
   (e: "updatePublic", sheet: Sheet, pub: boolean): void;
   (e: "createReview", sheet: Sheet): void;
+  (e: "update:matiere", matiere: MatiereTag): void;
 }>();
 
 const byLevels = computed(() => {

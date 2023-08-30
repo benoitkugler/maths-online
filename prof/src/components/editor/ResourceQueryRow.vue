@@ -83,6 +83,15 @@
           }
         "
       ></OriginSelect>
+      <MatiereSelect
+        :matiere="props.modelValue.Matiere"
+        @update:matiere="
+          o => {
+            props.modelValue.Matiere = o;
+            emit('update:model-value', props.modelValue);
+          }
+        "
+      ></MatiereSelect>
     </v-col>
   </v-row>
 </template>
@@ -92,6 +101,7 @@ import type { Query, TagsDB } from "@/controller/api_gen";
 import { ChapterColor, LevelColor, SubLevelColor } from "@/controller/editor";
 import { computed } from "vue";
 import OriginSelect from "../OriginSelect.vue";
+import MatiereSelect from "../MatiereSelect.vue";
 
 interface Props {
   modelValue: Query;

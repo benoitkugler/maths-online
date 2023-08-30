@@ -26,9 +26,9 @@ type sample struct {
 func setupDB(t *testing.T) (db tu.TestDB, out sample) {
 	t.Helper()
 
-	db = tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql", "../../sql/homework/gen_create.sql")
+	db = tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql", "../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql")
 
-	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	_, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 	out.userID = teacher.IdTeacher(1)
 
@@ -70,7 +70,7 @@ func TestCRUDSheet(t *testing.T) {
 	qu := sample.question
 	ct := NewController(db.DB, teacher.Teacher{Id: userID}, pass.Encrypter{})
 
-	l, err := ct.getSheets(userID)
+	l, err := ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 0)
 	tu.Assert(t, len(l.Travaux) == 1) // one per classroom
@@ -83,6 +83,7 @@ func TestCRUDSheet(t *testing.T) {
 	updated.Id = sh.Id
 	updated.IdTeacher = userID
 	updated.Level = string(editor.Seconde)
+	updated.Matiere = teacher.Mathematiques
 	err = ct.updateSheet(updated, userID)
 	tu.AssertNoErr(t, err)
 
@@ -96,7 +97,11 @@ func TestCRUDSheet(t *testing.T) {
 	_, err = ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: qu.Id}, userID)
 	tu.AssertNoErr(t, err)
 
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Francais)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l.Sheets) == 0)
+
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 1)
 	tu.Assert(t, len(l.Travaux) == 1)
@@ -105,7 +110,7 @@ func TestCRUDSheet(t *testing.T) {
 	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
 
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 1)
 
@@ -113,12 +118,12 @@ func TestCRUDSheet(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out.Sheet.Id != sh.Id)
 
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 2)
 
 	_, err = ct.copyTravailTo(CopyTravailIn{IdTravail: tr.Id, IdClassroom: class.Id}, userID)
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 2)
 
@@ -129,20 +134,20 @@ func TestCRUDSheet(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, out2.Sheet.Sheet.Anonymous.ID == out2.Travail.Id)
 
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 2)
 
 	_, err = ct.copyTravailTo(CopyTravailIn{out2.Travail.Id, class.Id}, userID)
 	tu.AssertNoErr(t, err)
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 3) // anonymous sheet is duplicated
 
 	err = ct.deleteTravail(out2.Travail.Id, userID)
 	tu.AssertNoErr(t, err)
 
-	l, err = ct.getSheets(userID)
+	l, err = ct.getSheets(userID, teacher.Mathematiques)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l.Sheets) == 2) // anonymous sheet deleted by cascade
 }

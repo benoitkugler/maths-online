@@ -2,6 +2,20 @@
   <v-card title="Modifier les étiquettes">
     <v-card-text class="my-1">
       <v-row>
+        <v-col cols="12">
+          <v-select
+            density="compact"
+            variant="outlined"
+            :model-value="matiereTag"
+            @update:model-value="(t) => updateMatiere(t as string)"
+            :color="MatiereColor"
+            label="Matière"
+            :items="Object.keys(MatiereTagLabels)"
+            hide-details
+          ></v-select>
+        </v-col>
+      </v-row>
+      <v-row>
         <v-col cols="6">
           <v-combobox
             :model-value="levelTag"
@@ -16,21 +30,6 @@
         </v-col>
         <v-col cols="6">
           <v-combobox
-            :model-value="chapterTag"
-            @update:model-value="(t) => updateChapter(t as string)"
-            :items="chapterTags"
-            label="Chapitre"
-            variant="outlined"
-            density="compact"
-            :color="ChapterColor"
-            hide-details
-          ></v-combobox>
-        </v-col>
-      </v-row>
-      <!-- sublevel -->
-      <v-row>
-        <v-col cols="12">
-          <v-combobox
             :model-value="subLevelTags"
             @update:model-value="(t) => updateSubLevels(t as string[])"
             label="Filière"
@@ -42,6 +41,21 @@
             hint="Optionnelle."
             persistent-hint
             chips
+          ></v-combobox>
+        </v-col>
+      </v-row>
+      <!-- sublevel -->
+      <v-row>
+        <v-col cols="12">
+          <v-combobox
+            :model-value="chapterTag"
+            @update:model-value="(t) => updateChapter(t as string)"
+            :items="chapterTags"
+            label="Chapitre"
+            variant="outlined"
+            density="compact"
+            :color="ChapterColor"
+            hide-details
           ></v-combobox>
         </v-col>
       </v-row>
@@ -79,12 +93,18 @@
 </template>
 
 <script setup lang="ts">
-import { Section, type TagsDB, type TagSection } from "@/controller/api_gen";
+import {
+  MatiereTagLabels,
+  Section,
+  type TagsDB,
+  type TagSection
+} from "@/controller/api_gen";
 import {
   ChapterColor,
   LevelColor,
   SubLevelColor,
-  IsyTrivColor
+  IsyTrivColor,
+  MatiereColor
 } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
@@ -102,6 +122,15 @@ const emit = defineEmits<{
   (e: "save"): void;
 }>();
 
+let matiereTag = $computed(
+  () => props.modelValue.find(ts => ts.Section == Section.Matiere)?.Tag || ""
+);
+function updateMatiere(t: string) {
+  const newL = props.modelValue
+    .filter(ts => ts.Section != Section.Matiere)
+    .concat([{ Section: Section.Matiere, Tag: t }]);
+  emit("update:model-value", newL);
+}
 let levelTag = $computed(
   () => props.modelValue.find(ts => ts.Section == Section.Level)?.Tag || ""
 );

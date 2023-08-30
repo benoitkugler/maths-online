@@ -5,7 +5,8 @@ CREATE TABLE sheets (
     IdTeacher integer NOT NULL,
     Level text NOT NULL,
     Anonymous integer,
-    Public boolean NOT NULL
+    Public boolean NOT NULL,
+    Matiere text CHECK (Matiere IN ('ALLEMAND', 'ANGLAIS', 'AUTRE', 'ESPAGNOL', 'FRANCAIS', 'HISTOIRE-GEO', 'ITALIEN', 'MATHS', 'PHYSIQUE', 'SES', 'SVT')) NOT NULL
 );
 
 CREATE TABLE sheet_tasks (

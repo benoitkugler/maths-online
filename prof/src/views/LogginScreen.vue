@@ -133,13 +133,14 @@
           </v-row>
           <v-row v-if="mode == 'inscription'">
             <v-col>
-              <v-switch
+              <v-select
                 density="compact"
-                v-model="mathMode"
+                variant="outlined"
+                v-model="favoriteMatiere"
                 color="primary"
-                label="Mode scientifique"
-                messages="Décocher pour masquer les fonctions spécifiques aux mathématiques."
-              ></v-switch>
+                label="Matière principale"
+                :items="Object.keys(MatiereTagLabels)"
+              ></v-select>
             </v-col>
           </v-row>
         </v-form>
@@ -171,7 +172,11 @@
 </template>
 
 <script setup lang="ts">
-import type { AskInscriptionOut } from "@/controller/api_gen";
+import {
+  MatiereTag,
+  type AskInscriptionOut,
+  MatiereTagLabels
+} from "@/controller/api_gen";
 import { controller, isInscriptionValidated } from "@/controller/controller";
 import { computed } from "vue";
 import { $ref } from "vue/macros";
@@ -186,10 +191,10 @@ function removeInscriptionValidated() {
 }
 
 let mode = $ref<"inscription" | "connection">("connection");
-let mathMode = $ref(true);
 
 let mail = $ref("");
 let password = $ref("");
+let favoriteMatiere = $ref<MatiereTag>(MatiereTag.Mathematiques);
 let showPassword = $ref(false);
 let error = $ref<AskInscriptionOut>({ Error: "", IsPasswordError: false });
 let showSuccessInscription = $ref(false);
@@ -208,7 +213,7 @@ async function inscription() {
   const res = await controller.AskInscription({
     Mail: mail,
     Password: password,
-    HasEditorSimplified: !mathMode
+    FavoriteMatiere: favoriteMatiere
   });
   isLoading = false;
   if (res == undefined) {

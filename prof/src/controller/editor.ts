@@ -621,6 +621,7 @@ export function tagString(tag: string) {
     .toUpperCase();
 }
 
+export const MatiereColor = "orange-lighten-2";
 export const LevelColor = "pink";
 export const SubLevelColor = "purple";
 export const ChapterColor = "primary-darken-1";
@@ -637,6 +638,8 @@ export function tagColor(tag: Section | undefined) {
       return IsyTrivColor;
     case Section.SubLevel:
       return SubLevelColor;
+    case Section.Matiere:
+      return MatiereColor;
   }
   // difficulty
   return DifficultyColor;

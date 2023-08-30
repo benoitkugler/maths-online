@@ -38,6 +38,46 @@ func (irv ErrInvalidRandomParameters) Error() string {
 	return fmt.Sprintf("%s -> %s", irv.Cause, irv.Detail)
 }
 
+type Instantiater struct {
+	paramsInstantiater
+	out Vars
+}
+
+func NewInstantiater(rv RandomParameters) *Instantiater {
+	return &Instantiater{
+		paramsInstantiater{
+			defs:    rv,
+			seen:    make(map[Variable]bool),
+			results: make(map[Variable]*Expr),
+		},
+		make(Vars, len(rv)),
+	}
+}
+
+func (inst *Instantiater) Reset() {
+	for k := range inst.seen {
+		delete(inst.seen, k)
+	}
+	for k := range inst.results {
+		delete(inst.results, k)
+	}
+	for k := range inst.out {
+		delete(inst.out, k)
+	}
+}
+
+func (inst *Instantiater) Instantiate() (Vars, error) {
+	for v := range inst.defs {
+		inst.paramsInstantiater.currentVariable = v
+		value, err := inst.paramsInstantiater.instantiate(v) // this triggers the evaluation of the expression
+		if err != nil {
+			return nil, err
+		}
+		inst.out[v] = value
+	}
+	return inst.out, nil
+}
+
 // Instantiate generates a random version of the variables, resolving possible dependencies.
 //
 // The general idea is to replace known variables by their expression (recursively)
@@ -51,23 +91,8 @@ func (irv ErrInvalidRandomParameters) Error() string {
 //
 // See `Validate` to statistically check for invalid parameters.
 func (rv RandomParameters) Instantiate() (Vars, error) {
-	resolver := &paramsInstantiater{
-		defs:    rv,
-		seen:    make(map[Variable]bool),
-		results: make(map[Variable]*Expr),
-	}
-
-	out := make(Vars, len(rv))
-	for v := range rv {
-		resolver.currentVariable = v
-		value, err := resolver.instantiate(v) // this triggers the evaluation of the expression
-		if err != nil {
-			return nil, err
-		}
-		out[v] = value
-	}
-
-	return out, nil
+	inst := NewInstantiater(rv)
+	return inst.Instantiate()
 }
 
 type paramsInstantiater struct {

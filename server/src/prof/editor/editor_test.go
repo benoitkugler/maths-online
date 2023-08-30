@@ -56,12 +56,12 @@ func TestExerciceCRUD(t *testing.T) {
 		"../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql")
 	defer db.Remove()
 
-	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	_, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})
 
-	group, err := ct.createExercice(1)
+	group, err := ct.createExercicegroup(1)
 	tu.AssertNoErr(t, err)
 	ex := group.Variants[0]
 
@@ -125,7 +125,7 @@ func TestGroupTagsEmpty(t *testing.T) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql")
 	defer db.Remove()
 
-	_, err := teacher.Teacher{IsAdmin: true}.Insert(db)
+	_, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, teacher.Teacher{Id: 1})

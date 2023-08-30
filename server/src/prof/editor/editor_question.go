@@ -60,6 +60,11 @@ func (ct *Controller) EditorGetQuestionsIndex(c echo.Context) error {
 }
 
 func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
 	groups, err := ed.SelectAllQuestiongroups(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -72,7 +77,7 @@ func (ct *Controller) loadQuestionsIndex(userID uID) (Index, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	return buildIndex(questionsToIndex(groups, tags)), nil
+	return buildIndexFor(questionsToIndex(groups, tags), user.FavoriteMatiere), nil
 }
 
 type SearchQuestionsIn = Query
@@ -106,6 +111,11 @@ func (ct *Controller) EditorCreateQuestiongroup(c echo.Context) error {
 }
 
 func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return QuestiongroupExt{}, utils.SQLError(err)
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return QuestiongroupExt{}, utils.SQLError(err)
@@ -126,6 +136,18 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 		return QuestiongroupExt{}, utils.SQLError(err)
 	}
 
+	// add the favorite matiere as tag
+	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
+	err = ed.InsertManyQuestiongroupTags(tx, ed.QuestiongroupTag{
+		Tag:             ts.Tag,
+		Section:         ts.Section,
+		IdQuestiongroup: group.Id,
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return QuestiongroupExt{}, utils.SQLError(err)
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return QuestiongroupExt{}, utils.SQLError(err)
@@ -134,7 +156,7 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 	origin := questionOrigin(group, tcAPI.OptionalIdReview{}, userID, ct.admin.Id)
 	return QuestiongroupExt{
 		Group:    group,
-		Tags:     nil,
+		Tags:     ed.Tags{ts},
 		Origin:   origin,
 		Variants: []QuestionHeader{newQuestionHeader(qu)},
 	}, nil
@@ -818,7 +840,7 @@ func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestion
 	for _, group := range groups {
 		tags := tagsMap[group.Id].Tags()
 		tagIndex := tags.BySection()
-		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter) && query.matchSubLevel(tagIndex.SubLevels)) {
+		if !query.matchTags(tagIndex) {
 			continue
 		}
 

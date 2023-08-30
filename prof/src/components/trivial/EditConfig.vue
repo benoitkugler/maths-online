@@ -113,7 +113,7 @@
               <tags-selector
                 :all-tags="allKnownTags"
                 :model-value="categorie || []"
-                :last-level-chapter="lastLevelChapter"
+                :last-matiere-level-chapter="lastMatiereLevelChapter"
                 @update:model-value="v => updateCategorie(index, v)"
               ></tags-selector>
             </v-col>
@@ -155,7 +155,6 @@
 <script setup lang="ts">
 import {
   Section,
-  type CategoriesQuestions,
   type CheckMissingQuestionsOut,
   type DifficultyTag,
   type QuestionCriterion,
@@ -171,6 +170,7 @@ import TagChip from "../editor/utils/TagChip.vue";
 import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
 import CategorieRow from "./CategorieRow.vue";
+import type { PrefillTrivialCategorie } from "@/controller/utils";
 
 interface Props {
   edited: Trivial;
@@ -184,16 +184,18 @@ const emit = defineEmits<{
   (e: "update", v: Trivial): void;
 }>();
 
-const lastLevelChapter = computed(() => {
+const lastMatiereLevelChapter = computed<PrefillTrivialCategorie>(() => {
   const all = allTags(props.edited.Questions.Tags);
   if (all.length) {
     const last = all[all.length - 1] || [];
     return {
+      matiere: last.find(s => s.Section == Section.Matiere)?.Tag || "",
       level: last.find(s => s.Section == Section.Level)?.Tag || "",
-      chapter: last.find(s => s.Section == Section.Chapter)?.Tag || ""
+      chapter: last.find(s => s.Section == Section.Chapter)?.Tag || "",
+      sublevels: last.filter(s => s.Section == Section.SubLevel)
     };
   }
-  return { level: "", chapter: "" };
+  return { matiere: "", level: "", chapter: "", sublevels: [] };
 });
 
 let showDifficultyCard = $ref(false);

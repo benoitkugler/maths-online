@@ -63,6 +63,7 @@ func (ct *Controller) GetDevToken() (string, error) {
 	t, err := tc.Teacher{
 		Mail:            mail,
 		PasswordCrypted: ct.teacherKey.EncryptPassword("1234"),
+		FavoriteMatiere: tc.Mathematiques,
 	}.Insert(ct.db)
 	if err != nil {
 		return "", err

@@ -77,6 +77,11 @@ func (ct *Controller) EditorGetExercicesIndex(c echo.Context) error {
 }
 
 func (ct *Controller) loadExercicesIndex(userID uID) (Index, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
 	groups, err := ed.SelectAllExercicegroups(ct.db)
 	if err != nil {
 		return nil, utils.SQLError(err)
@@ -89,7 +94,7 @@ func (ct *Controller) loadExercicesIndex(userID uID) (Index, error) {
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	return buildIndex(exercicesToIndex(groups, tags)), nil
+	return buildIndexFor(exercicesToIndex(groups, tags), user.FavoriteMatiere), nil
 }
 
 type ExerciceQuestionExt struct {
@@ -180,7 +185,7 @@ func (ct *Controller) searchExercices(query Query, userID uID) (out ListExercice
 	for _, group := range groups {
 		tags := tagsMap[group.Id].Tags()
 		tagIndex := tags.BySection()
-		if !(query.matchLevel(tagIndex.Level) && query.matchChapter(tagIndex.Chapter) && query.matchSubLevel(tagIndex.SubLevels)) {
+		if !query.matchTags(tagIndex) {
 			continue
 		}
 
@@ -457,7 +462,7 @@ func (ct *Controller) getExercice(exerciceID ed.IdExercice, userID uID) (Exercic
 func (ct *Controller) EditorCreateExercice(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	out, err := ct.createExercice(userID)
+	out, err := ct.createExercicegroup(userID)
 	if err != nil {
 		return err
 	}
@@ -465,7 +470,12 @@ func (ct *Controller) EditorCreateExercice(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
+func (ct *Controller) createExercicegroup(userID uID) (ExercicegroupExt, error) {
+	user, err := teacher.SelectTeacher(ct.db, userID)
+	if err != nil {
+		return ExercicegroupExt{}, utils.SQLError(err)
+	}
+
 	tx, err := ct.db.Begin()
 	if err != nil {
 		return ExercicegroupExt{}, utils.SQLError(err)
@@ -483,6 +493,18 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 		return ExercicegroupExt{}, utils.SQLError(err)
 	}
 
+	// add the favorite matiere as tag
+	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
+	err = ed.InsertManyExercicegroupTags(tx, ed.ExercicegroupTag{
+		Tag:             ts.Tag,
+		Section:         ts.Section,
+		IdExercicegroup: group.Id,
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return ExercicegroupExt{}, utils.SQLError(err)
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return ExercicegroupExt{}, utils.SQLError(err)
@@ -492,7 +514,7 @@ func (ct *Controller) createExercice(userID uID) (ExercicegroupExt, error) {
 	out := ExercicegroupExt{
 		Group:    group,
 		Origin:   origin,
-		Tags:     nil,
+		Tags:     ed.Tags{ts},
 		Variants: []ExerciceHeader{newExerciceHeader(ex)},
 	}
 	return out, nil

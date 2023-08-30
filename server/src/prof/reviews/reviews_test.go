@@ -41,9 +41,9 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql",
 		"../../sql/trivial/gen_create.sql", "../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql")
 
-	admin, err := teacher.Teacher{IsAdmin: true, Mail: " "}.Insert(db)
+	admin, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques, Mail: " "}.Insert(db)
 	tu.AssertNoErr(t, err)
-	user, err := teacher.Teacher{IsAdmin: false, Mail: userMail}.Insert(db)
+	user, err := teacher.Teacher{IsAdmin: false, FavoriteMatiere: teacher.Mathematiques, Mail: userMail}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	qu, err := editor.Questiongroup{IdTeacher: user.Id, Title: "Intervertion série intégrale (TEST)"}.Insert(db)
@@ -55,7 +55,7 @@ func setupDB(t *testing.T) (tu.TestDB, sample) {
 	tr, err := trivial.Trivial{IdTeacher: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	sheet, err := homework.Sheet{IdTeacher: user.Id}.Insert(db)
+	sheet, err := homework.Sheet{IdTeacher: user.Id, Matiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	return db, sample{

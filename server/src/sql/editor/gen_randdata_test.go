@@ -137,7 +137,7 @@ func randQuestiongroupTag() QuestiongroupTag {
 }
 
 func randSection() Section {
-	choix := [...]Section{Chapter, Level, SubLevel, TrivMath}
+	choix := [...]Section{Chapter, Level, Matiere, SubLevel, TrivMath}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

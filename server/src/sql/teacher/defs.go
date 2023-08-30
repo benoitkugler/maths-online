@@ -14,3 +14,20 @@ type Contact struct {
 	Name string
 	URL  string
 }
+
+// MatiereTag are special tags to indicate the topic of a question/exercice
+type MatiereTag string
+
+const (
+	Autre          MatiereTag = "AUTRE"
+	Mathematiques  MatiereTag = "MATHS"
+	Francais       MatiereTag = "FRANCAIS"
+	HistoireGeo    MatiereTag = "HISTOIRE-GEO"
+	Espagnol       MatiereTag = "ESPAGNOL"
+	Italien        MatiereTag = "ITALIEN"
+	Allemand       MatiereTag = "ALLEMAND"
+	Anglais        MatiereTag = "ANGLAIS"
+	SES            MatiereTag = "SES"
+	PhysiqueChimie MatiereTag = "PHYSIQUE"
+	SVT            MatiereTag = "SVT"
+)
