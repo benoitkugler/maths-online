@@ -378,53 +378,78 @@ class _ExerciceWState extends State<ExerciceW> {
     ct.updateProgression(resp.progression); // update the progression
     nextQuestions = resp.newQuestions; // buffer until retry
 
-    final isCorrect = resp.results[index]!.isCorrect;
-    final hasNextQuestion =
-        isCorrect && ct.exeAndProg.progression.nextQuestion != -1;
-    final showButtonCorrection = widget.showCorrectionButtonOnFail &&
-        ct.currentCorrection.isNotEmpty &&
-        !isCorrect;
-
-    final SnackBarAction? action = hasNextQuestion
-        ? SnackBarAction(
-            label: "Continuer l'exercice",
-            textColor: Colors.black,
-            onPressed: () {
-              setState(() {
-                ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
-              });
-            },
-          )
-        : (showButtonCorrection)
-            ? SnackBarAction(
-                backgroundColor: Colors.white,
-                label: "Correction",
-                onPressed: _showCorrection)
-            : null;
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: isCorrect ? Colors.lightGreen : Colors.red.shade200,
-      duration: Duration(
-          seconds: hasNextQuestion ? 20 : 4), // block on correct answer
-      content: Text(isCorrect
-          ? "Bonne réponse ! Bravo."
-          : "Dommage, la réponse est incorrecte"),
-      action: action,
-      actionOverflowThreshold: 0.5,
-    ));
-
     if (ct.exeAndProg.progression.nextQuestion == -1) {
       onExerciceOver();
       return;
     }
 
-    if (isCorrect) {
-      // wait for the user to go to the next question
-    } else {
+    final isCorrect = resp.results[index]!.isCorrect;
+    if (!isCorrect) {
       // show errors and ask for retry
       setState(() {
         ct.showFeedback({index: resp.results[index]!});
       });
+    } else {
+      // update the menu status
+      setState(() {});
+    }
+
+    _showValidDialogOrSnack(isCorrect);
+  }
+
+  // handle the following cases :
+  //  - the answer is correct and there is more to do
+  //  - the answer is incorrect and there is a correction to display
+  //  - the answer is incorrect and there is no correction to display
+  void _showValidDialogOrSnack(bool isAnswerCorrect) async {
+    final ct = widget.controller;
+    final hasNextQuestion =
+        isAnswerCorrect && ct.exeAndProg.progression.nextQuestion != -1;
+    final showButtonCorrection = widget.showCorrectionButtonOnFail &&
+        ct.currentCorrection.isNotEmpty &&
+        !isAnswerCorrect;
+
+    if (hasNextQuestion) {
+      // show a dialog with next button
+      await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+                backgroundColor: Colors.green.shade400,
+                title: const Text("Yes !"),
+                content: const Text("Ta réponse est correcte, bravo !"),
+                actions: [
+                  OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          ct.questionIndex =
+                              ct.exeAndProg.progression.nextQuestion;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black87),
+                      child: const Text("Continuer l'exercice"))
+                ],
+              ));
+    } else if (showButtonCorrection) {
+      // show a "persitent" snackbar
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red.shade200,
+        duration: const Duration(seconds: 120),
+        content: const Text("Dommage, la réponse est incorrecte."),
+        action: SnackBarAction(
+            backgroundColor: Colors.white,
+            label: "Correction",
+            onPressed: _showCorrection),
+        actionOverflowThreshold: 0.5,
+      ));
+    } else if (!isAnswerCorrect) {
+      // just show a short snackbar
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red.shade200,
+        duration: const Duration(seconds: 4),
+        content: const Text("Dommage, la réponse est incorrecte."),
+      ));
     }
   }
 
@@ -439,6 +464,8 @@ class _ExerciceWState extends State<ExerciceW> {
   }
 
   void onQuestionButtonClick() {
+    // cleanup potential snackbar
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     switch (widget.controller.status) {
       case ExerciceStatus.answering:
         return _onValideQuestion();

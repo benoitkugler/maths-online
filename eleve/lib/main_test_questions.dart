@@ -53,18 +53,25 @@ const questionComplexeAnswers = {
   3: PointAnswer(IntCoord(3, 8)),
 };
 
-Question numberQuestion(String title) {
-  return Question([
-    TextBlock([T(title)], false, false, false),
-    const NumberFieldBlock(0, 10)
-  ], [
-    TextBlock(List.filled(40, T("Une très belle correction : $title")), false,
-        true, true)
-  ]);
+Question numberQuestion(String title, {bool withCorrection = true}) {
+  return Question(
+      [
+        TextBlock([T(title)], false, false, false),
+        const NumberFieldBlock(0, 10)
+      ],
+      withCorrection
+          ? [
+              TextBlock(
+                  List.filled(40, T("Une très belle correction : $title")),
+                  false,
+                  true,
+                  true)
+            ]
+          : []);
 }
 
 final qu1 = numberQuestion("Test 1");
-final qu2 = numberQuestion("Test 2");
+final qu2 = numberQuestion("Test 2", withCorrection: false);
 final qu3 = numberQuestion("Test 3");
 
 final quI1 = InstantiatedQuestion(1, qu1, DifficultyTag.diff1, []);
@@ -321,6 +328,7 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final questionIndex = params.answers.keys.first;
     final answer = params.answers[questionIndex]!;
+    // the correct answer is the index of the question
     final isCorrect =
         questionIndex == (answer.answer.data[0] as NumberAnswer).value;
     final res = {

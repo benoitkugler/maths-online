@@ -395,7 +395,7 @@ class __FreeSheetListState extends State<_FreeSheetList> {
                                   style:
                                       Theme.of(context).textTheme.titleMedium),
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Chip(
                               label: Text("${e.value.length}"),
                               visualDensity: const VisualDensity(vertical: -2),
