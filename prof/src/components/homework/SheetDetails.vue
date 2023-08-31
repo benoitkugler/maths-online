@@ -33,6 +33,21 @@
 
           <v-row>
             <v-col>
+              <v-select
+                density="compact"
+                variant="outlined"
+                v-model="props.sheet.Sheet.Matiere"
+                :color="MatiereColor"
+                label="Matière"
+                :items="Object.keys(MatiereTagLabels)"
+                @blur="update"
+                hide-details
+              ></v-select>
+            </v-col>
+          </v-row>
+
+          <v-row>
+            <v-col>
               <v-combobox
                 variant="outlined"
                 density="compact"
@@ -51,21 +66,21 @@
           <SheetTasks
             :sheet="props.sheet"
             :all-tags="allTags"
-            @add-exercice="(v) => emit('addExercice', props.sheet.Sheet, v)"
+            @add-exercice="v => emit('addExercice', props.sheet.Sheet, v)"
             @add-monoquestion="
-              (v) => emit('addMonoquestion', props.sheet.Sheet, v)
+              v => emit('addMonoquestion', props.sheet.Sheet, v)
             "
             @add-random-monoquestion="
-              (v) => emit('addRandomMonoquestion', props.sheet.Sheet, v)
+              v => emit('addRandomMonoquestion', props.sheet.Sheet, v)
             "
             @update-monoquestion="
-              (v) => emit('udpateMonoquestion', props.sheet.Sheet, v)
+              v => emit('udpateMonoquestion', props.sheet.Sheet, v)
             "
             @update-random-monoquestion="
-              (v) => emit('udpateRandomMonoquestion', props.sheet.Sheet, v)
+              v => emit('udpateRandomMonoquestion', props.sheet.Sheet, v)
             "
-            @remove="(v) => emit('removeTask', props.sheet.Sheet, v)"
-            @reorder="(v) => emit('reorderTasks', props.sheet.Sheet, v)"
+            @remove="v => emit('removeTask', props.sheet.Sheet, v)"
+            @reorder="v => emit('reorderTasks', props.sheet.Sheet, v)"
           ></SheetTasks>
         </v-col>
       </v-row>
@@ -75,13 +90,14 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Monoquestion,
-  RandomMonoquestion,
-  Sheet,
-  SheetExt,
-  TagsDB,
-  TaskExt,
+import {
+  MatiereTagLabels,
+  type Monoquestion,
+  type RandomMonoquestion,
+  type Sheet,
+  type SheetExt,
+  type TagsDB,
+  type TaskExt
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import {
@@ -89,6 +105,7 @@ import {
   emptyTagsDB,
   type VariantG,
   type ResourceGroup,
+  MatiereColor
 } from "@/controller/editor";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
