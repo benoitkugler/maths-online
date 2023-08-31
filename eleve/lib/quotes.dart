@@ -239,6 +239,8 @@ final _quotes = [
       "",
       "Nelson Mandela"),
   const QuoteData("On est pas ici-bas pour se faire du tracas", "", ""),
+  const QuoteData(
+      "Ne regarde pas en arrière, ce n'est pas là que tu vas.", "", "")
 ];
 
 var _quoteIndex = 0;
