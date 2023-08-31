@@ -3,6 +3,7 @@ package tasks
 import (
 	"database/sql"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -243,6 +244,18 @@ func Test_selectVariants(t *testing.T) {
 			t.Errorf("selectVariants() = %v, want %v", got, tt.want)
 		}
 	}
+
+	tu.Assert(t, ed.Diff1 < ed.Diff2)
+	got := selectVariants(4, []ed.Question{
+		{Difficulty: ed.Diff1},
+		{Difficulty: ed.Diff1},
+		{Difficulty: ed.Diff2},
+		{Difficulty: ed.Diff2},
+		{Difficulty: ed.Diff3},
+		{Difficulty: ed.Diff3},
+		{Difficulty: ed.Diff3},
+	})
+	tu.Assert(t, sort.SliceIsSorted(got, func(i, j int) bool { return got[i].Difficulty < got[j].Difficulty }))
 }
 
 func TestRandomMonoquestion(t *testing.T) {

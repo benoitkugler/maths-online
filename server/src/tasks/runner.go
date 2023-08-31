@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -542,6 +543,10 @@ func selectVariants(nbToSelect int, among []ed.Question) []ed.Question {
 	for _, index := range perm {
 		selected = append(selected, among[index])
 	}
+
+	// sort by difficulty
+	sort.Slice(selected, func(i, j int) bool { return selected[i].Difficulty < selected[j].Difficulty })
+
 	return selected
 }
 
