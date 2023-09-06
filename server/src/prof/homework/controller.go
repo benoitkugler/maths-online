@@ -172,6 +172,7 @@ func (ct *Controller) assignSheetTo(args CreateTravailWithIn, userID uID) (ho.Tr
 		IdSheet:     args.IdSheet,
 		IdClassroom: args.IdClassroom,
 		Noted:       true,
+		ShowAfter:   ho.Time(time.Now().Round(10 * time.Minute)),
 		Deadline:    ho.Time(time.Now().Add(time.Hour * 7 * 14).Round(time.Hour)), // one week
 	}
 	tr, err = tr.Insert(ct.db)
@@ -234,6 +235,7 @@ func (ct *Controller) createTravail(idClassroom teacher.IdClassroom, userID uID)
 		IdSheet:     sheet.Id,
 		IdClassroom: idClassroom,
 		Noted:       true,
+		ShowAfter:   ho.Time(time.Now().Round(10 * time.Minute)),
 		Deadline:    ho.Time(time.Now().Add(time.Hour * 24 * 7).Round(time.Hour)), // one week
 	}
 	tr, err = tr.Insert(tx)

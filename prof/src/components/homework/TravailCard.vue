@@ -85,10 +85,30 @@
           </v-btn>
         </v-col>
       </v-row>
-      <v-row justify="space-between" class="mt-0">
+
+      <v-row>
+        <v-col align-self="center">
+          <span class="text-grey text-subtitle-1 ml-1">
+            Afficher à partir du
+          </span>
+        </v-col>
+        <v-col cols="auto" align-self="center">
+          <DateTimeChip
+            title="Modifier le début du travail"
+            :model-value="travail.ShowAfter"
+            @update:model-value="
+              v => {
+                travail.ShowAfter = v;
+                emit('update', travail);
+              }
+            "
+          ></DateTimeChip>
+        </v-col>
+      </v-row>
+      <v-row justify="space-between" class="mt-2" no-gutters>
         <v-col cols="auto" align-self="center">
           <v-switch
-            label="Accès à durée limité"
+            label="Limiter l'accès"
             v-model="travail.Noted"
             @update:model-value="emit('update', travail)"
             hide-details
@@ -97,48 +117,20 @@
           </v-switch>
         </v-col>
 
-        <v-col v-if="travail.Noted" cols="auto" align-self="center">
-          Clôture :
-          <v-menu
-            offset-y
-            :close-on-content-click="false"
-            :model-value="deadlineToEdit != null"
-            @update:model-value="deadlineToEdit = null"
-          >
-            <template v-slot:activator="{ isActive, props }">
-              <v-chip
-                v-on="{ isActive }"
-                v-bind="props"
-                style="text-align: right"
-                class="ml-1"
-                color="primary"
-                variant="outlined"
-                @click="deadlineToEdit = travail.Deadline"
-              >
-                {{ deadline }}
-              </v-chip>
-            </template>
-            <v-card width="300px">
-              <v-card-text class="pb-0" v-if="deadlineToEdit != null">
-                <TimeField v-model="deadlineToEdit"></TimeField>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="success"
-                  @click="
-                    travail.Deadline = deadlineToEdit!;
-                    deadlineToEdit = null;
-                    emit('update', travail);
-                  "
-                  >Enregistrer</v-btn
-                >
-              </v-card-actions>
-            </v-card>
-          </v-menu>
-        </v-col>
-        <v-col cols="auto" align-self="center" v-else>
-          <v-chip> Feuille en accès libre </v-chip>
+        <v-col cols="auto" align-self="center">
+          <DateTimeChip
+            prefix="clôture le"
+            title="Modifier la clôture du travail"
+            v-if="travail.Noted"
+            :model-value="travail.Deadline"
+            @update:model-value="
+              v => {
+                travail.Deadline = v;
+                emit('update', travail);
+              }
+            "
+          ></DateTimeChip>
+          <v-chip v-else> Feuille en accès libre, sans clôture</v-chip>
         </v-col>
       </v-row>
     </v-card-text>
@@ -151,14 +143,11 @@ import {
   type Classroom,
   type Sheet,
   type SheetExt,
-  type Time,
   type Travail
 } from "@/controller/api_gen";
-import { formatTime } from "@/controller/utils";
 import { computed } from "vue";
-import TimeField from "./TimeField.vue";
-import { $ref } from "vue/macros";
 import PreviewSheet from "./PreviewSheet.vue";
+import DateTimeChip from "../DateTimeChip.vue";
 
 interface Props {
   travail: Travail;
@@ -187,8 +176,4 @@ const subtitle = computed(() => {
     return `${nbTasks.value} tâches`;
   }
 });
-
-const deadline = computed(() => formatTime(props.travail.Deadline));
-
-let deadlineToEdit = $ref<Time | null>(null);
 </script>

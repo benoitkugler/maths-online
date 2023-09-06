@@ -17,19 +17,29 @@ export function formatDate(date: Date_) {
   return d.toLocaleDateString();
 }
 
-export function formatTime(time: Time, showMinute = false) {
+export function formatTime(
+  time: Time,
+  showMinute = false,
+  showWeekday = false
+) {
   const ti = new Date(time);
   if (isNaN(ti.valueOf()) || ti.getFullYear() <= 1) {
     return "";
   }
-  return ti.toLocaleString(undefined, {
+  const s = ti.toLocaleString(undefined, {
     year: "numeric",
     day: "numeric",
     month: "short",
     hour: "2-digit",
     minute: showMinute ? "2-digit" : undefined
   });
+  if (showWeekday) {
+    return `${_weekdays[ti.getDay()]} ${s}`;
+  }
+  return s;
 }
+
+const _weekdays = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
 
 export function onDragListItemStart(payload: DragEvent, index: number) {
   if (payload.dataTransfer == null) return;
