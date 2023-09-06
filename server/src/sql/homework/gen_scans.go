@@ -384,6 +384,7 @@ func scanOneTravail(row scanner) (Travail, error) {
 		&item.IdSheet,
 		&item.Noted,
 		&item.Deadline,
+		&item.ShowAfter,
 	)
 	return item, err
 }
@@ -452,22 +453,22 @@ func ScanTravails(rs *sql.Rows) (Travails, error) {
 // Insert one Travail in the database and returns the item with id filled.
 func (item Travail) Insert(tx DB) (out Travail, err error) {
 	row := tx.QueryRow(`INSERT INTO travails (
-		idclassroom, idsheet, noted, deadline
+		idclassroom, idsheet, noted, deadline, showafter
 		) VALUES (
-		$1, $2, $3, $4
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.IdClassroom, item.IdSheet, item.Noted, item.Deadline)
+		`, item.IdClassroom, item.IdSheet, item.Noted, item.Deadline, item.ShowAfter)
 	return ScanTravail(row)
 }
 
 // Update Travail in the database and returns the new version.
 func (item Travail) Update(tx DB) (out Travail, err error) {
 	row := tx.QueryRow(`UPDATE travails SET (
-		idclassroom, idsheet, noted, deadline
+		idclassroom, idsheet, noted, deadline, showafter
 		) = (
-		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
-		`, item.IdClassroom, item.IdSheet, item.Noted, item.Deadline, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.IdClassroom, item.IdSheet, item.Noted, item.Deadline, item.ShowAfter, item.Id)
 	return ScanTravail(row)
 }
 

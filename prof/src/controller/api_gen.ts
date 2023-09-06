@@ -1261,6 +1261,7 @@ export interface Travail {
   IdSheet: IdSheet;
   Noted: boolean;
   Deadline: Time;
+  ShowAfter: Time;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Approval
 export enum Approval {

@@ -59,6 +59,7 @@ func randTravail() Travail {
 	s.IdSheet = randIdSheet()
 	s.Noted = randbool()
 	s.Deadline = randTime()
+	s.ShowAfter = randTime()
 
 	return s
 }

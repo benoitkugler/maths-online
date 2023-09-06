@@ -20,7 +20,8 @@ CREATE TABLE travails (
     IdClassroom integer NOT NULL,
     IdSheet integer NOT NULL,
     Noted boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    Deadline timestamp(0) with time zone NOT NULL,
+    ShowAfter timestamp(0) with time zone NOT NULL
 );
 
 -- constraints

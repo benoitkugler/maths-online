@@ -37,6 +37,9 @@ type Travail struct {
 	// passed the Deadline, the sheet notations may not be modified anymore.
 	// Else, this field is ignored
 	Deadline Time
+
+	// Pospone the access for students to this work
+	ShowAfter Time
 }
 
 // Sheet is a list of exercices.

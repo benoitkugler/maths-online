@@ -19,6 +19,8 @@ type Sheet struct {
 	Noted    bool // new in version 1.5
 	Deadline ho.Time
 
+	// TODO: cleanup these unused fields
+
 	Notation    int                 // Deprecated
 	Activated   bool                // Deprecated
 	IdClassroom teacher.IdClassroom // Deprecated

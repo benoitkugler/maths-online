@@ -1257,17 +1257,18 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 			continue
 		}
 
+		// check the start field
+		if time.Now().Before(time.Time(travail.ShowAfter)) { // hide the work for now
+			continue
+		}
+
 		sheet := sheets[travail.IdSheet]
 		tasksForSheet := sheetToTasks[sheet.Id] // defined exercices
 		taskList := make([]taAPI.TaskProgressionHeader, len(tasksForSheet))
 		for i, exLink := range tasksForSheet {
 			taskList[i] = progMap[exLink.IdTask]
 		}
-		// compatiblity mode
-		notation := 0
-		if travail.Noted {
-			notation = 1
-		}
+
 		out = append(out, SheetProgression{
 			IdTravail: travail.Id,
 			Sheet: Sheet{
@@ -1276,9 +1277,10 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 				Deadline: travail.Deadline,
 				Noted:    travail.Noted,
 
-				Notation:    notation, // TODO: cleanup
+				// TODO: cleanup these unused fields
+				Notation:    0,
 				Activated:   true,
-				IdClassroom: travail.IdClassroom,
+				IdClassroom: 0,
 			},
 			Tasks: taskList,
 		})
@@ -1344,22 +1346,17 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 	}
 	isTaskComplete := pr.HasProgression && pr.Progression.IsComplete()
 
+	travail, err := ho.SelectTravail(ct.db, args.IdTravail)
+	if err != nil {
+		return StudentEvaluateTaskOut{}, utils.SQLError(err)
+	}
 	var registerProgression bool
-	// to preserve compatibily, we accept empty [IdTravail] field
-	if args.IdTravail == 0 {
-		registerProgression = !isTaskComplete
+	if travail.Noted {
+		// only register progression for non expired, non completed
+		registerProgression = !isTaskComplete && !travail.IsExpired()
 	} else {
-		travail, err := ho.SelectTravail(ct.db, args.IdTravail)
-		if err != nil {
-			return StudentEvaluateTaskOut{}, utils.SQLError(err)
-		}
-		if travail.Noted {
-			// only register progression for non expired, non completed
-			registerProgression = !isTaskComplete && !travail.IsExpired()
-		} else {
-			// Always register progression for free travail
-			registerProgression = true
-		}
+		// Always register progression for free travail
+		registerProgression = true
 	}
 
 	ex, mark, err := taAPI.EvaluateTaskExercice(ct.db, args.IdTask, idStudent, args.Ex, registerProgression)
