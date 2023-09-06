@@ -1,6 +1,6 @@
 {
     "name": "prof",
-    "version": "1.6.1",
+    "version": "1.6.3",
     "scripts": {
         "serve": "vite preview",
         "build": "vite build",
@@ -17,7 +17,7 @@
         "roboto-fontface": "^0.10.0",
         "vue": "^3.2.31",
         "vue-router": "^4.2.2",
-        "vuetify": "^3.3.2",
+        "vuetify": "^3.3.15",
         "webfontloader": "^1.6.28"
     },
     "devDependencies": {
