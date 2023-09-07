@@ -175,6 +175,11 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("Demo classroom loaded.")
+	err = tc.CleanupClassroomCodes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Expired classroom codes cleaned up.")
 
 	tvc := trivial.NewController(db, studentKey, demoCode, admin)
 	if err = tvc.CheckDemoQuestions(); err != nil {

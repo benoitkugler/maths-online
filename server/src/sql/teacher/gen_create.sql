@@ -5,6 +5,12 @@ CREATE TABLE classrooms (
     Name text NOT NULL
 );
 
+CREATE TABLE classroom_codes (
+    IdClassroom integer NOT NULL,
+    Code text NOT NULL,
+    ExpiresAt timestamp(0) with time zone NOT NULL
+);
+
 CREATE TABLE students (
     Id serial PRIMARY KEY,
     Name text NOT NULL,
@@ -34,6 +40,12 @@ ALTER TABLE classrooms
 
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+
+ALTER TABLE classroom_codes
+    ADD UNIQUE (Code);
+
+ALTER TABLE classroom_codes
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;

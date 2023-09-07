@@ -27,6 +27,14 @@ type Classroom struct {
 	Name      string      `json:"name"`
 }
 
+// ClassroomCode is a time limited, user friendly, code to access one class
+// gomacro:SQL ADD UNIQUE(Code)
+type ClassroomCode struct {
+	IdClassroom IdClassroom `gomacro-sql-on-delete:"CASCADE"`
+	Code        string
+	ExpiresAt   Time
+}
+
 // Student is a student profile, always attached to a classroom.
 type Student struct {
 	Id               IdStudent

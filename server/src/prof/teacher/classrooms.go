@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
@@ -19,7 +18,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const classroomCodeDuration = 6 * time.Hour
+// 2 days
+const classroomCodeDuration = 2 * 24 * time.Hour
 
 type ClassroomExt struct {
 	Classroom tc.Classroom
@@ -425,47 +425,6 @@ func (ct *Controller) updateStudent(st tc.Student, userID tc.IdTeacher) error {
 	return nil
 }
 
-type classroomsCode struct {
-	lock  sync.Mutex
-	codes map[string]tc.IdClassroom // code for student -> id_classroom
-}
-
-func (cc *classroomsCode) newCode(idClassroom tc.IdClassroom) string {
-	cc.lock.Lock()
-	defer cc.lock.Unlock()
-
-	// generated the code
-	code := utils.RandomID(true, 4, func(s string) bool {
-		_, has := cc.codes[s]
-		return has
-	})
-	// register it
-	cc.codes[code] = idClassroom
-
-	// time its removal
-	time.AfterFunc(classroomCodeDuration, func() { cc.expireCode(code) })
-
-	return code
-}
-
-func (cc *classroomsCode) expireCode(code string) {
-	cc.lock.Lock()
-	defer cc.lock.Unlock()
-	delete(cc.codes, code)
-}
-
-// return the ID of the classroom
-func (cc *classroomsCode) checkCode(code string) (tc.IdClassroom, error) {
-	cc.lock.Lock()
-	defer cc.lock.Unlock()
-
-	out, ok := cc.codes[code]
-	if !ok {
-		return 0, fmt.Errorf("Le code %s est invalide ou a expiré.", code)
-	}
-	return out, nil
-}
-
 type GenerateClassroomCodeOut struct {
 	Code string
 }
@@ -485,10 +444,49 @@ func (ct *Controller) TeacherGenerateClassroomCode(c echo.Context) error {
 		return err
 	}
 
-	code := ct.classCodes.newCode(tc.IdClassroom(idClassroom))
+	code, err := ct.generateClassroomCode(tc.IdClassroom(idClassroom))
+	if err != nil {
+		return err
+	}
 	out := GenerateClassroomCodeOut{Code: code}
 
 	return c.JSON(200, out)
+}
+
+func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
+	// load the existing codes
+	ccs, err := tc.SelectAllClassroomCodes(ct.db)
+	if err != nil {
+		return "", utils.SQLError(err)
+	}
+	m := ccs.Codes()
+
+	// generate the code
+	code := utils.RandomID(true, 4, func(s string) bool { return m[s] })
+
+	// register it
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return "", utils.SQLError(err)
+	}
+	err = tc.InsertManyClassroomCodes(tx, tc.ClassroomCode{
+		IdClassroom: id,
+		Code:        code,
+		ExpiresAt:   tc.Time(time.Now().Add(classroomCodeDuration)),
+	})
+	if err != nil {
+		_ = tx.Rollback()
+		return "", utils.SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return "", utils.SQLError(err)
+	}
+
+	// time its removal
+	time.AfterFunc(classroomCodeDuration, func() { tc.CleanupClassroomCodes(ct.db) })
+
+	return code, nil
 }
 
 // ------------------------- student client API -------------------------
@@ -564,13 +562,24 @@ func (ct *Controller) AttachStudentToClassroomStep1(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func (ct *Controller) checkClassroomCode(code string) (tc.IdClassroom, error) {
+	item, ok, err := tc.SelectClassroomCodeByCode(ct.db, code)
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	if !ok {
+		return 0, fmt.Errorf("Le code %s est invalide ou a expiré.", code)
+	}
+	return item.IdClassroom, nil
+}
+
 func (ct *Controller) attachStudentCandidates(code string) (AttachStudentToClassroom1Out, error) {
 	// look for demonstration code
 	if isDemoCode(ct.demoCode, code) {
 		return ct.createDemoStudent()
 	}
 
-	idClassroom, err := ct.classCodes.checkCode(code)
+	idClassroom, err := ct.checkClassroomCode(code)
 	if err != nil {
 		return nil, err
 	}
@@ -634,7 +643,7 @@ func (ct *Controller) AttachStudentToClassroomStep2(c echo.Context) error {
 func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out AttachStudentToClassroom2Out, err error) {
 	// check for expired codes
 	if !isDemoCode(ct.demoCode, args.ClassroomCode) {
-		_, err = ct.classCodes.checkCode(args.ClassroomCode)
+		_, err = ct.checkClassroomCode(args.ClassroomCode)
 		if err != nil {
 			return out, err
 		}

@@ -1,8 +1,17 @@
 package teacher
 
-import "time"
+import (
+	"time"
+
+	"github.com/benoitkugler/maths-online/server/src/utils"
+)
 
 const DateLayout = "2006-01-02"
+
+type Time time.Time
+
+func (d Time) MarshalJSON() ([]byte, error)     { return time.Time(d).MarshalJSON() }
+func (d *Time) UnmarshalJSON(data []byte) error { return (*time.Time)(d).UnmarshalJSON(data) }
 
 // Date represents a day, without time zone consideration
 type Date time.Time
@@ -31,3 +40,20 @@ const (
 	PhysiqueChimie MatiereTag = "PHYSIQUE"
 	SVT            MatiereTag = "SVT"
 )
+
+// CleanupClassroomCodes removes the expired codes.
+func CleanupClassroomCodes(db DB) error {
+	_, err := db.Exec("DELETE FROM classroom_codes WHERE now() > expiresat;")
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ccs ClassroomCodes) Codes() map[string]bool {
+	out := make(map[string]bool)
+	for _, item := range ccs {
+		out[item.Code] = true
+	}
+	return out
+}

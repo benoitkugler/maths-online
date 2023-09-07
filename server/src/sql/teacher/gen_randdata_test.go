@@ -16,6 +16,15 @@ func randClassroom() Classroom {
 	return s
 }
 
+func randClassroomCode() ClassroomCode {
+	var s ClassroomCode
+	s.IdClassroom = randIdClassroom()
+	s.Code = randstring()
+	s.ExpiresAt = randTime()
+
+	return s
+}
+
 func randContact() Contact {
 	var s Contact
 	s.Name = randstring()
@@ -79,6 +88,10 @@ func randTeacher() Teacher {
 	s.FavoriteMatiere = randMatiereTag()
 
 	return s
+}
+
+func randTime() Time {
+	return Time(randtTime())
 }
 
 func randbool() bool {

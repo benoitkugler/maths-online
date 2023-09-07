@@ -30,8 +30,6 @@ type Controller struct {
 	demoClassroom tc.Classroom // loaded at creation
 
 	demoCode string
-
-	classCodes *classroomsCode
 }
 
 // NewController return a new controller.
@@ -44,7 +42,6 @@ func NewController(db *sql.DB, smtp pass.SMTP, teacherKey, studentKey pass.Encry
 		smtp:       smtp,
 		host:       host,
 		demoCode:   demoCode,
-		classCodes: &classroomsCode{codes: make(map[string]tc.IdClassroom)},
 	}
 }
 
@@ -84,6 +81,8 @@ func (ct *Controller) LoadDemoClassroom() (tc.Classroom, error) {
 
 	return cl, nil
 }
+
+func (ct *Controller) CleanupClassroomCodes() error { return tc.CleanupClassroomCodes(ct.db) }
 
 const ValidateInscriptionEndPoint = "inscription"
 

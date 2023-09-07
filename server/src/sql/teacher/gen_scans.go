@@ -174,6 +174,140 @@ func DeleteClassroomsByIdTeachers(tx DB, idTeachers_ ...IdTeacher) ([]IdClassroo
 	return ScanIdClassroomArray(rows)
 }
 
+func scanOneClassroomCode(row scanner) (ClassroomCode, error) {
+	var item ClassroomCode
+	err := row.Scan(
+		&item.IdClassroom,
+		&item.Code,
+		&item.ExpiresAt,
+	)
+	return item, err
+}
+
+func ScanClassroomCode(row *sql.Row) (ClassroomCode, error) { return scanOneClassroomCode(row) }
+
+// SelectAll returns all the items in the classroom_codes table.
+func SelectAllClassroomCodes(db DB) (ClassroomCodes, error) {
+	rows, err := db.Query("SELECT * FROM classroom_codes")
+	if err != nil {
+		return nil, err
+	}
+	return ScanClassroomCodes(rows)
+}
+
+type ClassroomCodes []ClassroomCode
+
+func ScanClassroomCodes(rs *sql.Rows) (ClassroomCodes, error) {
+	var (
+		item ClassroomCode
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(ClassroomCodes, 0, 16)
+	for rs.Next() {
+		item, err = scanOneClassroomCode(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links ClassroomCode in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyClassroomCodes(tx *sql.Tx, items ...ClassroomCode) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("classroom_codes",
+		"idclassroom",
+		"code",
+		"expiresat",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdClassroom, item.Code, item.ExpiresAt)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link ClassroomCode from the database.
+// Only the foreign keys IdClassroom fields are used in 'item'.
+func (item ClassroomCode) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM classroom_codes WHERE IdClassroom = $1;`, item.IdClassroom)
+	return err
+}
+
+// ByIdClassroom returns a map with 'IdClassroom' as keys.
+func (items ClassroomCodes) ByIdClassroom() map[IdClassroom]ClassroomCodes {
+	out := make(map[IdClassroom]ClassroomCodes)
+	for _, target := range items {
+		out[target.IdClassroom] = append(out[target.IdClassroom], target)
+	}
+	return out
+}
+
+// IdClassrooms returns the list of ids of IdClassroom
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items ClassroomCodes) IdClassrooms() []IdClassroom {
+	out := make([]IdClassroom, len(items))
+	for index, target := range items {
+		out[index] = target.IdClassroom
+	}
+	return out
+}
+
+func SelectClassroomCodesByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (ClassroomCodes, error) {
+	rows, err := tx.Query("SELECT * FROM classroom_codes WHERE idclassroom = ANY($1)", IdClassroomArrayToPQ(idClassrooms_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanClassroomCodes(rows)
+}
+
+func DeleteClassroomCodesByIdClassrooms(tx DB, idClassrooms_ ...IdClassroom) (ClassroomCodes, error) {
+	rows, err := tx.Query("DELETE FROM classroom_codes WHERE idclassroom = ANY($1) RETURNING *", IdClassroomArrayToPQ(idClassrooms_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanClassroomCodes(rows)
+}
+
+// SelectClassroomCodeByCode return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectClassroomCodeByCode(tx DB, code string) (item ClassroomCode, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM classroom_codes WHERE Code = $1", code)
+	item, err = ScanClassroomCode(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 // SelectClassroomByIdAndIdTeacher return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectClassroomByIdAndIdTeacher(tx DB, id IdClassroom, idTeacher IdTeacher) (item Classroom, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM classrooms WHERE Id = $1 AND IdTeacher = $2", id, idTeacher)
@@ -489,6 +623,20 @@ func (s *Date) Scan(src interface{}) error {
 }
 
 func (s Date) Value() (driver.Value, error) {
+	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
+}
+
+func (s *Time) Scan(src interface{}) error {
+	var tmp pq.NullTime
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = Time(tmp.Time)
+	return nil
+}
+
+func (s Time) Value() (driver.Value, error) {
 	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
 }
 
