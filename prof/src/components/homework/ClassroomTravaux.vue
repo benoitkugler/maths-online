@@ -4,8 +4,7 @@
       v-if="showNotes"
       :classroom="props.classroom.Classroom"
       :travaux="
-        props.classroom.Travaux?.filter((tr) => selectedTravaux.has(tr.Id)) ||
-        []
+        props.classroom.Travaux?.filter(tr => selectedTravaux.has(tr.Id)) || []
       "
       :sheets="props.sheets"
     ></classroom-notes>
@@ -55,11 +54,11 @@
           :travail="travail"
           :sheet="props.sheets.get(travail.IdSheet)!"
           :classrooms="props.classrooms"
-          @update="(tr) => emit('update', tr)"
+          @update="tr => emit('update', tr)"
           @delete="emit('delete', travail)"
-          @copy="(idClassroom) => emit('copy', travail, idClassroom)"
-          @set-favorite="(s) => emit('setFavorite', s)"
-          @edit-sheet="(s) => emit('editSheet', s)"
+          @copy="idClassroom => emit('copy', travail, idClassroom)"
+          @set-favorite="s => emit('setFavorite', s)"
+          @edit-sheet="s => emit('editSheet', s)"
         ></travail-card>
         <v-card
           v-else
@@ -92,7 +91,7 @@ import type {
   ClassroomTravaux,
   Sheet,
   SheetExt,
-  Travail,
+  Travail
 } from "@/controller/api_gen";
 import { $ref } from "vue/macros";
 import ClassroomNotes from "./ClassroomNotes.vue";
@@ -129,8 +128,10 @@ function onToggle(tr: Travail) {
 }
 function onShowNotes() {
   if (!inSelect) {
-    // start with all selected
-    selectedTravaux = new Set(props.classroom.Travaux?.map((tr) => tr.Id));
+    // start with all noted selected
+    selectedTravaux = new Set(
+      props.classroom.Travaux?.filter(tr => tr.Noted).map(tr => tr.Id)
+    );
     inSelect = true;
   } else {
     inSelect = false;
