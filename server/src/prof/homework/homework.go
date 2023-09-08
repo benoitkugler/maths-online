@@ -30,9 +30,8 @@ func newClassroomTravaux(cl teacher.Classroom, travailMap ho.Travails) Classroom
 		}
 	}
 
-	// show Noted first
-	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Id < out.Travaux[j].Id })
-	sort.SliceStable(out.Travaux, func(i, j int) bool { return out.Travaux[i].Noted && !out.Travaux[j].Noted })
+	// show most recent first
+	sort.Slice(out.Travaux, func(i, j int) bool { return out.Travaux[i].Id > out.Travaux[j].Id })
 	return out
 }
 

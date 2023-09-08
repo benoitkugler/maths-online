@@ -1289,7 +1289,13 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 	}
 
 	sort.Slice(out, func(i, j int) bool { return out[i].Sheet.Id < out[j].Sheet.Id })
-
+	// for noted work, show the most recent first
+	if noted {
+		sort.SliceStable(out, func(i, j int) bool {
+			di, dj := out[i].Sheet.Deadline, out[j].Sheet.Deadline
+			return time.Time(di).After(time.Time(dj))
+		})
+	}
 	return out, nil
 }
 

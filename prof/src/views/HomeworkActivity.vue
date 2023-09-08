@@ -196,7 +196,7 @@ async function createTravail(idClassroom: number) {
 
   homeworks.Sheets.set(res.Sheet.Sheet.Id, res.Sheet);
   const cl = travauxByClassroom(idClassroom)!;
-  cl.Travaux = (cl.Travaux || []).concat(res.Travail);
+  cl.Travaux = [res.Travail].concat(...(cl.Travaux || []));
 
   sheetToUpdate = res.Sheet;
 }
@@ -211,7 +211,7 @@ async function createTravailWith(idSheet: number, idClassroom: number) {
   }
 
   const cl = travauxByClassroom(idClassroom)!;
-  cl.Travaux = (cl.Travaux || []).concat(res);
+  cl.Travaux = [res].concat(...(cl.Travaux || []));
 
   showFavorites = false;
   if (travauxPannel != null) travauxPannel.showClassroom(idClassroom);
