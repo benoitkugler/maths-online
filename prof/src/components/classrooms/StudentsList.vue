@@ -53,7 +53,7 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog v-model="showUploadFile" :retain-focus="false">
+  <v-dialog v-model="showUploadFile" :retain-focus="false" max-width="700px">
     <v-card
       title="Importer une liste"
       subtitle="Les élèves seront ajoutés à la liste courante."
@@ -137,11 +137,11 @@
           <v-alert
             closable
             color="info"
-            style="text-align: center; font-size: 18pt"
+            style="text-align: center; font-size: 24pt"
             :model-value="classroomCode != null"
             @update:model-value="classroomCode = null"
           >
-            <v-chip size="18pt" class="pa-2">{{ classroomCode }}</v-chip>
+            <v-chip size="30pt" class="pa-2 my-2">{{ classroomCode }}</v-chip>
           </v-alert>
 
           <v-list>
@@ -175,6 +175,11 @@
                 </v-col>
                 <v-col align-self="center">
                   <v-list-item-subtitle
+                    :style="
+                      classroomCode == null
+                        ? ''
+                        : 'color: transparent;  text-shadow: 0 0 4px rgba(0,0,0,0.5)'
+                    "
                     >{{ formatDate(student.Birthday) }}
                   </v-list-item-subtitle>
                 </v-col>
@@ -225,7 +230,7 @@ const emit = defineEmits<{
 onMounted(() => fetchStudents());
 
 let students = computed(() => {
-  const out = _students.map((v) => v);
+  const out = _students.map(v => v);
   out.sort((s1, s2) => s1.Name.localeCompare(s2.Name));
   return out;
 });
@@ -234,7 +239,7 @@ let _students = $ref<Student[]>([]);
 
 async function fetchStudents() {
   const res = await controller.TeacherGetClassroomStudents({
-    "id-classroom": props.classroom.id,
+    "id-classroom": props.classroom.id
   });
   if (res == undefined) {
     return;
@@ -244,7 +249,7 @@ async function fetchStudents() {
 
 async function addStudent() {
   const res = await controller.TeacherAddStudent({
-    "id-classroom": props.classroom.id,
+    "id-classroom": props.classroom.id
   });
   if (res == undefined) {
     return;
@@ -294,7 +299,7 @@ async function importStudents() {
 let classroomCode = $ref<string | null>(null);
 async function generateClassroomCode() {
   const res = await controller.TeacherGenerateClassroomCode({
-    "id-classroom": props.classroom.id,
+    "id-classroom": props.classroom.id
   });
   console.log(res);
 
