@@ -33,6 +33,39 @@ final questionComplexe = Question([
   const NumberFieldBlock(0, 10),
   const ExpressionFieldBlock("x=", "", 10, true, 1),
   const ExpressionFieldBlock("", " = 0", 10, false, 2),
+  TreeBlock(
+      [
+        [T("A")],
+        [T("B")],
+        [T("C")]
+      ],
+      const TreeNodeAnswer([
+        TreeNodeAnswer([
+          TreeNodeAnswer([], [], 0),
+          TreeNodeAnswer([], [], 0),
+        ], [
+          "",
+          "7"
+        ], 1),
+        TreeNodeAnswer([
+          TreeNodeAnswer([], [], 0),
+          TreeNodeAnswer([], [], 0),
+        ], [
+          "0.1",
+          "x"
+        ], 0),
+      ], [
+        "x",
+        "1/3"
+      ], 0)),
+  TreeFieldBlock([
+    [2, 2],
+    [2, 3],
+  ], [
+    [T("A")],
+    [T("B")],
+    [T("C")]
+  ], 10),
   const GeometricConstructionFieldBlock(
       3,
       GFPoint(),

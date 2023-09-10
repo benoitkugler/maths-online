@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:eleve/questions/dropdown.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
@@ -159,6 +161,14 @@ class _NodeController {
       children[i].setData(answer.children[i]);
     }
   }
+
+  double heightHint() {
+    final childrenHeight = children.isEmpty
+        ? 0.0
+        : children.map((e) => e.heightHint()).reduce((a, b) => a + b);
+    const valueHeight = _NodeLayout.valueHeight + 2 * _NodeLayout.valueMarginY;
+    return max(childrenHeight, valueHeight);
+  }
 }
 
 class TreeFieldW extends StatefulWidget {
@@ -250,9 +260,6 @@ class _TreeViewState extends State<_TreeView> {
   @override
   Widget build(BuildContext context) {
     const boxPadding = 5.0;
-    const levelHeightHint =
-        _NodeLayout.edgesHeight + _NodeLayout.valueHeight + 2 * boxPadding + 2;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Scrollbar(
@@ -264,22 +271,20 @@ class _TreeViewState extends State<_TreeView> {
           scrollDirection: Axis.horizontal,
           child: InkWell(
             onTap: widget.onTap,
-            child: SizedBox(
-              height: widget.nbLevels * levelHeightHint,
-              child: Stack(
-                children: [
-                  Container(
-                      padding: const EdgeInsets.symmetric(vertical: boxPadding),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: widget.color),
-                          borderRadius: BorderRadius.circular(5),
-                          color: widget.isSelected
-                              ? Colors.white.withOpacity(0.3)
-                              : null),
-                      child: widget.root),
-                  if (widget.backButton != null) widget.backButton!
-                ],
-              ),
+            child: Stack(
+              children: [
+                Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: boxPadding, horizontal: 4),
+                    decoration: BoxDecoration(
+                        border: Border.all(color: widget.color),
+                        borderRadius: BorderRadius.circular(5),
+                        color: widget.isSelected
+                            ? Colors.white.withOpacity(0.3)
+                            : null),
+                    child: widget.root),
+                if (widget.backButton != null) widget.backButton!
+              ],
             ),
           ),
         ),
@@ -341,24 +346,26 @@ class _ShapeSelection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: List<Widget>.generate(
-          proposals.length,
-          (index) {
-            final shapeI = proposals[index];
-            final isSelected = listEquals(selected, shapeI);
-            return _OneTree(isSelected, color, null, () => onSelect(index),
-                _NodeController.staticFromShape(shapeI, true));
-          },
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List<Widget>.generate(
+            proposals.length,
+            (index) {
+              final shapeI = proposals[index];
+              final isSelected = listEquals(selected, shapeI);
+              return _OneTree(isSelected, color, null, () => onSelect(index),
+                  _NodeController.staticFromShape(shapeI, true));
+            },
+          ),
         ),
       ),
     );
   }
 }
 
-class _NodeEditable extends StatefulWidget {
+class _NodeEditable extends StatefulWidget implements _NodeWidget {
   final Color color;
 
   final _NodeController data;
@@ -366,6 +373,9 @@ class _NodeEditable extends StatefulWidget {
 
   @override
   _NodeEditableState createState() => _NodeEditableState();
+
+  @override
+  double heightHint() => data.heightHint();
 }
 
 class _NodeEditableState extends State<_NodeEditable> {
@@ -410,9 +420,15 @@ class _NodeEditableState extends State<_NodeEditable> {
   }
 }
 
+// Common structure
+
+abstract class _NodeWidget extends Widget {
+  double heightHint();
+}
+
 class _NodeLayout extends StatelessWidget {
-  static const edgesHeight = 50.0;
-  static const valueHeight = 30.0;
+  static const valueMarginY = 12.0;
+  static const valueHeight = 40.0;
 
   final Color color;
   final bool isRoot;
@@ -420,7 +436,7 @@ class _NodeLayout extends StatelessWidget {
 
   final List<String> edges;
   final Widget value;
-  final List<Widget> children;
+  final List<_NodeWidget> children;
 
   const _NodeLayout(
       {super.key,
@@ -433,37 +449,20 @@ class _NodeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const marginX = 6.0;
+    const marginX = 8.0;
     const minWidth = 40.0;
-
-    final painter = _EdgesPainter(
-        color,
-        edges,
-        isRoot ? 0 : _NodeLayout.valueHeight,
-        _NodeLayout.edgesHeight,
-        onTapEdge != null);
-    final hasChildren = children.isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: GestureDetector(
-        onTapUp: onTapEdge == null
-            ? null
-            : (details) {
-                final index = painter.onHit(details.localPosition);
-                if (index != null) {
-                  onTapEdge!(index);
-                }
-              },
-        child: CustomPaint(
-          painter: painter,
-          child: Column(
-            children: [
-              if (!isRoot)
-                Container(
+    return IntrinsicHeight(
+      child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isRoot)
+              Center(
+                child: Container(
                   height: _NodeLayout.valueHeight,
-                  margin: const EdgeInsets.symmetric(horizontal: marginX),
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  margin: const EdgeInsets.symmetric(
+                      vertical: _NodeLayout.valueMarginY),
                   decoration: BoxDecoration(
                       border: Border.all(color: color),
                       borderRadius: const BorderRadius.all(Radius.circular(6))),
@@ -475,46 +474,69 @@ class _NodeLayout extends StatelessWidget {
                     ],
                   ),
                 ),
-              if (hasChildren) ...[
-                // make room for edges, drawn by CustomPaint
-                const SizedBox(height: _NodeLayout.edgesHeight),
-                // children row
-                IntrinsicWidth(
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children:
-                          children.map((e) => Expanded(child: e)).toList()),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+              ),
+            CustomPaint(
+              painter: _EdgesPainter(
+                  color, children.map((e) => e.heightHint()).toList()),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(
+                    edges.length,
+                    (index) => Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: marginX),
+                          child: TextButton(
+                              style: TextButton.styleFrom(
+                                elevation: onTapEdge == null ? 0 : 4,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 0),
+                                backgroundColor: Colors.white,
+                              ),
+                              onPressed: onTapEdge == null
+                                  ? null
+                                  : () => onTapEdge!(index),
+                              child: Text(edges[index],
+                                  style: const TextStyle(
+                                      color: Colors.black,
+                                      fontStyle: FontStyle.italic))),
+                        )),
+              ),
+            ),
+            Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children)
+          ]),
     );
   }
 }
 
+/// Create cumulative list totals
+List<double> getCumulative(Iterable<double> list) {
+  var sum = 0.0;
+  return [for (final value in list) sum += value];
+}
+
 class _EdgesPainter extends CustomPainter {
   final Color color;
-  final List<String> edges;
-  final double startY;
-  final double height;
-  final bool withShadow;
+  final List<double> heights;
 
-  _EdgesPainter(
-      this.color, this.edges, this.startY, this.height, this.withShadow);
-
-  List<Offset> _edgesMiddles = []; // cached during paint
+  _EdgesPainter(this.color, this.heights);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final N = edges.length;
-    final childWidth = size.width / N;
-    final edgeStart =
-        Offset(size.width / 2, startY); // middle of the parent block
+    final edgeStart = Offset(0, size.height / 2);
+    final totalEstimatedHeight =
+        heights.isEmpty ? 0 : heights.reduce((a, b) => a + b);
+
+    final heightsRatio = [
+      0,
+      ...getCumulative(heights.map((e) => e / totalEstimatedHeight))
+    ];
     final edgeEnds = List<Offset>.generate(
-        N, (i) => Offset((i + 0.5) * childWidth, startY + height));
+        heights.length,
+        (i) => Offset(size.width,
+            size.height * (heightsRatio[i] + heightsRatio[i + 1]) / 2));
 
     for (var end in edgeEnds) {
       canvas.drawLine(
@@ -524,67 +546,11 @@ class _EdgesPainter extends CustomPainter {
             ..color = color
             ..strokeWidth = 2);
     }
-
-    _edgesMiddles = List<Offset>.generate(N, (i) {
-      final end = edgeEnds[i];
-      return Offset((edgeStart.dx + end.dx) / 2, (edgeStart.dy + end.dy) / 2);
-    });
-
-    for (var i = 0; i < N; i++) {
-      final text = edges[i];
-      final painter = TextPainter(
-        text: TextSpan(
-            text: text,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
-        textDirection: TextDirection.ltr,
-      );
-      painter.layout();
-
-      const egdePaddingX = 7;
-      const edgePaddingY = 5;
-      final rrect = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-              center: _edgesMiddles[i],
-              width: painter.width + 2 * egdePaddingX,
-              height: painter.height + 2 * edgePaddingY),
-          const Radius.circular(10));
-
-      if (withShadow) {
-        final path = Path();
-        path.addRRect(rrect.inflate(2));
-        canvas.drawShadow(path, Colors.white, 0.5, true);
-      }
-
-      canvas.drawRRect(
-          rrect,
-          Paint()
-            ..style = PaintingStyle.fill
-            ..color = Colors.white);
-      painter.paint(canvas,
-          _edgesMiddles[i] - Offset(painter.width / 2, painter.height / 2));
-    }
   }
 
   @override
   bool shouldRepaint(covariant _EdgesPainter oldDelegate) {
     return oldDelegate != this;
-  }
-
-  @override
-  bool? hitTest(Offset position) {
-    return onHit(position) == null ? false : true;
-  }
-
-  int? onHit(Offset position) {
-    const fieldRadius = 20.0;
-    for (var i = 0; i < _edgesMiddles.length; i++) {
-      final m = position - _edgesMiddles[i];
-      if (m.distanceSquared <= fieldRadius * fieldRadius) {
-        return i;
-      }
-    }
-    return null;
   }
 }
 
@@ -615,7 +581,7 @@ class TreeW extends StatelessWidget {
   }
 }
 
-class _NodeStatic extends StatelessWidget {
+class _NodeStatic extends StatelessWidget implements _NodeWidget {
   final List<TextLine> eventProposals;
 
   final Color color;
@@ -642,5 +608,18 @@ class _NodeStatic extends StatelessWidget {
         children: node.children
             .map((e) => _NodeStatic(eventProposals, color, false, e))
             .toList());
+  }
+
+  @override
+  double heightHint() => node.heightHint();
+}
+
+extension on TreeNodeAnswer {
+  double heightHint() {
+    final childrenHeight = children.isEmpty
+        ? 0.0
+        : children.map((e) => e.heightHint()).reduce((a, b) => a + b);
+    const valueHeight = _NodeLayout.valueHeight + 2 * _NodeLayout.valueMarginY;
+    return max(childrenHeight, valueHeight);
   }
 }
