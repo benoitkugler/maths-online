@@ -2,7 +2,6 @@ package homework
 
 import (
 	"errors"
-	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -52,11 +51,6 @@ func LoadRandomMonoquestionSheet(db DB, idMono tasks.IdRandomMonoquestion) (task
 		return 0, 0, errors.New("internal error: task without sheet")
 	}
 	return link.IdTask, link.IdSheet, nil
-}
-
-// IsExpired returns true if the [Deadline] is before the present time.
-func (sh Travail) IsExpired() bool {
-	return time.Time(sh.Deadline).Before(time.Now())
 }
 
 // IsVisibleBy returns `true` if the Sheet is public or

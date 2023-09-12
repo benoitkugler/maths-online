@@ -25,6 +25,13 @@ func NewProgressionExt(progressions ta.Progressions, nbQuestions int) (out Progr
 	return out
 }
 
+func (qh ProgressionExt) Copy() ProgressionExt {
+	return ProgressionExt{
+		NextQuestion: qh.NextQuestion,
+		Questions:    append([]ta.QuestionHistory(nil), qh.Questions...),
+	}
+}
+
 func (qh ProgressionExt) IsComplete() bool { return qh.NextQuestion == -1 }
 
 // inferNextQuestion stores into `NextQuestion` the first question not passed by the student,

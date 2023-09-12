@@ -252,20 +252,17 @@ func TestEvaluateTask(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	// the sheet is not expired, check that a new progression has been added
-	if len(out.Ex.Progression.Questions[0]) != 1 {
-		t.Fatal()
-	}
+	tu.Assert(t, len(out.Ex.Progression.Questions[0]) == 1)
 	taHeader := loadProgression(t, ct.db, student.Id, task.Id)
-	if !taHeader.HasProgression {
-		t.Fatal()
-	}
+	tu.Assert(t, taHeader.HasProgression)
+	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 1)
 
 	// now expire the sheet ...
 	tr.Deadline = ho.Time(time.Now().Add(-time.Hour))
 	err = ct.updateTravail(tr, sp.userID)
 	tu.AssertNoErr(t, err)
 
-	out, err = ct.studentEvaluateTask(StudentEvaluateTaskIn{
+	args := StudentEvaluateTaskIn{
 		StudentID: studentKey.EncryptID(int64(student.Id)),
 		IdTask:    task.Id,
 		Ex: tasks.EvaluateWorkIn{
@@ -276,18 +273,27 @@ func TestEvaluateTask(t *testing.T) {
 			Progression: out.Ex.Progression,
 		},
 		IdTravail: tr.Id,
-	})
+	}
+	out, err = ct.studentEvaluateTask(args)
 	tu.AssertNoErr(t, err)
 
 	// ... and check that no new progression has been added,
 	// despite the runtime progression correctly updated
-	if len(out.Ex.Progression.Questions[0]) != 2 {
-		t.Fatal()
-	}
+	tu.Assert(t, len(out.Ex.Progression.Questions[0]) == 2)
 	taHeader = loadProgression(t, ct.db, student.Id, task.Id)
-	if len(taHeader.Progression.Questions[0]) != 1 {
-		t.Fatal()
-	}
+	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 1)
+
+	// finally add an exception...
+	err = ho.InsertTravailException(ct.db,
+		ho.TravailException{IdStudent: student.Id, IdTravail: tr.Id, Deadline: sql.NullTime{Valid: true, Time: time.Now().Add(time.Minute)}},
+	)
+	tu.AssertNoErr(t, err)
+	// ... and evaluate again
+	out, err = ct.studentEvaluateTask(args)
+	tu.AssertNoErr(t, err)
+	// the sheet is not expired for this student, check that a new progression has been added
+	taHeader = loadProgression(t, ct.db, student.Id, task.Id)
+	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 2)
 }
 
 func insertProgression(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, questions []ta.QuestionHistory) error {

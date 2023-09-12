@@ -1489,8 +1489,18 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 	}
 	var registerProgression bool
 	if travail.Noted {
+		exp, has, err := ho.SelectTravailExceptionByIdStudentAndIdTravail(ct.db, idStudent, travail.Id)
+		if err != nil {
+			return StudentEvaluateTaskOut{}, utils.SQLError(err)
+		}
+		deadline := time.Time(travail.Deadline)
+		if has && exp.Deadline.Valid {
+			deadline = exp.Deadline.Time
+		}
+		isExpired := deadline.Before(time.Now())
+
 		// only register progression for non expired, non completed
-		registerProgression = !isTaskComplete && !travail.IsExpired()
+		registerProgression = !isTaskComplete && !isExpired
 	} else {
 		// Always register progression for free travail
 		registerProgression = true

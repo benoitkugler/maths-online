@@ -626,7 +626,7 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 		return EvaluateWorkOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
 	}
 
-	updatedProgression := args.Progression // shallow copy is enough
+	updatedProgression := args.Progression.Copy()
 	results := make(map[int]client.QuestionAnswersOut)
 
 	// depending on the flow, we either evaluate only one question,
