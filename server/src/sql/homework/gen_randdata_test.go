@@ -1,6 +1,7 @@
 package homework
 
 import (
+	"database/sql"
 	"math/rand"
 	"time"
 
@@ -64,6 +65,16 @@ func randTravail() Travail {
 	return s
 }
 
+func randTravailException() TravailException {
+	var s TravailException
+	s.IdStudent = randtea_IdStudent()
+	s.IdTravail = randIdTravail()
+	s.Deadline = randsql_NullTime()
+	s.IgnoreForMark = randbool()
+
+	return s
+}
+
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
@@ -75,6 +86,14 @@ func randint() int {
 
 func randint64() int64 {
 	return int64(rand.Intn(1000000))
+}
+
+func randsql_NullTime() sql.NullTime {
+	var s sql.NullTime
+	s.Time = randtTime()
+	s.Valid = randbool()
+
+	return s
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
@@ -98,6 +117,10 @@ func randtas_IdTask() tasks.IdTask {
 
 func randtea_IdClassroom() teacher.IdClassroom {
 	return teacher.IdClassroom(randint64())
+}
+
+func randtea_IdStudent() teacher.IdStudent {
+	return teacher.IdStudent(randint64())
 }
 
 func randtea_IdTeacher() teacher.IdTeacher {

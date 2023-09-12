@@ -14,10 +14,11 @@ import (
 // of one student for one sheet
 
 type Sheet struct {
-	Id       ho.IdSheet
-	Title    string
-	Noted    bool // new in version 1.5
-	Deadline ho.Time
+	Id            ho.IdSheet
+	Title         string
+	Noted         bool // new in version 1.5
+	Deadline      ho.Time
+	IgnoreForMark bool // new in version 1.6.4
 
 	// TODO: cleanup these unused fields
 

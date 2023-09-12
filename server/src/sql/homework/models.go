@@ -1,6 +1,7 @@
 package homework
 
 import (
+	"database/sql"
 	"sort"
 	"time"
 
@@ -77,4 +78,22 @@ type SheetTask struct {
 // EnsureOrder enforce the slice order indicated by `Index`
 func (l SheetTasks) EnsureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+// TravailException is a link table storing per student
+// settings for a [Travail]
+//
+// gomacro:SQL ADD UNIQUE(IdStudent, IdTravail)
+// gomacro:SQL _SELECT KEY(IdStudent, IdTravail)
+type TravailException struct {
+	IdStudent teacher.IdStudent
+	IdTravail IdTravail
+
+	// [Deadline] is an optionnal deadline overriding the one
+	// setup in the related [Travail].
+	Deadline sql.NullTime
+
+	// [IgnoreForMark] may be set to true to ignore this mark
+	// when displaying the average.
+	IgnoreForMark bool
 }

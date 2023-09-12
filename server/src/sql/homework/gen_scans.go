@@ -244,6 +244,19 @@ func ScanSheetTasks(rs *sql.Rows) (SheetTasks, error) {
 	return structs, nil
 }
 
+func InsertSheetTask(db DB, item SheetTask) error {
+	_, err := db.Exec(`INSERT INTO sheet_tasks (
+			idsheet, index, idtask
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdSheet, item.Index, item.IdTask)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links SheetTask in the database.
 // It is a no-op if 'items' is empty.
 func InsertManySheetTasks(tx *sql.Tx, items ...SheetTask) error {
@@ -567,6 +580,212 @@ func DeleteTravailsByIdSheets(tx DB, idSheets_ ...IdSheet) ([]IdTravail, error) 
 		return nil, err
 	}
 	return ScanIdTravailArray(rows)
+}
+
+func scanOneTravailException(row scanner) (TravailException, error) {
+	var item TravailException
+	err := row.Scan(
+		&item.IdStudent,
+		&item.IdTravail,
+		&item.Deadline,
+		&item.IgnoreForMark,
+	)
+	return item, err
+}
+
+func ScanTravailException(row *sql.Row) (TravailException, error) {
+	return scanOneTravailException(row)
+}
+
+// SelectAll returns all the items in the travail_exceptions table.
+func SelectAllTravailExceptions(db DB) (TravailExceptions, error) {
+	rows, err := db.Query("SELECT * FROM travail_exceptions")
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+type TravailExceptions []TravailException
+
+func ScanTravailExceptions(rs *sql.Rows) (TravailExceptions, error) {
+	var (
+		item TravailException
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(TravailExceptions, 0, 16)
+	for rs.Next() {
+		item, err = scanOneTravailException(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func InsertTravailException(db DB, item TravailException) error {
+	_, err := db.Exec(`INSERT INTO travail_exceptions (
+			idstudent, idtravail, deadline, ignoreformark
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdStudent, item.IdTravail, item.Deadline, item.IgnoreForMark)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links TravailException in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyTravailExceptions(tx *sql.Tx, items ...TravailException) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("travail_exceptions",
+		"idstudent",
+		"idtravail",
+		"deadline",
+		"ignoreformark",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdStudent, item.IdTravail, item.Deadline, item.IgnoreForMark)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link TravailException from the database.
+// Only the foreign keys IdStudent, IdTravail fields are used in 'item'.
+func (item TravailException) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM travail_exceptions WHERE IdStudent = $1 AND IdTravail = $2;`, item.IdStudent, item.IdTravail)
+	return err
+}
+
+// ByIdStudent returns a map with 'IdStudent' as keys.
+func (items TravailExceptions) ByIdStudent() map[teacher.IdStudent]TravailExceptions {
+	out := make(map[teacher.IdStudent]TravailExceptions)
+	for _, target := range items {
+		out[target.IdStudent] = append(out[target.IdStudent], target)
+	}
+	return out
+}
+
+// IdStudents returns the list of ids of IdStudent
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items TravailExceptions) IdStudents() []teacher.IdStudent {
+	out := make([]teacher.IdStudent, len(items))
+	for index, target := range items {
+		out[index] = target.IdStudent
+	}
+	return out
+}
+
+func SelectTravailExceptionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (TravailExceptions, error) {
+	rows, err := tx.Query("SELECT * FROM travail_exceptions WHERE idstudent = ANY($1)", teacher.IdStudentArrayToPQ(idStudents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+func DeleteTravailExceptionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (TravailExceptions, error) {
+	rows, err := tx.Query("DELETE FROM travail_exceptions WHERE idstudent = ANY($1) RETURNING *", teacher.IdStudentArrayToPQ(idStudents_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+// ByIdTravail returns a map with 'IdTravail' as keys.
+func (items TravailExceptions) ByIdTravail() map[IdTravail]TravailExceptions {
+	out := make(map[IdTravail]TravailExceptions)
+	for _, target := range items {
+		out[target.IdTravail] = append(out[target.IdTravail], target)
+	}
+	return out
+}
+
+// IdTravails returns the list of ids of IdTravail
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items TravailExceptions) IdTravails() []IdTravail {
+	out := make([]IdTravail, len(items))
+	for index, target := range items {
+		out[index] = target.IdTravail
+	}
+	return out
+}
+
+func SelectTravailExceptionsByIdTravails(tx DB, idTravails_ ...IdTravail) (TravailExceptions, error) {
+	rows, err := tx.Query("SELECT * FROM travail_exceptions WHERE idtravail = ANY($1)", IdTravailArrayToPQ(idTravails_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+func DeleteTravailExceptionsByIdTravails(tx DB, idTravails_ ...IdTravail) (TravailExceptions, error) {
+	rows, err := tx.Query("DELETE FROM travail_exceptions WHERE idtravail = ANY($1) RETURNING *", IdTravailArrayToPQ(idTravails_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+// SelectTravailExceptionsByIdStudentAndIdTravail selects the items matching the given fields.
+func SelectTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item []TravailException, err error) {
+	rows, err := tx.Query("SELECT * FROM travail_exceptions WHERE IdStudent = $1 AND IdTravail = $2", idStudent, idTravail)
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+// DeleteTravailExceptionsByIdStudentAndIdTravail deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item []TravailException, err error) {
+	rows, err := tx.Query("DELETE FROM travail_exceptions WHERE IdStudent = $1 AND IdTravail = $2 RETURNING *", idStudent, idTravail)
+	if err != nil {
+		return nil, err
+	}
+	return ScanTravailExceptions(rows)
+}
+
+// SelectTravailExceptionByIdStudentAndIdTravail return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectTravailExceptionByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item TravailException, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM travail_exceptions WHERE IdStudent = $1 AND IdTravail = $2", idStudent, idTravail)
+	item, err = ScanTravailException(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 // SelectTravailByIdAndIdSheet return zero or one item, thanks to a UNIQUE SQL constraint.

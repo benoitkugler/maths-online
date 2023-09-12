@@ -117,6 +117,8 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/homework/sheet/randommonoquestion", home.HomeworkUpdateRandomMonoquestion)
 	gr.POST("/api/prof/homework/sheet", home.HomeworkReorderSheetTasks)
 	gr.POST("/api/prof/homework/marks", home.HomeworkGetMarks)
+	gr.GET("/api/prof/homework/dispences", home.HomeworkGetDispenses)
+	gr.POST("/api/prof/homework/dispences", home.HomeworkSetDispense)
 
 	// review page
 	gr.PUT("/api/prof/review", review.ReviewCreate)

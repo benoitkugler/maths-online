@@ -24,6 +24,13 @@ CREATE TABLE travails (
     ShowAfter timestamp(0) with time zone NOT NULL
 );
 
+CREATE TABLE travail_exceptions (
+    IdStudent integer NOT NULL,
+    IdTravail integer NOT NULL,
+    Deadline timestamp(0) with time zone,
+    IgnoreForMark boolean NOT NULL
+);
+
 -- constraints
 ALTER TABLE travails
     ADD UNIQUE (Id, IdSheet);
@@ -54,4 +61,13 @@ ALTER TABLE sheet_tasks
 
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
+
+ALTER TABLE travail_exceptions
+    ADD UNIQUE (IdStudent, IdTravail);
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdTravail) REFERENCES travails;
 

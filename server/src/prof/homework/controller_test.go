@@ -2,6 +2,7 @@ package homework
 
 import (
 	"database/sql"
+	"reflect"
 	"testing"
 	"time"
 
@@ -363,6 +364,13 @@ func TestGetMarks(t *testing.T) {
 	})
 	tu.AssertNoErr(t, err)
 
+	err = ho.InsertTravailException(ct.db, ho.TravailException{
+		IdStudent:     student2.Id,
+		IdTravail:     tr.Id,
+		IgnoreForMark: true,
+	})
+	tu.AssertNoErr(t, err)
+
 	out, err = ct.getMarks(HowemorkMarksIn{
 		IdClassroom: class.Id,
 		IdTravaux:   []ho.IdTravail{tr.Id},
@@ -372,6 +380,7 @@ func TestGetMarks(t *testing.T) {
 	// student1 : 4/5 => 16/20
 	// student2 : 2/5 => 8 /20
 	ma := out.Marks[tr.Id]
-	tu.Assert(t, ma[student1.Id] == 16)
-	tu.Assert(t, ma[student2.Id] == 8)
+	tu.Assert(t, reflect.DeepEqual(ma.Ignored, []teacher.IdStudent{student2.Id}))
+	tu.Assert(t, ma.Marks[student1.Id] == 16)
+	tu.Assert(t, ma.Marks[student2.Id] == 8)
 }

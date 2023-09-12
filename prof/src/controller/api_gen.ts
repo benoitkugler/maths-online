@@ -17,6 +17,11 @@ class TimeTag {
 // ISO date-time string
 export type Time = string & TimeTag;
 
+// database/sql.NullTime
+export interface NullTime {
+  Time: Time;
+  Valid: boolean;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/expression.Variable
 export interface Variable {
   Indice: string;
@@ -844,7 +849,7 @@ export interface CreateTravailWithIn {
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
-  Marks: { [key: IdTravail]: { [key: IdStudent]: number } | null } | null;
+  Marks: { [key: IdTravail]: TravailMarks } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.Homeworks
 export interface Homeworks {
@@ -875,6 +880,16 @@ export interface TaskExt {
   Title: string;
   Bareme: TaskBareme;
   NbProgressions: number;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.TravailExceptions
+export interface TravailExceptions {
+  Exceptions: TravailExceptions;
+  Students: Students;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
+export interface TravailMarks {
+  Marks: { [key: IdStudent]: number } | null;
+  Ignored: IdStudent[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
 export interface LoadTargetOut {
@@ -1263,6 +1278,15 @@ export interface Travail {
   Deadline: Time;
   ShowAfter: Time;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/homework.TravailException
+export interface TravailException {
+  IdStudent: IdStudent;
+  IdTravail: IdTravail;
+  Deadline: NullTime;
+  IgnoreForMark: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/homework.TravailExceptions
+export type TravailExceptions = TravailException[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Approval
 export enum Approval {
   Neutral = 0,
@@ -1384,6 +1408,8 @@ export interface Student {
   IsClientAttached: boolean;
   id_classroom: IdClassroom;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Students
+export type Students = { [key: IdStudent]: Student } | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.CategoriesQuestions
 export interface CategoriesQuestions {
   Tags: QuestionCriterion[];
@@ -3485,6 +3511,49 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {}
+
+  protected async rawHomeworkGetDispenses(params: { "id-travail": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
+    const rep: AxiosResponse<TravailExceptions> = await Axios.get(fullUrl, {
+      params: { "id-travail": String(params["id-travail"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** HomeworkGetDispenses wraps rawHomeworkGetDispenses and handles the error */
+  async HomeworkGetDispenses(params: { "id-travail": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkGetDispenses(params);
+      this.onSuccessHomeworkGetDispenses(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessHomeworkGetDispenses(data: TravailExceptions): void {}
+
+  protected async rawHomeworkSetDispense(params: TravailException) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** HomeworkSetDispense wraps rawHomeworkSetDispense and handles the error */
+  async HomeworkSetDispense(params: TravailException) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkSetDispense(params);
+      this.onSuccessHomeworkSetDispense();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessHomeworkSetDispense(): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";

@@ -277,23 +277,23 @@ func (ct *Controller) checkSheetOwner(idSheet ho.IdSheet, userID uID) error {
 	return checkSheetOwner(ct.db, idSheet, userID)
 }
 
-func (ct *Controller) checkTravailOwner(idTravail ho.IdTravail, userID uID) error {
+func (ct *Controller) checkTravailOwner(idTravail ho.IdTravail, userID uID) (ho.Travail, error) {
 	travail, err := ho.SelectTravail(ct.db, idTravail)
 	if err != nil {
-		return utils.SQLError(err)
+		return travail, utils.SQLError(err)
 	}
 
 	classroom, err := teacher.SelectClassroom(ct.db, travail.IdClassroom)
 	if err != nil {
-		return utils.SQLError(err)
+		return travail, utils.SQLError(err)
 	}
 
 	// check if the travail is owned by the user
 	if classroom.IdTeacher != userID {
-		return errAccessForbidden
+		return travail, errAccessForbidden
 	}
 
-	return nil
+	return travail, nil
 }
 
 func (ct *Controller) HomeworkUpdateSheet(c echo.Context) error {
@@ -342,7 +342,7 @@ func (ct *Controller) HomeworkUpdateTravail(c echo.Context) error {
 }
 
 func (ct *Controller) updateTravail(travail ho.Travail, userID uID) error {
-	if err := ct.checkTravailOwner(travail.Id, userID); err != nil {
+	if _, err := ct.checkTravailOwner(travail.Id, userID); err != nil {
 		return err
 	}
 
@@ -490,7 +490,7 @@ func (ct *Controller) addTaskTo(sheet ho.IdSheet, task tasks.Task, userID uID) (
 		return TaskExt{}, utils.SQLError(err)
 	}
 
-	err = ho.InsertManySheetTasks(tx, ho.SheetTask{IdSheet: sheet, IdTask: task.Id, Index: len(links)})
+	err = ho.InsertSheetTask(tx, ho.SheetTask{IdSheet: sheet, IdTask: task.Id, Index: len(links)})
 	if err != nil {
 		_ = tx.Rollback()
 		return TaskExt{}, utils.SQLError(err)
@@ -1097,9 +1097,14 @@ type HowemorkMarksIn struct {
 	IdTravaux   []ho.IdTravail
 }
 
+type TravailMarks struct {
+	Marks   map[teacher.IdStudent]float64 // the notes for each travail and student, /20
+	Ignored []teacher.IdStudent           // the student dispensed for this travail
+}
+
 type HomeworkMarksOut struct {
-	Students []tcAPI.StudentHeader                          // the students of the classroom
-	Marks    map[ho.IdTravail]map[teacher.IdStudent]float64 // the notes for each travail and student, /20
+	Students []tcAPI.StudentHeader // the students of the classroom
+	Marks    map[ho.IdTravail]TravailMarks
 }
 
 func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
@@ -1136,9 +1141,16 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 		return HomeworkMarksOut{}, utils.SQLError(err)
 	}
 
+	// load the dispenses
+	links, err := ho.SelectTravailExceptionsByIdTravails(ct.db, travaux.IDs()...)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+	expects := links.ByIdTravail()
+
 	out := HomeworkMarksOut{
 		Students: make([]tcAPI.StudentHeader, len(students)),
-		Marks:    make(map[ho.IdTravail]map[teacher.IdStudent]float64),
+		Marks:    make(map[ho.IdTravail]TravailMarks),
 	}
 	// student list
 	for i, s := range students {
@@ -1180,10 +1192,110 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 		for id, mark := range markByStudent {
 			markByStudent[id] = 20 * mark / float64(sheetTotal)
 		}
-		out.Marks[id] = markByStudent
+
+		tm := TravailMarks{
+			Marks: markByStudent,
+		}
+		// add the dispenses
+		for _, link := range expects[id] {
+			if link.IgnoreForMark {
+				tm.Ignored = append(tm.Ignored, link.IdStudent)
+			}
+		}
+
+		out.Marks[id] = tm
 	}
 
 	return out, nil
+}
+
+func (ct *Controller) HomeworkGetDispenses(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+	id_, err := utils.QueryParamInt64(c, "id-travail")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.getDispenses(ho.IdTravail(id_), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type TravailExceptions struct {
+	Exceptions ho.TravailExceptions
+	Students   teacher.Students // for the classroom
+}
+
+func (ct *Controller) getDispenses(idTravail ho.IdTravail, userID uID) (TravailExceptions, error) {
+	travail, err := ct.checkTravailOwner(idTravail, userID)
+	if err != nil {
+		return TravailExceptions{}, err
+	}
+	out, err := ho.SelectTravailExceptionsByIdTravails(ct.db, idTravail)
+	if err != nil {
+		return TravailExceptions{}, utils.SQLError(err)
+	}
+
+	students, err := teacher.SelectStudentsByIdClassrooms(ct.db, travail.IdClassroom)
+	if err != nil {
+		return TravailExceptions{}, utils.SQLError(err)
+	}
+
+	return TravailExceptions{Exceptions: out, Students: students}, nil
+}
+
+func (ct *Controller) HomeworkSetDispense(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args ho.TravailException
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.setDispense(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) setDispense(args ho.TravailException, userID uID) error {
+	if _, err := ct.checkTravailOwner(args.IdTravail, userID); err != nil {
+		return err
+	}
+
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// remove existing item
+	_, err = ho.DeleteTravailExceptionsByIdStudentAndIdTravail(tx, args.IdStudent, args.IdTravail)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+
+	// delete empty items
+	if !args.Deadline.Valid && !args.IgnoreForMark {
+		//
+	} else {
+		err = ho.InsertTravailException(tx, args)
+		if err != nil {
+			_ = tx.Rollback()
+			return utils.SQLError(err)
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
 }
 
 //
@@ -1254,6 +1366,13 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 		return nil, utils.SQLError(err)
 	}
 
+	// load the potential exceptions
+	links, err := ho.SelectTravailExceptionsByIdStudents(ct.db, idStudent)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	excepts := links.ByIdTravail()
+
 	for _, travail := range travaux {
 		if travail.Noted != noted { // select noted / free travaux
 			continue
@@ -1262,6 +1381,15 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 		// check the start field
 		if time.Now().Before(time.Time(travail.ShowAfter)) { // hide the work for now
 			continue
+		}
+
+		var exp ho.TravailException
+		if l := excepts[travail.Id]; len(l) != 0 {
+			exp = l[0] // by design there is at most 1 entry for a student and travail
+		}
+		deadline := travail.Deadline
+		if exp.Deadline.Valid {
+			deadline = ho.Time(exp.Deadline.Time)
 		}
 
 		sheet := sheets[travail.IdSheet]
@@ -1274,10 +1402,11 @@ func (ct *Controller) getStudentSheets(idStudent teacher.IdStudent, noted bool) 
 		out = append(out, SheetProgression{
 			IdTravail: travail.Id,
 			Sheet: Sheet{
-				Id:       sheet.Id,
-				Title:    sheet.Title,
-				Deadline: travail.Deadline,
-				Noted:    travail.Noted,
+				Id:            sheet.Id,
+				Title:         sheet.Title,
+				Deadline:      deadline,
+				Noted:         travail.Noted,
+				IgnoreForMark: exp.IgnoreForMark,
 
 				// TODO: cleanup these unused fields
 				Notation:    0,

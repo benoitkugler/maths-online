@@ -13,16 +13,17 @@ class Sheet {
   final String title;
   final bool noted;
   final Time deadline;
+  final bool ignoreForMark;
   final int notation;
   final bool activated;
   final IdClassroom idClassroom;
 
-  const Sheet(this.id, this.title, this.noted, this.deadline, this.notation,
-      this.activated, this.idClassroom);
+  const Sheet(this.id, this.title, this.noted, this.deadline,
+      this.ignoreForMark, this.notation, this.activated, this.idClassroom);
 
   @override
   String toString() {
-    return "Sheet($id, $title, $noted, $deadline, $notation, $activated, $idClassroom)";
+    return "Sheet($id, $title, $noted, $deadline, $ignoreForMark, $notation, $activated, $idClassroom)";
   }
 }
 
@@ -33,6 +34,7 @@ Sheet sheetFromJson(dynamic json_) {
       stringFromJson(json['Title']),
       boolFromJson(json['Noted']),
       dateTimeFromJson(json['Deadline']),
+      boolFromJson(json['IgnoreForMark']),
       intFromJson(json['Notation']),
       boolFromJson(json['Activated']),
       intFromJson(json['IdClassroom']));
@@ -44,6 +46,7 @@ Map<String, dynamic> sheetToJson(Sheet item) {
     "Title": stringToJson(item.title),
     "Noted": boolToJson(item.noted),
     "Deadline": dateTimeToJson(item.deadline),
+    "IgnoreForMark": boolToJson(item.ignoreForMark),
     "Notation": intToJson(item.notation),
     "Activated": boolToJson(item.activated),
     "IdClassroom": intToJson(item.idClassroom)
