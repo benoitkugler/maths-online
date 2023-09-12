@@ -225,6 +225,19 @@ func ScanProgressions(rs *sql.Rows) (Progressions, error) {
 	return structs, nil
 }
 
+func InsertProgression(db DB, item Progression) error {
+	_, err := db.Exec(`INSERT INTO progressions (
+			idstudent, idtask, index, history
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdStudent, item.IdTask, item.Index, item.History)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links Progression in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyProgressions(tx *sql.Tx, items ...Progression) error {
@@ -569,6 +582,19 @@ func ScanRandomMonoquestionVariants(rs *sql.Rows) (RandomMonoquestionVariants, e
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertRandomMonoquestionVariant(db DB, item RandomMonoquestionVariant) error {
+	_, err := db.Exec(`INSERT INTO random_monoquestion_variants (
+			idstudent, idrandommonoquestion, index, idquestion
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdStudent, item.IdRandomMonoquestion, item.Index, item.IdQuestion)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links RandomMonoquestionVariant in the database.

@@ -183,6 +183,19 @@ func ScanReviewExercices(rs *sql.Rows) (ReviewExercices, error) {
 	return structs, nil
 }
 
+func InsertReviewExercice(db DB, item ReviewExercice) error {
+	_, err := db.Exec(`INSERT INTO review_exercices (
+			idreview, idexercice, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdExercice, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ReviewExercice in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyReviewExercices(tx *sql.Tx, items ...ReviewExercice) error {
@@ -366,6 +379,19 @@ func ScanReviewParticipations(rs *sql.Rows) (ReviewParticipations, error) {
 	return structs, nil
 }
 
+func InsertReviewParticipation(db DB, item ReviewParticipation) error {
+	_, err := db.Exec(`INSERT INTO review_participations (
+			idreview, idteacher, approval, comments
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdReview, item.IdTeacher, item.Approval, item.Comments)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ReviewParticipation in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyReviewParticipations(tx *sql.Tx, items ...ReviewParticipation) error {
@@ -535,6 +561,19 @@ func ScanReviewQuestions(rs *sql.Rows) (ReviewQuestions, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertReviewQuestion(db DB, item ReviewQuestion) error {
+	_, err := db.Exec(`INSERT INTO review_questions (
+			idreview, idquestion, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdQuestion, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links ReviewQuestion in the database.
@@ -717,6 +756,19 @@ func ScanReviewSheets(rs *sql.Rows) (ReviewSheets, error) {
 	return structs, nil
 }
 
+func InsertReviewSheet(db DB, item ReviewSheet) error {
+	_, err := db.Exec(`INSERT INTO review_sheets (
+			idreview, idsheet, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdSheet, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ReviewSheet in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyReviewSheets(tx *sql.Tx, items ...ReviewSheet) error {
@@ -895,6 +947,19 @@ func ScanReviewTrivials(rs *sql.Rows) (ReviewTrivials, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertReviewTrivial(db DB, item ReviewTrivial) error {
+	_, err := db.Exec(`INSERT INTO review_trivials (
+			idreview, idtrivial, kind
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReview, item.IdTrivial, item.Kind)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links ReviewTrivial in the database.

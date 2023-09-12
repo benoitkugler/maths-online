@@ -222,6 +222,19 @@ func ScanClassroomCodes(rs *sql.Rows) (ClassroomCodes, error) {
 	return structs, nil
 }
 
+func InsertClassroomCode(db DB, item ClassroomCode) error {
+	_, err := db.Exec(`INSERT INTO classroom_codes (
+			idclassroom, code, expiresat
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdClassroom, item.Code, item.ExpiresAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ClassroomCode in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyClassroomCodes(tx *sql.Tx, items ...ClassroomCode) error {

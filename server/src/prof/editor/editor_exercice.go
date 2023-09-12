@@ -495,7 +495,7 @@ func (ct *Controller) createExercicegroup(userID uID) (ExercicegroupExt, error) 
 
 	// add the favorite matiere as tag
 	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
-	err = ed.InsertManyExercicegroupTags(tx, ed.ExercicegroupTag{
+	err = ed.InsertExercicegroupTag(tx, ed.ExercicegroupTag{
 		Tag:             ts.Tag,
 		Section:         ts.Section,
 		IdExercicegroup: group.Id,

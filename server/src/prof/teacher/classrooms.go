@@ -465,20 +465,11 @@ func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
 	code := utils.RandomID(true, 4, func(s string) bool { return m[s] })
 
 	// register it
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return "", utils.SQLError(err)
-	}
-	err = tc.InsertManyClassroomCodes(tx, tc.ClassroomCode{
+	err = tc.InsertClassroomCode(ct.db, tc.ClassroomCode{
 		IdClassroom: id,
 		Code:        code,
 		ExpiresAt:   tc.Time(time.Now().Add(classroomCodeDuration)),
 	})
-	if err != nil {
-		_ = tx.Rollback()
-		return "", utils.SQLError(err)
-	}
-	err = tx.Commit()
 	if err != nil {
 		return "", utils.SQLError(err)
 	}

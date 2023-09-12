@@ -138,7 +138,7 @@ func (ct *Controller) createQuestion(userID uID) (QuestiongroupExt, error) {
 
 	// add the favorite matiere as tag
 	ts := ed.TagSection{Section: ed.Matiere, Tag: string(user.FavoriteMatiere)}
-	err = ed.InsertManyQuestiongroupTags(tx, ed.QuestiongroupTag{
+	err = ed.InsertQuestiongroupTag(tx, ed.QuestiongroupTag{
 		Tag:             ts.Tag,
 		Section:         ts.Section,
 		IdQuestiongroup: group.Id,

@@ -75,6 +75,19 @@ func ScanSelfaccessTrivials(rs *sql.Rows) (SelfaccessTrivials, error) {
 	return structs, nil
 }
 
+func InsertSelfaccessTrivial(db DB, item SelfaccessTrivial) error {
+	_, err := db.Exec(`INSERT INTO selfaccess_trivials (
+			idclassroom, idtrivial, idteacher
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdClassroom, item.IdTrivial, item.IdTeacher)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links SelfaccessTrivial in the database.
 // It is a no-op if 'items' is empty.
 func InsertManySelfaccessTrivials(tx *sql.Tx, items ...SelfaccessTrivial) error {

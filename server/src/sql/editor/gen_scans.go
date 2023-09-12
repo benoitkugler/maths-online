@@ -227,6 +227,19 @@ func ScanExerciceQuestions(rs *sql.Rows) (ExerciceQuestions, error) {
 	return structs, nil
 }
 
+func InsertExerciceQuestion(db DB, item ExerciceQuestion) error {
+	_, err := db.Exec(`INSERT INTO exercice_questions (
+			idexercice, idquestion, bareme, index
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdExercice, item.IdQuestion, item.Bareme, item.Index)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links ExerciceQuestion in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyExerciceQuestions(tx *sql.Tx, items ...ExerciceQuestion) error {
@@ -558,6 +571,19 @@ func ScanExercicegroupTags(rs *sql.Rows) (ExercicegroupTags, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertExercicegroupTag(db DB, item ExercicegroupTag) error {
+	_, err := db.Exec(`INSERT INTO exercicegroup_tags (
+			tag, idexercicegroup, section
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.Tag, item.IdExercicegroup, item.Section)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links ExercicegroupTag in the database.
@@ -999,6 +1025,19 @@ func ScanQuestiongroupTags(rs *sql.Rows) (QuestiongroupTags, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertQuestiongroupTag(db DB, item QuestiongroupTag) error {
+	_, err := db.Exec(`INSERT INTO questiongroup_tags (
+			tag, idquestiongroup, section
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.Tag, item.IdQuestiongroup, item.Section)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links QuestiongroupTag in the database.
