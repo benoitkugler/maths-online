@@ -1224,27 +1224,27 @@ func (ct *Controller) HomeworkGetDispenses(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type TravailExceptions struct {
+type Exceptions struct {
 	Exceptions ho.TravailExceptions
 	Students   teacher.Students // for the classroom
 }
 
-func (ct *Controller) getDispenses(idTravail ho.IdTravail, userID uID) (TravailExceptions, error) {
+func (ct *Controller) getDispenses(idTravail ho.IdTravail, userID uID) (Exceptions, error) {
 	travail, err := ct.checkTravailOwner(idTravail, userID)
 	if err != nil {
-		return TravailExceptions{}, err
+		return Exceptions{}, err
 	}
 	out, err := ho.SelectTravailExceptionsByIdTravails(ct.db, idTravail)
 	if err != nil {
-		return TravailExceptions{}, utils.SQLError(err)
+		return Exceptions{}, utils.SQLError(err)
 	}
 
 	students, err := teacher.SelectStudentsByIdClassrooms(ct.db, travail.IdClassroom)
 	if err != nil {
-		return TravailExceptions{}, utils.SQLError(err)
+		return Exceptions{}, utils.SQLError(err)
 	}
 
-	return TravailExceptions{Exceptions: out, Students: students}, nil
+	return Exceptions{Exceptions: out, Students: students}, nil
 }
 
 func (ct *Controller) HomeworkSetDispense(c echo.Context) error {

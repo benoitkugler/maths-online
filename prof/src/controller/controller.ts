@@ -299,6 +299,12 @@ class Controller extends AbstractAPI {
       this.showMessage("Feuille de travail copiée avec succès.");
     }
   }
+  protected onSuccessHomeworkSetDispense(): void {
+    this.inRequest = false;
+    if (this.showMessage) {
+      this.showMessage("Permissions mises à jour avec succès.");
+    }
+  }
 
   protected onSuccessEditorSaveQuestionAndPreview(
     data: SaveQuestionAndPreviewOut

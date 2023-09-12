@@ -86,8 +86,8 @@ func (l SheetTasks) EnsureOrder() {
 // gomacro:SQL ADD UNIQUE(IdStudent, IdTravail)
 // gomacro:SQL _SELECT KEY(IdStudent, IdTravail)
 type TravailException struct {
-	IdStudent teacher.IdStudent
-	IdTravail IdTravail
+	IdStudent teacher.IdStudent `gomacro-sql-on-delete:"CASCADE"`
+	IdTravail IdTravail         `gomacro-sql-on-delete:"CASCADE"`
 
 	// [Deadline] is an optionnal deadline overriding the one
 	// setup in the related [Travail].

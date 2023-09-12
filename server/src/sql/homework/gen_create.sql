@@ -66,8 +66,8 @@ ALTER TABLE travail_exceptions
     ADD UNIQUE (IdStudent, IdTravail);
 
 ALTER TABLE travail_exceptions
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE travail_exceptions
-    ADD FOREIGN KEY (IdTravail) REFERENCES travails;
+    ADD FOREIGN KEY (IdTravail) REFERENCES travails ON DELETE CASCADE;
 

@@ -1,5 +1,6 @@
 <template>
   <v-text-field
+    autofocus
     @focus="onFocus"
     placeholder="JJ/MM/AAAA"
     variant="outlined"

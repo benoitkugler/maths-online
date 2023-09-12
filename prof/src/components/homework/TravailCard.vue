@@ -47,6 +47,25 @@
               </v-btn>
             </template>
           </v-tooltip>
+          <v-tooltip
+            text="Modifier les exceptions..."
+            location="top"
+            v-if="travail.Noted"
+          >
+            <template v-slot:activator="{ isActive, props }">
+              <v-btn
+                density="comfortable"
+                icon
+                size="small"
+                class="mr-1"
+                v-bind="props"
+                v-on="{ isActive }"
+                @click="emit('showDispenses')"
+              >
+                <v-icon> mdi-account-supervisor </v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
           <v-menu offset-y close-on-content-click>
             <template v-slot:activator="{ isActive, props }">
               <v-btn
@@ -163,6 +182,7 @@ const emit = defineEmits<{
   (e: "copy", idTarget: number): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "editSheet", sheet: SheetExt): void;
+  (e: "showDispenses"): void;
 }>();
 
 const nbTasks = computed(() => props.sheet.Tasks?.length || 0);

@@ -10,6 +10,17 @@
     ></classroom-notes>
   </v-dialog>
 
+  <v-dialog
+    max-width="800px"
+    :model-value="showDispensesFor != null"
+    @update:model-value="showDispensesFor = null"
+  >
+    <travail-dispenses
+      v-if="showDispensesFor != null"
+      :travail="showDispensesFor"
+    ></travail-dispenses>
+  </v-dialog>
+
   <div class="ma-2">
     <v-row no-gutters>
       <v-col>
@@ -59,6 +70,7 @@
           @copy="idClassroom => emit('copy', travail, idClassroom)"
           @set-favorite="s => emit('setFavorite', s)"
           @edit-sheet="s => emit('editSheet', s)"
+          @show-dispenses="showDispensesFor = travail"
         ></travail-card>
         <v-card
           v-else
@@ -96,6 +108,8 @@ import type {
 import { $ref } from "vue/macros";
 import ClassroomNotes from "./ClassroomNotes.vue";
 import TravailCard from "./TravailCard.vue";
+import { ref } from "vue";
+import TravailDispenses from "./TravailDispenses.vue";
 
 interface Props {
   classroom: ClassroomTravaux;
@@ -138,4 +152,6 @@ function onShowNotes() {
     showNotes = true;
   }
 }
+
+const showDispensesFor = ref<Travail | null>(null);
 </script>

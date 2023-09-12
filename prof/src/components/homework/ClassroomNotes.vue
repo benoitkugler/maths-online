@@ -42,10 +42,9 @@
 import type {
   Classroom,
   HomeworkMarksOut,
-  Sheet,
   SheetExt,
   StudentHeader,
-  Travail,
+  Travail
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { computed } from "@vue/reactivity";
@@ -71,24 +70,39 @@ async function fetchNotes() {
   data = null;
   const res = await controller.HomeworkGetMarks({
     IdClassroom: props.classroom.id,
-    IdTravaux: props.travaux.map((tr) => tr.Id),
+    IdTravaux: props.travaux.map(tr => tr.Id)
   });
   if (res == undefined) return;
   data = res;
 }
 
 function _getMark(tr: Travail, student: StudentHeader) {
-  const sheetMarks = (data?.Marks || {})[tr.Id] || {};
-  return sheetMarks[student.Id] || 0;
+  const sheetMarks = (data?.Marks || {})[tr.Id];
+  const mark = (sheetMarks.Marks || {})[student.Id] || 0;
+  const ignored = (sheetMarks.Ignored || []).includes(student.Id);
+  return { mark, ignored };
 }
 
 function getMark(tr: Travail, student: StudentHeader) {
-  return _getMark(tr, student).toFixed(1);
+  const m = _getMark(tr, student);
+  if (m.ignored) {
+    return `${m.mark.toFixed(1)} (*)`;
+  }
+  return m.mark.toFixed(1);
 }
 
 function getMoyenne(student: StudentHeader) {
   let total = 0;
-  props.travaux.forEach((tr) => (total += _getMark(tr, student)));
-  return (total / props.travaux.length).toFixed(2);
+  let nbTravaux = 0;
+  props.travaux.forEach(tr => {
+    const m = _getMark(tr, student);
+    if (m.ignored) {
+      return;
+    }
+    total += m.mark;
+    nbTravaux += 1;
+  });
+  if (nbTravaux == 0) return "-";
+  return (total / nbTravaux).toFixed(2);
 }
 </script>

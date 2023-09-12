@@ -846,6 +846,11 @@ export interface CreateTravailWithIn {
   IdSheet: IdSheet;
   IdClassroom: IdClassroom;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/homework.Exceptions
+export interface Exceptions {
+  Exceptions: TravailExceptions;
+  Students: Students;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
@@ -880,11 +885,6 @@ export interface TaskExt {
   Title: string;
   Bareme: TaskBareme;
   NbProgressions: number;
-}
-// github.com/benoitkugler/maths-online/server/src/prof/homework.TravailExceptions
-export interface TravailExceptions {
-  Exceptions: TravailExceptions;
-  Students: Students;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
 export interface TravailMarks {
@@ -3514,7 +3514,7 @@ export abstract class AbstractAPI {
 
   protected async rawHomeworkGetDispenses(params: { "id-travail": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
-    const rep: AxiosResponse<TravailExceptions> = await Axios.get(fullUrl, {
+    const rep: AxiosResponse<Exceptions> = await Axios.get(fullUrl, {
       params: { "id-travail": String(params["id-travail"]) },
       headers: this.getHeaders(),
     });
@@ -3533,7 +3533,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessHomeworkGetDispenses(data: TravailExceptions): void {}
+  protected onSuccessHomeworkGetDispenses(data: Exceptions): void {}
 
   protected async rawHomeworkSetDispense(params: TravailException) {
     const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
