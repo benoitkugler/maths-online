@@ -3,6 +3,8 @@ package homework
 import (
 	"database/sql"
 	"errors"
+	"log"
+	"os"
 	"sort"
 	"time"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
+
+var Logger = log.New(os.Stdout, "homework:INFO:", 0)
 
 type uID = teacher.IdTeacher
 
@@ -1476,6 +1480,8 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 		return StudentEvaluateTaskOut{}, err
 	}
 	idStudent := teacher.IdStudent(idStudent_)
+
+	Logger.Printf("evaluating Task %d (Travail %d) for Student %d", args.IdTask, args.IdTravail, idStudent)
 
 	pr, err := taAPI.LoadTaskProgression(ct.db, idStudent, args.IdTask)
 	if err != nil {

@@ -144,7 +144,7 @@ func (gs *gameStore) createGame(params createGame) {
 		}
 	}()
 
-	ProgressLogger.Printf("Creating game %s (launch: %s)", params.ID, params.Options.Launch)
+	ProgressLogger.Printf("Creating game %s (%T, launch: %s)", params.ID, params.ID, params.Options.Launch)
 }
 
 // TODO:
