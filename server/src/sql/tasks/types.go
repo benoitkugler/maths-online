@@ -47,6 +47,18 @@ func (qh QuestionHistory) Success() bool {
 	return false
 }
 
+// Stats returns the number of tries
+func (qh QuestionHistory) Stats() (success, failure int) {
+	for _, try := range qh {
+		if try {
+			success++
+		} else {
+			failure++
+		}
+	}
+	return
+}
+
 // EnsureOrder must be call on the questions of one exercice,
 // to make sure the order in the slice is consistent with the one
 // indicated by `Index`

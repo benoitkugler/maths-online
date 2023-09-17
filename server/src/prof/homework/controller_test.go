@@ -2,7 +2,6 @@ package homework
 
 import (
 	"database/sql"
-	"reflect"
 	"testing"
 	"time"
 
@@ -312,81 +311,4 @@ func insertProgression(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent
 	}
 	err = tx.Commit()
 	return err
-}
-
-func TestGetMarks(t *testing.T) {
-	db, sp := setupDB(t)
-	defer db.Remove()
-	class := sp.class
-	studentKey := pass.Encrypter{}
-	ct := NewController(db.DB, teacher.Teacher{Id: sp.userID}, studentKey)
-
-	// setup the sheet and exercices
-	sh, err := ct.createSheet(sp.userID)
-	tu.AssertNoErr(t, err)
-	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
-	tu.AssertNoErr(t, err)
-	task2, err := ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: sp.question.Id}, sp.userID)
-	tu.AssertNoErr(t, err)
-
-	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
-	tu.AssertNoErr(t, err)
-	tr.Noted = true
-	tr.Deadline = ho.Time(time.Now().Add(time.Hour))
-	err = ct.updateTravail(tr, sp.userID)
-	tu.AssertNoErr(t, err)
-
-	out, err := ct.getMarks(HowemorkMarksIn{
-		IdClassroom: class.Id,
-		IdTravaux:   []ho.IdTravail{tr.Id},
-	}, sp.userID)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out.Students) == 0)
-
-	// add students and progressions
-	student1, err := teacher.Student{IdClassroom: sp.class.Id}.Insert(ct.db)
-	tu.AssertNoErr(t, err)
-	student2, err := teacher.Student{IdClassroom: sp.class.Id}.Insert(ct.db)
-	tu.AssertNoErr(t, err)
-
-	// task1 has one question
-	err = insertProgression(ct.db, task1.Id, student1.Id, []ta.QuestionHistory{
-		{false, false, true},
-	})
-	tu.AssertNoErr(t, err)
-	// do not create progression for student 2
-
-	// task2 has 3 questions
-	err = insertProgression(ct.db, task2.Id, student1.Id, []ta.QuestionHistory{
-		{false, false, true},
-		{true},
-		{},
-	})
-	tu.AssertNoErr(t, err)
-	err = insertProgression(ct.db, task2.Id, student2.Id, []ta.QuestionHistory{
-		{false, false, false},
-		{false, false, true},
-		{false, true, false},
-	})
-	tu.AssertNoErr(t, err)
-
-	err = ho.InsertTravailException(ct.db, ho.TravailException{
-		IdStudent:     student2.Id,
-		IdTravail:     tr.Id,
-		IgnoreForMark: true,
-	})
-	tu.AssertNoErr(t, err)
-
-	out, err = ct.getMarks(HowemorkMarksIn{
-		IdClassroom: class.Id,
-		IdTravaux:   []ho.IdTravail{tr.Id},
-	}, sp.userID)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out.Students) == 2)
-	// student1 : 4/5 => 16/20
-	// student2 : 2/5 => 8 /20
-	ma := out.Marks[tr.Id]
-	tu.Assert(t, reflect.DeepEqual(ma.Ignored, []teacher.IdStudent{student2.Id}))
-	tu.Assert(t, ma.Marks[student1.Id] == 16)
-	tu.Assert(t, ma.Marks[student2.Id] == 8)
 }

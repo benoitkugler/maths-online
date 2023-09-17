@@ -3,6 +3,7 @@ package tasks
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
@@ -63,6 +64,8 @@ type TasksContents struct {
 
 	exerciceTags map[ed.IdExercicegroup]ed.ExercicegroupTags
 	questionTags map[ed.IdQuestiongroup]ed.QuestiongroupTags // for [monoquestions] and [randomMonoquestions]
+
+	selectedVariants map[teacher.IdStudent]ta.RandomMonoquestionVariants // for [randomMonoquestions], only used in [ResolveQuestions]
 }
 
 func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) {
@@ -155,6 +158,12 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 	}
 	out.questionTags = qTags.ByIdQuestiongroup()
 
+	tmp, err := ta.SelectRandomMonoquestionVariantsByIdRandomMonoquestions(db, randomMonoquestionIDs.Keys()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	out.selectedVariants = tmp.ByIdStudent()
+
 	return out, nil
 }
 
@@ -224,6 +233,42 @@ func (contents TasksContents) LoadProgressions(db ta.DB) (map[ta.IdTask]map[teac
 	}
 
 	return out, nil
+}
+
+// ResolveQuestions returns the question variants actually done by the student.
+// For [RandomMonoquestion]s, the student is expected to have actually started it.
+func (contents TasksContents) ResolveQuestions(idStudent teacher.IdStudent, work WorkMeta) []ed.Question {
+	switch work := work.(type) {
+	case ExerciceData:
+		return work.Questions()
+	case monoquestionData:
+		return work.Questions()
+	case randomMonoquestionData:
+		l := contents.selectedVariants[idStudent].ByIdRandomMonoquestion()[work.params.Id]
+		l.EnsureOrder()
+		out := make([]ed.Question, len(l))
+		for i, item := range l {
+			out[i] = contents.questions[item.IdQuestion]
+		}
+		return out
+	default:
+		panic("exhaustive switch")
+	}
+}
+
+func (contents TasksContents) OrderQuestions(work WorkMeta) []ed.Question {
+	switch work := work.(type) {
+	case ExerciceData:
+		return work.Questions()
+	case monoquestionData:
+		return []ed.Question{work.question}
+	case randomMonoquestionData:
+		l := contents.questions.ByGroup()[work.questiongroup.Id]
+		sort.Slice(l, func(i, j int) bool { return l[i].Difficulty < l[j].Difficulty })
+		return l
+	default:
+		panic("exhaustive switch")
+	}
 }
 
 // updateProgression write the question results for the given progression.

@@ -866,6 +866,14 @@ export interface HowemorkMarksIn {
   IdClassroom: IdClassroom;
   IdTravaux: IdTravail[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/homework.QuestionStat
+export interface QuestionStat {
+  Description: string;
+  Id: IdQuestion;
+  Difficulty: DifficultyTag;
+  NbSuccess: number;
+  NbFailure: number;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/homework.ReorderSheetTasksIn
 export interface ReorderSheetTasksIn {
   IdSheet: IdSheet;
@@ -886,10 +894,19 @@ export interface TaskExt {
   Bareme: TaskBareme;
   NbProgressions: number;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/homework.TaskStat
+export interface TaskStat {
+  IdWork: WorkID;
+  Title: string;
+  QuestionStats: QuestionStat[] | null;
+  NbSuccess: number;
+  NbFailure: number;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
 export interface TravailMarks {
   Marks: { [key: IdStudent]: number } | null;
   Ignored: IdStudent[] | null;
+  TaskStats: TaskStat[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
 export interface LoadTargetOut {

@@ -1,0 +1,203 @@
+package homework
+
+import (
+	"errors"
+	"fmt"
+
+	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
+	"github.com/benoitkugler/maths-online/server/src/utils"
+	"github.com/labstack/echo/v4"
+)
+
+// this file provides various statistics for a [Travail],
+// computed from the student progressions
+
+type HowemorkMarksIn struct {
+	IdClassroom teacher.IdClassroom
+	IdTravaux   []ho.IdTravail
+}
+
+type TravailMarks struct {
+	Marks     map[teacher.IdStudent]float64 // the notes for each travail and student, /20
+	Ignored   []teacher.IdStudent           // the student dispensed for this travail
+	TaskStats []TaskStat
+}
+
+type TaskStat struct {
+	IdWork taAPI.WorkID
+	Title  string // title
+
+	QuestionStats []QuestionStat
+
+	// the total number of answers, for the whole "exercice"
+	// it is the sum of each questions, provided for convenience
+	NbSuccess, NbFailure int
+}
+
+func (ts *TaskStat) inferTotal() {
+	for _, qu := range ts.QuestionStats {
+		ts.NbSuccess += qu.NbSuccess
+		ts.NbFailure += qu.NbFailure
+	}
+}
+
+type QuestionStat struct {
+	Description          string
+	Id                   editor.IdQuestion
+	Difficulty           editor.DifficultyTag
+	NbSuccess, NbFailure int // the total number of answers, for this question
+}
+
+type HomeworkMarksOut struct {
+	Students []tcAPI.StudentHeader // the students of the classroom
+	Marks    map[ho.IdTravail]TravailMarks
+}
+
+func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	var args HowemorkMarksIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.getMarks(args, userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksOut, error) {
+	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+	if classroom.IdTeacher != userID {
+		return HomeworkMarksOut{}, errAccessForbidden
+	}
+
+	students, err := tcAPI.LoadClassroomStudents(ct.db, classroom.Id)
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+	travaux, err := ho.SelectTravails(ct.db, args.IdTravaux...)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+
+	// load the dispenses
+	links, err := ho.SelectTravailExceptionsByIdTravails(ct.db, travaux.IDs()...)
+	if err != nil {
+		return HomeworkMarksOut{}, utils.SQLError(err)
+	}
+	expects := links.ByIdTravail()
+
+	out := HomeworkMarksOut{
+		Students: make([]tcAPI.StudentHeader, len(students)),
+		Marks:    make(map[ho.IdTravail]TravailMarks),
+	}
+	// student list
+	for i, s := range students {
+		out.Students[i] = tcAPI.NewStudentHeader(s)
+	}
+	// compute the sheets marks :
+	loader, err := newSheetsLoader(ct.db, travaux.IdSheets())
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+	// load all the progressions : for each task and student
+	progressions, err := loader.tasks.LoadProgressions(ct.db)
+	if err != nil {
+		return HomeworkMarksOut{}, err
+	}
+
+	for id, travail := range travaux {
+		if travail.IdClassroom != classroom.Id {
+			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
+		}
+
+		markByStudent := make(map[teacher.IdStudent]float64)
+		var sheetTotal int
+		// for each student, get its progression for each task
+		tasks := loader.tasksForSheet(travail.IdSheet)
+
+		tm := TravailMarks{
+			Marks: markByStudent,
+		}
+
+		for _, link := range tasks {
+			task := loader.tasks.Tasks[link.IdTask]
+			work := loader.tasks.GetWork(task)
+			bareme := work.Bareme()
+			taskTotal := bareme.Total()
+			sheetTotal += taskTotal
+			byStudent := progressions[link.IdTask]
+
+			questionsRes := make(map[editor.IdQuestion][2]int) // success, failure
+			questions := make(editor.Questions)                // success, failure
+
+			// add each progression to the student note
+			for idStudent, studentProg := range byStudent {
+				studentMark := bareme.ComputeMark(studentProg.Questions)
+				markByStudent[idStudent] = markByStudent[idStudent] + float64(studentMark)
+
+				// map each question to its origin and compute its stats
+				questionOrigins := loader.tasks.ResolveQuestions(idStudent, work)
+				for questionIndex, origin := range questionOrigins {
+					succes, failure := studentProg.Questions[questionIndex].Stats()
+					questions[origin.Id] = origin
+					v := questionsRes[origin.Id]
+					v[0] += succes
+					v[1] += failure
+					questionsRes[origin.Id] = v
+				}
+			}
+
+			taskStat := TaskStat{
+				IdWork: taAPI.NewWorkID(task),
+				Title:  work.Title(),
+			}
+			for index, qu := range loader.tasks.OrderQuestions(work) {
+				res := questionsRes[qu.Id]
+				stat := QuestionStat{
+					Id:         qu.Id,
+					Difficulty: qu.Difficulty,
+					NbSuccess:  res[0], NbFailure: res[1],
+				}
+				switch taskStat.IdWork.Kind {
+				case taAPI.WorkExercice:
+					stat.Description = fmt.Sprintf("Question %d", index+1)
+				case taAPI.WorkMonoquestion, taAPI.WorkRandomMonoquestion:
+					stat.Description = qu.Subtitle
+				}
+
+				taskStat.QuestionStats = append(taskStat.QuestionStats, stat)
+			}
+
+			taskStat.inferTotal()
+			tm.TaskStats = append(tm.TaskStats, taskStat)
+		}
+
+		// normalize the mark / 20
+		for id, mark := range markByStudent {
+			markByStudent[id] = 20 * mark / float64(sheetTotal)
+		}
+
+		// add the dispenses
+		for _, link := range expects[id] {
+			if link.IgnoreForMark {
+				tm.Ignored = append(tm.Ignored, link.IdStudent)
+			}
+		}
+
+		out.Marks[id] = tm
+	}
+
+	return out, nil
+}
