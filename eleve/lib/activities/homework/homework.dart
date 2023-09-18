@@ -150,10 +150,10 @@ class HomeworkStart extends StatelessWidget {
 /// activity.
 class _HomeworkW extends StatefulWidget {
   final HomeworkAPI api;
-  final bool isNonNoted;
+  final bool isNotNoted;
 
   /// Creates a new [_HomeworkW] widget
-  const _HomeworkW(this.api, this.isNonNoted, {Key? key}) : super(key: key);
+  const _HomeworkW(this.api, this.isNotNoted, {Key? key}) : super(key: key);
 
   @override
   State<_HomeworkW> createState() => _HomeworkWState();
@@ -164,42 +164,40 @@ class _HomeworkWState extends State<_HomeworkW> {
 
   @override
   void initState() {
-    sheets = widget.api.loadSheets(widget.isNonNoted);
+    sheets = widget.api.loadSheets(widget.isNotNoted);
     super.initState();
   }
 
   @override
   void didUpdateWidget(covariant _HomeworkW oldWidget) {
-    sheets = widget.api.loadSheets(widget.isNonNoted);
+    sheets = widget.api.loadSheets(widget.isNotNoted);
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isNonNoted
-            ? "Travaux d'entrainement"
-            : "Devoirs à la maison"),
-      ),
-      body: FutureBuilder<Sheets>(
+    return FutureBuilder<Sheets>(
         future: sheets,
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-                child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ErrorBar(
-                  "Impossible de charger le travail à faire.", snapshot.error!),
-            ));
-          } else if (snapshot.hasData) {
-            return _SheetList(widget.api, widget.isNonNoted, snapshot.data!);
-          } else {
-            return const _Loading();
+          if (!snapshot.hasError && snapshot.hasData) {
+            return _SheetListView(
+                widget.api, widget.isNotNoted, snapshot.data!);
           }
-        },
-      ),
-    );
+          return Scaffold(
+            appBar: AppBar(
+                title: Text(widget.isNotNoted
+                    ? "Travaux d'entrainement"
+                    : "Devoirs à la maison")),
+            body: snapshot.hasError
+                ? Center(
+                    child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ErrorBar("Impossible de charger le travail à faire.",
+                        snapshot.error!),
+                  ))
+                : const _Loading(),
+          );
+        });
   }
 }
 
@@ -218,25 +216,61 @@ class _Loading extends StatelessWidget {
   }
 }
 
-class _SheetList extends StatefulWidget {
+class _SheetListView extends StatefulWidget {
   final HomeworkAPI api;
   final bool isNotNoted;
   final Sheets initialSheets;
 
-  const _SheetList(this.api, this.isNotNoted, this.initialSheets, {Key? key})
+  const _SheetListView(this.api, this.isNotNoted, this.initialSheets,
+      {Key? key})
       : super(key: key);
 
   @override
-  State<_SheetList> createState() => _SheetListState();
+  State<_SheetListView> createState() => _SheetListViewState();
 }
 
-class _SheetListState extends State<_SheetList> {
+class _SheetListViewState extends State<_SheetListView> {
   late final Sheets sheets;
 
   @override
   void initState() {
     sheets = widget.initialSheets;
     super.initState();
+  }
+
+  double get averageMark {
+    double total = 0;
+    int nbSheets = 0;
+    for (var sheet in sheets) {
+      if (sheet.sheet.ignoreForMark) continue; // the student has a dispense
+      final ma = sheetMark(sheet.tasks);
+      nbSheets += 1;
+      total += 20.0 * ma.mark.toDouble() / ma.bareme; // convert to 20
+    }
+    if (nbSheets == 0) return 0;
+    return total / nbSheets;
+  }
+
+  void _showNotedSheetAverage() {
+    showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 8,
+            shadowColor: Colors.white,
+            title: const Text("Moyenne"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: AnimatedLogo(averageMark / 20)),
+                const SizedBox(height: 20),
+                Text("${averageMark.toStringAsFixed(1)} / 20",
+                    style: Theme.of(context).textTheme.headlineSmall)
+              ],
+            )));
   }
 
   bool updateMark(SheetMarkNotification notif) {
@@ -260,18 +294,31 @@ class _SheetListState extends State<_SheetList> {
 
   @override
   Widget build(BuildContext context) {
-    if (sheets.isEmpty) {
-      return Center(
-          child: Text(widget.isNotNoted
-              ? "Aucun exercice n'est disponible en accès libre."
-              : "Aucun travail à la maison n'est planifié."));
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4),
-      child: widget.isNotNoted
-          ? _FreeSheetList(sheets, onSelectSheet)
-          : _NotedSheetList(sheets, onSelectSheet),
-    );
+    return Scaffold(
+        appBar: AppBar(
+            title: Text(widget.isNotNoted
+                ? "Travaux d'entrainement"
+                : "Devoirs à la maison"),
+            actions: widget.isNotNoted
+                ? []
+                : [
+                    IconButton(
+                      onPressed: _showNotedSheetAverage,
+                      icon: const Icon(Icons.pie_chart),
+                    )
+                  ]),
+        body: sheets.isEmpty
+            ? Center(
+                child: Text(widget.isNotNoted
+                    ? "Aucun exercice n'est disponible en accès libre."
+                    : "Aucun travail à la maison n'est planifié."))
+            : Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4),
+                child: widget.isNotNoted
+                    ? _FreeSheetList(sheets, onSelectSheet)
+                    : _NotedSheetList(sheets, onSelectSheet),
+              ));
   }
 }
 
@@ -455,6 +502,7 @@ class _SheetSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ma = sheetMark(sheet.tasks);
+
     final hasNotation = sheet.sheet.noted;
     final started = sheet.tasks.where((ex) => ex.hasProgression).length;
     final completed = sheet.tasks
@@ -504,8 +552,10 @@ class _SheetSummary extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
-                  child: Text(
-                      "${hasNotation ? 'Note' : 'Score'} : ${ma.mark} / ${ma.bareme}"),
+                  child: sheet.sheet.ignoreForMark
+                      ? const Text("Note ignorée")
+                      : Text(
+                          "${hasNotation ? 'Note' : 'Score'} : ${(20 * ma.mark / ma.bareme).toStringAsFixed(1)} / 20"),
                 ),
               ])
           ],

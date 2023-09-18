@@ -169,15 +169,15 @@ class _API extends _FieldAPI implements HomeworkAPI {
               "Feuille périmée",
               !loadNonNoted,
               DateTime.now().subtract(const Duration(days: 3)),
-              true,
+              false,
               0,
               true,
               1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
+                1, "Ex 1", "", false, ProgressionExt([], 0), 6, 6),
             const TaskProgressionHeader(
-                2, "Ex 2", "", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "", false, ProgressionExt([], 0), 4, 5),
           ]),
       SheetProgression(
           2,
