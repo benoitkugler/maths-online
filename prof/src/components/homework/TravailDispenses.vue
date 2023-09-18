@@ -1,5 +1,5 @@
 <template>
-  <v-card density="compact" title="Exceptions">
+  <v-card title="Exceptions" :subtitle="props.sheet.Title">
     <v-dialog
       max-width="500px"
       :model-value="toEdit != null"
@@ -139,7 +139,8 @@ import type {
   Exceptions,
   Student,
   TravailException,
-  Time
+  Time,
+  Sheet
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
@@ -150,6 +151,7 @@ import { copy, formatTime } from "@/controller/utils";
 
 interface Props {
   travail: Travail;
+  sheet: Sheet;
 }
 
 const props = defineProps<Props>();

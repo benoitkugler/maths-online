@@ -18,6 +18,7 @@
     <travail-dispenses
       v-if="showDispensesFor != null"
       :travail="showDispensesFor"
+      :sheet="props.sheets.get(showDispensesFor.IdSheet)!.Sheet"
     ></travail-dispenses>
   </v-dialog>
 
