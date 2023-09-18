@@ -77,10 +77,7 @@
           toEdit = {
             IdTravail: props.travail.Id,
             IdStudent: -1,
-            Deadline: {
-              Valid: false,
-              Time: new Date(Date.now()).toISOString() as Time
-            },
+            Deadline: emptyTime(),
             IgnoreForMark: false
           }
         "
@@ -111,6 +108,16 @@
           :key="index"
           @click="toEdit = copy(exp)"
         >
+          <template v-slot:prepend>
+            <v-btn
+              icon
+              size="x-small"
+              class="mr-2"
+              @click.stop="removeDispense(exp)"
+            >
+              <v-icon color="red">mdi-close</v-icon>
+            </v-btn>
+          </template>
           <v-row>
             <v-col cols="5">
               <v-list-item-title>
@@ -140,7 +147,8 @@ import type {
   Student,
   TravailException,
   Time,
-  Sheet
+  Sheet,
+  NullTime
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
@@ -187,5 +195,18 @@ async function setDispense(params: TravailException) {
   const res = await controller.HomeworkSetDispense(params);
   if (res === undefined) return;
   fetchDispenses();
+}
+
+async function removeDispense(params: TravailException) {
+  params.Deadline = emptyTime();
+  params.IgnoreForMark = false;
+  setDispense(params);
+}
+
+function emptyTime(): NullTime {
+  return {
+    Valid: false,
+    Time: new Date(Date.now()).toISOString() as Time
+  };
 }
 </script>
