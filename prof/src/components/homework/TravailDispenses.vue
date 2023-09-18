@@ -10,7 +10,7 @@
           <v-form>
             <v-row>
               <v-col>
-                <v-select
+                <v-autocomplete
                   label="Élève"
                   density="compact"
                   variant="outlined"
@@ -19,7 +19,7 @@
                   :model-value="toEdit.IdStudent < 0 ? null : toEdit.IdStudent"
                   @update:model-value="v => (toEdit!.IdStudent = v)"
                   hide-details
-                ></v-select>
+                ></v-autocomplete>
               </v-col>
             </v-row>
             <v-row>
