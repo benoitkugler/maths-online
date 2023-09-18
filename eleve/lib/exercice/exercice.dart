@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:eleve/exercice/congratulations.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/fields.dart';
@@ -9,6 +11,22 @@ import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
+
+const congratsMessages = [
+  "Yes !",
+  "Félicitations !",
+  "Bravissimo !",
+  "Oui oui oui !",
+  "Mais comment fais-tu ??",
+  "Tu n'es pas là pour beurrer des tartines",
+  "Tu n'es pas là pour enfiler des perles",
+  "C'est qui le meilleur ? ",
+  "The best for ever...",
+];
+
+String _randCongrats() {
+  return congratsMessages[Random().nextInt(congratsMessages.length)];
+}
 
 class NotificationExerciceDone extends Notification {}
 
@@ -413,24 +431,12 @@ class _ExerciceWState extends State<ExerciceW> {
       // show a dialog with next button
       await showDialog<void>(
           context: context,
-          builder: (context) => AlertDialog(
-                backgroundColor: Colors.green.shade400,
-                title: const Text("Yes !"),
-                content: const Text("Ta réponse est correcte, bravo !"),
-                actions: [
-                  OutlinedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        setState(() {
-                          ct.questionIndex =
-                              ct.exeAndProg.progression.nextQuestion;
-                        });
-                      },
-                      style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.black87),
-                      child: const Text("Continuer l'exercice"))
-                ],
-              ));
+          builder: (context) => CorrectAnswerDialog(() {
+                Navigator.of(context).pop();
+                setState(() {
+                  ct.questionIndex = ct.exeAndProg.progression.nextQuestion;
+                });
+              }));
     } else if (showButtonCorrection) {
       // show a "persitent" snackbar
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
