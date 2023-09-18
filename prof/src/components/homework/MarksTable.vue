@@ -21,7 +21,7 @@
         {{ getMoyenne(student) }}
       </td>
       <td class="text-center" v-for="tr in props.travaux" :key="tr.Id">
-        {{ getMark(tr, student) }}
+        <MarksTableCell :data="getMark(tr, student)"></MarksTableCell>
       </td>
     </tr>
   </v-table>
@@ -32,8 +32,10 @@ import type {
   HomeworkMarksOut,
   SheetExt,
   StudentHeader,
-  Travail
+  Travail,
+  StudentTravailMark
 } from "@/controller/api_gen";
+import MarksTableCell from "./MarksTableCell.vue";
 
 interface Props {
   data: HomeworkMarksOut;
@@ -43,30 +45,25 @@ interface Props {
 
 const props = defineProps<Props>();
 
-function _getMark(tr: Travail, student: StudentHeader) {
-  const sheetMarks = (props.data?.Marks || {})[tr.Id];
-  const mark = (sheetMarks.Marks || {})[student.Id] || 0;
-  const ignored = (sheetMarks.Ignored || []).includes(student.Id);
-  return { mark, ignored };
-}
-
 function getMark(tr: Travail, student: StudentHeader) {
-  const m = _getMark(tr, student);
-  if (m.ignored) {
-    return `${m.mark.toFixed(1)} (*)`;
-  }
-  return m.mark.toFixed(1);
+  const sheetMarks = (props.data?.Marks || {})[tr.Id];
+  const mark: StudentTravailMark = (sheetMarks.Marks || {})[student.Id] || {
+    Mark: 0,
+    Dispensed: false,
+    NbTries: 0
+  };
+  return mark;
 }
 
 function getMoyenne(student: StudentHeader) {
   let total = 0;
   let nbTravaux = 0;
   props.travaux.forEach(tr => {
-    const m = _getMark(tr, student);
-    if (m.ignored) {
+    const m = getMark(tr, student);
+    if (m.Dispensed) {
       return;
     }
-    total += m.mark;
+    total += m.Mark;
     nbTravaux += 1;
   });
   if (nbTravaux == 0) return "-";

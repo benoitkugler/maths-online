@@ -21,9 +21,14 @@ type HowemorkMarksIn struct {
 	IdTravaux   []ho.IdTravail
 }
 
+type StudentTravailMark struct {
+	Mark      float64 // /20
+	Dispensed bool    // true if the student is dispensed for this travail
+	NbTries   int     // the total number of tries (both success and failures) on this sheet
+}
+
 type TravailMarks struct {
-	Marks     map[teacher.IdStudent]float64 // the notes for each travail and student, /20
-	Ignored   []teacher.IdStudent           // the student dispensed for this travail
+	Marks     map[teacher.IdStudent]StudentTravailMark // the notes for each student
 	TaskStats []TaskStat
 }
 
@@ -117,12 +122,12 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 		return HomeworkMarksOut{}, err
 	}
 
-	for id, travail := range travaux {
+	for idTravail, travail := range travaux {
 		if travail.IdClassroom != classroom.Id {
 			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
 		}
 
-		markByStudent := make(map[teacher.IdStudent]float64)
+		markByStudent := make(map[teacher.IdStudent]StudentTravailMark)
 		var sheetTotal int
 		// for each student, get its progression for each task
 		tasks := loader.tasksForSheet(travail.IdSheet)
@@ -145,7 +150,10 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 			// add each progression to the student note
 			for idStudent, studentProg := range byStudent {
 				studentMark := bareme.ComputeMark(studentProg.Questions)
-				markByStudent[idStudent] = markByStudent[idStudent] + float64(studentMark)
+				item := markByStudent[idStudent]
+				item.Mark += float64(studentMark)
+				item.NbTries += studentProg.NbTries()
+				markByStudent[idStudent] = item
 
 				// map each question to its origin and compute its stats
 				questionOrigins := loader.tasks.ResolveQuestions(idStudent, work)
@@ -184,19 +192,17 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 			tm.TaskStats = append(tm.TaskStats, taskStat)
 		}
 
-		// normalize the mark / 20
-		for id, mark := range markByStudent {
-			markByStudent[id] = 20 * mark / float64(sheetTotal)
-		}
-
-		// add the dispenses
-		for _, link := range expects[id] {
-			if link.IgnoreForMark {
-				tm.Ignored = append(tm.Ignored, link.IdStudent)
+		// normalize the mark / 20 and add dispenses
+		exceptions := expects[idTravail].ByIdStudent()
+		for id, item := range markByStudent {
+			item.Mark = 20 * item.Mark / float64(sheetTotal)
+			if l := exceptions[id]; len(l) != 0 {
+				item.Dispensed = l[0].IgnoreForMark
 			}
+			markByStudent[id] = item
 		}
 
-		out.Marks[id] = tm
+		out.Marks[idTravail] = tm
 	}
 
 	return out, nil

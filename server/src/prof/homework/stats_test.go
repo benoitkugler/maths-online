@@ -1,7 +1,6 @@
 package homework
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
@@ -84,9 +83,11 @@ func TestGetMarks(t *testing.T) {
 	// student1 : 4/5 => 16/20
 	// student2 : 2/5 => 8 /20
 	ma := out.Marks[tr.Id]
-	tu.Assert(t, reflect.DeepEqual(ma.Ignored, []teacher.IdStudent{student2.Id}))
-	tu.Assert(t, ma.Marks[student1.Id] == 16)
-	tu.Assert(t, ma.Marks[student2.Id] == 8)
+	tu.Assert(t, ma.Marks[student1.Id].Mark == 16)
+	tu.Assert(t, ma.Marks[student1.Id].NbTries == 7)
+	tu.Assert(t, ma.Marks[student2.Id].Mark == 8)
+	tu.Assert(t, ma.Marks[student2.Id].NbTries == 9)
+	tu.Assert(t, ma.Marks[student2.Id].Dispensed)
 }
 
 func TestGetStats(t *testing.T) {

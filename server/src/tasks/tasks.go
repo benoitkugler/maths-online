@@ -33,6 +33,15 @@ func (qh ProgressionExt) Copy() ProgressionExt {
 	}
 }
 
+// NbTries returns the total number of tries for this progression.
+func (qh ProgressionExt) NbTries() int {
+	s := 0
+	for _, qu := range qh.Questions {
+		s += len(qu)
+	}
+	return s
+}
+
 func (qh ProgressionExt) IsComplete() bool { return qh.NextQuestion == -1 }
 
 // inferNextQuestion stores into `NextQuestion` the first question not passed by the student,

@@ -886,6 +886,12 @@ export interface SheetExt {
   NbTravaux: number;
   Origin: Origin;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/homework.StudentTravailMark
+export interface StudentTravailMark {
+  Mark: number;
+  Dispensed: boolean;
+  NbTries: number;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TaskExt
 export interface TaskExt {
   Id: IdTask;
@@ -904,8 +910,7 @@ export interface TaskStat {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
 export interface TravailMarks {
-  Marks: { [key: IdStudent]: number } | null;
-  Ignored: IdStudent[] | null;
+  Marks: { [key: IdStudent]: StudentTravailMark } | null;
   TaskStats: TaskStat[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
