@@ -1,14 +1,14 @@
 <template>
   <v-table>
     <tr>
-      <th class="py-2">Elève</th>
+      <th class="py-2 text-left">Elève</th>
+      <th>
+        <div class="bg-blue-lighten-1 rounded py-1 px-1">Moyenne</div>
+      </th>
       <th v-for="tr in props.travaux" :key="tr.Id">
         <div class="bg-blue-lighten-4 rounded mx-2 my-1 py-1 text-subtitle-1">
           {{ props.sheets.get(tr.IdSheet)!.Sheet.Title }}
         </div>
-      </th>
-      <th>
-        <div class="bg-blue-lighten-1 rounded py-1 px-1">Moyenne</div>
       </th>
     </tr>
     <tr
@@ -16,12 +16,12 @@
       :key="index"
       :class="{ 'bg-grey-lighten-2': index % 2 == 0 }"
     >
-      <td style="text-align: left" class="px-2">{{ student.Label }}</td>
-      <td style="text-align: center" v-for="tr in props.travaux" :key="tr.Id">
-        {{ getMark(tr, student) }}
-      </td>
-      <td style="text-align: right" class="pa-1">
+      <td class="px-2 text-left">{{ student.Label }}</td>
+      <td class="pa-1 text-center font-weight-bold">
         {{ getMoyenne(student) }}
+      </td>
+      <td class="text-center" v-for="tr in props.travaux" :key="tr.Id">
+        {{ getMark(tr, student) }}
       </td>
     </tr>
   </v-table>
