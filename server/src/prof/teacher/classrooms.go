@@ -417,6 +417,7 @@ func (ct *Controller) updateStudent(st tc.Student, userID tc.IdTeacher) error {
 	existing.Name = st.Name
 	existing.Surname = st.Surname
 	existing.Birthday = st.Birthday
+	existing.IsClientAttached = st.IsClientAttached
 	_, err = existing.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)

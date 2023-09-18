@@ -44,6 +44,15 @@
           label="Date de naissance"
         >
         </date-field>
+        <v-checkbox
+          class="mt-4"
+          density="compact"
+          v-model="studentToUpdate.IsClientAttached"
+          label="Application élève rattachée"
+          hint="Décocher pour renouveller la procédure de rattachement, en générant un code de connection."
+          persistent-hint
+          :disabled="!studentToUpdate.IsClientAttached"
+        ></v-checkbox>
       </v-card-text>
       <v-card-actions>
         <v-btn @click="studentToUpdate = null" color="warning">Retour</v-btn>
@@ -161,7 +170,7 @@
                     <v-icon icon="mdi-delete" color="red"></v-icon>
                   </v-btn>
                   <v-btn
-                    class="mx-2"
+                    class="mx-1"
                     size="x-small"
                     icon
                     @click="studentToUpdate = copy(student)"
