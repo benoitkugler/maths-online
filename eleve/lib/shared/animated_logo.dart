@@ -3,9 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class AnimatedLogo extends StatefulWidget {
-  final double successPercentage;
+  /// in [0;1]
+  final double successRatio;
 
-  const AnimatedLogo(this.successPercentage, {Key? key}) : super(key: key);
+  const AnimatedLogo(this.successRatio, {Key? key}) : super(key: key);
 
   @override
   State<AnimatedLogo> createState() => _AnimatedLogoState();
@@ -21,7 +22,7 @@ class _AnimatedLogoState extends State<AnimatedLogo>
     super.initState();
     controller = AnimationController(
         duration: const Duration(milliseconds: 1500), vsync: this);
-    animation = Tween(begin: 0.0, end: widget.successPercentage.clamp(0.0, 1.0))
+    animation = Tween(begin: 0.0, end: widget.successRatio.clamp(0.0, 1.0))
         .chain(CurveTween(curve: Curves.bounceOut))
         .animate(controller);
 
@@ -57,7 +58,7 @@ class _LogoPainter extends CustomPainter {
     final s = size.shortestSide;
     final center = Offset(size.width / 2, size.height / 2);
     final circleCrownRadius = s / 30;
-    final outerCircleRadius = s * 0.48;
+    final outerCircleRadius = s * 0.49;
     final innerCircleRadius = s * 0.35;
     canvas.drawCircle(center, s * 0.5, Paint()..color = Colors.white);
     canvas.drawCircle(center, outerCircleRadius, Paint()..color = bgColor);

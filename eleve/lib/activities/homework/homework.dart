@@ -7,6 +7,7 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/fields.dart';
 import 'package:eleve/shared/activity_start.dart';
+import 'package:eleve/shared/animated_logo.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src.dart';
@@ -336,6 +337,17 @@ class _FreeSheetList extends StatefulWidget {
     return out;
   }
 
+  static double progressionRatio(List<SheetProgression> group) {
+    int totalMark = 0;
+    int totalBareme = 0;
+    for (var sheet in group) {
+      final ma = sheetMark(sheet.tasks);
+      totalMark += ma.mark;
+      totalBareme += ma.bareme;
+    }
+    return totalMark.toDouble() / totalBareme;
+  }
+
   @override
   State<_FreeSheetList> createState() => __FreeSheetListState();
 }
@@ -379,7 +391,7 @@ class __FreeSheetListState extends State<_FreeSheetList> {
           dividerColor: Colors.lightBlue.withOpacity(0.8),
           expandedHeaderPadding: const EdgeInsets.all(6),
           children: List.generate(widget._groups.length, (index) {
-            final e = widget._groups[index];
+            final group = widget._groups[index];
             return ExpansionPanel(
                 backgroundColor: Colors.transparent,
                 canTapOnHeader: true,
@@ -389,22 +401,32 @@ class __FreeSheetListState extends State<_FreeSheetList> {
                     child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
-                              child: Text(e.key.isEmpty ? "Non classé" : e.key,
+                              child: Text(
+                                  group.key.isEmpty ? "Non classé" : group.key,
                                   style:
                                       Theme.of(context).textTheme.titleMedium),
                             ),
                             const SizedBox(width: 4),
-                            Chip(
-                              label: Text("${e.value.length}"),
-                              visualDensity: const VisualDensity(vertical: -2),
-                            ),
+                            isExpanded
+                                ? SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: AnimatedLogo(
+                                        _FreeSheetList.progressionRatio(
+                                            group.value)))
+                                : Chip(
+                                    label: Text("${group.value.length}"),
+                                    visualDensity:
+                                        const VisualDensity(vertical: -2),
+                                  ),
                           ],
                         ))),
                 body: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: e.value
+                  children: group.value
                       .map((e) => InkWell(
                             onTap: () => widget.onTap(e),
                             child: _SheetSummary(

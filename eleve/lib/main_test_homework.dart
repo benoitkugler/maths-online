@@ -104,7 +104,7 @@ class _API extends _FieldAPI implements HomeworkAPI {
       SheetProgression(
           1,
           Sheet(1, "Feuille en cours", !loadNonNoted,
-              DateTime.now().add(const Duration(days: 3)), 0, true, 1),
+              DateTime.now().add(const Duration(days: 3)), false, 0, true, 1),
           [
             const TaskProgressionHeader(
                 1,
@@ -132,17 +132,24 @@ class _API extends _FieldAPI implements HomeworkAPI {
       SheetProgression(
           3,
           Sheet(3, "Autre feuille en cours", !loadNonNoted,
-              DateTime.now().add(const Duration(days: 4)), 0, true, 1),
+              DateTime.now().add(const Duration(days: 4)), true, 0, true, 1),
           [
             const TaskProgressionHeader(1, "Ex 1", "Nombres complexes", false,
-                ProgressionExt([], 0), 0, 6),
+                ProgressionExt([], 0), 5, 6),
             const TaskProgressionHeader(
-                2, "Ex 2", "Entiers", false, ProgressionExt([], 0), 0, 5),
+                2, "Ex 2", "Entiers", false, ProgressionExt([], 0), 3, 5),
           ]),
       SheetProgression(
           2,
-          Sheet(2, "Feuille périmée", !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          Sheet(
+              2,
+              "Feuille périmée",
+              !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)),
+              true,
+              0,
+              true,
+              1),
           [
             const TaskProgressionHeader(
                 1,
@@ -157,8 +164,15 @@ class _API extends _FieldAPI implements HomeworkAPI {
           ]),
       SheetProgression(
           2,
-          Sheet(4, "Feuille périmée", !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          Sheet(
+              4,
+              "Feuille périmée",
+              !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)),
+              true,
+              0,
+              true,
+              1),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
@@ -167,8 +181,15 @@ class _API extends _FieldAPI implements HomeworkAPI {
           ]),
       SheetProgression(
           2,
-          Sheet(5, "Feuille périmée", !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          Sheet(
+              5,
+              "Feuille périmée",
+              !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)),
+              false,
+              0,
+              true,
+              1),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
@@ -177,8 +198,15 @@ class _API extends _FieldAPI implements HomeworkAPI {
           ]),
       SheetProgression(
           2,
-          Sheet(6, "Feuille périmée", !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          Sheet(
+              6,
+              "Feuille périmée",
+              !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)),
+              false,
+              0,
+              true,
+              1),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
@@ -187,8 +215,15 @@ class _API extends _FieldAPI implements HomeworkAPI {
           ]),
       SheetProgression(
           2,
-          Sheet(7, "Feuille périmée", !loadNonNoted,
-              DateTime.now().subtract(const Duration(days: 3)), 0, true, 1),
+          Sheet(
+              7,
+              "Feuille périmée",
+              !loadNonNoted,
+              DateTime.now().subtract(const Duration(days: 3)),
+              false,
+              0,
+              true,
+              1),
           [
             const TaskProgressionHeader(
                 1, "Ex 1", "", false, ProgressionExt([], 0), 0, 6),
