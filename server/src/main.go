@@ -335,6 +335,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/api/student/trivial/selfaccess", tvc.StudentGetSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/launch", tvc.StudentLaunchSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/start", tvc.StudentStartSelfaccess)
+	// trivial monitor
+	e.GET("/api/trivial/monitor", tvc.GetTrivialsMetrics)
 
 	// student client classroom managment
 	e.GET("/api/classroom/login", tc.CheckStudentClassroom)
