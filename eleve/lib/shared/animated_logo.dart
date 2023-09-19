@@ -22,7 +22,7 @@ class _AnimatedLogoState extends State<AnimatedLogo>
     super.initState();
     controller = AnimationController(
         duration: const Duration(milliseconds: 1500), vsync: this);
-    animation = Tween(begin: 0.0, end: widget.successRatio.clamp(0.0, 1.0))
+    animation = Tween(begin: 0.0, end: widget.successRatio.clamp(0.0, 0.99))
         .chain(CurveTween(curve: Curves.bounceOut))
         .animate(controller);
 
