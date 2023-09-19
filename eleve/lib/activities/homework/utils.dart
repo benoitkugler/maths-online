@@ -1,6 +1,6 @@
 String formatTime(DateTime time) {
   time = time.toLocal();
-  return "${_days[time.weekday]} ${time.day} ${_months[time.month]} ${time.year}, ${time.hour}h";
+  return "${_days[time.weekday]} ${time.day} ${_months[time.month]} ${time.year}, ${time.hour}h${time.minute}";
 }
 
 const _days = [
