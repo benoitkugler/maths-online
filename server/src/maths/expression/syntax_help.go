@@ -18,6 +18,9 @@ func (sh SyntaxHints) Append(other SyntaxHints) {
 
 // Text returns a french string using interpolation syntax $ $ for LaTeX
 func (sh SyntaxHints) Text() string {
+	if len(sh) == 0 {
+		return ""
+	}
 	var chunks []string
 	for hint := range sh {
 		chunks = append(chunks, hint.text())
