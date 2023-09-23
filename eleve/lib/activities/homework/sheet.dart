@@ -274,7 +274,7 @@ class _TaskList extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: const EdgeInsets.only(right: 8.0, bottom: 4),
                           child: ElevatedButton.icon(
                               onPressed: () => onReset(task),
                               icon: hasNotation

@@ -26,7 +26,8 @@ final questionComplexe = Question([
 const questionComplexeAnswers = {
   0: NumberAnswer(11.5),
   1: ExpressionAnswer("x^2 + 4 /8 "),
-  2: PointAnswer(IntCoord(3, 8)),
+  2: ExpressionAnswer("x^2 + 4 /8 "),
+  3: PointAnswer(IntCoord(3, 8)),
 };
 
 Question numberQuestion(String title) {
@@ -164,7 +165,15 @@ class _API implements HomeworkAPI {
               1),
           [
             const TaskProgressionHeader(
-                1, "Ex 1", "", false, ProgressionExt([], 0), 6, 6),
+                1,
+                "Ex 1",
+                "",
+                true,
+                ProgressionExt([
+                  [true]
+                ], -1),
+                6,
+                6),
             const TaskProgressionHeader(
                 2, "Ex 2", "", false, ProgressionExt([], 0), 4, 5),
           ]),
