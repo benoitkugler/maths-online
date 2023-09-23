@@ -57,11 +57,6 @@ class _ExerciceAPI implements ExerciceAPI {
     lastState = res;
     return res.ex;
   }
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) {
-    return api.checkExpressionSyntax(expression);
-  }
 }
 
 class SheetMarkNotification extends Notification {
@@ -130,7 +125,7 @@ class _SheetWState extends State<SheetW> {
 
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
-    final exController = ExerciceController(studentEx, null, exeAPI);
+    final exController = ExerciceController(studentEx, null);
     // actually launch the exercice
 
     // TODO: for now we always show a correction (when available)

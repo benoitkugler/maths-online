@@ -1,16 +1,14 @@
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ExpressionController extends FieldController {
-  final FieldAPI api;
   final TextEditingController textController;
 
   bool _isDirty = false;
 
-  ExpressionController(this.api, void Function() onEditDone,
+  ExpressionController(void Function() onEditDone,
       {bool showFractionHelp = false})
       : textController = TextEditingController(),
         super(onEditDone) {
@@ -26,10 +24,6 @@ class ExpressionController extends FieldController {
   void submit() {
     _isDirty = false;
     onChange();
-  }
-
-  Future<CheckExpressionOut> _checkExpressionSyntax() async {
-    return api.checkExpressionSyntax(getExpression());
   }
 
   @override
@@ -122,32 +116,12 @@ class ExpressionFieldW extends StatefulWidget {
 }
 
 class _ExpressionFieldWState extends State<ExpressionFieldW> {
-  void _showSyntaxError(String reason) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      backgroundColor: Colors.red,
-      content: Text.rich(TextSpan(children: [
-        const TextSpan(text: "Syntaxe invalide: "),
-        TextSpan(
-            text: reason, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ])),
-    ));
-  }
-
   void _submit() async {
     if (widget._controller.getExpression().isEmpty) {
       // return early
       widget._controller.submit();
       if (widget.onSubmitted != null) widget.onSubmitted!();
       return;
-    }
-    final rep = await widget._controller._checkExpressionSyntax();
-    setState(() {
-      widget._controller.setError(!rep.isValid);
-    });
-
-    if (!rep.isValid) {
-      _showSyntaxError(rep.reason);
     }
 
     widget._controller.submit();
@@ -171,9 +145,9 @@ class _ExpressionFieldWState extends State<ExpressionFieldW> {
         child: TextField(
           autofocus: widget.autofocus,
           enabled: widget._controller.isEnabled,
-          onSubmitted: (_) {
-            _submit();
-          },
+          // submitting trigger a focus change : do not call _submit twice
+          // onSubmitted:
+
           inputFormatters: [
             TextInputFormatter.withFunction((oldValue, newValue) {
               if (ExpressionFieldW.isTypingFunc(oldValue, newValue)) {

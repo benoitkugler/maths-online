@@ -25,10 +25,9 @@ class _STController {
 
   final void Function() onChange;
 
-  _STController(
-      FieldAPI api, int signsLength, int functionsLength, this.onChange)
+  _STController(int signsLength, int functionsLength, this.onChange)
       : xs = List<ExpressionController>.generate(
-            signsLength + 1, (index) => ExpressionController(api, onChange)),
+            signsLength + 1, (index) => ExpressionController(onChange)),
         functions = List<_FunctionSign>.generate(
             functionsLength, (index) => _FunctionSign(signsLength));
 
@@ -89,7 +88,6 @@ class _STController {
 }
 
 class SignTableController extends FieldController {
-  final FieldAPI api;
   final SignTableFieldBlock data;
 
   // setup when selecting a length
@@ -97,13 +95,12 @@ class SignTableController extends FieldController {
 
   int? get selectedSignsLength => _ct == null ? null : _ct!.xs.length - 1;
 
-  SignTableController(this.api, this.data, void Function() onChange)
-      : super(onChange);
+  SignTableController(this.data, void Function() onChange) : super(onChange);
 
   void setSignsLength(int? length) {
     _ct = length == null
         ? null
-        : _STController(api, length, data.labels.length, onChange);
+        : _STController(length, data.labels.length, onChange);
   }
 
   @override

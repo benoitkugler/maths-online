@@ -6,10 +6,8 @@ import 'dart:html' as html;
 import 'package:eleve/activities/trivialpoursuit/categories.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_shared.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_trivial.dart';
 import 'package:flutter/material.dart';
@@ -103,7 +101,6 @@ class _MonitorState extends State<_Monitor> {
           : QuestionW(
               _QuestionController(
                 content.question,
-                _NoFieldAPI(),
               ),
               content.categorie.color),
     );
@@ -111,17 +108,10 @@ class _MonitorState extends State<_Monitor> {
 }
 
 class _QuestionController extends BaseQuestionController {
-  _QuestionController(Question question, FieldAPI api) : super(question, api) {
+  _QuestionController(Question question) : super(question) {
     state.buttonEnabled = false;
   }
 
   @override
   void onPrimaryButtonClick() {}
-}
-
-class _NoFieldAPI implements FieldAPI {
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
 }

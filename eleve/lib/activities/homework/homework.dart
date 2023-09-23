@@ -5,12 +5,10 @@ import 'package:eleve/activities/homework/sheet.dart';
 import 'package:eleve/activities/homework/utils.dart';
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/shared/activity_start.dart';
 import 'package:eleve/shared/animated_logo.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_prof_homework.dart';
 import 'package:eleve/types/src_sql_homework.dart';
 import 'package:eleve/types/src_sql_tasks.dart';
@@ -24,7 +22,7 @@ extension on SheetProgression {
   Set<String> chapters() => tasks.map((e) => e.chapter).toSet();
 }
 
-abstract class HomeworkAPI extends FieldAPI {
+abstract class HomeworkAPI {
   Future<Sheets> loadSheets(bool loadNonNoted);
   Future<InstantiatedWork> loadWork(IdTask id);
   Future<StudentEvaluateTaskOut> evaluateExercice(
@@ -36,11 +34,6 @@ class ServerHomeworkAPI implements HomeworkAPI {
   final BuildMode buildMode;
   final String studentID;
   const ServerHomeworkAPI(this.buildMode, this.studentID);
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) {
-    return ServerFieldAPI(buildMode).checkExpressionSyntax(expression);
-  }
 
   @override
   Future<Sheets> loadSheets(loadNonNoted) async {

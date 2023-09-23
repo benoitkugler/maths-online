@@ -1,8 +1,5 @@
-import 'dart:math';
-
 import 'package:eleve/exercice/congratulations.dart';
 import 'package:eleve/exercice/home.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
@@ -12,25 +9,9 @@ import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
 
-const congratsMessages = [
-  "Yes !",
-  "Félicitations !",
-  "Bravissimo !",
-  "Oui oui oui !",
-  "Mais comment fais-tu ??",
-  "Tu n'es pas là pour beurrer des tartines",
-  "Tu n'es pas là pour enfiler des perles",
-  "C'est qui le meilleur ? ",
-  "The best for ever...",
-];
-
-String _randCongrats() {
-  return congratsMessages[Random().nextInt(congratsMessages.length)];
-}
-
 class NotificationExerciceDone extends Notification {}
 
-abstract class ExerciceAPI extends FieldAPI {
+abstract class ExerciceAPI {
   /// [evaluate] must evaluate the exercice answers, according
   /// to the exercice mode, and returns the feedback and the new version
   /// of the questions if needed
@@ -40,8 +21,8 @@ abstract class ExerciceAPI extends FieldAPI {
 class _ExerciceQuestionController extends BaseQuestionController {
   void Function() onClick;
 
-  _ExerciceQuestionController(Question question, FieldAPI api, this.onClick)
-      : super(question, api);
+  _ExerciceQuestionController(Question question, this.onClick)
+      : super(question);
 
   void markDone() {
     state.buttonLabel = "Question terminée";
@@ -87,11 +68,8 @@ class ExerciceController {
   /// and is filled by the widget using the controller
   void Function()? onValid;
 
-  final FieldAPI api;
-
-  ExerciceController(this.exeAndProg, this.questionIndex, this.api)
-      : _questions = [] {
-    _questions = _createControllers(api);
+  ExerciceController(this.exeAndProg, this.questionIndex) : _questions = [] {
+    _questions = _createControllers();
     _refreshStates();
   }
 
@@ -106,10 +84,9 @@ class ExerciceController {
     return exeAndProg.progression.questions[questionIndex!].isNotEmpty;
   }
 
-  List<_ExerciceQuestionController> _createControllers(FieldAPI api) {
+  List<_ExerciceQuestionController> _createControllers() {
     return exeAndProg.exercice.questions
-        .map((qu) =>
-            _ExerciceQuestionController(qu.question, api, _onQuestionValid))
+        .map((qu) => _ExerciceQuestionController(qu.question, _onQuestionValid))
         .toList();
   }
 
@@ -151,7 +128,7 @@ class ExerciceController {
 
   void resetWithNextQuestions(List<InstantiatedQuestion> nextQuestions) {
     exeAndProg = exeAndProg.copyWithQuestions(nextQuestions);
-    _questions = _createControllers(api);
+    _questions = _createControllers();
     reset();
   }
 

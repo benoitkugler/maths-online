@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_editor.dart';
@@ -10,8 +9,7 @@ class LoopackQuestionController extends BaseQuestionController {
   final void Function(QuestionAnswersIn) onValid;
 
   final LoopbackShowQuestion data;
-  LoopackQuestionController(this.data, FieldAPI api, this.onValid)
-      : super(data.question, api);
+  LoopackQuestionController(this.data, this.onValid) : super(data.question);
 
   @override
   void onPrimaryButtonClick() {

@@ -2,7 +2,6 @@ import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/main_test_questions.dart';
 import 'package:eleve/questions/debug.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
@@ -116,11 +115,6 @@ final workSequencial = InstantiatedWork(
 
 class _LoopbackAPI implements LoopbackAPI {
   _LoopbackAPI();
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {

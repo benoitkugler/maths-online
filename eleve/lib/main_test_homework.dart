@@ -1,8 +1,6 @@
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
-import 'package:eleve/questions/fields.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_prof_homework.dart';
@@ -14,15 +12,6 @@ import 'package:flutter/material.dart' hide Flow;
 
 void main() async {
   runApp(const _HomeworkTestApp());
-}
-
-class _FieldAPI implements FieldAPI {
-  _FieldAPI();
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
 }
 
 final questionComplexe = Question([
@@ -96,7 +85,7 @@ class _HomeworkTestApp extends StatelessWidget {
   }
 }
 
-class _API extends _FieldAPI implements HomeworkAPI {
+class _API implements HomeworkAPI {
   @override
   Future<Sheets> loadSheets(bool loadNonNoted) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));

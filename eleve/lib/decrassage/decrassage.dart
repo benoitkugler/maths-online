@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
@@ -12,15 +11,16 @@ import 'package:http/http.dart' as http;
 
 /// [DecrassageAPI] provides the logic to load a list
 /// of questions
-abstract class DecrassageAPI extends FieldAPI {
+abstract class DecrassageAPI {
   Future<InstantiateQuestionsOut> loadQuestions(List<int> ids);
   Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer);
 }
 
 /// [ServerDecrassageAPI] is the default implementation of
 /// [DecrassageAPI], using an http call to the server.
-class ServerDecrassageAPI extends ServerFieldAPI implements DecrassageAPI {
-  const ServerDecrassageAPI(super.buildMode);
+class ServerDecrassageAPI implements DecrassageAPI {
+  final BuildMode buildMode;
+  const ServerDecrassageAPI(this.buildMode);
 
   @override
   Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
@@ -48,8 +48,8 @@ class DecrassageQuestionController extends BaseQuestionController {
   final void Function(QuestionAnswersIn) onValid;
 
   DecrassageQuestionController(
-      this.questionIndex, Question question, FieldAPI api, this.onValid)
-      : super(question, api) {
+      this.questionIndex, Question question, this.onValid)
+      : super(question) {
     state.footerQuote = pickQuote();
   }
 
@@ -99,8 +99,8 @@ class _DecrassageState extends State<Decrassage> {
   }
 
   DecrassageQuestionController controllerForIndex(int questionIndex) {
-    return DecrassageQuestionController(questionIndex,
-        questions[questionIndex].question, widget.api, _evaluateQuestion);
+    return DecrassageQuestionController(
+        questionIndex, questions[questionIndex].question, _evaluateQuestion);
   }
 
   void _selectQuestion(int questionIndex) {

@@ -7,7 +7,6 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/exercice.dart';
 import 'package:eleve/loopback/question.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_maths_questions.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
@@ -55,12 +54,11 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       questionData = null;
       exerciceData = null;
     } else if (event is LoopbackShowQuestion) {
-      questionData =
-          LoopackQuestionController(event, widget.api, evaluateQuestionAnswer);
+      questionData = LoopackQuestionController(event, evaluateQuestionAnswer);
       exerciceData = null;
     } else if (event is LoopbackShowExercice) {
       questionData = null;
-      exerciceData = LoopbackExerciceController(event, widget.api);
+      exerciceData = LoopbackExerciceController(event);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _handleCorrection());
@@ -204,8 +202,9 @@ abstract class LoopbackAPI extends ExerciceAPI {
 
 /// [LoopbackServerAPI] is the defaut implementation for [LoopbackAPI]
 /// using a backend and http calls.
-class LoopbackServerAPI extends ServerFieldAPI implements LoopbackAPI {
-  const LoopbackServerAPI(super.buildMode);
+class LoopbackServerAPI implements LoopbackAPI {
+  final BuildMode buildMode;
+  const LoopbackServerAPI(this.buildMode);
 
   @override
   Future<LoopbackEvaluateQuestionOut> evaluateQuestionAnswer(

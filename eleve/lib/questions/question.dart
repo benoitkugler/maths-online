@@ -88,20 +88,20 @@ abstract class BaseQuestionController extends ChangeNotifier {
   /// later used when building widgets.
   ///
   /// [api] is used to validate expression syntax
-  BaseQuestionController(Question question, FieldAPI api)
+  BaseQuestionController(Question question)
       : state = QuestionState(question: question) {
-    state.fields = _createFieldControllers(question, api, onFieldChange);
+    state.fields = _createFieldControllers(question, onFieldChange);
   }
 }
 
 Map<int, FieldController> _createFieldControllers(
-    Question question, FieldAPI api, void Function() onChange) {
+    Question question, void Function() onChange) {
   final fields = <int, FieldController>{};
   for (var block in question.enonce) {
     if (block is NumberFieldBlock) {
       fields[block.iD] = NumberController(onChange);
     } else if (block is ExpressionFieldBlock) {
-      fields[block.iD] = ExpressionController(api, onChange,
+      fields[block.iD] = ExpressionController(onChange,
           showFractionHelp: block.showFractionHelp);
     } else if (block is RadioFieldBlock) {
       fields[block.iD] = RadioController(onChange, block.proposals);
@@ -113,9 +113,9 @@ Map<int, FieldController> _createFieldControllers(
       fields[block.iD] =
           GeometricConstructionController.fromBlock(onChange, block);
     } else if (block is VariationTableFieldBlock) {
-      fields[block.iD] = VariationTableController(api, block, onChange);
+      fields[block.iD] = VariationTableController(block, onChange);
     } else if (block is SignTableFieldBlock) {
-      fields[block.iD] = SignTableController(api, block, onChange);
+      fields[block.iD] = SignTableController(block, onChange);
     } else if (block is FunctionPointsFieldBlock) {
       fields[block.iD] = FunctionPointsController(block, onChange);
     } else if (block is TreeFieldBlock) {

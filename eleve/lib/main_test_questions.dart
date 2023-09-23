@@ -4,7 +4,6 @@ import 'package:eleve/exercice/exercice.dart';
 import 'package:eleve/loopback/question.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/questions/debug.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
@@ -17,15 +16,6 @@ import 'package:flutter/material.dart' hide Flow;
 
 void main() async {
   runApp(const _QuestionTestApp());
-}
-
-class _FieldAPI implements FieldAPI {
-  _FieldAPI();
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
 }
 
 final questionComplexe = Question([
@@ -84,6 +74,11 @@ const questionComplexeAnswers = {
   1: ExpressionAnswer("4 / (2x)"),
   2: ExpressionAnswer("x^2 + 4 /8 "),
   3: PointAnswer(IntCoord(3, 8)),
+  4: PointAnswer(IntCoord(3, 8)),
+  5: DoublePointAnswer(IntCoord(3, 8), IntCoord(3, 8)),
+  6: DoublePointPairAnswer(
+      IntCoord(3, 8), IntCoord(3, 8), IntCoord(3, 8), IntCoord(3, 8)),
+  10: TreeAnswer(TreeNodeAnswer([], [], 0))
 };
 
 Question numberQuestion(String title, {bool withCorrection = true}) {
@@ -216,7 +211,6 @@ class _TrivialInGame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InGameQuestionRoute(
-        _FieldAPI(),
         ShowQuestion(60, Categorie.blue, 0, questionComplexe),
         (a) => onValid(a, context));
   }
@@ -236,7 +230,6 @@ class _TrivialLast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LastQuestionRoute(
-      _FieldAPI(),
       ShowQuestion(60, Categorie.blue, 0, questionComplexe),
       onDone,
       questionComplexeAnswers,
@@ -245,11 +238,6 @@ class _TrivialLast extends StatelessWidget {
 }
 
 class _DecrassageAPI implements DecrassageAPI {
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-
   @override
   Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
     await Future<void>.delayed(const Duration(seconds: 1));
@@ -298,7 +286,6 @@ class _LoopbackQuestionState extends State<_LoopbackQuestion> {
     controller = LoopackQuestionController(
         LoopbackShowQuestion(questionComplexe, [], false,
             const server_questions.QuestionPage(null, null, null)),
-        _FieldAPI(),
         onValid);
     super.initState();
   }
@@ -353,11 +340,6 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
   _ExerciceSequentialAPI();
 
   @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-
-  @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final questionIndex = params.answers.keys.first;
     final answer = params.answers[questionIndex]!;
@@ -384,8 +366,8 @@ class _ExerciceSequential extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceSequentialAPI(),
-        ExerciceController(workSequencial, null, _FieldAPI()));
+    return ExerciceW(
+        _ExerciceSequentialAPI(), ExerciceController(workSequencial, null));
   }
 }
 
@@ -399,7 +381,7 @@ class _LoopbackExerciceSequential extends StatefulWidget {
 
 class _LoopbackExerciceSequentialState
     extends State<_LoopbackExerciceSequential> {
-  ExerciceController ct = ExerciceController(workSequencial, null, _FieldAPI());
+  ExerciceController ct = ExerciceController(workSequencial, null);
 
   @override
   Widget build(BuildContext context) {
@@ -419,11 +401,6 @@ class _LoopbackExerciceSequentialState
 
 class _ExerciceParallelAPI implements ExerciceAPI {
   _ExerciceParallelAPI();
-
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
@@ -452,8 +429,8 @@ class _ExerciceParallel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExerciceW(_ExerciceParallelAPI(),
-        ExerciceController(workParallel, null, _FieldAPI()));
+    return ExerciceW(
+        _ExerciceParallelAPI(), ExerciceController(workParallel, null));
   }
 }
 
@@ -466,7 +443,7 @@ class _LoopbackExerciceParallel extends StatefulWidget {
 }
 
 class _LoopbackExerciceParallelState extends State<_LoopbackExerciceParallel> {
-  ExerciceController ct = ExerciceController(workParallel, null, _FieldAPI());
+  ExerciceController ct = ExerciceController(workParallel, null);
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,6 @@ import 'package:eleve/activities/trivialpoursuit/question.dart';
 import 'package:eleve/activities/trivialpoursuit/question_result.dart';
 import 'package:eleve/activities/trivialpoursuit/success_recap.dart';
 import 'package:eleve/build_mode.dart';
-import 'package:eleve/questions/fields.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:eleve/types/src_maths_questions_client.dart' hide Answer;
@@ -346,7 +345,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/question"),
       builder: (context) => InGameQuestionRoute(
-        ServerFieldAPI(widget.buildMode),
         event,
         (a) {
           // do not close the page now, it is handled when receiving result
@@ -365,7 +363,6 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
     Navigator.of(context).push(MaterialPageRoute<void>(
       settings: const RouteSettings(name: "/last-question"),
       builder: (context) => LastQuestionRoute(
-        ServerFieldAPI(widget.buildMode),
         lastQuestion!.question,
         () {
           Navigator.of(context).pop();
