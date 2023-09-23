@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:eleve/questions/dropdown.dart';
 import 'package:eleve/questions/expression.dart';
 import 'package:eleve/questions/fields.dart';
-import 'package:eleve/types/src.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -65,13 +64,6 @@ class TreeController extends FieldController {
   }
 }
 
-class _NoOpFieldApi implements FieldAPI {
-  @override
-  Future<CheckExpressionOut> checkExpressionSyntax(String expression) async {
-    return const CheckExpressionOut("", true);
-  }
-}
-
 class _NodeController {
   final bool isRoot;
   final DropDownController? valueController;
@@ -111,8 +103,7 @@ class _NodeController {
             onChange, shape.sublist(1), false, proposals, enabled));
 
     final edgesControllers = List<ExpressionController>.generate(
-        children.length,
-        (index) => ExpressionController(_NoOpFieldApi(), onChange));
+        children.length, (index) => ExpressionController(onChange));
     final dd = DropDownController(onChange, proposals);
     return _NodeController(isRoot, dd, children, edgesControllers);
   }
@@ -385,17 +376,28 @@ class _NodeEditableState extends State<_NodeEditable> {
       return;
     }
     showDialog<void>(
-        context: context,
-        builder: (context) => Dialog(
-            insetPadding: const EdgeInsets.all(16),
-            child: Center(
-              heightFactor: 2,
-              child: ExpressionFieldW(widget.color, cts[index], autofocus: true,
-                  onSubmitted: () {
-                Navigator.of(context).maybePop();
+      context: context,
+      builder: (context) => AlertDialog(
+        insetPadding: const EdgeInsets.all(16),
+        title: const Text("Modifier la probabilité"),
+        content: SizedBox(
+          width: 200,
+          child: ExpressionFieldW(
+            widget.color,
+            cts[index],
+            autofocus: true,
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
                 setState(() {});
-              }),
-            )));
+              },
+              child: const Text("OK"))
+        ],
+      ),
+    );
   }
 
   @override
