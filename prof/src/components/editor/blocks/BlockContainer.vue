@@ -41,10 +41,9 @@
           icon
           title="Ajouter un texte avec des conseils de syntaxe."
           size="x-small"
+          @click="emit('addSyntaxHint')"
         >
-          <v-icon small color="green" @click="emit('addSyntaxHint')"
-            >mdi-tooltip-plus</v-icon
-          >
+          <v-icon small color="green">mdi-tooltip-plus</v-icon>
         </v-btn>
         <v-btn
           v-if="showLaTeXDoc"
