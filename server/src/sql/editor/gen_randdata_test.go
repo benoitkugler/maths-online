@@ -169,15 +169,6 @@ func randSlicebool() []bool {
 	return out
 }
 
-func randSlicecli_FunctionSign() []client.FunctionSign {
-	l := 3 + rand.Intn(5)
-	out := make([]client.FunctionSign, l)
-	for i := range out {
-		out[i] = randcli_FunctionSign()
-	}
-	return out
-}
-
 func randSlicecli_SignSymbol() []client.SignSymbol {
 	l := 3 + rand.Intn(5)
 	out := make([]client.SignSymbol, l)
@@ -219,6 +210,15 @@ func randSliceque_FunctionPoint() []questions.FunctionPoint {
 	out := make([]questions.FunctionPoint, l)
 	for i := range out {
 		out[i] = randque_FunctionPoint()
+	}
+	return out
+}
+
+func randSliceque_FunctionSign() []questions.FunctionSign {
+	l := 3 + rand.Intn(5)
+	out := make([]questions.FunctionSign, l)
+	for i := range out {
+		out[i] = randque_FunctionSign()
 	}
 	return out
 }
@@ -316,15 +316,6 @@ func randSlicestring() []string {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
-}
-
-func randcli_FunctionSign() client.FunctionSign {
-	var s client.FunctionSign
-	s.Label = randstring()
-	s.FxSymbols = randSlicecli_SignSymbol()
-	s.Signs = randSlicebool()
-
-	return s
 }
 
 func randcli_SignSymbol() client.SignSymbol {
@@ -489,6 +480,15 @@ func randque_FunctionPointsFieldBlock() questions.FunctionPointsFieldBlock {
 	return s
 }
 
+func randque_FunctionSign() questions.FunctionSign {
+	var s questions.FunctionSign
+	s.Label = randque_Interpolated()
+	s.FxSymbols = randSlicecli_SignSymbol()
+	s.Signs = randSlicebool()
+
+	return s
+}
+
 func randque_FunctionsGraphBlock() questions.FunctionsGraphBlock {
 	var s questions.FunctionsGraphBlock
 	s.FunctionExprs = randSliceque_FunctionDefinition()
@@ -622,7 +622,7 @@ func randque_Rp() questions.Rp {
 func randque_SignTableBlock() questions.SignTableBlock {
 	var s questions.SignTableBlock
 	s.Xs = randSlicestring()
-	s.Functions = randSlicecli_FunctionSign()
+	s.Functions = randSliceque_FunctionSign()
 
 	return s
 }

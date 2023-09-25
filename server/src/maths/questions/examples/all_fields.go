@@ -191,7 +191,7 @@ var BlockList = [...]que.Block{
 			"1/2",
 			"3",
 		},
-		Functions: []client.FunctionSign{
+		Functions: []que.FunctionSign{
 			{
 				Label: "g",
 				FxSymbols: []client.SignSymbol{

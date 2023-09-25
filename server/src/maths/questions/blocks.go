@@ -427,9 +427,15 @@ func (vt VariationTableBlock) setupValidator(ex.RandomParameters) (validator, er
 	return out, nil
 }
 
+type FunctionSign struct {
+	Label     Interpolated
+	FxSymbols []client.SignSymbol
+	Signs     []bool
+}
+
 type SignTableBlock struct {
 	Xs        []string // valid expression
-	Functions []client.FunctionSign
+	Functions []FunctionSign
 }
 
 func (st SignTableBlock) instantiate(params ex.Vars, _ int) (instance, error) {
@@ -439,7 +445,7 @@ func (st SignTableBlock) instantiate(params ex.Vars, _ int) (instance, error) {
 func (st SignTableBlock) instantiateST(params ex.Vars) (SignTableInstance, error) {
 	out := SignTableInstance{
 		Xs:        make([]*ex.Expr, len(st.Xs)),
-		Functions: append([]client.FunctionSign(nil), st.Functions...),
+		Functions: make([]client.FunctionSign, len(st.Functions)),
 	}
 	var err error
 	for i, c := range st.Xs {
@@ -449,6 +455,17 @@ func (st SignTableBlock) instantiateST(params ex.Vars) (SignTableInstance, error
 		}
 		out.Xs[i].Substitute(params)
 	}
+	for i, fn := range st.Functions {
+		label, err := fn.Label.instantiateAndMerge(params)
+		if err != nil {
+			return out, err
+		}
+		out.Functions[i] = client.FunctionSign{
+			Label:     label,
+			FxSymbols: fn.FxSymbols,
+			Signs:     fn.Signs,
+		}
+	}
 	return out, nil
 }
 
@@ -457,9 +474,16 @@ func (st SignTableBlock) setupValidator(ex.RandomParameters) (validator, error) 
 		return nil, errors.New("Au moins deux colonnes sont attendues.")
 	}
 
-	for _, function := range st.Functions {
+	labels := make([]TextParts, len(st.Functions))
+	for i, function := range st.Functions {
 		if len(st.Xs) != len(function.FxSymbols) || len(function.Signs) != len(st.Xs)-1 {
 			return nil, errors.New("internal error: unexpected length for X and Fx")
+		}
+
+		var err error
+		labels[i], err = function.Label.parse()
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -470,7 +494,7 @@ func (st SignTableBlock) setupValidator(ex.RandomParameters) (validator, error) 
 		}
 	}
 
-	return noOpValidator{}, nil
+	return signTableValidator{labels: labels}, nil
 }
 
 type FigureBlock struct {

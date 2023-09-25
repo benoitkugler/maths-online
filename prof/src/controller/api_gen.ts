@@ -190,6 +190,12 @@ export interface FunctionPointsFieldBlock {
   Variable: Variable;
   XGrid: string[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionSign
+export interface FunctionSign {
+  Label: Interpolated;
+  FxSymbols: SignSymbol[] | null;
+  Signs: boolean[] | null;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionsGraphBlock
 export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
@@ -437,12 +443,6 @@ export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Or]: "Ou",
 };
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionSign
-export interface FunctionSign {
-  Label: string;
-  FxSymbols: SignSymbol[] | null;
-  Signs: boolean[] | null;
-}
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
 export enum SignSymbol {
   Nothing = 0,
@@ -1545,8 +1545,8 @@ export abstract class AbstractAPI {
   protected async rawValidateInscription(params: { data: string }) {
     const fullUrl = this.baseUrl + "inscription";
     await Axios.get(fullUrl, {
-      params: { data: params["data"] },
       headers: this.getHeaders(),
+      params: { data: params["data"] },
     });
     return true;
   }
@@ -1590,8 +1590,8 @@ export abstract class AbstractAPI {
   protected async rawTeacherResetPassword(params: { mail: string }) {
     const fullUrl = this.baseUrl + "/api/prof/reset";
     await Axios.get(fullUrl, {
-      params: { mail: params["mail"] },
       headers: this.getHeaders(),
+      params: { mail: params["mail"] },
     });
     return true;
   }
@@ -1719,8 +1719,8 @@ export abstract class AbstractAPI {
   protected async rawTeacherDeleteClassroom(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -1744,8 +1744,8 @@ export abstract class AbstractAPI {
   }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     const rep: AxiosResponse<Student[] | null> = await Axios.get(fullUrl, {
-      params: { "id-classroom": String(params["id-classroom"]) },
       headers: this.getHeaders(),
+      params: { "id-classroom": String(params["id-classroom"]) },
     });
     return rep.data;
   }
@@ -1769,8 +1769,8 @@ export abstract class AbstractAPI {
   protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     const rep: AxiosResponse<Student> = await Axios.put(fullUrl, null, {
-      params: { "id-classroom": String(params["id-classroom"]) },
       headers: this.getHeaders(),
+      params: { "id-classroom": String(params["id-classroom"]) },
     });
     return rep.data;
   }
@@ -1812,8 +1812,8 @@ export abstract class AbstractAPI {
   protected async rawTeacherDeleteStudent(params: { "id-student": number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     await Axios.delete(fullUrl, {
-      params: { "id-student": String(params["id-student"]) },
       headers: this.getHeaders(),
+      params: { "id-student": String(params["id-student"]) },
     });
     return true;
   }
@@ -1865,8 +1865,8 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<GenerateClassroomCodeOut> = await Axios.get(
       fullUrl,
       {
-        params: { "id-classroom": String(params["id-classroom"]) },
         headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
       },
     );
     return rep.data;
@@ -1891,8 +1891,8 @@ export abstract class AbstractAPI {
   protected async rawGetTrivialPoursuit(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     const rep: AxiosResponse<TrivialExt[] | null> = await Axios.get(fullUrl, {
-      params: { matiere: params["matiere"] },
       headers: this.getHeaders(),
+      params: { matiere: params["matiere"] },
     });
     return rep.data;
   }
@@ -1914,8 +1914,8 @@ export abstract class AbstractAPI {
   protected async rawCreateTrivialPoursuit(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     const rep: AxiosResponse<TrivialExt> = await Axios.put(fullUrl, null, {
-      params: { matiere: params["matiere"] },
       headers: this.getHeaders(),
+      params: { matiere: params["matiere"] },
     });
     return rep.data;
   }
@@ -1959,8 +1959,8 @@ export abstract class AbstractAPI {
   protected async rawDeleteTrivialPoursuit(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -2002,8 +2002,8 @@ export abstract class AbstractAPI {
   protected async rawDuplicateTrivialPoursuit(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config/duplicate";
     const rep: AxiosResponse<TrivialExt> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2074,8 +2074,8 @@ export abstract class AbstractAPI {
   protected async rawTrivialGetSelfaccess(params: { "id-trivial": number }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
     const rep: AxiosResponse<TrivialSelfaccess> = await Axios.get(fullUrl, {
-      params: { "id-trivial": String(params["id-trivial"]) },
       headers: this.getHeaders(),
+      params: { "id-trivial": String(params["id-trivial"]) },
     });
     return rep.data;
   }
@@ -2167,8 +2167,8 @@ export abstract class AbstractAPI {
   protected async rawStartTrivialGame(params: { "game-id": string }) {
     const fullUrl = this.baseUrl + "/api/trivial/sessions/start";
     await Axios.post(fullUrl, null, {
-      params: { "game-id": params["game-id"] },
       headers: this.getHeaders(),
+      params: { "game-id": params["game-id"] },
     });
     return true;
   }
@@ -2300,8 +2300,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDuplicateQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/duplicate";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2323,8 +2323,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
     await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -2390,8 +2390,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDeleteQuestiongroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
     const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2457,8 +2457,8 @@ export abstract class AbstractAPI {
   protected async rawEditorGetQuestions(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
     const rep: AxiosResponse<Question[] | null> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2480,8 +2480,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDeleteQuestion(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
     const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2671,8 +2671,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDeleteExercicegroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
     const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2716,8 +2716,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDuplicateExercicegroup(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
     await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -2739,8 +2739,8 @@ export abstract class AbstractAPI {
   protected async rawEditorGetExerciceContent(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2786,8 +2786,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDeleteExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -2831,8 +2831,8 @@ export abstract class AbstractAPI {
   protected async rawEditorDuplicateExercice(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";
     const rep: AxiosResponse<ExerciceHeader> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -3071,8 +3071,8 @@ export abstract class AbstractAPI {
   protected async rawHomeworkGetSheets(params: { matiere: string }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     const rep: AxiosResponse<Homeworks> = await Axios.get(fullUrl, {
-      params: { matiere: params["matiere"] },
       headers: this.getHeaders(),
+      params: { matiere: params["matiere"] },
     });
     return rep.data;
   }
@@ -3136,8 +3136,8 @@ export abstract class AbstractAPI {
   protected async rawHomeworkDeleteSheet(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -3206,8 +3206,8 @@ export abstract class AbstractAPI {
       fullUrl,
       null,
       {
-        params: { "id-classroom": String(params["id-classroom"]) },
         headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
       },
     );
     return rep.data;
@@ -3250,8 +3250,8 @@ export abstract class AbstractAPI {
   protected async rawHomeworkDeleteTravail(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -3297,8 +3297,8 @@ export abstract class AbstractAPI {
   protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
     await Axios.delete(fullUrl, {
-      params: { "id-task": String(params["id-task"]) },
       headers: this.getHeaders(),
+      params: { "id-task": String(params["id-task"]) },
     });
     return true;
   }
@@ -3344,8 +3344,8 @@ export abstract class AbstractAPI {
   }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
     const rep: AxiosResponse<Monoquestion> = await Axios.get(fullUrl, {
-      params: { "id-monoquestion": String(params["id-monoquestion"]) },
       headers: this.getHeaders(),
+      params: { "id-monoquestion": String(params["id-monoquestion"]) },
     });
     return rep.data;
   }
@@ -3392,10 +3392,10 @@ export abstract class AbstractAPI {
     const fullUrl =
       this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
     const rep: AxiosResponse<RandomMonoquestion> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
       params: {
         "id-randommonoquestion": String(params["id-randommonoquestion"]),
       },
-      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -3537,8 +3537,8 @@ export abstract class AbstractAPI {
   protected async rawHomeworkGetDispenses(params: { "id-travail": number }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
     const rep: AxiosResponse<Exceptions> = await Axios.get(fullUrl, {
-      params: { "id-travail": String(params["id-travail"]) },
       headers: this.getHeaders(),
+      params: { "id-travail": String(params["id-travail"]) },
     });
     return rep.data;
   }
@@ -3624,8 +3624,8 @@ export abstract class AbstractAPI {
   protected async rawReviewLoad(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return rep.data;
   }
@@ -3647,8 +3647,8 @@ export abstract class AbstractAPI {
   protected async rawReviewLoadTarget(params: { "id-review": number }) {
     const fullUrl = this.baseUrl + "/api/prof/review/target";
     const rep: AxiosResponse<LoadTargetOut> = await Axios.get(fullUrl, {
-      params: { "id-review": String(params["id-review"]) },
       headers: this.getHeaders(),
+      params: { "id-review": String(params["id-review"]) },
     });
     return rep.data;
   }
@@ -3670,8 +3670,8 @@ export abstract class AbstractAPI {
   protected async rawReviewDelete(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -3733,8 +3733,8 @@ export abstract class AbstractAPI {
   protected async rawReviewAccept(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/prof/review/accept";
     await Axios.post(fullUrl, null, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }

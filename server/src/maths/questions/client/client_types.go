@@ -74,7 +74,7 @@ type VariationTableBlock struct {
 }
 
 type FunctionSign struct {
-	Label     string
+	Label     string       // printed in math mode
 	FxSymbols []SignSymbol // one for each X, alternate with [Signs]
 	Signs     []bool       // is positive, with length len(Xs) - 1
 }

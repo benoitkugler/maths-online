@@ -189,6 +189,11 @@ type variationTableValidator struct {
 }
 
 func (v variationTableValidator) validate(vars expression.Vars) error {
+	_, err := v.label.instantiateAndMerge(vars)
+	if err != nil {
+		return err
+	}
+
 	for _, c := range v.fxs {
 		err := c.IsValidNumber(vars, false, true)
 		if err != nil {
@@ -197,6 +202,20 @@ func (v variationTableValidator) validate(vars expression.Vars) error {
 	}
 
 	return expression.AreSortedNumbers(v.xs, vars)
+}
+
+type signTableValidator struct {
+	labels []TextParts
+}
+
+func (v signTableValidator) validate(vars expression.Vars) error {
+	for _, label := range v.labels {
+		_, err := label.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type figureValidator struct {

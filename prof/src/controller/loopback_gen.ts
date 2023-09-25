@@ -142,6 +142,12 @@ export interface FunctionPointsFieldBlock {
   Variable: Variable;
   XGrid: string[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionSign
+export interface FunctionSign {
+  Label: Interpolated;
+  FxSymbols: SignSymbol[] | null;
+  Signs: boolean[] | null;
+}
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionsGraphBlock
 export interface FunctionsGraphBlock {
   FunctionExprs: FunctionDefinition[] | null;
@@ -383,12 +389,6 @@ export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Or]: "Ou",
 };
 
-// github.com/benoitkugler/maths-online/server/src/maths/questions/client.FunctionSign
-export interface FunctionSign {
-  Label: string;
-  FxSymbols: SignSymbol[] | null;
-  Signs: boolean[] | null;
-}
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
 export enum SignSymbol {
   Nothing = 0,

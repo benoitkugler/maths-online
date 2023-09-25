@@ -41,6 +41,9 @@ func (s Interpolated) instantiate(params expression.Vars) (client.TextLine, erro
 	return parsed.instantiate(params)
 }
 
+// instantiateAndMerge parse, instantiate and merge all the chunks back.
+// this will produce the expected output on the client if all the contents are to be displayed in the
+// same mode
 func (s Interpolated) instantiateAndMerge(params expression.Vars) (string, error) {
 	parsed, err := s.parse()
 	if err != nil {
