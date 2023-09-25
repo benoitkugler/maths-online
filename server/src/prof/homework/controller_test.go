@@ -183,9 +183,16 @@ func TestStudentSheets(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	// open sheet 1 and 2 ...
-	_, err = ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh1.Id, IdClassroom: class.Id}, userID)
+	tr1, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh1.Id, IdClassroom: class.Id}, userID)
 	tu.AssertNoErr(t, err)
-	_, err = ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh2.Id, IdClassroom: class.Id}, userID)
+	tr2, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh2.Id, IdClassroom: class.Id}, userID)
+	tu.AssertNoErr(t, err)
+
+	tr1.ShowAfter = ho.Time(time.Now().Add(-time.Second))
+	err = ct.updateTravail(tr1, userID)
+	tu.AssertNoErr(t, err)
+	tr2.ShowAfter = ho.Time(time.Now().Add(-time.Second))
+	err = ct.updateTravail(tr2, userID)
 	tu.AssertNoErr(t, err)
 
 	sheets, err = ct.getStudentSheets(student.Id, true)

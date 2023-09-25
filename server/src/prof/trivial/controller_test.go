@@ -41,10 +41,15 @@ func TestGetConfig(t *testing.T) {
 	user2, err := teacher.Teacher{Mail: "2", FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	c1, err := tr.Trivial{IdTeacher: user1.Id}.Insert(db)
+	mathTags := tr.CategoriesQuestions{
+		Tags: [5]tr.QuestionCriterion{
+			{{{Tag: string(teacher.Mathematiques), Section: editor.Matiere}}},
+		},
+	}
+	c1, err := tr.Trivial{IdTeacher: user1.Id, Questions: mathTags}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	_, err = tr.Trivial{IdTeacher: user2.Id}.Insert(db)
+	_, err = tr.Trivial{IdTeacher: user2.Id, Questions: mathTags}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	ct := NewController(db.DB, pass.Encrypter{}, "", user1)
