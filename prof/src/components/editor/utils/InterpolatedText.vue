@@ -7,7 +7,7 @@
       :tokenizer="props.customTokenize ? props.customTokenize : defautTokenize"
       :focus-color="activeColor"
       :center="!!props.center"
-      class="mb-3"
+      :class="props.hint ? 'mb-3' : ''"
     ></HiglightedText>
     <small v-if="props.hint" class="text-grey">{{ props.hint }} </small>
   </div>
