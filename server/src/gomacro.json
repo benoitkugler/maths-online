@@ -88,6 +88,20 @@
             "Output": "sql/reviews/gen_randdata_test.go"
         }
     ],
+    "sql/events/models.go": [
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/events/gen_scans.go"
+        },
+        {
+            "Mode": "sql",
+            "Output": "sql/events/gen_create.sql"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/events/gen_randdata_test.go"
+        }
+    ],
     "maths/questions/blocks_field_proof.go": [
         {
             "Mode": "go/unions",
