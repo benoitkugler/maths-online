@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/events"
+	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
@@ -111,6 +112,13 @@ func TestSQL(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	adv := NewAdvance(l)
 	tu.Assert(t, len(adv) == 3)
+
+	points, err := RegisterEvents(db.DB, student.Id, events.E_All_QuestionWrong, events.E_IsyTriv_Win)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, points == 1+300)
+
+	_, err = RegisterEvents(db.DB, student.Id, events.EventK(events.NbEvents+1))
+	tu.Assert(t, err != nil)
 }
 
 func TestAdvance_connectStreaks(t *testing.T) {
@@ -170,6 +178,69 @@ func TestAdvance_connectStreaks(t *testing.T) {
 		}
 		if gotNb30 != tt.wantNb30 {
 			t.Errorf("Advance.connectStreaks() gotNb30 = %v, want %v", gotNb30, tt.wantNb30)
+		}
+	}
+}
+
+func TestAdvance_Events(t *testing.T) {
+	tests := []struct {
+		adv            Advance
+		wantOccurences [evs.NbEvents]int
+	}{
+		{
+			Advance{}, [11]int{},
+		},
+		{
+			Advance{
+				{0, e(0, 1, 2)},
+			},
+			[11]int{1, 1, 1},
+		},
+		{
+			Advance{
+				{0, e(0, 1, 2)},
+				{1, e(0, 1, 2)},
+			},
+			[11]int{2, 2, 2},
+		},
+		{
+			Advance{
+				{0, e(0, 1, 2)},
+				{1, e(0, 1, 2)},
+				{2, e(0, 1, 2)},
+			},
+			[11]int{0: 3, 1: 3, 2: 3, events.E_ConnectStreak3: 1},
+		},
+	}
+	for _, tt := range tests {
+		if gotOccurences := tt.adv.Occurences(); gotOccurences != tt.wantOccurences {
+			t.Errorf("Advance.Events() = %v, want %v", gotOccurences, tt.wantOccurences)
+		}
+	}
+}
+
+func TestAdvance_TotalPoints(t *testing.T) {
+	tests := []struct {
+		adv  Advance
+		want int
+	}{
+		{
+			Advance{}, 0,
+		},
+		{
+			Advance{
+				{0, e(1, 1, 1)},
+			}, 3 * 40,
+		},
+		{
+			Advance{
+				{0, e(0, 0, 0)}, // unique
+			}, 30,
+		},
+	}
+	for _, tt := range tests {
+		if got := tt.adv.TotalPoints(); got != tt.want {
+			t.Errorf("Advance.TotalPoints() = %v, want %v", got, tt.want)
 		}
 	}
 }

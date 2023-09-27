@@ -1,31 +1,57 @@
 // Package events implements an event system
 // to reward student progression across the whole app.
+//
+// See https://docs.google.com/spreadsheets/d/1nY7zKsZ6JjW51QDSbt7OgaVSqzL-UoBHu6Qp6C3P7XQ
 package events
 
 import (
+	"database/sql"
 	"sort"
 	"time"
 
 	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
+	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
+
+type pointResolver interface {
+	resolve(nbOccurences int) int
+}
+
+// all events have the same score
+type constResolver int
+
+func (cr constResolver) resolve(nbOccurences int) int {
+	return int(cr) * nbOccurences
+}
+
+// only one event is taken into account
+type uniqueResolver int
+
+func (ur uniqueResolver) resolve(nbOccurences int) int {
+	if nbOccurences >= 1 {
+		return int(ur)
+	}
+	return 0
+}
 
 type eventProperties struct {
 	basePoint int
 	isUnique  bool
 }
 
-var properties = [...]eventProperties{
-	evs.E_IsyTriv_Create:       {30, true},
-	evs.E_IsyTriv_Streak3:      {40, false},
-	evs.E_IsyTriv_Win:          {300, false},
-	evs.E_Homework_TaskDone:    {40, false},
-	evs.E_Homework_TravailDone: {100, false},
-	evs.E_All_QuestionRight:    {5, false},
-	evs.E_All_QuestionWrong:    {1, false},
-	evs.E_Misc_SetPlaylist:     {30, true},
-	evs.E_ConnectStreak3:       {20, false},
-	evs.E_ConnectStreak7:       {50, false},
-	evs.E_ConnectStreak30:      {400, false},
+var properties = [evs.NbEvents]pointResolver{
+	evs.E_IsyTriv_Create:       uniqueResolver(30),
+	evs.E_IsyTriv_Streak3:      constResolver(40),
+	evs.E_IsyTriv_Win:          constResolver(300),
+	evs.E_Homework_TaskDone:    constResolver(40),
+	evs.E_Homework_TravailDone: constResolver(100),
+	evs.E_All_QuestionRight:    constResolver(5),
+	evs.E_All_QuestionWrong:    constResolver(1),
+	evs.E_Misc_SetPlaylist:     uniqueResolver(30),
+	evs.E_ConnectStreak3:       constResolver(20),
+	evs.E_ConnectStreak7:       constResolver(50),
+	evs.E_ConnectStreak30:      constResolver(400),
 }
 
 var refT = time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -136,4 +162,69 @@ func (adv Advance) Flames() int {
 	}
 
 	return start - currentDay
+}
+
+func (adv Advance) TotalPoints() int {
+	// for now, the occurences are sufficient to compute the points
+	oc := adv.Occurences()
+	total := 0
+	for ev, nb := range oc {
+		resolver := properties[ev]
+		total += resolver.resolve(nb)
+	}
+	return total
+}
+
+// Occurences returns the number of realisation for each event,
+// including the dynamic ones (deduced from others).
+func (adv Advance) Occurences() (occurences [evs.NbEvents]int) {
+	for _, day := range adv {
+		for _, ev := range day.events {
+			occurences[ev]++
+		}
+	}
+
+	// add the dynamic events
+	nb3, nb7, nb30 := adv.connectStreaks()
+	occurences[evs.E_ConnectStreak3] = nb3
+	occurences[evs.E_ConnectStreak7] = nb7
+	occurences[evs.E_ConnectStreak30] = nb30
+
+	return
+}
+
+// RegisterEvents stores the given events for the given student at the present time.
+//
+// It returns the number of points earned by the student.
+func RegisterEvents(db *sql.DB, idStudent teacher.IdStudent, events ...evs.EventK) (int, error) {
+	eventsBefore, err := evs.SelectEventsByIdStudents(db, idStudent)
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	advanceBefore := NewAdvance(eventsBefore)
+
+	newEvents := make(evs.Events, len(events))
+	for i, ev := range events {
+		newEvents[i] = evs.Event{IdStudent: idStudent, Date: evs.Date(time.Now()), Event: ev}
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+	err = evs.InsertManyEvents(tx, newEvents...)
+	if err != nil {
+		_ = tx.Rollback()
+		return 0, utils.SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return 0, utils.SQLError(err)
+	}
+
+	eventsAfter := append(eventsBefore, newEvents...)
+	advanceAfter := NewAdvance(eventsAfter)
+
+	score := advanceAfter.TotalPoints() - advanceBefore.TotalPoints()
+	return score, nil
 }
