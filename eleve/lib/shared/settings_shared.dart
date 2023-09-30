@@ -17,16 +17,17 @@ class UserSettings {
   UserSettings(
       {this.studentPseudo = "",
       this.studentID = "",
-      this.songs = Audio.defaultPlaylist,
+      PlaylistController? songs,
       Map<String, String>? trivialGameMetas,
       this.hasBeenLaunched = false})
-      : trivialGameMetas = trivialGameMetas ?? {};
+      : trivialGameMetas = trivialGameMetas ?? {},
+        songs = songs ?? PlaylistController([], false);
 
   String toJson() {
     return jsonEncode({
       studentPseudoKey: studentPseudo,
       studentIDKey: studentID,
-      "songs": songs,
+      "songs": songs.toJson(),
       "trivialGameMetas": trivialGameMetas,
       "hasBeenLaunched": hasBeenLaunched,
     });
@@ -34,16 +35,19 @@ class UserSettings {
 
   factory UserSettings.fromJson(String source) {
     final dict = jsonDecode(source) as Map<String, dynamic>;
-    var songs = [0, 1];
-    if (dict["songs"] is List) {
-      songs = (dict["songs"] as List<dynamic>).map((e) => e as int).toList();
+
+    PlaylistController? songs;
+    if (dict.containsKey("songs")) {
+      songs = PlaylistController.fromJson(dict["songs"]);
     }
+
     final gameMetas = (dict["trivialGameMetas"] ?? <String, dynamic>{})
         as Map<String, dynamic>;
+
     return UserSettings(
       studentPseudo: (dict[studentPseudoKey] ?? "") as String,
       studentID: (dict[studentIDKey] ?? "") as String,
-      songs: songs,
+      songs: songs ?? Audio.defaultPlaylist,
       trivialGameMetas:
           gameMetas.map((key, value) => MapEntry(key, value as String)),
       hasBeenLaunched: (dict["hasBeenLaunched"] ?? false) as bool,

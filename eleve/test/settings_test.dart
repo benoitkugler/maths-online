@@ -1,3 +1,4 @@
+import 'package:eleve/shared/audio.dart';
 import 'package:eleve/shared/settings_mobile.dart';
 import 'package:eleve/shared/settings_shared.dart';
 import 'package:flutter/foundation.dart';
@@ -23,13 +24,20 @@ void main() {
     final handler = FileSettings();
 
     final settings = UserSettings(
-        studentID: "msùlsùd", songs: [4, 56], trivialGameMetas: {"1": "2"});
+        studentID: "msùlsùd",
+        songs: PlaylistController([4, 56], true),
+        trivialGameMetas: {"1": "2"});
     await handler.save(settings);
 
     final settings2 = await handler.load();
     expect(settings.studentID, equals(settings2.studentID));
-    expect(listEquals(settings.songs, settings2.songs), equals(true));
+    expect(
+        listEquals(settings.songs.songs, settings2.songs.songs), equals(true));
+    expect(settings.songs.random, settings2.songs.random);
     expect(mapEquals(settings.trivialGameMetas, settings2.trivialGameMetas),
         equals(true));
+
+    final oldVersion = UserSettings.fromJson("""{"songs" :[0, 1]}""");
+    expect(listEquals(oldVersion.songs.songs, [0, 1]), true);
   });
 }

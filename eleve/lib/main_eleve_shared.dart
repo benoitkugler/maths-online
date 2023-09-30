@@ -81,7 +81,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _showAudioSettings() {
-    final ct = widget.audioPlayer.playlist.toList();
+    final ct = widget.audioPlayer.playlist;
     final onPop = Navigator.of(context)
         .push<void>(MaterialPageRoute<void>(builder: (_) => Playlist(ct)));
     onPop.then((_) async {
