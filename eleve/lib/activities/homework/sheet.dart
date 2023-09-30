@@ -47,14 +47,17 @@ class _ExerciceAPI implements ExerciceAPI {
   final IdTask idTask;
   final IdTravail idTravail;
 
-  StudentEvaluateTaskOut? lastState;
+  // last state registred on the server
+  StudentEvaluateTaskOut? lastRegistredState;
 
   _ExerciceAPI(this.api, this.idTask, this.idTravail);
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final res = await api.evaluateExercice(idTask, idTravail, params);
-    lastState = res;
+    if (res.wasProgressionRegistred) {
+      lastRegistredState = res;
+    }
     return res.ex;
   }
 }
@@ -126,6 +129,7 @@ class _SheetWState extends State<SheetW> {
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
     final exController = ExerciceController(studentEx, null);
+
     // actually launch the exercice
 
     // TODO: for now we always show a correction (when available)
@@ -137,9 +141,10 @@ class _SheetWState extends State<SheetW> {
               showCorrectionButtonOnFail: true,
               noticeSandbox: sandbox,
             )));
+    if (!mounted) return;
 
-    if (exeAPI.lastState != null && !sandbox) {
-      final state = exeAPI.lastState!;
+    if (exeAPI.lastRegistredState != null && !sandbox) {
+      final state = exeAPI.lastRegistredState!;
       final notif = SheetMarkNotification(
           widget.sheet.sheet.id, task.id, state.ex.progression, state.mark);
 
