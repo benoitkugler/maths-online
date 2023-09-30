@@ -21,7 +21,7 @@ class UserSettings {
       Map<String, String>? trivialGameMetas,
       this.hasBeenLaunched = false})
       : trivialGameMetas = trivialGameMetas ?? {},
-        songs = songs ?? PlaylistController([], false);
+        songs = songs ?? Audio.defaultPlaylist;
 
   String toJson() {
     return jsonEncode({
