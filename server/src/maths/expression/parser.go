@@ -263,9 +263,29 @@ func (pr *parser) parseOperator(op operator, pos int, acceptSemiColon bool) (*Ex
 		stopOp = pow - 1
 	}
 
-	right, err := pr.parseUntil(stopOp, acceptSemiColon)
-	if err != nil {
-		return nil, err
+	var (
+		right *Expr
+		err   error
+	)
+	// special case ..^-<exponent>, quite natural in practice
+	if op == pow && pr.tk.Peek().data == minus {
+		_ = pr.tk.Next() // consume minus
+		if next := pr.tk.Peek(); next.data == nil || next.data == closePar {
+			return nil, ErrInvalidExpr{
+				Reason: fmt.Sprintf("expression manquante après une puissance négative"),
+				Pos:    pos,
+			}
+		}
+		expr, err := pr.parseOneNode(acceptSemiColon)
+		if err != nil {
+			return nil, err
+		}
+		right = &Expr{atom: minus, right: expr}
+	} else {
+		right, err = pr.parseUntil(stopOp, acceptSemiColon)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if right == nil {
