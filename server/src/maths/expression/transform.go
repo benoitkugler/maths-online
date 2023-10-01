@@ -474,6 +474,19 @@ func (expr *Expr) extractNegativeInMults() {
 	}
 }
 
+// replace e^(...) by exp()
+func (expr *Expr) normalizeExp() {
+	if expr == nil {
+		return
+	}
+	expr.left.normalizeExp()
+	expr.right.normalizeExp()
+
+	if op, isOp := expr.atom.(operator); isOp && op == pow && expr.left.atom == eConstant {
+		*expr = Expr{atom: expFn, right: expr.right}
+	}
+}
+
 const maxIterations = 10_000 // very very unlikely in pratice
 
 func (expr *Expr) basicSimplification() (nbPasses int) {
@@ -483,6 +496,8 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
 		expr.simplifyNumbers()
 		expr.normalizeNegativeNumbers()
+
+		expr.normalizeExp()
 
 		expr.expandMinus()
 		expr.sortPlusAndMultOperands()
@@ -505,6 +520,8 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 	for nbPasses = 1; nbPasses < maxIterations; nbPasses++ {
 		expr.simplifyNumbers()
 		expr.normalizeNegativeNumbers()
+
+		expr.normalizeExp()
 
 		expr.expandPow()
 		expr.expandMinus()
