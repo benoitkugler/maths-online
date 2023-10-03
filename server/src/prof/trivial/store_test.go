@@ -1,12 +1,16 @@
 package trivial
 
 import (
+	"encoding/json"
+	"io"
 	"sort"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
 	"github.com/benoitkugler/maths-online/server/src/utils/testutils"
@@ -34,7 +38,7 @@ func TestGameID(t *testing.T) {
 }
 
 func TestSession(t *testing.T) {
-	gs := newGameStore("test")
+	gs := newGameStore(nil, pass.Encrypter{}, "test")
 
 	gs.createGame(createGame{ID: teacherCode{"teacherXXX", "g1"}, Options: tv.Options{Launch: tv.LaunchStrategy{Max: 2}, Questions: dummyQuestions}})
 	gs.createGame(createGame{ID: teacherCode{"teacherXXX", "g2"}, Options: tv.Options{Launch: tv.LaunchStrategy{Max: 2}, Questions: dummyQuestions}})
@@ -131,4 +135,89 @@ func TestMonitor(t *testing.T) {
 	session := ct.store.getSessionID(1)
 	sums := ct.store.collectSummaries(session)
 	tu.Assert(t, len(sums) == 4)
+}
+
+type clientOut struct {
+	updates []tv.StateUpdate
+}
+
+func (c *clientOut) WriteJSON(v interface{}) error {
+	err := json.NewEncoder(io.Discard).Encode(v)
+	c.updates = append(c.updates, v.(tv.StateUpdate))
+	return err
+}
+
+func (c *clientOut) lastU(lock *sync.Mutex) tv.StateUpdate {
+	lock.Lock()
+	defer lock.Unlock()
+	return c.updates[len(c.updates)-1]
+}
+
+func TestAdvance(t *testing.T) {
+	tv.GameStartDelay = time.Millisecond
+
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
+	defer db.Remove()
+
+	key := pass.Encrypter{}
+
+	gs := newGameStore(db.DB, key, "")
+
+	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Mathematiques}.Insert(db)
+	tu.AssertNoErr(t, err)
+	cl, err := teacher.Classroom{IdTeacher: tc.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+	student, err := teacher.Student{IdClassroom: cl.Id}.Insert(db)
+	tu.AssertNoErr(t, err)
+
+	encID := key.EncryptID(int64(student.Id))
+
+	gameID := selfaccessCode("g1")
+	gs.createGame(createGame{ID: gameID, Options: tv.Options{
+		Questions:       dummyQuestions,
+		Launch:          tv.LaunchStrategy{Max: 1},
+		QuestionTimeout: time.Minute,
+	}})
+	game := gs.games[gameID]
+
+	meta, err := gs.setupStudent(encID, gameID, key)
+	tu.AssertNoErr(t, err)
+
+	var out clientOut
+	err = game.Join(tv.Player{ID: meta.PlayerID}, &out)
+	tu.AssertNoErr(t, err)
+
+	playTurn := func() events.Events {
+		game.Event <- tv.ClientEvent{Player: meta.PlayerID, Event: tv.DiceClicked{}}
+		time.Sleep(time.Millisecond)
+
+		tile := out.lastU(&gs.lock).Events[1].(tv.PossibleMoves).Tiles[0]
+		game.Event <- tv.ClientEvent{Player: meta.PlayerID, Event: tv.ClientMove{Tile: tile}}
+		time.Sleep(time.Millisecond)
+
+		game.Event <- tv.ClientEvent{Player: meta.PlayerID, Event: tv.Answer{}}
+		time.Sleep(time.Millisecond)
+
+		game.Event <- tv.ClientEvent{Player: meta.PlayerID, Event: tv.WantNextTurn{}}
+
+		evList, err := events.SelectEventsByIdStudents(db, student.Id)
+		tu.AssertNoErr(t, err)
+
+		return evList
+	}
+
+	evList := playTurn()
+
+	// the questions are empty so the answer if always true
+	tu.Assert(t, len(evList) == 1)
+	tu.Assert(t, evList[0].Event == events.E_All_QuestionRight)
+
+	evList = playTurn()
+	tu.Assert(t, len(evList) == 2)
+
+	evList = playTurn()
+	tu.Assert(t, len(evList) == 4) // streak
+
+	evList = playTurn()
+	tu.Assert(t, len(evList) == 5)
 }

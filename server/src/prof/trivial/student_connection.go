@@ -207,7 +207,7 @@ func (ct *gameStore) checkGameConnection(meta gameConnection) bool {
 		return false
 	}
 	// check that it is the correct game
-	if gID != gameID2 {
+	if gID != gameID2.game {
 		return false
 	}
 
@@ -264,7 +264,7 @@ func (gs *gameStore) setupStudent(studentID pass.EncryptedID, requestedGameID ga
 		return gameConnection{}, fmt.Errorf("La partie %s a déjà commencée.", requestedGameID.String())
 	}
 
-	playerID := gs.registerPlayer(requestedGameID)
+	playerID := gs.registerPlayer(requestedGameID, studentID)
 	out := gameConnection{
 		GameID:    game.ID,
 		PlayerID:  playerID,

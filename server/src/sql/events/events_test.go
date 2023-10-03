@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benoitkugler/maths-online/server/src/sql/events"
-	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
@@ -39,10 +37,10 @@ func Test_day(t *testing.T) {
 	}
 }
 
-func e(evs ...events.EventK) []events.EventK { return evs }
+func e(evs ...EventK) []EventK { return evs }
 
 func TestAdvance_Flames(t *testing.T) {
-	const E = events.E_All_QuestionRight
+	const E = E_All_QuestionRight
 	present := day(time.Now())
 	tests := []struct {
 		adv  Advance
@@ -82,7 +80,7 @@ func TestAdvance_Flames(t *testing.T) {
 
 func TestSQL(t *testing.T) {
 	// create a DB shared by all tests
-	db := tu.NewTestDB(t, "../sql/teacher/gen_create.sql", "../sql/events/gen_create.sql")
+	db := tu.NewTestDB(t, "../teacher/gen_create.sql", "gen_create.sql")
 	defer db.Remove()
 
 	tc, err := teacher.Teacher{FavoriteMatiere: teacher.Allemand}.Insert(db)
@@ -96,28 +94,28 @@ func TestSQL(t *testing.T) {
 
 	tx, err := db.Begin()
 	tu.AssertNoErr(t, err)
-	err = events.InsertManyEvents(tx, events.Events{
-		{IdStudent: student.Id, Event: events.E_All_QuestionRight, Date: events.Date(time.Date(2023, time.September, 24, 1, 2, 0, 0, time.Local))},
-		{IdStudent: student.Id, Event: events.E_All_QuestionRight, Date: events.Date(time.Date(2023, time.September, 24, 0, 2, 0, 0, time.Local))},
-		{IdStudent: student.Id, Event: events.E_All_QuestionRight, Date: events.Date(time.Date(2023, time.September, 24, 23, 2, 0, 0, time.Local))},
-		{IdStudent: student.Id, Event: events.E_All_QuestionRight, Date: events.Date(time.Date(2023, time.September, 25, 23, 2, 0, 0, time.Local))},
-		{IdStudent: student.Id, Event: events.E_All_QuestionRight, Date: events.Date(time.Now())},
-		{IdStudent: student.Id, Event: events.E_All_QuestionRight, Date: events.Date(time.Now())},
+	err = InsertManyEvents(tx, Events{
+		{IdStudent: student.Id, Event: E_All_QuestionRight, Date: Date(time.Date(2023, time.September, 24, 1, 2, 0, 0, time.Local))},
+		{IdStudent: student.Id, Event: E_All_QuestionRight, Date: Date(time.Date(2023, time.September, 24, 0, 2, 0, 0, time.Local))},
+		{IdStudent: student.Id, Event: E_All_QuestionRight, Date: Date(time.Date(2023, time.September, 24, 23, 2, 0, 0, time.Local))},
+		{IdStudent: student.Id, Event: E_All_QuestionRight, Date: Date(time.Date(2023, time.September, 25, 23, 2, 0, 0, time.Local))},
+		{IdStudent: student.Id, Event: E_All_QuestionRight, Date: Date(time.Now())},
+		{IdStudent: student.Id, Event: E_All_QuestionRight, Date: Date(time.Now())},
 	}...)
 	tu.AssertNoErr(t, err)
 	err = tx.Commit()
 	tu.AssertNoErr(t, err)
 
-	l, err := events.SelectEventsByIdStudents(db, student.Id)
+	l, err := SelectEventsByIdStudents(db, student.Id)
 	tu.AssertNoErr(t, err)
 	adv := NewAdvance(l)
 	tu.Assert(t, len(adv) == 3)
 
-	points, err := RegisterEvents(db.DB, student.Id, events.E_All_QuestionWrong, events.E_IsyTriv_Win)
+	points, err := RegisterEvents(db.DB, student.Id, E_All_QuestionWrong, E_IsyTriv_Win)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, points == 1+300)
+	tu.Assert(t, points.Points == 1+300)
 
-	_, err = RegisterEvents(db.DB, student.Id, events.EventK(events.NbEvents+1))
+	_, err = RegisterEvents(db.DB, student.Id, EventK(NbEvents+1))
 	tu.Assert(t, err != nil)
 }
 
@@ -185,7 +183,7 @@ func TestAdvance_connectStreaks(t *testing.T) {
 func TestAdvance_Events(t *testing.T) {
 	tests := []struct {
 		adv            Advance
-		wantOccurences [evs.NbEvents]int
+		wantOccurences [NbEvents]int
 	}{
 		{
 			Advance{}, [11]int{},
@@ -209,7 +207,7 @@ func TestAdvance_Events(t *testing.T) {
 				{1, e(0, 1, 2)},
 				{2, e(0, 1, 2)},
 			},
-			[11]int{0: 3, 1: 3, 2: 3, events.E_ConnectStreak3: 1},
+			[11]int{0: 3, 1: 3, 2: 3, E_ConnectStreak3: 1},
 		},
 	}
 	for _, tt := range tests {

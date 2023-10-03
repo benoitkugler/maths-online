@@ -5,8 +5,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
+
+type noOpSuccesHandler struct{}
+
+func (noOpSuccesHandler) OnQuestion(player PlayerID, correct, hasStreak3 bool) events.EventNotification {
+	return events.EventNotification{}
+}
+
+func (noOpSuccesHandler) OnWin(player PlayerID) events.EventNotification {
+	return events.EventNotification{}
+}
 
 func TestPanics(t *testing.T) {
 	tu.ShouldPanic(t, func() { _ = (pGameOver + 1).String() })
@@ -18,7 +29,7 @@ func TestPanics(t *testing.T) {
 }
 
 func TestSummary(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 	go r.Listen(context.Background())
 
 	_ = r.Options()
@@ -63,7 +74,7 @@ func TestSummary(t *testing.T) {
 }
 
 func TestReview(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 
 	naturalEnding := make(chan bool)
 	go func() {

@@ -74,7 +74,7 @@ func TestGetConfig(t *testing.T) {
 func TestGameTermination(t *testing.T) {
 	tv.ProgressLogger.SetOutput(os.Stdout)
 
-	ct := newGameStore("test")
+	ct := newGameStore(nil, pass.Encrypter{}, "test")
 
 	ct.createGame(createGame{ID: selfaccessCode("Game1")})
 

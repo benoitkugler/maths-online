@@ -12,7 +12,7 @@ import (
 
 func TestController_parseCode(t *testing.T) {
 	const demoPin = "1234"
-	gs := newGameStore(demoPin)
+	gs := newGameStore(nil, pass.Encrypter{}, demoPin)
 
 	for _, test := range []struct {
 		code     string
@@ -54,7 +54,7 @@ func TestController_setupStudentClientDemo(t *testing.T) {
 	tu.Assert(t, len(ct.store.games) == 1)
 	_, ok := ct.store.games[demoCode{"1234", 12, 2}]
 	tu.Assert(t, ok)
-	tu.Assert(t, ct.store.playerIDs[out.PlayerID] == demoCode{"1234", 12, 2})
+	tu.Assert(t, ct.store.playerIDs[out.PlayerID].game == demoCode{"1234", 12, 2})
 }
 
 func TestController_setupStudentClient(t *testing.T) {
@@ -90,5 +90,5 @@ func TestController_setupStudentClient(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	tu.Assert(t, len(ct.store.games) == 1)
-	tu.Assert(t, ct.store.playerIDs[out.PlayerID] == gameID)
+	tu.Assert(t, ct.store.playerIDs[out.PlayerID].game == gameID)
 }

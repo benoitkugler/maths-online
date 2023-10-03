@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	gameStartDelay = time.Millisecond
+	GameStartDelay = time.Millisecond
 }
 
 var (
@@ -133,7 +133,7 @@ func (r *Room) lp() map[serial]*playerConn {
 }
 
 func TestStartAuto(t *testing.T) {
-	r := NewRoom("0", Options{Launch: LaunchStrategy{Max: 3}})
+	r := NewRoom("0", Options{Launch: LaunchStrategy{Max: 3}}, noOpSuccesHandler{})
 	go r.Listen(context.Background())
 
 	err := r.StartGame()
@@ -175,7 +175,7 @@ func TestStartAuto(t *testing.T) {
 }
 
 func TestStartManual(t *testing.T) {
-	r := NewRoom("0", Options{Launch: LaunchStrategy{Manual: true}})
+	r := NewRoom("0", Options{Launch: LaunchStrategy{Manual: true}}, noOpSuccesHandler{})
 	go r.Listen(context.Background())
 
 	err := r.StartGame()
@@ -208,7 +208,7 @@ func TestStartManual(t *testing.T) {
 }
 
 func TestEmitQuestion(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")
@@ -234,7 +234,7 @@ func TestEmitQuestion(t *testing.T) {
 }
 
 func TestQuestionTimeout(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: 5 * time.Millisecond})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 1}, Questions: exPool, QuestionTimeout: 5 * time.Millisecond}, noOpSuccesHandler{})
 
 	r.mustJoin(t, "p1")
 	r.players["p1"].advance.success = Success{true, true, true, true, true}
@@ -263,7 +263,7 @@ func TestQuestionTimeout(t *testing.T) {
 }
 
 func TestDisconnectStartTurn(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}}, noOpSuccesHandler{})
 	go r.Listen(context.Background())
 
 	p2 := &clientOut{}
@@ -285,7 +285,7 @@ func TestDisconnectStartTurn(t *testing.T) {
 }
 
 func TestDisconnectInQuestion(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 
 	go r.Listen(context.Background())
 
@@ -310,7 +310,7 @@ func TestDisconnectInQuestion(t *testing.T) {
 }
 
 func TestDisconnectInQuestionResult(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 
 	go r.Listen(context.Background())
 
@@ -342,7 +342,7 @@ func TestDisconnectInQuestionResult(t *testing.T) {
 }
 
 func TestAllDisconnectInQuestionResult(t *testing.T) {
-	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 
 	go r.Listen(context.Background())
 
@@ -377,7 +377,7 @@ func TestAllDisconnectInQuestionResult(t *testing.T) {
 }
 
 func TestReconnectInQuestion(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: 3 * time.Second})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: 3 * time.Second}, noOpSuccesHandler{})
 
 	go r.Listen(context.Background())
 
@@ -413,7 +413,7 @@ func TestReconnectInQuestion(t *testing.T) {
 }
 
 func TestHandleClientEvent(t *testing.T) {
-	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute})
+	r := NewRoom("", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: time.Minute}, noOpSuccesHandler{})
 
 	fmt.Println("Phase :", r.game.phase)
 
@@ -559,7 +559,7 @@ func TestHandleClientEvent(t *testing.T) {
 }
 
 func TestGameEnd(t *testing.T) {
-	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true}, noOpSuccesHandler{})
 
 	var c1 clientOut
 
@@ -626,7 +626,7 @@ func TestGameEnd(t *testing.T) {
 }
 
 func TestGameTimeout(t *testing.T) {
-	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 2}, Questions: exPool, QuestionTimeout: 10 * time.Millisecond, ShowDecrassage: true}, noOpSuccesHandler{})
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Millisecond*200)
 	defer cancelFunc()

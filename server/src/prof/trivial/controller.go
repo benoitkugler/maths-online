@@ -56,7 +56,7 @@ func NewController(db *sql.DB, key pass.Encrypter, demoPin string, admin teacher
 	out := &Controller{
 		db:         db,
 		studentKey: key,
-		store:      newGameStore(demoPin),
+		store:      newGameStore(db, key, demoPin),
 		admin:      admin,
 	}
 

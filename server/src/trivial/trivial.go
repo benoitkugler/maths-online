@@ -123,16 +123,19 @@ type Room struct {
 	//
 	// In auto mode, we always have len(players) <= game.options.Launch.Max
 	players map[PlayerID]*playerConn
+
+	successHandler SuccessHandler
 }
 
-func NewRoom(ID RoomID, options Options) *Room {
+func NewRoom(ID RoomID, options Options, successHandler SuccessHandler) *Room {
 	return &Room{
-		ID:        ID,
-		Terminate: make(chan bool),
-		Leave:     make(chan PlayerID),
-		Event:     make(chan ClientEvent),
-		game:      newGame(options),
-		players:   make(map[PlayerID]*playerConn),
+		ID:             ID,
+		Terminate:      make(chan bool),
+		Leave:          make(chan PlayerID),
+		Event:          make(chan ClientEvent),
+		game:           newGame(options),
+		players:        make(map[PlayerID]*playerConn),
+		successHandler: successHandler,
 	}
 }
 

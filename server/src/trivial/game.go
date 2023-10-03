@@ -9,6 +9,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
@@ -279,24 +280,31 @@ func (r *Room) tryEndQuestion(force bool) Events {
 	out := PlayerAnswerResults{
 		Categorie: r.game.question.Categorie,
 		Results:   make(map[serial]playerAnswerResult),
+		Advances:  make(map[serial]events.EventNotification),
 	}
 
 	// return the answers event, defaulting to
 	// false for no answer
 	for _, player := range r.players {
 		// we still mark invalid answsers for inactive player,
-		// to avoid cheating by leaving before right before the question
+		// to avoid cheating by leaving right before the question
 
-		isValid := r.game.currentAnswers[player.pl.ID]
+		isAnswerCorrect := r.game.currentAnswers[player.pl.ID]
 		// update the success
-		player.advance.success[r.game.question.Categorie] = isValid // false if not answered
+		player.advance.success[r.game.question.Categorie] = isAnswerCorrect // false if not answered
+		// update the history
 		player.advance.review.QuestionHistory = append(player.advance.review.QuestionHistory, QR{
 			IdQuestion: r.game.question.ID,
-			Success:    isValid,
+			Success:    isAnswerCorrect,
 		})
-		askForMark := !isValid && len(player.advance.review.MarkedQuestions) < 3
 
-		out.Results[player.pl.ID] = playerAnswerResult{Success: isValid, AskForMask: askForMark}
+		hasStreak := player.advance.review.hasStreak3()
+		notif := r.successHandler.OnQuestion(player.pl.ID, isAnswerCorrect, hasStreak)
+
+		askForMark := !isAnswerCorrect && len(player.advance.review.MarkedQuestions) < 3
+
+		out.Results[player.pl.ID] = playerAnswerResult{Success: isAnswerCorrect, AskForMask: askForMark}
+		out.Advances[player.pl.ID] = notif
 	}
 
 	// cleanup
@@ -345,11 +353,18 @@ func (r *Room) tryEndTurn() Events {
 	isGameOver := len(winners) != 0
 	if isGameOver { // end the game
 		r.game.phase = pGameOver
+
+		advances := make(map[PlayerID]events.EventNotification)
+		for _, player := range winners {
+			advances[player] = r.successHandler.OnWin(player)
+		}
+
 		return Events{
 			GameEnd{
 				Winners:               winners,
 				WinnerNames:           r.serialsToPseudos(winners),
 				QuestionDecrassageIds: r.decrassage(),
+				Advances:              advances,
 			},
 		}
 	}

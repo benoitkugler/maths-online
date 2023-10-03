@@ -13,7 +13,7 @@ var (
 	ProgressLogger = log.New(os.Stdout, "tv-game:INFO : ", 0)
 )
 
-var gameStartDelay = time.Second // reduced in tests to avoid latency
+var GameStartDelay = time.Second // reduced in tests to avoid latency
 
 func (pc playerConn) send(events StateUpdate) {
 	err := pc.conn.WriteJSON(events)
@@ -127,7 +127,7 @@ func (r *Room) Join(player Player, connection Connection) error {
 
 		// ... and check if the new player triggers a game start, after a brief pause
 		if events := r.tryStartGame(); len(events) != 0 {
-			time.Sleep(gameStartDelay)
+			time.Sleep(GameStartDelay)
 			r.broadcastEvents(events)
 		}
 	} else { // reconnection

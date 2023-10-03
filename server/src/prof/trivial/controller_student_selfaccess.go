@@ -8,6 +8,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/trivial"
 	tv "github.com/benoitkugler/maths-online/server/src/trivial"
@@ -209,7 +210,14 @@ func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent te
 	gameID := ct.store.newSelfaccessGameID()
 	ct.store.createGame(createGame{ID: gameID, Options: options})
 
-	return LaunchSelfaccessOut{tv.RoomID(gameID.String())}, nil
+	// update the success
+	notif, err := events.RegisterEvents(ct.db, idStudent, events.E_IsyTriv_Create)
+	if err != nil {
+		return LaunchSelfaccessOut{}, err
+	}
+	notif.HideIfNoPoints()
+
+	return LaunchSelfaccessOut{GameID: tv.RoomID(gameID.String()), Notification: notif}, nil
 }
 
 // StartSelfaccess starts a game previously created by [StudentLaunchSelfaccess]

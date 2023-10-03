@@ -31,7 +31,7 @@ func (c *clientOut) lastU(lock *sync.Mutex) StateUpdate {
 func TestConcurrentEvents(t *testing.T) {
 	ProgressLogger.SetOutput(io.Discard) // hide verbose log
 
-	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 4}}) // do not start a game to simplify
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 4}}, noOpSuccesHandler{}) // do not start a game to simplify
 	go r.Listen(context.Background())
 
 	var client1, client2, client3 clientOut
@@ -60,7 +60,7 @@ func TestConcurrentEvents(t *testing.T) {
 }
 
 func TestTerminate(t *testing.T) {
-	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}}, noOpSuccesHandler{})
 
 	isNaturalEnd := make(chan bool)
 	go func() {
@@ -102,7 +102,7 @@ func (r *Room) decoReco(player PlayerID, errC chan<- error) {
 }
 
 func TestReconnection(t *testing.T) {
-	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}})
+	r := NewRoom("<test>", Options{Launch: LaunchStrategy{Max: 3}}, noOpSuccesHandler{})
 	go r.Listen(context.Background())
 
 	r.mustJoin(t, "p1")

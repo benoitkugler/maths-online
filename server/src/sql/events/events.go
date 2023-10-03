@@ -9,7 +9,6 @@ import (
 	"sort"
 	"time"
 
-	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 )
@@ -40,18 +39,18 @@ type eventProperties struct {
 	isUnique  bool
 }
 
-var properties = [evs.NbEvents]pointResolver{
-	evs.E_IsyTriv_Create:       uniqueResolver(30),
-	evs.E_IsyTriv_Streak3:      constResolver(40),
-	evs.E_IsyTriv_Win:          constResolver(300),
-	evs.E_Homework_TaskDone:    constResolver(40),
-	evs.E_Homework_TravailDone: constResolver(100),
-	evs.E_All_QuestionRight:    constResolver(5),
-	evs.E_All_QuestionWrong:    constResolver(1),
-	evs.E_Misc_SetPlaylist:     uniqueResolver(30),
-	evs.E_ConnectStreak3:       constResolver(20),
-	evs.E_ConnectStreak7:       constResolver(50),
-	evs.E_ConnectStreak30:      constResolver(400),
+var properties = [NbEvents]pointResolver{
+	E_IsyTriv_Create:       uniqueResolver(30),
+	E_IsyTriv_Streak3:      constResolver(40),
+	E_IsyTriv_Win:          constResolver(300),
+	E_Homework_TaskDone:    constResolver(40),
+	E_Homework_TravailDone: constResolver(100),
+	E_All_QuestionRight:    constResolver(5),
+	E_All_QuestionWrong:    constResolver(1),
+	E_Misc_SetPlaylist:     uniqueResolver(30),
+	E_ConnectStreak3:       constResolver(20),
+	E_ConnectStreak7:       constResolver(50),
+	E_ConnectStreak30:      constResolver(400),
 }
 
 var refT = time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -62,7 +61,7 @@ func day(t time.Time) int {
 
 type dayEvents struct {
 	day    int // from the refT
-	events []evs.EventK
+	events []EventK
 }
 
 // isFlameDone returns true if the number of good answers
@@ -70,7 +69,7 @@ type dayEvents struct {
 func (de dayEvents) isFlameDone() bool {
 	count := 0
 	for _, event := range de.events {
-		if event == evs.E_All_QuestionRight {
+		if event == E_All_QuestionRight {
 			count++
 		}
 	}
@@ -81,8 +80,8 @@ func (de dayEvents) isFlameDone() bool {
 // Generally speaking, its features are dynamic : see the various access methods
 type Advance []dayEvents // sorted by day
 
-func NewAdvance(events evs.Events) Advance {
-	tmp := map[int][]evs.EventK{}
+func NewAdvance(events Events) Advance {
+	tmp := map[int][]EventK{}
 	for _, event := range events {
 		d := day(time.Time(event.Date))
 		tmp[d] = append(tmp[d], event.Event)
@@ -177,7 +176,7 @@ func (adv Advance) TotalPoints() int {
 
 // Occurences returns the number of realisation for each event,
 // including the dynamic ones (deduced from others).
-func (adv Advance) Occurences() (occurences [evs.NbEvents]int) {
+func (adv Advance) Occurences() (occurences [NbEvents]int) {
 	for _, day := range adv {
 		for _, ev := range day.events {
 			occurences[ev]++
@@ -186,9 +185,9 @@ func (adv Advance) Occurences() (occurences [evs.NbEvents]int) {
 
 	// add the dynamic events
 	nb3, nb7, nb30 := adv.connectStreaks()
-	occurences[evs.E_ConnectStreak3] = nb3
-	occurences[evs.E_ConnectStreak7] = nb7
-	occurences[evs.E_ConnectStreak30] = nb30
+	occurences[E_ConnectStreak3] = nb3
+	occurences[E_ConnectStreak7] = nb7
+	occurences[E_ConnectStreak30] = nb30
 
 	return
 }
@@ -196,35 +195,46 @@ func (adv Advance) Occurences() (occurences [evs.NbEvents]int) {
 // RegisterEvents stores the given events for the given student at the present time.
 //
 // It returns the number of points earned by the student.
-func RegisterEvents(db *sql.DB, idStudent teacher.IdStudent, events ...evs.EventK) (int, error) {
-	eventsBefore, err := evs.SelectEventsByIdStudents(db, idStudent)
+func RegisterEvents(db *sql.DB, idStudent teacher.IdStudent, events ...EventK) (EventNotification, error) {
+	eventsBefore, err := SelectEventsByIdStudents(db, idStudent)
 	if err != nil {
-		return 0, utils.SQLError(err)
+		return EventNotification{}, utils.SQLError(err)
 	}
 	advanceBefore := NewAdvance(eventsBefore)
 
-	newEvents := make(evs.Events, len(events))
+	newEvents := make(Events, len(events))
 	for i, ev := range events {
-		newEvents[i] = evs.Event{IdStudent: idStudent, Date: evs.Date(time.Now()), Event: ev}
+		newEvents[i] = Event{IdStudent: idStudent, Date: Date(time.Now()), Event: ev}
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
-		return 0, utils.SQLError(err)
+		return EventNotification{}, utils.SQLError(err)
 	}
-	err = evs.InsertManyEvents(tx, newEvents...)
+	err = InsertManyEvents(tx, newEvents...)
 	if err != nil {
 		_ = tx.Rollback()
-		return 0, utils.SQLError(err)
+		return EventNotification{}, utils.SQLError(err)
 	}
 	err = tx.Commit()
 	if err != nil {
-		return 0, utils.SQLError(err)
+		return EventNotification{}, utils.SQLError(err)
 	}
 
 	eventsAfter := append(eventsBefore, newEvents...)
 	advanceAfter := NewAdvance(eventsAfter)
 
 	score := advanceAfter.TotalPoints() - advanceBefore.TotalPoints()
-	return score, nil
+	return EventNotification{Events: events, Points: score}, nil
+}
+
+type EventNotification struct {
+	Events []EventK // the events (often with length 1)
+	Points int      // the number of points earned
+}
+
+func (en *EventNotification) HideIfNoPoints() {
+	if en.Points == 0 {
+		en.Events = nil
+	}
 }
