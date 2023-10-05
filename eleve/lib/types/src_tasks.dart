@@ -61,14 +61,16 @@ Map<String, dynamic> evaluateQuestionInToJson(EvaluateQuestionIn item) {
 // github.com/benoitkugler/maths-online/server/src/tasks.EvaluateWorkIn
 class EvaluateWorkIn {
   final WorkID iD;
-  final Map<int, AnswerP> answers;
   final ProgressionExt progression;
+  final int answerIndex;
+  final AnswerP answer;
 
-  const EvaluateWorkIn(this.iD, this.answers, this.progression);
+  const EvaluateWorkIn(
+      this.iD, this.progression, this.answerIndex, this.answer);
 
   @override
   String toString() {
-    return "EvaluateWorkIn($iD, $answers, $progression)";
+    return "EvaluateWorkIn($iD, $progression, $answerIndex, $answer)";
   }
 }
 
@@ -76,45 +78,51 @@ EvaluateWorkIn evaluateWorkInFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkIn(
       workIDFromJson(json['ID']),
-      dictIntToAnswerPFromJson(json['Answers']),
-      progressionExtFromJson(json['Progression']));
+      progressionExtFromJson(json['Progression']),
+      intFromJson(json['AnswerIndex']),
+      answerPFromJson(json['Answer']));
 }
 
 Map<String, dynamic> evaluateWorkInToJson(EvaluateWorkIn item) {
   return {
     "ID": workIDToJson(item.iD),
-    "Answers": dictIntToAnswerPToJson(item.answers),
-    "Progression": progressionExtToJson(item.progression)
+    "Progression": progressionExtToJson(item.progression),
+    "AnswerIndex": intToJson(item.answerIndex),
+    "Answer": answerPToJson(item.answer)
   };
 }
 
 // github.com/benoitkugler/maths-online/server/src/tasks.EvaluateWorkOut
 class EvaluateWorkOut {
-  final Map<int, QuestionAnswersOut> results;
   final ProgressionExt progression;
   final List<InstantiatedQuestion> newQuestions;
+  final int answerIndex;
+  final QuestionAnswersOut result;
 
-  const EvaluateWorkOut(this.results, this.progression, this.newQuestions);
+  const EvaluateWorkOut(
+      this.progression, this.newQuestions, this.answerIndex, this.result);
 
   @override
   String toString() {
-    return "EvaluateWorkOut($results, $progression, $newQuestions)";
+    return "EvaluateWorkOut($progression, $newQuestions, $answerIndex, $result)";
   }
 }
 
 EvaluateWorkOut evaluateWorkOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return EvaluateWorkOut(
-      dictIntToQuestionAnswersOutFromJson(json['Results']),
       progressionExtFromJson(json['Progression']),
-      listInstantiatedQuestionFromJson(json['NewQuestions']));
+      listInstantiatedQuestionFromJson(json['NewQuestions']),
+      intFromJson(json['AnswerIndex']),
+      questionAnswersOutFromJson(json['Result']));
 }
 
 Map<String, dynamic> evaluateWorkOutToJson(EvaluateWorkOut item) {
   return {
-    "Results": dictIntToQuestionAnswersOutToJson(item.results),
     "Progression": progressionExtToJson(item.progression),
-    "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions)
+    "NewQuestions": listInstantiatedQuestionToJson(item.newQuestions),
+    "AnswerIndex": intToJson(item.answerIndex),
+    "Result": questionAnswersOutToJson(item.result)
   };
 }
 
@@ -351,33 +359,6 @@ extension _WorkKindExt on WorkKind {
 WorkKind workKindFromJson(dynamic json) => _WorkKindExt.fromValue(json as int);
 
 dynamic workKindToJson(WorkKind item) => item.toValue();
-
-Map<int, AnswerP> dictIntToAnswerPFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(int.parse(k), answerPFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToAnswerPToJson(Map<int, AnswerP> item) {
-  return item
-      .map((k, v) => MapEntry(intToJson(k).toString(), answerPToJson(v)));
-}
-
-Map<int, QuestionAnswersOut> dictIntToQuestionAnswersOutFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(int.parse(k), questionAnswersOutFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToQuestionAnswersOutToJson(
-    Map<int, QuestionAnswersOut> item) {
-  return item.map(
-      (k, v) => MapEntry(intToJson(k).toString(), questionAnswersOutToJson(v)));
-}
 
 List<InstantiatedQuestion> listInstantiatedQuestionFromJson(dynamic json) {
   if (json == null) {

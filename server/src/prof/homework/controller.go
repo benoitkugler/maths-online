@@ -1399,7 +1399,7 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
 	}
-	return StudentEvaluateTaskOut{Ex: ex, Mark: mark}, nil
+	return StudentEvaluateTaskOut{Ex: ex, Mark: mark, WasProgressionRegistred: registerProgression}, nil
 }
 
 // StudentResetTask remove the progression for the given student

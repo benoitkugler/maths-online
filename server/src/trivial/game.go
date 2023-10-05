@@ -144,7 +144,14 @@ func newGame(options Options) game {
 // hasStarted returns true if the the game is not in the lobby anymore
 func (g *game) hasStarted() bool { return g.phase != pGameLobby }
 
-// nbActivePlayers returns the number of players currently connected
+// NbActivePlayers locks and returns the number of players currently connected.
+func (r *Room) NbActivePlayers() int {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	return r.nbActivePlayers()
+}
+
+// nbActivePlayers returns the number of players currently connected.
 func (r *Room) nbActivePlayers() int {
 	var out int
 	for _, pl := range r.players {

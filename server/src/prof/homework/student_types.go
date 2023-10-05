@@ -45,6 +45,9 @@ type StudentEvaluateTaskIn struct {
 type StudentEvaluateTaskOut struct {
 	Ex   taAPI.EvaluateWorkOut
 	Mark int // updated mark
+	// WasProgressionRegistred is true if the server has updated the DB
+	// It should be used to decide whether or not to update the sheet list.
+	WasProgressionRegistred bool // new in v1.6.8
 }
 
 type StudentResetTaskIn struct {

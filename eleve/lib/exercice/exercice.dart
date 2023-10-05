@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:eleve/exercice/congratulations.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/question.dart';
@@ -244,19 +246,28 @@ class ExerciceW extends StatefulWidget {
   /// if true, show an alter about progression not being updated
   final bool noticeSandbox;
 
-  const ExerciceW(this.api, this.controller,
-      {Key? key,
-      this.onShowCorrectAnswer,
-      this.showCorrectionButtonOnFail = true,
-      this.instantShowCorrection = false,
-      this.noticeSandbox = false})
-      : super(key: key);
+  /// optional, if given and reached, shows a dialog
+  final DateTime? deadline;
+
+  const ExerciceW(
+    this.api,
+    this.controller, {
+    Key? key,
+    this.onShowCorrectAnswer,
+    this.showCorrectionButtonOnFail = true,
+    this.instantShowCorrection = false,
+    this.noticeSandbox = false,
+    this.deadline,
+  }) : super(key: key);
 
   @override
   State<ExerciceW> createState() => _ExerciceWState();
 }
 
 class _ExerciceWState extends State<ExerciceW> {
+  bool noticeSandbox = false;
+  Timer? deadlineTimer;
+
   // the questions to display when trying again
   // this is a temporay slice, affected to the controller on user validation
   List<InstantiatedQuestion> nextQuestions = [];
@@ -273,7 +284,25 @@ class _ExerciceWState extends State<ExerciceW> {
     super.didUpdateWidget(oldWidget);
   }
 
+  @override
+  void dispose() {
+    deadlineTimer?.cancel();
+    super.dispose();
+  }
+
   void _init() {
+    noticeSandbox = widget.noticeSandbox;
+
+    // cancel the timer
+    deadlineTimer?.cancel();
+    final d = widget.deadline;
+    if (d != null) {
+      final now = DateTime.now();
+      if (d.isAfter(now)) {
+        deadlineTimer = Timer(d.difference(DateTime.now()), _onDeadlineReached);
+      }
+    }
+
     nextQuestions = [];
     widget.controller.reset();
     widget.controller.onValid = onQuestionButtonClick;
@@ -312,12 +341,32 @@ class _ExerciceWState extends State<ExerciceW> {
                 (index) => setState(() {
                       ct.questionIndex = index;
                     }),
-                widget.noticeSandbox)
+                noticeSandbox)
             : QuestionW(
                 widget.controller._questions[widget.controller.questionIndex!],
                 Colors.purpleAccent,
                 title: "Question ${widget.controller.questionIndex! + 1}",
               ));
+  }
+
+  void _onDeadlineReached() {
+    if (!mounted) return;
+
+    setState(() {
+      noticeSandbox = true;
+    });
+    showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text("Date de rendu"),
+              content: const Text(
+                  "Attention, la date de rendu est maintenant dépassée. Ta progression n'est plus enregistrée."),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("OK"))
+              ],
+            ));
   }
 
   // handle the errors
@@ -360,12 +409,12 @@ class _ExerciceWState extends State<ExerciceW> {
 
     // validate the given answer
     final resp = await _evaluate(EvaluateWorkIn(
-        ct.exeAndProg.exercice.iD,
-        {
-          index: AnswerP(ct.exeAndProg.exercice.questions[index].params,
-              ct._questions[index].answers())
-        },
-        ct.exeAndProg.progression));
+      ct.exeAndProg.exercice.iD,
+      ct.exeAndProg.progression,
+      index,
+      AnswerP(ct.exeAndProg.exercice.questions[index].params,
+          ct._questions[index].answers()),
+    ));
     if (resp == null || !mounted) {
       return;
     }
@@ -378,11 +427,11 @@ class _ExerciceWState extends State<ExerciceW> {
       return;
     }
 
-    final isCorrect = resp.results[index]!.isCorrect;
+    final isCorrect = resp.result.isCorrect;
     if (!isCorrect) {
       // show errors and ask for retry
       setState(() {
-        ct.showFeedback({index: resp.results[index]!});
+        ct.showFeedback({index: resp.result});
       });
     } else {
       // update the menu status

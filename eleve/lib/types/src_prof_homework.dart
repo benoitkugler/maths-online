@@ -121,23 +121,29 @@ Map<String, dynamic> studentEvaluateTaskInToJson(StudentEvaluateTaskIn item) {
 class StudentEvaluateTaskOut {
   final EvaluateWorkOut ex;
   final int mark;
+  final bool wasProgressionRegistred;
 
-  const StudentEvaluateTaskOut(this.ex, this.mark);
+  const StudentEvaluateTaskOut(
+      this.ex, this.mark, this.wasProgressionRegistred);
 
   @override
   String toString() {
-    return "StudentEvaluateTaskOut($ex, $mark)";
+    return "StudentEvaluateTaskOut($ex, $mark, $wasProgressionRegistred)";
   }
 }
 
 StudentEvaluateTaskOut studentEvaluateTaskOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return StudentEvaluateTaskOut(
-      evaluateWorkOutFromJson(json['Ex']), intFromJson(json['Mark']));
+  return StudentEvaluateTaskOut(evaluateWorkOutFromJson(json['Ex']),
+      intFromJson(json['Mark']), boolFromJson(json['WasProgressionRegistred']));
 }
 
 Map<String, dynamic> studentEvaluateTaskOutToJson(StudentEvaluateTaskOut item) {
-  return {"Ex": evaluateWorkOutToJson(item.ex), "Mark": intToJson(item.mark)};
+  return {
+    "Ex": evaluateWorkOutToJson(item.ex),
+    "Mark": intToJson(item.mark),
+    "WasProgressionRegistred": boolToJson(item.wasProgressionRegistred)
+  };
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/homework.StudentResetTaskIn

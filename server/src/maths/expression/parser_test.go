@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 var expressions = [...]struct {
@@ -146,6 +148,32 @@ var expressions = [...]struct {
 	{
 		" x ^ 3 ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(3)}, false,
 	},
+	{
+		" x ^ (-3) ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(-3)}, false,
+	},
+	// extended support for negative power
+	{
+		" x ^- ", nil, true,
+	},
+	{
+		" x ^-)", nil, true,
+	},
+	{
+		" x ^-(a+)", nil, true,
+	},
+	{
+		" x ^-3 ", &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(-3)}, false,
+	},
+	{
+		" x ^-3 + 1",
+		&Expr{atom: plus, left: &Expr{atom: pow, left: newVarExpr('x'), right: NewNb(-3)}, right: newNb(1)}, false,
+	},
+	{
+		" x ^-(x+y) ", &Expr{atom: pow, left: newVarExpr('x'), right: &Expr{atom: minus, right: &Expr{atom: plus, left: newVarExpr('x'), right: newVarExpr('y')}}}, false,
+	},
+	// { // = (a^n) / c
+	// 	" a ^ -2n ", &Expr{atom: div, left: &Expr{atom: pow, left: newVarExpr('a'), right: newVarExpr('n')}, right: newVarExpr('c')}, false,
+	// },
 	// operator precedence
 	{ // = (a^n) / c
 		" a ^ n / c ", &Expr{atom: div, left: &Expr{atom: pow, left: newVarExpr('a'), right: newVarExpr('n')}, right: newVarExpr('c')}, false,
@@ -715,4 +743,13 @@ func TestIsInt(t *testing.T) {
 	if _, ok := IsInt(math.NaN()); ok {
 		t.Fatal()
 	}
+}
+
+func TestExtendedPower(t *testing.T) {
+	_, err := Parse("a^-2")
+	tu.AssertNoErr(t, err)
+	_, err = Parse("a^-(2+3)")
+	tu.AssertNoErr(t, err)
+	_, err = Parse("a^2.5")
+	tu.AssertNoErr(t, err)
 }

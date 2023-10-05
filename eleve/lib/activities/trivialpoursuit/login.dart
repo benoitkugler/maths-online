@@ -130,6 +130,8 @@ class _SelfaccessList extends StatefulWidget {
 }
 
 class __SelfaccessListState extends State<_SelfaccessList> {
+  bool launching = false;
+
   List<Trivial>? trivials;
 
   @override
@@ -157,6 +159,10 @@ class __SelfaccessListState extends State<_SelfaccessList> {
   }
 
   void _launchTrivial(Trivial trivial) async {
+    if (launching) return;
+
+    launching = true;
+
     final uri = Uri.parse(widget.settings.buildMode
         .serverURL("/api/student/trivial/selfaccess/launch", query: {
       studentIDKey: widget.settings.settings.studentID,
@@ -170,10 +176,13 @@ class __SelfaccessListState extends State<_SelfaccessList> {
       data = launchSelfaccessOutFromJson(body);
     } catch (e) {
       showError("Erreur", e, context);
+
+      launching = false;
       return;
     }
-
+    launching = false;
     if (!mounted) return;
+
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (context) =>
             _GameLaunchedScreen(data.gameID, () => _joinGame(data.gameID))));

@@ -76,12 +76,17 @@ func (ct *Controller) checkOwner(configID tc.IdTrivial, userID uID) error {
 	return nil
 }
 
-// GetTrivialsMetrics is shows the number of actually running IsyTriv.
+// GetTrivialsMetrics shows the number of actually running IsyTriv.
+// This is a public endpoint.
 func (ct *Controller) GetTrivialsMetrics(c echo.Context) error {
 	ct.store.lock.Lock()
 	defer ct.store.lock.Unlock()
 
-	return c.HTML(200, fmt.Sprintf("Parties d'IsyTriv en cours : %d", len(ct.store.games)))
+	nbConnections := 0
+	for _, game := range ct.store.games {
+		nbConnections += game.NbActivePlayers()
+	}
+	return c.HTML(200, fmt.Sprintf("Parties d'IsyTriv en cours : %d ; Joueurs connectés : %d", len(ct.store.games), nbConnections))
 }
 
 type RunningSessionMetaOut struct {

@@ -118,22 +118,20 @@ class _LoopbackAPI implements LoopbackAPI {
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final questionIndex = params.answers.keys.first;
-    final answer = params.answers[questionIndex]!;
+    final questionIndex = params.answerIndex;
+    final answer = params.answer;
     final isCorrect =
         questionIndex == (answer.answer.data[0] as NumberAnswer).value;
-    final res = {
-      questionIndex: QuestionAnswersOut({0: isCorrect}, {})
-    };
     params.progression.questions[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        res,
         ProgressionExt(
             params.progression.questions,
             isCorrect
                 ? (questionIndex == 2 ? -1 : questionIndex + 1)
                 : questionIndex),
-        [quI1bis, quI2bis, quI3bis]);
+        [quI1bis, quI2bis, quI3bis],
+        questionIndex,
+        QuestionAnswersOut({0: isCorrect}, {}));
   }
 
   @override

@@ -11,6 +11,7 @@ func TestTokens(t *testing.T) {
 		expr   string
 		tokens []tokenData
 	}{
+		{"-2", []tokenData{minus, nT("2")}},
 		{"7x  + 8", []tokenData{nT("7"), mult, x, plus, nT("8")}},
 		{"7*x", []tokenData{nT("7"), mult, x}},
 		{"(2x + 1)(4x)", []tokenData{openPar, nT("2"), mult, x, plus, nT("1"), closePar, mult, openPar, nT("4"), mult, x, closePar}},

@@ -400,6 +400,7 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 
 	client.listen() // block until client leaves
 
+	ProgressLogger.Println("closing client connection", client.WS.RemoteAddr())
 	client.WS.Close()
 
 	return nil

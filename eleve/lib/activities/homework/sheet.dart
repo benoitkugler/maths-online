@@ -47,14 +47,17 @@ class _ExerciceAPI implements ExerciceAPI {
   final IdTask idTask;
   final IdTravail idTravail;
 
-  StudentEvaluateTaskOut? lastState;
+  // last state registred on the server
+  StudentEvaluateTaskOut? lastRegistredState;
 
   _ExerciceAPI(this.api, this.idTask, this.idTravail);
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
     final res = await api.evaluateExercice(idTask, idTravail, params);
-    lastState = res;
+    if (res.wasProgressionRegistred) {
+      lastRegistredState = res;
+    }
     return res.ex;
   }
 }
@@ -100,7 +103,8 @@ class _SheetWState extends State<SheetW> {
   }
 
   /// if [sandbox] is true, the progression is not updated on the client
-  void _startExercice(TaskProgressionHeader task, bool sandbox) async {
+  void _startExercice(
+      TaskProgressionHeader task, bool sandbox, DateTime? deadline) async {
     showDialog<void>(
         barrierDismissible: false,
         context: context,
@@ -126,6 +130,7 @@ class _SheetWState extends State<SheetW> {
     final studentEx = StudentWork(instantiatedExercice, task.progression);
     final exeAPI = _ExerciceAPI(widget.api, task.id, widget.sheet.idTravail);
     final exController = ExerciceController(studentEx, null);
+
     // actually launch the exercice
 
     // TODO: for now we always show a correction (when available)
@@ -136,10 +141,12 @@ class _SheetWState extends State<SheetW> {
               exController,
               showCorrectionButtonOnFail: true,
               noticeSandbox: sandbox,
+              deadline: deadline,
             )));
+    if (!mounted) return;
 
-    if (exeAPI.lastState != null && !sandbox) {
-      final state = exeAPI.lastState!;
+    if (exeAPI.lastRegistredState != null && !sandbox) {
+      final state = exeAPI.lastRegistredState!;
       final notif = SheetMarkNotification(
           widget.sheet.sheet.id, task.id, state.ex.progression, state.mark);
 
@@ -171,19 +178,19 @@ class _SheetWState extends State<SheetW> {
   }
 
   void _sandboxTask(TaskProgressionHeader task) async {
-    // reet the progression
+    // reset the progression
     task = task.copyWith(
         hasProgression: false,
         progression: const ProgressionExt([], 0),
         mark: 0);
-    _startExercice(task, true);
+    _startExercice(task, true, null);
   }
 
   @override
   Widget build(BuildContext context) {
     final hasNotation = widget.sheet.sheet.noted;
-    final isExpired =
-        hasNotation && widget.sheet.sheet.deadline.isBefore(DateTime.now());
+    final deadline = hasNotation ? widget.sheet.sheet.deadline : null;
+    final isExpired = deadline?.isBefore(DateTime.now()) ?? false;
     return Scaffold(
       appBar: AppBar(title: const Text("Contenu de la feuille")),
       body: Padding(
@@ -204,9 +211,7 @@ class _SheetWState extends State<SheetW> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text("Travail noté", style: TextStyle(fontSize: 18)),
-                    DeadlineCard(
-                        isExpired: isExpired,
-                        deadline: widget.sheet.sheet.deadline),
+                    DeadlineCard(isExpired: isExpired, deadline: deadline!),
                   ],
                 ),
               ),
@@ -224,7 +229,7 @@ class _SheetWState extends State<SheetW> {
                 child: _TaskList(
               widget.sheet.tasks,
               hasNotation,
-              (ex) => _startExercice(ex, isExpired),
+              (ex) => _startExercice(ex, isExpired, deadline),
               hasNotation ? _sandboxTask : _resetTask,
             )),
           ],
