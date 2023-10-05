@@ -165,6 +165,20 @@ func (loader sheetLoader) buildSheetExts(sheets ho.Sheets, userID, adminID uID) 
 	return out
 }
 
+func (ld sheetLoader) isSheetComplete(db ho.DB, idStudent teacher.IdStudent, idSheet ho.IdSheet) (bool, error) {
+	m, err := ld.tasks.LoadProgressions(db)
+	if err != nil {
+		return false, err
+	}
+	for _, task := range ld.tasksForSheet(idSheet) {
+		pr := m[task.IdTask][idStudent]
+		if !pr.IsComplete() {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func LoadSheet(db ho.DB, id ho.IdSheet, userID, adminID uID) (SheetExt, error) {
 	sheet, err := ho.SelectSheet(db, id)
 	if err != nil {
