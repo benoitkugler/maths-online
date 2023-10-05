@@ -590,17 +590,46 @@ func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
 type EvaluateWorkIn struct {
 	ID WorkID
 
-	Answers map[int]AnswerP // by question index (not ID)
-
 	// the current progression, as send by the server,
 	// to update with the given answers
 	Progression ProgressionExt
+
+	AnswerIndex int     // new in v1.7
+	Answer      AnswerP // new in v1.7
+
+	// Deprecated
+	Answers map[int]AnswerP // by question index (not ID)
+}
+
+func (ew *EvaluateWorkIn) fillFromMap() error {
+	// client is using new API
+	if len(ew.Answers) == 0 {
+		return nil
+	}
+
+	if len(ew.Answers) != 1 {
+		return errors.New("internal error: expected only one question")
+	}
+	for k, v := range ew.Answers {
+		ew.AnswerIndex = k
+		ew.Answer = v
+	}
+	return nil
 }
 
 type EvaluateWorkOut struct {
-	Results      map[int]client.QuestionAnswersOut
 	Progression  ProgressionExt         // the updated progression
 	NewQuestions []InstantiatedQuestion // only non empty if the answer is not correct
+
+	AnswerIndex int
+	Result      client.QuestionAnswersOut
+
+	// Deprecated
+	Results map[int]client.QuestionAnswersOut
+}
+
+func (ew *EvaluateWorkOut) fillMap() {
+	ew.Results = map[int]client.QuestionAnswersOut{ew.AnswerIndex: ew.Result}
 }
 
 // Evaluate checks the answer provided for the given exercice and
@@ -626,46 +655,32 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 		return EvaluateWorkOut{}, fmt.Errorf("internal error: inconsistent length %d != %d", L1, L2)
 	}
 
-	updatedProgression := args.Progression.Copy()
-	results := make(map[int]client.QuestionAnswersOut)
-
-	// depending on the flow, we either evaluate only one question,
-	// or all the ones given
-	switch data.flow() {
-	case ed.Parallel: // all questions
-		for questionIndex, question := range qus {
-			if answer, hasAnswer := args.Answers[questionIndex]; hasAnswer {
-				resp, err := EvaluateQuestion(question.Enonce, answer)
-				if err != nil {
-					return EvaluateWorkOut{}, err
-				}
-
-				results[questionIndex] = resp
-				l := &updatedProgression.Questions[questionIndex]
-				*l = append(*l, resp.IsCorrect())
-			}
-		}
-	case ed.Sequencial: // only the current question
-		questionIndex := args.Progression.NextQuestion
-		if questionIndex < 0 || questionIndex >= len(qus) {
-			return EvaluateWorkOut{}, fmt.Errorf("internal error: invalid question index %d", questionIndex)
-		}
-
-		answer, has := args.Answers[questionIndex]
-		if !has {
-			return EvaluateWorkOut{}, fmt.Errorf("internal error: missing answer for %d", questionIndex)
-		}
-
-		resp, err := EvaluateQuestion(qus[questionIndex].Enonce, answer)
-		if err != nil {
-			return EvaluateWorkOut{}, err
-		}
-
-		results[questionIndex] = resp
-		l := &updatedProgression.Questions[questionIndex]
-		*l = append(*l, resp.IsCorrect())
+	// compat mode
+	if err := args.fillFromMap(); err != nil {
+		return EvaluateWorkOut{}, err
 	}
 
+	if args.AnswerIndex < 0 || args.AnswerIndex >= len(qus) {
+		return EvaluateWorkOut{}, fmt.Errorf("internal error: invalid answer index %d", args.AnswerIndex)
+	}
+
+	// depending on the flow, check question index
+	switch data.flow() {
+	case ed.Parallel: // all questions are accessible
+	case ed.Sequencial: // only the current question is accessible
+		if exp := args.Progression.NextQuestion; args.AnswerIndex != exp {
+			return EvaluateWorkOut{}, fmt.Errorf("internal error: expected answer for %d, got %d", exp, args.AnswerIndex)
+		}
+	}
+
+	resp, err := EvaluateQuestion(qus[args.AnswerIndex].Enonce, args.Answer)
+	if err != nil {
+		return EvaluateWorkOut{}, err
+	}
+
+	updatedProgression := args.Progression.Copy()
+	l := &updatedProgression.Questions[args.AnswerIndex]
+	*l = append(*l, resp.IsCorrect())
 	updatedProgression.inferNextQuestion() // update in case of success
 
 	newVersion, err := data.Instantiate()
@@ -673,5 +688,15 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 		return EvaluateWorkOut{}, err
 	}
 
-	return EvaluateWorkOut{Results: results, Progression: updatedProgression, NewQuestions: newVersion.Questions}, nil
+	out := EvaluateWorkOut{
+		AnswerIndex:  args.AnswerIndex,
+		Result:       resp,
+		Progression:  updatedProgression,
+		NewQuestions: newVersion.Questions,
+	}
+
+	// compat
+	out.fillMap()
+
+	return out, nil
 }

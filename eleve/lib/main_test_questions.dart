@@ -341,23 +341,21 @@ class _ExerciceSequentialAPI implements ExerciceAPI {
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final questionIndex = params.answers.keys.first;
-    final answer = params.answers[questionIndex]!;
+    final questionIndex = params.answerIndex;
+    final answer = params.answer;
     // the correct answer is the index of the question
     final isCorrect =
         questionIndex == (answer.answer.data[0] as NumberAnswer).value;
-    final res = {
-      questionIndex: QuestionAnswersOut({0: isCorrect}, {})
-    };
     params.progression.questions[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        res,
         ProgressionExt(
             params.progression.questions,
             isCorrect
                 ? (questionIndex == 2 ? -1 : questionIndex + 1)
                 : questionIndex),
-        [quI1bis, quI2bis, quI3bis]);
+        [quI1bis, quI2bis, quI3bis],
+        questionIndex,
+        QuestionAnswersOut({0: isCorrect}, {}));
   }
 }
 
@@ -404,23 +402,18 @@ class _ExerciceParallelAPI implements ExerciceAPI {
 
   @override
   Future<EvaluateWorkOut> evaluate(EvaluateWorkIn params) async {
-    final res = <int, QuestionAnswersOut>{};
-    for (var item in params.answers.entries) {
-      final questionIndex = item.key;
-      final answer = item.value.answer;
-      final isCorrect = questionIndex == (answer.data[0] as NumberAnswer).value;
-      params.progression.questions[questionIndex].add(isCorrect);
-      res[questionIndex] = QuestionAnswersOut({0: isCorrect}, {});
-    }
-    params.progression.questions
-        .indexWhere((l) => l.every((sucess) => !sucess));
+    final questionIndex = params.answerIndex;
+    final answer = params.answer.answer;
+    final isCorrect = questionIndex == (answer.data[0] as NumberAnswer).value;
+    params.progression.questions[questionIndex].add(isCorrect);
     return EvaluateWorkOut(
-        res,
         ProgressionExt(
             params.progression.questions,
             params.progression.questions
                 .indexWhere((l) => l.every((sucess) => !sucess))),
-        [quI1bis, quI2bis, quI3bis]);
+        [quI1bis, quI2bis, quI3bis],
+        questionIndex,
+        QuestionAnswersOut({0: isCorrect}, {}));
   }
 }
 

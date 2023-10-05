@@ -409,12 +409,12 @@ class _ExerciceWState extends State<ExerciceW> {
 
     // validate the given answer
     final resp = await _evaluate(EvaluateWorkIn(
-        ct.exeAndProg.exercice.iD,
-        {
-          index: AnswerP(ct.exeAndProg.exercice.questions[index].params,
-              ct._questions[index].answers())
-        },
-        ct.exeAndProg.progression));
+      ct.exeAndProg.exercice.iD,
+      ct.exeAndProg.progression,
+      index,
+      AnswerP(ct.exeAndProg.exercice.questions[index].params,
+          ct._questions[index].answers()),
+    ));
     if (resp == null || !mounted) {
       return;
     }
@@ -427,11 +427,11 @@ class _ExerciceWState extends State<ExerciceW> {
       return;
     }
 
-    final isCorrect = resp.results[index]!.isCorrect;
+    final isCorrect = resp.result.isCorrect;
     if (!isCorrect) {
       // show errors and ask for retry
       setState(() {
-        ct.showFeedback({index: resp.results[index]!});
+        ct.showFeedback({index: resp.result});
       });
     } else {
       // update the menu status

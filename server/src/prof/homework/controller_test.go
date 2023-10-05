@@ -248,10 +248,9 @@ func TestEvaluateTask(t *testing.T) {
 		StudentID: studentKey.EncryptID(int64(student.Id)),
 		IdTask:    task.Id,
 		Ex: tasks.EvaluateWorkIn{
-			ID: task.IdWork,
-			Answers: map[int]tasks.AnswerP{
-				0: {},
-			},
+			ID:          task.IdWork,
+			AnswerIndex: 0,
+			Answer:      tasks.AnswerP{},
 		},
 		IdTravail: tr.Id,
 	})
@@ -272,10 +271,9 @@ func TestEvaluateTask(t *testing.T) {
 		StudentID: studentKey.EncryptID(int64(student.Id)),
 		IdTask:    task.Id,
 		Ex: tasks.EvaluateWorkIn{
-			ID: task.IdWork,
-			Answers: map[int]tasks.AnswerP{
-				0: {},
-			},
+			ID:          task.IdWork,
+			AnswerIndex: 0,
+			Answer:      tasks.AnswerP{},
 			Progression: out.Ex.Progression,
 		},
 		IdTravail: tr.Id,
