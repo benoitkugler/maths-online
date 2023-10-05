@@ -13,6 +13,7 @@ import (
 	"unicode"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
@@ -667,4 +668,21 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 	}
 
 	return out, nil
+}
+
+// StudentUpdatePlaylist is called to register an event when
+// a student updates its playlist
+func (ct *Controller) StudentUpdatePlaylist(c echo.Context) error {
+	idCrypted := pass.EncryptedID(c.QueryParam("client-id"))
+	id, err := ct.studentKey.DecryptID(idCrypted)
+	if err != nil {
+		return err
+	}
+
+	notif, err := events.RegisterEvents(ct.db, tc.IdStudent(id), events.E_Misc_SetPlaylist)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, notif)
 }
