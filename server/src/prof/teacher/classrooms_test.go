@@ -38,9 +38,7 @@ func Test_parsePronoteStudentList(t *testing.T) {
 	}
 
 	out, err := parsePronoteStudentList(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	if len(out) != 31 {
 		t.Fatal(len(out))
@@ -60,20 +58,15 @@ func Test_importPronoteFile(t *testing.T) {
 
 	ct := Controller{db: db}
 	classroom, err := tc.Classroom{IdTeacher: 1}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
+
 	defer tc.DeleteClassroomById(db, classroom.Id)
 
 	err = ct.importPronoteFile(f, classroom.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	out, err := ct.getClassroomStudents(classroom.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	if len(out) != 31 {
 		t.Fatal(len(out))
@@ -83,24 +76,18 @@ func Test_importPronoteFile(t *testing.T) {
 }
 
 func TestStudentCRUD(t *testing.T) {
-	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/events/gen_create.sql")
 	defer db.Remove()
 
 	teacher, err := tc.Teacher{Id: 1, FavoriteMatiere: tc.Mathematiques}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	ct := Controller{db: db.DB, admin: tc.Teacher{Id: teacher.Id}}
 	classroom, err := tc.Classroom{IdTeacher: teacher.Id}.Insert(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	st, err := ct.addStudent(classroom.Id, teacher.Id)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tu.AssertNoErr(t, err)
 
 	st.Name = "sdlsl"
 	st.Birthday = tc.Date(time.Now())
@@ -111,6 +98,10 @@ func TestStudentCRUD(t *testing.T) {
 	if err = ct.updateStudent(st, teacher.Id+1); err == nil {
 		t.Fatal()
 	}
+
+	m, err := ct.loadAdvances(classroom.Id, teacher.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, m[st.Id].TotalPoints == 0)
 
 	if err = ct.deleteStudent(st.Id, teacher.Id); err != nil {
 		t.Fatal(err)

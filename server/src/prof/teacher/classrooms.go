@@ -13,7 +13,7 @@ import (
 	"unicode"
 
 	"github.com/benoitkugler/maths-online/server/src/pass"
-	"github.com/benoitkugler/maths-online/server/src/sql/events"
+	evs "github.com/benoitkugler/maths-online/server/src/sql/events"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
@@ -482,6 +482,44 @@ func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
 	return code, nil
 }
 
+func (ct *Controller) ClassroomLoadAdvances(c echo.Context) error {
+	userID := JWTTeacher(c)
+
+	id, err := utils.QueryParamInt64(c, "id-classroom")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadAdvances(tc.IdClassroom(id), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadAdvances(id tc.IdClassroom, uID tc.IdTeacher) (map[tc.IdStudent]evs.Stats, error) {
+	if err := ct.checkAcces(uID, id); err != nil {
+		return nil, err
+	}
+
+	students, err := tc.SelectStudentsByIdClassrooms(ct.db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	events, err := evs.SelectEventsByIdStudents(ct.db, students.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	m := events.ByIdStudent()
+	out := make(map[tc.IdStudent]evs.Stats, len(m))
+	for id, l := range m {
+		out[id] = evs.NewAdvance(l).Stats()
+	}
+
+	return out, nil
+}
+
 // ------------------------- student client API -------------------------
 
 // CheckStudentClassroom is called on app startup, to check that the
@@ -679,7 +717,7 @@ func (ct *Controller) StudentUpdatePlaylist(c echo.Context) error {
 		return err
 	}
 
-	notif, err := events.RegisterEvents(ct.db, tc.IdStudent(id), events.E_Misc_SetPlaylist)
+	notif, err := evs.RegisterEvents(ct.db, tc.IdStudent(id), evs.E_Misc_SetPlaylist)
 	if err != nil {
 		return err
 	}

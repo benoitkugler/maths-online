@@ -1272,6 +1272,12 @@ export interface TagSection {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Tags
 export type Tags = TagSection[] | null;
+// github.com/benoitkugler/maths-online/server/src/sql/events.Stats
+export interface Stats {
+  Occurences: number[];
+  TotalPoints: number;
+  Flames: number;
+}
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
 export type IdSheet = number;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
@@ -1764,6 +1770,32 @@ export abstract class AbstractAPI {
 
   protected onSuccessTeacherGetClassroomStudents(
     data: Student[] | null,
+  ): void {}
+
+  protected async rawClassroomLoadAdvances(params: { "id-classroom": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/classrooms/students/advance";
+    const rep: AxiosResponse<{ [key: IdStudent]: Stats } | null> =
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { "id-classroom": String(params["id-classroom"]) },
+      });
+    return rep.data;
+  }
+
+  /** ClassroomLoadAdvances wraps rawClassroomLoadAdvances and handles the error */
+  async ClassroomLoadAdvances(params: { "id-classroom": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawClassroomLoadAdvances(params);
+      this.onSuccessClassroomLoadAdvances(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessClassroomLoadAdvances(
+    data: { [key: IdStudent]: Stats } | null,
   ): void {}
 
   protected async rawTeacherAddStudent(params: { "id-classroom": number }) {

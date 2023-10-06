@@ -140,9 +140,9 @@ func (adv Advance) connectStreaks() (nb3, nb7, nb30 int) {
 	return
 }
 
-// Flames returns the number of consecutive days (containing the present day)
+// flames returns the number of consecutive days (containing the present day)
 // for which (at least) 3 [E_All_QuestionRight] have been recorded
-func (adv Advance) Flames() int {
+func (adv Advance) flames() int {
 	start := day(time.Now())
 
 	currentDay := start
@@ -163,9 +163,8 @@ func (adv Advance) Flames() int {
 	return start - currentDay
 }
 
-func (adv Advance) TotalPoints() int {
-	// for now, the occurences are sufficient to compute the points
-	oc := adv.Occurences()
+// for now, the occurences are sufficient to compute the points
+func totalPoints(oc [NbEvents]int) int {
 	total := 0
 	for ev, nb := range oc {
 		resolver := properties[ev]
@@ -174,9 +173,9 @@ func (adv Advance) TotalPoints() int {
 	return total
 }
 
-// Occurences returns the number of realisation for each event,
+// occurences returns the number of realisation for each event,
 // including the dynamic ones (deduced from others).
-func (adv Advance) Occurences() (occurences [NbEvents]int) {
+func (adv Advance) occurences() (occurences [NbEvents]int) {
 	for _, day := range adv {
 		for _, ev := range day.events {
 			occurences[ev]++
@@ -190,6 +189,21 @@ func (adv Advance) Occurences() (occurences [NbEvents]int) {
 	occurences[E_ConnectStreak30] = nb30
 
 	return
+}
+
+type Stats struct {
+	Occurences  [NbEvents]int
+	TotalPoints int
+	Flames      int
+}
+
+func (adv Advance) Stats() Stats {
+	oc := adv.occurences()
+	return Stats{
+		Occurences:  oc,
+		TotalPoints: totalPoints(oc),
+		Flames:      adv.flames(),
+	}
 }
 
 // RegisterEvents stores the given events for the given student at the present time.
@@ -224,7 +238,7 @@ func RegisterEvents(db *sql.DB, idStudent teacher.IdStudent, events ...EventK) (
 	eventsAfter := append(eventsBefore, newEvents...)
 	advanceAfter := NewAdvance(eventsAfter)
 
-	score := advanceAfter.TotalPoints() - advanceBefore.TotalPoints()
+	score := totalPoints(advanceAfter.occurences()) - totalPoints(advanceBefore.occurences())
 	return EventNotification{Events: events, Points: score}, nil
 }
 

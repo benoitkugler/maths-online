@@ -72,7 +72,7 @@ func TestAdvance_Flames(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if got := tt.adv.Flames(); got != tt.want {
+		if got := tt.adv.flames(); got != tt.want {
 			t.Errorf("Advance.Flames() = %v, want %v", got, tt.want)
 		}
 	}
@@ -211,7 +211,7 @@ func TestAdvance_Events(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if gotOccurences := tt.adv.Occurences(); gotOccurences != tt.wantOccurences {
+		if gotOccurences := tt.adv.occurences(); gotOccurences != tt.wantOccurences {
 			t.Errorf("Advance.Events() = %v, want %v", gotOccurences, tt.wantOccurences)
 		}
 	}
@@ -237,7 +237,7 @@ func TestAdvance_TotalPoints(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if got := tt.adv.TotalPoints(); got != tt.want {
+		if got := totalPoints(tt.adv.occurences()); got != tt.want {
 			t.Errorf("Advance.TotalPoints() = %v, want %v", got, tt.want)
 		}
 	}

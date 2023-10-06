@@ -2,6 +2,7 @@
 
 import 'predefined.dart';
 import 'src_pass.dart';
+import 'src_sql_events.dart';
 import 'src_sql_homework.dart';
 import 'src_sql_tasks.dart';
 import 'src_sql_teacher.dart';
@@ -122,27 +123,32 @@ class StudentEvaluateTaskOut {
   final EvaluateWorkOut ex;
   final int mark;
   final bool wasProgressionRegistred;
+  final EventNotification advance;
 
   const StudentEvaluateTaskOut(
-      this.ex, this.mark, this.wasProgressionRegistred);
+      this.ex, this.mark, this.wasProgressionRegistred, this.advance);
 
   @override
   String toString() {
-    return "StudentEvaluateTaskOut($ex, $mark, $wasProgressionRegistred)";
+    return "StudentEvaluateTaskOut($ex, $mark, $wasProgressionRegistred, $advance)";
   }
 }
 
 StudentEvaluateTaskOut studentEvaluateTaskOutFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return StudentEvaluateTaskOut(evaluateWorkOutFromJson(json['Ex']),
-      intFromJson(json['Mark']), boolFromJson(json['WasProgressionRegistred']));
+  return StudentEvaluateTaskOut(
+      evaluateWorkOutFromJson(json['Ex']),
+      intFromJson(json['Mark']),
+      boolFromJson(json['WasProgressionRegistred']),
+      eventNotificationFromJson(json['Advance']));
 }
 
 Map<String, dynamic> studentEvaluateTaskOutToJson(StudentEvaluateTaskOut item) {
   return {
     "Ex": evaluateWorkOutToJson(item.ex),
     "Mark": intToJson(item.mark),
-    "WasProgressionRegistred": boolToJson(item.wasProgressionRegistred)
+    "WasProgressionRegistred": boolToJson(item.wasProgressionRegistred),
+    "Advance": eventNotificationToJson(item.advance)
   };
 }
 

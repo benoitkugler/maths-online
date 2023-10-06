@@ -31,6 +31,7 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.DELETE("/api/prof/classrooms", tc.TeacherDeleteClassroom)
 
 	gr.GET("/api/prof/classrooms/students", tc.TeacherGetClassroomStudents)
+	gr.GET("/api/prof/classrooms/students/advance", tc.ClassroomLoadAdvances)
 	gr.PUT("/api/prof/classrooms/students", tc.TeacherAddStudent)
 	gr.POST("/api/prof/classrooms/students", tc.TeacherUpdateStudent)
 	gr.DELETE("/api/prof/classrooms/students", tc.TeacherDeleteStudent)
