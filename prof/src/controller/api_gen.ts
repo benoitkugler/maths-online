@@ -1042,6 +1042,11 @@ export const PublicStatusLabels: { [key in PublicStatus]: string } = {
   [PublicStatus.AdminNotPublic]: "",
 };
 
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentExt
+export interface StudentExt {
+  Student: Student;
+  Success: Stats;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentHeader
 export interface StudentHeader {
   Id: IdStudent;
@@ -1749,7 +1754,7 @@ export abstract class AbstractAPI {
     "id-classroom": number;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    const rep: AxiosResponse<Student[] | null> = await Axios.get(fullUrl, {
+    const rep: AxiosResponse<StudentExt[] | null> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
       params: { "id-classroom": String(params["id-classroom"]) },
     });
@@ -1769,38 +1774,12 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessTeacherGetClassroomStudents(
-    data: Student[] | null,
-  ): void {}
-
-  protected async rawClassroomLoadAdvances(params: { "id-classroom": number }) {
-    const fullUrl = this.baseUrl + "/api/prof/classrooms/students/advance";
-    const rep: AxiosResponse<{ [key: IdStudent]: Stats } | null> =
-      await Axios.get(fullUrl, {
-        headers: this.getHeaders(),
-        params: { "id-classroom": String(params["id-classroom"]) },
-      });
-    return rep.data;
-  }
-
-  /** ClassroomLoadAdvances wraps rawClassroomLoadAdvances and handles the error */
-  async ClassroomLoadAdvances(params: { "id-classroom": number }) {
-    this.startRequest();
-    try {
-      const out = await this.rawClassroomLoadAdvances(params);
-      this.onSuccessClassroomLoadAdvances(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessClassroomLoadAdvances(
-    data: { [key: IdStudent]: Stats } | null,
+    data: StudentExt[] | null,
   ): void {}
 
   protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
-    const rep: AxiosResponse<Student> = await Axios.put(fullUrl, null, {
+    const rep: AxiosResponse<StudentExt> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
       params: { "id-classroom": String(params["id-classroom"]) },
     });
@@ -1819,7 +1798,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessTeacherAddStudent(data: Student): void {}
+  protected onSuccessTeacherAddStudent(data: StudentExt): void {}
 
   protected async rawTeacherUpdateStudent(params: Student) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";

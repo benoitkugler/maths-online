@@ -89,21 +89,17 @@ func TestStudentCRUD(t *testing.T) {
 	st, err := ct.addStudent(classroom.Id, teacher.Id)
 	tu.AssertNoErr(t, err)
 
-	st.Name = "sdlsl"
-	st.Birthday = tc.Date(time.Now())
-	if err = ct.updateStudent(st, teacher.Id); err != nil {
+	st.Student.Name = "sdlsl"
+	st.Student.Birthday = tc.Date(time.Now())
+	if err = ct.updateStudent(st.Student, teacher.Id); err != nil {
 		t.Fatal(err)
 	}
 
-	if err = ct.updateStudent(st, teacher.Id+1); err == nil {
+	if err = ct.updateStudent(st.Student, teacher.Id+1); err == nil {
 		t.Fatal()
 	}
 
-	m, err := ct.loadAdvances(classroom.Id, teacher.Id)
-	tu.AssertNoErr(t, err)
-	tu.Assert(t, m[st.Id].TotalPoints == 0)
-
-	if err = ct.deleteStudent(st.Id, teacher.Id); err != nil {
+	if err = ct.deleteStudent(st.Student.Id, teacher.Id); err != nil {
 		t.Fatal(err)
 	}
 }

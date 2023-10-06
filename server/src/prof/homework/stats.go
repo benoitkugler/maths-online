@@ -3,11 +3,12 @@ package homework
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
-	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
 	taAPI "github.com/benoitkugler/maths-online/server/src/tasks"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
@@ -17,7 +18,7 @@ import (
 // computed from the student progressions
 
 type HowemorkMarksIn struct {
-	IdClassroom teacher.IdClassroom
+	IdClassroom tc.IdClassroom
 	IdTravaux   []ho.IdTravail
 }
 
@@ -28,7 +29,7 @@ type StudentTravailMark struct {
 }
 
 type TravailMarks struct {
-	Marks     map[teacher.IdStudent]StudentTravailMark // the notes for each student
+	Marks     map[tc.IdStudent]StudentTravailMark // the notes for each student
 	TaskStats []TaskStat
 }
 
@@ -79,7 +80,7 @@ func (ct *Controller) HomeworkGetMarks(c echo.Context) error {
 }
 
 func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksOut, error) {
-	classroom, err := teacher.SelectClassroom(ct.db, args.IdClassroom)
+	classroom, err := tc.SelectClassroom(ct.db, args.IdClassroom)
 	if err != nil {
 		return HomeworkMarksOut{}, utils.SQLError(err)
 	}
@@ -87,10 +88,13 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 		return HomeworkMarksOut{}, errAccessForbidden
 	}
 
-	students, err := tcAPI.LoadClassroomStudents(ct.db, classroom.Id)
+	// returns the students for one classroom,
+	// sorted alphabetically.
+	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, args.IdClassroom)
 	if err != nil {
-		return HomeworkMarksOut{}, err
+		return HomeworkMarksOut{}, utils.SQLError(err)
 	}
+
 	travaux, err := ho.SelectTravails(ct.db, args.IdTravaux...)
 	if err != nil {
 		return HomeworkMarksOut{}, utils.SQLError(err)
@@ -104,13 +108,16 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 	expects := links.ByIdTravail()
 
 	out := HomeworkMarksOut{
-		Students: make([]tcAPI.StudentHeader, len(students)),
+		Students: make([]tcAPI.StudentHeader, 0, len(stds)),
 		Marks:    make(map[ho.IdTravail]TravailMarks),
 	}
 	// student list
-	for i, s := range students {
-		out.Students[i] = tcAPI.NewStudentHeader(s)
+	for _, s := range stds {
+		out.Students = append(out.Students, tcAPI.NewStudentHeader(s))
 	}
+
+	sort.Slice(out.Students, func(i, j int) bool { return out.Students[i].Label < out.Students[j].Label })
+
 	// compute the sheets marks :
 	loader, err := newSheetsLoader(ct.db, travaux.IdSheets())
 	if err != nil {
@@ -127,7 +134,7 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 			return HomeworkMarksOut{}, errors.New("internal error: inconsitent classroom ID")
 		}
 
-		markByStudent := make(map[teacher.IdStudent]StudentTravailMark)
+		markByStudent := make(map[tc.IdStudent]StudentTravailMark)
 		var sheetTotal int
 		// for each student, get its progression for each task
 		tasks := loader.tasksForSheet(travail.IdSheet)
@@ -148,7 +155,7 @@ func (ct *Controller) getMarks(args HowemorkMarksIn, userID uID) (HomeworkMarksO
 			questions := make(editor.Questions)                // success, failure
 
 			// add each progression to the student note
-			for _, student := range students { // make sure to consider all students
+			for _, student := range stds { // make sure to consider all students
 				studentProg := byStudent[student.Id]
 				studentMark := bareme.ComputeMark(studentProg.Questions)
 				item := markByStudent[student.Id]

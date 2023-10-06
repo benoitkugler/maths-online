@@ -181,27 +181,32 @@ func (ct *Controller) TeacherGetClassroomStudents(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-// LoadClassroomStudents returns the students for one classroom,
-// sorted alphabetically.
-func LoadClassroomStudents(db tc.DB, id tc.IdClassroom) ([]tc.Student, error) {
-	stds, err := tc.SelectStudentsByIdClassrooms(db, id)
+type StudentExt struct {
+	Student tc.Student
+	Success evs.Stats
+}
+
+func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]StudentExt, error) {
+	students, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	out := make([]tc.Student, 0, len(stds))
-	for _, student := range stds {
-		out = append(out, student)
+	events, err := evs.SelectEventsByIdStudents(ct.db, students.IDs()...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	m := events.ByIdStudent()
+
+	out := make([]StudentExt, 0, len(students))
+	for _, student := range students {
+		out = append(out, StudentExt{
+			Student: student,
+			Success: evs.NewAdvance(m[student.Id]).Stats(),
+		})
 	}
 
-	sort.Slice(out, func(i, j int) bool { return out[i].Surname < out[j].Surname })
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
-
 	return out, nil
-}
-
-func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]tc.Student, error) {
-	return LoadClassroomStudents(ct.db, idClassroom)
 }
 
 // split NAME NAME Surname into NAME NAME ; Surname
@@ -342,18 +347,21 @@ func (ct *Controller) TeacherAddStudent(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher) (tc.Student, error) {
+func (ct *Controller) addStudent(idClassroom tc.IdClassroom, userID tc.IdTeacher) (StudentExt, error) {
 	// check the access
 	if err := ct.checkAcces(userID, idClassroom); err != nil {
-		return tc.Student{}, err
+		return StudentExt{}, err
 	}
 
 	st, err := tc.Student{IdClassroom: idClassroom, Name: "Nouvel", Surname: "Eleve", Birthday: tc.Date(time.Now())}.Insert(ct.db)
 	if err != nil {
-		return tc.Student{}, utils.SQLError(err)
+		return StudentExt{}, utils.SQLError(err)
 	}
 
-	return st, nil
+	return StudentExt{
+		Student: st,
+		Success: evs.Stats{},
+	}, nil
 }
 
 // TeacherDeleteStudent removes the student from the classroom and
@@ -480,44 +488,6 @@ func (ct *Controller) generateClassroomCode(id tc.IdClassroom) (string, error) {
 	time.AfterFunc(classroomCodeDuration, func() { tc.CleanupClassroomCodes(ct.db) })
 
 	return code, nil
-}
-
-func (ct *Controller) ClassroomLoadAdvances(c echo.Context) error {
-	userID := JWTTeacher(c)
-
-	id, err := utils.QueryParamInt64(c, "id-classroom")
-	if err != nil {
-		return err
-	}
-
-	out, err := ct.loadAdvances(tc.IdClassroom(id), userID)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) loadAdvances(id tc.IdClassroom, uID tc.IdTeacher) (map[tc.IdStudent]evs.Stats, error) {
-	if err := ct.checkAcces(uID, id); err != nil {
-		return nil, err
-	}
-
-	students, err := tc.SelectStudentsByIdClassrooms(ct.db, id)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	events, err := evs.SelectEventsByIdStudents(ct.db, students.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	m := events.ByIdStudent()
-	out := make(map[tc.IdStudent]evs.Stats, len(m))
-	for id, l := range m {
-		out[id] = evs.NewAdvance(l).Stats()
-	}
-
-	return out, nil
 }
 
 // ------------------------- student client API -------------------------

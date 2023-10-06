@@ -5,14 +5,14 @@
     fullscreen
     :retain-focus="false"
   >
-    <students-list
+    <classroom-view
       v-if="classroomToShow"
       :classroom="classroomToShow"
       @closed="
         fetchClassrooms();
         classroomToShow = null;
       "
-    ></students-list>
+    ></classroom-view>
   </v-dialog>
 
   <v-dialog
@@ -108,8 +108,8 @@ import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
 import { onMounted } from "vue";
 import { $ref } from "vue/macros";
-import StudentsList from "../components/classrooms/StudentsList.vue";
 import ClassroomCard from "../components/classrooms/ClassroomCard.vue";
+import ClassroomView from "@/components/classrooms/ClassroomView.vue";
 
 let classrooms = $ref<ClassroomExt[]>([]);
 
@@ -149,7 +149,7 @@ async function updateClassroom() {
     return;
   }
 
-  const index = classrooms.findIndex((cl) => cl.Classroom.id == res.id);
+  const index = classrooms.findIndex(cl => cl.Classroom.id == res.id);
   classrooms[index].Classroom = res;
 }
 
