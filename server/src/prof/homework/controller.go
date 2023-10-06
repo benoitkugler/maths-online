@@ -12,6 +12,7 @@ import (
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -1399,7 +1400,37 @@ func (ct *Controller) studentEvaluateTask(args StudentEvaluateTaskIn) (StudentEv
 	if err != nil {
 		return StudentEvaluateTaskOut{}, err
 	}
-	return StudentEvaluateTaskOut{Ex: ex, Mark: mark, WasProgressionRegistred: registerProgression}, nil
+
+	// register success
+	ev := events.E_All_QuestionWrong
+	if ex.Result.IsCorrect() {
+		ev = events.E_All_QuestionRight
+	}
+	evL := []events.EventK{ev}
+	if ex.Progression.IsComplete() {
+		evL = append(evL, events.E_Homework_TaskDone)
+	}
+	// do we have finished the whole travail ?
+	ld, err := newSheetsLoader(ct.db, []ho.IdSheet{travail.IdSheet})
+	if err != nil {
+		return StudentEvaluateTaskOut{}, err
+	}
+	if len(ld.tasksForSheet(travail.IdSheet)) >= 2 {
+		travailComplete, err := ld.isSheetComplete(ct.db, idStudent, travail.IdSheet)
+		if err != nil {
+			return StudentEvaluateTaskOut{}, err
+		}
+		if travailComplete {
+			evL = append(evL, events.E_Homework_TravailDone)
+		}
+	}
+
+	notif, err := events.RegisterEvents(ct.db, idStudent, evL...)
+	if err != nil {
+		return StudentEvaluateTaskOut{}, err
+	}
+
+	return StudentEvaluateTaskOut{Ex: ex, Mark: mark, WasProgressionRegistred: registerProgression, Advance: notif}, nil
 }
 
 // StudentResetTask remove the progression for the given student

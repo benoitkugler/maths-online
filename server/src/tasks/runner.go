@@ -598,7 +598,7 @@ type EvaluateWorkIn struct {
 	Answer      AnswerP // new in v1.7
 
 	// Deprecated
-	Answers map[int]AnswerP // by question index (not ID)
+	Answers map[int]AnswerP `gomacro:"ignore"` // by question index (not ID)
 }
 
 func (ew *EvaluateWorkIn) fillFromMap() error {
@@ -625,7 +625,7 @@ type EvaluateWorkOut struct {
 	Result      client.QuestionAnswersOut
 
 	// Deprecated
-	Results map[int]client.QuestionAnswersOut
+	Results map[int]client.QuestionAnswersOut `gomacro:"ignore"`
 }
 
 func (ew *EvaluateWorkOut) fillMap() {

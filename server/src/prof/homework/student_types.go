@@ -2,6 +2,7 @@ package homework
 
 import (
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	sql "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -47,7 +48,8 @@ type StudentEvaluateTaskOut struct {
 	Mark int // updated mark
 	// WasProgressionRegistred is true if the server has updated the DB
 	// It should be used to decide whether or not to update the sheet list.
-	WasProgressionRegistred bool // new in v1.6.8
+	WasProgressionRegistred bool                     // new in v1.6.8
+	Advance                 events.EventNotification // new in v1.7
 }
 
 type StudentResetTaskIn struct {

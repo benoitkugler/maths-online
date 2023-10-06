@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/sql/events"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -26,7 +28,8 @@ type sample struct {
 func setupDB(t *testing.T) (db tu.TestDB, out sample) {
 	t.Helper()
 
-	db = tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql", "../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql")
+	db = tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/tasks/gen_create.sql",
+		"../../sql/homework/gen_create.sql", "../../sql/reviews/gen_create.sql", "../../sql/events/gen_create.sql")
 
 	_, err := teacher.Teacher{IsAdmin: true, FavoriteMatiere: teacher.Mathematiques}.Insert(db)
 	tu.AssertNoErr(t, err)
@@ -262,6 +265,12 @@ func TestEvaluateTask(t *testing.T) {
 	tu.Assert(t, taHeader.HasProgression)
 	tu.Assert(t, len(taHeader.Progression.Questions[0]) == 1)
 
+	// check the events
+	evL, err := events.SelectEventsByIdStudents(ct.db, student.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(evL) == 1 && evL[0].Event == events.E_All_QuestionWrong)
+	tu.Assert(t, len(out.Advance.Events) == 1)
+
 	// now expire the sheet ...
 	tr.Deadline = ho.Time(time.Now().Add(-time.Hour))
 	err = ct.updateTravail(tr, sp.userID)
@@ -273,13 +282,18 @@ func TestEvaluateTask(t *testing.T) {
 		Ex: tasks.EvaluateWorkIn{
 			ID:          task.IdWork,
 			AnswerIndex: 0,
-			Answer:      tasks.AnswerP{},
+			Answer:      tasks.AnswerP{Answer: client.QuestionAnswersIn{Data: client.Answers{0: client.NumberAnswer{Value: 1}}}},
 			Progression: out.Ex.Progression,
 		},
 		IdTravail: tr.Id,
 	}
 	out, err = ct.studentEvaluateTask(args)
 	tu.AssertNoErr(t, err)
+
+	// check the events
+	tu.Assert(t, len(out.Advance.Events) == 2)
+	tu.Assert(t, out.Advance.Events[0] == events.E_All_QuestionRight)
+	tu.Assert(t, out.Advance.Events[1] == events.E_Homework_TaskDone)
 
 	// ... and check that no new progression has been added,
 	// despite the runtime progression correctly updated
