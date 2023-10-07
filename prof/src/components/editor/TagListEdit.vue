@@ -73,17 +73,26 @@
             hint="Etiquettes supplémentaires permettant de définir les catégories de questions dans l'activité Isy'Triv."
             persistent-hint
             chips
+            closable-chips
           ></v-combobox>
         </v-col>
       </v-row>
     </v-card-text>
     <v-card-actions>
+      <v-alert
+        v-if="!areTagsDistinct"
+        color="warning"
+        density="compact"
+        class="ml-2"
+      >
+        Les étiquettes doivent être distinctes.
+      </v-alert>
       <v-spacer></v-spacer>
       <v-btn
         class="my-1"
         color="success"
         @click="emit('save')"
-        :disabled="!saveEnabled"
+        :disabled="!saveEnabled || !areTagsDistinct"
         variant="outlined"
       >
         Enregistrer
@@ -104,7 +113,8 @@ import {
   LevelColor,
   SubLevelColor,
   IsyTrivColor,
-  MatiereColor
+  MatiereColor,
+  tagString
 } from "@/controller/editor";
 import { computed } from "@vue/runtime-core";
 import { $computed } from "vue/macros";
@@ -187,6 +197,11 @@ const trivMathTags = computed(() => {
 });
 const subLevelItems = computed(() => {
   return (props.allTags.SubLevelsByLevel || {})[levelTag] || [];
+});
+
+const areTagsDistinct = computed(() => {
+  const s = new Set<string>(props.modelValue.map(t => tagString(t.Tag)));
+  return s.size == props.modelValue.length;
 });
 </script>
 
