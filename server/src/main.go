@@ -329,8 +329,8 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.Group("/prof-preview-app/*", middleware.Gzip(), cacheStatic).Static("/*", "static/prof_preview")
 
 	// student trivial access
-	e.GET("/trivial/game/setup", tvc.SetupStudentClient)
-	e.GET("/trivial/game/connect", tvc.ConnectStudentSession)
+	e.GET("/trivial/game/setup", tvc.SetupStudentClient, middleware.Secure())
+	e.GET("/trivial/game/connect", tvc.ConnectStudentSession, middleware.Secure())
 	// student trivial self access launcher
 	e.GET("/api/student/trivial/selfaccess", tvc.StudentGetSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/launch", tvc.StudentLaunchSelfaccess)
