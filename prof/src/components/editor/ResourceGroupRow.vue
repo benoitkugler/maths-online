@@ -94,7 +94,7 @@ import {
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
 import VariantList from "./VariantList.vue";
-import TagIndex from "./TagIndex.vue";
+import TagIndex from "../TagIndex.vue";
 
 interface Props {
   group: ResourceGroup;

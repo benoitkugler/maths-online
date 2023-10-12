@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
+	"github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ho "github.com/benoitkugler/maths-online/server/src/sql/homework"
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
 	"github.com/benoitkugler/maths-online/server/src/sql/tasks"
@@ -38,17 +39,30 @@ func newClassroomTravaux(cl teacher.Classroom, travailMap ho.Travails) Classroom
 type TaskExt struct {
 	Id             tasks.IdTask
 	IdWork         taAPI.WorkID
-	Title          string // title of the underlying exercice or question
+	Title          string      // title of the underlying exercice or question
+	Tags           editor.Tags // of the underlying group
 	Bareme         taAPI.TaskBareme
 	NbProgressions int // the number of student having started this task
 }
 
 // [progressions] is the list of all links item related to [task]
-func newTaskExt(task tasks.Task, work taAPI.WorkMeta, progressions tasks.Progressions) TaskExt {
+func newTaskExt(task tasks.Task, work taAPI.WorkMeta, progressions tasks.Progressions,
+	exTags map[editor.IdExercicegroup]editor.ExercicegroupTags, quTags map[editor.IdQuestiongroup]editor.QuestiongroupTags,
+) TaskExt {
 	baremes := work.Bareme()
+	var tags editor.Tags
+	switch work := work.(type) {
+	case taAPI.ExerciceData:
+		tags = exTags[work.Exercice.IdGroup].Tags()
+	case taAPI.MonoquestionData:
+		tags = quTags[work.Group.Id].Tags()
+	case taAPI.RandomMonoquestionData:
+		tags = quTags[work.Group.Id].Tags()
+	}
 	return TaskExt{
 		Id:             task.Id,
 		IdWork:         taAPI.NewWorkID(task),
+		Tags:           tags,
 		Title:          work.Title(),
 		NbProgressions: len(progressions.ByIdStudent()),
 		Bareme:         baremes,
@@ -68,7 +82,7 @@ func loadTaskExt(db ho.DB, idTask tasks.IdTask) (TaskExt, error) {
 		return TaskExt{}, utils.SQLError(err)
 	}
 
-	return newTaskExt(task, loader.GetWork(task), progressions), nil
+	return newTaskExt(task, loader.GetWork(task), progressions, loader.ExerciceTags, loader.QuestionTags), nil
 }
 
 type SheetExt struct {
@@ -152,7 +166,7 @@ func (loader sheetLoader) newSheetExt(sheet ho.Sheet, userID, adminID uID) Sheet
 	for _, link := range links {
 		task := loader.tasks.Tasks[link.IdTask]
 		work := loader.tasks.GetWork(task)
-		out.Tasks = append(out.Tasks, newTaskExt(task, work, loader.progressions[task.Id]))
+		out.Tasks = append(out.Tasks, newTaskExt(task, work, loader.progressions[task.Id], loader.tasks.ExerciceTags, loader.tasks.QuestionTags))
 	}
 	return out
 }

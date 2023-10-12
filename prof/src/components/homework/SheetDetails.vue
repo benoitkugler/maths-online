@@ -14,55 +14,47 @@
 
     <v-card-text>
       <v-row>
-        <!-- fields -->
-        <v-col cols="4" align-self="center">
-          <v-row>
-            <v-col>
-              <v-text-field
-                autofocus
-                @focus="$event.target.select()"
-                variant="outlined"
-                density="compact"
-                label="Titre de la feuille"
-                v-model="title"
-                @blur="updateTitle"
-                hide-details
-              >
-              </v-text-field> </v-col
-          ></v-row>
-
-          <v-row>
-            <v-col>
-              <v-select
-                density="compact"
-                variant="outlined"
-                v-model="props.sheet.Sheet.Matiere"
-                :color="MatiereColor"
-                label="Matière"
-                :items="Object.keys(MatiereTagLabels)"
-                @blur="update"
-                hide-details
-              ></v-select>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col>
-              <v-combobox
-                variant="outlined"
-                density="compact"
-                label="Niveau (classe)"
-                v-model="props.sheet.Sheet.Level"
-                :items="allTags.Levels || []"
-                :color="LevelColor"
-                @blur="update"
-              ></v-combobox>
-            </v-col>
-          </v-row>
+        <v-col>
+          <v-text-field
+            autofocus
+            @focus="$event.target.select()"
+            variant="outlined"
+            density="compact"
+            label="Titre de la feuille"
+            v-model="title"
+            @blur="updateTitle"
+            hide-details
+          >
+          </v-text-field>
         </v-col>
+        <v-col>
+          <v-select
+            density="compact"
+            variant="outlined"
+            v-model="props.sheet.Sheet.Matiere"
+            :color="MatiereColor"
+            label="Matière"
+            :items="Object.keys(MatiereTagLabels)"
+            @blur="update"
+            hide-details
+          ></v-select>
+        </v-col>
+        <v-col>
+          <v-combobox
+            variant="outlined"
+            density="compact"
+            label="Niveau (classe)"
+            v-model="props.sheet.Sheet.Level"
+            :items="allTags.Levels || []"
+            :color="LevelColor"
+            @blur="update"
+          ></v-combobox>
+        </v-col>
+      </v-row>
 
-        <!-- exercice list -->
-        <v-col cols="8">
+      <!-- exercice list -->
+      <v-row no-gutters>
+        <v-col>
           <SheetTasks
             :sheet="props.sheet"
             :all-tags="allTags"

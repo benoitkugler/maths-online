@@ -71,8 +71,10 @@ type TasksContents struct {
 
 	questions ed.Questions // provide exercices and monoquestions contents
 
-	exerciceTags map[ed.IdExercicegroup]ed.ExercicegroupTags
-	questionTags map[ed.IdQuestiongroup]ed.QuestiongroupTags // for [monoquestions] and [randomMonoquestions]
+	// ExerciceTags stores the tags for all the exercices found in [Tasks]
+	ExerciceTags map[ed.IdExercicegroup]ed.ExercicegroupTags
+	// QuestionTags stores the tags for all the monoquestions and randomMonoquestions found in [Tasks]
+	QuestionTags map[ed.IdQuestiongroup]ed.QuestiongroupTags // for [monoquestions] and [randomMonoquestions]
 
 	selectedVariants map[teacher.IdStudent]ta.RandomMonoquestionVariants // for [randomMonoquestions], only used in [ResolveQuestions]
 }
@@ -160,12 +162,12 @@ func NewTasksContents(db ta.DB, ids []ta.IdTask) (out TasksContents, err error) 
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	out.exerciceTags = eTags.ByIdExercicegroup()
+	out.ExerciceTags = eTags.ByIdExercicegroup()
 	qTags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroups.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	out.questionTags = qTags.ByIdQuestiongroup()
+	out.QuestionTags = qTags.ByIdQuestiongroup()
 
 	tmp, err := ta.SelectRandomMonoquestionVariantsByIdRandomMonoquestions(db, randomMonoquestionIDs.Keys()...)
 	if err != nil {
@@ -182,7 +184,7 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 	case task.IdExercice.Valid:
 		ex := contents.exercices[task.IdExercice.ID]
 		questions := contents.exToQuestions[task.IdExercice.ID]
-		tags := contents.exerciceTags[ex.IdGroup]
+		tags := contents.ExerciceTags[ex.IdGroup]
 		return ExerciceData{
 			Group:        contents.exercicegroups[ex.IdGroup],
 			Exercice:     ex,
@@ -193,21 +195,21 @@ func (contents TasksContents) GetWork(task ta.Task) WorkMeta {
 	case task.IdMonoquestion.Valid:
 		monoquestion := contents.monoquestions[task.IdMonoquestion.ID]
 		question := contents.questions[monoquestion.IdQuestion]
-		tags := contents.questionTags[question.IdGroup.ID]
-		return monoquestionData{
-			params:        monoquestion,
-			question:      question,
-			questiongroup: contents.questiongroups[question.IdGroup.ID],
-			chapter:       tags.Tags().BySection().Chapter,
+		tags := contents.QuestionTags[question.IdGroup.ID]
+		return MonoquestionData{
+			params:   monoquestion,
+			question: question,
+			Group:    contents.questiongroups[question.IdGroup.ID],
+			chapter:  tags.Tags().BySection().Chapter,
 		}
 	case task.IdRandomMonoquestion.Valid:
 		mono := contents.randomMonoquestions[task.IdRandomMonoquestion.ID]
-		tags := contents.questionTags[mono.IdQuestiongroup]
+		tags := contents.QuestionTags[mono.IdQuestiongroup]
 		// for this use case, leaving [selectedQuestions] is OK
-		return randomMonoquestionData{
-			params:        mono,
-			questiongroup: contents.questiongroups[mono.IdQuestiongroup],
-			chapter:       tags.Tags().BySection().Chapter,
+		return RandomMonoquestionData{
+			params:  mono,
+			Group:   contents.questiongroups[mono.IdQuestiongroup],
+			chapter: tags.Tags().BySection().Chapter,
 		}
 	default: // should not happen (enforced by SQL constraint)
 		return nil
@@ -250,9 +252,9 @@ func (contents TasksContents) ResolveQuestions(idStudent teacher.IdStudent, work
 	switch work := work.(type) {
 	case ExerciceData:
 		return work.Questions()
-	case monoquestionData:
+	case MonoquestionData:
 		return work.Questions()
-	case randomMonoquestionData:
+	case RandomMonoquestionData:
 		l := contents.selectedVariants[idStudent].ByIdRandomMonoquestion()[work.params.Id]
 		l.EnsureOrder()
 		out := make([]ed.Question, len(l))
@@ -269,10 +271,10 @@ func (contents TasksContents) OrderQuestions(work WorkMeta) []ed.Question {
 	switch work := work.(type) {
 	case ExerciceData:
 		return work.Questions()
-	case monoquestionData:
+	case MonoquestionData:
 		return []ed.Question{work.question}
-	case randomMonoquestionData:
-		l := contents.questions.ByGroup()[work.questiongroup.Id]
+	case RandomMonoquestionData:
+		l := contents.questions.ByGroup()[work.Group.Id]
 		sort.Slice(l, func(i, j int) bool { return l[i].Difficulty < l[j].Difficulty })
 		return l
 	default:

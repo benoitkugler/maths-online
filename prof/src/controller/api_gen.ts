@@ -897,6 +897,7 @@ export interface TaskExt {
   Id: IdTask;
   IdWork: WorkID;
   Title: string;
+  Tags: Tags;
   Bareme: TaskBareme;
   NbProgressions: number;
 }

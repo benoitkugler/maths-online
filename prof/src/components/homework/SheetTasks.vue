@@ -122,6 +122,9 @@
                   {{ taskTooltip(task) }}
                 </v-tooltip>
               </v-col>
+              <v-col cols="3" align-self="center" class="text-center">
+                <TagIndex :tags="task.Tags || []"></TagIndex>
+              </v-col>
               <v-col cols="auto" align-self="center" class="px-3">
                 <span v-if="!task.NbProgressions" class="text-grey"
                   >Non démarrée</span
@@ -191,6 +194,7 @@ import ResourceSelector from "../ResourceSelector.vue";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TaskDetailsChip from "./TaskDetailsChip.vue";
 import { controller } from "@/controller/controller";
+import TagIndex from "../TagIndex.vue";
 
 interface Props {
   sheet: SheetExt;

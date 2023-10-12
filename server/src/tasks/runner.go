@@ -218,7 +218,7 @@ func InstantiateWork(db *sql.DB, work WorkID, student tc.IdStudent) (Instantiate
 		return InstantiatedWork{}, err
 	}
 
-	if random, ok := loader.(randomMonoquestionData); ok && len(random.selectedQuestions) == 0 {
+	if random, ok := loader.(RandomMonoquestionData); ok && len(random.selectedQuestions) == 0 {
 		loader, err = random.selectQuestions(db, student)
 		if err != nil {
 			return InstantiatedWork{}, err
@@ -357,15 +357,15 @@ func (data ExerciceData) Instantiate() (InstantiatedWork, error) {
 	return out, nil
 }
 
-type monoquestionData struct {
-	params        ta.Monoquestion
-	questiongroup ed.Questiongroup
-	chapter       string
-	question      ed.Question
+type MonoquestionData struct {
+	params   ta.Monoquestion
+	Group    ed.Questiongroup
+	chapter  string
+	question ed.Question
 }
 
 // newMonoquestionData loads the given Monoquestion and the associated question
-func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, err error) {
+func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out MonoquestionData, err error) {
 	out.params, err = ta.SelectMonoquestion(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -376,12 +376,12 @@ func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, 
 		return out, utils.SQLError(err)
 	}
 
-	out.questiongroup, err = ed.SelectQuestiongroup(db, out.question.IdGroup.ID)
+	out.Group, err = ed.SelectQuestiongroup(db, out.question.IdGroup.ID)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroup.Id)
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.Group.Id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -390,12 +390,12 @@ func newMonoquestionData(db ed.DB, id ta.IdMonoquestion) (out monoquestionData, 
 	return out, nil
 }
 
-func (data monoquestionData) Title() string   { return data.questiongroup.Title }
-func (monoquestionData) flow() ed.Flow        { return ed.Parallel }
-func (data monoquestionData) Chapter() string { return data.chapter }
+func (data MonoquestionData) Title() string   { return data.Group.Title }
+func (MonoquestionData) flow() ed.Flow        { return ed.Parallel }
+func (data MonoquestionData) Chapter() string { return data.chapter }
 
 // Questions returns the generated list of questions
-func (data monoquestionData) Questions() []ed.Question {
+func (data MonoquestionData) Questions() []ed.Question {
 	questions := make([]ed.Question, data.params.NbRepeat)
 	// repeat the question
 	for i := range questions {
@@ -404,7 +404,7 @@ func (data monoquestionData) Questions() []ed.Question {
 	return questions
 }
 
-func (data monoquestionData) Bareme() TaskBareme {
+func (data MonoquestionData) Bareme() TaskBareme {
 	baremes := make([]int, data.params.NbRepeat)
 	// repeat the question
 	for i := range baremes {
@@ -413,7 +413,7 @@ func (data monoquestionData) Bareme() TaskBareme {
 	return baremes
 }
 
-func (data monoquestionData) Instantiate() (InstantiatedWork, error) {
+func (data MonoquestionData) Instantiate() (InstantiatedWork, error) {
 	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromMono(data.params.Id),
@@ -430,10 +430,10 @@ func (data monoquestionData) Instantiate() (InstantiatedWork, error) {
 	return out, nil
 }
 
-type randomMonoquestionData struct {
-	params        ta.RandomMonoquestion
-	questiongroup ed.Questiongroup
-	chapter       string
+type RandomMonoquestionData struct {
+	params  ta.RandomMonoquestion
+	Group   ed.Questiongroup
+	chapter string
 
 	// with length params.NbRepeat, or empty before
 	// instanciation
@@ -442,18 +442,18 @@ type randomMonoquestionData struct {
 
 // `selectedQuestions` may be empty if the student has not instanciated this task yet
 // See also [selectQuestions]
-func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.IdStudent) (out randomMonoquestionData, err error) {
+func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.IdStudent) (out RandomMonoquestionData, err error) {
 	out.params, err = ta.SelectRandomMonoquestion(db, id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	out.questiongroup, err = ed.SelectQuestiongroup(db, out.params.IdQuestiongroup)
+	out.Group, err = ed.SelectQuestiongroup(db, out.params.IdQuestiongroup)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 
-	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.questiongroup.Id)
+	tags, err := ed.SelectQuestiongroupTagsByIdQuestiongroups(db, out.Group.Id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -481,7 +481,7 @@ func newRandomMonoquestionData(db ed.DB, id ta.IdRandomMonoquestion, student tc.
 
 // selectQuestions chooses the variants (with respect to the teacher settings), update the DB,
 // and returns the updated struct
-func (data randomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdStudent) (randomMonoquestionData, error) {
+func (data RandomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdStudent) (RandomMonoquestionData, error) {
 	// load all the variants
 	questions, err := ed.SelectQuestionsByIdGroups(db, data.params.IdQuestiongroup)
 	if err != nil {
@@ -550,14 +550,14 @@ func selectVariants(nbToSelect int, among []ed.Question) []ed.Question {
 	return selected
 }
 
-func (data randomMonoquestionData) Title() string   { return data.questiongroup.Title }
-func (randomMonoquestionData) flow() ed.Flow        { return ed.Parallel }
-func (data randomMonoquestionData) Chapter() string { return data.chapter }
+func (data RandomMonoquestionData) Title() string   { return data.Group.Title }
+func (RandomMonoquestionData) flow() ed.Flow        { return ed.Parallel }
+func (data RandomMonoquestionData) Chapter() string { return data.chapter }
 
 // Questions is only valid when the student specific variants have been loaded
-func (data randomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }
+func (data RandomMonoquestionData) Questions() []ed.Question { return data.selectedQuestions }
 
-func (data randomMonoquestionData) Bareme() TaskBareme {
+func (data RandomMonoquestionData) Bareme() TaskBareme {
 	baremes := make([]int, data.params.NbRepeat)
 	// repeat the bareme
 	for i := range baremes {
@@ -566,7 +566,7 @@ func (data randomMonoquestionData) Bareme() TaskBareme {
 	return baremes
 }
 
-func (data randomMonoquestionData) Instantiate() (InstantiatedWork, error) {
+func (data RandomMonoquestionData) Instantiate() (InstantiatedWork, error) {
 	questions := data.Questions()
 	out := InstantiatedWork{
 		ID:      newWorkIDFromRandomMono(data.params.Id),
