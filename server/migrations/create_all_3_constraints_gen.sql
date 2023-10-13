@@ -7,6 +7,12 @@ ALTER TABLE classrooms
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
 
+ALTER TABLE classroom_codes
+    ADD UNIQUE (Code);
+
+ALTER TABLE classroom_codes
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
+
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
@@ -165,10 +171,10 @@ ALTER TABLE random_monoquestion_variants
     ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
@@ -214,6 +220,15 @@ ALTER TABLE sheet_tasks
 
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
+
+ALTER TABLE travail_exceptions
+    ADD UNIQUE (IdStudent, IdTravail);
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdTravail) REFERENCES travails ON DELETE CASCADE;
 
 ALTER TABLE reviews
     ADD UNIQUE (Id, Kind);

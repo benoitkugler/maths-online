@@ -507,7 +507,7 @@ func (data RandomMonoquestionData) selectQuestions(db *sql.DB, idStudent tc.IdSt
 		links[i] = ta.RandomMonoquestionVariant{
 			IdStudent:            idStudent,
 			IdRandomMonoquestion: data.params.Id,
-			Index:                i,
+			Index:                int16(i),
 			IdQuestion:           qu.Id,
 		}
 	}

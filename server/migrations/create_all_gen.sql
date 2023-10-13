@@ -7,6 +7,12 @@ CREATE TABLE classrooms (
     Name text NOT NULL
 );
 
+CREATE TABLE classroom_codes (
+    IdClassroom integer NOT NULL,
+    Code text NOT NULL,
+    ExpiresAt timestamp(0) with time zone NOT NULL
+);
+
 CREATE TABLE students (
     Id serial PRIMARY KEY,
     Name text NOT NULL,
@@ -36,6 +42,12 @@ ALTER TABLE classrooms
 
 ALTER TABLE classrooms
     ADD FOREIGN KEY (IdTeacher) REFERENCES teachers ON DELETE CASCADE;
+
+ALTER TABLE classroom_codes
+    ADD UNIQUE (Code);
+
+ALTER TABLE classroom_codes
+    ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
 
 ALTER TABLE students
     ADD FOREIGN KEY (IdClassroom) REFERENCES classrooms ON DELETE CASCADE;
@@ -295,29 +307,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_clie_FunctionSign (data jsonb)
-    RETURNS boolean
-    AS $$
-BEGIN
-    IF jsonb_typeof(data) = 'null' THEN
-        RETURN TRUE;
-    END IF;
-    IF jsonb_typeof(data) != 'array' THEN
-        RETURN FALSE;
-    END IF;
-    IF jsonb_array_length(data) = 0 THEN
-        RETURN TRUE;
-    END IF;
-    RETURN (
-        SELECT
-            bool_and(gomacro_validate_json_clie_FunctionSign (value))
-        FROM
-            jsonb_array_elements(data));
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_array_clie_SignSymbol (data jsonb)
     RETURNS boolean
     AS $$
@@ -426,6 +415,29 @@ BEGIN
     RETURN (
         SELECT
             bool_and(gomacro_validate_json_ques_FunctionPoint (value))
+        FROM
+            jsonb_array_elements(data));
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_ques_FunctionSign (data jsonb)
+    RETURNS boolean
+    AS $$
+BEGIN
+    IF jsonb_typeof(data) = 'null' THEN
+        RETURN TRUE;
+    END IF;
+    IF jsonb_typeof(data) != 'array' THEN
+        RETURN FALSE;
+    END IF;
+    IF jsonb_array_length(data) = 0 THEN
+        RETURN TRUE;
+    END IF;
+    RETURN (
+        SELECT
+            bool_and(gomacro_validate_json_ques_FunctionSign (value))
         FROM
             jsonb_array_elements(data));
 END;
@@ -711,29 +723,6 @@ BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a clie_Binary', data;
     END IF;
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
-CREATE OR REPLACE FUNCTION gomacro_validate_json_clie_FunctionSign (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Label', 'FxSymbols', 'Signs'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_array_clie_SignSymbol (data -> 'FxSymbols')
-        AND gomacro_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
 END;
 $$
@@ -1089,6 +1078,29 @@ BEGIN
         AND gomacro_validate_json_string (data -> 'Label')
         AND gomacro_validate_json_expr_Variable (data -> 'Variable')
         AND gomacro_validate_json_array_string (data -> 'XGrid');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FunctionSign (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Label', 'FxSymbols', 'Signs'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_array_clie_SignSymbol (data -> 'FxSymbols')
+        AND gomacro_validate_json_array_boolean (data -> 'Signs');
     RETURN is_valid;
 END;
 $$
@@ -1530,7 +1542,7 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_array_string (data -> 'Xs')
-        AND gomacro_validate_json_array_clie_FunctionSign (data -> 'Functions');
+        AND gomacro_validate_json_array_ques_FunctionSign (data -> 'Functions');
     RETURN is_valid;
 END;
 $$
@@ -2335,7 +2347,7 @@ CREATE TABLE monoquestions (
 CREATE TABLE progressions (
     IdStudent integer NOT NULL,
     IdTask integer NOT NULL,
-    Index integer NOT NULL,
+    Index smallint NOT NULL,
     History boolean[]
 );
 
@@ -2350,7 +2362,7 @@ CREATE TABLE random_monoquestions (
 CREATE TABLE random_monoquestion_variants (
     IdStudent integer NOT NULL,
     IdRandomMonoquestion integer NOT NULL,
-    Index integer NOT NULL,
+    Index smallint NOT NULL,
     IdQuestion integer NOT NULL
 );
 
@@ -2393,10 +2405,10 @@ ALTER TABLE random_monoquestion_variants
     ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;
@@ -2475,7 +2487,15 @@ CREATE TABLE travails (
     IdClassroom integer NOT NULL,
     IdSheet integer NOT NULL,
     Noted boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    Deadline timestamp(0) with time zone NOT NULL,
+    ShowAfter timestamp(0) with time zone NOT NULL
+);
+
+CREATE TABLE travail_exceptions (
+    IdStudent integer NOT NULL,
+    IdTravail integer NOT NULL,
+    Deadline timestamp(0) with time zone,
+    IgnoreForMark boolean NOT NULL
 );
 
 -- constraints
@@ -2508,6 +2528,15 @@ ALTER TABLE sheet_tasks
 
 ALTER TABLE sheet_tasks
     ADD FOREIGN KEY (IdTask) REFERENCES tasks;
+
+ALTER TABLE travail_exceptions
+    ADD UNIQUE (IdStudent, IdTravail);
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
+
+ALTER TABLE travail_exceptions
+    ADD FOREIGN KEY (IdTravail) REFERENCES travails ON DELETE CASCADE;
 
 -- sql/reviews/gen_create.sql
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.

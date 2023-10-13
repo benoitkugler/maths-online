@@ -317,7 +317,7 @@ func updateProgression(db *sql.DB, idStudent teacher.IdStudent, idTask ta.IdTask
 		links[i] = ta.Progression{
 			IdStudent: idStudent,
 			IdTask:    idTask,
-			Index:     i,
+			Index:     int16(i),
 			History:   qu,
 		}
 	}

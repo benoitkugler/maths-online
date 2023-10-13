@@ -16,4 +16,6 @@ echo "Importing..." &&
 psql isyro_prod < schema.sql && 
 psql isyro_prod < data.sql && 
 echo "Cleaning up" && 
-rm schema.sql data.sql
+rm schema.sql data.sql && 
+echo "Setting passwords to 1234..." && 
+psql isyro_prod -c  "UPDATE teachers SET passwordcrypted = '\xcd9c6d2bb0ce633cbc55d4a138f6945f89a5351db810c556a5a36f140e6116c1'"

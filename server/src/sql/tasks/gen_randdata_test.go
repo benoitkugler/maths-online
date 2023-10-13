@@ -55,7 +55,7 @@ func randProgression() Progression {
 	var s Progression
 	s.IdStudent = randtea_IdStudent()
 	s.IdTask = randIdTask()
-	s.Index = randint()
+	s.Index = randint16()
 	s.History = randQuestionHistory()
 
 	return s
@@ -80,7 +80,7 @@ func randRandomMonoquestionVariant() RandomMonoquestionVariant {
 	var s RandomMonoquestionVariant
 	s.IdStudent = randtea_IdStudent()
 	s.IdRandomMonoquestion = randIdRandomMonoquestion()
-	s.Index = randint()
+	s.Index = randint16()
 	s.IdQuestion = randedi_IdQuestion()
 
 	return s
@@ -151,6 +151,10 @@ func randedi_OptionalIdExercice() editor.OptionalIdExercice {
 
 func randint() int {
 	return int(rand.Intn(1000000))
+}
+
+func randint16() int16 {
+	return int16(rand.Intn(1000000))
 }
 
 func randint64() int64 {

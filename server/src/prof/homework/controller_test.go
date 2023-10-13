@@ -317,7 +317,7 @@ func TestEvaluateTask(t *testing.T) {
 func insertProgression(db *sql.DB, idTask ta.IdTask, idStudent teacher.IdStudent, questions []ta.QuestionHistory) error {
 	links := make(ta.Progressions, len(questions))
 	for i, qu := range questions {
-		links[i] = ta.Progression{IdStudent: idStudent, IdTask: idTask, Index: i, History: qu}
+		links[i] = ta.Progression{IdStudent: idStudent, IdTask: idTask, Index: int16(i), History: qu}
 	}
 	tx, err := db.Begin()
 	if err != nil {

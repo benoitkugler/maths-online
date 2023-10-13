@@ -9,7 +9,7 @@ CREATE TABLE monoquestions (
 CREATE TABLE progressions (
     IdStudent integer NOT NULL,
     IdTask integer NOT NULL,
-    Index integer NOT NULL,
+    Index smallint NOT NULL,
     History boolean[]
 );
 
@@ -24,7 +24,7 @@ CREATE TABLE random_monoquestions (
 CREATE TABLE random_monoquestion_variants (
     IdStudent integer NOT NULL,
     IdRandomMonoquestion integer NOT NULL,
-    Index integer NOT NULL,
+    Index smallint NOT NULL,
     IdQuestion integer NOT NULL
 );
 
@@ -67,10 +67,10 @@ ALTER TABLE random_monoquestion_variants
     ADD UNIQUE (IdStudent, IdRandomMonoquestion, INDEX);
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
-    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions;
+    ADD FOREIGN KEY (IdRandomMonoquestion) REFERENCES random_monoquestions ON DELETE CASCADE;
 
 ALTER TABLE random_monoquestion_variants
     ADD FOREIGN KEY (IdQuestion) REFERENCES questions;

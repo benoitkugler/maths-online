@@ -4,6 +4,12 @@ CREATE TABLE classrooms (
     Name text NOT NULL
 );
 
+CREATE TABLE classroom_codes (
+    IdClassroom integer NOT NULL,
+    Code text NOT NULL,
+    ExpiresAt timestamp(0) with time zone NOT NULL
+);
+
 CREATE TABLE students (
     Id serial PRIMARY KEY,
     Name text NOT NULL,
@@ -102,7 +108,7 @@ CREATE TABLE monoquestions (
 CREATE TABLE progressions (
     IdStudent integer NOT NULL,
     IdTask integer NOT NULL,
-    Index integer NOT NULL,
+    Index smallint NOT NULL,
     History boolean[]
 );
 
@@ -117,7 +123,7 @@ CREATE TABLE random_monoquestions (
 CREATE TABLE random_monoquestion_variants (
     IdStudent integer NOT NULL,
     IdRandomMonoquestion integer NOT NULL,
-    Index integer NOT NULL,
+    Index smallint NOT NULL,
     IdQuestion integer NOT NULL
 );
 
@@ -149,7 +155,15 @@ CREATE TABLE travails (
     IdClassroom integer NOT NULL,
     IdSheet integer NOT NULL,
     Noted boolean NOT NULL,
-    Deadline timestamp(0) with time zone NOT NULL
+    Deadline timestamp(0) with time zone NOT NULL,
+    ShowAfter timestamp(0) with time zone NOT NULL
+);
+
+CREATE TABLE travail_exceptions (
+    IdStudent integer NOT NULL,
+    IdTravail integer NOT NULL,
+    Deadline timestamp(0) with time zone,
+    IgnoreForMark boolean NOT NULL
 );
 
 CREATE TABLE reviews (

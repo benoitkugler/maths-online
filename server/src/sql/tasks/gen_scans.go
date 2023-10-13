@@ -371,7 +371,7 @@ func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, 
 }
 
 // SelectProgressionByIdStudentAndIdTaskAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectProgressionByIdStudentAndIdTaskAndIndex(tx DB, idStudent teacher.IdStudent, idTask IdTask, index int) (item Progression, found bool, err error) {
+func SelectProgressionByIdStudentAndIdTaskAndIndex(tx DB, idStudent teacher.IdStudent, idTask IdTask, index int16) (item Progression, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM progressions WHERE IdStudent = $1 AND IdTask = $2 AND Index = $3", idStudent, idTask, index)
 	item, err = ScanProgression(row)
 	if err == sql.ErrNoRows {
@@ -766,7 +766,7 @@ func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, i
 }
 
 // SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion, index int) (item RandomMonoquestionVariant, found bool, err error) {
+func SelectRandomMonoquestionVariantByIdStudentAndIdRandomMonoquestionAndIndex(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion, index int16) (item RandomMonoquestionVariant, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 AND Index = $3", idStudent, idRandomMonoquestion, index)
 	item, err = ScanRandomMonoquestionVariant(row)
 	if err == sql.ErrNoRows {
