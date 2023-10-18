@@ -106,3 +106,13 @@ func TestInstantiateMinMax(t *testing.T) {
 	tu.Assert(t, !strings.Contains(vars[expression.NewVarI('s', "1")].String(), "min"))
 	tu.Assert(t, !strings.Contains(vars[expression.NewVarI('s', "2")].String(), "max"))
 }
+
+func TestInstantiateTextFormula(t *testing.T) {
+	b := TextBlock{Parts: `Soit 
+		$$ f(x) = 3x + 5 $$
+		Calculer f'
+	`}
+	blocks, err := Enonce{b}.InstantiateWith(nil)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(blocks) == 3)
+}

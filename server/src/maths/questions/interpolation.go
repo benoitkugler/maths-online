@@ -2,6 +2,7 @@ package questions
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
@@ -11,6 +12,34 @@ import (
 // delimiters.
 // && are allowed in $$.
 type Interpolated string
+
+type textOrFormula struct {
+	s         string
+	isFormula bool
+}
+
+// parseFormula looks for $$ $$ lines
+func (s Interpolated) parseFormula() (out []textOrFormula) {
+	lines := strings.Split(string(s), "\n")
+	var currentLines []string
+	for _, line := range lines {
+		lineT := strings.TrimSpace(line)
+		if lineT != "$$" && strings.HasPrefix(lineT, "$$") && strings.HasSuffix(lineT, "$$") {
+			// found a formula
+			if len(currentLines) != 0 {
+				out = append(out, textOrFormula{strings.Join(currentLines, "\n"), false})
+				currentLines = nil
+			}
+			out = append(out, textOrFormula{lineT[2 : len(lineT)-2], true})
+		} else {
+			currentLines = append(currentLines, line)
+		}
+	}
+	if len(currentLines) != 0 {
+		out = append(out, textOrFormula{strings.Join(currentLines, "\n"), false})
+	}
+	return out
+}
 
 // parse extracts each parts of the interpolated string,
 // as well as parsing expressions found.

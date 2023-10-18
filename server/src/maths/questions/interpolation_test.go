@@ -111,3 +111,58 @@ func TestLatexOutput(t *testing.T) {
 		t.Fatal(len(sample))
 	}
 }
+
+func TestInterpolated_parseFormula(t *testing.T) {
+	tests := []struct {
+		s       Interpolated
+		wantOut []textOrFormula
+	}{
+		{
+			"", []textOrFormula{{isFormula: false}},
+		},
+		{
+			"regular\ntwo lines", []textOrFormula{{"regular\ntwo lines", false}},
+		},
+		{
+			"false$\n$$", []textOrFormula{{"false$\n$$", false}},
+		},
+		{
+			"with formula\n $$ test $$", []textOrFormula{
+				{"with formula", false},
+				{" test ", true},
+			},
+		},
+		{
+			"with formula\n\n $$ test $$", []textOrFormula{
+				{"with formula\n", false},
+				{" test ", true},
+			},
+		},
+		{
+			"with formula and line\n $$ test $$\nother line", []textOrFormula{
+				{"with formula and line", false},
+				{" test ", true},
+				{"other line", false},
+			},
+		},
+		{
+			"with formula and line\n $$ test $$\nother line\n", []textOrFormula{
+				{"with formula and line", false},
+				{" test ", true},
+				{"other line\n", false},
+			},
+		},
+		{
+			"two formula\n $$ test $$ \n $$ test $$", []textOrFormula{
+				{"two formula", false},
+				{" test ", true},
+				{" test ", true},
+			},
+		},
+	}
+	for _, tt := range tests {
+		if gotOut := tt.s.parseFormula(); !reflect.DeepEqual(gotOut, tt.wantOut) {
+			t.Errorf("Interpolated.parseFormula() = %v, want %v", gotOut, tt.wantOut)
+		}
+	}
+}

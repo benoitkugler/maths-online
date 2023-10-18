@@ -153,8 +153,22 @@ func (qu QuestionPage) InstantiateErr() (QuestionInstance, ex.Vars, error) {
 	return instance, rp, err
 }
 
+func (qu Enonce) expandText() Enonce {
+	out := make(Enonce, 0, len(qu))
+	for _, b := range qu {
+		if text, isText := b.(TextBlock); isText {
+			out = append(out, text.expandFormulas()...)
+		} else {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
 // InstantiateWith uses the given values to instantiate the general question
 func (qu Enonce) InstantiateWith(params ex.Vars) (EnonceInstance, error) {
+	qu = qu.expandText()
+
 	enonce := make(EnonceInstance, len(qu))
 	var currentID int
 	for j, bl := range qu {
@@ -267,6 +281,20 @@ type TextBlock struct {
 	Bold    bool
 	Italic  bool
 	Smaller bool
+}
+
+// return TextBlock or FormulaBlock
+func (t TextBlock) expandFormulas() []Block {
+	blocks := t.Parts.parseFormula()
+	out := make([]Block, len(blocks))
+	for i, b := range blocks {
+		if b.isFormula {
+			out[i] = FormulaBlock{Parts: Interpolated(b.s)}
+		} else {
+			out[i] = TextBlock{Parts: Interpolated(b.s), Bold: t.Bold, Italic: t.Italic, Smaller: t.Smaller}
+		}
+	}
+	return out
 }
 
 func (t TextBlock) instantiate(params ex.Vars, _ int) (instance, error) {

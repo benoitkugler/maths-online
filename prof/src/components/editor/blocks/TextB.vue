@@ -6,6 +6,7 @@
           <interpolated-text
             :model-value="props.modelValue.Parts"
             @update:model-value="onTextChanged"
+            :custom-tokenize="tokenizeText"
           ></interpolated-text>
         </v-col>
         <v-col md="12">
@@ -58,6 +59,13 @@
 <script setup lang="ts">
 import type { TextBlock, Variable } from "@/controller/api_gen";
 import InterpolatedText from "../utils/InterpolatedText.vue";
+import {
+  itemize,
+  defautTokenize,
+  partToToken,
+  type Token
+} from "../utils/interpolated_text";
+import { TextKind } from "@/controller/loopback_gen";
 
 interface Props {
   modelValue: TextBlock;
@@ -85,6 +93,56 @@ function onItalicChanged(b: boolean) {
 function onSmallerChanged(b: boolean) {
   props.modelValue.Smaller = b;
   emit("update:modelValue", props.modelValue);
+}
+
+// support for formulas
+function tokenizeText(input: string) {
+  const out: Token[] = [];
+  const lines = input.split("\n");
+  let currentLines: string[] = [];
+
+  lines.forEach((line, index) => {
+    const lineT = line.trim();
+    if (lineT != "$$" && lineT.startsWith("$$") && lineT.endsWith("$$")) {
+      // found a formula
+      if (currentLines.length) {
+        // flush the previous block
+        // apply the regular tokenization
+        const regularBlock = currentLines.join("\n") + "\n";
+
+        out.push(...defautTokenize(regularBlock));
+        currentLines = [];
+      }
+
+      const start = line.indexOf("$$");
+      const end = line.lastIndexOf("$$");
+      const style = "color: blue;";
+      const innerFormula = itemize(lineT.substring(2, lineT.length - 2));
+      const tokens = innerFormula.map(tp =>
+        tp.Kind == TextKind.Expression
+          ? partToToken(tp)
+          : { Content: tp.Content, Kind: style }
+      );
+      out.push(
+        { Content: line.substring(0, start + 2), Kind: style },
+        ...tokens,
+        {
+          Content:
+            index == lines.length - 1
+              ? line.substring(end)
+              : line.substring(end) + "\n",
+          Kind: style
+        }
+      );
+    } else {
+      currentLines.push(line);
+    }
+  });
+  if (currentLines.length) {
+    out.push(...defautTokenize(currentLines.join("\n")));
+  }
+
+  return out;
 }
 </script>
 
