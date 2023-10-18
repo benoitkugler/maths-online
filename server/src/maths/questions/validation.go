@@ -95,6 +95,8 @@ func (e ErrQuestionInvalid) Error() string {
 }
 
 func (en Enonce) validate(params expression.RandomParameters) (bool, errEnonce) {
+	en = en.expandText()
+
 	// setup the validators
 	var err error
 	validators := make([]validator, len(en))
