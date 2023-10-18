@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    <v-col md="7">
+    <v-col>
       <v-row no-gutters>
         <v-col md="12">
           <interpolated-text
@@ -11,47 +11,60 @@
         </v-col>
         <v-col md="12">
           <small class="text-grey mt-1 d-block">
-            Insérer du code LaTeX avec : $\frac{a}{b}$. Insérer une expression
-            avec : &2x + 1&
+            Insérer une expression avec & &, insérer du code LaTeX avec $ $ ou
+            $$ $$.
           </small>
         </v-col>
       </v-row>
     </v-col>
-    <v-col md="5">
-      <v-row no-gutters>
-        <v-col>
-          <v-checkbox
-            class="pr-1"
-            density="compact"
-            hide-details
-            label="Gras"
-            :model-value="props.modelValue.Bold"
-            @update:model-value="onBoldChanged"
-          ></v-checkbox>
-        </v-col>
-        <v-col>
-          <v-checkbox
-            class="pr-0"
-            density="compact"
-            hide-details
-            label="Italique"
-            :model-value="props.modelValue.Italic"
-            @update:model-value="onItalicChanged"
-          ></v-checkbox>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <v-checkbox
-            density="compact"
-            class="pr-2"
-            hide-details
-            label="Taille réduite"
-            :model-value="props.modelValue.Smaller"
-            @update:model-value="onSmallerChanged"
-          ></v-checkbox>
-        </v-col>
-      </v-row>
+    <v-col cols="auto">
+      <div class="mt-2">
+        <v-tooltip text="Gras">
+          <template v-slot:activator="{ isActive, props: inner }">
+            <v-btn-toggle
+              v-on="{ isActive }"
+              v-bind="inner"
+              density="comfortable"
+              :model-value="props.modelValue.Bold ? 0 : -1"
+              @update:model-value="i => onBoldChanged(i == 0)"
+            >
+              <v-btn icon="mdi-format-bold" class="py-1"></v-btn>
+            </v-btn-toggle>
+          </template>
+        </v-tooltip>
+      </div>
+
+      <div>
+        <v-tooltip text="Italique">
+          <template v-slot:activator="{ isActive, props: inner }">
+            <v-btn-toggle
+              v-on="{ isActive }"
+              v-bind="inner"
+              density="comfortable"
+              :model-value="props.modelValue.Italic ? 0 : -1"
+              @update:model-value="i => onItalicChanged(i == 0)"
+            >
+              <v-btn icon="mdi-format-italic" class="py-1"></v-btn>
+            </v-btn-toggle>
+          </template>
+        </v-tooltip>
+      </div>
+
+      <div>
+        <v-tooltip text="Taille réduite">
+          <template v-slot:activator="{ isActive, props: inner }">
+            <v-btn-toggle
+              v-on="{ isActive }"
+              v-bind="inner"
+              density="comfortable"
+              :model-value="props.modelValue.Smaller ? 0 : -1"
+              @update:model-value="i => onSmallerChanged(i == 0)"
+            >
+              <v-btn icon="mdi-format-font-size-decrease" class="py-1"></v-btn>
+            </v-btn-toggle>
+          </template>
+        </v-tooltip>
+      </div>
     </v-col>
   </v-row>
 </template>
@@ -146,4 +159,8 @@ function tokenizeText(input: string) {
 }
 </script>
 
-<style></style>
+<style scoped>
+.v-btn-toggle {
+  flex-direction: column;
+}
+</style>
