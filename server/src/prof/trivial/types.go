@@ -11,7 +11,7 @@ import (
 // LoadQuestionNumbers returns the number of questions available for
 // each categories, as defined by [config.Questions]
 func LoadQuestionNumbers(db tr.DB, config tr.Trivial, userID uID) (out [trivial.NbCategories]int, err error) {
-	qus, err := selectQuestions(db, config.Questions, userID)
+	qus, err := selectQuestions(db, config.Questions, userID, false)
 	if err != nil {
 		return out, err
 	}

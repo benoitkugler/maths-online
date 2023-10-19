@@ -127,7 +127,7 @@ func TestSelectQuestions(t *testing.T) {
 		Difficulties: nil,
 	}
 
-	pool, err := selectQuestions(db, cats, tc.Id)
+	pool, err := selectQuestions(db, cats, tc.Id, true)
 	tu.AssertNoErr(t, err)
 
 	if !reflect.DeepEqual(pool[0].Weights, []float64{

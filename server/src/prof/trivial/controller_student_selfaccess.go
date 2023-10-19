@@ -195,7 +195,7 @@ func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent te
 	}
 
 	// select the questions
-	questionPool, err := selectQuestions(ct.db, config.Questions, userID)
+	questionPool, err := selectQuestions(ct.db, config.Questions, userID, true)
 	if err != nil {
 		return LaunchSelfaccessOut{}, err
 	}

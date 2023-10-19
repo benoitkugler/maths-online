@@ -68,7 +68,7 @@ func TestController_setupStudentClient(t *testing.T) {
 
 	sessionID := ct.store.getOrCreateSession(10)
 
-	questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
+	questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id, false)
 	tu.AssertNoErr(t, err)
 
 	options := tv.Options{

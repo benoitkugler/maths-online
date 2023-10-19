@@ -375,7 +375,7 @@ func (ct *Controller) checkMissingQuestions(criteria tc.CategoriesQuestions, use
 		}
 	}
 
-	pool, err := selectQuestions(ct.db, criteria, userID)
+	pool, err := selectQuestions(ct.db, criteria, userID, false)
 	if err != nil {
 		return CheckMissingQuestionsOut{}, err
 	}
@@ -431,7 +431,7 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 	// populate the session with the required games :
 
 	// select the questions
-	questionPool, err := selectQuestions(ct.db, config.Questions, userID)
+	questionPool, err := selectQuestions(ct.db, config.Questions, userID, true)
 	if err != nil {
 		return LaunchSessionOut{}, err
 	}

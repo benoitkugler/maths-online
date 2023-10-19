@@ -107,7 +107,7 @@ func (ct *Controller) createDemoGame(code demoCode) error {
 
 	if !ok {
 		// create a game on the fly
-		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
+		questionPool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id, true)
 		if err != nil {
 			return err
 		}

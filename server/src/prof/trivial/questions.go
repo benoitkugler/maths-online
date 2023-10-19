@@ -120,12 +120,24 @@ func (sel questionSelector) search(query tc.CategoriesQuestions, userID uID) (ou
 	return out, nil
 }
 
-func selectQuestions(db ed.DB, query tc.CategoriesQuestions, userID uID) (out tv.QuestionPool, err error) {
+func selectQuestions(db ed.DB, query tc.CategoriesQuestions, userID uID, checkEmpty bool) (out tv.QuestionPool, err error) {
 	sel, err := newQuestionSelector(db)
 	if err != nil {
 		return out, err
 	}
-	return sel.search(query, userID)
+	out, err = sel.search(query, userID)
+	if err != nil {
+		return out, err
+	}
+	if checkEmpty {
+		for index, cat := range out {
+			if len(cat.Questions) == 0 {
+				return out, fmt.Errorf("La categorie %d n'a pas de questions.", index+1)
+			}
+		}
+	}
+
+	return out, nil
 }
 
 type sorter tv.WeigthedQuestions
@@ -239,14 +251,6 @@ func allQuestions(pool tv.QuestionPool) ed.IdQuestionSet {
 // CheckDemoQuestions checks that the categories registred for the demo
 // games indeed contains questions.
 func (ct *Controller) CheckDemoQuestions() error {
-	pool, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id)
-	if err != nil {
-		return err
-	}
-	for index, cat := range pool {
-		if len(cat.Questions) == 0 {
-			return fmt.Errorf("categorie %d has no questions", index)
-		}
-	}
-	return nil
+	_, err := selectQuestions(ct.db, demoQuestions, ct.admin.Id, true)
+	return err
 }
