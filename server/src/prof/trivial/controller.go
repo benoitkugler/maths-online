@@ -441,6 +441,8 @@ func (ct *Controller) launchConfig(params LaunchSessionIn, userID uID) (LaunchSe
 		return LaunchSessionOut{}, err
 	}
 
+	ProgressLogger.Printf("Creating games for config %d", config.Id)
+
 	var out LaunchSessionOut
 	for _, groupStrategy := range groups {
 		options := tv.Options{

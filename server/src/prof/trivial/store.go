@@ -134,7 +134,6 @@ type createGame struct {
 
 // createGame locks, creates, registers and starts the eveng loop of new game
 func (gs *gameStore) createGame(params createGame) {
-	// TODO: implement success handler
 	game := tv.NewRoom(tv.RoomID(params.ID.String()), params.Options, successHandler{key: gs.studentKey, db: gs.db, players: gs.playerIDs})
 
 	// register the controller...

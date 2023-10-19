@@ -208,6 +208,9 @@ func (ct *Controller) launchSelfaccess(idTrivial trivial.IdTrivial, idStudent te
 	}
 
 	gameID := ct.store.newSelfaccessGameID()
+
+	ProgressLogger.Printf("Creating game for config %d", config.Id)
+
 	ct.store.createGame(createGame{ID: gameID, Options: options})
 
 	// update the success
