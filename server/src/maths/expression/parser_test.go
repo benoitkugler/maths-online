@@ -652,6 +652,10 @@ var expressions = [...]struct {
 	{
 		"coeff(A; i)", nil, true,
 	},
+	// real world examples
+	{ // x is a variable, not a multiplication
+		"104 + 31x11 ", nil, true,
+	},
 }
 
 func Test_parseExpression(t *testing.T) {
