@@ -9,7 +9,7 @@ import (
 type Date time.Time
 
 type Event struct {
-	IdStudent teacher.IdStudent
+	IdStudent teacher.IdStudent `gomacro-sql-on-delete:"CASCADE"`
 	Event     EventK
 	Date      Date
 }

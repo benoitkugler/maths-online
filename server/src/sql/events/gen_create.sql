@@ -7,5 +7,5 @@ CREATE TABLE events (
 
 -- constraints
 ALTER TABLE events
-    ADD FOREIGN KEY (IdStudent) REFERENCES students;
+    ADD FOREIGN KEY (IdStudent) REFERENCES students ON DELETE CASCADE;
 
