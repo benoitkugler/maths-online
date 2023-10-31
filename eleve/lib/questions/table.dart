@@ -208,10 +208,14 @@ class BaseFunctionTable extends StatelessWidget {
             ]),
             ...fxRows.map((e) => TableRow(children: [
                   MathTableCell(TableCellVerticalAlignment.middle, e.key,
-                      width: 70),
+                      width: BaseFunctionTable._labelWidth(e.key)),
                   ...e.value,
                 ]))
           ]),
     );
+  }
+
+  static double _labelWidth(String label) {
+    return 24 + label.length.toDouble() * 8;
   }
 }
