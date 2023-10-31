@@ -224,6 +224,11 @@ func (r roundFunc) asLaTeX(_, right *Expr) string {
 }
 
 func (r specialFunction) asLaTeX(_, _ *Expr) string {
+	_ = exhaustiveSpecialFunctionSwitch
+	if r.kind == binomial {
+		k, n := r.args[0], r.args[1]
+		return fmt.Sprintf(`\binom{%s}{%s}`, n.AsLaTeX(), k.AsLaTeX())
+	}
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 

@@ -86,6 +86,7 @@ func TestExpression_AsLaTeX(t *testing.T) {
 		"trans(inv(A))",
 		"det(inv(A))",
 		"trace(inv(A))",
+		"binom(x+5; 2)",
 	} {
 		e, err := Parse(expr)
 		if err != nil {
