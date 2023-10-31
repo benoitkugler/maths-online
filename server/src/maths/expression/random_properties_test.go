@@ -365,3 +365,25 @@ func TestExpr_IsIncludedIntoOne(t *testing.T) {
 		}
 	}
 }
+
+func Test_binomialCoefficient(t *testing.T) {
+	tests := []struct {
+		k    int
+		n    int
+		want int
+	}{
+		{0, 4, 1},
+		{4, 4, 1},
+		{1, 4, 4},
+		{3, 4, 4},
+		{-3, 4, 0},
+		{2, 4, 6},
+		{2, 3, 3},
+		{2, 5, 10},
+	}
+	for _, tt := range tests {
+		if got := binomialCoefficient(tt.k, tt.n); got != tt.want {
+			t.Errorf("binomialCoefficient() = %v, want %v", got, tt.want)
+		}
+	}
+}

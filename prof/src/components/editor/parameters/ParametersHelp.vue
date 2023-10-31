@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     :model-value="props.modelValue"
-    @update:model-value="(v) => emit('update:modelValue', v)"
+    @update:model-value="v => emit('update:modelValue', v)"
     width="1000px"
   >
     <v-card
@@ -180,23 +180,24 @@ const emit = defineEmits<{
 const fonctionsDesc = [
   [
     "randChoice(-4;12;99)",
-    "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
+    "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}."
   ],
   [
     "choiceFrom(A; B; C; D; k)",
-    "Renvoie l'expression à l'index k parmi celles proposées (ici, k est entre 1 et 4).",
+    "Renvoie l'expression à l'index k parmi celles proposées (ici, k est entre 1 et 4)."
   ],
   ["randPrime(15;28)", "Renvoie un nombre premier entre 15 et 28 (inclus)."],
   [
     "randDecDen()",
-    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal).",
+    "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal)."
   ],
   ["round(x; 3)", "Arrondi x à trois chiffres après la virgule."],
   [
     "forceDecimal(x)",
-    "Affiche x sous forme décimale, même si x est rationnel.",
+    "Affiche x sous forme décimale, même si x est rationnel."
   ],
   ["floor(x)", "Renvoie la partie entière de x."],
+  ["binom(k; n)", "Renvoie le coefficient binomial k parmi n."],
   ["isPrime(n)", "Renvoie 1 is n est un nombre premier, 0 sinon."],
   ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0."],
   ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs."],
@@ -210,7 +211,7 @@ const fonctionsDesc = [
   ["acos(x)", "Fonction arccos"],
   ["atan(x)", "Fonction arctan"],
   ["abs(x)", "Fonction valeur absolue"],
-  ["sqrt(x)", "Fonction racine carrée"],
+  ["sqrt(x)", "Fonction racine carrée"]
 ] as const;
 
 const compsDesc = [
@@ -218,7 +219,7 @@ const compsDesc = [
   ["(a > b)", "a est strictement supérieur à b"],
   ["(a >= b)", "a est supérieur ou égal à b"],
   ["(a < b)", "a est strictement inférieur à b"],
-  ["(a <= b)", "a est inférieur ou égal à b"],
+  ["(a <= b)", "a est inférieur ou égal à b"]
 ] as const;
 </script>
 

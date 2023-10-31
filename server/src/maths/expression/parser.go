@@ -616,6 +616,13 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
+	case binomial:
+		if len(rd.args) != 2 {
+			return ErrInvalidExpr{
+				Reason: "binom requiert exactement 2 arguments",
+				Pos:    pos,
+			}
+		}
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}

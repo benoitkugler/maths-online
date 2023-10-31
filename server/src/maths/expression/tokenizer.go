@@ -38,6 +38,7 @@ const (
 	minFn
 	maxFn
 	matCoeff
+	binomial // coefficient binomial (n, k)
 
 	invalidSpecialFunction
 )
@@ -60,6 +61,8 @@ func (sf specialFunctionKind) String() string {
 		return "max"
 	case matCoeff:
 		return "coeff"
+	case binomial:
+		return "binom"
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
@@ -427,6 +430,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = maxFn
 	case "coeff":
 		fn = matCoeff
+	case "binom":
+		fn = binomial
 	default:
 		_ = exhaustiveSpecialFunctionSwitch
 		return 0, false

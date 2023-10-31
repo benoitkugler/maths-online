@@ -503,31 +503,50 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 			if err != nil {
 				return real{}, fmt.Errorf("Le troisième argument de coeff() doit être un indice de colonne : %s", err)
 			}
-			// human -> computer covention
+			// human -> computer convention
 			i--
 			j--
 			return mat[i][j].evalReal(res)
 		} else {
 			return real{}, fmt.Errorf("Le premier argument de coeff() doit être une matrice.")
 		}
+	case binomial:
+		// the parsing step ensure len(r.args) == 2
+		k, err := evalInt(r.args[0], res)
+		if err != nil {
+			return real{}, fmt.Errorf("Le premier argument de binom() doit être un entier (%s).", err)
+		}
+		n, err := evalInt(r.args[1], res)
+		if err != nil {
+			return real{}, fmt.Errorf("Le second argument de binom() doit être un entier (%s).", err)
+		}
+		return newRealInt(binomialCoefficient(k, n)), nil
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}
 }
 
-func evalIntInRange(arg *Expr, res varEvaluer, min, max int) (int, error) {
+func evalInt(arg *Expr, res varEvaluer) (int, error) {
 	i, err := arg.evalFloat(res)
 	if err != nil {
 		return 0, err
 	}
 	i_, ok := IsInt(i)
 	if !ok {
-		return 0, fmt.Errorf("valeur %f non entière", i)
-	}
-	if i_ < min || i_ > max {
-		return 0, fmt.Errorf("valeur %d en dehors de [%d;%d]", i_, min, max)
+		return 0, fmt.Errorf("valeur %g non entière", i)
 	}
 	return i_, nil
+}
+
+func evalIntInRange(arg *Expr, res varEvaluer, min, max int) (int, error) {
+	i, err := evalInt(arg, res)
+	if err != nil {
+		return 0, err
+	}
+	if i < min || i > max {
+		return 0, fmt.Errorf("valeur %d en dehors de [%d;%d]", i, min, max)
+	}
+	return i, nil
 }
 
 // evaluate the selector and return the expression at the index

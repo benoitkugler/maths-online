@@ -652,6 +652,12 @@ var expressions = [...]struct {
 	{
 		"coeff(A; i)", nil, true,
 	},
+	{
+		"binom(1)", nil, true,
+	},
+	{
+		"binom(1; 2 ; 3)", nil, true,
+	},
 	// real world examples
 	{ // x is a variable, not a multiplication
 		"104 + 31x11 ", nil, true,

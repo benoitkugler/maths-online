@@ -65,6 +65,27 @@ func generateDivisors(n, threshold int) (out []int) {
 	return out
 }
 
+func binomialCoefficient(k, n int) int {
+	if n < 0 || k < 0 || k > n {
+		return 0
+	}
+
+	// Since C(n, k) = C(n, n-k)
+	if k > n-k {
+		k = n - k
+	}
+
+	res := 1
+	// Calculate value of
+	// [n * (n-1) *---* (n-k+1)] / [k * (k-1) *----* 1]
+	for i := 0; i < k; i++ {
+		res *= (n - i)
+		res /= (i + 1)
+	}
+
+	return res
+}
+
 func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
 	switch rd.kind {
 	case randInt, randPrime:

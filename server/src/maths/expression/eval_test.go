@@ -233,6 +233,7 @@ func Test_Expression_eval(t *testing.T) {
 		{"min(2.235; 2)", nil, 2},
 		{"max(-2; 1.4; 5)", nil, 5},
 		{"(1<2) + (3>3) + (2<=1) + (4.4>=4)", nil, 2},
+		{"binom(2; 4)", nil, 6},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -271,6 +272,7 @@ func TestExpression_Evaluate_err(t *testing.T) {
 		},
 		{"coeff([[1; 2];[3;4]]; 2; 10)", nil},
 		{"coeff([[1; 2];[3;4]]; 10; 1)", nil},
+		{"binom(1.2; 3)", nil},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
