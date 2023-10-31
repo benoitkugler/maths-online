@@ -24,8 +24,8 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
   void _onValidCode(String code) async {
     this.code = code;
     try {
-      final uri = Uri.parse(widget.buildMode
-          .serverURL("/api/classroom/attach", query: {"code": code}));
+      final uri = widget.buildMode
+          .serverURL("/api/classroom/attach", query: {"code": code});
       final resp = await http.get(uri);
       setState(() {
         studentProposals =
@@ -69,8 +69,7 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
 
   void _validAttach(StudentHeader student, String date) async {
     try {
-      final uri =
-          Uri.parse(widget.buildMode.serverURL("/api/classroom/attach"));
+      final uri = widget.buildMode.serverURL("/api/classroom/attach");
       final args = AttachStudentToClassroom2In(code, student.id, date);
       final resp = await http.post(uri,
           body: jsonEncode(attachStudentToClassroom2InToJson(args)),
@@ -124,8 +123,8 @@ class _JoinClassroomRouteState extends State<JoinClassroomRoute> {
 }
 
 Future<bool> _leaveClassroom(BuildMode bm, String idCrypted) async {
-  final uri = Uri.parse(
-      bm.serverURL("/api/classroom/attach", query: {"id-crypted": idCrypted}));
+  final uri =
+      bm.serverURL("/api/classroom/attach", query: {"id-crypted": idCrypted});
   final resp = await http.delete(uri);
   return resp.statusCode == 200;
 }

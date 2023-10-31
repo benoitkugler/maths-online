@@ -6,8 +6,11 @@ import 'package:eleve/build_mode.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/settings.dart';
 import 'package:eleve/shared/activity_start.dart';
+import 'package:eleve/shared/errors.dart';
 import 'package:eleve/shared/settings_shared.dart';
+import 'package:eleve/types/src_sql_events.dart';
 import 'package:flutter/material.dart' hide Flow;
+import 'package:http/http.dart' as http;
 import 'package:upgrader/upgrader.dart';
 
 Future<Audio> loadAudioFromSettings(SettingsStorage handler) async {
@@ -89,10 +92,25 @@ class __AppScaffoldState extends State<_AppScaffold> {
       settings.songs = ct;
       await widget.handler.save(settings); // commit on disk
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         content: const Text("Playlist mise à jour."),
       ));
+
+      // notify the server and show event
+      final studentID = settings.studentID;
+      if (studentID.isNotEmpty) {
+        final resp = await http.get(widget.buildMode.serverURL(
+            "/api/student/set-playlist",
+            query: {studentIDKey: studentID}));
+        try {
+          final notif = eventNotificationFromJson(checkServerError(resp.body));
+          print("${notif.events}  ${notif.points}");
+        } catch (e) {
+          // silently fail
+        }
+      }
     });
   }
 

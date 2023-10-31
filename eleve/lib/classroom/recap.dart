@@ -34,8 +34,8 @@ class _ClassroomCardState extends State<ClassroomCard> {
   }
 
   Future<StudentClassroomHeader> loadMeta() async {
-    final uri = Uri.parse(widget.buildMode.serverURL("/api/classroom/login",
-        query: {studentIDKey: widget.studentID}));
+    final uri = widget.buildMode.serverURL("/api/classroom/login",
+        query: {studentIDKey: widget.studentID});
     final resp = await http.get(uri);
     final res = checkStudentClassroomOutFromJson(jsonDecode(resp.body));
     if (res.isOK) {

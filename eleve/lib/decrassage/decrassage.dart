@@ -24,7 +24,7 @@ class ServerDecrassageAPI implements DecrassageAPI {
 
   @override
   Future<InstantiateQuestionsOut> loadQuestions(List<int> ids) async {
-    final uri = Uri.parse(buildMode.serverURL("/api/questions/instantiate"));
+    final uri = buildMode.serverURL("/api/questions/instantiate");
     final resp = await http.post(uri, body: jsonEncode(ids), headers: {
       'Content-type': 'application/json',
     });
@@ -33,7 +33,7 @@ class ServerDecrassageAPI implements DecrassageAPI {
 
   @override
   Future<QuestionAnswersOut> evaluateQuestion(EvaluateQuestionIn answer) async {
-    final uri = Uri.parse(buildMode.serverURL("/api/questions/evaluate"));
+    final uri = buildMode.serverURL("/api/questions/evaluate");
     final resp = await http.post(uri,
         body: jsonEncode(evaluateQuestionInToJson(answer)),
         headers: {

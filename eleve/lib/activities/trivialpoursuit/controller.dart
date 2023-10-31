@@ -46,7 +46,7 @@ class TrivialPoursuitController extends StatefulWidget {
 
   static const gameMetaKey = "game-meta";
 
-  String get apiURL => buildMode.websocketURL('/trivial/game/connect', query: {
+  Uri get apiURL => buildMode.websocketURL('/trivial/game/connect', query: {
         studentPseudoKey: gameMeta.studentPseudo,
         gameMetaKey: gameMeta.gameMeta
       });
@@ -93,12 +93,12 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   @override
   void initState() {
-    if (widget.apiURL == "") {
+    if (widget.apiURL.host.isEmpty) {
       // debug only
       Future.delayed(const Duration(milliseconds: 200), processEventsDebug);
     } else {
       /// API connection
-      channel = WebSocketChannel.connect(Uri.parse(widget.apiURL));
+      channel = WebSocketChannel.connect(widget.apiURL);
       channel.stream
           .listen(listen, onError: _onNetworkError, onDone: _onServerDone);
 
@@ -142,7 +142,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   @override
   void dispose() {
-    if (widget.apiURL != "") {
+    if (widget.apiURL.host.isNotEmpty) {
       channel.sink.close(1000, "Bye bye");
       _keepAliveTimmer.cancel();
       eventQueue.close();
@@ -178,7 +178,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   }
 
   void _sendEvent(ClientEventITF event) {
-    if (widget.apiURL != "") {
+    if (widget.apiURL.host.isNotEmpty) {
       channel.sink.add(jsonEncode(clientEventITFToJson(event)));
     }
   }
@@ -525,10 +525,10 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
 
   // for self launched games, perform an http call to make the server start the game
   void _startGame() async {
-    final uri = Uri.parse(widget.buildMode
+    final uri = widget.buildMode
         .serverURL("/api/student/trivial/selfaccess/start", query: {
       "game-id": widget.gameMeta.code,
-    }));
+    });
 
     try {
       final resp = await http.get(uri);
@@ -568,7 +568,7 @@ class _TrivialPoursuitControllerState extends State<TrivialPoursuitController>
   Widget build(BuildContext context) {
     return GestureDetector(
       // simplify developpement
-      onDoubleTap: widget.apiURL.isEmpty ? processEventsDebug : null,
+      onDoubleTap: widget.apiURL.host.isEmpty ? processEventsDebug : null,
       child: AnimatedSwitcher(
         duration: const Duration(seconds: 3),
         child: _game,

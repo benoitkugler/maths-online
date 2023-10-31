@@ -31,13 +31,13 @@ class TrivialSettings {
       String code, void Function(String, String) saveGameMeta) async {
     const sessionIDKey = "session-id";
     // we assume that the time to type the code is enough to load the settings
-    final uri = Uri.parse(buildMode.serverURL("/trivial/game/setup", query: {
+    final uri = buildMode.serverURL("/trivial/game/setup", query: {
       sessionIDKey: code,
       studentIDKey: settings.studentID,
       // send (optional) meta so that we may reconnect
       TrivialPoursuitController.gameMetaKey:
           settings.trivialGameMetas[code] ?? "",
-    }));
+    });
 
     final resp = await http.get(uri);
     final body = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -141,10 +141,10 @@ class __SelfaccessListState extends State<_SelfaccessList> {
   }
 
   void _fetchTrivials() async {
-    final uri = Uri.parse(widget.settings.buildMode
+    final uri = widget.settings.buildMode
         .serverURL("/api/student/trivial/selfaccess", query: {
       studentIDKey: widget.settings.settings.studentID,
-    }));
+    });
 
     try {
       final resp = await http.get(uri);
@@ -163,11 +163,11 @@ class __SelfaccessListState extends State<_SelfaccessList> {
 
     launching = true;
 
-    final uri = Uri.parse(widget.settings.buildMode
+    final uri = widget.settings.buildMode
         .serverURL("/api/student/trivial/selfaccess/launch", query: {
       studentIDKey: widget.settings.settings.studentID,
       "trivial-id": trivial.id.toString(),
-    }));
+    });
 
     final LaunchSelfaccessOut data;
     try {

@@ -1,3 +1,4 @@
+import 'package:eleve/build_mode.dart';
 import 'package:eleve/shared/audio.dart';
 import 'package:eleve/shared/settings_mobile.dart';
 import 'package:eleve/shared/settings_shared.dart';
@@ -39,5 +40,10 @@ void main() {
 
     final oldVersion = UserSettings.fromJson("""{"songs" :[0, 1]}""");
     expect(listEquals(oldVersion.songs.songs, [0, 1]), true);
+  });
+
+  test("server url", () {
+    const bm = BuildMode.debug;
+    expect(bm.websocketURL("/api").host.isEmpty, true);
   });
 }

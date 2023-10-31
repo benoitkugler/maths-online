@@ -40,8 +40,8 @@ class ServerHomeworkAPI implements HomeworkAPI {
     final serverEndpoint = loadNonNoted
         ? "/api/student/homework/sheets/free"
         : "/api/student/homework/sheets";
-    final uri = Uri.parse(
-        buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID}));
+    final uri =
+        buildMode.serverURL(serverEndpoint, query: {studentIDKey: studentID});
     final resp = await http.get(uri);
     return listSheetProgressionFromJson(checkServerError(resp.body));
   }
@@ -49,8 +49,8 @@ class ServerHomeworkAPI implements HomeworkAPI {
   @override
   Future<InstantiatedWork> loadWork(IdTask idTask) async {
     const serverEndpoint = "/api/student/homework/task/instantiate";
-    final uri = Uri.parse(buildMode.serverURL(serverEndpoint,
-        query: {studentIDKey: studentID, "id": idTask.toString()}));
+    final uri = buildMode.serverURL(serverEndpoint,
+        query: {studentIDKey: studentID, "id": idTask.toString()});
     final resp = await http.get(uri);
     return instantiatedWorkFromJson(checkServerError(resp.body));
   }
@@ -59,7 +59,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
   Future<StudentEvaluateTaskOut> evaluateExercice(
       IdTask idTask, IdTravail idTravail, EvaluateWorkIn ex) async {
     const serverEndpoint = "/api/student/homework/task/evaluate";
-    final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
+    final uri = buildMode.serverURL(serverEndpoint);
     final resp = await http.post(uri,
         body: jsonEncode(studentEvaluateTaskInToJson(
             StudentEvaluateTaskIn(studentID, idTask, ex, idTravail))),
@@ -72,7 +72,7 @@ class ServerHomeworkAPI implements HomeworkAPI {
   @override
   Future<void> resetTask(IdTravail idTravail, IdTask idTask) async {
     const serverEndpoint = "/api/student/homework/task/reset";
-    final uri = Uri.parse(buildMode.serverURL(serverEndpoint));
+    final uri = buildMode.serverURL(serverEndpoint);
     final resp = await http.post(uri,
         body: jsonEncode(studentResetTaskInToJson(
             StudentResetTaskIn(studentID, idTravail, idTask))),
