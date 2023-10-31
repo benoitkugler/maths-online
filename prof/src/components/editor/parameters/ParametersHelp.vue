@@ -46,8 +46,8 @@
           </v-expansion-panel>
           <v-expansion-panel title="Fonctions usuelles">
             <v-expansion-panel-text>
-              Les fonctions mathématiques usuelles sont supportés, ainsi que des
-              fonctions génératrices de nombre aléatoires : <br />
+              Les fonctions mathématiques usuelles sont supportées, ainsi que
+              des fonctions aléatoires : <br />
 
               <v-list color="info" rounded>
                 <v-list-item
