@@ -122,6 +122,7 @@ class _OrderedListFieldWState extends State<OrderedListFieldW> {
     final props = ct._proposals;
     final answers = ct._answers;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _AnswerRow(
             ct.hasError ? Colors.red : widget._color,
@@ -183,71 +184,10 @@ class _AnswerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const minHeight = 80.0;
-    final widgets = answers.isEmpty
-        ? [
-            Expanded(
-              child: DragTarget<_PositionnedItem>(
-                  builder: (context, candidateData, rejectedData) => Container(
-                        constraints: const BoxConstraints(
-                          minHeight: minHeight,
-                        ),
-                        decoration: BoxDecoration(
-                          color: candidateData.isEmpty ? null : color,
-                        ),
-                        child: const Center(
-                          child: Text("Glisser les symboles...",
-                              style: TextStyle(fontStyle: FontStyle.italic)),
-                        ),
-                      ),
-                  onAccept: (_PositionnedItem symbol) {
-                    addAnswer(symbol, true);
-                  }),
-            )
-          ]
-        : [
-            Expanded(
-              child: DragTarget<_PositionnedItem>(
-                builder: (context, candidateData, rejectedData) => Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minHeight: minHeight,
-                    ),
-                    color: candidateData.isEmpty ? null : color,
-                  ),
-                ),
-                onAccept: (_PositionnedItem symbol) {
-                  addAnswer(symbol, true);
-                },
-              ),
-            ),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 2 / 3),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                children: _Symbol.fromList(true, enabled, answers),
-              ),
-            ),
-            Expanded(
-              child: DragTarget<_PositionnedItem>(
-                builder: (context, candidateData, rejectedData) => Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minHeight: minHeight,
-                    ),
-                    color: candidateData.isEmpty ? null : color,
-                  ),
-                ),
-                onAccept: (_PositionnedItem symbol) {
-                  addAnswer(symbol, false);
-                },
-              ),
-            ),
-          ];
     return Container(
-        decoration: BoxDecoration(border: Border.all(color: color)),
+        decoration: BoxDecoration(
+            border: Border.all(color: color),
+            borderRadius: const BorderRadius.all(Radius.circular(4))),
         child: Row(children: [
           if (label.isNotEmpty)
             Padding(
@@ -255,7 +195,35 @@ class _AnswerRow extends StatelessWidget {
               child:
                   textMath(label, const TextStyle(fontSize: _Symbol.fontSize)),
             ),
-          ...widgets,
+          Expanded(
+              child: DragTarget<_PositionnedItem>(
+            builder: (context, candidateData, rejectedData) => Container(
+              constraints: const BoxConstraints(
+                minHeight: minHeight,
+              ),
+              color: candidateData.isEmpty
+                  ? color.withOpacity(0.5)
+                  : color.withOpacity(0.9),
+              child: Center(
+                child: answers.isEmpty
+                    ? const Text("Glisser les symboles...",
+                        style: TextStyle(fontStyle: FontStyle.italic))
+                    : Wrap(
+                        alignment: WrapAlignment.center,
+                        children: _Symbol.fromList(true, enabled, answers),
+                      ),
+              ),
+            ),
+            onAcceptWithDetails: (details) {
+              final box = context.findRenderObject();
+              if (box is! RenderBox) {
+                return;
+              }
+              final localOffset = box.globalToLocal(details.offset);
+              final isStart = localOffset.dx <= box.size.width / 2;
+              addAnswer(details.data, isStart);
+            },
+          )),
         ]));
   }
 }
@@ -287,9 +255,13 @@ class _PropsRow extends StatelessWidget {
         bool accept =
             candidateData.isNotEmpty && !_isProposition(candidateData.first);
         return Container(
+          constraints: const BoxConstraints(
+            minHeight: 40,
+          ),
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-              border: Border.all(color: accept ? color : Colors.transparent)),
+              border: Border.all(color: accept ? color : Colors.transparent),
+              borderRadius: BorderRadius.circular(4)),
           child: Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
