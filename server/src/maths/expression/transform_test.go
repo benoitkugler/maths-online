@@ -320,6 +320,8 @@ func TestExpression_Substitute(t *testing.T) {
 			}, "A+2+3",
 		},
 		{"[[x; y]; [1; 2]]", Vars{NewVar('x'): newNb(3)}, "[[3; y]; [1; 2]]"},
+		{"binom(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "binom(l; n)"},
+		{"min(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "min(l; n)"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

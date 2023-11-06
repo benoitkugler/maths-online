@@ -233,6 +233,13 @@ func TestCycle(t *testing.T) {
 	err := params.Validate()
 	tu.AssertNoErr(t, err)
 
+	params = RandomParameters{
+		NewVar('a'): mustParse(t, "a"),
+		NewVar('b'): mustParse(t, "b"),
+	}
+	err = params.Validate()
+	tu.AssertNoErr(t, err)
+
 	// test that non trivial cycle are not accepted
 	params = RandomParameters{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
@@ -259,4 +266,14 @@ func TestInstantiateMinMax(t *testing.T) {
 	_, isNumber2 := s2.atom.(Number)
 	tu.Assert(t, isNumber1)
 	tu.Assert(t, isNumber2)
+}
+
+func TestCycleFunc(t *testing.T) {
+	params := RandomParameters{
+		NewVar('a'): mustParse(t, "randChoice(a;b)"),
+		NewVar('c'): mustParse(t, "min(a; n)"),
+		NewVar('d'): mustParse(t, "binom(a; n)"),
+	}
+	err := params.Validate()
+	tu.AssertNoErr(t, err)
 }

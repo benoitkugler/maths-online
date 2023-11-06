@@ -610,22 +610,25 @@ func (expr *Expr) Substitute(vars Vars) {
 		return
 	}
 
-	if mat, ok := expr.atom.(matrix); ok {
-		for i := range mat {
-			for j := range mat {
-				mat[i][j].Substitute(vars)
-			}
-		}
-		return
-	}
-
 	expr.left.Substitute(vars)
 	expr.right.Substitute(vars)
 
-	if v, isVariable := expr.atom.(Variable); isVariable {
-		value, has := vars[v]
+	_ = exhaustiveAtomSwitch
+	switch atom := expr.atom.(type) {
+	case Variable:
+		value, has := vars[atom]
 		if has {
 			*expr = *value.Copy()
+		}
+	case specialFunction:
+		for _, e := range atom.args {
+			e.Substitute(vars)
+		}
+	case matrix:
+		for i := range atom {
+			for j := range atom {
+				atom[i][j].Substitute(vars)
+			}
 		}
 	}
 }

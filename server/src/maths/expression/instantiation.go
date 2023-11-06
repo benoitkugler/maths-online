@@ -122,6 +122,11 @@ func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
 		}
 	}
 
+	// accept zero cycle by returning a free variable
+	if expr.isZeroCycle(v) {
+		return NewVarExpr(v), nil
+	}
+
 	// avoid invalid cycles
 	if rvv.seen[v] {
 		return nil, ErrInvalidRandomParameters{
@@ -154,6 +159,9 @@ func (rvv *paramsInstantiater) resolve(v Variable) (real, error) {
 	expr, err := rvv.instantiate(v)
 	if err != nil {
 		return real{}, err
+	}
+	if resolved, isVar := expr.atom.(Variable); isVar && v == resolved {
+		return real{}, errors.New("variable cycle")
 	}
 	return expr.evalReal(rvv)
 }
@@ -289,6 +297,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		if _, isDefined := ctx.defs[atom]; !isDefined {
 			return NewVarExpr(atom), nil
 		}
+		ctx.currentVariable = atom
 		return ctx.instantiate(atom)
 	case matrix:
 		mt, err := atom.instantiate(ctx)
