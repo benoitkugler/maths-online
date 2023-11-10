@@ -202,6 +202,10 @@ const fonctionsDesc = [
   ["sgn(x)", "Renvoie le signe de x : 1 si x > 0, -1 si x < 0, 0 si x = 0."],
   ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs."],
   ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs."],
+  [
+    "sum(k; 1; n; k^2)",
+    "Renvoie la somme d'une expression évaluée pour une plage d'indice"
+  ],
   ["exp(x)", "Fonction exponentielle"],
   ["ln(x)", "Fonction logarithme"],
   ["sin(x)", "Fonction sinus"],
