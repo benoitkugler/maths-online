@@ -407,12 +407,12 @@ const (
 
 var decimalDividors = generateDivisors(maxDecDen, thresholdDecDen)
 
-func (r specialFunction) startEnd(res varEvaluer) (float64, float64, error) {
-	start, err := r.args[0].evalFloat(res)
+func startEnd(startE, endE *Expr, res varEvaluer) (float64, float64, error) {
+	start, err := startE.evalFloat(res)
 	if err != nil {
 		return 0, 0, err
 	}
-	end, err := r.args[1].evalFloat(res)
+	end, err := endE.evalFloat(res)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -450,7 +450,7 @@ func minMax(args []*Expr, res varEvaluer) (float64, float64, error) {
 func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 	switch r.kind {
 	case randInt:
-		start, end, err := r.startEnd(res)
+		start, end, err := startEnd(r.args[0], r.args[1], res)
 		if err != nil {
 			return real{}, err
 		}
@@ -461,7 +461,7 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 		}
 		return newRealInt(int(start) + rand.Intn(int(end-start)+1)), nil
 	case randPrime:
-		start, end, err := r.startEnd(res)
+		start, end, err := startEnd(r.args[0], r.args[1], res)
 		if err != nil {
 			return real{}, err
 		}
@@ -491,6 +491,34 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 	case maxFn:
 		_, max, err := minMax(r.args, res)
 		return newReal(max), err
+	case sumFn:
+		start, end, err := startEnd(r.args[1], r.args[2], res)
+		if err != nil {
+			return real{}, err
+		}
+		err = r.validateStartEnd(start, end, 0)
+		if err != nil {
+			return real{}, err
+		}
+
+		// extract the variable
+		indice, ok := r.args[0].atom.(Variable)
+		if !ok {
+			return real{}, errors.New("Le premier argument de sum() doit être une variable.")
+		}
+		expr := r.args[3]
+		if start > end { //  ensure start <= end
+			start, end = end, start
+		}
+		sum := newRealInt(0)
+		for indiceVal := int(start); indiceVal <= int(end); indiceVal++ {
+			out, err := expr.evalReal(singleVarResolver{indice, float64(indiceVal)})
+			if err != nil {
+				return real{}, fmt.Errorf("Impossible d'évaluer le terme d'indice %s = %d : %s", indice, indiceVal, err)
+			}
+			sum = sumReal(sum, out)
+		}
+		return sum, nil
 	case matCoeff:
 		mat, i, j := r.args[0], r.args[1], r.args[2]
 		if mat, ok := mat.atom.(matrix); ok {
@@ -576,11 +604,6 @@ func gcd(a, b int) int {
 		a = t
 	}
 	return a
-}
-
-// find Least Common Multiple (LCM) via GCD
-func lcm(a, b int) int {
-	return a * b / gcd(a, b)
 }
 
 // rat stores a rational number p/q, with q != 0

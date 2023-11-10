@@ -330,7 +330,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 				return choice, nil
 			}
 			return choice.instantiate(ctx)
-		case minFn, maxFn, matCoeff, binomial: // no-op, simply recurse
+		case minFn, maxFn, matCoeff, binomial, sumFn: // no-op, simply recurse
 			inst := specialFunction{
 				kind: atom.kind,
 				args: make([]*Expr, len(atom.args)),

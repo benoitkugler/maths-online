@@ -234,6 +234,10 @@ func Test_Expression_eval(t *testing.T) {
 		{"max(-2; 1.4; 5)", nil, 5},
 		{"(1<2) + (3>3) + (2<=1) + (4.4>=4)", nil, 2},
 		{"binom(2; 4)", nil, 6},
+		{"sum(k; 1; n; k)", Vars{NewVar('n'): newNb(10)}, 10 * 11 / 2},        // n(n+1)/2
+		{"sum(k; n; 1; k)", Vars{NewVar('n'): newNb(10)}, 10 * 11 / 2},        // n(n+1)/2
+		{"sum(k; 2; n; k)", Vars{NewVar('n'): newNb(10)}, 10*11/2 - 1},        // n(n+1)/2
+		{"sum(k; 1; n; k^2)", Vars{NewVar('n'): newNb(10)}, 10 * 11 * 21 / 6}, // n(n+1)(2n+1)/6
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -272,7 +276,15 @@ func TestExpression_Evaluate_err(t *testing.T) {
 		},
 		{"coeff([[1; 2];[3;4]]; 2; 10)", nil},
 		{"coeff([[1; 2];[3;4]]; 10; 1)", nil},
+		{"a_{1}", nil},
 		{"binom(1.2; 3)", nil},
+		{"binom(1; 3.2)", nil},
+		{"sum(1; a; 3; k^2)", nil},
+		{"sum(1; 1; 3; k^2)", nil},
+		{"sum(k; 1; 10; a^2)", nil},
+		{"sum(k; a; 3; k^2)", nil},
+		{"sum(k; 3; a; k^2)", nil},
+		{"sum(k; 1; n; k^2)", Vars{NewVar('n'): NewNb(1.2)}},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)

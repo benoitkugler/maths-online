@@ -118,7 +118,18 @@ func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
 				Pos:    pos,
 			}
 		}
+	case sumFn:
+		_, okStart := IsInt(start)
+		_, okEnd := IsInt(end)
+		if !(okStart && okEnd) {
+			return ErrInvalidExpr{
+				Reason: "sum attend deux entiers comme indices limites",
+				Pos:    pos,
+			}
+		}
+
 	}
+
 	return nil
 }
 

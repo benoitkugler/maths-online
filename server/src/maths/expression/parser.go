@@ -582,7 +582,7 @@ func (rd specialFunction) validate(pos int) error {
 
 		// eagerly try to eval start and end in case their are constant,
 		// so that the error is detected during parameter setup
-		start, end, err := rd.startEnd(nil)
+		start, end, err := startEnd(rd.args[0], rd.args[1], nil)
 		if err == nil {
 			return rd.validateStartEnd(start, end, pos)
 		}
@@ -608,6 +608,20 @@ func (rd specialFunction) validate(pos int) error {
 				Reason: "min et max requierent au moins un argument",
 				Pos:    pos,
 			}
+		}
+	case sumFn:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "sum requiert exactement 4 arguments",
+				Pos:    pos,
+			}
+		}
+
+		// eagerly try to eval start and end in case their are constant,
+		// so that a potential error is detected during parameter setup
+		start, end, err := startEnd(rd.args[1], rd.args[2], nil)
+		if err == nil {
+			return rd.validateStartEnd(start, end, pos)
 		}
 	case matCoeff:
 		if len(rd.args) != 3 {

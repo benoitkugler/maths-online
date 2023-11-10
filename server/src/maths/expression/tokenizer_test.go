@@ -26,6 +26,7 @@ func TestTokens(t *testing.T) {
 		{"choiceFrom(x ; 2 )", []tokenData{choiceFrom, openPar, x, semicolon, nT("2"), closePar}},
 		{"min(1)", []tokenData{minFn, openPar, nT("1"), closePar}},
 		{"max(1)", []tokenData{maxFn, openPar, nT("1"), closePar}},
+		{"sum(1)", []tokenData{sumFn, openPar, nT("1"), closePar}},
 		{"forceDecimal(1/2)", []tokenData{forceDecimalFn, openPar, nT("1"), div, nT("2"), closePar}},
 		{"floor(1)", []tokenData{floorFn, openPar, nT("1"), closePar}},
 		{"round(2.12; 5)", []tokenData{roundFunc{}, openPar, nT("2.12"), semicolon, nT("5"), closePar}},

@@ -228,6 +228,9 @@ func (r specialFunction) asLaTeX(_, _ *Expr) string {
 	if r.kind == binomial {
 		k, n := r.args[0], r.args[1]
 		return fmt.Sprintf(`\binom{%s}{%s}`, n.AsLaTeX(), k.AsLaTeX())
+	} else if r.kind == sumFn {
+		k, start, end, expr := r.args[0], r.args[1], r.args[2], r.args[3]
+		return fmt.Sprintf(`\sum_{%s=%s}^{%s} %s`, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
 	}
 	return fmt.Sprintf(`\text{%s}`, r.String())
 }

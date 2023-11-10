@@ -37,6 +37,7 @@ const (
 	randDenominator
 	minFn
 	maxFn
+	sumFn // sum of an expression over a variable
 	matCoeff
 	binomial // coefficient binomial (n, k)
 
@@ -59,6 +60,8 @@ func (sf specialFunctionKind) String() string {
 		return "min"
 	case maxFn:
 		return "max"
+	case sumFn:
+		return "sum"
 	case matCoeff:
 		return "coeff"
 	case binomial:
@@ -428,6 +431,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = minFn
 	case "max":
 		fn = maxFn
+	case "sum":
+		fn = sumFn
 	case "coeff":
 		fn = matCoeff
 	case "binom":

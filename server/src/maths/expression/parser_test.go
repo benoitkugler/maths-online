@@ -523,6 +523,12 @@ var expressions = [...]struct {
 	},
 	{"max()", nil, true},
 	{"min()", nil, true},
+	{"sum()", nil, true},
+	{"sum(1;2;3)", nil, true},
+	{"sum(1;2;3;4;5)", nil, true},
+	{"sum(k; 1; n; k^2)", &Expr{atom: specialFunction{kind: sumFn, args: []*Expr{
+		newVarExpr('k'), newNb(1), newVarExpr('n'), {atom: pow, left: newVarExpr('k'), right: newNb(2)},
+	}}}, false},
 	// comparison
 	{"1 <", nil, true},
 	{">= 4", nil, true},
