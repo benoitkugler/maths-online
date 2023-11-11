@@ -18,11 +18,13 @@ class Settings extends StatefulWidget {
 class _SettingsState extends State<Settings> {
   UserSettings settings = UserSettings();
   String version = "";
+  String deviceName = "";
 
   @override
   void initState() {
     _loadUserSettings();
     _loadVersion();
+    _loadDeviceName();
     super.initState();
   }
 
@@ -37,6 +39,13 @@ class _SettingsState extends State<Settings> {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     setState(() {
       version = packageInfo.version;
+    });
+  }
+
+  void _loadDeviceName() async {
+    final name = await loadUserDeviceName();
+    setState(() {
+      deviceName = name;
     });
   }
 
@@ -109,14 +118,21 @@ class _SettingsState extends State<Settings> {
                         ],
                 ),
               ),
-              if (version.isNotEmpty)
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Text(
-                    "Version : $version",
-                    style: const TextStyle(fontStyle: FontStyle.italic),
-                  ),
-                )
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (version.isNotEmpty)
+                    Text(
+                      "Version : $version",
+                      style: const TextStyle(fontStyle: FontStyle.italic),
+                    ),
+                  if (deviceName.isNotEmpty)
+                    Text(
+                      deviceName,
+                      style: const TextStyle(fontStyle: FontStyle.italic),
+                    ),
+                ],
+              )
             ],
           ),
         ),

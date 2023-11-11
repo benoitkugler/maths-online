@@ -39,6 +39,7 @@ import type {
   SaveQuestionAndPreviewOut,
   SheetExt,
   Student,
+  StudentExt,
   TaskExt,
   TeacherSettings,
   TextBlock,
@@ -329,7 +330,7 @@ class Controller extends AbstractAPI {
     }
   }
 
-  protected onSuccessTeacherAddStudent(data: Student): void {
+  protected onSuccessTeacherAddStudent(data: StudentExt): void {
     this.inRequest = false;
     if (this.showMessage) {
       this.showMessage("Elève ajouté avec succès.");

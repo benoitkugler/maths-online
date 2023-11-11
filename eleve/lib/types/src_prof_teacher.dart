@@ -20,20 +20,24 @@ class AttachStudentToClassroom2In {
   final String classroomCode;
   final IdStudent idStudent;
   final String birthday;
+  final String device;
 
   const AttachStudentToClassroom2In(
-      this.classroomCode, this.idStudent, this.birthday);
+      this.classroomCode, this.idStudent, this.birthday, this.device);
 
   @override
   String toString() {
-    return "AttachStudentToClassroom2In($classroomCode, $idStudent, $birthday)";
+    return "AttachStudentToClassroom2In($classroomCode, $idStudent, $birthday, $device)";
   }
 }
 
 AttachStudentToClassroom2In attachStudentToClassroom2InFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return AttachStudentToClassroom2In(stringFromJson(json['ClassroomCode']),
-      intFromJson(json['IdStudent']), stringFromJson(json['Birthday']));
+  return AttachStudentToClassroom2In(
+      stringFromJson(json['ClassroomCode']),
+      intFromJson(json['IdStudent']),
+      stringFromJson(json['Birthday']),
+      stringFromJson(json['Device']));
 }
 
 Map<String, dynamic> attachStudentToClassroom2InToJson(
@@ -41,7 +45,8 @@ Map<String, dynamic> attachStudentToClassroom2InToJson(
   return {
     "ClassroomCode": stringToJson(item.classroomCode),
     "IdStudent": intToJson(item.idStudent),
-    "Birthday": stringToJson(item.birthday)
+    "Birthday": stringToJson(item.birthday),
+    "Device": stringToJson(item.device)
   };
 }
 
@@ -107,7 +112,7 @@ Map<String, dynamic> checkStudentClassroomOutToJson(
 
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentClassroomHeader
 class StudentClassroomHeader {
-  final Student student;
+  final StudentClient student;
   final String classroomName;
   final String teacherMail;
   final String teacherContactURL;
@@ -124,7 +129,7 @@ class StudentClassroomHeader {
 StudentClassroomHeader studentClassroomHeaderFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentClassroomHeader(
-      studentFromJson(json['Student']),
+      studentClientFromJson(json['Student']),
       stringFromJson(json['ClassroomName']),
       stringFromJson(json['TeacherMail']),
       stringFromJson(json['TeacherContactURL']));
@@ -132,10 +137,36 @@ StudentClassroomHeader studentClassroomHeaderFromJson(dynamic json_) {
 
 Map<String, dynamic> studentClassroomHeaderToJson(StudentClassroomHeader item) {
   return {
-    "Student": studentToJson(item.student),
+    "Student": studentClientToJson(item.student),
     "ClassroomName": stringToJson(item.classroomName),
     "TeacherMail": stringToJson(item.teacherMail),
     "TeacherContactURL": stringToJson(item.teacherContactURL)
+  };
+}
+
+// github.com/benoitkugler/maths-online/server/src/prof/teacher.StudentClient
+class StudentClient {
+  final String name;
+  final String surname;
+
+  const StudentClient(this.name, this.surname);
+
+  @override
+  String toString() {
+    return "StudentClient($name, $surname)";
+  }
+}
+
+StudentClient studentClientFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return StudentClient(
+      stringFromJson(json['Name']), stringFromJson(json['Surname']));
+}
+
+Map<String, dynamic> studentClientToJson(StudentClient item) {
+  return {
+    "Name": stringToJson(item.name),
+    "Surname": stringToJson(item.surname)
   };
 }
 
@@ -143,22 +174,28 @@ Map<String, dynamic> studentClassroomHeaderToJson(StudentClassroomHeader item) {
 class StudentHeader {
   final IdStudent id;
   final String label;
+  final bool hasAttachedClients;
 
-  const StudentHeader(this.id, this.label);
+  const StudentHeader(this.id, this.label, this.hasAttachedClients);
 
   @override
   String toString() {
-    return "StudentHeader($id, $label)";
+    return "StudentHeader($id, $label, $hasAttachedClients)";
   }
 }
 
 StudentHeader studentHeaderFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return StudentHeader(intFromJson(json['Id']), stringFromJson(json['Label']));
+  return StudentHeader(intFromJson(json['Id']), stringFromJson(json['Label']),
+      boolFromJson(json['HasAttachedClients']));
 }
 
 Map<String, dynamic> studentHeaderToJson(StudentHeader item) {
-  return {"Id": intToJson(item.id), "Label": stringToJson(item.label)};
+  return {
+    "Id": intToJson(item.id),
+    "Label": stringToJson(item.label),
+    "HasAttachedClients": boolToJson(item.hasAttachedClients)
+  };
 }
 
 List<StudentHeader> listStudentHeaderFromJson(dynamic json) {

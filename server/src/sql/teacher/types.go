@@ -57,3 +57,10 @@ func (ccs ClassroomCodes) Codes() map[string]bool {
 	}
 	return out
 }
+
+type Client struct {
+	Device string    // the name of the device
+	Time   time.Time // when the client was connected
+}
+
+type Clients []Client

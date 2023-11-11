@@ -25,6 +25,18 @@ func randClassroomCode() ClassroomCode {
 	return s
 }
 
+func randClient() Client {
+	var s Client
+	s.Device = randstring()
+	s.Time = randtTime()
+
+	return s
+}
+
+func randClients() Clients {
+	return Clients(randSliceClient())
+}
+
 func randContact() Contact {
 	var s Contact
 	s.Name = randstring()
@@ -55,6 +67,15 @@ func randMatiereTag() MatiereTag {
 	return choix[i]
 }
 
+func randSliceClient() []Client {
+	l := 3 + rand.Intn(5)
+	out := make([]Client, l)
+	for i := range out {
+		out[i] = randClient()
+	}
+	return out
+}
+
 func randSliceuint8() []byte {
 	l := 3 + rand.Intn(5)
 	out := make([]byte, l)
@@ -70,9 +91,8 @@ func randStudent() Student {
 	s.Name = randstring()
 	s.Surname = randstring()
 	s.Birthday = randDate()
-	s.TrivialSuccess = randint()
-	s.IsClientAttached = randbool()
 	s.IdClassroom = randIdClassroom()
+	s.Clients = randClients()
 
 	return s
 }
@@ -97,10 +117,6 @@ func randTime() Time {
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
-}
-
-func randint() int {
-	return int(rand.Intn(1000000))
 }
 
 func randint64() int64 {

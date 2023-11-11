@@ -1052,6 +1052,7 @@ export interface StudentExt {
 export interface StudentHeader {
   Id: IdStudent;
   Label: string;
+  HasAttachedClients: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.TeacherSettings
 export interface TeacherSettings {
@@ -1390,6 +1391,13 @@ export interface Classroom {
   id_teacher: IdTeacher;
   name: string;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Client
+export interface Client {
+  Device: string;
+  Time: Time;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Clients
+export type Clients = Client[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Contact
 export interface Contact {
   Name: string;
@@ -1438,9 +1446,8 @@ export interface Student {
   Name: string;
   Surname: string;
   Birthday: Date;
-  TrivialSuccess: number;
-  IsClientAttached: boolean;
   id_classroom: IdClassroom;
+  Clients: Clients;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Students
 export type Students = { [key: IdStudent]: Student } | null;

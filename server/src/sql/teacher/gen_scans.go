@@ -338,9 +338,8 @@ func scanOneStudent(row scanner) (Student, error) {
 		&item.Name,
 		&item.Surname,
 		&item.Birthday,
-		&item.TrivialSuccess,
-		&item.IsClientAttached,
 		&item.IdClassroom,
+		&item.Clients,
 	)
 	return item, err
 }
@@ -409,22 +408,22 @@ func ScanStudents(rs *sql.Rows) (Students, error) {
 // Insert one Student in the database and returns the item with id filled.
 func (item Student) Insert(tx DB) (out Student, err error) {
 	row := tx.QueryRow(`INSERT INTO students (
-		name, surname, birthday, trivialsuccess, isclientattached, idclassroom
+		name, surname, birthday, idclassroom, clients
 		) VALUES (
-		$1, $2, $3, $4, $5, $6
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.Name, item.Surname, item.Birthday, item.TrivialSuccess, item.IsClientAttached, item.IdClassroom)
+		`, item.Name, item.Surname, item.Birthday, item.IdClassroom, item.Clients)
 	return ScanStudent(row)
 }
 
 // Update Student in the database and returns the new version.
 func (item Student) Update(tx DB) (out Student, err error) {
 	row := tx.QueryRow(`UPDATE students SET (
-		name, surname, birthday, trivialsuccess, isclientattached, idclassroom
+		name, surname, birthday, idclassroom, clients
 		) = (
-		$1, $2, $3, $4, $5, $6
-		) WHERE id = $7 RETURNING *;
-		`, item.Name, item.Surname, item.Birthday, item.TrivialSuccess, item.IsClientAttached, item.IdClassroom, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.Name, item.Surname, item.Birthday, item.IdClassroom, item.Clients, item.Id)
 	return ScanStudent(row)
 }
 
@@ -799,6 +798,9 @@ func (s IdTeacherSet) Keys() []IdTeacher {
 	}
 	return out
 }
+
+func (s *Clients) Scan(src interface{}) error  { return loadJSON(s, src) }
+func (s Clients) Value() (driver.Value, error) { return dumpJSON(s) }
 
 func (s *Contact) Scan(src interface{}) error  { return loadJSON(s, src) }
 func (s Contact) Value() (driver.Value, error) { return dumpJSON(s) }

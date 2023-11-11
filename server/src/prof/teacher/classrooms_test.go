@@ -1,6 +1,8 @@
 package teacher
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -127,7 +129,14 @@ func TestDemoStudent(t *testing.T) {
 		ClassroomCode: DEMO_CODE + ".1",
 		IdStudent:     l[0].Id,
 		Birthday:      "2000-01-01",
+		Device:        "Xiaomi",
 	})
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, !out.ErrAlreadyAttached && !out.ErrInvalidBirthday)
+	tu.Assert(t, !out.ErrInvalidBirthday)
+}
+
+func TestClientJSON(t *testing.T) {
+	cl := tc.Client{Device: "", Time: time.Now()}
+	b, _ := json.Marshal(cl)
+	fmt.Println(string(b))
 }

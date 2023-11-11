@@ -37,12 +37,12 @@ type ClassroomCode struct {
 
 // Student is a student profile, always attached to a classroom.
 type Student struct {
-	Id               IdStudent
-	Name             string
-	Surname          string
-	Birthday         Date
-	TrivialSuccess   int
-	IsClientAttached bool // true if at least one student appli has claimed this profile
+	Id       IdStudent
+	Name     string
+	Surname  string
+	Birthday Date
 
 	IdClassroom IdClassroom `json:"id_classroom" gomacro-sql-on-delete:"CASCADE"`
+
+	Clients Clients
 }

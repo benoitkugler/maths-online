@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:eleve/shared/audio.dart';
+import 'package:flutter/foundation.dart';
 
 const studentPseudoKey = "client-pseudo";
 const studentIDKey = "client-id";
@@ -58,4 +60,28 @@ class UserSettings {
 abstract class SettingsStorage {
   Future<UserSettings> load();
   Future<void> save(UserSettings settings);
+}
+
+Future<String> loadUserDeviceName() async {
+  final deviceInfoPlugin = DeviceInfoPlugin();
+
+  try {
+    if (kIsWeb) {
+      final deviceData = await deviceInfoPlugin.webBrowserInfo;
+      return deviceData.browserName.name;
+    } else {
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.android:
+          final deviceData = await deviceInfoPlugin.androidInfo;
+          return "${deviceData.manufacturer} ${deviceData.brand}";
+        case TargetPlatform.iOS:
+          final deviceData = await deviceInfoPlugin.iosInfo;
+          return deviceData.name;
+        default:
+          return "";
+      }
+    }
+  } catch (e) {
+    return "";
+  }
 }

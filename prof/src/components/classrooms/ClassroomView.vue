@@ -50,15 +50,21 @@
             label="Date de naissance"
           >
           </DateField>
-          <v-checkbox
-            class="mt-4"
-            density="compact"
-            v-model="studentToUpdate.IsClientAttached"
-            label="Application élève rattachée"
-            hint="Décocher pour renouveller la procédure de rattachement, en générant un code de connection."
-            persistent-hint
-            :disabled="!studentToUpdate.IsClientAttached"
-          ></v-checkbox>
+          <v-list>
+            <v-list-subheader>
+              {{
+                studentToUpdate.Clients?.length
+                  ? "Appareils connectés"
+                  : "Aucun appareil connecté"
+              }}
+            </v-list-subheader>
+            <v-list-item
+              v-for="(client, i) in studentToUpdate.Clients"
+              :key="i"
+              :title="client.Device || 'Appareil inconnu'"
+              :subtitle="`le ${formatTime(client.Time, true)}`"
+            ></v-list-item>
+          </v-list>
         </v-card-text>
         <v-card-actions>
           <v-btn @click="studentToUpdate = null" color="warning">Retour</v-btn>
@@ -166,14 +172,14 @@
                 @click="studentToUpdate = copy(student.Student)"
                 title="Modifier le profil"
               >
-                <v-icon icon="mdi-pencil"></v-icon>
+                <v-icon icon="mdi-cog"></v-icon>
               </v-btn>
             </v-col>
             <v-col cols="6" sm="4" md="3" align-self="center">
               {{ student.Student.Name }} {{ student.Student.Surname }}
               <v-tooltip
                 style="cursor: pointer"
-                v-if="student.Student.IsClientAttached"
+                v-if="student.Student.Clients?.length"
               >
                 <template v-slot:activator="{ isActive, props }">
                   <v-icon
@@ -221,11 +227,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 import type { Classroom, Student, StudentExt } from "@/controller/api_gen";
 import { $ref } from "vue/macros";
 import { controller } from "@/controller/controller";
-import { copy, formatDate } from "@/controller/utils";
+import { copy, formatDate, formatTime } from "@/controller/utils";
 import { onMounted } from "vue";
 import { computed } from "vue";
 import DateField from "../DateField.vue";
@@ -241,13 +246,14 @@ const emit = defineEmits<{
   (e: "closed"): void;
 }>();
 
-const mode = ref(0);
-
 onMounted(() => fetchStudents());
 
 let students = computed(() => {
   const out = _students.map(v => v);
-  out.sort((s1, s2) => s1.Student.Name.localeCompare(s2.Student.Name));
+  out.sort((s1, s2) => {
+    const c1 = s1.Student.Name.localeCompare(s2.Student.Name);
+    return c1 == 0 ? s1.Student.Surname.localeCompare(s2.Student.Surname) : c1;
+  });
   return out;
 });
 

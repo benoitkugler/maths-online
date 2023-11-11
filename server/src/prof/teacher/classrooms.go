@@ -206,6 +206,8 @@ func (ct *Controller) getClassroomStudents(idClassroom tc.IdClassroom) ([]Studen
 		})
 	}
 
+	// data is sorted client side, to handle new profiles
+
 	return out, nil
 }
 
@@ -426,7 +428,6 @@ func (ct *Controller) updateStudent(st tc.Student, userID tc.IdTeacher) error {
 	existing.Name = st.Name
 	existing.Surname = st.Surname
 	existing.Birthday = st.Birthday
-	existing.IsClientAttached = st.IsClientAttached
 	_, err = existing.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -538,7 +539,10 @@ func (ct *Controller) checkStudentClassroom(idCrypted pass.EncryptedID) (out Che
 	return CheckStudentClassroomOut{
 		IsOK: true,
 		Meta: StudentClassroomHeader{
-			Student:           student,
+			Student: StudentClient{
+				Name:    student.Name,
+				Surname: student.Surname,
+			},
 			ClassroomName:     classroom.Name,
 			TeacherMail:       mail,
 			TeacherContactURL: url,
@@ -585,17 +589,14 @@ func (ct *Controller) attachStudentCandidates(code string) (AttachStudentToClass
 		return nil, err
 	}
 
-	// return the list of the student who are not yet identified
 	stds, err := tc.SelectStudentsByIdClassrooms(ct.db, idClassroom)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
+	// return the list of the students, indicating the ones already attached
 	var out AttachStudentToClassroom1Out
 	for _, student := range stds {
-		if student.IsClientAttached {
-			continue
-		}
 		out = append(out, NewStudentHeader(student))
 	}
 
@@ -655,11 +656,6 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 		return out, utils.SQLError(err)
 	}
 
-	// avoid usurpation
-	if student.IsClientAttached {
-		return AttachStudentToClassroom2Out{ErrAlreadyAttached: true}, nil
-	}
-
 	// check if the birthday is correct
 	if args.Birthday != time.Time(student.Birthday).Format(tc.DateLayout) {
 		return AttachStudentToClassroom2Out{ErrInvalidBirthday: true}, nil
@@ -669,7 +665,10 @@ func (ct *Controller) validAttachStudent(args AttachStudentToClassroom2In) (out 
 		IdCrypted: string(ct.studentKey.EncryptID(int64(args.IdStudent))),
 	}
 
-	student.IsClientAttached = true
+	student.Clients = append(student.Clients, tc.Client{
+		Device: args.Device,
+		Time:   time.Now(),
+	})
 	_, err = student.Update(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
