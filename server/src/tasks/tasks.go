@@ -18,8 +18,14 @@ type ProgressionExt struct {
 }
 
 func NewProgressionExt(progressions ta.Progressions, nbQuestions int) (out ProgressionExt) {
+	// nbQuestions is the current number of questions in the task,
+	// but, if it as been modified after a student started it, it may be lower than
+	// the questions registrer in progressions
 	out.Questions = make([]ta.QuestionHistory, nbQuestions)
 	for _, link := range progressions {
+		if link.Index >= int16(nbQuestions) {
+			continue // the progression item is no more usable
+		}
 		out.Questions[link.Index] = link.History
 	}
 	out.inferNextQuestion()

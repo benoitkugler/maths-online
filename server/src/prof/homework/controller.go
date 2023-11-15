@@ -631,6 +631,12 @@ func (ct *Controller) HomeworkUpdateMonoquestion(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
+	// if the number of repetitions is now lower, update the progressions
+	err = tasks.ResizeProgressions(ct.db, idTask, mono.NbRepeat)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
 	// reload the task to properly update the UI
 	out, err := loadTaskExt(ct.db, idTask)
 	if err != nil {
@@ -686,6 +692,12 @@ func (ct *Controller) HomeworkUpdateRandomMonoquestion(c echo.Context) error {
 	mono.NbRepeat = args.NbRepeat
 	mono.Difficulty = args.Difficulty
 	_, err = mono.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	// if the number of repetitions is now lower, update the progressions
+	err = tasks.ResizeProgressions(ct.db, idTask, mono.NbRepeat)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -903,7 +915,7 @@ func (ct *Controller) duplicateSheet(idSheet ho.IdSheet, userID uID) (SheetExt, 
 		return SheetExt{}, utils.SQLError(err)
 	}
 
-	newSheet, err := duplicateSheetTx(tx, idSheet, userID, ct.admin.Id)
+	newSheet, err := duplicateSheetTx(tx, idSheet, userID)
 	if err != nil {
 		_ = tx.Rollback()
 		return SheetExt{}, err
@@ -918,7 +930,7 @@ func (ct *Controller) duplicateSheet(idSheet ho.IdSheet, userID uID) (SheetExt, 
 }
 
 // DO NOT COMMIT, DO NOT ROLLBACK
-func duplicateSheetTx(tx *sql.Tx, idSheet ho.IdSheet, userID, adminID uID) (ho.Sheet, error) {
+func duplicateSheetTx(tx *sql.Tx, idSheet ho.IdSheet, userID uID) (ho.Sheet, error) {
 	sheet, err := ho.SelectSheet(tx, idSheet)
 	if err != nil {
 		return ho.Sheet{}, utils.SQLError(err)
@@ -1052,7 +1064,7 @@ func (ct *Controller) copyTravailTo(args CopyTravailIn, userID uID) (CopyTravail
 	var newSheet SheetExt
 	if isAnonymous {
 		// also duplicate the underlying sheet
-		newSheet.Sheet, err = duplicateSheetTx(tx, sheet.Id, userID, ct.admin.Id)
+		newSheet.Sheet, err = duplicateSheetTx(tx, sheet.Id, userID)
 		if err != nil {
 			_ = tx.Rollback()
 			return CopyTravailToOut{}, utils.SQLError(err)

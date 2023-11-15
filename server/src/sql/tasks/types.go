@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/sql/editor"
+	"github.com/benoitkugler/maths-online/server/src/utils"
 )
 
 type OptionalIdQuestion struct {
@@ -71,4 +72,29 @@ func (l RandomMonoquestionVariants) EnsureOrder() {
 // indicated by `Index`
 func (l Progressions) EnsureOrder() {
 	sort.Slice(l, func(i, j int) bool { return l[i].Index < l[j].Index })
+}
+
+// ResizeProgressions makes sure the given task has progression items
+// in range [0; nbQuestions[
+// This function should be called when updating a task content.
+func ResizeProgressions(db DB, id IdTask, nbQuestions int) error {
+	_, err := db.Exec("DELETE FROM progressions WHERE idTask = $1 AND Index >= $2", id, nbQuestions)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	task, err := SelectTask(db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if idM := task.IdRandomMonoquestion; idM.Valid {
+		// also remove the variants
+		_, err := db.Exec("DELETE FROM random_monoquestion_variants WHERE idRandomMonoquestion = $1 AND Index >= $2", idM.ID, nbQuestions)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+	}
+
+	return nil
 }
