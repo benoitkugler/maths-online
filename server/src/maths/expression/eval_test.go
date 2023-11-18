@@ -229,6 +229,7 @@ func Test_Expression_eval(t *testing.T) {
 				NewVar('c'): NewNb(5), // AB
 			}, 3,
 		},
+		{"3! n", Vars{NewVar('n'): newNb(4)}, 24},
 		{"round(2.235; 2)", nil, 2.24},
 		{"min(2.235; 2)", nil, 2},
 		{"max(-2; 1.4; 5)", nil, 5},

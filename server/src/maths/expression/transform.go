@@ -45,6 +45,10 @@ func compareNodes(n1, n2 *Expr) int {
 			} else if a1 > a2 {
 				return 1
 			} else {
+				// the only operator with nil right child is !
+				if a1 == factorial {
+					return compareNodes(n1.left, n2.left)
+				}
 				// use the children
 				if n1.left == nil && n2.left != nil {
 					return -1

@@ -37,6 +37,9 @@ func TestTokens(t *testing.T) {
 		{"2 >= 4", []tokenData{nT("2"), greater, nT("4")}},
 		{"2 == 4", []tokenData{nT("2"), equals, nT("4")}},
 		{"2pi^2", []tokenData{nT("2"), mult, piConstant, pow, nT("2")}},
+		// implicit multiplication
+		{"2x", []tokenData{nT("2"), mult, x}},
+		{"n!n", []tokenData{Variable{Name: 'n'}, factorial, mult, Variable{Name: 'n'}}},
 		{"(3;)", []tokenData{openPar, nT("3"), semicolon, closePar}},
 		{"{2;4;}", []tokenData{openCurly, nT("2"), semicolon, nT("4"), semicolon, closeCurly}},
 		{"]-inf;inf[", []tokenData{closeBracket, minus, nT("inf"), semicolon, nT("inf"), openBracket}},

@@ -382,6 +382,8 @@ func isImplicitMultLeft(t token) bool {
 	switch t := t.data.(type) {
 	case nT, constant: // 4x
 		return true
+	case operator:
+		return t == factorial // n! n
 	case symbol:
 		return t == closePar // (...)(...)
 	case Variable: // y(...)

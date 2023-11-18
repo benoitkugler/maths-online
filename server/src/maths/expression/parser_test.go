@@ -240,6 +240,27 @@ var expressions = [...]struct {
 	},
 	// implicit multiplication
 	{
+		"n!(n)", &Expr{
+			atom:  mult,
+			left:  &Expr{atom: factorial, left: newVarExpr('n')},
+			right: newVarExpr('n'),
+		}, false,
+	},
+	{
+		"n!n", &Expr{
+			atom:  mult,
+			left:  &Expr{atom: factorial, left: newVarExpr('n')},
+			right: newVarExpr('n'),
+		}, false,
+	},
+	{
+		"k! k!", &Expr{
+			atom:  mult,
+			left:  &Expr{atom: factorial, left: newVarExpr('k')},
+			right: &Expr{atom: factorial, left: newVarExpr('k')},
+		}, false,
+	},
+	{
 		"xln(x)", &Expr{
 			atom:  mult,
 			left:  newVarExpr('x'),
