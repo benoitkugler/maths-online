@@ -279,13 +279,13 @@ func (expr *Expr) groupAdditions() {
 
 // replace a-c by a + (-c)
 // so that plus operation may trigger
-func (expr *Expr) expandMinus() {
+func (expr *Expr) enforcePlus() {
 	if expr == nil {
 		return
 	}
 
-	expr.left.expandMinus()
-	expr.right.expandMinus()
+	expr.left.enforcePlus()
+	expr.right.enforcePlus()
 
 	if expr.atom != minus {
 		return
@@ -301,6 +301,26 @@ func (expr *Expr) expandMinus() {
 		}
 		return
 	}
+}
+
+// replace a / c by a * (1/c)
+// so that sort operation on mult may trigger
+func (expr *Expr) enforceMult() {
+	if expr == nil {
+		return
+	}
+
+	expr.left.enforceMult()
+	expr.right.enforceMult()
+
+	if expr.atom != div {
+		return
+	}
+
+	// a / c => a * (1/c)
+	expr.atom = mult
+	expr.right = &Expr{atom: div, left: newNb(1), right: expr.right}
+	return
 }
 
 // replace + (- 8) by -8 to have a better formatted output
@@ -503,7 +523,8 @@ func (expr *Expr) basicSimplification() (nbPasses int) {
 
 		expr.normalizeExp()
 
-		expr.expandMinus()
+		expr.enforcePlus()
+		expr.enforceMult()
 		expr.sortPlusAndMultOperands()
 		expr.DefaultSimplify()
 		expr.extractNegativeInMults()
@@ -528,7 +549,8 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 		expr.normalizeExp()
 
 		expr.expandPow()
-		expr.expandMinus()
+		expr.enforcePlus()
+		expr.expandMult()
 		expr.expandMult()
 		expr.sortPlusAndMultOperands()
 		expr.groupAdditions()

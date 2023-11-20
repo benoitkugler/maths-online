@@ -171,7 +171,7 @@ func Test_Expression_expandMinus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
-		expr.expandMinus()
+		expr.enforcePlus()
 
 		want := mustParse(t, tt.want)
 		if !reflect.DeepEqual(expr, want) {
@@ -268,6 +268,9 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"1.5x + 1", "(3/2)x+1", ExpandedSubstitutions, true},
 		{"2(x+1)(x+3)", "(2x+2)(x+3)", ExpandedSubstitutions, true},
 		{"2(x+1)(x+3)", "(x+3)(2x+2)", ExpandedSubstitutions, true},
+		{"(x + y) - z", "x + (y - z)", SimpleSubstitutions, true},
+		{"(n * (n+1)) / 2", "n * ((n+1) / 2)", SimpleSubstitutions, true},
+		{"n(n+1)/2", "(n(n+1))/2", SimpleSubstitutions, true},
 		// exponentiel
 		{"e^x", "exp(x)", Strict, false},
 		{"e^-1", "exp(-1)", SimpleSubstitutions, true},
