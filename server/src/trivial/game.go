@@ -163,10 +163,28 @@ func (r *Room) nbActivePlayers() int {
 }
 
 func (r *Room) playerPseudos() map[serial]string {
-	out := make(map[serial]string, len(r.players))
+	// check for duplicates, and use suffix to differentiate them
+	byPseudo := make(map[string][]Player)
 	for _, player := range r.players {
-		out[player.pl.ID] = player.pl.Pseudo
+		byPseudo[player.pl.Pseudo] = append(byPseudo[player.pl.Pseudo], player.pl)
 	}
+
+	out := make(map[serial]string, len(r.players))
+	for _, players := range byPseudo {
+		if len(players) == 1 { // no duplicate
+			player := players[0]
+			out[player.ID] = player.Pseudo
+		} else { // use the suffix
+			for _, player := range players {
+				suffix := player.PseudoSuffix
+				if suffix == "" {
+					suffix = string(player.ID)
+				}
+				out[player.ID] = fmt.Sprintf("%s %.1s.", player.Pseudo, suffix)
+			}
+		}
+	}
+
 	return out
 }
 
@@ -180,7 +198,7 @@ func (r *Room) serialsToPseudos(players []serial) []string {
 	return out
 }
 
-func (r *Room) serialToPseudo(se serial) string { return r.players[se].pl.Pseudo }
+func (r *Room) serialToPseudo(se serial) string { return r.playerPseudos()[se] }
 
 func (r *Room) startGame() Events {
 	ProgressLogger.Printf("Game %s : starting...", r.ID)
@@ -221,7 +239,7 @@ func (r *Room) tryStartGame() Events {
 // If a question is being answered and the `player` was the
 // last answering, the question is concluded.
 func (r *Room) removePlayer(player Player) Events {
-	playerName := player.Pseudo
+	playerName := r.serialToPseudo(player.ID)
 
 	if r.game.hasStarted() {
 		r.players[player.ID].conn = nil
@@ -388,10 +406,11 @@ func (r *Room) reconnectPlayer(player Player, connection Connection) {
 	pc := r.players[player.ID]
 	pc.conn = connection // use the new client connection
 	pc.pl.Pseudo = player.Pseudo
+	pc.pl.PseudoSuffix = player.PseudoSuffix
 
 	events := Events{PlayerReconnected{
 		ID:     pc.pl.ID,
-		Pseudo: player.Pseudo,
+		Pseudo: r.serialToPseudo(player.ID),
 	}}
 	if triggerNewTurn {
 		ProgressLogger.Printf("Game %s : reviving by starting a new turn...", r.ID)
@@ -669,7 +688,7 @@ func (r *Room) state() GameState {
 	}
 	for _, pl := range r.players {
 		out.Players[pl.pl.ID] = PlayerStatus{
-			Name:       pl.pl.Pseudo,
+			Name:       r.serialToPseudo(pl.pl.ID),
 			Review:     pl.advance.review,
 			Success:    pl.advance.success,
 			IsInactive: pl.conn == nil,

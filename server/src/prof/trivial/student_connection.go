@@ -364,6 +364,7 @@ func (ct *Controller) connectStudentTo(c echo.Context, student gameConnection, p
 		}
 
 		player.Pseudo = student.Surname
+		player.PseudoSuffix = student.Name
 	}
 
 	// then add the player

@@ -120,7 +120,7 @@ func (r *Room) Join(player Player, connection Connection) error {
 		// ... also notify the other players ...
 		r.broadcastEvents(Events{LobbyUpdate{
 			ID:            player.ID,
-			Pseudo:        player.Pseudo,
+			Pseudo:        r.serialToPseudo(player.ID),
 			IsJoining:     true,
 			PlayerPseudos: r.playerPseudos(),
 		}})

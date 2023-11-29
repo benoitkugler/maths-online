@@ -77,6 +77,10 @@ type Player struct {
 	// Pseudo is the display name of each player,
 	// which may change during a game (upon deconnection/reconnection)
 	Pseudo string
+
+	// PseudoSuffix is added to [Pseudo] when two players
+	// have the same pseudo
+	PseudoSuffix string
 }
 
 // playerConn stores a player profile and the underlying connection,
@@ -178,7 +182,7 @@ type RoomSize struct {
 type Summary struct {
 	PlayerTurn *Player // nil before game start
 	// Successes does not contains disconnected players
-	Successes      map[Player]Success
+	Successes      map[string]Success
 	ID             RoomID
 	RoomSize       RoomSize        // Number of players
 	LatestQuestion QuestionContent // zero ID before the first question
@@ -195,9 +199,9 @@ func (r *Room) Summary() Summary {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	successes := make(map[Player]Success)
+	successes := make(map[string]Success)
 	for _, v := range r.players {
-		successes[v.pl] = v.advance.success
+		successes[r.serialToPseudo(v.pl.ID)] = v.advance.success
 	}
 	out := Summary{
 		ID:             r.ID,

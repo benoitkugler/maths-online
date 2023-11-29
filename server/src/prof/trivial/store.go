@@ -237,7 +237,7 @@ func (gs *gameStore) generateName() string {
 	gs.lock.Lock()
 	defer gs.lock.Unlock()
 
-	allPlayers := make(map[tv.Player]bool)
+	allPlayers := make(map[string]bool)
 	for _, game := range gs.games {
 		for p := range game.Summary().Successes {
 			allPlayers[p] = true
@@ -247,7 +247,7 @@ func (gs *gameStore) generateName() string {
 	nameFromID := func(s string) string { return fmt.Sprintf("Joueur %s", s) }
 
 	id := utils.RandomID(true, 6, func(s string) bool {
-		return allPlayers[tv.Player{Pseudo: nameFromID(s)}]
+		return allPlayers[nameFromID(s)]
 	})
 
 	return nameFromID(id)
