@@ -1,11 +1,15 @@
 // defines helper used when debugging
 
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:eleve/loopback/question.dart';
+import 'package:eleve/types/src_maths_functiongrapher.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
+import 'package:flutter/material.dart';
 
 TextOrMath T(String s) {
   return TextOrMath(s, false);
@@ -14,6 +18,24 @@ TextOrMath T(String s) {
 const bounds = RepereBounds(20, 20, Coord(4, 4));
 
 const emptyFigure = Figure(Drawings({}, [], [], [], []), bounds, true, true);
+
+String toHex(int v) {
+  return v.toRadixString(16).padLeft(2, '0');
+}
+
+FunctionGraph function({String? label, Color? color}) {
+  color = color ?? randColor();
+  return FunctionGraph(
+      FunctionDecoration(label ?? "C_f",
+          "${toHex(color.red)}${toHex(color.green)}${toHex(color.blue)}"),
+      List.generate(100, (index) {
+        final x1 = 0 + (index / 100) * 15;
+        final x2 = x1 + (1 / 100) * 15;
+        final y = x1;
+        return BezierCurve(
+            Coord(x1, y), Coord(x1, y + Random().nextDouble()), Coord(x2, y));
+      }));
+}
 
 final questionList = [
   const InstantiatedQuestion(

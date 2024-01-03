@@ -54,8 +54,8 @@ class BezierCurvesPainter extends CustomPainterText {
   @override
   List<PositionnedText> extractTexts() {
     final out = <PositionnedText>[];
-    for (var fn in functions) {
-      final text = _functionText(fn);
+    for (var i = 0; i < functions.length; i++) {
+      final text = _functionText(functions[i], i, functions.length);
       if (text != null) {
         out.add(text);
       }
@@ -77,12 +77,13 @@ class BezierCurvesPainter extends CustomPainterText {
 
   // returns null if the function has an empty label
   // or has no segments
-  PositionnedText? _functionText(FunctionGraph fn) {
+  PositionnedText? _functionText(FunctionGraph fn, int index, int count) {
     if (fn.segments.isEmpty || fn.decoration.label.isEmpty) {
       return null;
     }
 
-    final labelIndex = fn.segments.length * 3 ~/ 4;
+    final ratio = 0.25 + (index / count) * 0.5;
+    final labelIndex = (fn.segments.length * ratio).round();
     final labelPos = fn.segments[labelIndex].p0;
     // adjust the position based on space available
     final visualLabelPos = metrics.logicalToVisual(labelPos);
