@@ -26,7 +26,7 @@ class TrivialSettings {
 
   const TrivialSettings(this.buildMode, this.settings);
 
-  // dispatch is called to trigger game meta on-disk save
+  /// [saveGameMeta] is called to trigger game meta on-disk save
   Future<GameAcces> _login(
       String code, void Function(String, String) saveGameMeta) async {
     const sessionIDKey = "session-id";
@@ -64,7 +64,10 @@ class TrivialSettings {
       settings: const RouteSettings(name: "/board"),
       builder: (_) => Scaffold(
           appBar: AppBar(
-              automaticallyImplyLeading: true, title: const Text("Isy'Triv")),
+            automaticallyImplyLeading: true,
+            title: const Text("Isy'Triv"),
+            actions: [_CodeTile(data.code)],
+          ),
           body: NotificationListener<GameTerminatedNotification>(
               onNotification: (n) {
                 settings.trivialGameMetas.remove(data.code);
@@ -75,6 +78,26 @@ class TrivialSettings {
     ));
 
     return route;
+  }
+}
+
+class _CodeTile extends StatelessWidget {
+  final String code;
+  const _CodeTile(this.code, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.key),
+          const SizedBox(width: 6),
+          Text(code),
+        ],
+      ),
+    );
   }
 }
 

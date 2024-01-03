@@ -42,6 +42,9 @@ class GameTerminatedNotification extends Notification {}
 class TrivialPoursuitController extends StatefulWidget {
   final BuildMode buildMode;
   final GameAcces gameMeta;
+
+  /// [isSelfLaunched] is [true] when the game was self launched by
+  /// this user.
   final bool isSelfLaunched;
 
   static const gameMetaKey = "game-meta";
