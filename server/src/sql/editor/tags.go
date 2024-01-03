@@ -105,6 +105,14 @@ type TagIndex struct {
 	Chapter string
 }
 
+func (ti TagIndex) List() Tags {
+	return Tags{
+		{Section: Matiere, Tag: string(ti.Matiere)},
+		{Section: Level, Tag: string(ti.Level)},
+		{Section: Chapter, Tag: ti.Chapter},
+	}
+}
+
 // TagGroup groups the tags for one question/exercice,
 // used to resolve the tag hierachy
 type TagGroup struct {

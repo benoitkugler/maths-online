@@ -40,7 +40,8 @@ type TaskExt struct {
 	Id             tasks.IdTask
 	IdWork         taAPI.WorkID
 	Title          string      // title of the underlying exercice or question
-	Tags           editor.Tags // of the underlying group
+	Tags           editor.Tags // of the underlying group (exercice or question)
+	GroupID        int64       // of the underlying group (exercice or question)
 	Bareme         taAPI.TaskBareme
 	NbProgressions int // the number of student having started this task
 }
@@ -50,19 +51,26 @@ func newTaskExt(task tasks.Task, work taAPI.WorkMeta, progressions tasks.Progres
 	exTags map[editor.IdExercicegroup]editor.ExercicegroupTags, quTags map[editor.IdQuestiongroup]editor.QuestiongroupTags,
 ) TaskExt {
 	baremes := work.Bareme()
-	var tags editor.Tags
+	var (
+		tags    editor.Tags
+		groupID int64
+	)
 	switch work := work.(type) {
 	case taAPI.ExerciceData:
 		tags = exTags[work.Exercice.IdGroup].Tags()
+		groupID = int64(work.Exercice.IdGroup)
 	case taAPI.MonoquestionData:
 		tags = quTags[work.Group.Id].Tags()
+		groupID = int64(work.Group.Id)
 	case taAPI.RandomMonoquestionData:
 		tags = quTags[work.Group.Id].Tags()
+		groupID = int64(work.Group.Id)
 	}
 	return TaskExt{
 		Id:             task.Id,
 		IdWork:         taAPI.NewWorkID(task),
 		Tags:           tags,
+		GroupID:        groupID,
 		Title:          work.Title(),
 		NbProgressions: len(progressions.ByIdStudent()),
 		Bareme:         baremes,

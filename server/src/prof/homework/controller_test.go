@@ -79,8 +79,9 @@ func TestCRUDSheet(t *testing.T) {
 	tu.Assert(t, len(l.Travaux) == 1) // one per classroom
 	tu.Assert(t, len(l.Travaux[0].Travaux) == 0)
 
-	sh, err := ct.createSheet(userID)
+	sh_, err := ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
+	sh := sh_.Sheet
 
 	updated := ho.Sheet{}
 	updated.Id = sh.Id
@@ -169,10 +170,12 @@ func TestStudentSheets(t *testing.T) {
 	tu.Assert(t, len(sheets) == 0)
 
 	// create sheets with exercices...
-	sh1, err := ct.createSheet(userID)
+	sh2_, err := ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
-	sh2, err := ct.createSheet(userID)
+	sh1 := sh2_.Sheet
+	sh2_, err = ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
+	sh2 := sh2_.Sheet
 	_, err = ct.createSheet(userID)
 	tu.AssertNoErr(t, err)
 
@@ -230,8 +233,9 @@ func TestEvaluateTask(t *testing.T) {
 	ct := NewController(db.DB, teacher.Teacher{Id: sp.userID}, studentKey)
 
 	// setup the sheet and exercices
-	sh, err := ct.createSheet(sp.userID)
+	sh_, err := ct.createSheet(sp.userID)
 	tu.AssertNoErr(t, err)
+	sh := sh_.Sheet
 	task, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 

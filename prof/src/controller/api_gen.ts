@@ -27,11 +27,6 @@ export interface Variable {
   Indice: string;
   Name: number;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/functiongrapher.FunctionDecoration
-export interface FunctionDecoration {
-  Label: string;
-  Color: string;
-}
 
 export enum BlockKind {
   ExpressionFieldBlock = "ExpressionFieldBlock",
@@ -166,6 +161,11 @@ export interface FunctionArea {
   Left: string;
   Right: string;
   Color: ColorHex;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDecoration
+export interface FunctionDecoration {
+  Label: Interpolated;
+  Color: string;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
@@ -866,6 +866,12 @@ export interface HowemorkMarksIn {
   IdClassroom: IdClassroom;
   IdTravaux: IdTravail[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/homework.MissingTasksHint
+export interface MissingTasksHint {
+  Pattern: Tags;
+  MissingExercices: Tags[] | null;
+  MissingQuestions: Tags[] | null;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/homework.QuestionStat
 export interface QuestionStat {
   Description: string;
@@ -898,6 +904,7 @@ export interface TaskExt {
   IdWork: WorkID;
   Title: string;
   Tags: Tags;
+  GroupID: number;
   Bareme: TaskBareme;
   NbProgressions: number;
 }
@@ -3528,6 +3535,29 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessHomeworkReorderSheetTasks(): void {}
+
+  protected async rawHomeworkMissingTasksHint(params: { "id-sheet": number }) {
+    const fullUrl = this.baseUrl + "/api/prof/homework/sheet/missing-hint";
+    const rep: AxiosResponse<MissingTasksHint> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+      params: { "id-sheet": String(params["id-sheet"]) },
+    });
+    return rep.data;
+  }
+
+  /** HomeworkMissingTasksHint wraps rawHomeworkMissingTasksHint and handles the error */
+  async HomeworkMissingTasksHint(params: { "id-sheet": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawHomeworkMissingTasksHint(params);
+      this.onSuccessHomeworkMissingTasksHint(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessHomeworkMissingTasksHint(data: MissingTasksHint): void {}
 
   protected async rawHomeworkGetMarks(params: HowemorkMarksIn) {
     const fullUrl = this.baseUrl + "/api/prof/homework/marks";

@@ -21,12 +21,12 @@ func TestGetMarks(t *testing.T) {
 	// setup the sheet and exercices
 	sh, err := ct.createSheet(sp.userID)
 	tu.AssertNoErr(t, err)
-	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Id, IdExercice: sp.exe1.Id}, sp.userID)
+	task1, err := ct.addExerciceTo(AddExerciceToTaskIn{IdSheet: sh.Sheet.Id, IdExercice: sp.exe1.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
-	task2, err := ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Id, IdQuestion: sp.question.Id}, sp.userID)
+	task2, err := ct.addMonoquestionTo(AddMonoquestionToTaskIn{IdSheet: sh.Sheet.Id, IdQuestion: sp.question.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 
-	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Id, IdClassroom: class.Id}, sp.userID)
+	tr, err := ct.assignSheetTo(CreateTravailWithIn{IdSheet: sh.Sheet.Id, IdClassroom: class.Id}, sp.userID)
 	tu.AssertNoErr(t, err)
 	tr.Noted = true
 	tr.Deadline = ho.Time(time.Now().Add(time.Hour))

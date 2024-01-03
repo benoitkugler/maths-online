@@ -78,6 +78,11 @@
       </v-col>
     </v-row>
     <v-card-text>
+      <MissingResourcesHint
+        :pattern="missingHint.Pattern || []"
+        :missing-exercices="missingHint.MissingExercices || []"
+        :missing-questions="missingHint.MissingQuestions || []"
+      ></MissingResourcesHint>
       <v-list
         class="overflow-y-auto"
         style="max-height: 50vh"
@@ -180,6 +185,8 @@ import {
   type TagsDB,
   type TaskExt,
   type RandomMonoquestion,
+  MissingTasksHint,
+  LevelTag,
 } from "@/controller/api_gen";
 import {
   onDragListItemStart,
@@ -194,6 +201,8 @@ import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TaskDetailsChip from "./TaskDetailsChip.vue";
 import { controller } from "@/controller/controller";
 import TagIndex from "../TagIndex.vue";
+import MissingResourcesHint from "../MissingResourcesHint.vue";
+import { onMounted } from "vue";
 
 interface Props {
   sheet: SheetExt;
@@ -234,6 +243,8 @@ const questionQuery = ref<Query>({
   Matiere: controller.settings.FavoriteMatiere,
 });
 
+onMounted(fetchMissingHint);
+
 watch(props.sheet, () => {
   exerciceQuery.value.LevelTags = props.sheet.Sheet.Level
     ? [props.sheet.Sheet.Level]
@@ -241,6 +252,7 @@ watch(props.sheet, () => {
   questionQuery.value.LevelTags = props.sheet.Sheet.Level
     ? [props.sheet.Sheet.Level]
     : [];
+  fetchMissingHint();
 });
 
 function removeExercice(index: number) {
@@ -278,5 +290,18 @@ function taskTooltip(task: TaskExt) {
     case WorkKind.WorkRandomMonoquestion:
       return `Groupe de questions (${task.Bareme?.length} variantes aléatoires)`;
   }
+}
+
+const missingHint = ref<MissingTasksHint>({
+  Pattern: [],
+  MissingExercices: [],
+  MissingQuestions: [],
+});
+async function fetchMissingHint() {
+  const res = await controller.HomeworkMissingTasksHint({
+    "id-sheet": props.sheet.Sheet.Id,
+  });
+  if (res === undefined) return;
+  missingHint.value = res;
 }
 </script>

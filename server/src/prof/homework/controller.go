@@ -1203,6 +1203,85 @@ func (ct *Controller) setDispense(args ho.TravailException, userID uID) error {
 	return nil
 }
 
+type MissingTasksHint struct {
+	Pattern          editor.Tags // empty if a common Chapter is not found
+	MissingExercices []editor.Tags
+	MissingQuestions []editor.Tags
+}
+
+// HomeworkMissingTasksHint returns the exercices and questions not
+// included in the given sheet, or nothing if the sheet is not
+// included in one chapter.
+// One monoquestion is enough to consider the group as included.
+func (ct *Controller) HomeworkMissingTasksHint(c echo.Context) error {
+	userID := tcAPI.JWTTeacher(c)
+
+	id_, err := utils.QueryParamInt64(c, "id-sheet")
+	if err != nil {
+		return err
+	}
+
+	hints, err := ct.missingTasksHint(ho.IdSheet(id_), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, hints)
+}
+
+func (ct *Controller) missingTasksHint(id ho.IdSheet, userID uID) (MissingTasksHint, error) {
+	sheet, err := LoadSheet(ct.db, id, userID, ct.admin.Id)
+	if err != nil {
+		return MissingTasksHint{}, err
+	}
+	byIndex, idExercices, idQuestions := map[ed.TagIndex]bool{}, ed.IdExercicegroupSet{}, ed.IdQuestiongroupSet{}
+	for _, task := range sheet.Tasks {
+		index := task.Tags.BySection().TagIndex
+		byIndex[index] = true
+
+		switch task.IdWork.Kind {
+		case taAPI.WorkExercice:
+			idExercices.Add(ed.IdExercicegroup(task.GroupID))
+		case taAPI.WorkMonoquestion, taAPI.WorkRandomMonoquestion:
+			idQuestions.Add(ed.IdQuestiongroup(task.GroupID))
+		}
+	}
+	if len(byIndex) != 1 { // no pattern found
+		return MissingTasksHint{}, nil
+	}
+	var index ed.TagIndex
+	for k := range byIndex { // copy the first and only item
+		index = k
+	}
+
+	out := MissingTasksHint{Pattern: index.List()}
+
+	// load all resource with the given index...
+	allExercices, err := editor.SelectExercicegroupByTags(ct.db, userID, index.List())
+	if err != nil {
+		return out, nil
+	}
+	allQuestions, err := editor.SelectQuestiongroupByTags(ct.db, userID, index.List())
+	if err != nil {
+		return out, nil
+	}
+	// ... and check wich one are missing
+	missingEx, missingQu := ed.NewTagListSet(), ed.NewTagListSet()
+	for ex, tags := range allExercices {
+		if !idExercices.Has(ex) {
+			missingEx.Add(tags.Tags())
+		}
+	}
+	for ex, tags := range allQuestions {
+		if !idQuestions.Has(ex) {
+			missingQu.Add(tags.Tags())
+		}
+	}
+	out.MissingExercices, out.MissingQuestions = missingEx.List(), missingQu.List()
+
+	return out, nil
+}
+
 //
 // Student API
 //

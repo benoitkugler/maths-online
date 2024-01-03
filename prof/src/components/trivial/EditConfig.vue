@@ -61,43 +61,13 @@
         </v-col>
       </v-row>
       <v-list>
-        <v-alert
-          class="mt-1 py-2 px-3"
-          variant="outlined"
-          v-if="hint.Pattern?.length"
-          :color="hint.Missing?.length ? 'info' : 'success'"
-          closable
-        >
-          <div
-            v-if="hint.Missing?.length"
-            style="max-height: 50vh"
-            class="overflow-y-auto mr-2"
-          >
-            Les catégories suivantes ne sont pas utilisées :
-            <v-list>
-              <v-list-item v-for="(tags, index) in hint.Missing!" :key="index">
-                <TagChip
-                  :tag="tag"
-                  :key="index"
-                  v-for="(tag, index) in tags || []"
-                  :pointer="false"
-                ></TagChip>
-              </v-list-item>
-            </v-list>
-          </div>
-          <div v-else>
-            Toutes les questions inclusent dans
-            <span>
-              <TagChip
-                :tag="tag"
-                :key="index"
-                v-for="(tag, index) in hint.Pattern"
-                :pointer="false"
-              ></TagChip
-            ></span>
-            sont utilisées.
-          </div>
-        </v-alert>
+        <MissingResourcesHint
+          class="mt-1"
+          :pattern="hint.Pattern"
+          :missing-questions="hint.Missing || []"
+          :missing-exercices="[]"
+        ></MissingResourcesHint>
+
         <CategorieRow
           v-for="(categorie, index) in props.edited.Questions.Tags"
           :key="index"
@@ -169,6 +139,7 @@ import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
 import CategorieRow from "./CategorieRow.vue";
 import type { PrefillTrivialCategorie } from "@/controller/utils";
+import MissingResourcesHint from "../MissingResourcesHint.vue";
 
 interface Props {
   edited: Trivial;

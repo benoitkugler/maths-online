@@ -39,6 +39,19 @@ func selectQuestiongroupsByTag(db DB, tag TagSection) (Questiongroups, error) {
 	return ScanQuestiongroups(rs)
 }
 
+// selectExercicegroupsByTag returns the exercice groups matching the given tag.
+// It is meant to avoid loading the whole tags table.
+func selectExercicegroupsByTag(db DB, tag TagSection) (Exercicegroups, error) {
+	rs, err := db.Query(`SELECT exercicegroups.*
+	FROM exercicegroups
+	JOIN exercicegroup_tags ON exercicegroups.id = exercicegroup_tags.IdExercicegroup
+   	WHERE exercicegroup_tags.tag = $1 AND exercicegroup_tags.section = $2`, tag.Tag, tag.Section)
+	if err != nil {
+		return nil, err
+	}
+	return ScanExercicegroups(rs)
+}
+
 // IsVisibleBy returns `true` if the question is public or
 // owned by `userID`
 func (qu Questiongroup) IsVisibleBy(userID teacher.IdTeacher) bool {
@@ -187,6 +200,49 @@ func SelectQuestiongroupByTags(db DB, userID teacher.IdTeacher, pattern Tags) (m
 	}
 
 	groups, err := SelectQuestiongroups(db, selectedIDs...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	// restrict to user visible groups
+	for _, group := range groups {
+		if !group.IsVisibleBy(userID) {
+			delete(tagsByGroup, group.Id)
+		}
+	}
+
+	return tagsByGroup, nil
+}
+
+// SelectExercicegroupByTags returns the question groups matching the given query,
+// and available to `userID`, returning their tags.
+// It panics if `pattern` is empty.
+func SelectExercicegroupByTags(db DB, userID teacher.IdTeacher, pattern Tags) (map[IdExercicegroup]ExercicegroupTags, error) {
+	firstSelection, err := selectExercicegroupsByTag(db, pattern[0])
+	if err != nil {
+		return nil, err
+	}
+
+	quTags, err := SelectExercicegroupTagsByIdExercicegroups(db, firstSelection.IDs()...)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		selectedIDs []IdExercicegroup
+		tagsByGroup = quTags.ByIdExercicegroup()
+	)
+	// remove exercices not matching all the tags
+	for idGroup, cr := range tagsByGroup {
+		hasAll := cr.Tags().Crible().HasAll(pattern)
+		if !hasAll {
+			delete(tagsByGroup, idGroup)
+		} else {
+			selectedIDs = append(selectedIDs, idGroup)
+		}
+	}
+
+	groups, err := SelectExercicegroups(db, selectedIDs...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
