@@ -148,6 +148,7 @@
                 emit('update', travail);
               }
             "
+            :min-date="travail.ShowAfter"
           ></DateTimeChip>
           <v-chip v-else> Feuille en accès libre, sans clôture</v-chip>
         </v-col>

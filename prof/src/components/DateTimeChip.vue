@@ -30,6 +30,7 @@
             emit('update:modelValue', timeToEdit!);
             timeToEdit = null;
           "
+          :disabled="!isValid"
           >Enregistrer</v-btn
         >
       </v-card-actions>
@@ -41,11 +42,12 @@
 import type { Time } from "@/controller/api_gen";
 import { formatTime } from "@/controller/utils";
 import TimeField from "./homework/TimeField.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 interface Props {
   modelValue: Time;
   title: string;
   prefix?: string;
+  minDate?: Time;
 }
 
 const props = defineProps<Props>();
@@ -55,4 +57,12 @@ const emit = defineEmits<{
 }>();
 
 const timeToEdit = ref<Time | null>(null);
+
+const isValid = computed(() => {
+  if (timeToEdit.value == null) return false;
+  if (!props.minDate) return true;
+  const min = new Date(props.minDate);
+  const current = new Date(timeToEdit.value);
+  return min <= current;
+});
 </script>
