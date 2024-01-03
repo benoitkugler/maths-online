@@ -266,11 +266,20 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 		{"round(2.2; 4) + round(2.2; 5)", "round(2.2; 5) + round(2.2; 4)", ExpandedSubstitutions, true},
 		{"-0.25x+1", "-0,25x+1", SimpleSubstitutions, true},
 		{"1.5x + 1", "(3/2)x+1", ExpandedSubstitutions, true},
+		{"2(x+1)", "2x+2", SimpleSubstitutions, false},
+		{"2(x+1)", "2x+2", ExpandedSubstitutions, true},
 		{"2(x+1)(x+3)", "(2x+2)(x+3)", ExpandedSubstitutions, true},
 		{"2(x+1)(x+3)", "(x+3)(2x+2)", ExpandedSubstitutions, true},
 		{"(x + y) - z", "x + (y - z)", SimpleSubstitutions, true},
 		{"(n * (n+1)) / 2", "n * ((n+1) / 2)", SimpleSubstitutions, true},
 		{"n(n+1)/2", "(n(n+1))/2", SimpleSubstitutions, true},
+		// issue 295
+		{"11/2*x", "11x/2", SimpleSubstitutions, true},
+		{"11/2*x", "11x/2", ExpandedSubstitutions, true},
+		{"3*11/7 * x", "33x/7", SimpleSubstitutions, true},
+		{"3*11/7 * x", "33x/7", ExpandedSubstitutions, true},
+		{"3(11/7 x+13/2)", "33x/7+39/2", SimpleSubstitutions, false},
+		{"3(11/7 x+13/2)", "33x/7+39/2", ExpandedSubstitutions, true},
 		// exponentiel
 		{"e^x", "exp(x)", Strict, false},
 		{"e^-1", "exp(-1)", SimpleSubstitutions, true},
@@ -280,7 +289,7 @@ func Test_AreExpressionEquivalent(t *testing.T) {
 	for _, tt := range tests {
 		e1, e2 := mustParse(t, tt.e1), mustParse(t, tt.e2)
 		if got := AreExpressionsEquivalent(e1, e2, tt.level); got != tt.want {
-			t.Fatalf("AreExpressionEquivalent(%s, %s) = %v, want %v", tt.e1, tt.e2, got, tt.want)
+			t.Fatalf("AreExpressionEquivalent(%s, %s, %s) = %v, want %v", tt.e1, tt.e2, tt.level, got, tt.want)
 		}
 	}
 }

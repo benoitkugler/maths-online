@@ -550,12 +550,13 @@ func (expr *Expr) fullSimplification() (nbPasses int) {
 
 		expr.expandPow()
 		expr.enforcePlus()
-		expr.expandMult()
+		expr.enforceMult()
 		expr.expandMult()
 		expr.sortPlusAndMultOperands()
 		expr.groupAdditions()
 		expr.simplify0And1()
 		expr.simplifyNumbers()
+
 		if expr.equals(ref) {
 			break
 		}
@@ -599,6 +600,19 @@ const (
 	// Operations on numbers are also performed.
 	ExpandedSubstitutions
 )
+
+func (l ComparisonLevel) String() string {
+	switch l {
+	case Strict:
+		return "strict"
+	case SimpleSubstitutions:
+		return "simple"
+	case ExpandedSubstitutions:
+		return "expanded"
+	default:
+		return "<invalid ComparisonLevel>"
+	}
+}
 
 // AreExpressionsEquivalent compares the two expressions using
 // mathematical knowledge, as hinted by `level`.
