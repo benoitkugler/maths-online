@@ -17,7 +17,7 @@
       <v-card-text>
         <v-radio-group
           :model-value="props.origin"
-          @update:model-value="o => emit('update:origin', o)"
+          @update:model-value="(o) => emit('update:origin', o!)"
           hide-details
         >
           <v-radio :value="OriginKind.All">
@@ -57,8 +57,7 @@
 
 <script setup lang="ts">
 import { OriginKind } from "@/controller/api_gen";
-import { ColorAdmin, ColorPersonnal } from "@/controller/editor";
-import { computed } from "vue";
+import { ColorAdmin, ColorPersonnal } from "@/controller/utils";
 
 interface Props {
   origin: OriginKind;
@@ -67,17 +66,4 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "update:origin", origin: OriginKind): void;
 }>();
-
-const color = computed(() => {
-  switch (props.origin) {
-    case OriginKind.All:
-      return "white";
-    case OriginKind.OnlyPersonnal:
-      return ColorPersonnal;
-    case OriginKind.OnlyAdmin:
-      return ColorAdmin;
-    default:
-      return "";
-  }
-});
 </script>

@@ -19,7 +19,7 @@
         <v-radio-group
           :model-value="props.matiere"
           @update:model-value="
-            (o) => emit('update:matiere', o || props.matiere)
+            (o) => emit('update:matiere', o!)
           "
           hide-details
           :color="MatiereColor"

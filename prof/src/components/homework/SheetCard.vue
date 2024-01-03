@@ -138,8 +138,8 @@ import {
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
-import { colorForOrigin } from "@/controller/editor";
 import PreviewSheet from "./PreviewSheet.vue";
+import { colorForOrigin } from "@/controller/utils";
 
 interface Props {
   sheet: SheetExt;

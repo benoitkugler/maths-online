@@ -105,7 +105,7 @@
               <v-list-item>
                 <OriginButton
                   :origin="config.Origin"
-                  @update-public="b => emit('update-public', b)"
+                  @update-public="(b) => emit('update-public', b)"
                   @create-review="emit('create-review')"
                 ></OriginButton>
               </v-list-item>
@@ -121,12 +121,12 @@
 import {
   Visibility,
   type Trivial,
-  type TrivialExt
+  type TrivialExt,
 } from "@/controller/api_gen";
-import { colorForOrigin } from "@/controller/editor";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
 import QuestionsRecap from "./QuestionsRecap.vue";
+import { colorForOrigin } from "@/controller/utils";
 
 interface Props {
   config: TrivialExt;

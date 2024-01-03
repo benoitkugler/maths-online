@@ -54,7 +54,7 @@
             <v-list-item>
               <OriginButton
                 :origin="props.group.Origin"
-                @update-public="b => emit('updatePublic', b)"
+                @update-public="(b) => emit('updatePublic', b)"
                 @create-review="emit('createReview')"
               ></OriginButton>
             </v-list-item>
@@ -86,15 +86,12 @@
 <script setup lang="ts">
 import type { TagsDB } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
-import {
-  colorForOrigin,
-  type ResourceGroup,
-  type VariantG
-} from "@/controller/editor";
+import { type ResourceGroup, type VariantG } from "@/controller/editor";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
 import VariantList from "./VariantList.vue";
 import TagIndex from "../TagIndex.vue";
+import { colorForOrigin } from "@/controller/utils";
 
 interface Props {
   group: ResourceGroup;
