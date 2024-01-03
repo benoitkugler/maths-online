@@ -18,17 +18,16 @@
     <v-list>
       <div v-for="(fn, index) in props.modelValue.FunctionExprs" :key="index">
         <v-list-item>
-          <v-row class="mt-1">
+          <v-row>
             <v-col>
               <v-row>
-                <v-col cols="3" align-self="center">
-                  <v-text-field
-                    variant="outlined"
-                    density="compact"
+                <v-col cols="3" class="mb-4">
+                  <interpolated-text
                     v-model="fn.Decoration.Label"
+                    force-latex
+                    center
                     label="Légende"
-                    hide-details
-                  ></v-text-field>
+                  ></interpolated-text>
                 </v-col>
                 <v-col md="2" align-self="center">
                   ( {{ variableToString(fn.Variable) }} ) =
@@ -132,17 +131,16 @@
     <v-list>
       <div v-for="(fn, index) in props.modelValue.SequenceExprs" :key="index">
         <v-list-item>
-          <v-row class="mt-1">
+          <v-row>
             <v-col>
               <v-row>
-                <v-col cols="3" align-self="center">
-                  <v-text-field
-                    variant="outlined"
-                    density="compact"
+                <v-col cols="3" class="mb-4">
+                  <interpolated-text
                     v-model="fn.Decoration.Label"
+                    force-latex
+                    center
                     label="Légende"
-                    hide-details
-                  ></v-text-field>
+                  ></interpolated-text>
                 </v-col>
                 <v-col md="3" align-self="center" class="text-center">
                   Variable : {{ variableToString(fn.Variable) }}
