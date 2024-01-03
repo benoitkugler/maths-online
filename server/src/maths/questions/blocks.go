@@ -753,9 +753,14 @@ func (f FigureBlock) setupValidator(ex.RandomParameters) (validator, error) {
 	return out, nil
 }
 
+type FunctionDecoration struct {
+	Label Interpolated
+	Color string
+}
+
 type FunctionDefinition struct {
 	Function   string // expression.Expression
-	Decoration functiongrapher.FunctionDecoration
+	Decoration FunctionDecoration
 	Variable   ex.Variable // usually x
 	From, To   string      // definition domain, expression.Expression
 }
@@ -780,27 +785,35 @@ func (fg FunctionDefinition) parse() (fn ex.FunctionExpr, from, to *ex.Expr, err
 	}, from, to, nil
 }
 
-func (fg FunctionDefinition) instantiate(params ex.Vars) (ex.FunctionDefinition, error) {
+func (fg FunctionDefinition) instantiate(params ex.Vars) (_ ex.FunctionDefinition, _ functiongrapher.FunctionDecoration, err error) {
 	fnExpr, from, to, err := fg.parse()
 	if err != nil {
-		return ex.FunctionDefinition{}, err
+		return
 	}
 	fnExpr.Function.Substitute(params)
 
 	fromV, err := from.Evaluate(params)
 	if err != nil {
-		return ex.FunctionDefinition{}, err
+		return
 	}
 	toV, err := to.Evaluate(params)
 	if err != nil {
-		return ex.FunctionDefinition{}, err
+		return
+	}
+
+	label, err := fg.Decoration.Label.instantiateAndMerge(params)
+	if err != nil {
+		return
 	}
 
 	return ex.FunctionDefinition{
-		FunctionExpr: fnExpr,
-		From:         fromV,
-		To:           toV,
-	}, nil
+			FunctionExpr: fnExpr,
+			From:         fromV,
+			To:           toV,
+		}, functiongrapher.FunctionDecoration{
+			Label: label,
+			Color: fg.Decoration.Color,
+		}, nil
 }
 
 type FunctionArea struct {
@@ -833,15 +846,15 @@ type FunctionsGraphBlock struct {
 
 func (fg FunctionsGraphBlock) setupValidator(params ex.RandomParameters) (validator, error) {
 	out := functionsGraphValidator{
-		functions:          make([]function, len(fg.FunctionExprs)),
+		functions:          make([]functionValidator, len(fg.FunctionExprs)),
 		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
-		sequences:          make([]function, len(fg.SequenceExprs)),
+		sequences:          make([]functionValidator, len(fg.SequenceExprs)),
 		areas:              make([]areaVData, len(fg.Areas)),
 		points:             make([]functionPointVData, len(fg.Points)),
 	}
 	for i, f := range fg.FunctionExprs {
 		var err error
-		out.functions[i], err = newFunction(f, params)
+		out.functions[i], err = newFunctionValidator(f, params)
 		if err != nil {
 			return nil, err
 		}
@@ -855,7 +868,7 @@ func (fg FunctionsGraphBlock) setupValidator(params ex.RandomParameters) (valida
 	}
 	for i, f := range fg.SequenceExprs {
 		var err error
-		out.sequences[i], err = newFunction(f, params)
+		out.sequences[i], err = newFunctionValidator(f, params)
 		if err != nil {
 			return nil, err
 		}
@@ -938,13 +951,13 @@ func (fg FunctionsGraphBlock) instantiateG(params ex.Vars) (FunctionsGraphInstan
 
 	// instantiate expression
 	for _, f := range fg.FunctionExprs {
-		fd, err := f.instantiate(params)
+		fd, dec, err := f.instantiate(params)
 		if err != nil {
 			return out, err
 		}
 		fg := functiongrapher.FunctionGraph{
 			Segments:   functiongrapher.NewFunctionGraph(fd),
-			Decoration: f.Decoration,
+			Decoration: dec,
 		}
 		out.Functions = append(out.Functions, fg)
 		byNames[fg.Decoration.Label] = append(byNames[fg.Decoration.Label], domainCurves{
@@ -953,13 +966,13 @@ func (fg FunctionsGraphBlock) instantiateG(params ex.Vars) (FunctionsGraphInstan
 		})
 	}
 	for _, f := range fg.SequenceExprs {
-		fd, err := f.instantiate(params)
+		fd, dec, err := f.instantiate(params)
 		if err != nil {
 			return out, err
 		}
 		fg := functiongrapher.SequenceGraph{
 			Points:     functiongrapher.NewSequenceGraph(fd),
-			Decoration: f.Decoration,
+			Decoration: dec,
 		}
 		out.Sequences = append(out.Sequences, fg)
 	}

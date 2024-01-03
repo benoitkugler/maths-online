@@ -2,7 +2,6 @@ package examples
 
 import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
-	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	que "github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
@@ -124,7 +123,7 @@ var BlockList = [...]que.Block{
 		FunctionExprs: []que.FunctionDefinition{
 			{
 				Function: "x^2 - 5",
-				Decoration: functiongrapher.FunctionDecoration{
+				Decoration: que.FunctionDecoration{
 					Label: "C_g",
 					Color: "#FF0000",
 				},
@@ -133,7 +132,7 @@ var BlockList = [...]que.Block{
 			},
 			{
 				Function: "1/x",
-				Decoration: functiongrapher.FunctionDecoration{
+				Decoration: que.FunctionDecoration{
 					Label: "y = 1/x",
 					Color: "#FF00BB",
 				},
@@ -142,7 +141,7 @@ var BlockList = [...]que.Block{
 			},
 			{
 				Function: "1/x",
-				Decoration: functiongrapher.FunctionDecoration{
+				Decoration: que.FunctionDecoration{
 					Label: "y = 1/x",
 					Color: "#FF00BB",
 				},

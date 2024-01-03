@@ -285,24 +285,29 @@ func (v figureValidator) validate(vars expression.Vars) error {
 	return nil
 }
 
-type function struct {
-	label  string
+type functionValidator struct {
+	label  Interpolated
 	domain expression.Domain
 	expression.FunctionExpr
 }
 
-func newFunction(fn FunctionDefinition, params expression.RandomParameters) (function, error) {
+func newFunctionValidator(fn FunctionDefinition, params expression.RandomParameters) (functionValidator, error) {
 	fnExpr, from, to, err := fn.parse()
 	if err != nil {
-		return function{}, err
+		return functionValidator{}, err
 	}
 
 	// check that the function variable is not used
 	if params[fn.Variable] != nil {
-		return function{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
+		return functionValidator{}, fmt.Errorf("La variable <b>%s</b> est déjà utilisée dans les paramètres aléatoires.", fn.Variable)
 	}
 
-	return function{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
+	_, err = fn.Decoration.Label.parse()
+	if err != nil {
+		return functionValidator{}, err
+	}
+
+	return functionValidator{label: fn.Decoration.Label, FunctionExpr: fnExpr, domain: expression.Domain{From: from, To: to}}, nil
 }
 
 type areaVData struct {
@@ -315,9 +320,9 @@ type functionPointVData struct {
 	x       *expression.Expr
 }
 type functionsGraphValidator struct {
-	functions          []function
+	functions          []functionValidator
 	variationValidator []variationTableValidator
-	sequences          []function
+	sequences          []functionValidator
 	areas              []areaVData
 	points             []functionPointVData
 }
@@ -343,7 +348,11 @@ func (v functionsGraphValidator) validate(vars expression.Vars) error {
 	// so that area references can't be ambiguous
 	byNames := make(map[string][]expression.Domain)
 	for _, fn := range v.functions {
-		byNames[fn.label] = append(byNames[fn.label], fn.domain)
+		label, err := fn.label.instantiateAndMerge(vars)
+		if err != nil {
+			return err
+		}
+		byNames[label] = append(byNames[label], fn.domain)
 	}
 	for _, vt := range v.variationValidator {
 		label, err := vt.label.instantiateAndMerge(vars)
@@ -498,7 +507,7 @@ func (v gfAffineLineValidator) validate(vars expression.Vars) error {
 
 type functionPointsValidator struct {
 	xGrid    []*expression.Expr
-	function function
+	function functionValidator
 }
 
 // checks the x grid only contains integers values with no duplicates,

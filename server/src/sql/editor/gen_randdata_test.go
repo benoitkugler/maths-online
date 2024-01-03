@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
-	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
@@ -336,14 +335,6 @@ func randfloat64() float64 {
 	return rand.Float64() * float64(rand.Int31())
 }
 
-func randfun_FunctionDecoration() functiongrapher.FunctionDecoration {
-	var s functiongrapher.FunctionDecoration
-	s.Label = randstring()
-	s.Color = randstring()
-
-	return s
-}
-
 func randint() int {
 	return int(rand.Intn(1000000))
 }
@@ -448,10 +439,18 @@ func randque_FunctionArea() questions.FunctionArea {
 	return s
 }
 
+func randque_FunctionDecoration() questions.FunctionDecoration {
+	var s questions.FunctionDecoration
+	s.Label = randque_Interpolated()
+	s.Color = randstring()
+
+	return s
+}
+
 func randque_FunctionDefinition() questions.FunctionDefinition {
 	var s questions.FunctionDefinition
 	s.Function = randstring()
-	s.Decoration = randfun_FunctionDecoration()
+	s.Decoration = randque_FunctionDecoration()
 	s.Variable = randexp_Variable()
 	s.From = randstring()
 	s.To = randstring()

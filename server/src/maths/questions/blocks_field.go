@@ -531,7 +531,7 @@ func (fp FunctionPointsFieldBlock) setupValidator(params expression.RandomParame
 		From:     fp.XGrid[0],
 		To:       fp.XGrid[len(fp.XGrid)-1],
 	}
-	out.function, err = newFunction(fn, params)
+	out.function, err = newFunctionValidator(fn, params)
 	if err != nil {
 		return nil, err
 	}

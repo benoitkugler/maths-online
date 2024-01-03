@@ -103,7 +103,7 @@ func TestExpression_AreFxsIntegers(t *testing.T) {
 	for _, tt := range tests {
 		expr := ex.MustParse(tt.expr)
 		v := functionPointsValidator{
-			function: function{
+			function: functionValidator{
 				FunctionExpr: ex.FunctionExpr{Function: expr, Variable: ex.NewVar('x')},
 				domain: ex.Domain{
 					From: ex.MustParse("-10"),

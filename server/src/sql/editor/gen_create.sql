@@ -672,28 +672,6 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_func_FunctionDecoration (data jsonb)
-    RETURNS boolean
-    AS $$
-DECLARE
-    is_valid boolean;
-BEGIN
-    IF jsonb_typeof(data) != 'object' THEN
-        RETURN FALSE;
-    END IF;
-    is_valid := (
-        SELECT
-            bool_and(key IN ('Label', 'Color'))
-        FROM
-            jsonb_each(data))
-        AND gomacro_validate_json_string (data -> 'Label')
-        AND gomacro_validate_json_string (data -> 'Color');
-    RETURN is_valid;
-END;
-$$
-LANGUAGE 'plpgsql'
-IMMUTABLE;
-
 CREATE OR REPLACE FUNCTION gomacro_validate_json_number (data jsonb)
     RETURNS boolean
     AS $$
@@ -915,6 +893,28 @@ $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FunctionDecoration (data jsonb)
+    RETURNS boolean
+    AS $$
+DECLARE
+    is_valid boolean;
+BEGIN
+    IF jsonb_typeof(data) != 'object' THEN
+        RETURN FALSE;
+    END IF;
+    is_valid := (
+        SELECT
+            bool_and(key IN ('Label', 'Color'))
+        FROM
+            jsonb_each(data))
+        AND gomacro_validate_json_string (data -> 'Label')
+        AND gomacro_validate_json_string (data -> 'Color');
+    RETURN is_valid;
+END;
+$$
+LANGUAGE 'plpgsql'
+IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION gomacro_validate_json_ques_FunctionDefinition (data jsonb)
     RETURNS boolean
     AS $$
@@ -930,7 +930,7 @@ BEGIN
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_string (data -> 'Function')
-        AND gomacro_validate_json_func_FunctionDecoration (data -> 'Decoration')
+        AND gomacro_validate_json_ques_FunctionDecoration (data -> 'Decoration')
         AND gomacro_validate_json_expr_Variable (data -> 'Variable')
         AND gomacro_validate_json_string (data -> 'From')
         AND gomacro_validate_json_string (data -> 'To');
