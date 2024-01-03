@@ -434,8 +434,8 @@ function nameToSelection(s: string) {
 function addArea() {
   props.modelValue.Areas?.push({
     Color: lastColorUsed.color,
-    Top: nameFromSelection(functionsNamesItems[1]),
-    Bottom: nameFromSelection(functionsNamesItems[0]),
+    Top: nameFromSelection(functionsNamesItems.value[1]),
+    Bottom: nameFromSelection(functionsNamesItems.value[0]),
     Left: "0",
     Right: "2",
   });
@@ -450,7 +450,7 @@ function deleteArea(index: number) {
 function addPoint() {
   props.modelValue.Points?.push({
     Color: lastColorUsed.color,
-    Function: nameFromSelection(functionsNamesItems[0]),
+    Function: nameFromSelection(functionsNamesItems.value[0]),
     X: "0",
     Legend: `P_${1 + (props.modelValue.Points.length || 0)}`,
   });

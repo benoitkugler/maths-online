@@ -142,14 +142,14 @@ async function updateClassroom() {
   if (classroomToUpdate.value == null) {
     return;
   }
-  const res = await controller.TeacherUpdateClassroom(classroomToUpdate);
+  const res = await controller.TeacherUpdateClassroom(classroomToUpdate.value);
   classroomToUpdate.value = null;
   if (res == undefined) {
     return;
   }
 
   const index = classrooms.value.findIndex((cl) => cl.Classroom.id == res.id);
-  classrooms[index].Classroom = res;
+  classrooms.value[index].Classroom = res;
 }
 
 const classroomToShow = ref<Classroom | null>(null);

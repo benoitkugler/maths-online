@@ -17,7 +17,7 @@
         :items="levelTags"
         :model-value="props.modelValue.LevelTags || []"
         @update:model-value="
-          v => {
+          (v) => {
             props.modelValue.LevelTags = v;
             emit('update:model-value', props.modelValue);
           }
@@ -40,7 +40,7 @@
         :items="subLevelTags"
         :model-value="props.modelValue.SubLevelTags || []"
         @update:model-value="
-          v => {
+          (v) => {
             props.modelValue.SubLevelTags = v;
             emit('update:model-value', props.modelValue);
           }
@@ -59,7 +59,7 @@
         :items="chapterTags"
         :model-value="props.modelValue.ChapterTags || []"
         @update:model-value="
-          v => {
+          (v) => {
             props.modelValue.ChapterTags = v;
             emit('update:model-value', props.modelValue);
           }
@@ -77,7 +77,7 @@
       <OriginSelect
         :origin="props.modelValue.Origin"
         @update:origin="
-          o => {
+          (o) => {
             props.modelValue.Origin = o;
             emit('update:model-value', props.modelValue);
           }
@@ -86,7 +86,7 @@
       <MatiereSelect
         :matiere="props.modelValue.Matiere"
         @update:matiere="
-          o => {
+          (o) => {
             props.modelValue.Matiere = o;
             emit('update:model-value', props.modelValue);
           }
@@ -116,40 +116,40 @@ const emit = defineEmits<{
 
 const levelTags = computed(() => {
   return (props.allTags.Levels || [])
-    .map(tag => ({
+    .map((tag) => ({
       title: tag,
-      value: tag
+      value: tag,
     }))
     .concat({ title: "Non classé", value: "" });
 });
 
 const chapterTags = computed(() => {
   const all = new Set<string>();
-  props.modelValue.LevelTags?.forEach(levelTag => {
+  props.modelValue.LevelTags?.forEach((levelTag) => {
     const l = (props.allTags.ChaptersByLevel || {})[levelTag];
-    l?.forEach(v => all.add(v));
+    l?.forEach((v) => all.add(v));
   });
   const out = Array.from(all.values());
   out.sort();
   return out
-    .map(tag => ({
+    .map((tag) => ({
       title: tag,
-      value: tag
+      value: tag,
     }))
     .concat({ title: "Non classé", value: "" });
 });
 
 const subLevelTags = computed(() => {
   const all = new Set<string>();
-  props.modelValue.LevelTags?.forEach(levelTag => {
+  props.modelValue.LevelTags?.forEach((levelTag) => {
     const l = (props.allTags.SubLevelsByLevel || {})[levelTag];
-    l?.forEach(v => all.add(v));
+    l?.forEach((v) => all.add(v));
   });
   const out = Array.from(all.values());
   out.sort();
-  return out.map(tag => ({
+  return out.map((tag) => ({
     title: tag,
-    value: tag
+    value: tag,
   }));
   // .concat({ title: "Non classé", value: "" });
 });
@@ -161,7 +161,7 @@ const noChaptersText = computed(() => {
 });
 
 // debounce feature for text field
-let timerId = 0;
+let timerId: ReturnType<typeof setTimeout>;
 function updateQuerySearch() {
   const debounceDelay = 300;
   // cancel pending call

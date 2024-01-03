@@ -1,25 +1,14 @@
 <template>
-  <v-row no-gutters>
-    <v-col cols="8" align-self="center">
-      <v-autocomplete
-        variant="outlined"
-        density="compact"
-        multiple
-        :label="label"
-        chips
-        :model-value="props.modelValue.map((v, i) => ({ value: i, title: v }))"
-        @update:model-value="(val) => onDelete(val)"
-        hide-no-data
-        closable-chips
-        readonly
-        clearable
-        append-inner-icon=""
-        :hint="props.hint"
-        :persistent-hint="!!props.hint"
-      >
-      </v-autocomplete>
-    </v-col>
-    <v-col cols="4">
+  <v-text-field
+    :hide-details="!props.hint"
+    :hint="props.hint"
+    :label="props.label"
+    readonly
+    variant="outlined"
+    density="compact"
+    model-value=" "
+  >
+    <template v-slot:append>
       <v-text-field
         class="fix-input-width"
         variant="outlined"
@@ -29,6 +18,7 @@
         v-model="entry"
         @click:append-inner="add"
         hint="Ajouter une expression"
+        persistent-hint
         @keyup="onEnter"
       >
         <template v-slot:append-inner>
@@ -37,8 +27,18 @@
           </v-btn>
         </template>
       </v-text-field>
-    </v-col>
-  </v-row>
+    </template>
+
+    <v-chip
+      v-for="(v, i) in props.modelValue"
+      :key="v"
+      closable
+      size="small"
+      @click:close="onDelete(i)"
+    >
+      {{ v }}
+    </v-chip>
+  </v-text-field>
 </template>
 
 <script setup lang="ts">
@@ -60,11 +60,8 @@ const emit = defineEmits<{
 
 const color = ExpressionColor;
 
-function onDelete(indices: number[]) {
-  emit(
-    "update:model-value",
-    indices.map((index) => props.modelValue[index])
-  );
+function onDelete(indice: number) {
+  emit("update:model-value", props.modelValue.toSpliced(indice, 1));
 }
 
 const entry = ref("");

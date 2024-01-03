@@ -127,7 +127,7 @@ watch(props, () => (title.value = props.sheet.Sheet.Title));
 
 function updateTitle() {
   if (title.value == props.sheet.Sheet.Title) return;
-  props.sheet.Sheet.Title = title;
+  props.sheet.Sheet.Title = title.value;
   update();
 }
 
