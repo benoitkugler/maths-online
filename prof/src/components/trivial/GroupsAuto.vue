@@ -24,8 +24,8 @@
 
 <script setup lang="ts">
 import type { GroupsStrategyAuto } from "@/controller/api_gen";
-import { $ref } from "vue/macros";
-import type { VCombobox } from "vuetify/lib/components";
+import { ref } from "vue";
+import { VCombobox } from "vuetify/lib/components/index.mjs";
 
 interface Props {
   modelValue: GroupsStrategyAuto;
@@ -37,7 +37,7 @@ const emit = defineEmits<{
 
 const props = defineProps<Props>();
 
-let field = $ref<InstanceType<typeof VCombobox> | null>(null);
+const field = ref<InstanceType<typeof VCombobox> | null>(null);
 
 // onUpdate is called on delete or when typing Enter
 function onUpdate(v: unknown) {
@@ -61,7 +61,7 @@ function onSearch(s: string) {
   if (numbers.length) {
     const newGroups = (props.modelValue.Groups || []).concat(...numbers);
     emit("update:model-value", { Groups: newGroups });
-    field.search = "";
+    field.value!.search = "";
   }
 }
 

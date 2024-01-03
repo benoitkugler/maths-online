@@ -15,7 +15,7 @@
     :style="{
       'border-width': '2px',
       cursor: props.readonly ? '' : 'pointer',
-      'text-align': 'center'
+      'text-align': 'center',
     }"
     :class="props.yPadding ? 'py-1' : ''"
   >
@@ -42,11 +42,11 @@
 <script setup lang="ts">
 import { Section, type TagsDB, type TagSection } from "@/controller/api_gen";
 import { tagString } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
 import TagListEdit from "./TagListEdit.vue";
 import TagChip from "./utils/TagChip.vue";
 import { copy } from "@/controller/utils";
+import { ref } from "vue";
+import { computed } from "vue";
 
 interface Props {
   modelValue: TagSection[];
@@ -64,25 +64,25 @@ const emit = defineEmits<{
 
 defineExpose({ startEdit });
 
-let isEditing = $ref(false);
-let tmpList = $ref<TagSection[]>([]);
+const isEditing = ref(false);
+const tmpList = ref<TagSection[]>([]);
 
 function startEdit() {
   if (props.readonly) {
     return;
   }
-  isEditing = true;
-  tmpList = props.modelValue.map(v => ({
+  isEditing.value = true;
+  tmpList.value = props.modelValue.map((v) => ({
     Tag: tagString(v.Tag),
-    Section: v.Section
+    Section: v.Section,
   }));
 }
 
 const saveEnabled = computed(() => {
-  if (tmpList.length != props.modelValue.length) {
+  if (tmpList.value.length != props.modelValue.length) {
     return true;
   }
-  return !tmpList.every((tag, index) => props.modelValue[index] == tag);
+  return !tmpList.value.every((tag, index) => props.modelValue[index] == tag);
 });
 
 const sorted = computed(() => {
@@ -92,8 +92,8 @@ const sorted = computed(() => {
 });
 
 function endEdit() {
-  isEditing = false;
-  emit("update:model-value", tmpList);
+  isEditing.value = false;
+  emit("update:model-value", tmpList.value);
 }
 
 function sectionOrder(s: Section) {

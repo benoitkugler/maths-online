@@ -93,7 +93,7 @@ import cahierImg from "@/assets/cahier-stylo-calc.png";
 import { PreviewMode } from "@/controller/controller";
 import { computed } from "vue";
 
-let studentAppLink = computed(() =>
+const studentAppLink = computed(() =>
   PreviewMode == "dev"
     ? "http://localhost:1323/test-eleve?mode=dev"
     : "https://isyro.fr/test-eleve"

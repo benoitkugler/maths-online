@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import type { TargetQuestion } from "@/controller/api_gen";
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 import ClientPreview from "../editor/ClientPreview.vue";
 import QuestiongroupPannel from "../editor/questions/QuestiongroupPannel.vue";
 
@@ -26,5 +26,5 @@ interface Props {
 
 const props = defineProps<Props>();
 
-let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
+const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
 </script>

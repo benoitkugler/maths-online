@@ -44,13 +44,11 @@ import type {
   Classroom,
   HomeworkMarksOut,
   SheetExt,
-  Travail
+  Travail,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "@vue/reactivity";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { onMounted } from "vue";
-import { $ref } from "vue/macros";
 import MarksStats from "./MarksStats.vue";
 import MarksTable from "./MarksTable.vue";
 
@@ -68,21 +66,21 @@ const viewKind = ref<"marks" | "tasks">("marks");
 
 const viewItems = [
   { title: "Notes par élève", value: "marks" },
-  { title: "Réussite par exercice", value: "tasks" }
+  { title: "Réussite par exercice", value: "tasks" },
 ];
 
 onMounted(fetchNotes);
 
-let isLoading = computed(() => data == null);
-let data = $ref<HomeworkMarksOut | null>(null);
+const isLoading = computed(() => data.value == null);
+const data = ref<HomeworkMarksOut | null>(null);
 
 async function fetchNotes() {
-  data = null;
+  data.value = null;
   const res = await controller.HomeworkGetMarks({
     IdClassroom: props.classroom.id,
-    IdTravaux: props.travaux.map(tr => tr.Id)
+    IdTravaux: props.travaux.map((tr) => tr.Id),
   });
   if (res == undefined) return;
-  data = res;
+  data.value = res;
 }
 </script>

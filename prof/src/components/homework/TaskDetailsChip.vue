@@ -71,9 +71,9 @@ import {
 } from "@/controller/api_gen";
 import { taskBareme } from "@/controller/utils";
 import MonoquestionDetails from "./MonoquestionDetails.vue";
-import { $ref } from "vue/macros";
 import { controller } from "@/controller/controller";
 import RandomMonoquestionDetails from "./RandomMonoquestionDetails.vue";
+import { ref } from "vue";
 
 interface Props {
   task: TaskExt;
@@ -86,8 +86,8 @@ const emit = defineEmits<{
   (e: "updateRandomMonoquestion", v: RandomMonoquestion): void;
 }>();
 
-let monoquestionToEdit = $ref<Monoquestion | null>(null);
-let randomMonoquestionToEdit = $ref<RandomMonoquestion | null>(null);
+const monoquestionToEdit = ref<Monoquestion | null>(null);
+const randomMonoquestionToEdit = ref<RandomMonoquestion | null>(null);
 
 // load the monoquestion details and show an editor
 async function startEditMonoquestion() {
@@ -96,7 +96,7 @@ async function startEditMonoquestion() {
   });
   if (res == undefined) return;
 
-  monoquestionToEdit = res;
+  monoquestionToEdit.value = res;
 }
 // load the monoquestion details and show an editor
 async function startEditRandomMonoquestion() {
@@ -105,7 +105,7 @@ async function startEditRandomMonoquestion() {
   });
   if (res == undefined) return;
 
-  randomMonoquestionToEdit = res;
+  randomMonoquestionToEdit.value = res;
 }
 </script>
 

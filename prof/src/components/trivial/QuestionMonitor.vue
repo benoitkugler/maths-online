@@ -26,8 +26,7 @@
 <script setup lang="ts">
 import type { QuestionContent } from "@/controller/api_gen";
 import { controller, PreviewMode } from "@/controller/controller";
-import { computed } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 
 interface Props {
   question: QuestionContent;
@@ -39,10 +38,10 @@ const emit = defineEmits<{
   (e: "close"): void;
 }>();
 
-let iframe = $ref<HTMLIFrameElement | null>(null);
+const iframe = ref<HTMLIFrameElement | null>(null);
 
 function setupListener() {
-  if (!iframe?.contentWindow) return;
+  if (!iframe.value?.contentWindow) return;
   window.addEventListener("message", (ev) => {
     const data = JSON.parse(ev.data);
     if (data["PREVIEW_READY"]) {
@@ -53,11 +52,11 @@ function setupListener() {
 
 /** transfer the given payload to the flutter embedded app */
 function sendEvent() {
-  if (iframe == null) return;
-  iframe.contentWindow?.postMessage(JSON.stringify(props.question), "*");
+  if (iframe.value == null) return;
+  iframe.value.contentWindow?.postMessage(JSON.stringify(props.question), "*");
 }
 
-let src = computed(() =>
+const src = computed(() =>
   controller.getURL(`/prof-preview-app?mode=${PreviewMode}`)
 );
 </script>

@@ -5,8 +5,8 @@
       :tags="props.allTags"
       :mode="'exercices'"
       @closed="showExerciceSelector = false"
-      @selected-variant="v => emit('addExercice', v)"
-      @update:query="q => (exerciceQuery = q)"
+      @selected-variant="(v) => emit('addExercice', v)"
+      @update:query="(q) => (exerciceQuery = q)"
     ></resource-selector>
   </v-dialog>
 
@@ -16,9 +16,9 @@
       :tags="props.allTags"
       :mode="'questions'"
       @closed="showMonoquestionSelector = false"
-      @selected-variant="v => emit('addMonoquestion', v)"
-      @selected-group="gr => emit('addRandomMonoquestion', gr)"
-      @update:query="q => (questionQuery = q)"
+      @selected-variant="(v) => emit('addMonoquestion', v)"
+      @selected-group="(gr) => emit('addRandomMonoquestion', gr)"
+      @update:query="(q) => (questionQuery = q)"
     ></resource-selector>
   </v-dialog>
 
@@ -89,7 +89,7 @@
 
         <drop-zone
           v-if="showDropZone"
-          @drop="origin => swap(origin, 0)"
+          @drop="(origin) => swap(origin, 0)"
         ></drop-zone>
 
         <div v-for="(task, index) in sheet.Tasks" :key="index">
@@ -98,7 +98,7 @@
               <v-col cols="auto" align-self="center">
                 <drag-icon
                   color="black"
-                  @start="e => onItemDragStart(e, index)"
+                  @start="(e) => onItemDragStart(e, index)"
                 ></drag-icon>
               </v-col>
               <v-col cols="auto" align-self="center">
@@ -141,9 +141,9 @@
               >
                 <task-details-chip
                   :task="task"
-                  @update-monoquestion="qu => emit('updateMonoquestion', qu)"
+                  @update-monoquestion="(qu) => emit('updateMonoquestion', qu)"
                   @update-random-monoquestion="
-                    qu => emit('updateRandomMonoquestion', qu)
+                    (qu) => emit('updateRandomMonoquestion', qu)
                   "
                 >
                 </task-details-chip>
@@ -152,7 +152,7 @@
           </v-list-item>
           <drop-zone
             v-if="showDropZone"
-            @drop="origin => swap(origin, index + 1)"
+            @drop="(origin) => swap(origin, index + 1)"
           ></drop-zone>
         </div>
 
@@ -179,17 +179,16 @@ import {
   type SheetExt,
   type TagsDB,
   type TaskExt,
-  type RandomMonoquestion
+  type RandomMonoquestion,
 } from "@/controller/api_gen";
 import {
   onDragListItemStart,
   sheetBareme,
-  swapItems
+  swapItems,
 } from "@/controller/utils";
-import { $ref } from "vue/macros";
 import DragIcon from "../DragIcon.vue";
 import DropZone from "../DropZone.vue";
-import { watch } from "vue";
+import { ref, watch } from "vue";
 import ResourceSelector from "../ResourceSelector.vue";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import TaskDetailsChip from "./TaskDetailsChip.vue";
@@ -213,33 +212,33 @@ const emit = defineEmits<{
   (e: "reorder", tasks: TaskExt[]): void;
 }>();
 
-let taskToRemove = $ref<TaskExt | null>(null);
+const taskToRemove = ref<TaskExt | null>(null);
 
-let showMonoquestionSelector = $ref(false);
+const showMonoquestionSelector = ref(false);
 
-let showExerciceSelector = $ref(false);
-let exerciceQuery = $ref<Query>({
+const showExerciceSelector = ref(false);
+const exerciceQuery = ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
   SubLevelTags: [],
   Origin: OriginKind.All,
-  Matiere: controller.settings.FavoriteMatiere
+  Matiere: controller.settings.FavoriteMatiere,
 });
-let questionQuery = $ref<Query>({
+const questionQuery = ref<Query>({
   TitleQuery: "",
   LevelTags: props.sheet.Sheet.Level ? [props.sheet.Sheet.Level] : [],
   ChapterTags: [],
   SubLevelTags: [],
   Origin: OriginKind.All,
-  Matiere: controller.settings.FavoriteMatiere
+  Matiere: controller.settings.FavoriteMatiere,
 });
 
 watch(props.sheet, () => {
-  exerciceQuery.LevelTags = props.sheet.Sheet.Level
+  exerciceQuery.value.LevelTags = props.sheet.Sheet.Level
     ? [props.sheet.Sheet.Level]
     : [];
-  questionQuery.LevelTags = props.sheet.Sheet.Level
+  questionQuery.value.LevelTags = props.sheet.Sheet.Level
     ? [props.sheet.Sheet.Level]
     : [];
 });
@@ -248,24 +247,24 @@ function removeExercice(index: number) {
   const task = props.sheet.Tasks![index];
   // ask confirmation if progression has started
   if (task.NbProgressions) {
-    taskToRemove = task;
+    taskToRemove.value = task;
   } else {
     emit("remove", task);
   }
 }
 
-let showDropZone = $ref(false);
+const showDropZone = ref(false);
 function onItemDragStart(payload: DragEvent, index: number) {
   onDragListItemStart(payload, index);
-  setTimeout(() => (showDropZone = true), 100); // workaround bug
+  setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
 function onDragend() {
-  showDropZone = false;
+  showDropZone.value = false;
 }
 
 function swap(origin: number, target: number) {
-  showDropZone = false;
+  showDropZone.value = false;
   const l = swapItems(origin, target, props.sheet.Tasks!);
   emit("reorder", l);
 }

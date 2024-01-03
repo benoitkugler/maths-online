@@ -119,7 +119,7 @@
             <v-list-item>
               <OriginButton
                 :origin="sheet.Origin"
-                @update-public="b => emit('updatePublic', b)"
+                @update-public="(b) => emit('updatePublic', b)"
                 @create-review="emit('createReview')"
               ></OriginButton>
             </v-list-item>
@@ -134,11 +134,12 @@
 import {
   Visibility,
   type Classroom,
-  type SheetExt
+  type SheetExt,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
 import { colorForOrigin } from "@/controller/editor";
+import PreviewSheet from "./PreviewSheet.vue";
 
 interface Props {
   sheet: SheetExt;

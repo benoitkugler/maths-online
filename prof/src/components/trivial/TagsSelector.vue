@@ -5,7 +5,7 @@
         <v-col cols="10">
           <tag-list-field
             :model-value="row || []"
-            @update:model-value="r => updateRow(index, r)"
+            @update:model-value="(r) => updateRow(index, r)"
             :all-tags="allTags"
             :ref="(el:any) => (rows[index] = el as TF)"
             :readonly="false"
@@ -42,10 +42,9 @@ import {
   Section,
   type Tags,
   type TagsDB,
-  type TagSection
+  type TagSection,
 } from "@/controller/api_gen";
-import { nextTick } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, nextTick } from "vue";
 import TagListField from "../editor/TagListField.vue";
 import type { PrefillTrivialCategorie } from "@/controller/utils";
 
@@ -63,7 +62,7 @@ const emit = defineEmits<{
 
 type TF = InstanceType<typeof TagListField>;
 
-let rows = $ref<TF[]>([]);
+const rows = ref<TF[]>([]);
 
 function addIntersection() {
   // defaut to last level and section, if any
@@ -71,19 +70,19 @@ function addIntersection() {
   if (props.lastMatiereLevelChapter.level.length) {
     newTags.push({
       Section: Section.Level,
-      Tag: props.lastMatiereLevelChapter.level
+      Tag: props.lastMatiereLevelChapter.level,
     });
   }
   if (props.lastMatiereLevelChapter.matiere.length) {
     newTags.push({
       Section: Section.Matiere,
-      Tag: props.lastMatiereLevelChapter.matiere
+      Tag: props.lastMatiereLevelChapter.matiere,
     });
   }
   if (props.lastMatiereLevelChapter.chapter.length) {
     newTags.push({
       Section: Section.Chapter,
-      Tag: props.lastMatiereLevelChapter.chapter
+      Tag: props.lastMatiereLevelChapter.chapter,
     });
   }
   newTags.push(...(props.lastMatiereLevelChapter.sublevels || []));
@@ -91,7 +90,7 @@ function addIntersection() {
   props.modelValue.push(newTags);
   emit("update:model-value", props.modelValue);
   nextTick(() => {
-    rows[rows.length - 1].startEdit();
+    rows.value[rows.value.length - 1].startEdit();
   });
 }
 

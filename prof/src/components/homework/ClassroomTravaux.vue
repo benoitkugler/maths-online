@@ -4,7 +4,8 @@
       v-if="showNotes"
       :classroom="props.classroom.Classroom"
       :travaux="
-        props.classroom.Travaux?.filter(tr => selectedTravaux.has(tr.Id)) || []
+        props.classroom.Travaux?.filter((tr) => selectedTravaux.has(tr.Id)) ||
+        []
       "
       :sheets="props.sheets"
     ></classroom-notes>
@@ -66,11 +67,11 @@
           :travail="travail"
           :sheet="props.sheets.get(travail.IdSheet)!"
           :classrooms="props.classrooms"
-          @update="tr => emit('update', tr)"
+          @update="(tr) => emit('update', tr)"
           @delete="emit('delete', travail)"
-          @copy="idClassroom => emit('copy', travail, idClassroom)"
-          @set-favorite="s => emit('setFavorite', s)"
-          @edit-sheet="s => emit('editSheet', s)"
+          @copy="(idClassroom) => emit('copy', travail, idClassroom)"
+          @set-favorite="(s) => emit('setFavorite', s)"
+          @edit-sheet="(s) => emit('editSheet', s)"
           @show-dispenses="showDispensesFor = travail"
         ></travail-card>
         <v-card
@@ -104,9 +105,8 @@ import type {
   ClassroomTravaux,
   Sheet,
   SheetExt,
-  Travail
+  Travail,
 } from "@/controller/api_gen";
-import { $ref } from "vue/macros";
 import ClassroomNotes from "./ClassroomNotes.vue";
 import TravailCard from "./TravailCard.vue";
 import { ref } from "vue";
@@ -129,28 +129,28 @@ const emit = defineEmits<{
   (e: "editSheet", sheet: SheetExt): void;
 }>();
 
-let inSelect = $ref(false);
-let selectedTravaux = $ref<Set<number>>(new Set());
+const inSelect = ref(false);
+const selectedTravaux = ref<Set<number>>(new Set());
 
-let showNotes = $ref(false);
+const showNotes = ref(false);
 
 function onToggle(tr: Travail) {
-  if (selectedTravaux.has(tr.Id)) {
-    selectedTravaux.delete(tr.Id);
+  if (selectedTravaux.value.has(tr.Id)) {
+    selectedTravaux.value.delete(tr.Id);
   } else {
-    selectedTravaux.add(tr.Id);
+    selectedTravaux.value.add(tr.Id);
   }
 }
 function onShowNotes() {
-  if (!inSelect) {
+  if (!inSelect.value) {
     // start with all noted selected
-    selectedTravaux = new Set(
-      props.classroom.Travaux?.filter(tr => tr.Noted).map(tr => tr.Id)
+    selectedTravaux.value = new Set(
+      props.classroom.Travaux?.filter((tr) => tr.Noted).map((tr) => tr.Id)
     );
-    inSelect = true;
+    inSelect.value = true;
   } else {
-    inSelect = false;
-    showNotes = true;
+    inSelect.value = false;
+    showNotes.value = true;
   }
 }
 

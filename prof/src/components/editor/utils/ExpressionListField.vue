@@ -8,7 +8,7 @@
         :label="label"
         chips
         :model-value="props.modelValue.map((v, i) => ({ value: i, title: v }))"
-        @update:model-value="val => onDelete(val)"
+        @update:model-value="(val) => onDelete(val)"
         hide-no-data
         closable-chips
         readonly
@@ -43,8 +43,8 @@
 
 <script setup lang="ts">
 import { ExpressionColor } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { computed } from "vue";
+import { ref } from "vue";
 
 interface Props {
   modelValue: string[];
@@ -63,17 +63,16 @@ const color = ExpressionColor;
 function onDelete(indices: number[]) {
   emit(
     "update:model-value",
-    indices.map(index => props.modelValue[index])
+    indices.map((index) => props.modelValue[index])
   );
 }
 
-let entry = $ref("");
-const isEntryValid = computed(() => !!entry.length);
+const entry = ref("");
+const isEntryValid = computed(() => !!entry.value.length);
 
 function add() {
-  props.modelValue.push(entry);
-  entry = "";
-  emit("update:model-value", props.modelValue);
+  emit("update:model-value", props.modelValue.concat(entry.value));
+  entry.value = "";
 }
 
 function onEnter(key: KeyboardEvent) {

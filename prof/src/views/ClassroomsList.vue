@@ -106,12 +106,11 @@
 import type { Classroom, ClassroomExt } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy } from "@/controller/utils";
-import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { ref, onMounted } from "vue";
 import ClassroomCard from "../components/classrooms/ClassroomCard.vue";
 import ClassroomView from "@/components/classrooms/ClassroomView.vue";
 
-let classrooms = $ref<ClassroomExt[]>([]);
+const classrooms = ref<ClassroomExt[]>([]);
 
 onMounted(() => fetchClassrooms());
 
@@ -120,7 +119,7 @@ async function fetchClassrooms() {
   if (res == undefined) {
     return;
   }
-  classrooms = res || [];
+  classrooms.value = res || [];
 }
 
 async function createClassroom() {
@@ -128,32 +127,32 @@ async function createClassroom() {
   await fetchClassrooms();
 }
 
-let classroomToDelete = $ref<Classroom | null>(null);
+const classroomToDelete = ref<Classroom | null>(null);
 async function deleteClassroom() {
-  if (classroomToDelete == null) {
+  if (classroomToDelete.value == null) {
     return;
   }
-  await controller.TeacherDeleteClassroom({ id: classroomToDelete.id });
-  classroomToDelete = null;
+  await controller.TeacherDeleteClassroom({ id: classroomToDelete.value.id });
+  classroomToDelete.value = null;
   await fetchClassrooms();
 }
 
-let classroomToUpdate = $ref<Classroom | null>(null);
+const classroomToUpdate = ref<Classroom | null>(null);
 async function updateClassroom() {
-  if (classroomToUpdate == null) {
+  if (classroomToUpdate.value == null) {
     return;
   }
   const res = await controller.TeacherUpdateClassroom(classroomToUpdate);
-  classroomToUpdate = null;
+  classroomToUpdate.value = null;
   if (res == undefined) {
     return;
   }
 
-  const index = classrooms.findIndex(cl => cl.Classroom.id == res.id);
+  const index = classrooms.value.findIndex((cl) => cl.Classroom.id == res.id);
   classrooms[index].Classroom = res;
 }
 
-let classroomToShow = $ref<Classroom | null>(null);
+const classroomToShow = ref<Classroom | null>(null);
 </script>
 
 <style>

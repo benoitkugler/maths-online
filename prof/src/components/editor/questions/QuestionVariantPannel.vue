@@ -166,9 +166,7 @@ import { controller } from "@/controller/controller";
 import { saveData } from "@/controller/editor";
 import { History } from "@/controller/editor_history";
 import { copy } from "@/controller/utils";
-import { ref } from "@vue/reactivity";
-import { computed, onMounted, onUnmounted, watch } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import BlockBar from "../BlockBar.vue";
 import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
 import QuestionContent from "../QuestionContent.vue";
@@ -187,12 +185,12 @@ const emit = defineEmits<{
   (e: "preview", preview: LoopbackShowQuestion): void;
 }>();
 
-let question = $ref(copy(props.question));
+const question = ref(copy(props.question));
 
-let modeEnonce = $ref(true); // false for correction
+const modeEnonce = ref(true); // false for correction
 
 watch(props, () => {
-  question = copy(props.question);
+  question.value = copy(props.question);
 });
 
 onMounted(() => {
@@ -212,60 +210,60 @@ interface historyEntry {
 }
 
 let history = new History(
-  { question }, // start with initial question in history
+  { question: question.value }, // start with initial question in history
   controller.showMessage!,
   restoreHistory
 );
 
 function restoreHistory(snapshot: historyEntry) {
-  question = snapshot.question;
+  question.value = snapshot.question;
 }
 
-let questionEnonceNode = $ref<InstanceType<typeof QuestionContent> | null>(
+const questionEnonceNode = ref<InstanceType<typeof QuestionContent> | null>(
   null
 );
-let questionCorrectionNode = $ref<InstanceType<typeof QuestionContent> | null>(
+const questionCorrectionNode = ref<InstanceType<typeof QuestionContent> | null>(
   null
 );
 function addBlock(kind: BlockKind) {
-  if (modeEnonce) {
-    questionEnonceNode?.addBlock(kind);
+  if (modeEnonce.value) {
+    questionEnonceNode.value?.addBlock(kind);
   } else {
-    questionCorrectionNode?.addBlock(kind);
+    questionCorrectionNode.value?.addBlock(kind);
   }
 }
 
 function onUpdateEnonce(v: Block[]) {
-  question.Enonce = v;
-  history.add({ question });
+  question.value.Enonce = v;
+  history.add({ question: question.value });
 }
 function onUpdateCorrection(v: Block[]) {
-  question.Correction = v;
-  history.add({ question });
+  question.value.Correction = v;
+  history.add({ question: question.value });
 }
 
-let errorContent = $ref<errEnonce | null>(null);
-let errorIsCorrection = $ref(false);
+const errorContent = ref<errEnonce | null>(null);
+const errorIsCorrection = ref(false);
 
 async function save() {
   const res = await controller.EditorSaveQuestionAndPreview({
-    Id: question.Id,
+    Id: question.value.Id,
     Page: {
-      enonce: question.Enonce,
-      parameters: question.Parameters,
-      correction: question.Correction,
+      enonce: question.value.Enonce,
+      parameters: question.value.Parameters,
+      correction: question.value.Correction,
     },
-    ShowCorrection: !modeEnonce,
+    ShowCorrection: !modeEnonce.value,
   });
   if (res == undefined) {
     return;
   }
 
   if (res.IsValid) {
-    errorParameters = null;
-    errorContent = null;
+    errorParameters.value = null;
+    errorContent.value = null;
     // notifie the parent on success
-    emit("update", question);
+    emit("update", question.value);
     emit("preview", res.Question);
   } else {
     onQuestionError(res.Error);
@@ -274,21 +272,21 @@ async function save() {
 
 function onQuestionError(err: ErrQuestionInvalid) {
   // reset previous error
-  errorParameters = null;
-  errorContent = null;
+  errorParameters.value = null;
+  errorContent.value = null;
   switch (err.Kind) {
     case ErrorKind.ErrParameters_:
-      errorParameters = err.ErrParameters;
+      errorParameters.value = err.ErrParameters;
       return;
     case ErrorKind.ErrEnonce:
-      errorContent = err.ErrEnonce;
-      errorIsCorrection = false;
-      modeEnonce = true;
+      errorContent.value = err.ErrEnonce;
+      errorIsCorrection.value = false;
+      modeEnonce.value = true;
       return;
     case ErrorKind.ErrCorrection:
-      errorContent = err.ErrCorrection;
-      errorIsCorrection = true;
-      modeEnonce = false;
+      errorContent.value = err.ErrCorrection;
+      errorIsCorrection.value = true;
+      modeEnonce.value = false;
       return;
   }
 }
@@ -299,47 +297,48 @@ function download() {
 
 async function onImportQuestion(imported: Question) {
   // only import the data fields
-  question.Enonce = imported.Enonce;
-  question.Correction = imported.Correction;
-  question.Parameters = imported.Parameters;
+  question.value.Enonce = imported.Enonce;
+  question.value.Correction = imported.Correction;
+  question.value.Parameters = imported.Parameters;
 
-  history.add({ question });
+  history.add({ question: question.value });
 }
 
-let errorParameters = $ref<ErrParameters | null>(null);
-const showErrorParameters = computed(() => errorParameters != null);
+const errorParameters = ref<ErrParameters | null>(null);
+const showErrorParameters = computed(() => errorParameters.value != null);
 const availableParameters = ref<Variable[]>([]);
-let isCheckingParameters = $ref(false);
+const isCheckingParameters = ref(false);
 
 async function checkParameters(params: Parameters) {
-  question.Parameters = params;
-  history.add({ question });
+  question.value.Parameters = params;
+  history.add({ question: question.value });
 
-  isCheckingParameters = true;
+  isCheckingParameters.value = true;
   const out = await controller.EditorCheckQuestionParameters({
     Parameters: params,
   });
-  isCheckingParameters = false;
+  isCheckingParameters.value = false;
   if (out === undefined) return;
 
   // hide previous error
-  errorContent = null;
-  errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
+  errorContent.value = null;
+  errorParameters.value =
+    out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
 
   availableParameters.value = out.Variables || [];
 }
 
 async function addSyntaxHint(block: ExpressionFieldBlock) {
-  if (questionEnonceNode == null) return;
+  if (questionEnonceNode.value == null) return;
 
   const res = await controller.EditorGenerateSyntaxHint({
     Block: block,
     SharedParameters: [],
-    QuestionParameters: question.Parameters,
+    QuestionParameters: question.value.Parameters,
   });
   if (res == undefined) return;
 
-  questionEnonceNode?.addExistingBlock({
+  questionEnonceNode.value?.addExistingBlock({
     Kind: BlockKind.TextBlock,
     Data: res,
   });
@@ -347,9 +346,9 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
 
 async function exportLatex() {
   const res = await controller.EditorQuestionExportLateX({
-    parameters: question.Parameters,
-    enonce: question.Enonce,
-    correction: question.Correction,
+    parameters: question.value.Parameters,
+    enonce: question.value.Enonce,
+    correction: question.value.Correction,
   });
   if (res == undefined) return;
 

@@ -83,8 +83,8 @@
 
 <script setup lang="ts">
 import type { VariantG } from "@/controller/editor";
-import { $ref } from "vue/macros";
 import TagChip from "./utils/TagChip.vue";
+import { ref } from "vue";
 
 interface Props {
   variants: VariantG[];
@@ -100,7 +100,7 @@ const emit = defineEmits<{
   (e: "duplicate", variant: VariantG): void;
 }>();
 
-const showMenu = $ref(false);
+const showMenu = ref(false);
 </script>
 
 <style scoped></style>

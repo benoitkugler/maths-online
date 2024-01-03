@@ -76,7 +76,7 @@
 import type { GFAffineLine } from "@/controller/api_gen";
 import { TextKind } from "@/controller/api_gen";
 import { colorByKind } from "@/controller/editor";
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
 interface Props {
   modelValue: GFAffineLine;
@@ -94,7 +94,7 @@ function emitUpdate() {
 
 const expressionColor = colorByKind[TextKind.Expression];
 
-let showDocumentation = $ref(false);
+const showDocumentation = ref(false);
 </script>
 
 <style scoped>

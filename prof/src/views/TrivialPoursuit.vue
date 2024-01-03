@@ -114,7 +114,7 @@
             :key="config.Config.Id"
             :config="config"
             :disable-launch="
-              isLaunching || !config.NbQuestionsByCategories.every(v => v > 0)
+              isLaunching || !config.NbQuestionsByCategories.every((v) => v > 0)
             "
             @update-public="(b:boolean) => updatePublic(config.Config, b)"
             @create-review="reviewToCreate = config.Config"
@@ -138,16 +138,10 @@ import {
   type TagsDB,
   type Trivial,
   type TrivialExt,
-  PublicStatus
+  PublicStatus,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import {
-  computed,
-  onMounted,
-  onActivated,
-  watchEffect
-} from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted, onActivated, watchEffect } from "vue";
 import TrivialRow from "../components/trivial/TrivialRow.vue";
 import EditConfig from "../components/trivial/EditConfig.vue";
 import LaunchOptions from "../components/trivial/LaunchOptions.vue";
@@ -155,30 +149,29 @@ import SessionMonitor from "../components/trivial/SessionMonitor.vue";
 import { useRouter } from "vue-router";
 import { emptyTagsDB } from "@/controller/editor";
 import ConfirmPublish from "@/components/ConfirmPublish.vue";
-import { ref } from "vue";
 import MatiereSelect from "@/components/MatiereSelect.vue";
 import SelfaccessConfig from "@/components/trivial/SelfaccessConfig.vue";
 
 const router = useRouter();
 
-let allKnownTags = $ref<TagsDB>(emptyTagsDB());
+const allKnownTags = ref<TagsDB>(emptyTagsDB());
 
-let editedConfig = $ref<Trivial | null>(null);
+const editedConfig = ref<Trivial | null>(null);
 
 const matiere = ref(controller.settings.FavoriteMatiere);
 
-let _configs = $ref<TrivialExt[]>([]);
+const _configs = ref<TrivialExt[]>([]);
 
 const configsByLevels = computed(() => {
   const byLevel = new Map<string, TrivialExt[]>();
-  _configs.forEach(cf => {
+  _configs.value.forEach((cf) => {
     if (!cf.Levels?.length) {
       // add to unclassified
       const l = byLevel.get("") || [];
       l.push(cf);
       byLevel.set("", l);
     } else {
-      cf.Levels.forEach(level => {
+      cf.Levels.forEach((level) => {
         const l = byLevel.get(level) || [];
         l.push(cf);
         byLevel.set(level, l);
@@ -192,13 +185,13 @@ const configsByLevels = computed(() => {
 
   // show unclassified first
   const unclassified = byLevel.get("");
-  const others = Array.from(byLevel.entries()).filter(v => v[0] != "");
+  const others = Array.from(byLevel.entries()).filter((v) => v[0] != "");
   others.sort((a, b) => -a[0].localeCompare(b[0]));
   const head: typeof others = [["", unclassified || []]];
   return unclassified?.length ? head.concat(others) : others;
 });
 
-let isLaunching = $ref(false);
+const isLaunching = ref(false);
 
 onMounted(_init);
 onActivated(_init);
@@ -212,50 +205,50 @@ async function _init() {
   const res = await controller.GetTrivialPoursuit({ matiere: matiere.value });
 
   if (res === undefined) return;
-  _configs = Object.values(res || {});
+  _configs.value = Object.values(res || {});
 
   const tags = await controller.EditorGetTags();
   if (tags) {
-    allKnownTags = tags;
+    allKnownTags.value = tags;
   }
 }
 
 async function createConfig() {
   const res = await controller.CreateTrivialPoursuit({
-    matiere: matiere.value
+    matiere: matiere.value,
   });
   if (res === undefined) {
     return;
   }
-  _configs.push(res);
+  _configs.value.push(res);
   // launch the edition
-  editedConfig = res.Config;
+  editedConfig.value = res.Config;
 }
 
 async function updateConfig(config: Trivial) {
   // remove empty categories
-  config.Questions.Tags = config.Questions.Tags.map(q =>
-    (q || []).filter(v => v && v.length != 0)
+  config.Questions.Tags = config.Questions.Tags.map((q) =>
+    (q || []).filter((v) => v && v.length != 0)
   );
   const res = await controller.UpdateTrivialPoursuit(config);
   if (res === undefined) {
     return;
   }
-  const index = _configs.findIndex(v => v.Config.Id == config.Id);
-  _configs[index] = res;
-  editedConfig = null;
+  const index = _configs.value.findIndex((v) => v.Config.Id == config.Id);
+  _configs.value[index] = res;
+  editedConfig.value = null;
 }
 
 async function updatePublic(config: Trivial, isPublic: boolean) {
   const res = await controller.UpdateTrivialVisiblity({
     ConfigID: config.Id,
-    Public: isPublic
+    Public: isPublic,
   });
   if (res === undefined) {
     return;
   }
-  const index = _configs.findIndex(v => v.Config.Id == config.Id);
-  _configs[index].Origin.PublicStatus = isPublic
+  const index = _configs.value.findIndex((v) => v.Config.Id == config.Id);
+  _configs.value[index].Origin.PublicStatus = isPublic
     ? PublicStatus.AdminPublic
     : PublicStatus.AdminNotPublic;
 }
@@ -265,7 +258,7 @@ async function createReview() {
   if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KTrivial,
-    Id: reviewToCreate.value.Id
+    Id: reviewToCreate.value.Id,
   });
   reviewToCreate.value = null;
   if (res == undefined) return;
@@ -280,68 +273,68 @@ async function duplicateConfig(config: Trivial) {
   }
   console.log(config, res);
 
-  _configs.push(res);
+  _configs.value.push(res);
 }
 
-let trivialToDelete = $ref<Trivial | null>(null);
+const trivialToDelete = ref<Trivial | null>(null);
 
 async function deleteConfig() {
-  if (trivialToDelete == null) return;
-  const id = trivialToDelete.Id;
+  if (trivialToDelete.value == null) return;
+  const id = trivialToDelete.value.Id;
   const res = await controller.DeleteTrivialPoursuit({ id: id });
-  trivialToDelete = null;
+  trivialToDelete.value = null;
   if (res === undefined) return;
-  _configs = _configs.filter(c => c.Config.Id != id);
+  _configs.value = _configs.value.filter((c) => c.Config.Id != id);
 }
 
-let selfaccessConfig = $ref<Trivial | null>(null);
+const selfaccessConfig = ref<Trivial | null>(null);
 
-let launchingConfig = $ref<Trivial | null>(null);
+const launchingConfig = ref<Trivial | null>(null);
 // workaround for https://github.com/vuetifyjs/vuetify/issues/16770
 watchEffect(() => {
   document.documentElement.style.overflow =
-    launchingConfig != null ? "hidden" : "";
+    launchingConfig.value != null ? "hidden" : "";
 });
 async function launchSession(groups: GroupsStrategy) {
-  if (launchingConfig == null) {
+  if (launchingConfig.value == null) {
     return;
   }
-  const configID = launchingConfig.Id;
-  isLaunching = true;
+  const configID = launchingConfig.value.Id;
+  isLaunching.value = true;
   const res = await controller.LaunchSessionTrivialPoursuit({
     IdConfig: configID,
-    Groups: groups
+    Groups: groups,
   });
-  launchingConfig = null;
-  isLaunching = false;
+  launchingConfig.value = null;
+  isLaunching.value = false;
   if (res === undefined) {
     return;
   }
   fetchSessionMeta();
 
   // automatically jump to monitor screen
-  showMonitor = true;
+  showMonitor.value = true;
 }
 
-let sessionMeta = $ref<RunningSessionMetaOut>({ NbGames: 0 });
+const sessionMeta = ref<RunningSessionMetaOut>({ NbGames: 0 });
 async function fetchSessionMeta() {
   const res = await controller.GetTrivialRunningSessions();
   if (res == undefined) {
     return;
   }
-  sessionMeta = res;
+  sessionMeta.value = res;
 }
 
-let showMonitor = $ref(false);
+const showMonitor = ref(false);
 function showMonitorChanged(show: boolean) {
-  showMonitor = show;
+  showMonitor.value = show;
   if (!show) {
     closeMonitor();
   }
 }
 
 function closeMonitor() {
-  showMonitor = false;
+  showMonitor.value = false;
   fetchSessionMeta();
 }
 </script>

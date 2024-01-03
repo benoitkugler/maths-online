@@ -106,7 +106,7 @@ import {
   MatiereTagLabels,
   Section,
   type TagsDB,
-  type TagSection
+  type TagSection,
 } from "@/controller/api_gen";
 import {
   ChapterColor,
@@ -114,10 +114,9 @@ import {
   SubLevelColor,
   IsyTrivColor,
   MatiereColor,
-  tagString
+  tagString,
 } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
-import { $computed } from "vue/macros";
+import { computed } from "vue";
 
 interface Props {
   modelValue: TagSection[];
@@ -132,55 +131,55 @@ const emit = defineEmits<{
   (e: "save"): void;
 }>();
 
-let matiereTag = $computed(
-  () => props.modelValue.find(ts => ts.Section == Section.Matiere)?.Tag || ""
+const matiereTag = computed(
+  () => props.modelValue.find((ts) => ts.Section == Section.Matiere)?.Tag || ""
 );
 function updateMatiere(t: string) {
   const newL = props.modelValue
-    .filter(ts => ts.Section != Section.Matiere)
+    .filter((ts) => ts.Section != Section.Matiere)
     .concat([{ Section: Section.Matiere, Tag: t }]);
   emit("update:model-value", newL);
 }
-let levelTag = $computed(
-  () => props.modelValue.find(ts => ts.Section == Section.Level)?.Tag || ""
+const levelTag = computed(
+  () => props.modelValue.find((ts) => ts.Section == Section.Level)?.Tag || ""
 );
 function updateLevel(t: string) {
   const newL = props.modelValue
-    .filter(ts => ts.Section != Section.Level)
+    .filter((ts) => ts.Section != Section.Level)
     .concat([{ Section: Section.Level, Tag: t }]);
   emit("update:model-value", newL);
 }
-let chapterTag = $computed(
-  () => props.modelValue.find(ts => ts.Section == Section.Chapter)?.Tag || ""
+const chapterTag = computed(
+  () => props.modelValue.find((ts) => ts.Section == Section.Chapter)?.Tag || ""
 );
 function updateChapter(t: string) {
   const newL = props.modelValue
-    .filter(ts => ts.Section != Section.Chapter)
+    .filter((ts) => ts.Section != Section.Chapter)
     .concat([{ Section: Section.Chapter, Tag: t }]);
   emit("update:model-value", newL);
 }
 
-let trivMathTag = $computed(() =>
+const trivMathTag = computed(() =>
   props.modelValue
-    .filter(ts => ts.Section == Section.TrivMath)
-    .map(ts => ts.Tag)
+    .filter((ts) => ts.Section == Section.TrivMath)
+    .map((ts) => ts.Tag)
 );
 function updateIsyTriv(t: string[]) {
   const newL = props.modelValue
-    .filter(ts => ts.Section != Section.TrivMath)
-    .concat(t.map(s => ({ Section: Section.TrivMath, Tag: s })));
+    .filter((ts) => ts.Section != Section.TrivMath)
+    .concat(t.map((s) => ({ Section: Section.TrivMath, Tag: s })));
   emit("update:model-value", newL);
 }
 
-const subLevelTags = $computed(() =>
+const subLevelTags = computed(() =>
   props.modelValue
-    .filter(ts => ts.Section == Section.SubLevel)
-    .map(ts => ts.Tag)
+    .filter((ts) => ts.Section == Section.SubLevel)
+    .map((ts) => ts.Tag)
 );
 function updateSubLevels(t: string[]) {
   const newL = props.modelValue
-    .filter(ts => ts.Section != Section.SubLevel)
-    .concat(t.map(s => ({ Section: Section.SubLevel, Tag: s })));
+    .filter((ts) => ts.Section != Section.SubLevel)
+    .concat(t.map((s) => ({ Section: Section.SubLevel, Tag: s })));
   emit("update:model-value", newL);
 }
 
@@ -188,19 +187,21 @@ const levelTags = computed(() => {
   return props.allTags.Levels || [];
 });
 const chapterTags = computed(() => {
-  return (props.allTags.ChaptersByLevel || {})[levelTag] || [];
+  return (props.allTags.ChaptersByLevel || {})[levelTag.value] || [];
 });
 const trivMathTags = computed(() => {
   return (
-    ((props.allTags.TrivByChapters || {})[levelTag] || {})[chapterTag] || []
+    ((props.allTags.TrivByChapters || {})[levelTag.value] || {})[
+      chapterTag.value
+    ] || []
   );
 });
 const subLevelItems = computed(() => {
-  return (props.allTags.SubLevelsByLevel || {})[levelTag] || [];
+  return (props.allTags.SubLevelsByLevel || {})[levelTag.value] || [];
 });
 
 const areTagsDistinct = computed(() => {
-  const s = new Set<string>(props.modelValue.map(t => tagString(t.Tag)));
+  const s = new Set<string>(props.modelValue.map((t) => tagString(t.Tag)));
   return s.size == props.modelValue.length;
 });
 </script>

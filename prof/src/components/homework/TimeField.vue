@@ -36,8 +36,7 @@
 
 <script setup lang="ts">
 import type { Date_, Time } from "@/controller/api_gen";
-import { computed } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 import DateField from "../DateField.vue";
 
 interface Props {
@@ -54,15 +53,15 @@ const date = computed(() => props.modelValue as unknown as Date_);
 
 const hours = Array.from({ length: 24 }, (_, i) => ({
   title: i.toString().padStart(2, "0") + "h",
-  value: i
+  value: i,
 }));
 const minutes = Array.from({ length: 12 }, (_, i) => ({
   title: (i * 5).toString().padStart(2, "0"),
-  value: i * 5
+  value: i * 5,
 }));
 
-let hour = $ref(hourFromTime(props.modelValue));
-let minute = $ref(minuteFromTime(props.modelValue));
+const hour = ref(hourFromTime(props.modelValue));
+const minute = ref(minuteFromTime(props.modelValue));
 
 function hourFromTime(time: Time) {
   const d = new Date(time);
@@ -75,8 +74,8 @@ function minuteFromTime(time: Time) {
 
 function updateDate(date: Date_) {
   const d = new Date(date);
-  d.setHours(hour);
-  d.setMinutes(minute);
+  d.setHours(hour.value);
+  d.setMinutes(minute.value);
   emit("update:model-value", d.toISOString() as Time);
 }
 

@@ -51,36 +51,33 @@ import {
   type Index,
   type Query,
   type TagsDB,
-  type LoopbackShowExercice
+  type LoopbackShowExercice,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { emptyTagsDB } from "@/controller/editor";
-import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { nextTick, ref, onMounted } from "vue";
 import ClientPreview from "../components/editor/ClientPreview.vue";
 import ExercicegroupList from "../components/editor/exercices/ExercicegroupList.vue";
 import ExercicegroupPannel from "../components/editor/exercices/ExercicegroupPannel.vue";
 import FolderView from "../components/editor/FolderView.vue";
-import { ref } from "vue";
-import { nextTick } from "vue";
 
-let viewMode = $ref<"details" | "folder">("folder");
+const viewMode = ref<"details" | "folder">("folder");
 
-let exercicesIndex = $ref<Index>([]);
+const exercicesIndex = ref<Index>([]);
 async function fetchIndex() {
   const res = await controller.EditorGetExercicesIndex();
-  exercicesIndex = res || [];
+  exercicesIndex.value = res || [];
 }
 
-let currentExercicegroup = $ref<ExercicegroupExt | null>(null);
+const currentExercicegroup = ref<ExercicegroupExt | null>(null);
 
-let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
+const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
 
-let allKnownTags = $ref<TagsDB>(emptyTagsDB());
+const allKnownTags = ref<TagsDB>(emptyTagsDB());
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
   if (tags) {
-    allKnownTags = tags;
+    allKnownTags.value = tags;
   }
 }
 
@@ -90,26 +87,26 @@ onMounted(async () => {
   fetchTags();
 });
 
-let initialQuery = $ref<Query | null>(null);
+const initialQuery = ref<Query | null>(null);
 function showFolder(index: [LevelTag, string]) {
-  initialQuery = {
+  initialQuery.value = {
     TitleQuery: "",
     LevelTags: [index[0]],
     ChapterTags: [index[1]],
     SubLevelTags: [],
     Origin: OriginKind.All,
-    Matiere: controller.settings.FavoriteMatiere
+    Matiere: controller.settings.FavoriteMatiere,
   };
-  viewMode = "details";
+  viewMode.value = "details";
 }
 
 async function editExercice(ex: ExercicegroupExt) {
-  currentExercicegroup = ex;
+  currentExercicegroup.value = ex;
 }
 
 const list = ref<InstanceType<typeof ExercicegroupList> | null>(null);
 function goAndCreateExercicegroup() {
-  viewMode = "details";
+  viewMode.value = "details";
   nextTick(() => {
     if (list.value == null) return;
     list.value.createExercicegroup();
@@ -117,9 +114,9 @@ function goAndCreateExercicegroup() {
 }
 
 async function backToList() {
-  currentExercicegroup = null;
+  currentExercicegroup.value = null;
 
-  preview?.pause();
+  preview.value?.pause();
 }
 </script>
 

@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { DifficultyTag } from "@/controller/api_gen";
 import { watch } from "vue";
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
 interface Props {
   difficulties: DifficultyTag[];
@@ -42,9 +42,9 @@ const emit = defineEmits<{
 
 const props = defineProps<Props>();
 
-let diffChoices = $ref<{ [key in DifficultyTag]: boolean }>(buildCrible());
+const diffChoices = ref<{ [key in DifficultyTag]: boolean }>(buildCrible());
 
-watch(props, () => (diffChoices = buildCrible()));
+watch(props, () => (diffChoices.value = buildCrible()));
 
 function buildCrible() {
   return {

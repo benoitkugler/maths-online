@@ -71,10 +71,10 @@
 import { BlockKind } from "@/controller/api_gen";
 import { BlockKindLabels } from "@/controller/editor";
 import { onDragListItemStart } from "@/controller/utils";
-import { computed } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
 import LatexCommands from "./LatexCommands.vue";
 import ExpressionFieldDoc from "./ExpressionFieldDoc.vue";
+import { computed } from "vue";
+import { ref } from "vue";
 
 const emit = defineEmits<{
   (e: "delete"): void;
@@ -110,13 +110,13 @@ function onDragStart(payload: DragEvent) {
   onDragListItemStart(payload, props.index);
 }
 
-let showDocumentationDefault = $ref(false);
-let showDocumentationExpression = $ref(false);
+const showDocumentationDefault = ref(false);
+const showDocumentationExpression = ref(false);
 function showDocumentation() {
   if (props.kind == BlockKind.ExpressionFieldBlock) {
-    showDocumentationExpression = true;
+    showDocumentationExpression.value = true;
   } else {
-    showDocumentationDefault = true;
+    showDocumentationDefault.value = true;
   }
 }
 </script>

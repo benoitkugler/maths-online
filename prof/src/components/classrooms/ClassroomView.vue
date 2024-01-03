@@ -228,10 +228,9 @@
 
 <script setup lang="ts">
 import type { Classroom, Student, StudentExt } from "@/controller/api_gen";
-import { $ref } from "vue/macros";
 import { controller } from "@/controller/controller";
 import { copy, formatDate, formatTime } from "@/controller/utils";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { computed } from "vue";
 import DateField from "../DateField.vue";
 import DetailsSuccess from "./DetailsSuccess.vue";
@@ -248,8 +247,8 @@ const emit = defineEmits<{
 
 onMounted(() => fetchStudents());
 
-let students = computed(() => {
-  const out = _students.map(v => v);
+const students = computed(() => {
+  const out = _students.value.map((v) => v);
   out.sort((s1, s2) => {
     const c1 = s1.Student.Name.localeCompare(s2.Student.Name);
     return c1 == 0 ? s1.Student.Surname.localeCompare(s2.Student.Surname) : c1;
@@ -257,82 +256,82 @@ let students = computed(() => {
   return out;
 });
 
-let _students = $ref<StudentExt[]>([]);
+const _students = ref<StudentExt[]>([]);
 
 async function fetchStudents() {
   const res = await controller.TeacherGetClassroomStudents({
-    "id-classroom": props.classroom.id
+    "id-classroom": props.classroom.id,
   });
   if (res == undefined) {
     return;
   }
 
-  _students = res || [];
+  _students.value = res || [];
 }
 
 async function addStudent() {
   const res = await controller.TeacherAddStudent({
-    "id-classroom": props.classroom.id
+    "id-classroom": props.classroom.id,
   });
   if (res == undefined) {
     return;
   }
 
-  _students.push(res);
+  _students.value.push(res);
 
-  studentToUpdate = copy(res.Student);
+  studentToUpdate.value = copy(res.Student);
 }
 
-let studentToDelete = $ref<Student | null>(null);
+const studentToDelete = ref<Student | null>(null);
 async function deleteStudent() {
-  if (studentToDelete == null) {
+  if (studentToDelete.value == null) {
     return;
   }
-  await controller.TeacherDeleteStudent({ "id-student": studentToDelete.Id });
-  studentToDelete = null;
+  await controller.TeacherDeleteStudent({
+    "id-student": studentToDelete.value.Id,
+  });
+  studentToDelete.value = null;
   await fetchStudents();
 }
 
-let studentToUpdate = $ref<Student | null>(null);
+const studentToUpdate = ref<Student | null>(null);
 async function updateStudent() {
-  if (studentToUpdate == null) {
+  if (studentToUpdate.value == null) {
     return;
   }
-  await controller.TeacherUpdateStudent(studentToUpdate);
-  studentToUpdate = null;
+  await controller.TeacherUpdateStudent(studentToUpdate.value);
+  studentToUpdate.value = null;
   await fetchStudents();
 }
 
-let showUploadFile = $ref(false);
-let uploadedFile = $ref<File[]>([]);
+const showUploadFile = ref(false);
+const uploadedFile = ref<File[]>([]);
 async function importStudents() {
-  showUploadFile = false;
-  if (uploadedFile.length == 0) {
+  showUploadFile.value = false;
+  if (uploadedFile.value.length == 0) {
     return;
   }
   await controller.TeacherImportStudents(
     { "id-classroom": String(props.classroom.id) },
-    uploadedFile[0]
+    uploadedFile.value[0]
   );
-  uploadedFile = [];
+  uploadedFile.value = [];
   await fetchStudents();
 }
 
-let classroomCode = $ref<string | null>(null);
+const classroomCode = ref<string | null>(null);
 async function generateClassroomCode() {
   const res = await controller.TeacherGenerateClassroomCode({
-    "id-classroom": props.classroom.id
+    "id-classroom": props.classroom.id,
   });
-  console.log(res);
-
   if (res == undefined) {
     return;
   }
-  classroomCode = res.Code;
+  classroomCode.value = res.Code;
 
   const timeout = 5000;
   const refresh = async () => {
-    if (classroomCode != null) {
+    if (classroomCode.value != null) {
       await fetchStudents();
       setTimeout(refresh, timeout);
     }

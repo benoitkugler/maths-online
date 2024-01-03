@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import type { TargetExercice } from "@/controller/api_gen";
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 import ClientPreview from "../editor/ClientPreview.vue";
 import ExercicegroupPannel from "../editor/exercices/ExercicegroupPannel.vue";
 
@@ -25,5 +25,5 @@ interface Props {
 
 const props = defineProps<Props>();
 
-let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
+const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
 </script>

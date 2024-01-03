@@ -37,9 +37,7 @@
 <script setup lang="ts">
 import type { Trivial, TrivialSelfaccess } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onMounted } from "vue";
-import { onActivated } from "vue";
-import { $ref } from "vue/macros";
+import { ref, onActivated, onMounted } from "vue";
 
 interface Props {
   config: Trivial;
@@ -54,22 +52,22 @@ const emit = defineEmits<{
 onMounted(() => fetch());
 onActivated(() => fetch());
 
-let selected = $ref<number[]>([]);
-let data = $ref<TrivialSelfaccess | null>(null);
+const selected = ref<number[]>([]);
+const data = ref<TrivialSelfaccess | null>(null);
 
 async function fetch() {
   const res = await controller.TrivialGetSelfaccess({
-    "id-trivial": props.config.Id
+    "id-trivial": props.config.Id,
   });
   if (res == undefined) return;
-  data = res;
-  selected = res.Actives || [];
+  data.value = res;
+  selected.value = res.Actives || [];
 }
 
 async function save() {
   await controller.TrivialUpdateSelfaccess({
     IdTrivial: props.config.Id,
-    IdClassrooms: selected
+    IdClassrooms: selected.value,
   });
   emit("close");
 }

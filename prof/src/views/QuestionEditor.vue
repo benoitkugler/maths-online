@@ -54,33 +54,30 @@ import {
   type Question,
   type QuestiongroupExt,
   type TagsDB,
-  type LoopbackShowQuestion
+  type LoopbackShowQuestion,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { onMounted } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
 import ClientPreview from "../components/editor/ClientPreview.vue";
 import QuestiongroupList from "../components/editor/questions/QuestiongroupList.vue";
 import QuestiongroupPannel from "../components/editor/questions/QuestiongroupPannel.vue";
 import FolderView from "../components/editor/FolderView.vue";
 import { emptyTagsDB } from "@/controller/editor";
-import { ref } from "vue";
-import { nextTick } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 
-let viewMode = $ref<"details" | "folder">("folder");
+const viewMode = ref<"details" | "folder">("folder");
 
-let questionsIndex = $ref<Index>([]);
+const questionsIndex = ref<Index>([]);
 async function fetchIndex() {
   const res = await controller.EditorGetQuestionsIndex();
-  questionsIndex = res || [];
+  questionsIndex.value = res || [];
 }
 
-let allKnownTags = $ref<TagsDB>(emptyTagsDB());
-let preview = $ref<InstanceType<typeof ClientPreview> | null>(null);
+const allKnownTags = ref<TagsDB>(emptyTagsDB());
+const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
 
-let viewKind: "questions" | "editor" = $ref("questions");
-let currentGroup: QuestiongroupExt | null = $ref(null);
-let currentVariants: Question[] = $ref([]);
+const viewKind = ref<"questions" | "editor">("questions");
+const currentGroup = ref<QuestiongroupExt | null>(null);
+const currentVariants = ref<Question[]>([]);
 
 onMounted(async () => {
   controller.ensureSettings();
@@ -91,42 +88,42 @@ onMounted(async () => {
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
   if (tags) {
-    allKnownTags = tags;
+    allKnownTags.value = tags;
   }
 }
 
-let initialQuery = $ref<Query | null>(null);
+const initialQuery = ref<Query | null>(null);
 function showFolder(index: [LevelTag, string]) {
-  initialQuery = {
+  initialQuery.value = {
     TitleQuery: "",
     LevelTags: [index[0]],
     ChapterTags: [index[1]],
     SubLevelTags: [],
     Origin: OriginKind.All,
-    Matiere: controller.settings.FavoriteMatiere
+    Matiere: controller.settings.FavoriteMatiere,
   };
-  viewMode = "details";
+  viewMode.value = "details";
 }
 
 function backToList() {
-  currentGroup = null;
-  currentVariants = [];
+  currentGroup.value = null;
+  currentVariants.value = [];
 
   fetchTags(); // required since the tags may have changed
 
-  viewKind = "questions";
-  preview?.pause();
+  viewKind.value = "questions";
+  preview.value?.pause();
 }
 
 function editQuestion(group: QuestiongroupExt, variants: Question[]) {
-  currentGroup = group;
-  currentVariants = variants;
-  viewKind = "editor";
+  currentGroup.value = group;
+  currentVariants.value = variants;
+  viewKind.value = "editor";
 }
 
 const list = ref<InstanceType<typeof QuestiongroupList> | null>(null);
 function goAndCreateQuestiongroup() {
-  viewMode = "details";
+  viewMode.value = "details";
   nextTick(() => {
     if (list.value == null) return;
     list.value.createQuestiongroup();

@@ -33,11 +33,10 @@
 import {
   TargetContentKind,
   type ReviewHeader,
-  type TargetContent
+  type TargetContent,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { markRaw, onMounted, type Component } from "vue";
-import { $ref } from "vue/macros";
+import { ref, markRaw, onMounted, type Component } from "vue";
 import TargetExerciceVue from "./TargetExercice.vue";
 import TargetQuestionVue from "./TargetQuestion.vue";
 import TargetTrivialVue from "./TargetTrivial.vue";
@@ -53,16 +52,16 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
-let content = $ref<targetContent | null>(null);
+const content = ref<targetContent | null>(null);
 
 onMounted(loadTarget);
 
 async function loadTarget() {
   const res = await controller.ReviewLoadTarget({
-    "id-review": props.review.Id
+    "id-review": props.review.Id,
   });
   if (res === undefined) return;
-  content = newContent(res.Content);
+  content.value = newContent(res.Content);
 }
 
 interface targetContent {

@@ -476,13 +476,12 @@ import {
   type Variable,
 } from "@/controller/api_gen";
 import { colorByKind, extractPoints, lastColorUsed } from "@/controller/editor";
-import { computed } from "@vue/runtime-core";
-import { $computed } from "vue/macros";
 import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionListField from "../utils/ExpressionListField.vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 import LabelPosField from "../utils/LabelPosField.vue";
 import SegmentKindField from "../utils/SegmentKindField.vue";
+import { computed } from "vue";
 
 interface Props {
   modelValue: FigureBlock;
@@ -501,7 +500,7 @@ function emitUpdate() {
 
 const expressionColor = colorByKind[TextKind.Expression];
 
-const pointsNamesHints = $computed(() =>
+const pointsNamesHints = computed(() =>
   (props.modelValue.Drawings.Points || []).map((p) => p.Name)
 );
 
@@ -525,8 +524,8 @@ function deletePoint(index: number) {
 }
 
 function addSegment() {
-  const from = pointsNamesHints[0];
-  const to = pointsNamesHints[1];
+  const from = pointsNamesHints.value[0];
+  const to = pointsNamesHints.value[1];
   const segments = props.modelValue.Drawings.Segments || [];
   segments.push({
     From: from,
@@ -578,7 +577,7 @@ function deleteCircle(index: number) {
 function addArea() {
   const areas = props.modelValue.Drawings.Areas || [];
   areas.push({
-    Points: pointsNamesHints.slice(0, 3),
+    Points: pointsNamesHints.value.slice(0, 3),
     Color: lastColorUsed.color,
   });
   props.modelValue.Drawings.Areas = areas;

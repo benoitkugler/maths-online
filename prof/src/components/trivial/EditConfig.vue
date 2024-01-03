@@ -114,7 +114,7 @@
                 :all-tags="allKnownTags"
                 :model-value="categorie || []"
                 :last-matiere-level-chapter="lastMatiereLevelChapter"
-                @update:model-value="v => updateCategorie(index, v)"
+                @update:model-value="(v) => updateCategorie(index, v)"
               ></tags-selector>
             </v-col>
           </v-row>
@@ -160,12 +160,10 @@ import {
   type QuestionCriterion,
   type Tags,
   type TagsDB,
-  type Trivial
+  type Trivial,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "@vue/reactivity";
-import { onMounted } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted } from "vue";
 import TagChip from "../editor/utils/TagChip.vue";
 import DifficultyChoices from "./DifficultyChoices.vue";
 import TagsSelector from "./TagsSelector.vue";
@@ -189,26 +187,26 @@ const lastMatiereLevelChapter = computed<PrefillTrivialCategorie>(() => {
   if (all.length) {
     const last = all[all.length - 1] || [];
     return {
-      matiere: last.find(s => s.Section == Section.Matiere)?.Tag || "",
-      level: last.find(s => s.Section == Section.Level)?.Tag || "",
-      chapter: last.find(s => s.Section == Section.Chapter)?.Tag || "",
-      sublevels: last.filter(s => s.Section == Section.SubLevel)
+      matiere: last.find((s) => s.Section == Section.Matiere)?.Tag || "",
+      level: last.find((s) => s.Section == Section.Level)?.Tag || "",
+      chapter: last.find((s) => s.Section == Section.Chapter)?.Tag || "",
+      sublevels: last.filter((s) => s.Section == Section.SubLevel),
     };
   }
   return { matiere: "", level: "", chapter: "", sublevels: [] };
 });
 
-let showDifficultyCard = $ref(false);
+const showDifficultyCard = ref(false);
 
 function onEditDifficulties(difficulties: DifficultyTag[]) {
-  showDifficultyCard = false;
+  showDifficultyCard.value = false;
   props.edited.Questions.Difficulties = difficulties;
   fetchHintForMissing();
 }
 
 function allTags(tags: QuestionCriterion[]) {
   const all: Tags[] = [];
-  tags.forEach(l => all.push(...(l || []).map(ls => ls || [])));
+  tags.forEach((l) => all.push(...(l || []).map((ls) => ls || [])));
   return all;
 }
 
@@ -219,20 +217,20 @@ function updateCategorie(index: number, cat: QuestionCriterion) {
 
 onMounted(fetchHintForMissing);
 
-let hint = $ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
+const hint = ref<CheckMissingQuestionsOut>({ Pattern: [], Missing: [] });
 async function fetchHintForMissing() {
   const criteria = props.edited.Questions;
   // fetch the hint only if the all categories have been filled,
   // to avoid useless queries
-  if (!criteria.Tags.every(qu => qu?.length)) {
-    hint = { Pattern: [], Missing: [] };
+  if (!criteria.Tags.every((qu) => qu?.length)) {
+    hint.value = { Pattern: [], Missing: [] };
     return;
   }
   const res = await controller.CheckMissingQuestions(criteria);
   if (res == undefined) {
     return;
   }
-  hint = res;
+  hint.value = res;
 }
 </script>
 

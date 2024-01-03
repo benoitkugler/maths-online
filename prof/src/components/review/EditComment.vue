@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
 interface Props {
   initialMessage: string;
@@ -37,5 +37,5 @@ const emit = defineEmits<{
   (e: "send", comment: string): void;
 }>();
 
-let comment = $ref(props.initialMessage);
+const comment = ref(props.initialMessage);
 </script>

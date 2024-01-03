@@ -59,14 +59,11 @@ import type {
   Block,
   ExpressionFieldBlock,
   Question,
-  Variable
+  Variable,
 } from "@/controller/api_gen";
 import { BlockKind } from "@/controller/api_gen";
 import { newBlock } from "@/controller/editor";
 import { swapItems } from "@/controller/utils";
-import { markRaw, ref } from "@vue/reactivity";
-import { computed, nextTick, watch, type Component } from "@vue/runtime-core";
-import { $ref } from "vue/macros";
 import BlockContainer from "./blocks/BlockContainer.vue";
 import ExpressionFieldVue from "./blocks/ExpressionField.vue";
 import FigureBlockVue from "./blocks/FigureBlock.vue";
@@ -88,6 +85,12 @@ import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import VectorFieldVue from "./blocks/VectorField.vue";
 import TreeB from "./blocks/TreeB.vue";
+import { computed } from "vue";
+import { ref } from "vue";
+import { type Component } from "vue";
+import { markRaw } from "vue";
+import { watch } from "vue";
+import { nextTick } from "vue";
 
 interface Props {
   modelValue: Block[];
@@ -214,14 +217,14 @@ function swapBlocks(origin: number, target: number) {
   emit("update:modelValue", out);
 }
 
-let showDropZone = $ref(false);
+const showDropZone = ref(false);
 
 function onDragStart() {
-  setTimeout(() => (showDropZone = true), 100); // workaround bug
+  setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
 function onDragEnd(ev: DragEvent) {
-  showDropZone = false;
+  showDropZone.value = false;
 }
 
 async function onDropJSON(ev: DragEvent) {

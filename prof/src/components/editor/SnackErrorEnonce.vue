@@ -68,8 +68,7 @@
 <script setup lang="ts">
 import type { errEnonce } from "@/controller/api_gen";
 import { watch } from "vue";
-import { computed } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 
 interface Props {
   error: errEnonce | null;
@@ -90,13 +89,13 @@ const errVars = computed(() => {
   return out;
 });
 
-let showErrVarsDetails = $ref(false);
+const showErrVarsDetails = ref(false);
 let timeout = 5000;
 
 watch(props, () => (timeout = 5000));
 
 function onShowDetails() {
-  showErrVarsDetails = true;
+  showErrVarsDetails.value = true;
   // remove the snackbar timeout so that the error stays on screen
   timeout = -1;
 }

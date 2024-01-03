@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
 interface Props {
   disabled: boolean;
@@ -38,5 +38,5 @@ const emit = defineEmits<{
   (e: "send", comment: string): void;
 }>();
 
-let comment = $ref("");
+const comment = ref("");
 </script>

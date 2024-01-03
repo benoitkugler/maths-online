@@ -16,9 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { $ref } from "vue/macros";
+import { ref } from "vue";
 
-let isActive = $ref(false);
+const isActive = ref(false);
 
 const emit = defineEmits<{
   (e: "drop", origin: number): void;
@@ -33,6 +33,6 @@ function onDrop(ev: DragEvent) {
 
 function onDragOver(ev: DragEvent) {
   ev.preventDefault();
-  isActive = true;
+  isActive.value = true;
 }
 </script>

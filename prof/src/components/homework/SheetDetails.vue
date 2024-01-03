@@ -58,21 +58,21 @@
           <SheetTasks
             :sheet="props.sheet"
             :all-tags="allTags"
-            @add-exercice="v => emit('addExercice', props.sheet.Sheet, v)"
+            @add-exercice="(v) => emit('addExercice', props.sheet.Sheet, v)"
             @add-monoquestion="
-              v => emit('addMonoquestion', props.sheet.Sheet, v)
+              (v) => emit('addMonoquestion', props.sheet.Sheet, v)
             "
             @add-random-monoquestion="
-              v => emit('addRandomMonoquestion', props.sheet.Sheet, v)
+              (v) => emit('addRandomMonoquestion', props.sheet.Sheet, v)
             "
             @update-monoquestion="
-              v => emit('udpateMonoquestion', props.sheet.Sheet, v)
+              (v) => emit('udpateMonoquestion', props.sheet.Sheet, v)
             "
             @update-random-monoquestion="
-              v => emit('udpateRandomMonoquestion', props.sheet.Sheet, v)
+              (v) => emit('udpateRandomMonoquestion', props.sheet.Sheet, v)
             "
-            @remove="v => emit('removeTask', props.sheet.Sheet, v)"
-            @reorder="v => emit('reorderTasks', props.sheet.Sheet, v)"
+            @remove="(v) => emit('removeTask', props.sheet.Sheet, v)"
+            @reorder="(v) => emit('reorderTasks', props.sheet.Sheet, v)"
           ></SheetTasks>
         </v-col>
       </v-row>
@@ -89,7 +89,7 @@ import {
   type Sheet,
   type SheetExt,
   type TagsDB,
-  type TaskExt
+  type TaskExt,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import {
@@ -97,10 +97,9 @@ import {
   emptyTagsDB,
   type VariantG,
   type ResourceGroup,
-  MatiereColor
+  MatiereColor,
 } from "@/controller/editor";
-import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { ref, onMounted } from "vue";
 import SheetTasks from "./SheetTasks.vue";
 import { watch } from "vue";
 
@@ -122,12 +121,12 @@ const emit = defineEmits<{
   (e: "reorderTasks", sheet: Sheet, tasks: TaskExt[]): void;
 }>();
 
-let title = $ref(props.sheet.Sheet.Title);
+const title = ref(props.sheet.Sheet.Title);
 
-watch(props, () => (title = props.sheet.Sheet.Title));
+watch(props, () => (title.value = props.sheet.Sheet.Title));
 
 function updateTitle() {
-  if (title == props.sheet.Sheet.Title) return;
+  if (title.value == props.sheet.Sheet.Title) return;
   props.sheet.Sheet.Title = title;
   update();
 }
@@ -137,9 +136,9 @@ function update() {
 }
 
 onMounted(fetchTags);
-let allTags = $ref<TagsDB>(emptyTagsDB());
+const allTags = ref<TagsDB>(emptyTagsDB());
 async function fetchTags() {
   const tags = await controller.EditorGetTags();
-  if (tags) allTags = tags;
+  if (tags) allTags.value = tags;
 }
 </script>

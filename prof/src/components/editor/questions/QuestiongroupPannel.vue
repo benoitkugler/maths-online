@@ -41,18 +41,17 @@ import type {
   Sheet,
   Tags,
   TagsDB,
-  TaskUses
+  TaskUses,
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import type { ResourceGroup, VariantG } from "@/controller/editor";
 import { copy } from "@/controller/utils";
 import { useRouter } from "vue-router";
-import { $computed, $ref } from "vue/macros";
 import UsesCard from "../UsesCard.vue";
 import QuestionVariantPannel from "./QuestionVariantPannel.vue";
 import ResourceScafold from "../ResourceScafold.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 interface Props {
   group: QuestiongroupExt;
@@ -69,35 +68,35 @@ const emit = defineEmits<{
 
 const router = useRouter();
 
-let group = $ref(copy(props.group));
-let ownVariants = $ref(copy(props.variants));
-let resource = computed<ResourceGroup>(() => ({
-  Id: group.Group.Id,
-  Title: group.Group.Title,
-  Tags: group.Tags,
-  Variants: ownVariants,
-  Origin: group.Origin
+const group = ref(copy(props.group));
+const ownVariants = ref(copy(props.variants));
+const resource = computed<ResourceGroup>(() => ({
+  Id: group.value.Group.Id,
+  Title: group.value.Group.Title,
+  Tags: group.value.Tags,
+  Variants: ownVariants.value,
+  Origin: group.value.Origin,
 }));
 
-let variantIndex = $ref(0);
+const variantIndex = ref(0);
 
-let isReadonly = $computed(
+const isReadonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
 function updateTitle(t: string) {
-  group.Group.Title = t;
+  group.value.Group.Title = t;
   updateQuestiongroup();
 }
 
 async function updateQuestiongroup() {
-  if (isReadonly) return;
-  await controller.EditorUpdateQuestiongroup(group.Group);
+  if (isReadonly.value) return;
+  await controller.EditorUpdateQuestiongroup(group.value.Group);
 }
 
-let deletedBlocked = $ref<TaskUses>(null);
+const deletedBlocked = ref<TaskUses>(null);
 function goToSheet(sh: Sheet) {
-  deletedBlocked = null;
+  deletedBlocked.value = null;
 
   router.push({ name: "homework", query: { idSheet: sh.Id } });
 }
@@ -107,45 +106,48 @@ async function deleteVariante(que: VariantG) {
   if (res == undefined) return;
   // check if the variant is used
   if (!res.Deleted) {
-    deletedBlocked = res.BlockedBy;
+    deletedBlocked.value = res.BlockedBy;
     return;
   }
 
-  ownVariants = ownVariants.filter(qu => qu.Id != que.Id);
-  if (ownVariants.length && variantIndex >= ownVariants.length) {
-    variantIndex = 0;
+  ownVariants.value = ownVariants.value.filter((qu) => qu.Id != que.Id);
+  if (
+    ownVariants.value.length &&
+    variantIndex.value >= ownVariants.value.length
+  ) {
+    variantIndex.value = 0;
   }
   // if there is no more variant, that means the questiongroup is deleted:
   // go back
-  if (!ownVariants.length) {
+  if (!ownVariants.value.length) {
     emit("back");
   }
 }
 
-let scafold = $ref<InstanceType<typeof ResourceScafold> | null>(null);
+const scafold = ref<InstanceType<typeof ResourceScafold> | null>(null);
 
 async function duplicateVariante(variant: VariantG) {
   const newQuestion = await controller.EditorDuplicateQuestion({
-    id: variant.Id
+    id: variant.Id,
   });
   if (newQuestion == undefined) {
     return;
   }
-  ownVariants.push(newQuestion);
-  variantIndex = ownVariants.length - 1; // go to the new question
+  ownVariants.value.push(newQuestion);
+  variantIndex.value = ownVariants.value.length - 1; // go to the new question
 
-  if (scafold) scafold.showEditVariant(newQuestion);
+  if (scafold.value) scafold.value.showEditVariant(newQuestion);
 }
 
 async function saveTags(newTags: Tags) {
   const rep = await controller.EditorUpdateQuestionTags({
-    Id: group.Group.Id,
-    Tags: newTags
+    Id: group.value.Group.Id,
+    Tags: newTags,
   });
   if (rep === undefined) {
     return;
   }
-  group.Tags = newTags;
+  group.value.Tags = newTags;
 }
 
 function backToList() {
@@ -153,13 +155,13 @@ function backToList() {
 }
 
 async function updateVariant(variant: VariantG) {
-  if (isReadonly) {
+  if (isReadonly.value) {
     return;
   }
-  ownVariants[variantIndex].Subtitle = variant.Subtitle;
-  ownVariants[variantIndex].Difficulty = variant.Difficulty;
+  ownVariants.value[variantIndex.value].Subtitle = variant.Subtitle;
+  ownVariants.value[variantIndex.value].Difficulty = variant.Difficulty;
   await controller.EditorSaveQuestionMeta({
-    Question: ownVariants[variantIndex]
+    Question: ownVariants.value[variantIndex.value],
   });
 }
 </script>

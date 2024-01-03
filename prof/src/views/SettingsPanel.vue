@@ -26,7 +26,7 @@
               v-model="settings.Password"
               label="Mot de passe"
               :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              :rules="[v => v.length >= 4 || 'Au moins 4 charactères']"
+              :rules="[(v) => v.length >= 4 || 'Au moins 4 charactères']"
               :type="showPassword ? 'text' : 'password'"
               hint="Le mot de passe doit contenir au moins 4 charactères."
               counter=""
@@ -75,7 +75,7 @@
               density="compact"
               :model-value="!settings.HasEditorSimplified"
               @update:model-value="
-                (b: boolean) => {
+                (b) => {
                   if (settings) settings.HasEditorSimplified = !b;
                 }
               "
@@ -109,19 +109,17 @@
 <script setup lang="ts">
 import { MatiereTagLabels, type TeacherSettings } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed } from "vue";
-import { onMounted } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed, onMounted } from "vue";
 
-let settings = $ref<TeacherSettings | null>(null);
+const settings = ref<TeacherSettings | null>(null);
 
-let showPassword = $ref(false);
+const showPassword = ref(false);
 
 const isFormValid = computed(
   () =>
-    settings?.Mail.includes("@") &&
-    settings?.Mail.includes(".") &&
-    settings.Password.length >= 4
+    settings.value?.Mail.includes("@") &&
+    settings.value?.Mail.includes(".") &&
+    settings.value.Password.length >= 4
 );
 
 onMounted(() => fetchSettings());
@@ -131,14 +129,14 @@ async function fetchSettings() {
   if (res == undefined) {
     return;
   }
-  settings = res;
+  settings.value = res;
 }
 
 async function save() {
-  if (settings == null) return;
-  const ok = await controller.TeacherUpdateSettings(settings);
+  if (settings.value == null) return;
+  const ok = await controller.TeacherUpdateSettings(settings.value);
   if (ok) {
-    controller.settings = settings;
+    controller.settings = settings.value;
   }
 }
 </script>

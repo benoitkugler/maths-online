@@ -78,8 +78,7 @@
 <script setup lang="ts">
 import type { ReviewComment } from "@/controller/api_gen";
 import { formatTime } from "@/controller/utils";
-import { computed } from "@vue/reactivity";
-import { $ref } from "vue/macros";
+import { ref, computed } from "vue";
 import EditComment from "./EditComment.vue";
 
 interface Props {
@@ -101,7 +100,7 @@ const colorClass = computed(() =>
   props.comment.IsOwned ? "bg-secondary-lighten-1" : "bg-grey-lighten-3"
 );
 
-let isEditing = $ref(false);
+const isEditing = ref(false);
 
-let showConfirmDelete = $ref(false);
+const showConfirmDelete = ref(false);
 </script>

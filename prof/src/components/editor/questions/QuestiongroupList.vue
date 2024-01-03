@@ -105,7 +105,7 @@
                 @duplicate="duplicate(questionGroup)"
                 @delete="groupToDelete = questionGroup"
                 @create-review="reviewToCreate = questionGroup.Group"
-                @update-public="b => updatePublic(questionGroup.Group.Id, b)"
+                @update-public="(b) => updatePublic(questionGroup.Group.Id, b)"
               ></resource-group-row>
             </div>
           </v-list>
@@ -140,16 +140,14 @@ import {
   type TagsDB,
   PublicStatus,
   type TaskUses,
-  type Sheet
+  type Sheet,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
-import { $ref } from "vue/macros";
 import ResourceQueryRow from "../ResourceQueryRow.vue";
 import ResourceGroupRow from "../ResourceGroupRow.vue";
 import { questionToResource } from "@/controller/editor";
-import { ref } from "vue";
+import { ref, computed, onActivated, onMounted } from "vue";
 import UsesCard from "../UsesCard.vue";
 import ConfirmPublish from "@/components/ConfirmPublish.vue";
 
@@ -171,16 +169,19 @@ const router = useRouter();
 // groups are cut in slice of `pagination` length,
 // and currentPage is the index of the page
 const pagination = 6;
-let currentPage = $ref(1);
-const pageLength = computed(() => Math.ceil(groups.length / pagination));
+const currentPage = ref(1);
+const pageLength = computed(() => Math.ceil(groups.value.length / pagination));
 const displayedGroups = computed(() =>
-  groups.slice((currentPage - 1) * pagination, currentPage * pagination)
+  groups.value.slice(
+    (currentPage.value - 1) * pagination,
+    currentPage.value * pagination
+  )
 );
 
-let groups = $ref<QuestiongroupExt[]>([]);
-let serverNbQuestions = $ref(0);
+const groups = ref<QuestiongroupExt[]>([]);
+const serverNbQuestions = ref(0);
 
-let query = $ref<Query>(
+const query = ref<Query>(
   props.initialQuery
     ? props.initialQuery
     : {
@@ -189,7 +190,7 @@ let query = $ref<Query>(
         ChapterTags: [],
         SubLevelTags: [],
         Origin: OriginKind.All,
-        Matiere: controller.settings.FavoriteMatiere
+        Matiere: controller.settings.FavoriteMatiere,
       }
 );
 
@@ -197,17 +198,17 @@ onMounted(fetchQuestions);
 onActivated(fetchQuestions);
 
 async function updateQuery(qu: Query) {
-  query = qu;
+  query.value = qu;
   await fetchQuestions();
 }
 
 async function fetchQuestions() {
-  const result = await controller.EditorSearchQuestions(query);
+  const result = await controller.EditorSearchQuestions(query.value);
   if (result == undefined) {
     return;
   }
-  groups = result.Groups || [];
-  serverNbQuestions = result.NbQuestions;
+  groups.value = result.Groups || [];
+  serverNbQuestions.value = result.NbQuestions;
 }
 
 async function createQuestiongroup() {
@@ -229,7 +230,7 @@ async function startEdit(group: QuestiongroupExt) {
 
 async function duplicate(group: QuestiongroupExt) {
   const ok = await controller.EditorDuplicateQuestiongroup({
-    id: group.Group.Id
+    id: group.Group.Id,
   });
   if (!ok) return;
   await fetchQuestions();
@@ -239,7 +240,7 @@ const groupToDelete = ref<QuestiongroupExt | null>(null);
 async function deleteGroup() {
   if (groupToDelete.value == null) return;
   const res = await controller.EditorDeleteQuestiongroup({
-    id: groupToDelete.value.Group.Id
+    id: groupToDelete.value.Group.Id,
   });
   groupToDelete.value = null;
   if (res === undefined) return;
@@ -261,14 +262,14 @@ function goToSheet(sh: Sheet) {
 async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
-    Public: isPublic
+    Public: isPublic,
   });
   if (res === undefined) {
     return;
   }
 
-  const index = groups.findIndex(gr => gr.Group.Id == id);
-  groups[index].Origin.PublicStatus = isPublic
+  const index = groups.value.findIndex((gr) => gr.Group.Id == id);
+  groups.value[index].Origin.PublicStatus = isPublic
     ? PublicStatus.AdminPublic
     : PublicStatus.AdminNotPublic;
 }
@@ -278,7 +279,7 @@ async function createReview() {
   if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KQuestion,
-    Id: reviewToCreate.value.Id
+    Id: reviewToCreate.value.Id,
   });
   reviewToCreate.value = null;
   if (res == undefined) return;

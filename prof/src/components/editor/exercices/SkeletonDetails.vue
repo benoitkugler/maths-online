@@ -107,8 +107,8 @@ import type {
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { copy, onDragListItemStart, swapItems } from "@/controller/utils";
-import { $ref } from "vue/macros";
 import DragIcon from "../../DragIcon.vue";
+import { ref } from "vue";
 
 interface Props {
   exercice: ExerciceExt;
@@ -151,17 +151,17 @@ async function duplicateQuestion(index: number) {
   emit("preview", res.Preview);
 }
 
-let questionToEdit = $ref<ExerciceQuestionExt | null>(null);
-let questionIndexToEdit = $ref<number | null>(null);
+const questionToEdit = ref<ExerciceQuestionExt | null>(null);
+const questionIndexToEdit = ref<number | null>(null);
 async function saveEditedQuestion() {
-  if (questionIndexToEdit == null || questionToEdit == null) {
+  if (questionIndexToEdit.value == null || questionToEdit.value == null) {
     return;
   }
   const current = copy(props.exercice.Questions || []);
-  current[questionIndexToEdit] = questionToEdit;
+  current[questionIndexToEdit.value] = questionToEdit.value;
 
-  questionToEdit = null;
-  questionIndexToEdit = null;
+  questionToEdit.value = null;
+  questionIndexToEdit.value = null;
   const res = await controller.EditorExerciceUpdateQuestions({
     IdExercice: props.exercice.Exercice.Id,
     Questions: toExerciceQuestions(current),
@@ -173,14 +173,14 @@ async function saveEditedQuestion() {
   emit("preview", res.Preview);
 }
 
-let showDropZone = $ref(false);
+const showDropZone = ref(false);
 
 function onDragStart() {
-  setTimeout(() => (showDropZone = true), 100); // workaround bug
+  setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
 function onDragEnd(ev: DragEvent) {
-  showDropZone = false;
+  showDropZone.value = false;
 }
 
 function onItemDragStart(paylod: DragEvent, index: number) {

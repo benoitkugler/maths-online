@@ -100,7 +100,7 @@
             <v-col>
               <BaseVariationTable
                 :model-value="fn"
-                @update:model-value="v => updateVar(index, v)"
+                @update:model-value="(v) => updateVar(index, v)"
                 description=""
               ></BaseVariationTable>
             </v-col>
@@ -327,20 +327,20 @@
 import type {
   FunctionsGraphBlock,
   Variable,
-  VariationTableBlock
+  VariationTableBlock,
 } from "@/controller/api_gen";
 import {
   ExpressionColor,
   lastColorUsed,
   nRune,
   variableToString,
-  xRune
+  xRune,
 } from "@/controller/editor";
-import { $computed } from "vue/macros";
 import BtnColorPicker from "../utils/BtnColorPicker.vue";
 import ExpressionField from "../utils/ExpressionField.vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 import BaseVariationTable from "./BaseVariationTable.vue";
+import { computed } from "vue";
 
 interface Props {
   modelValue: FunctionsGraphBlock;
@@ -357,11 +357,11 @@ function addFunctionExpr() {
     Function: "x^2",
     Decoration: {
       Label: "f",
-      Color: lastColorUsed.color
+      Color: lastColorUsed.color,
     },
     Variable: { Name: xRune, Indice: "" },
     From: "-4",
-    To: "4"
+    To: "4",
   });
   emit("update:modelValue", props.modelValue);
 }
@@ -376,11 +376,11 @@ function addSequenceExpr() {
     Function: "n + 2",
     Decoration: {
       Label: "u_n",
-      Color: lastColorUsed.color
+      Color: lastColorUsed.color,
     },
     Variable: { Name: nRune, Indice: "" },
     From: "-4",
-    To: "4"
+    To: "4",
   });
   emit("update:modelValue", props.modelValue);
 }
@@ -394,7 +394,7 @@ function addFunctionVar() {
   props.modelValue.FunctionVariations?.push({
     Label: "C_f",
     Xs: ["-5", "0", "5"],
-    Fxs: ["-3", "2", "-1"]
+    Fxs: ["-3", "2", "-1"],
   });
   emit("update:modelValue", props.modelValue);
 }
@@ -410,12 +410,12 @@ function updateVar(index: number, v: VariationTableBlock) {
 }
 
 /** includes the special [abscisseAxis] value */
-const functionsNamesItems = $computed(() => {
+const functionsNamesItems = computed(() => {
   const set: { [key: string]: boolean } = {};
   props.modelValue.FunctionExprs?.forEach(
-    fn => (set[fn.Decoration.Label] = true)
+    (fn) => (set[fn.Decoration.Label] = true)
   );
-  props.modelValue.FunctionVariations?.forEach(fn => (set[fn.Label] = true));
+  props.modelValue.FunctionVariations?.forEach((fn) => (set[fn.Label] = true));
   set[abscisseAxis] = true; // add empty string as horizontal axis
   const out = Object.keys(set);
   out.sort((a, b) => a.localeCompare(b));
@@ -437,7 +437,7 @@ function addArea() {
     Top: nameFromSelection(functionsNamesItems[1]),
     Bottom: nameFromSelection(functionsNamesItems[0]),
     Left: "0",
-    Right: "2"
+    Right: "2",
   });
   emit("update:modelValue", props.modelValue);
 }
@@ -452,7 +452,7 @@ function addPoint() {
     Color: lastColorUsed.color,
     Function: nameFromSelection(functionsNamesItems[0]),
     X: "0",
-    Legend: `P_${1 + (props.modelValue.Points.length || 0)}`
+    Legend: `P_${1 + (props.modelValue.Points.length || 0)}`,
   });
   emit("update:modelValue", props.modelValue);
 }

@@ -228,8 +228,7 @@ import {
   type TagsDB,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onMounted, onUnmounted, watch } from "vue";
-import { $computed, $ref } from "vue/macros";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import SkeletonDetails from "./SkeletonDetails.vue";
 import SnackErrorEnonce from "../SnackErrorEnonce.vue";
 import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
@@ -253,9 +252,9 @@ const emit = defineEmits<{
   (e: "preview", ex: LoopbackShowExercice): void;
 }>();
 
-let questionIndex = $ref(0);
+const questionIndex = ref(0);
 
-let exercice = $ref<ExerciceExt>({
+const exercice = ref<ExerciceExt>({
   Exercice: {
     Id: 0,
     IdGroup: 0,
@@ -266,23 +265,24 @@ let exercice = $ref<ExerciceExt>({
   Questions: [],
 });
 
-let modeEnonce = $ref(true); // false for correction
+const modeEnonce = ref(true); // false for correction
 
 onMounted(async () => {
   await fetchExercice();
   refreshExercicePreview(props.exerciceHeader.Id);
-  editSharedParams = inferEditSharedParams();
+  editSharedParams.value = inferEditSharedParams();
 });
 
 watch(props, async (_) => {
-  if (props.exerciceHeader.Id != exercice?.Exercice.Id) {
+  if (props.exerciceHeader.Id != exercice.value?.Exercice.Id) {
     await fetchExercice();
     refreshExercicePreview(props.exerciceHeader.Id);
 
     // reset the question index if needed
-    if (questionIndex >= (exercice.Questions?.length || 0)) questionIndex = 0;
+    if (questionIndex.value >= (exercice.value.Questions?.length || 0))
+      questionIndex.value = 0;
 
-    editSharedParams = inferEditSharedParams();
+    editSharedParams.value = inferEditSharedParams();
   }
 });
 
@@ -304,13 +304,14 @@ async function fetchExercice() {
     id: props.exerciceHeader.Id,
   });
   if (res == undefined) return;
-  exercice = res;
+  exercice.value = res;
 }
 
 function notifieUpdate(ex: ExerciceExt) {
-  exercice = ex;
+  exercice.value = ex;
   // reset the question index if needed
-  if (questionIndex >= (exercice.Questions?.length || 0)) questionIndex = 0;
+  if (questionIndex.value >= (exercice.value.Questions?.length || 0))
+    questionIndex.value = 0;
   emit("update", {
     Id: ex.Exercice.Id,
     Difficulty: ex.Exercice.Difficulty,
@@ -321,33 +322,37 @@ function notifieUpdate(ex: ExerciceExt) {
 // guess the edit mode, defaulting on shared for empty params
 function inferEditSharedParams() {
   if (
-    !exercice.Exercice.Parameters?.length &&
-    !question?.Question.Parameters?.length
+    !exercice.value.Exercice.Parameters?.length &&
+    !question.value?.Question.Parameters?.length
   ) {
     return true;
   }
-  return !!exercice.Exercice.Parameters?.length;
+  return !!exercice.value.Exercice.Parameters?.length;
 }
 
-let editSharedParams = $ref(true);
+const editSharedParams = ref(true);
 
 // either the shared params or the params of the current question
 const currentEditedParams = computed(() =>
-  editSharedParams
-    ? exercice.Exercice.Parameters
-    : question?.Question.Parameters || []
+  editSharedParams.value
+    ? exercice.value.Exercice.Parameters
+    : question.value?.Question.Parameters || []
 );
 
 function switchParamsMode(b: boolean) {
-  editSharedParams = b;
+  editSharedParams.value = b;
   console.log(currentEditedParams.value);
 }
 
-let question = $computed<ExerciceQuestionExt | null>(
-  () => (exercice.Questions || [])[questionIndex] || null
+const question = computed<ExerciceQuestionExt | null>(
+  () => (exercice.value.Questions || [])[questionIndex.value] || null
 );
 
-let history = new History(exercice, controller.showMessage!, restoreHistory);
+let history = new History(
+  exercice.value,
+  controller.showMessage!,
+  restoreHistory
+);
 
 onMounted(() => {
   history.addListener();
@@ -364,63 +369,64 @@ function restoreHistory(snapshot: ExerciceExt) {
   notifieUpdate(snapshot);
 }
 
-let questionEnonceNode = $ref<InstanceType<typeof QuestionContent> | null>(
+const questionEnonceNode = ref<InstanceType<typeof QuestionContent> | null>(
   null
 );
-let questionCorrectionNode = $ref<InstanceType<typeof QuestionContent> | null>(
+const questionCorrectionNode = ref<InstanceType<typeof QuestionContent> | null>(
   null
 );
 function addBlock(kind: BlockKind) {
-  if (modeEnonce) {
-    questionEnonceNode?.addBlock(kind);
+  if (modeEnonce.value) {
+    questionEnonceNode.value?.addBlock(kind);
   } else {
-    questionCorrectionNode?.addBlock(kind);
+    questionCorrectionNode.value?.addBlock(kind);
   }
 }
 
 function onUpdateEnonce(v: Block[]) {
-  if (!question) return;
-  question.Question.Enonce = v;
-  history.add(exercice);
+  if (!question.value) return;
+  question.value.Question.Enonce = v;
+  history.add(exercice.value);
 }
 function onUpdateCorrection(v: Block[]) {
-  if (!question) return;
-  question.Question.Correction = v;
-  history.add(exercice);
+  if (!question.value) return;
+  question.value.Question.Correction = v;
+  history.add(exercice.value);
 }
 
-let isCheckingParameters = $ref(false);
-let errorParameters = $ref<ErrParameters | null>(null);
-const showErrorParameters = computed(() => errorParameters != null);
+const isCheckingParameters = ref(false);
+const errorParameters = ref<ErrParameters | null>(null);
+const showErrorParameters = computed(() => errorParameters.value != null);
 
-let errorContent = $ref<errEnonce | null>(null);
-let errorIsCorrection = $ref(false);
+const errorContent = ref<errEnonce | null>(null);
+const errorIsCorrection = ref(false);
 
 async function checkParameters(ps: Parameters) {
-  if (editSharedParams) {
-    exercice.Exercice.Parameters = ps;
+  if (editSharedParams.value) {
+    exercice.value.Exercice.Parameters = ps;
   } else {
-    question!.Question.Parameters = ps;
+    question.value!.Question.Parameters = ps;
   }
-  history.add(exercice);
+  history.add(exercice.value);
 
-  isCheckingParameters = true;
+  isCheckingParameters.value = true;
   const out = await controller.EditorCheckExerciceParameters({
-    IdExercice: exercice.Exercice.Id,
-    SharedParameters: exercice.Exercice.Parameters,
+    IdExercice: exercice.value.Exercice.Id,
+    SharedParameters: exercice.value.Exercice.Parameters,
     QuestionParameters:
-      exercice.Questions?.map((q) => q.Question.Parameters) || [],
+      exercice.value.Questions?.map((q) => q.Question.Parameters) || [],
   });
-  isCheckingParameters = false;
+  isCheckingParameters.value = false;
   if (out === undefined) return;
 
   // hide previous error
-  errorContent = null;
+  errorContent.value = null;
 
-  errorParameters = out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
-  if (errorParameters != null) {
+  errorParameters.value =
+    out.ErrDefinition.Origin == "" ? null : out.ErrDefinition;
+  if (errorParameters.value != null) {
     // go to faulty question
-    questionIndex = out.QuestionIndex;
+    questionIndex.value = out.QuestionIndex;
   }
   //   availableParameters.value = out.Variables || [];
 }
@@ -428,21 +434,21 @@ async function checkParameters(ps: Parameters) {
 async function save() {
   const res = await controller.EditorSaveExerciceAndPreview({
     OnlyPreview: false,
-    IdExercice: exercice.Exercice.Id,
-    Parameters: exercice.Exercice.Parameters,
-    Questions: exercice.Questions?.map((qu) => qu.Question) || [],
-    CurrentQuestion: questionIndex,
-    ShowCorrection: !modeEnonce,
+    IdExercice: exercice.value.Exercice.Id,
+    Parameters: exercice.value.Exercice.Parameters,
+    Questions: exercice.value.Questions?.map((qu) => qu.Question) || [],
+    CurrentQuestion: questionIndex.value,
+    ShowCorrection: !modeEnonce.value,
   });
   if (res == undefined) {
     return;
   }
 
   if (res.IsValid) {
-    errorContent = null;
-    errorParameters = null;
+    errorContent.value = null;
+    errorParameters.value = null;
 
-    notifieUpdate(exercice);
+    notifieUpdate(exercice.value);
     emit("preview", res.Preview);
   } else {
     onQuestionError(res.QuestionIndex, res.Error);
@@ -451,74 +457,74 @@ async function save() {
 
 function onQuestionError(index: number, err: ErrQuestionInvalid) {
   // reset previous error
-  errorParameters = null;
-  errorContent = null;
+  errorParameters.value = null;
+  errorContent.value = null;
   switch (err.Kind) {
     case ErrorKind.ErrParameters_:
-      errorParameters = err.ErrParameters;
+      errorParameters.value = err.ErrParameters;
       break;
     case ErrorKind.ErrEnonce:
-      errorContent = err.ErrEnonce;
-      errorIsCorrection = false;
-      modeEnonce = true;
+      errorContent.value = err.ErrEnonce;
+      errorIsCorrection.value = false;
+      modeEnonce.value = true;
       break;
     case ErrorKind.ErrCorrection:
-      errorContent = err.ErrCorrection;
-      errorIsCorrection = true;
-      modeEnonce = false;
+      errorContent.value = err.ErrCorrection;
+      errorIsCorrection.value = true;
+      modeEnonce.value = false;
       break;
   }
 
   // go to the faulty question
-  questionIndex = index;
+  questionIndex.value = index;
 }
 
 function download() {
-  if (!question) return;
+  if (!question.value) return;
   saveData<Question>(
-    question.Question,
-    `question${questionIndex + 1}.isyro.json`
+    question.value.Question,
+    `question${questionIndex.value + 1}.isyro.json`
   );
 }
 
 async function onImportQuestion(imported: Question) {
-  if (!question) return;
+  if (!question.value) return;
   // only import the data fields
-  question.Question.Enonce = imported.Enonce;
-  question.Question.Correction = imported.Correction;
-  question.Question.Parameters = imported.Parameters;
+  question.value.Question.Enonce = imported.Enonce;
+  question.value.Question.Correction = imported.Correction;
+  question.value.Question.Parameters = imported.Parameters;
 
-  history.add(exercice);
+  history.add(exercice.value);
 
-  notifieUpdate(exercice);
+  notifieUpdate(exercice.value);
 }
 
 async function createQuestion() {
   const res = await controller.EditorExerciceCreateQuestion({
-    IdExercice: exercice.Exercice.Id,
+    IdExercice: exercice.value.Exercice.Id,
   });
   if (res == undefined) {
     return;
   }
   // go to the new question
-  questionIndex = (res.Ex.Questions?.length || 0) - 1;
+  questionIndex.value = (res.Ex.Questions?.length || 0) - 1;
   notifieUpdate(res.Ex);
   emit("preview", res.Preview);
 }
 
-let showSkeletonDetails = $ref(false);
+const showSkeletonDetails = ref(false);
 
 async function addSyntaxHint(block: ExpressionFieldBlock) {
-  if (questionEnonceNode == null || question == null) return;
+  if (questionEnonceNode.value == null || question.value == null) return;
 
   const res = await controller.EditorGenerateSyntaxHint({
     Block: block,
-    SharedParameters: exercice.Exercice.Parameters,
-    QuestionParameters: question.Question.Parameters,
+    SharedParameters: exercice.value.Exercice.Parameters,
+    QuestionParameters: question.value.Question.Parameters,
   });
   if (res == undefined) return;
 
-  questionEnonceNode?.addExistingBlock({
+  questionEnonceNode.value?.addExistingBlock({
     Kind: BlockKind.TextBlock,
     Data: res,
   });
@@ -527,12 +533,12 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
 async function exportLatex() {
   const res = await controller.EditorExerciceExportLateX({
     Questions:
-      exercice.Questions?.map((qu) => ({
+      exercice.value.Questions?.map((qu) => ({
         enonce: qu.Question.Enonce,
         parameters: qu.Question.Parameters,
         correction: qu.Question.Correction,
       })) || [],
-    Parameters: exercice.Exercice.Parameters,
+    Parameters: exercice.value.Exercice.Parameters,
   });
   if (res == undefined) return;
 

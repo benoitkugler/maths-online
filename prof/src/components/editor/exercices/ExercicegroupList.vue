@@ -104,7 +104,7 @@
                 @duplicate="duplicate(exerciceGroup)"
                 @delete="groupToDelete = exerciceGroup"
                 @create-review="reviewToCreate = exerciceGroup.Group"
-                @update-public="b => updatePublic(exerciceGroup.Group.Id, b)"
+                @update-public="(b) => updatePublic(exerciceGroup.Group.Id, b)"
               ></resource-group-row>
             </div>
           </v-list>
@@ -138,18 +138,19 @@ import {
   type TagsDB,
   PublicStatus,
   type TaskUses,
-  type Sheet
+  type Sheet,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { computed, onActivated, onMounted } from "@vue/runtime-core";
 import { useRouter } from "vue-router";
-import { $ref } from "vue/macros";
 import ResourceQueryRow from "../ResourceQueryRow.vue";
 import { exerciceToResource } from "@/controller/editor";
-import { ref } from "vue";
 import ResourceGroupRow from "../ResourceGroupRow.vue";
 import UsesCard from "../UsesCard.vue";
 import ConfirmPublish from "@/components/ConfirmPublish.vue";
+import { ref } from "vue";
+import { onMounted } from "vue";
+import { onActivated } from "vue";
+import { computed } from "vue";
 
 interface Props {
   tags: TagsDB; // queried once for all
@@ -169,16 +170,19 @@ const router = useRouter();
 // groups are cut in slice of `pagination` length,
 // and currentPage is the index of the page
 const pagination = 6;
-let currentPage = $ref(1);
-const pageLength = computed(() => Math.ceil(groups.length / pagination));
+const currentPage = ref(1);
+const pageLength = computed(() => Math.ceil(groups.value.length / pagination));
 const displayedGroups = computed(() =>
-  groups.slice((currentPage - 1) * pagination, currentPage * pagination)
+  groups.value.slice(
+    (currentPage.value - 1) * pagination,
+    currentPage.value * pagination
+  )
 );
 
-let groups = $ref<ExercicegroupExt[]>([]);
-let serverNbExercices = $ref(0);
+const groups = ref<ExercicegroupExt[]>([]);
+const serverNbExercices = ref(0);
 
-let query = $ref<Query>(
+const query = ref<Query>(
   props.initialQuery
     ? props.initialQuery
     : {
@@ -187,20 +191,20 @@ let query = $ref<Query>(
         ChapterTags: [],
         SubLevelTags: [],
         Origin: OriginKind.All,
-        Matiere: controller.settings.FavoriteMatiere
+        Matiere: controller.settings.FavoriteMatiere,
       }
 );
 onMounted(fetchExercices);
 onActivated(fetchExercices);
 
 async function updateQuery(qu: Query) {
-  query = qu;
+  query.value = qu;
   await fetchExercices();
 }
 
 async function duplicate(group: ExercicegroupExt) {
   const ok = await controller.EditorDuplicateExercicegroup({
-    id: group.Group.Id
+    id: group.Group.Id,
   });
   if (!ok) return;
   await fetchExercices();
@@ -210,7 +214,7 @@ const groupToDelete = ref<ExercicegroupExt | null>(null);
 async function deleteGroup() {
   if (groupToDelete.value == null) return;
   const res = await controller.EditorDeleteExercicegroup({
-    id: groupToDelete.value.Group.Id
+    id: groupToDelete.value.Group.Id,
   });
   if (res === undefined) return;
   if (!res.Deleted) {
@@ -228,12 +232,12 @@ function goToSheet(sh: Sheet) {
 }
 
 async function fetchExercices() {
-  const result = await controller.EditorSearchExercices(query);
+  const result = await controller.EditorSearchExercices(query.value);
   if (result == undefined) {
     return;
   }
-  groups = result.Groups || [];
-  serverNbExercices = result.NbExercices;
+  groups.value = result.Groups || [];
+  serverNbExercices.value = result.NbExercices;
 }
 
 async function createExercicegroup() {
@@ -252,14 +256,14 @@ async function startEdit(group: ExercicegroupExt) {
 async function updatePublic(id: number, isPublic: boolean) {
   const res = await controller.EditorUpdateExercicegroupVis({
     ID: id,
-    Public: isPublic
+    Public: isPublic,
   });
   if (res === undefined) {
     return;
   }
 
-  const index = groups.findIndex(gr => gr.Group.Id == id);
-  groups[index].Origin.PublicStatus = isPublic
+  const index = groups.value.findIndex((gr) => gr.Group.Id == id);
+  groups.value[index].Origin.PublicStatus = isPublic
     ? PublicStatus.AdminPublic
     : PublicStatus.AdminNotPublic;
 }
@@ -269,7 +273,7 @@ async function createReview() {
   if (reviewToCreate.value == null) return;
   const res = await controller.ReviewCreate({
     Kind: ReviewKind.KExercice,
-    Id: reviewToCreate.value.Id
+    Id: reviewToCreate.value.Id,
   });
   reviewToCreate.value = null;
   if (res == undefined) return;

@@ -90,8 +90,7 @@
 
 <script setup lang="ts">
 import type { ErrParameters, Parameters } from "@/controller/api_gen";
-import { computed, nextTick, watch } from "vue";
-import { $ref } from "vue/macros";
+import { ref, computed, watch } from "vue";
 import HiglightedText from "../utils/HiglightedText.vue";
 import {
   parametersToString,
@@ -125,14 +124,14 @@ const title = computed(() =>
 
 // to avoid cursor issues, we use a string as source of truth,
 // delaying the parsing/validation to the blur event
-let rawText = $ref(parametersToString(props.modelValue));
+const rawText = ref(parametersToString(props.modelValue));
 watch(props, (newP, oldP) => {
   // do not update the layout if it is triggered by error
   //   if (
   //     JSON.stringify(newP.modelValue || []) !=
   //     JSON.stringify(oldP.modelValue || [])
   //   ) {
-  rawText = parametersToString(props.modelValue);
+  rawText.value = parametersToString(props.modelValue);
   //   }
   //   console.log(
   //     props.modelValue,
@@ -141,17 +140,17 @@ watch(props, (newP, oldP) => {
   //   );
 });
 
-let errorParameters = $ref<ErrParameters | null>(null);
+const errorParameters = ref<ErrParameters | null>(null);
 function updateParams() {
-  const { params, error } = parseParameters(rawText);
+  const { params, error } = parseParameters(rawText.value);
   if (error != null) {
-    errorParameters = error;
+    errorParameters.value = error;
   } else {
     emit("update:modelValue", params);
   }
 }
 
-let showHelp = $ref(false);
+const showHelp = ref(false);
 </script>
 
 <style scoped></style>
