@@ -11,6 +11,9 @@ import "vuetify/styles";
 // Composables
 import { createVuetify } from "vuetify";
 
+// Translations provided by Vuetify
+import { fr } from "vuetify/locale";
+
 const myCustomLightTheme = {
   dark: false,
   colors: {
@@ -29,5 +32,9 @@ export default createVuetify({
     themes: {
       myCustomLightTheme,
     },
+  },
+  locale: {
+    locale: "fr",
+    messages: { fr },
   },
 });

@@ -18,7 +18,7 @@
         {{ props.prefix || "" }} {{ formatTime(props.modelValue, true, true) }}
       </v-chip>
     </template>
-    <v-card width="300px" :subtitle="props.title">
+    <v-card :subtitle="props.title">
       <v-card-text class="pb-0" v-if="timeToEdit != null">
         <TimeField v-model="timeToEdit"></TimeField>
       </v-card-text>

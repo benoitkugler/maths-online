@@ -1,43 +1,46 @@
 <template>
   <v-row class="my-1 px-1">
-    <v-col cols="12">
-      <DateField
-        label="Date"
+    <v-col cols="8" align-self="center">
+      <v-date-picker
+        hide-header
         :model-value="date"
         @update:model-value="updateDate"
-      ></DateField>
+      ></v-date-picker>
     </v-col>
-    <v-col cols="6" align-self="center">
-      <v-select
-        variant="outlined"
-        density="compact"
-        label="Heure"
-        :items="hours"
-        hide-details
-        v-model="hour"
-        @update:model-value="updateHour"
-      >
-      </v-select>
-    </v-col>
-    <v-col cols="6" align-self="center">
-      <v-select
-        variant="outlined"
-        density="compact"
-        label="Minute"
-        :items="minutes"
-        hide-details
-        v-model="minute"
-        @update:model-value="updateMinute"
-      >
-      </v-select>
+    <v-col cols="4" align-self="center">
+      <v-row>
+        <v-col cols="12">
+          <v-select
+            variant="outlined"
+            density="compact"
+            label="Heure"
+            :items="hours"
+            hide-details
+            v-model="hour"
+            @update:model-value="updateHour"
+          >
+          </v-select>
+        </v-col>
+        <v-col cols="12">
+          <v-select
+            variant="outlined"
+            density="compact"
+            label="Minute"
+            :items="minutes"
+            hide-details
+            v-model="minute"
+            @update:model-value="updateMinute"
+          >
+          </v-select>
+        </v-col>
+      </v-row>
     </v-col>
   </v-row>
 </template>
 
 <script setup lang="ts">
-import type { Date_, Time } from "@/controller/api_gen";
+import type { Time } from "@/controller/api_gen";
 import { ref, computed } from "vue";
-import DateField from "../DateField.vue";
 
 interface Props {
   modelValue: Time;
@@ -49,7 +52,7 @@ const emit = defineEmits<{
   (e: "update:model-value", v: Time): void;
 }>();
 
-const date = computed(() => props.modelValue as unknown as Date_);
+const date = computed(() => new Date(props.modelValue));
 
 const hours = Array.from({ length: 24 }, (_, i) => ({
   title: i.toString().padStart(2, "0") + "h",
@@ -72,8 +75,7 @@ function minuteFromTime(time: Time) {
   return d.getMinutes();
 }
 
-function updateDate(date: Date_) {
-  const d = new Date(date);
+function updateDate(d: Date) {
   d.setHours(hour.value);
   d.setMinutes(minute.value);
   emit("update:model-value", d.toISOString() as Time);
