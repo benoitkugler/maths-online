@@ -113,19 +113,18 @@ func (ct *Controller) getSheets(userID uID, matiere teacher.MatiereTag) (out Hom
 func (ct *Controller) HomeworkCreateSheet(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
-	sheet, err := ct.createSheet(userID)
+	out, err := ct.createSheet(userID)
 	if err != nil {
 		return err
 	}
 
-	out := SheetExt{Sheet: sheet, Origin: tcAPI.Origin{Visibility: tcAPI.Personnal}}
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) createSheet(userID uID) (ho.Sheet, error) {
+func (ct *Controller) createSheet(userID uID) (SheetExt, error) {
 	user, err := teacher.SelectTeacher(ct.db, userID)
 	if err != nil {
-		return ho.Sheet{}, utils.SQLError(err)
+		return SheetExt{}, utils.SQLError(err)
 	}
 
 	sheet, err := ho.Sheet{
@@ -134,10 +133,16 @@ func (ct *Controller) createSheet(userID uID) (ho.Sheet, error) {
 		Matiere:   user.FavoriteMatiere,
 	}.Insert(ct.db)
 	if err != nil {
-		return ho.Sheet{}, utils.SQLError(err)
+		return SheetExt{}, utils.SQLError(err)
 	}
 
-	return sheet, nil
+	out := SheetExt{Sheet: sheet, Origin: tcAPI.Origin{
+		Visibility:   tcAPI.NewVisibility(sheet.IdTeacher, userID, ct.admin.Id, sheet.Public),
+		PublicStatus: tcAPI.NewPublicStatus(sheet.IdTeacher, userID, ct.admin.Id, sheet.Public),
+		IsInReview:   tcAPI.OptionalIdReview{},
+	}}
+
+	return out, nil
 }
 
 type CreateTravailWithIn struct {
