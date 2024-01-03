@@ -11,7 +11,7 @@
                 variant="elevated"
                 :title="sheet.Sheet.Title"
                 :subtitle="subtitle"
-                color="yellow"
+                :color="color"
               >
               </v-card>
             </template>
@@ -23,16 +23,12 @@
             @click="emit('editSheet', props.sheet)"
             :title="sheet.Sheet.Title"
             :subtitle="subtitle"
-            color="grey-lighten-3"
+            :color="color"
           >
           </v-card>
         </v-col>
         <v-col cols="auto" align-self="center">
-          <v-tooltip
-            text="Enregistrer cette feuille dans les favoris"
-            location="top"
-            v-if="sheet.Sheet.Anonymous.Valid"
-          >
+          <v-menu>
             <template v-slot:activator="{ isActive, props }">
               <v-btn
                 density="comfortable"
@@ -41,12 +37,27 @@
                 class="mr-1"
                 v-bind="props"
                 v-on="{ isActive }"
-                @click="emit('setFavorite', sheet.Sheet)"
               >
                 <v-icon color="secondary"> mdi-heart </v-icon>
               </v-btn>
             </template>
-          </v-tooltip>
+            <v-card v-if="sheet.Sheet.Anonymous.Valid">
+              <v-card-text> Feuille anonyme </v-card-text>
+              <v-card-actions>
+                <v-spacer> </v-spacer>
+                <v-btn @click="emit('setFavorite', sheet.Sheet)"
+                  >Enregistrer dans les favoris</v-btn
+                >
+              </v-card-actions>
+            </v-card>
+            <v-card v-else :color="colorForOrigin(sheet.Origin)">
+              <v-card-text v-if="sheet.Origin.Visibility == Visibility.Admin">
+                Feuille favorite de la base officielle
+              </v-card-text>
+              <v-card-text v-else> Feuille favorite personelle </v-card-text>
+            </v-card>
+          </v-menu>
+
           <v-tooltip
             text="Modifier les exceptions..."
             location="top"
@@ -116,7 +127,7 @@
             title="Modifier le début du travail"
             :model-value="travail.ShowAfter"
             @update:model-value="
-              v => {
+              (v) => {
                 travail.ShowAfter = v;
                 emit('update', travail);
               }
@@ -143,7 +154,7 @@
             v-if="travail.Noted"
             :model-value="travail.Deadline"
             @update:model-value="
-              v => {
+              (v) => {
                 travail.Deadline = v;
                 emit('update', travail);
               }
@@ -163,11 +174,13 @@ import {
   type Classroom,
   type Sheet,
   type SheetExt,
-  type Travail
+  type Travail,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import PreviewSheet from "./PreviewSheet.vue";
 import DateTimeChip from "../DateTimeChip.vue";
+import { colorForOrigin } from "@/controller/utils";
+import { basename } from "path";
 
 interface Props {
   travail: Travail;
@@ -196,5 +209,14 @@ const subtitle = computed(() => {
   } else {
     return `${nbTasks.value} tâches`;
   }
+});
+
+const color = computed(() => {
+  const baseColor = "grey-lighten-3";
+  if (!props.travail.Noted) return baseColor;
+  const now = new Date(Date.now());
+  const start = new Date(props.travail.ShowAfter);
+  const end = new Date(props.travail.Deadline);
+  return start <= now && now <= end ? "blue-lighten-2" : baseColor;
 });
 </script>

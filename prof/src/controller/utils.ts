@@ -1,10 +1,13 @@
-import type {
-  ClassroomTravaux,
-  Date_,
-  SheetExt,
-  Tags,
-  TaskExt,
-  Time
+import {
+  PublicStatus,
+  type ClassroomTravaux,
+  type Date_,
+  type Origin,
+  type SheetExt,
+  type Tags,
+  type TaskExt,
+  type Time,
+  Visibility,
 } from "./api_gen";
 
 /** copy returns a deep copy of `obj` */
@@ -31,7 +34,7 @@ export function formatTime(
     day: "numeric",
     month: "short",
     hour: "2-digit",
-    minute: showMinute ? "2-digit" : undefined
+    minute: showMinute ? "2-digit" : undefined,
   });
   if (showWeekday) {
     return `${_weekdays[ti.getDay()]} ${s}`;
@@ -92,4 +95,16 @@ export interface PrefillTrivialCategorie {
   level: string;
   chapter: string;
   sublevels: Tags;
+}
+
+/** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
+export const ColorAdmin = "yellow-lighten-4";
+export const ColorPersonnal = "light-blue-lighten-5";
+export const ColorPublic = "blue-lighten-4";
+
+export function colorForOrigin(origin: Origin) {
+  if (origin.PublicStatus == PublicStatus.AdminPublic) return ColorPublic;
+  return origin.Visibility == Visibility.Personnal
+    ? ColorPersonnal
+    : ColorAdmin;
 }

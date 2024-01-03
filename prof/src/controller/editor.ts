@@ -40,7 +40,7 @@ import {
   FiguresOrGraphsKind,
   PublicStatus,
   type QuestiongroupExt,
-  type ExercicegroupExt
+  type ExercicegroupExt,
 } from "./api_gen";
 import { copy } from "./utils";
 
@@ -49,7 +49,7 @@ export const ExpressionColor = "orange";
 export const colorByKind: { [key in TextKind]: string } = {
   [TextKind.Text]: "",
   [TextKind.StaticMath]: "green",
-  [TextKind.Expression]: ExpressionColor
+  [TextKind.Expression]: ExpressionColor,
 };
 
 export const sortedBlockKindLabels = [
@@ -57,91 +57,91 @@ export const sortedBlockKindLabels = [
   [BlockKind.FormulaBlock, { label: "Formule", isAnswerField: false }],
   [
     BlockKind.FigureBlock,
-    { label: "Figure (droites, cercles)", isAnswerField: false }
+    { label: "Figure (droites, cercles)", isAnswerField: false },
   ],
   [
     BlockKind.FunctionsGraphBlock,
     {
       label: "Graphes (fonctions, suites)",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [BlockKind.TableBlock, { label: "Tableau", isAnswerField: false }],
   [
     BlockKind.SignTableBlock,
     {
       label: "Tableau de signes",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [
     BlockKind.VariationTableBlock,
     {
       label: "Tableau de variations",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [
     BlockKind.TreeBlock,
     {
       label: "Arbre (de probas)",
-      isAnswerField: false
-    }
+      isAnswerField: false,
+    },
   ],
   [BlockKind.NumberFieldBlock, { label: "Nombre", isAnswerField: true }],
   [
     BlockKind.ExpressionFieldBlock,
     {
       label: "Expression",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.OrderedListFieldBlock,
     {
       label: "Liste ordonnée",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [BlockKind.RadioFieldBlock, { label: "QCM", isAnswerField: true }],
   [
     BlockKind.GeometricConstructionFieldBlock,
     {
       label: "Constructions (point, vecteur, droite)",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.VectorFieldBlock,
-    { label: "Vecteur (numérique)", isAnswerField: true }
+    { label: "Vecteur (numérique)", isAnswerField: true },
   ],
   [
     BlockKind.FunctionPointsFieldBlock,
     {
       label: "Graphe de fonction (ou suite)",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.VariationTableFieldBlock,
     {
       label: "Tableau de variations",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.SignTableFieldBlock,
     {
       label: "Tableau de signes",
-      isAnswerField: true
-    }
+      isAnswerField: true,
+    },
   ],
   [
     BlockKind.ProofFieldBlock,
-    { label: "Preuve (à compléter)", isAnswerField: true }
+    { label: "Preuve (à compléter)", isAnswerField: true },
   ],
   [BlockKind.TableFieldBlock, { label: "Tableau", isAnswerField: true }],
-  [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }]
+  [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }],
 ] as const;
 
 export const BlockKindLabels: {
@@ -183,7 +183,7 @@ export const nRune = "n".codePointAt(0)!;
 /** extractPoints returns the names of indices A for which 'x_A' and 'y_A' are defined */
 export function extractPoints(vars: Variable[]) {
   const points: { [key: string]: { x: boolean; y: boolean } } = {};
-  vars.forEach(v => {
+  vars.forEach((v) => {
     if (v.Indice != "") {
       const point = points[v.Indice] || {};
       if (v.Name == xRune) {
@@ -195,7 +195,7 @@ export function extractPoints(vars: Variable[]) {
     }
   });
 
-  return Object.keys(points).filter(name => {
+  return Object.keys(points).filter((name) => {
     const point = points[name];
     return point.x && point.y;
   });
@@ -223,9 +223,9 @@ const signTableExample: SignTableBlock = {
         SignSymbol.Nothing,
         SignSymbol.Zero,
         SignSymbol.ForbiddenValue,
-        SignSymbol.Nothing
+        SignSymbol.Nothing,
       ],
-      Signs: [true, false, true]
+      Signs: [true, false, true],
     },
     {
       Label: "g(x)",
@@ -233,18 +233,18 @@ const signTableExample: SignTableBlock = {
         SignSymbol.ForbiddenValue,
         SignSymbol.Nothing,
         SignSymbol.Zero,
-        SignSymbol.Nothing
+        SignSymbol.Nothing,
       ],
-      Signs: [false, false, true]
-    }
-  ]
+      Signs: [false, false, true],
+    },
+  ],
 };
 
 function newTreeNode(value: number): TreeNodeAnswer {
   return {
     Value: value,
     Children: [],
-    Probabilities: []
+    Probabilities: [],
   };
 }
 
@@ -256,17 +256,17 @@ function newTree() {
         {
           Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
           Probabilities: ["0.7", "0.2", "0.1"],
-          Value: 0
+          Value: 0,
         },
         {
           Children: [newTreeNode(0), newTreeNode(1), newTreeNode(2)],
           Probabilities: ["0.7", "0.2", "0.1"],
-          Value: 1
-        }
+          Value: 1,
+        },
       ],
       Probabilities: ["0.7", "0.3"],
-      Value: 0
-    }
+      Value: 0,
+    },
   };
 }
 
@@ -279,8 +279,8 @@ export function newBlock(kind: BlockKind): Block {
           Parts: "",
           Bold: false,
           Italic: false,
-          Smaller: false
-        }
+          Smaller: false,
+        },
       };
       return out;
     }
@@ -288,8 +288,8 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Parts: ""
-        }
+          Parts: "",
+        },
       };
       return out;
     }
@@ -302,16 +302,16 @@ export function newBlock(kind: BlockKind): Block {
           Bounds: {
             Width: 10,
             Height: 10,
-            Origin: { X: 3, Y: 3 }
+            Origin: { X: 3, Y: 3 },
           },
           Drawings: {
             Lines: [],
             Points: [],
             Segments: [],
             Circles: [],
-            Areas: []
-          }
-        }
+            Areas: [],
+          },
+        },
       };
       return out;
     }
@@ -324,29 +324,29 @@ export function newBlock(kind: BlockKind): Block {
               Function: "abs(x) + sin(x)",
               Decoration: {
                 Label: "f",
-                Color: ""
+                Color: "",
               },
               Variable: { Name: xRune, Indice: "" },
               From: "-5",
-              To: "5"
-            }
+              To: "5",
+            },
           ],
           SequenceExprs: [
             {
               Function: "(-1)^n * (n/2)^2",
               Decoration: {
                 Label: "u_n",
-                Color: "#00FF00"
+                Color: "#00FF00",
               },
               Variable: { Name: nRune, Indice: "" },
               From: "-6",
-              To: "6"
-            }
+              To: "6",
+            },
           ],
           FunctionVariations: [],
           Areas: [],
-          Points: []
-        }
+          Points: [],
+        },
       };
       return out;
     }
@@ -356,15 +356,15 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Label: "f(x)",
           Xs: ["-5", "0", "5"],
-          Fxs: ["-3", "2", "-1"]
-        }
+          Fxs: ["-3", "2", "-1"],
+        },
       };
       return out;
     }
     case BlockKind.SignTableBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: copy(signTableExample)
+        Data: copy(signTableExample),
       };
       return out;
     }
@@ -374,23 +374,23 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           VerticalHeaders: [
             { Kind: TextKind.Text, Content: "Ligne 1" },
-            { Kind: TextKind.Text, Content: "Ligne 2" }
+            { Kind: TextKind.Text, Content: "Ligne 2" },
           ],
           HorizontalHeaders: [
             { Kind: TextKind.Text, Content: "Colonne 1" },
-            { Kind: TextKind.Text, Content: "Colonne 2" }
+            { Kind: TextKind.Text, Content: "Colonne 2" },
           ],
           Values: [
             [
               { Kind: TextKind.Text, Content: "Case" },
-              { Kind: TextKind.StaticMath, Content: "\\frac{1}{2}" }
+              { Kind: TextKind.StaticMath, Content: "\\frac{1}{2}" },
             ],
             [
               { Kind: TextKind.Expression, Content: "2x + 3" },
-              { Kind: TextKind.StaticMath, Content: "18" }
-            ]
-          ]
-        }
+              { Kind: TextKind.StaticMath, Content: "18" },
+            ],
+          ],
+        },
       };
       return out;
     }
@@ -398,8 +398,8 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Expression: "1"
-        }
+          Expression: "1",
+        },
       };
       return out;
     }
@@ -410,8 +410,8 @@ export function newBlock(kind: BlockKind): Block {
           Label: "",
           Expression: "x^2 + 2x + 1",
           ComparisonLevel: ComparisonLevel.SimpleSubstitutions,
-          ShowFractionHelp: false
-        }
+          ShowFractionHelp: false,
+        },
       };
       return out;
     }
@@ -421,8 +421,8 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Answer: "1",
           Proposals: ["Oui", "Non"],
-          AsDropDown: false
-        }
+          AsDropDown: false,
+        },
       };
       return out;
     }
@@ -432,8 +432,8 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Answer: ["$\\{$", "-12", ";", "30", "$\\}$"],
           AdditionalProposals: [],
-          Label: "x \\in "
-        }
+          Label: "x \\in ",
+        },
       };
       return out;
     }
@@ -446,9 +446,9 @@ export function newBlock(kind: BlockKind): Block {
             Data: {
               Answer: {
                 X: "3",
-                Y: "4"
-              }
-            }
+                Y: "4",
+              },
+            },
           },
           Background: {
             Kind: FiguresOrGraphsKind.FigureBlock,
@@ -458,18 +458,18 @@ export function newBlock(kind: BlockKind): Block {
               Bounds: {
                 Width: 10,
                 Height: 10,
-                Origin: { X: 3, Y: 3 }
+                Origin: { X: 3, Y: 3 },
               },
               Drawings: {
                 Lines: [],
                 Points: [],
                 Segments: [],
                 Circles: [],
-                Areas: []
-              }
-            }
-          }
-        }
+                Areas: [],
+              },
+            },
+          },
+        },
       };
       return out;
     }
@@ -480,9 +480,9 @@ export function newBlock(kind: BlockKind): Block {
           Answer: {
             Label: "f(x)",
             Xs: ["-5", "0", "5"],
-            Fxs: ["-3", "2", "-1"]
-          }
-        }
+            Fxs: ["-3", "2", "-1"],
+          },
+        },
       };
       return out;
     }
@@ -490,8 +490,8 @@ export function newBlock(kind: BlockKind): Block {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
         Data: {
-          Answer: copy(signTableExample)
-        }
+          Answer: copy(signTableExample),
+        },
       };
       return out;
     }
@@ -503,22 +503,22 @@ export function newBlock(kind: BlockKind): Block {
           Function: "(x/2)^2",
           Label: "C_f",
           Variable: { Name: xRune, Indice: "" },
-          XGrid: ["-4", "-2", "0", "2", "4"]
-        }
+          XGrid: ["-4", "-2", "0", "2", "4"],
+        },
       };
       return out;
     }
     case BlockKind.TreeFieldBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: { Answer: newTree() }
+        Data: { Answer: newTree() },
       };
       return out;
     }
     case BlockKind.TreeBlock: {
       const out: TypedBlock<typeof kind> = {
         Kind: kind,
-        Data: newTree()
+        Data: newTree(),
       };
       return out;
     }
@@ -528,17 +528,17 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           VerticalHeaders: [
             { Kind: TextKind.Text, Content: "Ligne 1" },
-            { Kind: TextKind.Text, Content: "Ligne 2" }
+            { Kind: TextKind.Text, Content: "Ligne 2" },
           ],
           HorizontalHeaders: [
             { Kind: TextKind.Text, Content: "Colonne 1" },
-            { Kind: TextKind.Text, Content: "Colonne 2" }
+            { Kind: TextKind.Text, Content: "Colonne 2" },
           ],
           Answer: [
             ["0", "1"],
-            ["2", "3"]
-          ]
-        }
+            ["2", "3"],
+          ],
+        },
       };
       return out;
     }
@@ -548,11 +548,11 @@ export function newBlock(kind: BlockKind): Block {
         Data: {
           Answer: {
             X: "3.5",
-            Y: "-4"
+            Y: "-4",
           },
           AcceptColinear: false,
-          DisplayColumn: true
-        }
+          DisplayColumn: true,
+        },
       };
       return out;
     }
@@ -568,21 +568,21 @@ export function newBlock(kind: BlockKind): Block {
                   Op: Binary.And,
                   Left: {
                     Kind: ProofAssertionKind.ProofStatement,
-                    Data: { Content: "$n$ est pair" }
+                    Data: { Content: "$n$ est pair" },
                   },
                   Right: {
                     Kind: ProofAssertionKind.ProofStatement,
-                    Data: { Content: "$m$ est impair" }
-                  }
-                }
+                    Data: { Content: "$m$ est impair" },
+                  },
+                },
               },
               {
                 Kind: ProofAssertionKind.ProofStatement,
-                Data: { Content: "$n+m$ est impair" }
-              }
-            ]
-          }
-        }
+                Data: { Content: "$n+m$ est impair" },
+              },
+            ],
+          },
+        },
       };
       return out;
     }
@@ -659,22 +659,10 @@ export function questionDifficulty(tags: string[]): number {
   return 0;
 }
 
-/** `visiblityColors` exposes the colors used to differentiate ressource visiblity */
-export const ColorAdmin = "yellow-lighten-4";
-export const ColorPersonnal = "light-blue-lighten-5";
-export const ColorPublic = "blue-lighten-4";
-
-export function colorForOrigin(origin: Origin) {
-  if (origin.PublicStatus == PublicStatus.AdminPublic) return ColorPublic;
-  return origin.Visibility == Visibility.Personnal
-    ? ColorPersonnal
-    : ColorAdmin;
-}
-
 export function removeDuplicates(tags: string[][]) {
   const unique: string[][] = [];
-  tags.forEach(l => {
-    if (unique.map(l => JSON.stringify(l)).includes(JSON.stringify(l))) {
+  tags.forEach((l) => {
+    if (unique.map((l) => JSON.stringify(l)).includes(JSON.stringify(l))) {
       return;
     }
     unique.push(l);
@@ -686,7 +674,7 @@ export function personnalOrigin(): Origin {
   return {
     PublicStatus: PublicStatus.NotAdmin,
     Visibility: Visibility.Personnal,
-    IsInReview: { InReview: false, Id: -1 }
+    IsInReview: { InReview: false, Id: -1 },
   };
 }
 
@@ -696,7 +684,7 @@ export const lastColorUsed = { color: "#FF0000" };
 export function emptyAssertion(): ProofAssertion {
   return {
     Kind: ProofAssertionKind.ProofInvalid,
-    Data: {}
+    Data: {},
   };
 }
 
@@ -740,15 +728,15 @@ export function emptyTagsDB(): TagsDB {
     Levels: [],
     ChaptersByLevel: {},
     TrivByChapters: {},
-    SubLevelsByLevel: {}
+    SubLevelsByLevel: {},
   };
 }
 
 /** areTagsEquals compares the tags without taking order in account */
 export function areTagsEquals(tags1: Tags, tags2: Tags) {
-  const l1 = (tags1 || []).map(ts => `${ts.Section}--${ts.Tag}`);
+  const l1 = (tags1 || []).map((ts) => `${ts.Section}--${ts.Tag}`);
   l1.sort();
-  const l2 = (tags2 || []).map(ts => `${ts.Section}--${ts.Tag}`);
+  const l2 = (tags2 || []).map((ts) => `${ts.Section}--${ts.Tag}`);
   l2.sort();
   return l1.join(";") == l2.join(";");
 }
@@ -768,7 +756,7 @@ export function questionToResource(group: QuestiongroupExt): ResourceGroup {
     Title: group.Group.Title,
     Tags: group.Tags,
     Variants: group.Variants || [],
-    Origin: group.Origin
+    Origin: group.Origin,
   };
 }
 
@@ -778,6 +766,6 @@ export function exerciceToResource(group: ExercicegroupExt): ResourceGroup {
     Title: group.Group.Title,
     Tags: group.Tags,
     Variants: group.Variants || [],
-    Origin: group.Origin
+    Origin: group.Origin,
   };
 }

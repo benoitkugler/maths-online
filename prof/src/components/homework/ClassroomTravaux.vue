@@ -76,7 +76,11 @@
         ></travail-card>
         <v-card
           v-else
-          :color="selectedTravaux.has(travail.Id) ? 'blue' : 'grey-lighten-3'"
+          :color="
+            selectedTravaux.has(travail.Id)
+              ? 'blue-lighten-2'
+              : 'grey-lighten-3'
+          "
           @click="onToggle(travail)"
         >
           <v-card-text style="text-align: center">
