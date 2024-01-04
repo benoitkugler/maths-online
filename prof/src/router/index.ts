@@ -1,11 +1,12 @@
 import ClassroomsListVue from "@/views/ClassroomsList.vue";
 import ExerciceEditorVue from "@/views/ExerciceEditor.vue";
 import HomeworkActivityVue from "@/views/HomeworkActivity.vue";
-import QuestionEditor from "@/views/QuestionEditor.vue";
+import QuestionEditorVue from "@/views/QuestionEditor.vue";
 import ReviewListVue from "@/views/ReviewList.vue";
 import SettingsPanelVue from "@/views/SettingsPanel.vue";
 import TrivialPoursuit from "@/views/TrivialPoursuit.vue";
-import HomeView from "@/views/HomeView.vue";
+import HomeViewVue from "@/views/HomeView.vue";
+import CeinturesActivityVue from "@/views/CeinturesActivity.vue";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
@@ -14,7 +15,7 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: HomeView,
+      component: HomeViewVue,
       meta: { Label: "Accueil" },
     },
     {
@@ -32,7 +33,7 @@ const router = createRouter({
     {
       path: "/editor-question",
       name: "editor-question",
-      component: QuestionEditor,
+      component: QuestionEditorVue,
       meta: { Label: "Editeur de question" },
     },
     {
@@ -52,6 +53,12 @@ const router = createRouter({
       name: "homework",
       component: HomeworkActivityVue,
       meta: { Label: "Travail à la maison" },
+    },
+    {
+      path: "/ceintures",
+      name: "ceintures",
+      component: CeinturesActivityVue,
+      meta: { Label: "Ceintures de calcul" },
     },
     {
       path: "/reviews",

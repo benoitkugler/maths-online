@@ -67,6 +67,15 @@
           >Travail à la maison</v-btn
         >
       </v-list-item>
+      <v-list-item>
+        <v-btn
+          link
+          class="my-1"
+          :to="{ name: 'ceintures' }"
+          color="pink-lighten-3"
+          >Ceintures de calcul</v-btn
+        >
+      </v-list-item>
       <v-divider></v-divider>
       <v-list-item>
         <v-btn link class="my-1" :to="{ name: 'reviews' }" color="secondary"
