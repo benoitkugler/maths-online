@@ -12,6 +12,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/prof/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/prof/editor"
 	"github.com/benoitkugler/maths-online/server/src/prof/homework"
 	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
@@ -191,6 +192,7 @@ func main() {
 	edit := editor.NewController(db, admin)
 	vit := &vitrine.Controller{Smtp: smtp, AdminMails: adminEmails}
 	review := reviews.NewController(db, admin, smtp)
+	ce := ceintures.NewController(db, admin, studentKey)
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -208,7 +210,7 @@ func main() {
 		devSetup(e, tc)
 	}
 
-	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review)
+	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review, ce)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -305,8 +307,9 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
 	vit *vitrine.Controller, review *reviews.Controller,
+	ce *ceintures.Controller,
 ) {
-	setupProfAPI(e, tvc, edit, tc, home, review)
+	setupProfAPI(e, tvc, edit, tc, home, review, ce)
 
 	// main page
 	e.GET("", serveVitrineApp)

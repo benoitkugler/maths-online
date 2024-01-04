@@ -560,6 +560,23 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.GetSchemeOut
+export interface GetSchemeOut {
+  Scheme: Scheme;
+  Questions: Beltquestion[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Location
+export interface Location {
+  Domain: Domain;
+  Rank: Rank;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
+export interface Prerequisite {
+  Need: Location;
+  For: Location;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
+export type Scheme = Prerequisite[] | null;
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
   Chapter: string;
@@ -1171,6 +1188,61 @@ export interface stopGame {
   ID: string;
   Restart: boolean;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Advance
+export type Advance = Rank[];
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Beltquestion
+export interface Beltquestion {
+  Id: IdBeltquestion;
+  Domain: Domain;
+  Color: Rank;
+  Parameters: Parameters;
+  Enonce: Enonce;
+  Correction: Enonce;
+}
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
+export enum Domain {
+  CalculMental = 0,
+  Fractions = 1,
+  Factorisation = 2,
+  Developpement = 3,
+  NbDomains = 4,
+}
+
+export const DomainLabels: { [key in Domain]: string } = {
+  [Domain.CalculMental]: "Calcul mental",
+  [Domain.Fractions]: "Fractions",
+  [Domain.Factorisation]: "Factorisation",
+  [Domain.Developpement]: "Développement",
+  [Domain.NbDomains]: "",
+};
+
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
+export type IdBeltquestion = number;
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Rank
+export enum Rank {
+  StartRank = 0,
+  Blanche = 1,
+  Jaune = 2,
+  Orange = 3,
+  Verte = 4,
+  Bleue = 5,
+  Marron = 6,
+  Noire = 7,
+  NbRanks = 8,
+}
+
+export const RankLabels: { [key in Rank]: string } = {
+  [Rank.StartRank]: "Départ",
+  [Rank.Blanche]: "Blanche",
+  [Rank.Jaune]: "Jaune",
+  [Rank.Orange]: "Orange",
+  [Rank.Verte]: "Verte",
+  [Rank.Bleue]: "Bleue",
+  [Rank.Marron]: "Marron",
+  [Rank.Noire]: "Noire",
+  [Rank.NbRanks]: "",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyTag
@@ -3625,6 +3697,52 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessHomeworkSetDispense(): void {}
+
+  protected async rawCeinturesGetScheme() {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/scheme";
+    const rep: AxiosResponse<GetSchemeOut> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** CeinturesGetScheme wraps rawCeinturesGetScheme and handles the error */
+  async CeinturesGetScheme() {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetScheme();
+      this.onSuccessCeinturesGetScheme(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetScheme(data: GetSchemeOut): void {}
+
+  protected async rawCeinturesGetPending(params: Advance) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/pending";
+    const rep: AxiosResponse<Location[] | null> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesGetPending wraps rawCeinturesGetPending and handles the error */
+  async CeinturesGetPending(params: Advance) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetPending(params);
+      this.onSuccessCeinturesGetPending(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetPending(data: Location[] | null): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";

@@ -1,0 +1,79 @@
+// Package ceintures defines the graph structure
+// used to organize questions into a progression,
+// and modelize prerequisites of each task.
+package ceintures
+
+import (
+	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
+)
+
+// Location stores the position of a question in
+// a scheme
+type Location struct {
+	Domain ce.Domain
+	Rank   ce.Rank
+}
+
+// returns true if [adv] is at least at [loc]
+func (loc Location) isReached(adv ce.Advance) bool {
+	return adv[loc.Domain] >= loc.Rank
+}
+
+// Prerequisite modelizes the required location, [Need]
+// to try a new one [For].
+type Prerequisite struct {
+	Need Location
+	For  Location
+}
+
+type Scheme []Prerequisite
+
+// we do not store the implicit links which are intern to one domain,
+// such as (CalculMental, Blanche) -> (CalculMental, Jaune)
+var mathScheme = Scheme{
+	{Location{ce.CalculMental, ce.Blanche}, Location{ce.Factorisation, ce.Jaune}},
+	{Location{ce.Fractions, ce.Blanche}, Location{ce.Factorisation, ce.Orange}},
+}
+
+// return, for each target, the list of prerequisite needed
+func (sh Scheme) byTarget() map[Location][]Location {
+	out := make(map[Location][]Location, len(sh))
+	for _, pr := range sh {
+		out[pr.For] = append(out[pr.For], pr.Need)
+	}
+	return out
+}
+
+// Pending returns the locations a student with [advance]
+// may start.
+// The current (or lower) positions are not included.
+//
+// An empty slice is returned if the scheme is complete.
+// Otherwise, a well-formed scheme will always propose
+// at least one new [Location].
+func (sh Scheme) Pending(advance ce.Advance) (nexts []Location) {
+	byTarget := sh.byTarget()
+	// try each next rank, and check if it is compatible
+	// with prerequisites
+	for domain, rank := range advance {
+		if rank+1 == ce.NbRanks { // reached max rank
+			continue
+		}
+		candidate := Location{Domain: ce.Domain(domain), Rank: rank + 1}
+		needed := byTarget[candidate]
+
+		reached := true
+		for _, need := range needed {
+			if !need.isReached(advance) { // prerequisite not fullfiled
+				reached = false
+				break
+			}
+		}
+
+		if reached {
+			nexts = append(nexts, candidate)
+		}
+	}
+
+	return nexts
+}
