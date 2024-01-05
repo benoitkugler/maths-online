@@ -1,8 +1,8 @@
 package ceintures
 
 const (
-	NbDomains = Developpement + 1
-	NbRanks   = Noire + 1
+	NbDomains = Developpement + 1 // gomacro:no-enum
+	NbRanks   = Noire + 1         // gomacro:no-enum
 )
 
 // Domain is a sub topic, like "Calcul littéral",

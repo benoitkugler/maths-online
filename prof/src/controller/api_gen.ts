@@ -565,18 +565,18 @@ export interface GetSchemeOut {
   Scheme: Scheme;
   Questions: Beltquestion[] | null;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Location
-export interface Location {
-  Domain: Domain;
-  Rank: Rank;
-}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
 export interface Prerequisite {
-  Need: Location;
-  For: Location;
+  Need: Stage;
+  For: Stage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
 export type Scheme = Prerequisite[] | null;
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.Stage
+export interface Stage {
+  Domain: Domain;
+  Rank: Rank;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
   Chapter: string;
@@ -1194,7 +1194,7 @@ export type Advance = Rank[];
 export interface Beltquestion {
   Id: IdBeltquestion;
   Domain: Domain;
-  Color: Rank;
+  Rank: Rank;
   Parameters: Parameters;
   Enonce: Enonce;
   Correction: Enonce;
@@ -1205,7 +1205,6 @@ export enum Domain {
   Fractions = 1,
   Factorisation = 2,
   Developpement = 3,
-  NbDomains = 4,
 }
 
 export const DomainLabels: { [key in Domain]: string } = {
@@ -1213,7 +1212,6 @@ export const DomainLabels: { [key in Domain]: string } = {
   [Domain.Fractions]: "Fractions",
   [Domain.Factorisation]: "Factorisation",
   [Domain.Developpement]: "Développement",
-  [Domain.NbDomains]: "",
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
@@ -1228,7 +1226,6 @@ export enum Rank {
   Bleue = 5,
   Marron = 6,
   Noire = 7,
-  NbRanks = 8,
 }
 
 export const RankLabels: { [key in Rank]: string } = {
@@ -1240,7 +1237,6 @@ export const RankLabels: { [key in Rank]: string } = {
   [Rank.Bleue]: "Bleue",
   [Rank.Marron]: "Marron",
   [Rank.Noire]: "Noire",
-  [Rank.NbRanks]: "",
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
@@ -3722,7 +3718,7 @@ export abstract class AbstractAPI {
 
   protected async rawCeinturesGetPending(params: Advance) {
     const fullUrl = this.baseUrl + "/api/prof/ceintures/pending";
-    const rep: AxiosResponse<Location[] | null> = await Axios.post(
+    const rep: AxiosResponse<Stage[] | null> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() },
@@ -3742,7 +3738,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessCeinturesGetPending(data: Location[] | null): void {}
+  protected onSuccessCeinturesGetPending(data: Stage[] | null): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";

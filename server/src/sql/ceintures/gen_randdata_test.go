@@ -53,7 +53,7 @@ func randBeltquestion() Beltquestion {
 	var s Beltquestion
 	s.Id = randIdBeltquestion()
 	s.Domain = randDomain()
-	s.Color = randRank()
+	s.Rank = randRank()
 	s.Parameters = randque_Parameters()
 	s.Enonce = randque_Enonce()
 	s.Correction = randque_Enonce()
@@ -62,7 +62,7 @@ func randBeltquestion() Beltquestion {
 }
 
 func randDomain() Domain {
-	choix := [...]Domain{CalculMental, Fractions, Factorisation, Developpement, NbDomains}
+	choix := [...]Domain{CalculMental, Fractions, Factorisation, Developpement}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -72,7 +72,7 @@ func randIdBeltquestion() IdBeltquestion {
 }
 
 func randRank() Rank {
-	choix := [...]Rank{StartRank, Blanche, Jaune, Orange, Verte, Bleue, Marron, Noire, NbRanks}
+	choix := [...]Rank{StartRank, Blanche, Jaune, Orange, Verte, Bleue, Marron, Noire}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

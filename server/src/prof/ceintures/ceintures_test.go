@@ -43,10 +43,10 @@ func TestAllAdvances(t *testing.T) {
 func TestPending(t *testing.T) {
 	for _, test := range []struct {
 		adv ce.Advance
-		got []Location
+		got []Stage
 	}{
 		{ // start
-			ce.Advance{}, []Location{{0, ce.Blanche}, {1, ce.Blanche}, {2, ce.Blanche}, {3, ce.Blanche}},
+			ce.Advance{}, []Stage{{0, ce.Blanche}, {1, ce.Blanche}, {2, ce.Blanche}, {3, ce.Blanche}},
 		},
 		// TODO:
 	} {

@@ -20,7 +20,7 @@ type Beltquestion struct {
 	Id IdBeltquestion
 
 	Domain Domain // Location
-	Color  Rank   // Location
+	Rank   Rank   // Location
 
 	Parameters questions.Parameters
 	Enonce     questions.Enonce

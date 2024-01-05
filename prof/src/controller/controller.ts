@@ -1,51 +1,27 @@
 import { devLogMeta } from "@/env";
 import type {
-  AskInscriptionOut,
-  CheckExerciceParametersOut,
-  CheckMissingQuestionsOut,
-  CheckQuestionParametersOut,
   Classroom,
-  ClassroomExt,
   CopyTravailToOut,
   CreateTravailOut,
   DeleteExerciceOut,
   DeleteQuestionOut,
   Exercice,
-  ExerciceExt,
   ExercicegroupExt,
   ExerciceHeader,
   ExerciceWithPreview,
-  ExportExerciceLatexOut,
-  ExportQuestionLatexOut,
-  GenerateClassroomCodeOut,
   HomeworkMarksOut,
-  Homeworks,
-  Index,
   LaunchSessionOut,
-  ListExercicesOut,
-  ListQuestionsOut,
-  LoadTargetOut,
   LogginOut,
-  MonitorOut,
-  Monoquestion,
-  Question,
   QuestiongroupExt,
-  RandomMonoquestion,
   Review,
-  ReviewExt,
-  ReviewHeader,
-  RunningSessionMetaOut,
-  SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
   SheetExt,
-  Student,
   StudentExt,
   TaskExt,
   TeacherSettings,
   TextBlock,
   Travail,
   TrivialExt,
-  TrivialSelfaccess
 } from "./api_gen";
 import { AbstractAPI, MatiereTag } from "./api_gen";
 
@@ -66,7 +42,7 @@ class Controller extends AbstractAPI {
     HasEditorSimplified: false,
     Password: "",
     Contact: { Name: "", URL: "" },
-    FavoriteMatiere: MatiereTag.Autre
+    FavoriteMatiere: MatiereTag.Autre,
   };
 
   logout() {

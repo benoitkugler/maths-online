@@ -7,7 +7,9 @@ import {
   type Tags,
   type TaskExt,
   type Time,
+  Stage,
   Visibility,
+  Rank,
 } from "./api_gen";
 
 /** copy returns a deep copy of `obj` */
@@ -107,4 +109,19 @@ export function colorForOrigin(origin: Origin) {
   return origin.Visibility == Visibility.Personnal
     ? ColorPersonnal
     : ColorAdmin;
+}
+
+export const rankColors: { [key in Rank]: string } = {
+  [Rank.StartRank]: "",
+  [Rank.Blanche]: "white",
+  [Rank.Jaune]: "yellow-accent-2",
+  [Rank.Orange]: "orange",
+  [Rank.Verte]: "light-green",
+  [Rank.Bleue]: "blue",
+  [Rank.Marron]: "deep-orange-darken-4",
+  [Rank.Noire]: "black",
+};
+
+export function sameStage(loc1: Stage, loc2: Stage) {
+  return loc1.Domain == loc2.Domain && loc1.Rank == loc2.Rank;
 }

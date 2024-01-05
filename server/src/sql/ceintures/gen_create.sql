@@ -7,8 +7,8 @@ CREATE TABLE beltevolutions (
 
 CREATE TABLE beltquestions (
     Id serial PRIMARY KEY,
-    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3, 4)) NOT NULL,
-    Color integer CHECK (Color IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL,
+    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3)) NOT NULL,
+    Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL,
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
     Correction jsonb NOT NULL
@@ -552,7 +552,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_cein_Rank (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7, 8);
+    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a cein_Rank', data;
