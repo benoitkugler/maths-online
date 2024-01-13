@@ -51,15 +51,17 @@ func (sh Scheme) byTarget() map[Stage][]Stage {
 // An empty slice is returned if the scheme is complete.
 // Otherwise, a well-formed scheme will always propose
 // at least one new [Location].
-func (sh Scheme) Pending(advance ce.Advance) (nexts []Stage) {
+func (sh Scheme) Pending(advance ce.Advance, level ce.Level) (nexts []Stage) {
 	byTarget := sh.byTarget()
 	// try each next rank, and check if it is compatible
 	// with prerequisites
-	for domain, rank := range advance {
-		if rank+1 == ce.NbRanks { // reached max rank
+	for domain_, rank := range advance {
+		domain := ce.Domain(domain_)
+		if rank+1 == ce.NbRanks || !domain.IsFor(level) { // reached max rank or wrong level
 			continue
 		}
-		candidate := Stage{Domain: ce.Domain(domain), Rank: rank + 1}
+
+		candidate := Stage{Domain: domain, Rank: rank + 1}
 		needed := byTarget[candidate]
 
 		reached := true
@@ -76,4 +78,25 @@ func (sh Scheme) Pending(advance ce.Advance) (nexts []Stage) {
 	}
 
 	return nexts
+}
+
+func (sh Scheme) suggestionIndex(nexts []Stage) int {
+	if len(nexts) == 0 {
+		return -1
+	}
+	// select the minimum rank, then minimum domain
+	var (
+		min   = nexts[0]
+		index int
+	)
+	for i, stage := range nexts {
+		if stage.Rank < min.Rank {
+			min = stage
+			index = i
+		} else if stage.Rank == min.Rank && stage.Domain < min.Domain {
+			min = stage
+			index = i
+		}
+	}
+	return index
 }

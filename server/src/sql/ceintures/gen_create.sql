@@ -1,14 +1,15 @@
 -- Code genererated by gomacro/generator/sql. DO NOT EDIT.
 CREATE TABLE beltevolutions (
     IdStudent integer NOT NULL,
+    Level integer CHECK (Level IN (0, 1, 2, 3)) NOT NULL,
     Advance jsonb NOT NULL,
     Stats jsonb NOT NULL
 );
 
 CREATE TABLE beltquestions (
     Id serial PRIMARY KEY,
-    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3)) NOT NULL,
-    Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7)) NOT NULL,
+    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
+    Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8)) NOT NULL,
     Parameters jsonb NOT NULL,
     Enonce jsonb NOT NULL,
     Correction jsonb NOT NULL
@@ -16,9 +17,12 @@ CREATE TABLE beltquestions (
 
 -- constraints
 ALTER TABLE beltevolutions
+    ADD UNIQUE (IdStudent);
+
+ALTER TABLE beltevolutions
     ADD FOREIGN KEY (IdStudent) REFERENCES students;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_4_array_8_cein_Stat (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_11_array_9_cein_Stat (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -27,16 +31,16 @@ BEGIN
     END IF;
     RETURN (
         SELECT
-            bool_and(gomacro_validate_json_array_8_cein_Stat (value))
+            bool_and(gomacro_validate_json_array_9_cein_Stat (value))
         FROM
             jsonb_array_elements(data))
-        AND jsonb_array_length(data) = 4;
+        AND jsonb_array_length(data) = 11;
 END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_4_cein_Rank (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_11_cein_Rank (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -48,13 +52,13 @@ BEGIN
             bool_and(gomacro_validate_json_cein_Rank (value))
         FROM
             jsonb_array_elements(data))
-        AND jsonb_array_length(data) = 4;
+        AND jsonb_array_length(data) = 11;
 END;
 $$
 LANGUAGE 'plpgsql'
 IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION gomacro_validate_json_array_8_cein_Stat (data jsonb)
+CREATE OR REPLACE FUNCTION gomacro_validate_json_array_9_cein_Stat (data jsonb)
     RETURNS boolean
     AS $$
 BEGIN
@@ -66,7 +70,7 @@ BEGIN
             bool_and(gomacro_validate_json_cein_Stat (value))
         FROM
             jsonb_array_elements(data))
-        AND jsonb_array_length(data) = 8;
+        AND jsonb_array_length(data) = 9;
 END;
 $$
 LANGUAGE 'plpgsql'
@@ -552,7 +556,7 @@ CREATE OR REPLACE FUNCTION gomacro_validate_json_cein_Rank (data jsonb)
     AS $$
 DECLARE
     is_valid boolean := jsonb_typeof(data) = 'number'
-    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7);
+    AND data::int IN (0, 1, 2, 3, 4, 5, 6, 7, 8);
 BEGIN
     IF NOT is_valid THEN
         RAISE WARNING '% is not a cein_Rank', data;
@@ -1981,10 +1985,10 @@ LANGUAGE 'plpgsql'
 IMMUTABLE;
 
 ALTER TABLE beltevolutions
-    ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_4_array_8_cein_Stat (Stats));
+    ADD CONSTRAINT Stats_gomacro CHECK (gomacro_validate_json_array_11_array_9_cein_Stat (Stats));
 
 ALTER TABLE beltevolutions
-    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_4_cein_Rank (Advance));
+    ADD CONSTRAINT Advance_gomacro CHECK (gomacro_validate_json_array_11_cein_Rank (Advance));
 
 ALTER TABLE beltquestions
     ADD CONSTRAINT Correction_gomacro CHECK (gomacro_validate_json_array_ques_Block (Correction));

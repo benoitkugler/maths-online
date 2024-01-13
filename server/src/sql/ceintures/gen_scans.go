@@ -29,6 +29,7 @@ func scanOneBeltevolution(row scanner) (Beltevolution, error) {
 	var item Beltevolution
 	err := row.Scan(
 		&item.IdStudent,
+		&item.Level,
 		&item.Advance,
 		&item.Stats,
 	)
@@ -75,11 +76,11 @@ func ScanBeltevolutions(rs *sql.Rows) (Beltevolutions, error) {
 
 func InsertBeltevolution(db DB, item Beltevolution) error {
 	_, err := db.Exec(`INSERT INTO beltevolutions (
-			idstudent, advance, stats
+			idstudent, level, advance, stats
 			) VALUES (
-			$1, $2, $3
+			$1, $2, $3, $4
 			);
-			`, item.IdStudent, item.Advance, item.Stats)
+			`, item.IdStudent, item.Level, item.Advance, item.Stats)
 	if err != nil {
 		return err
 	}
@@ -95,6 +96,7 @@ func InsertManyBeltevolutions(tx *sql.Tx, items ...Beltevolution) error {
 
 	stmt, err := tx.Prepare(pq.CopyIn("beltevolutions",
 		"idstudent",
+		"level",
 		"advance",
 		"stats",
 	))
@@ -103,7 +105,7 @@ func InsertManyBeltevolutions(tx *sql.Tx, items ...Beltevolution) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdStudent, item.Advance, item.Stats)
+		_, err = stmt.Exec(item.IdStudent, item.Level, item.Advance, item.Stats)
 		if err != nil {
 			return err
 		}
@@ -127,10 +129,10 @@ func (item Beltevolution) Delete(tx DB) error {
 }
 
 // ByIdStudent returns a map with 'IdStudent' as keys.
-func (items Beltevolutions) ByIdStudent() map[teacher.IdStudent]Beltevolutions {
-	out := make(map[teacher.IdStudent]Beltevolutions)
+func (items Beltevolutions) ByIdStudent() map[teacher.IdStudent]Beltevolution {
+	out := make(map[teacher.IdStudent]Beltevolution, len(items))
 	for _, target := range items {
-		out[target.IdStudent] = append(out[target.IdStudent], target)
+		out[target.IdStudent] = target
 	}
 	return out
 }
@@ -144,6 +146,16 @@ func (items Beltevolutions) IdStudents() []teacher.IdStudent {
 		out[index] = target.IdStudent
 	}
 	return out
+}
+
+// SelectBeltevolutionByIdStudent return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectBeltevolutionByIdStudent(tx DB, idStudent teacher.IdStudent) (item Beltevolution, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM beltevolutions WHERE idstudent = $1", idStudent)
+	item, err = ScanBeltevolution(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
 }
 
 func SelectBeltevolutionsByIdStudents(tx DB, idStudents_ ...teacher.IdStudent) (Beltevolutions, error) {
@@ -271,6 +283,25 @@ func DeleteBeltquestionsByIDs(tx DB, ids ...IdBeltquestion) ([]IdBeltquestion, e
 		return nil, err
 	}
 	return ScanIdBeltquestionArray(rows)
+}
+
+// SelectBeltquestionsByDomainAndRank selects the items matching the given fields.
+func SelectBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item Beltquestions, err error) {
+	rows, err := tx.Query("SELECT * FROM beltquestions WHERE Domain = $1 AND Rank = $2", domain, rank)
+	if err != nil {
+		return nil, err
+	}
+	return ScanBeltquestions(rows)
+}
+
+// DeleteBeltquestionsByDomainAndRank deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteBeltquestionsByDomainAndRank(tx DB, domain Domain, rank Rank) (item Beltquestions, err error) {
+	rows, err := tx.Query("DELETE FROM beltquestions WHERE Domain = $1 AND Rank = $2 RETURNING *", domain, rank)
+	if err != nil {
+		return nil, err
+	}
+	return ScanBeltquestions(rows)
 }
 
 func loadJSON(out interface{}, src interface{}) error {

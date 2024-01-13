@@ -44,8 +44,8 @@ type VarEntry struct {
 type Params []VarEntry
 
 // NewParams serialize the given map.
-func NewParams(vars expression.Vars) []VarEntry {
-	varList := make([]VarEntry, 0, len(vars))
+func NewParams(vars expression.Vars) Params {
+	varList := make(Params, 0, len(vars))
 	for k, v := range vars {
 		varList = append(varList, VarEntry{Variable: k, Resolved: v.Serialize()})
 	}

@@ -140,9 +140,9 @@ func (qu QuestionPage) InstantiateWith(params ex.Vars) (QuestionInstance, error)
 }
 
 // InstantiateErr is a shortcut to :
-// - instantiate [Parameters]
-// - instantiate [Enonce] with these parameters
-// - instantiate [Correction] with these parameters
+//   - instantiate [Parameters]
+//   - instantiate [Enonce] with these parameters
+//   - instantiate [Correction] with these parameters
 func (qu QuestionPage) InstantiateErr() (QuestionInstance, ex.Vars, error) {
 	// generate random params
 	rp, err := qu.Parameters.ToMap().Instantiate()

@@ -1,8 +1,17 @@
 package ceintures
 
 const (
-	NbDomains = Developpement + 1 // gomacro:no-enum
-	NbRanks   = Noire + 1         // gomacro:no-enum
+	NbDomains = Matrices + 1 // gomacro:no-enum
+	NbRanks   = Noire + 1    // gomacro:no-enum
+)
+
+type Level uint8
+
+const (
+	Seconde   Level = iota // Seconde
+	Premiere               // Première
+	Terminale              // Terminale
+	PostBac                // Post-bac
 )
 
 // Domain is a sub topic, like "Calcul littéral",
@@ -12,12 +21,31 @@ const (
 type Domain uint8
 
 const (
-	// TODO: precise
-	CalculMental  Domain = iota // Calcul mental
-	Fractions                   // Fractions
-	Factorisation               // Factorisation
-	Developpement               // Développement
+	CalculMental   Domain = iota // Calcul mental
+	Puissances                   // Puissances et racines
+	Fractions                    // Fractions
+	Reduction                    // Réduction
+	Factorisation                // Factorisation
+	Developpement                // Développement
+	IsolerVariable               // Isoler une variable
+	Equations                    // Équations
+	Inequations                  // Inéquations
+	Derivation                   // Dérivation
+	Matrices                     // Matrices et systèmes
 )
+
+// IsFor returns true if a student with [level] is
+// qualified for the [Domain]
+func (d Domain) IsFor(level Level) bool {
+	switch d {
+	case Derivation:
+		return level >= Terminale
+	case Matrices:
+		return level >= PostBac
+	default:
+		return true
+	}
+}
 
 // Rank is the belt color, that is the level
 // of progression in one [Domain].
@@ -30,6 +58,7 @@ const (
 	Orange                // Orange
 	Verte                 // Verte
 	Bleue                 // Bleue
+	Rouge                 // Rouge
 	Marron                // Marron
 	Noire                 // Noire
 )

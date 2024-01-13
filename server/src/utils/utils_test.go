@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math/rand"
 	"testing"
 )
 
@@ -36,5 +37,15 @@ func TestShuffler(t *testing.T) {
 		if output[shuffledIndex] != value {
 			t.Fatal()
 		}
+	}
+}
+
+func TestRandomID(t *testing.T) {
+	rand.Seed(1)
+	i1 := RandomID(false, 16, func(s string) bool { return false })
+	rand.Seed(1)
+	i2 := RandomID(false, 16, func(s string) bool { return s == i1 })
+	if i1 == i2 {
+		t.Fatal("duplicate!")
 	}
 }
