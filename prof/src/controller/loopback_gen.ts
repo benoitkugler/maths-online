@@ -4,11 +4,6 @@ export interface Variable {
   Indice: string;
   Name: number;
 }
-// github.com/benoitkugler/maths-online/server/src/maths/functiongrapher.FunctionDecoration
-export interface FunctionDecoration {
-  Label: string;
-  Color: string;
-}
 
 export enum BlockKind {
   ExpressionFieldBlock = "ExpressionFieldBlock",
@@ -61,12 +56,14 @@ export interface Block {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Co
 export type Co = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
-export enum ComparisonLevel {
-  AsLinearEquation = 102,
-  ExpandedSubstitutions = 2,
-  SimpleSubstitutions = 1,
-  Strict = 0,
-}
+export const ComparisonLevel = {
+  AsLinearEquation: 102,
+  ExpandedSubstitutions: 2,
+  SimpleSubstitutions: 1,
+  Strict: 0,
+} as const;
+export type ComparisonLevel =
+  (typeof ComparisonLevel)[keyof typeof ComparisonLevel];
 
 export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
   [ComparisonLevel.AsLinearEquation]: "",
@@ -118,6 +115,11 @@ export interface FunctionArea {
   Left: string;
   Right: string;
   Color: ColorHex;
+}
+// github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDecoration
+export interface FunctionDecoration {
+  Label: Interpolated;
+  Color: string;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.FunctionDefinition
 export interface FunctionDefinition {
@@ -313,11 +315,12 @@ export interface TextBlock {
   Smaller: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TextKind
-export enum TextKind {
-  Text = 0,
-  StaticMath = 1,
-  Expression = 2,
-}
+export const TextKind = {
+  Text: 0,
+  StaticMath: 1,
+  Expression: 2,
+} as const;
+export type TextKind = (typeof TextKind)[keyof typeof TextKind];
 
 export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Text]: "Text simple",
@@ -362,11 +365,13 @@ export interface VectorFieldBlock {
   DisplayColumn: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.VectorPairCriterion
-export enum VectorPairCriterion {
-  VectorEquals = 0,
-  VectorColinear = 1,
-  VectorOrthogonal = 2,
-}
+export const VectorPairCriterion = {
+  VectorEquals: 0,
+  VectorColinear: 1,
+  VectorOrthogonal: 2,
+} as const;
+export type VectorPairCriterion =
+  (typeof VectorPairCriterion)[keyof typeof VectorPairCriterion];
 
 export const VectorPairCriterionLabels: {
   [key in VectorPairCriterion]: string;
@@ -377,11 +382,12 @@ export const VectorPairCriterionLabels: {
 };
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Binary
-export enum Binary {
-  Invalid = 0,
-  And = 1,
-  Or = 2,
-}
+export const Binary = {
+  Invalid: 0,
+  And: 1,
+  Or: 2,
+} as const;
+export type Binary = (typeof Binary)[keyof typeof Binary];
 
 export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Invalid]: "Invalide",
@@ -390,11 +396,12 @@ export const BinaryLabels: { [key in Binary]: string } = {
 };
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
-export enum SignSymbol {
-  Nothing = 0,
-  Zero = 1,
-  ForbiddenValue = 2,
-}
+export const SignSymbol = {
+  Nothing: 0,
+  Zero: 1,
+  ForbiddenValue: 2,
+} as const;
+export type SignSymbol = (typeof SignSymbol)[keyof typeof SignSymbol];
 
 export const SignSymbolLabels: { [key in SignSymbol]: string } = {
   [SignSymbol.Nothing]: "",
@@ -410,17 +417,18 @@ export interface Coord {
   Y: number;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.LabelPos
-export enum LabelPos {
-  Top = 0,
-  Bottom = 1,
-  Left = 2,
-  Right = 3,
-  TopLeft = 4,
-  TopRight = 5,
-  BottomRight = 6,
-  BottomLeft = 7,
-  Hide = 8,
-}
+export const LabelPos = {
+  Top: 0,
+  Bottom: 1,
+  Left: 2,
+  Right: 3,
+  TopLeft: 4,
+  TopRight: 5,
+  BottomRight: 6,
+  BottomLeft: 7,
+  Hide: 8,
+} as const;
+export type LabelPos = (typeof LabelPos)[keyof typeof LabelPos];
 
 export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Top]: "Au dessus",
@@ -494,11 +502,12 @@ export interface RepereBounds {
   Origin: Coord;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.SegmentKind
-export enum SegmentKind {
-  SKSegment = 0,
-  SKVector = 1,
-  SKLine = 2,
-}
+export const SegmentKind = {
+  SKSegment: 0,
+  SKVector: 1,
+  SKLine: 2,
+} as const;
+export type SegmentKind = (typeof SegmentKind)[keyof typeof SegmentKind];
 
 export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKSegment]: "Segment",

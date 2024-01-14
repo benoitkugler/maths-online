@@ -20,10 +20,10 @@ func (loc Stage) isReached(adv ce.Advance) bool {
 }
 
 // Prerequisite modelizes the required location, [Need]
-// to try a new one [For].
+// to try a new one [Pending].
 type Prerequisite struct {
-	Need Stage
-	For  Stage
+	Need    Stage
+	Pending Stage
 }
 
 type Scheme []Prerequisite
@@ -39,7 +39,7 @@ var mathScheme = Scheme{
 func (sh Scheme) byTarget() map[Stage][]Stage {
 	out := make(map[Stage][]Stage, len(sh))
 	for _, pr := range sh {
-		out[pr.For] = append(out[pr.For], pr.Need)
+		out[pr.Pending] = append(out[pr.Pending], pr.Need)
 	}
 	return out
 }

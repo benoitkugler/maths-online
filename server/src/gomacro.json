@@ -190,6 +190,12 @@
             "Output": ""
         }
     ],
+    "prof/ceintures/student_types.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
+        }
+    ],
     "prof_api.go": [
         {
             "Mode": "typescript/api",

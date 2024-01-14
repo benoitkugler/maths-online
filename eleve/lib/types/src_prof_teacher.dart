@@ -148,25 +148,42 @@ Map<String, dynamic> studentClassroomHeaderToJson(StudentClassroomHeader item) {
 class StudentClient {
   final String name;
   final String surname;
+  final IdStudent id;
+  final Date birthday;
+  final IdClassroom id_classroom;
+  final int trivialSuccess;
+  final bool isClientAttached;
 
-  const StudentClient(this.name, this.surname);
+  const StudentClient(this.name, this.surname, this.id, this.birthday,
+      this.id_classroom, this.trivialSuccess, this.isClientAttached);
 
   @override
   String toString() {
-    return "StudentClient($name, $surname)";
+    return "StudentClient($name, $surname, $id, $birthday, $id_classroom, $trivialSuccess, $isClientAttached)";
   }
 }
 
 StudentClient studentClientFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentClient(
-      stringFromJson(json['Name']), stringFromJson(json['Surname']));
+      stringFromJson(json['Name']),
+      stringFromJson(json['Surname']),
+      intFromJson(json['Id']),
+      dateTimeFromJson(json['Birthday']),
+      intFromJson(json['id_classroom']),
+      intFromJson(json['TrivialSuccess']),
+      boolFromJson(json['IsClientAttached']));
 }
 
 Map<String, dynamic> studentClientToJson(StudentClient item) {
   return {
     "Name": stringToJson(item.name),
-    "Surname": stringToJson(item.surname)
+    "Surname": stringToJson(item.surname),
+    "Id": intToJson(item.id),
+    "Birthday": dateTimeToJson(item.birthday),
+    "id_classroom": intToJson(item.id_classroom),
+    "TrivialSuccess": intToJson(item.trivialSuccess),
+    "IsClientAttached": boolToJson(item.isClientAttached)
   };
 }
 
