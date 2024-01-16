@@ -69,7 +69,7 @@ const congratsMessages = [
   "The best for ever...",
 ];
 
-String _randCongrats() {
+String pickCongratulationMessage() {
   return congratsMessages[Random().nextInt(congratsMessages.length)];
 }
 
@@ -81,7 +81,7 @@ class CorrectAnswerDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.lightGreen.shade400,
-      title: Text(_randCongrats()),
+      title: Text(pickCongratulationMessage()),
       content: const Text("Ta réponse est correcte, bravo !"),
       actions: [
         OutlinedButton(

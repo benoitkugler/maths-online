@@ -26,19 +26,31 @@ type Prerequisite struct {
 	Pending Stage
 }
 
-type Scheme []Prerequisite
+type Scheme struct {
+	Ps     []Prerequisite
+	Levels [ce.NbDomains]ce.Level // level minimum
+}
 
 // we do not store the implicit links which are intern to one domain,
 // such as (CalculMental, Blanche) -> (CalculMental, Jaune)
 var mathScheme = Scheme{
-	{Stage{ce.CalculMental, ce.Blanche}, Stage{ce.Factorisation, ce.Jaune}},
-	{Stage{ce.Fractions, ce.Blanche}, Stage{ce.Factorisation, ce.Orange}},
+	Ps: []Prerequisite{
+		{Stage{ce.CalculMental, ce.Blanche}, Stage{ce.Equations, ce.Blanche}},
+		{Stage{ce.Fractions, ce.Jaune}, Stage{ce.Equations, ce.Blanche}},
+		{Stage{ce.Reduction, ce.Rouge}, Stage{ce.Equations, ce.Blanche}},
+		{Stage{ce.CalculMental, ce.Blanche}, Stage{ce.Factorisation, ce.Jaune}},
+		{Stage{ce.Fractions, ce.Blanche}, Stage{ce.Factorisation, ce.Orange}},
+	},
+	Levels: [ce.NbDomains]ce.Level{
+		ce.Derivation: ce.Terminale,
+		ce.Matrices:   ce.PostBac,
+	},
 }
 
 // return, for each target, the list of prerequisite needed
 func (sh Scheme) byTarget() map[Stage][]Stage {
-	out := make(map[Stage][]Stage, len(sh))
-	for _, pr := range sh {
+	out := make(map[Stage][]Stage, len(sh.Ps))
+	for _, pr := range sh.Ps {
 		out[pr.Pending] = append(out[pr.Pending], pr.Need)
 	}
 	return out
@@ -57,7 +69,7 @@ func (sh Scheme) Pending(advance ce.Advance, level ce.Level) (nexts []Stage) {
 	// with prerequisites
 	for domain_, rank := range advance {
 		domain := ce.Domain(domain_)
-		if rank+1 == ce.NbRanks || !domain.IsFor(level) { // reached max rank or wrong level
+		if rank+1 == ce.NbRanks || level < sh.Levels[domain_] { // reached max rank or wrong level
 			continue
 		}
 

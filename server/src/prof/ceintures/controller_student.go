@@ -214,6 +214,8 @@ func (ct *Controller) CeinturesEvaluateAnswers(c echo.Context) error {
 		return err
 	}
 
+	fmt.Println(out.Evolution.Stats)
+
 	return c.JSON(200, out)
 }
 

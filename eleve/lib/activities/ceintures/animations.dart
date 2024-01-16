@@ -1,10 +1,12 @@
 import 'dart:math';
 
+import 'package:eleve/types/src_sql_ceintures.dart';
 import 'package:flutter/material.dart';
 
 class UnlockAnimation extends StatefulWidget {
   final Color color;
-  const UnlockAnimation(this.color, {super.key});
+  final String title;
+  const UnlockAnimation(this.color, this.title, {super.key});
 
   @override
   State<UnlockAnimation> createState() => _UnlockAnimationState();
@@ -12,7 +14,7 @@ class UnlockAnimation extends StatefulWidget {
 
 class _UnlockAnimationState extends State<UnlockAnimation>
     with SingleTickerProviderStateMixin {
-  static const duration = Duration(milliseconds: 1200);
+  static const duration = Duration(milliseconds: 1500);
 
   late AnimationController animation;
   List<_Particle> particles = [];
@@ -21,7 +23,7 @@ class _UnlockAnimationState extends State<UnlockAnimation>
   void initState() {
     super.initState();
 
-    particles = List.generate(40, (_) => _Particle.random());
+    particles = List.generate(30, (_) => _Particle.random());
 
     animation = AnimationController(
       vsync: this,
@@ -43,12 +45,13 @@ class _UnlockAnimationState extends State<UnlockAnimation>
     return AnimatedBuilder(
         animation: animation,
         builder: (context, child) =>
-            _UnlockSnapshot(widget.color, particles, animation));
+            _UnlockSnapshot(widget.color, widget.title, particles, animation));
   }
 }
 
 class _UnlockSnapshot extends StatelessWidget {
   final Color color;
+  final String title;
   final List<_Particle> particles;
 
   final AnimationController controller;
@@ -56,21 +59,22 @@ class _UnlockSnapshot extends StatelessWidget {
   final Animation<double> particleAnimation;
   final Animation<double> opacityAnimation;
 
-  _UnlockSnapshot(this.color, this.particles, this.controller, {super.key})
+  _UnlockSnapshot(this.color, this.title, this.particles, this.controller,
+      {super.key})
       : riseAnimation = Tween<double>(begin: 150, end: 0).animate(
           CurvedAnimation(
               parent: controller,
-              curve: const Interval(0, 0.3, curve: Curves.easeInOut)),
+              curve: const Interval(0, 0.6, curve: Curves.easeInOut)),
         ),
-        particleAnimation = Tween<double>(begin: 0.2, end: 1).animate(
+        particleAnimation = Tween<double>(begin: 0.5, end: 1).animate(
           CurvedAnimation(
               parent: controller,
-              curve: const Interval(0.15, 1, curve: Curves.easeOut)),
+              curve: const Interval(0, 0.5, curve: Curves.easeOut)),
         ),
         opacityAnimation = Tween<double>(begin: 0, end: 1).animate(
           CurvedAnimation(
               parent: controller,
-              curve: const Interval(0.15, 1, curve: Curves.easeInOut)),
+              curve: const Interval(0.15, 0.5, curve: Curves.easeInOut)),
         );
 
   @override
@@ -85,7 +89,7 @@ class _UnlockSnapshot extends StatelessWidget {
             particleAnimation.value,
           ),
           child: SizedBox(
-            width: 300,
+            width: 400,
             height: 300,
             child: Center(
                 child: Padding(
@@ -112,8 +116,11 @@ class _UnlockSnapshot extends StatelessWidget {
         ),
         Opacity(
           opacity: opacityAnimation.value,
-          child: Text("Nouvelle ceinture !",
-              style: Theme.of(context).textTheme.headlineMedium),
+          child: Card(
+              child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+          )),
         )
       ],
     );
@@ -174,5 +181,47 @@ class _Painter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _Painter oldDelegate) {
     return oldDelegate.progression != progression;
+  }
+}
+
+extension RC on Rank {
+  Color get color {
+    switch (this) {
+      case Rank.startRank:
+        return Colors.transparent;
+      case Rank.blanche:
+        return Colors.white;
+      case Rank.jaune:
+        return Colors.yellow;
+      case Rank.orange:
+        return Colors.orange;
+      case Rank.verte:
+        return Colors.lightGreen;
+      case Rank.bleue:
+        return Colors.blue;
+      case Rank.rouge:
+        return Colors.red;
+      case Rank.marron:
+        return Colors.brown;
+      case Rank.noire:
+        return Colors.black87;
+    }
+  }
+
+  Rank? get next => this == Rank.noire ? null : Rank.values[index + 1];
+}
+
+class CeintureIcon extends StatelessWidget {
+  final Rank rank;
+  const CeintureIcon(this.rank, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      "assets/images/yellow-belt.png",
+      color: rank.color,
+      width: 48,
+      height: 32,
+    );
   }
 }

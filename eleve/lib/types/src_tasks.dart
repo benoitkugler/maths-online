@@ -356,6 +356,17 @@ extension _WorkKindExt on WorkKind {
   }
 }
 
+String workKindLabel(WorkKind v) {
+  switch (v) {
+    case WorkKind.workExercice:
+      return "";
+    case WorkKind.workMonoquestion:
+      return "";
+    case WorkKind.workRandomMonoquestion:
+      return "";
+  }
+}
+
 WorkKind workKindFromJson(dynamic json) => _WorkKindExt.fromValue(json as int);
 
 dynamic workKindToJson(WorkKind item) => item.toValue();

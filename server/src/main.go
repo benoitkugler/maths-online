@@ -338,6 +338,12 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/api/student/trivial/selfaccess", tvc.StudentGetSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/launch", tvc.StudentLaunchSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/start", tvc.StudentStartSelfaccess)
+	// student ceintures access
+	e.POST("/api/student/ceintures", ce.CeinturesGetEvolution)
+	e.PUT("/api/student/ceintures", ce.CeinturesCreateEvolution)
+	e.POST("/api/student/ceintures/stage", ce.CeinturesSelectQuestions)
+	e.PUT("/api/student/ceintures/stage", ce.CeinturesEvaluateAnswers)
+
 	// trivial monitor
 	e.GET("/api/trivial/monitor", tvc.GetTrivialsMetrics)
 

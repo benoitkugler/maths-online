@@ -197,14 +197,29 @@ Map<String, dynamic> prerequisiteToJson(Prerequisite item) {
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
-typedef Scheme = List<Prerequisite>;
+class Scheme {
+  final List<Prerequisite> ps;
+  final List<Level> levels;
 
-Scheme schemeFromJson(dynamic json) {
-  return listPrerequisiteFromJson(json);
+  const Scheme(this.ps, this.levels);
+
+  @override
+  String toString() {
+    return "Scheme($ps, $levels)";
+  }
 }
 
-dynamic schemeToJson(Scheme item) {
-  return listPrerequisiteToJson(item);
+Scheme schemeFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return Scheme(
+      listPrerequisiteFromJson(json['Ps']), listLevelFromJson(json['Levels']));
+}
+
+Map<String, dynamic> schemeToJson(Scheme item) {
+  return {
+    "Ps": listPrerequisiteToJson(item.ps),
+    "Levels": listLevelToJson(item.levels)
+  };
 }
 
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.SelectQuestionsIn
@@ -280,17 +295,18 @@ Map<String, dynamic> stageToJson(Stage item) {
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.StudentEvolution
 class StudentEvolution {
   final Scheme scheme;
+  final Level level;
   final Advance advance;
   final Stats stats;
   final List<Stage> pending;
   final int suggestionIndex;
 
-  const StudentEvolution(this.scheme, this.advance, this.stats, this.pending,
-      this.suggestionIndex);
+  const StudentEvolution(this.scheme, this.level, this.advance, this.stats,
+      this.pending, this.suggestionIndex);
 
   @override
   String toString() {
-    return "StudentEvolution($scheme, $advance, $stats, $pending, $suggestionIndex)";
+    return "StudentEvolution($scheme, $level, $advance, $stats, $pending, $suggestionIndex)";
   }
 }
 
@@ -298,6 +314,7 @@ StudentEvolution studentEvolutionFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return StudentEvolution(
       schemeFromJson(json['Scheme']),
+      levelFromJson(json['Level']),
       advanceFromJson(json['Advance']),
       statsFromJson(json['Stats']),
       listStageFromJson(json['Pending']),
@@ -307,6 +324,7 @@ StudentEvolution studentEvolutionFromJson(dynamic json_) {
 Map<String, dynamic> studentEvolutionToJson(StudentEvolution item) {
   return {
     "Scheme": schemeToJson(item.scheme),
+    "Level": levelToJson(item.level),
     "Advance": advanceToJson(item.advance),
     "Stats": statsToJson(item.stats),
     "Pending": listStageToJson(item.pending),
@@ -373,6 +391,17 @@ List<IdBeltquestion> listIntFromJson(dynamic json) {
 
 List<dynamic> listIntToJson(List<IdBeltquestion> item) {
   return item.map(intToJson).toList();
+}
+
+List<Level> listLevelFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(levelFromJson).toList();
+}
+
+List<dynamic> listLevelToJson(List<Level> item) {
+  return item.map(levelToJson).toList();
 }
 
 List<Prerequisite> listPrerequisiteFromJson(dynamic json) {

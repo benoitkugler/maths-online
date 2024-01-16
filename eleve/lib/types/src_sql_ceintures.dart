@@ -38,6 +38,33 @@ extension _DomainExt on Domain {
   }
 }
 
+String domainLabel(Domain v) {
+  switch (v) {
+    case Domain.calculMental:
+      return "Calcul mental";
+    case Domain.puissances:
+      return "Puissances et racines";
+    case Domain.fractions:
+      return "Fractions";
+    case Domain.reduction:
+      return "Réduction";
+    case Domain.factorisation:
+      return "Factorisation";
+    case Domain.developpement:
+      return "Développement";
+    case Domain.isolerVariable:
+      return "Isoler une variable";
+    case Domain.equations:
+      return "Équations";
+    case Domain.inequations:
+      return "Inéquations";
+    case Domain.derivation:
+      return "Dérivation";
+    case Domain.matrices:
+      return "Matrices et systèmes";
+  }
+}
+
 Domain domainFromJson(dynamic json) => _DomainExt.fromValue(json as int);
 
 dynamic domainToJson(Domain item) => item.toValue();
@@ -55,6 +82,19 @@ extension _LevelExt on Level {
 
   int toValue() {
     return index;
+  }
+}
+
+String levelLabel(Level v) {
+  switch (v) {
+    case Level.seconde:
+      return "Seconde";
+    case Level.premiere:
+      return "Première";
+    case Level.terminale:
+      return "Terminale";
+    case Level.postBac:
+      return "Post-bac";
   }
 }
 
@@ -82,6 +122,29 @@ extension _RankExt on Rank {
 
   int toValue() {
     return index;
+  }
+}
+
+String rankLabel(Rank v) {
+  switch (v) {
+    case Rank.startRank:
+      return "Départ";
+    case Rank.blanche:
+      return "Blanche";
+    case Rank.jaune:
+      return "Jaune";
+    case Rank.orange:
+      return "Orange";
+    case Rank.verte:
+      return "Verte";
+    case Rank.bleue:
+      return "Bleue";
+    case Rank.rouge:
+      return "Rouge";
+    case Rank.marron:
+      return "Marron";
+    case Rank.noire:
+      return "Noire";
   }
 }
 

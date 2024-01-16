@@ -27,6 +27,19 @@ extension _DifficultyTagExt on DifficultyTag {
   }
 }
 
+String difficultyTagLabel(DifficultyTag v) {
+  switch (v) {
+    case DifficultyTag.diff1:
+      return "1 étoile";
+    case DifficultyTag.diff2:
+      return "2 étoiles";
+    case DifficultyTag.diff3:
+      return "3 étoiles";
+    case DifficultyTag.diffEmpty:
+      return "";
+  }
+}
+
 DifficultyTag difficultyTagFromJson(dynamic json) =>
     _DifficultyTagExt.fromValue(json as String);
 
@@ -42,6 +55,15 @@ extension _FlowExt on Flow {
 
   int toValue() {
     return index;
+  }
+}
+
+String flowLabel(Flow v) {
+  switch (v) {
+    case Flow.parallel:
+      return "Questions indépendantes";
+    case Flow.sequencial:
+      return "Questions liées";
   }
 }
 
@@ -63,6 +85,21 @@ extension _SectionExt on Section {
 
   int toValue() {
     return _values[index];
+  }
+}
+
+String sectionLabel(Section v) {
+  switch (v) {
+    case Section.chapter:
+      return "Chapitre";
+    case Section.level:
+      return "Niveau";
+    case Section.matiere:
+      return "Matière";
+    case Section.subLevel:
+      return "Filière";
+    case Section.trivMath:
+      return "Triv'Math";
   }
 }
 

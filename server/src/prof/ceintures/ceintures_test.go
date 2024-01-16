@@ -13,7 +13,7 @@ import (
 func (sh Scheme) nextPrerequisite() (out [ce.NbDomains][ce.NbRanks]ce.Rank) {
 	for d := ce.Domain(0); d < ce.NbDomains; d++ {
 		var hasP [ce.NbRanks]bool
-		for _, pr := range sh {
+		for _, pr := range sh.Ps {
 			if pr.Pending.Domain == d {
 				hasP[pr.Pending.Rank] = true
 			}
@@ -64,8 +64,10 @@ func (sh Scheme) isWellFormed(level ce.Level) bool {
 
 func TestWellFormed(t *testing.T) {
 	brokenScheme := Scheme{
-		{Need: Stage{ce.CalculMental, ce.Blanche}, Pending: Stage{ce.Developpement, ce.Jaune}},
-		{Need: Stage{ce.Developpement, ce.Jaune}, Pending: Stage{ce.CalculMental, ce.Blanche}},
+		Ps: []Prerequisite{
+			{Need: Stage{ce.CalculMental, ce.Blanche}, Pending: Stage{ce.Developpement, ce.Jaune}},
+			{Need: Stage{ce.Developpement, ce.Jaune}, Pending: Stage{ce.CalculMental, ce.Blanche}},
+		},
 	}
 	tu.Assert(t, !brokenScheme.isWellFormed(ce.Seconde))
 

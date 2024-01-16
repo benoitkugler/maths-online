@@ -66,7 +66,14 @@ func createQuestions(t *testing.T, db *sql.DB) {
 			for n := 0; n < i; n++ {
 				_, err = ce.Beltquestion{Domain: d, Rank: r, Enonce: questions.Enonce{
 					questions.TextBlock{Parts: "1+1="},
-					questions.NumberFieldBlock{Expression: "2"},
+					questions.RadioFieldBlock{
+						Answer: "1",
+						Proposals: []questions.Interpolated{
+							"La bonne réponse !",
+							"La mauvaise..",
+						},
+						AsDropDown: false,
+					},
 				}}.Insert(tx)
 				tu.AssertNoErr(t, err)
 			}
@@ -75,6 +82,15 @@ func createQuestions(t *testing.T, db *sql.DB) {
 
 	err = tx.Commit()
 	tu.AssertNoErr(t, err)
+}
+
+func TestInitDevQuestions(t *testing.T) {
+	// t.Skip()
+
+	db, err := tu.DB.ConnectPostgres()
+	tu.AssertNoErr(t, err)
+
+	createQuestions(t, db)
 }
 
 func TestSelectEvaluateQuestions(t *testing.T) {

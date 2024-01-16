@@ -161,6 +161,17 @@ extension _BinaryExt on Binary {
   }
 }
 
+String binaryLabel(Binary v) {
+  switch (v) {
+    case Binary.invalid:
+      return "Invalide";
+    case Binary.and:
+      return "Et";
+    case Binary.or:
+      return "Ou";
+  }
+}
+
 Binary binaryFromJson(dynamic json) => _BinaryExt.fromValue(json as int);
 
 dynamic binaryToJson(Binary item) => item.toValue();
@@ -1276,6 +1287,17 @@ extension _SignSymbolExt on SignSymbol {
 
   int toValue() {
     return index;
+  }
+}
+
+String signSymbolLabel(SignSymbol v) {
+  switch (v) {
+    case SignSymbol.nothing:
+      return "";
+    case SignSymbol.zero:
+      return "0";
+    case SignSymbol.forbiddenValue:
+      return "||";
   }
 }
 

@@ -26,6 +26,7 @@ type GetEvolutionOut struct {
 
 type StudentEvolution struct {
 	Scheme          Scheme
+	Level           ce.Level
 	Advance         ce.Advance
 	Stats           ce.Stats
 	Pending         []Stage
@@ -36,6 +37,7 @@ func newStudentEvolution(ev ce.Beltevolution) StudentEvolution {
 	pending := mathScheme.Pending(ev.Advance, ev.Level)
 	return StudentEvolution{
 		Scheme:          mathScheme,
+		Level:           ev.Level,
 		Advance:         ev.Advance,
 		Stats:           ev.Stats,
 		Pending:         pending,

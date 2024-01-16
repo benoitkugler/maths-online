@@ -41,3 +41,29 @@ void showError(String kind, dynamic error, BuildContext context) {
       backgroundColor: Theme.of(context).colorScheme.error,
       content: ErrorBar(kind, error)));
 }
+
+class ErrorCard extends StatelessWidget {
+  final String message;
+  final dynamic error;
+  const ErrorCard(this.message, this.error, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Card(
+            child: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 20),
+          Text("$error", style: const TextStyle(fontStyle: FontStyle.italic)),
+        ],
+      ),
+    )));
+  }
+}

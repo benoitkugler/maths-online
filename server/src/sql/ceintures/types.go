@@ -34,19 +34,6 @@ const (
 	Matrices                     // Matrices et systèmes
 )
 
-// IsFor returns true if a student with [level] is
-// qualified for the [Domain]
-func (d Domain) IsFor(level Level) bool {
-	switch d {
-	case Derivation:
-		return level >= Terminale
-	case Matrices:
-		return level >= PostBac
-	default:
-		return true
-	}
-}
-
 // Rank is the belt color, that is the level
 // of progression in one [Domain].
 type Rank uint8
