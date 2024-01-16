@@ -185,12 +185,11 @@ class __AppScaffoldState extends State<_AppScaffold> {
   }
 
   void _launchCeintures() async {
-    // widget.audioPlayer.run();
-    // final isIdentified = settings.studentID.isNotEmpty;
+    widget.audioPlayer.run();
     await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => CeinturesStart(ServerCeinturesAPI(widget.buildMode),
             settings, _saveCeinturesAnonymousID)));
-    // widget.audioPlayer.pause();
+    widget.audioPlayer.pause();
   }
 
   @override
