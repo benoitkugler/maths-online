@@ -79,12 +79,14 @@ export interface Block {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.Co
 export type Co = string;
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ComparisonLevel
-export enum ComparisonLevel {
-  AsLinearEquation = 102,
-  ExpandedSubstitutions = 2,
-  SimpleSubstitutions = 1,
-  Strict = 0,
-}
+export const ComparisonLevel = {
+  AsLinearEquation: 102,
+  ExpandedSubstitutions: 2,
+  SimpleSubstitutions: 1,
+  Strict: 0,
+} as const;
+export type ComparisonLevel =
+  (typeof ComparisonLevel)[keyof typeof ComparisonLevel];
 
 export const ComparisonLevelLabels: { [key in ComparisonLevel]: string } = {
   [ComparisonLevel.AsLinearEquation]: "",
@@ -113,11 +115,12 @@ export interface ErrQuestionInvalid {
   Kind: ErrorKind;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.ErrorKind
-export enum ErrorKind {
-  ErrParameters_ = 0,
-  ErrEnonce = 1,
-  ErrCorrection = 2,
-}
+export const ErrorKind = {
+  ErrParameters_: 0,
+  ErrEnonce: 1,
+  ErrCorrection: 2,
+} as const;
+export type ErrorKind = (typeof ErrorKind)[keyof typeof ErrorKind];
 
 export const ErrorKindLabels: { [key in ErrorKind]: string } = {
   [ErrorKind.ErrParameters_]: "",
@@ -361,11 +364,12 @@ export interface TextBlock {
   Smaller: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.TextKind
-export enum TextKind {
-  Text = 0,
-  StaticMath = 1,
-  Expression = 2,
-}
+export const TextKind = {
+  Text: 0,
+  StaticMath: 1,
+  Expression: 2,
+} as const;
+export type TextKind = (typeof TextKind)[keyof typeof TextKind];
 
 export const TextKindLabels: { [key in TextKind]: string } = {
   [TextKind.Text]: "Text simple",
@@ -410,11 +414,13 @@ export interface VectorFieldBlock {
   DisplayColumn: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.VectorPairCriterion
-export enum VectorPairCriterion {
-  VectorEquals = 0,
-  VectorColinear = 1,
-  VectorOrthogonal = 2,
-}
+export const VectorPairCriterion = {
+  VectorEquals: 0,
+  VectorColinear: 1,
+  VectorOrthogonal: 2,
+} as const;
+export type VectorPairCriterion =
+  (typeof VectorPairCriterion)[keyof typeof VectorPairCriterion];
 
 export const VectorPairCriterionLabels: {
   [key in VectorPairCriterion]: string;
@@ -428,14 +434,15 @@ export const VectorPairCriterionLabels: {
 export interface errEnonce {
   Error: string;
   Block: number;
-  Vars: { [key: string]: string } | null;
+  Vars: { [key in string]: string } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Binary
-export enum Binary {
-  Invalid = 0,
-  And = 1,
-  Or = 2,
-}
+export const Binary = {
+  Invalid: 0,
+  And: 1,
+  Or: 2,
+} as const;
+export type Binary = (typeof Binary)[keyof typeof Binary];
 
 export const BinaryLabels: { [key in Binary]: string } = {
   [Binary.Invalid]: "Invalide",
@@ -444,11 +451,12 @@ export const BinaryLabels: { [key in Binary]: string } = {
 };
 
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.SignSymbol
-export enum SignSymbol {
-  Nothing = 0,
-  Zero = 1,
-  ForbiddenValue = 2,
-}
+export const SignSymbol = {
+  Nothing: 0,
+  Zero: 1,
+  ForbiddenValue: 2,
+} as const;
+export type SignSymbol = (typeof SignSymbol)[keyof typeof SignSymbol];
 
 export const SignSymbolLabels: { [key in SignSymbol]: string } = {
   [SignSymbol.Nothing]: "",
@@ -464,17 +472,18 @@ export interface Coord {
   Y: number;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.LabelPos
-export enum LabelPos {
-  Top = 0,
-  Bottom = 1,
-  Left = 2,
-  Right = 3,
-  TopLeft = 4,
-  TopRight = 5,
-  BottomRight = 6,
-  BottomLeft = 7,
-  Hide = 8,
-}
+export const LabelPos = {
+  Top: 0,
+  Bottom: 1,
+  Left: 2,
+  Right: 3,
+  TopLeft: 4,
+  TopRight: 5,
+  BottomRight: 6,
+  BottomLeft: 7,
+  Hide: 8,
+} as const;
+export type LabelPos = (typeof LabelPos)[keyof typeof LabelPos];
 
 export const LabelPosLabels: { [key in LabelPos]: string } = {
   [LabelPos.Top]: "Au dessus",
@@ -548,11 +557,12 @@ export interface RepereBounds {
   Origin: Coord;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.SegmentKind
-export enum SegmentKind {
-  SKSegment = 0,
-  SKVector = 1,
-  SKLine = 2,
-}
+export const SegmentKind = {
+  SKSegment: 0,
+  SKVector: 1,
+  SKLine: 2,
+} as const;
+export type SegmentKind = (typeof SegmentKind)[keyof typeof SegmentKind];
 
 export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKSegment]: "Segment",
@@ -568,10 +578,13 @@ export interface GetSchemeOut {
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
 export interface Prerequisite {
   Need: Stage;
-  For: Stage;
+  Pending: Stage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
-export type Scheme = Prerequisite[] | null;
+export interface Scheme {
+  Ps: Prerequisite[] | null;
+  Levels: Level[];
+}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Stage
 export interface Stage {
   Domain: Domain;
@@ -720,11 +733,12 @@ export interface LoopbackShowQuestion {
   Origin: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.OriginKind
-export enum OriginKind {
-  All = 0,
-  OnlyPersonnal = 1,
-  OnlyAdmin = 2,
-}
+export const OriginKind = {
+  All: 0,
+  OnlyPersonnal: 1,
+  OnlyAdmin: 2,
+} as const;
+export type OriginKind = (typeof OriginKind)[keyof typeof OriginKind];
 
 export const OriginKindLabels: { [key in OriginKind]: string } = {
   [OriginKind.All]: "",
@@ -795,11 +809,11 @@ export interface SaveQuestionMetaIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TagsDB
 export interface TagsDB {
   Levels: string[] | null;
-  ChaptersByLevel: { [key: string]: string[] | null } | null;
-  TrivByChapters: {
-    [key: string]: { [key: string]: string[] | null } | null;
-  } | null;
-  SubLevelsByLevel: { [key: string]: string[] | null } | null;
+  ChaptersByLevel: { [key in string]: string[] | null } | null;
+  TrivByChapters:
+    | { [key in string]: { [key in string]: string[] | null } | null }
+    | null;
+  SubLevelsByLevel: { [key in string]: string[] | null } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.TaskDetails
 export interface TaskDetails {
@@ -871,11 +885,11 @@ export interface Exceptions {
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HomeworkMarksOut
 export interface HomeworkMarksOut {
   Students: StudentHeader[] | null;
-  Marks: { [key: IdTravail]: TravailMarks } | null;
+  Marks: { [key in IdTravail]: TravailMarks } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.Homeworks
 export interface Homeworks {
-  Sheets: { [key: IdSheet]: SheetExt } | null;
+  Sheets: { [key in IdSheet]: SheetExt } | null;
   Travaux: ClassroomTravaux[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.HowemorkMarksIn
@@ -935,7 +949,7 @@ export interface TaskStat {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
 export interface TravailMarks {
-  Marks: { [key: IdStudent]: StudentTravailMark } | null;
+  Marks: { [key in IdStudent]: StudentTravailMark } | null;
   TaskStats: TaskStat[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
@@ -1055,11 +1069,12 @@ export interface Origin {
   IsInReview: OptionalIdReview;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.PublicStatus
-export enum PublicStatus {
-  NotAdmin = 0,
-  AdminPublic = 1,
-  AdminNotPublic = 2,
-}
+export const PublicStatus = {
+  NotAdmin: 0,
+  AdminPublic: 1,
+  AdminNotPublic: 2,
+} as const;
+export type PublicStatus = (typeof PublicStatus)[keyof typeof PublicStatus];
 
 export const PublicStatusLabels: { [key in PublicStatus]: string } = {
   [PublicStatus.NotAdmin]: "",
@@ -1087,11 +1102,12 @@ export interface TeacherSettings {
   FavoriteMatiere: MatiereTag;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.Visibility
-export enum Visibility {
-  Hidden = 0,
-  Personnal = 1,
-  Admin = 2,
-}
+export const Visibility = {
+  Hidden: 0,
+  Personnal: 1,
+  Admin: 2,
+} as const;
+export type Visibility = (typeof Visibility)[keyof typeof Visibility];
 
 export const VisibilityLabels: { [key in Visibility]: string } = {
   [Visibility.Hidden]: "not accessible by the user, except in reviews",
@@ -1200,33 +1216,66 @@ export interface Beltquestion {
   Correction: Enonce;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
-export enum Domain {
-  CalculMental = 0,
-  Fractions = 1,
-  Factorisation = 2,
-  Developpement = 3,
-}
+export const Domain = {
+  CalculMental: 0,
+  Puissances: 1,
+  Fractions: 2,
+  Reduction: 3,
+  Factorisation: 4,
+  Developpement: 5,
+  IsolerVariable: 6,
+  Equations: 7,
+  Inequations: 8,
+  Derivation: 9,
+  Matrices: 10,
+} as const;
+export type Domain = (typeof Domain)[keyof typeof Domain];
 
 export const DomainLabels: { [key in Domain]: string } = {
   [Domain.CalculMental]: "Calcul mental",
+  [Domain.Puissances]: "Puissances et racines",
   [Domain.Fractions]: "Fractions",
+  [Domain.Reduction]: "Réduction",
   [Domain.Factorisation]: "Factorisation",
   [Domain.Developpement]: "Développement",
+  [Domain.IsolerVariable]: "Isoler une variable",
+  [Domain.Equations]: "Équations",
+  [Domain.Inequations]: "Inéquations",
+  [Domain.Derivation]: "Dérivation",
+  [Domain.Matrices]: "Matrices et systèmes",
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
 export type IdBeltquestion = number;
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.Level
+export const Level = {
+  Seconde: 0,
+  Premiere: 1,
+  Terminale: 2,
+  PostBac: 3,
+} as const;
+export type Level = (typeof Level)[keyof typeof Level];
+
+export const LevelLabels: { [key in Level]: string } = {
+  [Level.Seconde]: "Seconde",
+  [Level.Premiere]: "Première",
+  [Level.Terminale]: "Terminale",
+  [Level.PostBac]: "Post-bac",
+};
+
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Rank
-export enum Rank {
-  StartRank = 0,
-  Blanche = 1,
-  Jaune = 2,
-  Orange = 3,
-  Verte = 4,
-  Bleue = 5,
-  Marron = 6,
-  Noire = 7,
-}
+export const Rank = {
+  StartRank: 0,
+  Blanche: 1,
+  Jaune: 2,
+  Orange: 3,
+  Verte: 4,
+  Bleue: 5,
+  Rouge: 6,
+  Marron: 7,
+  Noire: 8,
+} as const;
+export type Rank = (typeof Rank)[keyof typeof Rank];
 
 export const RankLabels: { [key in Rank]: string } = {
   [Rank.StartRank]: "Départ",
@@ -1235,6 +1284,7 @@ export const RankLabels: { [key in Rank]: string } = {
   [Rank.Orange]: "Orange",
   [Rank.Verte]: "Verte",
   [Rank.Bleue]: "Bleue",
+  [Rank.Rouge]: "Rouge",
   [Rank.Marron]: "Marron",
   [Rank.Noire]: "Noire",
 };
@@ -1242,12 +1292,13 @@ export const RankLabels: { [key in Rank]: string } = {
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyQuery
 export type DifficultyQuery = DifficultyTag[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.DifficultyTag
-export enum DifficultyTag {
-  Diff1 = "★",
-  Diff2 = "★★",
-  Diff3 = "★★★",
-  DiffEmpty = "",
-}
+export const DifficultyTag = {
+  Diff1: "★",
+  Diff2: "★★",
+  Diff3: "★★★",
+  DiffEmpty: "",
+} as const;
+export type DifficultyTag = (typeof DifficultyTag)[keyof typeof DifficultyTag];
 
 export const DifficultyTagLabels: { [key in DifficultyTag]: string } = {
   [DifficultyTag.Diff1]: "1 étoile",
@@ -1288,12 +1339,13 @@ export type IdQuestion = number;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestiongroup
 export type IdQuestiongroup = number;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.LevelTag
-export enum LevelTag {
-  CPGE = "CPGE",
-  Premiere = "1ERE",
-  Seconde = "2NDE",
-  Terminale = "TERM",
-}
+export const LevelTag = {
+  CPGE: "CPGE",
+  Premiere: "1ERE",
+  Seconde: "2NDE",
+  Terminale: "TERM",
+} as const;
+export type LevelTag = (typeof LevelTag)[keyof typeof LevelTag];
 
 export const LevelTagLabels: { [key in LevelTag]: string } = {
   [LevelTag.CPGE]: "CPGE",
@@ -1331,13 +1383,14 @@ export interface Questiongroup {
   IdTeacher: IdTeacher;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.Section
-export enum Section {
-  Chapter = 2,
-  Level = 1,
-  Matiere = 5,
-  SubLevel = 4,
-  TrivMath = 3,
-}
+export const Section = {
+  Chapter: 2,
+  Level: 1,
+  Matiere: 5,
+  SubLevel: 4,
+  TrivMath: 3,
+} as const;
+export type Section = (typeof Section)[keyof typeof Section];
 
 export const SectionLabels: { [key in Section]: string } = {
   [Section.Chapter]: "Chapitre",
@@ -1398,11 +1451,12 @@ export interface TravailException {
 // github.com/benoitkugler/maths-online/server/src/sql/homework.TravailExceptions
 export type TravailExceptions = TravailException[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Approval
-export enum Approval {
-  Neutral = 0,
-  InFavor = 1,
-  Opposed = 2,
-}
+export const Approval = {
+  Neutral: 0,
+  InFavor: 1,
+  Opposed: 2,
+} as const;
+export type Approval = (typeof Approval)[keyof typeof Approval];
 
 export const ApprovalLabels: { [key in Approval]: string } = {
   [Approval.Neutral]: "",
@@ -1425,12 +1479,13 @@ export interface Review {
   Kind: ReviewKind;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.ReviewKind
-export enum ReviewKind {
-  KQuestion = 0,
-  KExercice = 1,
-  KTrivial = 2,
-  KSheet = 3,
-}
+export const ReviewKind = {
+  KQuestion: 0,
+  KExercice: 1,
+  KTrivial: 2,
+  KSheet: 3,
+} as const;
+export type ReviewKind = (typeof ReviewKind)[keyof typeof ReviewKind];
 
 export const ReviewKindLabels: { [key in ReviewKind]: string } = {
   [ReviewKind.KQuestion]: "Question",
@@ -1487,19 +1542,20 @@ export type IdStudent = number;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
 export type IdTeacher = number;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.MatiereTag
-export enum MatiereTag {
-  Allemand = "ALLEMAND",
-  Anglais = "ANGLAIS",
-  Autre = "AUTRE",
-  Espagnol = "ESPAGNOL",
-  Francais = "FRANCAIS",
-  HistoireGeo = "HISTOIRE-GEO",
-  Italien = "ITALIEN",
-  Mathematiques = "MATHS",
-  PhysiqueChimie = "PHYSIQUE",
-  SES = "SES",
-  SVT = "SVT",
-}
+export const MatiereTag = {
+  Allemand: "ALLEMAND",
+  Anglais: "ANGLAIS",
+  Autre: "AUTRE",
+  Espagnol: "ESPAGNOL",
+  Francais: "FRANCAIS",
+  HistoireGeo: "HISTOIRE-GEO",
+  Italien: "ITALIEN",
+  Mathematiques: "MATHS",
+  PhysiqueChimie: "PHYSIQUE",
+  SES: "SES",
+  SVT: "SVT",
+} as const;
+export type MatiereTag = (typeof MatiereTag)[keyof typeof MatiereTag];
 
 export const MatiereTagLabels: { [key in MatiereTag]: string } = {
   [MatiereTag.Allemand]: "",
@@ -1525,7 +1581,7 @@ export interface Student {
   Clients: Clients;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Students
-export type Students = { [key: IdStudent]: Student } | null;
+export type Students = { [key in IdStudent]: Student } | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.CategoriesQuestions
 export interface CategoriesQuestions {
   Tags: QuestionCriterion[];
@@ -1554,11 +1610,12 @@ export interface WorkID {
   IsExercice: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/tasks.WorkKind
-export enum WorkKind {
-  WorkExercice = 1,
-  WorkMonoquestion = 2,
-  WorkRandomMonoquestion = 3,
-}
+export const WorkKind = {
+  WorkExercice: 1,
+  WorkMonoquestion: 2,
+  WorkRandomMonoquestion: 3,
+} as const;
+export type WorkKind = (typeof WorkKind)[keyof typeof WorkKind];
 
 export const WorkKindLabels: { [key in WorkKind]: string } = {
   [WorkKind.WorkExercice]: "",
@@ -1567,14 +1624,15 @@ export const WorkKindLabels: { [key in WorkKind]: string } = {
 };
 
 // github.com/benoitkugler/maths-online/server/src/trivial.Categorie
-export enum Categorie {
-  Purple = 0,
-  Green = 1,
-  Orange = 2,
-  Yellow = 3,
-  Blue = 4,
-  nbCategories = 5,
-}
+export const Categorie = {
+  Purple: 0,
+  Green: 1,
+  Orange: 2,
+  Yellow: 3,
+  Blue: 4,
+  nbCategories: 5,
+} as const;
+export type Categorie = (typeof Categorie)[keyof typeof Categorie];
 
 export const CategorieLabels: { [key in Categorie]: string } = {
   [Categorie.Purple]: "purple",

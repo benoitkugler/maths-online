@@ -118,6 +118,7 @@ export const rankColors: { [key in Rank]: string } = {
   [Rank.Orange]: "orange",
   [Rank.Verte]: "light-green",
   [Rank.Bleue]: "blue",
+  [Rank.Rouge]: "red",
   [Rank.Marron]: "deep-orange-darken-4",
   [Rank.Noire]: "black",
 };

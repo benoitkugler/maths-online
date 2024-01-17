@@ -1,5 +1,5 @@
 <template>
-  <v-container class="pb-1 fill-height">
+  <v-container class="pb-1 fill-height" fluid>
     <v-skeleton-loader
       v-if="scheme == null"
       width="600"
@@ -7,64 +7,70 @@
       type="card"
     ></v-skeleton-loader>
     <v-row v-else justify="space-evenly">
-      <v-col cols="auto">
-        <v-card>
+      <v-col cols="7" align-self="center">
+        <v-card class="overflow-x-auto">
           <v-card-text>
-            <table>
+            <table style="table-layout: fixed; width: 200%">
               <tr>
                 <th></th>
                 <th v-for="(k, v) in DomainLabels" :key="v" class="pa-2">
-                  {{ k }}
+                  <v-card
+                    link
+                    @click="currentDomain = v"
+                    :color="currentDomain == v ? 'grey-lighten-3' : undefined"
+                    height="50px"
+                    ><v-card-text class="pa-1 font-weight-bold">
+                      {{ k }}
+                    </v-card-text></v-card
+                  >
                 </th>
               </tr>
-              <tr v-for="rank in nbRanks - 1 as Rank" :key="rank">
+              <tr v-for="rank in nbRanks - 1" :key="rank">
                 <th class="px-2">{{ RankLabels[rank as Rank] }}</th>
+
                 <td
-                  v-for="(domainName, domain) in DomainLabels"
-                  :key="domain"
-                  class="pa-2"
+                  v-for="(stage, index) in stagesFor(rank as Rank)"
+                  :key="index"
+                  class="pa-1"
                 >
                   <v-card
                     v-if="simulateProgression == null"
-                    :elevation="
-                      sameStage(currentStage, { Domain: domain, Rank: rank })
-                        ? 12
-                        : 1
-                    "
-                    :color="rankColors[rank as Rank]"
-                    @click="currentStage = { Domain: domain, Rank: rank }"
+                    :color="rankColors[stage.Rank]"
                   >
-                    <v-card-text>
-                      {{ stageText({ Domain: domain, Rank: rank }) }}
+                    <v-card-text class="text-center pa-1">
+                      {{ stageText(stage) }}
                     </v-card-text>
                   </v-card>
                   <v-card
                     v-else
                     :color="
-                      simulateProgression[domain] >= rank
+                      simulateProgression[stage.Domain] >= rank
                         ? 'green-lighten-2'
-                        : isPending({ Domain: domain, Rank: rank })
+                        : isPending(stage)
                         ? 'blue-lighten-3'
                         : 'grey'
                     "
                     @click="
-                      simulateProgression[domain] =
-                        simulateProgression[domain] >= rank ? rank - 1 : rank;
+                      simulateProgression[stage.Domain] = (
+                        simulateProgression[stage.Domain] >= rank
+                          ? rank - 1
+                          : rank
+                      ) as Rank;
                       updatePending();
                     "
                     :disabled="
                       !(
-                        simulateProgression[domain] >= rank ||
-                        isPending({ Domain: domain, Rank: rank })
+                        simulateProgression[stage.Domain] >= rank ||
+                        isPending(stage)
                       )
                     "
                   >
-                    <v-card-text class="text-center">
+                    <v-card-text class="text-center pa-1">
                       <v-icon
                         :icon="
-                          simulateProgression[domain] >= rank
+                          simulateProgression[stage.Domain] >= rank
                             ? 'mdi-check'
-                            : isPending({ Domain: domain, Rank: rank })
+                            : isPending(stage)
                             ? 'mdi-play'
                             : 'mdi-lock'
                         "
@@ -78,12 +84,11 @@
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col
-        cols="5"
-        align-self="center"
-        v-if="currentStage != null && requiert != null"
-      >
-        <v-card title="Progression">
+      <v-col cols="5" align-self="center" v-if="currentDomain != null">
+        <v-card
+          title="Progression et prérequis"
+          :subtitle="DomainLabels[currentDomain]"
+        >
           <template v-slot:append>
             <v-btn
               v-if="simulateProgression == null"
@@ -95,63 +100,14 @@
             >
             <v-btn v-else @click="simulateProgression = null">Retour</v-btn>
           </template>
+
           <v-card-text>
             <v-fade-transition hide-on-leave>
-              <div v-if="simulateProgression == null">
-                <template v-if="requiert.needs.length">
-                  <v-row no-gutters justify="center"
-                    ><v-col cols="auto">
-                      <stage-chip
-                        v-for="(need, i) in requiert.needs"
-                        :key="i"
-                        :stage="need"
-                        link
-                        @click="currentStage = need"
-                      ></stage-chip> </v-col
-                  ></v-row>
-                  <v-row no-gutters justify="center">
-                    <v-col cols="auto">
-                      <v-icon>mdi-arrow-down</v-icon>
-                    </v-col>
-                  </v-row>
-                </template>
-                <v-row
-                  no-gutters
-                  justify="center"
-                  class="bg-grey-lighten-3 rounded-lg"
-                >
-                  <v-col cols="auto">
-                    <stage-chip :stage="currentStage"></stage-chip> </v-col
-                ></v-row>
-                <template v-if="requiert.isNeededIn.length">
-                  <v-row no-gutters justify="center">
-                    <v-col cols="auto">
-                      <v-icon>mdi-arrow-down</v-icon>
-                    </v-col>
-                  </v-row>
-                  <v-row no-gutters justify="center"
-                    ><v-col cols="auto">
-                      <stage-chip
-                        v-for="(need, i) in requiert.isNeededIn"
-                        :key="i"
-                        :stage="need"
-                        link
-                        @click="currentStage = need"
-                      ></stage-chip> </v-col
-                  ></v-row>
-                </template>
-              </div>
-              <div v-else>
-                <v-row class="mt-2">
-                  <v-col align-self="center" cols="auto">
-                    <v-icon>mdi-chevron-left</v-icon>
-                  </v-col>
-                  <v-col align-self="center">
-                    Sélectionner l'avancement pour afficher les niveaux
-                    atteignables...
-                  </v-col>
-                </v-row>
-              </div>
+              <domain-line
+                :domain="currentDomain"
+                :scheme="scheme.Scheme"
+                @go-to="(d) => (currentDomain = d)"
+              ></domain-line>
             </v-fade-transition>
           </v-card-text>
         </v-card>
@@ -161,8 +117,14 @@
 </template>
 
 <script setup lang="ts">
-import StageChip from "@/components/ceintures/StageChip.vue";
-import { Advance, Beltquestion, Rank, Stage } from "@/controller/api_gen";
+import DomainLine from "@/components/ceintures/DomainLine.vue";
+import {
+  Advance,
+  Beltquestion,
+  Domain,
+  Rank,
+  Stage,
+} from "@/controller/api_gen";
 import { GetSchemeOut, DomainLabels, RankLabels } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { rankColors, sameStage } from "@/controller/utils";
@@ -199,7 +161,7 @@ function isPending(stage: Stage) {
 const nbDomains = Object.values(DomainLabels).length;
 const nbRanks = Object.values(RankLabels).length;
 
-const currentStage = ref<Stage>({ Domain: 0, Rank: 1 });
+const currentDomain = ref<Domain | null>(0);
 
 const questionsByStage = computed(() => {
   const out: Beltquestion[][][] = Array.from({ length: nbDomains }).map(() =>
@@ -211,38 +173,13 @@ const questionsByStage = computed(() => {
   return out;
 });
 
+function stagesFor(rank: Rank): Stage[] {
+  return Object.values(Domain).map((d) => ({ Domain: d, Rank: rank }));
+}
+
 function stageText(stage: Stage) {
-  return `${
-    questionsByStage.value[stage.Domain][stage.Rank].length
-  } question(s)`;
+  return `${questionsByStage.value[stage.Domain][stage.Rank].length} qu.`;
 }
-
-interface deps {
-  needs: Stage[];
-  isNeededIn: Stage[];
-}
-
-const requiert = computed(() => {
-  const stage = currentStage.value;
-  if (stage == null || scheme.value == null) return null;
-  const out: deps = { needs: [], isNeededIn: [] };
-  for (const link of scheme.value.Scheme || []) {
-    if (sameStage(link.For, stage)) {
-      out.needs.push(link.Need);
-    } else if (sameStage(link.Need, stage)) {
-      out.isNeededIn.push(link.For);
-    }
-  }
-  // always include same domain side ranks
-  if (stage.Rank > Rank.Blanche) {
-    out.needs.push({ Domain: stage.Domain, Rank: stage.Rank - 1 });
-  }
-  if (stage.Rank < nbRanks - 1) {
-    out.isNeededIn.push({ Domain: stage.Domain, Rank: stage.Rank + 1 });
-  }
-
-  return out;
-});
 </script>
 
 <style></style>
