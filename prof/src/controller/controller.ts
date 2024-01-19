@@ -34,8 +34,8 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 class Controller extends AbstractAPI {
   private isLoggedIn = false;
 
-  public onError?: (kind: string, htmlError: string) => void;
-  public showMessage?: (message: string, color?: string) => void;
+  public onError: (kind: string, htmlError: string) => void = (_, __) => {};
+  public showMessage: (message: string, color?: string) => void = (_, __) => {};
 
   public settings: TeacherSettings = {
     Mail: "",

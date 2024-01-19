@@ -150,6 +150,22 @@ func (ct *Controller) CeinturesSelectQuestions(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func instantiateQuestions(selected []ce.Beltquestion) ([]tasks.InstantiatedBeltQuestion, error) {
+	out := make([]tasks.InstantiatedBeltQuestion, len(selected))
+	for i, qu := range selected {
+		inst, params, err := qu.Page().InstantiateErr()
+		if err != nil {
+			return nil, err
+		}
+		out[i] = tasks.InstantiatedBeltQuestion{
+			Id:       qu.Id,
+			Question: inst.ToClient(),
+			Params:   tasks.NewParams(params),
+		}
+	}
+	return out, nil
+}
+
 func (ct *Controller) selectQuestions(args SelectQuestionsIn) (SelectQuestionsOut, error) {
 	// We could check that the stage is actually reachable by the student,
 	// but we "trust" the client for now
@@ -157,11 +173,7 @@ func (ct *Controller) selectQuestions(args SelectQuestionsIn) (SelectQuestionsOu
 	if err != nil {
 		return SelectQuestionsOut{}, utils.SQLError(err)
 	}
-	byStage := map[Stage][]ce.Beltquestion{}
-	for _, qu := range questions {
-		key := Stage{qu.Domain, qu.Rank}
-		byStage[key] = append(byStage[key], qu)
-	}
+	byStage := byStage(questions)
 
 	// we include every question, with repetitions if there is less
 	// than 3
@@ -187,20 +199,11 @@ func (ct *Controller) selectQuestions(args SelectQuestionsIn) (SelectQuestionsOu
 		selected = append(selected, qu)
 	}
 
-	out := SelectQuestionsOut{Questions: make([]InstantiatedBeltQuestion, len(selected))}
-	for i, qu := range selected {
-		inst, params, err := qu.Page().InstantiateErr()
-		if err != nil {
-			return SelectQuestionsOut{}, err
-		}
-		out.Questions[i] = InstantiatedBeltQuestion{
-			Id:       qu.Id,
-			Question: inst.ToClient(),
-			Params:   tasks.NewParams(params),
-		}
+	l, err := instantiateQuestions(selected)
+	if err != nil {
+		return SelectQuestionsOut{}, err
 	}
-
-	return out, nil
+	return SelectQuestionsOut{Questions: l}, nil
 }
 
 func (ct *Controller) CeinturesEvaluateAnswers(c echo.Context) error {

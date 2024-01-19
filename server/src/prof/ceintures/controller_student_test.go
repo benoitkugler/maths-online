@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetEvolution(t *testing.T) {
-	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/editor/gen_create.sql", "../../sql/ceintures/gen_create.sql")
+	db := tu.NewTestDB(t, "../../sql/teacher/gen_create.sql", "../../sql/ceintures/gen_create.sql")
 	defer db.Remove()
 
 	tc, _ := teacher.Teacher{FavoriteMatiere: teacher.Francais}.Insert(db)
@@ -85,7 +85,7 @@ func createQuestions(t *testing.T, db *sql.DB) {
 }
 
 func TestInitDevQuestions(t *testing.T) {
-	// t.Skip()
+	t.Skip()
 
 	db, err := tu.DB.ConnectPostgres()
 	tu.AssertNoErr(t, err)

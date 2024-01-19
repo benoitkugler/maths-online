@@ -112,3 +112,12 @@ func (sh Scheme) suggestionIndex(nexts []Stage) int {
 	}
 	return index
 }
+
+func byStage(questions ce.Beltquestions) map[Stage][]ce.Beltquestion {
+	out := map[Stage][]ce.Beltquestion{}
+	for _, qu := range questions {
+		key := Stage{qu.Domain, qu.Rank}
+		out[key] = append(out[key], qu)
+	}
+	return out
+}

@@ -14,6 +14,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -699,4 +700,12 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 	out.fillMap()
 
 	return out, nil
+}
+
+// Ceintures variant
+
+type InstantiatedBeltQuestion struct {
+	Id       ceintures.IdBeltquestion
+	Question client.Question
+	Params   Params // for the evaluation
 }

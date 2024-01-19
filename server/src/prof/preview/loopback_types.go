@@ -1,4 +1,4 @@
-package editor
+package preview
 
 import (
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -38,9 +38,21 @@ type LoopbackShowExercice struct {
 	Origin []questions.QuestionPage
 }
 
+type LoopackShowCeinture struct {
+	Questions []tasks.InstantiatedBeltQuestion `gomacro-opaque:"typescript"`
+
+	QuestionIndex int
+
+	// Set the initial view to display the correction,
+	// instead of the enonce.
+	// TODO: ignored so far
+	ShowCorrection bool
+}
+
 func (LoopbackPaused) isLoopbackServerEvent()       {}
 func (LoopbackShowQuestion) isLoopbackServerEvent() {}
 func (LoopbackShowExercice) isLoopbackServerEvent() {}
+func (LoopackShowCeinture) isLoopbackServerEvent()  {}
 
 type LoopackEvaluateQuestionIn struct {
 	Question questions.QuestionPage

@@ -33,10 +33,10 @@ func (ct *Controller) JWTMiddlewareForQuery() echo.MiddlewareFunc {
 	return middleware.JWTWithConfig(config)
 }
 
-func (ct *Controller) newToken(teacher tc.Teacher) (string, error) {
+func (ct *Controller) newToken(id tc.IdTeacher) (string, error) {
 	// Set custom claims
 	claims := &UserMeta{
-		IdTeacher: teacher.Id,
+		IdTeacher: id,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(deltaToken).Unix(),
 		},
@@ -56,9 +56,9 @@ func JWTTeacher(c echo.Context) tc.IdTeacher {
 	return meta.IdTeacher
 }
 
-// GetDevToken creates a new user and returns a valid token,
+// GetDevTokens creates a new user and returns a valid token,
 // so that client frontend doesn't have to use password when developping.
-func (ct *Controller) GetDevToken() (string, error) {
+func (ct *Controller) GetDevTokens() (string, string, error) {
 	mail := utils.RandomString(false, 8) + "@dummy.com"
 	t, err := tc.Teacher{
 		Mail:            mail,
@@ -66,16 +66,28 @@ func (ct *Controller) GetDevToken() (string, error) {
 		FavoriteMatiere: tc.Mathematiques,
 	}.Insert(ct.db)
 	if err != nil {
-		return "", err
-	}
-	token, err := ct.newToken(t)
-	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	type meta struct {
 		IdTeacher tc.IdTeacher
 		Token     string
 	}
-	out, err := json.Marshal(meta{IdTeacher: t.Id, Token: token})
-	return string(out), err
+	token1, err := ct.newToken(t.Id)
+	if err != nil {
+		return "", "", err
+	}
+	out1, err := json.Marshal(meta{IdTeacher: t.Id, Token: token1})
+	if err != nil {
+		return "", "", err
+	}
+
+	token2, err := ct.newToken(ct.admin.Id)
+	if err != nil {
+		return "", "", err
+	}
+	out2, err := json.Marshal(meta{IdTeacher: ct.admin.Id, Token: token2})
+	if err != nil {
+		return "", "", err
+	}
+	return string(out1), string(out2), err
 }

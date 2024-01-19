@@ -99,11 +99,12 @@ func getAdminEmails() []string {
 }
 
 func devSetup(e *echo.Echo, tc *teacher.Controller) {
-	dev, err := tc.GetDevToken()
+	tokenU, tokenAdmin, err := tc.GetDevTokens()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(dev)
+	fmt.Println("Token user:", tokenU)
+	fmt.Println("Token admin:", tokenAdmin)
 
 	// also Cross origin requests
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

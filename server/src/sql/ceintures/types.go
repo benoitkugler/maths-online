@@ -43,8 +43,10 @@ const (
 	Blanche               // Blanche
 	Jaune                 // Jaune
 	Orange                // Orange
-	Verte                 // Verte
+	VerteI                // Verte clair
+	VerteII               // Verte foncée
 	Bleue                 // Bleue
+	Violet                // Violette
 	Rouge                 // Rouge
 	Marron                // Marron
 	Noire                 // Noire

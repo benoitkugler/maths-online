@@ -50,14 +50,8 @@ type SelectQuestionsIn struct {
 	Stage  Stage
 }
 
-type InstantiatedBeltQuestion struct {
-	Id       ce.IdBeltquestion
-	Question client.Question
-	Params   tasks.Params // for the evaluation
-}
-
 type SelectQuestionsOut struct {
-	Questions []InstantiatedBeltQuestion // Id and Difficulty should be ignored
+	Questions []tasks.InstantiatedBeltQuestion
 }
 
 type EvaluateAnswersIn struct {

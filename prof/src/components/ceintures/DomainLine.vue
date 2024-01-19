@@ -16,6 +16,7 @@
             :stage="need"
             link
             @click="emit('goTo', need.Domain)"
+            small
           ></stage-chip>
         </v-col>
       </v-row>

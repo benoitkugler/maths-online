@@ -16,10 +16,10 @@ func randAdvance() Advance {
 	return Advance(randArray11Rank())
 }
 
-func randArray11Array9Stat() [11][9]Stat {
-	var out [11][9]Stat
+func randArray11Array11Stat() [11][11]Stat {
+	var out [11][11]Stat
 	for i := range out {
-		out[i] = randArray9Stat()
+		out[i] = randArray11Stat()
 	}
 	return out
 }
@@ -32,8 +32,8 @@ func randArray11Rank() [11]Rank {
 	return out
 }
 
-func randArray9Stat() [9]Stat {
-	var out [9]Stat
+func randArray11Stat() [11]Stat {
+	var out [11]Stat
 	for i := range out {
 		out[i] = randStat()
 	}
@@ -79,7 +79,7 @@ func randLevel() Level {
 }
 
 func randRank() Rank {
-	choix := [...]Rank{StartRank, Blanche, Jaune, Orange, Verte, Bleue, Rouge, Marron, Noire}
+	choix := [...]Rank{StartRank, Blanche, Jaune, Orange, VerteI, VerteII, Bleue, Violet, Rouge, Marron, Noire}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }
@@ -264,7 +264,7 @@ func randStat() Stat {
 }
 
 func randStats() Stats {
-	return Stats(randArray11Array9Stat())
+	return Stats(randArray11Array11Stat())
 }
 
 func randbool() bool {

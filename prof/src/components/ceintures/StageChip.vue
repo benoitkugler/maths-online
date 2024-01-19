@@ -4,6 +4,8 @@
     :color="rankColors[props.stage.Rank]"
     class="ma-2"
     @[props.link&&`click`]="emit('click')"
+    :size="props.small ? 'small' : undefined"
+    label
   >
     {{ DomainLabels[props.stage.Domain] }}
   </v-chip>
@@ -17,6 +19,7 @@ import { rankColors } from "@/controller/utils";
 interface Props {
   stage: Stage;
   link?: boolean;
+  small?: boolean;
 }
 
 const props = defineProps<Props>();

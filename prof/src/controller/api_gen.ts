@@ -3,6 +3,69 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar11_Ar11_number = [
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+  Ar11_number,
+];
+export type Ar11_Level = [
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+  Level,
+];
+export type Ar11_Rank = [
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+  Rank,
+];
+export type Ar11_number = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
+export type Ar3_number = [number, number, number];
+export type Ar5_boolean = [boolean, boolean, boolean, boolean, boolean];
+export type Ar5_QuestionCriterion = [
+  QuestionCriterion,
+  QuestionCriterion,
+  QuestionCriterion,
+  QuestionCriterion,
+  QuestionCriterion,
+];
+export type Ar5_number = [number, number, number, number, number];
+
 class DateTag {
   private _ = "D" as const;
 }
@@ -573,17 +636,23 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.GetSchemeOut
 export interface GetSchemeOut {
   Scheme: Scheme;
-  Questions: Beltquestion[] | null;
+  NbQuestions: Ar11_Ar11_number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
 export interface Prerequisite {
   Need: Stage;
   Pending: Stage;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.SaveQuestionAndPreviewOut
+export interface SaveQuestionAndPreviewOut {
+  Error: ErrQuestionInvalid;
+  IsValid: boolean;
+  Preview: LoopackShowCeinture;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
 export interface Scheme {
   Ps: Prerequisite[] | null;
-  Levels: Level[];
+  Levels: Ar11_Level;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Stage
 export interface Stage {
@@ -717,20 +786,6 @@ export interface ListExercicesOut {
 export interface ListQuestionsOut {
   Groups: QuestiongroupExt[] | null;
   NbQuestions: number;
-}
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowExercice
-export interface LoopbackShowExercice {
-  Exercice: unknown;
-  Progression: unknown;
-  ShowCorrection: boolean;
-  Origin: QuestionPage[] | null;
-}
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestion
-export interface LoopbackShowQuestion {
-  Question: unknown;
-  Params: unknown;
-  ShowCorrection: boolean;
-  Origin: QuestionPage;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.OriginKind
 export const OriginKind = {
@@ -952,6 +1007,26 @@ export interface TravailMarks {
   Marks: { [key in IdStudent]: StudentTravailMark } | null;
   TaskStats: TaskStat[] | null;
 }
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopackShowCeinture
+export interface LoopackShowCeinture {
+  Questions: unknown;
+  QuestionIndex: number;
+  ShowCorrection: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowExercice
+export interface LoopbackShowExercice {
+  Exercice: unknown;
+  Progression: unknown;
+  ShowCorrection: boolean;
+  Origin: QuestionPage[] | null;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowQuestion
+export interface LoopbackShowQuestion {
+  Question: unknown;
+  Params: unknown;
+  ShowCorrection: boolean;
+  Origin: QuestionPage;
+}
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.LoadTargetOut
 export interface LoadTargetOut {
   Content: TargetContent;
@@ -969,7 +1044,7 @@ export interface ReviewCreateIn {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewExt
 export interface ReviewExt {
-  Approvals: number[];
+  Approvals: Ar3_number;
   Comments: ReviewComment[] | null;
   UserApproval: Approval;
   IsDeletable: boolean;
@@ -1024,7 +1099,7 @@ export interface TargetSheet {
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetTrivial
 export interface TargetTrivial {
   Config: Trivial;
-  NbQuestionsByCategories: number[];
+  NbQuestionsByCategories: Ar5_number;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
@@ -1181,7 +1256,7 @@ export interface RunningSessionMetaOut {
 export interface TrivialExt {
   Config: Trivial;
   Origin: Origin;
-  NbQuestionsByCategories: number[];
+  NbQuestionsByCategories: Ar5_number;
   Levels: string[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialSelfaccess
@@ -1205,7 +1280,7 @@ export interface stopGame {
   Restart: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Advance
-export type Advance = Rank[];
+export type Advance = Ar11_Rank;
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Beltquestion
 export interface Beltquestion {
   Id: IdBeltquestion;
@@ -1269,11 +1344,13 @@ export const Rank = {
   Blanche: 1,
   Jaune: 2,
   Orange: 3,
-  Verte: 4,
-  Bleue: 5,
-  Rouge: 6,
-  Marron: 7,
-  Noire: 8,
+  VerteI: 4,
+  VerteII: 5,
+  Bleue: 6,
+  Violet: 7,
+  Rouge: 8,
+  Marron: 9,
+  Noire: 10,
 } as const;
 export type Rank = (typeof Rank)[keyof typeof Rank];
 
@@ -1282,8 +1359,10 @@ export const RankLabels: { [key in Rank]: string } = {
   [Rank.Blanche]: "Blanche",
   [Rank.Jaune]: "Jaune",
   [Rank.Orange]: "Orange",
-  [Rank.Verte]: "Verte",
+  [Rank.VerteI]: "Verte clair",
+  [Rank.VerteII]: "Verte foncée",
   [Rank.Bleue]: "Bleue",
+  [Rank.Violet]: "Violette",
   [Rank.Rouge]: "Rouge",
   [Rank.Marron]: "Marron",
   [Rank.Noire]: "Noire",
@@ -1409,7 +1488,7 @@ export interface TagSection {
 export type Tags = TagSection[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/events.Stats
 export interface Stats {
-  Occurences: number[];
+  Occurences: Ar11_number;
   TotalPoints: number;
   Flames: number;
 }
@@ -1584,7 +1663,7 @@ export interface Student {
 export type Students = { [key in IdStudent]: Student } | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.CategoriesQuestions
 export interface CategoriesQuestions {
-  Tags: QuestionCriterion[];
+  Tags: Ar5_QuestionCriterion;
   Difficulties: DifficultyQuery;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.IdTrivial
@@ -1651,7 +1730,7 @@ export interface RoomSize {
   Max: number;
 }
 // github.com/benoitkugler/maths-online/server/src/trivial.Success
-export type Success = boolean[];
+export type Success = Ar5_boolean;
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -3797,6 +3876,101 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessCeinturesGetPending(data: Stage[] | null): void {}
+
+  protected async rawCeinturesGetQuestions(params: Stage) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/questions";
+    const rep: AxiosResponse<Beltquestion[] | null> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesGetQuestions wraps rawCeinturesGetQuestions and handles the error */
+  async CeinturesGetQuestions(params: Stage) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesGetQuestions(params);
+      this.onSuccessCeinturesGetQuestions(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesGetQuestions(data: Beltquestion[] | null): void {}
+
+  protected async rawCeinturesCreateQuestion(params: Stage) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
+    const rep: AxiosResponse<Beltquestion> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** CeinturesCreateQuestion wraps rawCeinturesCreateQuestion and handles the error */
+  async CeinturesCreateQuestion(params: Stage) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesCreateQuestion(params);
+      this.onSuccessCeinturesCreateQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesCreateQuestion(data: Beltquestion): void {}
+
+  protected async rawCeinturesSaveQuestion(params: Beltquestion) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
+    const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** CeinturesSaveQuestion wraps rawCeinturesSaveQuestion and handles the error */
+  async CeinturesSaveQuestion(params: Beltquestion) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesSaveQuestion(params);
+      this.onSuccessCeinturesSaveQuestion(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesSaveQuestion(
+    data: SaveQuestionAndPreviewOut,
+  ): void {}
+
+  protected async rawCeinturesDeleteQuestion(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
+    await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
+    });
+    return true;
+  }
+
+  /** CeinturesDeleteQuestion wraps rawCeinturesDeleteQuestion and handles the error */
+  async CeinturesDeleteQuestion(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawCeinturesDeleteQuestion(params);
+      this.onSuccessCeinturesDeleteQuestion();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessCeinturesDeleteQuestion(): void {}
 
   protected async rawReviewCreate(params: ReviewCreateIn) {
     const fullUrl = this.baseUrl + "/api/prof/review";
