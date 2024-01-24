@@ -224,7 +224,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
                     children: [
                       TrivialActivityIcon(_launchTrivialPoursuit),
                       HomeworkActivityIcon(_launchHomework),
-                      CeinturesActivityIcon(_launchCeintures),
+                      // CeinturesActivityIcon(_launchCeintures),
                     ],
                   ),
                 )
