@@ -2,6 +2,9 @@
 
 import 'predefined.dart';
 
+// github.com/benoitkugler/maths-online/server/src/sql/teacher.Date
+typedef Date = DateTime;
+
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
 typedef IdClassroom = int;
 

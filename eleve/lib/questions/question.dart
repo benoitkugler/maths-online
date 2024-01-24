@@ -563,11 +563,14 @@ class QuestionW extends StatefulWidget {
   /// [title] is the title of the question
   final String title;
 
+  final void Function()? onButtonClick;
+
   const QuestionW(
     this.controller,
     this.color, {
     Key? key,
     this.title = "Question",
+    this.onButtonClick,
   }) : super(key: key);
 
   @override
@@ -605,8 +608,13 @@ class _QuestionWState extends State<QuestionW> {
   }
 
   void onButtonClick() {
-    widget.controller.onPrimaryButtonClick();
-    setState(() {});
+    final cb = widget.onButtonClick;
+    if (cb != null) {
+      cb();
+    } else {
+      widget.controller.onPrimaryButtonClick();
+      setState(() {});
+    }
   }
 
   @override

@@ -12,6 +12,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/prof/preview"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/homework"
@@ -978,7 +979,7 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 type SaveQuestionAndPreviewOut struct {
 	Error    questions.ErrQuestionInvalid
 	IsValid  bool
-	Question LoopbackShowQuestion
+	Question preview.LoopbackShowQuestion
 }
 
 // For non personnal questions, only preview.
@@ -1038,7 +1039,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 	if err != nil {
 		return SaveQuestionAndPreviewOut{}, err
 	}
-	questionOut := LoopbackShowQuestion{
+	questionOut := preview.LoopbackShowQuestion{
 		Question:       question.ToClient(),
 		Params:         taAPI.NewParams(instanceParams),
 		Origin:         params.Page,

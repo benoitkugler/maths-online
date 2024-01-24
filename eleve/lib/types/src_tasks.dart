@@ -3,6 +3,7 @@
 import 'predefined.dart';
 import 'src_maths_expression.dart';
 import 'src_maths_questions_client.dart';
+import 'src_sql_ceintures.dart';
 import 'src_sql_editor.dart';
 import 'src_sql_tasks.dart';
 
@@ -135,6 +136,35 @@ InstantiateQuestionsOut instantiateQuestionsOutFromJson(dynamic json) {
 
 dynamic instantiateQuestionsOutToJson(InstantiateQuestionsOut item) {
   return listInstantiatedQuestionToJson(item);
+}
+
+// github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedBeltQuestion
+class InstantiatedBeltQuestion {
+  final IdBeltquestion id;
+  final Question question;
+  final Params params;
+
+  const InstantiatedBeltQuestion(this.id, this.question, this.params);
+
+  @override
+  String toString() {
+    return "InstantiatedBeltQuestion($id, $question, $params)";
+  }
+}
+
+InstantiatedBeltQuestion instantiatedBeltQuestionFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return InstantiatedBeltQuestion(intFromJson(json['Id']),
+      questionFromJson(json['Question']), paramsFromJson(json['Params']));
+}
+
+Map<String, dynamic> instantiatedBeltQuestionToJson(
+    InstantiatedBeltQuestion item) {
+  return {
+    "Id": intToJson(item.id),
+    "Question": questionToJson(item.question),
+    "Params": paramsToJson(item.params)
+  };
 }
 
 // github.com/benoitkugler/maths-online/server/src/tasks.InstantiatedQuestion
@@ -353,6 +383,17 @@ extension _WorkKindExt on WorkKind {
 
   int toValue() {
     return _values[index];
+  }
+}
+
+String workKindLabel(WorkKind v) {
+  switch (v) {
+    case WorkKind.workExercice:
+      return "";
+    case WorkKind.workMonoquestion:
+      return "";
+    case WorkKind.workRandomMonoquestion:
+      return "";
   }
 }
 

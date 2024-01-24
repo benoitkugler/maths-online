@@ -1,51 +1,27 @@
 import { devLogMeta } from "@/env";
 import type {
-  AskInscriptionOut,
-  CheckExerciceParametersOut,
-  CheckMissingQuestionsOut,
-  CheckQuestionParametersOut,
   Classroom,
-  ClassroomExt,
   CopyTravailToOut,
   CreateTravailOut,
   DeleteExerciceOut,
   DeleteQuestionOut,
   Exercice,
-  ExerciceExt,
   ExercicegroupExt,
   ExerciceHeader,
   ExerciceWithPreview,
-  ExportExerciceLatexOut,
-  ExportQuestionLatexOut,
-  GenerateClassroomCodeOut,
   HomeworkMarksOut,
-  Homeworks,
-  Index,
   LaunchSessionOut,
-  ListExercicesOut,
-  ListQuestionsOut,
-  LoadTargetOut,
   LogginOut,
-  MonitorOut,
-  Monoquestion,
-  Question,
   QuestiongroupExt,
-  RandomMonoquestion,
   Review,
-  ReviewExt,
-  ReviewHeader,
-  RunningSessionMetaOut,
-  SaveExerciceAndPreviewOut,
   SaveQuestionAndPreviewOut,
   SheetExt,
-  Student,
   StudentExt,
   TaskExt,
   TeacherSettings,
   TextBlock,
   Travail,
   TrivialExt,
-  TrivialSelfaccess
 } from "./api_gen";
 import { AbstractAPI, MatiereTag } from "./api_gen";
 
@@ -58,15 +34,15 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 class Controller extends AbstractAPI {
   private isLoggedIn = false;
 
-  public onError?: (kind: string, htmlError: string) => void;
-  public showMessage?: (message: string, color?: string) => void;
+  public onError: (kind: string, htmlError: string) => void = (_, __) => {};
+  public showMessage: (message: string, color?: string) => void = (_, __) => {};
 
   public settings: TeacherSettings = {
     Mail: "",
     HasEditorSimplified: false,
     Password: "",
     Contact: { Name: "", URL: "" },
-    FavoriteMatiere: MatiereTag.Autre
+    FavoriteMatiere: MatiereTag.Autre,
   };
 
   logout() {

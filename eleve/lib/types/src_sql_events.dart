@@ -27,6 +27,33 @@ extension _EventKExt on EventK {
   }
 }
 
+String eventKLabel(EventK v) {
+  switch (v) {
+    case EventK.isyTriv_Create:
+      return "Créer une partie d'IsyTriv";
+    case EventK.isyTriv_Streak3:
+      return "Réussir trois questions IsyTriv d'affilée";
+    case EventK.isyTriv_Win:
+      return "Remporter une partie IsyTriv";
+    case EventK.homework_TaskDone:
+      return "Terminer un exercice";
+    case EventK.homework_TravailDone:
+      return "Terminer une feuille d'exercices";
+    case EventK.all_QuestionRight:
+      return "Répondre correctement à une question";
+    case EventK.all_QuestionWrong:
+      return "Répondre incorrectement à une question";
+    case EventK.misc_SetPlaylist:
+      return "Modifier sa playlist";
+    case EventK.connectStreak3:
+      return "Se connecter 3 jours de suite";
+    case EventK.connectStreak7:
+      return "Se connecter 7 jours de suite";
+    case EventK.connectStreak30:
+      return "Se connecter 30 jours de suite";
+  }
+}
+
 EventK eventKFromJson(dynamic json) => _EventKExt.fromValue(json as int);
 
 dynamic eventKToJson(EventK item) => item.toValue();

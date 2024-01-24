@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:eleve/activities/ceintures/seance.dart';
+import 'package:eleve/exercice/home.dart';
+import 'package:eleve/loopback/ceintures.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/quotes.dart';
 import 'package:http/http.dart' as http;
@@ -10,11 +13,9 @@ import 'package:eleve/loopback/question.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_maths_questions.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
-import 'package:eleve/types/src_prof_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
+import 'package:eleve/types/src_prof_preview.dart';
 import 'package:flutter/material.dart';
-
-enum _Mode { paused, question, exercice }
 
 /// [EditorLoopback] switch between pause, question or exercice mode according
 /// to the [event] parameter.
@@ -22,19 +23,17 @@ class EditorLoopback extends StatefulWidget {
   final LoopbackServerEvent event;
   final LoopbackAPI api;
 
-  const EditorLoopback(this.event, this.api, {Key? key}) : super(key: key);
+  final String? rootRoute;
+
+  const EditorLoopback(this.event, this.api, {this.rootRoute, Key? key})
+      : super(key: key);
 
   @override
   State<EditorLoopback> createState() => _EditorLoopbackState();
 }
 
 class _EditorLoopbackState extends State<EditorLoopback> {
-  _Mode get mode => questionData != null
-      ? _Mode.question
-      : (exerciceData != null ? _Mode.exercice : _Mode.paused);
-
-  LoopackQuestionController? questionData;
-  LoopbackExerciceController? exerciceData;
+  LoopbackController? controller;
 
   @override
   void initState() {
@@ -51,39 +50,45 @@ class _EditorLoopbackState extends State<EditorLoopback> {
   void _initData() {
     final event = widget.event;
     if (event is LoopbackPaused) {
-      questionData = null;
-      exerciceData = null;
+      controller = null;
     } else if (event is LoopbackShowQuestion) {
-      questionData = LoopackQuestionController(event, evaluateQuestionAnswer);
-      exerciceData = null;
+      controller = LoopackQuestionController(event, evaluateQuestionAnswer);
     } else if (event is LoopbackShowExercice) {
-      questionData = null;
-      exerciceData = LoopbackExerciceController(event);
+      controller = LoopbackExerciceController(event);
+    } else if (event is LoopbackShowCeinture) {
+      controller = LoopbackCeinturesController(event);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _handleCorrection());
   }
 
-// properly show correction or hide potential old route
+  // properly show correction or hide potential old route
   void _handleCorrection() {
-    switch (mode) {
-      case _Mode.paused:
-        return _popToRoot();
-      case _Mode.exercice:
-        if (!exerciceData!.data.showCorrection) _popToRoot();
-        return;
-      case _Mode.question:
-        if (questionData!.data.showCorrection) {
-          _showQuestionCorrection();
-        } else {
-          _popToRoot();
-        }
-        return;
+    final controller = this.controller;
+    if (controller is LoopackQuestionController) {
+      if (controller.data.showCorrection) {
+        _showQuestionCorrection();
+      } else {
+        _popToRoot();
+      }
+      return;
+    } else if (controller is LoopbackExerciceController) {
+      if (!controller.data.showCorrection) _popToRoot();
+      return;
+    } else if (controller is LoopbackCeinturesController) {
+      // TODO:
+      return _popToRoot();
+    } else {
+      return _popToRoot();
     }
   }
 
   void _popToRoot() {
-    Navigator.popUntil(context, (Route<dynamic> route) => route.isFirst);
+    Navigator.popUntil(
+        context,
+        (Route<dynamic> route) => widget.rootRoute == null
+            ? route.isFirst
+            : route.settings.name == widget.rootRoute);
   }
 
   void _showError(dynamic error) {
@@ -91,9 +96,9 @@ class _EditorLoopbackState extends State<EditorLoopback> {
   }
 
   void evaluateQuestionAnswer(QuestionAnswersIn data) async {
+    final ct = controller as LoopackQuestionController;
     try {
-      final res =
-          await widget.api.evaluateQuestionAnswer(data, questionData!.data);
+      final res = await widget.api.evaluateQuestionAnswer(data, ct.data);
       if (!mounted) {
         return;
       }
@@ -101,19 +106,43 @@ class _EditorLoopbackState extends State<EditorLoopback> {
           res.answers, _showQuestionCorrection);
       ScaffoldMessenger.of(context).showSnackBar(snack);
       setState(() {
-        questionData!.setFeedback(res.answers.results);
+        ct.setFeedback(res.answers.results);
       });
     } catch (e) {
       _showError(e);
     }
   }
 
+  Future<List<QuestionAnswersOut>> _evaluateCeinture(
+      SeanceAnswers answers) async {
+    final res = await widget.api.evaluateCeinture(
+        LoopbackEvaluateCeintureIn(answers.questions, answers.answers));
+    if (!mounted) return [];
+
+    if (res.answers.every((element) => element.isCorrect)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Bonnes réponses !"),
+        backgroundColor: Colors.lightGreen,
+      ));
+    }
+
+    return res.answers;
+  }
+
+  void _resetCeinture() {
+    final c = controller as LoopbackCeinturesController;
+    setState(() {
+      controller = LoopbackCeinturesController(c.data);
+    });
+  }
+
   void _showQuestionCorrection() {
-    if (questionData == null) return;
+    final controller = this.controller;
+    if (controller is! LoopackQuestionController) return;
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (context) => Scaffold(
               appBar: AppBar(),
-              body: CorrectionW(questionData!.data.question.correction,
+              body: CorrectionW(controller.data.question.correction,
                   randColor(), pickQuote()),
             )));
   }
@@ -121,19 +150,22 @@ class _EditorLoopbackState extends State<EditorLoopback> {
   void _showCorrectAnswer() async {
     final QuestionPage originPage;
     final Params originParams;
-    switch (mode) {
-      case _Mode.question:
-        originPage = questionData!.data.origin;
-        originParams = questionData!.data.params;
-        break;
-      case _Mode.exercice:
-        final index = exerciceData!.controller.questionIndex!;
-        originPage = exerciceData!.data.origin[index];
-        originParams = exerciceData!
-            .controller.exeAndProg.exercice.questions[index].params;
-        break;
-      case _Mode.paused:
-        return;
+
+    final controller = this.controller;
+    if (controller is LoopackQuestionController) {
+      originPage = controller.data.origin;
+      originParams = controller.data.params;
+    } else if (controller is LoopbackExerciceController) {
+      final index = controller.controller.questionIndex!;
+      originPage = controller.data.origin[index];
+      originParams =
+          controller.controller.exeAndProg.exercice.questions[index].params;
+    } else if (controller is LoopbackCeinturesController) {
+      final index = controller.controller.currentQuestion;
+      originPage = controller.data.origin[index];
+      originParams = controller.data.questions[index].params;
+    } else {
+      return;
     }
 
     final QuestionAnswersIn ans;
@@ -145,47 +177,52 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       return;
     }
 
-    switch (mode) {
-      case _Mode.question:
-        setState(() {
-          questionData!.setAnswers(ans.data);
-        });
-        return;
-      case _Mode.exercice:
-        setState(() {
-          exerciceData!.controller.setQuestionAnswers(ans.data);
-          exerciceData!.instantShowCorrection = false;
-        });
-        return;
-      case _Mode.paused:
-        return;
+    if (controller is LoopackQuestionController) {
+      setState(() {
+        controller.setAnswers(ans.data);
+      });
+    } else if (controller is LoopbackExerciceController) {
+      setState(() {
+        controller.controller.setQuestionAnswers(ans.data);
+        controller.instantShowCorrection = false;
+      });
+    } else if (controller is LoopbackCeinturesController) {
+      setState(() {
+        controller.controller.setQuestionAnswers(ans.data);
+        controller.instantShowCorrection = false;
+      });
+    } else {
+      return;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    switch (mode) {
-      case _Mode.paused:
-        return const Scaffold(
-          body: Center(
-              child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text("En attente de prévisualisation..."),
-              ),
-            ],
-          )),
-        );
-      case _Mode.question:
-        return LoopbackQuestionW(questionData!, _showCorrectAnswer);
-      case _Mode.exercice:
-        return ExerciceW(widget.api, exerciceData!.controller,
-            onShowCorrectAnswer: _showCorrectAnswer,
-            showCorrectionButtonOnFail: true,
-            instantShowCorrection: exerciceData!.instantShowCorrection);
+    final controller = this.controller;
+    if (controller is LoopackQuestionController) {
+      return LoopbackQuestionW(controller, _showCorrectAnswer);
+    } else if (controller is LoopbackExerciceController) {
+      return ExerciceW(widget.api, controller.controller,
+          onShowCorrectAnswer: _showCorrectAnswer,
+          showCorrectionButtonOnFail: true,
+          instantShowCorrection: controller.instantShowCorrection);
+    } else if (controller is LoopbackCeinturesController) {
+      return CeintureW(
+          controller, _evaluateCeinture, _resetCeinture, _showCorrectAnswer);
+    } else {
+      return const Scaffold(
+        body: Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text("En attente de prévisualisation..."),
+            ),
+          ],
+        )),
+      );
     }
   }
 }
@@ -198,6 +235,9 @@ abstract class LoopbackAPI extends ExerciceAPI {
 
   Future<LoopbackShowQuestionAnswerOut> showQuestionAnswer(
       QuestionPage originPage, Params originParams);
+
+  Future<LoopbackEvaluateCeintureOut> evaluateCeinture(
+      LoopbackEvaluateCeintureIn args);
 }
 
 /// [LoopbackServerAPI] is the defaut implementation for [LoopbackAPI]
@@ -240,6 +280,18 @@ class LoopbackServerAPI implements LoopbackAPI {
         .post(uri, body: jsonEncode(evaluateWorkInToJson(params)), headers: {
       'Content-type': 'application/json',
     });
-    return evaluateWorkOutFromJson(jsonDecode(resp.body));
+    return evaluateWorkOutFromJson(checkServerError(resp.body));
+  }
+
+  @override
+  Future<LoopbackEvaluateCeintureOut> evaluateCeinture(
+      LoopbackEvaluateCeintureIn params) async {
+    final uri = buildMode.serverURL("/api/loopback/evaluate-ceinture");
+    final resp = await http.post(uri,
+        body: jsonEncode(loopbackEvaluateCeintureInToJson(params)),
+        headers: {
+          'Content-type': 'application/json',
+        });
+    return loopbackEvaluateCeintureOutFromJson(checkServerError(resp.body));
   }
 }

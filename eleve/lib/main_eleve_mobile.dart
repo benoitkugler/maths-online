@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
 
 final bm = buildModeFromEnv();
-// final bm = BuildMode.dev;
+// const bm = BuildMode.dev;
 
 void main() async {
   initQuotes();
