@@ -515,49 +515,72 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
   [SegmentKind.SKLine]: "Droite (infinie)",
 };
 
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopackEvaluateQuestionIn
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopackEvaluateQuestionIn
 export interface LoopackEvaluateQuestionIn {
   Question: QuestionPage;
   Answer: unknown;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackEvaluateQuestionOut
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackEvaluateCeintureIn
+export interface LoopbackEvaluateCeintureIn {
+  Questions: IdBeltquestion[] | null;
+  Answers: unknown;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackEvaluateCeintureOut
+export interface LoopbackEvaluateCeintureOut {
+  Answers: unknown;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackEvaluateQuestionOut
 export interface LoopbackEvaluateQuestionOut {
   Answers: unknown;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackPaused
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackPaused
 export type LoopbackPaused = Record<string, never>;
 
 export enum LoopbackServerEventKind {
   LoopbackPaused = "LoopbackPaused",
+  LoopbackShowCeinture = "LoopbackShowCeinture",
   LoopbackShowExercice = "LoopbackShowExercice",
   LoopbackShowQuestion = "LoopbackShowQuestion",
 }
 
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackServerEvent
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackServerEvent
 export interface LoopbackServerEvent {
   Kind: LoopbackServerEventKind;
-  Data: LoopbackPaused | LoopbackShowExercice | LoopbackShowQuestion;
+  Data:
+    | LoopbackPaused
+    | LoopbackShowCeinture
+    | LoopbackShowExercice
+    | LoopbackShowQuestion;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowExercice
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
+export interface LoopbackShowCeinture {
+  Questions: unknown;
+  QuestionIndex: number;
+  Origin: QuestionPage[] | null;
+  ShowCorrection: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowExercice
 export interface LoopbackShowExercice {
   Exercice: unknown;
   Progression: unknown;
   ShowCorrection: boolean;
   Origin: QuestionPage[] | null;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestion
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowQuestion
 export interface LoopbackShowQuestion {
   Question: unknown;
   Params: unknown;
   ShowCorrection: boolean;
   Origin: QuestionPage;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestionAnswerIn
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowQuestionAnswerIn
 export interface LoopbackShowQuestionAnswerIn {
   Question: QuestionPage;
   Params: unknown;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/editor.LoopbackShowQuestionAnswerOut
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowQuestionAnswerOut
 export interface LoopbackShowQuestionAnswerOut {
   Answers: unknown;
 }
+// github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
+export type IdBeltquestion = number;

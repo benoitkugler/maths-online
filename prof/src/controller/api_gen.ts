@@ -637,6 +637,7 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
 export interface GetSchemeOut {
   Scheme: Scheme;
   NbQuestions: Ar11_Ar11_number;
+  IsAdmin: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
 export interface Prerequisite {
@@ -647,7 +648,7 @@ export interface Prerequisite {
 export interface SaveQuestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
-  Preview: LoopackShowCeinture;
+  Preview: LoopbackShowCeinture;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
 export interface Scheme {
@@ -1007,10 +1008,11 @@ export interface TravailMarks {
   Marks: { [key in IdStudent]: StudentTravailMark } | null;
   TaskStats: TaskStat[] | null;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopackShowCeinture
-export interface LoopackShowCeinture {
+// github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
+export interface LoopbackShowCeinture {
   Questions: unknown;
   QuestionIndex: number;
+  Origin: QuestionPage[] | null;
   ShowCorrection: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowExercice
