@@ -2,10 +2,10 @@ import 'package:eleve/loopback/loopback.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/main_test_questions.dart';
 import 'package:eleve/questions/debug.dart';
+import 'package:eleve/types/src_prof_preview.dart';
 import 'package:eleve/types/src_maths_questions.dart' as server_questions;
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_maths_repere.dart';
-import 'package:eleve/types/src_prof_editor.dart';
 import 'package:eleve/types/src_sql_editor.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart' hide Flow;
@@ -69,34 +69,49 @@ class _LoopbackTestApp extends StatelessWidget {
               ElevatedButton(
                   onPressed: () => showExercice(context),
                   child: const Text("Loopack: Exercice")),
+              ElevatedButton(
+                  onPressed: () => showCeintures(context),
+                  child: const Text("Loopack: Ceintures")),
             ],
           ),
         ));
   }
 
-  void showPaused(BuildContext context) async {
+  void _showRoute(LoopbackServerEvent event, BuildContext context) async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) =>
-            EditorLoopback(const LoopbackPaused(), _LoopbackAPI())));
+      settings: const RouteSettings(name: "rootLoopback"),
+      builder: (context) =>
+          EditorLoopback(event, _LoopbackAPI(), rootRoute: "rootLoopback"),
+    ));
+  }
+
+  void showPaused(BuildContext context) async {
+    return _showRoute(const LoopbackPaused(), context);
   }
 
   void showQuestion(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => EditorLoopback(
-              LoopbackShowQuestion(qu1, [], true, origin),
-              _LoopbackAPI(),
-            )));
+    return _showRoute(LoopbackShowQuestion(qu1, [], true, origin), context);
   }
 
   void showExercice(BuildContext context) async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (context) => EditorLoopback(
-            LoopbackShowExercice(
-                workSequencial,
-                ProgressionExt([[], [], []], 0),
-                true,
-                [origin, origin, origin]),
-            _LoopbackAPI())));
+    return _showRoute(
+        LoopbackShowExercice(workSequencial, ProgressionExt([[], [], []], 0),
+            true, [origin, origin, origin]),
+        context);
+  }
+
+  void showCeintures(BuildContext context) async {
+    return _showRoute(
+        LoopbackShowCeinture(
+            [
+              InstantiatedBeltQuestion(1, qu1, []),
+              InstantiatedBeltQuestion(2, qu1, []),
+              InstantiatedBeltQuestion(3, qu1, []),
+            ],
+            0,
+            [origin, origin, origin],
+            false),
+        context);
   }
 }
 
@@ -149,5 +164,15 @@ class _LoopbackAPI implements LoopbackAPI {
       server_questions.QuestionPage originPage, Params originParams) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     return const LoopbackShowQuestionAnswerOut(QuestionAnswersIn(qu1Answer));
+  }
+
+  @override
+  Future<LoopbackEvaluateCeintureOut> evaluateCeinture(
+      LoopbackEvaluateCeintureIn args) async {
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    return LoopbackEvaluateCeintureOut(args.answers.map((an) {
+      final isCorrect = 0 == (an.answer.data[0] as NumberAnswer).value;
+      return QuestionAnswersOut({0: isCorrect}, {});
+    }).toList());
   }
 }

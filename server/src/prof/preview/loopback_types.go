@@ -3,6 +3,7 @@ package preview
 import (
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
+	"github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/tasks"
 )
 
@@ -38,10 +39,12 @@ type LoopbackShowExercice struct {
 	Origin []questions.QuestionPage
 }
 
-type LoopackShowCeinture struct {
+type LoopbackShowCeinture struct {
 	Questions []tasks.InstantiatedBeltQuestion `gomacro-opaque:"typescript"`
 
 	QuestionIndex int
+
+	Origin []questions.QuestionPage
 
 	// Set the initial view to display the correction,
 	// instead of the enonce.
@@ -52,7 +55,7 @@ type LoopackShowCeinture struct {
 func (LoopbackPaused) isLoopbackServerEvent()       {}
 func (LoopbackShowQuestion) isLoopbackServerEvent() {}
 func (LoopbackShowExercice) isLoopbackServerEvent() {}
-func (LoopackShowCeinture) isLoopbackServerEvent()  {}
+func (LoopbackShowCeinture) isLoopbackServerEvent() {}
 
 type LoopackEvaluateQuestionIn struct {
 	Question questions.QuestionPage
@@ -70,4 +73,13 @@ type LoopbackShowQuestionAnswerIn struct {
 
 type LoopbackShowQuestionAnswerOut struct {
 	Answers client.QuestionAnswersIn `gomacro-opaque:"typescript"`
+}
+
+type LoopbackEvaluateCeintureIn struct {
+	Questions []ceintures.IdBeltquestion // as send by the server
+	Answers   []tasks.AnswerP            `gomacro-opaque:"typescript"`
+}
+
+type LoopbackEvaluateCeintureOut struct {
+	Answers []client.QuestionAnswersOut `gomacro-opaque:"typescript"`
 }

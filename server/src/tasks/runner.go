@@ -14,7 +14,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
-	"github.com/benoitkugler/maths-online/server/src/sql/ceintures"
+	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	ta "github.com/benoitkugler/maths-online/server/src/sql/tasks"
 	tc "github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -705,7 +705,46 @@ func (args EvaluateWorkIn) Evaluate(db ed.DB, idStudent tc.IdStudent) (EvaluateW
 // Ceintures variant
 
 type InstantiatedBeltQuestion struct {
-	Id       ceintures.IdBeltquestion
+	Id       ce.IdBeltquestion
 	Question client.Question
 	Params   Params // for the evaluation
+}
+
+type BeltResult []client.QuestionAnswersOut
+
+func EvaluateBelt(db ce.DB, questions []ce.IdBeltquestion, answers []AnswerP) (BeltResult, error) {
+	if len(questions) != len(answers) {
+		return nil, fmt.Errorf("internal error: length mistmatch")
+	}
+
+	questionsSource, err := ce.SelectBeltquestions(db, questions...)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make([]client.QuestionAnswersOut, len(answers))
+	for index, idQuestion := range questions {
+		answer := answers[index]
+		qu := questionsSource[idQuestion]
+		out[index], err = EvaluateQuestion(qu.Enonce, answer)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
+func (br BeltResult) Stats() (hasPassed bool, stat ce.Stat) {
+	hasPassed = true
+	for _, res := range br {
+		correct := res.IsCorrect()
+		hasPassed = hasPassed && correct
+		if correct {
+			stat.Success += 1
+		} else {
+			stat.Failure += 1
+		}
+	}
+	return
 }

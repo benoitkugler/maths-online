@@ -195,10 +195,14 @@ extension RC on Rank {
         return Colors.yellow;
       case Rank.orange:
         return Colors.orange;
-      case Rank.verte:
-        return Colors.lightGreen;
+      case Rank.verteI:
+        return Colors.lime;
+      case Rank.verteII:
+        return Colors.green;
       case Rank.bleue:
         return Colors.blue;
+      case Rank.violet:
+        return Colors.purple;
       case Rank.rouge:
         return Colors.red;
       case Rank.marron:

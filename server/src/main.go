@@ -364,6 +364,7 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	// embeded preview app
 	e.POST("/api/loopack/evaluate-question", edit.LoopackEvaluateQuestion)
 	e.POST("/api/loopack/question-answer", edit.LoopbackShowQuestionAnswer)
+	e.POST("/api/loopack/evaluate-ceinture", ce.LoopbackEvaluateCeinture)
 
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)

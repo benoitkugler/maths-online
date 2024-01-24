@@ -144,35 +144,6 @@ Map<String, dynamic> getEvolutionOutToJson(GetEvolutionOut item) {
   };
 }
 
-// github.com/benoitkugler/maths-online/server/src/prof/ceintures.InstantiatedBeltQuestion
-class InstantiatedBeltQuestion {
-  final IdBeltquestion id;
-  final Question question;
-  final Params params;
-
-  const InstantiatedBeltQuestion(this.id, this.question, this.params);
-
-  @override
-  String toString() {
-    return "InstantiatedBeltQuestion($id, $question, $params)";
-  }
-}
-
-InstantiatedBeltQuestion instantiatedBeltQuestionFromJson(dynamic json_) {
-  final json = (json_ as Map<String, dynamic>);
-  return InstantiatedBeltQuestion(intFromJson(json['Id']),
-      questionFromJson(json['Question']), paramsFromJson(json['Params']));
-}
-
-Map<String, dynamic> instantiatedBeltQuestionToJson(
-    InstantiatedBeltQuestion item) {
-  return {
-    "Id": intToJson(item.id),
-    "Question": questionToJson(item.question),
-    "Params": paramsToJson(item.params)
-  };
-}
-
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
 class Prerequisite {
   final Stage need;

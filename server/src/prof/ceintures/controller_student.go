@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	"github.com/benoitkugler/maths-online/server/src/pass"
 	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
@@ -231,43 +230,25 @@ func (ct *Controller) evaluateAnswers(args EvaluateAnswersIn) (EvaluateAnswersOu
 
 	// We should check that the stage and the questions are correct,
 	// but we "trust" the client for now
-	if len(args.Answers) != len(args.Questions) {
-		return EvaluateAnswersOut{}, fmt.Errorf("Erreur interne (questions/réponses incohérentes)")
-	}
 
-	questionsSource, err := ce.SelectBeltquestionsByDomainAndRank(ct.db, args.Stage.Domain, args.Stage.Rank)
+	res, err := tasks.EvaluateBelt(ct.db, args.Questions, args.Answers)
 	if err != nil {
-		return EvaluateAnswersOut{}, utils.SQLError(err)
+		return EvaluateAnswersOut{}, err
 	}
 
-	out := EvaluateAnswersOut{Answers: make([]client.QuestionAnswersOut, len(args.Answers))}
-	hasPassed := true
-	stats := current.Stats[args.Stage.Domain][args.Stage.Rank]
-	for i, idQuestion := range args.Questions {
-		answer := args.Answers[i]
-		qu := questionsSource[idQuestion]
-		out.Answers[i], err = tasks.EvaluateQuestion(qu.Enonce, answer)
-		if err != nil {
-			return EvaluateAnswersOut{}, err
-		}
-		correct := out.Answers[i].IsCorrect()
-		hasPassed = hasPassed && correct
-		if correct {
-			stats.Success += 1
-		} else {
-			stats.Failure += 1
-		}
+	out := EvaluateAnswersOut{
+		Answers: res,
 	}
 
 	// update the evolution
-	newStats := current.Stats
-	newStats[args.Stage.Domain][args.Stage.Rank] = stats
-	newAdvance := current.Advance
+	hasPassed, stageStat := res.Stats()
+	stats, advance := current.Stats, current.Advance
+	stats[args.Stage.Domain][args.Stage.Rank].Add(stageStat)
 	if hasPassed {
-		newAdvance[args.Stage.Domain] += 1
+		advance[args.Stage.Domain] += 1
 	}
 
-	err = ct.setEvolution(args.Tokens, newAdvance, newStats)
+	err = ct.setEvolution(args.Tokens, advance, stats)
 	if err != nil {
 		return EvaluateAnswersOut{}, err
 	}

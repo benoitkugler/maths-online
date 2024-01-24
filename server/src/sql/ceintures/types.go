@@ -57,6 +57,11 @@ type Stat struct {
 	Failure uint16 // number of questions answered with failure
 }
 
+func (s *Stat) Add(other Stat) {
+	s.Success += other.Success
+	s.Failure += other.Failure
+}
+
 // Advance stores, for each [Domain], the rank
 // the student has checked.
 type Advance [NbDomains]Rank

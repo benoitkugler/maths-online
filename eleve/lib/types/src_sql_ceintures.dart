@@ -108,8 +108,10 @@ enum Rank {
   blanche,
   jaune,
   orange,
-  verte,
+  verteI,
+  verteII,
   bleue,
+  violet,
   rouge,
   marron,
   noire
@@ -135,10 +137,14 @@ String rankLabel(Rank v) {
       return "Jaune";
     case Rank.orange:
       return "Orange";
-    case Rank.verte:
-      return "Verte";
+    case Rank.verteI:
+      return "Verte clair";
+    case Rank.verteII:
+      return "Verte foncée";
     case Rank.bleue:
       return "Bleue";
+    case Rank.violet:
+      return "Violette";
     case Rank.rouge:
       return "Rouge";
     case Rank.marron:

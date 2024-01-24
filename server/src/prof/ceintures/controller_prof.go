@@ -11,6 +11,7 @@ import (
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ce "github.com/benoitkugler/maths-online/server/src/sql/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/sql/teacher"
+	"github.com/benoitkugler/maths-online/server/src/tasks"
 	"github.com/benoitkugler/maths-online/server/src/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -162,7 +163,7 @@ func (ct *Controller) CeinturesSaveQuestion(c echo.Context) error {
 type SaveQuestionAndPreviewOut struct {
 	Error   questions.ErrQuestionInvalid
 	IsValid bool
-	Preview preview.LoopackShowCeinture
+	Preview preview.LoopbackShowCeinture
 }
 
 func (ct *Controller) saveQuestion(qu ce.Beltquestion) (SaveQuestionAndPreviewOut, error) {
@@ -185,12 +186,16 @@ func (ct *Controller) saveQuestion(qu ce.Beltquestion) (SaveQuestionAndPreviewOu
 	return SaveQuestionAndPreviewOut{IsValid: true, Preview: pr}, nil
 }
 
-func (ct *Controller) preview(stage Stage, showCorrection bool, currentQuestion ce.IdBeltquestion) (out preview.LoopackShowCeinture, _ error) {
-	questions, err := ct.getQuestions(stage)
+func (ct *Controller) preview(stage Stage, showCorrection bool, currentQuestion ce.IdBeltquestion) (out preview.LoopbackShowCeinture, _ error) {
+	l, err := ct.getQuestions(stage)
 	if err != nil {
 		return out, err
 	}
-	out.Questions, err = instantiateQuestions(questions)
+	out.Origin = make([]questions.QuestionPage, len(l))
+	for i, qu := range l {
+		out.Origin[i] = qu.Page()
+	}
+	out.Questions, err = instantiateQuestions(l)
 	if err != nil {
 		return out, err
 	}
@@ -204,6 +209,22 @@ func (ct *Controller) preview(stage Stage, showCorrection bool, currentQuestion 
 	}
 
 	return out, nil
+}
+
+func (ct *Controller) LoopbackEvaluateCeinture(c echo.Context) error {
+	var args preview.LoopbackEvaluateCeintureIn
+
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	res, err := tasks.EvaluateBelt(ct.db, args.Questions, args.Answers)
+	if err != nil {
+		return err
+	}
+
+	out := preview.LoopbackEvaluateCeintureOut{Answers: res}
+	return c.JSON(200, out)
 }
 
 func (ct *Controller) CeinturesDeleteQuestion(c echo.Context) error {

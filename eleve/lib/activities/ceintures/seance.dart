@@ -2,10 +2,17 @@ import 'package:eleve/activities/ceintures/api.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/question.dart';
 import 'package:eleve/shared/errors.dart';
+import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_ceintures.dart';
 import 'package:eleve/types/src_sql_ceintures.dart';
 import 'package:eleve/types/src_tasks.dart';
 import 'package:flutter/material.dart';
+
+class SeanceAnswers {
+  final List<IdBeltquestion> questions;
+  final List<AnswerP> answers;
+  const SeanceAnswers(this.questions, this.answers);
+}
 
 class Seance extends StatefulWidget {
   final CeinturesAPI api;
@@ -43,109 +50,148 @@ class SeanceState extends State<Seance> {
                     "Impossible de charger les questions.", snapshot.error)
                 : data == null
                     ? const Center(child: CircularProgressIndicator())
-                    : _QuestionsW(widget.api, widget.tokens, widget.stage, data,
-                        widget.onValid, reset);
+                    : CeinturesQuestionsW(
+                        SeanceController(data.questions),
+                        _evaluate,
+                        _reset,
+                      );
           }),
     );
   }
 
-  void reset() async {
+  void _reset() async {
     setState(() {
       loader = widget.api
           .selectQuestions(SelectQuestionsIn(widget.tokens, widget.stage));
     });
   }
+
+  Future<List<QuestionAnswersOut>> _evaluate(SeanceAnswers answers) async {
+    final res = await widget.api.evaluateAnswers(EvaluateAnswersIn(
+        widget.tokens, widget.stage, answers.questions, answers.answers));
+
+    // notify the parent
+    widget.onValid(res.success, res.evolution);
+
+    return res.answers;
+  }
 }
 
-class _QuestionsW extends StatefulWidget {
-  final CeinturesAPI api;
-  final StudentTokens tokens;
-  final Stage stage;
-  final SelectQuestionsOut questions;
-  final void Function(bool isSuccess, StudentEvolution newEvolution) onValid;
+class SeanceController {
+  final List<InstantiatedBeltQuestion> questions;
+
+  var _state = _State.answering;
+  final _pageC = PageController();
+
+  final List<_QuestionController> _controllers;
+
+  SeanceController(this.questions)
+      : _controllers = List.generate(questions.length,
+            (index) => _QuestionController(questions[index].question));
+
+  /// currentQuestion returns the question currently visible.
+  int get currentQuestion => _pageC.hasClients ? _pageC.page?.round() ?? 0 : 0;
+
+  /// [answers] returns the current answers for all the questions.
+  SeanceAnswers answers() => SeanceAnswers(
+      questions.map((qu) => qu.id).toList(),
+      List.generate(
+          questions.length,
+          (index) =>
+              AnswerP(questions[index].params, _controllers[index].answers())));
+
+  /// [notAnswered] returns the indices of the question not done yet.
+  List<int> notAnswered() {
+    final out = <int>[];
+    for (var i = 0; i < _controllers.length; i++) {
+      if (!_controllers[i].state.buttonEnabled) {
+        out.add(i);
+      }
+    }
+    return out;
+  }
+
+  /// [setFeedback] displays the given feedback
+  void setFeedback(List<QuestionAnswersOut> res) {
+    _state = _State.displayingFeedback;
+    for (var i = 0; i < res.length; i++) {
+      final answer = res[i];
+      _controllers[i].setFeedback(answer.results);
+      _controllers[i].state.buttonEnabled = true;
+      _controllers[i].state.buttonLabel = "Essayer à nouveau...";
+    }
+  }
+
+  /// setQuestionAnswers show the answers for the current question
+  void setQuestionAnswers(Answers answers) {
+    _state = _State.answering;
+    _controllers[currentQuestion].setAnswers(answers);
+    _controllers[currentQuestion].state.buttonEnabled = true;
+    _controllers[currentQuestion].state.buttonLabel = "Valider";
+  }
+}
+
+class CeinturesQuestionsW extends StatefulWidget {
+  final SeanceController controller;
+  final Future<List<QuestionAnswersOut>> Function(SeanceAnswers)
+      evaluateAnswers;
+
   final void Function() onReset;
-  const _QuestionsW(this.api, this.tokens, this.stage, this.questions,
-      this.onValid, this.onReset,
+
+  const CeinturesQuestionsW(this.controller, this.evaluateAnswers, this.onReset,
       {super.key});
 
   @override
-  State<_QuestionsW> createState() => __QuestionsWState();
+  State<CeinturesQuestionsW> createState() => _CeinturesQuestionsWState();
 }
 
 enum _State { answering, displayingFeedback }
 
-class __QuestionsWState extends State<_QuestionsW> {
-  var state = _State.answering;
-  var pageC = PageController();
-
-  List<_QuestionController> controllers = [];
-
-  @override
-  void initState() {
-    _initControllers();
-    super.initState();
-  }
-
-  @override
-  void didUpdateWidget(covariant _QuestionsW oldWidget) {
-    _initControllers();
-    pageC.jumpToPage(0);
-    super.didUpdateWidget(oldWidget);
-  }
-
-  void _initControllers() {
-    state = _State.answering;
-    final l = widget.questions.questions;
-    controllers = List.generate(
-        l.length,
-        (index) => _QuestionController(
-            l[index].params, l[index].question, () => _onValidQuestion(index)));
-  }
-
+class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
   @override
   Widget build(BuildContext context) {
+    final c = widget.controller;
     return PageView(
-        controller: pageC,
+        controller: c._pageC,
         children: List.generate(
-            controllers.length,
+            c._controllers.length,
             (index) => QuestionW(
-                  controllers[index],
+                  c._controllers[index],
                   Colors.teal,
-                  title: "Question ${index + 1}/${controllers.length}",
+                  title: "Question ${index + 1}/${c._controllers.length}",
+                  onButtonClick: _onValidQuestion,
                 )).toList());
   }
 
-  void _onValidQuestion(int index) {
-    if (state == _State.displayingFeedback) {
+  void _onValidQuestion() {
+    final c = widget.controller;
+    if (c._state == _State.displayingFeedback) {
       // reset
       widget.onReset();
       return;
     }
 
     // find the next not answered question
-    final goTo = controllers.indexWhere((ct) => !ct.state.buttonEnabled);
-    if (goTo == -1) {
+    final notAnswered = c.notAnswered();
+    if (notAnswered.isEmpty) {
       _submitAnswers();
     } else {
-      pageC.animateToPage(goTo,
+      final goTo = notAnswered.first;
+      c._pageC.animateToPage(goTo,
           duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
       // update button label for the last question
-      if (controllers.where((ct) => !ct.state.buttonEnabled).length == 1) {
+      if (notAnswered.length == 1) {
         setState(() {
-          controllers[goTo].state.buttonLabel = "Soumettre !";
+          c._controllers[goTo].state.buttonLabel = "Soumettre !";
         });
       }
     }
   }
 
   void _submitAnswers() async {
-    final EvaluateAnswersOut res;
+    final List<QuestionAnswersOut> res;
     try {
-      res = await widget.api.evaluateAnswers(EvaluateAnswersIn(
-          widget.tokens,
-          widget.stage,
-          widget.questions.questions.map((qu) => qu.id).toList(),
-          controllers.map((ct) => AnswerP(ct.params, ct.answers())).toList()));
+      res = await widget.evaluateAnswers(widget.controller.answers());
     } catch (e) {
       if (!mounted) return;
       showError("Impossible d'évaluer les réponses.", e, context);
@@ -153,26 +199,16 @@ class __QuestionsWState extends State<_QuestionsW> {
     }
     if (!mounted) return;
 
-    if (res.success) {
-      widget.onValid(true, res.evolution);
+    if (res.every((element) => element.isCorrect)) {
       return;
     }
 
-    // notify the parent
-    widget.onValid(false, res.evolution);
+    final goTo = res.indexWhere((r) => !r.isCorrect);
 
-    // display feedback ...
-    for (var i = 0; i < res.answers.length; i++) {
-      final answer = res.answers[i];
-      controllers[i].setFeedback(answer.results);
-      controllers[i].state.buttonEnabled = true;
-      controllers[i].state.buttonLabel = "Essayer à nouveau...";
-    }
-    // .. and go to the "first" error
-    final goTo = res.answers.indexWhere((r) => !r.isCorrect);
+    // display feedback and go to the "first" error
     setState(() {
-      state = _State.displayingFeedback;
-      pageC.animateToPage(goTo,
+      widget.controller.setFeedback(res);
+      widget.controller._pageC.animateToPage(goTo,
           duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -182,17 +218,12 @@ class __QuestionsWState extends State<_QuestionsW> {
 }
 
 class _QuestionController extends BaseQuestionController {
-  final Params params;
-  void Function() onValid;
-
-  _QuestionController(this.params, super.question, this.onValid) {
+  _QuestionController(super.question) {
     state.buttonLabel = "Continuer";
   }
 
   @override
-  void onPrimaryButtonClick() {
-    onValid();
-  }
+  void onPrimaryButtonClick() {}
 }
 
 extension on EvaluateAnswersOut {
