@@ -233,6 +233,12 @@ func isOperator(src []rune) (op operator, n int) {
 		return pow, 1
 	case '!':
 		return factorial, 1
+	case '\u222A':
+		return union, 1
+	case '\u2229':
+		return intersection, 1
+	case '\u00AC':
+		return complement, 1
 	}
 	_ = exhaustiveOperatorSwitch
 	return op, 0

@@ -454,7 +454,7 @@ func (expr *Expr) simplify0And1() {
 		if left.atom == Number(1) || left.atom == Number(0) { // 0! = 1, 1! = 1
 			*expr = Expr{atom: Number(1)}
 		}
-	case mod, rem, equals, lesser, strictlyLesser, greater, strictlyGreater:
+	case mod, rem, equals, lesser, strictlyLesser, greater, strictlyGreater, union, intersection, complement:
 		// nothing to do
 	default:
 		panic(exhaustiveOperatorSwitch)

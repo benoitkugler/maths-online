@@ -148,6 +148,12 @@ func (op operator) asLaTeX(left, right *Expr) string {
 		return fmt.Sprintf(`{%s}^{%s}`, leftCode, rightCode)
 	case factorial:
 		return fmt.Sprintf(`%s!`, leftCode)
+	case union:
+		return fmt.Sprintf(`%s \cup %s`, leftCode, rightCode)
+	case intersection:
+		return fmt.Sprintf(`%s \cap %s`, leftCode, rightCode)
+	case complement:
+		return fmt.Sprintf(`\overline{%s}`, rightCode)
 	default:
 		panic(exhaustiveOperatorSwitch)
 	}
@@ -294,7 +300,7 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	}
 
 	// the latex syntax allow to spare some redundant parenthesis
-	if isLaTex && (op == div || op == rem || op == mod) {
+	if isLaTex && (op == div || op == rem || op == mod || op == complement) {
 		return false
 	}
 	if isLaTex && !isLeftArg && op == pow {
@@ -305,6 +311,11 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 	case Number, constant, function, Variable, roundFunc, specialFunction, indice, matrix:
 		return false
 	case operator:
+		if isLaTex && atom == complement {
+			// the latex overline is enough to delimit
+			return false
+		}
+
 		_ = exhaustiveOperatorSwitch
 		switch op {
 		case minus:
@@ -329,6 +340,8 @@ func (op operator) needParenthesis(expr *Expr, isLeftArg, isLaTex bool) bool {
 			return op > atom
 		case factorial:
 			// parenthesis are always needed if the argument is an expression
+			return true
+		case union, intersection, complement:
 			return true
 		default:
 			return op > atom //  (1+2)*4, (1-2)*4, 4*(1+2)
@@ -379,7 +392,7 @@ func (op operator) serialize(left, right *Expr) string {
 	case div:
 		// compact fractions
 		return leftCode + op.String() + rightCode
-	case equals, greater, strictlyGreater, lesser, strictlyLesser,
+	case equals, greater, strictlyGreater, lesser, strictlyLesser, union, intersection, complement,
 		mod, rem, pow:
 		return fmt.Sprintf(`%s %s %s`, leftCode, op.String(), rightCode)
 	default:
