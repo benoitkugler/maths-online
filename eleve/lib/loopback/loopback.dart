@@ -249,7 +249,7 @@ class LoopbackServerAPI implements LoopbackAPI {
   @override
   Future<LoopbackEvaluateQuestionOut> evaluateQuestionAnswer(
       QuestionAnswersIn data, LoopbackShowQuestion origin) async {
-    final uri = buildMode.serverURL("/api/loopack/evaluate-question");
+    final uri = buildMode.serverURL("/api/loopback/evaluate-question");
     final params =
         LoopackEvaluateQuestionIn(origin.origin, AnswerP(origin.params, data));
     final resp = await http.post(uri,
@@ -263,7 +263,7 @@ class LoopbackServerAPI implements LoopbackAPI {
   @override
   Future<LoopbackShowQuestionAnswerOut> showQuestionAnswer(
       QuestionPage originPage, Params originParams) async {
-    final uri = buildMode.serverURL("/api/loopack/question-answer");
+    final uri = buildMode.serverURL("/api/loopback/question-answer");
     final params = LoopbackShowQuestionAnswerIn(originPage, originParams);
     final resp = await http.post(uri,
         body: jsonEncode(loopbackShowQuestionAnswerInToJson(params)),

@@ -185,6 +185,8 @@ async function saveQuestion(qu: Beltquestion) {
 
   controller.showMessage("Question modifiée avec succès.");
   questions.value[questionIndex.value] = qu;
+
+  preview.value?.showCeinture(res.Preview);
 }
 
 const toDelete = ref<IdBeltquestion | null>(null);

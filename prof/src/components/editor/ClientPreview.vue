@@ -19,6 +19,7 @@ import {
   type LoopbackServerEvent,
 } from "@/controller/loopback_gen";
 import type {
+  LoopbackShowCeinture,
   LoopbackShowExercice,
   LoopbackShowQuestion,
 } from "@/controller/api_gen";
@@ -30,7 +31,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-defineExpose({ pause, showQuestion, showExercice });
+defineExpose({ pause, showQuestion, showExercice, showCeinture });
 
 const iframe = ref<HTMLIFrameElement | null>(null);
 
@@ -57,6 +58,13 @@ function showQuestion(qu: LoopbackShowQuestion) {
 function showExercice(qu: LoopbackShowExercice) {
   sendEvent({
     Kind: LoopbackServerEventKind.LoopbackShowExercice,
+    Data: qu,
+  });
+}
+
+function showCeinture(qu: LoopbackShowCeinture) {
+  sendEvent({
+    Kind: LoopbackServerEventKind.LoopbackShowCeinture,
     Data: qu,
   });
 }
