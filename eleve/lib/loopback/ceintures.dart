@@ -11,7 +11,8 @@ class LoopbackCeinturesController implements LoopbackController {
   bool instantShowCorrection = false;
 
   LoopbackCeinturesController(this.data)
-      : controller = SeanceController(data.questions),
+      : controller =
+            SeanceController(data.questions, initialPage: data.questionIndex),
         instantShowCorrection = data.showCorrection;
 }
 

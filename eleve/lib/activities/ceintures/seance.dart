@@ -81,12 +81,13 @@ class SeanceController {
   final List<InstantiatedBeltQuestion> questions;
 
   var _state = _State.answering;
-  final _pageC = PageController();
+  final PageController _pageC;
 
   final List<_QuestionController> _controllers;
 
-  SeanceController(this.questions)
-      : _controllers = List.generate(questions.length,
+  SeanceController(this.questions, {int initialPage = 0})
+      : _pageC = PageController(initialPage: initialPage),
+        _controllers = List.generate(questions.length,
             (index) => _QuestionController(questions[index].question));
 
   /// currentQuestion returns the question currently visible.
