@@ -227,8 +227,9 @@ async function createConfig() {
 
 async function updateConfig(config: Trivial) {
   // remove empty categories
-  config.Questions.Tags = config.Questions.Tags.map((q) =>
-    (q || []).filter((v) => v && v.length != 0)
+  config.Questions.Tags.forEach(
+    (q, i) =>
+      (config.Questions.Tags[i] = (q || []).filter((v) => v && v.length != 0))
   );
   const res = await controller.UpdateTrivialPoursuit(config);
   if (res === undefined) {
