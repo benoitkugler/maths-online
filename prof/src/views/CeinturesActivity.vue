@@ -170,6 +170,7 @@ const missingQuestions = computed(() => {
   const out: Stage[] = [];
   scheme.value?.NbQuestions.forEach((ar, domain) =>
     ar.forEach((nb, rank) => {
+      if (rank == Rank.StartRank) return;
       if (nb == 0) out.push({ Domain: domain as Domain, Rank: rank as Rank });
     })
   );
