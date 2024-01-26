@@ -34,7 +34,7 @@ func TestToSetExpr(t *testing.T) {
 		{"A * B", sets.BinarySet{}, true},
 	} {
 		e := mustParse(t, test.expr)
-		set, err := e.toBinarySet()
+		set, err := e.ToBinarySet()
 		tu.Assert(t, err != nil == test.wantErr)
 		tu.Assert(t, reflect.DeepEqual(set, test.want))
 	}

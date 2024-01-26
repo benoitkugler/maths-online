@@ -7,17 +7,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression/sets"
 )
 
-// // ToSetExpr converts the given expression to a specialized set format,
-// // or returns an error if [e] is not a valid set expression.
-// func (e *Expr) ToSetExpr() (sets.Set, error) {
-// 	tmp, err := e.toBinarySet()
-// 	if err != nil {
-// 		return sets.Set{}, err
-// 	}
-// 	return sets.NewSet(tmp)
-// }
-
-func (expr *Expr) toBinarySet() (sets.BinarySet, error) {
+func (expr *Expr) ToBinarySet() (sets.BinarySet, error) {
 	leaves := map[string]sets.Set{}
 	lastID := sets.Set(-1)
 

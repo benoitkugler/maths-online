@@ -7,22 +7,6 @@ import (
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
-func leaf(l Set) ListNode {
-	return ListNode{Op: SLeaf, Leaf: l}
-}
-
-func inter(args ...ListNode) ListNode {
-	return ListNode{Op: SInter, Args: args}
-}
-
-func union(args ...ListNode) ListNode {
-	return ListNode{Op: SUnion, Args: args}
-}
-
-func comp(arg ListNode) ListNode {
-	return ListNode{Op: SComplement, Args: []ListNode{arg}}
-}
-
 func TestNewSet(t *testing.T) {
 	for _, test := range []struct {
 		in   BinNode
