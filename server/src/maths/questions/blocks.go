@@ -283,15 +283,18 @@ type TextBlock struct {
 	Smaller bool
 }
 
-// return TextBlock or FormulaBlock
+// return TextBlock, FormulaBlock or NumberFieldBlock
 func (t TextBlock) expandFormulas() []Block {
 	blocks := t.Parts.parseFormula()
 	out := make([]Block, len(blocks))
 	for i, b := range blocks {
-		if b.isFormula {
-			out[i] = FormulaBlock{Parts: Interpolated(b.s)}
-		} else {
+		switch b.kind {
+		case iText:
 			out[i] = TextBlock{Parts: Interpolated(b.s), Bold: t.Bold, Italic: t.Italic, Smaller: t.Smaller}
+		case iFormula:
+			out[i] = FormulaBlock{Parts: Interpolated(b.s)}
+		case iNumberField:
+			out[i] = NumberFieldBlock{Expression: b.s}
 		}
 	}
 	return out

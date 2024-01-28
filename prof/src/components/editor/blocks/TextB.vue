@@ -3,11 +3,8 @@
     <v-col>
       <v-row no-gutters>
         <v-col md="12">
-          <interpolated-text
-            :model-value="props.modelValue.Parts"
-            @update:model-value="onTextChanged"
-            :custom-tokenize="tokenizeText"
-          ></interpolated-text>
+          <interpolated-text :model-value="props.modelValue.Parts" @update:model-value="onTextChanged"
+            :custom-tokenize="tokenizeText"></interpolated-text>
         </v-col>
         <v-col md="12">
           <small class="text-grey mt-1 d-block">
@@ -21,13 +18,8 @@
       <div class="mt-2">
         <v-tooltip text="Gras">
           <template v-slot:activator="{ isActive, props: inner }">
-            <v-btn-toggle
-              v-on="{ isActive }"
-              v-bind="inner"
-              density="comfortable"
-              :model-value="props.modelValue.Bold ? 0 : -1"
-              @update:model-value="i => onBoldChanged(i == 0)"
-            >
+            <v-btn-toggle v-on="{ isActive }" v-bind="inner" density="comfortable"
+              :model-value="props.modelValue.Bold ? 0 : -1" @update:model-value="i => onBoldChanged(i == 0)">
               <v-btn icon="mdi-format-bold" class="py-1"></v-btn>
             </v-btn-toggle>
           </template>
@@ -37,13 +29,8 @@
       <div>
         <v-tooltip text="Italique">
           <template v-slot:activator="{ isActive, props: inner }">
-            <v-btn-toggle
-              v-on="{ isActive }"
-              v-bind="inner"
-              density="comfortable"
-              :model-value="props.modelValue.Italic ? 0 : -1"
-              @update:model-value="i => onItalicChanged(i == 0)"
-            >
+            <v-btn-toggle v-on="{ isActive }" v-bind="inner" density="comfortable"
+              :model-value="props.modelValue.Italic ? 0 : -1" @update:model-value="i => onItalicChanged(i == 0)">
               <v-btn icon="mdi-format-italic" class="py-1"></v-btn>
             </v-btn-toggle>
           </template>
@@ -53,13 +40,8 @@
       <div>
         <v-tooltip text="Taille réduite">
           <template v-slot:activator="{ isActive, props: inner }">
-            <v-btn-toggle
-              v-on="{ isActive }"
-              v-bind="inner"
-              density="comfortable"
-              :model-value="props.modelValue.Smaller ? 0 : -1"
-              @update:model-value="i => onSmallerChanged(i == 0)"
-            >
+            <v-btn-toggle v-on="{ isActive }" v-bind="inner" density="comfortable"
+              :model-value="props.modelValue.Smaller ? 0 : -1" @update:model-value="i => onSmallerChanged(i == 0)">
               <v-btn icon="mdi-format-font-size-decrease" class="py-1"></v-btn>
             </v-btn-toggle>
           </template>
@@ -108,7 +90,7 @@ function onSmallerChanged(b: boolean) {
   emit("update:modelValue", props.modelValue);
 }
 
-// support for formulas
+// support for inline formulas $$ ... $$ and number fields # ... #
 function tokenizeText(input: string) {
   const out: Token[] = [];
   const lines = input.split("\n");
@@ -123,7 +105,7 @@ function tokenizeText(input: string) {
         // apply the regular tokenization
         const regularBlock = currentLines.join("\n") + "\n";
 
-        out.push(...defautTokenize(regularBlock));
+        out.push(...defautTokenize(regularBlock, true));
         currentLines = [];
       }
 
@@ -152,8 +134,10 @@ function tokenizeText(input: string) {
     }
   });
   if (currentLines.length) {
-    out.push(...defautTokenize(currentLines.join("\n")));
+    out.push(...defautTokenize(currentLines.join("\n"), true));
   }
+
+  // process # ... #
 
   return out;
 }
