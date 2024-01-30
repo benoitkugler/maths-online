@@ -126,7 +126,7 @@
           v-if="questions.length"
           :question="question"
           :readonly="props.readonly"
-          @save="saveQuestion"
+          @update="updateQuestion"
         ></BeltQuestionEditor>
       </v-card>
     </v-col>
@@ -138,7 +138,12 @@
 </template>
 
 <script setup lang="ts">
-import { Beltquestion, IdBeltquestion, Stage } from "@/controller/api_gen";
+import {
+  Beltquestion,
+  IdBeltquestion,
+  LoopbackShowCeinture,
+  Stage,
+} from "@/controller/api_gen";
 import ClientPreview from "../editor/ClientPreview.vue";
 import { ref } from "vue";
 import StageChip from "./StageChip.vue";
@@ -179,14 +184,12 @@ async function createQuestion() {
   questionIndex.value = questions.value.length - 1;
 }
 
-async function saveQuestion(qu: Beltquestion) {
-  const res = await controller.CeinturesSaveQuestion(qu);
-  if (res === undefined) return;
-
-  controller.showMessage("Question modifiée avec succès.");
+async function updateQuestion(
+  qu: Beltquestion,
+  previewData: LoopbackShowCeinture
+) {
   questions.value[questionIndex.value] = qu;
-
-  preview.value?.showCeinture(res.Preview);
+  preview.value?.showCeinture(previewData);
 }
 
 const toDelete = ref<IdBeltquestion | null>(null);

@@ -55,7 +55,7 @@
         <v-btn
           class="my-1 mx-2"
           icon
-          @click="emit('save', question)"
+          @click="save"
           :title="
             props.readonly ? 'Visualiser' : 'Enregistrer et prévisualiser'
           "
@@ -112,7 +112,10 @@ import {
   Block,
   BlockKind,
   ErrParameters,
+  ErrQuestionInvalid,
+  ErrorKind,
   ExpressionFieldBlock,
+  LoopbackShowCeinture,
   Parameters,
   Question,
   Variable,
@@ -140,7 +143,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "save", qu: Beltquestion): void;
+  (e: "update", qu: Beltquestion, preview: LoopbackShowCeinture): void;
 }>();
 
 const question = ref(copy(props.question));
@@ -238,5 +241,42 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
     Kind: BlockKind.TextBlock,
     Data: res,
   });
+}
+
+async function save() {
+  const res = await controller.CeinturesSaveQuestion(question.value);
+  if (res === undefined) return;
+
+  if (res.IsValid) {
+    controller.showMessage("Question modifiée avec succès.");
+
+    errorParameters.value = null;
+    errorContent.value = null;
+    // notifie the parent on success
+    emit("update", question.value, res.Preview);
+  } else {
+    onQuestionError(res.Error);
+  }
+}
+
+function onQuestionError(err: ErrQuestionInvalid) {
+  // reset previous error
+  errorParameters.value = null;
+  errorContent.value = null;
+  switch (err.Kind) {
+    case ErrorKind.ErrParameters_:
+      errorParameters.value = err.ErrParameters;
+      return;
+    case ErrorKind.ErrEnonce:
+      errorContent.value = err.ErrEnonce;
+      errorIsCorrection.value = false;
+      modeEnonce.value = true;
+      return;
+    case ErrorKind.ErrCorrection:
+      errorContent.value = err.ErrCorrection;
+      errorIsCorrection.value = true;
+      modeEnonce.value = false;
+      return;
+  }
 }
 </script>
