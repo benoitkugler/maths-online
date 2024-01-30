@@ -45,7 +45,7 @@ export function splitByRegexp<T>(
 export function itemize(s: string): TextPart[] {
   const out: TextPart[] = [];
   splitByRegexp(reLaTeX, s, TextKind.StaticMath, TextKind.Text).forEach(
-    chunk => {
+    (chunk) => {
       out.push(
         ...splitByRegexp(
           reExpression,
@@ -62,19 +62,24 @@ export function itemize(s: string): TextPart[] {
 export function partToToken(part: TextPart): Token {
   return {
     Content: part.Content,
-    Kind: styles[part.Kind]
+    Kind: styles[part.Kind],
   };
 }
 
-export function defautTokenize(input: string, allowNumberField = false): Token[] {
+export function defautTokenize(
+  input: string,
+  allowNumberField = false
+): Token[] {
   if (allowNumberField) {
     const chunks = splitByRegexp(reNumberField, input, true, false);
-    const out: Token[] = []
+    const out: Token[] = [];
     for (const chunk of chunks) {
-      if (chunk.Kind) { // number field
-        out.push({ Content: chunk.Content, Kind: styles.numberField })
-      } else { // regular 
-        out.push(...itemize(chunk.Content).map(partToToken))
+      if (chunk.Kind) {
+        // number field
+        out.push({ Content: chunk.Content, Kind: styles.numberField });
+      } else {
+        // regular
+        out.push(...itemize(chunk.Content).map(partToToken));
       }
     }
     return out;
@@ -86,9 +91,10 @@ export function defautTokenize(input: string, allowNumberField = false): Token[]
 const styles = {
   [TextKind.Text]: "",
   [TextKind.StaticMath]: `color: ${colorByKind[TextKind.StaticMath]}`,
-  [TextKind.Expression]: `color: ${colorByKind[TextKind.Expression]
-    }; font-weight: bold;`,
-  numberField: "color: pink; font-weight: bold;",
+  [TextKind.Expression]: `color: ${
+    colorByKind[TextKind.Expression]
+  }; font-weight: bold;`,
+  numberField: "color: purple; font-weight: bold;",
 } as const;
 
 const TokenNewLine = "__newLine" as const;
@@ -97,9 +103,9 @@ const TokenNewLine = "__newLine" as const;
 export function splitNewLines(tokens: Token[]): Token[][] {
   const out: Token[][] = [];
   let currentLine: Token[] = [];
-  tokens.forEach(origin => {
+  tokens.forEach((origin) => {
     const splitted = splitOneNewLines(origin);
-    splitted.forEach(token => {
+    splitted.forEach((token) => {
       if (token.Kind == TokenNewLine) {
         out.push(currentLine);
         currentLine = [];
@@ -116,11 +122,11 @@ export function splitNewLines(tokens: Token[]): Token[][] {
 
 function splitOneNewLines(token: Token): Token[] {
   const out: Token[] = [];
-  token.Content.split("\n").forEach(text =>
+  token.Content.split("\n").forEach((text) =>
     out.push(
       {
         Content: text,
-        Kind: token.Kind
+        Kind: token.Kind,
       },
       { Content: "", Kind: TokenNewLine }
     )
