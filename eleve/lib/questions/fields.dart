@@ -47,9 +47,9 @@ abstract class FieldController {
 }
 
 Math textMath(String content, TextStyle style, {Key? key}) {
-  style = style.copyWith(fontSize: (style.fontSize ?? 12) - 1);
   // remove bold since it also changes the font, with indesirable visual effect
-  style = style.copyWith(fontWeight: FontWeight.normal);
+  style = style.copyWith(
+      fontSize: (style.fontSize ?? 12) - 1, fontWeight: FontWeight.normal);
   return Math.tex(
     content,
     key: key,
