@@ -150,6 +150,18 @@ enum _State { answering, displayingFeedback }
 
 class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
   @override
+  void didUpdateWidget(covariant CeinturesQuestionsW oldWidget) {
+    final c = widget.controller;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      c._pageC.animateToPage(c._pageC.initialPage,
+          duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
+    });
+
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = widget.controller;
     return PageView(
