@@ -666,7 +666,7 @@ func (expr *Expr) Substitute(vars Vars) {
 		}
 	case matrix:
 		for i := range atom {
-			for j := range atom {
+			for j := range atom[i] {
 				atom[i][j].Substitute(vars)
 			}
 		}

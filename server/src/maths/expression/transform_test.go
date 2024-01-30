@@ -3,6 +3,8 @@ package expression
 import (
 	"reflect"
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 // an empty string return nil
@@ -334,6 +336,7 @@ func TestExpression_Substitute(t *testing.T) {
 		{"[[x; y]; [1; 2]]", Vars{NewVar('x'): newNb(3)}, "[[3; y]; [1; 2]]"},
 		{"binom(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "binom(l; n)"},
 		{"min(k; n)", Vars{NewVar('k'): newVarExpr('l')}, "min(l; n)"},
+		{"[[ x; y; z]]", Vars{NewVar('x'): newNb(1), NewVar('y'): newNb(1), NewVar('z'): newNb(1)}, "[[ 1; 1; 1]]"},
 	}
 	for _, tt := range tests {
 		expr := mustParse(t, tt.expr)
@@ -401,4 +404,18 @@ func TestBug51(t *testing.T) {
 		expr2.Substitute(vars)
 		_ = expr2.AsLaTeX() // check for crashes
 	}
+}
+
+func TestBug300(t *testing.T) {
+	params := RandomParameters{
+		NewVar('x'): mustParse(t, "1"),
+		NewVar('y'): mustParse(t, "2"),
+		NewVar('z'): mustParse(t, "3"),
+	}
+	vars, err := params.Instantiate()
+	tu.AssertNoErr(t, err)
+
+	e := mustParse(t, "[[ x; y; z]]")
+	e.Substitute(vars)
+	tu.Assert(t, e.String() == "[[1 ; 2 ; 3]]")
 }
