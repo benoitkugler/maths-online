@@ -352,7 +352,7 @@ func DeleteProgressionsByIdTasks(tx DB, idTasks_ ...IdTask) (Progressions, error
 }
 
 // SelectProgressionsByIdStudentAndIdTask selects the items matching the given fields.
-func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item []Progression, err error) {
+func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item Progressions, err error) {
 	rows, err := tx.Query("SELECT * FROM progressions WHERE IdStudent = $1 AND IdTask = $2", idStudent, idTask)
 	if err != nil {
 		return nil, err
@@ -362,7 +362,7 @@ func SelectProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, 
 
 // DeleteProgressionsByIdStudentAndIdTask deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item []Progression, err error) {
+func DeleteProgressionsByIdStudentAndIdTask(tx DB, idStudent teacher.IdStudent, idTask IdTask) (item Progressions, err error) {
 	rows, err := tx.Query("DELETE FROM progressions WHERE IdStudent = $1 AND IdTask = $2 RETURNING *", idStudent, idTask)
 	if err != nil {
 		return nil, err
@@ -747,7 +747,7 @@ func DeleteRandomMonoquestionVariantsByIdQuestions(tx DB, idQuestions_ ...editor
 }
 
 // SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion selects the items matching the given fields.
-func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item []RandomMonoquestionVariant, err error) {
+func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item RandomMonoquestionVariants, err error) {
 	rows, err := tx.Query("SELECT * FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2", idStudent, idRandomMonoquestion)
 	if err != nil {
 		return nil, err
@@ -757,7 +757,7 @@ func SelectRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, i
 
 // DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item []RandomMonoquestionVariant, err error) {
+func DeleteRandomMonoquestionVariantsByIdStudentAndIdRandomMonoquestion(tx DB, idStudent teacher.IdStudent, idRandomMonoquestion IdRandomMonoquestion) (item RandomMonoquestionVariants, err error) {
 	rows, err := tx.Query("DELETE FROM random_monoquestion_variants WHERE IdStudent = $1 AND IdRandomMonoquestion = $2 RETURNING *", idStudent, idRandomMonoquestion)
 	if err != nil {
 		return nil, err

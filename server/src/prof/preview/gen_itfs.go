@@ -1,4 +1,4 @@
-package editor
+package preview
 
 import "encoding/json"
 
@@ -22,6 +22,10 @@ func (out *LoopbackServerEventWrapper) UnmarshalJSON(src []byte) error {
 	switch wr.Kind {
 	case "LoopbackPaused":
 		var data LoopbackPaused
+		err = json.Unmarshal(wr.Data, &data)
+		out.Data = data
+	case "LoopbackShowCeinture":
+		var data LoopbackShowCeinture
 		err = json.Unmarshal(wr.Data, &data)
 		out.Data = data
 	case "LoopbackShowExercice":
@@ -48,6 +52,8 @@ func (item LoopbackServerEventWrapper) MarshalJSON() ([]byte, error) {
 	switch data := item.Data.(type) {
 	case LoopbackPaused:
 		wr = wrapper{Kind: "LoopbackPaused", Data: data}
+	case LoopbackShowCeinture:
+		wr = wrapper{Kind: "LoopbackShowCeinture", Data: data}
 	case LoopbackShowExercice:
 		wr = wrapper{Kind: "LoopbackShowExercice", Data: data}
 	case LoopbackShowQuestion:
@@ -61,6 +67,7 @@ func (item LoopbackServerEventWrapper) MarshalJSON() ([]byte, error) {
 
 const (
 	LoopbackPausedLoKind       = "LoopbackPaused"
+	LoopbackShowCeintureLoKind = "LoopbackShowCeinture"
 	LoopbackShowExerciceLoKind = "LoopbackShowExercice"
 	LoopbackShowQuestionLoKind = "LoopbackShowQuestion"
 )

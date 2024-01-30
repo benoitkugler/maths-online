@@ -210,7 +210,7 @@ func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
 		return LogginOut{Error: "Le mot de passe est incorrect.", IsPasswordError: true}, nil
 	}
 
-	token, err := ct.newToken(teacher)
+	token, err := ct.newToken(teacher.Id)
 	if err != nil {
 		return LogginOut{}, err
 	}

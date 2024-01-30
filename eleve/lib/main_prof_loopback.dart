@@ -5,9 +5,9 @@ import 'dart:html' as html;
 
 import 'package:eleve/build_mode.dart';
 import 'package:eleve/loopback/loopback.dart';
+import 'package:eleve/types/src_prof_preview.dart';
 import 'package:eleve/main_shared.dart';
 import 'package:eleve/shared/errors.dart';
-import 'package:eleve/types/src_prof_editor.dart';
 import 'package:flutter/material.dart';
 
 void main() {

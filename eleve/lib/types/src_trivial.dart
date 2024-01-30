@@ -39,6 +39,21 @@ extension _CategorieExt on Categorie {
   }
 }
 
+String categorieLabel(Categorie v) {
+  switch (v) {
+    case Categorie.purple:
+      return "purple";
+    case Categorie.green:
+      return "green";
+    case Categorie.orange:
+      return "orange";
+    case Categorie.yellow:
+      return "yellow";
+    case Categorie.blue:
+      return "blue";
+  }
+}
+
 Categorie categorieFromJson(dynamic json) =>
     _CategorieExt.fromValue(json as int);
 

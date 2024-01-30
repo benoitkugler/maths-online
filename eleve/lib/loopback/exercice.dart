@@ -1,9 +1,10 @@
 import 'package:eleve/exercice/exercice.dart';
+import 'package:eleve/loopback/question.dart';
 import 'package:eleve/types/src.dart';
-import 'package:eleve/types/src_prof_editor.dart';
+import 'package:eleve/types/src_prof_preview.dart';
 import 'package:eleve/types/src_tasks.dart';
 
-class LoopbackExerciceController {
+class LoopbackExerciceController implements LoopbackController {
   final ExerciceController controller;
   final LoopbackShowExercice data;
 

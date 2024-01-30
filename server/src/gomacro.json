@@ -130,7 +130,7 @@
             "Output": ""
         }
     ],
-    "prof/editor/loopback_types.go": [
+    "prof/preview/loopback_types.go": [
         {
             "Mode": "dart",
             "Output": ""
@@ -141,7 +141,7 @@
         },
         {
             "Mode": "go/unions",
-            "Output": "prof/editor/gen_itfs.go"
+            "Output": "prof/preview/gen_itfs.go"
         }
     ],
     "prof/trivial/monitor_preview_types.go": [
@@ -185,6 +185,12 @@
         }
     ],
     "prof/homework/student_types.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
+        }
+    ],
+    "prof/ceintures/student_types.go": [
         {
             "Mode": "dart",
             "Output": ""

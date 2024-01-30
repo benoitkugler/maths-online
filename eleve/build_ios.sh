@@ -4,3 +4,4 @@
 # mv flutter_01.sksl.json flutter_ios.sksl.json
 # flutter build ipa -t lib/main_eleve_mobile.dart --bundle-sksl-path flutter_ios.sksl.json
 flutter build ipa -t lib/main_eleve_mobile.dart
+flutter build ios -t lib/main_eleve_mobile.dart # to locally preview

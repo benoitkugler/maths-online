@@ -205,6 +205,29 @@ extension _LabelPosExt on LabelPos {
   }
 }
 
+String labelPosLabel(LabelPos v) {
+  switch (v) {
+    case LabelPos.top:
+      return "Au dessus";
+    case LabelPos.bottom:
+      return "En dessous";
+    case LabelPos.left:
+      return "A gauche";
+    case LabelPos.right:
+      return "A droite";
+    case LabelPos.topLeft:
+      return "Au dessus, à gauche";
+    case LabelPos.topRight:
+      return "Au dessus, à droite";
+    case LabelPos.bottomRight:
+      return "En dessous, à droite";
+    case LabelPos.bottomLeft:
+      return "En dessous, à gauche";
+    case LabelPos.hide:
+      return "Masquer la légende";
+  }
+}
+
 LabelPos labelPosFromJson(dynamic json) => _LabelPosExt.fromValue(json as int);
 
 dynamic labelPosToJson(LabelPos item) => item.toValue();
@@ -365,6 +388,17 @@ extension _SegmentKindExt on SegmentKind {
 
   int toValue() {
     return index;
+  }
+}
+
+String segmentKindLabel(SegmentKind v) {
+  switch (v) {
+    case SegmentKind.sKSegment:
+      return "Segment";
+    case SegmentKind.sKVector:
+      return "Vecteur";
+    case SegmentKind.sKLine:
+      return "Droite (infinie)";
   }
 }
 

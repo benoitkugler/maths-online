@@ -237,7 +237,7 @@ func DeleteSelfaccessTrivialsByIdTeachers(tx DB, idTeachers_ ...teacher.IdTeache
 }
 
 // SelectSelfaccessTrivialsByIdTrivialAndIdTeacher selects the items matching the given fields.
-func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item []SelfaccessTrivial, err error) {
+func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
 	rows, err := tx.Query("SELECT * FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2", idTrivial, idTeacher)
 	if err != nil {
 		return nil, err
@@ -247,7 +247,7 @@ func SelectSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial,
 
 // DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item []SelfaccessTrivial, err error) {
+func DeleteSelfaccessTrivialsByIdTrivialAndIdTeacher(tx DB, idTrivial IdTrivial, idTeacher teacher.IdTeacher) (item SelfaccessTrivials, err error) {
 	rows, err := tx.Query("DELETE FROM selfaccess_trivials WHERE IdTrivial = $1 AND IdTeacher = $2 RETURNING *", idTrivial, idTeacher)
 	if err != nil {
 		return nil, err

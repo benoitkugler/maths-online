@@ -35,6 +35,7 @@ func RandomID(numberOnly bool, length int, isTaken func(string) bool) string {
 	newID := RandomString(numberOnly, length)
 	// avoid (unlikely) collisions
 	for taken := isTaken(newID); taken; newID = RandomString(numberOnly, length) {
+		taken = isTaken(newID)
 	}
 	return newID
 }

@@ -15,14 +15,16 @@ class UserSettings {
   PlaylistController songs;
   Map<String, String> trivialGameMetas;
   bool hasBeenLaunched;
+  String ceinturesAnonymousID;
 
-  UserSettings(
-      {this.studentPseudo = "",
-      this.studentID = "",
-      PlaylistController? songs,
-      Map<String, String>? trivialGameMetas,
-      this.hasBeenLaunched = false})
-      : trivialGameMetas = trivialGameMetas ?? {},
+  UserSettings({
+    this.studentPseudo = "",
+    this.studentID = "",
+    PlaylistController? songs,
+    Map<String, String>? trivialGameMetas,
+    this.hasBeenLaunched = false,
+    this.ceinturesAnonymousID = "",
+  })  : trivialGameMetas = trivialGameMetas ?? {},
         songs = songs ?? Audio.defaultPlaylist;
 
   String toJson() {
@@ -32,6 +34,7 @@ class UserSettings {
       "songs": songs.toJson(),
       "trivialGameMetas": trivialGameMetas,
       "hasBeenLaunched": hasBeenLaunched,
+      "ceinturesAnonymousID": ceinturesAnonymousID,
     });
   }
 
@@ -53,6 +56,7 @@ class UserSettings {
       trivialGameMetas:
           gameMetas.map((key, value) => MapEntry(key, value as String)),
       hasBeenLaunched: (dict["hasBeenLaunched"] ?? false) as bool,
+      ceinturesAnonymousID: (dict["ceinturesAnonymousID"] ?? "") as String,
     );
   }
 }

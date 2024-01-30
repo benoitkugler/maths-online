@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/benoitkugler/maths-online/server/src/prof/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/prof/editor"
 	"github.com/benoitkugler/maths-online/server/src/prof/homework"
 	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
@@ -12,6 +13,7 @@ import (
 func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	edit *editor.Controller, tc *teacher.Controller,
 	home *homework.Controller, review *reviews.Controller,
+	ce *ceintures.Controller,
 ) {
 	e.POST("/prof/inscription", tc.AskInscription)
 	e.GET(teacher.ValidateInscriptionEndPoint, tc.ValidateInscription)
@@ -120,6 +122,14 @@ func setupProfAPI(e *echo.Echo, tvc *trivial.Controller,
 	gr.POST("/api/prof/homework/marks", home.HomeworkGetMarks)
 	gr.GET("/api/prof/homework/dispences", home.HomeworkGetDispenses)
 	gr.POST("/api/prof/homework/dispences", home.HomeworkSetDispense)
+
+	// ceintures
+	gr.GET("/api/prof/ceintures/scheme", ce.CeinturesGetScheme)
+	gr.POST("/api/prof/ceintures/pending", ce.CeinturesGetPending)
+	gr.POST("/api/prof/ceintures/questions", ce.CeinturesGetQuestions)
+	gr.PUT("/api/prof/ceintures/question", ce.CeinturesCreateQuestion)
+	gr.POST("/api/prof/ceintures/question", ce.CeinturesSaveQuestion)
+	gr.DELETE("/api/prof/ceintures/question", ce.CeinturesDeleteQuestion)
 
 	// review page
 	gr.PUT("/api/prof/review", review.ReviewCreate)

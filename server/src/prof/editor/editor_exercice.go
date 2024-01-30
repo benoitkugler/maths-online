@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
+	"github.com/benoitkugler/maths-online/server/src/prof/preview"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
 	ed "github.com/benoitkugler/maths-online/server/src/sql/editor"
 	"github.com/benoitkugler/maths-online/server/src/sql/reviews"
@@ -757,7 +758,7 @@ func deleteExercices(db ed.DB, ids []ed.IdExercice) error {
 
 type ExerciceWithPreview struct {
 	Ex      ExerciceExt
-	Preview LoopbackShowExercice
+	Preview preview.LoopbackShowExercice
 }
 
 type ExerciceCreateQuestionIn struct {
@@ -1177,7 +1178,7 @@ type SaveExerciceAndPreviewOut struct {
 	QuestionIndex int
 
 	IsValid bool
-	Preview LoopbackShowExercice
+	Preview preview.LoopbackShowExercice
 }
 
 func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, userID uID) (SaveExerciceAndPreviewOut, error) {
@@ -1268,10 +1269,10 @@ func (ct *Controller) saveExerciceAndPreview(params SaveExerciceAndPreviewIn, us
 // newExercicePreview instantiates the exercice and return preview data
 // [nextQuestion] is the index of the question to show in the preview,
 // or -1 for the summary
-func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrection bool) (LoopbackShowExercice, error) {
+func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrection bool) (preview.LoopbackShowExercice, error) {
 	instance, err := content.Instantiate()
 	if err != nil {
-		return LoopbackShowExercice{}, err
+		return preview.LoopbackShowExercice{}, err
 	}
 
 	qus := content.Questions()
@@ -1281,14 +1282,14 @@ func newExercicePreview(content taAPI.ExerciceData, nextQuestion int, showCorrec
 	}
 
 	if nextQuestion >= len(instance.Questions) {
-		return LoopbackShowExercice{}, fmt.Errorf("internal error: invalid question index %d", nextQuestion)
+		return preview.LoopbackShowExercice{}, fmt.Errorf("internal error: invalid question index %d", nextQuestion)
 	}
 	progression := make([]ta.QuestionHistory, len(instance.Questions))
 	// mark previous question as validated for better consistency on the preview
 	for i := 0; i < nextQuestion; i++ {
 		progression[i] = ta.QuestionHistory{true}
 	}
-	return LoopbackShowExercice{
+	return preview.LoopbackShowExercice{
 		Exercice: instance,
 		Progression: taAPI.ProgressionExt{
 			NextQuestion: nextQuestion,

@@ -760,7 +760,7 @@ func DeleteTravailExceptionsByIdTravails(tx DB, idTravails_ ...IdTravail) (Trava
 }
 
 // SelectTravailExceptionsByIdStudentAndIdTravail selects the items matching the given fields.
-func SelectTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item []TravailException, err error) {
+func SelectTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item TravailExceptions, err error) {
 	rows, err := tx.Query("SELECT * FROM travail_exceptions WHERE IdStudent = $1 AND IdTravail = $2", idStudent, idTravail)
 	if err != nil {
 		return nil, err
@@ -770,7 +770,7 @@ func SelectTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdS
 
 // DeleteTravailExceptionsByIdStudentAndIdTravail deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item []TravailException, err error) {
+func DeleteTravailExceptionsByIdStudentAndIdTravail(tx DB, idStudent teacher.IdStudent, idTravail IdTravail) (item TravailExceptions, err error) {
 	rows, err := tx.Query("DELETE FROM travail_exceptions WHERE IdStudent = $1 AND IdTravail = $2 RETURNING *", idStudent, idTravail)
 	if err != nil {
 		return nil, err

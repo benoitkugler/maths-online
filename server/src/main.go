@@ -12,6 +12,7 @@ import (
 
 	"github.com/benoitkugler/maths-online/server/src/mailer"
 	"github.com/benoitkugler/maths-online/server/src/pass"
+	"github.com/benoitkugler/maths-online/server/src/prof/ceintures"
 	"github.com/benoitkugler/maths-online/server/src/prof/editor"
 	"github.com/benoitkugler/maths-online/server/src/prof/homework"
 	"github.com/benoitkugler/maths-online/server/src/prof/reviews"
@@ -23,7 +24,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:generate ../../../gomacro/cmd/gomacro gomacro.json
+//go:generate ../../../gomacro/cmd/gomacro --config gomacro.json
 
 func connectDB(dev bool) (*sql.DB, error) {
 	var credentials pass.DB
@@ -98,11 +99,12 @@ func getAdminEmails() []string {
 }
 
 func devSetup(e *echo.Echo, tc *teacher.Controller) {
-	dev, err := tc.GetDevToken()
+	tokenU, tokenAdmin, err := tc.GetDevTokens()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(dev)
+	fmt.Println("Token user:", tokenU)
+	fmt.Println("Token admin:", tokenAdmin)
 
 	// also Cross origin requests
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -191,6 +193,7 @@ func main() {
 	edit := editor.NewController(db, admin)
 	vit := &vitrine.Controller{Smtp: smtp, AdminMails: adminEmails}
 	review := reviews.NewController(db, admin, smtp)
+	ce := ceintures.NewController(db, admin, studentKey)
 
 	// for now, show the logs
 	tvGame.ProgressLogger.SetOutput(os.Stdout)
@@ -208,7 +211,7 @@ func main() {
 		devSetup(e, tc)
 	}
 
-	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review)
+	setupRoutes(e, db, tvc, edit, tc, hwc, vit, review, ce)
 
 	if *dryPtr {
 		sanityChecks(db, *skipValidation)
@@ -305,8 +308,9 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	tvc *trivial.Controller, edit *editor.Controller,
 	tc *teacher.Controller, home *homework.Controller,
 	vit *vitrine.Controller, review *reviews.Controller,
+	ce *ceintures.Controller,
 ) {
-	setupProfAPI(e, tvc, edit, tc, home, review)
+	setupProfAPI(e, tvc, edit, tc, home, review, ce)
 
 	// main page
 	e.GET("", serveVitrineApp)
@@ -335,6 +339,12 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	e.GET("/api/student/trivial/selfaccess", tvc.StudentGetSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/launch", tvc.StudentLaunchSelfaccess)
 	e.GET("/api/student/trivial/selfaccess/start", tvc.StudentStartSelfaccess)
+	// student ceintures access
+	e.POST("/api/student/ceintures", ce.CeinturesGetEvolution)
+	e.PUT("/api/student/ceintures", ce.CeinturesCreateEvolution)
+	e.POST("/api/student/ceintures/stage", ce.CeinturesSelectQuestions)
+	e.PUT("/api/student/ceintures/stage", ce.CeinturesEvaluateAnswers)
+
 	// trivial monitor
 	e.GET("/api/trivial/monitor", tvc.GetTrivialsMetrics)
 
@@ -352,8 +362,9 @@ func setupRoutes(e *echo.Echo, db *sql.DB,
 	}
 
 	// embeded preview app
-	e.POST("/api/loopack/evaluate-question", edit.LoopackEvaluateQuestion)
-	e.POST("/api/loopack/question-answer", edit.LoopbackShowQuestionAnswer)
+	e.POST("/api/loopback/evaluate-question", edit.LoopackEvaluateQuestion)
+	e.POST("/api/loopback/question-answer", edit.LoopbackShowQuestionAnswer)
+	e.POST("/api/loopback/evaluate-ceinture", ce.LoopbackEvaluateCeinture)
 
 	// shared expression syntax check endpoint
 	e.GET("/api/check-expression", checkExpressionSyntax)

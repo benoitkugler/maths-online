@@ -1,3 +1,5 @@
+import 'package:eleve/activities/ceintures/api.dart';
+import 'package:eleve/activities/ceintures/ceintures.dart';
 import 'package:eleve/activities/homework/homework.dart';
 import 'package:eleve/activities/trivialpoursuit/controller.dart';
 import 'package:eleve/activities/trivialpoursuit/login.dart';
@@ -145,38 +147,49 @@ class __AppScaffoldState extends State<_AppScaffold> {
     await widget.handler.save(settings);
   }
 
+  void _saveCeinturesAnonymousID(String id) async {
+    settings.ceinturesAnonymousID = id;
+    await widget.handler.save(settings);
+  }
+
   void _launchTrivialPoursuit() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
         builder: (context) =>
             ActivityStart(() => Navigator.of(context).pop(true))));
-    if (onDone == null) {
-      return;
-    }
+    if (onDone == null) return;
+    if (!mounted) return;
 
     widget.audioPlayer.run();
-    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => Scaffold(
             body: TrivialGameSelect(TrivialSettings(widget.buildMode, settings),
                 _saveTrivialMeta))));
-    onPop.then((value) => widget.audioPlayer.pause());
+    widget.audioPlayer.pause();
   }
 
   void _launchHomework() async {
     final onDone = await Navigator.of(context).push(MaterialPageRoute<bool>(
         builder: (context) =>
             ActivityStart(() => Navigator.of(context).pop(true))));
-    if (onDone == null) {
-      return;
-    }
+    if (onDone == null) return;
+    if (!mounted) return;
 
     widget.audioPlayer.run();
     final isIdentified = settings.studentID.isNotEmpty;
-    final onPop = Navigator.of(context).push(MaterialPageRoute<void>(
+    await Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (_) => isIdentified
             ? HomeworkStart(
                 ServerHomeworkAPI(widget.buildMode, settings.studentID))
             : const HomeworkDisabled()));
-    onPop.then((value) => widget.audioPlayer.pause());
+    widget.audioPlayer.pause();
+  }
+
+  void _launchCeintures() async {
+    widget.audioPlayer.run();
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => CeinturesStart(ServerCeinturesAPI(widget.buildMode),
+            settings, _saveCeinturesAnonymousID)));
+    widget.audioPlayer.pause();
   }
 
   @override
@@ -211,6 +224,7 @@ class __AppScaffoldState extends State<_AppScaffold> {
                     children: [
                       TrivialActivityIcon(_launchTrivialPoursuit),
                       HomeworkActivityIcon(_launchHomework),
+                      // CeinturesActivityIcon(_launchCeintures),
                     ],
                   ),
                 )
