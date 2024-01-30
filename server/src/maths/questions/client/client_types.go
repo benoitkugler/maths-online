@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/benoitkugler/maths-online/server/src/maths/expression/sets"
 	"github.com/benoitkugler/maths-online/server/src/maths/functiongrapher"
 	"github.com/benoitkugler/maths-online/server/src/maths/repere"
 )
@@ -38,6 +39,7 @@ func (TreeFieldBlock) isBlock()                  {}
 func (TableFieldBlock) isBlock()                 {}
 func (VectorFieldBlock) isBlock()                {}
 func (ProofFieldBlock) isBlock()                 {}
+func (SetFieldBlock) isBlock()                   {}
 
 // TextOrMath is a part of a text line, rendered
 // either as plain text or using LaTeX in text mode.
@@ -295,6 +297,13 @@ type ProofFieldBlock struct {
 	ID            int
 }
 
+// SetFieldBlock asks the student to build a set expression,
+// using the given [Sets] and math set operator
+type SetFieldBlock struct {
+	Sets []string
+	ID   int
+}
+
 // Answer is a sum type for the possible answers
 // of question fields
 type Answer interface {
@@ -315,6 +324,7 @@ func (TreeAnswer) isAnswer()            {}
 func (TableAnswer) isAnswer()           {}
 func (VectorNumberAnswer) isAnswer()    {}
 func (ProofAnswer) isAnswer()           {}
+func (SetAnswer) isAnswer()             {}
 
 // NumberAnswer is compared with float equality, with a fixed
 // precision of 8 digits
@@ -389,6 +399,11 @@ type VectorNumberAnswer struct {
 
 type ProofAnswer struct {
 	Proof Proof
+}
+
+type SetAnswer struct {
+	// Sets are relative to the question [Sets] list.
+	Root sets.ListNode
 }
 
 // QuestionAnswersIn map the field ids to their answer

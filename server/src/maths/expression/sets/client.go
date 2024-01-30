@@ -3,7 +3,7 @@ package sets
 type SetOp uint8
 
 const (
-	SLeaf = iota
+	SLeaf SetOp = iota
 	SUnion
 	SInter
 	SComplement
