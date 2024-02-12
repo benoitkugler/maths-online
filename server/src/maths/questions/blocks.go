@@ -36,7 +36,7 @@ type Block interface {
 	//	- performs validation not depending on instantiated parameters
 	//  - delegates to `validator` for the other
 	// is is also meant to ensure that only valid content is persisted on DB
-	setupValidator(ex.RandomParameters) (validator, error)
+	setupValidator(*ex.RandomParameters) (validator, error)
 }
 
 // ParameterEntry is either a single variable definition,
@@ -46,7 +46,7 @@ type ParameterEntry interface {
 	String() string
 
 	// mergeTo returns an `ErrDuplicateParameter` error if parameters are already defined
-	mergeTo(vars ex.RandomParameters) error
+	mergeTo(vars *ex.RandomParameters) error
 }
 
 func (rp Rp) String() string {
@@ -55,32 +55,20 @@ func (rp Rp) String() string {
 func (it In) String() string { return string(it) }
 func (cm Co) String() string { return string(cm) }
 
-func (rp Rp) mergeTo(vars ex.RandomParameters) error {
-	expr, err := ex.Parse(rp.Expression)
-	if err != nil {
-		return err
-	}
-	if _, has := vars[rp.Variable]; has {
-		return ex.ErrDuplicateParameter{Duplicate: rp.Variable}
-	}
-	vars[rp.Variable] = expr
-	return nil
+func (rp Rp) mergeTo(vars *ex.RandomParameters) error {
+	return vars.ParseVariable(rp.Variable, rp.Expression)
 }
 
-func (it In) mergeTo(vars ex.RandomParameters) error {
-	intr, err := ex.ParseIntrinsic(string(it))
-	if err != nil {
-		return err
-	}
-	return intr.MergeTo(vars)
+func (it In) mergeTo(vars *ex.RandomParameters) error {
+	return vars.ParseIntrinsic(string(it))
 }
 
 // Comment are ignored
-func (Co) mergeTo(vars ex.RandomParameters) error { return nil }
+func (Co) mergeTo(vars *ex.RandomParameters) error { return nil }
 
 // ToMap may only be used after `Validate`
-func (pr Parameters) ToMap() ex.RandomParameters {
-	out := make(ex.RandomParameters)
+func (pr Parameters) ToMap() *ex.RandomParameters {
+	out := ex.NewRandomParameters()
 	for _, entry := range pr {
 		_ = entry.mergeTo(out) // error is check in Validate
 	}
@@ -313,7 +301,7 @@ func (t TextBlock) instantiate(params ex.Vars, _ int) (instance, error) {
 	}, nil
 }
 
-func (t TextBlock) setupValidator(ex.RandomParameters) (validator, error) {
+func (t TextBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	_, err := t.Parts.parse()
 	return noOpValidator{}, err
 }
@@ -358,7 +346,7 @@ func (f FormulaBlock) instantiate(params ex.Vars, _ int) (instance, error) {
 	return out, nil
 }
 
-func (f FormulaBlock) setupValidator(ex.RandomParameters) (validator, error) {
+func (f FormulaBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	_, err := f.Parts.parse()
 	return noOpValidator{}, err
 }
@@ -450,7 +438,7 @@ func (vt VariationTableBlock) setupValidatorVT() (variationTableValidator, error
 	return variationTableValidator{label: label, xs: xExprs, fxs: fxExprs}, nil
 }
 
-func (vt VariationTableBlock) setupValidator(ex.RandomParameters) (validator, error) {
+func (vt VariationTableBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	out, err := vt.setupValidatorVT()
 	if err != nil {
 		return nil, err
@@ -500,7 +488,7 @@ func (st SignTableBlock) instantiateST(params ex.Vars) (SignTableInstance, error
 	return out, nil
 }
 
-func (st SignTableBlock) setupValidator(ex.RandomParameters) (validator, error) {
+func (st SignTableBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	if len(st.Xs) < 2 {
 		return nil, errors.New("Au moins deux colonnes sont attendues.")
 	}
@@ -660,7 +648,7 @@ func (f FigureBlock) instantiateF(params ex.Vars) (FigureInstance, error) {
 	return out, nil
 }
 
-func (f FigureBlock) setupValidator(ex.RandomParameters) (validator, error) {
+func (f FigureBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	var (
 		out figureValidator
 		err error
@@ -847,7 +835,7 @@ type FunctionsGraphBlock struct {
 	Points             []FunctionPoint
 }
 
-func (fg FunctionsGraphBlock) setupValidator(params ex.RandomParameters) (validator, error) {
+func (fg FunctionsGraphBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	out := functionsGraphValidator{
 		functions:          make([]functionValidator, len(fg.FunctionExprs)),
 		variationValidator: make([]variationTableValidator, len(fg.FunctionVariations)),
@@ -1124,7 +1112,7 @@ func (t TableBlock) instantiate(params ex.Vars, _ int) (instance, error) {
 	return out, nil
 }
 
-func (t TableBlock) setupValidator(ex.RandomParameters) (validator, error) {
+func (t TableBlock) setupValidator(*ex.RandomParameters) (validator, error) {
 	for _, cell := range t.HorizontalHeaders {
 		if err := cell.validate(); err != nil {
 			return nil, err
@@ -1204,7 +1192,7 @@ func (tf TreeBlock) instantiateT(params ex.Vars) (TreeInstance, error) {
 	return out, err
 }
 
-func (tf TreeBlock) setupValidator(params ex.RandomParameters) (validator, error) {
+func (tf TreeBlock) setupValidator(params *ex.RandomParameters) (validator, error) {
 	// check events syntax
 	for _, event := range tf.EventsProposals {
 		_, err := event.parse()

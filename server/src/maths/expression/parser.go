@@ -28,7 +28,7 @@ type varMap map[int]Variable
 
 // Positions returns the indices in the original expression rune slice
 // of every occurence of the given variables
-func (vm varMap) Positions(subset RandomParameters) []int {
+func (vm varMap) Positions(subset map[Variable]bool) []int {
 	var out []int
 	for index, v := range vm {
 		if _, has := subset[v]; has {

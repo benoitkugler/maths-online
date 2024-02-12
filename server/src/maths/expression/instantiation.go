@@ -40,7 +40,6 @@ func (irv ErrInvalidRandomParameters) Error() string {
 
 type Instantiater struct {
 	paramsInstantiater
-	out Vars
 }
 
 func NewInstantiater(rv RandomParameters) *Instantiater {
@@ -50,7 +49,6 @@ func NewInstantiater(rv RandomParameters) *Instantiater {
 			seen:    make(map[Variable]bool),
 			results: make(map[Variable]*Expr),
 		},
-		make(Vars, len(rv)),
 	}
 }
 
@@ -61,21 +59,24 @@ func (inst *Instantiater) Reset() {
 	for k := range inst.results {
 		delete(inst.results, k)
 	}
-	for k := range inst.out {
-		delete(inst.out, k)
-	}
 }
 
 func (inst *Instantiater) Instantiate() (Vars, error) {
-	for v := range inst.defs {
-		inst.paramsInstantiater.currentVariable = v
-		value, err := inst.paramsInstantiater.instantiate(v) // this triggers the evaluation of the expression
+	for _, spe := range inst.defs.specials {
+		err := spe.instantiateTo(inst.results)
 		if err != nil {
 			return nil, err
 		}
-		inst.out[v] = value
 	}
-	return inst.out, nil
+
+	for v := range inst.defs.defs {
+		inst.paramsInstantiater.currentVariable = v
+		_, err := inst.paramsInstantiater.instantiate(v) // this triggers the evaluation of the expression
+		if err != nil {
+			return nil, err
+		}
+	}
+	return inst.results, nil
 }
 
 // Instantiate generates a random version of the variables, resolving possible dependencies.
@@ -109,12 +110,12 @@ type paramsInstantiater struct {
 // instantiate instantiate the given variable [v], and its dependencies
 // if [v] is not defined, it returns an error
 func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
-	// first, check if it has already been resolved by side effect
+	// first, check if it has already been resolved by side effect or special functions
 	if expr, has := rvv.results[v]; has {
 		return expr, nil
 	}
 
-	expr, ok := rvv.defs[v]
+	expr, ok := rvv.defs.defs[v]
 	if !ok {
 		return nil, ErrInvalidRandomParameters{
 			Cause:  v,
@@ -294,7 +295,7 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		return out.tryEval(ctx), nil
 	case Variable:
 		// if the variable is not defined, just returns the free variable as an expression
-		if _, isDefined := ctx.defs[atom]; !isDefined {
+		if _, isDefined := ctx.defs.defs[atom]; !isDefined {
 			return NewVarExpr(atom), nil
 		}
 		ctx.currentVariable = atom

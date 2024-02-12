@@ -181,9 +181,9 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rv := make(RandomParameters)
+		rv := NewRandomParameters()
 		for v, e := range tt.rv {
-			rv[v] = mustParse(t, e)
+			rv.defs[v] = mustParse(t, e)
 		}
 
 		got, err := rv.Instantiate()
@@ -208,7 +208,7 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 
 func Test_randChoice(t *testing.T) {
 	for range [10]int{} {
-		rv := RandomParameters{NewVar('P'): mustParse(t, "randChoice(A;B;C)")}
+		rv := RandomParameters{defs: map[Variable]*Expr{NewVar('P'): mustParse(t, "randChoice(A;B;C)")}}
 		vars, err := rv.Instantiate()
 		if err != nil {
 			t.Fatal(err)
@@ -226,36 +226,36 @@ func Test_randChoice(t *testing.T) {
 
 func TestCycle(t *testing.T) {
 	// test that zero length cycles are properly accepted
-	params := RandomParameters{
+	params := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
 		NewVar('c'): mustParse(t, "choiceFrom(c;d; randint(1;2))"),
-	}
+	}}
 	err := params.Validate()
 	tu.AssertNoErr(t, err)
 
-	params = RandomParameters{
+	params = RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "a"),
 		NewVar('b'): mustParse(t, "b"),
-	}
+	}}
 	err = params.Validate()
 	tu.AssertNoErr(t, err)
 
 	// test that non trivial cycle are not accepted
-	params = RandomParameters{
+	params = RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
 		NewVar('b'): mustParse(t, "randChoice(a;b)"),
-	}
+	}}
 	err = params.Validate()
 	tu.Assert(t, err != nil)
 }
 
 func TestInstantiateMinMax(t *testing.T) {
-	pr := RandomParameters{
+	pr := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'):       mustParse(t, "randChoice(1;2;3)"),
 		NewVar('b'):       mustParse(t, "randChoice(8;9;10)"),
 		NewVarI('s', "1"): mustParse(t, "min(a; b)"),
 		NewVarI('s', "2"): mustParse(t, "max(a; b)"),
-	}
+	}}
 	vars, err := pr.Instantiate()
 	tu.AssertNoErr(t, err)
 
@@ -269,11 +269,11 @@ func TestInstantiateMinMax(t *testing.T) {
 }
 
 func TestCycleFunc(t *testing.T) {
-	params := RandomParameters{
+	params := RandomParameters{defs: map[Variable]*Expr{
 		NewVar('a'): mustParse(t, "randChoice(a;b)"),
 		NewVar('c'): mustParse(t, "min(a; n)"),
 		NewVar('d'): mustParse(t, "binom(a; n)"),
-	}
+	}}
 	err := params.Validate()
 	tu.AssertNoErr(t, err)
 }

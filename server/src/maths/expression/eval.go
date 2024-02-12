@@ -446,6 +446,8 @@ func minMax(args []*Expr, res varEvaluer) (float64, float64, error) {
 	return min, max, nil
 }
 
+func randomInt(start, end int) int { return start + rand.Intn(end-start+1) }
+
 // return a random number
 func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 	switch r.kind {
@@ -459,7 +461,7 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 		if err != nil {
 			return real{}, err
 		}
-		return newRealInt(int(start) + rand.Intn(int(end-start)+1)), nil
+		return newRealInt(randomInt(int(start), int(end))), nil
 	case randPrime:
 		start, end, err := startEnd(r.args[0], r.args[1], res)
 		if err != nil {

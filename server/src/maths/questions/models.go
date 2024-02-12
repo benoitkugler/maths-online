@@ -24,11 +24,11 @@ type GeometricConstructionFieldBlock struct {
 
 type GeoField interface {
 	instantiate(params expression.Vars) (geoFieldInstance, error)
-	setupValidator(params expression.RandomParameters) (validator, error)
+	setupValidator(params *expression.RandomParameters) (validator, error)
 }
 type FiguresOrGraphs interface {
 	instantiateFG(params expression.Vars) (client.FigureOrGraph, error)
-	setupValidator(params expression.RandomParameters) (validator, error)
+	setupValidator(params *expression.RandomParameters) (validator, error)
 }
 
 func loadJSON(out interface{}, src interface{}) error {

@@ -18,12 +18,13 @@ func (err ErrIntrinsic) Error() string {
 	return err.Reason
 }
 
-// ParseIntrinsic interprets `s` as a special function definition.
+// ParseIntrinsic interprets `s` as a special function definition,
+// adding it to the parameters.
 // It returns `ErrIntrinsic` is the definition is invalid.
-func ParseIntrinsic(s string) (Intrinsic, error) {
+func (rd *RandomParameters) ParseIntrinsic(s string) error {
 	chunks := strings.Split(s, "=")
 	if len(chunks) != 2 {
-		return nil, ErrIntrinsic{
+		return ErrIntrinsic{
 			Reason: fmt.Sprintf("Une fonction spéciale doit contenir un seul symbol = (%d parties reçues)", len(chunks)),
 		}
 	}
@@ -33,7 +34,7 @@ func ParseIntrinsic(s string) (Intrinsic, error) {
 	startArg := strings.IndexByte(chunks[1], '(')
 	endArg := strings.IndexByte(chunks[1], ')')
 	if startArg == -1 || endArg == -1 || endArg < startArg {
-		return nil, ErrIntrinsic{
+		return ErrIntrinsic{
 			Reason: "Parenthèses invalides",
 		}
 	}
@@ -47,12 +48,21 @@ func ParseIntrinsic(s string) (Intrinsic, error) {
 
 	switch funcName {
 	case "pythagorians":
-		return parsePythagorians(varNames, args)
+		p, err := parsePythagorians(varNames, args)
+		if err != nil {
+			return err
+		}
+		rd.specials = append(rd.specials, p)
+		return nil
 	case "projection":
-		return parseProjection(varNames, args)
+		p, err := parseProjection(varNames, args)
+		if err != nil {
+			return err
+		}
+		return p.mergeTo(rd)
 	default:
 		_ = exhaustiveIntrinsicSwitch
-		return nil, ErrIntrinsic{
+		return ErrIntrinsic{
 			Reason: fmt.Sprintf("Fonction spéciale %s inconnue", funcName),
 		}
 	}
@@ -63,7 +73,7 @@ func parseVariable(s string) Variable {
 	return tk.readVariable()
 }
 
-func parsePythagorians(variables []string, arguments []string) (out PythagorianTriplet, err error) {
+func parsePythagorians(variables []string, arguments []string) (out pythagorianTriplet, err error) {
 	if len(variables) != 3 {
 		return out, ErrIntrinsic{
 			Reason: fmt.Sprintf("La fonction 'pythagorians' définit 3 variables (%d reçues)", len(variables)),
@@ -72,10 +82,10 @@ func parsePythagorians(variables []string, arguments []string) (out PythagorianT
 
 	switch len(arguments) {
 	case 0: // bound is optionnal
-		out.Bound = 10
+		out.bound = 10
 	case 1:
-		out.Bound, err = strconv.Atoi(strings.TrimSpace(arguments[0]))
-		if err != nil || out.Bound < 2 {
+		out.bound, err = strconv.Atoi(strings.TrimSpace(arguments[0]))
+		if err != nil || out.bound < 2 {
 			return out, ErrIntrinsic{
 				Reason: "L'argument optionnel de la fonction 'pythagorians' doit être un nombre entier >= 2",
 			}
@@ -86,14 +96,14 @@ func parsePythagorians(variables []string, arguments []string) (out PythagorianT
 		}
 	}
 
-	out.A = parseVariable(variables[0])
-	out.B = parseVariable(variables[1])
-	out.C = parseVariable(variables[2])
+	out.a = parseVariable(variables[0])
+	out.b = parseVariable(variables[1])
+	out.c = parseVariable(variables[2])
 
 	return out, nil
 }
 
-func parseProjection(variables []string, arguments []string) (out OrthogonalProjection, err error) {
+func parseProjection(variables []string, arguments []string) (out orthogonalProjection, err error) {
 	if len(arguments) != 3 {
 		return out, ErrIntrinsic{
 			Reason: fmt.Sprintf("La fonction 'projection' accepte 3 points en arguments (%d reçus)", len(arguments)),

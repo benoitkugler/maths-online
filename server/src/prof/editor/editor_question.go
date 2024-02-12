@@ -920,9 +920,7 @@ func (ct *Controller) checkQuestionParameters(params CheckQuestionParametersIn) 
 	}
 
 	var out CheckQuestionParametersOut
-	for vr := range params.Parameters.ToMap() {
-		out.Variables = append(out.Variables, vr)
-	}
+	out.Variables = params.Parameters.ToMap().DefinedVariables()
 	sort.Slice(out.Variables, func(i, j int) bool {
 		return out.Variables[i].String() < out.Variables[j].String()
 	})

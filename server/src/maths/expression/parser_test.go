@@ -755,9 +755,9 @@ func TestVarMap_Positions(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		rv := make(RandomParameters)
+		rv := make(map[Variable]bool)
 		for _, v := range tt.args {
-			rv[v] = nil
+			rv[v] = true
 		}
 
 		_, vm, err := parseBytes([]byte(tt.expr))

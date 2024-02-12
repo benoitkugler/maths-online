@@ -10,15 +10,60 @@ import (
 
 // RandomParameters stores a set of random parameters definitions,
 // which may be related, but cannot contain cycles.
-type RandomParameters map[Variable]*Expr
+type RandomParameters struct {
+	// special functions, called before resolving [defs]
+	specials []intrinsic
+
+	defs map[Variable]*Expr
+}
+
+func NewRandomParameters() *RandomParameters {
+	return &RandomParameters{defs: make(map[Variable]*Expr, 10)}
+}
+
+// IsDefined returns true if the variable [v] is defined (regular variables
+// and special functions included)
+func (rp RandomParameters) IsDefined(v Variable) bool {
+	for _, spe := range rp.specials {
+		if spe.isDef(v) {
+			return true
+		}
+	}
+	_, has := rp.defs[v]
+	return has
+}
+
+func (rp RandomParameters) DefinedVariables() []Variable {
+	var out []Variable
+	for _, spe := range rp.specials {
+		out = append(out, spe.vars()...)
+	}
+	for v := range rp.defs {
+		out = append(out, v)
+	}
+	return out
+}
+
+// ParseVariable parses the given expression and adds it to the parameters
+func (rp RandomParameters) ParseVariable(v Variable, expr string) error {
+	e, err := Parse(expr)
+	if err != nil {
+		return err
+	}
+	if _, has := rp.defs[v]; has {
+		return ErrDuplicateParameter{Duplicate: v}
+	}
+	rp.defs[v] = e
+	return nil
+}
 
 // addAnonymousParam register the given expression under a new variable, not used yet,
 // chosen among a private range
 func (rp RandomParameters) addAnonymousParam(expr *Expr) Variable {
 	for ru := firstPrivateVariable; ru > 0; ru++ {
 		v := Variable{Name: ru}
-		if _, has := rp[v]; !has {
-			rp[v] = expr
+		if _, has := rp.defs[v]; !has {
+			rp.defs[v] = expr
 			return v
 		}
 	}
