@@ -35,10 +35,13 @@ type Scheme struct {
 // such as (CalculMental, Blanche) -> (CalculMental, Jaune)
 var mathScheme = Scheme{
 	Ps: []Prerequisite{
-		{Stage{ce.CalculMental, ce.Blanche}, Stage{ce.Equations, ce.Blanche}},
+		{Stage{ce.CalculMentalI, ce.VerteI}, Stage{ce.CalculMentalII, ce.Orange}},
+
+		// TODO: this is not decided yet
+		{Stage{ce.CalculMentalI, ce.Blanche}, Stage{ce.Equations, ce.Blanche}},
 		{Stage{ce.Fractions, ce.Jaune}, Stage{ce.Equations, ce.Blanche}},
 		{Stage{ce.Reduction, ce.Rouge}, Stage{ce.Equations, ce.Blanche}},
-		{Stage{ce.CalculMental, ce.Blanche}, Stage{ce.Factorisation, ce.Jaune}},
+		{Stage{ce.CalculMentalII, ce.Blanche}, Stage{ce.Factorisation, ce.Jaune}},
 		{Stage{ce.Fractions, ce.Blanche}, Stage{ce.Factorisation, ce.Orange}},
 	},
 	Levels: [ce.NbDomains]ce.Level{

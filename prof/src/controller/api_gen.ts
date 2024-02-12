@@ -3,20 +3,23 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-export type Ar11_Ar11_number = [
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
-  Ar11_number,
+export type Ar11_Int = [Int, Int, Int, Int, Int, Int, Int, Int, Int, Int, Int];
+export type Ar12_Ar11_Int = [
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
+  Ar11_Int,
 ];
-export type Ar11_Level = [
+export type Ar12_Level = [
+  Level,
   Level,
   Level,
   Level,
@@ -29,7 +32,8 @@ export type Ar11_Level = [
   Level,
   Level,
 ];
-export type Ar11_Rank = [
+export type Ar12_Rank = [
+  Rank,
   Rank,
   Rank,
   Rank,
@@ -42,20 +46,7 @@ export type Ar11_Rank = [
   Rank,
   Rank,
 ];
-export type Ar11_number = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-];
-export type Ar3_number = [number, number, number];
+export type Ar3_Int = [Int, Int, Int];
 export type Ar5_boolean = [boolean, boolean, boolean, boolean, boolean];
 export type Ar5_QuestionCriterion = [
   QuestionCriterion,
@@ -64,21 +55,15 @@ export type Ar5_QuestionCriterion = [
   QuestionCriterion,
   QuestionCriterion,
 ];
-export type Ar5_number = [number, number, number, number, number];
-
-class DateTag {
-  private _ = "D" as const;
-}
+export type Ar5_Int = [Int, Int, Int, Int, Int];
 
 // AAAA-MM-YY date format
-export type Date_ = string & DateTag;
+export type Date_ = string & { __opaque__: "Date" };
 
-class TimeTag {
-  private _ = "T" as const;
-}
+export type Int = number & { __opaque__: "Int" };
 
 // ISO date-time string
-export type Time = string & TimeTag;
+export type Time = string & { __opaque__: "Time" };
 
 // database/sql.NullTime
 export interface NullTime {
@@ -88,7 +73,7 @@ export interface NullTime {
 // github.com/benoitkugler/maths-online/server/src/maths/expression.Variable
 export interface Variable {
   Indice: string;
-  Name: number;
+  Name: Int;
 }
 
 export enum BlockKind {
@@ -458,7 +443,7 @@ export interface TreeFieldBlock {
 export interface TreeNodeAnswer {
   Children: TreeNodeAnswer[] | null;
   Probabilities: string[] | null;
-  Value: number;
+  Value: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions.VariationTableBlock
 export interface VariationTableBlock {
@@ -496,7 +481,7 @@ export const VectorPairCriterionLabels: {
 // github.com/benoitkugler/maths-online/server/src/maths/questions.errEnonce
 export interface errEnonce {
   Error: string;
-  Block: number;
+  Block: Int;
   Vars: { [key in string]: string } | null;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/questions/client.Binary
@@ -615,8 +600,8 @@ export interface RandomSegment {
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.RepereBounds
 export interface RepereBounds {
-  Width: number;
-  Height: number;
+  Width: Int;
+  Height: Int;
   Origin: Coord;
 }
 // github.com/benoitkugler/maths-online/server/src/maths/repere.SegmentKind
@@ -636,7 +621,7 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.GetSchemeOut
 export interface GetSchemeOut {
   Scheme: Scheme;
-  NbQuestions: Ar11_Ar11_number;
+  NbQuestions: Ar12_Ar11_Int;
   IsAdmin: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
@@ -653,7 +638,7 @@ export interface SaveQuestionAndPreviewOut {
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Scheme
 export interface Scheme {
   Ps: Prerequisite[] | null;
-  Levels: Ar11_Level;
+  Levels: Ar12_Level;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Stage
 export interface Stage {
@@ -663,7 +648,7 @@ export interface Stage {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ChapterItems
 export interface ChapterItems {
   Chapter: string;
-  GroupCount: number;
+  GroupCount: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersIn
 export interface CheckExerciceParametersIn {
@@ -674,7 +659,7 @@ export interface CheckExerciceParametersIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckExerciceParametersOut
 export interface CheckExerciceParametersOut {
   ErrDefinition: ErrParameters;
-  QuestionIndex: number;
+  QuestionIndex: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.CheckQuestionParametersIn
 export interface CheckQuestionParametersIn {
@@ -701,7 +686,7 @@ export interface ExerciceCreateQuestionIn {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceDuplicateQuestionIn
 export interface ExerciceDuplicateQuestionIn {
-  QuestionIndex: number;
+  QuestionIndex: Int;
   IdExercice: IdExercice;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceExt
@@ -723,7 +708,7 @@ export interface ExerciceImportQuestionIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceQuestionExt
 export interface ExerciceQuestionExt {
   Question: Question;
-  Bareme: number;
+  Bareme: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExerciceUpdateQuestionsIn
 export interface ExerciceUpdateQuestionsIn {
@@ -755,7 +740,7 @@ export interface ExportExerciceLatexIn {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ExportExerciceLatexOut
 export interface ExportExerciceLatexOut {
   Error: ErrQuestionInvalid;
-  QuestionIndex: number;
+  QuestionIndex: Int;
   IsValid: boolean;
   Latex: string;
 }
@@ -781,12 +766,12 @@ export interface LevelItems {
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListExercicesOut
 export interface ListExercicesOut {
   Groups: ExercicegroupExt[] | null;
-  NbExercices: number;
+  NbExercices: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.ListQuestionsOut
 export interface ListQuestionsOut {
   Groups: QuestiongroupExt[] | null;
-  NbQuestions: number;
+  NbQuestions: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.OriginKind
 export const OriginKind = {
@@ -836,13 +821,13 @@ export interface SaveExerciceAndPreviewIn {
   IdExercice: IdExercice;
   Parameters: Parameters;
   Questions: Question[] | null;
-  CurrentQuestion: number;
+  CurrentQuestion: Int;
   ShowCorrection: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveExerciceAndPreviewOut
 export interface SaveExerciceAndPreviewOut {
   Error: ErrQuestionInvalid;
-  QuestionIndex: number;
+  QuestionIndex: Int;
   IsValid: boolean;
   Preview: LoopbackShowExercice;
 }
@@ -964,8 +949,8 @@ export interface QuestionStat {
   Description: string;
   Id: IdQuestion;
   Difficulty: DifficultyTag;
-  NbSuccess: number;
-  NbFailure: number;
+  NbSuccess: Int;
+  NbFailure: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.ReorderSheetTasksIn
 export interface ReorderSheetTasksIn {
@@ -976,14 +961,14 @@ export interface ReorderSheetTasksIn {
 export interface SheetExt {
   Sheet: Sheet;
   Tasks: TaskExt[] | null;
-  NbTravaux: number;
+  NbTravaux: Int;
   Origin: Origin;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.StudentTravailMark
 export interface StudentTravailMark {
   Mark: number;
   Dispensed: boolean;
-  NbTries: number;
+  NbTries: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TaskExt
 export interface TaskExt {
@@ -991,17 +976,17 @@ export interface TaskExt {
   IdWork: WorkID;
   Title: string;
   Tags: Tags;
-  GroupID: number;
+  GroupID: Int;
   Bareme: TaskBareme;
-  NbProgressions: number;
+  NbProgressions: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TaskStat
 export interface TaskStat {
   IdWork: WorkID;
   Title: string;
   QuestionStats: QuestionStat[] | null;
-  NbSuccess: number;
-  NbFailure: number;
+  NbSuccess: Int;
+  NbFailure: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/homework.TravailMarks
 export interface TravailMarks {
@@ -1011,7 +996,7 @@ export interface TravailMarks {
 // github.com/benoitkugler/maths-online/server/src/prof/preview.LoopbackShowCeinture
 export interface LoopbackShowCeinture {
   Questions: unknown;
-  QuestionIndex: number;
+  QuestionIndex: Int;
   Origin: QuestionPage[] | null;
   ShowCorrection: boolean;
 }
@@ -1042,11 +1027,11 @@ export interface ReviewComment {
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewCreateIn
 export interface ReviewCreateIn {
   Kind: ReviewKind;
-  Id: number;
+  Id: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewExt
 export interface ReviewExt {
-  Approvals: Ar3_number;
+  Approvals: Ar3_Int;
   Comments: ReviewComment[] | null;
   UserApproval: Approval;
   IsDeletable: boolean;
@@ -1058,7 +1043,7 @@ export interface ReviewHeader {
   Title: string;
   Kind: ReviewKind;
   OwnerMail: string;
-  NbComments: number;
+  NbComments: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.ReviewUpdateApprovalIn
 export interface ReviewUpdateApprovalIn {
@@ -1101,7 +1086,7 @@ export interface TargetSheet {
 // github.com/benoitkugler/maths-online/server/src/prof/reviews.TargetTrivial
 export interface TargetTrivial {
   Config: Trivial;
-  NbQuestionsByCategories: Ar5_number;
+  NbQuestionsByCategories: Ar5_Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.AskInscriptionIn
 export interface AskInscriptionIn {
@@ -1117,7 +1102,7 @@ export interface AskInscriptionOut {
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.ClassroomExt
 export interface ClassroomExt {
   Classroom: Classroom;
-  NbStudents: number;
+  NbStudents: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/teacher.GenerateClassroomCodeOut
 export interface GenerateClassroomCodeOut {
@@ -1224,11 +1209,11 @@ export interface GroupsStrategy {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyAuto
 export interface GroupsStrategyAuto {
-  Groups: number[] | null;
+  Groups: Int[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.GroupsStrategyManual
 export interface GroupsStrategyManual {
-  NbGroups: number;
+  NbGroups: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.LaunchSessionIn
 export interface LaunchSessionIn {
@@ -1252,13 +1237,13 @@ export interface QuestionContent {
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.RunningSessionMetaOut
 export interface RunningSessionMetaOut {
-  NbGames: number;
+  NbGames: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialExt
 export interface TrivialExt {
   Config: Trivial;
   Origin: Origin;
-  NbQuestionsByCategories: Ar5_number;
+  NbQuestionsByCategories: Ar5_Int;
   Levels: string[] | null;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/trivial.TrivialSelfaccess
@@ -1282,7 +1267,7 @@ export interface stopGame {
   Restart: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Advance
-export type Advance = Ar11_Rank;
+export type Advance = Ar12_Rank;
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Beltquestion
 export interface Beltquestion {
   Id: IdBeltquestion;
@@ -1294,22 +1279,24 @@ export interface Beltquestion {
 }
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
 export const Domain = {
-  CalculMental: 0,
-  Puissances: 1,
-  Fractions: 2,
-  Reduction: 3,
-  Factorisation: 4,
-  Developpement: 5,
-  IsolerVariable: 6,
-  Equations: 7,
-  Inequations: 8,
-  Derivation: 9,
-  Matrices: 10,
+  CalculMentalI: 0,
+  CalculMentalII: 1,
+  Puissances: 2,
+  Fractions: 3,
+  Reduction: 4,
+  Factorisation: 5,
+  Developpement: 6,
+  IsolerVariable: 7,
+  Equations: 8,
+  Inequations: 9,
+  Derivation: 10,
+  Matrices: 11,
 } as const;
 export type Domain = (typeof Domain)[keyof typeof Domain];
 
 export const DomainLabels: { [key in Domain]: string } = {
-  [Domain.CalculMental]: "Calcul mental",
+  [Domain.CalculMentalI]: "Calcul mental I",
+  [Domain.CalculMentalII]: "Calcul mental II",
   [Domain.Puissances]: "Puissances et racines",
   [Domain.Fractions]: "Fractions",
   [Domain.Reduction]: "Réduction",
@@ -1323,7 +1310,7 @@ export const DomainLabels: { [key in Domain]: string } = {
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.IdBeltquestion
-export type IdBeltquestion = number;
+export type IdBeltquestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Level
 export const Level = {
   Seconde: 0,
@@ -1400,7 +1387,7 @@ export interface Exercice {
 export interface ExerciceQuestion {
   id_exercice: IdExercice;
   id_question: IdQuestion;
-  bareme: number;
+  bareme: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.ExerciceQuestions
 export type ExerciceQuestions = ExerciceQuestion[] | null;
@@ -1412,13 +1399,13 @@ export interface Exercicegroup {
   IdTeacher: IdTeacher;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercice
-export type IdExercice = number;
+export type IdExercice = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdExercicegroup
-export type IdExercicegroup = number;
+export type IdExercicegroup = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestion
-export type IdQuestion = number;
+export type IdQuestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.IdQuestiongroup
-export type IdQuestiongroup = number;
+export type IdQuestiongroup = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/editor.LevelTag
 export const LevelTag = {
   CPGE: "CPGE",
@@ -1490,14 +1477,14 @@ export interface TagSection {
 export type Tags = TagSection[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/events.Stats
 export interface Stats {
-  Occurences: Ar11_number;
-  TotalPoints: number;
-  Flames: number;
+  Occurences: Ar11_Int;
+  TotalPoints: Int;
+  Flames: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
-export type IdSheet = number;
+export type IdSheet = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdTravail
-export type IdTravail = number;
+export type IdTravail = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/homework.OptionalIdTravail
 export interface OptionalIdTravail {
   Valid: boolean;
@@ -1553,7 +1540,7 @@ export interface Comment {
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Comments
 export type Comments = Comment[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.IdReview
-export type IdReview = number;
+export type IdReview = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/reviews.Review
 export interface Review {
   Id: IdReview;
@@ -1576,24 +1563,24 @@ export const ReviewKindLabels: { [key in ReviewKind]: string } = {
 };
 
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdMonoquestion
-export type IdMonoquestion = number;
+export type IdMonoquestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdRandomMonoquestion
-export type IdRandomMonoquestion = number;
+export type IdRandomMonoquestion = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.IdTask
-export type IdTask = number;
+export type IdTask = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.Monoquestion
 export interface Monoquestion {
   Id: IdMonoquestion;
   IdQuestion: IdQuestion;
-  NbRepeat: number;
-  Bareme: number;
+  NbRepeat: Int;
+  Bareme: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/tasks.RandomMonoquestion
 export interface RandomMonoquestion {
   Id: IdRandomMonoquestion;
   IdQuestiongroup: IdQuestiongroup;
-  NbRepeat: number;
-  Bareme: number;
+  NbRepeat: Int;
+  Bareme: Int;
   Difficulty: DifficultyQuery;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Classroom
@@ -1617,11 +1604,11 @@ export interface Contact {
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.Date
 export type Date = Date_;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdClassroom
-export type IdClassroom = number;
+export type IdClassroom = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdStudent
-export type IdStudent = number;
+export type IdStudent = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.IdTeacher
-export type IdTeacher = number;
+export type IdTeacher = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/teacher.MatiereTag
 export const MatiereTag = {
   Allemand: "ALLEMAND",
@@ -1669,24 +1656,24 @@ export interface CategoriesQuestions {
   Difficulties: DifficultyQuery;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.IdTrivial
-export type IdTrivial = number;
+export type IdTrivial = Int;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.QuestionCriterion
 export type QuestionCriterion = (TagSection[] | null)[] | null;
 // github.com/benoitkugler/maths-online/server/src/sql/trivial.Trivial
 export interface Trivial {
   Id: IdTrivial;
   Questions: CategoriesQuestions;
-  QuestionTimeout: number;
+  QuestionTimeout: Int;
   ShowDecrassage: boolean;
   Public: boolean;
   IdTeacher: IdTeacher;
   Name: string;
 }
 // github.com/benoitkugler/maths-online/server/src/tasks.TaskBareme
-export type TaskBareme = number[] | null;
+export type TaskBareme = Int[] | null;
 // github.com/benoitkugler/maths-online/server/src/tasks.WorkID
 export interface WorkID {
-  ID: number;
+  ID: Int;
   Kind: WorkKind;
   IsExercice: boolean;
 }
@@ -1728,8 +1715,8 @@ export const CategorieLabels: { [key in Categorie]: string } = {
 export type RoomID = string;
 // github.com/benoitkugler/maths-online/server/src/trivial.RoomSize
 export interface RoomSize {
-  Current: number;
-  Max: number;
+  Current: Int;
+  Max: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/trivial.Success
 export type Success = Ar5_boolean;
@@ -1949,7 +1936,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessTeacherUpdateClassroom(data: Classroom): void {}
 
-  protected async rawTeacherDeleteClassroom(params: { id: number }) {
+  protected async rawTeacherDeleteClassroom(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -1959,7 +1946,7 @@ export abstract class AbstractAPI {
   }
 
   /** TeacherDeleteClassroom wraps rawTeacherDeleteClassroom and handles the error */
-  async TeacherDeleteClassroom(params: { id: number }) {
+  async TeacherDeleteClassroom(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherDeleteClassroom(params);
@@ -1973,7 +1960,7 @@ export abstract class AbstractAPI {
   protected onSuccessTeacherDeleteClassroom(): void {}
 
   protected async rawTeacherGetClassroomStudents(params: {
-    "id-classroom": number;
+    "id-classroom": Int;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     const rep: AxiosResponse<StudentExt[] | null> = await Axios.get(fullUrl, {
@@ -1984,7 +1971,7 @@ export abstract class AbstractAPI {
   }
 
   /** TeacherGetClassroomStudents wraps rawTeacherGetClassroomStudents and handles the error */
-  async TeacherGetClassroomStudents(params: { "id-classroom": number }) {
+  async TeacherGetClassroomStudents(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherGetClassroomStudents(params);
@@ -1999,7 +1986,7 @@ export abstract class AbstractAPI {
     data: StudentExt[] | null,
   ): void {}
 
-  protected async rawTeacherAddStudent(params: { "id-classroom": number }) {
+  protected async rawTeacherAddStudent(params: { "id-classroom": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     const rep: AxiosResponse<StudentExt> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
@@ -2009,7 +1996,7 @@ export abstract class AbstractAPI {
   }
 
   /** TeacherAddStudent wraps rawTeacherAddStudent and handles the error */
-  async TeacherAddStudent(params: { "id-classroom": number }) {
+  async TeacherAddStudent(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherAddStudent(params);
@@ -2042,7 +2029,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessTeacherUpdateStudent(): void {}
 
-  protected async rawTeacherDeleteStudent(params: { "id-student": number }) {
+  protected async rawTeacherDeleteStudent(params: { "id-student": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -2052,7 +2039,7 @@ export abstract class AbstractAPI {
   }
 
   /** TeacherDeleteStudent wraps rawTeacherDeleteStudent and handles the error */
-  async TeacherDeleteStudent(params: { "id-student": number }) {
+  async TeacherDeleteStudent(params: { "id-student": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherDeleteStudent(params);
@@ -2092,7 +2079,7 @@ export abstract class AbstractAPI {
   protected onSuccessTeacherImportStudents(): void {}
 
   protected async rawTeacherGenerateClassroomCode(params: {
-    "id-classroom": number;
+    "id-classroom": Int;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/classrooms/students/connect";
     const rep: AxiosResponse<GenerateClassroomCodeOut> = await Axios.get(
@@ -2106,7 +2093,7 @@ export abstract class AbstractAPI {
   }
 
   /** TeacherGenerateClassroomCode wraps rawTeacherGenerateClassroomCode and handles the error */
-  async TeacherGenerateClassroomCode(params: { "id-classroom": number }) {
+  async TeacherGenerateClassroomCode(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTeacherGenerateClassroomCode(params);
@@ -2189,7 +2176,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessUpdateTrivialPoursuit(data: TrivialExt): void {}
 
-  protected async rawDeleteTrivialPoursuit(params: { id: number }) {
+  protected async rawDeleteTrivialPoursuit(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -2199,7 +2186,7 @@ export abstract class AbstractAPI {
   }
 
   /** DeleteTrivialPoursuit wraps rawDeleteTrivialPoursuit and handles the error */
-  async DeleteTrivialPoursuit(params: { id: number }) {
+  async DeleteTrivialPoursuit(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawDeleteTrivialPoursuit(params);
@@ -2232,7 +2219,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessUpdateTrivialVisiblity(): void {}
 
-  protected async rawDuplicateTrivialPoursuit(params: { id: number }) {
+  protected async rawDuplicateTrivialPoursuit(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/config/duplicate";
     const rep: AxiosResponse<TrivialExt> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2242,7 +2229,7 @@ export abstract class AbstractAPI {
   }
 
   /** DuplicateTrivialPoursuit wraps rawDuplicateTrivialPoursuit and handles the error */
-  async DuplicateTrivialPoursuit(params: { id: number }) {
+  async DuplicateTrivialPoursuit(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawDuplicateTrivialPoursuit(params);
@@ -2304,7 +2291,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessTrivialTeacherMonitor(data: MonitorOut): void {}
 
-  protected async rawTrivialGetSelfaccess(params: { "id-trivial": number }) {
+  protected async rawTrivialGetSelfaccess(params: { "id-trivial": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/trivial/selfaccess";
     const rep: AxiosResponse<TrivialSelfaccess> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2314,7 +2301,7 @@ export abstract class AbstractAPI {
   }
 
   /** TrivialGetSelfaccess wraps rawTrivialGetSelfaccess and handles the error */
-  async TrivialGetSelfaccess(params: { "id-trivial": number }) {
+  async TrivialGetSelfaccess(params: { "id-trivial": Int }) {
     this.startRequest();
     try {
       const out = await this.rawTrivialGetSelfaccess(params);
@@ -2530,7 +2517,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorSearchQuestions(data: ListQuestionsOut): void {}
 
-  protected async rawEditorDuplicateQuestion(params: { id: number }) {
+  protected async rawEditorDuplicateQuestion(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question/duplicate";
     const rep: AxiosResponse<Question> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2540,7 +2527,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDuplicateQuestion wraps rawEditorDuplicateQuestion and handles the error */
-  async EditorDuplicateQuestion(params: { id: number }) {
+  async EditorDuplicateQuestion(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateQuestion(params);
@@ -2553,7 +2540,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorDuplicateQuestion(data: Question): void {}
 
-  protected async rawEditorDuplicateQuestiongroup(params: { id: number }) {
+  protected async rawEditorDuplicateQuestiongroup(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup/duplicate";
     await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2563,7 +2550,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDuplicateQuestiongroup wraps rawEditorDuplicateQuestiongroup and handles the error */
-  async EditorDuplicateQuestiongroup(params: { id: number }) {
+  async EditorDuplicateQuestiongroup(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateQuestiongroup(params);
@@ -2620,7 +2607,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateQuestiongroup(): void {}
 
-  protected async rawEditorDeleteQuestiongroup(params: { id: number }) {
+  protected async rawEditorDeleteQuestiongroup(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/questiongroup";
     const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -2630,7 +2617,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDeleteQuestiongroup wraps rawEditorDeleteQuestiongroup and handles the error */
-  async EditorDeleteQuestiongroup(params: { id: number }) {
+  async EditorDeleteQuestiongroup(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteQuestiongroup(params);
@@ -2687,7 +2674,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateQuestiongroupVis(): void {}
 
-  protected async rawEditorGetQuestions(params: { id: number }) {
+  protected async rawEditorGetQuestions(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
     const rep: AxiosResponse<Question[] | null> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2697,7 +2684,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorGetQuestions wraps rawEditorGetQuestions and handles the error */
-  async EditorGetQuestions(params: { id: number }) {
+  async EditorGetQuestions(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorGetQuestions(params);
@@ -2710,7 +2697,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorGetQuestions(data: Question[] | null): void {}
 
-  protected async rawEditorDeleteQuestion(params: { id: number }) {
+  protected async rawEditorDeleteQuestion(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/question";
     const rep: AxiosResponse<DeleteQuestionOut> = await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -2720,7 +2707,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDeleteQuestion wraps rawEditorDeleteQuestion and handles the error */
-  async EditorDeleteQuestion(params: { id: number }) {
+  async EditorDeleteQuestion(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteQuestion(params);
@@ -2901,7 +2888,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateExercicegroup(): void {}
 
-  protected async rawEditorDeleteExercicegroup(params: { id: number }) {
+  protected async rawEditorDeleteExercicegroup(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup";
     const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -2911,7 +2898,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDeleteExercicegroup wraps rawEditorDeleteExercicegroup and handles the error */
-  async EditorDeleteExercicegroup(params: { id: number }) {
+  async EditorDeleteExercicegroup(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteExercicegroup(params);
@@ -2946,7 +2933,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorUpdateExerciceTags(): void {}
 
-  protected async rawEditorDuplicateExercicegroup(params: { id: number }) {
+  protected async rawEditorDuplicateExercicegroup(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercicegroup/duplicate";
     await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2956,7 +2943,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDuplicateExercicegroup wraps rawEditorDuplicateExercicegroup and handles the error */
-  async EditorDuplicateExercicegroup(params: { id: number }) {
+  async EditorDuplicateExercicegroup(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateExercicegroup(params);
@@ -2969,7 +2956,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorDuplicateExercicegroup(): void {}
 
-  protected async rawEditorGetExerciceContent(params: { id: number }) {
+  protected async rawEditorGetExerciceContent(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<ExerciceExt> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -2979,7 +2966,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorGetExerciceContent wraps rawEditorGetExerciceContent and handles the error */
-  async EditorGetExerciceContent(params: { id: number }) {
+  async EditorGetExerciceContent(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorGetExerciceContent(params);
@@ -3016,7 +3003,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorCreateExercice(data: ExercicegroupExt): void {}
 
-  protected async rawEditorDeleteExercice(params: { id: number }) {
+  protected async rawEditorDeleteExercice(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice";
     const rep: AxiosResponse<DeleteExerciceOut> = await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -3026,7 +3013,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDeleteExercice wraps rawEditorDeleteExercice and handles the error */
-  async EditorDeleteExercice(params: { id: number }) {
+  async EditorDeleteExercice(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDeleteExercice(params);
@@ -3061,7 +3048,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessEditorSaveExerciceMeta(data: Exercice): void {}
 
-  protected async rawEditorDuplicateExercice(params: { id: number }) {
+  protected async rawEditorDuplicateExercice(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/editor/exercice/duplicate";
     const rep: AxiosResponse<ExerciceHeader> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -3071,7 +3058,7 @@ export abstract class AbstractAPI {
   }
 
   /** EditorDuplicateExercice wraps rawEditorDuplicateExercice and handles the error */
-  async EditorDuplicateExercice(params: { id: number }) {
+  async EditorDuplicateExercice(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawEditorDuplicateExercice(params);
@@ -3366,7 +3353,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkUpdateSheet(): void {}
 
-  protected async rawHomeworkDeleteSheet(params: { id: number }) {
+  protected async rawHomeworkDeleteSheet(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -3376,7 +3363,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkDeleteSheet wraps rawHomeworkDeleteSheet and handles the error */
-  async HomeworkDeleteSheet(params: { id: number }) {
+  async HomeworkDeleteSheet(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkDeleteSheet(params);
@@ -3433,7 +3420,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkCreateTravailWith(data: Travail): void {}
 
-  protected async rawHomeworkCreateTravail(params: { "id-classroom": number }) {
+  protected async rawHomeworkCreateTravail(params: { "id-classroom": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail/anonymous";
     const rep: AxiosResponse<CreateTravailOut> = await Axios.put(
       fullUrl,
@@ -3447,7 +3434,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkCreateTravail wraps rawHomeworkCreateTravail and handles the error */
-  async HomeworkCreateTravail(params: { "id-classroom": number }) {
+  async HomeworkCreateTravail(params: { "id-classroom": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkCreateTravail(params);
@@ -3480,7 +3467,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkUpdateTravail(): void {}
 
-  protected async rawHomeworkDeleteTravail(params: { id: number }) {
+  protected async rawHomeworkDeleteTravail(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/travail";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -3490,7 +3477,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkDeleteTravail wraps rawHomeworkDeleteTravail and handles the error */
-  async HomeworkDeleteTravail(params: { id: number }) {
+  async HomeworkDeleteTravail(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkDeleteTravail(params);
@@ -3527,7 +3514,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkCopyTravail(data: CopyTravailToOut): void {}
 
-  protected async rawHomeworkRemoveTask(params: { "id-task": number }) {
+  protected async rawHomeworkRemoveTask(params: { "id-task": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -3537,7 +3524,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkRemoveTask wraps rawHomeworkRemoveTask and handles the error */
-  async HomeworkRemoveTask(params: { "id-task": number }) {
+  async HomeworkRemoveTask(params: { "id-task": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkRemoveTask(params);
@@ -3573,7 +3560,7 @@ export abstract class AbstractAPI {
   protected onSuccessHomeworkAddExercice(data: TaskExt): void {}
 
   protected async rawHomeworkGetMonoquestion(params: {
-    "id-monoquestion": number;
+    "id-monoquestion": Int;
   }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/monoquestion";
     const rep: AxiosResponse<Monoquestion> = await Axios.get(fullUrl, {
@@ -3584,7 +3571,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkGetMonoquestion wraps rawHomeworkGetMonoquestion and handles the error */
-  async HomeworkGetMonoquestion(params: { "id-monoquestion": number }) {
+  async HomeworkGetMonoquestion(params: { "id-monoquestion": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkGetMonoquestion(params);
@@ -3620,7 +3607,7 @@ export abstract class AbstractAPI {
   protected onSuccessHomeworkAddMonoquestion(data: TaskExt): void {}
 
   protected async rawHomeworkGetRandomMonoquestion(params: {
-    "id-randommonoquestion": number;
+    "id-randommonoquestion": Int;
   }) {
     const fullUrl =
       this.baseUrl + "/api/prof/homework/sheet/randommonoquestion";
@@ -3635,7 +3622,7 @@ export abstract class AbstractAPI {
 
   /** HomeworkGetRandomMonoquestion wraps rawHomeworkGetRandomMonoquestion and handles the error */
   async HomeworkGetRandomMonoquestion(params: {
-    "id-randommonoquestion": number;
+    "id-randommonoquestion": Int;
   }) {
     this.startRequest();
     try {
@@ -3743,7 +3730,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkReorderSheetTasks(): void {}
 
-  protected async rawHomeworkMissingTasksHint(params: { "id-sheet": number }) {
+  protected async rawHomeworkMissingTasksHint(params: { "id-sheet": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/sheet/missing-hint";
     const rep: AxiosResponse<MissingTasksHint> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -3753,7 +3740,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkMissingTasksHint wraps rawHomeworkMissingTasksHint and handles the error */
-  async HomeworkMissingTasksHint(params: { "id-sheet": number }) {
+  async HomeworkMissingTasksHint(params: { "id-sheet": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkMissingTasksHint(params);
@@ -3790,7 +3777,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessHomeworkGetMarks(data: HomeworkMarksOut): void {}
 
-  protected async rawHomeworkGetDispenses(params: { "id-travail": number }) {
+  protected async rawHomeworkGetDispenses(params: { "id-travail": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/homework/dispences";
     const rep: AxiosResponse<Exceptions> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -3800,7 +3787,7 @@ export abstract class AbstractAPI {
   }
 
   /** HomeworkGetDispenses wraps rawHomeworkGetDispenses and handles the error */
-  async HomeworkGetDispenses(params: { "id-travail": number }) {
+  async HomeworkGetDispenses(params: { "id-travail": Int }) {
     this.startRequest();
     try {
       const out = await this.rawHomeworkGetDispenses(params);
@@ -3951,7 +3938,7 @@ export abstract class AbstractAPI {
     data: SaveQuestionAndPreviewOut,
   ): void {}
 
-  protected async rawCeinturesDeleteQuestion(params: { id: number }) {
+  protected async rawCeinturesDeleteQuestion(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -3961,7 +3948,7 @@ export abstract class AbstractAPI {
   }
 
   /** CeinturesDeleteQuestion wraps rawCeinturesDeleteQuestion and handles the error */
-  async CeinturesDeleteQuestion(params: { id: number }) {
+  async CeinturesDeleteQuestion(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawCeinturesDeleteQuestion(params);
@@ -4018,7 +4005,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewsList(data: ReviewHeader[] | null): void {}
 
-  protected async rawReviewLoad(params: { id: number }) {
+  protected async rawReviewLoad(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     const rep: AxiosResponse<ReviewExt> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -4028,7 +4015,7 @@ export abstract class AbstractAPI {
   }
 
   /** ReviewLoad wraps rawReviewLoad and handles the error */
-  async ReviewLoad(params: { id: number }) {
+  async ReviewLoad(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewLoad(params);
@@ -4041,7 +4028,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewLoad(data: ReviewExt): void {}
 
-  protected async rawReviewLoadTarget(params: { "id-review": number }) {
+  protected async rawReviewLoadTarget(params: { "id-review": Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review/target";
     const rep: AxiosResponse<LoadTargetOut> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -4051,7 +4038,7 @@ export abstract class AbstractAPI {
   }
 
   /** ReviewLoadTarget wraps rawReviewLoadTarget and handles the error */
-  async ReviewLoadTarget(params: { "id-review": number }) {
+  async ReviewLoadTarget(params: { "id-review": Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewLoadTarget(params);
@@ -4064,7 +4051,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewLoadTarget(data: LoadTargetOut): void {}
 
-  protected async rawReviewDelete(params: { id: number }) {
+  protected async rawReviewDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -4074,7 +4061,7 @@ export abstract class AbstractAPI {
   }
 
   /** ReviewDelete wraps rawReviewDelete and handles the error */
-  async ReviewDelete(params: { id: number }) {
+  async ReviewDelete(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewDelete(params);
@@ -4127,7 +4114,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessReviewUpdateCommnents(): void {}
 
-  protected async rawReviewAccept(params: { id: number }) {
+  protected async rawReviewAccept(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/prof/review/accept";
     await Axios.post(fullUrl, null, {
       headers: this.getHeaders(),
@@ -4137,7 +4124,7 @@ export abstract class AbstractAPI {
   }
 
   /** ReviewAccept wraps rawReviewAccept and handles the error */
-  async ReviewAccept(params: { id: number }) {
+  async ReviewAccept(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawReviewAccept(params);

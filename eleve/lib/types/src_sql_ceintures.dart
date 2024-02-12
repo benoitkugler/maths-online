@@ -15,7 +15,8 @@ dynamic advanceToJson(Advance item) {
 
 // github.com/benoitkugler/maths-online/server/src/sql/ceintures.Domain
 enum Domain {
-  calculMental,
+  calculMentalI,
+  calculMentalII,
   puissances,
   fractions,
   reduction,
@@ -40,8 +41,10 @@ extension _DomainExt on Domain {
 
 String domainLabel(Domain v) {
   switch (v) {
-    case Domain.calculMental:
-      return "Calcul mental";
+    case Domain.calculMentalI:
+      return "Calcul mental I";
+    case Domain.calculMentalII:
+      return "Calcul mental II";
     case Domain.puissances:
       return "Puissances et racines";
     case Domain.fractions:
