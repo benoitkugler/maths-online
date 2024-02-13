@@ -60,6 +60,28 @@ var validOrthogonalProjection = []struct {
 	},
 }
 
+var validNumberPair = []struct {
+	args string
+	want numberPair
+}{
+	{
+		"a, b = number_pair_sum(1)",
+		numberPair{a: NewVar('a'), b: NewVar('b'), difficulty: 1, isMultiplicative: false},
+	},
+	{
+		"a, b = number_pair_sum(2)",
+		numberPair{a: NewVar('a'), b: NewVar('b'), difficulty: 2, isMultiplicative: false},
+	},
+	{
+		"x_a, b = number_pair_sum(2)",
+		numberPair{a: NewVarI('x', "a"), b: NewVar('b'), difficulty: 2, isMultiplicative: false},
+	},
+	{
+		"a, b = number_pair_prod(2)",
+		numberPair{a: NewVar('a'), b: NewVar('b'), difficulty: 2, isMultiplicative: true},
+	},
+}
+
 func Test_parseIntrisic(t *testing.T) {
 	type test struct {
 		args    string
@@ -79,11 +101,22 @@ func Test_parseIntrisic(t *testing.T) {
 		{"a, b, c = projection(a,b,c)", true},
 		{"a, b = projection()", true},
 		{"a, b = projection(a,b)", true},
+		// number pair
+		{"a = number_pair_sum(1)", true},
+		{"a, b,c = number_pair_sum(1)", true},
+		{"a, b = number_pair_sum(0)", true},
+		{"a, b = number_pair_sum(0, 1)", true},
+		{"a, b = number_pair_sum(1.2)", true},
+		{"a, b = number_pair_sum(6)", true},
+		{"a, b = number_pair_prod(6)", true},
 	}
 	for _, i := range validPythagorians {
 		tests = append(tests, test{i.args, false})
 	}
 	for _, i := range validOrthogonalProjection {
+		tests = append(tests, test{i.args, false})
+	}
+	for _, i := range validNumberPair {
 		tests = append(tests, test{i.args, false})
 	}
 	for _, tt := range tests {

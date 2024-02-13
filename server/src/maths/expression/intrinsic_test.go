@@ -2,6 +2,8 @@ package expression
 
 import (
 	"testing"
+
+	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
 
 func TestPythagorianTriplet_instantiateTo(t *testing.T) {
@@ -80,6 +82,30 @@ func TestOrthogonalProjection_mergeTo(t *testing.T) {
 		}
 		if v[op.Hx].mustEvaluate(nil) != tt.expectedX || v[op.Hy].mustEvaluate(nil) != tt.expectedY {
 			t.Fatal()
+		}
+	}
+}
+
+func Test_numberPair_instantiateTo(t *testing.T) {
+	for difficulty := 1; difficulty < 5; difficulty++ {
+		for _, isMultiplicative := range []bool{true, false} {
+			np := numberPair{
+				a:                NewVar('a'),
+				b:                NewVar('b'),
+				difficulty:       uint8(difficulty),
+				isMultiplicative: isMultiplicative,
+			}
+
+			for range [100]int{} {
+				out := make(Vars)
+				err := np.instantiateTo(out)
+				tu.AssertNoErr(t, err)
+				gotA, gotB := out[np.a], out[np.b]
+				_, ok := gotA.isConstantTerm()
+				tu.Assert(t, ok)
+				_, ok = gotB.isConstantTerm()
+				tu.Assert(t, ok)
+			}
 		}
 	}
 }

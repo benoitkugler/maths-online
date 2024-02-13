@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 type ErrDuplicateParameter struct {
@@ -94,4 +95,103 @@ func (op orthogonalProjection) mergeTo(params *RandomParameters) error {
 	params.defs[op.Hy] = MustParse(fmt.Sprintf("(%s * %s / %s) + %s", d, u, norm, op.Ay))
 
 	return nil
+}
+
+// numberPair generates random number suitable
+// to be added (or multiplied), according to a difficulty level (from 1 to 5)
+// Example :
+// a,b = number_pair_add(1) # difficulty one
+type numberPair struct {
+	a, b             Variable // output
+	difficulty       uint8    // in [1, 5]
+	isMultiplicative bool
+}
+
+func (np numberPair) instantiateTo(target Vars) error {
+	if err := checkDuplicates(target, np.a, np.b); err != nil {
+		return err
+	}
+
+	ranges := addPairTable[np.difficulty]
+	if np.isMultiplicative {
+		ranges = multPairTable[np.difficulty]
+	}
+	selectedRange := ranges[rand.Intn(len(ranges))]
+	a := randomInt(selectedRange.a[0], selectedRange.a[1])
+	b := randomInt(selectedRange.b[0], selectedRange.b[1])
+
+	target[np.a] = rat{a, 1}.toExpr()
+	target[np.b] = rat{b, 1}.toExpr()
+
+	return nil
+}
+
+func (np numberPair) isDef(v Variable) bool {
+	return v == np.a || v == np.b
+}
+
+func (np numberPair) vars() []Variable {
+	return []Variable{np.a, np.b}
+}
+
+var (
+	addPairTable = [...][]pairRange{
+		1: {
+			{p{1, 8}, p{1, 1}},
+			{p{3, 7}, p{1, 2}},
+			{p{4, 6}, p{1, 3}},
+			{p{5, 5}, p{1, 4}},
+		},
+		2: {
+			{p{1, 4}, p{1, 5}},
+			{p{1, 3}, p{1, 6}},
+			{p{1, 2}, p{1, 7}},
+			{p{1, 1}, p{1, 8}},
+		},
+		3: {
+			{p{1, 10}, p{1, 10}},
+		},
+		4: {
+			{p{-10, -5}, p{-10, -5}},
+			{p{-10, -5}, p{5, 10}},
+			{p{5, 10}, p{-10, -5}},
+			{p{5, 10}, p{5, 10}},
+		},
+		5: {
+			{p{-20, -10}, p{-20, -10}},
+			{p{-20, -10}, p{10, 20}},
+			{p{10, 20}, p{-20, -10}},
+			{p{10, 20}, p{10, 20}},
+		},
+	}
+	multPairTable = [...][]pairRange{
+		1: {
+			{p{1, 5}, p{1, 5}},
+		},
+		2: {
+			{p{1, 7}, p{1, 7}},
+		},
+		3: {
+			{p{1, 7}, p{1, 7}},
+			{p{-7, -1}, p{-7, -1}},
+			{p{1, 7}, p{-7, -1}},
+		},
+		4: {
+			{p{4, 10}, p{4, 10}},
+			{p{-10, -4}, p{-10, -4}},
+			{p{4, 10}, p{-10, -4}},
+		},
+		5: {
+			{p{5, 12}, p{5, 12}},
+			{p{-12, -5}, p{-12, -5}},
+			{p{5, 12}, p{-12, -5}},
+		},
+	}
+)
+
+type p = [2]int
+
+type pairRange struct {
+	a p
+	b p
 }
