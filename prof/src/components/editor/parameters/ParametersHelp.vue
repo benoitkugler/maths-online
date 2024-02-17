@@ -123,6 +123,7 @@
                     </v-col>
                   </v-row>
                 </v-list-item>
+
                 <v-list-item>
                   <v-row>
                     <v-col cols="6">
@@ -135,6 +136,45 @@
                       <div class="text-grey">
                         Calcule le projeté orthogonal du point <i>A</i> sur
                         <i>(BC)</i>, de coordonnées (<C>x_H</C>, <C>y_H</C>)
+                        <br />
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+
+                <v-list-item>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title
+                        ><C
+                          >a, b = number_pair_sum(difficulty)</C
+                        ></v-list-item-title
+                      >
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        Renvoie deux entiers aléatoires à utiliser dans une
+                        addition.
+                        <i>difficulty</i> est en entier entre 1 et 5 permettant
+                        d'ajuster la difficulté du calcul
+                        <br />
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+                <v-list-item>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-list-item-title
+                        ><C>
+                          a, b = number_pair_prod(difficulty)</C
+                        ></v-list-item-title
+                      >
+                    </v-col>
+                    <v-col align-self="center">
+                      <div class="text-grey">
+                        Idem que <i>number_pair_sum</i>, mais pensée pour un
+                        produit.
                         <br />
                       </div>
                     </v-col>
