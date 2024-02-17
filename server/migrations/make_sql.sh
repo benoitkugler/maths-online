@@ -12,6 +12,8 @@ echo "-- sql/homework/gen_create.sql" >> create_all_gen.sql &&
 cat ../src/sql/homework/gen_create.sql >> create_all_gen.sql && 
 echo "-- sql/reviews/gen_create.sql" >> create_all_gen.sql &&
 cat ../src/sql/reviews/gen_create.sql >> create_all_gen.sql && 
+echo "-- sql/ceintures/gen_create.sql" >> create_all_gen.sql &&
+cat ../src/sql/ceintures/gen_create.sql >> create_all_gen.sql && 
 echo "Splitting tables, constraints and json functions..."
 cd sql_statements && 
 go run sql.go &&

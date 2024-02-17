@@ -15,9 +15,8 @@ CREATE TABLE students (
     Name text NOT NULL,
     Surname text NOT NULL,
     Birthday date NOT NULL,
-    TrivialSuccess integer NOT NULL,
-    IsClientAttached boolean NOT NULL,
-    IdClassroom integer NOT NULL
+    IdClassroom integer NOT NULL,
+    Clients jsonb NOT NULL
 );
 
 CREATE TABLE teachers (
@@ -200,5 +199,21 @@ CREATE TABLE review_trivials (
     IdReview integer NOT NULL,
     IdTrivial integer NOT NULL,
     Kind integer CHECK (Kind IN (0, 1, 2, 3)) NOT NULL
+);
+
+CREATE TABLE beltevolutions (
+    IdStudent integer NOT NULL,
+    Level integer CHECK (Level IN (0, 1, 2, 3)) NOT NULL,
+    Advance jsonb NOT NULL,
+    Stats jsonb NOT NULL
+);
+
+CREATE TABLE beltquestions (
+    Id serial PRIMARY KEY,
+    Domain integer CHECK (DOMAIN IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)) NOT NULL,
+    Rank integer CHECK (Rank IN (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) NOT NULL,
+    Parameters jsonb NOT NULL,
+    Enonce jsonb NOT NULL,
+    Correction jsonb NOT NULL
 );
 
