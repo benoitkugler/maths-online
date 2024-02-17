@@ -9,7 +9,7 @@
         hint="Une partie est créée par groupe."
         :model-value="props.modelValue.NbGroups"
         @update:model-value="
-          (v) => emit('update:model-value', { NbGroups: Number(v) })
+          (v) => emit('update:model-value', { NbGroups: Number(v) as Int})
         "
       ></v-text-field>
     </v-col>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GroupsStrategyManual } from "@/controller/api_gen";
+import type { GroupsStrategyManual, Int } from "@/controller/api_gen";
 
 interface Props {
   modelValue: GroupsStrategyManual;

@@ -175,12 +175,12 @@ import {
   type Sheet,
   type SheetExt,
   type Travail,
+  Int,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import PreviewSheet from "./PreviewSheet.vue";
 import DateTimeChip from "../DateTimeChip.vue";
 import { colorForOrigin } from "@/controller/utils";
-import { basename } from "path";
 
 interface Props {
   travail: Travail;
@@ -193,7 +193,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "delete"): void;
   (e: "update", tr: Travail): void;
-  (e: "copy", idTarget: number): void;
+  (e: "copy", idTarget: Int): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "editSheet", sheet: SheetExt): void;
   (e: "showDispenses"): void;

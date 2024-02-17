@@ -21,7 +21,7 @@
                 class="mx-2 my-1"
                 size="x-small"
                 icon
-                @click.stop="duplicateQuestion(index)"
+                @click.stop="duplicateQuestion(index as Int)"
                 title="Dupliquer cette question"
               >
                 <v-icon icon="mdi-content-copy" color="secondary"></v-icon>
@@ -103,6 +103,7 @@ import DropZone from "@/components/DropZone.vue";
 import type {
   ExerciceExt,
   ExerciceQuestionExt,
+  Int,
   LoopbackShowExercice,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
@@ -123,7 +124,7 @@ const emit = defineEmits<{
 
 function toExerciceQuestions(questions: ExerciceQuestionExt[]) {
   return questions.map((qu) => ({
-    id_exercice: -1,
+    id_exercice: -1 as Int,
     id_question: qu.Question.Id,
     bareme: qu.Bareme,
   }));
@@ -141,7 +142,7 @@ async function removeQuestion(index: number) {
   emit("preview", res.Preview);
 }
 
-async function duplicateQuestion(index: number) {
+async function duplicateQuestion(index: Int) {
   const res = await controller.EditorExerciceDuplicateQuestion({
     IdExercice: props.exercice.Exercice.Id,
     QuestionIndex: index,
@@ -179,7 +180,7 @@ function onDragStart() {
   setTimeout(() => (showDropZone.value = true), 100); // workaround bug
 }
 
-function onDragEnd(ev: DragEvent) {
+function onDragEnd() {
   showDropZone.value = false;
 }
 

@@ -8,7 +8,7 @@
               :length="(exercice.Questions || []).length"
               :total-visible="(exercice.Questions || []).length"
               :model-value="questionIndex + 1"
-              @update:model-value="(oneBased: number) => (questionIndex = oneBased - 1)"
+              @update:model-value="(oneBased: number) => (questionIndex = oneBased - 1 as Int)"
               density="compact"
             ></v-pagination>
           </v-col>
@@ -226,6 +226,7 @@ import {
   type Parameters,
   type Question,
   type TagsDB,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
@@ -252,12 +253,12 @@ const emit = defineEmits<{
   (e: "preview", ex: LoopbackShowExercice): void;
 }>();
 
-const questionIndex = ref(0);
+const questionIndex = ref(0 as Int);
 
 const exercice = ref<ExerciceExt>({
   Exercice: {
-    Id: 0,
-    IdGroup: 0,
+    Id: 0 as Int,
+    IdGroup: 0 as Int,
     Subtitle: "",
     Parameters: [],
     Difficulty: DifficultyTag.DiffEmpty,
@@ -280,7 +281,7 @@ watch(props, async (_) => {
 
     // reset the question index if needed
     if (questionIndex.value >= (exercice.value.Questions?.length || 0))
-      questionIndex.value = 0;
+      questionIndex.value = 0 as Int;
 
     editSharedParams.value = inferEditSharedParams();
   }
@@ -292,7 +293,7 @@ async function refreshExercicePreview(id: IdExercice) {
     IdExercice: id,
     Parameters: [], // ignored
     Questions: [], // ignored
-    CurrentQuestion: -1,
+    CurrentQuestion: -1 as Int,
     ShowCorrection: false,
   });
   if (res == undefined) return;
@@ -311,7 +312,7 @@ function notifieUpdate(ex: ExerciceExt) {
   exercice.value = ex;
   // reset the question index if needed
   if (questionIndex.value >= (exercice.value.Questions?.length || 0))
-    questionIndex.value = 0;
+    questionIndex.value = 0 as Int;
   emit("update", {
     Id: ex.Exercice.Id,
     Difficulty: ex.Exercice.Difficulty,
@@ -455,7 +456,7 @@ async function save() {
   }
 }
 
-function onQuestionError(index: number, err: ErrQuestionInvalid) {
+function onQuestionError(index: Int, err: ErrQuestionInvalid) {
   // reset previous error
   errorParameters.value = null;
   errorContent.value = null;
@@ -507,7 +508,7 @@ async function createQuestion() {
     return;
   }
   // go to the new question
-  questionIndex.value = (res.Ex.Questions?.length || 0) - 1;
+  questionIndex.value = ((res.Ex.Questions?.length || 0) - 1) as Int;
   notifieUpdate(res.Ex);
   emit("preview", res.Preview);
 }

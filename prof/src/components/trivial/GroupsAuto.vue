@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GroupsStrategyAuto } from "@/controller/api_gen";
+import type { GroupsStrategyAuto, Int } from "@/controller/api_gen";
 import { ref } from "vue";
 import { VCombobox } from "vuetify/lib/components/index.mjs";
 
@@ -41,8 +41,8 @@ const field = ref<InstanceType<typeof VCombobox> | null>(null);
 
 // onUpdate is called on delete or when typing Enter
 function onUpdate(v: unknown) {
-  const final: number[] = [];
-  (v as (string | number)[]).forEach((item) => {
+  const final: Int[] = [];
+  (v as (string | Int)[]).forEach((item) => {
     if (typeof item == "string") {
       final.push(...parseEntry(item));
     } else {
@@ -73,12 +73,12 @@ function parseEntry(s: string) {
     if (isNaN(a) || isNaN(b)) {
       return [];
     }
-    return Array.from({ length: a }, () => b);
+    return Array.from({ length: a }, () => b as Int);
   }
 
   return s
     .split(",")
-    .map((c) => Number(c))
+    .map((c) => Number(c) as Int)
     .filter((v) => !isNaN(v));
 }
 </script>

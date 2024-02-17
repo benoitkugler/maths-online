@@ -107,6 +107,7 @@
 import type {
   Classroom,
   ClassroomTravaux,
+  Int,
   Sheet,
   SheetExt,
   Travail,
@@ -128,7 +129,7 @@ const emit = defineEmits<{
   (e: "create"): void;
   (e: "update", travail: Travail): void;
   (e: "delete", travail: Travail): void;
-  (e: "copy", travail: Travail, idClassroom: number): void;
+  (e: "copy", travail: Travail, idClassroom: Int): void;
   (e: "setFavorite", sheet: Sheet): void;
   (e: "editSheet", sheet: SheetExt): void;
 }>();

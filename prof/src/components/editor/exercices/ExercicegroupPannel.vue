@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import type {
   ExercicegroupExt,
+  Int,
   LoopbackShowExercice,
   Sheet,
   Tags,
@@ -101,7 +102,7 @@ async function updateExercicegroup() {
     IdExercice: ownVariants.value[variantIndex.value].Id,
     Parameters: [], // ignored
     Questions: [], // ignored
-    CurrentQuestion: -1,
+    CurrentQuestion: -1 as Int,
     ShowCorrection: false,
   });
   if (res == undefined) return;

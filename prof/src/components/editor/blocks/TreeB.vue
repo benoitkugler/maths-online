@@ -109,7 +109,12 @@
 </template>
 
 <script setup lang="ts">
-import type { TreeBlock, TreeNodeAnswer, Variable } from "@/controller/api_gen";
+import type {
+  Int,
+  TreeBlock,
+  TreeNodeAnswer,
+  Variable,
+} from "@/controller/api_gen";
 import TreeNode from "./TreeNode.vue";
 import { copy } from "@/controller/utils";
 import InterpolatedText from "../utils/InterpolatedText.vue";
@@ -136,7 +141,7 @@ function removeEventsProposals(index: number) {
   // make sure indexes in tree are still valid
   const clamp = (node: TreeNodeAnswer) => {
     if (node.Value >= L && L > 0) {
-      node.Value = L - 1;
+      node.Value = (L - 1) as Int;
     }
     // recurse
     node.Children?.forEach(clamp);
@@ -165,7 +170,7 @@ const defaultProbas = [
   ["1"],
   ["0.5", "0.5"],
   ["0.3", "0.3", "0.4"],
-  ["0.25", "0.25", "0.25", "0.25"]
+  ["0.25", "0.25", "0.25", "0.25"],
 ];
 
 function addLevel(branchesCount: number) {
@@ -177,9 +182,9 @@ function addLevel(branchesCount: number) {
       // we are at the last level
       node.Probabilities = copy(defaultProbas[branchesCount]);
       node.Children = node.Probabilities.map(() => ({
-        Value: 0,
+        Value: 0 as Int,
         Probabilities: [],
-        Children: []
+        Children: [],
       }));
     }
   };

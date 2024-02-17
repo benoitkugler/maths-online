@@ -141,6 +141,7 @@ import {
   PublicStatus,
   type TaskUses,
   type Sheet,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { useRouter } from "vue-router";
@@ -259,7 +260,7 @@ function goToSheet(sh: Sheet) {
   router.push({ name: "homework", query: { idSheet: sh.Id } });
 }
 
-async function updatePublic(id: number, isPublic: boolean) {
+async function updatePublic(id: Int, isPublic: boolean) {
   const res = await controller.EditorUpdateQuestiongroupVis({
     ID: id,
     Public: isPublic,

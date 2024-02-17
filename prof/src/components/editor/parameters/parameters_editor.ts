@@ -3,7 +3,8 @@ import {
   type ErrParameters,
   type ParameterEntry,
   type Parameters,
-  type Rp
+  type Rp,
+  Int,
 } from "@/controller/api_gen";
 import { ExpressionColor, variableToString } from "@/controller/editor";
 import type { Token } from "../utils/interpolated_text";
@@ -29,16 +30,16 @@ function tokenizeLine(line: string): Token[] {
   return [
     {
       Content: vars,
-      Kind: ""
+      Kind: "",
     },
     {
       Content: "=",
-      Kind: "font-weight: bold"
+      Kind: "font-weight: bold",
     },
     {
       Content: `${expression}\n`,
-      Kind: `color: ${color}`
-    }
+      Kind: `color: ${color}`,
+    },
   ];
 }
 
@@ -77,7 +78,7 @@ export function parseParameters(text: string): {
       if (currentComment.length) {
         out.push({
           Kind: ParameterEntryKind.Co,
-          Data: currentComment.substring(0, currentComment.length - 1)
+          Data: currentComment.substring(0, currentComment.length - 1),
         });
         currentComment = "";
       }
@@ -88,8 +89,8 @@ export function parseParameters(text: string): {
           params: [],
           error: {
             Origin: line,
-            Details: `Définition invalide (symbole '#' ou '=' manquant)`
-          }
+            Details: `Définition invalide (symbole '#' ou '=' manquant)`,
+          },
         };
       }
       const vars = line.substring(0, i).trim();
@@ -101,7 +102,10 @@ export function parseParameters(text: string): {
         out.push({ Kind: ParameterEntryKind.In, Data: line });
       } else {
         // we have a single variable
-        const rp: Rp = { variable: { Name: 0, Indice: "" }, expression: "" };
+        const rp: Rp = {
+          variable: { Name: 0 as Int, Indice: "" },
+          expression: "",
+        };
         const varsParts = vars.split("_", 2);
         const name = varsParts[0].trim();
         if (name.length != 1) {
@@ -109,11 +113,11 @@ export function parseParameters(text: string): {
             params: [],
             error: {
               Origin: line,
-              Details: `Nom de variable invalide : ${vars}`
-            }
+              Details: `Nom de variable invalide : ${vars}`,
+            },
           };
         }
-        rp.variable.Name = name.charCodeAt(0);
+        rp.variable.Name = name.charCodeAt(0) as Int;
         rp.variable.Indice = varsParts[1] || "";
         rp.expression = expression;
         out.push({ Kind: ParameterEntryKind.Rp, Data: rp });
@@ -125,7 +129,7 @@ export function parseParameters(text: string): {
   if (currentComment.length) {
     out.push({
       Kind: ParameterEntryKind.Co,
-      Data: currentComment.substring(0, currentComment.length - 1)
+      Data: currentComment.substring(0, currentComment.length - 1),
     });
     currentComment = "";
   }
@@ -138,13 +142,13 @@ export function parametersToString(params: Parameters) {
   params = params || [];
   const lines: string[] = [];
 
-  params.forEach(entry => {
+  params.forEach((entry) => {
     let rp: Rp;
     let s: string;
     switch (entry.Kind) {
       case ParameterEntryKind.Co:
         s = entry.Data as string;
-        lines.push(...s.split("\n").map(l => "# " + l.trim()));
+        lines.push(...s.split("\n").map((l) => "# " + l.trim()));
         return;
       case ParameterEntryKind.Rp:
         rp = entry.Data as Rp;

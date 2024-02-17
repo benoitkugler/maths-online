@@ -11,7 +11,7 @@
       </v-btn>
       <MatiereSelect
         :matiere="props.matiere"
-        @update:matiere="v => emit('update:matiere', v)"
+        @update:matiere="(v) => emit('update:matiere', v)"
       ></MatiereSelect>
     </template>
 
@@ -28,11 +28,11 @@
                 :key="sheet.Sheet.Id"
                 :sheet="sheet"
                 :classrooms="props.classrooms"
-                @assign="target => emit('assign', sheet.Sheet.Id, target)"
+                @assign="(target) => emit('assign', sheet.Sheet.Id, target)"
                 @edit="emit('edit', sheet)"
                 @duplicate="emit('duplicate', sheet)"
                 @delete="emit('delete', sheet)"
-                @updatePublic="b => emit('updatePublic', sheet.Sheet, b)"
+                @updatePublic="(b) => emit('updatePublic', sheet.Sheet, b)"
                 @createReview="emit('createReview', sheet.Sheet)"
               ></SheetCard>
             </v-list>
@@ -48,7 +48,8 @@ import type {
   Classroom,
   SheetExt,
   Sheet,
-  MatiereTag
+  MatiereTag,
+  Int,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import SheetCard from "./SheetCard.vue";
@@ -64,7 +65,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "create"): void;
-  (e: "assign", idSheet: number, idClassroom: number): void;
+  (e: "assign", idSheet: Int, idClassroom: Int): void;
   (e: "edit", sheet: SheetExt): void;
   (e: "duplicate", sheet: SheetExt): void;
   (e: "delete", sheet: SheetExt): void;
@@ -82,7 +83,7 @@ const byLevels = computed(() => {
   }
   const out = Array.from(tmp.entries());
   out.sort((a, b) => a[0].localeCompare(b[0]));
-  out.forEach(v =>
+  out.forEach((v) =>
     v[1].sort((a, b) => a.Sheet.Title.localeCompare(b.Sheet.Title))
   );
   return out;

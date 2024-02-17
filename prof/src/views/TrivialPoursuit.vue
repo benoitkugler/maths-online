@@ -139,6 +139,7 @@ import {
   type Trivial,
   type TrivialExt,
   PublicStatus,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, computed, onMounted, onActivated, watchEffect } from "vue";
@@ -317,7 +318,7 @@ async function launchSession(groups: GroupsStrategy) {
   showMonitor.value = true;
 }
 
-const sessionMeta = ref<RunningSessionMetaOut>({ NbGames: 0 });
+const sessionMeta = ref<RunningSessionMetaOut>({ NbGames: 0 as Int });
 async function fetchSessionMeta() {
   const res = await controller.GetTrivialRunningSessions();
   if (res == undefined) {

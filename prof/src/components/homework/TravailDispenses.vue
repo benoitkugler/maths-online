@@ -76,9 +76,9 @@
         @click="
           toEdit = {
             IdTravail: props.travail.Id,
-            IdStudent: -1,
+            IdStudent: -1 as Int,
             Deadline: emptyTime(),
-            IgnoreForMark: false
+            IgnoreForMark: false,
           }
         "
       >
@@ -148,7 +148,8 @@ import type {
   TravailException,
   Time,
   Sheet,
-  NullTime
+  NullTime,
+  Int,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
@@ -175,12 +176,12 @@ onMounted(fetchDispenses);
 const studentItems = computed(() => {
   const out = Object.values(data.value.Students || {});
   out.sort((a, b) => a.Name.localeCompare(b.Name));
-  return out.map(st => ({ value: st.Id, title: formatName(st) }));
+  return out.map((st) => ({ value: st.Id, title: formatName(st) }));
 });
 
 async function fetchDispenses() {
   const res = await controller.HomeworkGetDispenses({
-    "id-travail": props.travail.Id
+    "id-travail": props.travail.Id,
   });
   if (res === undefined) return;
   data.value = res;
@@ -206,7 +207,7 @@ async function removeDispense(params: TravailException) {
 function emptyTime(): NullTime {
   return {
     Valid: false,
-    Time: new Date(Date.now()).toISOString() as Time
+    Time: new Date(Date.now()).toISOString() as Time,
   };
 }
 </script>

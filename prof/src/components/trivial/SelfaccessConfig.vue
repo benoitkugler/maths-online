@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Trivial, TrivialSelfaccess } from "@/controller/api_gen";
+import type { Int, Trivial, TrivialSelfaccess } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
 import { ref, onActivated, onMounted } from "vue";
 
@@ -52,7 +52,7 @@ const emit = defineEmits<{
 onMounted(() => fetch());
 onActivated(() => fetch());
 
-const selected = ref<number[]>([]);
+const selected = ref<Int[]>([]);
 const data = ref<TrivialSelfaccess | null>(null);
 
 async function fetch() {

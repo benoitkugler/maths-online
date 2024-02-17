@@ -135,6 +135,7 @@ import {
   Visibility,
   type Classroom,
   type SheetExt,
+  Int,
 } from "@/controller/api_gen";
 import { computed } from "vue";
 import OriginButton from "../OriginButton.vue";
@@ -149,7 +150,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: "assign", idClassroom: number): void;
+  (e: "assign", idClassroom: Int): void;
   (e: "edit"): void;
   (e: "duplicate"): void;
   (e: "delete"): void;
