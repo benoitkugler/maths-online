@@ -277,3 +277,23 @@ func TestCycleFunc(t *testing.T) {
 	err := params.Validate()
 	tu.AssertNoErr(t, err)
 }
+
+func TestInstantiateWithIntrinsics(t *testing.T) {
+	params := NewRandomParameters()
+	err := params.ParseIntrinsic("a, b = number_pair_sum(1)")
+	tu.AssertNoErr(t, err)
+	err = params.ParseVariable(NewVar('A'), "[[a;b]]")
+	tu.AssertNoErr(t, err)
+	v, err := params.Instantiate()
+	tu.AssertNoErr(t, err)
+	A := v[NewVar('A')].atom.(matrix)
+	a, b := A[0][0], A[0][1]
+	an, ok := a.isConstantTerm()
+	tu.Assert(t, ok)
+	bn, ok := b.isConstantTerm()
+	tu.Assert(t, ok)
+	_, ok = IsInt(an)
+	tu.Assert(t, ok)
+	_, ok = IsInt(bn)
+	tu.Assert(t, ok)
+}

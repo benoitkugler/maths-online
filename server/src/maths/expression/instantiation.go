@@ -294,6 +294,10 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		}
 		return out.tryEval(ctx), nil
 	case Variable:
+		// take intrinsics into account
+		if v, has := ctx.results[atom]; has {
+			return v, nil
+		}
 		// if the variable is not defined, just returns the free variable as an expression
 		if _, isDefined := ctx.defs.defs[atom]; !isDefined {
 			return NewVarExpr(atom), nil
