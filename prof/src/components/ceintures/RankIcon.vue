@@ -3,8 +3,8 @@
     <div :class="'bg-' + rankColors[props.rank]">
       <v-img
         :src="beltImg"
-        width="60"
-        height="50"
+        :width="props.small ? 30 : 60"
+        :height="props.small ? 25 : 50"
         :style="{
           filter: props.rank == Rank.Blanche ? 'invert(30%)' : undefined,
         }"
@@ -21,6 +21,7 @@ import { rankColors } from "@/controller/utils";
 
 interface Props {
   rank: Rank;
+  small?: boolean;
 }
 
 const props = defineProps<Props>();

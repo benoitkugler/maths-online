@@ -32,8 +32,51 @@
             </v-btn>
           </v-col>
 
-          <v-col>
-            <StageChip :stage="props.stage"></StageChip>
+          <v-spacer></v-spacer>
+
+          <v-col cols="auto">
+            <v-btn
+              icon
+              flat
+              size="small"
+              :disabled="props.stage.Rank == Rank.Blanche"
+              @click="emit('goTo', (props.stage.Rank - 1) as Rank)"
+              ><v-icon>mdi-chevron-left</v-icon></v-btn
+            >
+            <v-menu>
+              <template v-slot:activator="{ isActive, props: innerProps }">
+                <v-chip
+                  v-on="{ isActive }"
+                  v-bind="innerProps"
+                  variant="elevated"
+                  :color="rankColors[props.stage.Rank]"
+                  class="ma-2"
+                  label
+                >
+                  {{ DomainLabels[props.stage.Domain] }}
+                </v-chip>
+              </template>
+              <v-list>
+                <v-list-item
+                  v-for="r in rankItems"
+                  :key="r"
+                  :title="RankLabels[r]"
+                  @click="emit('goTo', r)"
+                >
+                  <template v-slot:prepend>
+                    <RankIcon :rank="r" small></RankIcon>
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <v-btn
+              icon
+              flat
+              size="small"
+              :disabled="props.stage.Rank == Rank.Noire"
+              @click="emit('goTo', (props.stage.Rank + 1) as Rank)"
+              ><v-icon>mdi-chevron-right</v-icon></v-btn
+            >
           </v-col>
 
           <v-spacer></v-spacer>
@@ -142,15 +185,19 @@ import {
   Beltquestion,
   IdBeltquestion,
   LoopbackShowCeinture,
+  Rank,
+  RankLabels,
+  DomainLabels,
   Stage,
 } from "@/controller/api_gen";
 import ClientPreview from "../editor/ClientPreview.vue";
-import { ref } from "vue";
-import StageChip from "./StageChip.vue";
+import { ref, watch } from "vue";
 import { controller } from "@/controller/controller";
 import { onMounted } from "vue";
 import { computed } from "vue";
 import BeltQuestionEditor from "./BeltQuestionEditor.vue";
+import { rankColors } from "@/controller/utils";
+import RankIcon from "./RankIcon.vue";
 
 interface Props {
   stage: Stage;
@@ -161,9 +208,16 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "goTo", rank: Rank): void;
 }>();
 
 onMounted(fetchQuestions);
+
+watch(() => props.stage, fetchQuestions);
+
+const rankItems = Object.keys(RankLabels)
+  .map((r) => Number(r) as Rank)
+  .filter((r) => r != Rank.StartRank);
 
 const preview = ref<InstanceType<typeof ClientPreview> | null>(null);
 
@@ -173,6 +227,7 @@ async function fetchQuestions() {
   const res = await controller.CeinturesGetQuestions(props.stage);
   if (res === undefined) return;
   questions.value = res || [];
+  preview.value?.pause();
 }
 
 async function createQuestion() {

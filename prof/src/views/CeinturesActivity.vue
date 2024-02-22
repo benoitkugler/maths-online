@@ -139,6 +139,7 @@
           stageToEdit = null;
           fetchScheme();
         "
+        @go-to="(r) => (stageToEdit = { Domain: stageToEdit!.Domain, Rank: r })"
       ></stage-questions-editor>
     </v-fade-transition>
   </v-container>
