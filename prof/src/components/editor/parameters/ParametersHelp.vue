@@ -220,6 +220,10 @@ const emit = defineEmits<{
 
 const fonctionsDesc = [
   [
+    "randInt(-2; 10)",
+    "Renvoie un entier aléatoire entre un minimium et un maximum (inclus), ici -2 et 10.",
+  ],
+  [
     "randChoice(-4;12;99)",
     "Renvoie un nombre (ou une expression) aléatoire parmi ceux proposés par l'utilisateur, ici {-4, 12, 99}.",
   ],
@@ -231,6 +235,10 @@ const fonctionsDesc = [
   [
     "randDecDen()",
     "Renvoie un entier aléatoire parmi 1, 2, 4, 5, 8, 10, 16, 20, 25, 40, 50, 80, 100 (diviser n'importe quel entier par l'un de ces nombres permettra d'obtenir un nombre décimal).",
+  ],
+  [
+    "randMatrix(n, p, min, max)",
+    "Renvoie une matrice de taille n x p à coefficients entiers aléatoires compris entre min et max (inclus).",
   ],
   ["round(x; 3)", "Arrondi x à trois chiffres après la virgule."],
   [

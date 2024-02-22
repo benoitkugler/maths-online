@@ -584,12 +584,19 @@ func (rd specialFunction) validate(pos int) error {
 		// so that the error is detected during parameter setup
 		start, end, err := startEnd(rd.args[0], rd.args[1], nil)
 		if err == nil {
-			return rd.validateStartEnd(start, end, pos)
+			return rd.kind.validateStartEnd(start, end, pos)
 		}
 	case randChoice:
 		if len(rd.args) == 0 {
 			return ErrInvalidExpr{
 				Reason: "randChoice doit préciser au moins un argument",
+				Pos:    pos,
+			}
+		}
+	case randMatrixInt:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "randMatrix attend exactement 4 arguments",
 				Pos:    pos,
 			}
 		}
@@ -621,7 +628,7 @@ func (rd specialFunction) validate(pos int) error {
 		// so that a potential error is detected during parameter setup
 		start, end, err := startEnd(rd.args[1], rd.args[2], nil)
 		if err == nil {
-			return rd.validateStartEnd(start, end, pos)
+			return rd.kind.validateStartEnd(start, end, pos)
 		}
 	case matCoeff:
 		if len(rd.args) != 3 {

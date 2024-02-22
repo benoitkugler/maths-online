@@ -14,7 +14,7 @@ func (A matrix) dims() (rows, cols int) {
 	return len(A), len(A[0])
 }
 
-func newEmpty(n, m int) matrix {
+func newMatrixEmpty(n, m int) matrix {
 	out := make(matrix, n)
 	vals := make([]*Expr, n*m)
 	for i := range out {
@@ -107,7 +107,7 @@ func newNumberMatrixFrom(A matrix) (numberMatrix, bool) {
 
 func (A numberMatrix) toExprMatrix() matrix {
 	n, m := A.dims()
-	out := newEmpty(n, m)
+	out := newMatrixEmpty(n, m)
 	for i, row := range A {
 		for j, v := range row {
 			out[i][j] = NewNb(v)

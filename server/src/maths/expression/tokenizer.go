@@ -33,7 +33,8 @@ const (
 	randInt specialFunctionKind = iota
 	randPrime
 	randChoice
-	choiceFrom // the last argument is used as selector
+	randMatrixInt // random matrix with integer coeff
+	choiceFrom    // the last argument is used as selector
 	randDenominator
 	minFn
 	maxFn
@@ -52,6 +53,8 @@ func (sf specialFunctionKind) String() string {
 		return "randPrime"
 	case randChoice:
 		return "randChoice"
+	case randMatrixInt:
+		return "randMatrix"
 	case choiceFrom:
 		return "choiceFrom"
 	case randDenominator:
@@ -423,6 +426,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = randInt
 	case "randprime":
 		fn = randPrime
+	case "randmatrix":
+		fn = randMatrixInt
 	case "randchoice":
 		fn = randChoice
 	case "choicefrom":

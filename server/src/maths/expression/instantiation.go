@@ -316,6 +316,39 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		case randInt, randPrime, randDenominator:
 			v, err := atom.evalRat(ctx)
 			return v.toExpr(), err
+		case randMatrixInt:
+			ne, pe, min, max := atom.args[0], atom.args[1], atom.args[2], atom.args[3]
+			// evaluate the size
+			n, err := evalInt(ne, ctx)
+			if err != nil {
+				return nil, err
+			}
+			p, err := evalInt(pe, ctx)
+			if err != nil {
+				return nil, err
+			}
+			const maxMatrixSize = 100
+			if n <= 0 || n > maxMatrixSize {
+				return nil, fmt.Errorf("La taille d'une matrice doit être entre 1 et %d (%d reçu)", maxMatrixSize, n)
+			}
+			if p <= 0 || p > maxMatrixSize {
+				return nil, fmt.Errorf("La taille d'une matrice doit être entre 1 et %d (%d reçu)", maxMatrixSize, p)
+			}
+			start, end, err := startEnd(min, max, ctx)
+			if err != nil {
+				return nil, err
+			}
+			err = atom.kind.validateStartEnd(start, end, 0)
+			if err != nil {
+				return nil, err
+			}
+			out := newMatrixEmpty(n, p)
+			for i := range out {
+				for j := range out[i] {
+					out[i][j] = newRealInt(randomInt(int(start), int(end))).toExpr()
+				}
+			}
+			return &Expr{atom: out}, nil
 		case randChoice:
 			index := rand.Intn(len(atom.args))
 			choice := atom.args[index]

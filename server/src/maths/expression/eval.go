@@ -457,7 +457,7 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 			return real{}, err
 		}
 
-		err = r.validateStartEnd(start, end, 0)
+		err = r.kind.validateStartEnd(start, end, 0)
 		if err != nil {
 			return real{}, err
 		}
@@ -468,7 +468,7 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 			return real{}, err
 		}
 
-		err = r.validateStartEnd(start, end, 0)
+		err = r.kind.validateStartEnd(start, end, 0)
 		if err != nil {
 			return real{}, err
 		}
@@ -498,7 +498,7 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 		if err != nil {
 			return real{}, err
 		}
-		err = r.validateStartEnd(start, end, 0)
+		err = r.kind.validateStartEnd(start, end, 0)
 		if err != nil {
 			return real{}, err
 		}
@@ -551,6 +551,8 @@ func (r specialFunction) evalRat(res varEvaluer) (real, error) {
 			return real{}, fmt.Errorf("Le second argument de binom() doit être un entier (%s).", err)
 		}
 		return newRealInt(binomialCoefficient(k, n)), nil
+	case randMatrixInt:
+		return real{}, errors.New("La fonction randMatrix() ne peut pas être évaluée.")
 	default:
 		panic(exhaustiveSpecialFunctionSwitch)
 	}

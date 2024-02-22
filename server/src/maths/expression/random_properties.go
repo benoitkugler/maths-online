@@ -131,9 +131,10 @@ func binomialCoefficient(k, n int) int {
 	return res
 }
 
-func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
-	switch rd.kind {
-	case randInt, randPrime:
+func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) error {
+	_ = exhaustiveSpecialFunctionSwitch
+	switch kind {
+	case randInt, randPrime, randMatrixInt:
 		start, okStart := IsInt(start)
 		end, okEnd := IsInt(end)
 		if !(okStart && okEnd) {
@@ -150,14 +151,14 @@ func (rd specialFunction) validateStartEnd(start, end float64, pos int) error {
 			}
 		}
 
-		if rd.kind == randPrime && start < 0 {
+		if kind == randPrime && start < 0 {
 			return ErrInvalidExpr{
 				Reason: "randPrime n'accepte que des nombres positifs",
 				Pos:    pos,
 			}
 		}
 
-		if rd.kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
+		if kind == randPrime && len(sieveOfEratosthenes(start, end)) == 0 {
 			return ErrInvalidExpr{
 				Reason: fmt.Sprintf("aucun nombre premier n'existe entre %d et %d", start, end),
 				Pos:    pos,

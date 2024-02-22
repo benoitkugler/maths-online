@@ -102,6 +102,45 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 			Vars{NewVar('f'): mustParse(t, "i^2")},
 			false,
 		},
+		// random matrix
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; -1; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(-1; 2; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; 2; x; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; 2; 20; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1.5; 2; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(1; 2.2; 1; 10)"},
+			nil,
+			true,
+		},
+		{
+			map[Variable]string{NewVar('A'): "randMatrix(2; 3; 5; 5)"},
+			Vars{NewVar('A'): &Expr{atom: matrix{
+				{newNb(5), newNb(5), newNb(5)},
+				{newNb(5), newNb(5), newNb(5)},
+			}}},
+			false,
+		},
 		// substitution in min (or max) functions
 		{
 			map[Variable]string{NewVar('f'): "min(i^2; j)", NewVar('j'): "4"},

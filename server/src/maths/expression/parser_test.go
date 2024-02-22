@@ -492,6 +492,13 @@ var expressions = [...]struct {
 	{"choiceFrom( x;", nil, true},
 	{"choiceFrom( x,y )", nil, true},
 	{"choiceFrom(x;y); )", nil, true},
+	// random matrix
+	{"randMatrix(1;2)", nil, true},
+	{"randMatrix()", nil, true},
+	{"randMatrix(2;3;5; 1)", &Expr{atom: specialFunction{
+		kind: randMatrixInt,
+		args: []*Expr{newNb(2), newNb(3), newNb(5), newNb(1)},
+	}}, false},
 	{
 		"2 + 3 * randInt(2; 12)", &Expr{
 			atom:  plus,
