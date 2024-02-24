@@ -9,7 +9,7 @@
    id="svg1173"
    sodipodi:docname="ranks.svg"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
-   inkscape:export-filename="/home/benoit/go/src/github.com/benoitkugler/maths-online/eleve/assets/rank-6.png"
+   inkscape:export-filename="/home/benoit/go/src/github.com/benoitkugler/maths-online/eleve/assets/images/ranks/rank-0.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -183,7 +183,7 @@
      style="display:inline">
     <g
        id="g2204"
-       style="display:inline">
+       style="display:none">
       <path
          sodipodi:type="star"
          style="display:inline;opacity:0.951882;fill:#ffdd55;fill-opacity:1;stroke:#efca36;stroke-width:6.4252;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter9362)"
@@ -1324,7 +1324,7 @@
     <g
        id="g1876"
        transform="matrix(0.7448487,0,0,0.7448487,-1378.9291,-852.09078)"
-       style="display:inline"
+       style="display:none"
        inkscape:label="g1876">
       <path
          transform="rotate(47.695448,1500.8661,2218.869)"
@@ -2443,7 +2443,7 @@
     </g>
     <g
        id="g26077"
-       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:#efca36;stroke-width:1.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+       style="display:none;fill:#ffffff;fill-opacity:1;stroke:#efca36;stroke-width:1.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
       <path
          sodipodi:type="star"
          style="opacity:0.8;fill:#ffffff;fill-opacity:1;stroke:#efca36;stroke-width:3.68912;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -2489,7 +2489,7 @@
     </g>
     <path
        sodipodi:type="star"
-       style="display:inline;opacity:0.65;fill:url(#linearGradient22993);fill-opacity:1;stroke:#efca36;stroke-width:4.53522;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="display:none;opacity:0.65;fill:url(#linearGradient22993);fill-opacity:1;stroke:#efca36;stroke-width:4.53522;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path1256-9-1"
        inkscape:flatsided="true"
        sodipodi:sides="6"
@@ -2507,7 +2507,7 @@
        d="m 367.34719,527.86973 -169.04813,0.86272 -85.27119,-145.96861 83.77692,-146.83133 169.04812,-0.86271 85.2712,145.9686 z" />
     <g
        id="g1458"
-       style="display:inline">
+       style="display:none">
       <path
          sodipodi:type="star"
          style="display:inline;opacity:0.8;fill:#00fafa;fill-opacity:1;stroke:#3bd5b8;stroke-width:4.50191;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -2557,7 +2557,7 @@
     </g>
     <path
        id="path1256"
-       style="display:inline;opacity:0.8;fill:url(#linearGradient2710);stroke:#29a891;stroke-width:4.27446;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
+       style="display:none;opacity:0.8;fill:url(#linearGradient2710);stroke:#29a891;stroke-width:4.27446;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
        inkscape:transform-center-x="-0.029968665"
        inkscape:transform-center-y="-2.9762654"
        d="m 367.34719,527.86973 -169.04813,0.86272 -85.27119,-145.96861 83.77692,-146.83133 169.04812,-0.86271 85.2712,145.9686 z"
