@@ -20,34 +20,37 @@
       <v-col cols="auto" align-self="center">
         <v-icon size="large" icon="mdi-drag-vertical"></v-icon>
       </v-col>
-      <v-col align-self="center" cols="7">
+      <v-col align-self="center" cols="6">
         <v-card-subtitle>
           <b>{{ kindLabels[props.kind].label }}</b>
-          <span v-if="isAnswer" class="ml-1">(Champ de réponse)</span>
+          <span v-if="isAnswer" class="ml-1">(réponse)</span>
         </v-card-subtitle>
       </v-col>
       <v-spacer></v-spacer>
       <v-col cols="auto" style="text-align: right" class="my-1 mr-2">
         <v-btn
-          :icon="props.hideContent ? 'mdi-chevron-down' : 'mdi-chevron-up'"
-          size="x-small"
-          variant="tonal"
-          class="mx-2"
-          @click="emit('toggleContent')"
-        ></v-btn>
-        <v-btn
           v-if="props.kind == BlockKind.ExpressionFieldBlock"
-          class="mr-2"
+          class="mx-1"
           icon
-          title="Ajouter un texte avec des conseils de syntaxe."
           size="x-small"
+          title="Ajouter un texte avec des conseils de syntaxe."
           @click="emit('addSyntaxHint')"
         >
           <v-icon small color="green">mdi-tooltip-plus</v-icon>
         </v-btn>
         <v-btn
+          class="mx-1"
+          icon
+          size="x-small"
+          title="Copier le bloc"
+          @click="emit('copy')"
+        >
+          <v-icon small>mdi-content-copy</v-icon>
+        </v-btn>
+
+        <v-btn
           v-if="showLaTeXDoc"
-          class="mr-2"
+          class="mx-1"
           icon
           title="Documentation de la syntaxe LaTeX"
           size="x-small"
@@ -55,9 +58,22 @@
         >
           <v-icon small color="info">mdi-help</v-icon>
         </v-btn>
-        <v-btn icon title="Supprimer" size="x-small" @click="emit('delete')">
+        <v-btn
+          class="mx-1"
+          icon
+          title="Supprimer"
+          size="x-small"
+          @click="emit('delete')"
+        >
           <v-icon small color="red">mdi-close</v-icon>
         </v-btn>
+        <v-btn
+          :icon="props.hideContent ? 'mdi-chevron-down' : 'mdi-chevron-up'"
+          size="x-small"
+          variant="tonal"
+          class="ml-1"
+          @click="emit('toggleContent')"
+        ></v-btn>
       </v-col>
     </v-row>
 
@@ -80,6 +96,7 @@ const emit = defineEmits<{
   (e: "delete"): void;
   (e: "toggleContent"): void;
   (e: "addSyntaxHint"): void;
+  (e: "copy"): void;
 }>();
 
 interface ContainerProps {

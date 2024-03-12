@@ -84,6 +84,22 @@
               <v-btn
                 class="my-1"
                 size="small"
+                @click="paste"
+                title="Coller le bloc"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-content-paste"
+                  size="small"
+                ></v-icon>
+                Coller
+              </v-btn>
+            </v-list-item>
+
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
                 @click="download"
                 title="Télécharger la question au format .json"
               >
@@ -163,7 +179,10 @@ import {
   type Variable,
 } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import { saveData } from "@/controller/editor";
+import {
+  readClipboardForBlock as readClipboardForBlock,
+  saveData,
+} from "@/controller/editor";
 import { History } from "@/controller/editor_history";
 import { copy } from "@/controller/utils";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
@@ -366,6 +385,16 @@ async function exportLatex() {
     }
   } else {
     onQuestionError(res.Error);
+  }
+}
+
+async function paste() {
+  const block = await readClipboardForBlock();
+  if (block === undefined) return;
+  if (modeEnonce.value) {
+    questionEnonceNode.value?.addExistingBlock(block);
+  } else {
+    questionCorrectionNode.value?.addExistingBlock(block);
   }
 }
 </script>

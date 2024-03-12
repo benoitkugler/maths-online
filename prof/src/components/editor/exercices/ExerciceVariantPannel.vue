@@ -106,6 +106,22 @@
           <v-list>
             <v-list-item>
               <v-btn
+                class="my-1"
+                size="small"
+                @click="paste"
+                title="Coller le bloc"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-content-paste"
+                  size="small"
+                ></v-icon>
+                Coller
+              </v-btn>
+            </v-list-item>
+
+            <v-list-item>
+              <v-btn
                 size="small"
                 class="my-1"
                 @click="download"
@@ -235,7 +251,7 @@ import SnackErrorEnonce from "../SnackErrorEnonce.vue";
 import SnackErrorParameters from "../parameters/SnackErrorParameters.vue";
 import QuestionContent from "../QuestionContent.vue";
 import { History } from "@/controller/editor_history";
-import { saveData } from "@/controller/editor";
+import { saveData, readClipboardForBlock } from "@/controller/editor";
 import BlockBar from "../BlockBar.vue";
 import ParametersEditor from "../parameters/ParametersEditor.vue";
 
@@ -557,6 +573,16 @@ async function exportLatex() {
     }
   } else {
     onQuestionError(res.QuestionIndex, res.Error);
+  }
+}
+
+async function paste() {
+  const block = await readClipboardForBlock();
+  if (block === undefined) return;
+  if (modeEnonce.value) {
+    questionEnonceNode.value?.addExistingBlock(block);
+  } else {
+    questionCorrectionNode.value?.addExistingBlock(block);
   }
 }
 </script>

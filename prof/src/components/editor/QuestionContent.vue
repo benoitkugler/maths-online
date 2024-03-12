@@ -37,6 +37,7 @@
         :hide-content="showDropZone || !areExpanded[index]"
         :has-error="errorBlockIndex == index"
         @toggle-content="areExpanded[index] = !areExpanded[index]"
+        @copy="copyBlock(index)"
       >
         <component
           :model-value="row.Props.Data"
@@ -91,6 +92,7 @@ import { type Component } from "vue";
 import { markRaw } from "vue";
 import { watch } from "vue";
 import { nextTick } from "vue";
+import { controller } from "@/controller/controller";
 
 interface Props {
   modelValue: Block[];
@@ -245,6 +247,12 @@ function onDragoverJSON(ev: DragEvent) {
 async function addSyntaxHint(index: number) {
   const block = props.modelValue[index].Data as ExpressionFieldBlock;
   emit("addSyntaxHint", block);
+}
+
+async function copyBlock(index: number) {
+  const json = JSON.stringify(props.modelValue[index]);
+  await navigator.clipboard.writeText(json);
+  controller.showMessage("Bloc copié dans le presse-papier.");
 }
 </script>
 

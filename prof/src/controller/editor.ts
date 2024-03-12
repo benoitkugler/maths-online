@@ -770,3 +770,10 @@ export function exerciceToResource(group: ExercicegroupExt): ResourceGroup {
     Origin: group.Origin,
   };
 }
+
+export async function readClipboardForBlock() {
+  const json = await navigator.clipboard.readText();
+  const parsed = JSON.parse(json);
+  if (!(parsed["Data"] && parsed["Kind"])) return;
+  return parsed as Block;
+}

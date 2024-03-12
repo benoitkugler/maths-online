@@ -66,6 +66,37 @@
             size="small"
           ></v-icon>
         </v-btn>
+
+        <v-menu offset-y close-on-content-click>
+          <template v-slot:activator="{ isActive, props }">
+            <v-btn
+              icon
+              title="Plus d'options"
+              v-on="{ isActive }"
+              v-bind="props"
+              size="x-small"
+            >
+              <v-icon icon="mdi-dots-vertical"></v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-btn
+                class="my-1"
+                size="small"
+                @click="paste"
+                title="Coller le bloc"
+              >
+                <v-icon
+                  class="mr-2"
+                  icon="mdi-content-paste"
+                  size="small"
+                ></v-icon>
+                Coller
+              </v-btn>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-col>
     </v-row>
 
@@ -134,6 +165,7 @@ import SnackErrorParameters from "../editor/parameters/SnackErrorParameters.vue"
 import SnackErrorEnonce from "../editor/SnackErrorEnonce.vue";
 import { onUnmounted } from "vue";
 import { watch } from "vue";
+import { readClipboardForBlock } from "@/controller/editor";
 
 interface Props {
   question: Beltquestion;
@@ -277,6 +309,16 @@ function onQuestionError(err: ErrQuestionInvalid) {
       errorIsCorrection.value = true;
       modeEnonce.value = false;
       return;
+  }
+}
+
+async function paste() {
+  const block = await readClipboardForBlock();
+  if (block === undefined) return;
+  if (modeEnonce.value) {
+    questionEnonceNode.value?.addExistingBlock(block);
+  } else {
+    questionCorrectionNode.value?.addExistingBlock(block);
   }
 }
 </script>
