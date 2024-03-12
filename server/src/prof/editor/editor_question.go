@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
-	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
@@ -726,60 +724,29 @@ func questionOrigin(qu ed.Questiongroup, inReview tcAPI.OptionalIdReview, userID
 	}
 }
 
-func isQueryVariant(query string) (int64, bool) {
-	if strings.HasPrefix(query, "variante:") {
-		idS := strings.TrimPrefix(query, "variante:")
-		id, err := strconv.ParseInt(idS, 10, 64)
-		return id, err == nil
-	}
-	return 0, false
-}
-
-type itemGroupQuery interface {
-	match(id int64, title string) bool
-}
-
-func newQuery(title string) (itemGroupQuery, error) {
-	// special case for pattern id:id1, id2, ...
-	if strings.HasPrefix(title, "id:") {
-		idsString := strings.TrimSpace(title[len("id:"):])
-		if len(idsString) != 0 {
-			out := make(queryByIds)
-			ids := strings.Split(idsString, ",")
-
-			for _, id := range ids {
-				idV, err := strconv.Atoi(id)
-				if err != nil {
-					return nil, fmt.Errorf("Requête invalide: entier attendu (%s)", err)
-				}
-				out[int64(idV)] = true
-			}
-			return out, nil
-		}
-	}
-	return queryByTitle(normalizeTitle(title)), nil
-}
-
-type queryByTitle string
-
-func (qt queryByTitle) match(_ int64, title string) bool {
-	itemTitle := normalizeTitle(title)
-	return qt == "" || strings.Contains(itemTitle, string(qt))
-}
-
-type queryByIds map[int64]bool
-
-func (qt queryByIds) match(id int64, _ string) bool { return qt[id] }
-
-func normalizeTitle(title string) string {
-	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
-}
-
 func (ct *Controller) searchQuestions(query Query, userID uID) (out ListQuestionsOut, err error) {
 	query.normalize()
 
 	var groups ed.Questiongroups
-	if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
+	if isQueryTODO(query.TitleQuery) {
+		questions, err := ed.SelectAllQuestions(ct.db)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+		ids := ed.IdQuestiongroupSet{}
+		for _, question := range questions {
+			if question.NeedExercice.Valid {
+				continue // ignore exercices
+			}
+			if question.Parameters.HasTODO() {
+				ids.Add(question.IdGroup.ID)
+			}
+		}
+		groups, err = ed.SelectQuestiongroups(ct.db, ids.Keys()...)
+		if err != nil {
+			return out, utils.SQLError(err)
+		}
+	} else if idVariant, isVariante := isQueryVariant(query.TitleQuery); isVariante {
 		qu, err := ed.SelectQuestion(ct.db, ed.IdQuestion(idVariant))
 		if err == sql.ErrNoRows {
 			return out, fmt.Errorf("La question %d n'existe pas.", idVariant)

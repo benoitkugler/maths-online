@@ -3,7 +3,34 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
+export type Ar11_boolean = [
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+];
 export type Ar11_Int = [Int, Int, Int, Int, Int, Int, Int, Int, Int, Int, Int];
+export type Ar12_Ar11_boolean = [
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+  Ar11_boolean,
+];
 export type Ar12_Ar11_Int = [
   Ar11_Int,
   Ar11_Int,
@@ -622,6 +649,7 @@ export const SegmentKindLabels: { [key in SegmentKind]: string } = {
 export interface GetSchemeOut {
   Scheme: Scheme;
   NbQuestions: Ar12_Ar11_Int;
+  HasTODO: Ar12_Ar11_boolean;
   IsAdmin: boolean;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/ceintures.Prerequisite
@@ -1480,6 +1508,7 @@ export interface Stats {
   Occurences: Ar11_Int;
   TotalPoints: Int;
   Flames: Int;
+  Rank: Int;
 }
 // github.com/benoitkugler/maths-online/server/src/sql/homework.IdSheet
 export type IdSheet = Int;

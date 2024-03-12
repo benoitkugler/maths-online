@@ -66,6 +66,10 @@ func (it In) mergeTo(vars *ex.RandomParameters) error {
 // Comment are ignored
 func (Co) mergeTo(vars *ex.RandomParameters) error { return nil }
 
+func (comment Co) isTodo() bool {
+	return strings.Contains(strings.ToLower(string(comment)), "todo")
+}
+
 // ToMap may only be used after `Validate`
 func (pr Parameters) ToMap() *ex.RandomParameters {
 	out := ex.NewRandomParameters()
@@ -73,6 +77,16 @@ func (pr Parameters) ToMap() *ex.RandomParameters {
 		_ = entry.mergeTo(out) // error is check in Validate
 	}
 	return out
+}
+
+// HasTODO returns true if one of the comment has a TODO mention
+func (pr Parameters) HasTODO() bool {
+	for _, entry := range pr {
+		if entry, ok := entry.(Co); ok && entry.isTodo() {
+			return true
+		}
+	}
+	return false
 }
 
 type Rp struct {

@@ -3,6 +3,8 @@ package editor
 import (
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/benoitkugler/maths-online/server/src/maths/questions"
 	tcAPI "github.com/benoitkugler/maths-online/server/src/prof/teacher"
@@ -183,6 +185,59 @@ func (query Query) matchSubLevel(subLevels []string) bool {
 		}
 	}
 	return false
+}
+
+func isQueryVariant(query string) (int64, bool) {
+	if strings.HasPrefix(query, "variante:") {
+		idS := strings.TrimPrefix(query, "variante:")
+		id, err := strconv.ParseInt(idS, 10, 64)
+		return id, err == nil
+	}
+	return 0, false
+}
+
+type itemGroupQuery interface {
+	match(id int64, title string) bool
+}
+
+func newQuery(title string) (itemGroupQuery, error) {
+	// special case for pattern id:id1, id2, ...
+	if strings.HasPrefix(title, "id:") {
+		idsString := strings.TrimSpace(title[len("id:"):])
+		if len(idsString) != 0 {
+			out := make(queryByIds)
+			ids := strings.Split(idsString, ",")
+
+			for _, id := range ids {
+				idV, err := strconv.Atoi(id)
+				if err != nil {
+					return nil, fmt.Errorf("Requête invalide: entier attendu (%s)", err)
+				}
+				out[int64(idV)] = true
+			}
+			return out, nil
+		}
+	}
+	return queryByTitle(normalizeTitle(title)), nil
+}
+
+type queryByTitle string
+
+func (qt queryByTitle) match(_ int64, title string) bool {
+	itemTitle := normalizeTitle(title)
+	return qt == "" || strings.Contains(itemTitle, string(qt))
+}
+
+type queryByIds map[int64]bool
+
+func (qt queryByIds) match(id int64, _ string) bool { return qt[id] }
+
+func normalizeTitle(title string) string {
+	return utils.RemoveAccents(strings.TrimSpace(strings.ToLower(title)))
+}
+
+func isQueryTODO(query string) bool {
+	return strings.TrimSpace(strings.ToLower(query)) == "todo"
 }
 
 type ExerciceUpdateVisiblityIn struct {

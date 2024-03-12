@@ -25,7 +25,11 @@ func TestCRUDQuestion(t *testing.T) {
 	qu, err := ct.createQuestion(stage)
 	tu.AssertNoErr(t, err)
 
-	qu.Parameters = questions.Parameters{questions.Co("Un commentaire"), questions.Rp{Expression: "2", Variable: expression.NewVar('a')}}
+	qu.Parameters = questions.Parameters{
+		questions.Co("Un commentaire"),
+		questions.Rp{Expression: "2", Variable: expression.NewVar('a')},
+		questions.Co("TODO !"),
+	}
 	qu.Enonce = questions.Enonce{questions.TextBlock{}}
 	pr, err := ct.saveQuestion(qu)
 	tu.AssertNoErr(t, err)
@@ -35,10 +39,15 @@ func TestCRUDQuestion(t *testing.T) {
 	pr, err = ct.saveQuestion(qu)
 	tu.Assert(t, !pr.IsValid) // x is not defined
 
+	out, err := ct.getScheme(1)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, out.HasTODO[stage.Domain][stage.Rank])
+
 	err = ct.deleteQuestion(qu.Id)
 	tu.AssertNoErr(t, err)
 
 	l, err = ct.getQuestions(stage)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(l) == 0)
+
 }

@@ -56,6 +56,16 @@
                       @click="stageToEdit = stage"
                     >
                       <v-card-text class="text-center pa-1">
+                        <v-tooltip
+                          v-if="stageHasTODO(stage)"
+                          text="Certaines questions sont en cours d'édition."
+                        >
+                          <template v-slot:activator="{ isActive, props }">
+                            <v-icon v-on="{ isActive }" v-bind="props"
+                              >mdi-progress-alert</v-icon
+                            >
+                          </template>
+                        </v-tooltip>
                         {{ stageText(stage) }}
                       </v-card-text>
                     </v-card>
@@ -208,6 +218,12 @@ function stageText(stage: Stage) {
   const s = scheme.value;
   if (s == null) return;
   return `${s.NbQuestions[stage.Domain][stage.Rank]} qu.`;
+}
+
+function stageHasTODO(stage: Stage) {
+  const s = scheme.value;
+  if (s == null) return false;
+  return s.HasTODO[stage.Domain][stage.Rank];
 }
 
 // show/hide question editor

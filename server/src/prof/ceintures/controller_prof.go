@@ -52,6 +52,7 @@ func (ct *Controller) CeinturesGetScheme(c echo.Context) error {
 type GetSchemeOut struct {
 	Scheme      Scheme
 	NbQuestions [ce.NbDomains][ce.NbRanks]int
+	HasTODO     [ce.NbDomains][ce.NbRanks]bool
 	IsAdmin     bool
 }
 
@@ -66,6 +67,11 @@ func (ct *Controller) getScheme(userID uID) (GetSchemeOut, error) {
 
 	for stage, l := range byStage(questions) {
 		out.NbQuestions[stage.Domain][stage.Rank] = len(l)
+		for _, qu := range l {
+			if qu.Parameters.HasTODO() {
+				out.HasTODO[stage.Domain][stage.Rank] = true
+			}
+		}
 	}
 
 	return out, nil
