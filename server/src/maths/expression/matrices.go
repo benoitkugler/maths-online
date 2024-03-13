@@ -282,7 +282,7 @@ func (A matrix) trace() (*Expr, error) {
 	return s, nil
 }
 
-func (A matrix) instantiate(ctx *paramsInstantiater) (matrix, error) {
+func (A matrix) instantiate(ctx *resolver) (matrix, error) {
 	out := make(matrix, len(A))
 	var err error
 	for i, row := range A {
@@ -298,7 +298,7 @@ func (A matrix) instantiate(ctx *paramsInstantiater) (matrix, error) {
 	return out, nil
 }
 
-func matricesOperation(op operator, left, right *Expr, ctx *paramsInstantiater) (*Expr, error) {
+func matricesOperation(op operator, left, right *Expr, ctx *resolver) (*Expr, error) {
 	switch op {
 	case plus:
 		if leftA, ok := left.atom.(matrix); ok {

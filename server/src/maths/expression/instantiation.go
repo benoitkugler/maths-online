@@ -38,45 +38,51 @@ func (irv ErrInvalidRandomParameters) Error() string {
 	return fmt.Sprintf("%s -> %s", irv.Cause, irv.Detail)
 }
 
+// instantiate intrinsics and merge them to the regular definitions
+func (rv RandomParameters) consumeIntrinsics(dst Vars) error {
+	for _, spe := range rv.specials {
+		err := spe.instantiateTo(dst)
+		if err != nil {
+			return err
+		}
+	}
+	for k, v := range rv.defs {
+		dst[k] = v
+	}
+	return nil
+}
+
 type Instantiater struct {
-	paramsInstantiater
+	origin RandomParameters
+
+	ctx resolver
 }
 
 func NewInstantiater(rv RandomParameters) *Instantiater {
 	return &Instantiater{
-		paramsInstantiater{
-			defs:    rv,
-			seen:    make(map[Variable]bool),
-			results: make(map[Variable]*Expr),
-		},
+		origin: rv,
+		ctx:    *newParamsInstantiater(),
 	}
 }
 
 func (inst *Instantiater) Reset() {
-	for k := range inst.seen {
-		delete(inst.seen, k)
+	for k := range inst.ctx.defs {
+		delete(inst.ctx.defs, k)
 	}
-	for k := range inst.results {
-		delete(inst.results, k)
+	for k := range inst.ctx.seen {
+		delete(inst.ctx.seen, k)
+	}
+	for k := range inst.ctx.results {
+		delete(inst.ctx.results, k)
 	}
 }
 
 func (inst *Instantiater) Instantiate() (Vars, error) {
-	for _, spe := range inst.defs.specials {
-		err := spe.instantiateTo(inst.results)
-		if err != nil {
-			return nil, err
-		}
+	err := inst.origin.consumeIntrinsics(inst.ctx.defs)
+	if err != nil {
+		return nil, err
 	}
-
-	for v := range inst.defs.defs {
-		inst.paramsInstantiater.currentVariable = v
-		_, err := inst.paramsInstantiater.instantiate(v) // this triggers the evaluation of the expression
-		if err != nil {
-			return nil, err
-		}
-	}
-	return inst.results, nil
+	return inst.ctx.instantiateAll()
 }
 
 // Instantiate generates a random version of the variables, resolving possible dependencies.
@@ -96,26 +102,54 @@ func (rv RandomParameters) Instantiate() (Vars, error) {
 	return inst.Instantiate()
 }
 
-type paramsInstantiater struct {
-	defs RandomParameters
+type resolver struct {
+	defs Vars
 
-	seen    map[Variable]bool  // variable that we are currently resolving
-	results map[Variable]*Expr // resulting values being built
+	// in sum or prod, this will temporary override any definition in defs
+	tmpVariable Variable
+	tmpValue    Expr
+
+	seen    map[Variable]bool // variable that we are currently resolving
+	results Vars              // resulting values being built
 
 	// the top level variable being resolved,
 	// or zero if are recursing in the tree
 	currentVariable Variable
 }
 
+func newParamsInstantiater() *resolver {
+	return &resolver{
+		defs:    make(Vars),
+		seen:    make(map[Variable]bool),
+		results: make(Vars),
+	}
+}
+
+func (ctx *resolver) instantiateAll() (Vars, error) {
+	for v := range ctx.defs {
+		ctx.currentVariable = v
+		_, err := ctx.instantiate(v) // this triggers the evaluation of the expression
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ctx.results, nil
+}
+
 // instantiate instantiate the given variable [v], and its dependencies
 // if [v] is not defined, it returns an error
-func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
+func (rvv *resolver) instantiate(v Variable) (*Expr, error) {
+	// check the special temporary variable
+	if v == rvv.tmpVariable {
+		return &rvv.tmpValue, nil
+	}
+
 	// first, check if it has already been resolved by side effect or special functions
 	if expr, has := rvv.results[v]; has {
 		return expr, nil
 	}
 
-	expr, ok := rvv.defs.defs[v]
+	expr, ok := rvv.defs[v]
 	if !ok {
 		return nil, ErrInvalidRandomParameters{
 			Cause:  v,
@@ -156,40 +190,6 @@ func (rvv *paramsInstantiater) instantiate(v Variable) (*Expr, error) {
 	return value, nil
 }
 
-func (rvv *paramsInstantiater) resolve(v Variable) (real, error) {
-	expr, err := rvv.instantiate(v)
-	if err != nil {
-		return real{}, err
-	}
-	if resolved, isVar := expr.atom.(Variable); isVar && v == resolved {
-		return real{}, errors.New("variable cycle")
-	}
-	return expr.evalReal(rvv)
-}
-
-func (expr *Expr) tryEval(ctx *paramsInstantiater) *Expr {
-	if mat, ok := expr.atom.(matrix); ok {
-		out := make(matrix, len(mat))
-		for i, row := range mat {
-			out[i] = make([]*Expr, len(row))
-			for j := range row {
-				v, err := mat[i][j].evalReal(ctx)
-				if err == nil {
-					out[i][j] = v.toExpr()
-				} else {
-					out[i][j] = mat[i][j]
-				}
-			}
-		}
-		return &Expr{atom: out}
-	}
-	v, err := expr.evalReal(ctx)
-	if err == nil {
-		return v.toExpr()
-	}
-	return expr
-}
-
 // we allow zero length cycles so that f = randSymbol(f ; g ; h) is valid
 // note that such cycle will be invalid if used in evaluation
 // (see Evaluate)
@@ -203,7 +203,7 @@ func (expr *Expr) isZeroCycle(currentVariable Variable) bool {
 // instantiate recurse through [expr], resolving defined variables
 // and trying to evaluate all expressions. When used in random selectors,
 // an error is returned on failure, but not in general
-func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
+func (expr *Expr) instantiate(ctx *resolver) (*Expr, error) {
 	if expr == nil {
 		return nil, nil
 	}
@@ -294,12 +294,8 @@ func (expr *Expr) instantiate(ctx *paramsInstantiater) (*Expr, error) {
 		}
 		return out.tryEval(ctx), nil
 	case Variable:
-		// take intrinsics into account
-		if v, has := ctx.results[atom]; has {
-			return v, nil
-		}
 		// if the variable is not defined, just returns the free variable as an expression
-		if _, isDefined := ctx.defs.defs[atom]; !isDefined {
+		if _, isDefined := ctx.defs[atom]; !isDefined {
 			return NewVarExpr(atom), nil
 		}
 		ctx.currentVariable = atom

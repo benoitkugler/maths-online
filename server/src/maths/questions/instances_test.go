@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/benoitkugler/maths-online/server/src/maths/expression"
+	ex "github.com/benoitkugler/maths-online/server/src/maths/expression"
 	"github.com/benoitkugler/maths-online/server/src/maths/questions/client"
 	tu "github.com/benoitkugler/maths-online/server/src/utils/testutils"
 )
@@ -43,12 +43,12 @@ func TestQuestionInstance_CompareAnswer(t *testing.T) {
 			map[int]bool{0: true, 1: true},
 		},
 		{
-			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: expression.MustParse("x+2"), ComparisonLevel: SimpleSubstitutions}},
+			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: ex.MustParse("x+2"), ComparisonLevel: SimpleSubstitutions}},
 			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.ExpressionAnswer{Expression: "x+3"}},
 			map[int]bool{0: true, 1: false},
 		},
 		{
-			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: expression.MustParse("x+2"), ComparisonLevel: SimpleSubstitutions}},
+			EnonceInstance{NumberFieldInstance{ID: 0, Answer: 3.4}, ExpressionFieldInstance{ID: 1, Answer: ex.MustParse("x+2"), ComparisonLevel: SimpleSubstitutions}},
 			map[int]client.Answer{0: client.NumberAnswer{Value: 3.4}, 1: client.ExpressionAnswer{Expression: "x+ 2"}},
 			map[int]bool{0: true, 1: true},
 		},
@@ -77,9 +77,9 @@ func TestBug144(t *testing.T) {
 		rp, err := out.Instantiate()
 		tu.AssertNoErr(t, err)
 
-		k1, _ := rp[expression.NewVarI('k', "1")].Evaluate(nil)
+		k1, _ := rp[ex.NewVarI('k', "1")].Evaluate(nil)
 		if k1 == 0 {
-			tu.Assert(t, rp[expression.NewVar('b')].String() == "0")
+			tu.Assert(t, rp[ex.NewVar('b')].String() == "0")
 		} else {
 			tu.Assert(t, k1 == 1)
 		}
@@ -103,8 +103,8 @@ func TestInstantiateMinMax(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	// test that the min and max function are properly evaluated
-	tu.Assert(t, !strings.Contains(vars[expression.NewVarI('s', "1")].String(), "min"))
-	tu.Assert(t, !strings.Contains(vars[expression.NewVarI('s', "2")].String(), "max"))
+	tu.Assert(t, !strings.Contains(vars[ex.NewVarI('s', "1")].String(), "min"))
+	tu.Assert(t, !strings.Contains(vars[ex.NewVarI('s', "2")].String(), "max"))
 }
 
 func TestInstantiateTextFormula(t *testing.T) {

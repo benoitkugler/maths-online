@@ -82,7 +82,7 @@ type atom interface {
 
 	// return a value if possible as rational, so that
 	// it may be simplified by subsequent operations
-	eval(left, right real, context varEvaluer) (real, error)
+	eval(left, right *Expr, ctx *resolver) (real, error)
 
 	asLaTeX(left, right *Expr) string
 }
