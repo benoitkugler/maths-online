@@ -223,19 +223,55 @@ func (r roundFunc) asLaTeX(_, right *Expr) string {
 	return fmt.Sprintf(`\text{round(%s; %d)}`, right.AsLaTeX(), r.nbDigits)
 }
 
+// try to write the sequence explicitely
+func (r specialFunction) expandSequence() (string, error) {
+	start, err := evalInt(r.args[1], nil)
+	if err != nil {
+		return "", err
+	}
+	end, err := evalInt(r.args[2], nil)
+	if err != nil {
+		return "", err
+	}
+	k, _ := r.args[0].atom.(Variable)
+	expr := r.args[3]
+	var chunks []string
+	for i := start; i <= end; i++ {
+		v := newRealInt(i)
+		term := expr.Copy()
+		term.Substitute(Vars{k: v.toExpr()})
+		chunks = append(chunks, term.AsLaTeX())
+	}
+	sep := "+"
+	if r.kind == prodFn {
+		sep = "\\times"
+	}
+	return strings.Join(chunks, sep), nil
+}
+
 func (r specialFunction) asLaTeX(_, _ *Expr) string {
 	_ = exhaustiveSpecialFunctionSwitch
-	if r.kind == binomial {
+	switch r.kind {
+	case binomial:
 		k, n := r.args[0], r.args[1]
 		return fmt.Sprintf(`\binom{%s}{%s}`, n.AsLaTeX(), k.AsLaTeX())
-	} else if r.kind == sumFn {
+	case sumFn, prodFn:
 		k, start, end, expr := r.args[0], r.args[1], r.args[2], r.args[3]
-		return fmt.Sprintf(`\sum_{%s=%s}^{%s} %s`, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
-	} else if r.kind == prodFn {
-		k, start, end, expr := r.args[0], r.args[1], r.args[2], r.args[3]
+		if len(r.args) == 5 && (r.args[4].atom == Variable{Indice: "expand"}) {
+			// try to write the sequence explicitely
+			code, err := r.expandSequence()
+			if err == nil {
+				return code
+			}
+			// else, default to general notation
+		}
+		if r.kind == sumFn {
+			return fmt.Sprintf(`\sum_{%s=%s}^{%s} %s`, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
+		}
 		return fmt.Sprintf(`\prod_{%s=%s}^{%s} %s`, k.AsLaTeX(), start.AsLaTeX(), end.AsLaTeX(), expr.AsLaTeX())
+	default:
+		return fmt.Sprintf(`\text{%s}`, r.String())
 	}
-	return fmt.Sprintf(`\text{%s}`, r.String())
 }
 
 func (v Variable) asLaTeX(_, _ *Expr) string {
