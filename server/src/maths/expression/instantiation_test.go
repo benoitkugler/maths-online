@@ -183,6 +183,9 @@ func TestRandomVariables_Instantiate(t *testing.T) {
 		{map[Variable]string{NewVar('A'): "det(2)"}, nil, true},
 		{map[Variable]string{NewVar('A'): "trans(2)"}, nil, true},
 		{map[Variable]string{NewVar('A'): "inv(2)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "set([[1]];2;2;1)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "set(0;2;2;1)"}, nil, true},
+		{map[Variable]string{NewVar('A'): "set([[1; 2];[3;4]];2;2;10)"}, Vars{NewVar('A'): mustParse(t, "[[1; 2];[3;10]]")}, false},
 		{map[Variable]string{NewVar('A'): "coeff([[1; 2];[3;4]]; 2; 2)"}, Vars{NewVar('A'): newNb(4)}, false},
 		{map[Variable]string{
 			NewVar('A'): "coeff([[1; 2];[3;4]]; 2; j)",

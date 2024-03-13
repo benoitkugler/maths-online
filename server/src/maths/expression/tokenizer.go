@@ -40,6 +40,7 @@ const (
 	maxFn
 	sumFn // sum of an expression over a variable
 	matCoeff
+	matSet   // update a matrix
 	binomial // coefficient binomial (n, k)
 
 	invalidSpecialFunction
@@ -67,6 +68,8 @@ func (sf specialFunctionKind) String() string {
 		return "sum"
 	case matCoeff:
 		return "coeff"
+	case matSet:
+		return "set"
 	case binomial:
 		return "binom"
 	default:
@@ -442,6 +445,8 @@ func (tk *tokenizer) tryReadSpecialFunction() (specialFunctionKind, bool) {
 		fn = sumFn
 	case "coeff":
 		fn = matCoeff
+	case "set":
+		fn = matSet
 	case "binom":
 		fn = binomial
 	default:

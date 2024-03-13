@@ -637,6 +637,13 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
+	case matSet:
+		if len(rd.args) != 4 {
+			return ErrInvalidExpr{
+				Reason: "set requiert exactement 4 arguments",
+				Pos:    pos,
+			}
+		}
 	case binomial:
 		if len(rd.args) != 2 {
 			return ErrInvalidExpr{

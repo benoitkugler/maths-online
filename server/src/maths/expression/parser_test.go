@@ -687,6 +687,9 @@ var expressions = [...]struct {
 		"coeff(A; i)", nil, true,
 	},
 	{
+		"set(A; i)", nil, true,
+	},
+	{
 		"binom(1)", nil, true,
 	},
 	{

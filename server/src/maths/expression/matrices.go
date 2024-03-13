@@ -23,6 +23,17 @@ func newMatrixEmpty(n, m int) matrix {
 	return out
 }
 
+func (A matrix) copy() matrix {
+	n, m := A.dims()
+	out := newMatrixEmpty(n, m)
+	for i, row := range A {
+		for j, cell := range row {
+			out[i][j] = cell.Copy()
+		}
+	}
+	return out
+}
+
 func add(a, b *Expr) *Expr { return &Expr{atom: plus, left: a, right: b} }
 
 func prod(a, b *Expr) *Expr { return &Expr{atom: mult, left: a, right: b} }
@@ -30,14 +41,11 @@ func prod(a, b *Expr) *Expr { return &Expr{atom: mult, left: a, right: b} }
 // factor . A
 func (A matrix) scale(factor *Expr) matrix {
 	mA, nA := A.dims()
-	out := make(matrix, mA)
-	for i := range out {
-		row := make([]*Expr, nA)
+	out := newMatrixEmpty(mA, nA)
+	for i, row := range A {
 		for j := range row {
-			Aij := A[i][j]
-			row[j] = prod(factor, Aij)
+			out[i][j] = prod(factor, A[i][j])
 		}
-		out[i] = row
 	}
 	return out
 }
@@ -50,15 +58,11 @@ func (A matrix) plus(B matrix) (matrix, error) {
 		return nil, fmt.Errorf("matrices de dimensions incompatibles (%d, %d != %d, %d)", mA, nA, mB, nB)
 	}
 
-	out := make(matrix, mA)
-	for i := range out {
-		row := make([]*Expr, nA)
+	out := newMatrixEmpty(mA, nA)
+	for i, row := range A {
 		for j := range row {
-			Aij := A[i][j]
-			Bij := B[i][j]
-			row[j] = add(Aij, Bij)
+			out[i][j] = add(A[i][j], B[i][j])
 		}
-		out[i] = row
 	}
 
 	return out, nil

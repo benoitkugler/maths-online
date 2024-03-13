@@ -364,6 +364,34 @@ func (expr *Expr) instantiate(ctx *resolver) (*Expr, error) {
 				return choice, nil
 			}
 			return choice.instantiate(ctx)
+		case matSet: // perform matrix op
+			mat, i, j, value := atom.args[0], atom.args[1], atom.args[2], atom.args[3]
+			mat, err := mat.instantiate(ctx) // recurse
+			if err != nil {
+				return nil, err
+			}
+			matV, ok := mat.atom.(matrix)
+			if !ok {
+				return nil, errors.New("La fonction set attend une matrice en premier argument.")
+			}
+			m, n := matV.dims()
+			// evaluate indices
+			in, err := evalIntInRange(i, ctx, 1, m)
+			if err != nil {
+				return nil, err
+			}
+			jn, err := evalIntInRange(j, ctx, 1, n)
+			if err != nil {
+				return nil, err
+			}
+			// just recurse on the value
+			value, err = value.instantiate(ctx)
+			if err != nil {
+				return nil, err
+			}
+			out := matV.copy()
+			out[in-1][jn-1] = value // adjust to computer convention
+			return &Expr{atom: out}, nil
 		case minFn, maxFn, matCoeff, binomial, sumFn: // no-op, simply recurse
 			inst := specialFunction{
 				kind: atom.kind,
