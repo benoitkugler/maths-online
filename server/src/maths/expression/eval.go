@@ -503,7 +503,7 @@ func (r specialFunction) evalRat(ctx *resolver) (real, error) {
 	case maxFn:
 		_, max, err := minMax(r.args, ctx)
 		return newReal(max), err
-	case sumFn:
+	case sumFn, prodFn:
 		start, end, err := startEnd(r.args[1], r.args[2], ctx)
 		if err != nil {
 			return real{}, err
@@ -516,24 +516,31 @@ func (r specialFunction) evalRat(ctx *resolver) (real, error) {
 		// extract the variable
 		indice, ok := r.args[0].atom.(Variable)
 		if !ok {
-			return real{}, errors.New("Le premier argument de sum() doit être une variable.")
+			return real{}, errors.New("Le premier argument de sum() ou prod() doit être une variable.")
 		}
 		expr := r.args[3]
 		if start > end { //  ensure start <= end
 			start, end = end, start
 		}
-		sum := newRealInt(0)
+		result := newRealInt(0)
+		if r.kind == prodFn {
+			result = newRealInt(1)
+		}
 		for indiceVal := int(start); indiceVal <= int(end); indiceVal++ {
 			ctx.setTmpVariable(indice, float64(indiceVal))
-			out, err := expr.evalReal(ctx)
+			vi, err := expr.evalReal(ctx)
 			if err != nil {
 				return real{}, fmt.Errorf("Impossible d'évaluer le terme d'indice %s = %d : %s", indice, indiceVal, err)
 			}
 			ctx.clearTmpVariable()
 
-			sum = sumReal(sum, out)
+			if r.kind == sumFn {
+				result = sumReal(result, vi)
+			} else {
+				result = multReal(result, vi)
+			}
 		}
-		return sum, nil
+		return result, nil
 	case matCoeff:
 		mat, i, j := r.args[0], r.args[1], r.args[2]
 		mat, err := mat.instantiate(ctx)

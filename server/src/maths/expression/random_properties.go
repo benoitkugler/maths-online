@@ -164,12 +164,12 @@ func (kind specialFunctionKind) validateStartEnd(start, end float64, pos int) er
 				Pos:    pos,
 			}
 		}
-	case sumFn:
+	case sumFn, prodFn:
 		_, okStart := IsInt(start)
 		_, okEnd := IsInt(end)
 		if !(okStart && okEnd) {
 			return ErrInvalidExpr{
-				Reason: "sum attend deux entiers comme indices limites",
+				Reason: "sum et prod attendent deux entiers comme indices limites",
 				Pos:    pos,
 			}
 		}

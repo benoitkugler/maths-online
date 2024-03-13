@@ -616,10 +616,10 @@ func (rd specialFunction) validate(pos int) error {
 				Pos:    pos,
 			}
 		}
-	case sumFn:
+	case sumFn, prodFn:
 		if len(rd.args) != 4 {
 			return ErrInvalidExpr{
-				Reason: "sum requiert exactement 4 arguments",
+				Reason: "sum et prod requierent exactement 4 arguments",
 				Pos:    pos,
 			}
 		}

@@ -240,7 +240,8 @@ func Test_Expression_eval(t *testing.T) {
 		{"sum(k; 2; n; k)", Vars{NewVar('n'): newNb(10)}, 10*11/2 - 1},        // n(n+1)/2
 		{"sum(k; 1; n; k^2)", Vars{NewVar('n'): newNb(10)}, 10 * 11 * 21 / 6}, // n(n+1)(2n+1)/6
 		// sum with 'external' parameter
-		{"sum(k; 1; 10; k^n)", Vars{NewVar('n'): newNb(1)}, 10 * 11 / 2}, // n(n+1)/2
+		{"sum(k; 1; 10; k^n)", Vars{NewVar('n'): newNb(1)}, 10 * 11 / 2},     // n(n+1)/2
+		{"prod(k; 1; n; k)", Vars{NewVar('n'): newNb(5)}, 1 * 2 * 3 * 4 * 5}, // 5!
 		// https://github.com/benoitkugler/maths-online/issues/307
 		{"coeff(A;1;1)", Vars{NewVar('A'): mustParse(t, "[[1]]")}, 1},
 	}
