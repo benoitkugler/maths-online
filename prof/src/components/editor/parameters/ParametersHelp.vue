@@ -41,7 +41,9 @@
               euclidienne de x par 3. <br /><br />
               Un symbole spécial, un mot ou un code LaTeX peuvent être insérés
               directement en utilisant des guillemets :
-              <C>x = "moyenne"</C> , <C>A = ">"</C> ou <C>B = "\ge"</C>.
+              <C>x = "moyenne"</C> , <C>A = ">"</C> ou <C>B = "\ge"</C>. <br />
+              Une matrice est définie par une liste de lignes :
+              <C>A = [[1;2;3];[4;5;6]]</C>
             </v-expansion-panel-text>
           </v-expansion-panel>
           <v-expansion-panel title="Fonctions usuelles">
@@ -252,9 +254,16 @@ const fonctionsDesc = [
   ["min(x; 1.2; -4)", "Renvoie le minimum d'une série de valeurs."],
   ["max(x; 1.2; -4)", "Renvoie le maximum d'une série de valeurs."],
   [
-    "sum(k; 1; n; k^2)",
-    "Renvoie la somme d'une expression évaluée pour une plage d'indice",
+    `sum(k; 1; n; k^2; "expand")`,
+    "Renvoie la somme d'une expression évaluée pour une plage d'indice. Le dernier paramètre est optionel : s'il est présent, le symbole Sigma n'est pas utilisé.",
   ],
+  [`prod(k; 1; n; k^2; "expand")`, "Idem que sum, mais pour un produit."],
+  ["coeff(A; i; j)", "Renvoie le coefficient en case (i, j) de la matrice A."],
+  ["set(A; i; j, v)", "Renvoie la matrice A avec en case (i, j) la valeur v."],
+  ["trans(A) ou transpose(A)", "Renvoie la transposée de A."],
+  ["trace(A)", "Renvoie la trace de A."],
+  ["det(A)", "Renvoie le déterminant de A."],
+  ["inv(A)", "Renvoie l'inverse de A."],
   ["exp(x)", "Fonction exponentielle"],
   ["ln(x)", "Fonction logarithme"],
   ["sin(x)", "Fonction sinus"],
