@@ -31,12 +31,12 @@ func TestCRUDQuestion(t *testing.T) {
 		questions.Co("TODO !"),
 	}
 	qu.Enonce = questions.Enonce{questions.TextBlock{}}
-	pr, err := ct.saveQuestion(qu)
+	pr, err := ct.saveQuestion(SaveBeltQuestionIn{Question: qu})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(pr.Preview.Questions) == 1)
 
 	qu.Enonce = questions.Enonce{questions.TextBlock{}, questions.NumberFieldBlock{Expression: "x"}}
-	pr, err = ct.saveQuestion(qu)
+	pr, err = ct.saveQuestion(SaveBeltQuestionIn{Question: qu})
 	tu.Assert(t, !pr.IsValid) // x is not defined
 
 	out, err := ct.getScheme(1)

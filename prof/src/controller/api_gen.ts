@@ -657,8 +657,13 @@ export interface Prerequisite {
   Need: Stage;
   Pending: Stage;
 }
-// github.com/benoitkugler/maths-online/server/src/prof/ceintures.SaveQuestionAndPreviewOut
-export interface SaveQuestionAndPreviewOut {
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.SaveBeltQuestionIn
+export interface SaveBeltQuestionIn {
+  Question: Beltquestion;
+  ShowCorrection: boolean;
+}
+// github.com/benoitkugler/maths-online/server/src/prof/ceintures.SaveBeltquestionAndPreviewOut
+export interface SaveBeltquestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
   Preview: LoopbackShowCeinture;
@@ -3941,9 +3946,9 @@ export abstract class AbstractAPI {
 
   protected onSuccessCeinturesCreateQuestion(data: Beltquestion): void {}
 
-  protected async rawCeinturesSaveQuestion(params: Beltquestion) {
+  protected async rawCeinturesSaveQuestion(params: SaveBeltQuestionIn) {
     const fullUrl = this.baseUrl + "/api/prof/ceintures/question";
-    const rep: AxiosResponse<SaveQuestionAndPreviewOut> = await Axios.post(
+    const rep: AxiosResponse<SaveBeltquestionAndPreviewOut> = await Axios.post(
       fullUrl,
       params,
       { headers: this.getHeaders() },
@@ -3952,7 +3957,7 @@ export abstract class AbstractAPI {
   }
 
   /** CeinturesSaveQuestion wraps rawCeinturesSaveQuestion and handles the error */
-  async CeinturesSaveQuestion(params: Beltquestion) {
+  async CeinturesSaveQuestion(params: SaveBeltQuestionIn) {
     this.startRequest();
     try {
       const out = await this.rawCeinturesSaveQuestion(params);
@@ -3964,7 +3969,7 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessCeinturesSaveQuestion(
-    data: SaveQuestionAndPreviewOut,
+    data: SaveBeltquestionAndPreviewOut,
   ): void {}
 
   protected async rawCeinturesDeleteQuestion(params: { id: Int }) {

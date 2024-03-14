@@ -146,6 +146,11 @@ func (ct *Controller) createQuestion(stage Stage) (ce.Beltquestion, error) {
 	return qu, nil
 }
 
+type SaveBeltQuestionIn struct {
+	Question       ce.Beltquestion
+	ShowCorrection bool
+}
+
 func (ct *Controller) CeinturesSaveQuestion(c echo.Context) error {
 	userID := tcAPI.JWTTeacher(c)
 
@@ -153,7 +158,7 @@ func (ct *Controller) CeinturesSaveQuestion(c echo.Context) error {
 		return errAccess
 	}
 
-	var args ce.Beltquestion
+	var args SaveBeltQuestionIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -166,30 +171,32 @@ func (ct *Controller) CeinturesSaveQuestion(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type SaveQuestionAndPreviewOut struct {
+type SaveBeltquestionAndPreviewOut struct {
 	Error   questions.ErrQuestionInvalid
 	IsValid bool
 	Preview preview.LoopbackShowCeinture
 }
 
-func (ct *Controller) saveQuestion(qu ce.Beltquestion) (SaveQuestionAndPreviewOut, error) {
+func (ct *Controller) saveQuestion(args SaveBeltQuestionIn) (SaveBeltquestionAndPreviewOut, error) {
+	qu := args.Question
 	if err := qu.Page().Validate(); err != nil {
-		return SaveQuestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
+		return SaveBeltquestionAndPreviewOut{Error: err.(questions.ErrQuestionInvalid)}, nil
 	}
 
 	// TODO: only preview for non admin members
+
 	// save the question and load the group
 	_, err := qu.Update(ct.db)
 	if err != nil {
-		return SaveQuestionAndPreviewOut{}, utils.SQLError(err)
+		return SaveBeltquestionAndPreviewOut{}, utils.SQLError(err)
 	}
 
-	pr, err := ct.preview(Stage{qu.Domain, qu.Rank}, false, qu.Id)
+	pr, err := ct.preview(Stage{qu.Domain, qu.Rank}, args.ShowCorrection, qu.Id)
 	if err != nil {
-		return SaveQuestionAndPreviewOut{}, err
+		return SaveBeltquestionAndPreviewOut{}, err
 	}
 
-	return SaveQuestionAndPreviewOut{IsValid: true, Preview: pr}, nil
+	return SaveBeltquestionAndPreviewOut{IsValid: true, Preview: pr}, nil
 }
 
 func (ct *Controller) preview(stage Stage, showCorrection bool, currentQuestion ce.IdBeltquestion) (out preview.LoopbackShowCeinture, _ error) {

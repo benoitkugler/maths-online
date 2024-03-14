@@ -8,12 +8,10 @@ class LoopbackCeinturesController implements LoopbackController {
   final LoopbackShowCeinture data;
   final SeanceController controller;
 
-  bool instantShowCorrection = false;
-
   LoopbackCeinturesController(this.data)
-      : controller =
-            SeanceController(data.questions, initialPage: data.questionIndex),
-        instantShowCorrection = data.showCorrection;
+      : controller = SeanceController(data.questions,
+            initialPage: data.questionIndex,
+            showCorrection: data.showCorrection);
 }
 
 class CeintureW extends StatelessWidget {

@@ -1,6 +1,7 @@
 import 'package:eleve/activities/ceintures/api.dart';
 import 'package:eleve/exercice/home.dart';
 import 'package:eleve/questions/question.dart';
+import 'package:eleve/quotes.dart';
 import 'package:eleve/shared/errors.dart';
 import 'package:eleve/types/src_maths_questions_client.dart';
 import 'package:eleve/types/src_prof_ceintures.dart';
@@ -79,13 +80,15 @@ class SeanceState extends State<Seance> {
 
 class SeanceController {
   final List<InstantiatedBeltQuestion> questions;
+  bool showCorrection;
 
   var _state = _State.answering;
   final PageController _pageC;
 
   final List<_QuestionController> _controllers;
 
-  SeanceController(this.questions, {int initialPage = 0})
+  SeanceController(this.questions,
+      {int initialPage = 0, this.showCorrection = false})
       : _pageC = PageController(initialPage: initialPage),
         _controllers = List.generate(questions.length,
             (index) => _QuestionController(questions[index].question));
@@ -150,6 +153,14 @@ enum _State { answering, displayingFeedback }
 
 class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
   @override
+  void initState() {
+    if (widget.controller.showCorrection) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
+    }
+    super.initState();
+  }
+
+  @override
   void didUpdateWidget(covariant CeinturesQuestionsW oldWidget) {
     final c = widget.controller;
 
@@ -157,6 +168,10 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
       c._pageC.animateToPage(c._pageC.initialPage,
           duration: const Duration(milliseconds: 750), curve: Curves.easeInOut);
     });
+
+    if (c.showCorrection) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showCorrection());
+    }
 
     super.didUpdateWidget(oldWidget);
   }
@@ -174,6 +189,17 @@ class _CeinturesQuestionsWState extends State<CeinturesQuestionsW> {
                   title: "Question ${index + 1}/${c._controllers.length}",
                   onButtonClick: _onValidQuestion,
                 )).toList());
+  }
+
+  void _showCorrection() {
+    final c = widget.controller;
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (context) => Scaffold(
+        appBar: AppBar(),
+        body: CorrectionW(c.questions[c.currentQuestion].question.correction,
+            Colors.greenAccent, pickQuote()),
+      ),
+    ));
   }
 
   void _onValidQuestion() {

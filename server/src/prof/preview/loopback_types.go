@@ -48,7 +48,6 @@ type LoopbackShowCeinture struct {
 
 	// Set the initial view to display the correction,
 	// instead of the enonce.
-	// TODO: ignored so far
 	ShowCorrection bool
 }
 

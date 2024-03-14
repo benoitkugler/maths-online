@@ -276,7 +276,10 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
 }
 
 async function save() {
-  const res = await controller.CeinturesSaveQuestion(question.value);
+  const res = await controller.CeinturesSaveQuestion({
+    Question: question.value,
+    ShowCorrection: !modeEnonce.value,
+  });
   if (res === undefined) return;
 
   if (res.IsValid) {

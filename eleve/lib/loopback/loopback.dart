@@ -76,8 +76,8 @@ class _EditorLoopbackState extends State<EditorLoopback> {
       if (!controller.data.showCorrection) _popToRoot();
       return;
     } else if (controller is LoopbackCeinturesController) {
-      // TODO:
-      return _popToRoot();
+      if (!controller.controller.showCorrection) _popToRoot();
+      return;
     } else {
       return _popToRoot();
     }
@@ -189,7 +189,7 @@ class _EditorLoopbackState extends State<EditorLoopback> {
     } else if (controller is LoopbackCeinturesController) {
       setState(() {
         controller.controller.setQuestionAnswers(ans.data);
-        controller.instantShowCorrection = false;
+        controller.controller.showCorrection = false;
       });
     } else {
       return;
