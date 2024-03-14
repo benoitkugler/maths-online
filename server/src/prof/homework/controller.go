@@ -461,7 +461,16 @@ func (ct *Controller) addMonoquestionTo(args AddMonoquestionToTaskIn, userID uID
 
 // used defaut value of Bareme: 1, NbRepeat: 3
 func (ct *Controller) addRandomMonoquestionTo(args AddRandomMonoquestionToTaskIn, userID uID) (TaskExt, error) {
-	mono, err := tasks.RandomMonoquestion{IdQuestiongroup: args.IdQuestiongroup, Bareme: 1, NbRepeat: 3}.Insert(ct.db)
+	// by default, use the number of variants
+	questions, err := ed.SelectQuestionsByIdGroups(ct.db, args.IdQuestiongroup)
+	if err != nil {
+		return TaskExt{}, utils.SQLError(err)
+	}
+	count := len(questions)
+	if count < 3 {
+		count = 3
+	}
+	mono, err := tasks.RandomMonoquestion{IdQuestiongroup: args.IdQuestiongroup, Bareme: 1, NbRepeat: count}.Insert(ct.db)
 	if err != nil {
 		return TaskExt{}, utils.SQLError(err)
 	}
