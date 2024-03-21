@@ -942,9 +942,9 @@ func (ct *Controller) saveQuestionMeta(params SaveQuestionMetaIn, userID uID) er
 }
 
 type SaveQuestionAndPreviewOut struct {
-	Error    questions.ErrQuestionInvalid
-	IsValid  bool
-	Question preview.LoopbackShowQuestion
+	Error   questions.ErrQuestionInvalid
+	IsValid bool
+	Preview preview.LoopbackShowQuestion
 }
 
 // For non personnal questions, only preview.
@@ -1011,7 +1011,7 @@ func (ct *Controller) saveQuestionAndPreview(params SaveQuestionAndPreviewIn, us
 		ShowCorrection: params.ShowCorrection,
 	}
 
-	return SaveQuestionAndPreviewOut{IsValid: true, Question: questionOut}, nil
+	return SaveQuestionAndPreviewOut{IsValid: true, Preview: questionOut}, nil
 }
 
 // EditorQuestionExportLateX instantiate the given question and generates a LaTeX version,

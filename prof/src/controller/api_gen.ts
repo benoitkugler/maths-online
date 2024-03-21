@@ -874,7 +874,7 @@ export interface SaveQuestionAndPreviewIn {
 export interface SaveQuestionAndPreviewOut {
   Error: ErrQuestionInvalid;
   IsValid: boolean;
-  Question: LoopbackShowQuestion;
+  Preview: LoopbackShowQuestion;
 }
 // github.com/benoitkugler/maths-online/server/src/prof/editor.SaveQuestionMetaIn
 export interface SaveQuestionMetaIn {
