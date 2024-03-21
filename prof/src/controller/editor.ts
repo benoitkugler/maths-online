@@ -42,6 +42,8 @@ import {
   type QuestiongroupExt,
   type ExercicegroupExt,
   Int,
+  Parameters,
+  Enonce,
 } from "./api_gen";
 import { copy } from "./utils";
 
@@ -776,4 +778,12 @@ export async function readClipboardForBlock() {
   const parsed = JSON.parse(json);
   if (!(parsed["Data"] && parsed["Kind"])) return;
   return parsed as Block;
+}
+
+export interface QuestionPage {
+  id: number;
+  parameters: Parameters;
+  sharedParameters: Parameters;
+  enonce: Enonce;
+  correction: Enonce;
 }

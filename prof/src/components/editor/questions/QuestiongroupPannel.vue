@@ -13,7 +13,7 @@
 
   <ResourceScafold
     :resource="resource"
-    :readonly="isReadonly"
+    :readonly="readonly"
     :all-tags="props.allTags"
     v-model="variantIndex"
     @back="backToList"
@@ -24,12 +24,14 @@
     @delete-variant="deleteVariante"
     ref="scafold"
   >
-    <QuestionVariantPannel
-      :question="ownVariants[variantIndex]"
-      :readonly="isReadonly"
-      @update="(qu: Question) => (ownVariants[variantIndex] = qu)"
-      @preview="(qu: LoopbackShowQuestion) => emit('preview', qu)"
-    ></QuestionVariantPannel>
+    <QuestionPageEditor
+      :question="page"
+      :readonly="readonly"
+      :show-dual-parameters="false"
+      :on-save="saveQuestion"
+      :on-export-latex="exportLatex"
+      @update="writeChanges"
+    ></QuestionPageEditor>
   </ResourceScafold>
 </template>
 
@@ -45,13 +47,17 @@ import type {
 } from "@/controller/api_gen";
 import { Visibility } from "@/controller/api_gen";
 import { controller } from "@/controller/controller";
-import type { ResourceGroup, VariantG } from "@/controller/editor";
+import type {
+  QuestionPage,
+  ResourceGroup,
+  VariantG,
+} from "@/controller/editor";
 import { copy } from "@/controller/utils";
 import { useRouter } from "vue-router";
 import UsesCard from "../UsesCard.vue";
-import QuestionVariantPannel from "./QuestionVariantPannel.vue";
 import ResourceScafold from "../ResourceScafold.vue";
 import { computed, ref } from "vue";
+import QuestionPageEditor from "../QuestionPageEditor.vue";
 
 interface Props {
   group: QuestiongroupExt;
@@ -80,7 +86,7 @@ const resource = computed<ResourceGroup>(() => ({
 
 const variantIndex = ref(0);
 
-const isReadonly = computed(
+const readonly = computed(
   () => props.group.Origin.Visibility != Visibility.Personnal
 );
 
@@ -90,7 +96,7 @@ function updateTitle(t: string) {
 }
 
 async function updateQuestiongroup() {
-  if (isReadonly.value) return;
+  if (readonly.value) return;
   await controller.EditorUpdateQuestiongroup(group.value.Group);
 }
 
@@ -155,7 +161,7 @@ function backToList() {
 }
 
 async function updateVariant(variant: VariantG) {
-  if (isReadonly.value) {
+  if (readonly.value) {
     return;
   }
   ownVariants.value[variantIndex.value].Subtitle = variant.Subtitle;
@@ -163,6 +169,36 @@ async function updateVariant(variant: VariantG) {
   await controller.EditorSaveQuestionMeta({
     Question: ownVariants.value[variantIndex.value],
   });
+}
+
+const variant = computed(() => ownVariants.value[variantIndex.value]);
+
+const page = computed<QuestionPage>(() => ({
+  id: variant.value.Id,
+  parameters: variant.value.Parameters,
+  sharedParameters: [],
+  enonce: variant.value.Enonce,
+  correction: variant.value.Correction,
+}));
+
+function writeChanges(qu: QuestionPage) {
+  ownVariants.value[variantIndex.value].Parameters = qu.parameters;
+  ownVariants.value[variantIndex.value].Enonce = qu.enonce;
+  ownVariants.value[variantIndex.value].Correction = qu.correction;
+}
+
+async function saveQuestion(qu: QuestionPage, showCorrection: boolean) {
+  const res = await controller.EditorSaveQuestionAndPreview({
+    Id: variant.value.Id,
+    Page: qu,
+    ShowCorrection: showCorrection,
+  });
+  return res;
+}
+
+async function exportLatex(qu: QuestionPage) {
+  const res = await controller.EditorQuestionExportLateX(qu);
+  return res;
 }
 </script>
 

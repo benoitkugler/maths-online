@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white pa-1 rounded mx-1 d-inline">
+  <div class="bg-white pb-1 rounded mx-1 d-inline">
     <v-chip
       elevation="0"
       size="x-small"
