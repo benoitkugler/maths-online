@@ -298,7 +298,7 @@ type ProofFieldBlock struct {
 }
 
 // SetFieldBlock asks the student to build a set expression,
-// using the given [Sets] and math set operator
+// using the given [Sets] and math set operators
 type SetFieldBlock struct {
 	Sets []string
 	ID   int

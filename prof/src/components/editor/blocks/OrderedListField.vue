@@ -110,8 +110,7 @@
 
 <script setup lang="ts">
 import type { OrderedListFieldBlock, Variable } from "@/controller/api_gen";
-import { ref } from "@vue/reactivity";
-import { nextTick } from "@vue/runtime-core";
+import { ref, nextTick } from "vue";
 import InterpolatedText from "../utils/InterpolatedText.vue";
 
 interface Props {

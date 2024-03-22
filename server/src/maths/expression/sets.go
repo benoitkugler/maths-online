@@ -7,6 +7,7 @@ import (
 	"github.com/benoitkugler/maths-online/server/src/maths/expression/sets"
 )
 
+// ToBinarySet interprets [expr] as a set expression
 func (expr *Expr) ToBinarySet() (sets.BinarySet, error) {
 	leaves := map[string]sets.Set{}
 	lastID := sets.Set(-1)
@@ -72,9 +73,9 @@ func (expr *Expr) ToBinarySet() (sets.BinarySet, error) {
 		return sets.BinarySet{}, errors.New("Le nombre d'ensembles dépasse la limite supportée.")
 	}
 
-	out := sets.BinarySet{Root: root, Leaves: make([]string, len(leaves))}
+	out := sets.BinarySet{Root: root, Sets: make([]string, len(leaves))}
 	for l, id := range leaves {
-		out.Leaves[id] = l
+		out.Sets[id] = l
 	}
 	return out, nil
 }

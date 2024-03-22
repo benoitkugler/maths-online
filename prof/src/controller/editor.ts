@@ -45,6 +45,7 @@ import {
   Parameters,
   Enonce,
   ErrQuestionInvalid,
+  SetFieldBlock,
 } from "./api_gen";
 import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
@@ -147,6 +148,7 @@ export const sortedBlockKindLabels = [
   ],
   [BlockKind.TableFieldBlock, { label: "Tableau", isAnswerField: true }],
   [BlockKind.TreeFieldBlock, { label: "Arbre", isAnswerField: true }],
+  [BlockKind.SetFieldBlock, { label: "Ensembles", isAnswerField: true }],
 ] as const;
 
 export const BlockKindLabels: {
@@ -174,6 +176,7 @@ interface BlockKindTypes {
   [BlockKind.TableFieldBlock]: TableFieldBlock;
   [BlockKind.VectorFieldBlock]: VectorFieldBlock;
   [BlockKind.ProofFieldBlock]: ProofFieldBlock;
+  [BlockKind.SetFieldBlock]: SetFieldBlock;
 }
 
 export interface TypedBlock<K extends BlockKind> {
@@ -587,6 +590,16 @@ export function newBlock(kind: BlockKind): Block {
               },
             ],
           },
+        },
+      };
+      return out;
+    }
+    case BlockKind.SetFieldBlock: {
+      const out: TypedBlock<typeof kind> = {
+        Kind: kind,
+        Data: {
+          Answer: "¬A ∩ B ",
+          AdditionalSets: ["C"],
         },
       };
       return out;

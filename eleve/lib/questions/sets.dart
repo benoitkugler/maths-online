@@ -58,18 +58,28 @@ class _Node {
   }
 }
 
-class SetController extends FieldController {
-  final List<String> sets;
+class _IndexedSet {
+  final Set index;
+  final String set;
+  const _IndexedSet(this.index, this.set);
+}
 
-  List<_Node> _history = []; // history API
+class SetController extends FieldController {
+  final List<_IndexedSet> _sets; // shuffled
+
+  final List<_Node> _history = []; // history API
 
   _Node _answer = _Node.empty();
   // pointer to one node of answer,
   // may be modified by user tap
   late _Node _cursor;
 
-  SetController(super.onChange, this.sets) {
-    _cursor = _answer; // start with focus on the root
+  SetController(super.onChange, List<String> sets)
+      : _sets = List.generate(
+            sets.length, (index) => _IndexedSet(index, sets[index])).toList() {
+    // start with focus on the root
+    _cursor = _answer;
+    _sets.shuffle();
   }
 
   @override
@@ -188,8 +198,12 @@ class _SetFieldWState extends State<SetFieldW> {
   Widget build(BuildContext context) {
     final ct = widget.controller;
     const operators = [SetOp.sUnion, SetOp.sInter, SetOp.sComplement];
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(4.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: widget.color),
+        borderRadius: BorderRadius.circular(5),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -206,7 +220,7 @@ class _SetFieldWState extends State<SetFieldW> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: _NodeW(
-                        false, widget.controller._answer, ct.sets, ct._cursor,
+                        false, widget.controller._answer, ct._sets, ct._cursor,
                         onTap: (cr) => setState(() => ct._cursor = cr)),
                   ),
                 ),
@@ -221,13 +235,14 @@ class _SetFieldWState extends State<SetFieldW> {
             ],
           ),
           Wrap(
-              children: List.generate(
-            ct.sets.length,
-            (index) => _Control(
-              () => setState(() => ct._addLeaf(index)),
-              ct.sets[index],
-            ),
-          ).toList()),
+              children: ct._sets
+                  .map(
+                    (si) => _Control(
+                      () => setState(() => ct._addLeaf(si.index)),
+                      si.set,
+                    ),
+                  )
+                  .toList()),
           Row(mainAxisSize: MainAxisSize.min, children: [
             _Control(() => setState(() => ct._addParenthesis()), '()'),
             ...operators.map((op) =>
@@ -290,7 +305,7 @@ class _Control extends StatelessWidget {
 class _NodeW extends StatelessWidget {
   final bool showParenthesis;
   final _Node node;
-  final List<String> sets;
+  final List<_IndexedSet> sets;
   final _Node cursor;
 
   final void Function(_Node) onTap;
@@ -343,7 +358,7 @@ class _UniOrInt extends StatelessWidget {
   final String operator;
   final bool showParenthesis;
   final List<_Node> args;
-  final List<String> sets;
+  final List<_IndexedSet> sets;
   final _Node cursor;
 
   final void Function(_Node) onTap;
@@ -381,7 +396,7 @@ class _UniOrInt extends StatelessWidget {
 
 class _ComplementW extends StatelessWidget {
   final _Node? arg;
-  final List<String> sets;
+  final List<_IndexedSet> sets;
   final _Node cursor;
 
   final void Function(_Node) onTap;
@@ -402,12 +417,13 @@ class _ComplementW extends StatelessWidget {
 
 class _LeafW extends StatelessWidget {
   final Set leaf;
-  final List<String> sets;
+  final List<_IndexedSet> sets;
 
   const _LeafW(this.leaf, this.sets, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return textMath(sets[leaf], textStyle);
+    final set = sets.firstWhere((element) => element.index == leaf);
+    return textMath(set.set, textStyle);
   }
 }

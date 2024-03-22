@@ -34,7 +34,7 @@ type ListSet struct {
 }
 
 func (bin BinarySet) ToList() ListSet {
-	return ListSet{Leaves: bin.Leaves, Expr: toList(bin.Root)}
+	return ListSet{Leaves: bin.Sets, Expr: toList(bin.Root)}
 }
 
 func toList(node BinNode) ListNode {

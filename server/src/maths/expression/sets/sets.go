@@ -13,12 +13,12 @@ import (
 )
 
 type BinarySet struct {
-	// Leaves stores the LaTeX code of each set,
+	// Sets stores the LaTeX code of each set,
 	// like "A", "B_i" or "B_{i+1}", and is indexed by
 	// a Leaf id.
 	// A well formed set has no more than [MaxNumberOfLeaves] leaves.
-	Leaves []string
-	Root   BinNode
+	Sets []string
+	Root BinNode
 }
 
 // BinNode is one node of a binary tree representation

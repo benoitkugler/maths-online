@@ -107,7 +107,7 @@ func (cr crible) toList() (out normalized) {
 }
 
 func (set BinarySet) toNormalized() normalized {
-	out := newCrible(len(set.Leaves))
+	out := newCrible(len(set.Sets))
 	expr := normalize(set.Root) // normalize
 	// convert to a list tree ...
 	l := toList(expr)
@@ -151,6 +151,6 @@ func (set BinarySet) toNormalized() normalized {
 // and (A n B) u (A n neg(B)) == A
 func (s BinarySet) IsEquivalent(other BinNode) bool {
 	ref := s.toNormalized()
-	otherS := BinarySet{Leaves: s.Leaves, Root: other}
+	otherS := BinarySet{Sets: s.Sets, Root: other}
 	return ref.isEqual(otherS.toNormalized())
 }

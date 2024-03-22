@@ -9,7 +9,7 @@ import (
 )
 
 func set(root sets.BinNode, leaves ...string) sets.BinarySet {
-	return sets.BinarySet{Root: root, Leaves: leaves}
+	return sets.BinarySet{Root: root, Sets: leaves}
 }
 
 func TestToSetExpr(t *testing.T) {

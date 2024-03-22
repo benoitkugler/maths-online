@@ -23,6 +23,7 @@ var (
 	_ Block = TableFieldBlock{}
 	_ Block = VectorFieldBlock{}
 	_ Block = ProofFieldBlock{}
+	_ Block = SetFieldBlock{}
 )
 
 type NumberFieldBlock struct {
@@ -653,4 +654,54 @@ func (v VectorFieldBlock) setupValidator(*ex.RandomParameters) (validator, error
 	}
 
 	return vectorValidator{answer: answer}, nil
+}
+
+type SetFieldBlock struct {
+	Answer         string // expression
+	AdditionalSets []Interpolated
+}
+
+func (v SetFieldBlock) instantiate(params ex.Vars, ID int) (instance, error) {
+	answer, err := ex.Parse(v.Answer)
+	if err != nil {
+		return nil, err
+	}
+	answer.Substitute(params)
+
+	setExpr, err := answer.ToBinarySet()
+	if err != nil {
+		return nil, err
+	}
+	// add the sets to the answer
+	for _, s := range v.AdditionalSets {
+		setLatex, err := s.instantiateAndMerge(params)
+		if err != nil {
+			return nil, err
+		}
+		setExpr.Sets = append(setExpr.Sets, setLatex)
+	}
+
+	// the order of the sets presented is shuffled on the client
+
+	out := SetFieldInstance{
+		ID:     ID,
+		Answer: setExpr,
+	}
+	return out, nil
+}
+
+func (v SetFieldBlock) setupValidator(*ex.RandomParameters) (validator, error) {
+	answer, err := ex.Parse(v.Answer)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, set := range v.AdditionalSets {
+		_, err := set.parse()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return setValidator{answer: answer}, nil
 }

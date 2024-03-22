@@ -87,6 +87,7 @@ import VariationTableVue from "./blocks/VariationTable.vue";
 import VariationTableFieldVue from "./blocks/VariationTableField.vue";
 import VectorFieldVue from "./blocks/VectorField.vue";
 import TreeB from "./blocks/TreeB.vue";
+import SetFieldVue from "./blocks/SetField.vue";
 import { computed } from "vue";
 import { ref } from "vue";
 import { type Component } from "vue";
@@ -159,6 +160,8 @@ function dataToBlock(data: Block): block {
       return { Props: data, Component: markRaw(VectorFieldVue) };
     case BlockKind.ProofFieldBlock:
       return { Props: data, Component: markRaw(ProofFieldVue) };
+    case BlockKind.SetFieldBlock:
+      return { Props: data, Component: markRaw(SetFieldVue) };
     default:
       throw "dataToBlock: unexpected Kind";
   }

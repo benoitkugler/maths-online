@@ -281,7 +281,7 @@ func randcli_SignSymbol() client.SignSymbol {
 func randexp_Variable() expression.Variable {
 	var s expression.Variable
 	s.Indice = randstring()
-	s.Name = randrune()
+	s.Name = randint32()
 
 	return s
 }
@@ -292,6 +292,10 @@ func randfloat64() float64 {
 
 func randint() int {
 	return int(rand.Intn(1000000))
+}
+
+func randint32() int32 {
+	return int32(rand.Intn(1000000))
 }
 
 func randint64() int64 {
@@ -310,6 +314,7 @@ func randque_Block() questions.Block {
 		randque_OrderedListFieldBlock(),
 		randque_ProofFieldBlock(),
 		randque_RadioFieldBlock(),
+		randque_SetFieldBlock(),
 		randque_SignTableBlock(),
 		randque_SignTableFieldBlock(),
 		randque_TableBlock(),
@@ -321,7 +326,7 @@ func randque_Block() questions.Block {
 		randque_VariationTableFieldBlock(),
 		randque_VectorFieldBlock(),
 	}
-	i := rand.Intn(20)
+	i := rand.Intn(21)
 	return choix[i]
 }
 
@@ -573,6 +578,14 @@ func randque_Rp() questions.Rp {
 	return s
 }
 
+func randque_SetFieldBlock() questions.SetFieldBlock {
+	var s questions.SetFieldBlock
+	s.Answer = randstring()
+	s.AdditionalSets = randSliceque_Interpolated()
+
+	return s
+}
+
 func randque_SignTableBlock() questions.SignTableBlock {
 	var s questions.SignTableBlock
 	s.Xs = randSlicestring()
@@ -792,10 +805,6 @@ func randrep_SegmentKind() repere.SegmentKind {
 	choix := [...]repere.SegmentKind{repere.SKSegment, repere.SKVector, repere.SKLine}
 	i := rand.Intn(len(choix))
 	return choix[i]
-}
-
-func randrune() rune {
-	return rune(rand.Intn(1000000))
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
