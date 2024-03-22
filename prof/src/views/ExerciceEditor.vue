@@ -11,35 +11,22 @@
     </v-btn>
   </folder-view>
   <div class="ma-2" v-else>
-    <v-row>
-      <v-col>
-        <keep-alive>
-          <exercicegroup-list
-            v-if="currentExercicegroup == null"
-            @edit="editExercice"
-            :tags="allKnownTags"
-            @back="viewMode = 'folder'"
-            :initial-query="initialQuery"
-            ref="list"
-          ></exercicegroup-list>
-        </keep-alive>
-        <exercicegroup-pannel
-          v-if="currentExercicegroup != null"
-          :group="currentExercicegroup"
-          :all-tags="allKnownTags"
-          @back="backToList"
-          @preview="(ex: LoopbackShowExercice) => preview?.showExercice(ex)"
-        ></exercicegroup-pannel>
-      </v-col>
-      <v-col cols="auto">
-        <keep-alive>
-          <client-preview
-            ref="preview"
-            :hide="currentExercicegroup == null"
-          ></client-preview>
-        </keep-alive>
-      </v-col>
-    </v-row>
+    <keep-alive>
+      <exercicegroup-list
+        v-if="currentExercicegroup == null"
+        @edit="editExercice"
+        :tags="allKnownTags"
+        @back="viewMode = 'folder'"
+        :initial-query="initialQuery"
+        ref="list"
+      ></exercicegroup-list>
+    </keep-alive>
+    <exercicegroup-pannel
+      v-if="currentExercicegroup != null"
+      :group="currentExercicegroup"
+      :all-tags="allKnownTags"
+      @back="backToList"
+    ></exercicegroup-pannel>
   </div>
 </template>
 

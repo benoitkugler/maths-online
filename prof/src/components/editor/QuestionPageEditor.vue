@@ -79,6 +79,7 @@
                 <v-list-item
                   @click="paste"
                   title="Coller"
+                  subtitle="un bloc"
                   prepend-icon="mdi-content-paste"
                 >
                 </v-list-item>
@@ -106,7 +107,7 @@
                   @click="exportLatex"
                   prepend-icon="mdi-file-export"
                   title="Exporter en LaTeX"
-                  subtitle="Expérimental"
+                  subtitle="(Expérimental)"
                 >
                 </v-list-item>
               </v-list>
@@ -201,7 +202,6 @@ import {
   ExportQuestionLatexOut,
   ExpressionFieldBlock,
   Parameters,
-  SaveQuestionAndPreviewOut,
   Variable,
   errEnonce,
 } from "@/controller/api_gen";
@@ -213,6 +213,7 @@ import ParametersEditor from "./parameters/ParametersEditor.vue";
 import SnackErrorParameters from "./parameters/SnackErrorParameters.vue";
 import {
   QuestionPage,
+  SaveQuestionOut,
   readClipboardForBlock,
   saveData,
 } from "@/controller/editor";
@@ -224,13 +225,8 @@ import { watch } from "vue";
 
 const props = defineProps<{
   question: QuestionPage;
-  onSave: (
-    qu: QuestionPage,
-    showCorrection: boolean
-  ) => Promise<SaveQuestionAndPreviewOut | undefined>;
-  onExportLatex: (
-    qu: QuestionPage
-  ) => Promise<ExportQuestionLatexOut | undefined>;
+  onSave: (showCorrection: boolean) => Promise<SaveQuestionOut | undefined>;
+  onExportLatex: () => Promise<ExportQuestionLatexOut | undefined>;
   readonly: boolean;
   showDualParameters: boolean;
 }>();
@@ -336,7 +332,7 @@ async function checkParameters(ps: Parameters, shared: Parameters) {
 }
 
 async function save() {
-  const res = await props.onSave(inner.value, !modeEnonce.value);
+  const res = await props.onSave(!modeEnonce.value);
   if (res == undefined) return;
 
   if (res.IsValid) {
@@ -350,7 +346,7 @@ async function save() {
     errorContent.value = null;
     errorParameters.value = null;
 
-    preview.value?.showQuestion(res.Question); // TODO:
+    preview.value?.preview(res.Preview); // TODO:
   } else {
     onQuestionError(res.Error);
   }
@@ -418,7 +414,7 @@ async function addSyntaxHint(block: ExpressionFieldBlock) {
 }
 
 async function exportLatex() {
-  const res = await props.onExportLatex(inner.value);
+  const res = await props.onExportLatex();
   if (res == undefined) return;
 
   if (res.IsValid) {

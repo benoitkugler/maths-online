@@ -44,7 +44,9 @@ import {
   Int,
   Parameters,
   Enonce,
+  ErrQuestionInvalid,
 } from "./api_gen";
+import { LoopbackServerEvent } from "./loopback_gen";
 import { copy } from "./utils";
 
 export const ExpressionColor = "orange";
@@ -786,4 +788,10 @@ export interface QuestionPage {
   sharedParameters: Parameters;
   enonce: Enonce;
   correction: Enonce;
+}
+
+export interface SaveQuestionOut {
+  IsValid: boolean;
+  Error: ErrQuestionInvalid;
+  Preview: LoopbackServerEvent;
 }

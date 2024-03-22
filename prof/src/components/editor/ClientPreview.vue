@@ -18,11 +18,6 @@ import {
   LoopbackServerEventKind,
   type LoopbackServerEvent,
 } from "@/controller/loopback_gen";
-import type {
-  LoopbackShowCeinture,
-  LoopbackShowExercice,
-  LoopbackShowQuestion,
-} from "@/controller/api_gen";
 import { computed, ref } from "vue";
 
 interface Props {
@@ -31,7 +26,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-defineExpose({ pause, showQuestion, showExercice, showCeinture });
+defineExpose({ pause, preview });
 
 const iframe = ref<HTMLIFrameElement | null>(null);
 
@@ -48,25 +43,8 @@ function pause() {
   });
 }
 
-function showQuestion(qu: LoopbackShowQuestion) {
-  sendEvent({
-    Kind: LoopbackServerEventKind.LoopbackShowQuestion,
-    Data: qu,
-  });
-}
-
-function showExercice(qu: LoopbackShowExercice) {
-  sendEvent({
-    Kind: LoopbackServerEventKind.LoopbackShowExercice,
-    Data: qu,
-  });
-}
-
-function showCeinture(qu: LoopbackShowCeinture) {
-  sendEvent({
-    Kind: LoopbackServerEventKind.LoopbackShowCeinture,
-    Data: qu,
-  });
+function preview(data: LoopbackServerEvent) {
+  sendEvent(data);
 }
 
 const src = computed(() =>

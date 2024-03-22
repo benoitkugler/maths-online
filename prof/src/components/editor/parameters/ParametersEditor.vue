@@ -7,7 +7,7 @@
   >
   </SnackErrorParameters>
 
-  <div class="px-2">
+  <div class="pr-2">
     <v-row
       :style="{
         'background-color': props.isLoading
@@ -37,9 +37,12 @@
     </v-row>
     <div style="height: 61vh; overflow-y: auto">
       <v-row no-gutters>
-        <v-col cols="12">
+        <v-col cols="12" class="text-grey" v-if="props.dual"
+          ><small> Partagés par toutes les questions :</small>
+        </v-col>
+        <v-col cols="12" v-if="props.dual">
           <HiglightedText
-            v-model="rawParameters"
+            v-model="rawSharedParameters"
             :tokenizer="tokenize"
             :center="false"
             focus-color="lightgreen"
@@ -48,9 +51,12 @@
             :border-color="errorParameters != null ? '#FFB74D' : undefined"
           ></HiglightedText>
         </v-col>
-        <v-col cols="12" v-if="props.dual">
+        <v-col cols="12" class="text-grey" v-if="props.dual"
+          ><small>Spécifiques à la question :</small>
+        </v-col>
+        <v-col cols="12">
           <HiglightedText
-            v-model="rawSharedParameters"
+            v-model="rawParameters"
             :tokenizer="tokenize"
             :center="false"
             focus-color="lightgreen"

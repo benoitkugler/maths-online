@@ -842,7 +842,11 @@ func (ct *Controller) createQuestionEx(args ExerciceCreateQuestionIn, userID uID
 		return ExerciceExt{}, utils.SQLError(err)
 	}
 
-	question, err := ed.Question{NeedExercice: args.IdExercice.AsOptional()}.Insert(tx)
+	question, err := ed.Question{
+		// as a convenience, start with an empty text block
+		Enonce:       questions.Enonce{questions.TextBlock{}},
+		NeedExercice: args.IdExercice.AsOptional(),
+	}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return ExerciceExt{}, utils.SQLError(err)

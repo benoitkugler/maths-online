@@ -50,6 +50,7 @@ import { controller } from "@/controller/controller";
 import type {
   QuestionPage,
   ResourceGroup,
+  SaveQuestionOut,
   VariantG,
 } from "@/controller/editor";
 import { copy } from "@/controller/utils";
@@ -58,6 +59,7 @@ import UsesCard from "../UsesCard.vue";
 import ResourceScafold from "../ResourceScafold.vue";
 import { computed, ref } from "vue";
 import QuestionPageEditor from "../QuestionPageEditor.vue";
+import { LoopbackServerEventKind } from "@/controller/loopback_gen";
 
 interface Props {
   group: QuestiongroupExt;
@@ -69,7 +71,6 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "back"): void;
-  (e: "preview", question: LoopbackShowQuestion): void;
 }>();
 
 const router = useRouter();
@@ -187,17 +188,27 @@ function writeChanges(qu: QuestionPage) {
   ownVariants.value[variantIndex.value].Correction = qu.correction;
 }
 
-async function saveQuestion(qu: QuestionPage, showCorrection: boolean) {
+async function saveQuestion(
+  showCorrection: boolean
+): Promise<SaveQuestionOut | undefined> {
   const res = await controller.EditorSaveQuestionAndPreview({
     Id: variant.value.Id,
-    Page: qu,
+    Page: page.value,
     ShowCorrection: showCorrection,
   });
-  return res;
+  if (res === undefined) return;
+  return {
+    IsValid: res.IsValid,
+    Error: res.Error,
+    Preview: {
+      Kind: LoopbackServerEventKind.LoopbackShowQuestion,
+      Data: res.Preview,
+    },
+  };
 }
 
-async function exportLatex(qu: QuestionPage) {
-  const res = await controller.EditorQuestionExportLateX(qu);
+async function exportLatex() {
+  const res = await controller.EditorQuestionExportLateX(page.value);
   return res;
 }
 </script>

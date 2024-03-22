@@ -12,36 +12,23 @@
     </v-btn>
   </folder-view>
   <div class="ma-2" v-else>
-    <v-row>
-      <v-col>
-        <QuestiongroupPannel
-          v-if="viewKind == 'editor'"
-          :group="currentGroup!"
-          :variants="currentVariants"
-          :all-tags="allKnownTags"
-          @back="backToList"
-          @preview="(qu: LoopbackShowQuestion) => preview?.showQuestion(qu)"
-        ></QuestiongroupPannel>
-        <keep-alive>
-          <QuestiongroupList
-            v-if="viewKind == 'questions'"
-            :tags="allKnownTags"
-            @edit="editQuestion"
-            @back="viewMode = 'folder'"
-            :initial-query="initialQuery"
-            ref="list"
-          ></QuestiongroupList>
-        </keep-alive>
-      </v-col>
-      <!-- <v-col cols="auto">
-        <keep-alive>
-          <ClientPreview
-            ref="preview"
-            :hide="viewKind == 'questions'"
-          ></ClientPreview>
-        </keep-alive>
-      </v-col> -->
-    </v-row>
+    <QuestiongroupPannel
+      v-if="viewKind == 'editor'"
+      :group="currentGroup!"
+      :variants="currentVariants"
+      :all-tags="allKnownTags"
+      @back="backToList"
+    ></QuestiongroupPannel>
+    <keep-alive>
+      <QuestiongroupList
+        v-if="viewKind == 'questions'"
+        :tags="allKnownTags"
+        @edit="editQuestion"
+        @back="viewMode = 'folder'"
+        :initial-query="initialQuery"
+        ref="list"
+      ></QuestiongroupList>
+    </keep-alive>
   </div>
 </template>
 
